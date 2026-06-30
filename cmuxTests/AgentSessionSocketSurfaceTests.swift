@@ -72,7 +72,7 @@ struct AgentSessionSocketSurfaceTests {
     }
 
     @Test
-    func testWorkspaceBusyIndicatorTracksReportedShellCommandState() throws {
+    func testWorkspaceBusyIndicatorRequiresTrackedAgentRuntimeForShellCommandState() throws {
         let manager = TabManager()
         let workspace = try #require(manager.selectedWorkspace)
         let panelId = try #require(workspace.focusedPanelId)
@@ -80,6 +80,14 @@ struct AgentSessionSocketSurfaceTests {
         #expect(!workspace.hasActiveAIWork)
 
         workspace.updatePanelShellActivityState(panelId: panelId, state: .commandRunning)
+        #expect(!workspace.hasActiveAIWork)
+
+        workspace.recordAgentPID(
+            key: "codex.test-agent",
+            pid: 12345,
+            panelId: panelId,
+            refreshPorts: false
+        )
         #expect(workspace.hasActiveAIWork)
 
         workspace.updatePanelShellActivityState(panelId: panelId, state: .promptIdle)
@@ -87,6 +95,13 @@ struct AgentSessionSocketSurfaceTests {
 
         workspace.updatePanelShellActivityState(panelId: panelId, state: .unknown)
         #expect(!workspace.hasActiveAIWork)
+
+        _ = workspace.clearAgentPID(
+            key: "codex.test-agent",
+            panelId: panelId,
+            clearStatus: false,
+            refreshPorts: false
+        )
     }
 
     @Test

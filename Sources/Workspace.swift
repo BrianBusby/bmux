@@ -4889,13 +4889,15 @@ final class Workspace: Identifiable, ObservableObject {
 
     var hasActiveAIWork: Bool {
         let livePanelIds = Set(panels.keys)
-        if panelShellActivityStates.contains(where: { panelId, state in
-            livePanelIds.contains(panelId) && state == .commandRunning
+        if panels.values.contains(where: { panel in
+            (panel as? AgentSessionPanel)?.hasActiveWork == true
         }) {
             return true
         }
-        if panels.values.contains(where: { panel in
-            (panel as? AgentSessionPanel)?.hasActiveWork == true
+        if panelShellActivityStates.contains(where: { panelId, state in
+            livePanelIds.contains(panelId)
+                && state == .commandRunning
+                && agentRuntimeState(forPanelId: panelId) != nil
         }) {
             return true
         }
