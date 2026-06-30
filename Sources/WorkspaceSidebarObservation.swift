@@ -2,6 +2,7 @@ import Combine
 import CmuxCore
 import Foundation
 import CmuxSidebar
+import CmuxWorkspaces
 import SwiftUI
 
 private struct SidebarPanelObservationState: Equatable {
@@ -55,6 +56,8 @@ private struct SidebarObservationState: Equatable {
     let remoteConnectionDetail: String?
     let activeRemoteTerminalSessionCount: Int
     let listeningPorts: [Int]
+    let panelShellActivityStates: [UUID: PanelShellActivityState]
+    let agentSessionProviderActivity: [UUID: Bool]
     let browserMediaActivity: BrowserMediaActivity
 }
 
@@ -122,8 +125,11 @@ extension Workspace {
             remoteFields
         )
             .combineLatest($listeningPorts)
-            .compactMap { [weak self] groupedFields, listeningPorts -> SidebarObservationState? in
+            .combineLatest(panelShellActivityStatesPublisher, agentSessionActiveWorkPublisher)
+            .compactMap { [weak self] groupedFieldsAndPorts, panelShellActivityStates, agentSessionActiveWork -> SidebarObservationState? in
                 guard let self else { return nil }
+                let groupedFields = groupedFieldsAndPorts.0
+                let listeningPorts = groupedFieldsAndPorts.1
                 let workspaceFields = groupedFields.0
                 let metadataFields = groupedFields.1
                 let gitFields = groupedFields.2
@@ -146,6 +152,8 @@ extension Workspace {
                     remoteConnectionDetail: remoteFields.2,
                     activeRemoteTerminalSessionCount: remoteFields.3,
                     listeningPorts: listeningPorts,
+                    panelShellActivityStates: panelShellActivityStates,
+                    agentSessionProviderActivity: agentSessionActiveWork,
                     browserMediaActivity: self.browserMediaActivity
                 )
             }

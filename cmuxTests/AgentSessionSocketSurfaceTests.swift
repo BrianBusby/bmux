@@ -70,4 +70,56 @@ struct AgentSessionSocketSurfaceTests {
         expectEqual(panelSnapshot.directory, "/tmp/cmux-agent-session-cwd")
         expectEqual(panelSnapshot.agentSession?.workingDirectory, "/tmp/cmux-agent-session-cwd")
     }
+
+    @Test
+    func testWorkspaceBusyIndicatorTracksReportedShellCommandState() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+
+        #expect(!workspace.hasActiveAIWork)
+
+        workspace.updatePanelShellActivityState(panelId: panelId, state: .commandRunning)
+        #expect(workspace.hasActiveAIWork)
+
+        workspace.updatePanelShellActivityState(panelId: panelId, state: .promptIdle)
+        #expect(!workspace.hasActiveAIWork)
+
+        workspace.updatePanelShellActivityState(panelId: panelId, state: .unknown)
+        #expect(!workspace.hasActiveAIWork)
+    }
+
+    @Test
+    func testWorkspaceBusyIndicatorIgnoresStaleShellStatePanelIds() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+
+        workspace.panelShellActivityStates[UUID()] = .commandRunning
+
+        #expect(!workspace.hasActiveAIWork)
+    }
+
+    @Test
+    func testWorkspaceBusyIndicatorTracksAgentSessionWorkActivity() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let paneId = try #require(workspace.bonsplitController.focusedPaneId)
+        let panel = try #require(
+            workspace.newAgentSessionSurface(
+                inPane: paneId,
+                providerID: .codex,
+                rendererKind: .react,
+                workingDirectory: "/tmp",
+                focus: true
+            )
+        )
+
+        #expect(!workspace.hasActiveAIWork)
+
+        panel.rendererSession.onHasActiveWorkChanged?(true)
+        #expect(workspace.hasActiveAIWork)
+
+        panel.rendererSession.onHasActiveWorkChanged?(false)
+        #expect(!workspace.hasActiveAIWork)
+    }
 }

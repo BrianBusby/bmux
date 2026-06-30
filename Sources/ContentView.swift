@@ -13235,6 +13235,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         let listeningPorts: [Int]
         let finderDirectoryPath: String?
         let mediaActivity: BrowserMediaActivity
+        let hasActiveAIWork: Bool
     }
 }
 
@@ -13243,6 +13244,28 @@ private final class SidebarTabItemContextMenuState: ObservableObject {
     var pendingWorkspaceSnapshot: SidebarWorkspaceSnapshotBuilder.Snapshot?
 }
 
+private struct WorkspaceBusyEllipsisIndicator: View {
+    let color: Color
+    let size: CGFloat
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 0.28)) { timeline in
+            let phase = Int(timeline.date.timeIntervalSinceReferenceDate / 0.28) % 3
+            let dotSize = max(3, size * 0.24)
+            HStack(spacing: max(1, size * 0.08)) {
+                ForEach(0..<3, id: \.self) { index in
+                    Circle()
+                        .fill(color)
+                        .frame(width: dotSize, height: dotSize)
+                        .opacity(index == phase ? 1.0 : 0.32)
+                        .scaleEffect(index == phase ? 1.18 : 0.82)
+                        .animation(.easeInOut(duration: 0.22), value: phase)
+                }
+            }
+            .frame(width: size, height: size, alignment: .center)
+        }
+    }
+}
 struct TabItemView: View, Equatable {
     private static let workspaceObservationCoalesceInterval: RunLoop.SchedulerTimeType.Stride = .milliseconds(40)
     private static let legacyVMWebSocketDescription = "VM WebSocket PTY"
@@ -13507,6 +13530,10 @@ struct TabItemView: View, Equatable {
         usesInvertedActiveForeground ? activePrimaryTextColor : .white
     }
 
+    private var activeBusyIndicatorColor: Color {
+        usesInvertedActiveForeground ? activePrimaryTextColor : cmuxAccentColor()
+    }
+
     private var activeProgressTrackColor: Color {
         usesInvertedActiveForeground ? activeSecondaryColor(0.15) : Color.secondary.opacity(0.2)
     }
@@ -13703,6 +13730,7 @@ struct TabItemView: View, Equatable {
             SidebarTrailingAccessoryWidthPolicy().closeButtonWidth,
             scaledCloseButtonHitSize
         )
+        let aiBusyTooltip = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running")
 
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .top, spacing: 8) {
@@ -13715,6 +13743,13 @@ struct TabItemView: View, Equatable {
                             .foregroundColor(activeUnreadBadgeTextColor)
                     }
                     .frame(width: scaledUnreadBadgeSize, height: scaledUnreadBadgeSize)
+                } else if workspaceSnapshot.hasActiveAIWork {
+                    WorkspaceBusyEllipsisIndicator(
+                        color: activeBusyIndicatorColor,
+                        size: scaledUnreadBadgeSize
+                    )
+                    .safeHelp(aiBusyTooltip)
+                    .accessibilityLabel(aiBusyTooltip)
                 }
 
                 if workspaceSnapshot.isPinned {
@@ -14826,7 +14861,8 @@ struct TabItemView: View, Equatable {
             pullRequestRows: pullRequestRows,
             listeningPorts: detailVisibility.showsPorts ? tab.listeningPorts : [],
             finderDirectoryPath: WorkspaceFinderDirectoryResolver.path(for: tab),
-            mediaActivity: tab.browserMediaActivity
+            mediaActivity: tab.browserMediaActivity,
+            hasActiveAIWork: tab.hasActiveAIWork
         )
     }
 

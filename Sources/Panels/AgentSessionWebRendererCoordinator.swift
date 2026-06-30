@@ -28,6 +28,11 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             onHasActiveProviderChanged?(processStore.hasActiveProviderSession)
         }
     }
+    var onHasActiveWorkChanged: ((Bool) -> Void)? {
+        didSet {
+            onHasActiveWorkChanged?(processStore.hasActiveWork)
+        }
+    }
     var onProviderIDChanged: ((AgentSessionProviderID) -> Void)?
 
     func bind(
@@ -61,6 +66,9 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         }
         processStore.activeProviderSink = { [weak self] hasActiveProvider in
             self?.onHasActiveProviderChanged?(hasActiveProvider)
+        }
+        processStore.activeWorkSink = { [weak self] hasActiveWork in
+            self?.onHasActiveWorkChanged?(hasActiveWork)
         }
     }
 

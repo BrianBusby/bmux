@@ -9,11 +9,21 @@ final class AgentSessionProcessStore {
             emitActiveProviderStateIfNeeded()
         }
     }
+    var activeWorkSink: ((Bool) -> Void)? {
+        didSet {
+            emitActiveWorkStateIfNeeded()
+        }
+    }
     var hasActiveProviderSession: Bool {
         !sessions.isEmpty
     }
+    var hasActiveWork: Bool {
+        isWorkInFlight
+    }
     private var sessions: [String: AgentSessionRunningSession] = [:]
     private var lastEmittedHasActiveProviderSession: Bool?
+    private var isWorkInFlight = false
+    private var lastEmittedHasActiveWork: Bool?
     private static let terminationEscalationInterval: DispatchTimeInterval = .seconds(3)
 
     func start(plan: AgentSessionLaunchPlan, workingDirectory: String?) async throws -> AgentSessionStartedSession {
@@ -74,6 +84,7 @@ final class AgentSessionProcessStore {
                     )
                 },
                 turnCompleteSink: { [weak self] in
+                    self?.setWorkInFlight(false)
                     self?.emitTurnComplete(
                         sessionId: sessionId,
                         providerID: plan.provider
@@ -133,11 +144,29 @@ final class AgentSessionProcessStore {
             guard let codexAppServerSession = session.codexAppServerSession else {
                 throw AgentSessionBridgeError.providerNotReady(session.providerID.displayName)
             }
-            try await codexAppServerSession.submit(text, permissionMode: permissionMode)
+            setWorkInFlight(true)
+            do {
+                try await codexAppServerSession.submit(text, permissionMode: permissionMode)
+            } catch {
+                setWorkInFlight(false)
+                throw error
+            }
         case .claude:
-            try await writeClaudeStreamJSON(text, to: session.inputWriter)
+            setWorkInFlight(true)
+            do {
+                try await writeClaudeStreamJSON(text, to: session.inputWriter)
+            } catch {
+                setWorkInFlight(false)
+                throw error
+            }
         case .opencode:
-            try await postOpenCodePrompt(text, session: session)
+            setWorkInFlight(true)
+            do {
+                try await postOpenCodePrompt(text, session: session)
+            } catch {
+                setWorkInFlight(false)
+                throw error
+            }
         }
     }
 
@@ -197,6 +226,7 @@ final class AgentSessionProcessStore {
         }
         sessions.removeValue(forKey: session.sessionId)
         cancelSessionTasks(session)
+        setWorkInFlight(false)
         emitActiveProviderStateIfNeeded()
         emitExit(
             sessionId: session.sessionId,
@@ -209,6 +239,7 @@ final class AgentSessionProcessStore {
         guard let session = sessions.removeValue(forKey: sessionId) else {
             return
         }
+        setWorkInFlight(false)
         emitActiveProviderStateIfNeeded()
         cancelSessionTasks(session)
         requestTermination(for: session)
@@ -306,6 +337,7 @@ final class AgentSessionProcessStore {
                 )
             }
             if completesTurn {
+                setWorkInFlight(false)
                 emitTurnComplete(
                     sessionId: session.sessionId,
                     providerID: session.providerID
@@ -552,6 +584,7 @@ final class AgentSessionProcessStore {
             )
         }
         if completesTurn {
+            setWorkInFlight(false)
             emitTurnComplete(
                 sessionId: session.sessionId,
                 providerID: session.providerID
@@ -677,5 +710,17 @@ final class AgentSessionProcessStore {
         guard lastEmittedHasActiveProviderSession != hasActiveProviderSession else { return }
         lastEmittedHasActiveProviderSession = hasActiveProviderSession
         activeProviderSink?(hasActiveProviderSession)
+    }
+
+    private func setWorkInFlight(_ newValue: Bool) {
+        guard isWorkInFlight != newValue else { return }
+        isWorkInFlight = newValue
+        emitActiveWorkStateIfNeeded()
+    }
+
+    private func emitActiveWorkStateIfNeeded() {
+        guard lastEmittedHasActiveWork != isWorkInFlight else { return }
+        lastEmittedHasActiveWork = isWorkInFlight
+        activeWorkSink?(isWorkInFlight)
     }
 }

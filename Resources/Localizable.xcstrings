@@ -189544,6 +189544,23 @@
         }
       }
     },
+    "sidebar.aiBusy.tooltip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI is running"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AIが実行中"
+          }
+        }
+      }
+    },
     "sidebar.mediaActivity.camera.tooltip": {
       "extractionState": "manual",
       "localizations": {
