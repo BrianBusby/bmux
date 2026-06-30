@@ -122,4 +122,23 @@ struct AgentSessionSocketSurfaceTests {
         panel.rendererSession.onHasActiveWorkChanged?(false)
         #expect(!workspace.hasActiveAIWork)
     }
+
+    @Test
+    func testAgentSessionProcessStoreClearsBusyWhenLastActivityCompletes() {
+        let store = AgentSessionProcessStore()
+
+        #expect(!store.hasActiveWork)
+
+        store.ingestActivityForTesting(activityID: "command-1", status: "inProgress")
+        #expect(store.hasActiveWork)
+
+        store.markTurnCompleteForTesting()
+        #expect(!store.hasActiveWork)
+
+        store.ingestActivityForTesting(activityID: "command-1", status: "inProgress")
+        #expect(store.hasActiveWork)
+
+        store.ingestActivityForTesting(activityID: "command-1", status: "completed")
+        #expect(!store.hasActiveWork)
+    }
 }
