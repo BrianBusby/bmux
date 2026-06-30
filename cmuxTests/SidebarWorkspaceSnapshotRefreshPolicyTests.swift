@@ -187,6 +187,43 @@ import Testing
     }
 }
 
+@Suite struct SidebarWorkspaceRowLineLimitPolicyTests {
+    @Test func workspaceTitlesUseAtMostTwoLinesWhenWrappingIsEnabled() {
+        #expect(SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: true) == 2)
+    }
+
+    @Test func workspaceTitlesStaySingleLineWhenWrappingIsDisabled() {
+        #expect(SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: false) == 1)
+    }
+
+    @Test func conversationSubtitleCanUseThreeLines() throws {
+        let subtitle = try #require(SidebarWorkspaceRowLineLimitPolicy.subtitle(
+            notificationText: nil,
+            conversationMessage: "First line\nSecond line\nThird line"
+        ))
+
+        #expect(subtitle.text == "First line\nSecond line\nThird line")
+        #expect(subtitle.lineLimit == 3)
+    }
+
+    @Test func notificationSubtitleStaysCompactAndWinsOverConversation() throws {
+        let subtitle = try #require(SidebarWorkspaceRowLineLimitPolicy.subtitle(
+            notificationText: "Build finished",
+            conversationMessage: "A longer conversation summary"
+        ))
+
+        #expect(subtitle.text == "Build finished")
+        #expect(subtitle.lineLimit == 2)
+    }
+
+    @Test func blankConversationSubtitleIsHidden() {
+        #expect(SidebarWorkspaceRowLineLimitPolicy.subtitle(
+            notificationText: nil,
+            conversationMessage: " \n "
+        ) == nil)
+    }
+}
+
 @Suite struct SidebarSelectedWorkspaceScrollPolicyTests {
     @Test func skipsScrollWhenSelectedWorkspaceIdIsNil() {
         #expect(!SidebarSelectedWorkspaceScrollPolicy.shouldScrollSelectedWorkspace(
