@@ -239,6 +239,40 @@
         }
       }
     },
+    "buildHint.number": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build %@"
+          }
+        }
+      }
+    },
+    "titlebar.buildIndicator.accessibilityLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build %@"
+          }
+        }
+      }
+    },
     "about.commit": {
       "extractionState": "manual",
       "localizations": {

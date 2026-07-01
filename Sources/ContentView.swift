@@ -2113,6 +2113,32 @@ struct ContentView: View {
 
                 Spacer()
 
+                if let buildNumber = AppBuildIdentityFormatter.buildNumber() {
+                    Text(buildNumber)
+                        .cmuxFont(size: 10.5, weight: .semibold)
+                        .foregroundColor(fakeTitlebarTextColor(appearance: appearance).opacity(0.86))
+                        .lineLimit(1)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.58))
+                        )
+                        .overlay(
+                            Capsule(style: .continuous)
+                                .stroke(Color(nsColor: .separatorColor).opacity(0.35), lineWidth: 1)
+                        )
+                        .allowsHitTesting(false)
+                        .accessibilityLabel(
+                            Text(
+                                String(
+                                    format: String(localized: "titlebar.buildIndicator.accessibilityLabel", defaultValue: "Build %@"),
+                                    locale: .current,
+                                    buildNumber
+                                )
+                            )
+                        )
+                }
             }
             .frame(height: titlebarContentHeight)
             .padding(.top, 2)
