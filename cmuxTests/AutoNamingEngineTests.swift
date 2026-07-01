@@ -223,9 +223,20 @@ import Testing
 
         #expect(prompt.contains("subject statement"))
         #expect(prompt.contains("currently talking about"))
+        #expect(prompt.contains("up to 80 characters"))
+        #expect(prompt.contains("human-readable"))
+        #expect(prompt.contains("meaningfully changed"))
         #expect(prompt.contains("Now Seeing Trying"))
+        #expect(prompt.contains("Look Ticket Determine"))
+        #expect(prompt.contains("Workspace Automation"))
         #expect(prompt.contains("Improving workspace tab summaries"))
         #expect(!prompt.contains("2-5 word title"))
+    }
+
+    @Test func defaultsAllowDescriptiveStableTitles() {
+        #expect(config.maxTitleLength == 80)
+        #expect(config.minLineGrowth >= 12)
+        #expect(config.minInterval >= 300)
     }
 
     // MARK: - Sanitization
@@ -264,6 +275,7 @@ import Testing
 
     @Test func identicalTitleIsNoOp() {
         #expect(engine.sanitizeResponse("Fix auth bug", currentTitle: "Fix auth bug") == nil)
+        #expect(engine.sanitizeResponse("  fix   auth bug  ", currentTitle: "Fix auth bug") == nil)
         #expect(engine.sanitizeResponse("Fix auth bug", currentTitle: "Other title") == "Fix auth bug")
     }
 

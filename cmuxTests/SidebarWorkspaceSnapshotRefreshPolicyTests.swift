@@ -192,12 +192,16 @@ import Testing
 }
 
 @Suite struct SidebarWorkspaceRowLineLimitPolicyTests {
-    @Test func workspaceTitlesUseAtMostTwoLinesWhenWrappingIsEnabled() {
-        #expect(SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: true) == 2)
+    @Test func workspaceTitlesUseAtMostThreeLinesWhenWrappingIsEnabled() {
+        #expect(SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: true) == 3)
     }
 
     @Test func workspaceTitlesStaySingleLineWhenWrappingIsDisabled() {
         #expect(SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: false) == 1)
+    }
+
+    @Test func workspaceTitleWrappingIsEnabledByDefault() {
+        #expect(SidebarWorkspaceTitleWrapSettings.defaultWrap)
     }
 
     @Test func conversationSubtitleCanUseThreeLines() throws {
