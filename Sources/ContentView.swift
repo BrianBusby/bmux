@@ -14647,7 +14647,7 @@ struct TabItemView: View, Equatable {
             activeTabIndicatorStyle: activeTabIndicatorStyle,
             isActive: isActive,
             isMultiSelected: isMultiSelected,
-            customColorHex: workspaceSnapshot.customColorHex,
+            customColorHex: workspaceRowColorHex,
             colorScheme: colorScheme,
             sidebarSelectionColorHex: sidebarSelectionColorHex
         )
@@ -14662,12 +14662,19 @@ struct TabItemView: View, Equatable {
     private var explicitRailColor: Color? {
         guard let railColor = sidebarWorkspaceRowExplicitRailNSColor(
             activeTabIndicatorStyle: activeTabIndicatorStyle,
-            customColorHex: workspaceSnapshot.customColorHex,
+            customColorHex: workspaceRowColorHex,
             colorScheme: colorScheme
         ) else {
             return nil
         }
         return Color(nsColor: railColor).opacity(0.95)
+    }
+
+    private var workspaceRowColorHex: String? {
+        WorkspaceRepoBadgeAppearanceColorPolicy.effectiveColorHex(
+            customColorHex: workspaceSnapshot.customColorHex,
+            repoBadgeAppearance: workspaceSnapshot.repoBadgeAppearance
+        )
     }
 
     private func tabColorSwatchColor(for hex: String) -> NSColor {

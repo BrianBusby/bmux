@@ -5,6 +5,18 @@ struct WorkspaceRepoBadgeAppearance: Equatable {
     let colorHex: String
 }
 
+enum WorkspaceRepoBadgeAppearanceColorPolicy {
+    static func effectiveColorHex(
+        customColorHex: String?,
+        repoBadgeAppearance: WorkspaceRepoBadgeAppearance?
+    ) -> String? {
+        if let customColorHex = customColorHex.flatMap(WorkspaceTabColorSettings.normalizedHex) {
+            return customColorHex
+        }
+        return repoBadgeAppearance?.colorHex
+    }
+}
+
 struct WorkspaceRepoBadgeAppearanceResolver {
     private static let fallbackColorHex = "#F2C94C"
     private static let sessionPalette = [
