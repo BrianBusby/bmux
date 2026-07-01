@@ -1,4 +1,6 @@
 import Foundation
+import Combine
+import XCTest
 import Testing
 
 #if canImport(cmux_DEV)
@@ -72,7 +74,7 @@ struct AgentSessionSocketSurfaceTests {
     }
 
     @Test
-    func testWorkspaceBusyIndicatorRequiresTrackedAgentRuntimeForShellCommandState() throws {
+    func testWorkspaceBusyIndicatorTracksTerminalAgentLifecycleInsteadOfShellCommandLifetime() throws {
         let manager = TabManager()
         let workspace = try #require(manager.selectedWorkspace)
         let panelId = try #require(workspace.focusedPanelId)
@@ -88,20 +90,14 @@ struct AgentSessionSocketSurfaceTests {
             panelId: panelId,
             refreshPorts: false
         )
+        workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .running)
         #expect(workspace.hasActiveAIWork)
+
+        workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .idle)
+        #expect(!workspace.hasActiveAIWork)
 
         workspace.updatePanelShellActivityState(panelId: panelId, state: .promptIdle)
         #expect(!workspace.hasActiveAIWork)
-
-        workspace.updatePanelShellActivityState(panelId: panelId, state: .unknown)
-        #expect(!workspace.hasActiveAIWork)
-
-        _ = workspace.clearAgentPID(
-            key: "codex.test-agent",
-            panelId: panelId,
-            clearStatus: false,
-            refreshPorts: false
-        )
     }
 
     @Test
@@ -136,6 +132,58 @@ struct AgentSessionSocketSurfaceTests {
 
         panel.rendererSession.onHasActiveWorkChanged?(false)
         #expect(!workspace.hasActiveAIWork)
+    }
+
+    @Test
+    func testWorkspaceSidebarObservationPublishesWhenAgentPidOwnershipChanges() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+
+        let expectation = XCTestExpectation(description: "sidebar observation emits after PID ownership changes")
+        expectation.expectedFulfillmentCount = 2
+
+        var cancellable: AnyCancellable?
+        cancellable = workspace.sidebarObservationPublisher.sink { _ in
+            expectation.fulfill()
+        }
+        defer { cancellable?.cancel() }
+
+        workspace.recordAgentPID(
+            key: "codex.test-agent",
+            pid: 12345,
+            panelId: panelId,
+            refreshPorts: false
+        )
+
+        #expect(XCTWaiter().wait(for: [expectation], timeout: 1.0) == .completed)
+
+        _ = workspace.clearAgentPID(
+            key: "codex.test-agent",
+            panelId: panelId,
+            clearStatus: false,
+            refreshPorts: false
+        )
+    }
+
+    @Test
+    func testWorkspaceSidebarObservationPublishesWhenAgentLifecycleChanges() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+
+        let expectation = XCTestExpectation(description: "sidebar observation emits after agent lifecycle changes")
+        expectation.expectedFulfillmentCount = 2
+
+        var cancellable: AnyCancellable?
+        cancellable = workspace.sidebarObservationPublisher.sink { _ in
+            expectation.fulfill()
+        }
+        defer { cancellable?.cancel() }
+
+        workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .running)
+
+        #expect(XCTWaiter().wait(for: [expectation], timeout: 1.0) == .completed)
     }
 
     @Test

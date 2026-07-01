@@ -221,7 +221,7 @@ extension Workspace {
         statusEntries.removeAll()
         agentPIDs.removeAll()
         agentPIDPanelIdsByKey.removeAll()
-        agentPIDKeysByPanelId.removeAll()
+        agentPIDKeysByPanelId = [:]
         clearAllAgentLifecycleStates()
         agentListeningPorts.removeAll()
         logEntries = snapshot.logEntries.map { entry in
@@ -2346,6 +2346,8 @@ final class Workspace: Identifiable, ObservableObject {
     /// subscribers; same contract as `panelsPublisher`.
     let paneLayoutVersionPublisher = CurrentValueSubject<Int, Never>(0)
     let panelShellActivityStatesPublisher = CurrentValueSubject<[UUID: PanelShellActivityState], Never>([:])
+    let agentPIDKeysByPanelIdPublisher = CurrentValueSubject<[UUID: Set<String>], Never>([:])
+    let agentLifecycleStatesByPanelIdPublisher = CurrentValueSubject<[UUID: [String: AgentHibernationLifecycleState]], Never>([:])
     let agentSessionActiveWorkPublisher = CurrentValueSubject<[UUID: Bool], Never>([:])
 
     /// Mapping from bonsplit TabID to our Panel instances
@@ -4894,10 +4896,9 @@ final class Workspace: Identifiable, ObservableObject {
         }) {
             return true
         }
-        if panelShellActivityStates.contains(where: { panelId, state in
+        if agentLifecycleStatesByPanelId.contains(where: { panelId, states in
             livePanelIds.contains(panelId)
-                && state == .commandRunning
-                && agentRuntimeState(forPanelId: panelId) != nil
+                && states.values.contains(.running)
         }) {
             return true
         }
@@ -5037,7 +5038,7 @@ final class Workspace: Identifiable, ObservableObject {
         statusEntries.removeAll()
         agentPIDs.removeAll()
         agentPIDPanelIdsByKey.removeAll()
-        agentPIDKeysByPanelId.removeAll()
+        agentPIDKeysByPanelId = [:]
         clearAllAgentLifecycleStates()
         agentListeningPorts.removeAll()
         latestConversationMessage = nil
