@@ -577,6 +577,37 @@ final class CmuxConfigContextMenuTests: XCTestCase {
         XCTAssertTrue(store.configurationIssues.isEmpty)
     }
 
+    func testRepoAgentLauncherAgentDetectorIncludesCodexAndClaudeFromRuntimeSearchDirectories() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "cmux-repo-agent-detector-\(UUID().uuidString)",
+            isDirectory: true
+        )
+        let bin = root.appendingPathComponent("bin", isDirectory: true)
+        try FileManager.default.createDirectory(at: bin, withIntermediateDirectories: true)
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let codex = bin.appendingPathComponent("codex", isDirectory: false)
+        let claude = bin.appendingPathComponent("claude", isDirectory: false)
+        try "#!/bin/sh\nexit 0\n".write(to: codex, atomically: true, encoding: .utf8)
+        try "#!/bin/sh\nexit 0\n".write(to: claude, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: codex.path)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: claude.path)
+
+        let options = RepoAgentLauncherAgentDetector(
+            environment: [
+                "PATH": bin.path,
+                "HOME": root.path,
+            ],
+            fileManager: .default,
+            configuredExecutablePaths: [:]
+        ).detectedOptions()
+
+        XCTAssertEqual(options.map(\.agent), [.codex, .claudeCode])
+        XCTAssertEqual(options.map(\.executablePath), [codex.path, claude.path])
+    }
+
     @MainActor
     func testResolvedNewWorkspaceContextMenuSanitizesLabels() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(
