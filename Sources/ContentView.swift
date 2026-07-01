@@ -13288,7 +13288,7 @@ struct SidebarWorkspaceRowLineLimitPolicy {
 
     private static let compactNotificationSubtitleLines = 2
     private static let conversationSubtitleLines = 3
-    private static let wrappedWorkspaceTitleLines = 2
+    private static let wrappedWorkspaceTitleLines = 3
 
     static func titleLineLimit(wrapsWorkspaceTitles: Bool) -> Int {
         wrapsWorkspaceTitles ? wrappedWorkspaceTitleLines : 1
@@ -13395,8 +13395,6 @@ struct TabItemView: View, Equatable {
     @State private var rowInteractionState = SidebarWorkspaceRowInteractionState()
     @State private var rowHeight: CGFloat = 1
     @State private var workspaceFinderDirectoryOpenRequest: WorkspaceFinderDirectoryOpenRequest?
-
-    private static let maxDisplayedTitleCharacters = 2048
 
     var isMultiSelected: Bool {
         selectedTabIds.contains(tab.id)
@@ -13758,10 +13756,7 @@ struct TabItemView: View, Equatable {
         let titleLineLimit = SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(
             wrapsWorkspaceTitles: settings.wrapsWorkspaceTitles
         )
-        let displayedTitle = workspaceSnapshot.title.sidebarBoundedDisplayString(
-            maxDisplayedLines: titleLineLimit,
-            maxDisplayedCharacters: Self.maxDisplayedTitleCharacters
-        )
+        let displayedTitle = workspaceSnapshot.title
         let scaledUnreadBadgeSize = 16 * fontScale
         let scaledCloseButtonHitSize = max(16, 16 * fontScale)
         let scaledCloseButtonWidth = max(
@@ -13843,6 +13838,7 @@ struct TabItemView: View, Equatable {
                         .lineLimit(titleLineLimit)
                         .truncationMode(.tail)
                         .fixedSize(horizontal: false, vertical: true)
+                        .multilineTextAlignment(.leading)
 
                     if let repoBadgeAppearance = workspaceSnapshot.repoBadgeAppearance {
                         Text(repoBadgeAppearance.name)

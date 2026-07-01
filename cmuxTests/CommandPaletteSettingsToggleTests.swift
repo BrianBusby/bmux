@@ -270,11 +270,11 @@ final class CommandPaletteSettingsToggleTests: XCTestCase {
                 )
             )
 
-            XCTAssertFalse(descriptor.isOn(defaults))
+            XCTAssertTrue(descriptor.isOn(defaults))
             descriptor.toggle(defaults: defaults, notificationCenter: NotificationCenter())
 
-            XCTAssertEqual(defaults.object(forKey: SidebarWorkspaceTitleWrapSettings.key) as? Bool, true)
-            XCTAssertTrue(descriptor.isOn(defaults))
+            XCTAssertEqual(defaults.object(forKey: SidebarWorkspaceTitleWrapSettings.key) as? Bool, false)
+            XCTAssertFalse(descriptor.isOn(defaults))
         }
     }
 

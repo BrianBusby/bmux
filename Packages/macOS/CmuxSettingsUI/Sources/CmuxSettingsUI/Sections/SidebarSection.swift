@@ -267,7 +267,7 @@ public struct SidebarSection: View {
                 configurationReview: .json("sidebar.wrapWorkspaceTitles"),
                 String(localized: "settings.app.wrapWorkspaceTitles", defaultValue: "Wrap Workspace Titles in Sidebar"),
                 subtitle: wrapTitles.current
-                    ? String(localized: "settings.app.wrapWorkspaceTitles.subtitleOn", defaultValue: "Long workspace titles can use as many lines as they need.")
+                    ? String(localized: "settings.app.wrapWorkspaceTitles.subtitleOn", defaultValue: "Long workspace titles can wrap to three lines.")
                     : String(localized: "settings.app.wrapWorkspaceTitles.subtitleOff", defaultValue: "Workspace titles stay on one line and truncate at the end.")
             ) {
                 Toggle("", isOn: Binding(get: { wrapTitles.current }, set: { wrapTitles.set($0) }))

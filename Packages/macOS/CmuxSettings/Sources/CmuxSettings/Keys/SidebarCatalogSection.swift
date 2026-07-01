@@ -11,7 +11,7 @@ public struct SidebarCatalogSection: SettingCatalogSection {
 
     public let wrapWorkspaceTitles = DefaultsKey<Bool>(
         id: "sidebar.wrapWorkspaceTitles",
-        defaultValue: false,
+        defaultValue: true,
         userDefaultsKey: "sidebarWrapWorkspaceTitles"
     )
 
