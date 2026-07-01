@@ -13307,62 +13307,6 @@ struct SidebarWorkspaceRowLineLimitPolicy {
     }
 }
 
-struct WorkspaceBusyEllipsisPalette {
-    let inactiveFillColor: NSColor
-    let activeFillColor: NSColor
-    let inactiveStrokeColor: NSColor
-    let activeStrokeColor: NSColor
-
-    static let `default` = WorkspaceBusyEllipsisPalette(
-        inactiveFillColor: NSColor.black.withAlphaComponent(0.78),
-        activeFillColor: .white,
-        inactiveStrokeColor: NSColor.white.withAlphaComponent(0.70),
-        activeStrokeColor: NSColor.black.withAlphaComponent(0.72)
-    )
-
-    func fillColor(isActive: Bool) -> Color {
-        Color(nsColor: isActive ? activeFillColor : inactiveFillColor)
-    }
-
-    func strokeColor(isActive: Bool) -> Color {
-        Color(nsColor: isActive ? activeStrokeColor : inactiveStrokeColor)
-    }
-}
-
-private struct WorkspaceBusyEllipsisIndicator: View {
-    let palette: WorkspaceBusyEllipsisPalette = .default
-    let size: CGFloat
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 0.28)) { timeline in
-            let phase = Int(timeline.date.timeIntervalSinceReferenceDate / 0.28) % 3
-            let dotSize = max(3, size * 0.24)
-            let strokeWidth = max(0.6, dotSize * 0.16)
-            HStack(spacing: max(1, size * 0.08)) {
-                ForEach(0..<3, id: \.self) { index in
-                    let isActive = index == phase
-                    Circle()
-                        .fill(palette.fillColor(isActive: isActive))
-                        .overlay {
-                            Circle()
-                                .stroke(palette.strokeColor(isActive: isActive), lineWidth: strokeWidth)
-                        }
-                        .frame(width: dotSize, height: dotSize)
-                        .shadow(
-                            color: palette.strokeColor(isActive: isActive).opacity(isActive ? 0.60 : 0.36),
-                            radius: isActive ? 0.8 : 0.5,
-                            x: 0,
-                            y: 0
-                        )
-                        .scaleEffect(isActive ? 1.18 : 0.82)
-                        .animation(.easeInOut(duration: 0.22), value: phase)
-                }
-            }
-            .frame(width: size, height: size, alignment: .center)
-        }
-    }
-}
-
 struct TabItemView: View, Equatable {
     private static let workspaceObservationCoalesceInterval: RunLoop.SchedulerTimeType.Stride = .milliseconds(40)
     private static let legacyVMWebSocketDescription = "VM WebSocket PTY"
@@ -13829,8 +13773,10 @@ struct TabItemView: View, Equatable {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .top, spacing: 8) {
                     if workspaceSnapshot.hasActiveAIWork {
-                        WorkspaceBusyEllipsisIndicator(
-                            size: scaledUnreadBadgeSize
+                        TronLoadingIndicator(
+                            size: scaledUnreadBadgeSize,
+                            color: Color(nsColor: TronLoadingIndicatorPalette.default.defaultColor),
+                            lineWidth: max(1.15, scaledUnreadBadgeSize * 0.085)
                         )
                         .safeHelp(aiBusyTooltip)
                         .accessibilityLabel(aiBusyTooltip)
