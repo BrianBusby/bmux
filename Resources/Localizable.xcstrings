@@ -136996,121 +136996,121 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يمكن لعناوين مساحات العمل الطويلة استخدام أي عدد تحتاجه من الأسطر."
+            "value": "يمكن لعناوين مساحات العمل الطويلة أن تلتف إلى سطرين كحد أقصى."
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dugi naslovi radnih prostora mogu koristiti onoliko redova koliko im treba."
+            "value": "Dugi naslovi radnih prostora mogu se prelomiti na najviše dva reda."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lange arbejdsområdetitler kan bruge så mange linjer, som de har brug for."
+            "value": "Lange arbejdsområdetitler kan ombrydes til højst to linjer."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lange Arbeitsbereichstitel können so viele Zeilen verwenden, wie sie brauchen."
+            "value": "Lange Arbeitsbereichstitel können auf bis zu zwei Zeilen umbrechen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Long workspace titles can use as many lines as they need."
+            "value": "Long workspace titles can wrap to two lines."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los títulos largos de espacios de trabajo pueden usar tantas líneas como necesiten."
+            "value": "Los títulos largos de espacios de trabajo pueden ajustarse hasta dos líneas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les titres longs des espaces de travail peuvent utiliser autant de lignes que nécessaire."
+            "value": "Les titres longs des espaces de travail peuvent revenir sur deux lignes maximum."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I titoli lunghi degli spazi di lavoro possono usare tutte le righe necessarie."
+            "value": "I titoli lunghi degli spazi di lavoro possono andare a capo fino a due righe."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "長いワークスペースタイトルは必要な行数で表示されます。"
+            "value": "長いワークスペースタイトルは最大2行まで折り返せます。"
           }
         },
         "km": {
           "stringUnit": {
             "state": "translated",
-            "value": "ចំណងជើងកន្លែងធ្វើការដែលវែង អាចប្រើចំនួនបន្ទាត់ដែលត្រូវការ។"
+            "value": "ចំណងជើងកន្លែងធ្វើការដែលវែង អាចបត់បានអតិបរមា 2 បន្ទាត់។"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "긴 워크스페이스 제목은 필요한 만큼 여러 줄을 사용할 수 있습니다."
+            "value": "긴 워크스페이스 제목은 최대 두 줄까지 줄바꿈됩니다."
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lange arbeidsområdetitler kan bruke så mange linjer de trenger."
+            "value": "Lange arbeidsområdetitler kan brytes over opptil to linjer."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Długie tytuły obszarów roboczych mogą zajmować tyle wierszy, ile potrzebują."
+            "value": "Długie tytuły obszarów roboczych mogą zawijać się maksymalnie do dwóch wierszy."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Títulos longos de espaços de trabalho podem usar quantas linhas forem necessárias."
+            "value": "Títulos longos de espaços de trabalho podem quebrar em até duas linhas."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Длинные названия рабочих областей могут занимать столько строк, сколько нужно."
+            "value": "Длинные названия рабочих областей могут переноситься максимум на две строки."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ชื่อเวิร์กสเปซที่ยาวสามารถใช้กี่บรรทัดก็ได้ตามต้องการ"
+            "value": "ชื่อเวิร์กสเปซที่ยาวสามารถตัดบรรทัดได้สูงสุดสองบรรทัด"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uzun çalışma alanı başlıkları ihtiyaç duyduğu kadar satır kullanabilir."
+            "value": "Uzun çalışma alanı başlıkları en fazla iki satıra kayabilir."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Довгі назви робочих областей можуть займати стільки рядків, скільки потрібно."
+            "value": "Довгі назви робочих областей можуть переноситися щонайбільше на два рядки."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "较长的工作区标题可以按需要使用任意行数。"
+            "value": "较长的工作区标题最多可换行到两行。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "較長的工作區標題可依需要使用任意行數。"
+            "value": "較長的工作區標題最多可換行到兩行。"
           }
         }
       }

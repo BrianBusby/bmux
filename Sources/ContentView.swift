@@ -13243,6 +13243,33 @@ private final class SidebarTabItemContextMenuState: ObservableObject {
     var pendingWorkspaceSnapshot: SidebarWorkspaceSnapshotBuilder.Snapshot?
 }
 
+struct SidebarWorkspaceRowLineLimitPolicy {
+    struct Subtitle: Equatable {
+        let text: String
+        let lineLimit: Int
+    }
+
+    private static let compactNotificationSubtitleLines = 2
+    private static let conversationSubtitleLines = 3
+    private static let wrappedWorkspaceTitleLines = 2
+
+    static func titleLineLimit(wrapsWorkspaceTitles: Bool) -> Int {
+        wrapsWorkspaceTitles ? wrappedWorkspaceTitleLines : 1
+    }
+
+    static func subtitle(notificationText: String?, conversationMessage: String?) -> Subtitle? {
+        if let notificationText {
+            return Subtitle(text: notificationText, lineLimit: compactNotificationSubtitleLines)
+        }
+        guard let conversationMessage = conversationMessage?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .nilIfEmpty else {
+            return nil
+        }
+        return Subtitle(text: conversationMessage, lineLimit: conversationSubtitleLines)
+    }
+}
+
 struct TabItemView: View, Equatable {
     private static let workspaceObservationCoalesceInterval: RunLoop.SchedulerTimeType.Stride = .milliseconds(40)
     private static let legacyVMWebSocketDescription = "VM WebSocket PTY"
@@ -13332,7 +13359,6 @@ struct TabItemView: View, Equatable {
     @State private var rowHeight: CGFloat = 1
     @State private var workspaceFinderDirectoryOpenRequest: WorkspaceFinderDirectoryOpenRequest?
 
-    private static let maxWrappedTitleLines = 8
     private static let maxDisplayedTitleCharacters = 2048
 
     var isMultiSelected: Bool {
@@ -13684,15 +13710,17 @@ struct TabItemView: View, Equatable {
         let accessibilityHintText = String(localized: "sidebar.workspace.accessibilityHint", defaultValue: "Activate to focus this workspace. Drag to reorder, or use Move Up and Move Down actions.")
         let moveUpActionText = String(localized: "sidebar.workspace.moveUpAction", defaultValue: "Move Up")
         let moveDownActionText = String(localized: "sidebar.workspace.moveDownAction", defaultValue: "Move Down")
-        let latestNotificationSubtitle = latestNotificationText
         let conversationMessageSubtitle = !settings.hidesAllDetails && settings.iMessageModeEnabled
-            ? workspaceSnapshot.latestConversationMessage?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .nilIfEmpty
+            ? workspaceSnapshot.latestConversationMessage
             : nil
-        let effectiveSubtitle = latestNotificationSubtitle ?? conversationMessageSubtitle
+        let subtitle = SidebarWorkspaceRowLineLimitPolicy.subtitle(
+            notificationText: latestNotificationText,
+            conversationMessage: conversationMessageSubtitle
+        )
         let detailVisibility = visibleAuxiliaryDetails
-        let titleLineLimit = settings.wrapsWorkspaceTitles ? Self.maxWrappedTitleLines : 1
+        let titleLineLimit = SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(
+            wrapsWorkspaceTitles: settings.wrapsWorkspaceTitles
+        )
         let displayedTitle = workspaceSnapshot.title.sidebarBoundedDisplayString(
             maxDisplayedLines: titleLineLimit,
             maxDisplayedCharacters: Self.maxDisplayedTitleCharacters
@@ -13803,11 +13831,11 @@ struct TabItemView: View, Equatable {
                 )
             }
 
-            if let subtitle = effectiveSubtitle {
-                Text(subtitle)
+            if let subtitle {
+                Text(subtitle.text)
                     .font(magnifiedFont(scaledFontSize(10)))
                     .foregroundColor(activeSecondaryColor(0.8))
-                    .lineLimit(2)
+                    .lineLimit(subtitle.lineLimit)
                     .truncationMode(.tail)
                     .multilineTextAlignment(.leading)
             }
