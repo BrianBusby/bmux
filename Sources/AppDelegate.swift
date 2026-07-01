@@ -7727,10 +7727,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 action: launcher.action
             )
             item.toolTip = launcher.tooltip
-            item.image = launcher.icon?.contextMenuImage(
-                configSourcePath: launcher.iconSourcePath,
-                globalConfigPath: cmuxConfigStore.globalConfigPath
-            )
             menu.addItem(item)
         }
 
@@ -8066,10 +8062,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 agent.commandName,
                 "repo",
                 "ai",
-            ],
-            "icon": [
-                "type": "symbol",
-                "name": agent == .codex ? "sparkles" : "brain.head.profile",
             ],
         ]
         commands.append([
