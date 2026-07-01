@@ -289,6 +289,32 @@ import Testing
     }
 }
 
+@Suite struct WorkspaceRepoBadgeAppearanceColorPolicyTests {
+    @Test func usesRepoColorWhenWorkspaceHasNoCustomColor() {
+        let colorHex = WorkspaceRepoBadgeAppearanceColorPolicy.effectiveColorHex(
+            customColorHex: nil,
+            repoBadgeAppearance: WorkspaceRepoBadgeAppearance(
+                name: "cmux",
+                colorHex: "#F2C94C"
+            )
+        )
+
+        #expect(colorHex == "#F2C94C")
+    }
+
+    @Test func keepsExplicitWorkspaceColorAheadOfRepoColor() {
+        let colorHex = WorkspaceRepoBadgeAppearanceColorPolicy.effectiveColorHex(
+            customColorHex: "#56CCF2",
+            repoBadgeAppearance: WorkspaceRepoBadgeAppearance(
+                name: "cmux",
+                colorHex: "#F2C94C"
+            )
+        )
+
+        #expect(colorHex == "#56CCF2")
+    }
+}
+
 @Suite struct SidebarSelectedWorkspaceScrollPolicyTests {
     @Test func skipsScrollWhenSelectedWorkspaceIdIsNil() {
         #expect(!SidebarSelectedWorkspaceScrollPolicy.shouldScrollSelectedWorkspace(
