@@ -93,6 +93,9 @@ struct AgentSessionSocketSurfaceTests {
         workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .running)
         #expect(workspace.hasActiveAIWork)
 
+        workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .needsInput)
+        #expect(workspace.hasActiveAIWork)
+
         workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .idle)
         #expect(!workspace.hasActiveAIWork)
 

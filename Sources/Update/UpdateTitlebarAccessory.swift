@@ -494,8 +494,11 @@ enum TitlebarControlsLayoutMetrics {
             + hintTrailingBaseInset
     }
 
-    static func buttonRowWidth(config: TitlebarControlsStyleConfig) -> CGFloat {
-        let buttonCount = CGFloat(TitlebarShortcutHintActionSlot.allCases.count)
+    static func buttonRowWidth(
+        config: TitlebarControlsStyleConfig,
+        additionalButtonCount: Int = 0
+    ) -> CGFloat {
+        let buttonCount = CGFloat(TitlebarShortcutHintActionSlot.allCases.count + max(0, additionalButtonCount))
         let gapCount = max(0, buttonCount - 1)
         return (buttonCount * config.buttonSize) + (gapCount * config.spacing)
     }
@@ -522,13 +525,14 @@ enum TitlebarControlsLayoutMetrics {
 
     static func contentSize(
         config: TitlebarControlsStyleConfig,
-        titlebarShortcutHintXOffset: Double = ShortcutHintDebugSettings.defaultTitlebarHintX
+        titlebarShortcutHintXOffset: Double = ShortcutHintDebugSettings.defaultTitlebarHintX,
+        additionalButtonCount: Int = 0
     ) -> NSSize {
         // Two width requirements; reserve the larger so neither the buttons nor the
         // shortcut hints are clipped by the accessory's allocated frame.
         let buttonReservation = outerLeadingPadding
             + config.groupPadding.leading
-            + buttonRowWidth(config: config)
+            + buttonRowWidth(config: config, additionalButtonCount: additionalButtonCount)
             + config.groupPadding.trailing
             + hintTrailingInset(titlebarShortcutHintXOffset: titlebarShortcutHintXOffset)
         // Drive the reservation from the planner's actual rightmost hint edge so the
@@ -678,6 +682,35 @@ struct TitlebarControlButton<Content: View>: View {
     }
 }
 
+private struct RepoAgentLauncherTitlebarButton: View {
+    let config: TitlebarControlsStyleConfig
+    let foregroundColor: Color
+    let onShowMenu: (NSView) -> Void
+
+    @State private var anchorView: NSView?
+
+    var body: some View {
+        TitlebarControlButton(
+            config: config,
+            foregroundColor: foregroundColor,
+            accessibilityIdentifier: "titlebarControl.repoAgentLauncher",
+            accessibilityLabel: String(localized: "titlebar.repoAgentLauncher.accessibilityLabel", defaultValue: "AI Repo Launcher"),
+            action: {
+                guard let anchorView else {
+                    NSSound.beep()
+                    return
+                }
+                onShowMenu(anchorView)
+            }
+        ) {
+            CmuxSystemSymbolImage(systemName: "sparkles", pointSize: config.iconSize, weight: .regular)
+                .frame(width: config.buttonSize, height: config.buttonSize)
+        }
+        .background(TitlebarControlAnchorView { anchorView = $0 })
+        .safeHelp(String(localized: "titlebar.repoAgentLauncher.tooltip", defaultValue: "Launch an AI session for a repo"))
+    }
+}
+
 struct FocusHistoryNavigationAvailability: Equatable {
     let canNavigateBack: Bool
     let canNavigateForward: Bool
@@ -816,6 +849,7 @@ struct TitlebarControlsView: View {
     let onNewTab: () -> Void
     let onFocusHistoryBack: () -> Void
     let onFocusHistoryForward: () -> Void
+    var onShowRepoAgentLaunchers: ((NSView) -> Void)? = nil
     let visibilityMode: TitlebarControlsVisibilityMode
     @ObservedObject private var popoverVisibilityState = NotificationsPopoverVisibilityState.shared
     @AppStorage("titlebarControlsStyle") private var styleRawValue = TitlebarControlsStyle.classic.rawValue
@@ -873,9 +907,11 @@ struct TitlebarControlsView: View {
         let _ = globalFontPercent
         let style = TitlebarControlsStyle(rawValue: styleRawValue) ?? .classic
         let config = style.config
+        let additionalButtonCount = onShowRepoAgentLaunchers == nil ? 0 : 1
         let contentSize = TitlebarControlsLayoutMetrics.contentSize(
             config: config,
-            titlebarShortcutHintXOffset: titlebarShortcutHintXOffset
+            titlebarShortcutHintXOffset: titlebarShortcutHintXOffset,
+            additionalButtonCount: additionalButtonCount
         )
         let foregroundColor = Color(nsColor: titlebarControlForegroundNSColor(opacity: 1.0))
         controlsGroup(config: config, foregroundColor: foregroundColor)
@@ -1016,6 +1052,14 @@ struct TitlebarControlsView: View {
                 iconLabel(systemName: "plus", config: config, iconGeometryKeyPrefix: "titlebarControl_newTabIcon")
             }
             .safeHelp(KeyboardShortcutSettings.Action.newTab.tooltip(String(localized: "titlebar.newWorkspace.tooltip", defaultValue: "New workspace")))
+
+            if let onShowRepoAgentLaunchers {
+                RepoAgentLauncherTitlebarButton(
+                    config: config,
+                    foregroundColor: foregroundColor,
+                    onShowMenu: onShowRepoAgentLaunchers
+                )
+            }
 
             TitlebarControlButton(
                 config: config,
@@ -1242,26 +1286,34 @@ private struct TitlebarSidebarGlyphShape: Shape {
 
 private struct TitlebarControlsGapDragView: NSViewRepresentable {
     let config: TitlebarControlsStyleConfig
+    var additionalProtectedButtonCount = 0
 
     func makeNSView(context: Context) -> GapDragView {
         let view = GapDragView()
         view.config = config
+        view.additionalProtectedButtonCount = additionalProtectedButtonCount
         return view
     }
 
     func updateNSView(_ nsView: GapDragView, context: Context) {
         nsView.config = config
+        nsView.additionalProtectedButtonCount = additionalProtectedButtonCount
     }
 
     final class GapDragView: NSView {
         var config = TitlebarControlsStyle.classic.config
+        var additionalProtectedButtonCount = 0
 
         override var mouseDownCanMoveWindow: Bool { false }
 
         override func hitTest(_ point: NSPoint) -> NSView? {
             guard NSApp.currentEvent?.type == .leftMouseDown else { return nil }
             guard bounds.contains(point) else { return nil }
-            guard !TitlebarControlsHitRegions.pointFallsInButtonColumn(point, config: config) else {
+            guard !TitlebarControlsHitRegions.pointFallsInButtonColumn(
+                point,
+                config: config,
+                additionalButtonCount: additionalProtectedButtonCount
+            ) else {
                 return nil
             }
             return self
@@ -1337,6 +1389,7 @@ struct HiddenTitlebarSidebarControlsView: View {
     let onNewTab: () -> Void
     let onFocusHistoryBack: () -> Void
     let onFocusHistoryForward: () -> Void
+    var onShowRepoAgentLaunchers: ((NSView) -> Void)? = nil
     @StateObject private var viewModel = TitlebarControlsViewModel()
     @ObservedObject private var popoverVisibilityState = NotificationsPopoverVisibilityState.shared
     @State private var isHoveringHost = false
@@ -1350,6 +1403,8 @@ struct HiddenTitlebarSidebarControlsView: View {
 
     var body: some View {
         let style = TitlebarControlsStyle(rawValue: styleRawValue) ?? .classic
+        let hostWidth = MinimalModeSidebarTitlebarControlsMetrics.hostWidth
+            + (onShowRepoAgentLaunchers == nil ? 0 : style.config.buttonSize + style.config.spacing)
 
         ZStack(alignment: .leading) {
             WindowAccessor { window in
@@ -1376,7 +1431,7 @@ struct HiddenTitlebarSidebarControlsView: View {
                 #endif
             }
             .frame(
-                width: MinimalModeSidebarTitlebarControlsMetrics.hostWidth,
+                width: hostWidth,
                 height: MinimalModeSidebarTitlebarControlsMetrics.hostHeight
             )
             .allowsHitTesting(false)
@@ -1391,10 +1446,11 @@ struct HiddenTitlebarSidebarControlsView: View {
                 onNewTab: onNewTab,
                 onFocusHistoryBack: onFocusHistoryBack,
                 onFocusHistoryForward: onFocusHistoryForward,
+                onShowRepoAgentLaunchers: onShowRepoAgentLaunchers,
                 visibilityMode: .alwaysVisible
             )
             .frame(
-                width: MinimalModeSidebarTitlebarControlsMetrics.hostWidth,
+                width: hostWidth,
                 height: MinimalModeSidebarTitlebarControlsMetrics.hostHeight,
                 alignment: .leading
             )
@@ -1403,9 +1459,12 @@ struct HiddenTitlebarSidebarControlsView: View {
             .accessibilityHidden(true)
             .animation(.easeInOut(duration: 0.14), value: shouldPinControls)
 
-            TitlebarControlsGapDragView(config: style.config)
-                .frame(
-                    width: MinimalModeSidebarTitlebarControlsMetrics.hostWidth,
+            TitlebarControlsGapDragView(
+                config: style.config,
+                additionalProtectedButtonCount: onShowRepoAgentLaunchers == nil ? 0 : 1
+            )
+            .frame(
+                    width: hostWidth,
                     height: MinimalModeSidebarTitlebarControlsMetrics.hostHeight
                 )
 
@@ -1435,19 +1494,19 @@ struct HiddenTitlebarSidebarControlsView: View {
                 }
             }
             .frame(
-                width: MinimalModeSidebarTitlebarControlsMetrics.hostWidth,
+                width: hostWidth,
                 height: MinimalModeSidebarTitlebarControlsMetrics.hostHeight
             )
 
             PassthroughHoverTrackingView(capturesPassiveHits: !shouldPinControls) { isHoveringHost = $0 }
             .frame(
-                width: MinimalModeSidebarTitlebarControlsMetrics.hostWidth,
+                width: hostWidth,
                 height: MinimalModeSidebarTitlebarControlsMetrics.hostHeight
             )
 
         }
         .frame(
-            width: MinimalModeSidebarTitlebarControlsMetrics.hostWidth,
+            width: hostWidth,
             height: MinimalModeSidebarTitlebarControlsMetrics.hostHeight,
             alignment: .leading
         )
@@ -1761,6 +1820,9 @@ final class TitlebarControlsAccessoryViewController: NSTitlebarAccessoryViewCont
         let focusHistoryForward = { [weak containerView] in
             _ = AppDelegate.shared?.activeTabManagerForCommands(preferredWindow: containerView?.window)?.navigateForward()
         }
+        let showRepoAgentLaunchers: (NSView) -> Void = { anchorView in
+            _ = AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView)
+        }
         let rootView = TitlebarControlsView(
             notificationStore: notificationStore,
             viewModel: viewModel,
@@ -1769,6 +1831,7 @@ final class TitlebarControlsAccessoryViewController: NSTitlebarAccessoryViewCont
             onNewTab: newTab,
             onFocusHistoryBack: focusHistoryBack,
             onFocusHistoryForward: focusHistoryForward,
+            onShowRepoAgentLaunchers: showRepoAgentLaunchers,
             visibilityMode: .alwaysVisible
         )
         hostingView = NonDraggableHostingView(
@@ -1894,7 +1957,10 @@ final class TitlebarControlsAccessoryViewController: NSTitlebarAccessoryViewCont
         guard showsWorkspaceTitlebar else { return }
         let styleRawValue = UserDefaults.standard.integer(forKey: "titlebarControlsStyle")
         let style = TitlebarControlsStyle(rawValue: styleRawValue) ?? .classic
-        let contentSize = TitlebarControlsLayoutMetrics.contentSize(config: style.config)
+        let contentSize = TitlebarControlsLayoutMetrics.contentSize(
+            config: style.config,
+            additionalButtonCount: 1
+        )
         if intrinsicSizeNeedsRefresh {
             hostingView.invalidateIntrinsicContentSize()
             intrinsicSizeNeedsRefresh = false

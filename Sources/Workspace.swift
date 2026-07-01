@@ -4898,7 +4898,7 @@ final class Workspace: Identifiable, ObservableObject {
         }
         if agentLifecycleStatesByPanelId.contains(where: { panelId, states in
             livePanelIds.contains(panelId)
-                && states.values.contains(.running)
+                && states.values.contains { $0 == .running || $0 == .needsInput }
         }) {
             return true
         }

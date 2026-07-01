@@ -487,6 +487,97 @@ final class CmuxConfigContextMenuTests: XCTestCase {
     }
 
     @MainActor
+    func testRepoAgentLaunchersResolveWorkspaceCommandActions() throws {
+        let store = try loadStore(localJSON: """
+        {
+          "actions": {
+            "repo.mobile": {
+              "type": "workspaceCommand",
+              "title": "companycam-mobile (Claude)",
+              "commandName": "companycam-mobile (Claude)",
+              "icon": { "type": "symbol", "name": "iphone" }
+            },
+            "repo.api": {
+              "type": "workspaceCommand",
+              "title": "Company-Cam-API (Codex)",
+              "commandName": "Company-Cam-API (Codex)",
+              "icon": { "type": "symbol", "name": "server.rack" }
+            },
+            "not-repo": {
+              "type": "workspaceCommand",
+              "title": "Other",
+              "commandName": "Other"
+            },
+            "repo.command": {
+              "type": "command",
+              "title": "Shell",
+              "command": "echo hi"
+            },
+            "repo.missing": {
+              "type": "workspaceCommand",
+              "title": "Missing",
+              "commandName": "Missing"
+            }
+          },
+          "commands": [
+            {
+              "name": "companycam-mobile (Claude)",
+              "workspace": {
+                "name": "companycam-mobile",
+                "cwd": "/Users/me/repos/companycam-mobile",
+                "layout": {
+                  "pane": {
+                    "surfaces": [{
+                      "type": "terminal",
+                      "name": "Claude",
+                      "command": "claude",
+                      "focus": true
+                    }]
+                  }
+                }
+              }
+            },
+            {
+              "name": "Company-Cam-API (Codex)",
+              "workspace": {
+                "name": "Company-Cam-API",
+                "cwd": "/Users/me/repos/Company-Cam-API",
+                "layout": {
+                  "pane": {
+                    "surfaces": [{
+                      "type": "terminal",
+                      "name": "Codex",
+                      "command": "codex",
+                      "focus": true
+                    }]
+                  }
+                }
+              }
+            },
+            {
+              "name": "Other",
+              "workspace": { "name": "Other" }
+            }
+          ]
+        }
+        """)
+
+        XCTAssertEqual(store.repoAgentLauncherItems.map(\.title), [
+            "Company-Cam-API (Codex)",
+            "companycam-mobile (Claude)",
+        ])
+        XCTAssertEqual(store.repoAgentLauncherItems.map(\.action.id), [
+            "repo.api",
+            "repo.mobile",
+        ])
+        XCTAssertEqual(store.repoAgentLauncherItems.map(\.icon), [
+            .symbol("server.rack"),
+            .symbol("iphone"),
+        ])
+        XCTAssertTrue(store.configurationIssues.isEmpty)
+    }
+
+    @MainActor
     func testResolvedNewWorkspaceContextMenuSanitizesLabels() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(
             "cmux-config-store-\(UUID().uuidString)",
