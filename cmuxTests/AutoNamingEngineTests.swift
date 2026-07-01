@@ -215,6 +215,19 @@ import Testing
         #expect(!untitled.contains("current title"))
     }
 
+    @Test func promptRequestsSubjectStatementInsteadOfVagueTitleFragment() {
+        let prompt = engine.buildPrompt(
+            currentTitle: nil,
+            context: "user: the title summary for cmux workspace tabs isn't good enough"
+        )
+
+        #expect(prompt.contains("subject statement"))
+        #expect(prompt.contains("currently talking about"))
+        #expect(prompt.contains("Now Seeing Trying"))
+        #expect(prompt.contains("Improving workspace tab summaries"))
+        #expect(!prompt.contains("2-5 word title"))
+    }
+
     // MARK: - Sanitization
 
     @Test func sanitizationNormalizesUsableResponses() {

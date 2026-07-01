@@ -348,8 +348,13 @@ struct AutoNamingEngine: Sendable {
     func buildPrompt(currentTitle: String?, context: String) -> String {
         var lines: [String] = [
             "You name terminal workspace tabs for a developer running coding agents.",
-            "Given a conversation excerpt, output ONLY a short title: 2-5 words,",
-            "in the same language as the conversation, no quotes, no trailing punctuation.",
+            "Given a conversation excerpt, output ONLY a short subject statement that reflects what the conversation is currently talking about.",
+            "Write a compact grammatical phrase in the same language as the conversation.",
+            "Use one line only, no quotes, no trailing punctuation.",
+            "Avoid filler words such as \"now\", \"seeing\", \"trying\", or \"working on\".",
+            "Bad: Now Seeing Trying",
+            "Good: Improving workspace tab summaries",
+            "Good: Debugging Vite startup failures",
             ""
         ]
         if let currentTitle, !currentTitle.isEmpty {
