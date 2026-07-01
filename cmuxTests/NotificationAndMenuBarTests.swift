@@ -1734,22 +1734,23 @@ final class NotificationMenuSnapshotBuilderTests: XCTestCase {
 
 final class MenuBarBuildHintFormatterTests: XCTestCase {
     func testReleaseBuildShowsNoHint() {
-        XCTAssertNil(MenuBarBuildHintFormatter.menuTitle(appName: "cmux DEV menubar-extra", isDebugBuild: false))
+        XCTAssertNil(MenuBarBuildHintFormatter.menuTitle(isDebugBuild: false))
     }
 
-    func testDebugBuildWithTagShowsTag() {
-        XCTAssertEqual(
-            MenuBarBuildHintFormatter.menuTitle(appName: "cmux DEV menubar-extra", isDebugBuild: true),
-            "Build Tag: menubar-extra"
-        )
+    func testDebugBuildShowsBuildNumberWhenAvailable() {
+        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
+        let normalizedBuildNumber = buildNumber?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if normalizedBuildNumber.isEmpty {
+            XCTAssertNil(MenuBarBuildHintFormatter.menuTitle(isDebugBuild: true))
+        } else {
+            XCTAssertEqual(
+                MenuBarBuildHintFormatter.menuTitle(isDebugBuild: true),
+                "Build \(normalizedBuildNumber)"
+            )
+        }
     }
 
-    func testDebugBuildWithoutTagShowsUntagged() {
-        XCTAssertEqual(
-            MenuBarBuildHintFormatter.menuTitle(appName: "cmux DEV", isDebugBuild: true),
-            "Build: DEV (untagged)"
-        )
-    }
 }
 
 

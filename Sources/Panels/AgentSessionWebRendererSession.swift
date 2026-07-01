@@ -8,6 +8,11 @@ final class AgentSessionWebRendererSession {
             ownedCoordinator.onHasActiveProviderChanged = onHasActiveProviderChanged
         }
     }
+    var onHasActiveWorkChanged: ((Bool) -> Void)? {
+        didSet {
+            ownedCoordinator.onHasActiveWorkChanged = onHasActiveWorkChanged
+        }
+    }
     var onProviderIDChanged: ((AgentSessionProviderID) -> Void)? {
         didSet {
             ownedCoordinator.onProviderIDChanged = onProviderIDChanged

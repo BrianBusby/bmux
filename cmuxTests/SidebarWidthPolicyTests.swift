@@ -379,6 +379,25 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
         assertColor(foreground, equals: NSColor.white.withAlphaComponent(0.75))
     }
 
+    func testTronLoadingIndicatorPaletteKeepsCyanVisibleOnLightAndDarkBackgrounds() throws {
+        let palette = TronLoadingIndicatorPalette.default
+        let color = try XCTUnwrap(NSColor(hex: "#33F5FF"))
+
+        assertColor(palette.backdropColor, equals: NSColor.black.withAlphaComponent(0.72))
+        assertColor(palette.defaultColor, equals: color)
+        XCTAssertGreaterThanOrEqual(
+            cmuxContrastRatio(foreground: color, background: .black),
+            3.0
+        )
+
+        let backdropOverWhite = palette.backdropColor.blended(withFraction: 1.0 - palette.backdropColor.alphaComponent, of: .white)
+        let effectiveBackground = try XCTUnwrap(backdropOverWhite)
+        XCTAssertGreaterThanOrEqual(
+            cmuxContrastRatio(foreground: color, background: effectiveBackground),
+            3.0
+        )
+    }
+
     func testTitlebarControlForegroundContrastsWithLightTerminalBackground() throws {
         let background = try XCTUnwrap(NSColor(hex: "#F7F7F7"))
         let snapshot = makeWindowAppearanceSnapshot(background: background)

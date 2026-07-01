@@ -2,6 +2,7 @@ import Combine
 import CmuxCore
 import Foundation
 import CmuxSidebar
+import CmuxWorkspaces
 import SwiftUI
 
 private struct SidebarPanelObservationState: Equatable {
@@ -55,6 +56,10 @@ private struct SidebarObservationState: Equatable {
     let remoteConnectionDetail: String?
     let activeRemoteTerminalSessionCount: Int
     let listeningPorts: [Int]
+    let panelShellActivityStates: [UUID: PanelShellActivityState]
+    let agentPIDKeysByPanelId: [UUID: Set<String>]
+    let agentLifecycleStatesByPanelId: [UUID: [String: AgentHibernationLifecycleState]]
+    let agentSessionProviderActivity: [UUID: Bool]
     let browserMediaActivity: BrowserMediaActivity
 }
 
@@ -115,6 +120,12 @@ extension Workspace {
             $remoteConnectionDetail,
             $activeRemoteTerminalSessionCount
         )
+        let terminalAgentFields = Publishers.CombineLatest4(
+            panelShellActivityStatesPublisher,
+            agentPIDKeysByPanelIdPublisher,
+            agentLifecycleStatesByPanelIdPublisher,
+            agentSessionActiveWorkPublisher
+        )
         return Publishers.CombineLatest4(
             workspaceFields,
             metadataFields,
@@ -122,12 +133,19 @@ extension Workspace {
             remoteFields
         )
             .combineLatest($listeningPorts)
-            .compactMap { [weak self] groupedFields, listeningPorts -> SidebarObservationState? in
+            .combineLatest(terminalAgentFields)
+            .compactMap { [weak self] groupedFieldsAndPorts, terminalAgentFields -> SidebarObservationState? in
                 guard let self else { return nil }
+                let groupedFields = groupedFieldsAndPorts.0
+                let listeningPorts = groupedFieldsAndPorts.1
                 let workspaceFields = groupedFields.0
                 let metadataFields = groupedFields.1
                 let gitFields = groupedFields.2
                 let remoteFields = groupedFields.3
+                let panelShellActivityStates = terminalAgentFields.0
+                let agentPIDKeysByPanelId = terminalAgentFields.1
+                let agentLifecycleStatesByPanelId = terminalAgentFields.2
+                let agentSessionActiveWork = terminalAgentFields.3
                 return SidebarObservationState(
                     currentDirectory: workspaceFields.0,
                     extensionSidebarProjectRootPath: workspaceFields.1,
@@ -146,6 +164,10 @@ extension Workspace {
                     remoteConnectionDetail: remoteFields.2,
                     activeRemoteTerminalSessionCount: remoteFields.3,
                     listeningPorts: listeningPorts,
+                    panelShellActivityStates: panelShellActivityStates,
+                    agentPIDKeysByPanelId: agentPIDKeysByPanelId,
+                    agentLifecycleStatesByPanelId: agentLifecycleStatesByPanelId,
+                    agentSessionProviderActivity: agentSessionActiveWork,
                     browserMediaActivity: self.browserMediaActivity
                 )
             }

@@ -5,7 +5,9 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
         let isPinned: Bool
         let customColorHex: String?
         let finderDirectoryPath: String?
+        let repoBadgeAppearance: WorkspaceRepoBadgeAppearance?
         let mediaActivity: BrowserMediaActivity
+        let hasActiveAIWork: Bool
     }
 
     var contextMenuImmediateFields: ContextMenuImmediateFields {
@@ -15,7 +17,9 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
             isPinned: isPinned,
             customColorHex: customColorHex,
             finderDirectoryPath: finderDirectoryPath,
-            mediaActivity: mediaActivity
+            repoBadgeAppearance: repoBadgeAppearance,
+            mediaActivity: mediaActivity,
+            hasActiveAIWork: hasActiveAIWork
         )
     }
 
@@ -45,9 +49,11 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
             pullRequestRows: pullRequestRows,
             listeningPorts: listeningPorts,
             finderDirectoryPath: snapshot.finderDirectoryPath,
+            repoBadgeAppearance: snapshot.repoBadgeAppearance,
             // Media activity drives a leading row glyph, so stale values are
             // visually worse than ordinary telemetry text while the menu is open.
-            mediaActivity: snapshot.mediaActivity
+            mediaActivity: snapshot.mediaActivity,
+            hasActiveAIWork: snapshot.hasActiveAIWork
         )
     }
 }

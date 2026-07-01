@@ -38,6 +38,15 @@ enum SessionTranscriptRole: Equatable, Sendable {
         }
     }
 
+    func foregroundColor(colorScheme: ColorScheme) -> Color {
+        switch self {
+        case .user:
+            return colorScheme == .dark ? .black : .white
+        case .assistant, .system, .tool, .event:
+            return foregroundColor
+        }
+    }
+
     var backgroundColor: Color {
         switch self {
         case .user: return Color.accentColor.opacity(0.035)
@@ -45,6 +54,24 @@ enum SessionTranscriptRole: Equatable, Sendable {
         case .system: return Color.primary.opacity(0.025)
         case .tool: return Color.orange.opacity(0.035)
         case .event: return Color.primary.opacity(0.02)
+        }
+    }
+
+    func backgroundColor(colorScheme: ColorScheme) -> Color {
+        switch self {
+        case .user:
+            return colorScheme == .dark ? .white : .black
+        case .assistant, .system, .tool, .event:
+            return backgroundColor
+        }
+    }
+
+    func bodyForegroundColor(colorScheme: ColorScheme) -> Color {
+        switch self {
+        case .user:
+            return foregroundColor(colorScheme: colorScheme)
+        case .assistant, .system, .tool, .event:
+            return .primary.opacity(0.92)
         }
     }
 

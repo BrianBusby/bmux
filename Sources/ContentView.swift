@@ -2033,6 +2033,9 @@ struct ContentView: View {
                     NSSound.beep()
                 }
             },
+            onShowRepoAgentLaunchers: { anchorView in
+                _ = AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView)
+            },
             visibilityMode: .alwaysVisible
         )
         .offset(y: -TitlebarControlsVisualMetrics.verticalLift)
@@ -2043,7 +2046,10 @@ struct ContentView: View {
     /// the controls, which are themselves mounted once in the band overlay.
     private var fullscreenControlsWidth: CGFloat {
         let style = TitlebarControlsStyle(rawValue: titlebarControlsStyleRawValue) ?? .classic
-        return TitlebarControlsLayoutMetrics.contentSize(config: style.config).width
+        return TitlebarControlsLayoutMetrics.contentSize(
+            config: style.config,
+            additionalButtonCount: 1
+        ).width
     }
 
     private var titlebarDebugChromeSnapshot: MinimalModeTitlebarDebugSnapshot {
@@ -2113,6 +2119,32 @@ struct ContentView: View {
 
                 Spacer()
 
+                if let buildNumber = AppBuildIdentityFormatter.buildNumber() {
+                    Text(buildNumber)
+                        .cmuxFont(size: 10.5, weight: .semibold)
+                        .foregroundColor(fakeTitlebarTextColor(appearance: appearance).opacity(0.86))
+                        .lineLimit(1)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.58))
+                        )
+                        .overlay(
+                            Capsule(style: .continuous)
+                                .stroke(Color(nsColor: .separatorColor).opacity(0.35), lineWidth: 1)
+                        )
+                        .allowsHitTesting(false)
+                        .accessibilityLabel(
+                            Text(
+                                String(
+                                    format: String(localized: "titlebar.buildIndicator.accessibilityLabel", defaultValue: "Build %@"),
+                                    locale: .current,
+                                    buildNumber
+                                )
+                            )
+                        )
+                }
             }
             .frame(height: titlebarContentHeight)
             .padding(.top, 2)
@@ -10355,6 +10387,9 @@ struct VerticalTabsSidebar: View {
                 if !tabManager.navigateForward() {
                     NSSound.beep()
                 }
+            },
+            onShowRepoAgentLaunchers: { anchorView in
+                _ = AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView)
             }
         )
     }
@@ -13234,13 +13269,42 @@ struct SidebarWorkspaceSnapshotBuilder {
         let pullRequestRows: [PullRequestDisplay]
         let listeningPorts: [Int]
         let finderDirectoryPath: String?
+        let repoBadgeAppearance: WorkspaceRepoBadgeAppearance?
         let mediaActivity: BrowserMediaActivity
+        let hasActiveAIWork: Bool
     }
 }
 
 private final class SidebarTabItemContextMenuState: ObservableObject {
     var hasDeferredWorkspaceObservationInvalidation = false
     var pendingWorkspaceSnapshot: SidebarWorkspaceSnapshotBuilder.Snapshot?
+}
+
+struct SidebarWorkspaceRowLineLimitPolicy {
+    struct Subtitle: Equatable {
+        let text: String
+        let lineLimit: Int
+    }
+
+    private static let compactNotificationSubtitleLines = 2
+    private static let conversationSubtitleLines = 3
+    private static let wrappedWorkspaceTitleLines = 2
+
+    static func titleLineLimit(wrapsWorkspaceTitles: Bool) -> Int {
+        wrapsWorkspaceTitles ? wrappedWorkspaceTitleLines : 1
+    }
+
+    static func subtitle(notificationText: String?, conversationMessage: String?) -> Subtitle? {
+        if let notificationText {
+            return Subtitle(text: notificationText, lineLimit: compactNotificationSubtitleLines)
+        }
+        guard let conversationMessage = conversationMessage?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .nilIfEmpty else {
+            return nil
+        }
+        return Subtitle(text: conversationMessage, lineLimit: conversationSubtitleLines)
+    }
 }
 
 struct TabItemView: View, Equatable {
@@ -13332,7 +13396,6 @@ struct TabItemView: View, Equatable {
     @State private var rowHeight: CGFloat = 1
     @State private var workspaceFinderDirectoryOpenRequest: WorkspaceFinderDirectoryOpenRequest?
 
-    private static let maxWrappedTitleLines = 8
     private static let maxDisplayedTitleCharacters = 2048
 
     var isMultiSelected: Bool {
@@ -13684,15 +13747,17 @@ struct TabItemView: View, Equatable {
         let accessibilityHintText = String(localized: "sidebar.workspace.accessibilityHint", defaultValue: "Activate to focus this workspace. Drag to reorder, or use Move Up and Move Down actions.")
         let moveUpActionText = String(localized: "sidebar.workspace.moveUpAction", defaultValue: "Move Up")
         let moveDownActionText = String(localized: "sidebar.workspace.moveDownAction", defaultValue: "Move Down")
-        let latestNotificationSubtitle = latestNotificationText
         let conversationMessageSubtitle = !settings.hidesAllDetails && settings.iMessageModeEnabled
-            ? workspaceSnapshot.latestConversationMessage?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .nilIfEmpty
+            ? workspaceSnapshot.latestConversationMessage
             : nil
-        let effectiveSubtitle = latestNotificationSubtitle ?? conversationMessageSubtitle
+        let subtitle = SidebarWorkspaceRowLineLimitPolicy.subtitle(
+            notificationText: latestNotificationText,
+            conversationMessage: conversationMessageSubtitle
+        )
         let detailVisibility = visibleAuxiliaryDetails
-        let titleLineLimit = settings.wrapsWorkspaceTitles ? Self.maxWrappedTitleLines : 1
+        let titleLineLimit = SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(
+            wrapsWorkspaceTitles: settings.wrapsWorkspaceTitles
+        )
         let displayedTitle = workspaceSnapshot.title.sidebarBoundedDisplayString(
             maxDisplayedLines: titleLineLimit,
             maxDisplayedCharacters: Self.maxDisplayedTitleCharacters
@@ -13703,10 +13768,21 @@ struct TabItemView: View, Equatable {
             SidebarTrailingAccessoryWidthPolicy().closeButtonWidth,
             scaledCloseButtonHitSize
         )
+        let aiBusyTooltip = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running or needs input")
 
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .top, spacing: 8) {
-                if unreadCount > 0 {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .top, spacing: 8) {
+                    if workspaceSnapshot.hasActiveAIWork {
+                        TronLoadingIndicator(
+                            size: scaledUnreadBadgeSize,
+                            color: Color(nsColor: TronLoadingIndicatorPalette.default.defaultColor),
+                            lineWidth: max(1.15, scaledUnreadBadgeSize * 0.085)
+                        )
+                        .safeHelp(aiBusyTooltip)
+                        .accessibilityLabel(aiBusyTooltip)
+                    }
+
+                    if unreadCount > 0 {
                     ZStack {
                         Circle()
                             .fill(activeUnreadBadgeFillColor)
@@ -13715,7 +13791,7 @@ struct TabItemView: View, Equatable {
                             .foregroundColor(activeUnreadBadgeTextColor)
                     }
                     .frame(width: scaledUnreadBadgeSize, height: scaledUnreadBadgeSize)
-                }
+                    }
 
                 if workspaceSnapshot.isPinned {
                     CmuxSystemSymbolImage(magnified: "pin.fill", pointSize: scaledFontSize(9), weight: .semibold)
@@ -13760,14 +13836,24 @@ struct TabItemView: View, Equatable {
                         .accessibilityLabel(cameraInUseTooltip)
                 }
 
-                Text(displayedTitle)
-                    .font(magnifiedFont(scaledFontSize(12.5), weight: titleFontWeight))
-                    .foregroundColor(activePrimaryTextColor)
-                    .lineLimit(titleLineLimit)
-                    .truncationMode(.tail)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .layoutPriority(1)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(displayedTitle)
+                        .font(magnifiedFont(scaledFontSize(12.5), weight: titleFontWeight))
+                        .foregroundColor(activePrimaryTextColor)
+                        .lineLimit(titleLineLimit)
+                        .truncationMode(.tail)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    if let repoBadgeAppearance = workspaceSnapshot.repoBadgeAppearance {
+                        Text(repoBadgeAppearance.name)
+                            .font(magnifiedFont(scaledFontSize(9), weight: .medium))
+                            .foregroundColor(repoBadgeColor(for: repoBadgeAppearance.colorHex))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .layoutPriority(1)
 
                 // The close button is a sibling that always reserves its width
                 // when the workspace is closable, so the title wraps/truncates
@@ -13803,11 +13889,11 @@ struct TabItemView: View, Equatable {
                 )
             }
 
-            if let subtitle = effectiveSubtitle {
-                Text(subtitle)
+            if let subtitle {
+                Text(subtitle.text)
                     .font(magnifiedFont(scaledFontSize(10)))
                     .foregroundColor(activeSecondaryColor(0.8))
-                    .lineLimit(2)
+                    .lineLimit(subtitle.lineLimit)
                     .truncationMode(.tail)
                     .multilineTextAlignment(.leading)
             }
@@ -14507,7 +14593,7 @@ struct TabItemView: View, Equatable {
             activeTabIndicatorStyle: activeTabIndicatorStyle,
             isActive: isActive,
             isMultiSelected: isMultiSelected,
-            customColorHex: workspaceSnapshot.customColorHex,
+            customColorHex: workspaceRowColorHex,
             colorScheme: colorScheme,
             sidebarSelectionColorHex: sidebarSelectionColorHex
         )
@@ -14522,12 +14608,19 @@ struct TabItemView: View, Equatable {
     private var explicitRailColor: Color? {
         guard let railColor = sidebarWorkspaceRowExplicitRailNSColor(
             activeTabIndicatorStyle: activeTabIndicatorStyle,
-            customColorHex: workspaceSnapshot.customColorHex,
+            customColorHex: workspaceRowColorHex,
             colorScheme: colorScheme
         ) else {
             return nil
         }
         return Color(nsColor: railColor).opacity(0.95)
+    }
+
+    private var workspaceRowColorHex: String? {
+        WorkspaceRepoBadgeAppearanceColorPolicy.effectiveColorHex(
+            customColorHex: workspaceSnapshot.customColorHex,
+            repoBadgeAppearance: workspaceSnapshot.repoBadgeAppearance
+        )
     }
 
     private func tabColorSwatchColor(for hex: String) -> NSColor {
@@ -14536,6 +14629,14 @@ struct TabItemView: View, Equatable {
             colorScheme: colorScheme,
             forceBright: activeTabIndicatorStyle == .leftRail
         ) ?? NSColor(hex: hex) ?? .gray
+    }
+
+    private func repoBadgeColor(for hex: String) -> Color {
+        WorkspaceTabColorSettings.displayColor(
+            hex: hex,
+            colorScheme: colorScheme,
+            forceBright: usesInvertedActiveForeground
+        ) ?? activeSecondaryColor(0.86)
     }
 
     private var accessibilityTitle: String {
@@ -14826,7 +14927,11 @@ struct TabItemView: View, Equatable {
             pullRequestRows: pullRequestRows,
             listeningPorts: detailVisibility.showsPorts ? tab.listeningPorts : [],
             finderDirectoryPath: WorkspaceFinderDirectoryResolver.path(for: tab),
-            mediaActivity: tab.browserMediaActivity
+            repoBadgeAppearance: WorkspaceRepoBadgeAppearanceResolver.sessionAppearance(
+                repoRootPath: tab.extensionSidebarProjectRootPath
+            ),
+            mediaActivity: tab.browserMediaActivity,
+            hasActiveAIWork: tab.hasActiveAIWork
         )
     }
 

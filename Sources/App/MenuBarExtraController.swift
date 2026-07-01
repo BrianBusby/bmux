@@ -500,31 +500,24 @@ enum MenuBarNotificationLineFormatter {
 
 enum MenuBarBuildHintFormatter {
     static func menuTitle(
-        appName: String = defaultAppName(),
         isDebugBuild: Bool = _isDebugAssertConfiguration()
     ) -> String? {
         guard isDebugBuild else { return nil }
-        let normalized = appName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let prefix = "cmux DEV"
-        guard normalized.hasPrefix(prefix) else { return "Build: DEV" }
-
-        let suffix = String(normalized.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
-        if suffix.isEmpty {
-            return "Build: DEV (untagged)"
-        }
-        return "Build Tag: \(suffix)"
+        guard let buildNumber = AppBuildIdentityFormatter.buildNumber() else { return nil }
+        return String(
+            format: String(localized: "buildHint.number", defaultValue: "Build %@"),
+            locale: .current,
+            buildNumber
+        )
     }
+}
 
-    private static func defaultAppName() -> String {
-        let bundle = Bundle.main
-        if let displayName = bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String,
-           !displayName.isEmpty {
-            return displayName
-        }
-        if let name = bundle.object(forInfoDictionaryKey: "CFBundleName") as? String, !name.isEmpty {
-            return name
-        }
-        return ProcessInfo.processInfo.processName
+enum AppBuildIdentityFormatter {
+    static func buildNumber(isDebugBuild: Bool = _isDebugAssertConfiguration()) -> String? {
+        guard isDebugBuild else { return nil }
+        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
+        let normalized = buildNumber?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return normalized.isEmpty ? nil : normalized
     }
 }
 

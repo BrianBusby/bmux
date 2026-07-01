@@ -9,11 +9,22 @@ final class AgentSessionProcessStore {
             emitActiveProviderStateIfNeeded()
         }
     }
+    var activeWorkSink: ((Bool) -> Void)? {
+        didSet {
+            emitActiveWorkStateIfNeeded()
+        }
+    }
     var hasActiveProviderSession: Bool {
         !sessions.isEmpty
     }
+    var hasActiveWork: Bool {
+        isTurnInFlight || !activeActivityIDs.isEmpty
+    }
     private var sessions: [String: AgentSessionRunningSession] = [:]
     private var lastEmittedHasActiveProviderSession: Bool?
+    private var isTurnInFlight = false
+    private var activeActivityIDs: Set<String> = []
+    private var lastEmittedHasActiveWork: Bool?
     private static let terminationEscalationInterval: DispatchTimeInterval = .seconds(3)
 
     func start(plan: AgentSessionLaunchPlan, workingDirectory: String?) async throws -> AgentSessionStartedSession {
@@ -74,6 +85,7 @@ final class AgentSessionProcessStore {
                     )
                 },
                 turnCompleteSink: { [weak self] in
+                    self?.resetWorkState()
                     self?.emitTurnComplete(
                         sessionId: sessionId,
                         providerID: plan.provider
@@ -133,11 +145,29 @@ final class AgentSessionProcessStore {
             guard let codexAppServerSession = session.codexAppServerSession else {
                 throw AgentSessionBridgeError.providerNotReady(session.providerID.displayName)
             }
-            try await codexAppServerSession.submit(text, permissionMode: permissionMode)
+            setTurnInFlight(true)
+            do {
+                try await codexAppServerSession.submit(text, permissionMode: permissionMode)
+            } catch {
+                setTurnInFlight(false)
+                throw error
+            }
         case .claude:
-            try await writeClaudeStreamJSON(text, to: session.inputWriter)
+            setTurnInFlight(true)
+            do {
+                try await writeClaudeStreamJSON(text, to: session.inputWriter)
+            } catch {
+                setTurnInFlight(false)
+                throw error
+            }
         case .opencode:
-            try await postOpenCodePrompt(text, session: session)
+            setTurnInFlight(true)
+            do {
+                try await postOpenCodePrompt(text, session: session)
+            } catch {
+                setTurnInFlight(false)
+                throw error
+            }
         }
     }
 
@@ -197,6 +227,7 @@ final class AgentSessionProcessStore {
         }
         sessions.removeValue(forKey: session.sessionId)
         cancelSessionTasks(session)
+        resetWorkState()
         emitActiveProviderStateIfNeeded()
         emitExit(
             sessionId: session.sessionId,
@@ -209,6 +240,7 @@ final class AgentSessionProcessStore {
         guard let session = sessions.removeValue(forKey: sessionId) else {
             return
         }
+        resetWorkState()
         emitActiveProviderStateIfNeeded()
         cancelSessionTasks(session)
         requestTermination(for: session)
@@ -306,6 +338,7 @@ final class AgentSessionProcessStore {
                 )
             }
             if completesTurn {
+                resetWorkState()
                 emitTurnComplete(
                     sessionId: session.sessionId,
                     providerID: session.providerID
@@ -552,6 +585,7 @@ final class AgentSessionProcessStore {
             )
         }
         if completesTurn {
+            resetWorkState()
             emitTurnComplete(
                 sessionId: session.sessionId,
                 providerID: session.providerID
@@ -641,6 +675,10 @@ final class AgentSessionProcessStore {
         providerID: AgentSessionProviderID,
         activity: [String: Any]
     ) {
+        if let activityID = activity["activityId"] as? String,
+           let status = activity["status"] as? String {
+            updateActiveWorkState(activityID: activityID, status: status)
+        }
         var event = activity
         event["type"] = "provider.activity"
         event["sessionId"] = sessionId
@@ -677,5 +715,45 @@ final class AgentSessionProcessStore {
         guard lastEmittedHasActiveProviderSession != hasActiveProviderSession else { return }
         lastEmittedHasActiveProviderSession = hasActiveProviderSession
         activeProviderSink?(hasActiveProviderSession)
+    }
+
+    private func setTurnInFlight(_ newValue: Bool) {
+        guard isTurnInFlight != newValue else { return }
+        isTurnInFlight = newValue
+        emitActiveWorkStateIfNeeded()
+    }
+
+    private func emitActiveWorkStateIfNeeded() {
+        let hasActiveWork = self.hasActiveWork
+        guard lastEmittedHasActiveWork != hasActiveWork else { return }
+        lastEmittedHasActiveWork = hasActiveWork
+        activeWorkSink?(hasActiveWork)
+    }
+
+    private func updateActiveWorkState(activityID: String, status: String) {
+        switch status {
+        case "inProgress":
+            activeActivityIDs.insert(activityID)
+        default:
+            activeActivityIDs.remove(activityID)
+            if activeActivityIDs.isEmpty {
+                isTurnInFlight = false
+            }
+        }
+        emitActiveWorkStateIfNeeded()
+    }
+
+    private func resetWorkState() {
+        isTurnInFlight = false
+        activeActivityIDs.removeAll()
+        emitActiveWorkStateIfNeeded()
+    }
+
+    func ingestActivityForTesting(activityID: String, status: String) {
+        updateActiveWorkState(activityID: activityID, status: status)
+    }
+
+    func markTurnCompleteForTesting() {
+        resetWorkState()
     }
 }
