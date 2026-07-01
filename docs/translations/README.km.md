@@ -5,12 +5,12 @@
 
 <p align="center">
   <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-    <img src="./docs/assets/macos-badge.png" alt="Download cmux for macOS" width="180" />
+    <img src="../assets/macos-badge.png" alt="Download cmux for macOS" width="180" />
   </a>
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | <a href="README.ar.md">العربية</a> | <a href="README.no.md">Norsk</a> | <a href="README.pt-BR.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | ភាសាខ្មែរ | <a href="README.uk.md">Українська</a>
+  <a href="../../README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | <a href="README.ar.md">العربية</a> | <a href="README.no.md">Norsk</a> | <a href="README.pt-BR.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | ភាសាខ្មែរ | <a href="README.uk.md">Українська</a>
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="./docs/assets/main-first-image.png" alt="cmux screenshot" width="900" />
+  <img src="../assets/main-first-image.png" alt="cmux screenshot" width="900" />
 </p>
 
 <p align="center">
@@ -36,7 +36,7 @@
 ផ្ទាំង (panes) ទទួលបានរង្វង់ពណ៌ខៀវ ហើយផ្ទាំងផ្លាក (tabs) ភ្លឺឡើង នៅពេលភ្នាក់ងារសរសេរកូដ (coding agents) ត្រូវការការយកចិត្តទុកដាក់ពីអ្នក
 </td>
 <td width="60%">
-<img src="./docs/assets/notification-rings.png" alt="Notification rings" width="100%" />
+<img src="../assets/notification-rings.png" alt="Notification rings" width="100%" />
 </td>
 </tr>
 <tr>
@@ -45,7 +45,7 @@
 មើលការជូនដំណឹងដែលកំពុងរង់ចាំទាំងអស់នៅកន្លែងតែមួយ លោតទៅកាន់សារដែលមិនទាន់អានថ្មីបំផុត
 </td>
 <td width="60%">
-<img src="./docs/assets/sidebar-notification-badge.png" alt="Sidebar notification badge" width="100%" />
+<img src="../assets/sidebar-notification-badge.png" alt="Sidebar notification badge" width="100%" />
 </td>
 </tr>
 <tr>
@@ -54,7 +54,7 @@
 បំបែកកម្មវិធីរុករកនៅជាប់នឹង terminal របស់អ្នក ជាមួយ API ដែលអាចសរសេរ script បាន បានបម្លែងពី <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a>
 </td>
 <td width="60%">
-<img src="./docs/assets/built-in-browser.png" alt="Built-in browser" width="100%" />
+<img src="../assets/built-in-browser.png" alt="Built-in browser" width="100%" />
 </td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@
 របារចំហៀង (Sidebar) បង្ហាញ git branch, ស្ថានភាព/លេខ PR ដែលភ្ជាប់, directory កំពុងធ្វើការ, ports ដែលកំពុងស្តាប់, និងអត្ថបទការជូនដំណឹងថ្មីបំផុត។ បំបែកតាមផ្តេក និងបញ្ឈរ។
 </td>
 <td width="60%">
-<img src="./docs/assets/vertical-horizontal-tabs-and-splits.png" alt="Vertical tabs and split panes" width="100%" />
+<img src="../assets/vertical-horizontal-tabs-and-splits.png" alt="Vertical tabs and split panes" width="100%" />
 </td>
 </tr>
 <tr>
@@ -72,7 +72,7 @@
 <code>cmux ssh user@remote</code> បង្កើត workspace សម្រាប់ម៉ាស៊ីនពីចម្ងាយ។ ផ្ទាំងកម្មវិធីរុករកធ្វើដំណើរឆ្លងកាត់បណ្តាញពីចម្ងាយ ដូច្នេះ localhost ដំណើរការបានយ៉ាងស្រួល។ អូសរូបភាពចូលទៅក្នុង session ពីចម្ងាយ ដើម្បីផ្ទុកឡើងតាមរយៈ scp។
 </td>
 <td width="60%">
-<img src="./docs/assets/ssh.png" alt="cmux SSH" width="100%" />
+<img src="../assets/ssh.png" alt="cmux SSH" width="100%" />
 </td>
 </tr>
 <tr>
@@ -81,7 +81,7 @@
 <code>cmux claude-teams</code> ដំណើរការ teammate mode របស់ Claude Code ដោយប្រើពាក្យបញ្ជាតែមួយ។ សមាជិកក្រុមកើតឡើងជា splits ដើមកំណើត ជាមួយ metadata របារចំហៀង និងការជូនដំណឹង។ មិនត្រូវការ tmux ឡើយ។
 </td>
 <td width="60%">
-<img src="./docs/assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
+<img src="../assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
 </td>
 </tr>
 </table>
@@ -100,7 +100,7 @@
 ### DMG (បានណែនាំ)
 
 <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-  <img src="./docs/assets/macos-badge.png" alt="Download cmux for macOS" width="180" />
+  <img src="../assets/macos-badge.png" alt="Download cmux for macOS" width="180" />
 </a>
 
 បើក `.dmg` ហើយអូស cmux ទៅកាន់ថត Applications របស់អ្នក។ cmux ធ្វើបច្ចុប្បន្នភាពដោយស្វ័យប្រវត្តិតាមរយៈ Sparkle ដូច្នេះអ្នកគ្រាន់តែទាញយកម្តងគឺគ្រប់គ្រាន់ហើយ។

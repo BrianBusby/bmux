@@ -5,12 +5,12 @@
 
 <p align="center">
   <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-    <img src="./docs/assets/macos-badge.png" alt="macOS용 cmux 다운로드" width="180" />
+    <img src="../assets/macos-badge.png" alt="macOS용 cmux 다운로드" width="180" />
   </a>
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | 한국어 | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | <a href="README.ar.md">العربية</a> | <a href="README.no.md">Norsk</a> | <a href="README.pt-BR.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.km.md">ភាសាខ្មែរ</a> | <a href="README.uk.md">Українська</a>
+  <a href="../../README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | 한국어 | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | <a href="README.ar.md">العربية</a> | <a href="README.no.md">Norsk</a> | <a href="README.pt-BR.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.km.md">ភាសាខ្មែរ</a> | <a href="README.uk.md">Українська</a>
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="./docs/assets/main-first-image.png" alt="cmux 스크린샷" width="900" />
+  <img src="../assets/main-first-image.png" alt="cmux 스크린샷" width="900" />
 </p>
 
 <p align="center">
@@ -36,7 +36,7 @@
 코딩 에이전트가 입력을 기다리면 패널에 파란색 링이 뜨고 탭이 강조돼요
 </td>
 <td width="60%">
-<img src="./docs/assets/ko/notification-rings.png" alt="알림 링" width="100%" />
+<img src="../assets/ko/notification-rings.png" alt="알림 링" width="100%" />
 </td>
 </tr>
 <tr>
@@ -45,7 +45,7 @@
 대기 중인 알림을 한곳에서 확인하고, 가장 최근 읽지 않은 알림으로 바로 이동할 수 있어요
 </td>
 <td width="60%">
-<img src="./docs/assets/ko/sidebar-notification-badge.png" alt="사이드바 알림 배지" width="100%" />
+<img src="../assets/ko/sidebar-notification-badge.png" alt="사이드바 알림 배지" width="100%" />
 </td>
 </tr>
 <tr>
@@ -54,7 +54,7 @@
 <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a>에서 포팅된 스크립팅 API를 갖춘 브라우저를 터미널 옆에 띄울 수 있어요
 </td>
 <td width="60%">
-<img src="./docs/assets/ko/built-in-browser.png" alt="내장 브라우저" width="100%" />
+<img src="../assets/ko/built-in-browser.png" alt="내장 브라우저" width="100%" />
 </td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@
 사이드바에서 git 브랜치, 연결된 PR 상태/번호, 작업 디렉토리, 수신 포트, 최근 알림 텍스트를 한눈에 볼 수 있어요. 수평·수직 분할을 지원해요.
 </td>
 <td width="60%">
-<img src="./docs/assets/vertical-horizontal-tabs-and-splits.png" alt="세로 탭과 분할 패널" width="100%" />
+<img src="../assets/vertical-horizontal-tabs-and-splits.png" alt="세로 탭과 분할 패널" width="100%" />
 </td>
 </tr>
 <tr>
@@ -72,7 +72,7 @@
 <code>cmux ssh user@remote</code>로 원격 머신용 워크스페이스를 생성해요. 브라우저 패널은 원격 네트워크를 통해 라우팅되어 localhost가 그대로 작동해요. 원격 세션에 이미지를 드래그하면 scp로 업로드돼요.
 </td>
 <td width="60%">
-<img src="./docs/assets/ssh.png" alt="cmux SSH" width="100%" />
+<img src="../assets/ssh.png" alt="cmux SSH" width="100%" />
 </td>
 </tr>
 <tr>
@@ -81,7 +81,7 @@
 <code>cmux claude-teams</code>로 Claude Code의 팀원 모드를 한 명령어로 실행해요. 팀원은 네이티브 분할로 생성되며 사이드바에 메타데이터와 알림이 표시돼요. tmux가 필요 없어요.
 </td>
 <td width="60%">
-<img src="./docs/assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
+<img src="../assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
 </td>
 </tr>
 </table>
@@ -100,7 +100,7 @@
 ### DMG (권장)
 
 <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-  <img src="./docs/assets/macos-badge.png" alt="macOS용 cmux 다운로드" width="180" />
+  <img src="../assets/macos-badge.png" alt="macOS용 cmux 다운로드" width="180" />
 </a>
 
 `.dmg` 파일을 열고 cmux를 응용 프로그램 폴더로 드래그하면 돼요. Sparkle을 통해 자동 업데이트되니 한 번만 다운로드하면 돼요.

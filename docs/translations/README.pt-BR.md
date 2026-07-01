@@ -5,12 +5,12 @@
 
 <p align="center">
   <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-    <img src="./docs/assets/macos-badge.png" alt="Baixar cmux para macOS" width="180" />
+    <img src="../assets/macos-badge.png" alt="Baixar cmux para macOS" width="180" />
   </a>
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | <a href="README.ar.md">العربية</a> | <a href="README.no.md">Norsk</a> | Português (Brasil) | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.km.md">ភាសាខ្មែរ</a> | <a href="README.uk.md">Українська</a>
+  <a href="../../README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | <a href="README.ar.md">العربية</a> | <a href="README.no.md">Norsk</a> | Português (Brasil) | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.km.md">ភាសាខ្មែរ</a> | <a href="README.uk.md">Українська</a>
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="./docs/assets/main-first-image.png" alt="Captura de tela do cmux" width="900" />
+  <img src="../assets/main-first-image.png" alt="Captura de tela do cmux" width="900" />
 </p>
 
 <p align="center">
@@ -36,7 +36,7 @@
 Os painéis recebem um anel azul e as abas acendem quando agentes de programação precisam da sua atenção
 </td>
 <td width="60%">
-<img src="./docs/assets/notification-rings.png" alt="Anéis de notificação" width="100%" />
+<img src="../assets/notification-rings.png" alt="Anéis de notificação" width="100%" />
 </td>
 </tr>
 <tr>
@@ -45,7 +45,7 @@ Os painéis recebem um anel azul e as abas acendem quando agentes de programaç�
 Veja todas as notificações pendentes em um só lugar, vá direto para a mais recente não lida
 </td>
 <td width="60%">
-<img src="./docs/assets/sidebar-notification-badge.png" alt="Badge de notificação na barra lateral" width="100%" />
+<img src="../assets/sidebar-notification-badge.png" alt="Badge de notificação na barra lateral" width="100%" />
 </td>
 </tr>
 <tr>
@@ -54,7 +54,7 @@ Veja todas as notificações pendentes em um só lugar, vá direto para a mais r
 Divida um navegador ao lado do seu terminal com uma API programável portada do <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a>
 </td>
 <td width="60%">
-<img src="./docs/assets/built-in-browser.png" alt="Navegador integrado" width="100%" />
+<img src="../assets/built-in-browser.png" alt="Navegador integrado" width="100%" />
 </td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@ Divida um navegador ao lado do seu terminal com uma API programável portada do 
 A barra lateral mostra o branch do git, status/número do PR vinculado, diretório de trabalho, portas em escuta e texto da última notificação. Divida horizontal e verticalmente.
 </td>
 <td width="60%">
-<img src="./docs/assets/vertical-horizontal-tabs-and-splits.png" alt="Abas verticais e painéis divididos" width="100%" />
+<img src="../assets/vertical-horizontal-tabs-and-splits.png" alt="Abas verticais e painéis divididos" width="100%" />
 </td>
 </tr>
 <tr>
@@ -72,7 +72,7 @@ A barra lateral mostra o branch do git, status/número do PR vinculado, diretór
 <code>cmux ssh user@remote</code> cria um workspace para uma máquina remota. Painéis do navegador são roteados pela rede remota, então localhost simplesmente funciona. Arraste uma imagem para uma sessão remota para fazer upload via scp.
 </td>
 <td width="60%">
-<img src="./docs/assets/ssh.png" alt="cmux SSH" width="100%" />
+<img src="../assets/ssh.png" alt="cmux SSH" width="100%" />
 </td>
 </tr>
 <tr>
@@ -81,7 +81,7 @@ A barra lateral mostra o branch do git, status/número do PR vinculado, diretór
 <code>cmux claude-teams</code> executa o modo de companheiros de equipe do Claude Code com um único comando. Os companheiros aparecem como divisões nativas com metadados na barra lateral e notificações. Sem necessidade de tmux.
 </td>
 <td width="60%">
-<img src="./docs/assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
+<img src="../assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
 </td>
 </tr>
 </table>
@@ -100,7 +100,7 @@ A barra lateral mostra o branch do git, status/número do PR vinculado, diretór
 ### DMG (recomendado)
 
 <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-  <img src="./docs/assets/macos-badge.png" alt="Baixar cmux para macOS" width="180" />
+  <img src="../assets/macos-badge.png" alt="Baixar cmux para macOS" width="180" />
 </a>
 
 Abra o `.dmg` e arraste o cmux para a pasta Aplicativos. O cmux se atualiza automaticamente via Sparkle, então você só precisa baixar uma vez.
