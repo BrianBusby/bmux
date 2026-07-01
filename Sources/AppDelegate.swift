@@ -586,6 +586,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         }
     }
 
+    @MainActor
+    private final class RepoAgentLauncherMenuActionBox: NSObject {
+        let windowId: UUID
+        let action: CmuxResolvedConfigAction
+
+        init(windowId: UUID, action: CmuxResolvedConfigAction) {
+            self.windowId = windowId
+            self.action = action
+        }
+    }
+
+    private struct RepoAgentLauncherPromptResult {
+        let repoURL: URL
+        let agent: CmuxConfigAgentKind
+    }
+
+    private struct RepoAgentLauncherAgentOption {
+        let agent: CmuxConfigAgentKind
+        let title: String
+        let executablePath: String
+    }
+
     private final class MainWindowController: NSWindowController, NSWindowDelegate {
         var onClose: (() -> Void)?
         var shouldClose: (() -> Bool)?
@@ -7676,6 +7698,493 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             NSSound.beep()
             return
         }
+    }
+
+    @discardableResult
+    func showRepoAgentLauncherMenu(
+        anchorView: NSView,
+        event: NSEvent? = nil,
+        debugSource: String = "sidebar.repoAgentLauncher"
+    ) -> Bool {
+        let context = contextForMainWindow(anchorView.window)
+            ?? event.flatMap { mainWindowContext(forShortcutEvent: $0, debugSource: debugSource) }
+            ?? preferredMainWindowContextForWorkspaceCreation(event: event, debugSource: debugSource)
+        guard let context,
+              let cmuxConfigStore = context.cmuxConfigStore else {
+            return false
+        }
+
+        let menu = NSMenu()
+        for launcher in cmuxConfigStore.repoAgentLauncherItems {
+            let item = NSMenuItem(
+                title: launcher.title,
+                action: #selector(performRepoAgentLauncherMenuItem(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = RepoAgentLauncherMenuActionBox(
+                windowId: context.windowId,
+                action: launcher.action
+            )
+            item.toolTip = launcher.tooltip
+            item.image = launcher.icon?.contextMenuImage(
+                configSourcePath: launcher.iconSourcePath,
+                globalConfigPath: cmuxConfigStore.globalConfigPath
+            )
+            menu.addItem(item)
+        }
+
+        if !menu.items.isEmpty {
+            menu.addItem(.separator())
+        }
+        let addItem = NSMenuItem(
+            title: String(localized: "menu.repoAgentLauncher.add", defaultValue: "Add Repo Shortcut..."),
+            action: #selector(performAddRepoAgentLauncherShortcut(_:)),
+            keyEquivalent: ""
+        )
+        addItem.target = self
+        addItem.representedObject = context.windowId
+        addItem.image = NSImage(systemSymbolName: "plus", accessibilityDescription: nil)
+        menu.addItem(addItem)
+
+        if let event {
+            NSMenu.popUpContextMenu(menu, with: event, for: anchorView)
+        } else {
+            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: anchorView.bounds.height + 2), in: anchorView)
+        }
+        return true
+    }
+
+    @objc private func performRepoAgentLauncherMenuItem(_ sender: NSMenuItem) {
+        guard let box = sender.representedObject as? RepoAgentLauncherMenuActionBox,
+              let context = mainWindowContexts.values.first(where: { $0.windowId == box.windowId }),
+              let window = resolvedWindow(for: context) else {
+            NSSound.beep()
+            return
+        }
+        guard executeConfiguredCmuxAction(box.action, context: context, preferredWindow: window) else {
+            NSSound.beep()
+            return
+        }
+    }
+
+    @objc private func performAddRepoAgentLauncherShortcut(_ sender: NSMenuItem) {
+        let context = (sender.representedObject as? UUID).flatMap { windowId in
+            mainWindowContexts.values.first(where: { $0.windowId == windowId })
+        } ?? preferredMainWindowContextForWorkspaceCreation(debugSource: "repoAgentLauncher.add")
+        guard let context,
+              let cmuxConfigStore = context.cmuxConfigStore else {
+            NSSound.beep()
+            return
+        }
+
+        let presentingWindow = resolvedWindow(for: context)
+        let seedPath = context.tabManager.selectedWorkspace?.currentDirectory ?? ""
+        guard let promptResult = promptForRepoAgentLauncher(
+            seedPath: seedPath,
+            presentingWindow: presentingWindow
+        ) else {
+            return
+        }
+
+        do {
+            try addRepoAgentLauncherShortcut(
+                repoURL: promptResult.repoURL,
+                agent: promptResult.agent,
+                configStore: cmuxConfigStore
+            )
+            cmuxConfigStore.loadAll()
+        } catch {
+            showRepoAgentLauncherError(error, presentingWindow: presentingWindow)
+        }
+    }
+
+    private func promptForRepoAgentLauncher(
+        seedPath: String,
+        presentingWindow: NSWindow?
+    ) -> RepoAgentLauncherPromptResult? {
+        let agentOptions = detectedRepoAgentLauncherOptions()
+        guard !agentOptions.isEmpty else {
+            showRepoAgentLauncherError(RepoAgentLauncherConfigError.noSupportedAgent, presentingWindow: presentingWindow)
+            return nil
+        }
+
+        var currentPath = seedPath
+        var selectedAgent = agentOptions[0].agent
+        while true {
+            let alert = NSAlert()
+            alert.messageText = String(localized: "dialog.repoAgentLauncher.title", defaultValue: "Add Repo Shortcut")
+            alert.informativeText = String(
+                localized: "dialog.repoAgentLauncher.message",
+                defaultValue: "Enter an absolute path to a repo and choose which installed AI to launch there."
+            )
+            alert.addButton(withTitle: String(localized: "dialog.repoAgentLauncher.add", defaultValue: "Add"))
+            alert.addButton(withTitle: String(localized: "dialog.repoAgentLauncher.cancel", defaultValue: "Cancel"))
+
+            let pathField = NSTextField(string: currentPath)
+            pathField.placeholderString = String(
+                localized: "dialog.repoAgentLauncher.path.placeholder",
+                defaultValue: "/Users/name/repos/project"
+            )
+            pathField.frame = NSRect(x: 0, y: 0, width: 420, height: 24)
+
+            let agentPopup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 420, height: 26), pullsDown: false)
+            for option in agentOptions {
+                let title = String(
+                    format: String(
+                        localized: "dialog.repoAgentLauncher.agentOption",
+                        defaultValue: "%@ (%@)"
+                    ),
+                    option.title,
+                    option.executablePath
+                )
+                agentPopup.addItem(withTitle: title)
+                agentPopup.lastItem?.representedObject = option.agent
+                if option.agent == selectedAgent {
+                    agentPopup.select(agentPopup.lastItem)
+                }
+            }
+
+            let pathLabel = NSTextField(labelWithString: String(
+                localized: "dialog.repoAgentLauncher.path.label",
+                defaultValue: "Repo path"
+            ))
+            let agentLabel = NSTextField(labelWithString: String(
+                localized: "dialog.repoAgentLauncher.agent.label",
+                defaultValue: "AI"
+            ))
+            let stack = NSStackView(views: [
+                pathLabel,
+                pathField,
+                agentLabel,
+                agentPopup,
+            ])
+            stack.orientation = .vertical
+            stack.alignment = .leading
+            stack.spacing = 6
+            stack.setFrameSize(NSSize(width: 420, height: 96))
+            alert.accessoryView = stack
+
+            guard runCmuxModalAlert(alert, presentingWindow: presentingWindow) == .alertFirstButtonReturn else {
+                return nil
+            }
+            currentPath = pathField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            selectedAgent = (agentPopup.selectedItem?.representedObject as? CmuxConfigAgentKind) ?? selectedAgent
+            guard currentPath.hasPrefix("/") else {
+                showRepoAgentLauncherError(RepoAgentLauncherConfigError.invalidRepoPath, presentingWindow: presentingWindow)
+                continue
+            }
+            var isDirectory: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: currentPath, isDirectory: &isDirectory), isDirectory.boolValue else {
+                showRepoAgentLauncherError(RepoAgentLauncherConfigError.invalidRepoPath, presentingWindow: presentingWindow)
+                continue
+            }
+            return RepoAgentLauncherPromptResult(
+                repoURL: URL(fileURLWithPath: currentPath),
+                agent: selectedAgent
+            )
+        }
+    }
+
+    private func detectedRepoAgentLauncherOptions() -> [RepoAgentLauncherAgentOption] {
+        [
+            CmuxConfigAgentKind.codex,
+            CmuxConfigAgentKind.claudeCode,
+        ].compactMap { agent in
+            guard let executablePath = executablePathForRepoAgentLauncher(agent.commandName) else {
+                return nil
+            }
+            return RepoAgentLauncherAgentOption(
+                agent: agent,
+                title: repoAgentLauncherAgentTitle(agent),
+                executablePath: executablePath
+            )
+        }
+    }
+
+    private func executablePathForRepoAgentLauncher(_ commandName: String) -> String? {
+        let environmentPath = ProcessInfo.processInfo.environment["PATH"] ?? ""
+        let commonDirectories = [
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+            "/usr/bin",
+            "/bin",
+            "\(NSHomeDirectory())/.local/bin",
+            "\(NSHomeDirectory())/.npm-global/bin",
+        ]
+        let searchDirectories = uniqueRepoAgentLauncherSearchDirectories(
+            environmentPath.split(separator: ":").map(String.init) + commonDirectories
+        )
+        for directory in searchDirectories {
+            let candidate = URL(fileURLWithPath: directory).appendingPathComponent(commandName).path
+            if FileManager.default.isExecutableFile(atPath: candidate) {
+                return candidate
+            }
+        }
+        return nil
+    }
+
+    private func uniqueRepoAgentLauncherSearchDirectories(_ directories: [String]) -> [String] {
+        var seen = Set<String>()
+        var result: [String] = []
+        for directory in directories where !directory.isEmpty {
+            guard seen.insert(directory).inserted else {
+                continue
+            }
+            result.append(directory)
+        }
+        return result
+    }
+
+    private func showRepoAgentLauncherError(_ error: Error, presentingWindow: NSWindow?) {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = String(
+            localized: "dialog.repoAgentLauncher.saveFailed.title",
+            defaultValue: "Could Not Save Repo Shortcut"
+        )
+        alert.informativeText = error.localizedDescription
+        alert.addButton(withTitle: String(localized: "dialog.repoAgentLauncher.saveFailed.ok", defaultValue: "OK"))
+        _ = runCmuxModalAlert(alert, presentingWindow: presentingWindow)
+    }
+
+    private enum RepoAgentLauncherConfigError: LocalizedError {
+        case unreadableConfig
+        case noSupportedAgent
+        case invalidRepoPath
+        case invalidRoot
+        case invalidActions
+        case invalidCommands
+        case encodeFailed
+        case writeFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .unreadableConfig:
+                return String(
+                    localized: "dialog.repoAgentLauncher.saveFailed.unreadableConfig",
+                    defaultValue: "The cmux config file could not be read."
+                )
+            case .noSupportedAgent:
+                return String(
+                    localized: "dialog.repoAgentLauncher.saveFailed.noSupportedAgent",
+                    defaultValue: "No supported AI command was found on this machine."
+                )
+            case .invalidRepoPath:
+                return String(
+                    localized: "dialog.repoAgentLauncher.saveFailed.invalidRepoPath",
+                    defaultValue: "Enter an absolute path to an existing directory."
+                )
+            case .invalidRoot:
+                return String(
+                    localized: "dialog.repoAgentLauncher.saveFailed.invalidRoot",
+                    defaultValue: "The cmux config file must contain a JSON object."
+                )
+            case .invalidActions:
+                return String(
+                    localized: "dialog.repoAgentLauncher.saveFailed.invalidActions",
+                    defaultValue: "The cmux config actions section is not an object."
+                )
+            case .invalidCommands:
+                return String(
+                    localized: "dialog.repoAgentLauncher.saveFailed.invalidCommands",
+                    defaultValue: "The cmux config commands section is not an array."
+                )
+            case .encodeFailed:
+                return String(
+                    localized: "dialog.repoAgentLauncher.saveFailed.encodeFailed",
+                    defaultValue: "The repo shortcut could not be encoded."
+                )
+            case .writeFailed:
+                return String(
+                    localized: "dialog.repoAgentLauncher.saveFailed.writeFailed",
+                    defaultValue: "The cmux config file could not be updated."
+                )
+            }
+        }
+    }
+
+    private func addRepoAgentLauncherShortcut(
+        repoURL: URL,
+        agent: CmuxConfigAgentKind,
+        configStore: CmuxConfigStore
+    ) throws {
+        let fileManager = FileManager.default
+        let configURL = URL(fileURLWithPath: configStore.globalConfigPath)
+        let existingData = fileManager.contents(atPath: configURL.path)
+        let source: (text: String, encoding: String.Encoding)
+        let root: [String: Any]
+
+        if let existingData, !existingData.isEmpty {
+            source = try JSONCParser.source(data: existingData)
+            let sanitized = try JSONCParser.preprocess(data: existingData)
+            guard let parsed = try JSONSerialization.jsonObject(with: sanitized, options: []) as? [String: Any] else {
+                throw RepoAgentLauncherConfigError.invalidRoot
+            }
+            root = parsed
+        } else {
+            source = ("{\n}\n", .utf8)
+            root = [:]
+        }
+
+        var actions = root["actions"] as? [String: Any] ?? [:]
+        if root["actions"] != nil, !(root["actions"] is [String: Any]) {
+            throw RepoAgentLauncherConfigError.invalidActions
+        }
+        var commands = root["commands"] as? [[String: Any]] ?? []
+        if root["commands"] != nil, !(root["commands"] is [[String: Any]]) {
+            throw RepoAgentLauncherConfigError.invalidCommands
+        }
+
+        let repoName = repoURL.lastPathComponent.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedRepoName = repoName.isEmpty
+            ? String(localized: "repoAgentLauncher.defaultRepoName", defaultValue: "Repository")
+            : repoName
+        let agentLabel = repoAgentLauncherAgentTitle(agent)
+        let baseTitle = "\(normalizedRepoName) (\(agentLabel))"
+        let existingCommandNames = Set(commands.compactMap { $0["name"] as? String })
+        let commandName = uniqueConfigName(baseTitle, existingNames: existingCommandNames)
+        let actionID = uniqueConfigActionID(
+            base: "repo.\(slugForRepoAgentLauncher(normalizedRepoName))",
+            existingIDs: Set(actions.keys)
+        )
+
+        actions[actionID] = [
+            "type": "workspaceCommand",
+            "title": commandName,
+            "subtitle": String(
+                format: String(
+                    localized: "repoAgentLauncher.actionSubtitle",
+                    defaultValue: "Open %@ in %@"
+                ),
+                normalizedRepoName,
+                agentLabel
+            ),
+            "commandName": commandName,
+            "keywords": [
+                normalizedRepoName,
+                agent.commandName,
+                "repo",
+                "ai",
+            ],
+            "icon": [
+                "type": "symbol",
+                "name": agent == .codex ? "sparkles" : "brain.head.profile",
+            ],
+        ]
+        commands.append([
+            "name": commandName,
+            "description": String(
+                format: String(
+                    localized: "repoAgentLauncher.commandDescription",
+                    defaultValue: "Create a %@ workspace scoped to %@"
+                ),
+                agentLabel,
+                normalizedRepoName
+            ),
+            "restart": "new",
+            "keywords": [
+                normalizedRepoName,
+                agent.commandName,
+                "repo",
+                "ai",
+            ],
+            "workspace": [
+                "name": normalizedRepoName,
+                "cwd": repoURL.path,
+                "layout": [
+                    "pane": [
+                        "surfaces": [[
+                            "type": "terminal",
+                            "name": agentLabel,
+                            "command": agent.commandName,
+                            "focus": true,
+                        ]],
+                    ],
+                ],
+            ],
+        ])
+
+        let actionsJSON = try jsonStringForRepoAgentLauncherValue(actions)
+        let commandsJSON = try jsonStringForRepoAgentLauncherValue(commands)
+        guard var updatedSource = JSONCObjectEditor.setRootProperty(
+            key: "actions",
+            valueJSON: actionsJSON,
+            in: source.text
+        ) else {
+            throw RepoAgentLauncherConfigError.writeFailed
+        }
+        guard let updatedWithCommands = JSONCObjectEditor.setRootProperty(
+            key: "commands",
+            valueJSON: commandsJSON,
+            in: updatedSource
+        ) else {
+            throw RepoAgentLauncherConfigError.writeFailed
+        }
+        updatedSource = updatedWithCommands
+        guard let updatedData = updatedSource.data(using: source.encoding) else {
+            throw RepoAgentLauncherConfigError.encodeFailed
+        }
+        _ = try JSONCParser.preprocess(data: updatedData)
+
+        try fileManager.createDirectory(
+            at: configURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try updatedData.write(to: configURL, options: [.atomic])
+        try? fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: configURL.path)
+    }
+
+    private func jsonStringForRepoAgentLauncherValue(_ value: Any) throws -> String {
+        guard JSONSerialization.isValidJSONObject(value) else {
+            throw RepoAgentLauncherConfigError.encodeFailed
+        }
+        let data = try JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys])
+        guard let json = String(data: data, encoding: .utf8) else {
+            throw RepoAgentLauncherConfigError.encodeFailed
+        }
+        return json
+    }
+
+    private func repoAgentLauncherAgentTitle(_ agent: CmuxConfigAgentKind) -> String {
+        switch agent {
+        case .codex:
+            return String(localized: "repoAgentLauncher.agent.codex", defaultValue: "Codex")
+        case .claudeCode:
+            return String(localized: "repoAgentLauncher.agent.claude", defaultValue: "Claude")
+        }
+    }
+
+    private func slugForRepoAgentLauncher(_ name: String) -> String {
+        let lowercased = name.lowercased()
+        var slug = ""
+        var lastWasSeparator = false
+        for scalar in lowercased.unicodeScalars {
+            if CharacterSet.alphanumerics.contains(scalar) {
+                slug.unicodeScalars.append(scalar)
+                lastWasSeparator = false
+            } else if !lastWasSeparator {
+                slug.append("-")
+                lastWasSeparator = true
+            }
+        }
+        let trimmed = slug.trimmingCharacters(in: CharacterSet(charactersIn: "-"))
+        return trimmed.isEmpty ? "repository" : trimmed
+    }
+
+    private func uniqueConfigActionID(base: String, existingIDs: Set<String>) -> String {
+        uniqueConfigName(base, existingNames: existingIDs)
+    }
+
+    private func uniqueConfigName(_ base: String, existingNames: Set<String>) -> String {
+        if !existingNames.contains(base) {
+            return base
+        }
+        var index = 2
+        while existingNames.contains("\(base) \(index)") {
+            index += 1
+        }
+        return "\(base) \(index)"
     }
 
     /// Shows the "Open Folder" panel and creates a workspace for the selected directory.

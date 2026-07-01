@@ -2033,6 +2033,9 @@ struct ContentView: View {
                     NSSound.beep()
                 }
             },
+            onShowRepoAgentLaunchers: { anchorView in
+                _ = AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView)
+            },
             visibilityMode: .alwaysVisible
         )
         .offset(y: -TitlebarControlsVisualMetrics.verticalLift)
@@ -2043,7 +2046,10 @@ struct ContentView: View {
     /// the controls, which are themselves mounted once in the band overlay.
     private var fullscreenControlsWidth: CGFloat {
         let style = TitlebarControlsStyle(rawValue: titlebarControlsStyleRawValue) ?? .classic
-        return TitlebarControlsLayoutMetrics.contentSize(config: style.config).width
+        return TitlebarControlsLayoutMetrics.contentSize(
+            config: style.config,
+            additionalButtonCount: 1
+        ).width
     }
 
     private var titlebarDebugChromeSnapshot: MinimalModeTitlebarDebugSnapshot {
@@ -10381,6 +10387,9 @@ struct VerticalTabsSidebar: View {
                 if !tabManager.navigateForward() {
                     NSSound.beep()
                 }
+            },
+            onShowRepoAgentLaunchers: { anchorView in
+                _ = AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView)
             }
         )
     }
@@ -13814,7 +13823,7 @@ struct TabItemView: View, Equatable {
             SidebarTrailingAccessoryWidthPolicy().closeButtonWidth,
             scaledCloseButtonHitSize
         )
-        let aiBusyTooltip = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running")
+        let aiBusyTooltip = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running or needs input")
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .top, spacing: 8) {

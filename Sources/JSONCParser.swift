@@ -231,6 +231,28 @@ enum JSONCParser {
 }
 
 enum JSONCObjectEditor {
+    static func setRootProperty(
+        key: String,
+        valueJSON: String,
+        in source: String
+    ) -> String? {
+        guard let root = rootObject(in: source) else { return nil }
+        let newline = preferredNewline(in: source)
+
+        if let property = root.property(named: key) {
+            let propertyIndent = indentationBeforeLine(containing: property.keyStart, in: source)
+            let replacement = withPreferredNewline(
+                valueJSONForProperty(valueJSON, propertyIndent: propertyIndent),
+                newline: newline
+            )
+            return replacing(source, from: property.valueStart, to: property.valueEnd, with: replacement)
+        }
+
+        let indent = propertyIndent(for: root, in: source)
+        let propertyText = propertyText(key: key, valueJSON: valueJSON, indent: indent)
+        return inserting(propertyText, into: root, in: source)
+    }
+
     static func setNestedObjectProperty(
         parentKey: String,
         childKey: String,
