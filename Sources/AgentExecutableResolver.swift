@@ -1,6 +1,51 @@
 import CmuxSettings
 import Foundation
 
+struct RepoAgentLauncherAgentOption: Equatable {
+    let agent: CmuxConfigAgentKind
+    let executablePath: String
+}
+
+struct RepoAgentLauncherAgentDetector {
+    var environment: [String: String]
+    var fileManager: FileManager
+    var configuredExecutablePaths: [AgentSessionProviderID: String]
+
+    init(
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        fileManager: FileManager = .default,
+        configuredExecutablePaths: [AgentSessionProviderID: String] = AgentExecutableResolver.cmuxConfiguredExecutablePaths()
+    ) {
+        self.environment = environment
+        self.fileManager = fileManager
+        self.configuredExecutablePaths = configuredExecutablePaths
+    }
+
+    func detectedOptions() -> [RepoAgentLauncherAgentOption] {
+        supportedAgents.compactMap { item in
+            let resolver = AgentExecutableResolver(
+                environment: environment,
+                fileManager: fileManager,
+                configuredExecutablePaths: configuredExecutablePaths
+            )
+            guard let plan = try? resolver.resolve(item.provider) else {
+                return nil
+            }
+            return RepoAgentLauncherAgentOption(
+                agent: item.agent,
+                executablePath: plan.executableURL.path
+            )
+        }
+    }
+
+    private var supportedAgents: [(agent: CmuxConfigAgentKind, provider: AgentSessionProviderID)] {
+        [
+            (.codex, .codex),
+            (.claudeCode, .claude),
+        ]
+    }
+}
+
 struct AgentExecutableResolver {
     var environment: [String: String]
     var fileManager: FileManager
