@@ -12,9 +12,9 @@ import Foundation
 struct AutoNamingConfig: Sendable {
     /// Minimum transcript line growth since the last naming before another
     /// summarization call is considered.
-    var minLineGrowth: Int = 6
+    var minLineGrowth: Int = 12
     /// Minimum seconds between summarization calls for one session.
-    var minInterval: TimeInterval = 180
+    var minInterval: TimeInterval = 300
     /// Transcripts shorter than this are skipped entirely (subagent or
     /// trivial sessions).
     var minTranscriptLines: Int = 12
@@ -29,7 +29,7 @@ struct AutoNamingConfig: Sendable {
     /// Total lifetime of an in-flight marker before a new pass may start.
     var inFlightExpiry: TimeInterval { llmTimeout + inFlightExpiryGrace }
     /// Maximum title length after sanitization.
-    var maxTitleLength: Int = 50
+    var maxTitleLength: Int = 80
     /// Leading user messages included in the summarization context.
     var contextHeadUserMessages: Int = 2
     /// Trailing user/assistant messages included in the context.
@@ -75,6 +75,11 @@ enum AutoNamingThrottleDecision: Equatable, Sendable {
     case skipInFlight
     case skipTooSoon
     case skipInsufficientGrowth
+}
+
+enum AutoNamingSanitizedTitle: Equatable, Sendable {
+    case changed(String)
+    case unchanged(String)
 }
 
 /// One user/assistant text message extracted from a transcript.
@@ -348,12 +353,18 @@ struct AutoNamingEngine: Sendable {
     func buildPrompt(currentTitle: String?, context: String) -> String {
         var lines: [String] = [
             "You name terminal workspace tabs for a developer running coding agents.",
-            "Given a conversation excerpt, output ONLY a short subject statement that reflects what the conversation is currently talking about.",
-            "Write a compact grammatical phrase in the same language as the conversation.",
+            "Given a conversation excerpt, output ONLY an informative subject statement, up to 80 characters, that reflects what the conversation is currently talking about.",
+            "Write a natural, human-readable grammatical phrase in the same language as the conversation.",
+            "Prefer concrete nouns from the work: feature, bug, ticket, repo, file, workflow, or decision.",
+            "Do not emit title-case keyword fragments or generic category labels.",
+            "Do not rename just because wording could be slightly improved; change only when the main subject has meaningfully changed.",
             "Use one line only, no quotes, no trailing punctuation.",
             "Avoid filler words such as \"now\", \"seeing\", \"trying\", or \"working on\".",
             "Bad: Now Seeing Trying",
+            "Bad: Look Ticket Determine",
+            "Bad: Workspace Automation",
             "Good: Improving workspace tab summaries",
+            "Good: Creating CompanyCam API branch and PR for ticket",
             "Good: Debugging Vite startup failures",
             ""
         ]
@@ -372,6 +383,13 @@ struct AutoNamingEngine: Sendable {
     /// needed). Takes the first non-empty line, strips wrapping quotes,
     /// collapses whitespace, and enforces the length cap at a word boundary.
     func sanitizeResponse(_ raw: String?, currentTitle: String?) -> String? {
+        guard case .changed(let title) = sanitizeResponseOutcome(raw, currentTitle: currentTitle) else {
+            return nil
+        }
+        return title
+    }
+
+    func sanitizeResponseOutcome(_ raw: String?, currentTitle: String?) -> AutoNamingSanitizedTitle? {
         guard let raw else { return nil }
         guard let firstLine = raw
             .components(separatedBy: .newlines)
@@ -402,8 +420,19 @@ struct AutoNamingEngine: Sendable {
             title = title.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         guard !title.isEmpty else { return nil }
-        if let currentTitle, title == currentTitle { return nil }
-        return title
+        if let currentTitle,
+           normalizedTitleIdentity(title) == normalizedTitleIdentity(currentTitle) {
+            return .unchanged(currentTitle.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        return .changed(title)
+    }
+
+    private func normalizedTitleIdentity(_ title: String) -> String {
+        title
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
     }
 
     private func appendHookMessage(

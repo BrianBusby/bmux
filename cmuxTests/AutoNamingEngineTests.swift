@@ -263,7 +263,7 @@ import Testing
     }
 
     @Test func sanitizationEnforcesLengthCapAtWordBoundary() throws {
-        let long = "Investigating the extremely convoluted authentication subsystem regression"
+        let long = "Investigating the extremely convoluted authentication subsystem regression across workspace tab title generation"
         let sanitized = try #require(engine.sanitizeResponse(long, currentTitle: nil))
         #expect(sanitized.count <= config.maxTitleLength)
         #expect(!sanitized.hasSuffix(" "))

@@ -90,20 +90,28 @@ extension CMUXCLI {
             return
         }
 
-        guard let sanitized = engine.sanitizeResponse(rawResponse, currentTitle: nil) else { return }
-        confirmedTitle = applyAutoNamingTitle(
-            sanitized,
-            workspaceId: workspaceId,
-            surfaceId: surfaceId,
-            previousTitle: outcome.lastTitle,
-            client: client,
-            telemetryKey: "claude-hook.auto-name",
-            telemetry: telemetry
-        )
-        // Re-report a missing override only after the fallback apply, so the
-        // app's clear-on-apply doesn't immediately wipe the Settings note.
-        if confirmedTitle != nil, let missing = resolution.missingOverride {
-            reportAutoNamingProblem("not_installed", agent: missing, workspaceId: workspaceId, client: client)
+        guard let titleOutcome = engine.sanitizeResponseOutcome(rawResponse, currentTitle: outcome.lastTitle) else {
+            return
+        }
+        switch titleOutcome {
+        case .changed(let sanitized):
+            confirmedTitle = applyAutoNamingTitle(
+                sanitized,
+                workspaceId: workspaceId,
+                surfaceId: surfaceId,
+                previousTitle: outcome.lastTitle,
+                client: client,
+                telemetryKey: "claude-hook.auto-name",
+                telemetry: telemetry
+            )
+            // Re-report a missing override only after the fallback apply, so the
+            // app's clear-on-apply doesn't immediately wipe the Settings note.
+            if confirmedTitle != nil, let missing = resolution.missingOverride {
+                reportAutoNamingProblem("not_installed", agent: missing, workspaceId: workspaceId, client: client)
+            }
+        case .unchanged(let title):
+            confirmedTitle = title
+            telemetry.breadcrumb("claude-hook.auto-name.unchanged")
         }
     }
 
