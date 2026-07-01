@@ -133,7 +133,8 @@ import Testing
         latestConversationMessage: String? = nil,
         listeningPorts: [Int] = [],
         finderDirectoryPath: String? = nil,
-        mediaActivity: BrowserMediaActivity = BrowserMediaActivity()
+        mediaActivity: BrowserMediaActivity = BrowserMediaActivity(),
+        hasActiveAIWork: Bool = false
     ) -> SidebarWorkspaceSnapshotBuilder.Snapshot {
         SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: presentationKey ?? Self.presentationKey(),
@@ -159,7 +160,8 @@ import Testing
             pullRequestRows: [],
             listeningPorts: listeningPorts,
             finderDirectoryPath: finderDirectoryPath,
-            mediaActivity: mediaActivity
+            mediaActivity: mediaActivity,
+            hasActiveAIWork: hasActiveAIWork
         )
     }
 
