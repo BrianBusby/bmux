@@ -379,6 +379,15 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
         assertColor(foreground, equals: NSColor.white.withAlphaComponent(0.75))
     }
 
+    func testBusyEllipsisPaletteUsesVisibleInactiveAndActiveDots() {
+        let palette = WorkspaceBusyEllipsisPalette.default
+
+        assertColor(palette.inactiveFillColor, equals: NSColor.black.withAlphaComponent(0.78))
+        assertColor(palette.activeFillColor, equals: .white)
+        assertColor(palette.inactiveStrokeColor, equals: NSColor.white.withAlphaComponent(0.70))
+        assertColor(palette.activeStrokeColor, equals: NSColor.black.withAlphaComponent(0.72))
+    }
+
     func testTitlebarControlForegroundContrastsWithLightTerminalBackground() throws {
         let background = try XCTUnwrap(NSColor(hex: "#F7F7F7"))
         let snapshot = makeWindowAppearanceSnapshot(background: background)

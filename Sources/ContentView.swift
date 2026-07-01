@@ -13244,21 +13244,54 @@ private final class SidebarTabItemContextMenuState: ObservableObject {
     var pendingWorkspaceSnapshot: SidebarWorkspaceSnapshotBuilder.Snapshot?
 }
 
+struct WorkspaceBusyEllipsisPalette {
+    let inactiveFillColor: NSColor
+    let activeFillColor: NSColor
+    let inactiveStrokeColor: NSColor
+    let activeStrokeColor: NSColor
+
+    static let `default` = WorkspaceBusyEllipsisPalette(
+        inactiveFillColor: NSColor.black.withAlphaComponent(0.78),
+        activeFillColor: .white,
+        inactiveStrokeColor: NSColor.white.withAlphaComponent(0.70),
+        activeStrokeColor: NSColor.black.withAlphaComponent(0.72)
+    )
+
+    func fillColor(isActive: Bool) -> Color {
+        Color(nsColor: isActive ? activeFillColor : inactiveFillColor)
+    }
+
+    func strokeColor(isActive: Bool) -> Color {
+        Color(nsColor: isActive ? activeStrokeColor : inactiveStrokeColor)
+    }
+}
+
 private struct WorkspaceBusyEllipsisIndicator: View {
-    let color: Color
+    let palette: WorkspaceBusyEllipsisPalette = .default
     let size: CGFloat
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 0.28)) { timeline in
             let phase = Int(timeline.date.timeIntervalSinceReferenceDate / 0.28) % 3
             let dotSize = max(3, size * 0.24)
+            let strokeWidth = max(0.6, dotSize * 0.16)
             HStack(spacing: max(1, size * 0.08)) {
                 ForEach(0..<3, id: \.self) { index in
+                    let isActive = index == phase
                     Circle()
-                        .fill(color)
+                        .fill(palette.fillColor(isActive: isActive))
+                        .overlay {
+                            Circle()
+                                .stroke(palette.strokeColor(isActive: isActive), lineWidth: strokeWidth)
+                        }
                         .frame(width: dotSize, height: dotSize)
-                        .opacity(index == phase ? 1.0 : 0.32)
-                        .scaleEffect(index == phase ? 1.18 : 0.82)
+                        .shadow(
+                            color: palette.strokeColor(isActive: isActive).opacity(isActive ? 0.60 : 0.36),
+                            radius: isActive ? 0.8 : 0.5,
+                            x: 0,
+                            y: 0
+                        )
+                        .scaleEffect(isActive ? 1.18 : 0.82)
                         .animation(.easeInOut(duration: 0.22), value: phase)
                 }
             }
@@ -13530,10 +13563,6 @@ struct TabItemView: View, Equatable {
         usesInvertedActiveForeground ? activePrimaryTextColor : .white
     }
 
-    private var activeBusyIndicatorColor: Color {
-        usesInvertedActiveForeground ? activePrimaryTextColor : cmuxAccentColor()
-    }
-
     private var activeProgressTrackColor: Color {
         usesInvertedActiveForeground ? activeSecondaryColor(0.15) : Color.secondary.opacity(0.2)
     }
@@ -13732,9 +13761,17 @@ struct TabItemView: View, Equatable {
         )
         let aiBusyTooltip = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running")
 
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .top, spacing: 8) {
-                if unreadCount > 0 {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .top, spacing: 8) {
+                    if workspaceSnapshot.hasActiveAIWork {
+                        WorkspaceBusyEllipsisIndicator(
+                            size: scaledUnreadBadgeSize
+                        )
+                        .safeHelp(aiBusyTooltip)
+                        .accessibilityLabel(aiBusyTooltip)
+                    }
+
+                    if unreadCount > 0 {
                     ZStack {
                         Circle()
                             .fill(activeUnreadBadgeFillColor)
@@ -13743,14 +13780,7 @@ struct TabItemView: View, Equatable {
                             .foregroundColor(activeUnreadBadgeTextColor)
                     }
                     .frame(width: scaledUnreadBadgeSize, height: scaledUnreadBadgeSize)
-                } else if workspaceSnapshot.hasActiveAIWork {
-                    WorkspaceBusyEllipsisIndicator(
-                        color: activeBusyIndicatorColor,
-                        size: scaledUnreadBadgeSize
-                    )
-                    .safeHelp(aiBusyTooltip)
-                    .accessibilityLabel(aiBusyTooltip)
-                }
+                    }
 
                 if workspaceSnapshot.isPinned {
                     CmuxSystemSymbolImage(magnified: "pin.fill", pointSize: scaledFontSize(9), weight: .semibold)
