@@ -13269,6 +13269,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         let pullRequestRows: [PullRequestDisplay]
         let listeningPorts: [Int]
         let finderDirectoryPath: String?
+        let repoBadgeAppearance: WorkspaceRepoBadgeAppearance?
         let mediaActivity: BrowserMediaActivity
         let hasActiveAIWork: Bool
     }
@@ -13889,14 +13890,24 @@ struct TabItemView: View, Equatable {
                         .accessibilityLabel(cameraInUseTooltip)
                 }
 
-                Text(displayedTitle)
-                    .font(magnifiedFont(scaledFontSize(12.5), weight: titleFontWeight))
-                    .foregroundColor(activePrimaryTextColor)
-                    .lineLimit(titleLineLimit)
-                    .truncationMode(.tail)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .layoutPriority(1)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(displayedTitle)
+                        .font(magnifiedFont(scaledFontSize(12.5), weight: titleFontWeight))
+                        .foregroundColor(activePrimaryTextColor)
+                        .lineLimit(titleLineLimit)
+                        .truncationMode(.tail)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    if let repoBadgeAppearance = workspaceSnapshot.repoBadgeAppearance {
+                        Text(repoBadgeAppearance.name)
+                            .font(magnifiedFont(scaledFontSize(9), weight: .medium))
+                            .foregroundColor(repoBadgeColor(for: repoBadgeAppearance.colorHex))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .layoutPriority(1)
 
                 // The close button is a sibling that always reserves its width
                 // when the workspace is closable, so the title wraps/truncates
@@ -14667,6 +14678,14 @@ struct TabItemView: View, Equatable {
         ) ?? NSColor(hex: hex) ?? .gray
     }
 
+    private func repoBadgeColor(for hex: String) -> Color {
+        WorkspaceTabColorSettings.displayColor(
+            hex: hex,
+            colorScheme: colorScheme,
+            forceBright: usesInvertedActiveForeground
+        ) ?? activeSecondaryColor(0.86)
+    }
+
     private var accessibilityTitle: String {
         String(localized: "accessibility.workspacePosition", defaultValue: "\(workspaceSnapshot.title), workspace \(index + 1) of \(accessibilityWorkspaceCount)")
     }
@@ -14955,6 +14974,9 @@ struct TabItemView: View, Equatable {
             pullRequestRows: pullRequestRows,
             listeningPorts: detailVisibility.showsPorts ? tab.listeningPorts : [],
             finderDirectoryPath: WorkspaceFinderDirectoryResolver.path(for: tab),
+            repoBadgeAppearance: WorkspaceRepoBadgeAppearanceResolver.sessionAppearance(
+                repoRootPath: tab.extensionSidebarProjectRootPath
+            ),
             mediaActivity: tab.browserMediaActivity,
             hasActiveAIWork: tab.hasActiveAIWork
         )

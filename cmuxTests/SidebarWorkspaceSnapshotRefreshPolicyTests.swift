@@ -133,6 +133,7 @@ import Testing
         latestConversationMessage: String? = nil,
         listeningPorts: [Int] = [],
         finderDirectoryPath: String? = nil,
+        repoBadgeAppearance: WorkspaceRepoBadgeAppearance? = nil,
         mediaActivity: BrowserMediaActivity = BrowserMediaActivity(),
         hasActiveAIWork: Bool = false
     ) -> SidebarWorkspaceSnapshotBuilder.Snapshot {
@@ -160,6 +161,7 @@ import Testing
             pullRequestRows: [],
             listeningPorts: listeningPorts,
             finderDirectoryPath: finderDirectoryPath,
+            repoBadgeAppearance: repoBadgeAppearance,
             mediaActivity: mediaActivity,
             hasActiveAIWork: hasActiveAIWork
         )
@@ -223,6 +225,67 @@ import Testing
             notificationText: nil,
             conversationMessage: " \n "
         ) == nil)
+    }
+}
+
+@Suite struct WorkspaceRepoBadgeAppearanceResolverTests {
+    @Test func returnsNilForBlankRepoPath() {
+        var resolver = WorkspaceRepoBadgeAppearanceResolver(
+            palette: ["#F2C94C"]
+        )
+
+        let blankAppearance = resolver.appearance(repoRootPath: " \n ")
+        let missingAppearance = resolver.appearance(repoRootPath: nil)
+
+        #expect(blankAppearance == nil)
+        #expect(missingAppearance == nil)
+    }
+
+    @Test func usesLastPathComponentAsRepoName() throws {
+        var resolver = WorkspaceRepoBadgeAppearanceResolver(
+            palette: ["#F2C94C"]
+        )
+
+        let appearanceCandidate = resolver.appearance(
+            repoRootPath: "/Users/brian/repos/cmux"
+        )
+        let appearance = try #require(appearanceCandidate)
+
+        #expect(appearance.name == "cmux")
+        #expect(appearance.colorHex == "#F2C94C")
+    }
+
+    @Test func reusesColorForSameNormalizedRepoPath() throws {
+        var resolver = WorkspaceRepoBadgeAppearanceResolver(
+            palette: ["#F2C94C", "#56CCF2"]
+        )
+
+        let firstCandidate = resolver.appearance(
+            repoRootPath: "/Users/brian/repos/cmux"
+        )
+        let secondCandidate = resolver.appearance(
+            repoRootPath: "/Users/brian/repos/cmux/"
+        )
+        let first = try #require(firstCandidate)
+        let second = try #require(secondCandidate)
+
+        #expect(first.name == "cmux")
+        #expect(second.name == "cmux")
+        #expect(first.colorHex == second.colorHex)
+    }
+
+    @Test func assignsDifferentColorsToDifferentReposWhenPaletteAllows() throws {
+        var resolver = WorkspaceRepoBadgeAppearanceResolver(
+            palette: ["#F2C94C", "#56CCF2"]
+        )
+
+        let cmuxCandidate = resolver.appearance(repoRootPath: "/repo/cmux")
+        let apiCandidate = resolver.appearance(repoRootPath: "/repo/api")
+        let cmux = try #require(cmuxCandidate)
+        let api = try #require(apiCandidate)
+
+        #expect(cmux.colorHex == "#F2C94C")
+        #expect(api.colorHex == "#56CCF2")
     }
 }
 
