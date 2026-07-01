@@ -602,12 +602,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let agent: CmuxConfigAgentKind
     }
 
-    private struct RepoAgentLauncherAgentOption {
-        let agent: CmuxConfigAgentKind
-        let title: String
-        let executablePath: String
-    }
-
     private final class MainWindowController: NSWindowController, NSWindowDelegate {
         var onClose: (() -> Void)?
         var shouldClose: (() -> Bool)?
@@ -7831,7 +7825,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                         localized: "dialog.repoAgentLauncher.agentOption",
                         defaultValue: "%@ (%@)"
                     ),
-                    option.title,
+                    repoAgentLauncherAgentTitle(option.agent),
                     option.executablePath
                 )
                 agentPopup.addItem(withTitle: title)
@@ -7883,53 +7877,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     private func detectedRepoAgentLauncherOptions() -> [RepoAgentLauncherAgentOption] {
-        [
-            CmuxConfigAgentKind.codex,
-            CmuxConfigAgentKind.claudeCode,
-        ].compactMap { agent in
-            guard let executablePath = executablePathForRepoAgentLauncher(agent.commandName) else {
-                return nil
-            }
-            return RepoAgentLauncherAgentOption(
-                agent: agent,
-                title: repoAgentLauncherAgentTitle(agent),
-                executablePath: executablePath
-            )
-        }
-    }
-
-    private func executablePathForRepoAgentLauncher(_ commandName: String) -> String? {
-        let environmentPath = ProcessInfo.processInfo.environment["PATH"] ?? ""
-        let commonDirectories = [
-            "/opt/homebrew/bin",
-            "/usr/local/bin",
-            "/usr/bin",
-            "/bin",
-            "\(NSHomeDirectory())/.local/bin",
-            "\(NSHomeDirectory())/.npm-global/bin",
-        ]
-        let searchDirectories = uniqueRepoAgentLauncherSearchDirectories(
-            environmentPath.split(separator: ":").map(String.init) + commonDirectories
-        )
-        for directory in searchDirectories {
-            let candidate = URL(fileURLWithPath: directory).appendingPathComponent(commandName).path
-            if FileManager.default.isExecutableFile(atPath: candidate) {
-                return candidate
-            }
-        }
-        return nil
-    }
-
-    private func uniqueRepoAgentLauncherSearchDirectories(_ directories: [String]) -> [String] {
-        var seen = Set<String>()
-        var result: [String] = []
-        for directory in directories where !directory.isEmpty {
-            guard seen.insert(directory).inserted else {
-                continue
-            }
-            result.append(directory)
-        }
-        return result
+        RepoAgentLauncherAgentDetector().detectedOptions()
     }
 
     private func showRepoAgentLauncherError(_ error: Error, presentingWindow: NSWindow?) {
