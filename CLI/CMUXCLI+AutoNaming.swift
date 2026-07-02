@@ -30,10 +30,8 @@ struct AutoNamingConfig: Sendable {
     var inFlightExpiry: TimeInterval { llmTimeout + inFlightExpiryGrace }
     /// Maximum title length after sanitization.
     var maxTitleLength: Int = 80
-    /// Leading user messages included in the summarization context.
-    var contextHeadUserMessages: Int = 2
-    /// Trailing user/assistant messages included in the context.
-    var contextTailMessages: Int = 4
+    /// Recent user-led exchanges included in the summarization context.
+    var contextRecentExchangeCount: Int = 25
     /// Per-message truncation applied to context excerpts.
     var contextMessageMaxChars: Int = 240
 }
@@ -234,17 +232,14 @@ struct AutoNamingEngine: Sendable {
         return messages
     }
 
-    /// Builds the summarization context: the first user messages anchor the
-    /// session's purpose, the trailing messages capture the current topic.
+    /// Builds the summarization context from the recent user-led exchanges so
+    /// stale setup work does not anchor the current workspace title.
     func buildContext(from messages: [AutoNamingTranscriptMessage]) -> String? {
         guard !messages.isEmpty else { return nil }
-        let headUser = messages
-            .filter { $0.role == "user" }
-            .prefix(config.contextHeadUserMessages)
-        let tail = messages.suffix(config.contextTailMessages)
+        let recentMessages = recentExchangeMessages(from: messages)
         var seen = Set<String>()
         var parts: [String] = []
-        for message in Array(headUser) + Array(tail) {
+        for message in recentMessages {
             let excerpt = String(message.text.prefix(config.contextMessageMaxChars))
             let key = "\(message.role):\(excerpt)"
             guard seen.insert(key).inserted else { continue }
@@ -252,6 +247,33 @@ struct AutoNamingEngine: Sendable {
         }
         let context = parts.joined(separator: "\n")
         return context.isEmpty ? nil : context
+    }
+
+    private func recentExchangeMessages(from messages: [AutoNamingTranscriptMessage]) -> [AutoNamingTranscriptMessage] {
+        var completedExchanges: [[AutoNamingTranscriptMessage]] = []
+        var currentExchange: [AutoNamingTranscriptMessage] = []
+
+        for message in messages {
+            if message.role == "user" {
+                if !currentExchange.isEmpty {
+                    completedExchanges.append(currentExchange)
+                }
+                currentExchange = [message]
+            } else if !currentExchange.isEmpty {
+                currentExchange.append(message)
+            }
+        }
+
+        let includesOpenUserExchange = currentExchange.last?.role == "user"
+        let completeWindow = completedExchanges.suffix(config.contextRecentExchangeCount)
+        var selected = completeWindow.flatMap { $0 }
+        if includesOpenUserExchange {
+            selected.append(contentsOf: currentExchange)
+        } else if !currentExchange.isEmpty {
+            let allExchanges = completedExchanges + [currentExchange]
+            selected = allExchanges.suffix(config.contextRecentExchangeCount).flatMap { $0 }
+        }
+        return selected
     }
 
     // MARK: - Transcript extraction (Codex rollout JSONL)
@@ -353,7 +375,7 @@ struct AutoNamingEngine: Sendable {
     func buildPrompt(currentTitle: String?, context: String) -> String {
         var lines: [String] = [
             "You name terminal workspace tabs for a developer running coding agents.",
-            "Given a conversation excerpt, output ONLY an informative subject statement, up to 80 characters, that reflects what the conversation is currently talking about.",
+            "Given up to the last 25 recent exchanges from a conversation, output ONLY an informative subject statement, up to 80 characters, that summarizes the current task being worked on.",
             "Write a natural, human-readable grammatical phrase in the same language as the conversation.",
             "Prefer concrete nouns from the work: feature, bug, ticket, repo, file, workflow, or decision.",
             "Do not emit title-case keyword fragments or generic category labels.",

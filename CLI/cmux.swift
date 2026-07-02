@@ -240,7 +240,7 @@ final class ClaudeHookSessionStore {
     private static let defaultStatePath = "~/.cmuxterm/claude-hook-sessions.json"
     private static let maxStateAgeSeconds: TimeInterval = 60 * 60 * 24 * 7
     private static let maxRememberedTerminalPromptTurnIds = 32
-    private static let maxAutoNameRecentMessages = 24
+    private static let maxAutoNameRecentMessages = 75
     private static let maxAutoNameMessageCharacters = 1_000
 
     private let statePath: String

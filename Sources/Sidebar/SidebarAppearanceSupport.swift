@@ -314,11 +314,11 @@ func sidebarWorkspaceRowBackgroundStyle(
         if isActive {
             return SidebarWorkspaceRowBackgroundStyle(
                 color: selectedBackground,
-                opacity: 1
+                opacity: 0.78
             )
         }
         if isMultiSelected {
-            return SidebarWorkspaceRowBackgroundStyle(color: accentBackground, opacity: 0.25)
+            return SidebarWorkspaceRowBackgroundStyle(color: accentBackground, opacity: 0.18)
         }
         return .clear
 
@@ -326,17 +326,17 @@ func sidebarWorkspaceRowBackgroundStyle(
         if isActive {
             return SidebarWorkspaceRowBackgroundStyle(
                 color: selectedBackground,
-                opacity: 1
+                opacity: 0.78
             )
         }
         if let customBackground {
             return SidebarWorkspaceRowBackgroundStyle(
                 color: customBackground,
-                opacity: isMultiSelected ? 0.35 : 0.7
+                opacity: isMultiSelected ? 0.24 : 0.46
             )
         }
         if isMultiSelected {
-            return SidebarWorkspaceRowBackgroundStyle(color: accentBackground, opacity: 0.25)
+            return SidebarWorkspaceRowBackgroundStyle(color: accentBackground, opacity: 0.18)
         }
         return .clear
     }
