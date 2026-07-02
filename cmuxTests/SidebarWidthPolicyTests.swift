@@ -379,22 +379,91 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
         assertColor(foreground, equals: NSColor.white.withAlphaComponent(0.75))
     }
 
-    func testTronLoadingIndicatorPaletteKeepsCyanVisibleOnLightAndDarkBackgrounds() throws {
-        let palette = TronLoadingIndicatorPalette.default
-        let color = try XCTUnwrap(NSColor(hex: "#33F5FF"))
-
-        assertColor(palette.backdropColor, equals: NSColor.black.withAlphaComponent(0.72))
-        assertColor(palette.defaultColor, equals: color)
-        XCTAssertGreaterThanOrEqual(
-            cmuxContrastRatio(foreground: color, background: .black),
-            3.0
+    func testWorkspaceLoadingIndicatorUsesBlackOnClearLightRows() {
+        let foreground = sidebarWorkspaceRowLoadingIndicatorNSColor(
+            activeTabIndicatorStyle: .leftRail,
+            isActive: false,
+            isMultiSelected: false,
+            customColorHex: nil,
+            colorScheme: .light,
+            sidebarSelectionColorHex: nil
         )
 
-        let backdropOverWhite = palette.backdropColor.blended(withFraction: 1.0 - palette.backdropColor.alphaComponent, of: .white)
-        let effectiveBackground = try XCTUnwrap(backdropOverWhite)
-        XCTAssertGreaterThanOrEqual(
-            cmuxContrastRatio(foreground: color, background: effectiveBackground),
-            3.0
+        assertColor(foreground, equals: .black)
+    }
+
+    func testWorkspaceLoadingIndicatorUsesWhiteOnClearDarkRows() {
+        let foreground = sidebarWorkspaceRowLoadingIndicatorNSColor(
+            activeTabIndicatorStyle: .leftRail,
+            isActive: false,
+            isMultiSelected: false,
+            customColorHex: nil,
+            colorScheme: .dark,
+            sidebarSelectionColorHex: nil
+        )
+
+        assertColor(foreground, equals: .white)
+    }
+
+    func testWorkspaceLoadingIndicatorUsesBlackOnPaleSelectedRows() throws {
+        let selectionBackground = try XCTUnwrap(NSColor(hex: "#F7F7F7"))
+        let foreground = sidebarWorkspaceRowLoadingIndicatorNSColor(
+            activeTabIndicatorStyle: .solidFill,
+            isActive: true,
+            isMultiSelected: false,
+            customColorHex: "#E85D75",
+            colorScheme: .light,
+            sidebarSelectionColorHex: selectionBackground.hexString(),
+            baseBackgroundColor: .white
+        )
+        let style = sidebarWorkspaceRowBackgroundStyle(
+            activeTabIndicatorStyle: .solidFill,
+            isActive: true,
+            isMultiSelected: false,
+            customColorHex: "#E85D75",
+            colorScheme: .light,
+            sidebarSelectionColorHex: selectionBackground.hexString()
+        )
+        let effectiveBackground = cmuxCompositedNSColor(
+            try XCTUnwrap(style.color).withAlphaComponent(CGFloat(style.opacity)),
+            over: .white
+        )
+
+        assertColor(foreground, equals: .black)
+        XCTAssertGreaterThan(
+            cmuxContrastRatio(foreground: foreground, background: effectiveBackground),
+            cmuxContrastRatio(foreground: .white, background: effectiveBackground)
+        )
+    }
+
+    func testWorkspaceLoadingIndicatorUsesWhiteOnDarkSelectedRows() throws {
+        let selectionBackground = try XCTUnwrap(NSColor(hex: "#123456"))
+        let foreground = sidebarWorkspaceRowLoadingIndicatorNSColor(
+            activeTabIndicatorStyle: .solidFill,
+            isActive: true,
+            isMultiSelected: false,
+            customColorHex: nil,
+            colorScheme: .light,
+            sidebarSelectionColorHex: selectionBackground.hexString(),
+            baseBackgroundColor: .white
+        )
+        let style = sidebarWorkspaceRowBackgroundStyle(
+            activeTabIndicatorStyle: .solidFill,
+            isActive: true,
+            isMultiSelected: false,
+            customColorHex: nil,
+            colorScheme: .light,
+            sidebarSelectionColorHex: selectionBackground.hexString()
+        )
+        let effectiveBackground = cmuxCompositedNSColor(
+            try XCTUnwrap(style.color).withAlphaComponent(CGFloat(style.opacity)),
+            over: .white
+        )
+
+        assertColor(foreground, equals: .white)
+        XCTAssertGreaterThan(
+            cmuxContrastRatio(foreground: foreground, background: effectiveBackground),
+            cmuxContrastRatio(foreground: .black, background: effectiveBackground)
         )
     }
 

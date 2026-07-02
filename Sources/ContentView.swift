@@ -13576,6 +13576,17 @@ struct TabItemView: View, Equatable {
         usesInvertedActiveForeground ? activeSecondaryColor(0.8) : cmuxAccentColor()
     }
 
+    private var workspaceLoadingIndicatorColor: Color {
+        Color(nsColor: sidebarWorkspaceRowLoadingIndicatorNSColor(
+            activeTabIndicatorStyle: activeTabIndicatorStyle,
+            isActive: isActive,
+            isMultiSelected: isMultiSelected,
+            customColorHex: workspaceRowColorHex,
+            colorScheme: colorScheme,
+            sidebarSelectionColorHex: sidebarSelectionColorHex
+        ))
+    }
+
     private var shortcutHintEmphasis: Double {
         usesInvertedActiveForeground ? 1.0 : 0.9
     }
@@ -13770,7 +13781,7 @@ struct TabItemView: View, Equatable {
                     if workspaceSnapshot.hasActiveAIWork {
                         TronLoadingIndicator(
                             size: scaledUnreadBadgeSize,
-                            color: Color(nsColor: TronLoadingIndicatorPalette.default.defaultColor),
+                            color: workspaceLoadingIndicatorColor,
                             lineWidth: max(1.15, scaledUnreadBadgeSize * 0.085)
                         )
                         .safeHelp(aiBusyTooltip)

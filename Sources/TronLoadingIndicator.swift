@@ -1,117 +1,96 @@
 import SwiftUI
 
-struct TronLoadingIndicatorPalette {
-    let defaultColor: NSColor
-    let backdropColor: NSColor
-
-    static let `default` = TronLoadingIndicatorPalette(
-        defaultColor: NSColor(hex: "#33F5FF") ?? NSColor.cyan,
-        backdropColor: NSColor.black.withAlphaComponent(0.72)
-    )
-}
-
 struct TronLoadingIndicator: View {
     var size: CGFloat = 44
-    var color: Color = Color(nsColor: TronLoadingIndicatorPalette.default.defaultColor)
+    var color: Color = .primary
     var lineWidth: CGFloat = 4
 
-    @State private var isAnimating = false
-
-    private let duration: Double = 1.15
-    private let backdropOpacity: CGFloat = TronLoadingIndicatorPalette.default.backdropColor.alphaComponent
-    private let glowOpacity: Double = 0.34
-    private let haloOpacity: Double = 0.12
-
-    private let outerSegments: [ClosedRange<CGFloat>] = [
-        0.00...0.11,
-        0.20...0.32,
-        0.46...0.57,
-        0.68...0.81,
-        0.89...0.98
-    ]
-
-    private let innerSegments: [ClosedRange<CGFloat>] = [
-        0.04...0.15,
-        0.27...0.41,
-        0.54...0.65,
-        0.78...0.92
-    ]
+    private let parentPeriod: TimeInterval = 7
+    private let childPeriod: TimeInterval = 1.5
+    private let secondChildDelay: TimeInterval = -0.75
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(Color.black.opacity(backdropOpacity))
-
-            Circle()
-                .stroke(color.opacity(0.10), lineWidth: lineWidth)
-                .padding(lineWidth * 0.5)
-
-            SegmentedTronRing(
-                segments: outerSegments,
-                color: color,
-                lineWidth: lineWidth
+        TimelineView(.animation) { timeline in
+            let parentAngle = rotationAngle(
+                at: timeline.date,
+                period: parentPeriod
             )
-            .padding(lineWidth * 0.5)
-            .rotationEffect(.degrees(isAnimating ? 360 : 0))
-
-            SegmentedTronRing(
-                segments: innerSegments,
-                color: color,
-                lineWidth: lineWidth * 0.85
+            let firstChildAngle = rotationAngle(
+                at: timeline.date,
+                period: childPeriod
             )
-            .frame(width: size * 0.65, height: size * 0.65)
-            .rotationEffect(.degrees(isAnimating ? -360 : 0))
+            let secondChildAngle = rotationAngle(
+                at: timeline.date,
+                period: childPeriod,
+                delay: secondChildDelay
+            )
 
-            Circle()
-                .fill(color.opacity(haloOpacity))
-                .frame(width: size * 0.22, height: size * 0.22)
+            ZStack(alignment: .topLeading) {
+                Circle()
+                    .strokeBorder(color, lineWidth: lineWidth)
+                    .frame(width: size, height: size)
+                    .rotationEffect(parentAngle)
 
-            Circle()
-                .fill(color)
-                .frame(width: size * 0.10, height: size * 0.10)
-                .shadow(color: color.opacity(0.65), radius: size * 0.05)
+                orbitingCircle(rotation: firstChildAngle)
+                orbitingCircle(rotation: secondChildAngle)
+            }
         }
         .frame(width: size, height: size)
-        .foregroundStyle(color)
-        .shadow(color: color.opacity(glowOpacity), radius: size * 0.045)
-        .onAppear {
-            withAnimation(.linear(duration: duration).repeatForever(autoreverses: false)) {
-                isAnimating = true
-            }
-        }
     }
-}
 
-private struct SegmentedTronRing: View {
-    let segments: [ClosedRange<CGFloat>]
-    let color: Color
-    let lineWidth: CGFloat
+    private var childSize: CGFloat {
+        size * 0.5
+    }
 
-    var body: some View {
-        ZStack {
-            ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
-                Circle()
-                    .trim(from: segment.lowerBound, to: segment.upperBound)
-                    .stroke(
-                        color,
-                        style: StrokeStyle(
-                            lineWidth: lineWidth,
-                            lineCap: .butt
-                        )
-                    )
-            }
-        }
+    private var childAnchor: UnitPoint {
+        UnitPoint(
+            x: 0.5,
+            y: -1 - ((2 * lineWidth) / max(size, 1))
+        )
+    }
+
+    private func orbitingCircle(rotation: Angle) -> some View {
+        Circle()
+            .strokeBorder(color, lineWidth: lineWidth)
+            .frame(width: childSize, height: childSize)
+            .offset(x: (size - childSize) * 0.5, y: size + lineWidth)
+            .rotationEffect(rotation, anchor: childAnchor)
+    }
+
+    private func rotationAngle(
+        at date: Date,
+        period: TimeInterval,
+        delay: TimeInterval = 0
+    ) -> Angle {
+        let elapsed = date.timeIntervalSinceReferenceDate - delay
+        let turns = elapsed
+            .truncatingRemainder(dividingBy: period)
+            / period
+        return .degrees(turns * 360)
     }
 }
 
 #Preview {
-    ZStack {
-        Color.black.ignoresSafeArea()
+    VStack(spacing: 40) {
+        ZStack {
+            Color.black
 
-        TronLoadingIndicator(
-            size: 96,
-            color: Color(red: 0.20, green: 0.96, blue: 1.00),
-            lineWidth: 6
-        )
+            TronLoadingIndicator(
+                size: 96,
+                color: .white,
+                lineWidth: 6
+            )
+        }
+
+        ZStack {
+            Color.white
+
+            TronLoadingIndicator(
+                size: 96,
+                color: .black,
+                lineWidth: 6
+            )
+        }
     }
+    .frame(width: 220, height: 320)
 }
