@@ -23,6 +23,7 @@ import CryptoKit
 import Darwin
 import Network
 import CoreText
+import CmuxAgentChat
 
 #if DEBUG
 private func debugWorkspaceDescriptionPreview(_ text: String?, limit: Int = 120) -> String {
@@ -2349,6 +2350,10 @@ final class Workspace: Identifiable, ObservableObject {
     let agentPIDKeysByPanelIdPublisher = CurrentValueSubject<[UUID: Set<String>], Never>([:])
     let agentLifecycleStatesByPanelIdPublisher = CurrentValueSubject<[UUID: [String: AgentHibernationLifecycleState]], Never>([:])
     let agentSessionActiveWorkPublisher = CurrentValueSubject<[UUID: Bool], Never>([:])
+
+#if DEBUG
+    var debugRenderedTerminalRowsForActiveWorkTesting: [UUID: [String]]?
+#endif
 
     /// Mapping from bonsplit TabID to our Panel instances
     var panels: [UUID: any Panel] {
@@ -4896,6 +4901,9 @@ final class Workspace: Identifiable, ObservableObject {
         }) {
             return true
         }
+        if livePanelIds.contains(where: terminalPanelHasVisibleActiveAgentStatusLine) {
+            return true
+        }
         if agentLifecycleStatesByPanelId.contains(where: { panelId, states in
             livePanelIds.contains(panelId)
                 && states.values.contains { $0 == .running || $0 == .needsInput }
@@ -4914,6 +4922,30 @@ final class Workspace: Identifiable, ObservableObject {
             }
         }
         return false
+    }
+
+    var hasTerminalPanelsForVisibleAgentWorkObservation: Bool {
+        panels.values.contains { $0 is TerminalPanel }
+    }
+
+    private func terminalPanelHasVisibleActiveAgentStatusLine(panelId: UUID) -> Bool {
+        guard terminalPanel(for: panelId) != nil,
+              let rows = renderedTerminalRowsForActiveWork(panelId: panelId) else {
+            return false
+        }
+        return AgentChatProseScreenExtractor.containsActiveStatusLine(in: rows)
+    }
+
+    private func renderedTerminalRowsForActiveWork(panelId: UUID) -> [String]? {
+#if DEBUG
+        if let debugRows = debugRenderedTerminalRowsForActiveWorkTesting?[panelId] {
+            return debugRows
+        }
+#endif
+        return terminalPanel(for: panelId)?
+            .surface
+            .mobileRenderGridFrame(stateSeq: 0, full: true)?
+            .rows
     }
 
     private func publishAgentSessionActiveWorkIfNeeded() {
