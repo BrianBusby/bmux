@@ -28,8 +28,11 @@ struct AutoNamingConfig: Sendable {
 
     /// Total lifetime of an in-flight marker before a new pass may start.
     var inFlightExpiry: TimeInterval { llmTimeout + inFlightExpiryGrace }
-    /// Maximum title length after sanitization.
-    var maxTitleLength: Int = 80
+    /// Maximum title words after sanitization.
+    var maxTitleWordCount: Int = 12
+    /// Maximum title length after sanitization, kept as a UI safety cap after
+    /// the primary word-count cap.
+    var maxTitleLength: Int = 120
     /// Recent user-led exchanges included in the summarization context.
     var contextRecentExchangeCount: Int = 25
     /// Per-message truncation applied to context excerpts.
@@ -375,7 +378,8 @@ struct AutoNamingEngine: Sendable {
     func buildPrompt(currentTitle: String?, context: String) -> String {
         var lines: [String] = [
             "You name terminal workspace tabs for a developer running coding agents.",
-            "Given up to the last 25 recent exchanges from a conversation, output ONLY an informative subject statement, up to 80 characters, that summarizes the current task being worked on.",
+            "Given up to the last 25 recent exchanges from a conversation, output ONLY an informative subject statement, up to 12 words, that summarizes the current task being worked on.",
+            "Base the title on the thread across the last several prompts and replies; do not summarize only the latest prompt when prior recent prompts establish the actual task.",
             "Write a natural, human-readable grammatical phrase in the same language as the conversation.",
             "Prefer concrete nouns from the work: feature, bug, ticket, repo, file, workflow, or decision.",
             "Do not emit title-case keyword fragments or generic category labels.",
@@ -384,6 +388,7 @@ struct AutoNamingEngine: Sendable {
             "Avoid filler words such as \"now\", \"seeing\", \"trying\", or \"working on\".",
             "Bad: Now Seeing Trying",
             "Bad: Look Ticket Determine",
+            "Bad: Three Dot Here",
             "Bad: Workspace Automation",
             "Good: Improving workspace tab summaries",
             "Good: Creating CompanyCam API branch and PR for ticket",
@@ -394,6 +399,8 @@ struct AutoNamingEngine: Sendable {
         if !pullRequestReferences.isEmpty {
             lines.append("Important pull requests mentioned: \(pullRequestReferences.joined(separator: ", "))")
             lines.append("When a pull request is central to the task, include the repository and PR number in the title.")
+            lines.append("Do not turn PR URLs into URL fragment titles such as \"PR Https Github\"; convert URLs into the pull request's repo and number.")
+            lines.append("Good: Address PR #1234 CompanyCam API review")
             lines.append("")
         }
         if let currentTitle, !currentTitle.isEmpty {
@@ -460,6 +467,10 @@ struct AutoNamingEngine: Sendable {
             .filter { !$0.isEmpty }
             .joined(separator: " ")
         guard !title.isEmpty else { return nil }
+        let words = title.split(separator: " ")
+        if words.count > config.maxTitleWordCount {
+            title = words.prefix(config.maxTitleWordCount).joined(separator: " ")
+        }
         if title.count > config.maxTitleLength {
             let prefix = String(title.prefix(config.maxTitleLength))
             if let lastSpace = prefix.lastIndex(of: " "), prefix.distance(from: prefix.startIndex, to: lastSpace) > 0 {

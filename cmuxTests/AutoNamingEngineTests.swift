@@ -224,15 +224,18 @@ import Testing
 
         #expect(prompt.contains("subject statement"))
         #expect(prompt.contains("last 25 recent exchanges"))
+        #expect(prompt.contains("last several prompts"))
         #expect(prompt.contains("current task being worked on"))
-        #expect(prompt.contains("up to 80 characters"))
+        #expect(prompt.contains("up to 12 words"))
         #expect(prompt.contains("human-readable"))
         #expect(prompt.contains("meaningfully changed"))
         #expect(prompt.contains("Now Seeing Trying"))
         #expect(prompt.contains("Look Ticket Determine"))
+        #expect(prompt.contains("Three Dot Here"))
         #expect(prompt.contains("Workspace Automation"))
         #expect(prompt.contains("Improving workspace tab summaries"))
         #expect(!prompt.contains("2-5 word title"))
+        #expect(!prompt.contains("up to 80 characters"))
     }
 
     @Test func promptCarriesPullRequestIdentityForReviewTasks() {
@@ -246,10 +249,14 @@ import Testing
 
         #expect(prompt.contains("CompanyCam/Company-Cam-API PR #1234"))
         #expect(prompt.contains("include the repository and PR number"))
+        #expect(prompt.contains("Do not turn PR URLs into URL fragment titles"))
+        #expect(prompt.contains("PR Https Github"))
+        #expect(prompt.contains("Address PR #1234 CompanyCam API review"))
     }
 
     @Test func defaultsAllowDescriptiveStableTitles() {
-        #expect(config.maxTitleLength == 80)
+        #expect(config.maxTitleLength == 120)
+        #expect(config.maxTitleWordCount == 12)
         #expect(config.minLineGrowth >= 12)
         #expect(config.minInterval >= 300)
         #expect(config.contextRecentExchangeCount == 25)
@@ -279,7 +286,7 @@ import Testing
     }
 
     @Test func sanitizationEnforcesLengthCapAtWordBoundary() throws {
-        let long = "Investigating the extremely convoluted authentication subsystem regression across workspace tab title generation"
+        let long = "Investigating authentication-subsystem-regression workspace-title-summarization behavior-with-descriptive-prompts across-recent-developer-instructions instead-of-latest-fragments for-agent-session-auto-naming reliability"
         let sanitized = try #require(engine.sanitizeResponse(long, currentTitle: nil))
         #expect(sanitized.count <= config.maxTitleLength)
         #expect(!sanitized.hasSuffix(" "))
@@ -287,6 +294,13 @@ import Testing
         #expect(long.hasPrefix(sanitized))
         let nextIndex = long.index(long.startIndex, offsetBy: sanitized.count)
         #expect(long[nextIndex] == " ")
+    }
+
+    @Test func sanitizationEnforcesWordCapAtWordBoundary() throws {
+        let long = "Investigating workspace tab titles that mirror the last several developer prompts instead of the newest fragment"
+        let sanitized = try #require(engine.sanitizeResponse(long, currentTitle: nil))
+        #expect(sanitized.split(separator: " ").count == 12)
+        #expect(sanitized == "Investigating workspace tab titles that mirror the last several developer prompts instead")
     }
 
     @Test func identicalTitleIsNoOp() {
