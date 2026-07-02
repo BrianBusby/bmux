@@ -13309,6 +13309,7 @@ struct SidebarWorkspaceRowLineLimitPolicy {
 
 struct TabItemView: View, Equatable {
     private static let workspaceObservationCoalesceInterval: RunLoop.SchedulerTimeType.Stride = .milliseconds(40)
+    private static let terminalAgentStatusLineRefreshInterval: RunLoop.SchedulerTimeType.Stride = .seconds(1)
     private static let legacyVMWebSocketDescription = "VM WebSocket PTY"
 
     // Closures, Bindings, and object references are excluded from ==
@@ -13395,6 +13396,7 @@ struct TabItemView: View, Equatable {
     @State private var rowInteractionState = SidebarWorkspaceRowInteractionState()
     @State private var rowHeight: CGFloat = 1
     @State private var workspaceFinderDirectoryOpenRequest: WorkspaceFinderDirectoryOpenRequest?
+    @State private var releaseTerminalAgentStatusLineTickNotifications: (() -> Void)?
 
     var isMultiSelected: Bool {
         selectedTabIds.contains(tab.id)
@@ -14188,7 +14190,11 @@ struct TabItemView: View, Equatable {
         }
         .onAppear {
             updateObservedActiveState(tabManager.selectedTabId == tab.id)
+            updateTerminalAgentStatusLineObservation()
             refreshWorkspaceSnapshot(force: true)
+        }
+        .onDisappear {
+            releaseTerminalAgentStatusLineObservation()
         }
         .onReceive(
             tabManager.selectedTabIdPublisher
@@ -14238,7 +14244,18 @@ struct TabItemView: View, Equatable {
                 "desc=\"\(debugCommandPaletteTextPreview(description))\""
             )
 #endif
+            updateTerminalAgentStatusLineObservation()
             refreshWorkspaceSnapshot()
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(for: .ghosttyDidTick)
+                .throttle(
+                    for: Self.terminalAgentStatusLineRefreshInterval,
+                    scheduler: RunLoop.main,
+                    latest: true
+                )
+        ) { _ in
+            refreshWorkspaceSnapshotFromTerminalAgentStatusLine()
         }
         .onChange(of: settings) { _ in
             refreshWorkspaceSnapshot(force: true)
@@ -14340,6 +14357,26 @@ struct TabItemView: View, Equatable {
         if contextMenuState.hasDeferredWorkspaceObservationInvalidation != decision.hasDeferredWorkspaceObservationInvalidation {
             contextMenuState.hasDeferredWorkspaceObservationInvalidation = decision.hasDeferredWorkspaceObservationInvalidation
         }
+    }
+
+    private func updateTerminalAgentStatusLineObservation() {
+        if tab.hasTerminalPanelsForVisibleAgentWorkObservation {
+            if releaseTerminalAgentStatusLineTickNotifications == nil {
+                releaseTerminalAgentStatusLineTickNotifications = GhosttyApp.retainTickNotifications()
+            }
+        } else {
+            releaseTerminalAgentStatusLineObservation()
+        }
+    }
+
+    private func releaseTerminalAgentStatusLineObservation() {
+        releaseTerminalAgentStatusLineTickNotifications?()
+        releaseTerminalAgentStatusLineTickNotifications = nil
+    }
+
+    private func refreshWorkspaceSnapshotFromTerminalAgentStatusLine() {
+        guard releaseTerminalAgentStatusLineTickNotifications != nil else { return }
+        refreshWorkspaceSnapshot()
     }
 
     private func flushDeferredWorkspaceObservationInvalidation() {

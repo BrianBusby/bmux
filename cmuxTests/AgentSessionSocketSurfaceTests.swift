@@ -104,6 +104,32 @@ struct AgentSessionSocketSurfaceTests {
     }
 
     @Test
+    func testWorkspaceBusyIndicatorTracksVisibleTerminalAgentStatusLine() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+
+        #expect(!workspace.hasActiveAIWork)
+
+        workspace.debugRenderedTerminalRowsForActiveWorkTesting = [
+            panelId: [
+                "Addressing the workspace tab spinner now.",
+                "Working (36s • Esc to interrupt)",
+                "",
+            ],
+        ]
+        #expect(workspace.hasActiveAIWork)
+
+        workspace.debugRenderedTerminalRowsForActiveWorkTesting = [
+            panelId: [
+                "Completed in 36s",
+                "",
+            ],
+        ]
+        #expect(!workspace.hasActiveAIWork)
+    }
+
+    @Test
     func testWorkspaceBusyIndicatorIgnoresStaleShellStatePanelIds() throws {
         let manager = TabManager()
         let workspace = try #require(manager.selectedWorkspace)
