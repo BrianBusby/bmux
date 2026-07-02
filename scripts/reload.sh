@@ -34,6 +34,7 @@ XCODEBUILD_OUTPUT_VALID=0
 XCODEBUILD_CLEANED_OUTPUTS=0
 LOCAL_BUILD_NUMBER=""
 LOCAL_BUILD_NUMBER_FILE=""
+LOCAL_BUILD_NUMBER_LEGACY_FILE=""
 
 should_skip_ghostty_cli_helper_zig_build() {
   if [[ "${CMUX_SKIP_ZIG_BUILD:-}" == "1" ]]; then
@@ -277,6 +278,7 @@ current_project_build_number() {
 resolve_local_build_number() {
   local baseline="${1:-0}"
   local file="${2:-}"
+  local legacy_derived_data_root="${3:-$HOME/Library/Developer/Xcode/DerivedData}"
   local current="$baseline"
 
   if [[ -n "$file" && -r "$file" ]]; then
@@ -286,6 +288,15 @@ resolve_local_build_number() {
       current="$stored"
     fi
   fi
+
+  local legacy_file legacy_stored
+  for legacy_file in "$legacy_derived_data_root"/cmux-*/cmux-local-build-number; do
+    [[ -r "$legacy_file" ]] || continue
+    legacy_stored="$(tr -d '[:space:]' < "$legacy_file")"
+    if [[ "$legacy_stored" =~ ^[0-9]+$ ]] && (( legacy_stored > current )); then
+      current="$legacy_stored"
+    fi
+  done
 
   echo $((current + 1))
 }
@@ -558,7 +569,8 @@ if [[ -n "$TAG" ]]; then
   if [[ "$DERIVED_SET" -eq 0 ]]; then
     DERIVED_DATA="$(tagged_derived_data_path "$TAG_SLUG")"
   fi
-  LOCAL_BUILD_NUMBER_FILE="${DERIVED_DATA}/cmux-local-build-number"
+  LOCAL_BUILD_NUMBER_FILE="${LAST_SOCKET_PATH_DIR}/local-build-number"
+  LOCAL_BUILD_NUMBER_LEGACY_FILE="${DERIVED_DATA}/cmux-local-build-number"
   LOCAL_BUILD_NUMBER="$(resolve_local_build_number "$(current_project_build_number)" "$LOCAL_BUILD_NUMBER_FILE")"
 fi
 
@@ -882,6 +894,9 @@ except OSError as exc:
 
 if [[ -n "$LOCAL_BUILD_NUMBER_FILE" ]]; then
   persist_local_build_number "$LOCAL_BUILD_NUMBER_FILE" "$LOCAL_BUILD_NUMBER"
+fi
+if [[ -n "$LOCAL_BUILD_NUMBER_LEGACY_FILE" ]]; then
+  persist_local_build_number "$LOCAL_BUILD_NUMBER_LEGACY_FILE" "$LOCAL_BUILD_NUMBER"
 fi
 sleep 0.2
 if LC_ALL=C grep -q 'BUILD INTERRUPTED' "$RELOAD_LOG"; then
