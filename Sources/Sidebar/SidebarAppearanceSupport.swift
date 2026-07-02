@@ -296,10 +296,6 @@ func sidebarWorkspaceRowBackgroundStyle(
     colorScheme: ColorScheme,
     sidebarSelectionColorHex: String?
 ) -> SidebarWorkspaceRowBackgroundStyle {
-    let selectedBackground = sidebarSelectedWorkspaceBackgroundNSColor(
-        for: colorScheme,
-        sidebarSelectionColorHex: sidebarSelectionColorHex
-    )
     let accentBackground = cmuxAccentNSColor(for: colorScheme)
     let customBackground = customColorHex.flatMap {
         WorkspaceTabColorSettings.displayNSColor(
@@ -312,10 +308,7 @@ func sidebarWorkspaceRowBackgroundStyle(
     switch activeTabIndicatorStyle {
     case .leftRail:
         if isActive {
-            return SidebarWorkspaceRowBackgroundStyle(
-                color: selectedBackground,
-                opacity: 0.78
-            )
+            return .clear
         }
         if isMultiSelected {
             return SidebarWorkspaceRowBackgroundStyle(color: accentBackground, opacity: 0.18)
@@ -324,10 +317,7 @@ func sidebarWorkspaceRowBackgroundStyle(
 
     case .solidFill:
         if isActive {
-            return SidebarWorkspaceRowBackgroundStyle(
-                color: selectedBackground,
-                opacity: 0.78
-            )
+            return .clear
         }
         if let customBackground {
             return SidebarWorkspaceRowBackgroundStyle(

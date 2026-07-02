@@ -13525,26 +13525,16 @@ struct TabItemView: View, Equatable {
     }
 
     private var activeBorderLineWidth: CGFloat {
-        switch activeTabIndicatorStyle {
-        case .leftRail:
-            return 0
-        case .solidFill:
-            return isActive ? 1.5 : 0
-        }
+        isActive ? 1.5 : 0
     }
 
     private var activeBorderColor: Color {
         guard isActive else { return .clear }
-        switch activeTabIndicatorStyle {
-        case .leftRail:
-            return .clear
-        case .solidFill:
-            return Color.primary.opacity(0.5)
-        }
+        return Color.white.opacity(colorScheme == .dark ? 0.92 : 0.78)
     }
 
     private var usesInvertedActiveForeground: Bool {
-        isActive
+        false
     }
 
     private var activePrimaryTextColor: Color {
@@ -14131,11 +14121,6 @@ struct TabItemView: View, Equatable {
             RoundedRectangle(cornerRadius: 6)
                 .fill(backgroundColor)
                 .overlay {
-                    if isActive {
-                        selectedWorkspaceGlassOverlay
-                    }
-                }
-                .overlay {
                     RoundedRectangle(cornerRadius: 6)
                         .strokeBorder(activeBorderColor, lineWidth: activeBorderLineWidth)
                 }
@@ -14295,43 +14280,6 @@ struct TabItemView: View, Equatable {
                     flushDeferredWorkspaceObservationInvalidation()
                 }
         }
-    }
-
-    private var selectedWorkspaceGlassOverlay: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 6)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(colorScheme == .dark ? 0.18 : 0.30),
-                            Color.white.opacity(0.03),
-                            Color.black.opacity(colorScheme == .dark ? 0.14 : 0.08)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .blendMode(.overlay)
-
-            RoundedRectangle(cornerRadius: 6)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(colorScheme == .dark ? 0.34 : 0.58),
-                            Color.white.opacity(0.08),
-                            Color.black.opacity(colorScheme == .dark ? 0.30 : 0.16)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
-
-            RoundedRectangle(cornerRadius: 5)
-                .strokeBorder(Color.white.opacity(colorScheme == .dark ? 0.16 : 0.24), lineWidth: 0.5)
-                .padding(1)
-        }
-        .allowsHitTesting(false)
     }
 
     private func updateObservedActiveState(_ isActive: Bool) {
