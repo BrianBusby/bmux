@@ -13761,6 +13761,9 @@ struct TabItemView: View, Equatable {
         )
         let displayedTitle = workspaceSnapshot.title
         let scaledUnreadBadgeSize = 16 * fontScale
+        let scaledLoadingIndicatorSize = TronLoadingIndicatorMotion.workspaceTabSize(
+            forBadgeSize: scaledUnreadBadgeSize
+        )
         let scaledCloseButtonHitSize = max(16, 16 * fontScale)
         let scaledCloseButtonWidth = max(
             SidebarTrailingAccessoryWidthPolicy().closeButtonWidth,
@@ -13772,9 +13775,9 @@ struct TabItemView: View, Equatable {
                 HStack(alignment: .top, spacing: 8) {
                     if workspaceSnapshot.hasActiveAIWork {
                         TronLoadingIndicator(
-                            size: scaledUnreadBadgeSize,
+                            size: scaledLoadingIndicatorSize,
                             color: workspaceLoadingIndicatorColor,
-                            lineWidth: max(1.15, scaledUnreadBadgeSize * 0.085)
+                            lineWidth: max(1.15, scaledLoadingIndicatorSize * 0.085)
                         )
                         .safeHelp(aiBusyTooltip)
                         .accessibilityLabel(aiBusyTooltip)

@@ -455,6 +455,61 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
         )
     }
 
+    func testWorkspaceLoadingIndicatorTabSizeIsSlightlyLargerThanUnreadBadge() {
+        XCTAssertEqual(
+            TronLoadingIndicatorMotion.workspaceTabSize(forBadgeSize: 16),
+            18,
+            accuracy: 0.001
+        )
+    }
+
+    func testWorkspaceLoadingIndicatorOrbitMaintainsTangentContactAtHandoffs() {
+        let motion = TronLoadingIndicatorMotion(contactSeparationTurns: 0.06)
+
+        XCTAssertEqual(
+            motion.phaseSeparation(atElapsedTime: 0),
+            0.5,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            motion.phaseSeparation(atElapsedTime: 0.75),
+            0.06,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            motion.phaseSeparation(atElapsedTime: 1.5),
+            0.5,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            motion.phaseSeparation(atElapsedTime: 2.25),
+            0.94,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            motion.phaseSeparation(atElapsedTime: 3.0),
+            0.5,
+            accuracy: 0.001
+        )
+    }
+
+    func testWorkspaceLoadingIndicatorOrbitSwapsFastAndSlowRingsAfterImpact() {
+        let motion = TronLoadingIndicatorMotion(contactSeparationTurns: 0.06)
+        let beforeImpactStart = motion.phases(atElapsedTime: 0.65)
+        let beforeImpactEnd = motion.phases(atElapsedTime: 0.70)
+        let afterImpactStart = motion.phases(atElapsedTime: 0.80)
+        let afterImpactEnd = motion.phases(atElapsedTime: 0.85)
+
+        XCTAssertGreaterThan(
+            motion.forwardDistance(from: beforeImpactStart.first, to: beforeImpactEnd.first),
+            motion.forwardDistance(from: beforeImpactStart.second, to: beforeImpactEnd.second)
+        )
+        XCTAssertLessThan(
+            motion.forwardDistance(from: afterImpactStart.first, to: afterImpactEnd.first),
+            motion.forwardDistance(from: afterImpactStart.second, to: afterImpactEnd.second)
+        )
+    }
+
     func testTitlebarControlForegroundContrastsWithLightTerminalBackground() throws {
         let background = try XCTUnwrap(NSColor(hex: "#F7F7F7"))
         let snapshot = makeWindowAppearanceSnapshot(background: background)
