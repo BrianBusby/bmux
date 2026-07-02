@@ -316,14 +316,14 @@ func sidebarWorkspaceRowBackgroundStyle(
         return .clear
 
     case .solidFill:
-        if isActive {
-            return .clear
-        }
         if let customBackground {
             return SidebarWorkspaceRowBackgroundStyle(
                 color: customBackground,
                 opacity: isMultiSelected ? 0.24 : 0.46
             )
+        }
+        if isActive {
+            return .clear
         }
         if isMultiSelected {
             return SidebarWorkspaceRowBackgroundStyle(color: accentBackground, opacity: 0.18)

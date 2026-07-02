@@ -25,10 +25,10 @@ struct TronLoadingIndicator: View {
                 delay: secondChildDelay
             )
 
-            ZStack(alignment: .topLeading) {
+            ZStack {
                 Circle()
-                    .strokeBorder(color, lineWidth: lineWidth)
-                    .frame(width: size, height: size)
+                    .strokeBorder(color, lineWidth: effectiveLineWidth)
+                    .frame(width: parentSize, height: parentSize)
                     .rotationEffect(parentAngle)
 
                 orbitingCircle(rotation: firstChildAngle)
@@ -38,23 +38,32 @@ struct TronLoadingIndicator: View {
         .frame(width: size, height: size)
     }
 
-    private var childSize: CGFloat {
-        size * 0.5
+    private var parentSize: CGFloat {
+        size * 0.48
     }
 
-    private var childAnchor: UnitPoint {
-        UnitPoint(
-            x: 0.5,
-            y: -1 - ((2 * lineWidth) / max(size, 1))
-        )
+    private var childSize: CGFloat {
+        parentSize * 0.46
+    }
+
+    private var effectiveLineWidth: CGFloat {
+        min(lineWidth, max(0.6, parentSize * 0.08))
+    }
+
+    private var orbitGap: CGFloat {
+        max(0.4, effectiveLineWidth * 0.75)
+    }
+
+    private var orbitRadius: CGFloat {
+        (parentSize * 0.5) + (childSize * 0.5) + orbitGap
     }
 
     private func orbitingCircle(rotation: Angle) -> some View {
         Circle()
-            .strokeBorder(color, lineWidth: lineWidth)
+            .strokeBorder(color, lineWidth: effectiveLineWidth)
             .frame(width: childSize, height: childSize)
-            .offset(x: (size - childSize) * 0.5, y: size + lineWidth)
-            .rotationEffect(rotation, anchor: childAnchor)
+            .offset(y: orbitRadius)
+            .rotationEffect(rotation)
     }
 
     private func rotationAngle(
