@@ -194,10 +194,11 @@ import Testing
         messages.append(AutoNamingTranscriptMessage(role: "user", text: longText))
 
         let context = try #require(engine.buildContext(from: messages))
+        let contextLines = context.components(separatedBy: .newlines)
         #expect(!context.contains("Old deployment task"))
-        #expect(!context.contains("Workspace title exchange 1"))
-        #expect(context.contains("Workspace title exchange 2"))
-        #expect(context.contains("Reply for workspace title exchange 26"))
+        #expect(!contextLines.contains("user: Workspace title exchange 1"))
+        #expect(contextLines.contains("user: Workspace title exchange 2"))
+        #expect(contextLines.contains("assistant: Reply for workspace title exchange 26"))
         // The long tail message is truncated to the per-message cap.
         #expect(!context.contains(longText))
         #expect(context.contains(String(longText.prefix(config.contextMessageMaxChars))))
@@ -222,7 +223,8 @@ import Testing
         )
 
         #expect(prompt.contains("subject statement"))
-        #expect(prompt.contains("currently talking about"))
+        #expect(prompt.contains("last 25 recent exchanges"))
+        #expect(prompt.contains("current task being worked on"))
         #expect(prompt.contains("up to 80 characters"))
         #expect(prompt.contains("human-readable"))
         #expect(prompt.contains("meaningfully changed"))
@@ -237,6 +239,7 @@ import Testing
         #expect(config.maxTitleLength == 80)
         #expect(config.minLineGrowth >= 12)
         #expect(config.minInterval >= 300)
+        #expect(config.contextRecentExchangeCount == 25)
     }
 
     // MARK: - Sanitization
