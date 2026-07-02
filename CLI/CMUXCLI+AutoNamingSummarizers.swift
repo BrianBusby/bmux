@@ -50,7 +50,7 @@ extension CMUXCLI {
                 "--format", "default",
                 "--dir", tempRoot.path,
                 "--file", promptPath,
-                "Generate an informative human-readable subject statement, up to 80 characters, about the current task in the recent exchanges. Output only the statement."
+                "Generate an informative human-readable subject statement, up to 12 words, about the current task across the last several recent exchanges. Output only the statement."
             ]
             stdinPrompt = ""
         case "grok":
@@ -78,7 +78,7 @@ extension CMUXCLI {
                 "--no-prompt-templates",
                 "--no-context-files",
                 "@\(promptPath)",
-                "Generate an informative human-readable subject statement, up to 80 characters, about the current task in the recent exchanges. Output only the statement."
+                "Generate an informative human-readable subject statement, up to 12 words, about the current task across the last several recent exchanges. Output only the statement."
             ]
             stdinPrompt = ""
         default:
