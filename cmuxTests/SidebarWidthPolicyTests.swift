@@ -278,7 +278,7 @@ final class SidebarWidthPolicyTests: XCTestCase {
 }
 
 final class SidebarWorkspaceSelectionColorTests: XCTestCase {
-    func testSelectedWorkspaceRowsUseClearBackgroundInLightAndDark() {
+    func testSelectedWorkspaceRowsUseRepoColorBackgroundInLightAndDark() {
         for colorScheme in [ColorScheme.light, .dark] {
             let coloredSelected = sidebarWorkspaceRowBackgroundStyle(
                 activeTabIndicatorStyle: .solidFill,
@@ -297,9 +297,9 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
                 sidebarSelectionColorHex: nil
             )
 
-            XCTAssertEqual(coloredSelected.opacity, standardSelected.opacity, accuracy: 0.001)
-            XCTAssertEqual(coloredSelected.opacity, 0, accuracy: 0.001)
-            XCTAssertNil(coloredSelected.color)
+            XCTAssertEqual(coloredSelected.opacity, 0.46, accuracy: 0.001)
+            XCTAssertNotNil(coloredSelected.color)
+            XCTAssertEqual(standardSelected.opacity, 0, accuracy: 0.001)
             XCTAssertNil(standardSelected.color)
 
             let unselectedColored = sidebarWorkspaceRowBackgroundStyle(
@@ -312,6 +312,7 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
             )
             XCTAssertEqual(unselectedColored.opacity, 0.46, accuracy: 0.001)
             XCTAssertNotNil(unselectedColored.color)
+            assertColor(coloredSelected.color, equals: unselectedColored.color)
         }
     }
 
@@ -334,8 +335,9 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
             sidebarSelectionColorHex: selectionHex
         )
 
-        XCTAssertEqual(coloredSelected.opacity, 0, accuracy: 0.001)
-        XCTAssertNil(coloredSelected.color)
+        XCTAssertEqual(coloredSelected.opacity, 0.46, accuracy: 0.001)
+        assertColor(coloredSelected.color, equals: NSColor(hex: "#E85D75"))
+        XCTAssertEqual(standardSelected.opacity, 0, accuracy: 0.001)
         XCTAssertNil(standardSelected.color)
     }
 
@@ -403,7 +405,7 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
         assertColor(foreground, equals: .white)
     }
 
-    func testWorkspaceLoadingIndicatorUsesBaseBackgroundForPaleConfiguredSelectionRows() throws {
+    func testWorkspaceLoadingIndicatorUsesRepoColorForSelectedRows() throws {
         let selectionBackground = try XCTUnwrap(NSColor(hex: "#F7F7F7"))
         let foreground = sidebarWorkspaceRowLoadingIndicatorNSColor(
             activeTabIndicatorStyle: .solidFill,
@@ -414,11 +416,23 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
             sidebarSelectionColorHex: selectionBackground.hexString(),
             baseBackgroundColor: .white
         )
+        let style = sidebarWorkspaceRowBackgroundStyle(
+            activeTabIndicatorStyle: .solidFill,
+            isActive: true,
+            isMultiSelected: false,
+            customColorHex: "#E85D75",
+            colorScheme: .light,
+            sidebarSelectionColorHex: selectionBackground.hexString()
+        )
+        let effectiveBackground = cmuxCompositedNSColor(
+            try XCTUnwrap(style.color).withAlphaComponent(CGFloat(style.opacity)),
+            over: .white
+        )
 
         assertColor(foreground, equals: .black)
         XCTAssertGreaterThan(
-            cmuxContrastRatio(foreground: foreground, background: .white),
-            cmuxContrastRatio(foreground: .white, background: .white)
+            cmuxContrastRatio(foreground: foreground, background: effectiveBackground),
+            cmuxContrastRatio(foreground: .white, background: effectiveBackground)
         )
     }
 
