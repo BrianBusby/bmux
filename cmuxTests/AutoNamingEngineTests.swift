@@ -181,23 +181,23 @@ import Testing
         #expect(engine.extractMessages(fromTranscriptLines: ["", "garbage", "{}"]).isEmpty)
     }
 
-    @Test func contextCombinesHeadUserMessagesAndTailWithTruncation() throws {
+    @Test func contextUsesLastTwentyFiveExchangesWithTruncation() throws {
         let longText = String(repeating: "x", count: config.contextMessageMaxChars + 100)
         var messages: [AutoNamingTranscriptMessage] = [
-            AutoNamingTranscriptMessage(role: "user", text: "First ask"),
-            AutoNamingTranscriptMessage(role: "user", text: "Second ask"),
-            AutoNamingTranscriptMessage(role: "user", text: "Third ask")
+            AutoNamingTranscriptMessage(role: "user", text: "Old deployment task"),
+            AutoNamingTranscriptMessage(role: "assistant", text: "Finished the deployment task.")
         ]
-        for index in 0..<10 {
-            messages.append(AutoNamingTranscriptMessage(role: "assistant", text: "Reply \(index)"))
+        for index in 1...26 {
+            messages.append(AutoNamingTranscriptMessage(role: "user", text: "Workspace title exchange \(index)"))
+            messages.append(AutoNamingTranscriptMessage(role: "assistant", text: "Reply for workspace title exchange \(index)"))
         }
         messages.append(AutoNamingTranscriptMessage(role: "user", text: longText))
 
         let context = try #require(engine.buildContext(from: messages))
-        #expect(context.contains("user: First ask"))
-        #expect(context.contains("user: Second ask"))
-        #expect(!context.contains("Third ask"))
-        #expect(context.contains("Reply 9"))
+        #expect(!context.contains("Old deployment task"))
+        #expect(!context.contains("Workspace title exchange 1"))
+        #expect(context.contains("Workspace title exchange 2"))
+        #expect(context.contains("Reply for workspace title exchange 26"))
         // The long tail message is truncated to the per-message cap.
         #expect(!context.contains(longText))
         #expect(context.contains(String(longText.prefix(config.contextMessageMaxChars))))
