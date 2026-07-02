@@ -390,6 +390,12 @@ struct AutoNamingEngine: Sendable {
             "Good: Debugging Vite startup failures",
             ""
         ]
+        let pullRequestReferences = githubPullRequestReferences(in: context)
+        if !pullRequestReferences.isEmpty {
+            lines.append("Important pull requests mentioned: \(pullRequestReferences.joined(separator: ", "))")
+            lines.append("When a pull request is central to the task, include the repository and PR number in the title.")
+            lines.append("")
+        }
         if let currentTitle, !currentTitle.isEmpty {
             lines.append("The current title is: \(currentTitle)")
             lines.append("If that still accurately describes the conversation's main topic, output it EXACTLY as given.")
@@ -398,6 +404,28 @@ struct AutoNamingEngine: Sendable {
         lines.append("Conversation excerpt:")
         lines.append(context)
         return lines.joined(separator: "\n")
+    }
+
+    private func githubPullRequestReferences(in text: String) -> [String] {
+        let pattern = #"https?://github\.com/([^/\s]+)/([^/\s]+)/pull/([0-9]+)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return []
+        }
+        let nsText = text as NSString
+        var seen = Set<String>()
+        var references: [String] = []
+
+        for match in regex.matches(in: text, range: NSRange(location: 0, length: nsText.length)) {
+            guard match.numberOfRanges == 4 else { continue }
+            let owner = nsText.substring(with: match.range(at: 1))
+            let repo = nsText.substring(with: match.range(at: 2))
+            let number = nsText.substring(with: match.range(at: 3))
+            let reference = "\(owner)/\(repo) PR #\(number)"
+            guard seen.insert(reference.lowercased()).inserted else { continue }
+            references.append(reference)
+        }
+
+        return references
     }
 
     /// Normalizes a summarizer response into a usable title, or `nil` when

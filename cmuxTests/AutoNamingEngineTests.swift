@@ -235,6 +235,19 @@ import Testing
         #expect(!prompt.contains("2-5 word title"))
     }
 
+    @Test func promptCarriesPullRequestIdentityForReviewTasks() {
+        let prompt = engine.buildPrompt(
+            currentTitle: nil,
+            context: """
+            user: address the claude comments on this PR: https://github.com/CompanyCam/Company-Cam-API/pull/1234
+            assistant: I will inspect the unresolved review threads.
+            """
+        )
+
+        #expect(prompt.contains("CompanyCam/Company-Cam-API PR #1234"))
+        #expect(prompt.contains("include the repository and PR number"))
+    }
+
     @Test func defaultsAllowDescriptiveStableTitles() {
         #expect(config.maxTitleLength == 80)
         #expect(config.minLineGrowth >= 12)
