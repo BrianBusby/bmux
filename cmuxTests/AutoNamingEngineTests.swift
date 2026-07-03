@@ -207,13 +207,20 @@ import Testing
     // MARK: - Prompt
 
     @Test func promptCarriesCurrentTitleAndVerbatimInstruction() {
-        let prompt = engine.buildPrompt(currentTitle: "Fix auth bug", context: "user: hello")
-        #expect(prompt.contains("The current title is: Fix auth bug"))
+        let prompt = engine.buildPrompt(currentTitle: "Fix auth bug in login flow", context: "user: hello")
+        #expect(prompt.contains("The current title is: Fix auth bug in login flow"))
         #expect(prompt.contains("EXACTLY"))
         #expect(prompt.contains("user: hello"))
 
         let untitled = engine.buildPrompt(currentTitle: nil, context: "user: hello")
         #expect(!untitled.contains("current title"))
+    }
+
+    @Test func promptDoesNotAllowExactReuseOfShortCurrentTitle() {
+        let prompt = engine.buildPrompt(currentTitle: "Fix auth bug", context: "user: hello")
+        #expect(prompt.contains("The current title is: Fix auth bug"))
+        #expect(prompt.contains("shorter than 6 words"))
+        #expect(prompt.contains("do not output it exactly"))
     }
 
     @Test func promptRequestsSubjectStatementInsteadOfVagueTitleFragment() {
@@ -226,7 +233,8 @@ import Testing
         #expect(prompt.contains("whole conversation"))
         #expect(prompt.contains("entire conversation"))
         #expect(prompt.contains("current task being worked on"))
-        #expect(prompt.contains("up to 20 words"))
+        #expect(prompt.contains("between 6 and 20 words"))
+        #expect(prompt.contains("Never output fewer than 6 words"))
         #expect(prompt.contains("normal sentence"))
         #expect(prompt.contains("human-readable"))
         #expect(prompt.contains("meaningfully changed"))
@@ -259,6 +267,7 @@ import Testing
 
     @Test func defaultsAllowDescriptiveStableTitles() {
         #expect(config.maxTitleLength == 180)
+        #expect(config.minTitleWordCount == 6)
         #expect(config.maxTitleWordCount == 20)
         #expect(config.minLineGrowth >= 12)
         #expect(config.minInterval >= 300)
@@ -267,17 +276,16 @@ import Testing
     // MARK: - Sanitization
 
     @Test func sanitizationNormalizesUsableResponses() {
-        #expect(engine.sanitizeResponse("Fix auth bug\nextra line", currentTitle: nil) == "Fix auth bug")
-        #expect(engine.sanitizeResponse("\n\n  \"Debug login flow\"  \n", currentTitle: nil) == "Debug login flow")
-        #expect(engine.sanitizeResponse("Multi   space    title", currentTitle: nil) == "Multi space title")
-        #expect(engine.sanitizeResponse("\u{201C}Fix auth bug\u{201D}", currentTitle: nil) == "Fix auth bug")
-        #expect(engine.sanitizeResponse("'Fix auth bug'", currentTitle: nil) == "Fix auth bug")
+        #expect(engine.sanitizeResponse("Fix auth bug in login flow\nextra line", currentTitle: nil) == "Fix auth bug in login flow")
+        #expect(engine.sanitizeResponse("\n\n  \"Debug login flow in web app\"  \n", currentTitle: nil) == "Debug login flow in web app")
+        #expect(engine.sanitizeResponse("Multi   space    title   for workspace tabs", currentTitle: nil) == "Multi space title for workspace tabs")
+        #expect(engine.sanitizeResponse("\u{201C}Fix auth bug in login flow\u{201D}", currentTitle: nil) == "Fix auth bug in login flow")
+        #expect(engine.sanitizeResponse("'Fix auth bug in login flow'", currentTitle: nil) == "Fix auth bug in login flow")
     }
 
-    @Test func sanitizationTruncatesUnbrokenStringsAtHardCap() {
+    @Test func sanitizationRejectsUnbrokenStringsBecauseTheyAreTooShort() {
         let unbroken = String(repeating: "x", count: config.maxTitleLength + 10)
-        let sanitized = engine.sanitizeResponse(unbroken, currentTitle: nil)
-        #expect(sanitized == String(repeating: "x", count: config.maxTitleLength))
+        #expect(engine.sanitizeResponse(unbroken, currentTitle: nil) == nil)
     }
 
     @Test func sanitizationRejectsGarbage() {
@@ -285,6 +293,12 @@ import Testing
         #expect(engine.sanitizeResponse("", currentTitle: nil) == nil)
         #expect(engine.sanitizeResponse("   \n  \n", currentTitle: nil) == nil)
         #expect(engine.sanitizeResponse("\"\"", currentTitle: nil) == nil)
+    }
+
+    @Test func sanitizationRejectsTitlesShorterThanMinimumWordCount() {
+        #expect(engine.sanitizeResponse("Fix auth bug", currentTitle: nil) == nil)
+        #expect(engine.sanitizeResponse("Debug login flow today", currentTitle: nil) == nil)
+        #expect(engine.sanitizeResponse("Fix auth bug in login flow", currentTitle: nil) == "Fix auth bug in login flow")
     }
 
     @Test func sanitizationEnforcesLengthCapAtWordBoundary() throws {
@@ -306,9 +320,9 @@ import Testing
     }
 
     @Test func identicalTitleIsNoOp() {
-        #expect(engine.sanitizeResponse("Fix auth bug", currentTitle: "Fix auth bug") == nil)
-        #expect(engine.sanitizeResponse("  fix   auth bug  ", currentTitle: "Fix auth bug") == nil)
-        #expect(engine.sanitizeResponse("Fix auth bug", currentTitle: "Other title") == "Fix auth bug")
+        #expect(engine.sanitizeResponse("Fix auth bug in login flow", currentTitle: "Fix auth bug in login flow") == nil)
+        #expect(engine.sanitizeResponse("  fix   auth bug in login flow  ", currentTitle: "Fix auth bug in login flow") == nil)
+        #expect(engine.sanitizeResponse("Fix auth bug in login flow", currentTitle: "Other title") == "Fix auth bug in login flow")
     }
 
     // MARK: - Environment policy
