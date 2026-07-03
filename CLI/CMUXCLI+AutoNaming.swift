@@ -29,12 +29,10 @@ struct AutoNamingConfig: Sendable {
     /// Total lifetime of an in-flight marker before a new pass may start.
     var inFlightExpiry: TimeInterval { llmTimeout + inFlightExpiryGrace }
     /// Maximum title words after sanitization.
-    var maxTitleWordCount: Int = 12
+    var maxTitleWordCount: Int = 20
     /// Maximum title length after sanitization, kept as a UI safety cap after
     /// the primary word-count cap.
-    var maxTitleLength: Int = 120
-    /// Recent user-led exchanges included in the summarization context.
-    var contextRecentExchangeCount: Int = 25
+    var maxTitleLength: Int = 180
     /// Per-message truncation applied to context excerpts.
     var contextMessageMaxChars: Int = 240
 }
@@ -235,14 +233,12 @@ struct AutoNamingEngine: Sendable {
         return messages
     }
 
-    /// Builds the summarization context from the recent user-led exchanges so
-    /// stale setup work does not anchor the current workspace title.
+    /// Builds the summarization context from the whole extracted conversation.
     func buildContext(from messages: [AutoNamingTranscriptMessage]) -> String? {
         guard !messages.isEmpty else { return nil }
-        let recentMessages = recentExchangeMessages(from: messages)
         var seen = Set<String>()
         var parts: [String] = []
-        for message in recentMessages {
+        for message in messages {
             let excerpt = String(message.text.prefix(config.contextMessageMaxChars))
             let key = "\(message.role):\(excerpt)"
             guard seen.insert(key).inserted else { continue }
@@ -250,33 +246,6 @@ struct AutoNamingEngine: Sendable {
         }
         let context = parts.joined(separator: "\n")
         return context.isEmpty ? nil : context
-    }
-
-    private func recentExchangeMessages(from messages: [AutoNamingTranscriptMessage]) -> [AutoNamingTranscriptMessage] {
-        var completedExchanges: [[AutoNamingTranscriptMessage]] = []
-        var currentExchange: [AutoNamingTranscriptMessage] = []
-
-        for message in messages {
-            if message.role == "user" {
-                if !currentExchange.isEmpty {
-                    completedExchanges.append(currentExchange)
-                }
-                currentExchange = [message]
-            } else if !currentExchange.isEmpty {
-                currentExchange.append(message)
-            }
-        }
-
-        let includesOpenUserExchange = currentExchange.last?.role == "user"
-        let completeWindow = completedExchanges.suffix(config.contextRecentExchangeCount)
-        var selected = completeWindow.flatMap { $0 }
-        if includesOpenUserExchange {
-            selected.append(contentsOf: currentExchange)
-        } else if !currentExchange.isEmpty {
-            let allExchanges = completedExchanges + [currentExchange]
-            selected = allExchanges.suffix(config.contextRecentExchangeCount).flatMap { $0 }
-        }
-        return selected
     }
 
     // MARK: - Transcript extraction (Codex rollout JSONL)
@@ -378,8 +347,9 @@ struct AutoNamingEngine: Sendable {
     func buildPrompt(currentTitle: String?, context: String) -> String {
         var lines: [String] = [
             "You name terminal workspace tabs for a developer running coding agents.",
-            "Given up to the last 25 recent exchanges from a conversation, output ONLY an informative subject statement, up to 12 words, that summarizes the current task being worked on.",
-            "Base the title on the thread across the last several prompts and replies; do not summarize only the latest prompt when prior recent prompts establish the actual task.",
+            "Given the whole conversation excerpt, output ONLY an informative subject statement, up to 20 words, that summarizes the current task being worked on.",
+            "Evaluate the entire conversation before choosing the title; do not summarize only the latest prompt when earlier messages establish the actual task.",
+            "The title should read like a normal sentence fragment a person would write, not a bag of keywords.",
             "Write a natural, human-readable grammatical phrase in the same language as the conversation.",
             "Prefer concrete nouns from the work: feature, bug, ticket, repo, file, workflow, or decision.",
             "Do not emit title-case keyword fragments or generic category labels.",
@@ -388,6 +358,7 @@ struct AutoNamingEngine: Sendable {
             "Avoid filler words such as \"now\", \"seeing\", \"trying\", or \"working on\".",
             "Bad: Now Seeing Trying",
             "Bad: Look Ticket Determine",
+            "Bad: Look failing test pr summary all failing tests",
             "Bad: Three Dot Here",
             "Bad: Workspace Automation",
             "Good: Improving workspace tab summaries",

@@ -302,7 +302,7 @@ import Testing
         let long = "Investigating workspace tab titles that mirror the entire developer conversation instead of extracting disconnected keywords from the newest message fragment"
         let sanitized = try #require(engine.sanitizeResponse(long, currentTitle: nil))
         #expect(sanitized.split(separator: " ").count == 20)
-        #expect(sanitized == "Investigating workspace tab titles that mirror the entire developer conversation instead of extracting disconnected keywords from the newest message")
+        #expect(sanitized == "Investigating workspace tab titles that mirror the entire developer conversation instead of extracting disconnected keywords from the newest message fragment")
     }
 
     @Test func identicalTitleIsNoOp() {
