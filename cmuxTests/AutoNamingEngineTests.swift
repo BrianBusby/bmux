@@ -181,7 +181,7 @@ import Testing
         #expect(engine.extractMessages(fromTranscriptLines: ["", "garbage", "{}"]).isEmpty)
     }
 
-    @Test func contextUsesLastTwentyFiveExchangesWithTruncation() throws {
+    @Test func contextUsesWholeConversationWithTruncation() throws {
         let longText = String(repeating: "x", count: config.contextMessageMaxChars + 100)
         var messages: [AutoNamingTranscriptMessage] = [
             AutoNamingTranscriptMessage(role: "user", text: "Old deployment task"),
@@ -195,8 +195,8 @@ import Testing
 
         let context = try #require(engine.buildContext(from: messages))
         let contextLines = context.components(separatedBy: .newlines)
-        #expect(!context.contains("Old deployment task"))
-        #expect(!contextLines.contains("user: Workspace title exchange 1"))
+        #expect(context.contains("Old deployment task"))
+        #expect(contextLines.contains("user: Workspace title exchange 1"))
         #expect(contextLines.contains("user: Workspace title exchange 2"))
         #expect(contextLines.contains("assistant: Reply for workspace title exchange 26"))
         // The long tail message is truncated to the per-message cap.
@@ -223,19 +223,22 @@ import Testing
         )
 
         #expect(prompt.contains("subject statement"))
-        #expect(prompt.contains("last 25 recent exchanges"))
-        #expect(prompt.contains("last several prompts"))
+        #expect(prompt.contains("whole conversation"))
+        #expect(prompt.contains("entire conversation"))
         #expect(prompt.contains("current task being worked on"))
-        #expect(prompt.contains("up to 12 words"))
+        #expect(prompt.contains("up to 20 words"))
+        #expect(prompt.contains("normal sentence"))
         #expect(prompt.contains("human-readable"))
         #expect(prompt.contains("meaningfully changed"))
         #expect(prompt.contains("Now Seeing Trying"))
         #expect(prompt.contains("Look Ticket Determine"))
+        #expect(prompt.contains("Look failing test pr summary all failing tests"))
         #expect(prompt.contains("Three Dot Here"))
         #expect(prompt.contains("Workspace Automation"))
         #expect(prompt.contains("Improving workspace tab summaries"))
         #expect(!prompt.contains("2-5 word title"))
         #expect(!prompt.contains("up to 80 characters"))
+        #expect(!prompt.contains("last 25 recent exchanges"))
     }
 
     @Test func promptCarriesPullRequestIdentityForReviewTasks() {
@@ -255,11 +258,10 @@ import Testing
     }
 
     @Test func defaultsAllowDescriptiveStableTitles() {
-        #expect(config.maxTitleLength == 120)
-        #expect(config.maxTitleWordCount == 12)
+        #expect(config.maxTitleLength == 180)
+        #expect(config.maxTitleWordCount == 20)
         #expect(config.minLineGrowth >= 12)
         #expect(config.minInterval >= 300)
-        #expect(config.contextRecentExchangeCount == 25)
     }
 
     // MARK: - Sanitization
@@ -297,10 +299,10 @@ import Testing
     }
 
     @Test func sanitizationEnforcesWordCapAtWordBoundary() throws {
-        let long = "Investigating workspace tab titles that mirror the last several developer prompts instead of the newest fragment"
+        let long = "Investigating workspace tab titles that mirror the entire developer conversation instead of extracting disconnected keywords from the newest message fragment"
         let sanitized = try #require(engine.sanitizeResponse(long, currentTitle: nil))
-        #expect(sanitized.split(separator: " ").count == 12)
-        #expect(sanitized == "Investigating workspace tab titles that mirror the last several developer prompts instead")
+        #expect(sanitized.split(separator: " ").count == 20)
+        #expect(sanitized == "Investigating workspace tab titles that mirror the entire developer conversation instead of extracting disconnected keywords from the newest message")
     }
 
     @Test func identicalTitleIsNoOp() {
