@@ -28,6 +28,8 @@ struct AutoNamingConfig: Sendable {
 
     /// Total lifetime of an in-flight marker before a new pass may start.
     var inFlightExpiry: TimeInterval { llmTimeout + inFlightExpiryGrace }
+    /// Minimum title words after sanitization.
+    var minTitleWordCount: Int = 6
     /// Maximum title words after sanitization.
     var maxTitleWordCount: Int = 20
     /// Maximum title length after sanitization, kept as a UI safety cap after
@@ -347,14 +349,14 @@ struct AutoNamingEngine: Sendable {
     func buildPrompt(currentTitle: String?, context: String) -> String {
         var lines: [String] = [
             "You name terminal workspace tabs for a developer running coding agents.",
-            "Given the whole conversation excerpt, output ONLY an informative subject statement, up to 20 words, that summarizes the current task being worked on.",
+            "Given the whole conversation excerpt, output ONLY an informative subject statement, between 6 and 20 words, that summarizes the current task being worked on.",
             "Evaluate the entire conversation before choosing the title; do not summarize only the latest prompt when earlier messages establish the actual task.",
             "The title should read like a normal sentence fragment a person would write, not a bag of keywords.",
             "Write a natural, human-readable grammatical phrase in the same language as the conversation.",
+            "Never output fewer than 6 words.",
             "Prefer concrete nouns from the work: feature, bug, ticket, repo, file, workflow, or decision.",
             "Do not emit title-case keyword fragments or generic category labels.",
             "Do not rename just because wording could be slightly improved; change only when the main subject has meaningfully changed.",
-            "Use one line only, no quotes, no trailing punctuation.",
             "Avoid filler words such as \"now\", \"seeing\", \"trying\", or \"working on\".",
             "Bad: Now Seeing Trying",
             "Bad: Look Ticket Determine",
@@ -376,7 +378,11 @@ struct AutoNamingEngine: Sendable {
         }
         if let currentTitle, !currentTitle.isEmpty {
             lines.append("The current title is: \(currentTitle)")
-            lines.append("If that still accurately describes the conversation's main topic, output it EXACTLY as given.")
+            if titleWordCount(currentTitle) >= config.minTitleWordCount {
+                lines.append("If that still accurately describes the conversation's main topic and is at least 6 words, output it EXACTLY as given.")
+            } else {
+                lines.append("The current title is shorter than 6 words, so do not output it exactly; replace it with a 6- to 20-word title.")
+            }
             lines.append("")
         }
         lines.append("Conversation excerpt:")
@@ -438,7 +444,8 @@ struct AutoNamingEngine: Sendable {
             .filter { !$0.isEmpty }
             .joined(separator: " ")
         guard !title.isEmpty else { return nil }
-        let words = title.split(separator: " ")
+        let words = titleWords(title)
+        guard words.count >= config.minTitleWordCount else { return nil }
         if words.count > config.maxTitleWordCount {
             title = words.prefix(config.maxTitleWordCount).joined(separator: " ")
         }
@@ -452,11 +459,25 @@ struct AutoNamingEngine: Sendable {
             title = title.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         guard !title.isEmpty else { return nil }
+        guard titleWordCount(title) >= config.minTitleWordCount else { return nil }
         if let currentTitle,
            normalizedTitleIdentity(title) == normalizedTitleIdentity(currentTitle) {
             return .unchanged(currentTitle.trimmingCharacters(in: .whitespacesAndNewlines))
         }
         return .changed(title)
+    }
+
+    private func titleWords(_ title: String) -> [Substring] {
+        title.split(separator: " ")
+    }
+
+    private func titleWordCount(_ title: String) -> Int {
+        titleWords(
+            title
+                .components(separatedBy: .whitespacesAndNewlines)
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+        ).count
     }
 
     private func normalizedTitleIdentity(_ title: String) -> String {

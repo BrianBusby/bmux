@@ -302,7 +302,7 @@ import Testing
     }
 
     @Test func sanitizationEnforcesLengthCapAtWordBoundary() throws {
-        let long = "Investigating authentication-subsystem-regression workspace-title-summarization behavior-with-descriptive-prompts across-recent-developer-instructions instead-of-latest-fragments for-agent-session-auto-naming reliability"
+        let long = "Investigating workspace title sanitizer behavior around authentication-subsystem-regression workspace-title-summarization behavior-with-descriptive-prompts across-recent-developer-instructions instead-of-latest-fragments for-agent-session-auto-naming reliability"
         let sanitized = try #require(engine.sanitizeResponse(long, currentTitle: nil))
         #expect(sanitized.count <= config.maxTitleLength)
         #expect(!sanitized.hasSuffix(" "))
