@@ -23467,7 +23467,12 @@ struct CMUXCLI {
             if let mappedSession,
                let savedBody = mappedSession.lastBody, !savedBody.isEmpty,
                summary.body.contains("needs your attention") || summary.body.contains("needs your input") {
-                summary = (subtitle: mappedSession.lastSubtitle ?? summary.subtitle, body: savedBody)
+                summary = (
+                    subtitle: mappedSession.lastSubtitle ?? summary.subtitle,
+                    body: savedBody,
+                    status: summary.status,
+                    isGenericIdleHeartbeat: summary.isGenericIdleHeartbeat
+                )
             }
 
             let title = String(
@@ -23476,6 +23481,31 @@ struct CMUXCLI {
             )
             let payload = notificationPayload(title: title, subtitle: summary.subtitle, body: summary.body)
 
+            // Claude's Notification hook also fires for its generic "idle at the
+            // prompt for 60+ seconds" heartbeat, not just permission/question
+            // prompts — genuine blocking states (AskUserQuestion/ExitPlanMode,
+            // permission approval) are already surfaced through PreToolUse /
+            // PermissionRequest before this ever fires. Forcing .needsInput for
+            // every notification left the sidebar spinner stuck busy after
+            // ordinary completed turns, since .needsInput counts as active work
+            // and nothing ever moved it back to .idle. Fold the plain heartbeat
+            // back to idle unless a more specific hook already marked the
+            // session needsInput (e.g. a pending question the user hasn't
+            // answered yet), so that real blocking states are preserved.
+            let lifecycle: AgentHibernationLifecycleState?
+            if summary.isGenericIdleHeartbeat, mappedSession?.agentLifecycle != .needsInput {
+                lifecycle = .idle
+            } else {
+                switch summary.status {
+                case .idle:
+                    lifecycle = .idle
+                case .needsInput, .error:
+                    lifecycle = .needsInput
+                case nil:
+                    lifecycle = nil
+                }
+            }
+
             if let sessionId = parsedInput.sessionId {
                 try? sessionStore.upsert(
                     sessionId: sessionId,
@@ -23483,27 +23513,41 @@ struct CMUXCLI {
                     surfaceId: surfaceId,
                     cwd: parsedInput.cwd,
                     transcriptPath: parsedInput.transcriptPath,
-                    agentLifecycle: .needsInput,
+                    agentLifecycle: lifecycle,
                     lastSubtitle: summary.subtitle,
                     lastBody: summary.body
                 )
             }
 
-            setAgentLifecycle(
-                client: client,
-                key: Self.claudeCodeStatusKey,
-                lifecycle: .needsInput,
-                workspaceId: workspaceId,
-                surfaceId: surfaceId
-            )
-            _ = try? setClaudeStatus(
-                client: client,
-                workspaceId: workspaceId,
-                surfaceId: surfaceId,
-                value: "Needs input",
-                icon: "bell.fill",
-                color: "#4C8DFF", pid: claudePid
-            )
+            if let lifecycle {
+                setAgentLifecycle(
+                    client: client,
+                    key: Self.claudeCodeStatusKey,
+                    lifecycle: lifecycle,
+                    workspaceId: workspaceId,
+                    surfaceId: surfaceId
+                )
+                switch lifecycle {
+                case .idle:
+                    _ = try? setClaudeStatus(
+                        client: client,
+                        workspaceId: workspaceId,
+                        surfaceId: surfaceId,
+                        value: "Idle",
+                        icon: "pause.circle.fill",
+                        color: "#8E8E93", pid: claudePid
+                    )
+                case .needsInput, .running, .unknown:
+                    _ = try? setClaudeStatus(
+                        client: client,
+                        workspaceId: workspaceId,
+                        surfaceId: surfaceId,
+                        value: "Needs input",
+                        icon: "bell.fill",
+                        color: "#4C8DFF", pid: claudePid
+                    )
+                }
+            }
             let response = try sendV1Command("notify_target_async \(workspaceId) \(surfaceId) \(payload)", client: client)
             print(response)
 
@@ -25813,12 +25857,14 @@ struct CMUXCLI {
         return nil
     }
 
-    private func summarizeClaudeHookNotification(parsedInput: ClaudeHookParsedInput) -> (subtitle: String, body: String) {
+    private func summarizeClaudeHookNotification(
+        parsedInput: ClaudeHookParsedInput
+    ) -> (subtitle: String, body: String, status: AgentHookNotificationStatus?, isGenericIdleHeartbeat: Bool) {
         guard let object = parsedInput.object else {
             if let fallback = parsedInput.rawFallback, !fallback.isEmpty {
                 return classifyClaudeNotification(signal: fallback, message: fallback)
             }
-            return ("Waiting", "Claude is waiting for your input")
+            return ("Waiting", "Claude is waiting for your input", .needsInput, false)
         }
 
         let nested = (object["notification"] as? [String: Any]) ?? (object["data"] as? [String: Any]) ?? [:]
@@ -26207,29 +26253,41 @@ struct CMUXCLI {
         )
     }
 
-    private func classifyClaudeNotification(signal: String, message: String) -> (subtitle: String, body: String) {
+    private func classifyClaudeNotification(
+        signal: String,
+        message: String
+    ) -> (subtitle: String, body: String, status: AgentHookNotificationStatus?, isGenericIdleHeartbeat: Bool) {
         let lower = "\(signal) \(message)".lowercased()
         if lower.contains("permission") || lower.contains("approve") || lower.contains("approval") || lower.contains("permission_prompt") {
             let body = message.isEmpty ? "Approval needed" : message
-            return ("Permission", body)
+            return ("Permission", body, .needsInput, false)
         }
         if lower.contains("error") || lower.contains("failed") || lower.contains("exception") {
             let body = message.isEmpty ? "Claude reported an error" : message
-            return ("Error", body)
+            return ("Error", body, .error, false)
         }
         if containsCompletionCue(lower) {
             let body = message.isEmpty ? "Task completed" : message
-            return ("Completed", body)
+            return ("Completed", body, .idle, false)
         }
         if containsWaitingCue(lower) {
+            // Claude fires this generic "waiting at the prompt" heartbeat ~60s
+            // after going idle with nothing pending — genuine blocking states
+            // (AskUserQuestion/ExitPlanMode, permission approval) are already
+            // surfaced through PreToolUse/PermissionRequest before this ever
+            // fires. Flag it so the caller can fold it back to idle unless a
+            // more specific hook already marked the session needsInput.
             let body = message.isEmpty ? "Waiting for input" : message
-            return ("Waiting", body)
+            return ("Waiting", body, .needsInput, true)
         }
         // Use the message directly if it's meaningful (not a generic placeholder).
+        // The cue is ambiguous, so leave the lifecycle untouched rather than
+        // forcing a "needs input" spin that may never clear (matches the
+        // generic agent classifier's nil-status handling).
         if !message.isEmpty, message != "Claude needs your input" {
-            return ("Attention", message)
+            return ("Attention", message, nil, false)
         }
-        return ("Attention", "Claude needs your attention")
+        return ("Attention", "Claude needs your attention", .needsInput, false)
     }
 
     private func containsCompletionCue(_ lowercasedText: String) -> Bool {
