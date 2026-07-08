@@ -295,7 +295,7 @@ enum JSONCObjectEditor {
         return inserting(parentProperty, into: root, in: source)
     }
 
-    private struct ObjectRange {
+    struct ObjectRange {
         let openBrace: String.Index
         let closeBrace: String.Index
         let properties: [PropertyRange]
@@ -305,14 +305,14 @@ enum JSONCObjectEditor {
         }
     }
 
-    private struct PropertyRange {
+    struct PropertyRange {
         let key: String
         let keyStart: String.Index
         let valueStart: String.Index
         let valueEnd: String.Index
     }
 
-    private static func rootObject(in source: String) -> ObjectRange? {
+    static func rootObject(in source: String) -> ObjectRange? {
         var index = skipWhitespaceAndComments(in: source, from: source.startIndex)
         if index < source.endIndex, source[index] == "\u{feff}" {
             index = source.index(after: index)
@@ -322,7 +322,7 @@ enum JSONCObjectEditor {
         return parseObject(in: source, at: index)
     }
 
-    private static func parseObject(in source: String, at openBrace: String.Index) -> ObjectRange? {
+    static func parseObject(in source: String, at openBrace: String.Index) -> ObjectRange? {
         guard openBrace < source.endIndex, source[openBrace] == "{" else { return nil }
         guard let closeBrace = matchingContainerEnd(in: source, at: openBrace) else { return nil }
 
@@ -470,7 +470,7 @@ enum JSONCObjectEditor {
         return nil
     }
 
-    private static func skipWhitespaceAndComments(in source: String, from start: String.Index) -> String.Index {
+    static func skipWhitespaceAndComments(in source: String, from start: String.Index) -> String.Index {
         var index = start
         while index < source.endIndex {
             let character = source[index]
@@ -569,7 +569,7 @@ enum JSONCObjectEditor {
         return text.replacingOccurrences(of: "\n", with: newline)
     }
 
-    private static func replacing(
+    static func replacing(
         _ source: String,
         from start: String.Index,
         to end: String.Index,

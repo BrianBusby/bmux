@@ -35,18 +35,55 @@ enum TitlebarControlsHitRegions {
         config: TitlebarControlsStyleConfig,
         additionalButtonCount: Int = 0
     ) -> [ClosedRange<CGFloat>] {
-        var ranges: [ClosedRange<CGFloat>] = []
-        let totalButtonCount = buttonCount + max(0, additionalButtonCount)
-        ranges.reserveCapacity(totalButtonCount)
-
-        var minX = outerLeadingPadding + config.groupPadding.leading
-        for _ in 0..<totalButtonCount {
+        var ranges = MinimalModeSidebarControlActionSlot.allCases.compactMap {
+            buttonXRange(for: $0, config: config)
+        }
+        var minX = (ranges.last?.upperBound ?? (outerLeadingPadding + config.groupPadding.leading - config.spacing)) + config.spacing
+        for _ in 0..<max(0, additionalButtonCount) {
             let maxX = minX + config.buttonSize
             ranges.append(minX...maxX)
             minX = maxX + config.spacing
         }
-
         return ranges
+    }
+
+    static func buttonXRange(
+        for slot: MinimalModeSidebarControlActionSlot,
+        config: TitlebarControlsStyleConfig
+    ) -> ClosedRange<CGFloat>? {
+        let startX = outerLeadingPadding + config.groupPadding.leading
+        let sidebarX = startX
+        let notificationsX = sidebarX + config.buttonSize + config.spacing
+        let newTabX = notificationsX + config.buttonSize + config.spacing
+        let newTabWidth = TitlebarNewWorkspaceCloudSplitButtonMetrics.primaryWidth(config: config)
+        let cloudMenuX = newTabX + newTabWidth
+        let cloudMenuWidth = TitlebarNewWorkspaceCloudSplitButtonMetrics.dropdownWidth(config: config)
+        let focusBackX = cloudMenuX + cloudMenuWidth + config.spacing
+        let focusForwardX = focusBackX + config.buttonSize + config.spacing
+
+        let minX: CGFloat = switch slot {
+        case .toggleSidebar:
+            sidebarX
+        case .showNotifications:
+            notificationsX
+        case .newTab:
+            newTabX
+        case .cloudVM:
+            cloudMenuX
+        case .focusHistoryBack:
+            focusBackX
+        case .focusHistoryForward:
+            focusForwardX
+        }
+        let width: CGFloat = switch slot {
+        case .newTab:
+            newTabWidth
+        case .cloudVM:
+            cloudMenuWidth
+        case .toggleSidebar, .showNotifications, .focusHistoryBack, .focusHistoryForward:
+            config.buttonSize
+        }
+        return minX...(minX + width)
     }
 
     static func sidebarActionSlot(
@@ -207,6 +244,12 @@ final class MinimalModeSidebarControlActionView: NSView {
             CmuxExtensionSidebarSelection.showMenu(anchorView: self, event: event)
         case .newTab:
             _ = AppDelegate.shared?.showNewWorkspaceContextMenu(anchorView: self, event: event)
+        case .cloudVM:
+            _ = AppDelegate.shared?.showNewWorkspaceContextMenu(
+                anchorView: self,
+                event: event,
+                debugSource: "titlebar.minimalSidebar.cloudMenu.rightClick"
+            )
         case .focusHistoryBack:
             _ = AppDelegate.shared?.showFocusHistoryContextMenu(anchorView: self, event: event, direction: .back)
         case .focusHistoryForward:
@@ -225,7 +268,7 @@ final class MinimalModeSidebarControlActionView: NSView {
             button.frame = NSRect(
                 x: range.lowerBound,
                 y: max(0, (bounds.height - config.buttonSize) / 2),
-                width: config.buttonSize,
+                width: range.upperBound - range.lowerBound,
                 height: config.buttonSize
             )
         }
