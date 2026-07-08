@@ -31800,6 +31800,23 @@
         }
       }
     },
+    "cli.error.agentTokenProxyRequiresCommandHex": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent-token-proxy requires --command-hex <hex>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent-token-proxy には --command-hex <hex> が必要です"
+          }
+        }
+      }
+    },
     "cli.error.workspaceSubcommandRequired": {
       "extractionState": "manual",
       "localizations": {

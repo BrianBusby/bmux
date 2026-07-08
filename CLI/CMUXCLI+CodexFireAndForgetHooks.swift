@@ -1,3 +1,6 @@
+import CmuxAgentChat
+import CmuxSettings
+import Darwin
 import Foundation
 
 extension CMUXCLI {
@@ -42,26 +45,12 @@ extension CMUXCLI {
         let hooksDir = Self.codexHookScriptsDirectory()
         var args: [String] = ["--enable", "hooks", "--dangerously-bypass-hook-trust"]
         for event in Self.codexWrapperInjectionEvents {
-            let ff = Self.codexFireAndForgetAgentHookShellCommand(
-                "cmux hooks codex \(event.cmuxSubcommand)", for: codexDef
+            let groups = try Self.codexWrapperHookGroups(
+                for: event,
+                codexDef: codexDef,
+                hooksDir: hooksDir
             )
-            let command: String
-            if let scriptPath = hooksDir.flatMap({
-                Self.writeCodexHookScript(subcommand: event.cmuxSubcommand, body: ff, in: $0)
-            }), !scriptPath.contains("'''") {
-                command = scriptPath
-            } else {
-                command = ff
-            }
-            // TOML multi-line literal string ('''...''') preserves bytes verbatim
-            // and may contain single quotes, so the embedded `echo '{}'` / `sh -c
-            // '...'` survive with no escaping. TOML forbids only a literal triple
-            // single quote inside; guard against it (neither a path nor the
-            // command ever has one).
-            guard !command.contains("'''") else {
-                throw CLIError(message: "Codex hook command contains a triple single quote and cannot be TOML-encoded.")
-            }
-            let toml = "hooks.\(event.agentEvent)=[{hooks=[{type=\"command\",command='''\(command)''',timeout=\(event.timeoutMs)}]}]"
+            let toml = "hooks.\(event.agentEvent)=\(groups)"
             args.append("-c")
             args.append(toml)
         }
@@ -75,6 +64,44 @@ extension CMUXCLI {
             out.append(0)
         }
         FileHandle.standardOutput.write(out)
+    }
+
+    private static func codexWrapperHookGroups(
+        for event: (agentEvent: String, cmuxSubcommand: String, timeoutMs: Int),
+        codexDef: AgentHookDef,
+        hooksDir: URL?
+    ) throws -> String {
+        var hookGroups: [String] = []
+        if event.agentEvent == "PreToolUse" {
+            let optimizerCommand = codexOptimizerHookCommandString(for: codexDef)
+            hookGroups.append(try codexWrapperHookGroupTOML(command: optimizerCommand, timeoutMs: 5_000))
+        }
+
+        let ff = Self.codexFireAndForgetAgentHookShellCommand(
+            "cmux hooks codex \(event.cmuxSubcommand)", for: codexDef
+        )
+        let command: String
+        if let scriptPath = hooksDir.flatMap({
+            Self.writeCodexHookScript(subcommand: event.cmuxSubcommand, body: ff, in: $0)
+        }), !scriptPath.contains("'''") {
+            command = scriptPath
+        } else {
+            command = ff
+        }
+        hookGroups.append(try codexWrapperHookGroupTOML(command: command, timeoutMs: event.timeoutMs))
+        return "[\(hookGroups.joined(separator: ","))]"
+    }
+
+    private static func codexWrapperHookGroupTOML(command: String, timeoutMs: Int) throws -> String {
+        // TOML multi-line literal string ('''...''') preserves bytes verbatim
+        // and may contain single quotes, so the embedded `echo '{}'` / `sh -c
+        // '...'` survive with no escaping. TOML forbids only a literal triple
+        // single quote inside; guard against it (neither a path nor the command
+        // ever has one).
+        guard !command.contains("'''") else {
+            throw CLIError(message: "Codex hook command contains a triple single quote and cannot be TOML-encoded.")
+        }
+        return "{hooks=[{type=\"command\",command='''\(command)''',timeout=\(timeoutMs)}]}"
     }
 
     /// The cmux-owned directory holding the generated codex hook scripts.
@@ -118,6 +145,364 @@ extension CMUXCLI {
         } catch {
             return nil
         }
+    }
+
+    func runCodexOptimizePreToolUseHook() throws {
+        let env = ProcessInfo.processInfo.environment
+        guard env["CMUX_SURFACE_ID"]?.isEmpty == false,
+              env["CMUX_CODEX_HOOKS_DISABLED"] != "1",
+              Self.currentAgentTokenOptimizationMode() != .off
+        else {
+            print("{}")
+            return
+        }
+
+        let stdinData = FileHandle.standardInput.readDataToEndOfFile()
+        guard !stdinData.isEmpty,
+              let payload = try? JSONSerialization.jsonObject(with: stdinData) as? [String: Any]
+        else {
+            print("{}")
+            return
+        }
+
+        let eventName = Self.agentHookString(in: payload, keys: ["hook_event_name", "event"]) ?? ""
+        guard eventName == "PreToolUse" else {
+            print("{}")
+            return
+        }
+
+        guard var updatedInput = Self.agentHookToolInputDictionary(from: payload),
+              let commandKey = Self.agentHookCommandKey(in: updatedInput),
+              let command = updatedInput[commandKey] as? String,
+              Self.agentHookCommandEligibleForTokenProxy(command)
+        else {
+            print("{}")
+            return
+        }
+
+        let cwd = Self.agentHookString(in: payload, keys: ["cwd"])
+            ?? Self.agentHookString(in: updatedInput, keys: ["cwd", "workdir", "working_directory"])
+        updatedInput[commandKey] = Self.agentTokenProxyShellCommand(command: command, cwd: cwd)
+
+        try Self.writeAgentHookJSONObject([
+            "hookSpecificOutput": [
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "allow",
+                "updatedInput": updatedInput,
+            ] as [String: Any],
+            "decision": "approve",
+        ] as [String: Any])
+    }
+
+    func runClaudeOptimizePreToolUseHook() throws {
+        let env = ProcessInfo.processInfo.environment
+        guard env["CMUX_SURFACE_ID"]?.isEmpty == false,
+              env["CMUX_CLAUDE_HOOKS_DISABLED"] != "1",
+              Self.currentAgentTokenOptimizationMode() != .off
+        else {
+            print("{}")
+            return
+        }
+
+        let stdinData = FileHandle.standardInput.readDataToEndOfFile()
+        guard !stdinData.isEmpty,
+              let payload = try? JSONSerialization.jsonObject(with: stdinData) as? [String: Any]
+        else {
+            print("{}")
+            return
+        }
+
+        let eventName = Self.agentHookString(in: payload, keys: ["hook_event_name", "event"]) ?? ""
+        let toolName = Self.agentHookString(in: payload, keys: ["tool_name", "toolName"]) ?? ""
+        guard eventName == "PreToolUse", toolName == "Bash" else {
+            print("{}")
+            return
+        }
+
+        guard var updatedInput = Self.agentHookToolInputDictionary(from: payload),
+              let commandKey = Self.agentHookCommandKey(in: updatedInput),
+              let command = updatedInput[commandKey] as? String,
+              Self.agentHookCommandEligibleForTokenProxy(command)
+        else {
+            print("{}")
+            return
+        }
+
+        let cwd = Self.agentHookString(in: payload, keys: ["cwd"])
+            ?? Self.agentHookString(in: updatedInput, keys: ["cwd", "workdir", "working_directory"])
+        updatedInput[commandKey] = Self.agentTokenProxyShellCommand(command: command, cwd: cwd)
+
+        try Self.writeAgentHookJSONObject([
+            "hookSpecificOutput": [
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "allow",
+                "updatedInput": updatedInput,
+            ] as [String: Any],
+            "decision": "approve",
+        ] as [String: Any])
+    }
+
+    func runAgentTokenProxy(commandArgs: [String]) throws {
+        guard let commandHex = optionValue(commandArgs, name: "--command-hex"),
+              let command = Self.stringFromLowercaseHex(commandHex)
+        else {
+            throw CLIError(message: String(
+                localized: "cli.error.agentTokenProxyRequiresCommandHex",
+                defaultValue: "agent-token-proxy requires --command-hex <hex>"
+            ))
+        }
+        let cwd = optionValue(commandArgs, name: "--cwd-hex")
+            .flatMap(Self.stringFromLowercaseHex)
+            .flatMap { value -> String? in
+                let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+                return trimmed.isEmpty ? nil : trimmed
+            }
+
+        let result = CLIProcessRunner.runProcess(
+            executablePath: Self.agentTokenProxyShellPath(),
+            arguments: ["-lc", command],
+            currentDirectoryPath: cwd
+        )
+
+        let mode = Self.currentAgentTokenOptimizationMode()
+        guard mode != .off else {
+            Self.writeAgentTokenProxyRawResult(result)
+            Darwin.exit(result.status)
+        }
+
+        let optimizationInput = Self.agentTokenProxyOptimizationInput(stdout: result.stdout, stderr: result.stderr)
+        let optimization = TokenOptimizationLayer(mode: mode).optimizeTerminalOutput(
+            messageID: "agent-token-proxy-\(UUID().uuidString)",
+            command: command,
+            rawOutput: optimizationInput,
+            exitCode: Int(result.status)
+        )
+
+        if optimization.wasOptimized {
+            Self.persistAgentTokenProxyRawOutput(optimization.rawOutputRecord)
+            var output = optimization.output
+            if !output.hasSuffix("\n") {
+                output.append("\n")
+            }
+            cliWriteStdout(output)
+        } else {
+            Self.writeAgentTokenProxyRawResult(result)
+        }
+        Darwin.exit(result.status)
+    }
+
+    private static func agentHookToolInputDictionary(from payload: [String: Any]) -> [String: Any]? {
+        if let dict = agentHookJSONDictionary(from: payload["tool_input"])
+            ?? agentHookJSONDictionary(from: payload["toolInput"]) {
+            return dict
+        }
+        if let toolCall = payload["toolCall"] as? [String: Any] {
+            return agentHookJSONDictionary(from: toolCall["args"])
+                ?? agentHookJSONDictionary(from: toolCall["input"])
+        }
+        if agentHookCommandKey(in: payload) != nil {
+            return payload
+        }
+        return nil
+    }
+
+    private static func agentHookJSONDictionary(from raw: Any?) -> [String: Any]? {
+        if let dict = raw as? [String: Any] {
+            return dict
+        }
+        if let string = raw as? String,
+           let data = string.data(using: .utf8),
+           let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            return dict
+        }
+        return nil
+    }
+
+    private static func agentHookString(in dictionary: [String: Any], keys: [String]) -> String? {
+        for key in keys {
+            guard let raw = dictionary[key] as? String else { continue }
+            let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                return trimmed
+            }
+        }
+        return nil
+    }
+
+    private static func agentHookCommandKey(in dictionary: [String: Any]) -> String? {
+        for key in ["command", "cmd"] {
+            guard let command = dictionary[key] as? String else { continue }
+            if !command.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return key
+            }
+        }
+        return nil
+    }
+
+    private static func agentHookCommandEligibleForTokenProxy(_ command: String) -> Bool {
+        let trimmed = command.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              !trimmed.contains("agent-token-proxy")
+        else {
+            return false
+        }
+
+        let lowercased = trimmed.lowercased()
+        if lowercased.hasPrefix("git status") {
+            return true
+        }
+        if lowercased.contains(" test")
+            || lowercased.hasSuffix(" test")
+            || lowercased.contains("swift test")
+            || lowercased.contains("xcodebuild test")
+            || lowercased.contains("rspec")
+            || lowercased.contains("vitest")
+            || lowercased.contains("jest") {
+            return true
+        }
+        if lowercased.contains("tsc")
+            || lowercased.contains("typescript")
+            || lowercased.contains("typecheck")
+            || lowercased.contains("types:check") {
+            return true
+        }
+        if lowercased == "npm install"
+            || lowercased.hasPrefix("npm install ")
+            || lowercased == "yarn install"
+            || lowercased.hasPrefix("yarn install ")
+            || lowercased == "bun install"
+            || lowercased.hasPrefix("bun install ")
+            || lowercased == "pnpm install"
+            || lowercased.hasPrefix("pnpm install ")
+            || lowercased == "bundle install"
+            || lowercased.hasPrefix("bundle install ")
+            || lowercased == "pod install"
+            || lowercased.hasPrefix("pod install ") {
+            return true
+        }
+
+        let commandName = trimmed.split(separator: " ").first.map(String.init) ?? ""
+        return ["rg", "grep", "find", "tree"].contains(commandName)
+            || lowercased.hasPrefix("ls -r")
+    }
+
+    private static func agentTokenProxyShellCommand(command: String, cwd: String?) -> String {
+        var arguments = "agent-token-proxy --command-hex '\(lowercaseHexString(from: Data(command.utf8)))'"
+        if let cwd,
+           !cwd.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            arguments += " --cwd-hex '\(lowercaseHexString(from: Data(cwd.utf8)))'"
+        }
+        return [
+            "cmux_cli=\"${CMUX_BUNDLED_CLI_PATH:-}\"",
+            "if [ -z \"$cmux_cli\" ] || [ ! -x \"$cmux_cli\" ]; then cmux_cli=\"$(command -v cmux 2>/dev/null || printf cmux)\"; fi",
+            "\"$cmux_cli\" \(arguments)",
+        ].joined(separator: "; ")
+    }
+
+    private static func writeAgentHookJSONObject(_ object: [String: Any]) throws {
+        let data = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
+        cliWriteStdout(data)
+        cliWriteStdout(Data("\n".utf8))
+    }
+
+    private static func writeAgentTokenProxyRawResult(_ result: CLIProcessResult) {
+        cliWriteStdout(result.stdout)
+        cliWriteStderr(result.stderr)
+    }
+
+    private static func agentTokenProxyOptimizationInput(stdout: String, stderr: String) -> String {
+        if !stdout.isEmpty {
+            return stdout
+        }
+        return stderr
+    }
+
+    private static func persistAgentTokenProxyRawOutput(_ record: ChatRawTerminalOutputRecord) {
+        guard let rawOutputRef = record.metadata.rawOutputRef,
+              !rawOutputRef.isEmpty else {
+            return
+        }
+        let root = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        let directory = root
+            .appendingPathComponent("cmux", isDirectory: true)
+            .appendingPathComponent("agent-raw-output", isDirectory: true)
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))
+        let fileName = rawOutputRef.unicodeScalars.map { scalar in
+            allowed.contains(scalar) ? String(scalar) : "_"
+        }.joined()
+        guard !fileName.isEmpty else { return }
+
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let data = try encoder.encode(record)
+            try data.write(
+                to: directory.appendingPathComponent(fileName).appendingPathExtension("json"),
+                options: [.atomic]
+            )
+        } catch {
+            return
+        }
+    }
+
+    private static func currentAgentTokenOptimizationMode() -> TokenOptimizationMode {
+        let catalog = SettingCatalog()
+        let store = JSONConfigStore(fileURL: CmuxConfigLocation().userConfigFile)
+        switch store.snapshotValue(for: catalog.terminal.agentTokenOptimizationMode) {
+        case .off:
+            return .off
+        case .conservative:
+            return .conservative
+        case .balanced:
+            return .balanced
+        case .aggressive:
+            return .aggressive
+        }
+    }
+
+    private static func agentTokenProxyShellPath() -> String {
+        let fileManager = FileManager.default
+        if let shell = ProcessInfo.processInfo.environment["SHELL"],
+           fileManager.isExecutableFile(atPath: shell) {
+            return shell
+        }
+        if fileManager.isExecutableFile(atPath: "/bin/zsh") {
+            return "/bin/zsh"
+        }
+        return "/bin/sh"
+    }
+
+    private static func lowercaseHexString(from data: Data) -> String {
+        let digits = Array("0123456789abcdef".utf8)
+        var output = [UInt8]()
+        output.reserveCapacity(data.count * 2)
+        for byte in data {
+            output.append(digits[Int(byte >> 4)])
+            output.append(digits[Int(byte & 0x0f)])
+        }
+        return String(decoding: output, as: UTF8.self)
+    }
+
+    private static func stringFromLowercaseHex(_ hex: String) -> String? {
+        let trimmed = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count.isMultiple(of: 2),
+              !trimmed.isEmpty else {
+            return nil
+        }
+        var bytes = [UInt8]()
+        bytes.reserveCapacity(trimmed.count / 2)
+        var index = trimmed.startIndex
+        while index < trimmed.endIndex {
+            let next = trimmed.index(index, offsetBy: 2)
+            guard let byte = UInt8(trimmed[index..<next], radix: 16) else {
+                return nil
+            }
+            bytes.append(byte)
+            index = next
+        }
+        return String(data: Data(bytes), encoding: .utf8)
     }
 
     static func codexFireAndForgetAgentHookShellCommand(_ command: String, for def: AgentHookDef) -> String {

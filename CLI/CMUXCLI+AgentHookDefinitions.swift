@@ -209,6 +209,35 @@ extension CMUXCLI {
         return inline
     }
 
+    static func codexOptimizerHookCommandString(for def: AgentHookDef) -> String {
+        let inline = agentHookShellCommand(
+            "cmux hooks codex optimize-pre-tool-use",
+            for: def,
+            noOpCommand: "cat >/dev/null 2>/dev/null || true; echo '{}'"
+        )
+        return codexPersistentHookScriptCommand(inline, eventTag: "optimize-pre-tool-use")
+    }
+
+    static func codexLegacyInlineHookCommandStrings(
+        for def: AgentHookDef,
+        event: AgentHookDef.HookEvent
+    ) -> [String] {
+        let command = "cmux hooks \(def.name) \(event.cmuxSubcommand)"
+        var commands = [agentHookShellCommand(command, for: def)]
+        if def.name == "codex", codexHookCanRunFireAndForget(event.cmuxSubcommand) {
+            commands.append(codexFireAndForgetAgentHookShellCommand(command, for: def))
+        }
+        return commands
+    }
+
+    static func codexLegacyInlineFeedHookCommandString(for def: AgentHookDef, agentEvent: String) -> String {
+        agentHookShellCommand(
+            "cmux hooks feed --source \(def.name) --event \(agentEvent)",
+            for: def,
+            noOpCommand: feedHookNoOpShellCommand(for: def, agentEvent: agentEvent)
+        )
+    }
+
     private static func feedHookNoOpShellCommand(for def: AgentHookDef, agentEvent: String) -> String {
         let normalized = (def.name == "codex" ? "posttooluse" : agentEvent)
             .replacingOccurrences(of: "_", with: "")
@@ -419,6 +448,7 @@ extension CMUXCLI {
         }
         if def.events.contains(where: { hookCommandString(for: def, event: $0) == command })
             || def.feedHookEvents.contains(where: { feedHookCommandString(for: def, agentEvent: $0) == command })
+            || (def.name == "codex" && codexOptimizerHookCommandString(for: def) == command)
         {
             return true
         }

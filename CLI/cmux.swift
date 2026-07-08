@@ -3229,6 +3229,7 @@ struct CMUXCLI {
         if command == "__sigpipe-probe" { try runSIGPIPEProbe(commandArgs: commandArgs); return }
         if command == "__sigpipe-stdin-pipe-probe" { try runSIGPIPEStdinPipeProbe(); return }
         if command == "__sigpipe-inspect" { try runSIGPIPEInspect(commandArgs: commandArgs); return }
+        if command == "agent-token-proxy" { try runAgentTokenProxy(commandArgs: commandArgs); return }
         if command == "diff-viewer-server" { try runDiffViewerServerCommand(commandArgs: commandArgs); return }
         if command == "__diff-viewer-refs" { try runDiffViewerRefsCommand(commandArgs: commandArgs); return }
         if command == "__diff-viewer-branch" { try runDiffViewerBranchRegenerateCommand(commandArgs: commandArgs); return }
@@ -28348,6 +28349,17 @@ struct CMUXCLI {
                 break
             }
         }
+        if def.name == "codex" {
+            var groups = result["PreToolUse"] as? [[String: Any]] ?? []
+            groups.append([
+                "hooks": [[
+                    "type": "command",
+                    "command": Self.codexOptimizerHookCommandString(for: def),
+                    "timeout": 5,
+                ] as [String: Any]]
+            ] as [String: Any])
+            result["PreToolUse"] = groups
+        }
         // Layer in Feed bridge entries. Blocking approval bridges get a long
         // timeout; Codex telemetry stays short so it never delays Codex's own
         // approval reviewer. Most nested agents use milliseconds. Codex, Grok,
@@ -29899,6 +29911,13 @@ export default CMUXSessionRestore;
                 command: Self.hookCommandString(for: def, event: event),
                 timeouts: [5_000, 600]
             )
+            for command in Self.codexLegacyInlineHookCommandStrings(for: def, event: event) {
+                insertHashes(
+                    eventLabel: eventLabel,
+                    command: command,
+                    timeouts: [5_000, 600]
+                )
+            }
             insertHashes(
                 eventLabel: eventLabel,
                 command: "cmux codex-hook \(event.cmuxSubcommand)",
@@ -29911,6 +29930,11 @@ export default CMUXSessionRestore;
             insertHashes(
                 eventLabel: eventLabel,
                 command: Self.feedHookCommandString(for: def, agentEvent: agentEvent),
+                timeouts: [120_000, 120, 600]
+            )
+            insertHashes(
+                eventLabel: eventLabel,
+                command: Self.codexLegacyInlineFeedHookCommandString(for: def, agentEvent: agentEvent),
                 timeouts: [120_000, 120, 600]
             )
             insertHashes(
@@ -34814,6 +34838,17 @@ export default CMUXSessionRestore;
             )
             return true
 
+        case "claude":
+            let rest = Array(commandArgs.dropFirst())
+            if rest.first?.lowercased() == "optimize-pre-tool-use" {
+                // Hidden: synchronous Claude PreToolUse Bash command rewriter.
+                // Returns `{}` unless a command can be routed through the local
+                // token optimizer proxy.
+                try runClaudeOptimizePreToolUseHook()
+                return true
+            }
+            return false
+
         default:
             guard let def = Self.agentDef(named: first) else {
                 if first == "feed" || first == "claude" {
@@ -34834,6 +34869,12 @@ export default CMUXSessionRestore;
                 // (Resources/bin/cmux-codex-wrapper) splices to inject cmux's
                 // fire-and-forget hooks for one invocation. No socket required.
                 try emitCodexWrapperInjectArgs()
+                return true
+            case "optimize-pre-tool-use" where def.name == "codex":
+                // Hidden: synchronous Codex PreToolUse command rewriter. It
+                // returns `{}` unless a shell command can be routed through the
+                // local token optimizer proxy.
+                try runCodexOptimizePreToolUseHook()
                 return true
             case "install":
                 try installHooksForAgent(def, arguments: actionArgs)
