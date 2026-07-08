@@ -213923,6 +213923,23 @@
         }
       }
     },
+    "repoAgentLauncher.agent.opencode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenCode"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenCode"
+          }
+        }
+      }
+    },
     "repoAgentLauncher.commandDescription": {
       "extractionState": "manual",
       "localizations": {

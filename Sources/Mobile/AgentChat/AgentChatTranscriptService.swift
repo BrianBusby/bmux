@@ -16,7 +16,6 @@ final class AgentChatTranscriptService {
     let resolver: AgentChatTranscriptResolver
     private let rawOutputStore: ChatRawTerminalOutputFileStore
     private let tokenOptimizationModeProvider: () -> TokenOptimizationMode
-    private let coding = ChatWireCoding()
     private var tailers: [String: AgentChatTranscriptTailer] = [:]
     private let hasEventSubscribers: @MainActor () -> Bool
     private let emitEventPayload: @MainActor ([String: Any]) -> Void
@@ -529,15 +528,6 @@ final class AgentChatTranscriptService {
         }
     }
 
-    /// Encodes a wire value into the `[String: Any]` payload shape the
-    /// event fan-out expects.
-    func wirePayload<T: Encodable>(_ value: T) -> [String: Any]? {
-        guard let data = try? coding.encode(value),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return nil
-        }
-        return object
-    }
 }
 
 private extension TokenOptimizationMode {
