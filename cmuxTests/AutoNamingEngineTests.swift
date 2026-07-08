@@ -216,6 +216,19 @@ import Testing
         #expect(!untitled.contains("current title"))
     }
 
+    @Test func promptWithCurrentTitleRequiresKeepRenameDecision() {
+        let prompt = engine.buildPrompt(
+            currentTitle: "Debugging generated workspace title churn in cmux",
+            context: "user: the title is changing after every prompt"
+        )
+
+        #expect(prompt.contains("Decision: KEEP"))
+        #expect(prompt.contains("Decision: RENAME"))
+        #expect(prompt.contains("Title:"))
+        #expect(prompt.contains("Only output Decision: RENAME"))
+        #expect(prompt.contains("short reason"))
+    }
+
     @Test func promptDoesNotAllowExactReuseOfShortCurrentTitle() {
         let prompt = engine.buildPrompt(currentTitle: "Fix auth bug", context: "user: hello")
         #expect(prompt.contains("The current title is: Fix auth bug"))
@@ -323,6 +336,41 @@ import Testing
         #expect(engine.sanitizeResponse("Fix auth bug in login flow", currentTitle: "Fix auth bug in login flow") == nil)
         #expect(engine.sanitizeResponse("  fix   auth bug in login flow  ", currentTitle: "Fix auth bug in login flow") == nil)
         #expect(engine.sanitizeResponse("Fix auth bug in login flow", currentTitle: "Other title") == "Fix auth bug in login flow")
+    }
+
+    @Test func currentTitleTreatsTitleOnlyResponseAsKeep() {
+        let currentTitle = "Debugging generated workspace title churn in cmux"
+        let outcome = engine.sanitizeResponseOutcome(
+            "Investigating unstable generated workspace names in cmux",
+            currentTitle: currentTitle
+        )
+        #expect(outcome == .unchanged(currentTitle))
+    }
+
+    @Test func currentTitleKeepsOnExplicitKeepDecision() {
+        let currentTitle = "Debugging generated workspace title churn in cmux"
+        let outcome = engine.sanitizeResponseOutcome(
+            """
+            Decision: KEEP
+            Reason: The main topic is still generated workspace title churn.
+            Title: Investigating unstable generated workspace names in cmux
+            """,
+            currentTitle: currentTitle
+        )
+        #expect(outcome == .unchanged(currentTitle))
+    }
+
+    @Test func currentTitleRenamesOnlyOnExplicitRenameDecision() {
+        let currentTitle = "Debugging generated workspace title churn in cmux"
+        let outcome = engine.sanitizeResponseOutcome(
+            """
+            Decision: RENAME
+            Reason: The conversation moved from title churn to explicit stability gating.
+            Title: Adding explicit keep rename decisions for workspace titles
+            """,
+            currentTitle: currentTitle
+        )
+        #expect(outcome == .changed("Adding explicit keep rename decisions for workspace titles"))
     }
 
     // MARK: - Environment policy

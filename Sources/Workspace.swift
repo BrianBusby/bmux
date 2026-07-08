@@ -2098,6 +2098,13 @@ final class Workspace: Identifiable, ObservableObject {
     let agentPIDKeysByPanelIdPublisher = CurrentValueSubject<[UUID: Set<String>], Never>([:])
     let agentLifecycleStatesByPanelIdPublisher = CurrentValueSubject<[UUID: [String: AgentHibernationLifecycleState]], Never>([:])
     let agentSessionActiveWorkPublisher = CurrentValueSubject<[UUID: Bool], Never>([:])
+    let interruptedAgentWorkPanelIdsPublisher = CurrentValueSubject<Set<UUID>, Never>([])
+    var interruptedAgentWorkPanelIds: Set<UUID> = [] {
+        didSet {
+            guard interruptedAgentWorkPanelIds != oldValue else { return }
+            interruptedAgentWorkPanelIdsPublisher.send(interruptedAgentWorkPanelIds)
+        }
+    }
 
 #if DEBUG
     var debugRenderedTerminalRowsForActiveWorkTesting: [UUID: [String]]?
@@ -4315,19 +4322,20 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     func applyProcessTitle(_ title: String) {
-        if processTitle != title {
-            processTitle = title
+        guard let sanitizedTitle = TerminalProcessTitleSanitizer().sanitizedTitle(title) else { return }
+        if processTitle != sanitizedTitle {
+            processTitle = sanitizedTitle
         }
         guard customTitle == nil else { return }
-        guard self.title != title else { return }
+        guard self.title != sanitizedTitle else { return }
 #if DEBUG
         cmuxDebugLog(
             "workspace.title.applyProcess workspace=\(id.uuidString.prefix(5)) " +
             "from=\"\(debugWorkspaceDescriptionPreview(self.title, limit: 80))\" " +
-            "to=\"\(debugWorkspaceDescriptionPreview(title, limit: 80))\""
+            "to=\"\(debugWorkspaceDescriptionPreview(sanitizedTitle, limit: 80))\""
         )
 #endif
-        self.title = title
+        self.title = sanitizedTitle
     }
 
     func setCustomColor(_ hex: String?) {
@@ -4624,6 +4632,9 @@ final class Workspace: Identifiable, ObservableObject {
     ) {
         let targetPanelId = panelId ?? focusedPanelId
         guard let targetPanelId, panels[targetPanelId] != nil else { return }
+        if lifecycle == .running || lifecycle == .needsInput {
+            _ = clearPanelAgentWorkInterrupt(panelId: targetPanelId)
+        }
         agentLifecycleStatesByPanelId[targetPanelId, default: [:]][key] = lifecycle
         recordAgentLifecycleChange(panelId: targetPanelId)
     }
@@ -4645,6 +4656,7 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     func clearAgentLifecycleStates(panelId: UUID) {
+        _ = clearPanelAgentWorkInterrupt(panelId: panelId)
         guard agentLifecycleStatesByPanelId.removeValue(forKey: panelId) != nil else { return }
         recordAgentLifecycleChange(panelId: panelId)
     }
@@ -4900,13 +4912,13 @@ final class Workspace: Identifiable, ObservableObject {
         }) {
             return true
         }
-        if livePanelIds.contains(where: terminalPanelHasVisibleActiveAgentStatusLine) {
-            return true
-        }
         if agentLifecycleStatesByPanelId.contains(where: { panelId, states in
             livePanelIds.contains(panelId)
                 && states.values.contains { $0 == .running || $0 == .needsInput }
         }) {
+            return true
+        }
+        if livePanelIds.contains(where: terminalPanelHasVisibleActiveAgentStatusLine) {
             return true
         }
         if isRemoteTmuxMirror {
@@ -4932,10 +4944,13 @@ final class Workspace: Identifiable, ObservableObject {
               let rows = renderedTerminalRowsForActiveWork(panelId: panelId) else {
             return false
         }
+        if interruptedAgentWorkPanelIds.contains(panelId) {
+            return false
+        }
         return AgentChatProseScreenExtractor.containsActiveStatusLine(in: rows)
     }
 
-    private func renderedTerminalRowsForActiveWork(panelId: UUID) -> [String]? {
+    func renderedTerminalRowsForActiveWork(panelId: UUID) -> [String]? {
 #if DEBUG
         if let debugRows = debugRenderedTerminalRowsForActiveWorkTesting?[panelId] {
             return debugRows

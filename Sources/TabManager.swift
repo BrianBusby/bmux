@@ -3266,19 +3266,18 @@ class TabManager: ObservableObject {
         notificationDismissal.dismissNotificationOnTerminalInteraction(workspaceId: tabId, surfaceId: surfaceId)
     }
     private func enqueuePanelTitleUpdate(_ change: GhosttyTitleChange, sourceSurface: TerminalSurface) {
-        let trimmed = change.title.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        guard let sanitizedTitle = TerminalProcessTitleSanitizer().sanitizedTitle(change.title) else { return }
         guard workspacesById[change.tabId]?.terminalPanel(for: change.surfaceId)?.surface === sourceSurface else { return }
 #if DEBUG
         if PanelTitleUpdateCoalescingSettings.diagnosticsEnabled(settings: settings) {
             cmuxDebugLog(
                 "workspace.title.enqueue workspace=\(Self.debugShortWorkspaceId(change.tabId)) " +
-                "panel=\(change.surfaceId.uuidString.prefix(5)) title=\"\(Self.debugTitlePreview(trimmed))\""
+                "panel=\(change.surfaceId.uuidString.prefix(5)) title=\"\(Self.debugTitlePreview(sanitizedTitle))\""
             )
         }
 #endif
         let key = PanelTitleUpdateKey(tabId: change.tabId, panelId: change.surfaceId)
-        pendingPanelTitleUpdates[key] = PendingPanelTitleUpdate(title: trimmed, sourceSurface: sourceSurface)
+        pendingPanelTitleUpdates[key] = PendingPanelTitleUpdate(title: sanitizedTitle, sourceSurface: sourceSurface)
         panelTitleUpdateCoalescer.signal(
             delay: PanelTitleUpdateCoalescingSettings.delay(settings: settings)
         ) { [weak self] in

@@ -3334,9 +3334,13 @@ private final class TerminalSharedBackdropCutoutFilter: CIFilter {
 // TerminalSurfaceFocusPlacement moved to CmuxTerminalCore (SurfaceRegistry/).
 
 private func recordAgentHibernationTerminalInput(workspaceId: UUID, panelId: UUID) {
-    guard AgentHibernationTrackingGate.isEnabled() else { return }
+    let shouldRecordHibernationInput = AgentHibernationTrackingGate.isEnabled()
     let recordedAt = Date()
     Task { @MainActor in
+        _ = AppDelegate.shared?
+            .workspaceFor(tabId: workspaceId)?
+            .clearPanelAgentWorkInterrupt(panelId: panelId)
+        guard shouldRecordHibernationInput else { return }
         AgentHibernationController.shared.recordTerminalInput(
             workspaceId: workspaceId,
             panelId: panelId,
@@ -5160,6 +5164,28 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
         )
     }
 
+    private func recordDirectAgentInterruptIfNeeded(event: NSEvent) {
+        guard Self.isTerminalInterruptEvent(event),
+              let terminalSurface else {
+            return
+        }
+        _ = terminalSurface.owningWorkspace()?.markPanelAgentWorkInterrupted(
+            panelId: terminalSurface.id
+        )
+    }
+
+    private static func isTerminalInterruptEvent(_ event: NSEvent) -> Bool {
+        let flags = ShortcutStroke.normalizedModifierFlags(from: event.modifierFlags)
+        guard flags == .control else { return false }
+        if event.characters?.unicodeScalars.contains(where: { $0.value == 0x03 }) == true {
+            return true
+        }
+        let character = (event.charactersIgnoringModifiers ?? event.characters ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        return character == "c"
+    }
+
     // MARK: - Clipboard paste
 
     @IBAction func paste(_ sender: Any?) {
@@ -5685,6 +5711,7 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
             return
         }
         recordDirectAgentHibernationTerminalInput()
+        recordDirectAgentInterruptIfNeeded(event: event)
 #if DEBUG
         ensureSurfaceMs = (ProcessInfo.processInfo.systemUptime - ensureSurfaceStart) * 1000.0
 #endif

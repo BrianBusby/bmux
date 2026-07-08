@@ -130,7 +130,7 @@ extension CMUXCLI {
                 "--disable-slash-commands",
                 "--no-session-persistence",
                 "--strict-mcp-config",
-                "--mcp-config", "{}"
+                "--mcp-config", "{\"mcpServers\":{}}"
             ],
             prompt: prompt,
             environment: policy.summarizerEnvironment(from: env),

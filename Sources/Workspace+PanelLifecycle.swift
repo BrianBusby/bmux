@@ -1,4 +1,5 @@
 import Bonsplit
+import CmuxAgentChat
 import CmuxSettings
 import CmuxCore
 import Darwin
@@ -310,6 +311,60 @@ extension Workspace {
     }
 
     @discardableResult
+    func clearPanelAgentWorkInterrupt(panelId: UUID) -> Bool {
+        interruptedAgentWorkPanelIds.remove(panelId) != nil
+    }
+
+    @discardableResult
+    func markPanelAgentWorkInterrupted(panelId: UUID) -> Bool {
+        guard terminalPanel(for: panelId) != nil else { return false }
+
+        let hadVisibleActiveStatusLine = renderedTerminalRowsForActiveWork(panelId: panelId).map {
+            AgentChatProseScreenExtractor.containsActiveStatusLine(in: $0)
+        } ?? false
+        var didChange = false
+        if hadVisibleActiveStatusLine, interruptedAgentWorkPanelIds.insert(panelId).inserted {
+            didChange = true
+        }
+
+        var statusKeys = Set<String>()
+        for key in agentPIDKeysByPanelId[panelId] ?? [] where isStructuredAgentHookPIDKey(key) {
+            statusKeys.insert(agentStatusKey(forAgentPIDKey: key))
+        }
+        if let lifecycleStates = agentLifecycleStatesByPanelId[panelId] {
+            for key in lifecycleStates.keys where Self.structuredAgentHookStatusKeys.contains(key) {
+                statusKeys.insert(key)
+            }
+        }
+        guard !statusKeys.isEmpty else { return didChange }
+
+        let idleStatus = String(localized: "agent.generic.notification.status.idle", defaultValue: "Idle")
+        for statusKey in statusKeys {
+            if agentLifecycleStatesByPanelId[panelId]?[statusKey] != .idle {
+                setAgentLifecycle(key: statusKey, panelId: panelId, lifecycle: .idle)
+                didChange = true
+            }
+            if let existing = statusEntries[statusKey],
+               existing.value != idleStatus ||
+               existing.icon != "pause.circle.fill" ||
+               existing.color != "#8E8E93" {
+                statusEntries[statusKey] = SidebarStatusEntry(
+                    key: existing.key,
+                    value: idleStatus,
+                    icon: "pause.circle.fill",
+                    color: "#8E8E93",
+                    url: existing.url,
+                    priority: existing.priority,
+                    format: existing.format,
+                    timestamp: Date()
+                )
+                didChange = true
+            }
+        }
+        return didChange
+    }
+
+    @discardableResult
     func clearAgentPID(
         key: String,
         panelId: UUID? = nil,
@@ -459,6 +514,7 @@ extension Workspace {
         manualUnreadPanelIds.remove(panelId)
         manualUnreadMarkedAt.removeValue(forKey: panelId)
         panelShellActivityStates.removeValue(forKey: panelId)
+        _ = clearPanelAgentWorkInterrupt(panelId: panelId)
         clearAgentLifecycleStates(panelId: panelId)
         surfaceTTYNames.removeValue(forKey: panelId)
         discardRemotePTYSessionID(panelId: panelId)

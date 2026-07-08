@@ -116,14 +116,26 @@ extension RendererRealizationController: TerminalRendererRealizationScheduling {
 /// injected recorder: same gate, same timestamp capture, same main-actor hop.
 final class TerminalAgentHibernationRecorder: AgentHibernationRecording {
     func recordTerminalInput(workspaceId: UUID, panelId: UUID) {
-        guard AgentHibernationTrackingGate.isEnabled() else { return }
+        let shouldRecordHibernationInput = AgentHibernationTrackingGate.isEnabled()
         let recordedAt = Date()
         Task { @MainActor in
+            _ = AppDelegate.shared?
+                .workspaceFor(tabId: workspaceId)?
+                .clearPanelAgentWorkInterrupt(panelId: panelId)
+            guard shouldRecordHibernationInput else { return }
             AgentHibernationController.shared.recordTerminalInput(
                 workspaceId: workspaceId,
                 panelId: panelId,
                 recordedAt: recordedAt
             )
+        }
+    }
+
+    func recordTerminalInterrupt(workspaceId: UUID, panelId: UUID) {
+        Task { @MainActor in
+            _ = AppDelegate.shared?
+                .workspaceFor(tabId: workspaceId)?
+                .markPanelAgentWorkInterrupted(panelId: panelId)
         }
     }
 }

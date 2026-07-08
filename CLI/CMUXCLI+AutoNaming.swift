@@ -379,7 +379,14 @@ struct AutoNamingEngine: Sendable {
         if let currentTitle, !currentTitle.isEmpty {
             lines.append("The current title is: \(currentTitle)")
             if titleWordCount(currentTitle) >= config.minTitleWordCount {
-                lines.append("If that still accurately describes the conversation's main topic and is at least 6 words, output it EXACTLY as given.")
+                lines.append("Because a current auto-title already exists, output a keep-or-rename decision instead of a bare title.")
+                lines.append("Output exactly these three lines:")
+                lines.append("Decision: KEEP")
+                lines.append("Reason: <short reason>")
+                lines.append("Title: \(currentTitle)")
+                lines.append("Only output Decision: RENAME when the conversation's main subject has meaningfully changed.")
+                lines.append("If keeping, output Decision: KEEP and repeat the current title EXACTLY in the Title line.")
+                lines.append("If renaming, output Decision: RENAME and set Title to the new 6- to 20-word subject statement.")
             } else {
                 lines.append("The current title is shorter than 6 words, so do not output it exactly; replace it with a 6- to 20-word title.")
             }
@@ -413,9 +420,9 @@ struct AutoNamingEngine: Sendable {
     }
 
     /// Normalizes a summarizer response into a usable title, or `nil` when
-    /// the response is unusable or matches the current title (no rename
-    /// needed). Takes the first non-empty line, strips wrapping quotes,
-    /// collapses whitespace, and enforces the length cap at a word boundary.
+    /// the response is unusable or keeps the current title. Once a reusable
+    /// auto-title exists, only an explicit `Decision: RENAME` block can change
+    /// it; title-only responses are treated as keep decisions.
     func sanitizeResponse(_ raw: String?, currentTitle: String?) -> String? {
         guard case .changed(let title) = sanitizeResponseOutcome(raw, currentTitle: currentTitle) else {
             return nil
@@ -424,6 +431,41 @@ struct AutoNamingEngine: Sendable {
     }
 
     func sanitizeResponseOutcome(_ raw: String?, currentTitle: String?) -> AutoNamingSanitizedTitle? {
+        if let currentTitle = reusableCurrentTitle(currentTitle) {
+            return sanitizeDecisionResponseOutcome(raw, currentTitle: currentTitle)
+        }
+        return sanitizeTitleOnlyResponseOutcome(raw, currentTitle: currentTitle)
+    }
+
+    private func sanitizeDecisionResponseOutcome(_ raw: String?, currentTitle: String) -> AutoNamingSanitizedTitle? {
+        guard let raw else { return nil }
+        let lines = raw
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !lines.isEmpty else { return nil }
+
+        guard let decision = decisionValue(in: lines) else {
+            return .unchanged(currentTitle)
+        }
+        switch decision {
+        case "keep":
+            return .unchanged(currentTitle)
+        case "rename":
+            guard let titleLine = fieldValue(named: "title", in: lines),
+                  let title = sanitizedTitleCandidate(titleLine) else {
+                return .unchanged(currentTitle)
+            }
+            if normalizedTitleIdentity(title) == normalizedTitleIdentity(currentTitle) {
+                return .unchanged(currentTitle)
+            }
+            return .changed(title)
+        default:
+            return .unchanged(currentTitle)
+        }
+    }
+
+    private func sanitizeTitleOnlyResponseOutcome(_ raw: String?, currentTitle: String?) -> AutoNamingSanitizedTitle? {
         guard let raw else { return nil }
         guard let firstLine = raw
             .components(separatedBy: .newlines)
@@ -431,7 +473,16 @@ struct AutoNamingEngine: Sendable {
             .first(where: { !$0.isEmpty }) else {
             return nil
         }
-        var title = firstLine
+        guard let title = sanitizedTitleCandidate(firstLine) else { return nil }
+        if let currentTitle,
+           normalizedTitleIdentity(title) == normalizedTitleIdentity(currentTitle) {
+            return .unchanged(currentTitle.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        return .changed(title)
+    }
+
+    private func sanitizedTitleCandidate(_ candidate: String) -> String? {
+        var title = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
         while title.count >= 2,
               let first = title.first, let last = title.last,
               (first == "\"" && last == "\"") || (first == "'" && last == "'") ||
@@ -460,11 +511,46 @@ struct AutoNamingEngine: Sendable {
         }
         guard !title.isEmpty else { return nil }
         guard titleWordCount(title) >= config.minTitleWordCount else { return nil }
-        if let currentTitle,
-           normalizedTitleIdentity(title) == normalizedTitleIdentity(currentTitle) {
-            return .unchanged(currentTitle.trimmingCharacters(in: .whitespacesAndNewlines))
+        return title
+    }
+
+    private func reusableCurrentTitle(_ currentTitle: String?) -> String? {
+        let title = currentTitle?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard titleWordCount(title) >= config.minTitleWordCount else { return nil }
+        return title
+    }
+
+    private func decisionValue(in lines: [String]) -> String? {
+        for line in lines {
+            let rawValue = fieldValue(named: "decision", in: line) ?? line
+            let normalized = rawValue
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            if normalized == "keep" || normalized.hasPrefix("keep ") {
+                return "keep"
+            }
+            if normalized == "rename" || normalized.hasPrefix("rename ") {
+                return "rename"
+            }
         }
-        return .changed(title)
+        return nil
+    }
+
+    private func fieldValue(named name: String, in lines: [String]) -> String? {
+        for line in lines {
+            if let value = fieldValue(named: name, in: line) {
+                return value
+            }
+        }
+        return nil
+    }
+
+    private func fieldValue(named name: String, in line: String) -> String? {
+        let prefix = "\(name):"
+        guard line.lowercased().hasPrefix(prefix) else { return nil }
+        let valueStart = line.index(line.startIndex, offsetBy: prefix.count)
+        let value = String(line[valueStart...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? nil : value
     }
 
     private func titleWords(_ title: String) -> [Substring] {

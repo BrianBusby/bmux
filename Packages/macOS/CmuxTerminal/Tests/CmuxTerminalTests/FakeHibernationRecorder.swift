@@ -3,4 +3,5 @@ import Foundation
 
 final class FakeHibernationRecorder: AgentHibernationRecording {
     func recordTerminalInput(workspaceId: UUID, panelId: UUID) {}
+    func recordTerminalInterrupt(workspaceId: UUID, panelId: UUID) {}
 }

@@ -62,6 +62,7 @@ private struct SidebarObservationState: Equatable {
     let agentPIDKeysByPanelId: [UUID: Set<String>]
     let agentLifecycleStatesByPanelId: [UUID: [String: AgentHibernationLifecycleState]]
     let agentSessionProviderActivity: [UUID: Bool]
+    let interruptedAgentWorkPanelIds: Set<UUID>
     let browserMediaActivity: BrowserMediaActivity
 }
 
@@ -161,6 +162,7 @@ extension Workspace {
             agentLifecycleStatesByPanelIdPublisher,
             agentSessionActiveWorkPublisher
         )
+        .combineLatest(interruptedAgentWorkPanelIdsPublisher)
         let directoryChangeRevision = currentDirectoryChangeRevisionPublisher()
         return Publishers.CombineLatest4(
             workspaceFields,
@@ -180,10 +182,12 @@ extension Workspace {
                 let metadataFields = groupedFields.1
                 let gitFields = groupedFields.2
                 let remoteFields = groupedFields.3
-                let panelShellActivityStates = terminalAgentFields.0
-                let agentPIDKeysByPanelId = terminalAgentFields.1
-                let agentLifecycleStatesByPanelId = terminalAgentFields.2
-                let agentSessionActiveWork = terminalAgentFields.3
+                let terminalAgentStateFields = terminalAgentFields.0
+                let interruptedAgentWorkPanelIds = terminalAgentFields.1
+                let panelShellActivityStates = terminalAgentStateFields.0
+                let agentPIDKeysByPanelId = terminalAgentStateFields.1
+                let agentLifecycleStatesByPanelId = terminalAgentStateFields.2
+                let agentSessionActiveWork = terminalAgentStateFields.3
                 return SidebarObservationState(
                     currentDirectory: workspaceFields.0,
                     extensionSidebarProjectRootPath: workspaceFields.1,
@@ -208,6 +212,7 @@ extension Workspace {
                     agentPIDKeysByPanelId: agentPIDKeysByPanelId,
                     agentLifecycleStatesByPanelId: agentLifecycleStatesByPanelId,
                     agentSessionProviderActivity: agentSessionActiveWork,
+                    interruptedAgentWorkPanelIds: interruptedAgentWorkPanelIds,
                     browserMediaActivity: self.browserMediaActivity
                 )
             }

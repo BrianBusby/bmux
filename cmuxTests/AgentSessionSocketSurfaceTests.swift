@@ -3,6 +3,7 @@ import Combine
 import XCTest
 import Testing
 import CmuxAgentChat
+import CmuxSidebar
 
 #if canImport(cmux_DEV)
     @testable import cmux_DEV
@@ -128,6 +129,80 @@ struct AgentSessionSocketSurfaceTests {
             ],
         ]
         #expect(!workspace.hasActiveAIWork)
+    }
+
+    @Test
+    func testWorkspaceBusyIndicatorUsesVisibleStatusLineWhenIdle() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+
+        workspace.debugRenderedTerminalRowsForActiveWorkTesting = [
+            panelId: [
+                "Working (36s, Esc to interrupt)",
+                "",
+            ],
+        ]
+        #expect(workspace.hasActiveAIWork)
+
+        workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .idle)
+
+        #expect(workspace.hasActiveAIWork)
+    }
+
+    @Test
+    func testInterruptingTerminalAgentWorkClearsWorkspaceBusyIndicator() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+
+        workspace.statusEntries["codex"] = SidebarStatusEntry(
+            key: "codex",
+            value: "Running",
+            icon: "bolt.fill",
+            color: "#4C8DFF"
+        )
+        workspace.recordAgentPID(
+            key: "codex.test-agent",
+            pid: 12345,
+            panelId: panelId,
+            refreshPorts: false
+        )
+        workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .running)
+        workspace.debugRenderedTerminalRowsForActiveWorkTesting = [
+            panelId: [
+                "Working (36s, Esc to interrupt)",
+                "",
+            ],
+        ]
+        #expect(workspace.hasActiveAIWork)
+
+        #expect(workspace.markPanelAgentWorkInterrupted(panelId: panelId))
+
+        #expect(workspace.agentLifecycleStatesByPanelId[panelId]?["codex"] == .idle)
+        #expect(workspace.statusEntries["codex"]?.value == "Idle")
+        #expect(!workspace.hasActiveAIWork)
+    }
+
+    @Test
+    func testInterruptMarkerSuppressesStaleVisibleAgentStatusLineUntilNextInput() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+
+        workspace.debugRenderedTerminalRowsForActiveWorkTesting = [
+            panelId: [
+                "Working (36s, Esc to interrupt)",
+                "",
+            ],
+        ]
+        #expect(workspace.hasActiveAIWork)
+
+        #expect(workspace.markPanelAgentWorkInterrupted(panelId: panelId))
+        #expect(!workspace.hasActiveAIWork)
+
+        #expect(workspace.clearPanelAgentWorkInterrupt(panelId: panelId))
+        #expect(workspace.hasActiveAIWork)
     }
 
     @Test

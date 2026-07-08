@@ -41,6 +41,9 @@ extension TerminalSurface {
             let queued = enqueuePendingSocketInput(.pasteText(data))
             if queued {
                 hibernationRecorder.recordTerminalInput(workspaceId: tabId, panelId: id)
+                if Self.containsInterruptControlCharacter(text) {
+                    hibernationRecorder.recordTerminalInterrupt(workspaceId: tabId, panelId: id)
+                }
                 requestInputDemandSurfaceStartIfNeeded()
             }
             return queued
@@ -50,6 +53,9 @@ extension TerminalSurface {
         }
         guard !ghostty_surface_process_exited(liveSurface) else { return false }
         hibernationRecorder.recordTerminalInput(workspaceId: tabId, panelId: id)
+        if Self.containsInterruptControlCharacter(text) {
+            hibernationRecorder.recordTerminalInterrupt(workspaceId: tabId, panelId: id)
+        }
         writeTextData(data, to: liveSurface)
         return true
     }
@@ -89,6 +95,9 @@ extension TerminalSurface {
             guard allowsRuntimeSurfaceCreation() else { return .surfaceUnavailable }
             guard enqueuePendingSocketInput(.key(event)) else { return .inputQueueFull }
             hibernationRecorder.recordTerminalInput(workspaceId: tabId, panelId: id)
+            if Self.isInterruptKeyEvent(event) {
+                hibernationRecorder.recordTerminalInterrupt(workspaceId: tabId, panelId: id)
+            }
             requestInputDemandSurfaceStartIfNeeded()
             return .queued
         }
@@ -97,6 +106,9 @@ extension TerminalSurface {
         }
         guard !ghostty_surface_process_exited(liveSurface) else { return .processExited }
         hibernationRecorder.recordTerminalInput(workspaceId: tabId, panelId: id)
+        if Self.isInterruptKeyEvent(event) {
+            hibernationRecorder.recordTerminalInterrupt(workspaceId: tabId, panelId: id)
+        }
         sendKeyEvent(surface: liveSurface, keycode: event.keycode, mods: event.mods)
         return .sent
     }
@@ -148,6 +160,9 @@ extension TerminalSurface {
             let queued = enqueuePendingSocketInput(text)
             if queued {
                 hibernationRecorder.recordTerminalInput(workspaceId: tabId, panelId: id)
+                if Self.containsInterruptControlCharacter(text) {
+                    hibernationRecorder.recordTerminalInterrupt(workspaceId: tabId, panelId: id)
+                }
                 requestInputDemandSurfaceStartIfNeeded()
             }
             return queued ? .queued : .inputQueueFull
@@ -157,6 +172,9 @@ extension TerminalSurface {
         }
         guard !ghostty_surface_process_exited(liveSurface) else { return .processExited }
         hibernationRecorder.recordTerminalInput(workspaceId: tabId, panelId: id)
+        if Self.containsInterruptControlCharacter(text) {
+            hibernationRecorder.recordTerminalInterrupt(workspaceId: tabId, panelId: id)
+        }
         sendInput(text, to: liveSurface)
         return .sent
     }
@@ -251,6 +269,11 @@ extension TerminalSurface {
             case 0x09:
                 flushBufferedText()
                 appendKey(UInt32(kVK_Tab), label: "tab")
+                previousWasCR = false
+                index += 1
+            case 0x03:
+                flushBufferedText()
+                appendKey(UInt32(kVK_ANSI_C), mods: GHOSTTY_MODS_CTRL, label: "ctrl-c")
                 previousWasCR = false
                 index += 1
             case 0x1B:
@@ -697,6 +720,15 @@ extension TerminalSurface {
             }
             return nil
         }
+    }
+
+    private static func containsInterruptControlCharacter(_ text: String) -> Bool {
+        text.unicodeScalars.contains { $0.value == 0x03 }
+    }
+
+    private static func isInterruptKeyEvent(_ event: PendingKeyEvent) -> Bool {
+        event.keycode == UInt32(kVK_ANSI_C) &&
+            event.mods.rawValue == GHOSTTY_MODS_CTRL.rawValue
     }
 
     @MainActor

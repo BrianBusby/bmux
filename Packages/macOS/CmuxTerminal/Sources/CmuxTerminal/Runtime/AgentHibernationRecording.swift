@@ -13,4 +13,14 @@ public protocol AgentHibernationRecording: AnyObject, Sendable {
     ///   - workspaceId: The owning workspace id.
     ///   - panelId: The surface/panel id that received input.
     func recordTerminalInput(workspaceId: UUID, panelId: UUID)
+
+    /// Records that terminal input interrupted the foreground agent turn.
+    ///
+    /// Implementers should clear panel-scoped active-work UI without tearing down
+    /// the still-live agent process or its restorable session metadata.
+    ///
+    /// - Parameters:
+    ///   - workspaceId: The owning workspace id.
+    ///   - panelId: The surface/panel id that received the interrupt.
+    func recordTerminalInterrupt(workspaceId: UUID, panelId: UUID)
 }

@@ -92,6 +92,52 @@ struct TabManagerTitleUpdateTests {
         #expect(notifiedWorkspaceIds == [workspace.id])
     }
 
+    @Test(arguments: [
+        ("codex", "⠂ cmux", "cmux"),
+        ("codexAlternateFrame", "⠈ cmux", "cmux"),
+        ("claude", "✻ cmux", "cmux"),
+        ("claudeAlternateFrame", "✶ cmux", "cmux"),
+    ])
+    func terminalTitleUpdateStripsAgentSpinnerPrefix(agent: String, rawTitle: String, expectedTitle: String) async throws {
+        let suiteName = "TabManagerTitleSpinnerPrefix.\(agent).\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let settings = UserDefaultsSettingsClient(defaults: defaults)
+        let catalog = SettingCatalog()
+        settings.set(true, for: catalog.terminal.titleUpdateCoalescingEnabled)
+        settings.set(100, for: catalog.terminal.titleUpdateCoalescingMilliseconds)
+
+        let scheduler = ManualCoalescerScheduler()
+        let manager = TabManager(
+            panelTitleUpdateCoalescer: NotificationBurstCoalescer(
+                schedule: scheduler.schedule(delay:action:)
+            ),
+            settings: settings
+        )
+        let workspace = try #require(manager.selectedWorkspace)
+        let focusedPanelId = try #require(workspace.focusedPanelId)
+
+        NotificationCenter.default.post(
+            name: .ghosttyDidSetTitle,
+            object: titleNotificationObject(workspace, focusedPanelId),
+            userInfo: [
+                GhosttyNotificationKey.tabId: workspace.id,
+                GhosttyNotificationKey.surfaceId: focusedPanelId,
+                GhosttyNotificationKey.title: rawTitle
+            ]
+        )
+
+        await drainMainQueue()
+        #expect(scheduler.delays == [0.1])
+
+        scheduler.fire(at: 0)
+
+        #expect(workspace.panelTitles[focusedPanelId] == expectedTitle)
+        #expect(workspace.title == expectedTitle)
+    }
+
     @Test
     func titleNotificationIgnoredWhenWorkspaceIsNotOwnedByManager() async throws {
         let suiteName = "TabManagerTitleOwnership.\(UUID().uuidString)"
