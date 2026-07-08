@@ -31,10 +31,20 @@ enum TitlebarControlsHitRegions {
     static let outerLeadingPadding: CGFloat = HeaderChromeControlMetrics.titlebarControlsLeadingPadding
     static let buttonCount = MinimalModeSidebarControlActionSlot.allCases.count
 
-    static func buttonXRanges(config: TitlebarControlsStyleConfig) -> [ClosedRange<CGFloat>] {
-        MinimalModeSidebarControlActionSlot.allCases.compactMap {
+    static func buttonXRanges(
+        config: TitlebarControlsStyleConfig,
+        additionalButtonCount: Int = 0
+    ) -> [ClosedRange<CGFloat>] {
+        var ranges = MinimalModeSidebarControlActionSlot.allCases.compactMap {
             buttonXRange(for: $0, config: config)
         }
+        var minX = (ranges.last?.upperBound ?? (outerLeadingPadding + config.groupPadding.leading - config.spacing)) + config.spacing
+        for _ in 0..<max(0, additionalButtonCount) {
+            let maxX = minX + config.buttonSize
+            ranges.append(minX...maxX)
+            minX = maxX + config.spacing
+        }
+        return ranges
     }
 
     static func buttonXRange(
@@ -86,8 +96,12 @@ enum TitlebarControlsHitRegions {
         return nil
     }
 
-    static func pointFallsInButtonColumn(_ point: NSPoint, config: TitlebarControlsStyleConfig) -> Bool {
-        sidebarActionSlot(at: point, config: config) != nil
+    static func pointFallsInButtonColumn(
+        _ point: NSPoint,
+        config: TitlebarControlsStyleConfig,
+        additionalButtonCount: Int = 0
+    ) -> Bool {
+        buttonXRanges(config: config, additionalButtonCount: additionalButtonCount).contains { $0.contains(point.x) }
     }
 }
 

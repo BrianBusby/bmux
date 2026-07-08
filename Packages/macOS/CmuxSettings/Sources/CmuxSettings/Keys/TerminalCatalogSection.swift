@@ -45,6 +45,13 @@ public struct TerminalCatalogSection: SettingCatalogSection {
         userDefaultsKey: "terminal.agentHibernation.maxLiveTerminals"
     )
 
+    /// Controls how aggressively agent terminal output is compressed for
+    /// token-sensitive transcript consumers. Raw output is still stored locally.
+    public let agentTokenOptimizationMode = JSONKey<AgentTokenOptimizationMode>(
+        id: "terminal.agentTokenOptimization.mode",
+        defaultValue: .balanced
+    )
+
     /// Whether off-screen terminals release their GPU renderer memory while
     /// idle (rebuilt instantly on re-show). Non-destructive; on by default.
     public let rendererRealizationEnabled = DefaultsKey<Bool>(

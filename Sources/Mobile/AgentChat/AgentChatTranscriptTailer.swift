@@ -28,6 +28,8 @@ actor AgentChatTranscriptTailer {
     private let agentKind: ChatAgentKind
     private let path: String
     private let onBatch: @Sendable (Batch) async -> Void
+    private let rawOutputStore: ChatRawTerminalOutputFileStore?
+    private let tokenOptimizationMode: TokenOptimizationMode
 
     private let maxInitialLines: Int
     private let maxCachedMessages: Int
@@ -53,6 +55,8 @@ actor AgentChatTranscriptTailer {
     ///   - sessionID: The session this transcript belongs to.
     ///   - agentKind: Selects the parser (claude or codex).
     ///   - path: Absolute transcript JSONL path.
+    ///   - rawOutputStore: Store for complete raw terminal outputs.
+    ///   - tokenOptimizationMode: Compression mode applied to completed terminal output.
     ///   - maxInitialLines: Backfill bound for the first read.
     ///   - maxCachedMessages: In-memory cache cap; oldest fall out.
     ///   - onBatch: Receives live change batches after the initial load.
@@ -60,6 +64,8 @@ actor AgentChatTranscriptTailer {
         sessionID: String,
         agentKind: ChatAgentKind,
         path: String,
+        rawOutputStore: ChatRawTerminalOutputFileStore? = nil,
+        tokenOptimizationMode: TokenOptimizationMode = .balanced,
         maxInitialLines: Int = 2000,
         maxCachedMessages: Int = 4000,
         onBatch: @escaping @Sendable (Batch) async -> Void
@@ -67,6 +73,8 @@ actor AgentChatTranscriptTailer {
         self.sessionID = sessionID
         self.agentKind = agentKind
         self.path = path
+        self.rawOutputStore = rawOutputStore
+        self.tokenOptimizationMode = tokenOptimizationMode
         self.maxInitialLines = maxInitialLines
         self.maxCachedMessages = maxCachedMessages
         self.onBatch = onBatch
@@ -77,7 +85,7 @@ actor AgentChatTranscriptTailer {
     func start() async {
         guard !started else { return }
         started = true
-        loadInitialTail()
+        await loadInitialTail()
         let watcher = FileWatcher(path: path, throttle: .milliseconds(200))
         self.watcher = watcher
         watchTask = Task { [weak self] in
@@ -142,7 +150,7 @@ actor AgentChatTranscriptTailer {
 
     // MARK: - Reading
 
-    private func loadInitialTail() {
+    private func loadInitialTail() async {
         guard let handle = FileHandle(forReadingAtPath: path) else { return }
         defer { try? handle.close() }
         // Memory-mapped read: newline scanning walks the file without
@@ -179,6 +187,7 @@ actor AgentChatTranscriptTailer {
         cache = outcome.messages
         parseState = outcome.state
         trimCacheIfNeeded()
+        await persistRawTerminalOutputs(outcome.rawTerminalOutputs)
     }
 
     private func drainNewContent() async {
@@ -203,7 +212,7 @@ actor AgentChatTranscriptTailer {
             // the file) carries a new first prompt; allow it to be rediscovered
             // and re-emitted as the title instead of keeping the stale one.
             reportedTitle = false
-            loadInitialTail()
+            await loadInitialTail()
             await onBatch(Batch(appended: [], updated: [], discoveredTitle: nil, didReset: true))
             return
         }
@@ -227,6 +236,7 @@ actor AgentChatTranscriptTailer {
         lineCount += lines.count
         let outcome = parse(lines: lines, startingSeq: startingSeq)
         parseState = outcome.state
+        await persistRawTerminalOutputs(outcome.rawTerminalOutputs)
         var updated = outcome.updatedMessages
         for update in updated {
             if let index = cache.firstIndex(where: { $0.id == update.id }) {
@@ -256,9 +266,25 @@ actor AgentChatTranscriptTailer {
     private func parse(lines: [String], startingSeq: Int) -> ChatTranscriptParseResult {
         switch agentKind {
         case .codex:
-            return CodexTranscriptParser().parse(lines: lines, startingSeq: startingSeq, state: parseState)
+            return CodexTranscriptParser(tokenOptimizationMode: tokenOptimizationMode)
+                .parse(lines: lines, startingSeq: startingSeq, state: parseState)
         case .claude, .other:
-            return ClaudeTranscriptParser().parse(lines: lines, startingSeq: startingSeq, state: parseState)
+            return ClaudeTranscriptParser(tokenOptimizationMode: tokenOptimizationMode)
+                .parse(lines: lines, startingSeq: startingSeq, state: parseState)
+        }
+    }
+
+    private func persistRawTerminalOutputs(_ records: [ChatRawTerminalOutputRecord]) async {
+        guard !records.isEmpty, let rawOutputStore else { return }
+        do {
+            try await rawOutputStore.write(records)
+        } catch {
+            #if DEBUG
+            cmuxDebugLog(
+                "agentChat.rawOutput.persist session=\(sessionID.prefix(8)) "
+                + "records=\(records.count) error=\(error.localizedDescription)"
+            )
+            #endif
         }
     }
 

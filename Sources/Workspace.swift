@@ -23,6 +23,7 @@ import CryptoKit
 import Darwin
 import Network
 import CoreText
+import CmuxAgentChat
 
 #if DEBUG
 private func debugWorkspaceDescriptionPreview(_ text: String?, limit: Int = 120) -> String {
@@ -2093,6 +2094,14 @@ final class Workspace: Identifiable, ObservableObject {
     /// Legacy Combine bridge for the remaining `$paneLayoutVersion`
     /// subscribers; same contract as `panelsPublisher`.
     let paneLayoutVersionPublisher = CurrentValueSubject<Int, Never>(0)
+    let panelShellActivityStatesPublisher = CurrentValueSubject<[UUID: PanelShellActivityState], Never>([:])
+    let agentPIDKeysByPanelIdPublisher = CurrentValueSubject<[UUID: Set<String>], Never>([:])
+    let agentLifecycleStatesByPanelIdPublisher = CurrentValueSubject<[UUID: [String: AgentHibernationLifecycleState]], Never>([:])
+    let agentSessionActiveWorkPublisher = CurrentValueSubject<[UUID: Bool], Never>([:])
+
+#if DEBUG
+    var debugRenderedTerminalRowsForActiveWorkTesting: [UUID: [String]]?
+#endif
 
     /// Mapping from bonsplit TabID to our Panel instances
     var panels: [UUID: any Panel] {
@@ -2340,7 +2349,10 @@ final class Workspace: Identifiable, ObservableObject {
     /// surface-registry sub-model.
     var panelShellActivityStates: [UUID: PanelShellActivityState] {
         get { surfaceRegistry.panelShellActivityStates }
-        set { surfaceRegistry.panelShellActivityStates = newValue }
+        set {
+            surfaceRegistry.panelShellActivityStates = newValue
+            panelShellActivityStatesPublisher.send(newValue)
+        }
     }
     /// Agent runtime maps that affect sidebar status visibility.
     let sidebarAgentRuntimeObservation = WorkspaceSidebarAgentRuntimeObservationModel()
@@ -3760,20 +3772,29 @@ final class Workspace: Identifiable, ObservableObject {
             let resolvedTitle = self.resolvedPanelTitle(panelId: agentPanel.id, fallback: newTitle)
             let titleUpdate: String? = existing.title == resolvedTitle ? nil : resolvedTitle
             let dirtyUpdate: Bool? = existing.isDirty == isDirty ? nil : isDirty
-            guard titleUpdate != nil || dirtyUpdate != nil else { return }
-            self.bonsplitController.updateTab(
-                tabId,
-                title: titleUpdate,
-                hasCustomTitle: self.panelCustomTitles[agentPanel.id] != nil,
-                isDirty: dirtyUpdate
-            )
+            if titleUpdate != nil || dirtyUpdate != nil {
+                self.bonsplitController.updateTab(
+                    tabId,
+                    title: titleUpdate,
+                    hasCustomTitle: self.panelCustomTitles[agentPanel.id] != nil,
+                    isDirty: dirtyUpdate
+                )
+            }
+            if dirtyUpdate != nil {
+                self.publishAgentSessionActiveWorkIfNeeded()
+            }
+        }
+        agentPanel.onWorkStateChanged = { [weak self] _ in
+            self?.publishAgentSessionActiveWorkIfNeeded()
         }
         agentSessionPanelCallbackIds.insert(agentPanel.id)
+        publishAgentSessionActiveWorkIfNeeded()
     }
 
     func discardAgentSessionPanelSubscription(panelId: UUID, panel: (any Panel)?) {
         if let agentPanel = panel as? AgentSessionPanel {
             agentPanel.onDisplayStateChanged = nil
+            agentPanel.onWorkStateChanged = nil
         }
         agentSessionPanelCallbackIds.remove(panelId)
     }
@@ -4870,6 +4891,69 @@ final class Workspace: Identifiable, ObservableObject {
             )
         }
         return panel.isDirty
+    }
+
+    var hasActiveAIWork: Bool {
+        let livePanelIds = Set(panels.keys)
+        if panels.values.contains(where: { panel in
+            (panel as? AgentSessionPanel)?.hasActiveWork == true
+        }) {
+            return true
+        }
+        if livePanelIds.contains(where: terminalPanelHasVisibleActiveAgentStatusLine) {
+            return true
+        }
+        if agentLifecycleStatesByPanelId.contains(where: { panelId, states in
+            livePanelIds.contains(panelId)
+                && states.values.contains { $0 == .running || $0 == .needsInput }
+        }) {
+            return true
+        }
+        if isRemoteTmuxMirror {
+            for panelId in livePanelIds {
+                guard let activity = AppDelegate.shared?.remoteTmuxController
+                    .cachedMirrorTabActivity(workspaceId: id, panelId: panelId) else {
+                    continue
+                }
+                if activity.hasActiveCommand {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    var hasTerminalPanelsForVisibleAgentWorkObservation: Bool {
+        panels.values.contains { $0 is TerminalPanel }
+    }
+
+    private func terminalPanelHasVisibleActiveAgentStatusLine(panelId: UUID) -> Bool {
+        guard terminalPanel(for: panelId) != nil,
+              let rows = renderedTerminalRowsForActiveWork(panelId: panelId) else {
+            return false
+        }
+        return AgentChatProseScreenExtractor.containsActiveStatusLine(in: rows)
+    }
+
+    private func renderedTerminalRowsForActiveWork(panelId: UUID) -> [String]? {
+#if DEBUG
+        if let debugRows = debugRenderedTerminalRowsForActiveWorkTesting?[panelId] {
+            return debugRows
+        }
+#endif
+        return terminalPanel(for: panelId)?
+            .surface
+            .mobileRenderGridFrame(stateSeq: 0, full: true)?
+            .rows
+    }
+
+    private func publishAgentSessionActiveWorkIfNeeded() {
+        let next = panels.reduce(into: [UUID: Bool]()) { activity, element in
+            guard let agentSessionPanel = element.value as? AgentSessionPanel else { return }
+            activity[element.key] = agentSessionPanel.hasActiveWork
+        }
+        guard agentSessionActiveWorkPublisher.value != next else { return }
+        agentSessionActiveWorkPublisher.send(next)
     }
 
     func updatePanelGitBranch(panelId: UUID, branch: String, isDirty: Bool) {

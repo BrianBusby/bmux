@@ -239,6 +239,40 @@
         }
       }
     },
+    "buildHint.number": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build %@"
+          }
+        }
+      }
+    },
+    "titlebar.buildIndicator.accessibilityLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build %@"
+          }
+        }
+      }
+    },
     "about.commit": {
       "extractionState": "manual",
       "localizations": {
@@ -6628,6 +6662,381 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Collapse shell"
+          }
+        }
+      }
+    },
+    "agentSession.web.showRawOutput": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show raw output"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生の出力を表示"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show raw output"
+          }
+        }
+      }
+    },
+    "agentSession.web.showOptimizedOutput": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show optimized output"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最適化された出力を表示"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Show optimized output"
+          }
+        }
+      }
+    },
+    "agentSession.web.rawOutputUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raw output unavailable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生の出力を利用できません"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raw output unavailable"
           }
         }
       }
@@ -31387,6 +31796,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "open-notification には --id が必要です"
+          }
+        }
+      }
+    },
+    "cli.error.agentTokenProxyRequiresCommandHex": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent-token-proxy requires --command-hex <hex>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent-token-proxy には --command-hex <hex> が必要です"
           }
         }
       }
@@ -144050,121 +144476,121 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يمكن لعناوين مساحات العمل الطويلة استخدام أي عدد تحتاجه من الأسطر."
+            "value": "يمكن لعناوين مساحات العمل الطويلة أن تلتف إلى ثلاثة أسطر كحد أقصى."
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dugi naslovi radnih prostora mogu koristiti onoliko redova koliko im treba."
+            "value": "Dugi naslovi radnih prostora mogu se prelomiti na najviše tri reda."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lange arbejdsområdetitler kan bruge så mange linjer, som de har brug for."
+            "value": "Lange arbejdsområdetitler kan ombrydes til højst tre linjer."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lange Arbeitsbereichstitel können so viele Zeilen verwenden, wie sie brauchen."
+            "value": "Lange Arbeitsbereichstitel können auf bis zu drei Zeilen umbrechen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Long workspace titles can use as many lines as they need."
+            "value": "Long workspace titles can wrap to three lines."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los títulos largos de espacios de trabajo pueden usar tantas líneas como necesiten."
+            "value": "Los títulos largos de espacios de trabajo pueden ajustarse hasta tres líneas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les titres longs des espaces de travail peuvent utiliser autant de lignes que nécessaire."
+            "value": "Les titres longs des espaces de travail peuvent revenir sur trois lignes maximum."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I titoli lunghi degli spazi di lavoro possono usare tutte le righe necessarie."
+            "value": "I titoli lunghi degli spazi di lavoro possono andare a capo fino a tre righe."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "長いワークスペースタイトルは必要な行数で表示されます。"
+            "value": "長いワークスペースタイトルは最大3行まで折り返せます。"
           }
         },
         "km": {
           "stringUnit": {
             "state": "translated",
-            "value": "ចំណងជើងកន្លែងធ្វើការដែលវែង អាចប្រើចំនួនបន្ទាត់ដែលត្រូវការ។"
+            "value": "ចំណងជើងកន្លែងធ្វើការដែលវែង អាចបត់បានអតិបរមា 3 បន្ទាត់។"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "긴 워크스페이스 제목은 필요한 만큼 여러 줄을 사용할 수 있습니다."
+            "value": "긴 워크스페이스 제목은 최대 세 줄까지 줄바꿈됩니다."
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lange arbeidsområdetitler kan bruke så mange linjer de trenger."
+            "value": "Lange arbeidsområdetitler kan brytes over opptil tre linjer."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Długie tytuły obszarów roboczych mogą zajmować tyle wierszy, ile potrzebują."
+            "value": "Długie tytuły obszarów roboczych mogą zawijać się maksymalnie do trzech wierszy."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Títulos longos de espaços de trabalho podem usar quantas linhas forem necessárias."
+            "value": "Títulos longos de espaços de trabalho podem quebrar em até três linhas."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Длинные названия рабочих областей могут занимать столько строк, сколько нужно."
+            "value": "Длинные названия рабочих областей могут переноситься максимум на три строки."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ชื่อเวิร์กสเปซที่ยาวสามารถใช้กี่บรรทัดก็ได้ตามต้องการ"
+            "value": "ชื่อเวิร์กสเปซที่ยาวสามารถตัดบรรทัดได้สูงสุดสามบรรทัด"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uzun çalışma alanı başlıkları ihtiyaç duyduğu kadar satır kullanabilir."
+            "value": "Uzun çalışma alanı başlıkları en fazla üç satıra kayabilir."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Довгі назви робочих областей можуть займати стільки рядків, скільки потрібно."
+            "value": "Довгі назви робочих областей можуть переноситися щонайбільше на три рядки."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "较长的工作区标题可以按需要使用任意行数。"
+            "value": "较长的工作区标题最多可换行到三行。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "較長的工作區標題可依需要使用任意行數。"
+            "value": "較長的工作區標題最多可換行到三行。"
           }
         }
       }
@@ -197387,6 +197813,23 @@
         }
       }
     },
+    "sidebar.aiBusy.tooltip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI is running or needs input"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AIが実行中または入力待ち"
+          }
+        }
+      }
+    },
     "sidebar.mediaActivity.camera.tooltip": {
       "extractionState": "manual",
       "localizations": {
@@ -213034,6 +213477,584 @@
           "stringUnit": {
             "state": "translated",
             "value": "新增工作區"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.agent.cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.agent.claude": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.agent.codex": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.agent.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose which AI this repo shortcut launches."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このリポジトリショートカットで起動するAIを選択してください。"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.agent.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose AI"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AIを選択"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.add": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.agent.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.agentOption": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (%@)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@（%@）"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an absolute path to a repo and choose which installed AI to launch there."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リポジトリの絶対パスを入力し、そこで起動するインストール済みAIを選択してください。"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.path.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repo path"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リポジトリパス"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.path.placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/Users/name/repos/project"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/Users/name/repos/project"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Repo Shortcut"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リポジトリショートカットを追加"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.saveFailed.encodeFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The repo shortcut could not be encoded."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リポジトリショートカットをエンコードできませんでした。"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.saveFailed.invalidActions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The cmux config actions section is not an object."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cmux設定のactionsセクションはオブジェクトである必要があります。"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.saveFailed.invalidCommands": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The cmux config commands section is not an array."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cmux設定のcommandsセクションは配列である必要があります。"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.saveFailed.invalidRepoPath": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an absolute path to an existing directory."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "既存のディレクトリへの絶対パスを入力してください。"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.saveFailed.invalidRoot": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The cmux config file must contain a JSON object."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cmux設定ファイルにはJSONオブジェクトが必要です。"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.saveFailed.noSupportedAgent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No supported AI command was found on this machine."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このマシンで対応するAIコマンドが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.saveFailed.ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.saveFailed.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could Not Save Repo Shortcut"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リポジトリショートカットを保存できませんでした"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.saveFailed.unreadableConfig": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The cmux config file could not be read."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cmux設定ファイルを読み込めませんでした。"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.saveFailed.writeFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The cmux config file could not be updated."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cmux設定ファイルを更新できませんでした。"
+          }
+        }
+      }
+    },
+    "menu.repoAgentLauncher.add": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Repo Shortcut..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リポジトリショートカットを追加..."
+          }
+        }
+      }
+    },
+    "panel.repoAgentLauncher.chooseRepo.prompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択"
+          }
+        }
+      }
+    },
+    "panel.repoAgentLauncher.chooseRepo.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Repository"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リポジトリを選択"
+          }
+        }
+      }
+    },
+    "repoAgentLauncher.actionSubtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open %@ in %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を%@で開く"
+          }
+        }
+      }
+    },
+    "repoAgentLauncher.agent.claude": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude"
+          }
+        }
+      }
+    },
+    "repoAgentLauncher.agent.codex": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex"
+          }
+        }
+      }
+    },
+    "repoAgentLauncher.agent.opencode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenCode"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenCode"
+          }
+        }
+      }
+    },
+    "repoAgentLauncher.commandDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a %@ workspace scoped to %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の%@用ワークスペースを作成"
+          }
+        }
+      }
+    },
+    "repoAgentLauncher.defaultRepoName": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repository"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リポジトリ"
+          }
+        }
+      }
+    },
+    "titlebar.repoAgentLauncher.accessibilityLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI Repo Launcher"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AIリポジトリランチャー"
+          }
+        }
+      }
+    },
+    "titlebar.repoAgentLauncher.tooltip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launch an AI session for a repo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リポジトリ用のAIセッションを起動"
           }
         }
       }

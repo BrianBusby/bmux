@@ -133,7 +133,9 @@ import Testing
         latestConversationMessage: String? = nil,
         listeningPorts: [Int] = [],
         finderDirectoryPath: String? = nil,
-        mediaActivity: BrowserMediaActivity = BrowserMediaActivity()
+        repoBadgeAppearance: WorkspaceRepoBadgeAppearance? = nil,
+        mediaActivity: BrowserMediaActivity = BrowserMediaActivity(),
+        hasActiveAIWork: Bool = false
     ) -> SidebarWorkspaceSnapshotBuilder.Snapshot {
         SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: presentationKey ?? Self.presentationKey(),
@@ -159,7 +161,9 @@ import Testing
             pullRequestRows: [],
             listeningPorts: listeningPorts,
             finderDirectoryPath: finderDirectoryPath,
-            mediaActivity: mediaActivity
+            repoBadgeAppearance: repoBadgeAppearance,
+            mediaActivity: mediaActivity,
+            hasActiveAIWork: hasActiveAIWork
         )
     }
 
@@ -184,6 +188,134 @@ import Testing
             usesViewportAwarePath: usesViewportAwarePath,
             visibleAuxiliaryDetails: visibleAuxiliaryDetails
         )
+    }
+}
+
+@Suite struct SidebarWorkspaceRowLineLimitPolicyTests {
+    @Test func workspaceTitlesUseAtMostThreeLinesWhenWrappingIsEnabled() {
+        #expect(SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: true) == 3)
+    }
+
+    @Test func workspaceTitlesStaySingleLineWhenWrappingIsDisabled() {
+        #expect(SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: false) == 1)
+    }
+
+    @Test func workspaceTitleWrappingIsEnabledByDefault() {
+        #expect(SidebarWorkspaceTitleWrapSettings.defaultWrap)
+    }
+
+    @Test func conversationSubtitleCanUseThreeLines() throws {
+        let subtitle = try #require(SidebarWorkspaceRowLineLimitPolicy.subtitle(
+            notificationText: nil,
+            conversationMessage: "First line\nSecond line\nThird line"
+        ))
+
+        #expect(subtitle.text == "First line\nSecond line\nThird line")
+        #expect(subtitle.lineLimit == 3)
+    }
+
+    @Test func notificationSubtitleStaysCompactAndWinsOverConversation() throws {
+        let subtitle = try #require(SidebarWorkspaceRowLineLimitPolicy.subtitle(
+            notificationText: "Build finished",
+            conversationMessage: "A longer conversation summary"
+        ))
+
+        #expect(subtitle.text == "Build finished")
+        #expect(subtitle.lineLimit == 2)
+    }
+
+    @Test func blankConversationSubtitleIsHidden() {
+        #expect(SidebarWorkspaceRowLineLimitPolicy.subtitle(
+            notificationText: nil,
+            conversationMessage: " \n "
+        ) == nil)
+    }
+}
+
+@Suite struct WorkspaceRepoBadgeAppearanceResolverTests {
+    @Test func returnsNilForBlankRepoPath() {
+        var resolver = WorkspaceRepoBadgeAppearanceResolver(
+            palette: ["#F2C94C"]
+        )
+
+        let blankAppearance = resolver.appearance(repoRootPath: " \n ")
+        let missingAppearance = resolver.appearance(repoRootPath: nil)
+
+        #expect(blankAppearance == nil)
+        #expect(missingAppearance == nil)
+    }
+
+    @Test func usesLastPathComponentAsRepoName() throws {
+        var resolver = WorkspaceRepoBadgeAppearanceResolver(
+            palette: ["#F2C94C"]
+        )
+
+        let appearanceCandidate = resolver.appearance(
+            repoRootPath: "/Users/brian/repos/cmux"
+        )
+        let appearance = try #require(appearanceCandidate)
+
+        #expect(appearance.name == "cmux")
+        #expect(appearance.colorHex == "#F2C94C")
+    }
+
+    @Test func reusesColorForSameNormalizedRepoPath() throws {
+        var resolver = WorkspaceRepoBadgeAppearanceResolver(
+            palette: ["#F2C94C", "#56CCF2"]
+        )
+
+        let firstCandidate = resolver.appearance(
+            repoRootPath: "/Users/brian/repos/cmux"
+        )
+        let secondCandidate = resolver.appearance(
+            repoRootPath: "/Users/brian/repos/cmux/"
+        )
+        let first = try #require(firstCandidate)
+        let second = try #require(secondCandidate)
+
+        #expect(first.name == "cmux")
+        #expect(second.name == "cmux")
+        #expect(first.colorHex == second.colorHex)
+    }
+
+    @Test func assignsDifferentColorsToDifferentReposWhenPaletteAllows() throws {
+        var resolver = WorkspaceRepoBadgeAppearanceResolver(
+            palette: ["#F2C94C", "#56CCF2"]
+        )
+
+        let cmuxCandidate = resolver.appearance(repoRootPath: "/repo/cmux")
+        let apiCandidate = resolver.appearance(repoRootPath: "/repo/api")
+        let cmux = try #require(cmuxCandidate)
+        let api = try #require(apiCandidate)
+
+        #expect(cmux.colorHex == "#F2C94C")
+        #expect(api.colorHex == "#56CCF2")
+    }
+}
+
+@Suite struct WorkspaceRepoBadgeAppearanceColorPolicyTests {
+    @Test func usesRepoColorWhenWorkspaceHasNoCustomColor() {
+        let colorHex = WorkspaceRepoBadgeAppearanceColorPolicy.effectiveColorHex(
+            customColorHex: nil,
+            repoBadgeAppearance: WorkspaceRepoBadgeAppearance(
+                name: "cmux",
+                colorHex: "#F2C94C"
+            )
+        )
+
+        #expect(colorHex == "#F2C94C")
+    }
+
+    @Test func keepsExplicitWorkspaceColorAheadOfRepoColor() {
+        let colorHex = WorkspaceRepoBadgeAppearanceColorPolicy.effectiveColorHex(
+            customColorHex: "#56CCF2",
+            repoBadgeAppearance: WorkspaceRepoBadgeAppearance(
+                name: "cmux",
+                colorHex: "#F2C94C"
+            )
+        )
+
+        #expect(colorHex == "#56CCF2")
     }
 }
 

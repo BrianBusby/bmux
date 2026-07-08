@@ -29,10 +29,13 @@ public struct CodexTranscriptParser: Sendable {
     ]
 
     private let budget = TranscriptTextBudget()
+    private let tokenOptimizationMode: TokenOptimizationMode
     private let timestamps = TranscriptTimestampParser()
 
     /// Creates a Codex transcript parser.
-    public init() {}
+    public init(tokenOptimizationMode: TokenOptimizationMode = .balanced) {
+        self.tokenOptimizationMode = tokenOptimizationMode
+    }
 
     /// Parses a contiguous run of JSONL lines into chat messages.
     ///
@@ -48,7 +51,11 @@ public struct CodexTranscriptParser: Sendable {
         startingSeq: Int,
         state: ChatTranscriptParseState = ChatTranscriptParseState()
     ) -> ChatTranscriptParseResult {
-        var assembler = TranscriptBatchAssembler(state: state, budget: budget)
+        var assembler = TranscriptBatchAssembler(
+            state: state,
+            budget: budget,
+            tokenOptimizationMode: tokenOptimizationMode
+        )
         var lastTimestamp = state.lastTimestamp
         for (offset, line) in lines.enumerated() {
             let seq = startingSeq + offset

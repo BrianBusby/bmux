@@ -296,10 +296,6 @@ func sidebarWorkspaceRowBackgroundStyle(
     colorScheme: ColorScheme,
     sidebarSelectionColorHex: String?
 ) -> SidebarWorkspaceRowBackgroundStyle {
-    let selectedBackground = sidebarSelectedWorkspaceBackgroundNSColor(
-        for: colorScheme,
-        sidebarSelectionColorHex: sidebarSelectionColorHex
-    )
     let accentBackground = cmuxAccentNSColor(for: colorScheme)
     let customBackground = customColorHex.flatMap {
         WorkspaceTabColorSettings.displayNSColor(
@@ -312,32 +308,71 @@ func sidebarWorkspaceRowBackgroundStyle(
     switch activeTabIndicatorStyle {
     case .leftRail:
         if isActive {
-            return SidebarWorkspaceRowBackgroundStyle(
-                color: selectedBackground,
-                opacity: 1
-            )
+            return .clear
         }
         if isMultiSelected {
-            return SidebarWorkspaceRowBackgroundStyle(color: accentBackground, opacity: 0.25)
+            return SidebarWorkspaceRowBackgroundStyle(color: accentBackground, opacity: 0.18)
         }
         return .clear
 
     case .solidFill:
-        if isActive {
-            return SidebarWorkspaceRowBackgroundStyle(
-                color: selectedBackground,
-                opacity: 1
-            )
-        }
         if let customBackground {
             return SidebarWorkspaceRowBackgroundStyle(
                 color: customBackground,
-                opacity: isMultiSelected ? 0.35 : 0.7
+                opacity: isMultiSelected ? 0.24 : 0.46
             )
         }
         if isMultiSelected {
-            return SidebarWorkspaceRowBackgroundStyle(color: accentBackground, opacity: 0.25)
+            return SidebarWorkspaceRowBackgroundStyle(color: accentBackground, opacity: 0.18)
         }
         return .clear
     }
+}
+
+func sidebarWorkspaceRowLoadingIndicatorNSColor(
+    activeTabIndicatorStyle: WorkspaceIndicatorStyle,
+    isActive: Bool,
+    isMultiSelected: Bool,
+    customColorHex: String?,
+    colorScheme: ColorScheme,
+    sidebarSelectionColorHex: String?
+) -> NSColor {
+    sidebarWorkspaceRowLoadingIndicatorNSColor(
+        activeTabIndicatorStyle: activeTabIndicatorStyle,
+        isActive: isActive,
+        isMultiSelected: isMultiSelected,
+        customColorHex: customColorHex,
+        colorScheme: colorScheme,
+        sidebarSelectionColorHex: sidebarSelectionColorHex,
+        baseBackgroundColor: colorScheme == .dark ? .black : .white
+    )
+}
+
+func sidebarWorkspaceRowLoadingIndicatorNSColor(
+    activeTabIndicatorStyle: WorkspaceIndicatorStyle,
+    isActive: Bool,
+    isMultiSelected: Bool,
+    customColorHex: String?,
+    colorScheme: ColorScheme,
+    sidebarSelectionColorHex: String?,
+    baseBackgroundColor: NSColor
+) -> NSColor {
+    let style = sidebarWorkspaceRowBackgroundStyle(
+        activeTabIndicatorStyle: activeTabIndicatorStyle,
+        isActive: isActive,
+        isMultiSelected: isMultiSelected,
+        customColorHex: customColorHex,
+        colorScheme: colorScheme,
+        sidebarSelectionColorHex: sidebarSelectionColorHex
+    )
+    let effectiveBackground: NSColor
+    if let rowColor = style.color {
+        effectiveBackground = cmuxCompositedNSColor(
+            rowColor.withAlphaComponent(CGFloat(style.opacity)),
+            over: baseBackgroundColor
+        )
+    } else {
+        effectiveBackground = baseBackgroundColor
+    }
+    return cmuxReadableForegroundNSColor(on: effectiveBackground, opacity: 1)
 }

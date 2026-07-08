@@ -1654,6 +1654,15 @@ struct CmuxResolvedCommand: Sendable {
     let sourcePath: String?
 }
 
+struct CmuxResolvedRepoAgentLauncher: Identifiable, Sendable, Hashable {
+    let id: String
+    let title: String
+    let icon: CmuxButtonIcon?
+    let iconSourcePath: String?
+    let tooltip: String?
+    let action: CmuxResolvedConfigAction
+}
+
 struct CmuxConfigIssue: Identifiable, Equatable, Sendable {
     enum Kind: String, Sendable {
         case newWorkspaceActionNotFound
@@ -1718,6 +1727,7 @@ final class CmuxConfigStore: ObservableObject {
     @Published private(set) var newWorkspaceActionID: String?
     @Published private(set) var newWorkspaceContextMenuItems: [CmuxResolvedConfigContextMenuItem] = []
     @Published private(set) var newWorkspaceContextMenuIsConfigured = false
+    @Published private(set) var repoAgentLauncherItems: [CmuxResolvedRepoAgentLauncher] = []
     @Published private(set) var newWorkspaceMenuSectionOrder: CmuxNewWorkspaceMenuSectionOrder = .default
     @Published private(set) var agentChat: CmuxAgentChatConfiguration = .default
     /// Resolved per-cwd workspace group customization, keyed by the JSON cwd key.
@@ -2131,6 +2141,11 @@ final class CmuxConfigStore: ObservableObject {
             commands: commands,
             sourcePaths: sourcePaths
         )
+        let resolvedRepoAgentLauncherItems = resolvedRepoAgentLaunchers(
+            actions: resolvedActions,
+            commands: commands,
+            sourcePaths: sourcePaths
+        )
         let resolvedNotificationHooks = resolveNotificationHooks(
             globalConfig: globalConfig,
             localConfigs: localHookParseResults.compactMap { entry in
@@ -2146,6 +2161,7 @@ final class CmuxConfigStore: ObservableObject {
         newWorkspaceCommandName = configuredNewWorkspaceCommandName
         newWorkspaceContextMenuItems = resolvedNewWorkspaceContextMenuItems.items
         newWorkspaceContextMenuIsConfigured = configuredNewWorkspaceContextMenu != nil
+        repoAgentLauncherItems = resolvedRepoAgentLauncherItems
         newWorkspaceMenuSectionOrder = configuredNewWorkspaceMenuSectionOrder ?? .default
         agentChat = CmuxAgentChatConfiguration.resolved(
             local: localConfig?.agentChat, global: globalConfig?.agentChat,
@@ -2827,6 +2843,36 @@ final class CmuxConfigStore: ObservableObject {
             resolvedItems.removeLast()
         }
         return ResolvedContextMenuItems(items: resolvedItems, issues: issues)
+    }
+
+    private func resolvedRepoAgentLaunchers(
+        actions: [CmuxResolvedConfigAction],
+        commands: [CmuxCommandDefinition],
+        sourcePaths: [String: String]
+    ) -> [CmuxResolvedRepoAgentLauncher] {
+        actions.compactMap { action -> CmuxResolvedRepoAgentLauncher? in
+            guard action.id.hasPrefix("repo."),
+                  let commandName = action.workspaceCommandName,
+                  resolvedWorkspaceCommand(
+                      named: commandName,
+                      settingName: "repoAgentLaunchers action",
+                      commands: commands,
+                      sourcePaths: sourcePaths
+                  ) != nil else {
+                return nil
+            }
+            return CmuxResolvedRepoAgentLauncher(
+                id: action.id,
+                title: sanitizeConfigText(action.title, fallback: action.id),
+                icon: action.icon,
+                iconSourcePath: action.iconSourcePath,
+                tooltip: action.tooltip.map(sanitizeConfigText),
+                action: action
+            )
+        }
+        .sorted { lhs, rhs in
+            lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+        }
     }
 
     private func canonicalActionID(_ id: String) -> String {

@@ -5,12 +5,12 @@
 
 <p align="center">
   <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-    <img src="./docs/assets/macos-badge.png" alt="Preuzmi cmux za macOS" width="180" />
+    <img src="../assets/macos-badge.png" alt="Preuzmi cmux za macOS" width="180" />
   </a>
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | Bosanski | <a href="README.ar.md">العربية</a> | <a href="README.no.md">Norsk</a> | <a href="README.pt-BR.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.km.md">ភាសាខ្មែរ</a> | <a href="README.uk.md">Українська</a>
+  <a href="../../README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | Bosanski | <a href="README.ar.md">العربية</a> | <a href="README.no.md">Norsk</a> | <a href="README.pt-BR.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.km.md">ភាសាខ្មែរ</a> | <a href="README.uk.md">Українська</a>
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="./docs/assets/main-first-image.png" alt="cmux snimak ekrana" width="900" />
+  <img src="../assets/main-first-image.png" alt="cmux snimak ekrana" width="900" />
 </p>
 
 <p align="center">
@@ -36,7 +36,7 @@
 Paneli dobijaju plavi prsten, a tabovi se osvjetljavaju kada agenti za programiranje trebaju vašu pažnju
 </td>
 <td width="60%">
-<img src="./docs/assets/notification-rings.png" alt="Prstenovi obavještenja" width="100%" />
+<img src="../assets/notification-rings.png" alt="Prstenovi obavještenja" width="100%" />
 </td>
 </tr>
 <tr>
@@ -45,7 +45,7 @@ Paneli dobijaju plavi prsten, a tabovi se osvjetljavaju kada agenti za programir
 Pregledajte sva obavještenja na čekanju na jednom mjestu, skočite na najnovije nepročitano
 </td>
 <td width="60%">
-<img src="./docs/assets/sidebar-notification-badge.png" alt="Značka obavještenja u bočnoj traci" width="100%" />
+<img src="../assets/sidebar-notification-badge.png" alt="Značka obavještenja u bočnoj traci" width="100%" />
 </td>
 </tr>
 <tr>
@@ -54,7 +54,7 @@ Pregledajte sva obavještenja na čekanju na jednom mjestu, skočite na najnovij
 Podijelite preglednik pored terminala sa skriptabilnim API portiranim iz <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a>
 </td>
 <td width="60%">
-<img src="./docs/assets/built-in-browser.png" alt="Ugrađeni preglednik" width="100%" />
+<img src="../assets/built-in-browser.png" alt="Ugrađeni preglednik" width="100%" />
 </td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@ Podijelite preglednik pored terminala sa skriptabilnim API portiranim iz <a href
 Bočna traka prikazuje git granu, status/broj povezanog PR-a, radni direktorij, portove koji slušaju i tekst posljednjeg obavještenja. Horizontalna i vertikalna podjela.
 </td>
 <td width="60%">
-<img src="./docs/assets/vertical-horizontal-tabs-and-splits.png" alt="Vertikalni tabovi i podijeljeni paneli" width="100%" />
+<img src="../assets/vertical-horizontal-tabs-and-splits.png" alt="Vertikalni tabovi i podijeljeni paneli" width="100%" />
 </td>
 </tr>
 <tr>
@@ -72,7 +72,7 @@ Bočna traka prikazuje git granu, status/broj povezanog PR-a, radni direktorij, 
 <code>cmux ssh user@remote</code> kreira radni prostor za udaljenu mašinu. Paneli preglednika se usmjeravaju kroz udaljenu mrežu tako da localhost jednostavno radi. Prevucite sliku u udaljenu sesiju za upload putem scp.
 </td>
 <td width="60%">
-<img src="./docs/assets/ssh.png" alt="cmux SSH" width="100%" />
+<img src="../assets/ssh.png" alt="cmux SSH" width="100%" />
 </td>
 </tr>
 <tr>
@@ -81,7 +81,7 @@ Bočna traka prikazuje git granu, status/broj povezanog PR-a, radni direktorij, 
 <code>cmux claude-teams</code> pokreće teammate režim Claude Code sa jednom komandom. Članovi tima se pojavljuju kao nativni podijeljeni paneli sa metapodacima u bočnoj traci i obavještenjima. Nije potreban tmux.
 </td>
 <td width="60%">
-<img src="./docs/assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
+<img src="../assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
 </td>
 </tr>
 </table>
@@ -100,7 +100,7 @@ Bočna traka prikazuje git granu, status/broj povezanog PR-a, radni direktorij, 
 ### DMG (preporučeno)
 
 <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-  <img src="./docs/assets/macos-badge.png" alt="Preuzmi cmux za macOS" width="180" />
+  <img src="../assets/macos-badge.png" alt="Preuzmi cmux za macOS" width="180" />
 </a>
 
 Otvorite `.dmg` datoteku i prevucite cmux u folder Aplikacije. cmux se automatski ažurira putem Sparkle, tako da trebate preuzeti samo jednom.

@@ -1,5 +1,6 @@
 import CMUXAgentLaunch
 import CmuxAgentChat
+import CmuxSettings
 import CmuxTerminal
 import Foundation
 
@@ -13,6 +14,8 @@ final class AgentChatTranscriptService {
 
     let registry: AgentChatSessionRegistry
     let resolver: AgentChatTranscriptResolver
+    private let rawOutputStore: ChatRawTerminalOutputFileStore
+    private let tokenOptimizationModeProvider: () -> TokenOptimizationMode
     private var tailers: [String: AgentChatTranscriptTailer] = [:]
     private let hasEventSubscribers: @MainActor () -> Bool
     private let emitEventPayload: @MainActor ([String: Any]) -> Void
@@ -29,7 +32,12 @@ final class AgentChatTranscriptService {
     ///
     /// - Parameter resolver: Transcript path resolver.
     convenience init(resolver: AgentChatTranscriptResolver = AgentChatTranscriptResolver()) {
-        self.init(registry: AgentChatSessionRegistry(), resolver: resolver)
+        self.init(
+            registry: AgentChatSessionRegistry(),
+            resolver: resolver,
+            rawOutputStore: Self.defaultRawOutputStore(),
+            tokenOptimizationModeProvider: Self.defaultTokenOptimizationModeProvider()
+        )
     }
 
     /// Creates the service with explicit dependencies.
@@ -40,6 +48,10 @@ final class AgentChatTranscriptService {
     init(
         registry: AgentChatSessionRegistry,
         resolver: AgentChatTranscriptResolver = AgentChatTranscriptResolver(),
+        rawOutputStore: ChatRawTerminalOutputFileStore,
+        tokenOptimizationModeProvider: @escaping () -> TokenOptimizationMode = {
+            .balanced
+        },
         hasEventSubscribers: @escaping @MainActor () -> Bool = {
             MobileHostService.hasEventSubscribers(topic: AgentChatTranscriptService.eventTopic)
         },
@@ -50,6 +62,8 @@ final class AgentChatTranscriptService {
     ) {
         self.registry = registry
         self.resolver = resolver
+        self.rawOutputStore = rawOutputStore
+        self.tokenOptimizationModeProvider = tokenOptimizationModeProvider
         self.hasEventSubscribers = hasEventSubscribers
         self.emitEventPayload = emitEventPayload
         self.now = now
@@ -368,7 +382,9 @@ final class AgentChatTranscriptService {
         let tailer = AgentChatTranscriptTailer(
             sessionID: sessionID,
             agentKind: agentKind,
-            path: path
+            path: path,
+            rawOutputStore: rawOutputStore,
+            tokenOptimizationMode: tokenOptimizationModeProvider()
         ) { [weak self] batch in
             await self?.publishBatch(batch, sessionID: sessionID)
         }
@@ -491,5 +507,40 @@ final class AgentChatTranscriptService {
     private func emit(frame: ChatSessionEventFrame) {
         guard let payload = wirePayload(frame) else { return }
         emitEventPayload(payload)
+    }
+
+    nonisolated static func defaultRawOutputStore() -> ChatRawTerminalOutputFileStore {
+        let root = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        return ChatRawTerminalOutputFileStore(
+            rootDirectory: root
+                .appendingPathComponent("cmux", isDirectory: true)
+                .appendingPathComponent("agent-raw-output", isDirectory: true)
+        )
+    }
+
+    nonisolated static func defaultTokenOptimizationModeProvider() -> () -> TokenOptimizationMode {
+        let catalog = SettingCatalog()
+        let store = JSONConfigStore(fileURL: CmuxConfigLocation().userConfigFile)
+        let key = catalog.terminal.agentTokenOptimizationMode
+        return {
+            TokenOptimizationMode(setting: store.snapshotValue(for: key))
+        }
+    }
+
+}
+
+private extension TokenOptimizationMode {
+    init(setting: AgentTokenOptimizationMode) {
+        switch setting {
+        case .off:
+            self = .off
+        case .conservative:
+            self = .conservative
+        case .balanced:
+            self = .balanced
+        case .aggressive:
+            self = .aggressive
+        }
     }
 }

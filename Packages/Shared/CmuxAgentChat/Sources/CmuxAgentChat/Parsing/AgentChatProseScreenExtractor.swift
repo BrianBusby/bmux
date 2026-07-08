@@ -87,6 +87,12 @@ public struct AgentChatProseScreenExtractor: Sendable {
         return cleaned.isEmpty ? nil : cleaned
     }
 
+    /// Whether a rendered terminal snapshot contains an in-flight agent status
+    /// line such as Codex's `Working (3s • Esc to interrupt)`.
+    public static func containsActiveStatusLine(in lines: [String]) -> Bool {
+        statusLineIndex(in: lines.map(trimTrailing)) != nil
+    }
+
     /// Removes up to two leading spaces (Claude's hanging-indent width) from a
     /// wrapped answer continuation row; blank rows are returned unchanged.
     static func strippingHangingIndent(_ row: String) -> String {

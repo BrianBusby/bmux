@@ -547,6 +547,34 @@ def test_live_socket_injects_supported_hooks_without_unlocking_bypass(failures: 
             failures,
         )
 
+    optimizer_groups = [group for group in pre_tool_use_groups if group.get("matcher") == "Bash"]
+    expect(optimizer_groups, f"PreToolUse should install a Bash optimizer hook, got {pre_tool_use_groups}", failures)
+    if optimizer_groups:
+        optimizer_hooks = optimizer_groups[0].get("hooks", [])
+        expect(
+            any(
+                h.get("command") == '"${CMUX_CLAUDE_HOOK_CMUX_BIN:-cmux}" hooks claude optimize-pre-tool-use'
+                and h.get("async") is not True
+                for h in optimizer_hooks
+            ),
+            f"Bash optimizer should synchronously call hooks claude optimize-pre-tool-use, got {optimizer_hooks}",
+            failures,
+        )
+        bash_index = pre_tool_use_groups.index(optimizer_groups[0])
+        telemetry_index = next(
+            (
+                idx
+                for idx, group in enumerate(pre_tool_use_groups)
+                if any("hooks claude pre-tool-use" in h.get("command", "") for h in group.get("hooks", []))
+            ),
+            -1,
+        )
+        expect(
+            telemetry_index == -1 or bash_index < telemetry_index,
+            f"Bash optimizer should run before async telemetry, got {pre_tool_use_groups}",
+            failures,
+        )
+
     # PushNotification delivers via a raw OSC notification that cmux suppresses
     # for agent surfaces and never fires the Notification hook, so a PostToolUse
     # matcher is the only bridge into cmux notifications. Async: no decision.

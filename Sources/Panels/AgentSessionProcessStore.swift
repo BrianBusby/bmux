@@ -1,5 +1,6 @@
 import Foundation
 import Darwin
+import CmuxAgentChat
 
 @MainActor
 final class AgentSessionProcessStore {
@@ -9,12 +10,29 @@ final class AgentSessionProcessStore {
             emitActiveProviderStateIfNeeded()
         }
     }
+    var activeWorkSink: ((Bool) -> Void)? {
+        didSet {
+            emitActiveWorkStateIfNeeded()
+        }
+    }
     var hasActiveProviderSession: Bool {
         !sessions.isEmpty
     }
+    var hasActiveWork: Bool {
+        isTurnInFlight || !activeActivityIDs.isEmpty
+    }
     private var sessions: [String: AgentSessionRunningSession] = [:]
     private var lastEmittedHasActiveProviderSession: Bool?
+    private var isTurnInFlight = false
+    private var activeActivityIDs: Set<String> = []
+    private var rawActivityOutputs: [String: RawActivityOutputAccumulator] = [:]
+    private let rawOutputStore: ChatRawTerminalOutputFileStore
+    private var lastEmittedHasActiveWork: Bool?
     private static let terminationEscalationInterval: DispatchTimeInterval = .seconds(3)
+
+    init(rawOutputStore: ChatRawTerminalOutputFileStore = AgentChatTranscriptService.defaultRawOutputStore()) {
+        self.rawOutputStore = rawOutputStore
+    }
 
     func start(plan: AgentSessionLaunchPlan, workingDirectory: String?) async throws -> AgentSessionStartedSession {
         guard sessions.isEmpty else {
@@ -74,6 +92,7 @@ final class AgentSessionProcessStore {
                     )
                 },
                 turnCompleteSink: { [weak self] in
+                    self?.resetWorkState()
                     self?.emitTurnComplete(
                         sessionId: sessionId,
                         providerID: plan.provider
@@ -109,6 +128,7 @@ final class AgentSessionProcessStore {
             }
             running.openCodeEventTask?.cancel()
             sessions.removeValue(forKey: sessionId)
+            removeRawActivityOutputs(sessionId: sessionId)
             emitActiveProviderStateIfNeeded()
             throw error
         }
@@ -133,11 +153,29 @@ final class AgentSessionProcessStore {
             guard let codexAppServerSession = session.codexAppServerSession else {
                 throw AgentSessionBridgeError.providerNotReady(session.providerID.displayName)
             }
-            try await codexAppServerSession.submit(text, permissionMode: permissionMode)
+            setTurnInFlight(true)
+            do {
+                try await codexAppServerSession.submit(text, permissionMode: permissionMode)
+            } catch {
+                setTurnInFlight(false)
+                throw error
+            }
         case .claude:
-            try await writeClaudeStreamJSON(text, to: session.inputWriter)
+            setTurnInFlight(true)
+            do {
+                try await writeClaudeStreamJSON(text, to: session.inputWriter)
+            } catch {
+                setTurnInFlight(false)
+                throw error
+            }
         case .opencode:
-            try await postOpenCodePrompt(text, session: session)
+            setTurnInFlight(true)
+            do {
+                try await postOpenCodePrompt(text, session: session)
+            } catch {
+                setTurnInFlight(false)
+                throw error
+            }
         }
     }
 
@@ -196,7 +234,9 @@ final class AgentSessionProcessStore {
             return
         }
         sessions.removeValue(forKey: session.sessionId)
+        removeRawActivityOutputs(sessionId: session.sessionId)
         cancelSessionTasks(session)
+        resetWorkState()
         emitActiveProviderStateIfNeeded()
         emitExit(
             sessionId: session.sessionId,
@@ -209,6 +249,8 @@ final class AgentSessionProcessStore {
         guard let session = sessions.removeValue(forKey: sessionId) else {
             return
         }
+        removeRawActivityOutputs(sessionId: sessionId)
+        resetWorkState()
         emitActiveProviderStateIfNeeded()
         cancelSessionTasks(session)
         requestTermination(for: session)
@@ -306,6 +348,7 @@ final class AgentSessionProcessStore {
                 )
             }
             if completesTurn {
+                resetWorkState()
                 emitTurnComplete(
                     sessionId: session.sessionId,
                     providerID: session.providerID
@@ -552,6 +595,7 @@ final class AgentSessionProcessStore {
             )
         }
         if completesTurn {
+            resetWorkState()
             emitTurnComplete(
                 sessionId: session.sessionId,
                 providerID: session.providerID
@@ -642,10 +686,94 @@ final class AgentSessionProcessStore {
         activity: [String: Any]
     ) {
         var event = activity
+        if providerID == .codex,
+           let metadata = recordRawActivityOutput(
+            sessionId: sessionId,
+            activity: activity
+           ) {
+            event["outputMetadata"] = metadata
+        }
+        if let activityID = activity["activityId"] as? String,
+           let status = activity["status"] as? String {
+            updateActiveWorkState(activityID: activityID, status: status)
+        }
         event["type"] = "provider.activity"
         event["sessionId"] = sessionId
         event["providerId"] = providerID.rawValue
         eventSink?(event)
+    }
+
+    private func recordRawActivityOutput(
+        sessionId: String,
+        activity: [String: Any]
+    ) -> [String: Any]? {
+        guard let activityID = activity["activityId"] as? String,
+              let kind = activity["kind"] as? String,
+              kind == "command" else {
+            return nil
+        }
+        let key = "\(sessionId):\(activityID)"
+        var accumulator = rawActivityOutputs[key] ?? RawActivityOutputAccumulator(
+            sessionId: sessionId,
+            activityID: activityID,
+            command: activity["detail"] as? String
+        )
+        if let detail = activity["detail"] as? String,
+           !detail.isEmpty {
+            accumulator.command = detail
+        }
+        if let outputDelta = activity["outputDelta"] as? String,
+           !outputDelta.isEmpty {
+            accumulator.rawOutput.append(outputDelta)
+        }
+        rawActivityOutputs[key] = accumulator
+        guard !accumulator.rawOutput.isEmpty else {
+            return nil
+        }
+
+        let metadata = ChatTerminalOutputMetadata(
+            kind: .generic,
+            rawOutputRef: accumulator.rawOutputRef,
+            rawByteCount: accumulator.rawOutput.utf8.count,
+            rawLineCount: Self.lineCount(accumulator.rawOutput),
+            optimizedByteCount: nil,
+            omittedLineCount: 0,
+            wasOptimized: false
+        )
+        persistRawActivityOutput(
+            messageID: accumulator.activityID,
+            command: accumulator.command ?? "",
+            rawOutput: accumulator.rawOutput,
+            metadata: metadata
+        )
+        return [
+            "rawOutputRef": accumulator.rawOutputRef,
+            "rawByteCount": metadata.rawByteCount,
+            "rawLineCount": metadata.rawLineCount,
+            "wasOptimized": metadata.wasOptimized
+        ]
+    }
+
+    private func persistRawActivityOutput(
+        messageID: String,
+        command: String,
+        rawOutput: String,
+        metadata: ChatTerminalOutputMetadata
+    ) {
+        let record = ChatRawTerminalOutputRecord(
+            messageID: messageID,
+            command: command,
+            rawOutput: rawOutput,
+            metadata: metadata
+        )
+        let rawOutputStore = rawOutputStore
+        Task {
+            try? await rawOutputStore.write([record])
+        }
+    }
+
+    func readRawActivityOutput(rawOutputRef: String) async throws -> ChatRawTerminalOutputRecord? {
+        try await rawOutputStore.read(rawOutputRef: rawOutputRef)
     }
 
     private func emitTurnComplete(
@@ -677,5 +805,85 @@ final class AgentSessionProcessStore {
         guard lastEmittedHasActiveProviderSession != hasActiveProviderSession else { return }
         lastEmittedHasActiveProviderSession = hasActiveProviderSession
         activeProviderSink?(hasActiveProviderSession)
+    }
+
+    private func setTurnInFlight(_ newValue: Bool) {
+        guard isTurnInFlight != newValue else { return }
+        isTurnInFlight = newValue
+        emitActiveWorkStateIfNeeded()
+    }
+
+    private func emitActiveWorkStateIfNeeded() {
+        let hasActiveWork = self.hasActiveWork
+        guard lastEmittedHasActiveWork != hasActiveWork else { return }
+        lastEmittedHasActiveWork = hasActiveWork
+        activeWorkSink?(hasActiveWork)
+    }
+
+    private func updateActiveWorkState(activityID: String, status: String) {
+        switch status {
+        case "inProgress":
+            activeActivityIDs.insert(activityID)
+        default:
+            activeActivityIDs.remove(activityID)
+            if activeActivityIDs.isEmpty {
+                isTurnInFlight = false
+            }
+        }
+        emitActiveWorkStateIfNeeded()
+    }
+
+    private func resetWorkState() {
+        isTurnInFlight = false
+        activeActivityIDs.removeAll()
+        emitActiveWorkStateIfNeeded()
+    }
+
+    private func removeRawActivityOutputs(sessionId: String) {
+        rawActivityOutputs = rawActivityOutputs.filter { _, accumulator in
+            accumulator.sessionId != sessionId
+        }
+    }
+
+    private static func lineCount(_ text: String) -> Int {
+        guard !text.isEmpty else { return 0 }
+        return text.split(separator: "\n", omittingEmptySubsequences: false).count
+    }
+
+    func ingestActivityForTesting(activityID: String, status: String) {
+        updateActiveWorkState(activityID: activityID, status: status)
+    }
+
+    func ingestRawActivityOutputForTesting(
+        sessionId: String,
+        activityID: String,
+        command: String,
+        outputDelta: String
+    ) -> [String: Any]? {
+        recordRawActivityOutput(
+            sessionId: sessionId,
+            activity: [
+                "activityId": activityID,
+                "kind": "command",
+                "status": "inProgress",
+                "detail": command,
+                "outputDelta": outputDelta
+            ]
+        )
+    }
+
+    func markTurnCompleteForTesting() {
+        resetWorkState()
+    }
+}
+
+private struct RawActivityOutputAccumulator {
+    let sessionId: String
+    let activityID: String
+    var command: String?
+    var rawOutput = ""
+
+    var rawOutputRef: String {
+        "agent-session-output:\(sessionId):\(activityID)"
     }
 }

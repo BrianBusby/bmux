@@ -8,6 +8,7 @@ import type {
   ComposerPermissionMode,
   ProviderId,
   ProviderInfo,
+  TerminalOutputMetadata,
 } from "./types";
 
 export type LogEntry = {
@@ -30,6 +31,7 @@ export type TranscriptEntry = {
   detail?: string;
   isComplete?: boolean;
   output?: string;
+  outputMetadata?: TerminalOutputMetadata;
 };
 
 export type SessionState = {
@@ -579,6 +581,7 @@ function appendProviderActivityTranscript(
         output: event.outputDelta === undefined
           ? previous.output
           : appendBoundedText(previous.output ?? "", event.outputDelta, maxActivityOutputChars, activityTruncationMarker),
+        outputMetadata: event.outputMetadata ?? previous.outputMetadata,
       },
       ...state.transcript.slice(existingIndex + 1),
     ];
@@ -596,6 +599,7 @@ function appendProviderActivityTranscript(
     output: event.outputDelta === undefined
       ? undefined
       : boundedText(event.outputDelta, maxActivityOutputChars, activityTruncationMarker),
+    outputMetadata: event.outputMetadata,
   });
 }
 

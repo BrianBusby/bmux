@@ -50,7 +50,7 @@ extension CMUXCLI {
                 "--format", "default",
                 "--dir", tempRoot.path,
                 "--file", promptPath,
-                "Generate a 2-5 word title from the attached conversation excerpt. Output only the title."
+                "Generate an informative human-readable subject statement, between 6 and 20 words, about the current task across the whole conversation excerpt. Make it read like a normal sentence fragment, not keywords. Never output fewer than 6 words. Output only the statement."
             ]
             stdinPrompt = ""
         case "grok":
@@ -78,7 +78,7 @@ extension CMUXCLI {
                 "--no-prompt-templates",
                 "--no-context-files",
                 "@\(promptPath)",
-                "Generate a 2-5 word title from the attached conversation excerpt. Output only the title."
+                "Generate an informative human-readable subject statement, between 6 and 20 words, about the current task across the whole conversation excerpt. Make it read like a normal sentence fragment, not keywords. Never output fewer than 6 words. Output only the statement."
             ]
             stdinPrompt = ""
         default:

@@ -12,9 +12,9 @@ import Foundation
 struct AutoNamingConfig: Sendable {
     /// Minimum transcript line growth since the last naming before another
     /// summarization call is considered.
-    var minLineGrowth: Int = 6
+    var minLineGrowth: Int = 12
     /// Minimum seconds between summarization calls for one session.
-    var minInterval: TimeInterval = 180
+    var minInterval: TimeInterval = 300
     /// Transcripts shorter than this are skipped entirely (subagent or
     /// trivial sessions).
     var minTranscriptLines: Int = 12
@@ -28,12 +28,13 @@ struct AutoNamingConfig: Sendable {
 
     /// Total lifetime of an in-flight marker before a new pass may start.
     var inFlightExpiry: TimeInterval { llmTimeout + inFlightExpiryGrace }
-    /// Maximum title length after sanitization.
-    var maxTitleLength: Int = 50
-    /// Leading user messages included in the summarization context.
-    var contextHeadUserMessages: Int = 2
-    /// Trailing user/assistant messages included in the context.
-    var contextTailMessages: Int = 4
+    /// Minimum title words after sanitization.
+    var minTitleWordCount: Int = 6
+    /// Maximum title words after sanitization.
+    var maxTitleWordCount: Int = 20
+    /// Maximum title length after sanitization, kept as a UI safety cap after
+    /// the primary word-count cap.
+    var maxTitleLength: Int = 180
     /// Per-message truncation applied to context excerpts.
     var contextMessageMaxChars: Int = 240
 }
@@ -75,6 +76,11 @@ enum AutoNamingThrottleDecision: Equatable, Sendable {
     case skipInFlight
     case skipTooSoon
     case skipInsufficientGrowth
+}
+
+enum AutoNamingSanitizedTitle: Equatable, Sendable {
+    case changed(String)
+    case unchanged(String)
 }
 
 /// One user/assistant text message extracted from a transcript.
@@ -229,17 +235,12 @@ struct AutoNamingEngine: Sendable {
         return messages
     }
 
-    /// Builds the summarization context: the first user messages anchor the
-    /// session's purpose, the trailing messages capture the current topic.
+    /// Builds the summarization context from the whole extracted conversation.
     func buildContext(from messages: [AutoNamingTranscriptMessage]) -> String? {
         guard !messages.isEmpty else { return nil }
-        let headUser = messages
-            .filter { $0.role == "user" }
-            .prefix(config.contextHeadUserMessages)
-        let tail = messages.suffix(config.contextTailMessages)
         var seen = Set<String>()
         var parts: [String] = []
-        for message in Array(headUser) + Array(tail) {
+        for message in messages {
             let excerpt = String(message.text.prefix(config.contextMessageMaxChars))
             let key = "\(message.role):\(excerpt)"
             guard seen.insert(key).inserted else { continue }
@@ -348,13 +349,40 @@ struct AutoNamingEngine: Sendable {
     func buildPrompt(currentTitle: String?, context: String) -> String {
         var lines: [String] = [
             "You name terminal workspace tabs for a developer running coding agents.",
-            "Given a conversation excerpt, output ONLY a short title: 2-5 words,",
-            "in the same language as the conversation, no quotes, no trailing punctuation.",
+            "Given the whole conversation excerpt, output ONLY an informative subject statement, between 6 and 20 words, that summarizes the current task being worked on.",
+            "Evaluate the entire conversation before choosing the title; do not summarize only the latest prompt when earlier messages establish the actual task.",
+            "The title should read like a normal sentence fragment a person would write, not a bag of keywords.",
+            "Write a natural, human-readable grammatical phrase in the same language as the conversation.",
+            "Never output fewer than 6 words.",
+            "Prefer concrete nouns from the work: feature, bug, ticket, repo, file, workflow, or decision.",
+            "Do not emit title-case keyword fragments or generic category labels.",
+            "Do not rename just because wording could be slightly improved; change only when the main subject has meaningfully changed.",
+            "Avoid filler words such as \"now\", \"seeing\", \"trying\", or \"working on\".",
+            "Bad: Now Seeing Trying",
+            "Bad: Look Ticket Determine",
+            "Bad: Look failing test pr summary all failing tests",
+            "Bad: Three Dot Here",
+            "Bad: Workspace Automation",
+            "Good: Improving workspace tab summaries",
+            "Good: Creating CompanyCam API branch and PR for ticket",
+            "Good: Debugging Vite startup failures",
             ""
         ]
+        let pullRequestReferences = githubPullRequestReferences(in: context)
+        if !pullRequestReferences.isEmpty {
+            lines.append("Important pull requests mentioned: \(pullRequestReferences.joined(separator: ", "))")
+            lines.append("When a pull request is central to the task, include the repository and PR number in the title.")
+            lines.append("Do not turn PR URLs into URL fragment titles such as \"PR Https Github\"; convert URLs into the pull request's repo and number.")
+            lines.append("Good: Address PR #1234 CompanyCam API review")
+            lines.append("")
+        }
         if let currentTitle, !currentTitle.isEmpty {
             lines.append("The current title is: \(currentTitle)")
-            lines.append("If that still accurately describes the conversation's main topic, output it EXACTLY as given.")
+            if titleWordCount(currentTitle) >= config.minTitleWordCount {
+                lines.append("If that still accurately describes the conversation's main topic and is at least 6 words, output it EXACTLY as given.")
+            } else {
+                lines.append("The current title is shorter than 6 words, so do not output it exactly; replace it with a 6- to 20-word title.")
+            }
             lines.append("")
         }
         lines.append("Conversation excerpt:")
@@ -362,11 +390,40 @@ struct AutoNamingEngine: Sendable {
         return lines.joined(separator: "\n")
     }
 
+    private func githubPullRequestReferences(in text: String) -> [String] {
+        let pattern = #"https?://github\.com/([^/\s]+)/([^/\s]+)/pull/([0-9]+)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return []
+        }
+        let nsText = text as NSString
+        var seen = Set<String>()
+        var references: [String] = []
+
+        for match in regex.matches(in: text, range: NSRange(location: 0, length: nsText.length)) {
+            guard match.numberOfRanges == 4 else { continue }
+            let owner = nsText.substring(with: match.range(at: 1))
+            let repo = nsText.substring(with: match.range(at: 2))
+            let number = nsText.substring(with: match.range(at: 3))
+            let reference = "\(owner)/\(repo) PR #\(number)"
+            guard seen.insert(reference.lowercased()).inserted else { continue }
+            references.append(reference)
+        }
+
+        return references
+    }
+
     /// Normalizes a summarizer response into a usable title, or `nil` when
     /// the response is unusable or matches the current title (no rename
     /// needed). Takes the first non-empty line, strips wrapping quotes,
     /// collapses whitespace, and enforces the length cap at a word boundary.
     func sanitizeResponse(_ raw: String?, currentTitle: String?) -> String? {
+        guard case .changed(let title) = sanitizeResponseOutcome(raw, currentTitle: currentTitle) else {
+            return nil
+        }
+        return title
+    }
+
+    func sanitizeResponseOutcome(_ raw: String?, currentTitle: String?) -> AutoNamingSanitizedTitle? {
         guard let raw else { return nil }
         guard let firstLine = raw
             .components(separatedBy: .newlines)
@@ -387,6 +444,11 @@ struct AutoNamingEngine: Sendable {
             .filter { !$0.isEmpty }
             .joined(separator: " ")
         guard !title.isEmpty else { return nil }
+        let words = titleWords(title)
+        guard words.count >= config.minTitleWordCount else { return nil }
+        if words.count > config.maxTitleWordCount {
+            title = words.prefix(config.maxTitleWordCount).joined(separator: " ")
+        }
         if title.count > config.maxTitleLength {
             let prefix = String(title.prefix(config.maxTitleLength))
             if let lastSpace = prefix.lastIndex(of: " "), prefix.distance(from: prefix.startIndex, to: lastSpace) > 0 {
@@ -397,8 +459,33 @@ struct AutoNamingEngine: Sendable {
             title = title.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         guard !title.isEmpty else { return nil }
-        if let currentTitle, title == currentTitle { return nil }
-        return title
+        guard titleWordCount(title) >= config.minTitleWordCount else { return nil }
+        if let currentTitle,
+           normalizedTitleIdentity(title) == normalizedTitleIdentity(currentTitle) {
+            return .unchanged(currentTitle.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        return .changed(title)
+    }
+
+    private func titleWords(_ title: String) -> [Substring] {
+        title.split(separator: " ")
+    }
+
+    private func titleWordCount(_ title: String) -> Int {
+        titleWords(
+            title
+                .components(separatedBy: .whitespacesAndNewlines)
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+        ).count
+    }
+
+    private func normalizedTitleIdentity(_ title: String) -> String {
+        title
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
     }
 
     private func appendHookMessage(

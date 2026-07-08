@@ -5,12 +5,12 @@
 
 <p align="center">
   <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-    <img src="./docs/assets/macos-badge.png" alt="Last ned cmux for macOS" width="180" />
+    <img src="../assets/macos-badge.png" alt="Last ned cmux for macOS" width="180" />
   </a>
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | <a href="README.ar.md">العربية</a> | Norsk | <a href="README.pt-BR.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.km.md">ភាសាខ្មែរ</a> | <a href="README.uk.md">Українська</a>
+  <a href="../../README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | <a href="README.ar.md">العربية</a> | Norsk | <a href="README.pt-BR.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.km.md">ភាសាខ្មែរ</a> | <a href="README.uk.md">Українська</a>
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="./docs/assets/main-first-image.png" alt="cmux skjermbilde" width="900" />
+  <img src="../assets/main-first-image.png" alt="cmux skjermbilde" width="900" />
 </p>
 
 <p align="center">
@@ -36,7 +36,7 @@
 Paneler får en blå ring og faner lyser opp når kodeagenter trenger oppmerksomheten din
 </td>
 <td width="60%">
-<img src="./docs/assets/notification-rings.png" alt="Varselringer" width="100%" />
+<img src="../assets/notification-rings.png" alt="Varselringer" width="100%" />
 </td>
 </tr>
 <tr>
@@ -45,7 +45,7 @@ Paneler får en blå ring og faner lyser opp når kodeagenter trenger oppmerksom
 Se alle ventende varsler på ett sted, hopp til det nyeste uleste
 </td>
 <td width="60%">
-<img src="./docs/assets/sidebar-notification-badge.png" alt="Varselmerke i sidefeltet" width="100%" />
+<img src="../assets/sidebar-notification-badge.png" alt="Varselmerke i sidefeltet" width="100%" />
 </td>
 </tr>
 <tr>
@@ -54,7 +54,7 @@ Se alle ventende varsler på ett sted, hopp til det nyeste uleste
 Del en nettleser ved siden av terminalen med et skriptbart API portet fra <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a>
 </td>
 <td width="60%">
-<img src="./docs/assets/built-in-browser.png" alt="Innebygd nettleser" width="100%" />
+<img src="../assets/built-in-browser.png" alt="Innebygd nettleser" width="100%" />
 </td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@ Del en nettleser ved siden av terminalen med et skriptbart API portet fra <a hre
 Sidefeltet viser git-gren, tilknyttet PR-status/nummer, arbeidsmappe, lyttende porter og siste varselstekst. Del horisontalt og vertikalt.
 </td>
 <td width="60%">
-<img src="./docs/assets/vertical-horizontal-tabs-and-splits.png" alt="Vertikale faner og delte paneler" width="100%" />
+<img src="../assets/vertical-horizontal-tabs-and-splits.png" alt="Vertikale faner og delte paneler" width="100%" />
 </td>
 </tr>
 <tr>
@@ -72,7 +72,7 @@ Sidefeltet viser git-gren, tilknyttet PR-status/nummer, arbeidsmappe, lyttende p
 <code>cmux ssh user@remote</code> oppretter et arbeidsområde for en ekstern maskin. Nettleserpaneler rutes gjennom det eksterne nettverket, så localhost bare fungerer. Dra et bilde inn i en ekstern sesjon for å laste opp via scp.
 </td>
 <td width="60%">
-<img src="./docs/assets/ssh.png" alt="cmux SSH" width="100%" />
+<img src="../assets/ssh.png" alt="cmux SSH" width="100%" />
 </td>
 </tr>
 <tr>
@@ -81,7 +81,7 @@ Sidefeltet viser git-gren, tilknyttet PR-status/nummer, arbeidsmappe, lyttende p
 <code>cmux claude-teams</code> kjører Claude Codes lagkameratmodus med én kommando. Lagkamerater opprettes som native delinger med metadata i sidefeltet og varsler. Ingen tmux nødvendig.
 </td>
 <td width="60%">
-<img src="./docs/assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
+<img src="../assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
 </td>
 </tr>
 </table>
@@ -100,7 +100,7 @@ Sidefeltet viser git-gren, tilknyttet PR-status/nummer, arbeidsmappe, lyttende p
 ### DMG (anbefalt)
 
 <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-  <img src="./docs/assets/macos-badge.png" alt="Last ned cmux for macOS" width="180" />
+  <img src="../assets/macos-badge.png" alt="Last ned cmux for macOS" width="180" />
 </a>
 
 Åpne `.dmg`-filen og dra cmux til Programmer-mappen. cmux oppdaterer seg selv automatisk via Sparkle, så du trenger bare å laste ned én gang.

@@ -67,6 +67,9 @@ const context: AppContext = {
     copyShellContents: "Copy shell contents",
     copiedShellContents: "Copied shell contents",
     collapseShell: "Collapse shell",
+    showRawOutput: "Show raw output",
+    showOptimizedOutput: "Show optimized output",
+    rawOutputUnavailable: "Raw output unavailable",
     shellSuccess: "Success",
     showMore: "Show more",
     showLess: "Show less",
@@ -382,6 +385,53 @@ test("provider activity updates a single transcript turn by activity id", () => 
     output: "ok\\n",
     activityKind: "command",
     activityStatus: "completed",
+  });
+});
+
+test("provider activity retains raw output metadata across status updates", () => {
+  const running = {
+    ...initialState("solid"),
+    status: "running" as const,
+    runningSessionId: "session-1",
+  };
+  const withOutput = reduceSession(running, {
+    type: "event",
+    event: {
+      type: "provider.activity",
+      providerId: "codex",
+      sessionId: "session-1",
+      activityId: "item-1",
+      kind: "command",
+      status: "inProgress",
+      action: "Running",
+      outputDelta: "ok\\n",
+      outputMetadata: {
+        rawOutputRef: "terminal-output:session-1:item-1",
+        rawByteCount: 3,
+        rawLineCount: 2,
+        wasOptimized: false,
+      },
+    },
+  });
+  const completed = reduceSession(withOutput, {
+    type: "event",
+    event: {
+      type: "provider.activity",
+      providerId: "codex",
+      sessionId: "session-1",
+      activityId: "item-1",
+      kind: "command",
+      status: "completed",
+      action: "Ran",
+      detail: "echo ok",
+    },
+  });
+
+  expect(completed.transcript[0]?.outputMetadata).toEqual({
+    rawOutputRef: "terminal-output:session-1:item-1",
+    rawByteCount: 3,
+    rawLineCount: 2,
+    wasOptimized: false,
   });
 });
 

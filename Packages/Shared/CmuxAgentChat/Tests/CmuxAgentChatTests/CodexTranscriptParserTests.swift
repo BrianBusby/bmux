@@ -166,6 +166,78 @@ struct CodexTranscriptParserTests {
         #expect(capture.output?.contains("Build complete!") == true)
     }
 
+    @Test("shell command output is semantically optimized in completed terminal captures")
+    func outputOptimization() {
+        let searchOutput = (1...8)
+            .map { "Sources/File\($0).swift:\($0):match line \($0)" }
+            .joined(separator: "\n")
+        let lines = [
+            functionCallLine(name: "exec_command", arguments: #"{"cmd":"rg token Sources"}"#),
+            outputLine(output: "Process exited with code 0\nOutput:\n\(searchOutput)"),
+        ]
+        let result = parser.parse(lines: lines, startingSeq: 0)
+        guard case .terminal(let capture) = result.messages[0].kind else {
+            Issue.record("expected terminal kind")
+            return
+        }
+        #expect(capture.output?.contains("search output summary") == true)
+        #expect(capture.output?.contains("8 matches") == true)
+        #expect(capture.output?.contains("3 additional matches omitted") == true)
+    }
+
+    @Test("optimized shell output keeps raw-output metadata for local expansion")
+    func outputOptimizationMetadata() {
+        let searchOutput = (1...8)
+            .map { "Sources/File\($0).swift:\($0):match line \($0)" }
+            .joined(separator: "\n")
+        let rawOutput = "Process exited with code 0\nOutput:\n\(searchOutput)"
+        let lines = [
+            functionCallLine(
+                name: "exec_command",
+                arguments: #"{"cmd":"rg token Sources"}"#,
+                callID: "call_raw"
+            ),
+            outputLine(callID: "call_raw", output: rawOutput),
+        ]
+        let result = parser.parse(lines: lines, startingSeq: 0)
+        guard case .terminal(let capture) = result.messages[0].kind else {
+            Issue.record("expected terminal kind")
+            return
+        }
+        let metadata = capture.outputMetadata
+
+        #expect(metadata?.kind == .search)
+        #expect(metadata?.rawOutputRef?.hasPrefix("terminal-output:call_raw:") == true)
+        #expect(metadata?.rawByteCount == searchOutput.utf8.count)
+        #expect(metadata?.rawLineCount == 8)
+        #expect(metadata?.omittedLineCount == 3)
+        #expect(metadata?.wasOptimized == true)
+        #expect(capture.output?.contains(searchOutput) == false)
+    }
+
+    @Test("optimized shell output emits a raw-output side-channel record")
+    func outputOptimizationRawRecord() {
+        let searchOutput = (1...8)
+            .map { "Sources/File\($0).swift:\($0):match line \($0)" }
+            .joined(separator: "\n")
+        let lines = [
+            functionCallLine(
+                name: "exec_command",
+                arguments: #"{"cmd":"rg token Sources"}"#,
+                callID: "call_record"
+            ),
+            outputLine(callID: "call_record", output: "Process exited with code 0\nOutput:\n\(searchOutput)"),
+        ]
+        let result = parser.parse(lines: lines, startingSeq: 0)
+        let record = result.rawTerminalOutputs.first
+
+        #expect(result.rawTerminalOutputs.count == 1)
+        #expect(record?.messageID == "call_record")
+        #expect(record?.command == "rg token Sources")
+        #expect(record?.rawOutput == searchOutput)
+        #expect(record?.metadata.rawOutputRef?.hasPrefix("terminal-output:call_record:") == true)
+    }
+
     @Test("function_call_output in a later parse call re-emits via updatedMessages")
     func outputAcrossCalls() {
         let first = parser.parse(

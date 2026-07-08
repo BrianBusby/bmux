@@ -41,17 +41,42 @@ struct TranscriptToolCompletion: Sendable {
     ///   - budget: The text budget for stored output.
     /// - Returns: The completed message, or `nil` when the result does not
     ///   change how the message renders (file edits, unanswered questions).
-    func applied(to message: ChatMessage, budget: TranscriptTextBudget) -> ChatMessage? {
+    func applied(
+        to message: ChatMessage,
+        budget: TranscriptTextBudget,
+        tokenOptimizationMode: TokenOptimizationMode = .balanced
+    ) -> (message: ChatMessage, rawTerminalOutput: ChatRawTerminalOutputRecord?)? {
         switch message.kind {
         case .terminal(let capture):
+            let terminalOutput = output.map { rawOutput -> (
+                text: String,
+                metadata: ChatTerminalOutputMetadata?,
+                rawRecord: ChatRawTerminalOutputRecord?
+            ) in
+                let bodyOutput = Self.commandOutputBody(from: rawOutput)
+                let optimization = TokenOptimizationLayer(mode: tokenOptimizationMode).optimizeTerminalOutput(
+                    messageID: message.id,
+                    command: capture.command,
+                    rawOutput: bodyOutput,
+                    exitCode: exitCode ?? (isError ? 1 : 0)
+                )
+                let outputText = optimization.wasOptimized ? optimization.output : rawOutput
+                let budgetedOutput = budget.body(outputText)
+                let metadata = optimization.metadata.withOptimizedByteCount(
+                    budgetedOutput.utf8.count
+                )
+                let rawRecord = optimization.rawOutputRecord.withMetadata(metadata)
+                return (budgetedOutput, metadata, rawRecord)
+            }
             let completed = ChatTerminalCapture(
                 command: capture.command,
-                output: output.map { budget.body($0) },
+                output: terminalOutput?.text,
                 exitCode: exitCode ?? (isError ? 1 : 0),
                 durationSeconds: durationSeconds,
-                isRunning: false
+                isRunning: false,
+                outputMetadata: terminalOutput?.metadata
             )
-            return message.replacingKind(.terminal(completed))
+            return (message.replacingKind(.terminal(completed)), terminalOutput?.rawRecord)
         case .toolUse(let toolUse):
             let failed = isError || (exitCode ?? 0) != 0
             let completed = ChatToolUse(
@@ -61,7 +86,7 @@ struct TranscriptToolCompletion: Sendable {
                 output: output.map { budget.body($0) },
                 status: failed ? .failed : .succeeded
             )
-            return message.replacingKind(.toolUse(completed))
+            return (message.replacingKind(.toolUse(completed)), nil)
         case .question(let question):
             // Codex keys answers by question id, so a multi-question call
             // resolves each card to its own answer; Claude keys by prompt.
@@ -78,10 +103,17 @@ struct TranscriptToolCompletion: Sendable {
                 selectedOptionLabel: answer,
                 questionID: question.questionID
             )
-            return message.replacingKind(.question(answered))
+            return (message.replacingKind(.question(answered)), nil)
         default:
             return nil
         }
+    }
+
+    private static func commandOutputBody(from output: String) -> String {
+        guard let markerRange = output.range(of: "\nOutput:\n") else {
+            return output
+        }
+        return String(output[markerRange.upperBound...])
     }
 
     /// Extracts the chosen answer for a question prompt.
@@ -137,6 +169,31 @@ struct TranscriptToolCompletion: Sendable {
               let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let answers = root["answers"] as? [String: Any] else { return nil }
         return answers.compactMapValues { $0 as? [String: Any] }
+    }
+}
+
+private extension ChatTerminalOutputMetadata {
+    func withOptimizedByteCount(_ optimizedByteCount: Int) -> ChatTerminalOutputMetadata {
+        ChatTerminalOutputMetadata(
+            kind: kind,
+            rawOutputRef: rawOutputRef,
+            rawByteCount: rawByteCount,
+            rawLineCount: rawLineCount,
+            optimizedByteCount: optimizedByteCount,
+            omittedLineCount: omittedLineCount,
+            wasOptimized: wasOptimized
+        )
+    }
+}
+
+private extension ChatRawTerminalOutputRecord {
+    func withMetadata(_ metadata: ChatTerminalOutputMetadata) -> ChatRawTerminalOutputRecord {
+        ChatRawTerminalOutputRecord(
+            messageID: messageID,
+            command: command,
+            rawOutput: rawOutput,
+            metadata: metadata
+        )
     }
 }
 

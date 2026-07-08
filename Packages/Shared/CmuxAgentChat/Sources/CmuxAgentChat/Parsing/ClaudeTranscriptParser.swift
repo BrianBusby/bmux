@@ -23,11 +23,14 @@ public struct ClaudeTranscriptParser: Sendable {
     ]
 
     private let budget = TranscriptTextBudget()
+    private let tokenOptimizationMode: TokenOptimizationMode
     private let timestamps = TranscriptTimestampParser()
     private let diffs = TranscriptDiffBuilder()
 
     /// Creates a Claude transcript parser.
-    public init() {}
+    public init(tokenOptimizationMode: TokenOptimizationMode = .balanced) {
+        self.tokenOptimizationMode = tokenOptimizationMode
+    }
 
     /// Parses a contiguous run of JSONL lines into chat messages.
     ///
@@ -43,7 +46,11 @@ public struct ClaudeTranscriptParser: Sendable {
         startingSeq: Int,
         state: ChatTranscriptParseState = ChatTranscriptParseState()
     ) -> ChatTranscriptParseResult {
-        var assembler = TranscriptBatchAssembler(state: state, budget: budget)
+        var assembler = TranscriptBatchAssembler(
+            state: state,
+            budget: budget,
+            tokenOptimizationMode: tokenOptimizationMode
+        )
         var lastTimestamp = state.lastTimestamp
         for (offset, line) in lines.enumerated() {
             let seq = startingSeq + offset

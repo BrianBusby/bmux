@@ -25,7 +25,7 @@ enum SidebarWorkspaceDetailDefaults {
 
 enum SidebarWorkspaceTitleWrapSettings {
     static let key = "sidebarWrapWorkspaceTitles"
-    static let defaultWrap = false
+    static let defaultWrap = true
 
     static func wraps(defaults: UserDefaults = .standard) -> Bool {
         SidebarWorkspaceDetailDefaults.boolValue(

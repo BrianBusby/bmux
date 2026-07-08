@@ -5,12 +5,12 @@
 
 <p align="center">
   <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-    <img src="./docs/assets/macos-badge.png" alt="Download cmux til macOS" width="180" />
+    <img src="../assets/macos-badge.png" alt="Download cmux til macOS" width="180" />
   </a>
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | Dansk | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | <a href="README.ar.md">العربية</a> | <a href="README.no.md">Norsk</a> | <a href="README.pt-BR.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.km.md">ភាសាខ្មែរ</a> | <a href="README.uk.md">Українська</a>
+  <a href="../../README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | Dansk | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | <a href="README.ar.md">العربية</a> | <a href="README.no.md">Norsk</a> | <a href="README.pt-BR.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.km.md">ភាសាខ្មែរ</a> | <a href="README.uk.md">Українська</a>
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="./docs/assets/main-first-image.png" alt="cmux skærmbillede" width="900" />
+  <img src="../assets/main-first-image.png" alt="cmux skærmbillede" width="900" />
 </p>
 
 <p align="center">
@@ -36,7 +36,7 @@
 Paneler får en blå ring, og faner lyser op, når kodningsagenter har brug for din opmærksomhed
 </td>
 <td width="60%">
-<img src="./docs/assets/notification-rings.png" alt="Notifikationsringe" width="100%" />
+<img src="../assets/notification-rings.png" alt="Notifikationsringe" width="100%" />
 </td>
 </tr>
 <tr>
@@ -45,7 +45,7 @@ Paneler får en blå ring, og faner lyser op, når kodningsagenter har brug for 
 Se alle ventende notifikationer ét sted, hop til den seneste ulæste
 </td>
 <td width="60%">
-<img src="./docs/assets/sidebar-notification-badge.png" alt="Notifikationsbadge i sidebjælken" width="100%" />
+<img src="../assets/sidebar-notification-badge.png" alt="Notifikationsbadge i sidebjælken" width="100%" />
 </td>
 </tr>
 <tr>
@@ -54,7 +54,7 @@ Se alle ventende notifikationer ét sted, hop til den seneste ulæste
 Del en browser ved siden af din terminal med en scriptbar API porteret fra <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a>
 </td>
 <td width="60%">
-<img src="./docs/assets/built-in-browser.png" alt="Indbygget browser" width="100%" />
+<img src="../assets/built-in-browser.png" alt="Indbygget browser" width="100%" />
 </td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@ Del en browser ved siden af din terminal med en scriptbar API porteret fra <a hr
 Sidebjælken viser git-branch, tilknyttet PR-status/nummer, arbejdsmappe, lyttende porte og seneste notifikationstekst. Del vandret og lodret.
 </td>
 <td width="60%">
-<img src="./docs/assets/vertical-horizontal-tabs-and-splits.png" alt="Lodrette faner og delte paneler" width="100%" />
+<img src="../assets/vertical-horizontal-tabs-and-splits.png" alt="Lodrette faner og delte paneler" width="100%" />
 </td>
 </tr>
 <tr>
@@ -72,7 +72,7 @@ Sidebjælken viser git-branch, tilknyttet PR-status/nummer, arbejdsmappe, lytten
 <code>cmux ssh user@remote</code> opretter et workspace til en fjernmaskine. Browserpaneler rutes gennem fjernnetværket, så localhost bare virker. Træk et billede ind i en fjernsession for at uploade via scp.
 </td>
 <td width="60%">
-<img src="./docs/assets/ssh.png" alt="cmux SSH" width="100%" />
+<img src="../assets/ssh.png" alt="cmux SSH" width="100%" />
 </td>
 </tr>
 <tr>
@@ -81,7 +81,7 @@ Sidebjælken viser git-branch, tilknyttet PR-status/nummer, arbejdsmappe, lytten
 <code>cmux claude-teams</code> kører Claude Codes holdkammeratstilstand med én kommando. Holdkammerater oprettes som native opdelinger med metadata i sidebjælken og notifikationer. Ingen tmux påkrævet.
 </td>
 <td width="60%">
-<img src="./docs/assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
+<img src="../assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
 </td>
 </tr>
 </table>
@@ -100,7 +100,7 @@ Sidebjælken viser git-branch, tilknyttet PR-status/nummer, arbejdsmappe, lytten
 ### DMG (anbefalet)
 
 <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-  <img src="./docs/assets/macos-badge.png" alt="Download cmux til macOS" width="180" />
+  <img src="../assets/macos-badge.png" alt="Download cmux til macOS" width="180" />
 </a>
 
 Åbn `.dmg`-filen og træk cmux til din Programmer-mappe. cmux opdaterer sig selv automatisk via Sparkle, så du behøver kun at downloade én gang.

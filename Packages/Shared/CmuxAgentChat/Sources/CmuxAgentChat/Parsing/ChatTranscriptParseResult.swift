@@ -23,19 +23,26 @@ public struct ChatTranscriptParseResult: Sendable, Equatable {
     /// Carry-over state to pass into the next parse call.
     public let state: ChatTranscriptParseState
 
+    /// Complete raw terminal outputs observed during this parse call.
+    public let rawTerminalOutputs: [ChatRawTerminalOutputRecord]
+
     /// Creates a parse result.
     ///
     /// - Parameters:
     ///   - messages: Messages newly produced by this call.
     ///   - updatedMessages: Completed re-emissions of earlier messages.
     ///   - state: Carry-over state for the next call.
+    ///   - rawTerminalOutputs: Complete raw terminal outputs observed during
+    ///     this parse call.
     public init(
         messages: [ChatMessage],
         updatedMessages: [ChatMessage],
-        state: ChatTranscriptParseState
+        state: ChatTranscriptParseState,
+        rawTerminalOutputs: [ChatRawTerminalOutputRecord] = []
     ) {
         self.messages = messages
         self.updatedMessages = updatedMessages
         self.state = state
+        self.rawTerminalOutputs = rawTerminalOutputs
     }
 }

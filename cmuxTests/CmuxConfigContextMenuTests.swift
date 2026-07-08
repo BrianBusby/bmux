@@ -542,6 +542,128 @@ final class CmuxConfigContextMenuTests: XCTestCase {
     }
 
     @MainActor
+    func testRepoAgentLaunchersResolveWorkspaceCommandActions() throws {
+        let store = try loadStore(localJSON: """
+        {
+          "actions": {
+            "repo.mobile": {
+              "type": "workspaceCommand",
+              "title": "companycam-mobile (Claude)",
+              "commandName": "companycam-mobile (Claude)",
+              "icon": { "type": "symbol", "name": "iphone" }
+            },
+            "repo.api": {
+              "type": "workspaceCommand",
+              "title": "Company-Cam-API (Codex)",
+              "commandName": "Company-Cam-API (Codex)",
+              "icon": { "type": "symbol", "name": "server.rack" }
+            },
+            "not-repo": {
+              "type": "workspaceCommand",
+              "title": "Other",
+              "commandName": "Other"
+            },
+            "repo.command": {
+              "type": "command",
+              "title": "Shell",
+              "command": "echo hi"
+            },
+            "repo.missing": {
+              "type": "workspaceCommand",
+              "title": "Missing",
+              "commandName": "Missing"
+            }
+          },
+          "commands": [
+            {
+              "name": "companycam-mobile (Claude)",
+              "workspace": {
+                "name": "companycam-mobile",
+                "cwd": "/Users/me/repos/companycam-mobile",
+                "layout": {
+                  "pane": {
+                    "surfaces": [{
+                      "type": "terminal",
+                      "name": "Claude",
+                      "command": "claude",
+                      "focus": true
+                    }]
+                  }
+                }
+              }
+            },
+            {
+              "name": "Company-Cam-API (Codex)",
+              "workspace": {
+                "name": "Company-Cam-API",
+                "cwd": "/Users/me/repos/Company-Cam-API",
+                "layout": {
+                  "pane": {
+                    "surfaces": [{
+                      "type": "terminal",
+                      "name": "Codex",
+                      "command": "codex",
+                      "focus": true
+                    }]
+                  }
+                }
+              }
+            },
+            {
+              "name": "Other",
+              "workspace": { "name": "Other" }
+            }
+          ]
+        }
+        """)
+
+        XCTAssertEqual(store.repoAgentLauncherItems.map(\.title), [
+            "Company-Cam-API (Codex)",
+            "companycam-mobile (Claude)",
+        ])
+        XCTAssertEqual(store.repoAgentLauncherItems.map(\.action.id), [
+            "repo.api",
+            "repo.mobile",
+        ])
+        XCTAssertEqual(store.repoAgentLauncherItems.map(\.icon), [
+            .symbol("server.rack"),
+            .symbol("iphone"),
+        ])
+        XCTAssertTrue(store.configurationIssues.isEmpty)
+    }
+
+    func testRepoAgentLauncherAgentDetectorIncludesCodexAndClaudeFromRuntimeSearchDirectories() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "cmux-repo-agent-detector-\(UUID().uuidString)",
+            isDirectory: true
+        )
+        let bin = root.appendingPathComponent("bin", isDirectory: true)
+        try FileManager.default.createDirectory(at: bin, withIntermediateDirectories: true)
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let codex = bin.appendingPathComponent("codex", isDirectory: false)
+        let claude = bin.appendingPathComponent("claude", isDirectory: false)
+        try "#!/bin/sh\nexit 0\n".write(to: codex, atomically: true, encoding: .utf8)
+        try "#!/bin/sh\nexit 0\n".write(to: claude, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: codex.path)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: claude.path)
+
+        let options = RepoAgentLauncherAgentDetector(
+            environment: [
+                "PATH": bin.path,
+                "HOME": root.path,
+            ],
+            fileManager: .default,
+            configuredExecutablePaths: [:]
+        ).detectedOptions()
+
+        XCTAssertEqual(options.map(\.agent), [.codex, .claudeCode])
+        XCTAssertEqual(options.map(\.executablePath), [codex.path, claude.path])
+    }
+
+    @MainActor
     func testResolvedNewWorkspaceContextMenuSanitizesLabels() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(
             "cmux-config-store-\(UUID().uuidString)",

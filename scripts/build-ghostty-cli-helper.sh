@@ -75,6 +75,13 @@ select_zig_for_target() {
   fi
 
   local -a candidates=()
+  local user_zig_root="${CMUX_ZIG_ROOT:-${HOME:-}/.local/share/cmux/zig}"
+  if [[ -n "$user_zig_root" ]]; then
+    candidates+=(
+      "$user_zig_root/zig-aarch64-macos-${ZIG_REQUIRED}/zig"
+      "$user_zig_root/zig-x86_64-macos-${ZIG_REQUIRED}/zig"
+    )
+  fi
   # Prefer Apple Silicon Homebrew Zig on macOS runners. Some CI shells expose
   # /usr/local/bin first or run under Rosetta, but the x86_64 Zig link path can
   # fail against newer macOS SDKs while arm64 Zig cross-compiles both slices.

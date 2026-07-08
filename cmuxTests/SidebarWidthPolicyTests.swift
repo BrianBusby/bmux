@@ -278,7 +278,7 @@ final class SidebarWidthPolicyTests: XCTestCase {
 }
 
 final class SidebarWorkspaceSelectionColorTests: XCTestCase {
-    func testSelectedColoredWorkspaceUsesStandardSelectionBackgroundInLightAndDark() {
+    func testSelectedWorkspaceRowsKeepUnselectedBackgroundInLightAndDark() {
         for colorScheme in [ColorScheme.light, .dark] {
             let coloredSelected = sidebarWorkspaceRowBackgroundStyle(
                 activeTabIndicatorStyle: .solidFill,
@@ -297,9 +297,10 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
                 sidebarSelectionColorHex: nil
             )
 
-            XCTAssertEqual(coloredSelected.opacity, standardSelected.opacity, accuracy: 0.001)
-            XCTAssertEqual(coloredSelected.opacity, 1, accuracy: 0.001)
-            assertColor(coloredSelected.color, equals: standardSelected.color)
+            XCTAssertEqual(coloredSelected.opacity, 0.46, accuracy: 0.001)
+            XCTAssertNotNil(coloredSelected.color)
+            XCTAssertEqual(standardSelected.opacity, 0, accuracy: 0.001)
+            XCTAssertNil(standardSelected.color)
 
             let unselectedColored = sidebarWorkspaceRowBackgroundStyle(
                 activeTabIndicatorStyle: .solidFill,
@@ -309,15 +310,13 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
                 colorScheme: colorScheme,
                 sidebarSelectionColorHex: nil
             )
-            XCTAssertEqual(unselectedColored.opacity, 0.7, accuracy: 0.001)
-            XCTAssertFalse(
-                colorsAreEqual(coloredSelected.color, unselectedColored.color),
-                "Selected row should use the standard selection background, not the workspace tab color"
-            )
+            XCTAssertEqual(unselectedColored.opacity, 0.46, accuracy: 0.001)
+            XCTAssertNotNil(unselectedColored.color)
+            assertColor(coloredSelected.color, equals: unselectedColored.color)
         }
     }
 
-    func testSelectedColoredWorkspaceUsesConfiguredSelectionBackground() {
+    func testSelectedWorkspaceIgnoresConfiguredSelectionFillColor() {
         let selectionHex = "#123456"
         let coloredSelected = sidebarWorkspaceRowBackgroundStyle(
             activeTabIndicatorStyle: .solidFill,
@@ -336,9 +335,10 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
             sidebarSelectionColorHex: selectionHex
         )
 
-        XCTAssertEqual(coloredSelected.opacity, 1, accuracy: 0.001)
-        assertColor(coloredSelected.color, equals: standardSelected.color)
-        assertColor(coloredSelected.color, equals: NSColor(hex: selectionHex))
+        XCTAssertEqual(coloredSelected.opacity, 0.46, accuracy: 0.001)
+        assertColor(coloredSelected.color, equals: NSColor(hex: "#E85D75"))
+        XCTAssertEqual(standardSelected.opacity, 0, accuracy: 0.001)
+        XCTAssertNil(standardSelected.color)
     }
 
     func testDefaultSelectedForegroundFallsBackForPaleSelectionBackground() throws {
@@ -377,6 +377,137 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
         )
 
         assertColor(foreground, equals: NSColor.white.withAlphaComponent(0.75))
+    }
+
+    func testWorkspaceLoadingIndicatorUsesBlackOnClearLightRows() {
+        let foreground = sidebarWorkspaceRowLoadingIndicatorNSColor(
+            activeTabIndicatorStyle: .leftRail,
+            isActive: false,
+            isMultiSelected: false,
+            customColorHex: nil,
+            colorScheme: .light,
+            sidebarSelectionColorHex: nil
+        )
+
+        assertColor(foreground, equals: .black)
+    }
+
+    func testWorkspaceLoadingIndicatorUsesWhiteOnClearDarkRows() {
+        let foreground = sidebarWorkspaceRowLoadingIndicatorNSColor(
+            activeTabIndicatorStyle: .leftRail,
+            isActive: false,
+            isMultiSelected: false,
+            customColorHex: nil,
+            colorScheme: .dark,
+            sidebarSelectionColorHex: nil
+        )
+
+        assertColor(foreground, equals: .white)
+    }
+
+    func testWorkspaceLoadingIndicatorUsesRepoColorForSelectedRows() throws {
+        let selectionBackground = try XCTUnwrap(NSColor(hex: "#F7F7F7"))
+        let foreground = sidebarWorkspaceRowLoadingIndicatorNSColor(
+            activeTabIndicatorStyle: .solidFill,
+            isActive: true,
+            isMultiSelected: false,
+            customColorHex: "#E85D75",
+            colorScheme: .light,
+            sidebarSelectionColorHex: selectionBackground.hexString(),
+            baseBackgroundColor: .white
+        )
+        let style = sidebarWorkspaceRowBackgroundStyle(
+            activeTabIndicatorStyle: .solidFill,
+            isActive: true,
+            isMultiSelected: false,
+            customColorHex: "#E85D75",
+            colorScheme: .light,
+            sidebarSelectionColorHex: selectionBackground.hexString()
+        )
+        let effectiveBackground = cmuxCompositedNSColor(
+            try XCTUnwrap(style.color).withAlphaComponent(CGFloat(style.opacity)),
+            over: .white
+        )
+
+        assertColor(foreground, equals: .black)
+        XCTAssertGreaterThan(
+            cmuxContrastRatio(foreground: foreground, background: effectiveBackground),
+            cmuxContrastRatio(foreground: .white, background: effectiveBackground)
+        )
+    }
+
+    func testWorkspaceLoadingIndicatorUsesBaseBackgroundForSelectedRows() throws {
+        let selectionBackground = try XCTUnwrap(NSColor(hex: "#123456"))
+        let foreground = sidebarWorkspaceRowLoadingIndicatorNSColor(
+            activeTabIndicatorStyle: .solidFill,
+            isActive: true,
+            isMultiSelected: false,
+            customColorHex: nil,
+            colorScheme: .light,
+            sidebarSelectionColorHex: selectionBackground.hexString(),
+            baseBackgroundColor: .white
+        )
+
+        assertColor(foreground, equals: .black)
+        XCTAssertGreaterThan(
+            cmuxContrastRatio(foreground: foreground, background: .white),
+            cmuxContrastRatio(foreground: .white, background: .white)
+        )
+    }
+
+    func testWorkspaceLoadingIndicatorTabSizeIsSlightlyLargerThanUnreadBadge() {
+        XCTAssertEqual(
+            TronLoadingIndicatorMotion.workspaceTabSize(forBadgeSize: 16),
+            18,
+            accuracy: 0.001
+        )
+    }
+
+    func testWorkspaceLoadingIndicatorOrbitMaintainsTangentContactAtHandoffs() {
+        let motion = TronLoadingIndicatorMotion(contactSeparationTurns: 0.06)
+
+        XCTAssertEqual(
+            motion.phaseSeparation(atElapsedTime: 0),
+            0.5,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            motion.phaseSeparation(atElapsedTime: 0.75),
+            0.06,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            motion.phaseSeparation(atElapsedTime: 1.5),
+            0.5,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            motion.phaseSeparation(atElapsedTime: 2.25),
+            0.94,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            motion.phaseSeparation(atElapsedTime: 3.0),
+            0.5,
+            accuracy: 0.001
+        )
+    }
+
+    func testWorkspaceLoadingIndicatorOrbitSwapsFastAndSlowRingsAfterImpact() {
+        let motion = TronLoadingIndicatorMotion(contactSeparationTurns: 0.06)
+        let beforeImpactStart = motion.phases(atElapsedTime: 0.65)
+        let beforeImpactEnd = motion.phases(atElapsedTime: 0.70)
+        let afterImpactStart = motion.phases(atElapsedTime: 0.80)
+        let afterImpactEnd = motion.phases(atElapsedTime: 0.85)
+
+        XCTAssertGreaterThan(
+            motion.forwardDistance(from: beforeImpactStart.first, to: beforeImpactEnd.first),
+            motion.forwardDistance(from: beforeImpactStart.second, to: beforeImpactEnd.second)
+        )
+        XCTAssertLessThan(
+            motion.forwardDistance(from: afterImpactStart.first, to: afterImpactEnd.first),
+            motion.forwardDistance(from: afterImpactStart.second, to: afterImpactEnd.second)
+        )
     }
 
     func testTitlebarControlForegroundContrastsWithLightTerminalBackground() throws {

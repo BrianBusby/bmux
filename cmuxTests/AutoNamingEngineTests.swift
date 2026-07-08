@@ -181,23 +181,24 @@ import Testing
         #expect(engine.extractMessages(fromTranscriptLines: ["", "garbage", "{}"]).isEmpty)
     }
 
-    @Test func contextCombinesHeadUserMessagesAndTailWithTruncation() throws {
+    @Test func contextUsesWholeConversationWithTruncation() throws {
         let longText = String(repeating: "x", count: config.contextMessageMaxChars + 100)
         var messages: [AutoNamingTranscriptMessage] = [
-            AutoNamingTranscriptMessage(role: "user", text: "First ask"),
-            AutoNamingTranscriptMessage(role: "user", text: "Second ask"),
-            AutoNamingTranscriptMessage(role: "user", text: "Third ask")
+            AutoNamingTranscriptMessage(role: "user", text: "Old deployment task"),
+            AutoNamingTranscriptMessage(role: "assistant", text: "Finished the deployment task.")
         ]
-        for index in 0..<10 {
-            messages.append(AutoNamingTranscriptMessage(role: "assistant", text: "Reply \(index)"))
+        for index in 1...26 {
+            messages.append(AutoNamingTranscriptMessage(role: "user", text: "Workspace title exchange \(index)"))
+            messages.append(AutoNamingTranscriptMessage(role: "assistant", text: "Reply for workspace title exchange \(index)"))
         }
         messages.append(AutoNamingTranscriptMessage(role: "user", text: longText))
 
         let context = try #require(engine.buildContext(from: messages))
-        #expect(context.contains("user: First ask"))
-        #expect(context.contains("user: Second ask"))
-        #expect(!context.contains("Third ask"))
-        #expect(context.contains("Reply 9"))
+        let contextLines = context.components(separatedBy: .newlines)
+        #expect(context.contains("Old deployment task"))
+        #expect(contextLines.contains("user: Workspace title exchange 1"))
+        #expect(contextLines.contains("user: Workspace title exchange 2"))
+        #expect(contextLines.contains("assistant: Reply for workspace title exchange 26"))
         // The long tail message is truncated to the per-message cap.
         #expect(!context.contains(longText))
         #expect(context.contains(String(longText.prefix(config.contextMessageMaxChars))))
@@ -206,8 +207,8 @@ import Testing
     // MARK: - Prompt
 
     @Test func promptCarriesCurrentTitleAndVerbatimInstruction() {
-        let prompt = engine.buildPrompt(currentTitle: "Fix auth bug", context: "user: hello")
-        #expect(prompt.contains("The current title is: Fix auth bug"))
+        let prompt = engine.buildPrompt(currentTitle: "Fix auth bug in login flow", context: "user: hello")
+        #expect(prompt.contains("The current title is: Fix auth bug in login flow"))
         #expect(prompt.contains("EXACTLY"))
         #expect(prompt.contains("user: hello"))
 
@@ -215,20 +216,76 @@ import Testing
         #expect(!untitled.contains("current title"))
     }
 
+    @Test func promptDoesNotAllowExactReuseOfShortCurrentTitle() {
+        let prompt = engine.buildPrompt(currentTitle: "Fix auth bug", context: "user: hello")
+        #expect(prompt.contains("The current title is: Fix auth bug"))
+        #expect(prompt.contains("shorter than 6 words"))
+        #expect(prompt.contains("do not output it exactly"))
+    }
+
+    @Test func promptRequestsSubjectStatementInsteadOfVagueTitleFragment() {
+        let prompt = engine.buildPrompt(
+            currentTitle: nil,
+            context: "user: the title summary for cmux workspace tabs isn't good enough"
+        )
+
+        #expect(prompt.contains("subject statement"))
+        #expect(prompt.contains("whole conversation"))
+        #expect(prompt.contains("entire conversation"))
+        #expect(prompt.contains("current task being worked on"))
+        #expect(prompt.contains("between 6 and 20 words"))
+        #expect(prompt.contains("Never output fewer than 6 words"))
+        #expect(prompt.contains("normal sentence"))
+        #expect(prompt.contains("human-readable"))
+        #expect(prompt.contains("meaningfully changed"))
+        #expect(prompt.contains("Now Seeing Trying"))
+        #expect(prompt.contains("Look Ticket Determine"))
+        #expect(prompt.contains("Look failing test pr summary all failing tests"))
+        #expect(prompt.contains("Three Dot Here"))
+        #expect(prompt.contains("Workspace Automation"))
+        #expect(prompt.contains("Improving workspace tab summaries"))
+        #expect(!prompt.contains("2-5 word title"))
+        #expect(!prompt.contains("up to 80 characters"))
+        #expect(!prompt.contains("last 25 recent exchanges"))
+    }
+
+    @Test func promptCarriesPullRequestIdentityForReviewTasks() {
+        let prompt = engine.buildPrompt(
+            currentTitle: nil,
+            context: """
+            user: address the claude comments on this PR: https://github.com/CompanyCam/Company-Cam-API/pull/1234
+            assistant: I will inspect the unresolved review threads.
+            """
+        )
+
+        #expect(prompt.contains("CompanyCam/Company-Cam-API PR #1234"))
+        #expect(prompt.contains("include the repository and PR number"))
+        #expect(prompt.contains("Do not turn PR URLs into URL fragment titles"))
+        #expect(prompt.contains("PR Https Github"))
+        #expect(prompt.contains("Address PR #1234 CompanyCam API review"))
+    }
+
+    @Test func defaultsAllowDescriptiveStableTitles() {
+        #expect(config.maxTitleLength == 180)
+        #expect(config.minTitleWordCount == 6)
+        #expect(config.maxTitleWordCount == 20)
+        #expect(config.minLineGrowth >= 12)
+        #expect(config.minInterval >= 300)
+    }
+
     // MARK: - Sanitization
 
     @Test func sanitizationNormalizesUsableResponses() {
-        #expect(engine.sanitizeResponse("Fix auth bug\nextra line", currentTitle: nil) == "Fix auth bug")
-        #expect(engine.sanitizeResponse("\n\n  \"Debug login flow\"  \n", currentTitle: nil) == "Debug login flow")
-        #expect(engine.sanitizeResponse("Multi   space    title", currentTitle: nil) == "Multi space title")
-        #expect(engine.sanitizeResponse("\u{201C}Fix auth bug\u{201D}", currentTitle: nil) == "Fix auth bug")
-        #expect(engine.sanitizeResponse("'Fix auth bug'", currentTitle: nil) == "Fix auth bug")
+        #expect(engine.sanitizeResponse("Fix auth bug in login flow\nextra line", currentTitle: nil) == "Fix auth bug in login flow")
+        #expect(engine.sanitizeResponse("\n\n  \"Debug login flow in web app\"  \n", currentTitle: nil) == "Debug login flow in web app")
+        #expect(engine.sanitizeResponse("Multi   space    title   for workspace tabs", currentTitle: nil) == "Multi space title for workspace tabs")
+        #expect(engine.sanitizeResponse("\u{201C}Fix auth bug in login flow\u{201D}", currentTitle: nil) == "Fix auth bug in login flow")
+        #expect(engine.sanitizeResponse("'Fix auth bug in login flow'", currentTitle: nil) == "Fix auth bug in login flow")
     }
 
-    @Test func sanitizationTruncatesUnbrokenStringsAtHardCap() {
+    @Test func sanitizationRejectsUnbrokenStringsBecauseTheyAreTooShort() {
         let unbroken = String(repeating: "x", count: config.maxTitleLength + 10)
-        let sanitized = engine.sanitizeResponse(unbroken, currentTitle: nil)
-        #expect(sanitized == String(repeating: "x", count: config.maxTitleLength))
+        #expect(engine.sanitizeResponse(unbroken, currentTitle: nil) == nil)
     }
 
     @Test func sanitizationRejectsGarbage() {
@@ -238,8 +295,14 @@ import Testing
         #expect(engine.sanitizeResponse("\"\"", currentTitle: nil) == nil)
     }
 
+    @Test func sanitizationRejectsTitlesShorterThanMinimumWordCount() {
+        #expect(engine.sanitizeResponse("Fix auth bug", currentTitle: nil) == nil)
+        #expect(engine.sanitizeResponse("Debug login flow today", currentTitle: nil) == nil)
+        #expect(engine.sanitizeResponse("Fix auth bug in login flow", currentTitle: nil) == "Fix auth bug in login flow")
+    }
+
     @Test func sanitizationEnforcesLengthCapAtWordBoundary() throws {
-        let long = "Investigating the extremely convoluted authentication subsystem regression"
+        let long = "Investigating workspace title sanitizer behavior around authentication-subsystem-regression workspace-title-summarization behavior-with-descriptive-prompts across-recent-developer-instructions instead-of-latest-fragments for-agent-session-auto-naming reliability"
         let sanitized = try #require(engine.sanitizeResponse(long, currentTitle: nil))
         #expect(sanitized.count <= config.maxTitleLength)
         #expect(!sanitized.hasSuffix(" "))
@@ -249,9 +312,17 @@ import Testing
         #expect(long[nextIndex] == " ")
     }
 
+    @Test func sanitizationEnforcesWordCapAtWordBoundary() throws {
+        let long = "Investigating workspace tab titles that mirror the entire developer conversation instead of extracting disconnected keywords from the newest message fragment"
+        let sanitized = try #require(engine.sanitizeResponse(long, currentTitle: nil))
+        #expect(sanitized.split(separator: " ").count == 20)
+        #expect(sanitized == "Investigating workspace tab titles that mirror the entire developer conversation instead of extracting disconnected keywords from the newest message fragment")
+    }
+
     @Test func identicalTitleIsNoOp() {
-        #expect(engine.sanitizeResponse("Fix auth bug", currentTitle: "Fix auth bug") == nil)
-        #expect(engine.sanitizeResponse("Fix auth bug", currentTitle: "Other title") == "Fix auth bug")
+        #expect(engine.sanitizeResponse("Fix auth bug in login flow", currentTitle: "Fix auth bug in login flow") == nil)
+        #expect(engine.sanitizeResponse("  fix   auth bug in login flow  ", currentTitle: "Fix auth bug in login flow") == nil)
+        #expect(engine.sanitizeResponse("Fix auth bug in login flow", currentTitle: "Other title") == "Fix auth bug in login flow")
     }
 
     // MARK: - Environment policy

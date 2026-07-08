@@ -5,12 +5,12 @@
 
 <p align="center">
   <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-    <img src="./docs/assets/macos-badge.png" alt="تحميل cmux لنظام macOS" width="180" />
+    <img src="../assets/macos-badge.png" alt="تحميل cmux لنظام macOS" width="180" />
   </a>
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | العربية | <a href="README.no.md">Norsk</a> | <a href="README.pt-BR.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.km.md">ភាសាខ្មែរ</a> | <a href="README.uk.md">Українська</a>
+  <a href="../../README.md">English</a> | <a href="README.ja.md">日本語</a> | <a href="README.vi.md">Tiếng Việt</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-TW.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | <a href="README.es.md">Español</a> | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | العربية | <a href="README.no.md">Norsk</a> | <a href="README.pt-BR.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.km.md">ភាសាខ្មែរ</a> | <a href="README.uk.md">Українська</a>
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="./docs/assets/main-first-image.png" alt="لقطة شاشة cmux" width="900" />
+  <img src="../assets/main-first-image.png" alt="لقطة شاشة cmux" width="900" />
 </p>
 
 <p align="center">
@@ -36,7 +36,7 @@
 تحصل الأجزاء على حلقة زرقاء وتضيء علامات التبويب عندما يحتاج وكلاء البرمجة انتباهك
 </td>
 <td width="60%">
-<img src="./docs/assets/notification-rings.png" alt="حلقات الإشعارات" width="100%" />
+<img src="../assets/notification-rings.png" alt="حلقات الإشعارات" width="100%" />
 </td>
 </tr>
 <tr>
@@ -45,7 +45,7 @@
 عرض جميع الإشعارات المعلقة في مكان واحد، والانتقال إلى أحدث إشعار غير مقروء
 </td>
 <td width="60%">
-<img src="./docs/assets/sidebar-notification-badge.png" alt="شارة إشعارات الشريط الجانبي" width="100%" />
+<img src="../assets/sidebar-notification-badge.png" alt="شارة إشعارات الشريط الجانبي" width="100%" />
 </td>
 </tr>
 <tr>
@@ -54,7 +54,7 @@
 قسّم متصفحًا بجانب الطرفية مع API قابل للبرمجة مأخوذ من <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a>
 </td>
 <td width="60%">
-<img src="./docs/assets/built-in-browser.png" alt="المتصفح المدمج" width="100%" />
+<img src="../assets/built-in-browser.png" alt="المتصفح المدمج" width="100%" />
 </td>
 </tr>
 <tr>
@@ -63,7 +63,7 @@
 يعرض الشريط الجانبي فرع git وحالة/رقم طلب السحب المرتبط ومجلد العمل والمنافذ المستمعة وآخر نص إشعار. تقسيم أفقي وعمودي.
 </td>
 <td width="60%">
-<img src="./docs/assets/vertical-horizontal-tabs-and-splits.png" alt="علامات تبويب عمودية وأجزاء مقسمة" width="100%" />
+<img src="../assets/vertical-horizontal-tabs-and-splits.png" alt="علامات تبويب عمودية وأجزاء مقسمة" width="100%" />
 </td>
 </tr>
 <tr>
@@ -72,7 +72,7 @@
 <code>cmux ssh user@remote</code> ينشئ مساحة عمل لجهاز بعيد. تُوجَّه أجزاء المتصفح عبر الشبكة البعيدة بحيث يعمل localhost مباشرة. اسحب صورة إلى جلسة بعيدة لرفعها عبر scp.
 </td>
 <td width="60%">
-<img src="./docs/assets/ssh.png" alt="cmux SSH" width="100%" />
+<img src="../assets/ssh.png" alt="cmux SSH" width="100%" />
 </td>
 </tr>
 <tr>
@@ -81,7 +81,7 @@
 <code>cmux claude-teams</code> يشغّل وضع الفريق في Claude Code بأمر واحد. يظهر أعضاء الفريق كأقسام أصلية مع بيانات وصفية في الشريط الجانبي وإشعارات. لا حاجة لـ tmux.
 </td>
 <td width="60%">
-<img src="./docs/assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
+<img src="../assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
 </td>
 </tr>
 </table>
@@ -100,7 +100,7 @@
 ### DMG (مستحسن)
 
 <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-  <img src="./docs/assets/macos-badge.png" alt="تحميل cmux لنظام macOS" width="180" />
+  <img src="../assets/macos-badge.png" alt="تحميل cmux لنظام macOS" width="180" />
 </a>
 
 افتح ملف `.dmg` واسحب cmux إلى مجلد التطبيقات. يتم تحديث cmux تلقائيًا عبر Sparkle، لذا تحتاج للتحميل مرة واحدة فقط.

@@ -4,6 +4,7 @@ set -euo pipefail
 APP_NAME="cmux DEV"
 BUNDLE_ID="com.cmuxterm.app.debug"
 BASE_APP_NAME="cmux DEV"
+PROJECT_FILE="cmux.xcodeproj/project.pbxproj"
 DERIVED_DATA=""
 NAME_SET=0
 BUNDLE_SET=0
@@ -32,10 +33,27 @@ SWIFT_FRONTEND_WORKAROUND=0
 XCODEBUILD_STARTED=0
 XCODEBUILD_OUTPUT_VALID=0
 XCODEBUILD_CLEANED_OUTPUTS=0
+LOCAL_BUILD_NUMBER=""
+LOCAL_BUILD_NUMBER_FILE=""
+LOCAL_BUILD_NUMBER_LEGACY_FILE=""
 
 should_skip_ghostty_cli_helper_zig_build() {
   if [[ "${CMUX_SKIP_ZIG_BUILD:-}" == "1" ]]; then
     AUTO_SKIP_ZIG_BUILD_REASON="CMUX_SKIP_ZIG_BUILD=1"
+    return 0
+  fi
+
+  if [[ "${CMUX_REQUIRE_GHOSTTY_CLI_HELPER:-}" == "1" ]]; then
+    AUTO_SKIP_ZIG_BUILD_REASON=""
+    return 1
+  fi
+
+  local sdk_version=""
+  local sdk_major=""
+  sdk_version="$(xcrun --sdk macosx --show-sdk-version 2>/dev/null || true)"
+  sdk_major="${sdk_version%%.*}"
+  if [[ "$sdk_major" =~ ^[0-9]+$ ]] && [[ "$sdk_major" -ge 26 ]]; then
+    AUTO_SKIP_ZIG_BUILD_REASON="macOS SDK ${sdk_version} cannot link the Zig 0.15.2 Ghostty CLI helper in local reloads; set CMUX_REQUIRE_GHOSTTY_CLI_HELPER=1 to force the real helper build"
     return 0
   fi
 
@@ -284,6 +302,50 @@ sanitize_path() {
   local cleaned
   cleaned="$(echo "$raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//; s/-+/-/g')"
   echo "$cleaned"
+}
+
+current_project_build_number() {
+  local value
+  value="$(grep -m1 'CURRENT_PROJECT_VERSION = ' "$PROJECT_FILE" | sed 's/.*= \(.*\);/\1/')"
+  if [[ "$value" =~ ^[0-9]+$ ]]; then
+    echo "$value"
+  else
+    echo "0"
+  fi
+}
+
+resolve_local_build_number() {
+  local baseline="${1:-0}"
+  local file="${2:-}"
+  local legacy_derived_data_root="${3:-$HOME/Library/Developer/Xcode/DerivedData}"
+  local current="$baseline"
+
+  if [[ -n "$file" && -r "$file" ]]; then
+    local stored
+    stored="$(tr -d '[:space:]' < "$file")"
+    if [[ "$stored" =~ ^[0-9]+$ ]] && (( stored > current )); then
+      current="$stored"
+    fi
+  fi
+
+  local legacy_file legacy_stored
+  for legacy_file in "$legacy_derived_data_root"/cmux-*/cmux-local-build-number; do
+    [[ -r "$legacy_file" ]] || continue
+    legacy_stored="$(tr -d '[:space:]' < "$legacy_file")"
+    if [[ "$legacy_stored" =~ ^[0-9]+$ ]] && (( legacy_stored > current )); then
+      current="$legacy_stored"
+    fi
+  done
+
+  echo $((current + 1))
+}
+
+persist_local_build_number() {
+  local file="${1:-}"
+  local value="${2:-}"
+  [[ -n "$file" && -n "$value" ]] || return 0
+  mkdir -p "$(dirname "$file")"
+  printf '%s\n' "$value" > "$file"
 }
 
 is_valid_port() {
@@ -550,6 +612,9 @@ if [[ -n "$TAG" ]]; then
   if [[ "$DERIVED_SET" -eq 0 ]]; then
     DERIVED_DATA="$(tagged_derived_data_path "$TAG_SLUG")"
   fi
+  LOCAL_BUILD_NUMBER_FILE="${LAST_SOCKET_PATH_DIR}/local-build-number"
+  LOCAL_BUILD_NUMBER_LEGACY_FILE="${DERIVED_DATA}/cmux-local-build-number"
+  LOCAL_BUILD_NUMBER="$(resolve_local_build_number "$(current_project_build_number)" "$LOCAL_BUILD_NUMBER_FILE")"
 fi
 
 CMUX_DEV_PORT="$(choose_cmux_dev_port)"
@@ -618,10 +683,15 @@ reload_finalize() {
     echo
     echo "Dev web origin:"
     echo "  $CMUX_DEV_ORIGIN"
-    if [[ -n "${TAG_SLUG:-}" ]]; then
+  if [[ -n "${TAG_SLUG:-}" ]]; then
       echo "Dev web command:"
       echo "  cd web && CMUX_PORT=$CMUX_DEV_PORT CMUX_PORT_RANGE=$CMUX_DEV_PORT_RANGE CMUX_PORT_END=$CMUX_DEV_PORT_END CMUX_AUTH_CALLBACK_SCHEME=cmux-dev-$TAG_SLUG bun dev"
     fi
+  fi
+  if [[ -n "${LOCAL_BUILD_NUMBER:-}" ]]; then
+    echo
+    echo "Local build number:"
+    echo "  $LOCAL_BUILD_NUMBER"
   fi
   if [[ -x "${CLI_PATH:-}" ]]; then
     echo
@@ -658,6 +728,7 @@ echo "==> reload starting (tag: ${TAG}, log: ${RELOAD_LOG})" >&3
 
 if should_skip_ghostty_cli_helper_zig_build; then
   export CMUX_SKIP_ZIG_BUILD=1
+  echo "==> skipping Ghostty CLI helper Zig build: ${AUTO_SKIP_ZIG_BUILD_REASON}" >&3
 fi
 
 XCODEBUILD_ARGS=(
@@ -681,6 +752,9 @@ if [[ -z "$TAG" ]]; then
     INFOPLIST_KEY_CFBundleName="$APP_NAME"
     INFOPLIST_KEY_CFBundleDisplayName="$APP_NAME"
   )
+else
+  XCODEBUILD_ARGS+=(CURRENT_PROJECT_VERSION="$LOCAL_BUILD_NUMBER")
+  XCODEBUILD_ARGS+=(INFOPLIST_KEY_CFBundleVersion="$LOCAL_BUILD_NUMBER")
 fi
 XCODEBUILD_ARGS+=(PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID")
 # Scope the sidebar ExtensionKit point per build tag so concurrent dev builds (and
@@ -865,6 +939,13 @@ try:
 except OSError as exc:
     raise SystemExit(f"error: exec: {exc}")
 ' "$XCODEBUILD_LOCK_DIR" "$XCODEBUILD_LOCK_CONCURRENCY" "$XCODEBUILD_LOCK_WAIT_SECONDS" xcodebuild "${XCODEBUILD_ARGS[@]}"
+
+if [[ -n "$LOCAL_BUILD_NUMBER_FILE" ]]; then
+  persist_local_build_number "$LOCAL_BUILD_NUMBER_FILE" "$LOCAL_BUILD_NUMBER"
+fi
+if [[ -n "$LOCAL_BUILD_NUMBER_LEGACY_FILE" ]]; then
+  persist_local_build_number "$LOCAL_BUILD_NUMBER_LEGACY_FILE" "$LOCAL_BUILD_NUMBER"
+fi
 sleep 0.2
 if LC_ALL=C grep -q 'BUILD INTERRUPTED' "$RELOAD_LOG"; then
   echo "error: xcodebuild reported ** BUILD INTERRUPTED **; refusing to reuse DerivedData app artifacts" >&2

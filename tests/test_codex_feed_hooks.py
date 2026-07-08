@@ -59,6 +59,9 @@ CMUX_CODEX_FEED_EVENTS = (
     "SubagentStop",
 )
 
+CMUX_CODEX_OPTIMIZER_HOOK_SUBCOMMAND = "optimize-pre-tool-use"
+CMUX_AGENT_OPTIMIZER_HOOK_SUBCOMMAND = "optimize-pre-tool-use"
+
 FAKE_WORKSPACE_ID = "11111111-1111-1111-1111-111111111111"
 FAKE_SURFACE_ID = "22222222-2222-2222-2222-222222222222"
 
@@ -614,10 +617,57 @@ def cmux_codex_feed_command(agent_event: str) -> str:
     )
 
 
+def cmux_codex_optimizer_command() -> str:
+    routed_arguments = f"hooks codex {CMUX_CODEX_OPTIMIZER_HOOK_SUBCOMMAND}"
+    noop_command = "{ cat >/dev/null 2>/dev/null || true; echo '{}'; }"
+    return (
+        'cmux_cli="${CMUX_BUNDLED_CLI_PATH:-}"; if [ -z "$cmux_cli" ] || [ ! -x "$cmux_cli" ]; '
+        'then cmux_cli="$(command -v cmux 2>/dev/null || true)"; fi; if [ -n "$CMUX_SURFACE_ID" ] '
+        '&& [ "$CMUX_CODEX_HOOKS_DISABLED" != "1" ] && [ -n "$cmux_cli" ]; then { '
+        f'if [ -n "${{CMUX_SOCKET_PATH:-}}" ]; then "$cmux_cli" --socket "$CMUX_SOCKET_PATH" {routed_arguments}; '
+        f'else "$cmux_cli" {routed_arguments}; fi; '
+        f"}} || {noop_command}; else {noop_command}; fi"
+    )
+
+
+def cmux_hook_command_body(command: str) -> str:
+    path = Path(command)
+    if not path.name.startswith("cmux-codex-hook-") or not path.exists():
+        return command
+    content = path.read_text(encoding="utf-8")
+    if content.startswith("#!/bin/sh\n"):
+        content = content[len("#!/bin/sh\n") :]
+    return content.rstrip("\n")
+
+
+def cmux_hook_command_matches(command: str, expected_body: str) -> bool:
+    return command == expected_body or cmux_hook_command_body(command) == expected_body
+
+
+def normalized_cmux_hook_command(command: str) -> str:
+    return cmux_hook_command_body(command)
+
+
+def cmux_codex_lifecycle_command_matches(command: str, subcommand: str) -> bool:
+    body = normalized_cmux_hook_command(command)
+    return (
+        body == cmux_codex_hook_command(subcommand)
+        or (
+            f"hooks codex {subcommand}" in body
+            and "CMUX_CODEX_HOOKS_DISABLED" in body
+            and "cmux_cli" in body
+        )
+    )
+
+
 def is_cmux_codex_hook_command(command: str) -> bool:
-    hook_commands = {cmux_codex_hook_command(subcommand) for subcommand in CMUX_CODEX_HOOK_SUBCOMMANDS}
     feed_commands = {cmux_codex_feed_command(agent_event) for agent_event in CMUX_CODEX_FEED_EVENTS}
-    return command in hook_commands or command in feed_commands
+    body = normalized_cmux_hook_command(command)
+    return (
+        any(cmux_codex_lifecycle_command_matches(command, subcommand) for subcommand in CMUX_CODEX_HOOK_SUBCOMMANDS)
+        or body in feed_commands
+        or body == cmux_codex_optimizer_command()
+    )
 
 
 def toml_basic_string_unescape(value: str) -> str:
@@ -755,7 +805,7 @@ def test_install_adds_codex_permission_request_hook(cli_path: str, root: Path) -
         if not groups:
             raise AssertionError(f"missing {event_name} hook group: {hooks!r}")
         command = groups[-1]["hooks"][0]["command"]
-        if command != cmux_codex_feed_command(event_name):
+        if not cmux_hook_command_matches(command, cmux_codex_feed_command(event_name)):
             raise AssertionError(f"wrong {event_name} feed command: {command!r}")
         if groups[-1]["hooks"][0].get("timeout") != 5:
             raise AssertionError(f"wrong {event_name} timeout: {groups[-1]!r}")
@@ -848,12 +898,48 @@ def test_install_preserves_codex_hook_position_with_third_party_hooks(cli_path: 
 
     hooks = json.loads((codex_home / "hooks.json").read_text(encoding="utf-8"))
     groups = hooks["hooks"]["PreToolUse"]
-    first_command = groups[0]["hooks"][0]["command"]
-    second_command = groups[1]["hooks"][0]["command"]
-    if first_command != cmux_pre_tool:
-        raise AssertionError(f"cmux hook did not keep its existing position: {groups!r}")
-    if second_command != orca_hook:
+    commands = [normalized_cmux_hook_command(group["hooks"][0]["command"]) for group in groups]
+    if commands[:2] != [cmux_codex_optimizer_command(), cmux_pre_tool]:
+        raise AssertionError(f"cmux hooks did not keep their existing position: {groups!r}")
+    if commands[2] != orca_hook:
         raise AssertionError(f"third-party hook was not preserved after cmux hook: {groups!r}")
+
+
+def test_codex_install_adds_optimizer_before_pretool_telemetry(cli_path: str, root: Path) -> None:
+    codex_home = root / "codex-home-token-optimizer"
+    codex_home.mkdir()
+    env = os.environ.copy()
+    env["CODEX_HOME"] = str(codex_home)
+
+    result = subprocess.run(
+        [cli_path, "hooks", "codex", "install", "--yes"],
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+        timeout=20,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            f"hooks codex install failed exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}"
+        )
+
+    hooks = json.loads((codex_home / "hooks.json").read_text(encoding="utf-8"))
+    groups = hooks["hooks"]["PreToolUse"]
+    commands = [normalized_cmux_hook_command(group["hooks"][0]["command"]) for group in groups]
+    if commands[:2] != [cmux_codex_optimizer_command(), cmux_codex_feed_command("PreToolUse")]:
+        raise AssertionError(f"PreToolUse hooks should run optimizer before telemetry: {commands!r}")
+
+    config_toml = (codex_home / "config.toml").read_text(encoding="utf-8")
+    state = codex_hook_trust_state(config_toml)
+    expected_trust = expected_cmux_codex_hook_trust(hooks, codex_home / "hooks.json")
+    if not any(CODEX_HOOK_EVENT_LABELS["PreToolUse"] in key for key in expected_trust):
+        raise AssertionError(f"expected optimizer trust entry for PreToolUse, got {expected_trust!r}")
+    for key, trusted_hash in expected_trust.items():
+        if state.get(key, {}).get("trusted_hash") != trusted_hash:
+            raise AssertionError(
+                f"missing trusted hash for {key}: expected {trusted_hash!r}, got state {state!r}"
+            )
 
 
 def test_install_deduplicates_interleaved_codex_hook_positions(
@@ -899,9 +985,10 @@ def test_install_deduplicates_interleaved_codex_hook_positions(
         )
 
     hooks = json.loads((codex_home / "hooks.json").read_text(encoding="utf-8"))
-    commands = [group["hooks"][0]["command"] for group in hooks["hooks"]["PreToolUse"]]
+    commands = [normalized_cmux_hook_command(group["hooks"][0]["command"]) for group in hooks["hooks"]["PreToolUse"]]
     expected = [
         user_hook_before,
+        cmux_codex_optimizer_command(),
         cmux_pre_tool,
         user_hook_middle,
         user_hook_after,
@@ -949,9 +1036,10 @@ def test_install_collapses_consecutive_codex_hook_positions(cli_path: str, root:
         )
 
     hooks = json.loads((codex_home / "hooks.json").read_text(encoding="utf-8"))
-    commands = [group["hooks"][0]["command"] for group in hooks["hooks"]["PreToolUse"]]
+    commands = [normalized_cmux_hook_command(group["hooks"][0]["command"]) for group in hooks["hooks"]["PreToolUse"]]
     expected = [
         user_hook_before,
+        cmux_codex_optimizer_command(),
         cmux_pre_tool,
         user_hook_after,
     ]
@@ -1002,10 +1090,10 @@ def test_install_replaces_legacy_codex_hook_commands(cli_path: str, root: Path) 
         )
 
     hooks = json.loads((codex_home / "hooks.json").read_text(encoding="utf-8"))
-    commands = codex_hook_commands(hooks)
+    commands = [normalized_cmux_hook_command(command) for command in codex_hook_commands(hooks)]
     if any("cmux codex-hook" in command or "cmux feed-hook --source" in command for command in commands):
         raise AssertionError(f"legacy cmux hook commands were not removed: {commands!r}")
-    if cmux_codex_hook_command("stop") not in commands:
+    if not any(cmux_codex_lifecycle_command_matches(command, "stop") for command in commands):
         raise AssertionError(f"current Stop hook was not installed: {commands!r}")
     if cmux_codex_feed_command("PreToolUse") not in commands:
         raise AssertionError(f"current PreToolUse feed hook was not installed: {commands!r}")
@@ -2075,6 +2163,223 @@ def test_codex_pre_tool_use_is_telemetry_not_actionable(cli_path: str, root: Pat
         raise AssertionError(f"wrong PreToolUse event: {frame!r}")
 
 
+def test_codex_optimize_pre_tool_use_rewrites_shell_command(cli_path: str, root: Path) -> None:
+    payload = {
+        "session_id": "codex-session",
+        "turn_id": "turn-token-opt",
+        "cwd": str(root),
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "rg token Sources"},
+    }
+    env = os.environ.copy()
+    env["CMUX_SURFACE_ID"] = FAKE_SURFACE_ID
+    env["CMUX_BUNDLED_CLI_PATH"] = cli_path
+
+    result = subprocess.run(
+        [cli_path, "hooks", "codex", CMUX_CODEX_OPTIMIZER_HOOK_SUBCOMMAND],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+        timeout=10,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            f"optimize-pre-tool-use failed exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}"
+        )
+    stdout = json.loads(result.stdout)
+    hook_output = stdout.get("hookSpecificOutput")
+    if not isinstance(hook_output, dict):
+        raise AssertionError(f"missing hookSpecificOutput: {stdout!r}")
+    if hook_output.get("hookEventName") != "PreToolUse":
+        raise AssertionError(f"wrong hook event: {hook_output!r}")
+    if hook_output.get("permissionDecision") != "allow":
+        raise AssertionError(f"optimizer should allow the rewritten command: {hook_output!r}")
+    updated_input = hook_output.get("updatedInput")
+    if not isinstance(updated_input, dict):
+        raise AssertionError(f"missing updatedInput: {hook_output!r}")
+    command = updated_input.get("command")
+    if not isinstance(command, str) or "agent-token-proxy" not in command:
+        raise AssertionError(f"expected proxy command, got {command!r}")
+    if "rg token Sources" in command:
+        raise AssertionError(f"original command should be base64-wrapped, got {command!r}")
+
+
+def test_codex_optimize_pre_tool_use_ignores_ineligible_command(cli_path: str, root: Path) -> None:
+    payload = {
+        "session_id": "codex-session",
+        "turn_id": "turn-token-opt",
+        "cwd": str(root),
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "echo plain"},
+    }
+    env = os.environ.copy()
+    env["CMUX_SURFACE_ID"] = FAKE_SURFACE_ID
+    env["CMUX_BUNDLED_CLI_PATH"] = cli_path
+
+    result = subprocess.run(
+        [cli_path, "hooks", "codex", CMUX_CODEX_OPTIMIZER_HOOK_SUBCOMMAND],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+        timeout=10,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            f"optimize-pre-tool-use failed exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}"
+        )
+    stdout = json.loads(result.stdout)
+    if stdout != {}:
+        raise AssertionError(f"ineligible command should not be rewritten: {stdout!r}")
+
+
+def test_claude_optimize_pre_tool_use_rewrites_bash_command(cli_path: str, root: Path) -> None:
+    payload = {
+        "session_id": "claude-session",
+        "cwd": str(root),
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "rg token Sources", "description": "Search token references"},
+    }
+    env = os.environ.copy()
+    env["CMUX_SURFACE_ID"] = FAKE_SURFACE_ID
+    env["CMUX_BUNDLED_CLI_PATH"] = cli_path
+
+    result = subprocess.run(
+        [cli_path, "hooks", "claude", CMUX_AGENT_OPTIMIZER_HOOK_SUBCOMMAND],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+        timeout=10,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            f"claude optimize-pre-tool-use failed exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}"
+        )
+    stdout = json.loads(result.stdout)
+    hook_output = stdout.get("hookSpecificOutput")
+    if not isinstance(hook_output, dict):
+        raise AssertionError(f"missing hookSpecificOutput: {stdout!r}")
+    if hook_output.get("hookEventName") != "PreToolUse":
+        raise AssertionError(f"wrong hook event: {hook_output!r}")
+    if hook_output.get("permissionDecision") != "allow":
+        raise AssertionError(f"optimizer should allow the rewritten command: {hook_output!r}")
+    updated_input = hook_output.get("updatedInput")
+    if not isinstance(updated_input, dict):
+        raise AssertionError(f"missing updatedInput: {hook_output!r}")
+    if updated_input.get("description") != "Search token references":
+        raise AssertionError(f"updatedInput should preserve other Bash fields, got {updated_input!r}")
+    command = updated_input.get("command")
+    if not isinstance(command, str) or "agent-token-proxy" not in command:
+        raise AssertionError(f"expected proxy command, got {command!r}")
+    if "rg token Sources" in command:
+        raise AssertionError(f"original command should be hex-wrapped, got {command!r}")
+
+
+def test_claude_optimize_pre_tool_use_ignores_ineligible_command(cli_path: str, root: Path) -> None:
+    payload = {
+        "session_id": "claude-session",
+        "cwd": str(root),
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "echo plain"},
+    }
+    env = os.environ.copy()
+    env["CMUX_SURFACE_ID"] = FAKE_SURFACE_ID
+    env["CMUX_BUNDLED_CLI_PATH"] = cli_path
+
+    result = subprocess.run(
+        [cli_path, "hooks", "claude", CMUX_AGENT_OPTIMIZER_HOOK_SUBCOMMAND],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+        timeout=10,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            f"claude optimize-pre-tool-use failed exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}"
+        )
+    stdout = json.loads(result.stdout)
+    if stdout != {}:
+        raise AssertionError(f"ineligible Claude command should not be rewritten: {stdout!r}")
+
+
+def test_agent_token_proxy_optimizes_search_output(cli_path: str, root: Path) -> None:
+    fixture = root / "emit-search-output.sh"
+    fixture.write_text(
+        "\n".join(
+            [
+                "#!/bin/sh",
+                "printf '%s\\n' \\",
+                "  'Sources/File1.swift:1:match line 1' \\",
+                "  'Sources/File2.swift:2:match line 2' \\",
+                "  'Sources/File3.swift:3:match line 3' \\",
+                "  'Sources/File4.swift:4:match line 4' \\",
+                "  'Sources/File5.swift:5:match line 5' \\",
+                "  'Sources/File6.swift:6:match line 6' \\",
+                "  'Sources/File7.swift:7:match line 7' \\",
+                "  'Sources/File8.swift:8:match line 8'",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    fixture.chmod(0o755)
+    command = f"rg token Sources; {fixture}"
+    command_b64 = command.encode("utf-8").hex()
+
+    result = subprocess.run(
+        [cli_path, "agent-token-proxy", "--command-hex", command_b64],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=root,
+        timeout=10,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            f"agent-token-proxy failed exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}"
+        )
+    if "search output summary" not in result.stdout:
+        raise AssertionError(f"expected optimized search summary, got stdout={result.stdout!r}")
+    if "3 additional matches omitted" not in result.stdout:
+        raise AssertionError(f"expected omitted-match count, got stdout={result.stdout!r}")
+    if "Sources/File8.swift" in result.stdout:
+        raise AssertionError(f"optimized output should omit later raw lines, got stdout={result.stdout!r}")
+
+
+def test_agent_token_proxy_preserves_nonzero_exit_and_raw_output(cli_path: str, root: Path) -> None:
+    command = "printf 'plain output\\n'; printf 'bad stderr\\n' >&2; exit 7"
+    command_hex = command.encode("utf-8").hex()
+
+    result = subprocess.run(
+        [cli_path, "agent-token-proxy", "--command-hex", command_hex],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=root,
+        timeout=10,
+    )
+    if result.returncode != 7:
+        raise AssertionError(
+            f"agent-token-proxy should preserve exit 7, got {result.returncode}\n"
+            f"stdout={result.stdout}\nstderr={result.stderr}"
+        )
+    if result.stdout != "plain output\n":
+        raise AssertionError(f"stdout should pass through for generic failures, got {result.stdout!r}")
+    if result.stderr != "bad stderr\n":
+        raise AssertionError(f"stderr should pass through for generic failures, got {result.stderr!r}")
+
+
 def test_codex_lifecycle_feed_events_stay_telemetry_and_distinct(cli_path: str, root: Path) -> None:
     event_payloads = {
         "PostToolUse": {
@@ -2402,6 +2707,7 @@ def main() -> int:
             test_install_adds_codex_permission_request_hook(cli_path, root)
             test_install_escapes_codex_hook_trust_state_keys(cli_path, root)
             test_install_preserves_codex_hook_position_with_third_party_hooks(cli_path, root)
+            test_codex_install_adds_optimizer_before_pretool_telemetry(cli_path, root)
             test_install_deduplicates_interleaved_codex_hook_positions(cli_path, root)
             test_install_collapses_consecutive_codex_hook_positions(cli_path, root)
             test_install_replaces_legacy_codex_hook_commands(cli_path, root)
@@ -2429,6 +2735,12 @@ def main() -> int:
             test_codex_permission_request_is_nonblocking_telemetry(cli_path, root)
             test_codex_permission_decisions_do_not_block_approval_reviewer(cli_path, root)
             test_codex_pre_tool_use_is_telemetry_not_actionable(cli_path, root)
+            test_codex_optimize_pre_tool_use_rewrites_shell_command(cli_path, root)
+            test_codex_optimize_pre_tool_use_ignores_ineligible_command(cli_path, root)
+            test_claude_optimize_pre_tool_use_rewrites_bash_command(cli_path, root)
+            test_claude_optimize_pre_tool_use_ignores_ineligible_command(cli_path, root)
+            test_agent_token_proxy_optimizes_search_output(cli_path, root)
+            test_agent_token_proxy_preserves_nonzero_exit_and_raw_output(cli_path, root)
             test_codex_lifecycle_feed_events_stay_telemetry_and_distinct(cli_path, root)
             test_codex_post_tool_use_redacts_tool_output(cli_path, root)
             test_codex_post_tool_use_accepts_native_event_label(cli_path, root)

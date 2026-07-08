@@ -27,12 +27,18 @@ extension Workspace {
 
     var agentPIDKeysByPanelId: [UUID: Set<String>] {
         get { sidebarAgentRuntimeObservation.agentPIDKeysByPanelId }
-        set { sidebarAgentRuntimeObservation.setAgentPIDKeysByPanelId(newValue) }
+        set {
+            sidebarAgentRuntimeObservation.setAgentPIDKeysByPanelId(newValue)
+            agentPIDKeysByPanelIdPublisher.send(newValue)
+        }
     }
 
     var agentLifecycleStatesByPanelId: [UUID: [String: AgentHibernationLifecycleState]] {
         get { sidebarAgentRuntimeObservation.agentLifecycleStatesByPanelId }
-        set { sidebarAgentRuntimeObservation.setAgentLifecycleStatesByPanelId(newValue) }
+        set {
+            sidebarAgentRuntimeObservation.setAgentLifecycleStatesByPanelId(newValue)
+            agentLifecycleStatesByPanelIdPublisher.send(newValue)
+        }
     }
 
     func agentRuntimeState(forPanelId panelId: UUID) -> DetachedAgentRuntimeState? {

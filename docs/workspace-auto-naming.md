@@ -1,12 +1,12 @@
 # Workspace auto-naming
 
-Opt-in AI naming of sidebar workspaces and tabs from agent conversation content. With several concurrent agent sessions, the sidebar otherwise shows identical rows ("Claude Code", "codex"); auto-naming turns them into short, topic-bearing names that refresh as each conversation moves.
+Opt-in AI naming of sidebar workspaces and tabs from agent conversation content. With several concurrent agent sessions, the sidebar otherwise shows identical rows ("Claude Code", "codex"); auto-naming turns them into descriptive, topic-bearing statements that refresh only as the conversation meaningfully moves.
 
 Off by default. Enable it in **Settings > Automation > Workspace Auto-Naming** or via `automation.workspaceAutoNaming` in `cmux.json` (see [configuration.md](configuration.md#automationworkspaceautonaming)).
 
 ## What it does
 
-- At the end of an agent turn, cmux summarizes the session's recent conversation into a 2-5 word title (in the conversation's language) and applies it to the workspace. When a workspace has multiple tabs, the agent's own tab is named too.
+- At the end of an agent turn, cmux summarizes the extracted conversation into an informative subject statement between 6 and 20 words (in the conversation's language) and applies it to the workspace. The title is based on the whole conversation, not just the last prompt, and should read like a normal sentence fragment instead of extracted keywords. When a workspace has multiple tabs, the agent's own tab is named too.
 - Names refresh when the topic shifts, throttled by transcript growth and a minimum interval, so quiet or single-topic sessions converge to a stable name without repeated summarization calls.
 - Summarization runs through your own agent binary: `claude -p` for Claude Code sessions (model from `ANTHROPIC_SMALL_FAST_MODEL` when set, the fast default otherwise; Vertex/Bedrock backend selection is preserved), `codex exec` for Codex sessions, and each supported hook agent's own non-interactive CLI for its sessions. Each agent names itself, so the calls use the account you already authenticated, and a machine without another agent installed simply skips that adapter.
 

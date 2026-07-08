@@ -16,9 +16,16 @@ final class AgentSessionPanel: Panel {
     private(set) var displayTitle: String
     var displayIcon: String? { "sparkles.rectangle.stack" }
     private(set) var isDirty: Bool = false
+    var hasActiveProviderSession: Bool { isDirty }
+    private(set) var hasActiveWork: Bool = false
     var onDisplayStateChanged: ((String, Bool) -> Void)? {
         didSet {
             onDisplayStateChanged?(displayTitle, isDirty)
+        }
+    }
+    var onWorkStateChanged: ((Bool) -> Void)? {
+        didSet {
+            onWorkStateChanged?(hasActiveWork)
         }
     }
 
@@ -37,6 +44,9 @@ final class AgentSessionPanel: Panel {
         self.displayTitle = Self.title(provider: initialProviderID, rendererKind: rendererKind)
         self.rendererSession.onHasActiveProviderChanged = { [weak self] hasActiveProvider in
             self?.setHasActiveProvider(hasActiveProvider)
+        }
+        self.rendererSession.onHasActiveWorkChanged = { [weak self] hasActiveWork in
+            self?.setHasActiveWork(hasActiveWork)
         }
         self.rendererSession.onProviderIDChanged = { [weak self] providerID in
             self?.setCurrentProviderID(providerID)
@@ -75,6 +85,12 @@ final class AgentSessionPanel: Panel {
         guard isDirty != hasActiveProvider else { return }
         isDirty = hasActiveProvider
         emitDisplayStateChanged()
+    }
+
+    private func setHasActiveWork(_ hasActiveWork: Bool) {
+        guard self.hasActiveWork != hasActiveWork else { return }
+        self.hasActiveWork = hasActiveWork
+        onWorkStateChanged?(hasActiveWork)
     }
 
     private func setCurrentProviderID(_ providerID: AgentSessionProviderID) {

@@ -260,7 +260,7 @@ final class ClaudeHookSessionStore {
     private static let defaultStatePath = "~/.cmuxterm/claude-hook-sessions.json"
     private static let maxStateAgeSeconds: TimeInterval = 60 * 60 * 24 * 7
     private static let maxRememberedTerminalPromptTurnIds = 32
-    private static let maxAutoNameRecentMessages = 24
+    private static let maxAutoNameRecentMessages = 75
     private static let maxAutoNameMessageCharacters = 1_000
 
     private let statePath: String
@@ -3229,6 +3229,7 @@ struct CMUXCLI {
         if command == "__sigpipe-probe" { try runSIGPIPEProbe(commandArgs: commandArgs); return }
         if command == "__sigpipe-stdin-pipe-probe" { try runSIGPIPEStdinPipeProbe(); return }
         if command == "__sigpipe-inspect" { try runSIGPIPEInspect(commandArgs: commandArgs); return }
+        if command == "agent-token-proxy" { try runAgentTokenProxy(commandArgs: commandArgs); return }
         if command == "diff-viewer-server" { try runDiffViewerServerCommand(commandArgs: commandArgs); return }
         if command == "__diff-viewer-refs" { try runDiffViewerRefsCommand(commandArgs: commandArgs); return }
         if command == "__diff-viewer-branch" { try runDiffViewerBranchRegenerateCommand(commandArgs: commandArgs); return }
@@ -24570,7 +24571,12 @@ struct CMUXCLI {
             if let mappedSession,
                let savedBody = mappedSession.lastBody, !savedBody.isEmpty,
                summary.body.contains("needs your attention") || summary.body.contains("needs your input") {
-                summary = (subtitle: mappedSession.lastSubtitle ?? summary.subtitle, body: savedBody)
+                summary = (
+                    subtitle: mappedSession.lastSubtitle ?? summary.subtitle,
+                    body: savedBody,
+                    status: summary.status,
+                    isGenericIdleHeartbeat: summary.isGenericIdleHeartbeat
+                )
             }
 
             let title = String(
@@ -24639,6 +24645,27 @@ struct CMUXCLI {
                 meta: notifyCategory == .other ? nil : notifyMeta(notifyCategory, pending: notifyPending)
             )
 
+            // Claude's Notification hook also fires for its generic "idle at the
+            // prompt for 60+ seconds" heartbeat, not just permission/question
+            // prompts. Fold a plain heartbeat back to idle unless a more specific
+            // hook already marked the session needsInput; keep main's background
+            // work suppression so idle nags cannot overwrite Running.
+            let lifecycle: AgentHibernationLifecycleState?
+            if suppressNeedsInputState {
+                lifecycle = nil
+            } else if summary.isGenericIdleHeartbeat, mappedSession?.agentLifecycle != .needsInput {
+                lifecycle = .idle
+            } else {
+                switch summary.status {
+                case .idle:
+                    lifecycle = .idle
+                case .needsInput, .error:
+                    lifecycle = .needsInput
+                case nil:
+                    lifecycle = nil
+                }
+            }
+
             if let sessionId = parsedInput.sessionId, !suppressNeedsInputState {
                 try? sessionStore.upsert(
                     sessionId: sessionId,
@@ -24646,28 +24673,40 @@ struct CMUXCLI {
                     surfaceId: surfaceId,
                     cwd: parsedInput.cwd,
                     transcriptPath: parsedInput.transcriptPath,
-                    agentLifecycle: .needsInput,
+                    agentLifecycle: lifecycle,
                     lastSubtitle: summary.subtitle,
                     lastBody: summary.body
                 )
             }
 
-            if !suppressNeedsInputState {
+            if let lifecycle {
                 setAgentLifecycle(
                     client: client,
                     key: Self.claudeCodeStatusKey,
-                    lifecycle: .needsInput,
+                    lifecycle: lifecycle,
                     workspaceId: workspaceId,
                     surfaceId: surfaceId
                 )
-                _ = try? setClaudeStatus(
-                    client: client,
-                    workspaceId: workspaceId,
-                    surfaceId: surfaceId,
-                    value: "Needs input",
-                    icon: "bell.fill",
-                    color: "#4C8DFF", pid: claudePid
-                )
+                switch lifecycle {
+                case .idle:
+                    _ = try? setClaudeStatus(
+                        client: client,
+                        workspaceId: workspaceId,
+                        surfaceId: surfaceId,
+                        value: "Idle",
+                        icon: "pause.circle.fill",
+                        color: "#8E8E93", pid: claudePid
+                    )
+                case .needsInput, .running, .unknown:
+                    _ = try? setClaudeStatus(
+                        client: client,
+                        workspaceId: workspaceId,
+                        surfaceId: surfaceId,
+                        value: "Needs input",
+                        icon: "bell.fill",
+                        color: "#4C8DFF", pid: claudePid
+                    )
+                }
             }
             let response = try sendV1Command("notify_target_async \(workspaceId) \(surfaceId) \(payload)", client: client)
             print(response)
@@ -26956,12 +26995,14 @@ struct CMUXCLI {
         return nil
     }
 
-    private func summarizeClaudeHookNotification(parsedInput: ClaudeHookParsedInput) -> (subtitle: String, body: String) {
+    private func summarizeClaudeHookNotification(
+        parsedInput: ClaudeHookParsedInput
+    ) -> (subtitle: String, body: String, status: AgentHookNotificationStatus?, isGenericIdleHeartbeat: Bool) {
         guard let object = parsedInput.object else {
             if let fallback = parsedInput.rawFallback, !fallback.isEmpty {
                 return classifyClaudeNotification(signal: fallback, message: fallback)
             }
-            return ("Waiting", "Claude is waiting for your input")
+            return ("Waiting", "Claude is waiting for your input", .needsInput, false)
         }
 
         let nested = (object["notification"] as? [String: Any]) ?? (object["data"] as? [String: Any]) ?? [:]
@@ -27355,29 +27396,41 @@ struct CMUXCLI {
         )
     }
 
-    private func classifyClaudeNotification(signal: String, message: String) -> (subtitle: String, body: String) {
+    private func classifyClaudeNotification(
+        signal: String,
+        message: String
+    ) -> (subtitle: String, body: String, status: AgentHookNotificationStatus?, isGenericIdleHeartbeat: Bool) {
         let lower = "\(signal) \(message)".lowercased()
         if lower.contains("permission") || lower.contains("approve") || lower.contains("approval") || lower.contains("permission_prompt") {
             let body = message.isEmpty ? "Approval needed" : message
-            return ("Permission", body)
+            return ("Permission", body, .needsInput, false)
         }
         if lower.contains("error") || lower.contains("failed") || lower.contains("exception") {
             let body = message.isEmpty ? "Claude reported an error" : message
-            return ("Error", body)
+            return ("Error", body, .error, false)
         }
         if containsCompletionCue(lower) {
             let body = message.isEmpty ? "Task completed" : message
-            return ("Completed", body)
+            return ("Completed", body, .idle, false)
         }
         if containsWaitingCue(lower) {
+            // Claude fires this generic "waiting at the prompt" heartbeat ~60s
+            // after going idle with nothing pending — genuine blocking states
+            // (AskUserQuestion/ExitPlanMode, permission approval) are already
+            // surfaced through PreToolUse/PermissionRequest before this ever
+            // fires. Flag it so the caller can fold it back to idle unless a
+            // more specific hook already marked the session needsInput.
             let body = message.isEmpty ? "Waiting for input" : message
-            return ("Waiting", body)
+            return ("Waiting", body, .needsInput, true)
         }
         // Use the message directly if it's meaningful (not a generic placeholder).
+        // The cue is ambiguous, so leave the lifecycle untouched rather than
+        // forcing a "needs input" spin that may never clear (matches the
+        // generic agent classifier's nil-status handling).
         if !message.isEmpty, message != "Claude needs your input" {
-            return ("Attention", message)
+            return ("Attention", message, nil, false)
         }
-        return ("Attention", "Claude needs your attention")
+        return ("Attention", "Claude needs your attention", .needsInput, false)
     }
 
     private func containsCompletionCue(_ lowercasedText: String) -> Bool {
@@ -28295,6 +28348,17 @@ struct CMUXCLI {
             case .rovoDevYAML, .hermesAgentYAML, .tomlArrayTable:
                 break
             }
+        }
+        if def.name == "codex" {
+            var groups = result["PreToolUse"] as? [[String: Any]] ?? []
+            groups.append([
+                "hooks": [[
+                    "type": "command",
+                    "command": Self.codexOptimizerHookCommandString(for: def),
+                    "timeout": 5,
+                ] as [String: Any]]
+            ] as [String: Any])
+            result["PreToolUse"] = groups
         }
         // Layer in Feed bridge entries. Blocking approval bridges get a long
         // timeout; Codex telemetry stays short so it never delays Codex's own
@@ -29847,6 +29911,13 @@ export default CMUXSessionRestore;
                 command: Self.hookCommandString(for: def, event: event),
                 timeouts: [5_000, 600]
             )
+            for command in Self.codexLegacyInlineHookCommandStrings(for: def, event: event) {
+                insertHashes(
+                    eventLabel: eventLabel,
+                    command: command,
+                    timeouts: [5_000, 600]
+                )
+            }
             insertHashes(
                 eventLabel: eventLabel,
                 command: "cmux codex-hook \(event.cmuxSubcommand)",
@@ -29859,6 +29930,11 @@ export default CMUXSessionRestore;
             insertHashes(
                 eventLabel: eventLabel,
                 command: Self.feedHookCommandString(for: def, agentEvent: agentEvent),
+                timeouts: [120_000, 120, 600]
+            )
+            insertHashes(
+                eventLabel: eventLabel,
+                command: Self.codexLegacyInlineFeedHookCommandString(for: def, agentEvent: agentEvent),
                 timeouts: [120_000, 120, 600]
             )
             insertHashes(
@@ -34762,6 +34838,17 @@ export default CMUXSessionRestore;
             )
             return true
 
+        case "claude":
+            let rest = Array(commandArgs.dropFirst())
+            if rest.first?.lowercased() == "optimize-pre-tool-use" {
+                // Hidden: synchronous Claude PreToolUse Bash command rewriter.
+                // Returns `{}` unless a command can be routed through the local
+                // token optimizer proxy.
+                try runClaudeOptimizePreToolUseHook()
+                return true
+            }
+            return false
+
         default:
             guard let def = Self.agentDef(named: first) else {
                 if first == "feed" || first == "claude" {
@@ -34782,6 +34869,12 @@ export default CMUXSessionRestore;
                 // (Resources/bin/cmux-codex-wrapper) splices to inject cmux's
                 // fire-and-forget hooks for one invocation. No socket required.
                 try emitCodexWrapperInjectArgs()
+                return true
+            case "optimize-pre-tool-use" where def.name == "codex":
+                // Hidden: synchronous Codex PreToolUse command rewriter. It
+                // returns `{}` unless a shell command can be routed through the
+                // local token optimizer proxy.
+                try runCodexOptimizePreToolUseHook()
                 return true
             case "install":
                 try installHooksForAgent(def, arguments: actionArgs)

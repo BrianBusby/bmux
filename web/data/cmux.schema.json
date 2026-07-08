@@ -967,7 +967,7 @@
         },
         "wrapWorkspaceTitles": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Allow workspace titles in the sidebar to wrap to multiple lines instead of truncating after one line."
         },
         "showWorkspaceDescription": {
@@ -1209,7 +1209,7 @@
           "type": "boolean",
           "default": false,
           "descriptionKey": "schemaDescriptions.automation.workspaceAutoNaming",
-          "description": "Opt-in AI auto-naming of workspaces and tabs from agent conversation content. When enabled, cmux summarizes supported agent sessions into short titles using each agent's own binary; manual renames always win."
+          "description": "Opt-in AI auto-naming of workspaces and tabs from agent conversation content. When enabled, cmux summarizes supported agent sessions into short subject statements using each agent's own binary; manual renames always win."
         },
         "autoNamingAgent": {
           "type": "string",
