@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import XCTest
 import Testing
+import CmuxAgentChat
 
 #if canImport(cmux_DEV)
     @testable import cmux_DEV
@@ -232,5 +233,38 @@ struct AgentSessionSocketSurfaceTests {
 
         store.ingestActivityForTesting(activityID: "command-1", status: "completed")
         #expect(!store.hasActiveWork)
+    }
+
+    @Test
+    func testAgentSessionProcessStorePersistsRawActivityOutput() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("cmux-agent-session-raw-output-\(UUID().uuidString)", isDirectory: true)
+        defer {
+            try? FileManager.default.removeItem(at: directory)
+        }
+        let rawOutputStore = ChatRawTerminalOutputFileStore(rootDirectory: directory)
+        let store = AgentSessionProcessStore(rawOutputStore: rawOutputStore)
+
+        let metadata = store.ingestRawActivityOutputForTesting(
+            sessionId: "session-1",
+            activityID: "command-1",
+            command: "echo ok",
+            outputDelta: "ok\n"
+        )
+        guard let rawOutputRef = metadata?["rawOutputRef"] as? String else {
+            Issue.record("Expected a raw output reference")
+            return
+        }
+
+        var record: ChatRawTerminalOutputRecord?
+        for _ in 0..<10 {
+            record = try await store.readRawActivityOutput(rawOutputRef: rawOutputRef)
+            if record != nil { break }
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+
+        #expect(record?.command == "echo ok")
+        #expect(record?.rawOutput == "ok\n")
+        #expect(record?.metadata.rawOutputRef == rawOutputRef)
     }
 }

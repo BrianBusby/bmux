@@ -53,6 +53,7 @@ struct WindowTitleTemplateTests {
         #expect(resolved == "{windowId} cmux")
     }
 
+    @MainActor
     @Test func settingsFileStoreAppliesAppWindowTitleTemplate() throws {
         let defaults = UserDefaults.standard
         let keys = [

@@ -278,7 +278,7 @@ final class SidebarWidthPolicyTests: XCTestCase {
 }
 
 final class SidebarWorkspaceSelectionColorTests: XCTestCase {
-    func testSelectedWorkspaceRowsUseRepoColorBackgroundInLightAndDark() {
+    func testSelectedWorkspaceRowsKeepUnselectedBackgroundInLightAndDark() {
         for colorScheme in [ColorScheme.light, .dark] {
             let coloredSelected = sidebarWorkspaceRowBackgroundStyle(
                 activeTabIndicatorStyle: .solidFill,

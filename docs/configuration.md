@@ -67,6 +67,26 @@ Opt-in Agent Hibernation. cmux kills idle background agent processes to free RAM
 
 Enable it from the command palette (`⌘⇧P` -> Enable Agent Hibernation), from **Settings > Terminal > Agent Hibernation**, or with `cmux agent-hibernation on`.
 
+## `terminal.agentTokenOptimization.mode`
+
+Controls how aggressively cmux compresses agent terminal output for transcript and chat consumers. Raw output is still stored locally and can be expanded or copied from UI surfaces that support raw-output refs.
+
+```json
+{
+  "terminal": {
+    "agentTokenOptimization": {
+      "mode": "balanced"
+    }
+  }
+}
+```
+
+Values: `off`, `conservative`, `balanced`, `aggressive`.
+
+Default: `balanced`.
+
+See [agent-token-optimization.md](agent-token-optimization.md) for the architecture, current coverage, and the remaining Codex-side integration boundary.
+
 ## `automation.workspaceAutoNaming`
 
 Opt-in AI auto-naming of workspaces and tabs from agent conversation content. When enabled, cmux summarizes the extracted conversation from supported agent sessions into descriptive sidebar and tab names using each agent's own binary, and refreshes them as the conversation topic meaningfully shifts. See [workspace-auto-naming.md](workspace-auto-naming.md) for the supported adapter list and full behavior.

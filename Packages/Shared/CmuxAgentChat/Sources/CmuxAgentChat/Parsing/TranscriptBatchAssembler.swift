@@ -6,9 +6,11 @@ import Foundation
 struct TranscriptBatchAssembler {
     private var messages: [ChatMessage] = []
     private var updatedMessages: [ChatMessage] = []
+    private var rawTerminalOutputs: [ChatRawTerminalOutputRecord] = []
     private var pending: [String: [ChatMessage]]
     private var batchIndexByMessageID: [String: Int] = [:]
     private let budget: TranscriptTextBudget
+    private let tokenOptimizationMode: TokenOptimizationMode
 
     /// Upper bound on tool invocations carried across parse calls awaiting a
     /// result. A `tool_use` whose `tool_result` never arrives (interrupted or
@@ -23,9 +25,14 @@ struct TranscriptBatchAssembler {
     /// - Parameters:
     ///   - state: The carry-over state from the previous parse call.
     ///   - budget: The text budget applied to completed outputs.
-    init(state: ChatTranscriptParseState, budget: TranscriptTextBudget) {
+    init(
+        state: ChatTranscriptParseState,
+        budget: TranscriptTextBudget,
+        tokenOptimizationMode: TokenOptimizationMode = .balanced
+    ) {
         self.pending = state.pendingToolUses
         self.budget = budget
+        self.tokenOptimizationMode = tokenOptimizationMode
     }
 
     /// Appends a newly parsed message, optionally registering it as a tool
@@ -57,13 +64,20 @@ struct TranscriptBatchAssembler {
         // questions, `completion.applied` resolves each by its own prompt,
         // so multi-question cards each get their correct answer.
         for pendingMessage in pendingMessages {
-            guard let completed = completion.applied(to: pendingMessage, budget: budget) else {
+            guard let result = completion.applied(
+                to: pendingMessage,
+                budget: budget,
+                tokenOptimizationMode: tokenOptimizationMode
+            ) else {
                 continue
             }
-            if let index = batchIndexByMessageID[completed.id] {
-                messages[index] = completed
+            if let rawTerminalOutput = result.rawTerminalOutput {
+                rawTerminalOutputs.append(rawTerminalOutput)
+            }
+            if let index = batchIndexByMessageID[result.message.id] {
+                messages[index] = result.message
             } else {
-                updatedMessages.append(completed)
+                updatedMessages.append(result.message)
             }
         }
     }
@@ -79,7 +93,8 @@ struct TranscriptBatchAssembler {
             state: ChatTranscriptParseState(
                 pendingToolUses: Self.bounded(pending),
                 lastTimestamp: lastTimestamp
-            )
+            ),
+            rawTerminalOutputs: rawTerminalOutputs
         )
     }
 

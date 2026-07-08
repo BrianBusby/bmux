@@ -19,6 +19,9 @@ public struct ChatTerminalCapture: Sendable, Equatable, Codable {
     /// Whether the command is still running (no result observed yet).
     public let isRunning: Bool
 
+    /// Metadata for optimized output and local raw-output lookup.
+    public let outputMetadata: ChatTerminalOutputMetadata?
+
     /// Creates a terminal capture.
     ///
     /// - Parameters:
@@ -27,18 +30,21 @@ public struct ChatTerminalCapture: Sendable, Equatable, Codable {
     ///   - exitCode: Exit code when known.
     ///   - durationSeconds: Wall-clock duration when known.
     ///   - isRunning: Whether the command is still running.
+    ///   - outputMetadata: Metadata for optimized output and raw-output lookup.
     public init(
         command: String,
         output: String? = nil,
         exitCode: Int? = nil,
         durationSeconds: Double? = nil,
-        isRunning: Bool = false
+        isRunning: Bool = false,
+        outputMetadata: ChatTerminalOutputMetadata? = nil
     ) {
         self.command = command
         self.output = output
         self.exitCode = exitCode
         self.durationSeconds = durationSeconds
         self.isRunning = isRunning
+        self.outputMetadata = outputMetadata
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -47,5 +53,6 @@ public struct ChatTerminalCapture: Sendable, Equatable, Codable {
         case exitCode = "exit_code"
         case durationSeconds = "duration_seconds"
         case isRunning = "is_running"
+        case outputMetadata = "output_metadata"
     }
 }

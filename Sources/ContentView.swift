@@ -13533,6 +13533,15 @@ struct TabItemView: View, Equatable {
         return Color.white.opacity(colorScheme == .dark ? 0.92 : 0.78)
     }
 
+    private var activeElevationShadowColor: Color {
+        guard isActive else { return .clear }
+        return Color.black.opacity(colorScheme == .dark ? 0.34 : 0.18)
+    }
+
+    private var activeElevationYOffset: CGFloat {
+        isActive ? -1 : 0
+    }
+
     private var usesInvertedActiveForeground: Bool {
         false
     }
@@ -14137,6 +14146,7 @@ struct TabItemView: View, Equatable {
                             .offset(x: -1)
                     }
                 }
+                .shadow(color: activeElevationShadowColor, radius: 4, x: 0, y: 2)
         )
         .sidebarShortcutHintOverlay(
             text: showsWorkspaceShortcutHint ? workspaceShortcutLabel : nil,
@@ -14150,6 +14160,8 @@ struct TabItemView: View, Equatable {
         .background { rowHeightProbe }
         .contentShape(Rectangle())
         .opacity(isBeingDragged ? 0.6 : 1)
+        .offset(y: activeElevationYOffset)
+        .zIndex(isActive ? 1 : 0)
         .overlay {
             SidebarWorkspaceRowHoverTracker(rowInteractionState: $rowInteractionState)
         }

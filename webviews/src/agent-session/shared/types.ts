@@ -79,6 +79,9 @@ export type AgentSessionCopy = {
   copyShellContents: string;
   copiedShellContents: string;
   collapseShell: string;
+  showRawOutput: string;
+  showOptimizedOutput: string;
+  rawOutputUnavailable: string;
   shellSuccess: string;
   showMore: string;
   showLess: string;
@@ -117,6 +120,13 @@ export type AgentSessionCopy = {
   providerStarted: string;
   providerExitedFormat: string;
   requestFailed: string;
+};
+
+export type TerminalOutputMetadata = {
+  rawOutputRef?: string;
+  rawByteCount: number;
+  rawLineCount: number;
+  wasOptimized: boolean;
 };
 
 export type AgentSessionAttachment = {
@@ -162,6 +172,7 @@ export type AgentEvent =
       action: string;
       detail?: string;
       outputDelta?: string;
+      outputMetadata?: TerminalOutputMetadata;
     }
   | {
       type: "provider.turnComplete";

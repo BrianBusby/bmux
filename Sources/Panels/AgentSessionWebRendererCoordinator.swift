@@ -433,6 +433,18 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
                         localized: "agentSession.web.collapseShell",
                         defaultValue: "Collapse shell"
                     ),
+                    "showRawOutput": String(
+                        localized: "agentSession.web.showRawOutput",
+                        defaultValue: "Show raw output"
+                    ),
+                    "showOptimizedOutput": String(
+                        localized: "agentSession.web.showOptimizedOutput",
+                        defaultValue: "Show optimized output"
+                    ),
+                    "rawOutputUnavailable": String(
+                        localized: "agentSession.web.rawOutputUnavailable",
+                        defaultValue: "Raw output unavailable"
+                    ),
                     "shellSuccess": String(
                         localized: "agentSession.web.shellSuccess",
                         defaultValue: "Success"
@@ -620,6 +632,18 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         case "provider.stop":
             try processStore.stop(sessionId: request.requiredString("sessionId"))
             return ["stopped": true]
+        case "agentSession.rawOutput":
+            let rawOutputRef = try request.requiredString("rawOutputRef")
+            guard let record = try await processStore.readRawActivityOutput(rawOutputRef: rawOutputRef) else {
+                throw AgentSessionBridgeError.invalidRequest
+            }
+            return [
+                "rawOutputRef": rawOutputRef,
+                "command": record.command,
+                "rawOutput": record.rawOutput,
+                "rawByteCount": record.metadata.rawByteCount,
+                "rawLineCount": record.metadata.rawLineCount
+            ] as [String: Any]
         default:
             throw AgentSessionBridgeError.unsupportedMethod(request.method)
         }

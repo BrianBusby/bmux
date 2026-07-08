@@ -42,6 +42,20 @@ should_skip_ghostty_cli_helper_zig_build() {
     return 0
   fi
 
+  if [[ "${CMUX_REQUIRE_GHOSTTY_CLI_HELPER:-}" == "1" ]]; then
+    AUTO_SKIP_ZIG_BUILD_REASON=""
+    return 1
+  fi
+
+  local sdk_version=""
+  local sdk_major=""
+  sdk_version="$(xcrun --sdk macosx --show-sdk-version 2>/dev/null || true)"
+  sdk_major="${sdk_version%%.*}"
+  if [[ "$sdk_major" =~ ^[0-9]+$ ]] && [[ "$sdk_major" -ge 26 ]]; then
+    AUTO_SKIP_ZIG_BUILD_REASON="macOS SDK ${sdk_version} cannot link the Zig 0.15.2 Ghostty CLI helper in local reloads; set CMUX_REQUIRE_GHOSTTY_CLI_HELPER=1 to force the real helper build"
+    return 0
+  fi
+
   AUTO_SKIP_ZIG_BUILD_REASON=""
   return 1
 }
@@ -681,6 +695,7 @@ echo "==> reload starting (tag: ${TAG}, log: ${RELOAD_LOG})" >&3
 
 if should_skip_ghostty_cli_helper_zig_build; then
   export CMUX_SKIP_ZIG_BUILD=1
+  echo "==> skipping Ghostty CLI helper Zig build: ${AUTO_SKIP_ZIG_BUILD_REASON}" >&3
 fi
 
 XCODEBUILD_ARGS=(

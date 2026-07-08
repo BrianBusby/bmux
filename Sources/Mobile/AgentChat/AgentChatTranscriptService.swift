@@ -1,5 +1,6 @@
 import CMUXAgentLaunch
 import CmuxAgentChat
+import CmuxSettings
 import CmuxTerminal
 import Foundation
 
@@ -13,6 +14,8 @@ final class AgentChatTranscriptService {
 
     let registry: AgentChatSessionRegistry
     let resolver: AgentChatTranscriptResolver
+    private let rawOutputStore: ChatRawTerminalOutputFileStore
+    private let tokenOptimizationModeProvider: () -> TokenOptimizationMode
     private let coding = ChatWireCoding()
     private var tailers: [String: AgentChatTranscriptTailer] = [:]
     /// Drives the live agent-prose streaming preview.
@@ -26,7 +29,12 @@ final class AgentChatTranscriptService {
     ///
     /// - Parameter resolver: Transcript path resolver.
     convenience init(resolver: AgentChatTranscriptResolver = AgentChatTranscriptResolver()) {
-        self.init(registry: AgentChatSessionRegistry(), resolver: resolver)
+        self.init(
+            registry: AgentChatSessionRegistry(),
+            resolver: resolver,
+            rawOutputStore: Self.defaultRawOutputStore(),
+            tokenOptimizationModeProvider: Self.defaultTokenOptimizationModeProvider()
+        )
     }
 
     /// Creates the service with explicit dependencies.
@@ -36,10 +44,16 @@ final class AgentChatTranscriptService {
     ///   - resolver: Transcript path resolver.
     init(
         registry: AgentChatSessionRegistry,
-        resolver: AgentChatTranscriptResolver = AgentChatTranscriptResolver()
+        resolver: AgentChatTranscriptResolver = AgentChatTranscriptResolver(),
+        rawOutputStore: ChatRawTerminalOutputFileStore,
+        tokenOptimizationModeProvider: @escaping () -> TokenOptimizationMode = {
+            .balanced
+        }
     ) {
         self.registry = registry
         self.resolver = resolver
+        self.rawOutputStore = rawOutputStore
+        self.tokenOptimizationModeProvider = tokenOptimizationModeProvider
         registry.onRecordChanged = { [weak self] record, previous in
             self?.handleRecordChange(record, previous: previous)
         }
@@ -326,7 +340,9 @@ final class AgentChatTranscriptService {
         let tailer = AgentChatTranscriptTailer(
             sessionID: sessionID,
             agentKind: agentKind,
-            path: path
+            path: path,
+            rawOutputStore: rawOutputStore,
+            tokenOptimizationMode: tokenOptimizationModeProvider()
         ) { [weak self] batch in
             await self?.publishBatch(batch, sessionID: sessionID)
         }
@@ -437,6 +453,25 @@ final class AgentChatTranscriptService {
         MobileHostService.emitEvent(topic: Self.eventTopic, payload: payload)
     }
 
+    nonisolated static func defaultRawOutputStore() -> ChatRawTerminalOutputFileStore {
+        let root = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        return ChatRawTerminalOutputFileStore(
+            rootDirectory: root
+                .appendingPathComponent("cmux", isDirectory: true)
+                .appendingPathComponent("agent-raw-output", isDirectory: true)
+        )
+    }
+
+    nonisolated static func defaultTokenOptimizationModeProvider() -> () -> TokenOptimizationMode {
+        let catalog = SettingCatalog()
+        let store = JSONConfigStore(fileURL: CmuxConfigLocation().userConfigFile)
+        let key = catalog.terminal.agentTokenOptimizationMode
+        return {
+            TokenOptimizationMode(setting: store.snapshotValue(for: key))
+        }
+    }
+
     /// Encodes a wire value into the `[String: Any]` payload shape the
     /// event fan-out expects.
     func wirePayload<T: Encodable>(_ value: T) -> [String: Any]? {
@@ -445,5 +480,20 @@ final class AgentChatTranscriptService {
             return nil
         }
         return object
+    }
+}
+
+private extension TokenOptimizationMode {
+    init(setting: AgentTokenOptimizationMode) {
+        switch setting {
+        case .off:
+            self = .off
+        case .conservative:
+            self = .conservative
+        case .balanced:
+            self = .balanced
+        case .aggressive:
+            self = .aggressive
+        }
     }
 }

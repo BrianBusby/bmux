@@ -322,9 +322,6 @@ func sidebarWorkspaceRowBackgroundStyle(
                 opacity: isMultiSelected ? 0.24 : 0.46
             )
         }
-        if isActive {
-            return .clear
-        }
         if isMultiSelected {
             return SidebarWorkspaceRowBackgroundStyle(color: accentBackground, opacity: 0.18)
         }

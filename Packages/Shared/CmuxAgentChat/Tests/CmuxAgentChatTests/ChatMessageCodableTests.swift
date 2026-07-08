@@ -43,7 +43,16 @@ struct ChatMessageCodableTests {
                     output: "All tests passed",
                     exitCode: 0,
                     durationSeconds: 4.2,
-                    isRunning: false
+                    isRunning: false,
+                    outputMetadata: ChatTerminalOutputMetadata(
+                        kind: .tests,
+                        rawOutputRef: "terminal-output:m1:abc123",
+                        rawByteCount: 1800,
+                        rawLineCount: 42,
+                        optimizedByteCount: 38,
+                        omittedLineCount: 39,
+                        wasOptimized: true
+                    )
                 )
             ),
             .fileEdit(
@@ -90,6 +99,36 @@ struct ChatMessageCodableTests {
         let kind = try #require(object["kind"] as? [String: Any])
         #expect(kind["type"] as? String == "terminal")
         #expect(kind["command"] as? String == "ls")
+    }
+
+    @Test("terminal output metadata encodes a local raw-output reference without embedding raw output")
+    func terminalOutputMetadataEncoding() throws {
+        let rawOutput = String(repeating: "downloaded package\n", count: 20)
+        let terminal = ChatTerminalCapture(
+            command: "npm install",
+            output: "package install summary\n- completed",
+            outputMetadata: ChatTerminalOutputMetadata(
+                kind: .packageInstall,
+                rawOutputRef: "terminal-output:m1:feedface",
+                rawByteCount: rawOutput.utf8.count,
+                rawLineCount: 20,
+                optimizedByteCount: 35,
+                omittedLineCount: 18,
+                wasOptimized: true
+            )
+        )
+        let data = try JSONEncoder().encode(message(kind: .terminal(terminal)))
+        let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let kind = try #require(object["kind"] as? [String: Any])
+        let metadata = try #require(kind["output_metadata"] as? [String: Any])
+
+        #expect(metadata["kind"] as? String == "package_install")
+        #expect(metadata["raw_output_ref"] as? String == "terminal-output:m1:feedface")
+        #expect(metadata["raw_byte_count"] as? Int == rawOutput.utf8.count)
+        #expect(metadata["raw_line_count"] as? Int == 20)
+        #expect(metadata["omitted_line_count"] as? Int == 18)
+        #expect(metadata["was_optimized"] as? Bool == true)
+        #expect(String(decoding: data, as: UTF8.self).contains(rawOutput) == false)
     }
 
     @Test("unknown kind decodes as unsupported, preserving the raw type")
