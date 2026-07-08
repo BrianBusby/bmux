@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-const port = Number(process.env.CMUX_AGENT_UI_PORT ?? 7739);
+const port = Number(process.env.BMUX_AGENT_UI_PORT ?? 7739);
 const root = join(import.meta.dir, "..", "scratch", "files-changed-e2e");
 await rm(root, { recursive: true, force: true });
 await mkdir(root, { recursive: true });

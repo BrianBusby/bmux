@@ -1,4 +1,4 @@
-module github.com/manaflow-ai/cmux/vault
+module github.com/manaflow-ai/bmux/vault
 
 go 1.24
 

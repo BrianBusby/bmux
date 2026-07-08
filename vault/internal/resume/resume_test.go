@@ -12,9 +12,9 @@ import (
 	"testing"
 
 	"github.com/klauspost/compress/zstd"
-	"github.com/manaflow-ai/cmux/vault/internal/agentdirs"
-	"github.com/manaflow-ai/cmux/vault/internal/api"
-	"github.com/manaflow-ai/cmux/vault/internal/authstore"
+	"github.com/manaflow-ai/bmux/vault/internal/agentdirs"
+	"github.com/manaflow-ai/bmux/vault/internal/api"
+	"github.com/manaflow-ai/bmux/vault/internal/authstore"
 )
 
 func TestResumeRestoresDeletedCodexSessionAndRefusesOverwrite(t *testing.T) {

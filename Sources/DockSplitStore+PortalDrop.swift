@@ -1,5 +1,5 @@
 import Bonsplit
-import CmuxTerminal
+import BmuxTerminal
 import Foundation
 
 /// Portal pane-drop routing for the Dock — the Dock equivalent of

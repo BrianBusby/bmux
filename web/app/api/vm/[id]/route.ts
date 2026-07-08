@@ -17,13 +17,13 @@ export async function GET(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]",
-    { "cmux.vm.operation": "status" },
+    { "bmux.vm.operation": "status" },
     "/api/vm/[id] GET failed",
     async ({ user, span }) => {
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
+      setSpanAttributes(span, { "bmux.vm.id": id });
       try {
         const vm = await runVmWorkflow(getVm({
           userId: user.id,
@@ -54,13 +54,13 @@ export async function DELETE(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]",
-    { "cmux.vm.operation": "destroy" },
+    { "bmux.vm.operation": "destroy" },
     "/api/vm/[id] DELETE failed",
     async ({ user, span }) => {
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
+      setSpanAttributes(span, { "bmux.vm.id": id });
       try {
         await runVmWorkflow(destroyVm({
           userId: user.id,

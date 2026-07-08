@@ -7,7 +7,7 @@ export function reportError(error: unknown, context: Record<string, unknown>): v
     // embed credential-bearing URLs/headers and logs must stay secret-free.
     // Sentry still receives the original exception below (its own scrubbing
     // applies, and grouping needs the real error).
-    console.error("cmux.observability.error", safeContext, scrubErrorForLog(error));
+    console.error("bmux.observability.error", safeContext, scrubErrorForLog(error));
   } catch {
     // Reporting must never change the caller's control flow.
   }
@@ -17,7 +17,7 @@ export function reportError(error: unknown, context: Record<string, unknown>): v
   void import("@sentry/nextjs")
     .then((Sentry) => {
       Sentry.withScope((scope) => {
-        scope.setContext("cmux", safeContext);
+        scope.setContext("bmux", safeContext);
         Sentry.captureException(error);
       });
     })

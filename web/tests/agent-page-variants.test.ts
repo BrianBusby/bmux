@@ -73,24 +73,24 @@ describe("agent page variants", () => {
               </a>
               <table>
                 <thead><tr><th>Command</th><th>Description</th></tr></thead>
-                <tbody><tr><td><code>cmux list-workspaces</code></td><td>List workspaces.</td></tr></tbody>
+                <tbody><tr><td><code>bmux list-workspaces</code></td><td>List workspaces.</td></tr></tbody>
               </table>
-              <pre><code>cmux notify --title Done</code></pre>
+              <pre><code>bmux notify --title Done</code></pre>
             </main>
           </body>
         </html>`,
-      sourceUrl: "https://cmux.com/docs",
+      sourceUrl: "https://bmux.com/docs",
     });
 
     expect(markdown).toContain("# Docs");
-    expect(markdown).toContain("[API docs](https://cmux.com/docs/api)");
-    expect(markdown).toContain("[Download](https://cmux.com/download) [GitHub](https://cmux.com/github)");
+    expect(markdown).toContain("[API docs](https://bmux.com/docs/api)");
+    expect(markdown).toContain("[Download](https://bmux.com/download) [GitHub](https://bmux.com/github)");
     expect(markdown).toContain("## Post Title");
-    expect(markdown).toContain("Link: https://cmux.com/blog/post");
-    expect(markdown).not.toContain("](https://cmux.com/blog/post)");
+    expect(markdown).toContain("Link: https://bmux.com/blog/post");
+    expect(markdown).not.toContain("](https://bmux.com/blog/post)");
     expect(markdown).toContain("| Command | Description |");
     expect(markdown).toContain("```");
-    expect(markdown).toContain("Canonical: https://cmux.com/docs");
+    expect(markdown).toContain("Canonical: https://bmux.com/docs");
     expect(markdown).not.toContain("Skip this");
   });
 
@@ -98,15 +98,15 @@ describe("agent page variants", () => {
     const markdown = markdownFromHtml({
       html: `
         <html>
-          <head><title>Settings &amp; Docs &#39;Guide&#39; \u2014 cmux</title></head>
+          <head><title>Settings &amp; Docs &#39;Guide&#39; \u2014 bmux</title></head>
           <body>
-            <main><p>Configure cmux.</p></main>
+            <main><p>Configure bmux.</p></main>
           </body>
         </html>`,
-      sourceUrl: "https://cmux.com/docs/configuration",
+      sourceUrl: "https://bmux.com/docs/configuration",
     });
 
-    expect(markdown).toStartWith("# Settings & Docs 'Guide'\n\nConfigure cmux.");
+    expect(markdown).toStartWith("# Settings & Docs 'Guide'\n\nConfigure bmux.");
   });
 
   test("prefers the readable page heading over shell headings", () => {
@@ -122,7 +122,7 @@ describe("agent page variants", () => {
             </main>
           </body>
         </html>`,
-      sourceUrl: "https://cmux.com/docs",
+      sourceUrl: "https://bmux.com/docs",
     });
 
     expect(markdown).toStartWith("# Docs\n\nActual page content.");
@@ -142,7 +142,7 @@ describe("agent page variants", () => {
       </html>`;
     const markdown = markdownFromHtml({
       html,
-      sourceUrl: "https://cmux.com/docs",
+      sourceUrl: "https://bmux.com/docs",
     });
 
     expect(extractReadableHtml(html)).toContain("<p>After script.</p>");
@@ -157,13 +157,13 @@ describe("agent page variants", () => {
           <body>
             <main>
               <a href="/blog">Back to blog</a>
-              <img src="/logo.png" alt="cmux icon" />
+              <img src="/logo.png" alt="bmux icon" />
               <h1>Post Title</h1>
               <p>Body text.</p>
             </main>
           </body>
         </html>`,
-      sourceUrl: "https://cmux.com/blog/post",
+      sourceUrl: "https://bmux.com/blog/post",
     });
 
     expect(markdown).toStartWith("# Post Title\n\n[Back to blog]");
@@ -182,7 +182,7 @@ describe("agent page variants", () => {
             </main>
           </body>
         </html>`,
-      sourceUrl: "https://cmux.com/docs/code",
+      sourceUrl: "https://bmux.com/docs/code",
     });
 
     expect(markdown).toContain("arr.map(fn)[0]");
@@ -202,26 +202,26 @@ describe("agent page variants", () => {
                 <a href="?tab=cli">CLI tab</a>
                 <a href="#install">Install</a>
                 <a href="/download">Download</a>
-                <a href="https://github.com/manaflow-ai/cmux">GitHub</a>
+                <a href="https://github.com/manaflow-ai/bmux">GitHub</a>
                 <img src="images/logo.png" alt="Logo" />
               </p>
             </main>
           </body>
         </html>`,
-      sourceUrl: "https://cmux.com/docs/getting-started",
+      sourceUrl: "https://bmux.com/docs/getting-started",
     });
 
-    expect(markdown).toContain("[Relative API](https://cmux.com/docs/api)");
-    expect(markdown).toContain("[Blog](https://cmux.com/blog)");
+    expect(markdown).toContain("[Relative API](https://bmux.com/docs/api)");
+    expect(markdown).toContain("[Blog](https://bmux.com/blog)");
     expect(markdown).toContain(
-      "[CLI tab](https://cmux.com/docs/getting-started?tab=cli)",
+      "[CLI tab](https://bmux.com/docs/getting-started?tab=cli)",
     );
     expect(markdown).toContain(
-      "[Install](https://cmux.com/docs/getting-started#install)",
+      "[Install](https://bmux.com/docs/getting-started#install)",
     );
-    expect(markdown).toContain("[Download](https://cmux.com/download)");
-    expect(markdown).toContain("[GitHub](https://github.com/manaflow-ai/cmux)");
-    expect(markdown).toContain("![Logo](https://cmux.com/docs/images/logo.png)");
+    expect(markdown).toContain("[Download](https://bmux.com/download)");
+    expect(markdown).toContain("[GitHub](https://github.com/manaflow-ai/bmux)");
+    expect(markdown).toContain("![Logo](https://bmux.com/docs/images/logo.png)");
   });
 
   test("converts Markdown variants to readable plain text", () => {
@@ -229,30 +229,30 @@ describe("agent page variants", () => {
       [
         "# Docs",
         "",
-        "![cmux icon](https://cmux.com/logo.png)",
+        "![bmux icon](https://bmux.com/logo.png)",
         "",
-        "Read the [API docs](https://cmux.com/docs/api).",
+        "Read the [API docs](https://bmux.com/docs/api).",
         "",
         "| Command | Description |",
         "| --- | --- |",
-        "| `cmux list-workspaces` | List workspaces. |",
+        "| `bmux list-workspaces` | List workspaces. |",
         "",
         "```",
         "arr.map(fn)[0]",
         "```",
         "",
-        "Canonical: https://cmux.com/docs",
+        "Canonical: https://bmux.com/docs",
       ].join("\n"),
     );
 
     expect(text).toContain("Docs");
-    expect(text).toContain("cmux icon (https://cmux.com/logo.png)");
-    expect(text).toContain("API docs (https://cmux.com/docs/api)");
+    expect(text).toContain("bmux icon (https://bmux.com/logo.png)");
+    expect(text).toContain("API docs (https://bmux.com/docs/api)");
     expect(text).toContain("Command\tDescription");
-    expect(text).toContain("cmux list-workspaces\tList workspaces.");
+    expect(text).toContain("bmux list-workspaces\tList workspaces.");
     expect(text).toContain("arr.map(fn)[0]");
     expect(text).not.toContain("```");
-    expect(text).not.toContain("![cmux icon]");
+    expect(text).not.toContain("![bmux icon]");
     expect(text).not.toContain("[API docs]");
   });
 
@@ -270,17 +270,17 @@ describe("agent page variants", () => {
 
   test("removes single-column Markdown table dividers from text", () => {
     const text = plainTextFromMarkdown(
-      ["| Name |", "| --- |", "| cmux |"].join("\n"),
+      ["| Name |", "| --- |", "| bmux |"].join("\n"),
     );
 
     expect(text).toContain("Name");
-    expect(text).toContain("cmux");
+    expect(text).toContain("bmux");
     expect(text).not.toContain("---");
   });
 
   test("marks alternate text responses as non-indexable canonical variants", () => {
     const headers = headersForAgentPage({
-      canonicalUrl: "https://cmux.com/docs/getting-started",
+      canonicalUrl: "https://bmux.com/docs/getting-started",
       contentLanguage: "en",
       format: "md",
     });
@@ -288,13 +288,13 @@ describe("agent page variants", () => {
     expect(headers.get("content-type")).toBe("text/markdown; charset=utf-8");
     expect(headers.get("x-robots-tag")).toBe("noindex, follow");
     expect(headers.get("link")).toBe(
-      '<https://cmux.com/docs/getting-started>; rel="canonical"',
+      '<https://bmux.com/docs/getting-started>; rel="canonical"',
     );
   });
 
   test("keeps personalized variant responses out of shared caches", () => {
     const headers = headersForAgentPage({
-      canonicalUrl: "https://cmux.com/docs/getting-started",
+      canonicalUrl: "https://bmux.com/docs/getting-started",
       contentLanguage: "en",
       format: "txt",
       privateResponse: true,
@@ -333,26 +333,26 @@ describe("agent page variants", () => {
   test("keeps internal redirects on the same origin", () => {
     expect(
       sameOriginRedirectUrl({
-        currentUrl: new URL("https://cmux.com/docs"),
+        currentUrl: new URL("https://bmux.com/docs"),
         location: "/docs/getting-started?from=old#intro",
-        origin: "https://cmux.com",
+        origin: "https://bmux.com",
       })?.toString(),
-    ).toBe("https://cmux.com/docs/getting-started?from=old");
+    ).toBe("https://bmux.com/docs/getting-started?from=old");
     expect(
       sameOriginRedirectUrl({
-        currentUrl: new URL("https://cmux.com/docs"),
+        currentUrl: new URL("https://bmux.com/docs"),
         location: "https://example.com/docs",
-        origin: "https://cmux.com",
+        origin: "https://bmux.com",
       }),
     ).toBeNull();
   });
 
   test("lists agent-readable Markdown and text variants", () => {
-    const llms = buildLlmsText("https://cmux.com");
+    const llms = buildLlmsText("https://bmux.com");
 
-    expect(llms).toContain("[Getting Started](https://cmux.com/docs/getting-started.md)");
-    expect(llms).toContain("[Skills](https://cmux.com/docs/skills.md)");
-    expect(llms).toContain("Text: https://cmux.com/docs/getting-started.txt");
+    expect(llms).toContain("[Getting Started](https://bmux.com/docs/getting-started.md)");
+    expect(llms).toContain("[Skills](https://bmux.com/docs/skills.md)");
+    expect(llms).toContain("Text: https://bmux.com/docs/getting-started.txt");
     expect(variantPathForPage("/", "md")).toBe("/index.md");
   });
 
@@ -360,12 +360,12 @@ describe("agent page variants", () => {
     const llms = buildLlmsText("https://preview.example");
 
     expect(llms).toContain(
-      "[cmux vs Herdr](https://preview.example/compare/cmux-vs-herdr)",
+      "[bmux vs Herdr](https://preview.example/compare/bmux-vs-herdr)",
     );
     expect(llms).toContain(
       "[How to run multiple Claude Code agents in parallel](https://preview.example/compare/multiple-claude-code-agents-parallel)",
     );
-    expect(llms).not.toContain("https://cmux.com/compare/");
+    expect(llms).not.toContain("https://bmux.com/compare/");
   });
 
   test("limits en-ja docs variants to translated locales", () => {
@@ -390,13 +390,13 @@ describe("agent page variants", () => {
     expect(path).toBe("/docs/vault");
 
     const header = buildAlternateLinkHeader(
-      "https://cmux.com",
+      "https://bmux.com",
       path!,
       featureWorkflowContentLocales,
     );
-    expect(header).toContain("<https://cmux.com/docs/vault>; rel=\"alternate\"; hreflang=\"en\"");
-    expect(header).toContain("<https://cmux.com/ja/docs/vault>; rel=\"alternate\"; hreflang=\"ja\"");
-    expect(header).toContain("<https://cmux.com/docs/vault>; rel=\"alternate\"; hreflang=\"x-default\"");
+    expect(header).toContain("<https://bmux.com/docs/vault>; rel=\"alternate\"; hreflang=\"en\"");
+    expect(header).toContain("<https://bmux.com/ja/docs/vault>; rel=\"alternate\"; hreflang=\"ja\"");
+    expect(header).toContain("<https://bmux.com/docs/vault>; rel=\"alternate\"; hreflang=\"x-default\"");
     expect(header).not.toContain("/de/docs/vault");
   });
 

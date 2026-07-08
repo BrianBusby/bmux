@@ -1,12 +1,12 @@
 import AppKit
-import CMUXAuthCore
-import CmuxAuthRuntime
-import CmuxSettingsUI
+import BMUXAuthCore
+import BmuxAuthRuntime
+import BmuxSettingsUI
 import Foundation
 import Observation
 
-/// Adapts the shared ``CmuxAuthRuntime/AuthCoordinator`` and the macOS
-/// ``HostBrowserSignInFlow`` to the `CmuxSettingsUI` `AccountFlow` protocol so
+/// Adapts the shared ``BmuxAuthRuntime/AuthCoordinator`` and the macOS
+/// ``HostBrowserSignInFlow`` to the `BmuxSettingsUI` `AccountFlow` protocol so
 /// the `AccountSection` can drive sign-in / sign-out / team selection without
 /// depending on the auth packages.
 ///
@@ -19,7 +19,7 @@ import Observation
 final class HostAccountFlow: AccountFlow {
     private let coordinator: AuthCoordinator
     private let browserSignIn: HostBrowserSignInFlow
-    private let featureFlags = CmuxFeatureFlags.shared
+    private let featureFlags = BmuxFeatureFlags.shared
     @ObservationIgnored private var featureFlagsObserver: (any NSObjectProtocol)?
     private(set) var isProUpgradeAvailable: Bool
     private(set) var isProActive = false
@@ -30,12 +30,12 @@ final class HostAccountFlow: AccountFlow {
         self.browserSignIn = browserSignIn
         isProUpgradeAvailable = featureFlags.isProUpgradeUIEnabled
         featureFlagsObserver = NotificationCenter.default.addObserver(
-            forName: .cmuxFeatureFlagsDidChange,
+            forName: .bmuxFeatureFlagsDidChange,
             object: featureFlags,
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.isProUpgradeAvailable = CmuxFeatureFlags.shared.isProUpgradeUIEnabled
+                self?.isProUpgradeAvailable = BmuxFeatureFlags.shared.isProUpgradeUIEnabled
             }
         }
     }
@@ -134,7 +134,7 @@ final class HostAccountFlow: AccountFlow {
         ProUpgradePresenter.presentBillingPortal()
     }
 
-    private static func identity(from user: CMUXAuthUser?) -> AccountIdentity? {
+    private static func identity(from user: BMUXAuthUser?) -> AccountIdentity? {
         guard let user else { return nil }
         return AccountIdentity(
             id: user.id,

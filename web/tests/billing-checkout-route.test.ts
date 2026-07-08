@@ -156,7 +156,7 @@ describe("billing checkout route", () => {
     userResponses = [null, anonymousUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout"),
+      new NextRequest("https://bmux.test/api/billing/checkout"),
     );
 
     expect(response.status).toBe(307);
@@ -165,7 +165,7 @@ describe("billing checkout route", () => {
     expect(getUser).toHaveBeenNthCalledWith(2, { or: "anonymous" });
     expect(anonymousUser.createCheckoutUrl).toHaveBeenCalledWith({
       productId: "pro",
-      returnUrl: "https://cmux.test/api/billing/confirm",
+      returnUrl: "https://bmux.test/api/billing/confirm",
     });
   });
 
@@ -173,7 +173,7 @@ describe("billing checkout route", () => {
     userResponses = [signedInUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout"),
+      new NextRequest("https://bmux.test/api/billing/checkout"),
     );
 
     expect(response.status).toBe(307);
@@ -181,7 +181,7 @@ describe("billing checkout route", () => {
     expect(getUser).toHaveBeenCalledTimes(1);
     expect(signedInUser.createCheckoutUrl).toHaveBeenCalledWith({
       productId: "pro",
-      returnUrl: "https://cmux.test/api/billing/confirm",
+      returnUrl: "https://bmux.test/api/billing/confirm",
     });
   });
 
@@ -198,17 +198,17 @@ describe("billing checkout route", () => {
     );
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout"),
+      new NextRequest("https://bmux.test/api/billing/checkout"),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?welcome=active",
+      "https://bmux.test/pricing?welcome=active",
     );
     expect(signedInUser.createCheckoutUrl).toHaveBeenCalledTimes(1);
     expect(signedInUser.listProducts).toHaveBeenCalled();
     expect(signedInUser.update).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { bmuxPlan: "pro" },
     });
   });
 
@@ -220,12 +220,12 @@ describe("billing checkout route", () => {
     signedInUser.listProducts.mockResolvedValue(emptyProductsPage());
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout"),
+      new NextRequest("https://bmux.test/api/billing/checkout"),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/api/billing/confirm",
+      "https://bmux.test/api/billing/confirm",
     );
     expect(signedInUser.listProducts).toHaveBeenCalled();
     expect(signedInUser.update).not.toHaveBeenCalled();
@@ -236,7 +236,7 @@ describe("billing checkout route", () => {
     userResponses = [signedInUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=team"),
+      new NextRequest("https://bmux.test/api/billing/checkout?plan=team"),
     );
 
     expect(response.status).toBe(307);
@@ -245,7 +245,7 @@ describe("billing checkout route", () => {
     expect(signedInUser.createCheckoutUrl).not.toHaveBeenCalled();
     expect(teamCustomer.createCheckoutUrl).toHaveBeenCalledWith({
       productId: "team",
-      returnUrl: "https://cmux.test/pricing?welcome=team",
+      returnUrl: "https://bmux.test/pricing?welcome=team",
     });
   });
 
@@ -254,7 +254,7 @@ describe("billing checkout route", () => {
     userResponses = [null, anonymousUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout"),
+      new NextRequest("https://bmux.test/api/billing/checkout"),
     );
 
     expect(response.status).toBe(307);
@@ -267,15 +267,15 @@ describe("billing checkout route", () => {
       mode: "subscription",
       line_items: [{ price: "price_month", quantity: 1 }],
       client_reference_id: "user-anonymous",
-      metadata: { stackUserId: "user-anonymous", plan: "pro", app: "cmux" },
+      metadata: { stackUserId: "user-anonymous", plan: "pro", app: "bmux" },
       subscription_data: {
-        metadata: { stackUserId: "user-anonymous", plan: "pro", app: "cmux" },
+        metadata: { stackUserId: "user-anonymous", plan: "pro", app: "bmux" },
       },
       allow_promotion_codes: true,
       customer_email: undefined,
       success_url:
-        "https://cmux.test/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&cmux_scheme=cmux",
-      cancel_url: "https://cmux.test/pricing?billing=cancelled",
+        "https://bmux.test/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&bmux_scheme=bmux",
+      cancel_url: "https://bmux.test/pricing?billing=cancelled",
     });
   });
 
@@ -284,7 +284,7 @@ describe("billing checkout route", () => {
     userResponses = [signedInUser];
 
     await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?interval=year"),
+      new NextRequest("https://bmux.test/api/billing/checkout?interval=year"),
     );
 
     expect(resolveProPrice).toHaveBeenCalledWith("year");
@@ -295,17 +295,17 @@ describe("billing checkout route", () => {
   });
 
   test("rejects dev callback schemes on non-local Stripe checkout hosts", async () => {
-    process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES = "cmux-dev-test";
+    process.env.BMUX_DEV_NATIVE_CALLBACK_SCHEMES = "bmux-dev-test";
     stripeConfigured = true;
     userResponses = [null, anonymousUser];
 
     await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?cmux_scheme=cmux-dev-test"),
+      new NextRequest("https://bmux.test/api/billing/checkout?bmux_scheme=bmux-dev-test"),
     );
 
     expect(createdStripeSessions[0]).toMatchObject({
       success_url:
-        "https://cmux.test/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&cmux_scheme=cmux",
+        "https://bmux.test/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&bmux_scheme=bmux",
     });
   });
 
@@ -315,7 +315,7 @@ describe("billing checkout route", () => {
     userResponses = [signedInUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=team"),
+      new NextRequest("https://bmux.test/api/billing/checkout?plan=team"),
     );
 
     expect(response.headers.get("location")).toBe("https://checkout.stripe.com/c/session");
@@ -323,7 +323,7 @@ describe("billing checkout route", () => {
     expect(resolveTeamPrice).toHaveBeenCalled();
     expect(createStripeCustomer).toHaveBeenCalledWith({
       name: "Signed Team",
-      metadata: { stackTeamId: "team-signed-in", app: "cmux" },
+      metadata: { stackTeamId: "team-signed-in", app: "bmux" },
     });
     expect(insertedStripeCustomers).toContainEqual({
       id: "cus_team",
@@ -342,25 +342,25 @@ describe("billing checkout route", () => {
       ],
       customer: "cus_team",
       client_reference_id: "team-signed-in",
-      metadata: { stackTeamId: "team-signed-in", plan: "team", app: "cmux" },
+      metadata: { stackTeamId: "team-signed-in", plan: "team", app: "bmux" },
       subscription_data: {
-        metadata: { stackTeamId: "team-signed-in", plan: "team", app: "cmux" },
+        metadata: { stackTeamId: "team-signed-in", plan: "team", app: "bmux" },
       },
       allow_promotion_codes: true,
       success_url:
-        "https://cmux.test/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&cmux_scheme=cmux",
-      cancel_url: "https://cmux.test/pricing?billing=cancelled",
+        "https://bmux.test/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&bmux_scheme=bmux",
+      cancel_url: "https://bmux.test/pricing?billing=cancelled",
     });
   });
 
   test("rejects unknown checkout plans", async () => {
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=enterprise"),
+      new NextRequest("https://bmux.test/api/billing/checkout?plan=enterprise"),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=invalid_plan",
+      "https://bmux.test/pricing?billing=invalid_plan",
     );
     expect(getUser).not.toHaveBeenCalled();
   });

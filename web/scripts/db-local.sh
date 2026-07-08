@@ -10,23 +10,23 @@ fi
 
 command="${1:-status}"
 
-cmux_port="${CMUX_PORT:-${PORT:-3777}}"
-if [[ ! "$cmux_port" =~ ^[0-9]+$ ]]; then
-  echo "CMUX_PORT must be numeric, got: $cmux_port" >&2
+bmux_port="${BMUX_PORT:-${PORT:-3777}}"
+if [[ ! "$bmux_port" =~ ^[0-9]+$ ]]; then
+  echo "BMUX_PORT must be numeric, got: $bmux_port" >&2
   exit 2
 fi
 
-db_kind="${CMUX_DB_KIND:-dev}"
-db_offset="${CMUX_DB_PORT_OFFSET:-10000}"
+db_kind="${BMUX_DB_KIND:-dev}"
+db_offset="${BMUX_DB_PORT_OFFSET:-10000}"
 if [[ ! "$db_offset" =~ ^[0-9]+$ ]]; then
-  echo "CMUX_DB_PORT_OFFSET must be numeric, got: $db_offset" >&2
+  echo "BMUX_DB_PORT_OFFSET must be numeric, got: $db_offset" >&2
   exit 2
 fi
 
-db_port="${CMUX_DB_PORT:-$((cmux_port + db_offset))}"
-db_user="${CMUX_DB_USER:-cmux}"
-db_password="${CMUX_DB_PASSWORD:-cmux}"
-db_name="${CMUX_DB_NAME:-cmux}"
+db_port="${BMUX_DB_PORT:-$((bmux_port + db_offset))}"
+db_user="${BMUX_DB_USER:-bmux}"
+db_password="${BMUX_DB_PASSWORD:-bmux}"
+db_name="${BMUX_DB_NAME:-bmux}"
 
 branch="$(git -C "$REPO_DIR" branch --show-current 2>/dev/null || true)"
 if [[ -z "$branch" ]]; then
@@ -42,13 +42,13 @@ if [[ -z "$slug" ]]; then
   slug="worktree"
 fi
 
-export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-cmux-db-${slug}-${db_kind}-${cmux_port}}"
-export CMUX_DB_CONTAINER_NAME="${CMUX_DB_CONTAINER_NAME:-cmux-postgres-${slug}-${db_kind}-${cmux_port}}"
-export CMUX_DB_VOLUME_NAME="${CMUX_DB_VOLUME_NAME:-cmux-postgres-${slug}-${db_kind}-${cmux_port}}"
-export CMUX_DB_PORT="$db_port"
-export CMUX_DB_USER="$db_user"
-export CMUX_DB_PASSWORD="$db_password"
-export CMUX_DB_NAME="$db_name"
+export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-bmux-db-${slug}-${db_kind}-${bmux_port}}"
+export BMUX_DB_CONTAINER_NAME="${BMUX_DB_CONTAINER_NAME:-bmux-postgres-${slug}-${db_kind}-${bmux_port}}"
+export BMUX_DB_VOLUME_NAME="${BMUX_DB_VOLUME_NAME:-bmux-postgres-${slug}-${db_kind}-${bmux_port}}"
+export BMUX_DB_PORT="$db_port"
+export BMUX_DB_USER="$db_user"
+export BMUX_DB_PASSWORD="$db_password"
+export BMUX_DB_NAME="$db_name"
 export DATABASE_URL="${DATABASE_URL:-postgres://${db_user}:${db_password}@localhost:${db_port}/${db_name}}"
 export DIRECT_DATABASE_URL="${DIRECT_DATABASE_URL:-$DATABASE_URL}"
 
@@ -72,12 +72,12 @@ print_status() {
   local redacted_url
   redacted_url="postgres://${db_user}:<redacted>@localhost:${db_port}/${db_name}"
   cat <<EOF
-CMUX_PORT=$cmux_port
-CMUX_DB_KIND=$db_kind
-CMUX_DB_PORT=$db_port
+BMUX_PORT=$bmux_port
+BMUX_DB_KIND=$db_kind
+BMUX_DB_PORT=$db_port
 COMPOSE_PROJECT_NAME=$COMPOSE_PROJECT_NAME
-CMUX_DB_CONTAINER_NAME=$CMUX_DB_CONTAINER_NAME
-CMUX_DB_VOLUME_NAME=$CMUX_DB_VOLUME_NAME
+BMUX_DB_CONTAINER_NAME=$BMUX_DB_CONTAINER_NAME
+BMUX_DB_VOLUME_NAME=$BMUX_DB_VOLUME_NAME
 DATABASE_URL=$redacted_url
 EOF
 }
@@ -111,21 +111,21 @@ case "$command" in
   test)
     env \
       -u COMPOSE_PROJECT_NAME \
-      -u CMUX_DB_CONTAINER_NAME \
-      -u CMUX_DB_VOLUME_NAME \
-      -u CMUX_DB_PORT \
+      -u BMUX_DB_CONTAINER_NAME \
+      -u BMUX_DB_VOLUME_NAME \
+      -u BMUX_DB_PORT \
       -u DATABASE_URL \
       -u DIRECT_DATABASE_URL \
-      CMUX_DB_KIND=test \
-      CMUX_DB_PORT_OFFSET="${CMUX_TEST_DB_PORT_OFFSET:-30000}" \
-      CMUX_DB_NAME="${CMUX_TEST_DB_NAME:-cmux_test}" \
+      BMUX_DB_KIND=test \
+      BMUX_DB_PORT_OFFSET="${BMUX_TEST_DB_PORT_OFFSET:-30000}" \
+      BMUX_DB_NAME="${BMUX_TEST_DB_NAME:-bmux_test}" \
       "$0" up >/dev/null
-    export CMUX_DB_TEST=1
-    export CMUX_DB_KIND=test
-    export CMUX_DB_PORT_OFFSET="${CMUX_TEST_DB_PORT_OFFSET:-30000}"
-    export CMUX_DB_NAME="${CMUX_TEST_DB_NAME:-cmux_test}"
-    export CMUX_DB_PORT="$((cmux_port + ${CMUX_TEST_DB_PORT_OFFSET:-30000}))"
-    export DATABASE_URL="postgres://${db_user}:${db_password}@localhost:${CMUX_DB_PORT}/${CMUX_DB_NAME}"
+    export BMUX_DB_TEST=1
+    export BMUX_DB_KIND=test
+    export BMUX_DB_PORT_OFFSET="${BMUX_TEST_DB_PORT_OFFSET:-30000}"
+    export BMUX_DB_NAME="${BMUX_TEST_DB_NAME:-bmux_test}"
+    export BMUX_DB_PORT="$((bmux_port + ${BMUX_TEST_DB_PORT_OFFSET:-30000}))"
+    export DATABASE_URL="postgres://${db_user}:${db_password}@localhost:${BMUX_DB_PORT}/${BMUX_DB_NAME}"
     export DIRECT_DATABASE_URL="$DATABASE_URL"
     bunx drizzle-kit migrate --config "$ROOT_DIR/drizzle.config.ts"
     bunx drizzle-kit migrate --config "$ROOT_DIR/drizzle.config.ts"

@@ -254,7 +254,7 @@ export default async function PricingPage({
               ),
               github: (chunks) => (
                 <a
-                  href="https://github.com/manaflow-ai/cmux"
+                  href="https://github.com/manaflow-ai/bmux"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={linkClass}

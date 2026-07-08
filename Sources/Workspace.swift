@@ -1,29 +1,29 @@
-import CmuxAppKitSupportUI
-import CmuxFoundation
+import BmuxAppKitSupportUI
+import BmuxFoundation
 import Foundation
-import CmuxCore
-import CmuxRemoteDaemon
-import CmuxRemoteSession
-import CmuxRemoteWorkspace
-import CmuxWorkspaces
-import CmuxTerminal
+import BmuxCore
+import BmuxRemoteDaemon
+import BmuxRemoteSession
+import BmuxRemoteWorkspace
+import BmuxWorkspaces
+import BmuxTerminal
 import SwiftUI
 import AppKit
-import CmuxFoundation
+import BmuxFoundation
 import Bonsplit
-import CMUXAgentLaunch
-import CmuxSettings
-import CmuxBrowser
-import CmuxCanvasUI
-import CmuxPanes
-import CmuxSidebar
-import CmuxNotifications
+import BMUXAgentLaunch
+import BmuxSettings
+import BmuxBrowser
+import BmuxCanvasUI
+import BmuxPanes
+import BmuxSidebar
+import BmuxNotifications
 import Combine
 import CryptoKit
 import Darwin
 import Network
 import CoreText
-import CmuxAgentChat
+import BmuxAgentChat
 
 #if DEBUG
 private func debugWorkspaceDescriptionPreview(_ text: String?, limit: Int = 120) -> String {
@@ -735,7 +735,7 @@ extension Workspace {
         // prewarmed at launch so this is rare). A cached entry at most one refresh stale
         // is acceptable here because restore prefers the always-fresh in-memory
         // resumeBinding and only consults this agent snapshot when no binding exists, so
-        // cmux-launched agents reopen correctly regardless of cache freshness.
+        // bmux-launched agents reopen correctly regardless of cache freshness.
         let agentIndex = SharedLiveAgentIndex.shared.currentIndexSchedulingRefresh()
             ?? RestorableAgentSessionIndex.load()
         let restorableAgent = agentIndex.snapshot(workspaceId: id, panelId: panelId)
@@ -1074,7 +1074,7 @@ extension Workspace {
         var totalCharacters = 0
         for panelId in panels.keys.sorted(by: { $0.uuidString < $1.uuidString }) {
             guard panels[panelId] is TerminalPanel else { continue }
-            let header = "cmux perf synthetic scrollback workspace=\(id.uuidString) panel=\(panelId.uuidString)\n"
+            let header = "bmux perf synthetic scrollback workspace=\(id.uuidString) panel=\(panelId.uuidString)\n"
             let paddingCount = max(0, targetCharacters - header.count)
             let scrollback = String((header + String(repeating: "s", count: paddingCount)).prefix(targetCharacters))
             debugSessionSnapshotSyntheticScrollbackByPanelId[panelId] = scrollback
@@ -1335,10 +1335,10 @@ extension Workspace {
                 tmuxStartCommand: restoredTmuxStartCommand,
                 hasResumeStartupWork: restoredBindingLaunch != nil || restoredAgentResumeLaunch != nil
             )
-            // cmux is itself resuming this agent session onto the restored surface.
+            // bmux is itself resuming this agent session onto the restored surface.
             // Some agents (codex) fire NO SessionStart hook on resume, and an
             // `sr codex resume` bypasses the hook-injecting shim entirely, so
-            // record the (session, surface) binding from cmux's own authority
+            // record the (session, surface) binding from bmux's own authority
             // instead of waiting for a hook that will not arrive; otherwise the
             // chat registry keeps the stale pre-relaunch record (dead pid ->
             // .ended) and the iOS GUI shows it read-only. The actual call is made
@@ -1420,7 +1420,7 @@ extension Workspace {
             if let restorableAgent {
                 let sessionPreview = String(restorableAgent.sessionId.prefix(8))
                 let launchArgc = restorableAgent.launchCommand?.arguments.count ?? 0
-                cmuxDebugLog(
+                bmuxDebugLog(
                     "session.restore.agent panel=\(snapshot.id.uuidString.prefix(5)) " +
                     "kind=\(restorableAgent.kind.rawValue) session=\(sessionPreview) " +
                     "hasLaunch=\(restorableAgent.launchCommand == nil ? 0 : 1) " +
@@ -1430,7 +1430,7 @@ extension Workspace {
                 )
             }
             if let resumeBinding {
-                cmuxDebugLog(
+                bmuxDebugLog(
                     "session.restore.surfaceResume panel=\(snapshot.id.uuidString.prefix(5)) " +
                     "kind=\(resumeBinding.kind ?? "unknown") source=\(resumeBinding.source ?? "unknown") " +
                     "hasLaunch=\(restoredBindingLaunch == nil ? 0 : 1) " +
@@ -1465,13 +1465,13 @@ extension Workspace {
             ) else {
                 return nil
             }
-            // Re-bind the resumed agent session from cmux's own authority, keyed
+            // Re-bind the resumed agent session from bmux's own authority, keyed
             // on the surface that was actually created. `terminalPanel.id` equals
             // `snapshot.id` on the normal path, but on a surface-id collision
             // (restore-into-live / duplicate-workspace) `newTerminalSurface`
             // minted a fresh id, so keying on `snapshot.id` would bind to a
             // surface that does not exist and the GUI would never find the
-            // session. This is unconditional on whether cmux runs the resume
+            // session. This is unconditional on whether bmux runs the resume
             // command itself: a restored surface that CARRIES a resumable agent
             // binding must flip its registry record to live/.idle so the iOS GUI
             // is editable, even when auto-resume is off and the user resumes
@@ -1873,7 +1873,7 @@ extension Workspace {
 
                 self.removePendingTerminalInputObserver(registration, forPanelId: panelId)
                 #if DEBUG
-                NSLog("[CmuxConfig] surface not ready after 3s, dropping command (%d chars)", text.count)
+                NSLog("[BmuxConfig] surface not ready after 3s, dropping command (%d chars)", text.count)
                 #endif
             }
         }
@@ -1919,9 +1919,9 @@ extension Workspace {
 }
 
 
-/// Lifted to `CmuxBrowser.ClosedBrowserPanelRestoreSnapshot` (Workspace
+/// Lifted to `BmuxBrowser.ClosedBrowserPanelRestoreSnapshot` (Workspace
 /// decomposition, Wave 3). This typealias keeps call sites byte-identical.
-typealias ClosedBrowserPanelRestoreSnapshot = CmuxBrowser.ClosedBrowserPanelRestoreSnapshot
+typealias ClosedBrowserPanelRestoreSnapshot = BmuxBrowser.ClosedBrowserPanelRestoreSnapshot
 
 /// Workspace represents a sidebar tab.
 /// Each workspace contains one BonsplitController that manages split panes and nested surfaces.
@@ -1942,7 +1942,7 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     static let terminalScrollBarHiddenDidChangeNotification = Notification.Name(
-        "cmux.workspaceTerminalScrollBarHiddenDidChange"
+        "bmux.workspaceTerminalScrollBarHiddenDidChange"
     )
 
     let id: UUID
@@ -1969,12 +1969,12 @@ final class Workspace: Identifiable, ObservableObject {
     @Published var customColor: String?  // hex string, e.g. "#C0392B"
     /// User-defined environment variables applied to every shell spawned in this
     /// workspace: the initial terminal, every later pane/surface/split, and every
-    /// surface recreated on session restore. Managed `CMUX_*` and terminal-identity
+    /// surface recreated on session restore. Managed `BMUX_*` and terminal-identity
     /// variables always win — this dictionary is merged through the
     /// `additionalEnvironment` / `initialEnvironmentOverrides` channels, both of
     /// which skip `protectedStartupEnvironmentKeys` in
     /// `mergedStartupEnvironment(...)`, so a workspace env entry can never clobber
-    /// the variables the daemon relies on (CMUX_WORKSPACE_ID, CMUX_SOCKET_PATH, …).
+    /// the variables the daemon relies on (BMUX_WORKSPACE_ID, BMUX_SOCKET_PATH, …).
     /// Persisted in the session manifest and restored before surfaces are rebuilt.
     @Published var workspaceEnvironment: [String: String] = [:]
     // Legacy in-memory state for old helpers/tests. Product UI, rendering, and
@@ -2004,7 +2004,7 @@ final class Workspace: Identifiable, ObservableObject {
     private(set) var preferredBrowserProfileID: UUID?
     let closeTabWarningDefaults, agentSessionAutoResumeDefaults: UserDefaults
 
-    /// Ordinal for CMUX_PORT range assignment (monotonically increasing per app session)
+    /// Ordinal for BMUX_PORT range assignment (monotonically increasing per app session)
     var portOrdinal: Int = 0
 
     /// The bonsplit controller managing the split panes for this workspace
@@ -2047,9 +2047,9 @@ final class Workspace: Identifiable, ObservableObject {
     /// workspace so it survives canvas view remounts and workspace switches.
     let canvasModel = CanvasModel(metricsProvider: { CanvasLayoutSettings.currentMetrics() })
     private struct SurfaceTabBarExecutableButton {
-        let button: CmuxSurfaceTabBarButton
-        let builtInAction: CmuxSurfaceTabBarBuiltInAction?
-        let workspaceCommand: CmuxResolvedCommand?
+        let button: BmuxSurfaceTabBarButton
+        let builtInAction: BmuxSurfaceTabBarBuiltInAction?
+        let workspaceCommand: BmuxResolvedCommand?
         let terminalCommandSourcePath: String?
     }
 
@@ -2057,27 +2057,27 @@ final class Workspace: Identifiable, ObservableObject {
     private var surfaceTabBarButtonSourcePath: String?
     private var surfaceTabBarButtonGlobalConfigPath: String?
 
-    /// The pane-tree sub-model (CmuxPanes): owns the panel registry, the
+    /// The pane-tree sub-model (BmuxPanes): owns the panel registry, the
     /// surface-id mapping, and the pane-layout bookkeeping. The legacy
     /// accessors below forward here; `Workspace` hosts the property-observer
     /// hooks via `PaneTreeHosting`.
     let paneTree = PaneTreeModel<any Panel>()
 
-    /// The surface-list derivation sub-model (CmuxWorkspaces): derives
+    /// The surface-list derivation sub-model (BmuxWorkspaces): derives
     /// the ordered panel-id lists, focused panel, representative panel, per-pane
     /// selection, the `tabIdsTo*` pane queries, and the `paneLayoutVersion`
     /// reorder bump. `Workspace` is its tree-reading host via
     /// `WorkspaceSurfaceTreeReading`; the legacy accessors below forward here.
     let surfaceList = WorkspaceSurfaceListModel()
 
-    /// The surface-registry sub-model (CmuxWorkspaceCore): owns the
+    /// The surface-registry sub-model (BmuxWorkspaceCore): owns the
     /// per-surface registry annotations (tty names, shell-activity states)
     /// and the transient tab-selection/focus-reassert request state. The
     /// legacy accessors below forward here. None of the moved properties
     /// were `@Published`, so no observer hooks are required.
     private let surfaceRegistry = SurfaceRegistryModel<PendingTabSelectionRequest>()
 
-    /// The split-layout sub-model (CmuxPanes): owns the split/detach
+    /// The split-layout sub-model (BmuxPanes): owns the split/detach
     /// choreography bookkeeping (programmatic-split flag, detaching surface
     /// ids, captured transfer payloads, detach-close transaction count). The
     /// legacy accessors below forward here. None of the moved properties
@@ -2240,7 +2240,7 @@ final class Workspace: Identifiable, ObservableObject {
     @Published private(set) var tmuxWorkspaceFlashReason: WorkspaceAttentionFlashReason?
     @Published private(set) var tmuxWorkspaceFlashToken: UInt64 = 0
     var manualUnreadMarkedAt: [UUID: Date] = [:]
-    /// The sidebar-metadata sub-model (CmuxSidebar): owns the
+    /// The sidebar-metadata sub-model (BmuxSidebar): owns the
     /// sidebar status entries, metadata blocks, log entries, progress, and
     /// git-branch / pull-request presentation state. The legacy accessors below
     /// forward here. The moved properties were `@Published` and fed the sidebar
@@ -2336,7 +2336,7 @@ final class Workspace: Identifiable, ObservableObject {
     private static let remotePortConflictStatusKey = "remote.port_conflicts"
     private static let remoteNotificationCooldown: TimeInterval = 5 * 60
     private static let sshControlMasterCleanupQueue = DispatchQueue(
-        label: "com.cmux.remote-ssh.control-master-cleanup",
+        label: "com.bmux.remote-ssh.control-master-cleanup",
         qos: .utility
     )
     private static let remoteHeartbeatDateFormatter: ISO8601DateFormatter = {
@@ -2571,7 +2571,7 @@ final class Workspace: Identifiable, ObservableObject {
         alert.informativeText = String(
             format: String(
                 localized: "surfaceResumeApproval.runPrompt.message",
-                defaultValue: "cmux is restoring a terminal with this resume command:\n\n%@\n\nWorking directory: %@"
+                defaultValue: "bmux is restoring a terminal with this resume command:\n\n%@\n\nWorking directory: %@"
             ),
             binding.command,
             binding.cwd ?? String(localized: "surfaceResumeApproval.cwd.none", defaultValue: "None")
@@ -2877,7 +2877,7 @@ final class Workspace: Identifiable, ObservableObject {
         title: String = "Terminal",
         workingDirectory: String? = nil,
         portOrdinal: Int = 0,
-        configTemplate: CmuxSurfaceConfigTemplate? = nil,
+        configTemplate: BmuxSurfaceConfigTemplate? = nil,
         initialSurface: NewWorkspaceInitialSurface = .terminal,
         initialTerminalCommand: String? = nil,
         initialTerminalInput: String? = nil,
@@ -2939,15 +2939,15 @@ final class Workspace: Identifiable, ObservableObject {
         // Remove the default "Welcome" tab that bonsplit creates
         let welcomeTabIds = bonsplitController.allTabIds
 
-        // When the workspace boots with an explicit initial command (`cmux ssh` /
-        // `cmux vm new` both funnel their ssh startup script through this path),
+        // When the workspace boots with an explicit initial command (`bmux ssh` /
+        // `bmux vm new` both funnel their ssh startup script through this path),
         // hold the PTY open after that command exits. Without this Ghostty
         // silently respawns a local login shell and the user can't tell a dead
         // VM apart from a healthy local prompt.
         var resolvedConfigTemplate = configTemplate
         if let trimmedCommand = initialTerminalCommand?.trimmingCharacters(in: .whitespacesAndNewlines),
            !trimmedCommand.isEmpty {
-            var template = resolvedConfigTemplate ?? CmuxSurfaceConfigTemplate()
+            var template = resolvedConfigTemplate ?? BmuxSurfaceConfigTemplate()
             template.waitAfterCommand = true
             resolvedConfigTemplate = template
         }
@@ -3168,16 +3168,16 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     func applySurfaceTabBarButtons(
-        _ buttons: [CmuxSurfaceTabBarButton],
+        _ buttons: [BmuxSurfaceTabBarButton],
         sourcePath: String?,
         globalConfigPath: String,
         terminalCommandSourcePaths: [String: String],
-        workspaceCommands: [String: CmuxResolvedCommand]
+        workspaceCommands: [String: BmuxResolvedCommand]
     ) {
         // The default mobile-connect button is remotely toggleable; the flag
         // is read when buttons are (re)applied, so a dashboard change lands
         // on the next config reload or launch.
-        let buttons = CmuxFeatureFlags.shared.isMobileConnectButtonEnabled
+        let buttons = BmuxFeatureFlags.shared.isMobileConnectButtonEnabled
             ? buttons
             : buttons.filter { button in
                 if case .builtIn(let builtInAction) = button.action, builtInAction == .mobileConnect {
@@ -3242,7 +3242,7 @@ final class Workspace: Identifiable, ObservableObject {
         let bonsplitButtons = buttons.map { button in
             let executable = executableButtons[button.id]
             let allowProjectLocalIcon = executable.map {
-                CmuxConfigExecutor.isTrustedSurfaceButton(
+                BmuxConfigExecutor.isTrustedSurfaceButton(
                     $0.button,
                     workspaceCommand: $0.workspaceCommand,
                     terminalCommandSourcePath: $0.terminalCommandSourcePath,
@@ -3364,7 +3364,7 @@ final class Workspace: Identifiable, ObservableObject {
     private var isAttemptingLayoutFollowUp = false
     private var isNormalizingPinnedTabOrder = false
     /// The pending non-focusing-split focus re-assert request (the value
-    /// type now lives in CmuxWorkspaceCore); stored in the surface-registry
+    /// type now lives in BmuxWorkspaceCore); stored in the surface-registry
     /// sub-model.
     private var pendingNonFocusSplitFocusReassert: PendingNonFocusSplitFocusReassert? {
         get { surfaceRegistry.pendingNonFocusSplitFocusReassert }
@@ -3563,7 +3563,7 @@ final class Workspace: Identifiable, ObservableObject {
             guard let self, let browserPanel else { return }
             guard self.panels[browserPanel.id] is BrowserPanel else { return }
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "browser.close.requestedByPage ws=\(self.id.uuidString.prefix(5)) " +
                 "panel=\(browserPanel.id.uuidString.prefix(5))"
             )
@@ -4329,7 +4329,7 @@ final class Workspace: Identifiable, ObservableObject {
         guard customTitle == nil else { return }
         guard self.title != sanitizedTitle else { return }
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "workspace.title.applyProcess workspace=\(id.uuidString.prefix(5)) " +
             "from=\"\(debugWorkspaceDescriptionPreview(self.title, limit: 80))\" " +
             "to=\"\(debugWorkspaceDescriptionPreview(sanitizedTitle, limit: 80))\""
@@ -4396,7 +4396,7 @@ final class Workspace: Identifiable, ObservableObject {
         let normalizedNewlines = normalizedDescription?.reduce(into: 0) { count, character in
             if character == "\n" { count += 1 }
         } ?? 0
-        cmuxDebugLog(
+        bmuxDebugLog(
             "workspace.customDescription.update workspace=\(id.uuidString.prefix(8)) " +
             "inputLen=\((description as NSString?)?.length ?? 0) " +
             "inputNewlines=\(inputNewlines) " +
@@ -4571,7 +4571,7 @@ final class Workspace: Identifiable, ObservableObject {
         if Self.unmountedVolumeRoot(for: restoredDirectory) != nil {
             // Keep guarding until the restored volume remounts and reports its cwd (#5278).
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "session.restore.cwdReport.ignored panel=\(panelId.uuidString.prefix(5)) " +
                 "saved=\(restoredDirectory) reported=\(reportedDirectory)"
             )
@@ -4587,7 +4587,7 @@ final class Workspace: Identifiable, ObservableObject {
             restoredResumeSessionWorkingDirectoriesByPanelId.removeValue(forKey: panelId)
         }
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "session.restore.cwdReport.\(restoredDirectoryStillExists ? "ignoredOnce" : "accepted") " +
             "panel=\(panelId.uuidString.prefix(5)) saved=\(restoredDirectory) reported=\(reportedDirectory)"
         )
@@ -4618,7 +4618,7 @@ final class Workspace: Identifiable, ObservableObject {
             updateBindingOnlyRestoredAgentResumeState(panelId: panelId, shellState: state)
         }
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "surface.shellState workspace=\(id.uuidString.prefix(5)) " +
             "panel=\(panelId.uuidString.prefix(5)) from=\(previousState.rawValue) to=\(state.rawValue)"
         )
@@ -4829,7 +4829,7 @@ final class Workspace: Identifiable, ObservableObject {
         clearRestoredAgentResumeBinding(panelId: panelId, restoredAgent: restoredAgent)
         clearRestoredAgentSnapshot(panelId: panelId)
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "session.restore.agent.invalidate panel=\(panelId.uuidString.prefix(5)) " +
             "kind=\(restoredAgent.kind.rawValue) session=\(restoredAgent.sessionId.prefix(8))"
         )
@@ -5105,7 +5105,7 @@ final class Workspace: Identifiable, ObservableObject {
         guard !browserPanels.isEmpty else { return }
 
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "workspace.contextReset.browserPanels workspace=\(id.uuidString.prefix(5)) " +
             "reason=\(reason) count=\(browserPanels.count)"
         )
@@ -5189,7 +5189,7 @@ final class Workspace: Identifiable, ObservableObject {
 
 #if DEBUG
         if didMutate {
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "workspace.title.updatePanel workspace=\(id.uuidString.prefix(5)) " +
                 "panel=\(panelId.uuidString.prefix(5)) panels=\(panels.count) custom=\(customTitle == nil ? 0 : 1) " +
                 "panelChanged=\(didMutatePanelTitle ? 1 : 0) workspaceChanged=\(didMutateWorkspaceTitle ? 1 : 0) " +
@@ -5356,7 +5356,7 @@ final class Workspace: Identifiable, ObservableObject {
         remoteConfiguration != nil
     }
 
-    /// Ephemeral remote tmux mirror; excluded from cmux session restore.
+    /// Ephemeral remote tmux mirror; excluded from bmux session restore.
     var isRemoteTmuxMirror: Bool = false
 
     /// Per-window multi-pane renderers, keyed by mirrored window-tab panel id.
@@ -5483,7 +5483,7 @@ final class Workspace: Identifiable, ObservableObject {
 
     func listRemotePTYSessions() throws -> [[String: Any]] {
         guard let controller = remoteSessionController else {
-            throw NSError(domain: "cmux.remote.pty", code: 10, userInfo: [
+            throw NSError(domain: "bmux.remote.pty", code: 10, userInfo: [
                 NSLocalizedDescriptionKey: "remote connection is not active",
             ])
         }
@@ -5492,7 +5492,7 @@ final class Workspace: Identifiable, ObservableObject {
 
     func closeRemotePTYSession(sessionID: String) throws {
         guard let controller = remoteSessionController else {
-            throw NSError(domain: "cmux.remote.pty", code: 11, userInfo: [
+            throw NSError(domain: "bmux.remote.pty", code: 11, userInfo: [
                 NSLocalizedDescriptionKey: "remote connection is not active",
             ])
         }
@@ -5506,7 +5506,7 @@ final class Workspace: Identifiable, ObservableObject {
         requireExisting: Bool
     ) throws -> RemotePTYBridgeServer.Endpoint {
         guard let controller = remoteSessionController else {
-            throw NSError(domain: "cmux.remote.pty", code: 12, userInfo: [
+            throw NSError(domain: "bmux.remote.pty", code: 12, userInfo: [
                 NSLocalizedDescriptionKey: "remote connection is not active",
             ])
         }
@@ -5520,7 +5520,7 @@ final class Workspace: Identifiable, ObservableObject {
 
     func resizeRemotePTY(sessionID: String, attachmentID: String, attachmentToken: String, cols: Int, rows: Int) throws {
         guard let controller = remoteSessionController else {
-            throw NSError(domain: "cmux.remote.pty", code: 13, userInfo: [
+            throw NSError(domain: "bmux.remote.pty", code: 13, userInfo: [
                 NSLocalizedDescriptionKey: "remote connection is not active",
             ])
         }
@@ -5535,7 +5535,7 @@ final class Workspace: Identifiable, ObservableObject {
 
     func detachRemotePTYAttachment(sessionID: String, attachmentID: String, attachmentToken: String) throws {
         guard let controller = remoteSessionController else {
-            throw NSError(domain: "cmux.remote.pty", code: 14, userInfo: [
+            throw NSError(domain: "bmux.remote.pty", code: 14, userInfo: [
                 NSLocalizedDescriptionKey: "remote connection is not active",
             ])
         }
@@ -5960,15 +5960,15 @@ final class Workspace: Identifiable, ObservableObject {
     /// empty values) and the `initialEnvironmentOverrides` channel (which would
     /// otherwise export a blank value on the initial shell only).
     ///
-    /// Reserved `CMUX_*` variables are intentionally *not* stripped by name — they
+    /// Reserved `BMUX_*` variables are intentionally *not* stripped by name — they
     /// are protected at spawn time by `mergedStartupEnvironment(protectedKeys:)`,
     /// the single authority on which keys are managed. That protection is an exact
     /// Swift-string match, but the env eventually crosses the Swift→C boundary
     /// (`strdup` / Ghostty), where a key is truncated at its first NUL. A key like
-    /// `"CMUX_SOCKET_PATH\0x"` would dodge the exact-match check yet collapse to
-    /// `CMUX_SOCKET_PATH` in the spawned shell, so reject any key containing a NUL
+    /// `"BMUX_SOCKET_PATH\0x"` would dodge the exact-match check yet collapse to
+    /// `BMUX_SOCKET_PATH` in the spawned shell, so reject any key containing a NUL
     /// (and `=`, which is never a valid env var name) and any value containing a
-    /// NUL. This is the single choke point for every entry point (CLI, cmux.json,
+    /// NUL. This is the single choke point for every entry point (CLI, bmux.json,
     /// session restore), so the guard cannot be bypassed.
     // `nonisolated` so the nonisolated socket workspace-create parsing path
     // (`v2WorkspaceCreate`) can call this pure helper without hopping to the main
@@ -5987,7 +5987,7 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     /// Pure merge core: overlays `explicit` on top of `workspaceEnvironment`.
-    /// Managed `CMUX_*` / terminal-identity keys are protected downstream by
+    /// Managed `BMUX_*` / terminal-identity keys are protected downstream by
     /// `mergedStartupEnvironment(protectedKeys:)`; this only decides precedence
     /// among user-supplied values — explicit per-surface entries (layout `env`,
     /// scrollback replay, SSH startup) win over the workspace set. Static so the
@@ -6284,7 +6284,7 @@ final class Workspace: Identifiable, ObservableObject {
         "ssh-\(workspaceId.uuidString)-\(panelId.uuidString)"
     }
 
-    private nonisolated static let remotePTYSessionEnvironmentKey = "CMUX_REMOTE_PTY_SESSION_ID"
+    private nonisolated static let remotePTYSessionEnvironmentKey = "BMUX_REMOTE_PTY_SESSION_ID"
 
     private nonisolated static func parsedDefaultSSHPTYSessionID(_ value: String) -> (workspaceId: UUID, panelId: UUID)? {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -6359,43 +6359,43 @@ final class Workspace: Identifiable, ObservableObject {
 
     private func defaultFreestyleSSHDTerminalStartupCommand(vmID: String) -> String {
         let lines = [
-            "cmux_freestyle_cli=\"${CMUX_BUNDLED_CLI_PATH:-}\"",
-            "if [ -z \"$cmux_freestyle_cli\" ] || [ ! -x \"$cmux_freestyle_cli\" ]; then cmux_freestyle_cli=\"$(command -v cmux 2>/dev/null || true)\"; fi",
-            "if [ -z \"$cmux_freestyle_cli\" ]; then printf '%s\\n' '[cmux] bundled CLI not found for Cloud VM SSH attach.' >&2; exit 127; fi",
-            "CMUX_SSH_RECONNECT_LIMIT=\"${CMUX_SSH_RECONNECT_LIMIT:-86400}\"",
-            "CMUX_SSH_RECONNECT_DELAY_SECONDS=\"${CMUX_SSH_RECONNECT_DELAY_SECONDS:-2}\"",
-            "CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT=\"${CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT:-$CMUX_SSH_RECONNECT_LIMIT}\"",
-            "CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS=\"${CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS:-$CMUX_SSH_RECONNECT_DELAY_SECONDS}\"",
-            "export CMUX_SSH_RECONNECT_LIMIT CMUX_SSH_RECONNECT_DELAY_SECONDS",
-            "export CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS",
-            "cmux_freestyle_attach() {",
-            "  if [ -n \"${CMUX_SOCKET_PATH:-}\" ]; then",
-            "    if [ -n \"${CMUX_REMOTE_PTY_SESSION_ID:-}\" ]; then",
-            "      \"$cmux_freestyle_cli\" --socket \"$CMUX_SOCKET_PATH\" vm-pty-attach --id \(Self.shellQuote(vmID)) --default-freestyle-sshd --session \"$CMUX_REMOTE_PTY_SESSION_ID\"",
+            "bmux_freestyle_cli=\"${BMUX_BUNDLED_CLI_PATH:-}\"",
+            "if [ -z \"$bmux_freestyle_cli\" ] || [ ! -x \"$bmux_freestyle_cli\" ]; then bmux_freestyle_cli=\"$(command -v bmux 2>/dev/null || true)\"; fi",
+            "if [ -z \"$bmux_freestyle_cli\" ]; then printf '%s\\n' '[bmux] bundled CLI not found for Cloud VM SSH attach.' >&2; exit 127; fi",
+            "BMUX_SSH_RECONNECT_LIMIT=\"${BMUX_SSH_RECONNECT_LIMIT:-86400}\"",
+            "BMUX_SSH_RECONNECT_DELAY_SECONDS=\"${BMUX_SSH_RECONNECT_DELAY_SECONDS:-2}\"",
+            "BMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT=\"${BMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT:-$BMUX_SSH_RECONNECT_LIMIT}\"",
+            "BMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS=\"${BMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS:-$BMUX_SSH_RECONNECT_DELAY_SECONDS}\"",
+            "export BMUX_SSH_RECONNECT_LIMIT BMUX_SSH_RECONNECT_DELAY_SECONDS",
+            "export BMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT BMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS",
+            "bmux_freestyle_attach() {",
+            "  if [ -n \"${BMUX_SOCKET_PATH:-}\" ]; then",
+            "    if [ -n \"${BMUX_REMOTE_PTY_SESSION_ID:-}\" ]; then",
+            "      \"$bmux_freestyle_cli\" --socket \"$BMUX_SOCKET_PATH\" vm-pty-attach --id \(Self.shellQuote(vmID)) --default-freestyle-sshd --session \"$BMUX_REMOTE_PTY_SESSION_ID\"",
             "    else",
-            "      \"$cmux_freestyle_cli\" --socket \"$CMUX_SOCKET_PATH\" vm-pty-attach --id \(Self.shellQuote(vmID)) --default-freestyle-sshd",
+            "      \"$bmux_freestyle_cli\" --socket \"$BMUX_SOCKET_PATH\" vm-pty-attach --id \(Self.shellQuote(vmID)) --default-freestyle-sshd",
             "    fi",
             "  else",
-            "    if [ -n \"${CMUX_REMOTE_PTY_SESSION_ID:-}\" ]; then",
-            "      \"$cmux_freestyle_cli\" vm-pty-attach --id \(Self.shellQuote(vmID)) --default-freestyle-sshd --session \"$CMUX_REMOTE_PTY_SESSION_ID\"",
+            "    if [ -n \"${BMUX_REMOTE_PTY_SESSION_ID:-}\" ]; then",
+            "      \"$bmux_freestyle_cli\" vm-pty-attach --id \(Self.shellQuote(vmID)) --default-freestyle-sshd --session \"$BMUX_REMOTE_PTY_SESSION_ID\"",
             "    else",
-            "      \"$cmux_freestyle_cli\" vm-pty-attach --id \(Self.shellQuote(vmID)) --default-freestyle-sshd",
+            "      \"$bmux_freestyle_cli\" vm-pty-attach --id \(Self.shellQuote(vmID)) --default-freestyle-sshd",
             "    fi",
             "  fi",
             "}",
-            "cmux_freestyle_retry=0",
+            "bmux_freestyle_retry=0",
             "while :; do",
-            "  if [ \"$cmux_freestyle_retry\" -gt 0 ]; then",
-            "    export CMUX_CLOUD_RECONNECT_ATTEMPT=\"$cmux_freestyle_retry\"",
+            "  if [ \"$bmux_freestyle_retry\" -gt 0 ]; then",
+            "    export BMUX_CLOUD_RECONNECT_ATTEMPT=\"$bmux_freestyle_retry\"",
             "  else",
-            "    unset CMUX_CLOUD_RECONNECT_ATTEMPT",
+            "    unset BMUX_CLOUD_RECONNECT_ATTEMPT",
             "  fi",
-            "  cmux_freestyle_attach",
-            "  cmux_freestyle_status=$?",
-            "  case \"$cmux_freestyle_status\" in 254|255) ;; *) exit \"$cmux_freestyle_status\" ;; esac",
-            "  if [ \"$cmux_freestyle_retry\" -ge \"$CMUX_SSH_RECONNECT_LIMIT\" ]; then exit \"$cmux_freestyle_status\"; fi",
-            "  cmux_freestyle_retry=$((cmux_freestyle_retry + 1))",
-            "  sleep \"$CMUX_SSH_RECONNECT_DELAY_SECONDS\"",
+            "  bmux_freestyle_attach",
+            "  bmux_freestyle_status=$?",
+            "  case \"$bmux_freestyle_status\" in 254|255) ;; *) exit \"$bmux_freestyle_status\" ;; esac",
+            "  if [ \"$bmux_freestyle_retry\" -ge \"$BMUX_SSH_RECONNECT_LIMIT\" ]; then exit \"$bmux_freestyle_status\"; fi",
+            "  bmux_freestyle_retry=$((bmux_freestyle_retry + 1))",
+            "  sleep \"$BMUX_SSH_RECONNECT_DELAY_SECONDS\"",
             "done",
         ]
         return "/bin/sh -c \(Self.shellQuote(lines.joined(separator: "\n")))"
@@ -6430,12 +6430,12 @@ final class Workspace: Identifiable, ObservableObject {
               configuration.skipDaemonBootstrap else {
             return nil
         }
-        if configuration.persistentDaemonSlot == "cmux-default-freestyle-sshd-v1",
+        if configuration.persistentDaemonSlot == "bmux-default-freestyle-sshd-v1",
            let vmID = configuration.managedCloudVMID {
             return vmID
         }
         let destination = configuration.destination.trimmingCharacters(in: .whitespacesAndNewlines)
-        let suffix = "+cmux@vm-ssh.freestyle.sh"
+        let suffix = "+bmux@vm-ssh.freestyle.sh"
         guard destination.hasSuffix(suffix) else {
             return nil
         }
@@ -7006,7 +7006,7 @@ final class Workspace: Identifiable, ObservableObject {
 
     private func seedTerminalInheritanceFontPoints(
         panelId: UUID,
-        configTemplate: CmuxSurfaceConfigTemplate?
+        configTemplate: BmuxSurfaceConfigTemplate?
     ) {
         guard let fontPoints = configTemplate?.fontSize, fontPoints > 0 else { return }
         terminalInheritanceFontPointsByPanelId[panelId] = fontPoints
@@ -7016,9 +7016,9 @@ final class Workspace: Identifiable, ObservableObject {
     private func resolvedTerminalInheritanceFontPoints(
         for terminalPanel: TerminalPanel,
         sourceSurface: ghostty_surface_t,
-        inheritedConfig: CmuxSurfaceConfigTemplate
+        inheritedConfig: BmuxSurfaceConfigTemplate
     ) -> Float? {
-        let runtimeBasePoints = cmuxCurrentSurfaceFontSizePoints(sourceSurface).map { CmuxSurfaceConfigTemplate.baseFontSize(fromRuntimePoints: $0, percent: GlobalFontMagnification.storedPercent) }
+        let runtimeBasePoints = bmuxCurrentSurfaceFontSizePoints(sourceSurface).map { BmuxSurfaceConfigTemplate.baseFontSize(fromRuntimePoints: $0, percent: GlobalFontMagnification.storedPercent) }
         if let rooted = terminalInheritanceFontPointsByPanelId[terminalPanel.id], rooted > 0 {
             if let runtimeBasePoints, abs(runtimeBasePoints - rooted) > 0.05 {
                 // Runtime zoom changed after lineage was seeded (manual zoom on descendant);
@@ -7036,8 +7036,8 @@ final class Workspace: Identifiable, ObservableObject {
     private func rememberTerminalConfigInheritanceSource(_ terminalPanel: TerminalPanel) {
         lastTerminalConfigInheritancePanelId = terminalPanel.id
         if let sourceSurface = terminalPanel.surface.surface,
-           let runtimePoints = cmuxCurrentSurfaceFontSizePoints(sourceSurface) {
-            let runtimeBasePoints = CmuxSurfaceConfigTemplate.baseFontSize(fromRuntimePoints: runtimePoints, percent: GlobalFontMagnification.storedPercent)
+           let runtimePoints = bmuxCurrentSurfaceFontSizePoints(sourceSurface) {
+            let runtimeBasePoints = BmuxSurfaceConfigTemplate.baseFontSize(fromRuntimePoints: runtimePoints, percent: GlobalFontMagnification.storedPercent)
             let existing = terminalInheritanceFontPointsByPanelId[terminalPanel.id]
             if existing == nil || abs((existing ?? runtimeBasePoints) - runtimeBasePoints) > 0.05 {
                 terminalInheritanceFontPointsByPanelId[terminalPanel.id] = runtimeBasePoints
@@ -7273,7 +7273,7 @@ final class Workspace: Identifiable, ObservableObject {
     private func inheritedTerminalConfig(
         preferredPanelId: UUID? = nil,
         inPane preferredPaneId: PaneID? = nil
-    ) -> CmuxSurfaceConfigTemplate? {
+    ) -> BmuxSurfaceConfigTemplate? {
         // Walk candidates in priority order and use the first panel that still exposes
         // a runtime surface pointer.
         for terminalPanel in terminalPanelConfigInheritanceCandidates(
@@ -7283,11 +7283,11 @@ final class Workspace: Identifiable, ObservableObject {
             // Pin the panel and its TerminalSurface wrapper for the duration of
             // this iteration. The raw ghostty_surface_t extracted below is owned
             // by `surface` (the TerminalSurface) — ARC must not release it while
-            // ghostty_surface_inherited_config or cmuxCurrentSurfaceFontSizePoints
+            // ghostty_surface_inherited_config or bmuxCurrentSurfaceFontSizePoints
             // is still reading through the pointer.
             let surface = terminalPanel.surface
             guard let sourceSurface = surface.surface else { continue }
-            var config = cmuxInheritedSurfaceConfig(
+            var config = bmuxInheritedSurfaceConfig(
                 sourceSurface: sourceSurface,
                 context: GHOSTTY_SURFACE_CONTEXT_SPLIT
             )
@@ -7309,10 +7309,10 @@ final class Workspace: Identifiable, ObservableObject {
         }
 
         if let fallbackFontPoints = lastTerminalConfigInheritanceFontPoints {
-            var config = CmuxSurfaceConfigTemplate()
+            var config = BmuxSurfaceConfigTemplate()
             config.fontSize = fallbackFontPoints
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "zoom.inherit fallback=lastKnownFont context=split font=\(String(format: "%.2f", fallbackFontPoints))"
             )
 #endif
@@ -7467,7 +7467,7 @@ final class Workspace: Identifiable, ObservableObject {
         // to $SHELL), and a dead VM looks identical to a healthy workspace with a
         // local prompt — which is what we saw during dogfood.
         if startupCommand != nil {
-            var template = inheritedConfig ?? CmuxSurfaceConfigTemplate()
+            var template = inheritedConfig ?? BmuxSurfaceConfigTemplate()
             template.waitAfterCommand = true
             inheritedConfig = template
         }
@@ -7486,7 +7486,7 @@ final class Workspace: Identifiable, ObservableObject {
             sourcePanelId: panelId
         )
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.cwd panelId=\(panelId.uuidString.prefix(5)) panelDir=\(panelDirectories[panelId] ?? "nil") requestedDir=\(terminalPanel(for: panelId)?.requestedWorkingDirectory ?? "nil") currentDir=\(currentDirectory) resolved=\(splitWorkingDirectory ?? "nil")"
         )
 #endif
@@ -7558,11 +7558,11 @@ final class Workspace: Identifiable, ObservableObject {
             return nil
         }
         applyInitialSplitDividerPosition(initialDividerPosition, sourcePaneId: paneId, newPaneId: newPaneId)
-        publishCmuxSplitCreated(newPaneId, sourcePaneId: paneId, orientation: orientation, surfaceId: newPanel.id, kind: "terminal", origin: "terminal_split", focused: focus)
+        publishBmuxSplitCreated(newPaneId, sourcePaneId: paneId, orientation: orientation, surfaceId: newPanel.id, kind: "terminal", origin: "terminal_split", focused: focus)
 
 #if DEBUG
-        cmuxDebugLog("split.created pane=\(paneId.id.uuidString.prefix(5)) orientation=\(orientation)")
-        cmuxDebugLog(
+        bmuxDebugLog("split.created pane=\(paneId.id.uuidString.prefix(5)) orientation=\(orientation)")
+        bmuxDebugLog(
             "split.timing workspace=\(id.uuidString.prefix(5)) panel=\(panelId.uuidString.prefix(5)) " +
             "transport=\(splitTransport) stage=layout_committed elapsedMs=\(debugElapsedMs(since: splitTimingStart)) " +
             "newPanel=\(newPanel.id.uuidString.prefix(5))"
@@ -7762,7 +7762,7 @@ final class Workspace: Identifiable, ObservableObject {
         // command exits so the user sees the error rather than a silently-respawned
         // local login shell.
         if startupCommand != nil {
-            var template = inheritedConfig ?? CmuxSurfaceConfigTemplate()
+            var template = inheritedConfig ?? BmuxSurfaceConfigTemplate()
             template.waitAfterCommand = true
             inheritedConfig = template
         }
@@ -7829,7 +7829,7 @@ final class Workspace: Identifiable, ObservableObject {
         }
 
         bindSurface(newTabId, toPanelId: newPanel.id)
-        publishCmuxSurfaceCreated(newPanel.id, paneId: paneId, kind: "terminal", origin: "terminal_tab", focused: shouldFocusNewTab)
+        publishBmuxSurfaceCreated(newPanel.id, paneId: paneId, kind: "terminal", origin: "terminal_tab", focused: shouldFocusNewTab)
 
         // bonsplit's createTab may not reliably emit didSelectTab, and its internal selection
         // updates can be deferred. Force a deterministic selection + focus path so the new
@@ -7862,7 +7862,7 @@ final class Workspace: Identifiable, ObservableObject {
     /// Creates a configured MANUAL-I/O ``TerminalPanel`` for one remote tmux pane,
     /// WITHOUT inserting it into the workspace's bonsplit/`panels` (the
     /// ``RemoteTmuxWindowMirror`` owns it and renders it via ``TerminalPanelView``
-    /// inside a single tab, so the pane gets the full native cmux pane chrome —
+    /// inside a single tab, so the pane gets the full native bmux pane chrome —
     /// background, focus overlay, dividers).
     func makeRemoteTmuxPanePanel(onInput: @escaping @Sendable (Data) -> Void) -> TerminalPanel {
         let surface = TerminalSurface(
@@ -8028,7 +8028,7 @@ final class Workspace: Identifiable, ObservableObject {
             return nil
         }
 
-        var inheritedConfig = inheritedTerminalConfig(inPane: paneId) ?? CmuxSurfaceConfigTemplate()
+        var inheritedConfig = inheritedTerminalConfig(inPane: paneId) ?? BmuxSurfaceConfigTemplate()
         inheritedConfig.waitAfterCommand = true
         let replacementPanel = TerminalPanel(
             id: pair.key,
@@ -8060,7 +8060,7 @@ final class Workspace: Identifiable, ObservableObject {
             isLoading: false,
             isPinned: false
         )
-        publishCmuxSurfaceCreated(pair.key, paneId: paneId, kind: SurfaceKind.terminal.rawValue, origin: "cloud_vm_ready", focused: focus)
+        publishBmuxSurfaceCreated(pair.key, paneId: paneId, kind: SurfaceKind.terminal.rawValue, origin: "cloud_vm_ready", focused: focus)
 
         if focus {
             bonsplitController.focusPane(paneId)
@@ -8100,7 +8100,7 @@ final class Workspace: Identifiable, ObservableObject {
         guard !trimmedCommand.isEmpty else { return nil }
 
         var inheritedConfig = inheritedTerminalConfig(preferredPanelId: panelId, inPane: paneId)
-        var respawnConfig = inheritedConfig ?? CmuxSurfaceConfigTemplate()
+        var respawnConfig = inheritedConfig ?? BmuxSurfaceConfigTemplate()
         respawnConfig.waitAfterCommand = waitAfterCommand ?? oldPanel.surface.debugWaitAfterCommand()
         inheritedConfig = respawnConfig
         let requestedWorkingDirectory = resolvedTerminalStartupWorkingDirectory(
@@ -8315,7 +8315,7 @@ final class Workspace: Identifiable, ObservableObject {
         }
         applyInitialSplitDividerPosition(initialDividerPosition, sourcePaneId: paneId, newPaneId: newPaneId)
         setPreferredBrowserProfileID(browserPanel.profileID)
-        publishCmuxSplitCreated(newPaneId, sourcePaneId: paneId, orientation: orientation, surfaceId: browserPanel.id, kind: "browser", origin: "browser_split", focused: focus)
+        publishBmuxSplitCreated(newPaneId, sourcePaneId: paneId, orientation: orientation, surfaceId: browserPanel.id, kind: "browser", origin: "browser_split", focused: focus)
 
         // See newTerminalSplit: suppress old view's becomeFirstResponder during reparenting.
         let previousHostedView = focusedTerminalPanel?.hostedView
@@ -8422,7 +8422,7 @@ final class Workspace: Identifiable, ObservableObject {
             let targetIndex = max(0, bonsplitController.tabs(inPane: paneId).count - 1)
             _ = bonsplitController.reorderTab(newTabId, toIndex: targetIndex)
         }
-        publishCmuxSurfaceCreated(browserPanel.id, paneId: paneId, kind: "browser", origin: "browser_tab", focused: shouldFocusNewTab)
+        publishBmuxSurfaceCreated(browserPanel.id, paneId: paneId, kind: "browser", origin: "browser_tab", focused: shouldFocusNewTab)
 
         // Match terminal behavior: enforce deterministic selection + focus.
         if shouldFocusNewTab {
@@ -8459,9 +8459,9 @@ final class Workspace: Identifiable, ObservableObject {
         inPane paneId: PaneID,
         title: String,
         focus: Bool = true
-    ) -> CMUXSidebarExtensionBrowserPanel? {
+    ) -> BMUXSidebarExtensionBrowserPanel? {
         let shouldFocusNewTab = focus || bonsplitController.focusedPaneId == paneId
-        let extensionBrowserPanel = CMUXSidebarExtensionBrowserPanel(title: title)
+        let extensionBrowserPanel = BMUXSidebarExtensionBrowserPanel(title: title)
         panels[extensionBrowserPanel.id] = extensionBrowserPanel
         panelTitles[extensionBrowserPanel.id] = extensionBrowserPanel.displayTitle
 
@@ -8480,7 +8480,7 @@ final class Workspace: Identifiable, ObservableObject {
         }
 
         bindSurface(newTabId, toPanelId: extensionBrowserPanel.id)
-        publishCmuxSurfaceCreated(
+        publishBmuxSurfaceCreated(
             extensionBrowserPanel.id,
             paneId: paneId,
             kind: SurfaceKind.extensionBrowser.rawValue,
@@ -8574,7 +8574,7 @@ final class Workspace: Identifiable, ObservableObject {
             panelTitles.removeValue(forKey: markdownPanel.id)
             return nil
         }
-        publishCmuxSplitCreated(newPaneId, sourcePaneId: paneId, orientation: orientation, surfaceId: markdownPanel.id, kind: "markdown", origin: "markdown_split", focused: focus)
+        publishBmuxSplitCreated(newPaneId, sourcePaneId: paneId, orientation: orientation, surfaceId: markdownPanel.id, kind: "markdown", origin: "markdown_split", focused: focus)
 
         let previousHostedView = focusedTerminalPanel?.hostedView
         if focus {
@@ -8628,7 +8628,7 @@ final class Workspace: Identifiable, ObservableObject {
         if let targetIndex {
             _ = bonsplitController.reorderTab(newTabId, toIndex: targetIndex)
         }
-        publishCmuxSurfaceCreated(markdownPanel.id, paneId: paneId, kind: "markdown", origin: "markdown_tab", focused: shouldFocusNewTab)
+        publishBmuxSurfaceCreated(markdownPanel.id, paneId: paneId, kind: "markdown", origin: "markdown_tab", focused: shouldFocusNewTab)
         if shouldFocusNewTab {
             bonsplitController.focusPane(paneId)
             bonsplitController.selectTab(newTabId)
@@ -8680,7 +8680,7 @@ final class Workspace: Identifiable, ObservableObject {
         if let targetIndex {
             _ = bonsplitController.reorderTab(newTabId, toIndex: targetIndex)
         }
-        publishCmuxSurfaceCreated(projectPanel.id, paneId: paneId, kind: SurfaceKind.project.rawValue, origin: "project_tab", focused: shouldFocusNewTab)
+        publishBmuxSurfaceCreated(projectPanel.id, paneId: paneId, kind: SurfaceKind.project.rawValue, origin: "project_tab", focused: shouldFocusNewTab)
         if shouldFocusNewTab {
             bonsplitController.focusPane(paneId)
             bonsplitController.selectTab(newTabId)
@@ -8838,7 +8838,7 @@ final class Workspace: Identifiable, ObservableObject {
         if let targetIndex {
             _ = bonsplitController.reorderTab(newTabId, toIndex: targetIndex)
         }
-        publishCmuxSurfaceCreated(filePreviewPanel.id, paneId: paneId, kind: "file_preview", origin: "file_preview_tab", focused: shouldFocusNewTab)
+        publishBmuxSurfaceCreated(filePreviewPanel.id, paneId: paneId, kind: "file_preview", origin: "file_preview_tab", focused: shouldFocusNewTab)
         if shouldFocusNewTab {
             bonsplitController.focusPane(paneId)
             bonsplitController.selectTab(newTabId)
@@ -8910,7 +8910,7 @@ final class Workspace: Identifiable, ObservableObject {
         if let targetIndex {
             _ = bonsplitController.reorderTab(newTabId, toIndex: targetIndex)
         }
-        publishCmuxSurfaceCreated(toolPanel.id, paneId: paneId, kind: "right_sidebar_tool", origin: "right_sidebar_tool_tab", focused: shouldFocusNewTab)
+        publishBmuxSurfaceCreated(toolPanel.id, paneId: paneId, kind: "right_sidebar_tool", origin: "right_sidebar_tool_tab", focused: shouldFocusNewTab)
 
         if shouldFocusNewTab {
             focusPanel(toolPanel.id)
@@ -8977,7 +8977,7 @@ final class Workspace: Identifiable, ObservableObject {
         if let targetIndex {
             _ = bonsplitController.reorderTab(newTabId, toIndex: targetIndex)
         }
-        publishCmuxSurfaceCreated(
+        publishBmuxSurfaceCreated(
             agentPanel.id,
             paneId: paneId,
             kind: "agent_session",
@@ -9032,7 +9032,7 @@ final class Workspace: Identifiable, ObservableObject {
             removeSurfaceMapping(forSurfaceId: newTab.id)
             return nil
         }
-        publishCmuxSplitCreated(newPaneId, sourcePaneId: paneId, orientation: orientation, surfaceId: filePreviewPanel.id, kind: "file_preview", origin: "file_preview_split", focused: true)
+        publishBmuxSplitCreated(newPaneId, sourcePaneId: paneId, orientation: orientation, surfaceId: filePreviewPanel.id, kind: "file_preview", origin: "file_preview_split", focused: true)
 
         bonsplitController.selectTab(newTab.id)
         filePreviewPanel.focus()
@@ -9090,7 +9090,7 @@ final class Workspace: Identifiable, ObservableObject {
         // Mapping can transiently drift during split-tree mutations. If the target panel is
         // currently focused (or is the active terminal first responder), close whichever tab
         // bonsplit marks selected in that focused pane.
-        let firstResponderPanelId = cmuxOwningGhosttyView(
+        let firstResponderPanelId = bmuxOwningGhosttyView(
             for: NSApp.keyWindow?.firstResponder ?? NSApp.mainWindow?.firstResponder
         )?.terminalSurface?.id
         let targetIsActive = focusedPanelId == panelId || firstResponderPanelId == panelId
@@ -9098,7 +9098,7 @@ final class Workspace: Identifiable, ObservableObject {
               let focusedPane = bonsplitController.focusedPaneId,
               let selected = bonsplitController.selectedTab(inPane: focusedPane) else {
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "surface.close.fallback.skip panel=\(panelId.uuidString.prefix(5)) " +
                 "focusedPanel=\(focusedPanelId?.uuidString.prefix(5) ?? "nil") " +
                 "firstResponderPanel=\(firstResponderPanelId?.uuidString.prefix(5) ?? "nil") " +
@@ -9110,7 +9110,7 @@ final class Workspace: Identifiable, ObservableObject {
 
         let closed = requestCloseTab(selected.id, force: force)
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "surface.close.fallback panel=\(panelId.uuidString.prefix(5)) " +
             "selectedTab=\(String(describing: selected.id).prefix(5)) " +
             "closed=\(closed ? 1 : 0)"
@@ -9500,7 +9500,7 @@ final class Workspace: Identifiable, ObservableObject {
     /// current tab selection and pane focus.
     ///
     /// This follows reorders that originate on the remote (a second tmux client, or
-    /// a manual `move-window` / a `new-window` inserted mid-list). The cmux→tmux
+    /// a manual `move-window` / a `new-window` inserted mid-list). The bmux→tmux
     /// drag direction is handled by `handleMirrorWindowsReordered`. bonsplit's
     /// `reorderTab` selects+focuses the moved tab (and `selectTab`/`focusPane` fire
     /// the same activation), so the whole operation runs under
@@ -9525,7 +9525,7 @@ final class Workspace: Identifiable, ObservableObject {
         let currentPanelIds = bonsplitController.tabs(inPane: paneId).compactMap { panelIdFromSurfaceId($0.id) }
         guard let desired = RemoteTmuxSessionMirror.mirrorTabReorder(current: currentPanelIds, requested: panelOrder) else { return false }
 #if DEBUG
-        cmuxDebugLog("remote-tmux: reorder mirror tabs ws=\(id.uuidString.prefix(5)) count=\(desired.count)")
+        bmuxDebugLog("remote-tmux: reorder mirror tabs ws=\(id.uuidString.prefix(5)) count=\(desired.count)")
 #endif
 
         let savedSelectedTabId = bonsplitController.selectedTab(inPane: paneId)?.id
@@ -9538,7 +9538,7 @@ final class Workspace: Identifiable, ObservableObject {
             _ = bonsplitController.reorderTab(tabId, toIndex: index)
         }
         // Restore bonsplit's internal selection + focus (the loop moved them to the
-        // last-reordered tab). cmux's own focus/selection were never touched (the
+        // last-reordered tab). bmux's own focus/selection were never touched (the
         // delegate handlers short-circuited), so this just realigns bonsplit with
         // the user's unchanged state — no `applyTabSelection` runs.
         if let savedSelectedTabId { bonsplitController.selectTab(savedSelectedTabId) }
@@ -9557,7 +9557,7 @@ final class Workspace: Identifiable, ObservableObject {
             && activeRemoteTerminalSurfaceIds.count == 1
 #if DEBUG
         let detachStart = ProcessInfo.processInfo.systemUptime
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.detach.begin ws=\(id.uuidString.prefix(5)) panel=\(panelId.uuidString.prefix(5)) " +
             "tab=\(tabId.uuid.uuidString.prefix(5)) activeDetachTxn=\(activeDetachCloseTransactions) " +
             "pendingDetached=\(pendingDetachedSurfaces.count)"
@@ -9572,7 +9572,7 @@ final class Workspace: Identifiable, ObservableObject {
             splitLayout.cancelDetach(tabId)
             forceCloseTabIds.remove(tabId)
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "split.detach.fail ws=\(id.uuidString.prefix(5)) panel=\(panelId.uuidString.prefix(5)) " +
                 "tab=\(tabId.uuid.uuidString.prefix(5)) reason=closeTabRejected elapsedMs=\(debugElapsedMs(since: detachStart))"
             )
@@ -9587,9 +9587,9 @@ final class Workspace: Identifiable, ObservableObject {
                 detached = detachedTransfer.withRemoteCleanupConfiguration(remoteConfiguration)
             }
         }
-        publishCmuxSurfaceClosed(panelId, paneId: sourcePaneId, panel: sourcePanel, origin: detached == nil ? "detach_lost" : "detach")
+        publishBmuxSurfaceClosed(panelId, paneId: sourcePaneId, panel: sourcePanel, origin: detached == nil ? "detach_lost" : "detach")
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.detach.end ws=\(id.uuidString.prefix(5)) panel=\(panelId.uuidString.prefix(5)) " +
             "tab=\(tabId.uuid.uuidString.prefix(5)) transfer=\(detached != nil ? 1 : 0) " +
             "elapsedMs=\(debugElapsedMs(since: detachStart))"
@@ -9608,14 +9608,14 @@ final class Workspace: Identifiable, ObservableObject {
     ) -> UUID? {
 #if DEBUG
         let attachStart = ProcessInfo.processInfo.systemUptime
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.attach.begin ws=\(id.uuidString.prefix(5)) panel=\(detached.panelId.uuidString.prefix(5)) " +
             "pane=\(paneId.id.uuidString.prefix(5)) index=\(index.map(String.init) ?? "nil") focus=\(focus ? 1 : 0)"
         )
 #endif
         guard bonsplitController.allPaneIds.contains(paneId) else {
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "split.attach.fail ws=\(id.uuidString.prefix(5)) panel=\(detached.panelId.uuidString.prefix(5)) " +
                 "reason=invalidPane elapsedMs=\(debugElapsedMs(since: attachStart))"
             )
@@ -9624,7 +9624,7 @@ final class Workspace: Identifiable, ObservableObject {
         }
         guard panels[detached.panelId] == nil else {
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "split.attach.fail ws=\(id.uuidString.prefix(5)) panel=\(detached.panelId.uuidString.prefix(5)) " +
                 "reason=panelExists elapsedMs=\(debugElapsedMs(since: attachStart))"
             )
@@ -9708,7 +9708,7 @@ final class Workspace: Identifiable, ObservableObject {
                 agentSessionPanelCallbackIds.remove(detached.panelId)
             }
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "split.attach.fail ws=\(id.uuidString.prefix(5)) panel=\(detached.panelId.uuidString.prefix(5)) " +
                 "reason=createTabFailed elapsedMs=\(debugElapsedMs(since: attachStart))"
             )
@@ -9814,7 +9814,7 @@ final class Workspace: Identifiable, ObservableObject {
         syncPinnedStateForTab(newTabId, panelId: detached.panelId)
         syncUnreadBadgeStateForPanel(detached.panelId)
         normalizePinnedTabs(in: paneId)
-        publishCmuxSurfaceCreated(detached.panelId, paneId: paneId, kind: Self.cmuxEventSurfaceKind(detached.panel), origin: "detach_attach", focused: focus)
+        publishBmuxSurfaceCreated(detached.panelId, paneId: paneId, kind: Self.bmuxEventSurfaceKind(detached.panel), origin: "detach_attach", focused: focus)
 
         if focus {
             bonsplitController.focusPane(paneId)
@@ -9826,7 +9826,7 @@ final class Workspace: Identifiable, ObservableObject {
         scheduleTerminalGeometryReconcile()
 
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.attach.end ws=\(id.uuidString.prefix(5)) panel=\(detached.panelId.uuidString.prefix(5)) " +
             "tab=\(newTabId.uuid.uuidString.prefix(5)) pane=\(paneId.id.uuidString.prefix(5)) " +
             "index=\(index.map(String.init) ?? "nil") focus=\(focus ? 1 : 0) " +
@@ -9946,7 +9946,7 @@ final class Workspace: Identifiable, ObservableObject {
 #if DEBUG
         let pane = bonsplitController.focusedPaneId?.id.uuidString.prefix(5) ?? "nil"
         let triggerLabel = trigger == .terminalFirstResponder ? "firstResponder" : "standard"
-        cmuxDebugLog("focus.panel panel=\(panelId.uuidString.prefix(5)) pane=\(pane) trigger=\(triggerLabel)")
+        bmuxDebugLog("focus.panel panel=\(panelId.uuidString.prefix(5)) pane=\(pane) trigger=\(triggerLabel)")
         AppDelegate.shared?.focusLog.append(
             "Workspace.focusPanel panelId=\(panelId.uuidString) focusedPane=\(pane) trigger=\(triggerLabel)"
         )
@@ -9993,7 +9993,7 @@ final class Workspace: Identifiable, ObservableObject {
             .flatMap { bonsplitController.selectedTab(inPane: $0)?.id }
             .map { String($0.uuid.uuidString.prefix(5)) } ?? "nil"
         let currentPanelShort = currentlyFocusedPanelId.map { String($0.uuidString.prefix(5)) } ?? "nil"
-        cmuxDebugLog(
+        bmuxDebugLog(
             "focus.panel.begin workspace=\(id.uuidString.prefix(5)) " +
             "panel=\(panelId.uuidString.prefix(5)) trigger=\(String(describing: trigger)) " +
             "targetPane=\(targetPaneShort) focusedPane=\(focusedPaneShort) selectedTab=\(selectedTabShort) " +
@@ -10021,7 +10021,7 @@ final class Workspace: Identifiable, ObservableObject {
 
         if let targetPaneId, !selectionAlreadyConverged {
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "focus.panel.focusPane workspace=\(id.uuidString.prefix(5)) " +
                 "panel=\(panelId.uuidString.prefix(5)) pane=\(targetPaneId.id.uuidString.prefix(5))"
             )
@@ -10031,7 +10031,7 @@ final class Workspace: Identifiable, ObservableObject {
 
         if !selectionAlreadyConverged {
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "focus.panel.selectTab workspace=\(id.uuidString.prefix(5)) " +
                 "panel=\(panelId.uuidString.prefix(5)) tab=\(tabId.uuid.uuidString.prefix(5))"
             )
@@ -10290,7 +10290,7 @@ final class Workspace: Identifiable, ObservableObject {
     private static func remoteDisconnectPlaceholderScript(target: String, reconnectCommand: String?) -> String {
         let tempDir = FileManager.default.temporaryDirectory
         let scriptURL = tempDir.appendingPathComponent(
-            "cmux-remote-disconnect-\(UUID().uuidString.lowercased()).sh"
+            "bmux-remote-disconnect-\(UUID().uuidString.lowercased()).sh"
         )
         // Encode the target as base64 and decode it inside the shell. This sidesteps every
         // layer of shell quoting: no matter what the target contains (`$(id)`, backticks,
@@ -10302,15 +10302,15 @@ final class Workspace: Identifiable, ObservableObject {
         // POSIX printf inside the shell wrapper, not by Swift's String(format:).
         let endedLineFormat = String(
             localized: "remote.disconnectBanner.sessionEnded",
-            defaultValue: "[cmux] remote session disconnected: %s"
+            defaultValue: "[bmux] remote session disconnected: %s"
         )
         let reconnectLine = String(
             localized: "remote.disconnectBanner.reconnectHint",
-            defaultValue: "[cmux] Press Enter to reconnect. This terminal will stay disconnected until then."
+            defaultValue: "[bmux] Press Enter to reconnect. This terminal will stay disconnected until then."
         )
         let reconnectUnavailableLine = String(
             localized: "remote.disconnectBanner.reconnectUnavailableHint",
-            defaultValue: "[cmux] Reconnect this workspace from the sidebar or by running the original cmux remote command again."
+            defaultValue: "[bmux] Reconnect this workspace from the sidebar or by running the original bmux remote command again."
         )
         // Encode the localized lines the same way as the target, so a translator using
         // backticks or $(…) in a translation string can't unexpectedly execute in the
@@ -10321,44 +10321,44 @@ final class Workspace: Identifiable, ObservableObject {
         let encodedReconnectCommand = Data((reconnectCommand ?? "").utf8).base64EncodedString()
         let body = """
         #!/bin/sh
-        cmux_disconnect_decode() {
+        bmux_disconnect_decode() {
           printf '%s' "$1" | base64 --decode 2>/dev/null || printf '%s' "$1" | base64 -D 2>/dev/null
         }
-        cmux_disconnect_target="$(cmux_disconnect_decode '\(encodedTarget)')"
-        cmux_disconnect_ended_format="$(cmux_disconnect_decode '\(encodedEndedFormat)')"
-        cmux_disconnect_reconnect_line="$(cmux_disconnect_decode '\(encodedReconnectLine)')"
-        cmux_disconnect_reconnect_unavailable_line="$(cmux_disconnect_decode '\(encodedReconnectUnavailableLine)')"
-        cmux_disconnect_reconnect_command="$(cmux_disconnect_decode '\(encodedReconnectCommand)')"
+        bmux_disconnect_target="$(bmux_disconnect_decode '\(encodedTarget)')"
+        bmux_disconnect_ended_format="$(bmux_disconnect_decode '\(encodedEndedFormat)')"
+        bmux_disconnect_reconnect_line="$(bmux_disconnect_decode '\(encodedReconnectLine)')"
+        bmux_disconnect_reconnect_unavailable_line="$(bmux_disconnect_decode '\(encodedReconnectUnavailableLine)')"
+        bmux_disconnect_reconnect_command="$(bmux_disconnect_decode '\(encodedReconnectCommand)')"
         # Append newline + color codes ourselves rather than trusting the translator to
         # preserve them in every locale.
         printf '\\033[1;33m'
-        printf "$cmux_disconnect_ended_format" "$cmux_disconnect_target"
+        printf "$bmux_disconnect_ended_format" "$bmux_disconnect_target"
         printf '\\033[0m\\n' >&2
         # Remove ourselves so /tmp doesn't accumulate these wrappers across sessions.
         rm -f -- "$0" 2>/dev/null || true
-        if [ -n "$cmux_disconnect_reconnect_command" ]; then
-          printf '\\033[2m%s\\033[0m\\n\\n' "$cmux_disconnect_reconnect_line" >&2
+        if [ -n "$bmux_disconnect_reconnect_command" ]; then
+          printf '\\033[2m%s\\033[0m\\n\\n' "$bmux_disconnect_reconnect_line" >&2
           IFS= read -r _ || exit 0
-          cmux_reconnect_cli="${CMUX_BUNDLED_CLI_PATH:-}"
-          if [ -z "$cmux_reconnect_cli" ] || [ ! -x "$cmux_reconnect_cli" ]; then
-            cmux_reconnect_cli="$(command -v cmux 2>/dev/null || true)"
+          bmux_reconnect_cli="${BMUX_BUNDLED_CLI_PATH:-}"
+          if [ -z "$bmux_reconnect_cli" ] || [ ! -x "$bmux_reconnect_cli" ]; then
+            bmux_reconnect_cli="$(command -v bmux 2>/dev/null || true)"
           fi
-          cmux_reconnect_socket="${CMUX_SOCKET_PATH:-${CMUX_SOCKET:-}}"
-          if [ -n "$cmux_reconnect_cli" ] && [ -n "$cmux_reconnect_socket" ] && [ -n "${CMUX_WORKSPACE_ID:-}" ]; then
-            cmux_reconnect_payload="{\\"workspace_id\\":\\"$CMUX_WORKSPACE_ID\\""
-            if [ -n "${CMUX_SURFACE_ID:-}" ]; then
-              cmux_reconnect_payload="$cmux_reconnect_payload,\\"surface_id\\":\\"$CMUX_SURFACE_ID\\""
+          bmux_reconnect_socket="${BMUX_SOCKET_PATH:-${BMUX_SOCKET:-}}"
+          if [ -n "$bmux_reconnect_cli" ] && [ -n "$bmux_reconnect_socket" ] && [ -n "${BMUX_WORKSPACE_ID:-}" ]; then
+            bmux_reconnect_payload="{\\"workspace_id\\":\\"$BMUX_WORKSPACE_ID\\""
+            if [ -n "${BMUX_SURFACE_ID:-}" ]; then
+              bmux_reconnect_payload="$bmux_reconnect_payload,\\"surface_id\\":\\"$BMUX_SURFACE_ID\\""
             fi
-            cmux_reconnect_payload="$cmux_reconnect_payload}"
-            if "$cmux_reconnect_cli" --socket "$cmux_reconnect_socket" rpc workspace.remote.reconnect "$cmux_reconnect_payload" >/dev/null 2>&1; then
-              exec /bin/sh -lc "$cmux_disconnect_reconnect_command"
+            bmux_reconnect_payload="$bmux_reconnect_payload}"
+            if "$bmux_reconnect_cli" --socket "$bmux_reconnect_socket" rpc workspace.remote.reconnect "$bmux_reconnect_payload" >/dev/null 2>&1; then
+              exec /bin/sh -lc "$bmux_disconnect_reconnect_command"
             fi
           fi
-          printf '\\033[2m%s\\033[0m\\n' "$cmux_disconnect_reconnect_unavailable_line" >&2
+          printf '\\033[2m%s\\033[0m\\n' "$bmux_disconnect_reconnect_unavailable_line" >&2
           while IFS= read -r _; do :; done
           exit 0
         fi
-        printf '\\033[2m%s\\033[0m\\n' "$cmux_disconnect_reconnect_unavailable_line" >&2
+        printf '\\033[2m%s\\033[0m\\n' "$bmux_disconnect_reconnect_unavailable_line" >&2
         while IFS= read -r _; do :; done
         exit 0
 
@@ -10388,7 +10388,7 @@ final class Workspace: Identifiable, ObservableObject {
             )
         }
         if replacementInitialCommand != nil {
-            var config = replacementConfig ?? CmuxSurfaceConfigTemplate()
+            var config = replacementConfig ?? BmuxSurfaceConfigTemplate()
             config.waitAfterCommand = true
             replacementConfig = config
         }
@@ -10560,7 +10560,7 @@ final class Workspace: Identifiable, ObservableObject {
         hostedView.suppressReparentFocus()
         pendingReparentFocusSuppressionViews[ObjectIdentifier(hostedView)] = hostedView
 #if DEBUG
-        cmuxDebugLog("focus.reparent.suppressPending reason=\(reason) count=\(pendingReparentFocusSuppressionViews.count)")
+        bmuxDebugLog("focus.reparent.suppressPending reason=\(reason) count=\(pendingReparentFocusSuppressionViews.count)")
 #endif
 
         guard portalRenderingEnabled else {
@@ -10576,7 +10576,7 @@ final class Workspace: Identifiable, ObservableObject {
         let hostedViews = Array(pendingReparentFocusSuppressionViews.values)
         pendingReparentFocusSuppressionViews.removeAll()
 #if DEBUG
-        cmuxDebugLog("focus.reparent.clearPending reason=\(reason) count=\(hostedViews.count)")
+        bmuxDebugLog("focus.reparent.clearPending reason=\(reason) count=\(hostedViews.count)")
 #endif
         for hostedView in hostedViews {
             hostedView.clearSuppressReparentFocus()
@@ -10594,7 +10594,7 @@ final class Workspace: Identifiable, ObservableObject {
             pendingReparentFocusSuppressionViews.removeValue(forKey: key)
         }
 #if DEBUG
-        cmuxDebugLog("focus.reparent.clearReady reason=\(reason) count=\(hostedViews.count)")
+        bmuxDebugLog("focus.reparent.clearReady reason=\(reason) count=\(hostedViews.count)")
 #endif
         for hostedView in hostedViews {
             hostedView.clearSuppressReparentFocus()
@@ -10626,7 +10626,7 @@ final class Workspace: Identifiable, ObservableObject {
         // it on every event-loop tick during tracking (scroll, drag), which pumped
         // flushWorkspaceWindowLayouts() per scroll tick while a session was open.
         // Convergence comes from the self-rescheduling attempt loop plus the
-        // structural observers below (https://github.com/manaflow-ai/cmux/issues/6790).
+        // structural observers below (https://github.com/manaflow-ai/bmux/issues/6790).
         layoutFollowUpObservers.append(NotificationCenter.default.addObserver(
             forName: .terminalSurfaceDidBecomeReady,
             object: nil,
@@ -11350,7 +11350,7 @@ final class Workspace: Identifiable, ObservableObject {
         let failure = NSAlert()
         failure.alertStyle = .warning
         failure.messageText = String(localized: "alert.moveTab.failed.title", defaultValue: "Move Failed")
-        failure.informativeText = String(localized: "alert.moveTab.failed.message", defaultValue: "cmux could not move this tab to the selected destination.")
+        failure.informativeText = String(localized: "alert.moveTab.failed.message", defaultValue: "bmux could not move this tab to the selected destination.")
         failure.addButton(withTitle: String(localized: "alert.ok", defaultValue: "OK"))
         _ = failure.runModal()
     }
@@ -11488,7 +11488,7 @@ final class Workspace: Identifiable, ObservableObject {
             remoteStartupCommand: startupCommand
         )
         if startupCommand != nil {
-            var template = inheritedConfig ?? CmuxSurfaceConfigTemplate()
+            var template = inheritedConfig ?? BmuxSurfaceConfigTemplate()
             template.waitAfterCommand = true
             inheritedConfig = template
         }
@@ -11532,7 +11532,7 @@ final class Workspace: Identifiable, ObservableObject {
             terminalInheritanceFontPointsByPanelId.removeValue(forKey: newPanel.id)
             return nil
         }
-        publishCmuxSplitCreated(newPaneId, sourcePaneId: paneId, orientation: orientation, surfaceId: newPanel.id, kind: "terminal", origin: "terminal_split", focused: true)
+        publishBmuxSplitCreated(newPaneId, sourcePaneId: paneId, orientation: orientation, surfaceId: newPanel.id, kind: "terminal", origin: "terminal_split", focused: true)
 
         bonsplitController.selectTab(newTab.id)
         newPanel.focus()
@@ -11660,7 +11660,7 @@ final class Workspace: Identifiable, ObservableObject {
     /// Fork the panel's agent conversation into a brand-new sibling tab placed immediately
     /// to the right of `anchorTabId` in `paneId`. Uses the same `claude --resume --fork-session`
     /// startup input the existing split/new-workspace forks rely on, so divergence is owned by
-    /// the agent itself (Claude / Codex / OpenCode) instead of any cmux-side history copy.
+    /// the agent itself (Claude / Codex / OpenCode) instead of any bmux-side history copy.
     @discardableResult
     func forkAgentConversationToNewTab(
         fromPanelId panelId: UUID,
@@ -11773,7 +11773,7 @@ final class Workspace: Identifiable, ObservableObject {
         }
 
         #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.externalDrop.begin ws=\(id.uuidString.prefix(5)) tab=\(request.tabId.uuid.uuidString.prefix(5)) " +
             "sourcePane=\(request.sourcePaneId.id.uuidString.prefix(5)) destination=\(destinationLabel)"
         )
@@ -11788,7 +11788,7 @@ final class Workspace: Identifiable, ObservableObject {
             focusWindow: true
         )
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.externalDrop.end ws=\(id.uuidString.prefix(5)) tab=\(request.tabId.uuid.uuidString.prefix(5)) " +
             "moved=\(moved ? 1 : 0) elapsedMs=\(debugElapsedMs(since: dropStart))"
         )
@@ -11973,7 +11973,7 @@ extension Workspace: BonsplitDelegate {
         let selectedTabBefore = bonsplitController.focusedPaneId
             .flatMap { bonsplitController.selectedTab(inPane: $0)?.id }
             .map { String($0.uuid.uuidString.prefix(5)) } ?? "nil"
-        cmuxDebugLog(
+        bmuxDebugLog(
             "focus.split.apply.begin workspace=\(id.uuidString.prefix(5)) " +
             "pane=\(pane.id.uuidString.prefix(5)) tab=\(tabId.uuid.uuidString.prefix(5)) " +
             "focusedPane=\(focusedPaneBefore) selectedTab=\(selectedTabBefore) " +
@@ -12092,7 +12092,7 @@ extension Workspace: BonsplitDelegate {
                 if !terminalPanel.hostedView.isSurfaceViewFirstResponder() {
 #if DEBUG
                     let previousExists = previousTerminalHostedView != nil ? 1 : 0
-                    cmuxDebugLog(
+                    bmuxDebugLog(
                         "focus.split.moveFocus workspace=\(id.uuidString.prefix(5)) " +
                         "panel=\(panelId.uuidString.prefix(5)) previousExists=\(previousExists) " +
                         "to=\(panelId.uuidString.prefix(5))"
@@ -12101,7 +12101,7 @@ extension Workspace: BonsplitDelegate {
                     terminalPanel.hostedView.moveFocus(from: previousTerminalHostedView)
                 }
 #if DEBUG
-                cmuxDebugLog(
+                bmuxDebugLog(
                     "focus.split.ensureFocus workspace=\(id.uuidString.prefix(5)) " +
                     "panel=\(panelId.uuidString.prefix(5)) pane=\(focusedPane.id.uuidString.prefix(5)) " +
                     "tab=\(selectedTabId.uuid.uuidString.prefix(5)) intent=\(String(describing: activationIntent))"
@@ -12139,10 +12139,10 @@ extension Workspace: BonsplitDelegate {
                 explicitFocusIntent: explicitFocusIntent
             )
         )
-        publishCmuxFocusedSelection(paneId: focusedPane, surfaceId: panelId, origin: "bonsplit_selection")
+        publishBmuxFocusedSelection(paneId: focusedPane, surfaceId: panelId, origin: "bonsplit_selection")
 #if DEBUG
         let prevPanelShort = previousFocusedPanelId.map { String($0.uuidString.prefix(5)) } ?? "nil"
-        cmuxDebugLog(
+        bmuxDebugLog(
             "focus.split.apply.end workspace=\(id.uuidString.prefix(5)) " +
             "panel=\(panelId.uuidString.prefix(5)) type=\(String(describing: type(of: panel))) " +
             "focusedPane=\(focusedPane.id.uuidString.prefix(5)) selectedTab=\(selectedTabId.uuid.uuidString.prefix(5)) " +
@@ -12197,7 +12197,7 @@ extension Workspace: BonsplitDelegate {
         for (panelId, panel) in panels where panelId != targetPanelId {
             guard let ownedIntent = panel.ownedFocusIntent(for: firstResponder, in: window) else { continue }
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "focus.handoff.begin workspace=\(id.uuidString.prefix(5)) " +
                 "fromPanel=\(panelId.uuidString.prefix(5)) toPanel=\(targetPanelId.uuidString.prefix(5)) " +
                 "fromIntent=\(String(describing: ownedIntent)) toIntent=\(String(describing: targetIntent))"
@@ -12733,12 +12733,12 @@ extension Workspace: BonsplitDelegate {
             .map { String(String(describing: $0.id).prefix(5)) } ?? "nil"
         let focusedPaneBefore = controller.focusedPaneId?.id.uuidString.prefix(5) ?? "nil"
         let focusedPanelBefore = focusedPanelId?.uuidString.prefix(5) ?? "nil"
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.moveTab idx=\(debugDidMoveTabEventCount) dtSincePrevMs=\(sincePrev) panel=\(movedPanel) " +
             "from=\(source.id.uuidString.prefix(5)) to=\(destination.id.uuidString.prefix(5)) " +
             "sourceTabs=\(controller.tabs(inPane: source).count) destTabs=\(controller.tabs(inPane: destination).count)"
         )
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.moveTab.state.before idx=\(debugDidMoveTabEventCount) panel=\(movedPanel) " +
             "destSelected=\(selectedBefore) focusedPane=\(focusedPaneBefore) focusedPanel=\(focusedPanelBefore)"
         )
@@ -12756,7 +12756,7 @@ extension Workspace: BonsplitDelegate {
         let focusedPaneAfter = controller.focusedPaneId?.id.uuidString.prefix(5) ?? "nil"
         let focusedPanelAfter = focusedPanelId?.uuidString.prefix(5) ?? "nil"
         let movedPanelFocused = (movedPanelIdAfter != nil && movedPanelIdAfter == focusedPanelId) ? 1 : 0
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.moveTab.state.after idx=\(debugDidMoveTabEventCount) panel=\(movedPanel) " +
             "destSelected=\(selectedAfter) focusedPane=\(focusedPaneAfter) focusedPanel=\(focusedPanelAfter) " +
             "movedFocused=\(movedPanelFocused)"
@@ -12795,7 +12795,7 @@ extension Workspace: BonsplitDelegate {
         let closedHistoryEntries = pendingPaneCloseHistoryEntries.removeValue(forKey: paneId.id) ?? []
         let shouldScheduleFocusReconcile = !isDetachingCloseTransaction
 
-        publishCmuxPaneClosed(paneId, closedPanelIds: closedPanelIds, origin: "pane_close")
+        publishBmuxPaneClosed(paneId, closedPanelIds: closedPanelIds, origin: "pane_close")
         if !closedPanelIds.isEmpty {
             if !isDetachingCloseTransaction && !suppressClosedPanelHistory {
                 for entry in closedHistoryEntries {
@@ -12891,7 +12891,7 @@ extension Workspace: BonsplitDelegate {
         }
         let originalSelectedKind = controller.selectedTab(inPane: originalPane).map { panelKindForTab($0.id) } ?? "none"
         let newSelectedKind = controller.selectedTab(inPane: newPane).map { panelKindForTab($0.id) } ?? "none"
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.didSplit original=\(originalPane.id.uuidString.prefix(5)) new=\(newPane.id.uuidString.prefix(5)) " +
             "orientation=\(orientation) programmatic=\(isProgrammaticSplit ? 1 : 0) " +
             "originalTabs=\(controller.tabs(inPane: originalPane).count) newTabs=\(controller.tabs(inPane: newPane).count) " +
@@ -12926,7 +12926,7 @@ extension Workspace: BonsplitDelegate {
         // If the new pane already has a tab, this split moved an existing tab (drag-to-split).
         //
         // In the "drag the only tab to split edge" case, bonsplit inserts a placeholder "Empty"
-        // tab in the source pane to avoid leaving it tabless. In cmux, this is undesirable:
+        // tab in the source pane to avoid leaving it tabless. In bmux, this is undesirable:
         // it creates a pane with no real surfaces and leaves an "Empty" tab in the tab bar.
         //
         // Replace placeholder-only source panes with a real terminal surface, then drop the
@@ -12935,7 +12935,7 @@ extension Workspace: BonsplitDelegate {
             let originalTabs = controller.tabs(inPane: originalPane)
             let hasRealSurface = originalTabs.contains { panelIdFromSurfaceId($0.id) != nil }
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "split.didSplit.drag original=\(originalPane.id.uuidString.prefix(5)) " +
                 "new=\(newPane.id.uuidString.prefix(5)) originalTabs=\(originalTabs.count) " +
                 "newTabs=\(controller.tabs(inPane: newPane).count) hasRealSurface=\(hasRealSurface ? 1 : 0) " +
@@ -12945,7 +12945,7 @@ extension Workspace: BonsplitDelegate {
             if !hasRealSurface {
                 let placeholderTabs = originalTabs.filter { panelIdFromSurfaceId($0.id) == nil }
 #if DEBUG
-                cmuxDebugLog(
+                bmuxDebugLog(
                     "split.placeholderRepair pane=\(originalPane.id.uuidString.prefix(5)) " +
                     "action=reusePlaceholder placeholderCount=\(placeholderTabs.count)"
                 )
@@ -12981,14 +12981,14 @@ extension Workspace: BonsplitDelegate {
                         isLoading: false,
                         isPinned: false
                     )
-                    publishCmuxSurfaceCreated(replacementPanel.id, paneId: originalPane, kind: "terminal", origin: "placeholder_repair", focused: false)
+                    publishBmuxSurfaceCreated(replacementPanel.id, paneId: originalPane, kind: "terminal", origin: "placeholder_repair", focused: false)
 
                     for extraPlaceholder in placeholderTabs.dropFirst() {
                         bonsplitController.closeTab(extraPlaceholder.id)
                     }
                 } else {
 #if DEBUG
-                    cmuxDebugLog(
+                    bmuxDebugLog(
                         "split.placeholderRepair pane=\(originalPane.id.uuidString.prefix(5)) " +
                         "fallback=createTerminalAndDropPlaceholders"
                     )
@@ -13014,7 +13014,7 @@ extension Workspace: BonsplitDelegate {
         let sourcePanelId = sourceTabId.flatMap { panelIdFromSurfaceId($0) }
 
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.didSplit.autoCreate pane=\(newPane.id.uuidString.prefix(5)) " +
             "fromPane=\(originalPane.id.uuidString.prefix(5)) sourcePanel=\(sourcePanelId.map { String($0.uuidString.prefix(5)) } ?? "none")"
         )
@@ -13053,9 +13053,9 @@ extension Workspace: BonsplitDelegate {
 
         bindSurface(newTabId, toPanelId: newPanel.id)
         normalizePinnedTabs(in: newPane)
-        publishCmuxSplitCreated(newPane, sourcePaneId: originalPane, orientation: orientation, surfaceId: newPanel.id, kind: "terminal", origin: "ui_split", focused: true)
+        publishBmuxSplitCreated(newPane, sourcePaneId: originalPane, orientation: orientation, surfaceId: newPanel.id, kind: "terminal", origin: "ui_split", focused: true)
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.didSplit.autoCreate.done pane=\(newPane.id.uuidString.prefix(5)) " +
             "panel=\(newPanel.id.uuidString.prefix(5))"
         )
@@ -13128,7 +13128,7 @@ extension Workspace: BonsplitDelegate {
             let trimmedCwd = rawCwd.trimmingCharacters(in: .whitespacesAndNewlines)
             let baseCwd = trimmedCwd.isEmpty ? FileManager.default.homeDirectoryForCurrentUser.path : trimmedCwd
             guard let tabManager = owningTabManager else { return }
-            let command: CmuxCommandDefinition
+            let command: BmuxCommandDefinition
             let configSourcePath: String?
             if let workspaceCommand = executable.workspaceCommand {
                 command = workspaceCommand.command
@@ -13139,7 +13139,7 @@ extension Workspace: BonsplitDelegate {
             } else {
                 return
             }
-            _ = CmuxConfigExecutor.execute(
+            _ = BmuxConfigExecutor.execute(
                 command: command,
                 tabManager: tabManager,
                 baseCwd: baseCwd,
@@ -13156,7 +13156,7 @@ extension Workspace: BonsplitDelegate {
 
         guard let command = executable.button.terminalCommand else { return }
         let target = executable.button.resolvedTerminalCommandTarget
-        let didExecute = CmuxConfigExecutor.prepareShellInputIfAuthorized(
+        let didExecute = BmuxConfigExecutor.prepareShellInputIfAuthorized(
             command,
             confirm: executable.button.confirm ?? false,
             actionID: executable.button.id,
@@ -13200,7 +13200,7 @@ extension Workspace: BonsplitDelegate {
 
     func splitTabBar(_ controller: BonsplitController, didRequestCustomAction identifier: String, inPane pane: PaneID) {
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.customAction.request workspace=\(id.uuidString.prefix(5)) " +
             "pane=\(pane.id.uuidString.prefix(5)) identifier=\(identifier)"
         )

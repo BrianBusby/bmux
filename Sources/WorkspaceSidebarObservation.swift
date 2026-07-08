@@ -1,8 +1,8 @@
 import Combine
-import CmuxCore
+import BmuxCore
 import Foundation
-import CmuxSidebar
-import CmuxWorkspaces
+import BmuxSidebar
+import BmuxWorkspaces
 import SwiftUI
 
 private struct SidebarPanelObservationState: Equatable {
@@ -77,7 +77,7 @@ extension Workspace {
     // (a user pin/color/title edit stays immediate, which Combine's throttle
     // cannot guarantee because it schedules every emission onto the scheduler)
     // and collapses the tail of the burst into one trailing emission per window.
-    // See https://github.com/manaflow-ai/cmux/issues/4127.
+    // See https://github.com/manaflow-ai/bmux/issues/4127.
     static let sidebarImmediateObservationCoalesceInterval: RunLoop.SchedulerTimeType.Stride = .milliseconds(50)
 
     func makeSidebarImmediateObservationPublisher() -> AnyPublisher<Void, Never> {

@@ -23,7 +23,7 @@ private final class InternalFlagsWindowController: NSWindowController {
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true
         window.minSize = NSSize(width: 760, height: 420)
-        window.contentView = NSHostingView(rootView: InternalFlagsView(flags: CmuxFeatureFlags.shared))
+        window.contentView = NSHostingView(rootView: InternalFlagsView(flags: BmuxFeatureFlags.shared))
         super.init(window: window)
     }
 
@@ -43,10 +43,10 @@ private final class InternalFlagsWindowController: NSWindowController {
 }
 
 private struct InternalFlagsView: View {
-    let flags: CmuxFeatureFlags
+    let flags: BmuxFeatureFlags
 
     private var rows: [InternalFlagRowSnapshot] {
-        CmuxFeatureFlags.allFlags.map { definition in
+        BmuxFeatureFlags.allFlags.map { definition in
             InternalFlagRowSnapshot(
                 definition: definition,
                 effectiveValue: flags.effectiveValue(for: definition),
@@ -138,7 +138,7 @@ private struct InternalFlagHeaderRow: View {
 private struct InternalFlagRowSnapshot: Identifiable, Equatable {
     var id: String { definition.key }
 
-    let definition: CmuxFeatureFlagDefinition
+    let definition: BmuxFeatureFlagDefinition
     let effectiveValue: Bool
     let overrideValue: Bool?
     let remoteValue: Bool?

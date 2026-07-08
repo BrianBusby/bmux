@@ -1,7 +1,7 @@
 import Foundation
 import CoreServices
 import ImageIO
-import CmuxSettings
+import BmuxSettings
 import UniformTypeIdentifiers
 
 nonisolated struct BrowserDownloadFilenameResolver: Sendable {
@@ -287,7 +287,7 @@ nonisolated struct BrowserDownloadFilenameResolver: Sendable {
 }
 
 extension URL {
-    func cmuxApplyWebDownloadQuarantine(sourceURL: URL?) throws {
+    func bmuxApplyWebDownloadQuarantine(sourceURL: URL?) throws {
         guard let sourceURL,
               !sourceURL.isFileURL else {
             return
@@ -296,13 +296,13 @@ extension URL {
         var quarantineProperties: [String: Any] = [
             kLSQuarantineTypeKey as String: kLSQuarantineTypeWebDownload as String,
             kLSQuarantineTimeStampKey as String: Date(),
-            kLSQuarantineAgentNameKey as String: Self.cmuxDownloadQuarantineAgentName(),
+            kLSQuarantineAgentNameKey as String: Self.bmuxDownloadQuarantineAgentName(),
         ]
         if let bundleIdentifier = Bundle.main.bundleIdentifier,
            !bundleIdentifier.isEmpty {
             quarantineProperties[kLSQuarantineAgentBundleIdentifierKey as String] = bundleIdentifier
         }
-        if let sanitizedSourceURL = Self.cmuxSanitizedDownloadSourceURL(sourceURL) {
+        if let sanitizedSourceURL = Self.bmuxSanitizedDownloadSourceURL(sourceURL) {
             quarantineProperties[kLSQuarantineDataURLKey as String] = sanitizedSourceURL
             quarantineProperties[kLSQuarantineOriginURLKey as String] = sanitizedSourceURL
         }
@@ -313,15 +313,15 @@ extension URL {
         try fileURL.setResourceValues(resourceValues)
     }
 
-    private static func cmuxDownloadQuarantineAgentName() -> String {
+    private static func bmuxDownloadQuarantineAgentName() -> String {
         let candidate = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
             ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-            ?? "cmux"
+            ?? "bmux"
         let trimmed = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "cmux" : trimmed
+        return trimmed.isEmpty ? "bmux" : trimmed
     }
 
-    private static func cmuxSanitizedDownloadSourceURL(_ sourceURL: URL) -> URL? {
+    private static func bmuxSanitizedDownloadSourceURL(_ sourceURL: URL) -> URL? {
         let scheme = sourceURL.scheme?.lowercased()
         guard scheme == "http" || scheme == "https",
               var components = URLComponents(url: sourceURL, resolvingAgainstBaseURL: false) else {

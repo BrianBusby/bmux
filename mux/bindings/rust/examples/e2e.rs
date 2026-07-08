@@ -1,17 +1,17 @@
-use cmux_client::{ClientConfig, CmuxClient, CmuxError, Event, Result, Tree};
+use bmux_client::{ClientConfig, BmuxClient, BmuxError, Event, Result, Tree};
 use std::env;
 use std::thread;
 use std::time::{Duration, Instant};
 
 fn main() -> Result<()> {
-    let socket = env::var("CMUX_MUX_SOCKET")
-        .map_err(|_| CmuxError::Connection("CMUX_MUX_SOCKET is required".to_string()))?;
-    let mut client = CmuxClient::connect(ClientConfig::from_socket_path(socket))?;
-    let marker = format!("CMUX_RUST_E2E_{}_{}", std::process::id(), now_ms());
+    let socket = env::var("BMUX_MUX_SOCKET")
+        .map_err(|_| BmuxError::Connection("BMUX_MUX_SOCKET is required".to_string()))?;
+    let mut client = BmuxClient::connect(ClientConfig::from_socket_path(socket))?;
+    let marker = format!("BMUX_RUST_E2E_{}_{}", std::process::id(), now_ms());
     let later = format!("{marker}_ATTACH");
 
     let identify = client.identify()?;
-    assert!(identify.app == "cmux-mux", "unexpected app {}", identify.app);
+    assert!(identify.app == "bmux-mux", "unexpected app {}", identify.app);
     assert!((5..=6).contains(&identify.protocol), "unsupported protocol {}", identify.protocol);
 
     let created = client.new_workspace(Some(&marker), Some(80), Some(24))?;
@@ -29,7 +29,7 @@ fn main() -> Result<()> {
     assert_eq!((resized.0, resized.1), (100, 31));
     client.resize_surface(created.surface, 100, 31)?;
     match next_resized(&mut events, created.surface, Duration::from_millis(500)) {
-        Err(CmuxError::Timeout(_)) => {}
+        Err(BmuxError::Timeout(_)) => {}
         Ok(_) => panic!("same-size resize emitted surface-resized"),
         Err(err) => return Err(err),
     }
@@ -44,14 +44,14 @@ fn main() -> Result<()> {
     let after_close = client.list_workspaces()?;
     assert!(find_workspace_for_surface(&after_close, created.surface).is_none());
     match client.read_screen(created.surface) {
-        Err(CmuxError::Command { message, .. }) if !message.is_empty() => {}
+        Err(BmuxError::Command { message, .. }) if !message.is_empty() => {}
         Ok(_) => panic!("read-screen on closed surface unexpectedly succeeded"),
         Err(err) => panic!("closed surface error was not command error: {err}"),
     }
     Ok(())
 }
 
-fn wait_for_marker(client: &mut CmuxClient, surface: u64, marker: &str) -> Result<()> {
+fn wait_for_marker(client: &mut BmuxClient, surface: u64, marker: &str) -> Result<()> {
     let deadline = Instant::now() + Duration::from_secs(5);
     let mut last = String::new();
     while Instant::now() < deadline {
@@ -65,14 +65,14 @@ fn wait_for_marker(client: &mut CmuxClient, surface: u64, marker: &str) -> Resul
 }
 
 fn next_resized(
-    events: &mut cmux_client::CmuxStream,
+    events: &mut bmux_client::BmuxStream,
     surface: u64,
     timeout: Duration,
 ) -> Result<(u16, u16)> {
     let deadline = Instant::now() + timeout;
     loop {
         if Instant::now() >= deadline {
-            return Err(CmuxError::Timeout("surface-resized not observed".to_string()));
+            return Err(BmuxError::Timeout("surface-resized not observed".to_string()));
         }
         match events.recv_timeout(time_left(deadline))? {
             Event::SurfaceResized(event) if event.surface == surface => {
@@ -83,11 +83,11 @@ fn next_resized(
     }
 }
 
-fn next_attach_output(events: &mut cmux_client::CmuxStream, timeout: Duration) -> Result<()> {
+fn next_attach_output(events: &mut bmux_client::BmuxStream, timeout: Duration) -> Result<()> {
     let deadline = Instant::now() + timeout;
     loop {
         if Instant::now() >= deadline {
-            return Err(CmuxError::Timeout("attach output not observed".to_string()));
+            return Err(BmuxError::Timeout("attach output not observed".to_string()));
         }
         match events.recv_timeout(time_left(deadline))? {
             Event::Output(_) | Event::Resized(_) => return Ok(()),

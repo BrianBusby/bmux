@@ -1,8 +1,8 @@
 import AppKit
-import CmuxFoundation
+import BmuxFoundation
 import SwiftUI
-import CmuxSettings
-import CmuxWorkspaces
+import BmuxSettings
+import BmuxWorkspaces
 
 extension VerticalTabsSidebar {
     @ViewBuilder
@@ -16,7 +16,7 @@ extension VerticalTabsSidebar {
         let settings = renderContext.tabItemSettings
         let isAnchorActive = tabManager.selectedTabId == group.anchorWorkspaceId
         let anchorCwd = renderContext.workspaceById[group.anchorWorkspaceId]?.currentDirectory
-        let resolvedConfig = cmuxConfigStore.resolveWorkspaceGroupConfig(forCwd: anchorCwd)
+        let resolvedConfig = bmuxConfigStore.resolveWorkspaceGroupConfig(forCwd: anchorCwd)
         let effectiveColor = group.customColor ?? resolvedConfig?.color
         let effectiveIcon = RenderableSystemSymbol.resolvedWorkspaceGroupIcon(
             explicit: group.iconSymbol,
@@ -64,7 +64,7 @@ extension VerticalTabsSidebar {
         )
         let onDragStart: () -> NSItemProvider = { [anchorId = group.anchorWorkspaceId] in
             #if DEBUG
-            cmuxDebugLog("sidebar.onDrag groupAnchor=\(anchorId.uuidString.prefix(5))")
+            bmuxDebugLog("sidebar.onDrag groupAnchor=\(anchorId.uuidString.prefix(5))")
             #endif
             dragState.beginDragging(tabId: anchorId)
             return SidebarTabDragPayload(tabId: anchorId).provider()
@@ -189,7 +189,7 @@ extension VerticalTabsSidebar {
                 tabManager.workspaceGrouping.deleteWorkspaceGroup(confirmed: confirmation)
             },
             onEditConfig: {
-                SidebarWorkspaceGroupConfigOpener.openCmuxConfigInEditor()
+                SidebarWorkspaceGroupConfigOpener.openBmuxConfigInEditor()
             },
             onOpenDocs: {
                 SidebarWorkspaceGroupConfigOpener.openWorkspaceGroupsDocs()

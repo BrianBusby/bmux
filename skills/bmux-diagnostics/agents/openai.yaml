@@ -1,0 +1,4 @@
+interface:
+  display_name: "bmux Diagnostics"
+  short_description: "Check bmux hooks, restore, CLI, and settings."
+  default_prompt: "Use $bmux-diagnostics to collect a read-only bmux health report and explain any hook or session restore problems."

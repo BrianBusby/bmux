@@ -1,26 +1,26 @@
 import Foundation
 
 extension SessionPersistencePolicy {
-    static func defaultCmuxCrashDirectoryURL(
+    static func defaultBmuxCrashDirectoryURL(
         homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
     ) -> URL {
         homeDirectory
             .appendingPathComponent(".local", isDirectory: true)
             .appendingPathComponent("state", isDirectory: true)
-            .appendingPathComponent("cmux", isDirectory: true)
+            .appendingPathComponent("bmux", isDirectory: true)
             .appendingPathComponent("crash", isDirectory: true)
     }
 
-    static func cmuxCrashDirectoryURLs(
+    static func bmuxCrashDirectoryURLs(
         homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> [URL] {
-        var urls = [defaultCmuxCrashDirectoryURL(homeDirectory: homeDirectory)]
+        var urls = [defaultBmuxCrashDirectoryURL(homeDirectory: homeDirectory)]
         if let xdgStateHome = environment["XDG_STATE_HOME"]?.trimmingCharacters(in: .whitespacesAndNewlines),
            !xdgStateHome.isEmpty {
             urls.append(
                 URL(fileURLWithPath: (xdgStateHome as NSString).expandingTildeInPath, isDirectory: true)
-                    .appendingPathComponent("cmux", isDirectory: true)
+                    .appendingPathComponent("bmux", isDirectory: true)
                     .appendingPathComponent("crash", isDirectory: true)
             )
         }
@@ -31,48 +31,48 @@ extension SessionPersistencePolicy {
         }
     }
 
-    static func isCmuxCrashStorageURL(
+    static func isBmuxCrashStorageURL(
         _ url: URL,
         homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool {
         guard url.isFileURL else { return false }
-        return isCmuxCrashStoragePath(
+        return isBmuxCrashStoragePath(
             url.path(percentEncoded: false),
             homeDirectory: homeDirectory,
             environment: environment
         )
     }
 
-    static func isCmuxCrashStoragePath(
+    static func isBmuxCrashStoragePath(
         _ path: String,
         homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool {
         let trimmedPath = path.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedPath.isEmpty else { return false }
-        let crashDirectoryComponents = cmuxCrashDirectoryURLs(homeDirectory: homeDirectory, environment: environment)
+        let crashDirectoryComponents = bmuxCrashDirectoryURLs(homeDirectory: homeDirectory, environment: environment)
             .map { pathComponents(for: $0.path(percentEncoded: false)) }
         var pathCache: [String: Bool] = [:]
-        return isCmuxCrashStoragePath(
+        return isBmuxCrashStoragePath(
             trimmedPath,
             crashDirectoryComponents: crashDirectoryComponents,
             pathCache: &pathCache
         )
     }
 
-    static func pruningCmuxCrashDiagnosticWindows(
+    static func pruningBmuxCrashDiagnosticWindows(
         from snapshot: AppSessionSnapshot,
         homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> (snapshot: AppSessionSnapshot?, removedAny: Bool) {
-        let crashDirectoryComponents = cmuxCrashDirectoryURLs(homeDirectory: homeDirectory, environment: environment)
+        let crashDirectoryComponents = bmuxCrashDirectoryURLs(homeDirectory: homeDirectory, environment: environment)
             .map { pathComponents(for: $0.path(percentEncoded: false)) }
         var removedAny = false
         var pathCache: [String: Bool] = [:]
         var windows: [SessionWindowSnapshot] = []
         for window in snapshot.windows {
-            let result = pruningCmuxCrashDiagnosticWorkspaces(
+            let result = pruningBmuxCrashDiagnosticWorkspaces(
                 from: window,
                 crashDirectoryComponents: crashDirectoryComponents,
                 pathCache: &pathCache
@@ -95,18 +95,18 @@ extension SessionPersistencePolicy {
         return (pruned, removedAny)
     }
 
-    static func isCmuxCrashDiagnosticWindow(
+    static func isBmuxCrashDiagnosticWindow(
         _ window: SessionWindowSnapshot,
         homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool {
-        let crashDirectoryComponents = cmuxCrashDirectoryURLs(homeDirectory: homeDirectory, environment: environment)
+        let crashDirectoryComponents = bmuxCrashDirectoryURLs(homeDirectory: homeDirectory, environment: environment)
             .map { pathComponents(for: $0.path(percentEncoded: false)) }
         let workspaces = window.tabManager.workspaces
         guard !workspaces.isEmpty else { return false }
         var pathCache: [String: Bool] = [:]
         for workspace in workspaces {
-            guard isCmuxCrashDiagnosticWorkspace(
+            guard isBmuxCrashDiagnosticWorkspace(
                 workspace,
                 crashDirectoryComponents: crashDirectoryComponents,
                 pathCache: &pathCache
@@ -117,7 +117,7 @@ extension SessionPersistencePolicy {
         return true
     }
 
-    private static func pruningCmuxCrashDiagnosticWorkspaces(
+    private static func pruningBmuxCrashDiagnosticWorkspaces(
         from window: SessionWindowSnapshot,
         crashDirectoryComponents: [[String]],
         pathCache: inout [String: Bool]
@@ -125,7 +125,7 @@ extension SessionPersistencePolicy {
         let originalWorkspaces = window.tabManager.workspaces
         var kept: [(offset: Int, element: SessionWorkspaceSnapshot)] = []
         for (offset, workspace) in originalWorkspaces.enumerated() {
-            if !isCmuxCrashDiagnosticWorkspace(
+            if !isBmuxCrashDiagnosticWorkspace(
                 workspace,
                 crashDirectoryComponents: crashDirectoryComponents,
                 pathCache: &pathCache
@@ -155,7 +155,7 @@ extension SessionPersistencePolicy {
         return (prunedWindow, true)
     }
 
-    private static func isCmuxCrashDiagnosticWorkspace(
+    private static func isBmuxCrashDiagnosticWorkspace(
         _ workspace: SessionWorkspaceSnapshot,
         crashDirectoryComponents: [[String]],
         pathCache: inout [String: Bool]
@@ -163,7 +163,7 @@ extension SessionPersistencePolicy {
         guard workspace.remote == nil else { return false }
         guard !workspaceCarriesRestorableUserState(workspace) else { return false }
         if workspace.panels.isEmpty {
-            return isCmuxCrashStoragePath(
+            return isBmuxCrashStoragePath(
                 workspace.currentDirectory,
                 crashDirectoryComponents: crashDirectoryComponents,
                 pathCache: &pathCache
@@ -179,7 +179,7 @@ extension SessionPersistencePolicy {
 
         guard !paths.isEmpty else { return false }
         for path in paths {
-            guard isCmuxCrashStoragePath(
+            guard isBmuxCrashStoragePath(
                 path,
                 crashDirectoryComponents: crashDirectoryComponents,
                 pathCache: &pathCache
@@ -294,7 +294,7 @@ extension SessionPersistencePolicy {
         return pruned.isEmpty ? nil : pruned
     }
 
-    private static func isCmuxCrashStoragePath(
+    private static func isBmuxCrashStoragePath(
         _ path: String,
         crashDirectoryComponents: [[String]],
         pathCache: inout [String: Bool]

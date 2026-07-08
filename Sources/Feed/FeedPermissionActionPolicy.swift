@@ -1,5 +1,5 @@
 import Foundation
-import CMUXAgentLaunch
+import BMUXAgentLaunch
 
 enum FeedPermissionActionPolicy {
     private typealias CodexPermissionCapabilities = (supportsOnce: Bool, supportsAlways: Bool, supportsAll: Bool)

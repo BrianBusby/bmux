@@ -9,7 +9,7 @@ const sshEndpoint: SSHEndpoint = {
   transport: "ssh",
   host: "vm-ssh.freestyle.sh",
   port: 22,
-  username: "vm-1+cmux",
+  username: "vm-1+bmux",
   publicKeyFingerprint: null,
   credential: { kind: "password", value: "token" },
   identityHandle: "identity-1",
@@ -45,10 +45,10 @@ class TestFreestyleProvider extends FreestyleProvider {
 describe("FreestyleProvider attach fallback", () => {
   test("does not fall back to SSH when a required daemon attach is unavailable", async () => {
     const provider = new TestFreestyleProvider();
-    provider.websocketResult = new Error("Freestyle cmuxd websocket health check returned 502");
+    provider.websocketResult = new Error("Freestyle bmuxd websocket health check returned 502");
 
     await expect(provider.openAttach("vm-1", { requireDaemon: true })).rejects.toThrow(
-      "Freestyle cmuxd websocket health check returned 502",
+      "Freestyle bmuxd websocket health check returned 502",
     );
 
     expect(provider.sshCalls).toBe(0);
@@ -57,11 +57,11 @@ describe("FreestyleProvider attach fallback", () => {
   test("does not fall back to SSH when required daemon health check times out", async () => {
     const provider = new TestFreestyleProvider();
     provider.websocketResult = new Error(
-      "Freestyle cmuxd websocket health check failed: The operation was aborted",
+      "Freestyle bmuxd websocket health check failed: The operation was aborted",
     );
 
     await expect(provider.openAttach("vm-1", { requireDaemon: true })).rejects.toThrow(
-      "Freestyle cmuxd websocket health check failed",
+      "Freestyle bmuxd websocket health check failed",
     );
 
     expect(provider.sshCalls).toBe(0);
@@ -69,7 +69,7 @@ describe("FreestyleProvider attach fallback", () => {
 
   test("keeps SSH fallback for non-daemon attach when WebSocket is unavailable", async () => {
     const provider = new TestFreestyleProvider();
-    provider.websocketResult = new Error("Freestyle cmuxd websocket health check returned 502");
+    provider.websocketResult = new Error("Freestyle bmuxd websocket health check returned 502");
 
     const endpoint = await provider.openAttach("vm-1");
 
@@ -92,7 +92,7 @@ describe("FreestyleProvider attach fallback", () => {
     provider.websocketResult = websocketEndpoint;
 
     await expect(provider.openAttach("vm-1", { requireDaemon: true })).rejects.toThrow(
-      "requires a cmuxd RPC endpoint",
+      "requires a bmuxd RPC endpoint",
     );
 
     expect(provider.sshCalls).toBe(0);

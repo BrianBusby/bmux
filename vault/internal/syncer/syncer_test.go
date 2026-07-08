@@ -14,10 +14,10 @@ import (
 	"time"
 
 	"github.com/klauspost/compress/zstd"
-	"github.com/manaflow-ai/cmux/vault/internal/agentdirs"
-	"github.com/manaflow-ai/cmux/vault/internal/api"
-	"github.com/manaflow-ai/cmux/vault/internal/authstore"
-	"github.com/manaflow-ai/cmux/vault/internal/state"
+	"github.com/manaflow-ai/bmux/vault/internal/agentdirs"
+	"github.com/manaflow-ai/bmux/vault/internal/api"
+	"github.com/manaflow-ai/bmux/vault/internal/authstore"
+	"github.com/manaflow-ai/bmux/vault/internal/state"
 )
 
 func TestSyncerUploadsIncrementallyAndCompresses(t *testing.T) {
@@ -106,7 +106,7 @@ func TestSyncerUploadsIncrementallyAndCompresses(t *testing.T) {
 	}))
 	defer apiServer.Close()
 
-	store, err := state.Load(home, map[string]string{"CMUX_VAULT_STATE_DIR": filepath.Join(home, "state")})
+	store, err := state.Load(home, map[string]string{"BMUX_VAULT_STATE_DIR": filepath.Join(home, "state")})
 	if err != nil {
 		t.Fatal(err)
 	}

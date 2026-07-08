@@ -2,10 +2,10 @@ import SwiftUI
 import Foundation
 import AppKit
 import Bonsplit
-import CmuxAppKitSupportUI
-import CmuxTestSupport
-import CmuxTerminal
-import CmuxFoundation
+import BmuxAppKitSupportUI
+import BmuxTestSupport
+import BmuxTerminal
+import BmuxFoundation
 
 /// View for rendering a terminal panel
 struct TerminalPanelView: View {
@@ -201,13 +201,13 @@ private struct AgentHibernationPlaceholderView: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            CmuxSystemSymbolImage(magnified: "pause.circle", pointSize: 34, weight: .regular)
+            BmuxSystemSymbolImage(magnified: "pause.circle", pointSize: 34, weight: .regular)
                 .foregroundStyle(.secondary)
             VStack(spacing: 4) {
                 Text(String(localized: "terminal.agentHibernation.title", defaultValue: "Agent hibernated"))
-                    .cmuxFont(.headline)
+                    .bmuxFont(.headline)
                 Text(state.agentDisplayName)
-                    .cmuxFont(.subheadline)
+                    .bmuxFont(.subheadline)
                     .foregroundStyle(.secondary)
                 Text(
                     String.localizedStringWithFormat(
@@ -215,7 +215,7 @@ private struct AgentHibernationPlaceholderView: View {
                         lastActivityText
                     )
                 )
-                .cmuxFont(.caption)
+                .bmuxFont(.caption)
                 .foregroundStyle(.tertiary)
             }
             Button(String(localized: "terminal.agentHibernation.resume", defaultValue: "Resume")) {
@@ -258,7 +258,7 @@ private struct TerminalViewportGeometryReporter: ViewModifier {
 @MainActor
 private func recordTerminalViewportGeometryForUITest(proxy: GeometryProxy, panel: TerminalPanel) {
     let env = ProcessInfo.processInfo.environment
-    guard env["CMUX_UI_TEST_TERMINAL_VIEWPORT_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+    guard env["BMUX_UI_TEST_TERMINAL_VIEWPORT_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
         return
     }
 
@@ -274,7 +274,7 @@ private func recordTerminalViewportGeometryForUITest(proxy: GeometryProxy, panel
         hostedFrameInContent = .zero
     }
 
-    _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "CMUX_UI_TEST_TERMINAL_VIEWPORT_PATH") { payload in
+    _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "BMUX_UI_TEST_TERMINAL_VIEWPORT_PATH") { payload in
         payload["terminalViewportPanelId"] = panel.id.uuidString
         payload["terminalViewportPanelWidth"] = terminalViewportFormat(proxy.size.width)
         payload["terminalViewportPanelHeight"] = terminalViewportFormat(proxy.size.height)
@@ -334,7 +334,7 @@ struct PanelAppearance {
         )
         return PanelAppearance(
             backgroundColor: backgroundColor,
-            foregroundColor: cmuxReadableForegroundNSColor(
+            foregroundColor: bmuxReadableForegroundNSColor(
                 preferred: config.foregroundColor,
                 on: backgroundColor
             ),

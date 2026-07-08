@@ -2,7 +2,7 @@ export {};
 
 declare global {
   interface Window {
-    __cmuxDiffViewer?: {
+    __bmuxDiffViewer?: {
       codeView?: unknown;
       codeViewItems?: unknown[];
       items?: unknown[];

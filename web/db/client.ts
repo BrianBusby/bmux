@@ -20,7 +20,7 @@ type CloudDbState = {
 };
 
 const globalForDb = globalThis as typeof globalThis & {
-  __cmuxCloudDb?: CloudDbState;
+  __bmuxCloudDb?: CloudDbState;
 };
 
 export function createAwsRdsIamPool(config: CloudDbAwsRdsIamConfig): Pool {
@@ -53,15 +53,15 @@ export function cloudDb(): CloudDb {
   const config = cloudDbConfig();
   const key = cloudDbConfigKey(config);
 
-  if (globalForDb.__cmuxCloudDb?.key === key) {
-    return globalForDb.__cmuxCloudDb.db;
+  if (globalForDb.__bmuxCloudDb?.key === key) {
+    return globalForDb.__bmuxCloudDb.db;
   }
 
   if (config.driver === "aws-rds-iam") {
     const pool = createAwsRdsIamPool(config);
     attachDatabasePool(pool);
     const db = drizzleNodePg({ client: pool, schema }) as unknown as CloudDb;
-    globalForDb.__cmuxCloudDb = { db, close: () => pool.end(), key };
+    globalForDb.__bmuxCloudDb = { db, close: () => pool.end(), key };
     return db;
   }
 
@@ -70,12 +70,12 @@ export function cloudDb(): CloudDb {
     prepare: false,
   });
   const db = createPostgresJsDb(sql);
-  globalForDb.__cmuxCloudDb = { db, close: () => sql.end(), key };
+  globalForDb.__bmuxCloudDb = { db, close: () => sql.end(), key };
   return db;
 }
 
 export async function closeCloudDbForTests(): Promise<void> {
-  const state = globalForDb.__cmuxCloudDb;
-  globalForDb.__cmuxCloudDb = undefined;
+  const state = globalForDb.__bmuxCloudDb;
+  globalForDb.__bmuxCloudDb = undefined;
   await state?.close();
 }

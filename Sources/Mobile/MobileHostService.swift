@@ -1,7 +1,7 @@
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxSettings
-import CmuxTerminalCore
+import BMUXMobileCore
+import BmuxAuthRuntime
+import BmuxSettings
+import BmuxTerminalCore
 import CryptoKit
 import Foundation
 @preconcurrency import Network
@@ -9,11 +9,11 @@ import OSLog
 import StackAuth
 import os
 
-private let mobileHostLog = Logger(subsystem: "dev.cmux", category: "mobile-host")
+private let mobileHostLog = Logger(subsystem: "dev.bmux", category: "mobile-host")
 
 extension Notification.Name {
     static let mobileHostEventSubscriptionsDidChange = Notification.Name(
-        "cmux.mobileHostEventSubscriptionsDidChange"
+        "bmux.mobileHostEventSubscriptionsDidChange"
     )
 
     /// Posted whenever the mobile pairing host's observable status changes:
@@ -22,7 +22,7 @@ extension Notification.Name {
     /// `AsyncStream` so the Mobile settings section can show the live bound
     /// port and connection count without polling.
     static let mobileHostStatusDidChange = Notification.Name(
-        "cmux.mobileHostStatusDidChange"
+        "bmux.mobileHostStatusDidChange"
     )
 }
 
@@ -305,7 +305,7 @@ final class MobileHostService {
     nonisolated static func publicStatusPayload(routesPayload: [[String: Any]]) -> [String: Any] {
         // The Mac's resolved terminal theme is caller-independent, so it rides
         // the public payload (identity merges on top). `GhosttyConfig.load()`
-        // resolves named ghostty themes, cmux's managed defaults, and explicit
+        // resolves named ghostty themes, bmux's managed defaults, and explicit
         // color overrides into a complete effective palette; the phone applies
         // it so its embedded terminal renders with the Mac's colors instead of
         // the built-in Monokai default.
@@ -377,7 +377,7 @@ final class MobileHostService {
         return MobileHostPublicStatusCache.result(includeIdentity: verified)
     }
 
-    private let callbackQueue = DispatchQueue(label: "dev.cmux.mobile.host-listener")
+    private let callbackQueue = DispatchQueue(label: "dev.bmux.mobile.host-listener")
     private let routeResolver = MobileRouteResolver()
     private let ticketStore = MobileAttachTicketStore()
     private var listener: NWListener?
@@ -454,13 +454,13 @@ final class MobileHostService {
         let connections = MobileHostConnectionRegistry.shared.snapshot()
         guard !connections.isEmpty else { return }
         #if DEBUG
-        cmuxDebugLog("mobile.emit topic=\(topic) connections=\(connections.count)")
+        bmuxDebugLog("mobile.emit topic=\(topic) connections=\(connections.count)")
         #endif
         for connection in connections {
             Task {
                 let delivered = await connection.sendEvent(topic: topic, payload: payload)
                 #if DEBUG
-                cmuxDebugLog("mobile.emit -> connection delivered=\(delivered) topic=\(topic)")
+                bmuxDebugLog("mobile.emit -> connection delivered=\(delivered) topic=\(topic)")
                 #endif
             }
         }
@@ -1979,7 +1979,7 @@ actor MobileHostConnection {
     ) {
         self.id = id
         self.connection = connection
-        self.callbackQueue = DispatchQueue(label: "dev.cmux.mobile.host-connection.\(id.uuidString)")
+        self.callbackQueue = DispatchQueue(label: "dev.bmux.mobile.host-connection.\(id.uuidString)")
         self.firstFrameTimeoutNanoseconds = firstFrameTimeoutNanoseconds
         self.idleTimeoutNanoseconds = idleTimeoutNanoseconds
         self.authorizeRequest = authorizeRequest
@@ -2238,7 +2238,7 @@ actor MobileHostConnection {
             let alreadySubscribed = subscriptions[streamID] != nil
             subscribe(streamID: streamID, topics: topics)
             #if DEBUG
-            cmuxDebugLog("mobile.subscribe streamID=\(streamID) topics=\(topics.sorted()) existing=\(alreadySubscribed) connID=\(self.id.uuidString)")
+            bmuxDebugLog("mobile.subscribe streamID=\(streamID) topics=\(topics.sorted()) existing=\(alreadySubscribed) connID=\(self.id.uuidString)")
             #endif
             return .ok([
                 "stream_id": streamID,
@@ -2313,13 +2313,13 @@ actor MobileHostConnection {
     func sendEvent(topic: String, payload: [String: Any]) async -> Bool {
         guard !isClosed else {
             #if DEBUG
-            cmuxDebugLog("mobile.send skip: closed topic=\(topic) connID=\(self.id.uuidString)")
+            bmuxDebugLog("mobile.send skip: closed topic=\(topic) connID=\(self.id.uuidString)")
             #endif
             return false
         }
         guard isSubscribed(to: topic) else {
             #if DEBUG
-            cmuxDebugLog("mobile.send skip: not subscribed topic=\(topic) connID=\(self.id.uuidString) subs=\(subscriptions.count)")
+            bmuxDebugLog("mobile.send skip: not subscribed topic=\(topic) connID=\(self.id.uuidString) subs=\(subscriptions.count)")
             #endif
             return false
         }

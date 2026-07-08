@@ -1,14 +1,14 @@
 "use strict";
 
 const IMMUTABLE_RELEASE_ASSETS = [
-  "cmux-macos.dmg",
+  "bmux-macos.dmg",
   "appcast.xml",
-  "cmuxd-remote-darwin-arm64",
-  "cmuxd-remote-darwin-amd64",
-  "cmuxd-remote-linux-arm64",
-  "cmuxd-remote-linux-amd64",
-  "cmuxd-remote-checksums.txt",
-  "cmuxd-remote-manifest.json",
+  "bmuxd-remote-darwin-arm64",
+  "bmuxd-remote-darwin-amd64",
+  "bmuxd-remote-linux-arm64",
+  "bmuxd-remote-linux-amd64",
+  "bmuxd-remote-checksums.txt",
+  "bmuxd-remote-manifest.json",
 ];
 const RELEASE_ASSET_GUARD_STATE = Object.freeze({
   CLEAR: "clear",

@@ -1,4 +1,4 @@
-import CmuxAuthRuntime
+import BmuxAuthRuntime
 import Foundation
 
 enum VMClientError: Error, CustomStringConvertible {
@@ -12,27 +12,27 @@ enum VMClientError: Error, CustomStringConvertible {
         switch self {
         case .notSignedIn:
             return """
-                You are not signed in to cmux.
+                You are not signed in to bmux.
 
                 What to do:
-                  cmux auth login
-                  cmux auth status
+                  bmux auth login
+                  bmux auth status
                 """
         case .sessionRefreshFailed:
             return """
-                You are signed in, but cmux could not refresh your session (network or server issue).
+                You are signed in, but bmux could not refresh your session (network or server issue).
 
                 What to do:
                   Retry in a moment.
-                  If it keeps failing, run `cmux auth status` to check your session.
+                  If it keeps failing, run `bmux auth status` to check your session.
                 """
         case .backendUnreachable(let url, let detail):
             return """
-                Cannot reach the cmux Cloud VM service at \(url).
+                Cannot reach the bmux Cloud VM service at \(url).
 
                 What to do:
-                  Start the cmux web server, then retry.
-                  If you are using a local development build, check its Cloud VM service URL before launching cmux.
+                  Start the bmux web server, then retry.
+                  If you are using a local development build, check its Cloud VM service URL before launching bmux.
 
                 Details:
                   \(detail)
@@ -41,10 +41,10 @@ enum VMClientError: Error, CustomStringConvertible {
             return formattedCloudVMHTTPError(status: code, body: body)
         case .malformedResponse(let message):
             return """
-                The cmux Cloud VM backend returned a response this client could not read.
+                The bmux Cloud VM backend returned a response this client could not read.
 
                 What to do:
-                  Update cmux to the latest build and retry.
+                  Update bmux to the latest build and retry.
                   If this keeps happening, copy the details below and contact support.
 
                 Details:
@@ -107,7 +107,7 @@ private func defaultCloudVMMessage(status: Int) -> String {
     case 400:
         return "The Cloud VM request was not valid."
     case 401:
-        return "cmux could not authenticate this Cloud VM request."
+        return "bmux could not authenticate this Cloud VM request."
     case 402:
         return "This team cannot create another Cloud VM with the current billing state."
     case 403:
@@ -126,19 +126,19 @@ private func defaultCloudVMMessage(status: Int) -> String {
 private func defaultCloudVMAction(status: Int, errorCode: String) -> String {
     switch errorCode {
     case "vm_active_limit_exceeded":
-        return "Run `cmux vm ls`, then stop or delete an active VM with `cmux vm rm <id>` before retrying."
+        return "Run `bmux vm ls`, then stop or delete an active VM with `bmux vm rm <id>` before retrying."
     case "vm_not_found":
-        return "Run `cmux vm ls` to see available Cloud VMs. If the VM was paused or destroyed, start a fresh one with `cmux vm new`."
+        return "Run `bmux vm ls` to see available Cloud VMs. If the VM was paused or destroyed, start a fresh one with `bmux vm new`."
     case "vm_billing_team_required":
-        return "Select a team in cmux, then retry. You can also run `cmux auth status` to check the signed-in account."
+        return "Select a team in bmux, then retry. You can also run `bmux auth status` to check the signed-in account."
     case "vm_create_credits_insufficient":
         return "Ask a team admin to upgrade the plan or grant more Cloud VM create credits, then retry."
     default:
         if status == 401 {
-            return "Run `cmux auth login`, then retry."
+            return "Run `bmux auth login`, then retry."
         }
         if status == 403 {
-            return "Run `cmux auth status` and confirm you are using the expected team."
+            return "Run `bmux auth status` and confirm you are using the expected team."
         }
         return "Retry the command. If it keeps failing, copy this error and contact support."
     }
@@ -756,7 +756,7 @@ actor VMClient {
         req.setValue("Bearer \(tokens.accessToken)", forHTTPHeaderField: "Authorization")
         req.setValue(tokens.refreshToken, forHTTPHeaderField: "X-Stack-Refresh-Token")
         if let teamID, !teamID.isEmpty {
-            req.setValue(teamID, forHTTPHeaderField: "X-Cmux-Team-Id")
+            req.setValue(teamID, forHTTPHeaderField: "X-Bmux-Team-Id")
         }
         if let jsonBody {
             req.setValue("application/json", forHTTPHeaderField: "content-type")

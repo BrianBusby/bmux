@@ -1,5 +1,5 @@
-import CmuxCore
-import CmuxRemoteSession
+import BmuxCore
+import BmuxRemoteSession
 import Foundation
 
 // The app-side conformer of the session coordinator's publish seam. Owns

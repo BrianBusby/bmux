@@ -15,8 +15,8 @@ let exporter: InMemorySpanExporter;
 let provider: BasicTracerProvider;
 
 const ORIGINAL_ENV = {
-  CMUX_VAULT_ENABLED: process.env.CMUX_VAULT_ENABLED,
-  CMUX_VAULT_S3_BUCKET: process.env.CMUX_VAULT_S3_BUCKET,
+  BMUX_VAULT_ENABLED: process.env.BMUX_VAULT_ENABLED,
+  BMUX_VAULT_S3_BUCKET: process.env.BMUX_VAULT_S3_BUCKET,
 };
 
 beforeAll(() => {
@@ -28,8 +28,8 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  process.env.CMUX_VAULT_ENABLED = "1";
-  process.env.CMUX_VAULT_S3_BUCKET = "test-bucket";
+  process.env.BMUX_VAULT_ENABLED = "1";
+  process.env.BMUX_VAULT_S3_BUCKET = "test-bucket";
   exporter.reset();
 });
 
@@ -42,9 +42,9 @@ describe("Vault route helper", () => {
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withAuthedVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test"),
+      new Request("https://bmux.test/api/vault/test"),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "bmux.vault.operation": "test" },
       "/api/vault/test failed",
       {},
       handler,
@@ -69,9 +69,9 @@ describe("Vault route helper", () => {
     console.error = consoleError as unknown as typeof console.error;
     try {
       const response = await withVaultApiRoute(
-        new Request("https://cmux.test/api/vault/test"),
+        new Request("https://bmux.test/api/vault/test"),
         "/api/vault/test",
-        { "cmux.vault.operation": "test" },
+        { "bmux.vault.operation": "test" },
         "/api/vault/test failed",
         async () => {
           throw new Error("provider exploded");
@@ -94,7 +94,7 @@ describe("Vault route helper", () => {
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withAuthedVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test", {
+      new Request("https://bmux.test/api/vault/test", {
         method: "POST",
         headers: {
           origin: "https://evil.test",
@@ -102,7 +102,7 @@ describe("Vault route helper", () => {
         },
       }),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "bmux.vault.operation": "test" },
       "/api/vault/test failed",
       {},
       handler,
@@ -118,9 +118,9 @@ describe("Vault route helper", () => {
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withAuthedVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test", { method: "POST" }),
+      new Request("https://bmux.test/api/vault/test", { method: "POST" }),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "bmux.vault.operation": "test" },
       "/api/vault/test failed",
       {},
       handler,
@@ -136,12 +136,12 @@ describe("Vault route helper", () => {
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withAuthedVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test", {
+      new Request("https://bmux.test/api/vault/test", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://bmux.test" },
       }),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "bmux.vault.operation": "test" },
       "/api/vault/test failed",
       {},
       handler,
@@ -157,7 +157,7 @@ describe("Vault route helper", () => {
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withAuthedVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test", {
+      new Request("https://bmux.test/api/vault/test", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
@@ -165,7 +165,7 @@ describe("Vault route helper", () => {
         },
       }),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "bmux.vault.operation": "test" },
       "/api/vault/test failed",
       { allowCookie: false },
       handler,
@@ -194,13 +194,13 @@ const testUser: AuthedUser = {
 function latestVaultTestSpan() {
   return exporter
     .getFinishedSpans()
-    .filter((span) => span.name === "cmux.api.GET /api/vault/test")
+    .filter((span) => span.name === "bmux.api.GET /api/vault/test")
     .at(-1);
 }
 
 function restoreEnv(): void {
-  restoreEnvValue("CMUX_VAULT_ENABLED", ORIGINAL_ENV.CMUX_VAULT_ENABLED);
-  restoreEnvValue("CMUX_VAULT_S3_BUCKET", ORIGINAL_ENV.CMUX_VAULT_S3_BUCKET);
+  restoreEnvValue("BMUX_VAULT_ENABLED", ORIGINAL_ENV.BMUX_VAULT_ENABLED);
+  restoreEnvValue("BMUX_VAULT_S3_BUCKET", ORIGINAL_ENV.BMUX_VAULT_S3_BUCKET);
 }
 
 function restoreEnvValue(key: string, value: string | undefined): void {

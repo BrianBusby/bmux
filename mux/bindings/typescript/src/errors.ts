@@ -1,11 +1,11 @@
-export class CmuxError extends Error {
+export class BmuxError extends Error {
   constructor(message: string) {
     super(message);
     this.name = new.target.name;
   }
 }
 
-export class CmuxCommandError extends CmuxError {
+export class BmuxCommandError extends BmuxError {
   readonly commandId: unknown;
   readonly response: unknown;
 
@@ -16,6 +16,6 @@ export class CmuxCommandError extends CmuxError {
   }
 }
 
-export class CmuxConnectionError extends CmuxError {}
-export class CmuxProtocolError extends CmuxError {}
-export class CmuxTimeoutError extends CmuxError {}
+export class BmuxConnectionError extends BmuxError {}
+export class BmuxProtocolError extends BmuxError {}
+export class BmuxTimeoutError extends BmuxError {}

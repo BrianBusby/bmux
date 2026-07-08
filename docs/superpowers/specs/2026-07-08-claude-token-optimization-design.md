@@ -2,13 +2,13 @@
 
 ## Context
 
-cmux already has a command-output token optimization path for Codex. The Codex
+bmux already has a command-output token optimization path for Codex. The Codex
 wrapper installs a synchronous `PreToolUse` optimizer hook before telemetry. The
-hook rewrites eligible shell commands to run through `cmux agent-token-proxy`,
+hook rewrites eligible shell commands to run through `bmux agent-token-proxy`,
 which preserves the original command exit status while returning compact output
 when `terminal.agentTokenOptimization.mode` is not `off`.
 
-Claude Code is launched through `Resources/bin/cmux-claude-wrapper`, which
+Claude Code is launched through `Resources/bin/bmux-claude-wrapper`, which
 already injects Claude hooks through a merged `--settings` payload. Current
 Claude hooks include a synchronous `PreToolUse` `CronCreate` guard, an async
 general `PreToolUse` telemetry/status hook, and a synchronous
@@ -16,7 +16,7 @@ general `PreToolUse` telemetry/status hook, and a synchronous
 
 Claude Code's current hook contract supports `PreToolUse` decisions with
 `hookSpecificOutput.updatedInput`, including updated `Bash` tool input before a
-command executes. This allows cmux to optimize Claude command output without
+command executes. This allows bmux to optimize Claude command output without
 PATH shims or changes to Claude's permission UI.
 
 ## Decision
@@ -28,9 +28,9 @@ When the setting is enabled, only eligible Claude `Bash` commands are rewritten.
 
 The Claude wrapper will inject a synchronous `PreToolUse` hook with matcher
 `Bash` before the existing async general `PreToolUse` telemetry hook. The new
-hook will call `cmux hooks claude optimize-pre-tool-use`.
+hook will call `bmux hooks claude optimize-pre-tool-use`.
 
-`cmux hooks claude optimize-pre-tool-use` will:
+`bmux hooks claude optimize-pre-tool-use` will:
 
 1. Read the Claude hook JSON payload from stdin.
 2. Return `{}` unless token optimization is enabled, the event is `PreToolUse`,
@@ -75,7 +75,7 @@ guard remains synchronous and unchanged.
 
 - Claude versions before `PreToolUse.updatedInput` support may ignore the
   optimizer response. In that case, the command should still proceed normally,
-  and cmux should not rely on PATH-level interception.
+  and bmux should not rely on PATH-level interception.
 - A synchronous hook adds one process spawn to eligible Bash calls. The hook is
   scoped to matcher `Bash`, returns quickly for ineligible commands, and leaves
   telemetry async.

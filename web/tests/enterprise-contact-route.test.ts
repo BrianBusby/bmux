@@ -55,7 +55,7 @@ beforeEach(() => {
 });
 
 function request(body: unknown): Request {
-  return new Request("https://cmux.test/api/enterprise/contact", {
+  return new Request("https://bmux.test/api/enterprise/contact", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -134,7 +134,7 @@ describe("enterprise contact route", () => {
       (fetchCalls[1]?.[1] as RequestInit).body as string,
     );
     expect(posthogBody).toMatchObject({
-      event: "cmux_enterprise_contact_submitted",
+      event: "bmux_enterprise_contact_submitted",
       distinct_id: "ada@good.test",
       properties: {
         companyName: "Analytical Engines Inc.",

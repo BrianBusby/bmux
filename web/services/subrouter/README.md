@@ -1,6 +1,6 @@
 # Subrouter tenant service
 
-Server-side integration between the cmux web app and the subrouter multi-tenant
+Server-side integration between the bmux web app and the subrouter multi-tenant
 account API. Powers `/dashboard/ai-accounts` and the `/api/subrouter/accounts`
 routes.
 
@@ -14,5 +14,5 @@ isn't available yet") until both secrets are set:
   tenant keys (AES-256-GCM) before they are stored in `subrouter_tenants`.
   Generate with `openssl rand -base64 32`. Rotating this secret invalidates
   previously stored tenant keys.
-- `SUBROUTER_BASE_URL` — optional; defaults to `https://subrouter.cmux.dev` in
-  production and `https://subrouter-staging.cmux.dev` elsewhere.
+- `SUBROUTER_BASE_URL` — optional; defaults to `https://subrouter.bmux.dev` in
+  production and `https://subrouter-staging.bmux.dev` elsewhere.

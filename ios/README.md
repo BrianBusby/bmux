@@ -1,17 +1,17 @@
-# cmux iOS
+# bmux iOS
 
-SwiftUI iOS/iPadOS shell for the CMUXMobileCore production path.
+SwiftUI iOS/iPadOS shell for the BMUXMobileCore production path.
 
 Current phase:
 
 - Stack Auth sign-in gate with Apple, Google, email code, and a debug-only `42` shortcut
 - QR/manual pairing surface
-- CMUXMobileCore pairing payload and attach-ticket decoding
+- BMUXMobileCore pairing payload and attach-ticket decoding
 - injectable `CmxByteTransportFactory` runtime hook
 - isolated preview host data when no concrete transport is installed
 - workspace list, workspace detail, terminal dropdown, and input bar
 
-No Rust, Iroh, or Zig dependency is linked into this shell. Concrete route implementations should enter through `CMUXMobileRuntime`.
+No Rust, Iroh, or Zig dependency is linked into this shell. Concrete route implementations should enter through `BMUXMobileRuntime`.
 
 Build and reload the simulator:
 
@@ -22,16 +22,16 @@ ios/scripts/reload.sh --tag iossh
 Run package tests:
 
 ```bash
-swift test --package-path ios/cmuxPackage
+swift test --package-path ios/bmuxPackage
 ```
 
 ## Pairing a sideloaded dev build with a real (beta/stable) Mac
 
-A plain dev (DEBUG) build signs in to cmux's development Stack project. Stack
+A plain dev (DEBUG) build signs in to bmux's development Stack project. Stack
 user ids are per-project, so a dev build's user id can never match the
 production account binding (`ub`) a release Mac stamps into its pairing QR —
 pairing fails instantly, even with the same email on the same tailnet
-(https://github.com/manaflow-ai/cmux/issues/7145). To dogfood a device build
+(https://github.com/manaflow-ai/bmux/issues/7145). To dogfood a device build
 against your real Mac, build with production auth:
 
 ```bash
@@ -40,14 +40,14 @@ ios/scripts/reload.sh --tag my-tag --device-only --prod-auth
 
 What `--prod-auth` does:
 
-- Bakes `CMUXAuthEnvironment=production` into the app's Info.plist (via the
-  `CMUX_IOS_AUTH_ENV` build setting), so the build signs in against the
-  production Stack project and uses `https://cmux.com` for the device
+- Bakes `BMUXAuthEnvironment=production` into the app's Info.plist (via the
+  `BMUX_IOS_AUTH_ENV` build setting), so the build signs in against the
+  production Stack project and uses `https://bmux.com` for the device
   registry/API and the magic-link callback.
 - Makes the presence worker follow the auth channel: the app resolves the
   production presence instance (see `PresenceClient.productionServiceURL`) so
   your real Macs appear in Computers. The worker URLs live only in Swift —
-  the script bakes no copy — and an explicit `CMUX_PRESENCE_BASE_URL` still
+  the script bakes no copy — and an explicit `BMUX_PRESENCE_BASE_URL` still
   wins.
 - Skips the dogfood auto sign-in/auto-pair (those credentials belong to the
   development Stack project). Sign in in-app with the same account as your
@@ -58,7 +58,7 @@ What `--prod-auth` does:
   stale identity.
 
 Scan the Mac's pairing QR with the **in-app** scanner. The system Camera app
-routes release QR links (`cmux-ios://…`) to the beta/App Store app because
+routes release QR links (`bmux-ios://…`) to the beta/App Store app because
 pairing URL schemes are channel-specific; the in-app scanner accepts both
 schemes.
 
@@ -73,7 +73,7 @@ Info.plist value.
 beta. It builds the heavy GhosttyKit + Swift Release compile on a leased fleet
 Mac (same maclease pool as the device cloud reload, m1ultra excluded), so the
 build stays off this Mac's CPU. The fleet produces an UNSIGNED Release archive
-for the beta bundle id `dev.cmux.app.beta` (no signing material ever lands on
+for the beta bundle id `dev.bmux.app.beta` (no signing material ever lands on
 the shared Macs), downloads it locally, then hands it to
 `ios/scripts/upload-testflight.sh --archive-path`, which does the local export,
 re-sign with the Apple Distribution cert (re-adding `aps-environment=production`),
@@ -83,17 +83,17 @@ strict codesign verification, and TestFlight upload.
 # Dry run: build + export + re-sign + verify aps-environment=production, NO upload
 ios/scripts/cloud-testflight.sh --no-upload
 
-# Full lane: build on the fleet and upload to TestFlight (internal "cmux beta" group)
+# Full lane: build on the fleet and upload to TestFlight (internal "bmux beta" group)
 ios/scripts/cloud-testflight.sh
 
 # Also make the build eligible for external testers
 ios/scripts/cloud-testflight.sh --external
 ```
 
-A standalone cmux clone with no cmuxterm-hq checkout transparently falls back to
+A standalone bmux clone with no bmuxterm-hq checkout transparently falls back to
 a LOCAL Release archive (`--local` forces it), then takes the same export path.
 
-Internal testers (the `cmux beta` group) get every uploaded build instantly with
+Internal testers (the `bmux beta` group) get every uploaded build instantly with
 no review. An `--external` build is different: the FIRST external build of a new
 `MARKETING_VERSION` must pass a one-time Apple Beta App Review (~24h) before any
 external tester can install it. Subsequent external builds of the same version
@@ -126,4 +126,4 @@ Required GitHub secrets:
 - `ASC_API_KEY_P8_BASE64`
 - `IOS_DISTRIBUTION_CERTIFICATE_BASE64` (base64-encoded `.p12` for an Apple Distribution certificate on team `7WLXT3NR37`)
 - `IOS_DISTRIBUTION_CERTIFICATE_PASSWORD`
-- `IOS_BETA_PROVISIONING_PROFILE_BASE64` (base64-encoded App Store profile for `dev.cmux.app.beta`, with `aps-environment=production`)
+- `IOS_BETA_PROVISIONING_PROFILE_BASE64` (base64-encoded App Store profile for `dev.bmux.app.beta`, with `aps-environment=production`)

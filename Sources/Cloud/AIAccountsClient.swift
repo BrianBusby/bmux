@@ -1,5 +1,5 @@
-import CmuxAuthRuntime
-import CmuxControlSocket
+import BmuxAuthRuntime
+import BmuxControlSocket
 import Foundation
 
 enum AIAccountsClientError: Error, CustomStringConvertible {
@@ -12,15 +12,15 @@ enum AIAccountsClientError: Error, CustomStringConvertible {
     var description: String {
         switch self {
         case .notSignedIn:
-            return "Not signed in. Run `cmux auth login`, then retry."
+            return "Not signed in. Run `bmux auth login`, then retry."
         case .sessionRefreshFailed:
-            return "Signed in, but cmux could not refresh your session (network or server issue). Retry in a moment."
+            return "Signed in, but bmux could not refresh your session (network or server issue). Retry in a moment."
         case let .httpStatus(status, body):
             return AIAccountsClient.formatHTTPError(status: status, body: body)
         case let .malformedResponse(message):
             return "The AI accounts service returned an unexpected response: \(message)"
         case let .backendUnreachable(url, detail):
-            return "Could not reach the cmux backend at \(url): \(detail)"
+            return "Could not reach the bmux backend at \(url): \(detail)"
         }
     }
 }
@@ -120,7 +120,7 @@ actor AIAccountsClient {
         let resolvedTeamID = await auth.resolvedTeamID
 
         guard var comps = URLComponents(url: AuthEnvironment.vmAPIBaseURL, resolvingAgainstBaseURL: false) else {
-            throw AIAccountsClientError.malformedResponse("the cmux backend URL is misconfigured")
+            throw AIAccountsClientError.malformedResponse("the bmux backend URL is misconfigured")
         }
         comps.path = (comps.path.hasSuffix("/") ? String(comps.path.dropLast()) : comps.path) + path
         if !queryItems.isEmpty {
@@ -137,7 +137,7 @@ actor AIAccountsClient {
         req.setValue(tokens.refreshToken, forHTTPHeaderField: "X-Stack-Refresh-Token")
         let teamID = explicitTeamID?.trimmingCharacters(in: .whitespacesAndNewlines)
         if let teamID = teamID?.isEmpty == false ? teamID : resolvedTeamID, !teamID.isEmpty {
-            req.setValue(teamID, forHTTPHeaderField: "X-Cmux-Team-Id")
+            req.setValue(teamID, forHTTPHeaderField: "X-Bmux-Team-Id")
         }
         if let jsonBody {
             req.setValue("application/json", forHTTPHeaderField: "content-type")
@@ -180,10 +180,10 @@ actor AIAccountsClient {
 
     static func formatHTTPError(status: Int, body: String) -> String {
         if status == 503 {
-            return "AI accounts are not configured on this cmux backend."
+            return "AI accounts are not configured on this bmux backend."
         }
         if status == 401 {
-            return "Not signed in or session expired. Run `cmux auth login`, then retry."
+            return "Not signed in or session expired. Run `bmux auth login`, then retry."
         }
 
         let trimmed = body.trimmingCharacters(in: .whitespacesAndNewlines)

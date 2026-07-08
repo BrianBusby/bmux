@@ -6,9 +6,9 @@ import Foundation
 @MainActor
 final class NewWorkspaceContextMenuActionBox: NSObject {
     let windowId: UUID
-    let action: CmuxResolvedConfigAction
+    let action: BmuxResolvedConfigAction
 
-    init(windowId: UUID, action: CmuxResolvedConfigAction) {
+    init(windowId: UUID, action: BmuxResolvedConfigAction) {
         self.windowId = windowId
         self.action = action
     }
@@ -31,13 +31,13 @@ extension AppDelegate {
             ?? mainWindowContext(forShortcutEvent: event, debugSource: debugSource)
             ?? preferredMainWindowContextForWorkspaceCreation(event: event, debugSource: debugSource)
         guard let context,
-              let cmuxConfigStore = context.cmuxConfigStore else {
+              let bmuxConfigStore = context.bmuxConfigStore else {
             return false
         }
 
         guard let menu = makeNewWorkspaceContextMenu(
             context: context,
-            cmuxConfigStore: cmuxConfigStore
+            bmuxConfigStore: bmuxConfigStore
         ) else {
             return false
         }
@@ -54,13 +54,13 @@ extension AppDelegate {
         let context = contextForMainWindow(anchorView.window)
             ?? preferredMainWindowContextForWorkspaceCreation(event: nil, debugSource: debugSource)
         guard let context,
-              let cmuxConfigStore = context.cmuxConfigStore else {
+              let bmuxConfigStore = context.bmuxConfigStore else {
             return false
         }
 
         guard let menu = makeNewWorkspaceContextMenu(
             context: context,
-            cmuxConfigStore: cmuxConfigStore
+            bmuxConfigStore: bmuxConfigStore
         ) else {
             return false
         }
@@ -75,10 +75,10 @@ extension AppDelegate {
 
     func makeNewWorkspaceContextMenu(
         context: MainWindowContext,
-        cmuxConfigStore: CmuxConfigStore
+        bmuxConfigStore: BmuxConfigStore
     ) -> NSMenu? {
         let menu = NSMenu()
-        let sections: [NewWorkspaceContextMenuSection] = switch cmuxConfigStore.newWorkspaceMenuSectionOrder {
+        let sections: [NewWorkspaceContextMenuSection] = switch bmuxConfigStore.newWorkspaceMenuSectionOrder {
         case .customFirst:
             [.customAndAgentChat, .cloud]
         case .cloudFirst:
@@ -89,7 +89,7 @@ extension AppDelegate {
             case .customAndAgentChat:
                 appendCustomAndAgentChatMenuSection(
                     context: context,
-                    cmuxConfigStore: cmuxConfigStore,
+                    bmuxConfigStore: bmuxConfigStore,
                     to: menu
                 )
             case .cloud:
@@ -102,7 +102,7 @@ extension AppDelegate {
         appendWorkspaceActionAffordances(
             to: menu,
             windowId: context.windowId,
-            cmuxConfigStore: cmuxConfigStore
+            bmuxConfigStore: bmuxConfigStore
         )
         trimTrailingNewWorkspaceMenuSeparators(menu)
         guard menu.items.contains(where: { !$0.isSeparatorItem }) else { return nil }
@@ -111,18 +111,18 @@ extension AppDelegate {
 
     private func appendCustomAndAgentChatMenuSection(
         context: MainWindowContext,
-        cmuxConfigStore: CmuxConfigStore,
+        bmuxConfigStore: BmuxConfigStore,
         to menu: NSMenu
     ) {
         let customItems = makeConfiguredNewWorkspaceMenuItems(
             context: context,
-            cmuxConfigStore: cmuxConfigStore
+            bmuxConfigStore: bmuxConfigStore
         )
         appendNewWorkspaceMenuSection(customItems, to: menu)
         appendNewWorkspaceMenuSection(
             makeBuiltInNewAgentChatMenuItems(
                 context: context,
-                cmuxConfigStore: cmuxConfigStore
+                bmuxConfigStore: bmuxConfigStore
             ),
             to: menu
         )
@@ -130,9 +130,9 @@ extension AppDelegate {
 
     private func makeConfiguredNewWorkspaceMenuItems(
         context: MainWindowContext,
-        cmuxConfigStore: CmuxConfigStore
+        bmuxConfigStore: BmuxConfigStore
     ) -> [NSMenuItem] {
-        let configuredItems = cmuxConfigStore.newWorkspaceContextMenuItems
+        let configuredItems = bmuxConfigStore.newWorkspaceContextMenuItems
         var menuItems: [NSMenuItem] = []
         for configuredItem in configuredItems {
             switch configuredItem {
@@ -154,13 +154,13 @@ extension AppDelegate {
                 item.toolTip = menuAction.tooltip
                 item.image = menuAction.icon?.contextMenuImage(
                     configSourcePath: menuAction.iconSourcePath,
-                    globalConfigPath: cmuxConfigStore.globalConfigPath
+                    globalConfigPath: bmuxConfigStore.globalConfigPath
                 )
                 menuItems.append(item)
 
                 // Hold Option to turn a deletable saved action into its delete
                 // affordance, native alternate-item style.
-                if isDeletableGlobalAction(menuAction.action, cmuxConfigStore: cmuxConfigStore) {
+                if isDeletableGlobalAction(menuAction.action, bmuxConfigStore: bmuxConfigStore) {
                     let deleteFormat = String(
                         localized: "menu.newWorkspace.deleteLayoutAlternate",
                         defaultValue: "Delete “%@”"
@@ -191,18 +191,18 @@ extension AppDelegate {
 
     private func makeBuiltInNewAgentChatMenuItems(
         context: MainWindowContext,
-        cmuxConfigStore: CmuxConfigStore
+        bmuxConfigStore: BmuxConfigStore
     ) -> [NSMenuItem] {
         // Agent chat opens a browser surface; hide it when browser surfaces
         // are disabled, matching the command palette's browserDisabled gate.
         guard BrowserAvailabilitySettings.isEnabled() else { return [] }
-        let actionID = CmuxSurfaceTabBarBuiltInAction.newAgentChat.configID
-        let action = cmuxConfigStore.resolvedAction(id: actionID)
+        let actionID = BmuxSurfaceTabBarBuiltInAction.newAgentChat.configID
+        let action = bmuxConfigStore.resolvedAction(id: actionID)
             ?? .builtIn(.newAgentChat)
         guard shouldAppendBuiltInNewAgentChatMenuItem(
             action,
             actionID: actionID,
-            cmuxConfigStore: cmuxConfigStore
+            bmuxConfigStore: bmuxConfigStore
         ) else {
             return []
         }
@@ -219,24 +219,24 @@ extension AppDelegate {
         item.toolTip = action.tooltip
         item.image = action.icon?.contextMenuImage(
             configSourcePath: action.iconSourcePath,
-            globalConfigPath: cmuxConfigStore.globalConfigPath
+            globalConfigPath: bmuxConfigStore.globalConfigPath
         )
         return [item]
     }
 
     private func shouldAppendBuiltInNewAgentChatMenuItem(
-        _ action: CmuxResolvedConfigAction,
+        _ action: BmuxResolvedConfigAction,
         actionID: String,
-        cmuxConfigStore: CmuxConfigStore
+        bmuxConfigStore: BmuxConfigStore
     ) -> Bool {
         if action.newWorkspaceMenu == false { return false }
-        let configuredActionIDs = Set(cmuxConfigStore.newWorkspaceContextMenuItems.compactMap { item -> String? in
+        let configuredActionIDs = Set(bmuxConfigStore.newWorkspaceContextMenuItems.compactMap { item -> String? in
             guard case .action(let menuAction) = item else { return nil }
             return menuAction.action.id
         })
         if configuredActionIDs.contains(actionID) { return false }
         if action.newWorkspaceMenu == true { return true }
-        return !cmuxConfigStore.newWorkspaceContextMenuIsConfigured
+        return !bmuxConfigStore.newWorkspaceContextMenuIsConfigured
     }
 
     private func appendNewWorkspaceMenuSection(_ items: [NSMenuItem], to menu: NSMenu) {
@@ -267,7 +267,7 @@ extension AppDelegate {
             NSSound.beep()
             return
         }
-        guard executeConfiguredCmuxAction(box.action, context: context, preferredWindow: window) else {
+        guard executeConfiguredBmuxAction(box.action, context: context, preferredWindow: window) else {
             NSSound.beep()
             return
         }

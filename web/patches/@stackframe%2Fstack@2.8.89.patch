@@ -10,7 +10,7 @@ index 99773f6ee51f305b7497b78a55eaca0a4c09d899..57cba1f2eb143fdcd225e5ee6392633e
  let react_jsx_runtime = require("react/jsx-runtime");
  
  //#region src/components/elements/ssr-layout-effect.tsx
-+// Patched (cmux): see esm variant — inject the SSR script outside the React
++// Patched (bmux): see esm variant — inject the SSR script outside the React
 +// tree via useServerInsertedHTML; client behavior is the layout-effect eval.
  function SsrScript(props) {
 +	(0, next_navigation.useServerInsertedHTML)(() => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("script", {
@@ -44,7 +44,7 @@ index 1233d79c915fc5b7214fbf3a56570cd9f9f04950..79c8f22b1e5c19d50c52f502f8aa715b
  import { jsx } from "react/jsx-runtime";
  
  //#region src/components/elements/ssr-layout-effect.tsx
-+// Patched (cmux): React 19 warns about <script> elements rendered inside
++// Patched (bmux): React 19 warns about <script> elements rendered inside
 +// components ("Scripts inside React components are never executed when
 +// rendering on the client"). The script element only matters for SSR HTML
 +// (pre-hydration theme sync); the client path is covered by the

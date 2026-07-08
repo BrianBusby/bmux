@@ -1,8 +1,8 @@
 import AppKit
-import CmuxTerminal
+import BmuxTerminal
 
 extension NSEvent {
-    var cmuxIsUndoRedoCommandEquivalent: Bool {
+    var bmuxIsUndoRedoCommandEquivalent: Bool {
         let normalizedFlags = modifierFlags
             .intersection(.deviceIndependentFlagsMask)
             .subtracting([.numericPad, .function, .capsLock])
@@ -13,7 +13,7 @@ extension NSEvent {
 }
 
 /// Identity of a key event currently being force-dispatched into a responder's
-/// `keyDown(with:)` by `NSWindow.cmux_performKeyEquivalent(with:)`.
+/// `keyDown(with:)` by `NSWindow.bmux_performKeyEquivalent(with:)`.
 ///
 /// Forwarding keyDown can re-enter `performKeyEquivalent` with the same event
 /// while the dispatch is still on the stack: WebKit replays unhandled keys
@@ -21,14 +21,14 @@ extension NSEvent {
 /// re-enters `performKeyEquivalent`. Without a replay guard at the dispatch
 /// chokepoint the same event ping-pongs between the swizzle and the focused
 /// responder until the main-thread stack overflows
-/// (https://github.com/manaflow-ai/cmux/issues/5887).
+/// (https://github.com/manaflow-ai/bmux/issues/5887).
 ///
 /// Identity is the event's stable field tuple rather than object identity so
 /// the guard still holds if AppKit/WebKit re-deliver the event as an equal
 /// copy. Key autorepeat produces distinct events (fresh timestamps), so
 /// repeat typing is never throttled. The dispatching window's number is part
 /// of the identity so windows cannot suppress each other's dispatches.
-private struct CmuxForceDispatchedKeyEventIdentity: Hashable {
+private struct BmuxForceDispatchedKeyEventIdentity: Hashable {
     let windowNumber: Int
     let eventType: UInt
     let keyCode: UInt16
@@ -41,30 +41,30 @@ private struct CmuxForceDispatchedKeyEventIdentity: Hashable {
 /// before `keyDown(with:)` and removed when the dispatch unwinds, so WebKit's
 /// legitimate replay of an unhandled key (which arrives after the original
 /// dispatch has fully unwound) is still force-dispatched normally.
-private var cmuxInFlightForceDispatchedKeyEventIdentities = Set<CmuxForceDispatchedKeyEventIdentity>()
+private var bmuxInFlightForceDispatchedKeyEventIdentities = Set<BmuxForceDispatchedKeyEventIdentity>()
 
 extension NSWindow {
-    func cmuxRouteUndoRedoCommandEquivalentAwayFromAppKit(
+    func bmuxRouteUndoRedoCommandEquivalentAwayFromAppKit(
         _ event: NSEvent,
         terminalView: GhosttyNSView?,
-        webView: CmuxWebView?,
+        webView: BmuxWebView?,
         browserWebKitKeyDownReentry: Bool
     ) -> Bool {
-        guard event.cmuxIsUndoRedoCommandEquivalent,
-              !cmuxFirstResponderPreservesLocalUndoRedo,
-              !cmuxIsLikelyWebInspectorResponder(firstResponder) else {
+        guard event.bmuxIsUndoRedoCommandEquivalent,
+              !bmuxFirstResponderPreservesLocalUndoRedo,
+              !bmuxIsLikelyWebInspectorResponder(firstResponder) else {
             return false
         }
         if let terminalView {
             if terminalView.performKeyEquivalentAfterMenuMiss(with: event) {
 #if DEBUG
-                cmuxDebugLog("  -> undo/redo routed to terminal before AppKit menu")
+                bmuxDebugLog("  -> undo/redo routed to terminal before AppKit menu")
 #endif
                 return true
             }
-            if cmuxForceDispatchKeyDownOnce(event, to: terminalView, reason: "terminal undo/redo") {
+            if bmuxForceDispatchKeyDownOnce(event, to: terminalView, reason: "terminal undo/redo") {
 #if DEBUG
-                cmuxDebugLog("  -> undo/redo keyDown fallback routed to terminal")
+                bmuxDebugLog("  -> undo/redo keyDown fallback routed to terminal")
 #endif
                 return true
             }
@@ -73,19 +73,19 @@ extension NSWindow {
         if let webView {
             if browserWebKitKeyDownReentry {
 #if DEBUG
-                cmuxDebugLog("  -> undo/redo browser reentry suppressed before AppKit menu")
+                bmuxDebugLog("  -> undo/redo browser reentry suppressed before AppKit menu")
 #endif
                 return true
             }
             if webView.performKeyEquivalent(with: event) {
 #if DEBUG
-                cmuxDebugLog("  -> undo/redo routed to browser before AppKit menu")
+                bmuxDebugLog("  -> undo/redo routed to browser before AppKit menu")
 #endif
                 return true
             }
-            if cmuxForceDispatchKeyDownOnce(event, to: webView, reason: "browser undo/redo") {
+            if bmuxForceDispatchKeyDownOnce(event, to: webView, reason: "browser undo/redo") {
 #if DEBUG
-                cmuxDebugLog("  -> undo/redo keyDown fallback routed to browser")
+                bmuxDebugLog("  -> undo/redo keyDown fallback routed to browser")
 #endif
                 return true
             }
@@ -97,7 +97,7 @@ extension NSWindow {
         return false
     }
 
-    private var cmuxFirstResponderPreservesLocalUndoRedo: Bool {
+    private var bmuxFirstResponderPreservesLocalUndoRedo: Bool {
         guard let responder = firstResponder else { return false }
         if let textView = responder as? NSTextView {
             return textView.isEditable || textView.isFieldEditor
@@ -109,7 +109,7 @@ extension NSWindow {
     }
 
     /// Single chokepoint for every direct `keyDown(with:)` force-dispatch made
-    /// by `cmux_performKeyEquivalent(with:)`.
+    /// by `bmux_performKeyEquivalent(with:)`.
     ///
     /// Dispatches `event` into `target`'s `keyDown(with:)` unless the same
     /// event is already being force-dispatched lower on this window's call
@@ -117,29 +117,29 @@ extension NSWindow {
     /// `false` back must decline the event (fall through to default AppKit
     /// handling) instead of dispatching themselves; re-dispatching the same
     /// in-flight event is the infinite key-routing loop from
-    /// https://github.com/manaflow-ai/cmux/issues/5887.
-    func cmuxForceDispatchKeyDownOnce(
+    /// https://github.com/manaflow-ai/bmux/issues/5887.
+    func bmuxForceDispatchKeyDownOnce(
         _ event: NSEvent,
         to target: NSResponder,
         reason: @autoclosure () -> String
     ) -> Bool {
-        let identity = CmuxForceDispatchedKeyEventIdentity(
+        let identity = BmuxForceDispatchedKeyEventIdentity(
             windowNumber: self.windowNumber,
             eventType: event.type.rawValue,
             keyCode: event.keyCode,
             modifierFlags: event.modifierFlags.rawValue,
             timestamp: event.timestamp
         )
-        guard !cmuxInFlightForceDispatchedKeyEventIdentities.contains(identity) else {
+        guard !bmuxInFlightForceDispatchedKeyEventIdentities.contains(identity) else {
 #if DEBUG
-            cmuxDebugLog("  → \(reason()) reentry; declining force-dispatch of in-flight key event")
+            bmuxDebugLog("  → \(reason()) reentry; declining force-dispatch of in-flight key event")
 #endif
             return false
         }
-        cmuxInFlightForceDispatchedKeyEventIdentities.insert(identity)
-        defer { cmuxInFlightForceDispatchedKeyEventIdentities.remove(identity) }
+        bmuxInFlightForceDispatchedKeyEventIdentities.insert(identity)
+        defer { bmuxInFlightForceDispatchedKeyEventIdentities.remove(identity) }
 #if DEBUG
-        cmuxDebugLog("  → \(reason()) routed to firstResponder.keyDown")
+        bmuxDebugLog("  → \(reason()) routed to firstResponder.keyDown")
 #endif
         target.keyDown(with: event)
         return true

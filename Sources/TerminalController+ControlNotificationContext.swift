@@ -1,4 +1,4 @@
-import CmuxControlSocket
+import BmuxControlSocket
 import Foundation
 
 /// The notification-domain witnesses are the byte-faithful bodies of the former

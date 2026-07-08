@@ -12,9 +12,9 @@ import (
 	"sync/atomic"
 
 	"github.com/klauspost/compress/zstd"
-	"github.com/manaflow-ai/cmux/vault/internal/agentdirs"
-	"github.com/manaflow-ai/cmux/vault/internal/api"
-	"github.com/manaflow-ai/cmux/vault/internal/state"
+	"github.com/manaflow-ai/bmux/vault/internal/agentdirs"
+	"github.com/manaflow-ai/bmux/vault/internal/api"
+	"github.com/manaflow-ai/bmux/vault/internal/state"
 )
 
 const maxUploadBatch = 25
@@ -338,7 +338,7 @@ func compressFile(path, tempDir string) (compressResult, error) {
 	}
 	defer in.Close()
 
-	tmp, err := os.CreateTemp(tempDir, "cmux-vault-*.jsonl.zst")
+	tmp, err := os.CreateTemp(tempDir, "bmux-vault-*.jsonl.zst")
 	if err != nil {
 		return result, err
 	}

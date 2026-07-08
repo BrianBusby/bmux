@@ -11,7 +11,7 @@ describe("testimonial translations", () => {
     name: "minixalpha",
     handle: "@minixalpha",
     avatar: "/avatars/minixalpha.jpg",
-    text: "我也主力用 cmux",
+    text: "我也主力用 bmux",
     lang: "zh-CN",
     url: "https://x.com/minixalpha/status/2037496984890986576",
     platform: "x" as const,

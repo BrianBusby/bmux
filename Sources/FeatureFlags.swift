@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import PostHog
 
-struct CmuxFeatureFlagDefinition: Identifiable, Equatable {
+struct BmuxFeatureFlagDefinition: Identifiable, Equatable {
     var id: String { key }
 
     let key: String
@@ -18,7 +18,7 @@ struct CmuxFeatureFlagDefinition: Identifiable, Equatable {
 ///
 /// Fallback semantics (flags must never break the app):
 /// - Until a payload arrives — including forever, when the SDK never starts
-///   because telemetry is off or a DEBUG build lacks CMUX_POSTHOG_ENABLE=1 —
+///   because telemetry is off or a DEBUG build lacks BMUX_POSTHOG_ENABLE=1 —
 ///   every flag keeps its safe default.
 /// - Once a payload has arrived, a false flag reads as off. An absent flag
 ///   still uses the explicit per-flag fallback below.
@@ -28,8 +28,8 @@ struct CmuxFeatureFlagDefinition: Identifiable, Equatable {
 /// comment above its property, and its key literal appears nowhere else.
 @MainActor
 @Observable
-final class CmuxFeatureFlags {
-    static let shared = CmuxFeatureFlags()
+final class BmuxFeatureFlags {
+    static let shared = BmuxFeatureFlags()
 
     #if DEBUG
     private static let proUpgradeUIDefault = true
@@ -38,19 +38,19 @@ final class CmuxFeatureFlags {
     #endif
 
     private static let mobileConnectButtonDefault = true
-    private static let overrideKeyPrefix = "cmux.flags.override."
+    private static let overrideKeyPrefix = "bmux.flags.override."
 
     // Order is load-bearing for the typed accessors below. A keyed lookup would
     // repeat flag-key literals and violate the feature-flag lint's single
     // evaluation-site rule.
-    static var allFlags: [CmuxFeatureFlagDefinition] {
+    static var allFlags: [BmuxFeatureFlagDefinition] {
         [
             // FLAG(key: pro-upgrade-ui-enabled-release, owner: lawrencecchen,
             //      reviewBy: 2026-10-01, defaultWhenUnavailable: false)
             // Shows the Pro upgrade entrypoints (sidebar badge, Settings Account
             // card, palette command, Help menu item). Release builds hide them until
             // the PostHog flag is enabled; DEBUG keeps them visible for dogfood.
-            CmuxFeatureFlagDefinition(
+            BmuxFeatureFlagDefinition(
                 key: "pro-upgrade-ui-enabled-release",
                 title: String(localized: "featureFlags.proUpgrade.title", defaultValue: "Pro upgrade UI"),
                 flagDescription: String(
@@ -65,7 +65,7 @@ final class CmuxFeatureFlags {
             // Shows the top-right iPhone button that opens the Mobile Connect
             // (phone pairing) window. Default keeps it visible when flags are
             // unavailable; the window it opens ships in every build.
-            CmuxFeatureFlagDefinition(
+            BmuxFeatureFlagDefinition(
                 key: "mobile-connect-button-enabled-release",
                 title: String(localized: "featureFlags.mobileConnect.title", defaultValue: "Mobile Connect button"),
                 flagDescription: String(
@@ -126,19 +126,19 @@ final class CmuxFeatureFlags {
         PostHogSDK.shared.reloadFeatureFlags()
     }
 
-    func effectiveValue(for definition: CmuxFeatureFlagDefinition) -> Bool {
+    func effectiveValue(for definition: BmuxFeatureFlagDefinition) -> Bool {
         effectiveValuesByKey[definition.key] ?? definition.defaultWhenUnavailable
     }
 
-    func overrideValue(for definition: CmuxFeatureFlagDefinition) -> Bool? {
+    func overrideValue(for definition: BmuxFeatureFlagDefinition) -> Bool? {
         localOverridesByKey[definition.key]
     }
 
-    func remoteValue(for definition: CmuxFeatureFlagDefinition) -> Bool? {
+    func remoteValue(for definition: BmuxFeatureFlagDefinition) -> Bool? {
         remoteValuesByKey[definition.key]
     }
 
-    func setOverride(_ value: Bool?, for definition: CmuxFeatureFlagDefinition) {
+    func setOverride(_ value: Bool?, for definition: BmuxFeatureFlagDefinition) {
         let previousEffectiveValues = effectiveValuesByKey
         if let value {
             localOverridesByKey[definition.key] = value
@@ -188,7 +188,7 @@ final class CmuxFeatureFlags {
         if Self.allFlags.contains(where: { definition in
             previousEffectiveValues[definition.key] != effectiveValuesByKey[definition.key]
         }) {
-            NotificationCenter.default.post(name: .cmuxFeatureFlagsDidChange, object: self)
+            NotificationCenter.default.post(name: .bmuxFeatureFlagsDidChange, object: self)
         }
     }
 
@@ -240,5 +240,5 @@ final class CmuxFeatureFlags {
 }
 
 extension Notification.Name {
-    static let cmuxFeatureFlagsDidChange = Notification.Name("cmuxFeatureFlagsDidChange")
+    static let bmuxFeatureFlagsDidChange = Notification.Name("bmuxFeatureFlagsDidChange")
 }

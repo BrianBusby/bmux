@@ -1,8 +1,8 @@
-import CmuxFoundation
+import BmuxFoundation
 import AppKit
 import Bonsplit
-import CmuxAppKitSupportUI
-import CMUXAgentLaunch
+import BmuxAppKitSupportUI
+import BMUXAgentLaunch
 import SQLite3
 import SwiftUI
 import UniformTypeIdentifiers
@@ -114,7 +114,7 @@ struct SessionIndexView: View {
 
             Toggle(isOn: $store.scopeToCurrentDirectory) {
                 Text(String(localized: "sessionIndex.scope.thisFolder", defaultValue: "This folder only"))
-                    .cmuxFont(size: 11)
+                    .bmuxFont(size: 11)
                     .foregroundColor(.secondary)
             }
             .toggleStyle(.checkbox)
@@ -129,7 +129,7 @@ struct SessionIndexView: View {
                 store.reload()
             } label: {
                 Image(systemName: "arrow.clockwise")
-                    .cmuxFont(size: 10, weight: .medium)
+                    .bmuxFont(size: 10, weight: .medium)
             }
             .buttonStyle(.borderless)
             .help(String(localized: "sessionIndex.reload.tooltip", defaultValue: "Reload Vault"))
@@ -145,7 +145,7 @@ struct SessionIndexView: View {
         VStack(spacing: 6) {
             ProgressView().controlSize(.small)
             Text(String(localized: "sessionIndex.loading", defaultValue: "Loading Vault…"))
-                .cmuxFont(size: 11)
+                .bmuxFont(size: 11)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -154,11 +154,11 @@ struct SessionIndexView: View {
     private var emptyView: some View {
         VStack(spacing: 4) {
             Text(String(localized: "sessionIndex.empty.title", defaultValue: "Vault is empty"))
-                .cmuxFont(size: 12)
+                .bmuxFont(size: 12)
                 .foregroundColor(.secondary)
             Text(String(localized: "sessionIndex.empty.subtitle",
                                    defaultValue: "Claude Code, Codex, OpenCode, and Rovo Dev history will appear here."))
-                .cmuxFont(size: 11)
+                .bmuxFont(size: 11)
                 .foregroundColor(.secondary.opacity(0.7))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16)
@@ -268,7 +268,7 @@ private struct AgentIconImage: View, Equatable {
                 .frame(width: size, height: size)
         } else {
             Image(systemName: agent.systemImageName ?? "person.crop.circle")
-                .cmuxFont(size: max(size - 2, 10), weight: .regular)
+                .bmuxFont(size: max(size - 2, 10), weight: .regular)
                 .foregroundColor(.secondary)
                 .frame(width: size, height: size)
         }
@@ -286,12 +286,12 @@ private struct GroupingButton: View {
             HStack(spacing: 3) {
                 Image(systemName: mode.symbolName)
                     .symbolRenderingMode(.monochrome)
-                    .cmuxFont(
+                    .bmuxFont(
                         size: RightSidebarChromeControlStyle.secondaryIconSize,
                         weight: RightSidebarChromeControlStyle.iconWeight
                     )
                 Text(mode.label)
-                    .cmuxFont(
+                    .bmuxFont(
                         size: RightSidebarChromeControlStyle.labelSize,
                         weight: RightSidebarChromeControlStyle.labelWeight
                     )
@@ -405,7 +405,7 @@ private struct IndexSectionView: View, Equatable {
             isPopoverOpen = true
         } label: {
             Text(String(localized: "sessionIndex.section.showMore", defaultValue: "Show more"))
-                .cmuxFont(size: 12, weight: .medium)
+                .bmuxFont(size: 12, weight: .medium)
                 .foregroundColor(.secondary.opacity(0.7))
                 .padding(.leading, 32)
                 .padding(.trailing, 12)
@@ -432,12 +432,12 @@ private struct IndexSectionView: View, Equatable {
             HStack(spacing: 8) {
                 sectionIconView
                 Text(section.title)
-                    .cmuxFont(size: 13, weight: .regular)
+                    .bmuxFont(size: 13, weight: .regular)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Image(systemName: "chevron.down")
-                    .cmuxFont(size: 9, weight: .semibold)
+                    .bmuxFont(size: 9, weight: .semibold)
                     .foregroundColor(.secondary.opacity(0.6))
                     .rotationEffect(.degrees(isCollapsed ? -90 : 0))
                 Spacer(minLength: 0)
@@ -456,7 +456,7 @@ private struct IndexSectionView: View, Equatable {
             HStack(spacing: 8) {
                 sectionIconView
                 Text(section.title)
-                    .cmuxFont(size: 13)
+                    .bmuxFont(size: 13)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
@@ -471,7 +471,7 @@ private struct IndexSectionView: View, Equatable {
             AgentIconImage(agent: agent, size: 14)
         case .folder:
             Image(systemName: "folder")
-                .cmuxFont(size: 12, weight: .regular)
+                .bmuxFont(size: 12, weight: .regular)
                 .foregroundColor(.secondary)
                 .frame(width: 14, height: 14)
         }
@@ -569,13 +569,13 @@ private struct SessionRow: View, Equatable {
         HStack(spacing: 6) {
             AgentIconImage(agent: entry.agent, size: 12)
             Text(entry.displayTitle)
-                .cmuxFont(size: 13)
+                .bmuxFont(size: 13)
                 .foregroundColor(.primary.opacity(0.92))
                 .lineLimit(1)
                 .truncationMode(.tail)
             Spacer(minLength: 8)
             Text(relativeTime(entry.modified))
-                .cmuxFont(size: 12, monospacedDigit: true)
+                .bmuxFont(size: 12, monospacedDigit: true)
                 .foregroundColor(.secondary.opacity(0.65))
                 .fixedSize()
         }
@@ -597,7 +597,7 @@ private struct SessionRow: View, Equatable {
             HStack(spacing: 6) {
                 AgentIconImage(agent: entry.agent, size: 12)
                 Text(entry.displayTitle)
-                    .cmuxFont(size: 12, weight: .medium)
+                    .bmuxFont(size: 12, weight: .medium)
                     .lineLimit(1)
                     .truncationMode(.tail)
             }
@@ -755,13 +755,13 @@ private struct SessionTranscriptPreviewView: View {
             AgentIconImage(agent: entry.agent, size: 14)
             VStack(alignment: .leading, spacing: 1) {
                 Text(entry.displayTitle)
-                    .cmuxFont(size: 13, weight: .semibold)
+                    .bmuxFont(size: 13, weight: .semibold)
                     .foregroundColor(.primary)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if let cwd = entry.cwdLabel {
                     Text(cwd)
-                        .cmuxFont(size: 11)
+                        .bmuxFont(size: 11)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -769,7 +769,7 @@ private struct SessionTranscriptPreviewView: View {
             }
             Spacer(minLength: 8)
             Image(systemName: "xmark")
-                .cmuxFont(size: 11, weight: .semibold)
+                .bmuxFont(size: 11, weight: .semibold)
                 .foregroundColor(closeIsHovered ? .primary : .secondary)
                 .frame(width: 20, height: 20)
                 .background(
@@ -822,7 +822,7 @@ private struct SessionTranscriptPreviewView: View {
             ProgressView()
                 .controlSize(.small)
             Text(String(localized: "sessionIndex.popover.loading", defaultValue: "Loading…"))
-                .cmuxFont(size: 12)
+                .bmuxFont(size: 12)
                 .foregroundColor(.secondary)
             Spacer(minLength: 0)
         }
@@ -833,10 +833,10 @@ private struct SessionTranscriptPreviewView: View {
     private func statusRow(systemImage: String, text: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: systemImage)
-                .cmuxFont(size: 12, weight: .medium)
+                .bmuxFont(size: 12, weight: .medium)
                 .foregroundColor(.secondary)
             Text(text)
-                .cmuxFont(size: 12)
+                .bmuxFont(size: 12)
                 .foregroundColor(.secondary)
             Spacer(minLength: 0)
         }
@@ -949,7 +949,7 @@ private struct SessionTranscriptTurnView: View, Equatable {
         HStack(alignment: .top, spacing: 10) {
             VStack(spacing: 3) {
                 Text(row.isContinuation ? "" : row.role.label)
-                    .cmuxFont(size: 10, weight: .semibold)
+                    .bmuxFont(size: 10, weight: .semibold)
                     .foregroundColor(row.role.foregroundColor(colorScheme: colorScheme))
                     .lineLimit(1)
                     .frame(width: 58, alignment: .trailing)
@@ -960,7 +960,7 @@ private struct SessionTranscriptTurnView: View, Equatable {
                 }
             }
             Text(row.text)
-                .cmuxFont(size: row.role.bodyFontSize, design: row.role.bodyFontDesign)
+                .bmuxFont(size: row.role.bodyFontSize, design: row.role.bodyFontDesign)
                 .foregroundColor(row.role.bodyForegroundColor(colorScheme: colorScheme))
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
@@ -1352,7 +1352,7 @@ private enum SessionTranscriptLoader {
     private static func loadOpenCodeSynchronously(sessionId: String) throws -> [SessionTranscriptTurn] {
         let snapshot: OpenCodeDatabaseSnapshot.Snapshot
         do {
-            guard let madeSnapshot = try OpenCodeDatabaseSnapshot.make(prefix: "cmux-opencode-preview") else {
+            guard let madeSnapshot = try OpenCodeDatabaseSnapshot.make(prefix: "bmux-opencode-preview") else {
                 throw SessionTranscriptLoadError.missingFile
             }
             snapshot = madeSnapshot
@@ -2157,7 +2157,7 @@ private struct SectionPopoverView: View {
             HStack(spacing: 8) {
                 sectionIconView
                 Text(section.title)
-                    .cmuxFont(size: 13, weight: .semibold)
+                    .bmuxFont(size: 13, weight: .semibold)
                     .foregroundColor(.primary)
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -2169,7 +2169,7 @@ private struct SectionPopoverView: View {
 
             HStack(spacing: 6) {
                 Image(systemName: "magnifyingglass")
-                    .cmuxFont(size: 11, weight: .medium)
+                    .bmuxFont(size: 11, weight: .medium)
                     .foregroundColor(.secondary)
                 TextField(
                     String(localized: "sessionIndex.popover.searchPlaceholder",
@@ -2177,14 +2177,14 @@ private struct SectionPopoverView: View {
                     text: $query
                 )
                 .textFieldStyle(.plain)
-                .cmuxFont(size: 12)
+                .bmuxFont(size: 12)
                 .focused($searchFieldFocused)
                 if !query.isEmpty {
                     Button {
                         query = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .cmuxFont(size: 11)
+                            .bmuxFont(size: 11)
                             .foregroundColor(.secondary)
                     }
                     .buttonStyle(.plain)
@@ -2206,10 +2206,10 @@ private struct SectionPopoverView: View {
                     ForEach(errorMessages, id: \.self) { msg in
                         HStack(alignment: .top, spacing: 6) {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .cmuxFont(size: 10)
+                                .bmuxFont(size: 10)
                                 .foregroundColor(.orange)
                             Text(msg)
-                                .cmuxFont(size: 11)
+                                .bmuxFont(size: 11)
                                 .foregroundColor(.primary.opacity(0.85))
                         }
                     }
@@ -2226,7 +2226,7 @@ private struct SectionPopoverView: View {
                     } else if loaded.isEmpty {
                         Text(String(localized: "sessionIndex.popover.noMatches",
                                     defaultValue: "No matches"))
-                            .cmuxFont(size: 12)
+                            .bmuxFont(size: 12)
                             .foregroundColor(.secondary)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
@@ -2249,7 +2249,7 @@ private struct SectionPopoverView: View {
                         } else {
                             Text(String(localized: "sessionIndex.popover.endOfList",
                                         defaultValue: "You've reached the end"))
-                                .cmuxFont(size: 11)
+                                .bmuxFont(size: 11)
                                 .foregroundColor(.secondary.opacity(0.5))
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .padding(.vertical, 8)
@@ -2367,7 +2367,7 @@ private struct SectionPopoverView: View {
         HStack(spacing: 6) {
             ProgressView().controlSize(.small)
             Text(String(localized: "sessionIndex.popover.loading", defaultValue: "Loading…"))
-                .cmuxFont(size: 11)
+                .bmuxFont(size: 11)
                 .foregroundColor(.secondary)
             Spacer(minLength: 0)
         }
@@ -2453,7 +2453,7 @@ private struct SectionPopoverView: View {
             AgentIconImage(agent: agent, size: 14)
         case .folder:
             Image(systemName: "folder")
-                .cmuxFont(size: 12, weight: .regular)
+                .bmuxFont(size: 12, weight: .regular)
                 .foregroundColor(.secondary)
                 .frame(width: 14, height: 14)
         }
@@ -2491,7 +2491,7 @@ private struct PopoverRow: View, Equatable {
         TimelineView(RelativeTimestampSchedule(modified: entry.modified)) { context in
             Text(SessionIndexView.relativeFormatter.localizedString(for: entry.modified, relativeTo: context.date))
         }
-        .cmuxFont(size: 11, monospacedDigit: true)
+        .bmuxFont(size: 11, monospacedDigit: true)
         .foregroundColor(.secondary.opacity(0.7))
         .fixedSize()
     }
@@ -2504,7 +2504,7 @@ private struct PopoverRow: View, Equatable {
             // always constrain a Text that has hard line breaks in the
             // source string.
             Text(Self.flatten(entry.displayTitle))
-                .cmuxFont(size: 12)
+                .bmuxFont(size: 12)
                 .foregroundColor(.primary.opacity(0.92))
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -2631,7 +2631,7 @@ private func sessionDragItemProvider(for entry: SessionEntry) -> NSItemProvider 
 // MARK: - NSPopover host
 
 /// Hosts SectionPopoverView in a real NSPopover. SwiftUI's native `.popover()`
-/// doesn't reliably let the embedded TextField become first responder in cmux's
+/// doesn't reliably let the embedded TextField become first responder in bmux's
 /// focus-managed environment because the terminal keeps grabbing focus back.
 struct SectionPopoverHost: NSViewRepresentable {
     @Binding var isPresented: Bool
@@ -2689,7 +2689,7 @@ struct SectionPopoverHost: NSViewRepresentable {
             // open SwiftUI layout settles over multiple passes and
             // preferredContentSize briefly reports a partial height —
             // NSPopover latches onto that and renders squished (evidence:
-            // /tmp/cmux-debug-spin-fix.log, refreshContent logged
+            // /tmp/bmux-debug-spin-fix.log, refreshContent logged
             // fitting=360x486 at present, but visible popover was ~280).
             // Instead we drive popover.contentSize manually from
             // fittingSize on every updateNSView / present call.

@@ -42,7 +42,7 @@ export async function SiteFooter() {
     {
       heading: t("social"),
       links: [
-        { label: t("github"), href: "https://github.com/manaflow-ai/cmux" },
+        { label: t("github"), href: "https://github.com/manaflow-ai/bmux" },
         { label: t("twitter"), href: "https://twitter.com/manaflowai" },
         { label: t("discord"), href: "https://discord.gg/xsgFEVrWCZ" },
         { label: t("contact"), href: "mailto:founders@manaflow.com" },
@@ -101,7 +101,7 @@ export async function SiteFooter() {
               ·
             </span>
             <a
-              href="https://github.com/manaflow-ai/cmux"
+              href="https://github.com/manaflow-ai/bmux"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-foreground transition-colors"

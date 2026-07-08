@@ -34,7 +34,7 @@ chmod +x "$bin_dir/xcrun"
 cat > "$bin_dir/xcode-select" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-printf '%s\n' "$*" >> "$CMUX_TEST_XCODE_SELECT_LOG"
+printf '%s\n' "$*" >> "$BMUX_TEST_XCODE_SELECT_LOG"
 EOF
 chmod +x "$bin_dir/xcode-select"
 
@@ -53,10 +53,10 @@ printf '%s\n' "26.2" > "$pinned_developer/sdk-version"
 output="$(
   PATH="$bin_dir:/usr/bin:/bin" \
     GITHUB_ENV="$env_file" \
-    CMUX_TEST_XCODE_SELECT_LOG="$xcode_select_log" \
-    CMUX_CI_DEVELOPER_DIR="$pinned_developer" \
-    CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=26 \
-    CMUX_XCODE_APPLICATIONS_DIR="$tmp_dir/no-apps" \
+    BMUX_TEST_XCODE_SELECT_LOG="$xcode_select_log" \
+    BMUX_CI_DEVELOPER_DIR="$pinned_developer" \
+    BMUX_CI_REQUIRED_MACOS_SDK_MAJOR=26 \
+    BMUX_XCODE_APPLICATIONS_DIR="$tmp_dir/no-apps" \
     "$SCRIPT"
 )"
 
@@ -92,9 +92,9 @@ printf '%s\n' "15.5" > "$old_developer/sdk-version"
 wrong_sdk_output="$(
   PATH="$bin_dir:/usr/bin:/bin" \
     GITHUB_ENV="$env_file" \
-    CMUX_TEST_XCODE_SELECT_LOG="$xcode_select_log" \
-    CMUX_CI_DEVELOPER_DIR="$old_developer" \
-    CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=26 \
+    BMUX_TEST_XCODE_SELECT_LOG="$xcode_select_log" \
+    BMUX_CI_DEVELOPER_DIR="$old_developer" \
+    BMUX_CI_REQUIRED_MACOS_SDK_MAJOR=26 \
     "$SCRIPT" 2>&1 >/dev/null
 )" && {
   echo "FAIL: pinned Xcode with the wrong SDK major should fail"
@@ -113,9 +113,9 @@ fi
 scan_output="$(
   PATH="$bin_dir:/usr/bin:/bin" \
     GITHUB_ENV="$env_file" \
-    CMUX_TEST_XCODE_SELECT_LOG="$xcode_select_log" \
-    CMUX_XCODE_APPLICATIONS_DIR="$tmp_dir" \
-    CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15 \
+    BMUX_TEST_XCODE_SELECT_LOG="$xcode_select_log" \
+    BMUX_XCODE_APPLICATIONS_DIR="$tmp_dir" \
+    BMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15 \
     "$SCRIPT"
 )"
 
@@ -140,8 +140,8 @@ fi
 missing_output="$(
   PATH="$bin_dir:/usr/bin:/bin" \
     GITHUB_ENV="$env_file" \
-    CMUX_TEST_XCODE_SELECT_LOG="$xcode_select_log" \
-    CMUX_CI_DEVELOPER_DIR="$tmp_dir/missing/Contents/Developer" \
+    BMUX_TEST_XCODE_SELECT_LOG="$xcode_select_log" \
+    BMUX_CI_DEVELOPER_DIR="$tmp_dir/missing/Contents/Developer" \
     "$SCRIPT" 2>&1 >/dev/null
 )" && {
   echo "FAIL: missing pinned developer dir should fail"

@@ -1,7 +1,7 @@
 // End-to-end smoke: for each provider, start a session over WS, send a
 // prompt, and assert we see streamed/final assistant text plus a done event.
 // Usage: bun test/e2e.ts [provider ...]
-const PORT = Number(process.env.CMUX_AGENT_UI_PORT ?? 7739);
+const PORT = Number(process.env.BMUX_AGENT_UI_PORT ?? 7739);
 const providersToTest = Bun.argv.slice(2).length
   ? Bun.argv.slice(2)
   : ["claude", "codex", "opencode", "pi", "gemini"];

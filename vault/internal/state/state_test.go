@@ -8,7 +8,7 @@ import (
 
 func TestStoreRoundTripAndAtomicWrite(t *testing.T) {
 	home := t.TempDir()
-	env := map[string]string{"CMUX_VAULT_STATE_DIR": filepath.Join(home, "state")}
+	env := map[string]string{"BMUX_VAULT_STATE_DIR": filepath.Join(home, "state")}
 	store, err := Load(home, env)
 	if err != nil {
 		t.Fatal(err)

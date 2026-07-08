@@ -1,6 +1,6 @@
-import CmuxCommandPalette
+import BmuxCommandPalette
 import Foundation
-import CmuxSettings
+import BmuxSettings
 
 extension MenuBarOnlySettings {
     static let legacyCommandPaletteUsageKey = "commandPalette.commandUsage.v1"
@@ -198,17 +198,17 @@ enum CommandPaletteSettingsToggleCommands {
                 defaultsKey: PaneFirstClickFocusSettings.enabledKey
             ),
             CommandPaletteSettingToggleDescriptor(
-                commandId: commandIdPrefix + "openSupportedFilesInCmux",
-                settingsKey: "app.openSupportedFilesInCmux",
+                commandId: commandIdPrefix + "openSupportedFilesInBmux",
+                settingsKey: "app.openSupportedFilesInBmux",
                 title: {
                     String(
-                        localized: "settings.app.openSupportedFilesInCmux",
-                        defaultValue: "Open Supported Files in cmux"
+                        localized: "settings.app.openSupportedFilesInBmux",
+                        defaultValue: "Open Supported Files in bmux"
                     )
                 },
                 sectionTitle: app,
                 keywords: [
-                    "app.openSupportedFilesInCmux",
+                    "app.openSupportedFilesInBmux",
                     "cmd",
                     "click",
                     "file",
@@ -223,8 +223,8 @@ enum CommandPaletteSettingsToggleCommands {
                     "editor",
                     "external",
                 ],
-                defaultValue: AppCatalogSection().openSupportedFilesInCmux.defaultValue,
-                defaultsKey: AppCatalogSection().openSupportedFilesInCmux.userDefaultsKey,
+                defaultValue: AppCatalogSection().openSupportedFilesInBmux.defaultValue,
+                defaultsKey: AppCatalogSection().openSupportedFilesInBmux.userDefaultsKey,
                 didSet: { _, _, notificationCenter in
                     FileRouteSettingsStore(
                         defaults: .standard,
@@ -233,18 +233,18 @@ enum CommandPaletteSettingsToggleCommands {
                 }
             ),
             CommandPaletteSettingToggleDescriptor(
-                commandId: commandIdPrefix + "openMarkdownInCmuxViewer",
-                settingsKey: "app.openMarkdownInCmuxViewer",
+                commandId: commandIdPrefix + "openMarkdownInBmuxViewer",
+                settingsKey: "app.openMarkdownInBmuxViewer",
                 title: {
                     String(
-                        localized: "settings.app.openMarkdownInCmuxViewer",
-                        defaultValue: "Open Markdown in cmux Viewer"
+                        localized: "settings.app.openMarkdownInBmuxViewer",
+                        defaultValue: "Open Markdown in bmux Viewer"
                     )
                 },
                 sectionTitle: app,
-                keywords: ["app.openMarkdownInCmuxViewer", "markdown", "md", "viewer", "preview", "file"],
-                defaultValue: AppCatalogSection().openMarkdownInCmuxViewer.defaultValue,
-                defaultsKey: AppCatalogSection().openMarkdownInCmuxViewer.userDefaultsKey,
+                keywords: ["app.openMarkdownInBmuxViewer", "markdown", "md", "viewer", "preview", "file"],
+                defaultValue: AppCatalogSection().openMarkdownInBmuxViewer.defaultValue,
+                defaultsKey: AppCatalogSection().openMarkdownInBmuxViewer.userDefaultsKey,
                 didSet: { _, _, notificationCenter in
                     FileRouteSettingsStore(
                         defaults: .standard,
@@ -637,33 +637,33 @@ enum CommandPaletteSettingsToggleCommands {
                 }
             ),
             CommandPaletteSettingToggleDescriptor(
-                commandId: commandIdPrefix + "openSidebarPullRequestLinksInCmuxBrowser",
-                settingsKey: "sidebar.openPullRequestLinksInCmuxBrowser",
+                commandId: commandIdPrefix + "openSidebarPullRequestLinksInBmuxBrowser",
+                settingsKey: "sidebar.openPullRequestLinksInBmuxBrowser",
                 title: {
                     String(
                         localized: "settings.app.openSidebarPRLinks",
-                        defaultValue: "Open Sidebar PR Links in cmux Browser"
+                        defaultValue: "Open Sidebar PR Links in bmux Browser"
                     )
                 },
                 sectionTitle: sidebar,
-                keywords: ["sidebar.openPullRequestLinksInCmuxBrowser", "sidebar", "pull", "request", "pr", "browser", "link"],
-                defaultValue: BrowserLinkOpenSettings.defaultOpenSidebarPullRequestLinksInCmuxBrowser,
-                defaultsKey: BrowserLinkOpenSettings.openSidebarPullRequestLinksInCmuxBrowserKey,
+                keywords: ["sidebar.openPullRequestLinksInBmuxBrowser", "sidebar", "pull", "request", "pr", "browser", "link"],
+                defaultValue: BrowserLinkOpenSettings.defaultOpenSidebarPullRequestLinksInBmuxBrowser,
+                defaultsKey: BrowserLinkOpenSettings.openSidebarPullRequestLinksInBmuxBrowserKey,
                 isAvailable: sidebarPullRequestLinksAvailable
             ),
             CommandPaletteSettingToggleDescriptor(
-                commandId: commandIdPrefix + "openSidebarPortLinksInCmuxBrowser",
-                settingsKey: "sidebar.openPortLinksInCmuxBrowser",
+                commandId: commandIdPrefix + "openSidebarPortLinksInBmuxBrowser",
+                settingsKey: "sidebar.openPortLinksInBmuxBrowser",
                 title: {
                     String(
                         localized: "settings.app.openSidebarPortLinks",
-                        defaultValue: "Open Sidebar Port Links in cmux Browser"
+                        defaultValue: "Open Sidebar Port Links in bmux Browser"
                     )
                 },
                 sectionTitle: sidebar,
-                keywords: ["sidebar.openPortLinksInCmuxBrowser", "sidebar", "port", "localhost", "browser", "link"],
-                defaultValue: BrowserLinkOpenSettings.defaultOpenSidebarPortLinksInCmuxBrowser,
-                defaultsKey: BrowserLinkOpenSettings.openSidebarPortLinksInCmuxBrowserKey,
+                keywords: ["sidebar.openPortLinksInBmuxBrowser", "sidebar", "port", "localhost", "browser", "link"],
+                defaultValue: BrowserLinkOpenSettings.defaultOpenSidebarPortLinksInBmuxBrowser,
+                defaultsKey: BrowserLinkOpenSettings.openSidebarPortLinksInBmuxBrowserKey,
                 isAvailable: sidebarPortLinksAvailable
             ),
             CommandPaletteSettingToggleDescriptor(
@@ -851,38 +851,38 @@ enum CommandPaletteSettingsToggleCommands {
                 defaultsKey: SettingCatalog().browser.askWhereToSaveDownloads.userDefaultsKey
             ),
             CommandPaletteSettingToggleDescriptor(
-                commandId: commandIdPrefix + "openTerminalLinksInCmuxBrowser",
-                settingsKey: "browser.openTerminalLinksInCmuxBrowser",
+                commandId: commandIdPrefix + "openTerminalLinksInBmuxBrowser",
+                settingsKey: "browser.openTerminalLinksInBmuxBrowser",
                 title: {
                     String(
                         localized: "settings.browser.openTerminalLinks",
-                        defaultValue: "Open Terminal Links in cmux Browser"
+                        defaultValue: "Open Terminal Links in bmux Browser"
                     )
                 },
                 sectionTitle: browser,
-                keywords: ["browser.openTerminalLinksInCmuxBrowser", "browser", "terminal", "links", "url", "click"],
-                defaultValue: BrowserLinkOpenSettings.defaultOpenTerminalLinksInCmuxBrowser,
-                defaultsKey: BrowserLinkOpenSettings.openTerminalLinksInCmuxBrowserKey
+                keywords: ["browser.openTerminalLinksInBmuxBrowser", "browser", "terminal", "links", "url", "click"],
+                defaultValue: BrowserLinkOpenSettings.defaultOpenTerminalLinksInBmuxBrowser,
+                defaultsKey: BrowserLinkOpenSettings.openTerminalLinksInBmuxBrowserKey
             ),
             CommandPaletteSettingToggleDescriptor(
-                commandId: commandIdPrefix + "interceptTerminalOpenCommandInCmuxBrowser",
-                settingsKey: "browser.interceptTerminalOpenCommandInCmuxBrowser",
+                commandId: commandIdPrefix + "interceptTerminalOpenCommandInBmuxBrowser",
+                settingsKey: "browser.interceptTerminalOpenCommandInBmuxBrowser",
                 title: {
                     String(localized: "settings.browser.interceptOpen", defaultValue: "Intercept open http(s) in Terminal")
                 },
                 sectionTitle: browser,
-                keywords: ["browser.interceptTerminalOpenCommandInCmuxBrowser", "browser", "terminal", "open", "http", "https", "intercept"],
+                keywords: ["browser.interceptTerminalOpenCommandInBmuxBrowser", "browser", "terminal", "open", "http", "https", "intercept"],
                 isOn: { defaults in
-                    if defaults.object(forKey: BrowserLinkOpenSettings.interceptTerminalOpenCommandInCmuxBrowserKey) != nil {
-                        return defaults.bool(forKey: BrowserLinkOpenSettings.interceptTerminalOpenCommandInCmuxBrowserKey)
+                    if defaults.object(forKey: BrowserLinkOpenSettings.interceptTerminalOpenCommandInBmuxBrowserKey) != nil {
+                        return defaults.bool(forKey: BrowserLinkOpenSettings.interceptTerminalOpenCommandInBmuxBrowserKey)
                     }
-                    if defaults.object(forKey: BrowserLinkOpenSettings.openTerminalLinksInCmuxBrowserKey) != nil {
-                        return defaults.bool(forKey: BrowserLinkOpenSettings.openTerminalLinksInCmuxBrowserKey)
+                    if defaults.object(forKey: BrowserLinkOpenSettings.openTerminalLinksInBmuxBrowserKey) != nil {
+                        return defaults.bool(forKey: BrowserLinkOpenSettings.openTerminalLinksInBmuxBrowserKey)
                     }
-                    return BrowserLinkOpenSettings.defaultInterceptTerminalOpenCommandInCmuxBrowser
+                    return BrowserLinkOpenSettings.defaultInterceptTerminalOpenCommandInBmuxBrowser
                 },
                 setOn: { newValue, defaults, _ in
-                    defaults.set(newValue, forKey: BrowserLinkOpenSettings.interceptTerminalOpenCommandInCmuxBrowserKey)
+                    defaults.set(newValue, forKey: BrowserLinkOpenSettings.interceptTerminalOpenCommandInBmuxBrowserKey)
                 }
             ),
             CommandPaletteSettingToggleDescriptor(

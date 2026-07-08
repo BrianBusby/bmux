@@ -9,20 +9,20 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cmux import cmux, cmuxError
+from bmux import bmux, bmuxError
 
 
-SOCKET_PATH = os.environ.get("CMUX_SOCKET_PATH", "").strip()
+SOCKET_PATH = os.environ.get("BMUX_SOCKET_PATH", "").strip()
 if not SOCKET_PATH:
-    raise cmuxError("CMUX_SOCKET_PATH is required")
+    raise bmuxError("BMUX_SOCKET_PATH is required")
 
 
 def _must(condition: bool, message: str) -> None:
     if not condition:
-        raise cmuxError(message)
+        raise bmuxError(message)
 
 
-def _create_workspace(c: cmux, layout: dict) -> str:
+def _create_workspace(c: bmux, layout: dict) -> str:
     payload = c._call(
         "workspace.create",
         {
@@ -35,12 +35,12 @@ def _create_workspace(c: cmux, layout: dict) -> str:
     return workspace_id
 
 
-def _pane_rows(c: cmux, workspace_id: str) -> list[dict]:
+def _pane_rows(c: bmux, workspace_id: str) -> list[dict]:
     payload = c._call("pane.list", {"workspace_id": workspace_id}) or {}
     return list(payload.get("panes") or [])
 
 
-def _surface_rows(c: cmux, workspace_id: str) -> list[dict]:
+def _surface_rows(c: bmux, workspace_id: str) -> list[dict]:
     payload = c._call("surface.list", {"workspace_id": workspace_id}) or {}
     return list(payload.get("surfaces") or [])
 
@@ -51,7 +51,7 @@ def _frame(row: dict) -> dict:
     return frame
 
 
-def _assert_live_layout(c: cmux, workspace_id: str) -> None:
+def _assert_live_layout(c: bmux, workspace_id: str) -> None:
     panes = _pane_rows(c, workspace_id)
     _must(len(panes) == 3, f"expected 3 panes, got {len(panes)}: {panes}")
     frames = [_frame(row) for row in panes]
@@ -92,7 +92,7 @@ def main() -> int:
         ],
     }
 
-    with cmux(SOCKET_PATH) as c:
+    with bmux(SOCKET_PATH) as c:
         baseline_workspace = c.current_workspace()
         try:
             source_workspace = _create_workspace(c, layout)
@@ -124,8 +124,8 @@ def main() -> int:
             _must(deleted.get("deleted") is True, f"layout.delete returned unexpected payload: {deleted}")
             try:
                 c._call("layout.open", {"name": layout_name})
-                raise cmuxError("layout.open should fail after delete")
-            except cmuxError as err:
+                raise bmuxError("layout.open should fail after delete")
+            except bmuxError as err:
                 _must("not_found" in str(err), f"layout.open after delete should be not_found, got: {err}")
 
             if baseline_workspace:

@@ -1,12 +1,12 @@
 import AppKit
 import Foundation
-import CmuxTerminal
-import CmuxTerminalCore
+import BmuxTerminal
+import BmuxTerminalCore
 import GhosttyKit
-import CmuxSettings
-import struct CmuxSettings.AgentIntegrationSettingsStore
+import BmuxSettings
+import struct BmuxSettings.AgentIntegrationSettingsStore
 
-// The app-side conformances and bridges injected into the CmuxTerminal
+// The app-side conformances and bridges injected into the BmuxTerminal
 // package through `GhosttyApp.terminalSurfaceRuntimeDependencies`. Each type
 // here carries behavior verbatim from the legacy god-file reach-up it
 // replaces; this file is intended composition-root residue.
@@ -94,7 +94,7 @@ final class TerminalMobileByteTeeBridge: TerminalByteTeeBinding {
         let teeContext = Unmanaged.passRetained(MobileTerminalByteTeeUserdata(surfaceID: surfaceID))
         ghostty_surface_set_pty_tee_cb(
             surface,
-            cmuxMobileTerminalByteTeeCallback,
+            bmuxMobileTerminalByteTeeCallback,
             teeContext.toOpaque()
         )
         return Lease(context: teeContext)
@@ -171,7 +171,7 @@ extension TerminalSurface {
         id: UUID = UUID(),
         tabId: UUID,
         context: ghostty_surface_context_e,
-        configTemplate: CmuxSurfaceConfigTemplate?,
+        configTemplate: BmuxSurfaceConfigTemplate?,
         workingDirectory: String? = nil,
         portOrdinal: Int = 0,
         initialCommand: String? = nil,

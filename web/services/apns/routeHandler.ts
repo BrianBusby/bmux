@@ -10,8 +10,8 @@ export async function withApnsApiRoute(
     request,
     route,
     {
-      "cmux.subsystem": "apns",
-      "cmux.apns.operation": operation,
+      "bmux.subsystem": "apns",
+      "bmux.apns.operation": operation,
     } satisfies MaybeAttributes,
     async (span) => {
       try {

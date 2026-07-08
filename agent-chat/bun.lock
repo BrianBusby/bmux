@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "cmux-agent-chat",
+      "name": "bmux-agent-chat",
       "dependencies": {
         "@base-ui-components/react": "^1.0.0-rc.0",
         "cmdk": "^1.1.1",

@@ -1,4 +1,4 @@
-const port = Number(process.env.CMUX_AGENT_UI_PORT ?? 7739);
+const port = Number(process.env.BMUX_AGENT_UI_PORT ?? 7739);
 const base = `http://127.0.0.1:${port}`;
 
 const page = await fetch(`${base}/gallery`);

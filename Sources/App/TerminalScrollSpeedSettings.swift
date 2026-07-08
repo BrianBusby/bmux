@@ -1,4 +1,4 @@
-import CmuxSettings
+import BmuxSettings
 import Foundation
 
 enum TerminalScrollSpeedSettings {

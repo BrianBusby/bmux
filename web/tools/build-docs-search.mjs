@@ -21,7 +21,7 @@ const mergedMessagesCache = new Map();
 const searchAliases = {
   apiReference: [
     "CLI reference",
-    "cmux CLI",
+    "bmux CLI",
     "command line",
     "API reference",
     "socket API",
@@ -39,8 +39,8 @@ const searchAliases = {
     "console logs",
   ],
   claudeCodeTeams: ["Claude teams", "teammate mode", "tmux shim"],
-  configuration: ["settings.json", "cmux.json", "Ghostty config"],
-  customCommands: ["command palette", "project commands", "cmux.json"],
+  configuration: ["settings.json", "bmux.json", "Ghostty config"],
+  customCommands: ["command palette", "project commands", "bmux.json"],
   dock: ["dock", "agent dock", "workspace dock"],
   notifications: ["OSC 777", "OSC 99", "hooks", "notification rings"],
   ohMyClaudeCode: ["omc", "oh my claude", "oh-my-claudecode"],

@@ -27,7 +27,7 @@ export function makeWebSocketLease(
   ttlSeconds: number,
   requestedSessionId?: string,
 ) {
-  const token = `cmux-${provider}-${label}-${randomBytes(32).toString("hex")}`;
+  const token = `bmux-${provider}-${label}-${randomBytes(32).toString("hex")}`;
   const trimmedSessionId = requestedSessionId?.trim();
   const sessionId = trimmedSessionId || randomBytes(16).toString("hex");
   const expiresAtUnix = Math.floor(Date.now() / 1000) + ttlSeconds;
@@ -46,7 +46,7 @@ export function makeWebSocketLease(
 }
 
 export function makeWebSocketAttachmentId(provider: string): string {
-  return `cmux-${provider}-${randomBytes(16).toString("hex")}`;
+  return `bmux-${provider}-${randomBytes(16).toString("hex")}`;
 }
 
 export type WebSocketLease = ReturnType<typeof makeWebSocketLease>;

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — cmux",
-  description: "Terms of service for cmux",
-  alternates: { canonical: "https://cmux.com/terms-of-service" },
+  title: "Terms of Service — bmux",
+  description: "Terms of service for bmux",
+  alternates: { canonical: "https://bmux.com/terms-of-service" },
 };
 
 export default function TermsOfServicePage() {
@@ -14,8 +14,8 @@ export default function TermsOfServicePage() {
 
       <p>
         The website located at{" "}
-        <a href="https://cmux.com">cmux.com</a> (the
-        &ldquo;Site&rdquo;) and the cmux desktop application (the
+        <a href="https://bmux.com">bmux.com</a> (the
+        &ldquo;Site&rdquo;) and the bmux desktop application (the
         &ldquo;Application&rdquo;) are copyrighted works belonging to Manaflow
         (&ldquo;Company&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;, and
         &ldquo;we&rdquo;). These Terms of Use (these &ldquo;Terms&rdquo;) set

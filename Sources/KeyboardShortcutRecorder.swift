@@ -1,4 +1,4 @@
-import CmuxFoundation
+import BmuxFoundation
 import AppKit
 import SwiftUI
 
@@ -31,7 +31,7 @@ struct KeyboardShortcutRecorder: View {
                     Text(label)
                     if let subtitle {
                         Text(subtitle)
-                            .cmuxFont(.caption)
+                            .bmuxFont(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -86,24 +86,24 @@ struct KeyboardShortcutRecorder: View {
             if let validationMessage {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .cmuxFont(.caption)
+                        .bmuxFont(.caption)
                         .foregroundStyle(.red)
 
                     Text(validationMessage)
-                        .cmuxFont(.caption)
+                        .bmuxFont(.caption)
                         .foregroundStyle(.red)
                         .fixedSize(horizontal: false, vertical: true)
 
                     if let validationButtonTitle, let onValidationButtonPressed {
                         Button(validationButtonTitle, action: onValidationButtonPressed)
                             .buttonStyle(.link)
-                            .cmuxFont(.caption)
+                            .bmuxFont(.caption)
                     }
 
                     if let undoButtonTitle, let onUndoButtonPressed {
                         Button(undoButtonTitle, action: onUndoButtonPressed)
                             .buttonStyle(.link)
-                            .cmuxFont(.caption)
+                            .bmuxFont(.caption)
                     }
                 }
                 .padding(.horizontal, 8)

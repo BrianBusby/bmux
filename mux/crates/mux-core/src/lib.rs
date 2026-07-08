@@ -4,7 +4,7 @@
 //! (a PTY child whose output feeds a libghostty-vt terminal). A workspace
 //! holds screens; each screen is a binary split tree of panes; each pane
 //! holds one or more tabs, and each tab is a [`Surface`]. Frontends (the
-//! bundled TUI, or the cmux app over the control socket) subscribe to
+//! bundled TUI, or the bmux app over the control socket) subscribe to
 //! [`MuxEvent`]s and read surface state; they never own terminal state
 //! themselves, which is what makes the backend attachable.
 

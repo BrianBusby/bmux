@@ -1,19 +1,19 @@
 # Python Binding Style
 
-Generate a zero-dependency synchronous Python package under `mux/bindings/python/cmux/`.
+Generate a zero-dependency synchronous Python package under `mux/bindings/python/bmux/`.
 
 Requirements:
 
 - Use only the Python standard library.
-- Provide `CmuxClient` as the main entry point.
+- Provide `BmuxClient` as the main entry point.
 - Export `EventStream` and `AttachStream`.
 - Use dataclasses for typed results, tree objects, and stream events.
 - Method names are snake_case and map 1:1 to implemented command names.
 - Preserve server error strings in `CommandError`.
 - Distinguish command errors, connection errors, protocol errors, and timeouts.
-- Resolve the default socket as `$TMPDIR/cmux-mux-<uid>/<session>.sock`, with explicit socket path override.
+- Resolve the default socket as `$TMPDIR/bmux-mux-<uid>/<session>.sock`, with explicit socket path override.
 - Use separate sockets for command requests, subscribe streams, and attach streams.
-- Provide `CmuxClient.request(cmd, **params) -> dict` as the raw JSON response entry point.
+- Provide `BmuxClient.request(cmd, **params) -> dict` as the raw JSON response entry point.
 - Implement `subscribe()` as an iterator over event objects.
 - Implement `attach_surface(surface)` as an iterator over attach event objects.
 - Support protocol v5 attach streams and reject protocol v6 attach streams unless `resized` replay handling is implemented.
@@ -22,8 +22,8 @@ Requirements:
 
 Public API shape:
 
-- `CmuxClient.identify() -> IdentifyResult`
-- `CmuxClient.list_workspaces() -> Tree`
+- `BmuxClient.identify() -> IdentifyResult`
+- `BmuxClient.list_workspaces() -> Tree`
 - Mutating commands returning `{}` should return `EmptyResult`.
 - Create commands returning `{surface}` should return `SurfaceResult`.
 - `read_screen()` and `vt_state()` return typed dataclasses.
@@ -32,5 +32,5 @@ Public API shape:
 The package must be importable with:
 
 ```python
-from cmux import CmuxClient
+from bmux import BmuxClient
 ```

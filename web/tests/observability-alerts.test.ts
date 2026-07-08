@@ -36,7 +36,7 @@ describe("observability alerts", () => {
       body: "Alert body",
       severity: "critical",
     }, {
-      env: { CMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/services/test" },
+      env: { BMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/services/test" },
       fetch: fetchMock,
     });
 
@@ -49,18 +49,18 @@ describe("observability alerts", () => {
     try {
       delete process.env.CRON_SECRET;
       const notConfigured = await vmAlertsCronGET(
-        new Request("https://cmux.test/api/cron/vm-alerts"),
+        new Request("https://bmux.test/api/cron/vm-alerts"),
       );
       expect(notConfigured.status).toBe(503);
 
       process.env.CRON_SECRET = "cron-secret";
       const missingBearer = await vmAlertsCronGET(
-        new Request("https://cmux.test/api/cron/vm-alerts"),
+        new Request("https://bmux.test/api/cron/vm-alerts"),
       );
       expect(missingBearer.status).toBe(401);
 
       const unauthorized = await vmAlertsCronGET(
-        new Request("https://cmux.test/api/cron/vm-alerts", {
+        new Request("https://bmux.test/api/cron/vm-alerts", {
           headers: { authorization: "Bearer wrong-secret" },
         }),
       );

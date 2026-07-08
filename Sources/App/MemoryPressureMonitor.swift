@@ -8,11 +8,11 @@ final class MemoryPressureMonitor {
     static let shared = MemoryPressureMonitor()
 
     private static let logger = Logger(
-        subsystem: "com.cmuxterm.app",
+        subsystem: "com.bmuxterm.app",
         category: "MemoryPressure"
     )
     private static let signposter = OSSignposter(
-        subsystem: "com.cmuxterm.app",
+        subsystem: "com.bmuxterm.app",
         category: "MemoryPressure"
     )
 
@@ -32,7 +32,7 @@ final class MemoryPressureMonitor {
     @ObservationIgnored
     private let systemPressureHoldDuration: TimeInterval
     @ObservationIgnored
-    private let queue = DispatchQueue(label: "com.cmux.memory-pressure", qos: .utility)
+    private let queue = DispatchQueue(label: "com.bmux.memory-pressure", qos: .utility)
     @ObservationIgnored
     private var memoryPressureSource: DispatchSourceMemoryPressure?
     @ObservationIgnored

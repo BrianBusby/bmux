@@ -1,6 +1,6 @@
-import CmuxControlSocket
+import BmuxControlSocket
 import Foundation
-import CmuxSidebar
+import BmuxSidebar
 
 /// The live-app half of the v1 sidebar metadata commands (`set_status` /
 /// `report_meta` / `report_meta_block` / agent PID + lifecycle / `log` /
@@ -116,7 +116,7 @@ extension TerminalController: ControlSidebarContext {
         if AgentHibernationLifecycleStatusKeys.isAllowed(key) {
             return true
         }
-        guard CmuxVaultAgentRegistration.isValidID(key) else {
+        guard BmuxVaultAgentRegistration.isValidID(key) else {
             return false
         }
         let snapshot: (tabResolved: Bool, workingDirectory: String?) = v2MainSync {
@@ -128,7 +128,7 @@ extension TerminalController: ControlSidebarContext {
         guard snapshot.tabResolved else {
             return false
         }
-        let registry = CmuxVaultAgentRegistry.load(workingDirectory: snapshot.workingDirectory)
+        let registry = BmuxVaultAgentRegistry.load(workingDirectory: snapshot.workingDirectory)
         return registry.registration(id: key) != nil
     }
 

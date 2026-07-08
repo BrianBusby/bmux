@@ -1,5 +1,5 @@
 import AppKit
-import CmuxTerminal
+import BmuxTerminal
 import GhosttyKit
 
 final class GhosttyPassthroughVisualEffectView: NSVisualEffectView {

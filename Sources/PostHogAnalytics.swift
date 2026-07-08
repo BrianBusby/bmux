@@ -10,11 +10,11 @@ final class PostHogAnalytics: @unchecked Sendable {
     // The PostHog project API key is intentionally embedded in the app (it's a public key).
     private let apiKey = "phc_opOVu7oFzR9wD3I6ZahFGOV2h3mqGpl5EHyQvmHciDP"
 
-    // PostHog Cloud US default (matches other cmux properties).
+    // PostHog Cloud US default (matches other bmux properties).
     private let host = "https://us.i.posthog.com"
 
-    private let dailyActiveEvent = "cmux_daily_active"
-    private let hourlyActiveEvent = "cmux_hourly_active"
+    private let dailyActiveEvent = "bmux_daily_active"
+    private let hourlyActiveEvent = "bmux_hourly_active"
 
     private let lastActiveDayUTCKey = "posthog.lastActiveDayUTC"
     private let lastActiveHourUTCKey = "posthog.lastActiveHourUTC"
@@ -32,7 +32,7 @@ final class PostHogAnalytics: @unchecked Sendable {
     private var activeCheckTimer: Timer?
 
     private init(
-        workQueue: DispatchQueue = DispatchQueue(label: "com.cmux.posthog.analytics", qos: .utility),
+        workQueue: DispatchQueue = DispatchQueue(label: "com.bmux.posthog.analytics", qos: .utility),
         didStart: Bool = false,
         userDefaults: UserDefaults = .standard,
         now: @escaping @Sendable () -> Date = { Date() },
@@ -76,7 +76,7 @@ final class PostHogAnalytics: @unchecked Sendable {
         guard TelemetrySettings.enabledForCurrentLaunch else { return false }
 #if DEBUG
         // Avoid polluting production analytics while iterating locally.
-        return ProcessInfo.processInfo.environment["CMUX_POSTHOG_ENABLE"] == "1"
+        return ProcessInfo.processInfo.environment["BMUX_POSTHOG_ENABLE"] == "1"
 #else
         return !apiKey.isEmpty && apiKey != "REPLACE_WITH_POSTHOG_PUBLIC_KEY"
 #endif
@@ -121,7 +121,7 @@ final class PostHogAnalytics: @unchecked Sendable {
         config.captureApplicationLifecycleEvents = false
         config.captureScreenViews = false
 #if DEBUG
-        config.debug = ProcessInfo.processInfo.environment["CMUX_POSTHOG_DEBUG"] == "1"
+        config.debug = ProcessInfo.processInfo.environment["BMUX_POSTHOG_DEBUG"] == "1"
 #endif
 
         PostHogSDK.shared.setup(config)
@@ -239,7 +239,7 @@ final class PostHogAnalytics: @unchecked Sendable {
     }
 
     nonisolated static func superProperties(infoDictionary: [String: Any]) -> [String: Any] {
-        var properties: [String: Any] = ["platform": "cmuxterm"]
+        var properties: [String: Any] = ["platform": "bmuxterm"]
         properties.merge(versionProperties(infoDictionary: infoDictionary)) { _, new in new }
         return properties
     }
@@ -272,7 +272,7 @@ final class PostHogAnalytics: @unchecked Sendable {
 
     nonisolated static func shouldFlushAfterCapture(event: String) -> Bool {
         switch event {
-        case "cmux_daily_active", "cmux_hourly_active":
+        case "bmux_daily_active", "bmux_hourly_active":
             return true
         default:
             return false

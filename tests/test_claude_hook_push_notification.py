@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Regression: Claude PushNotification tool calls must reach cmux notifications.
+"""Regression: Claude PushNotification tool calls must reach bmux notifications.
 
 Claude Code's PushNotification tool delivers via a raw OSC desktop
-notification. cmux suppresses raw OSC notifications for surfaces running a
+notification. bmux suppresses raw OSC notifications for surfaces running a
 hook-integrated agent, and the tool never fires the Notification hook, so the
 PostToolUse `hooks claude push-notification` bridge is the only path into the
-cmux notification store. The bridge mirrors the tool's own delivery decision
+bmux notification store. The bridge mirrors the tool's own delivery decision
 (tool_response.localSent) and fails open when the structured response is
 missing.
 """
@@ -24,27 +24,27 @@ import time
 import uuid
 
 
-def resolve_cmux_cli() -> str:
-    explicit = os.environ.get("CMUX_CLI_BIN") or os.environ.get("CMUX_CLI")
+def resolve_bmux_cli() -> str:
+    explicit = os.environ.get("BMUX_CLI_BIN") or os.environ.get("BMUX_CLI")
     if explicit:
         if os.path.exists(explicit) and os.access(explicit, os.X_OK):
             return explicit
-        raise RuntimeError(f"Configured cmux CLI is not executable: {explicit}")
+        raise RuntimeError(f"Configured bmux CLI is not executable: {explicit}")
 
     # No /tmp globbing: /tmp is world-writable, so auto-discovering and
-    # executing binaries from it is unsafe. CI always passes CMUX_CLI_BIN.
+    # executing binaries from it is unsafe. CI always passes BMUX_CLI_BIN.
     candidates: list[str] = []
-    candidates.extend(glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/*/Build/Products/Debug/cmux")))
+    candidates.extend(glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/*/Build/Products/Debug/bmux")))
     candidates = [path for path in candidates if os.path.exists(path) and os.access(path, os.X_OK)]
     if candidates:
         candidates.sort(key=os.path.getmtime, reverse=True)
         return candidates[0]
 
-    in_path = shutil.which("cmux")
+    in_path = shutil.which("bmux")
     if in_path:
         return in_path
 
-    raise RuntimeError("Unable to find cmux CLI binary. Set CMUX_CLI_BIN.")
+    raise RuntimeError("Unable to find bmux CLI binary. Set BMUX_CLI_BIN.")
 
 
 class CapturingSocketServer:
@@ -55,8 +55,8 @@ class CapturingSocketServer:
         self.ready = threading.Event()
         self.stop = threading.Event()
         self.error: Exception | None = None
-        self.root = tempfile.TemporaryDirectory(prefix="cmux-claude-push-")
-        self.socket_path = os.path.join(self.root.name, "cmux.sock")
+        self.root = tempfile.TemporaryDirectory(prefix="bmux-claude-push-")
+        self.socket_path = os.path.join(self.root.name, "bmux.sock")
         self.thread = threading.Thread(target=self._run, daemon=True)
         self.server: socket.socket | None = None
 
@@ -159,12 +159,12 @@ def run_push_notification_hook(
     surface_id = str(uuid.uuid4()).upper()
     with CapturingSocketServer(workspace_id=workspace_id, surface_id=surface_id) as server:
         env = os.environ.copy()
-        env["CMUX_SOCKET_PATH"] = server.socket_path
-        env["CMUX_WORKSPACE_ID"] = workspace_id
-        env["CMUX_SURFACE_ID"] = surface_id
-        env["CMUX_CLAUDE_HOOK_STATE_PATH"] = os.path.join(server.root.name, "state.json")
-        env["CMUX_CLI_SENTRY_DISABLED"] = "1"
-        env["CMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
+        env["BMUX_SOCKET_PATH"] = server.socket_path
+        env["BMUX_WORKSPACE_ID"] = workspace_id
+        env["BMUX_SURFACE_ID"] = surface_id
+        env["BMUX_CLAUDE_HOOK_STATE_PATH"] = os.path.join(server.root.name, "state.json")
+        env["BMUX_CLI_SENTRY_DISABLED"] = "1"
+        env["BMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
 
         proc = subprocess.run(
             [cli_path, "--socket", server.socket_path, "hooks", "claude", "push-notification"],
@@ -183,7 +183,7 @@ def push_payload(message: str, tool_response: object) -> dict:
     payload = {
         "session_id": f"sess-{uuid.uuid4().hex}",
         "hook_event_name": "PostToolUse",
-        "cwd": "/tmp/cmux-test-workspace",
+        "cwd": "/tmp/bmux-test-workspace",
         "tool_name": "PushNotification",
         "tool_input": {"message": message, "status": "proactive"},
     }
@@ -194,12 +194,12 @@ def push_payload(message: str, tool_response: object) -> dict:
 
 def main() -> int:
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_bmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1
 
-    # 1. localSent true -> bridged into a cmux notification, no lifecycle flip.
+    # 1. localSent true -> bridged into a bmux notification, no lifecycle flip.
     message = "build failed: 2 auth tests"
     proc, commands, workspace_id, surface_id = run_push_notification_hook(
         cli_path,
@@ -225,7 +225,7 @@ def main() -> int:
         print(f"commands={commands!r}")
         return 1
 
-    # 2. Tool skipped delivery (user present) -> no cmux notification.
+    # 2. Tool skipped delivery (user present) -> no bmux notification.
     proc, commands, _, _ = run_push_notification_hook(
         cli_path,
         push_payload(
@@ -238,7 +238,7 @@ def main() -> int:
         print(f"stdout={proc.stdout!r} stderr={proc.stderr!r} commands={commands!r}")
         return 1
     if any(line.startswith("notify_target_async ") for line in commands):
-        print("FAIL: skipped PushNotification must not create a cmux notification")
+        print("FAIL: skipped PushNotification must not create a bmux notification")
         print(f"commands={commands!r}")
         return 1
 
@@ -279,7 +279,7 @@ def main() -> int:
 
     # 5. localSent=false with NO disabledReason (e.g. mobile-only delivery, or
     #    a client whose local terminal channel is suppressed) -> bridge. The
-    #    cmux notification is the only Mac-visible surface in that state, so
+    #    bmux notification is the only Mac-visible surface in that state, so
     #    the gate must not key on localSent; only explicit user-facing skip
     #    reasons (user_present, config_off) suppress the bridge.
     proc, commands, workspace_id, surface_id = run_push_notification_hook(
@@ -299,7 +299,7 @@ def main() -> int:
         print(f"expected={expected!r} commands={commands!r}")
         return 1
 
-    # 6. config_off is a deliberate user setting -> no cmux notification.
+    # 6. config_off is a deliberate user setting -> no bmux notification.
     proc, commands, _, _ = run_push_notification_hook(
         cli_path,
         push_payload(
@@ -312,7 +312,7 @@ def main() -> int:
         print(f"stdout={proc.stdout!r} stderr={proc.stderr!r} commands={commands!r}")
         return 1
     if any(line.startswith("notify_target_async ") for line in commands):
-        print("FAIL: config_off PushNotification must not create a cmux notification")
+        print("FAIL: config_off PushNotification must not create a bmux notification")
         print(f"commands={commands!r}")
         return 1
 
@@ -336,7 +336,7 @@ def main() -> int:
         print(f"expected len={len(expected)} got={[len(a) for a in actual]}")
         return 1
 
-    print("PASS: PushNotification tool calls bridge into cmux notifications")
+    print("PASS: PushNotification tool calls bridge into bmux notifications")
     return 0
 
 

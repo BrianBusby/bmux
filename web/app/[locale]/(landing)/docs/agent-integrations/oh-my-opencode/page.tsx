@@ -26,7 +26,7 @@ export default function OhMyOpenCodePage() {
       <p>{t("intro")}</p>
 
       <video
-        src="/blog/cmux-omo-demo.mp4"
+        src="/blog/bmux-omo-demo.mp4"
         width={1824}
         height={1080}
         autoPlay
@@ -37,9 +37,9 @@ export default function OhMyOpenCodePage() {
       />
 
       <DocsHeading level={2} id="usage">{t("usage")}</DocsHeading>
-      <CodeBlock lang="bash">{`cmux omo
-cmux omo --continue
-cmux omo --model claude-sonnet-4-6`}</CodeBlock>
+      <CodeBlock lang="bash">{`bmux omo
+bmux omo --continue
+bmux omo --model claude-sonnet-4-6`}</CodeBlock>
       <p>{t("usageDesc")}</p>
 
       <DocsHeading level={2} id="what-you-get">{t("whatYouGet")}</DocsHeading>
@@ -81,9 +81,9 @@ cmux omo --model claude-sonnet-4-6`}</CodeBlock>
           </tr>
         </thead>
         <tbody>
-          <tr><td><code>~/.cmuxterm/omo-bin/</code></td><td>{t("dirShim")}</td></tr>
-          <tr><td><code>~/.cmuxterm/omo-config/</code></td><td>{t("dirShadow")}</td></tr>
-          <tr><td><code>~/.cmuxterm/tmux-compat-store.json</code></td><td>{t("dirStore")}</td></tr>
+          <tr><td><code>~/.bmuxterm/omo-bin/</code></td><td>{t("dirShim")}</td></tr>
+          <tr><td><code>~/.bmuxterm/omo-config/</code></td><td>{t("dirShadow")}</td></tr>
+          <tr><td><code>~/.bmuxterm/tmux-compat-store.json</code></td><td>{t("dirStore")}</td></tr>
         </tbody>
       </table>
 
@@ -108,7 +108,7 @@ cmux omo --model claude-sonnet-4-6`}</CodeBlock>
           <tr><td><code>TMUX</code></td><td>{t("envTmux")}</td></tr>
           <tr><td><code>TMUX_PANE</code></td><td>{t("envTmuxPane")}</td></tr>
           <tr><td><code>OPENCODE_CONFIG_DIR</code></td><td>{t("envConfigDir")}</td></tr>
-          <tr><td><code>CMUX_SOCKET_PATH</code></td><td>{t("envSocket")}</td></tr>
+          <tr><td><code>BMUX_SOCKET_PATH</code></td><td>{t("envSocket")}</td></tr>
         </tbody>
       </table>
     </>

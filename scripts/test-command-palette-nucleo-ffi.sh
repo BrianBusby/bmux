@@ -3,28 +3,28 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CRATE_DIR="${ROOT}/Native/CommandPaletteNucleoFFI"
-DERIVED_DATA="${CMUX_NUCLEO_FFI_DERIVED_DATA:-/tmp/cmux-nucleo-ffi-unit}"
-LOG_PATH="${CMUX_NUCLEO_FFI_LOG:-/tmp/cmux-nucleo-ffi-tests.log}"
+DERIVED_DATA="${BMUX_NUCLEO_FFI_DERIVED_DATA:-/tmp/bmux-nucleo-ffi-unit}"
+LOG_PATH="${BMUX_NUCLEO_FFI_LOG:-/tmp/bmux-nucleo-ffi-tests.log}"
 
 cargo build --manifest-path "${CRATE_DIR}/Cargo.toml" --release
 
-LIB_PATH="${CRATE_DIR}/target/release/libcmux_command_palette_nucleo_ffi.dylib"
+LIB_PATH="${CRATE_DIR}/target/release/libbmux_command_palette_nucleo_ffi.dylib"
 if [ ! -f "${LIB_PATH}" ]; then
   echo "error: expected nucleo FFI library at ${LIB_PATH}" >&2
   exit 1
 fi
 
-if [ "${CMUX_NUCLEO_FFI_CLEAN:-0}" = "1" ]; then
+if [ "${BMUX_NUCLEO_FFI_CLEAN:-0}" = "1" ]; then
   rm -rf "${DERIVED_DATA}"
 fi
-NSUnbufferedIO=YES CMUX_NUCLEO_FFI_LIB="${LIB_PATH}" \
+NSUnbufferedIO=YES BMUX_NUCLEO_FFI_LIB="${LIB_PATH}" \
   xcodebuild \
-    -project "${ROOT}/cmux.xcodeproj" \
-    -scheme cmux-unit \
+    -project "${ROOT}/bmux.xcodeproj" \
+    -scheme bmux-unit \
     -configuration Debug \
     -destination 'platform=macOS' \
     -derivedDataPath "${DERIVED_DATA}" \
-    -only-testing:cmuxTests/CommandPaletteNucleoFFITests \
+    -only-testing:bmuxTests/CommandPaletteNucleoFFITests \
     test | tee "${LOG_PATH}"
 
 if ! grep 'BENCH cmd+p nucleo-ffi' "${LOG_PATH}"; then

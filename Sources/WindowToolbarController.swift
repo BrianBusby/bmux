@@ -1,12 +1,12 @@
 import AppKit
 import Combine
-import CmuxFoundation
+import BmuxFoundation
 import SwiftUI
 
 @MainActor
 final class WindowToolbarController: NSObject, NSToolbarDelegate {
-    private let commandItemIdentifier = NSToolbarItem.Identifier("cmux.focusedCommand")
-    private let layoutModeItemIdentifier = NSToolbarItem.Identifier("cmux.layoutMode")
+    private let commandItemIdentifier = NSToolbarItem.Identifier("bmux.focusedCommand")
+    private let layoutModeItemIdentifier = NSToolbarItem.Identifier("bmux.layoutMode")
 
     private weak var tabManager: TabManager?
 
@@ -173,7 +173,7 @@ final class WindowToolbarController: NSObject, NSToolbarDelegate {
     private func attach(to window: NSWindow) {
         guard window.toolbar == nil else { return }
         guard !WorkspacePresentationModeSettings.isMinimal() else { return }
-        let toolbar = NSToolbar(identifier: NSToolbar.Identifier("cmux.toolbar"))
+        let toolbar = NSToolbar(identifier: NSToolbar.Identifier("bmux.toolbar"))
         toolbar.delegate = self
         toolbar.displayMode = .iconOnly
         toolbar.sizeMode = .small

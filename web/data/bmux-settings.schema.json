@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/manaflow-ai/bmux/main/web/data/bmux-settings.schema.json",
+  "$ref": "https://raw.githubusercontent.com/manaflow-ai/bmux/main/web/data/bmux.schema.json",
+  "description": "Compatibility schema URL for existing configs. Use bmux.schema.json for new bmux.json files."
+}

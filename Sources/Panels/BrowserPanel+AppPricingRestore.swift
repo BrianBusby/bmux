@@ -11,10 +11,10 @@ extension BrowserPanel {
             components.fragment = restoredComponents.fragment
         }
         var queryItems = components.queryItems ?? []
-        queryItems.removeAll { $0.name == "cmux_app" }
-        queryItems.removeAll { $0.name == "cmux_scheme" }
-        queryItems.append(URLQueryItem(name: "cmux_app", value: "1"))
-        queryItems.append(URLQueryItem(name: "cmux_scheme", value: AuthEnvironment.callbackScheme))
+        queryItems.removeAll { $0.name == "bmux_app" }
+        queryItems.removeAll { $0.name == "bmux_scheme" }
+        queryItems.append(URLQueryItem(name: "bmux_app", value: "1"))
+        queryItems.append(URLQueryItem(name: "bmux_scheme", value: AuthEnvironment.callbackScheme))
         components.queryItems = queryItems
         return components.url ?? AuthEnvironment.appPricingURL
     }

@@ -69,7 +69,7 @@ export default function PasskeyAuthPage() {
 
       <p className="mt-6">{t("p1")}</p>
       <p>{t("p2")}</p>
-      <CodeBlock lang="bash">{`cmux browser import`}</CodeBlock>
+      <CodeBlock lang="bash">{`bmux browser import`}</CodeBlock>
       <p>{t("p3")}</p>
     </>
   );

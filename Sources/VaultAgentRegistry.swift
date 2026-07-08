@@ -1,25 +1,25 @@
 import Foundation
 import OSLog
 
-struct CmuxVaultConfigDefinition: Codable, Hashable, Sendable {
-    var agents: [CmuxVaultAgentRegistration]
+struct BmuxVaultConfigDefinition: Codable, Hashable, Sendable {
+    var agents: [BmuxVaultAgentRegistration]
 
-    init(agents: [CmuxVaultAgentRegistration] = []) {
+    init(agents: [BmuxVaultAgentRegistration] = []) {
         self.agents = agents
     }
 }
 
-struct CmuxVaultAgentRegistration: Codable, Hashable, Sendable {
+struct BmuxVaultAgentRegistration: Codable, Hashable, Sendable {
     var id: String
     var name: String
     var iconAssetName: String?
-    var detect: CmuxVaultAgentDetectRule
-    var sessionIdSource: CmuxVaultAgentSessionIDSource
+    var detect: BmuxVaultAgentDetectRule
+    var sessionIdSource: BmuxVaultAgentSessionIDSource
     var resumeCommand: String
     /// Optional template for forking (branching) a session into a new copy.
     /// Omit it for agents that do not have a fork verb.
     var forkCommand: String?
-    var cwd: CmuxVaultAgentCWDPolicy
+    var cwd: BmuxVaultAgentCWDPolicy
     var sessionDirectory: String?
 
     private enum CodingKeys: String, CodingKey {
@@ -30,11 +30,11 @@ struct CmuxVaultAgentRegistration: Codable, Hashable, Sendable {
         id: String,
         name: String,
         iconAssetName: String? = nil,
-        detect: CmuxVaultAgentDetectRule,
-        sessionIdSource: CmuxVaultAgentSessionIDSource,
+        detect: BmuxVaultAgentDetectRule,
+        sessionIdSource: BmuxVaultAgentSessionIDSource,
         resumeCommand: String,
         forkCommand: String? = nil,
-        cwd: CmuxVaultAgentCWDPolicy = .preserve,
+        cwd: BmuxVaultAgentCWDPolicy = .preserve,
         sessionDirectory: String? = nil
     ) {
         self.id = id
@@ -83,8 +83,8 @@ struct CmuxVaultAgentRegistration: Codable, Hashable, Sendable {
         self.id = id
         self.name = name
         self.iconAssetName = Self.normalizedOptional(try container.decodeIfPresent(String.self, forKey: .iconAssetName))
-        self.detect = try container.decodeIfPresent(CmuxVaultAgentDetectRule.self, forKey: .detect) ?? .init()
-        self.sessionIdSource = try container.decode(CmuxVaultAgentSessionIDSource.self, forKey: .sessionIdSource)
+        self.detect = try container.decodeIfPresent(BmuxVaultAgentDetectRule.self, forKey: .detect) ?? .init()
+        self.sessionIdSource = try container.decode(BmuxVaultAgentSessionIDSource.self, forKey: .sessionIdSource)
         self.resumeCommand = resumeCommand
         if let forkCommand = try container.decodeIfPresent(String.self, forKey: .forkCommand)?
             .trimmingCharacters(in: .whitespacesAndNewlines), !forkCommand.isEmpty {
@@ -99,7 +99,7 @@ struct CmuxVaultAgentRegistration: Codable, Hashable, Sendable {
         } else {
             self.forkCommand = nil
         }
-        self.cwd = try container.decodeIfPresent(CmuxVaultAgentCWDPolicy.self, forKey: .cwd) ?? .preserve
+        self.cwd = try container.decodeIfPresent(BmuxVaultAgentCWDPolicy.self, forKey: .cwd) ?? .preserve
         let directory = try container.decodeIfPresent(String.self, forKey: .sessionDirectory)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         self.sessionDirectory = directory?.isEmpty == true ? nil : directory
@@ -131,12 +131,12 @@ struct CmuxVaultAgentRegistration: Codable, Hashable, Sendable {
         return id
     }
 
-    static var builtInPi: CmuxVaultAgentRegistration {
-        CmuxVaultAgentRegistration(
+    static var builtInPi: BmuxVaultAgentRegistration {
+        BmuxVaultAgentRegistration(
             id: "pi",
             name: "Pi",
             iconAssetName: "AgentIcons/Pi",
-            detect: CmuxVaultAgentDetectRule(processName: "pi", argvContains: ["pi"]),
+            detect: BmuxVaultAgentDetectRule(processName: "pi", argvContains: ["pi"]),
             sessionIdSource: .piSessionFile,
             resumeCommand: "{{executable}} --session {{sessionId}}",
             forkCommand: "{{executable}} --session {{sessionId}} --fork",
@@ -145,12 +145,12 @@ struct CmuxVaultAgentRegistration: Codable, Hashable, Sendable {
         )
     }
 
-    static var builtInOmp: CmuxVaultAgentRegistration {
-        CmuxVaultAgentRegistration(
+    static var builtInOmp: BmuxVaultAgentRegistration {
+        BmuxVaultAgentRegistration(
             id: "omp",
             name: "OMP",
             iconAssetName: "AgentIcons/Pi",
-            detect: CmuxVaultAgentDetectRule(
+            detect: BmuxVaultAgentDetectRule(
                 processName: "omp",
                 alternateArgvContains: ["@oh-my-pi/pi-coding-agent"]
             ),
@@ -162,12 +162,12 @@ struct CmuxVaultAgentRegistration: Codable, Hashable, Sendable {
         )
     }
 
-    static var builtInAntigravity: CmuxVaultAgentRegistration {
-        CmuxVaultAgentRegistration(
+    static var builtInAntigravity: BmuxVaultAgentRegistration {
+        BmuxVaultAgentRegistration(
             id: "antigravity",
             name: "Antigravity",
             iconAssetName: "AgentIcons/Antigravity",
-            detect: CmuxVaultAgentDetectRule(processNames: ["agy", "antigravity"]),
+            detect: BmuxVaultAgentDetectRule(processNames: ["agy", "antigravity"]),
             sessionIdSource: .argvOption("--conversation"),
             resumeCommand: "{{executable}} --conversation {{sessionId}}",
             cwd: .preserve,
@@ -175,11 +175,11 @@ struct CmuxVaultAgentRegistration: Codable, Hashable, Sendable {
         )
     }
 
-    static var builtInGrok: CmuxVaultAgentRegistration {
-        CmuxVaultAgentRegistration(
+    static var builtInGrok: BmuxVaultAgentRegistration {
+        BmuxVaultAgentRegistration(
             id: "grok",
             name: "Grok",
-            detect: CmuxVaultAgentDetectRule(processNames: ["grok", "grok-macos-aarch64", "grok-macos-aarch"]),
+            detect: BmuxVaultAgentDetectRule(processNames: ["grok", "grok-macos-aarch64", "grok-macos-aarch"]),
             sessionIdSource: .grokSessionDirectory,
             resumeCommand: "{{executable}} -r {{sessionId}}",
             cwd: .preserve,
@@ -188,7 +188,7 @@ struct CmuxVaultAgentRegistration: Codable, Hashable, Sendable {
     }
 }
 
-struct CmuxVaultAgentDetectRule: Codable, Hashable, Sendable {
+struct BmuxVaultAgentDetectRule: Codable, Hashable, Sendable {
     var processName: String?
     var processNames: [String]
     var argvContains: [String]
@@ -243,7 +243,7 @@ struct CmuxVaultAgentDetectRule: Codable, Hashable, Sendable {
     }
 }
 
-enum CmuxVaultAgentSessionIDSource: Codable, Hashable, Sendable {
+enum BmuxVaultAgentSessionIDSource: Codable, Hashable, Sendable {
     case argvOption(String)
     case piSessionFile
     case grokSessionDirectory
@@ -331,7 +331,7 @@ enum CmuxVaultAgentSessionIDSource: Codable, Hashable, Sendable {
     }
 }
 
-enum CmuxVaultAgentCWDPolicy: String, Codable, Hashable, Sendable {
+enum BmuxVaultAgentCWDPolicy: String, Codable, Hashable, Sendable {
     case preserve
     case ignore
 
@@ -354,13 +354,13 @@ enum CmuxVaultAgentCWDPolicy: String, Codable, Hashable, Sendable {
     }
 }
 
-struct CmuxVaultAgentRegistry: Sendable {
-    private static let logger = Logger(subsystem: "ai.manaflow.cmux", category: "VaultAgentRegistry")
+struct BmuxVaultAgentRegistry: Sendable {
+    private static let logger = Logger(subsystem: "ai.manaflow.bmux", category: "VaultAgentRegistry")
 
-    var registrations: [CmuxVaultAgentRegistration]
+    var registrations: [BmuxVaultAgentRegistration]
 
-    init(registrations: [CmuxVaultAgentRegistration]) {
-        var ordered: [CmuxVaultAgentRegistration] = []
+    init(registrations: [BmuxVaultAgentRegistration]) {
+        var ordered: [BmuxVaultAgentRegistration] = []
         var indexesByID: [String: Int] = [:]
         for registration in registrations {
             if let existingIndex = indexesByID[registration.id] {
@@ -373,14 +373,14 @@ struct CmuxVaultAgentRegistry: Sendable {
         self.registrations = ordered
     }
 
-    func registration(id: String) -> CmuxVaultAgentRegistration? {
+    func registration(id: String) -> BmuxVaultAgentRegistration? {
         registrations.first { $0.id == id }
     }
 
     func mergingProjectConfig(
         workingDirectory: String?,
         fileManager: FileManager = .default
-    ) -> CmuxVaultAgentRegistry {
+    ) -> BmuxVaultAgentRegistry {
         guard let workingDirectory = workingDirectory?.trimmingCharacters(in: .whitespacesAndNewlines),
               !workingDirectory.isEmpty,
               let path = Self.findLocalConfig(startingAt: workingDirectory, fileManager: fileManager),
@@ -389,7 +389,7 @@ struct CmuxVaultAgentRegistry: Sendable {
               !agents.isEmpty else {
             return self
         }
-        return CmuxVaultAgentRegistry(registrations: registrations + agents)
+        return BmuxVaultAgentRegistry(registrations: registrations + agents)
     }
 
     static func load(
@@ -397,18 +397,18 @@ struct CmuxVaultAgentRegistry: Sendable {
         workingDirectory: String? = nil,
         environment: [String: String] = ProcessInfo.processInfo.environment,
         fileManager: FileManager = .default
-    ) -> CmuxVaultAgentRegistry {
+    ) -> BmuxVaultAgentRegistry {
         var registrations = [
-            CmuxVaultAgentRegistration.builtInPi,
-            CmuxVaultAgentRegistration.builtInOmp,
-            CmuxVaultAgentRegistration.builtInAntigravity,
-            CmuxVaultAgentRegistration.builtInGrok,
+            BmuxVaultAgentRegistration.builtInPi,
+            BmuxVaultAgentRegistration.builtInOmp,
+            BmuxVaultAgentRegistration.builtInAntigravity,
+            BmuxVaultAgentRegistration.builtInGrok,
         ]
         for path in configPaths(homeDirectory: homeDirectory, workingDirectory: workingDirectory, environment: environment, fileManager: fileManager) {
             guard let config = decodeConfig(at: path, fileManager: fileManager) else { continue }
             registrations.append(contentsOf: config.vault?.agents ?? [])
         }
-        return CmuxVaultAgentRegistry(registrations: registrations)
+        return BmuxVaultAgentRegistry(registrations: registrations)
     }
 
     private static func configPaths(
@@ -418,7 +418,7 @@ struct CmuxVaultAgentRegistry: Sendable {
         fileManager: FileManager
     ) -> [String] {
         let home = (homeDirectory as NSString).standardizingPath
-        var paths = [(home as NSString).appendingPathComponent(".config/cmux/cmux.json")]
+        var paths = [(home as NSString).appendingPathComponent(".config/bmux/bmux.json")]
         let startingDirectory = workingDirectory?.trimmingCharacters(in: .whitespacesAndNewlines)
             ?? environment["PWD"]?.trimmingCharacters(in: .whitespacesAndNewlines)
         if let startingDirectory, !startingDirectory.isEmpty,
@@ -437,8 +437,8 @@ struct CmuxVaultAgentRegistry: Sendable {
         var current = (start as NSString).standardizingPath
         while true {
             let candidates = [
-                ((current as NSString).appendingPathComponent(".cmux") as NSString).appendingPathComponent("cmux.json"),
-                (current as NSString).appendingPathComponent("cmux.json"),
+                ((current as NSString).appendingPathComponent(".bmux") as NSString).appendingPathComponent("bmux.json"),
+                (current as NSString).appendingPathComponent("bmux.json"),
             ]
             for candidate in candidates where fileManager.fileExists(atPath: candidate) {
                 return candidate
@@ -449,7 +449,7 @@ struct CmuxVaultAgentRegistry: Sendable {
         }
     }
 
-    private static func decodeConfig(at path: String, fileManager: FileManager) -> CmuxConfigFile? {
+    private static func decodeConfig(at path: String, fileManager: FileManager) -> BmuxConfigFile? {
         guard fileManager.fileExists(atPath: path),
               let data = fileManager.contents(atPath: path),
               !data.isEmpty else {
@@ -457,7 +457,7 @@ struct CmuxVaultAgentRegistry: Sendable {
         }
         do {
             let sanitized = try JSONCParser.preprocess(data: data)
-            return try JSONDecoder().decode(CmuxConfigFile.self, from: sanitized)
+            return try JSONDecoder().decode(BmuxConfigFile.self, from: sanitized)
         } catch {
             logger.fault(
                 "Failed to decode config at \(path, privacy: .public): \(error.localizedDescription, privacy: .public)"

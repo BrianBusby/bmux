@@ -1,7 +1,7 @@
 export function vaultSignInHref(returnPath: string): string {
-  const afterSignIn = new URL("/handler/after-sign-in", "https://cmux.com");
+  const afterSignIn = new URL("/handler/after-sign-in", "https://bmux.com");
   afterSignIn.searchParams.set("after_auth_return_to", returnPath);
-  const signIn = new URL("/handler/sign-in", "https://cmux.com");
+  const signIn = new URL("/handler/sign-in", "https://bmux.com");
   signIn.searchParams.set(
     "after_auth_return_to",
     `${afterSignIn.pathname}${afterSignIn.search}`,

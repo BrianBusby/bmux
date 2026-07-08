@@ -1,5 +1,5 @@
-import CmuxAgentChat
-import CmuxFoundation
+import BmuxAgentChat
+import BmuxFoundation
 import Foundation
 
 /// Tails one agent session's transcript JSONL: initial bounded backfill,
@@ -280,7 +280,7 @@ actor AgentChatTranscriptTailer {
             try await rawOutputStore.write(records)
         } catch {
             #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "agentChat.rawOutput.persist session=\(sessionID.prefix(8)) "
                 + "records=\(records.count) error=\(error.localizedDescription)"
             )

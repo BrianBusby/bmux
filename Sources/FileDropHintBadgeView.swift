@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import BmuxFoundation
 
 @MainActor
 final class FileDropHintBadgeView: NSView {

@@ -5,9 +5,9 @@ import {
 import { env } from "../../app/env";
 
 export const TESTFLIGHT_APP_ID =
-  env.CMUX_TESTFLIGHT_APP_ID || "6757092429";
+  env.BMUX_TESTFLIGHT_APP_ID || "6757092429";
 export const TESTFLIGHT_GROUP_ID =
-  env.CMUX_TESTFLIGHT_GROUP_ID ||
+  env.BMUX_TESTFLIGHT_GROUP_ID ||
   "3ee84bfa-10ad-4f23-a45c-f9a3b037373e";
 
 type JsonApiResource = {

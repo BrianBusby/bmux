@@ -65,7 +65,7 @@ export default async function TaskManagerPage({
 
       <p className="mt-6">{t("p1")}</p>
       <p>{t("p2")}</p>
-      <CodeBlock lang="bash">{`cmux top`}</CodeBlock>
+      <CodeBlock lang="bash">{`bmux top`}</CodeBlock>
       <p>{t("p3")}</p>
       <p>{t("p4")}</p>
 

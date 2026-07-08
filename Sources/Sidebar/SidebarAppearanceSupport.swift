@@ -1,13 +1,13 @@
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxFoundation
+import BmuxAppKitSupportUI
+import BmuxFoundation
 import Foundation
 import SwiftUI
-import CmuxSettings
+import BmuxSettings
 
 enum SidebarMatchTerminalBackgroundSettings {
     static let userDefaultsKey = "sidebarMatchTerminalBackground"
-    static let legacyAppliedSettingsFileDefaultKey = "cmux.settingsFile.sidebarMatchTerminalBackground.appliedDefault.v1"
+    static let legacyAppliedSettingsFileDefaultKey = "bmux.settingsFile.sidebarMatchTerminalBackground.appliedDefault.v1"
 }
 
 enum SidebarTabItemFontScale {
@@ -69,13 +69,13 @@ func titlebarControlForegroundNSColor(opacity: CGFloat) -> NSColor {
 }
 
 func titlebarControlForegroundNSColor(opacity: CGFloat, appearance: WindowAppearanceSnapshot) -> NSColor {
-    cmuxReadableForegroundNSColor(
+    bmuxReadableForegroundNSColor(
         on: appearance.compositedTerminalBackgroundColor,
         opacity: opacity
     )
 }
 
-func cmuxAccentNSColor(for colorScheme: ColorScheme) -> NSColor {
+func bmuxAccentNSColor(for colorScheme: ColorScheme) -> NSColor {
     switch colorScheme {
     case .dark:
         return NSColor(
@@ -94,50 +94,50 @@ func cmuxAccentNSColor(for colorScheme: ColorScheme) -> NSColor {
     }
 }
 
-func cmuxAccentNSColor(for appAppearance: NSAppearance?) -> NSColor {
+func bmuxAccentNSColor(for appAppearance: NSAppearance?) -> NSColor {
     let bestMatch = appAppearance?.bestMatch(from: [.darkAqua, .aqua])
     let scheme: ColorScheme = (bestMatch == .darkAqua) ? .dark : .light
-    return cmuxAccentNSColor(for: scheme)
+    return bmuxAccentNSColor(for: scheme)
 }
 
-func cmuxAccentNSColor() -> NSColor {
+func bmuxAccentNSColor() -> NSColor {
     NSColor(name: nil) { appearance in
-        cmuxAccentNSColor(for: appearance)
+        bmuxAccentNSColor(for: appearance)
     }
 }
 
-func cmuxAccentColor() -> Color {
-    Color(nsColor: cmuxAccentNSColor())
+func bmuxAccentColor() -> Color {
+    Color(nsColor: bmuxAccentNSColor())
 }
 
-func cmuxReadableColorScheme(for backgroundColor: NSColor) -> ColorScheme {
-    let backgroundLuminance = cmuxRelativeLuminance(backgroundColor)
-    let whiteContrast = cmuxContrastRatio(backgroundLuminance, 1.0)
-    let blackContrast = cmuxContrastRatio(backgroundLuminance, 0.0)
+func bmuxReadableColorScheme(for backgroundColor: NSColor) -> ColorScheme {
+    let backgroundLuminance = bmuxRelativeLuminance(backgroundColor)
+    let whiteContrast = bmuxContrastRatio(backgroundLuminance, 1.0)
+    let blackContrast = bmuxContrastRatio(backgroundLuminance, 0.0)
     return whiteContrast >= blackContrast ? .dark : .light
 }
 
-func cmuxReadableForegroundNSColor(on backgroundColor: NSColor, opacity: CGFloat) -> NSColor {
+func bmuxReadableForegroundNSColor(on backgroundColor: NSColor, opacity: CGFloat) -> NSColor {
     let clampedOpacity = max(0, min(opacity, 1))
-    return cmuxReadableForegroundBaseColor(on: backgroundColor)
+    return bmuxReadableForegroundBaseColor(on: backgroundColor)
         .withAlphaComponent(clampedOpacity)
 }
 
-func cmuxReadableForegroundNSColor(
+func bmuxReadableForegroundNSColor(
     preferred preferredColor: NSColor,
     on backgroundColor: NSColor,
     minimumContrast: CGFloat = 4.5
 ) -> NSColor {
     let foregroundForComparison = preferredColor.alphaComponent < 1
-        ? cmuxCompositedNSColor(preferredColor, over: backgroundColor)
+        ? bmuxCompositedNSColor(preferredColor, over: backgroundColor)
         : preferredColor
-    guard cmuxContrastRatio(foreground: foregroundForComparison, background: backgroundColor) < minimumContrast else {
+    guard bmuxContrastRatio(foreground: foregroundForComparison, background: backgroundColor) < minimumContrast else {
         return preferredColor
     }
-    return cmuxReadableForegroundNSColor(on: backgroundColor, opacity: preferredColor.alphaComponent)
+    return bmuxReadableForegroundNSColor(on: backgroundColor, opacity: preferredColor.alphaComponent)
 }
 
-func cmuxCompositedNSColor(_ foreground: NSColor, over background: NSColor) -> NSColor {
+func bmuxCompositedNSColor(_ foreground: NSColor, over background: NSColor) -> NSColor {
     let fg = foreground.usingColorSpace(.sRGB) ?? foreground
     let bg = background.usingColorSpace(.sRGB) ?? background
     var foregroundRed: CGFloat = 0
@@ -161,18 +161,18 @@ func cmuxCompositedNSColor(_ foreground: NSColor, over background: NSColor) -> N
     )
 }
 
-func cmuxContrastRatio(foreground: NSColor, background: NSColor) -> CGFloat {
-    cmuxContrastRatio(
-        cmuxRelativeLuminance(foreground),
-        cmuxRelativeLuminance(background)
+func bmuxContrastRatio(foreground: NSColor, background: NSColor) -> CGFloat {
+    bmuxContrastRatio(
+        bmuxRelativeLuminance(foreground),
+        bmuxRelativeLuminance(background)
     )
 }
 
-private func cmuxReadableForegroundBaseColor(on backgroundColor: NSColor) -> NSColor {
-    cmuxReadableColorScheme(for: backgroundColor) == .dark ? .white : .black
+private func bmuxReadableForegroundBaseColor(on backgroundColor: NSColor) -> NSColor {
+    bmuxReadableColorScheme(for: backgroundColor) == .dark ? .white : .black
 }
 
-private func cmuxRelativeLuminance(_ color: NSColor) -> CGFloat {
+private func bmuxRelativeLuminance(_ color: NSColor) -> CGFloat {
     let srgb = color.usingColorSpace(.sRGB) ?? color
     var red: CGFloat = 0
     var green: CGFloat = 0
@@ -192,7 +192,7 @@ private func cmuxRelativeLuminance(_ color: NSColor) -> CGFloat {
         + 0.0722 * linearized(blue)
 }
 
-private func cmuxContrastRatio(_ lhs: CGFloat, _ rhs: CGFloat) -> CGFloat {
+private func bmuxContrastRatio(_ lhs: CGFloat, _ rhs: CGFloat) -> CGFloat {
     let lighter = max(lhs, rhs)
     let darker = min(lhs, rhs)
     return (lighter + 0.05) / (darker + 0.05)
@@ -243,7 +243,7 @@ func sidebarSelectedWorkspaceBackgroundNSColor(
        let parsed = NSColor(hex: hex) {
         return parsed
     }
-    return cmuxAccentNSColor(for: colorScheme)
+    return bmuxAccentNSColor(for: colorScheme)
 }
 
 func sidebarSelectedWorkspaceForegroundNSColor(opacity: CGFloat) -> NSColor {
@@ -258,11 +258,11 @@ func sidebarSelectedWorkspaceForegroundNSColor(
     opacity: CGFloat
 ) -> NSColor {
     let clampedOpacity = max(0, min(opacity, 1))
-    let whiteContrast = cmuxContrastRatio(foreground: .white, background: backgroundColor)
+    let whiteContrast = bmuxContrastRatio(foreground: .white, background: backgroundColor)
     guard whiteContrast < 2.75 else {
         return NSColor.white.withAlphaComponent(clampedOpacity)
     }
-    return cmuxReadableForegroundNSColor(on: backgroundColor, opacity: clampedOpacity)
+    return bmuxReadableForegroundNSColor(on: backgroundColor, opacity: clampedOpacity)
 }
 
 struct SidebarWorkspaceRowBackgroundStyle {
@@ -296,7 +296,7 @@ func sidebarWorkspaceRowBackgroundStyle(
     colorScheme: ColorScheme,
     sidebarSelectionColorHex: String?
 ) -> SidebarWorkspaceRowBackgroundStyle {
-    let accentBackground = cmuxAccentNSColor(for: colorScheme)
+    let accentBackground = bmuxAccentNSColor(for: colorScheme)
     let customBackground = customColorHex.flatMap {
         WorkspaceTabColorSettings.displayNSColor(
             hex: $0,
@@ -367,12 +367,12 @@ func sidebarWorkspaceRowLoadingIndicatorNSColor(
     )
     let effectiveBackground: NSColor
     if let rowColor = style.color {
-        effectiveBackground = cmuxCompositedNSColor(
+        effectiveBackground = bmuxCompositedNSColor(
             rowColor.withAlphaComponent(CGFloat(style.opacity)),
             over: baseBackgroundColor
         )
     } else {
         effectiveBackground = baseBackgroundColor
     }
-    return cmuxReadableForegroundNSColor(on: effectiveBackground, opacity: 1)
+    return bmuxReadableForegroundNSColor(on: effectiveBackground, opacity: 1)
 }

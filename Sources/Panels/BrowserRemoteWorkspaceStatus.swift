@@ -1,4 +1,4 @@
-import CmuxCore
+import BmuxCore
 import Foundation
 
 /// Connection snapshot for the remote workspace a browser panel belongs to.

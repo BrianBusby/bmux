@@ -124,9 +124,9 @@ export function resolveDiffFileLanguage(
     return explicitLanguage;
   }
 
-  const cmuxLanguage = cmuxLanguageForFileName(filePath);
-  if (cmuxLanguage != null) {
-    return cmuxLanguage;
+  const bmuxLanguage = bmuxLanguageForFileName(filePath);
+  if (bmuxLanguage != null) {
+    return bmuxLanguage;
   }
 
   const fallbackLanguage = stringLanguage(fallbackResolver?.(filePath));
@@ -164,7 +164,7 @@ export function markdownFenceLanguages(fileDiff: DiffFileText | null | undefined
   return Array.from(languages);
 }
 
-function cmuxLanguageForFileName(filePath: string): string | undefined {
+function bmuxLanguageForFileName(filePath: string): string | undefined {
   const basename = filePath.split(/[\\/]/).at(-1)?.trim().toLowerCase() ?? "";
   if (basename.length === 0) {
     return undefined;

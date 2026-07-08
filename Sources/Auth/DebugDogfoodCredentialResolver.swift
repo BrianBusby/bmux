@@ -3,32 +3,32 @@ import Foundation
 
 /// Resolves dogfood Stack credentials for the macOS DEBUG auto-sign-in path.
 ///
-/// A tagged `cmux DEV` build is a separate bundle (separate keychain), so it
+/// A tagged `bmux DEV` build is a separate bundle (separate keychain), so it
 /// starts signed out and shows the sign-in window. iOS already auto-signs-in on
-/// DEBUG launch by injecting `CMUX_UITEST_STACK_EMAIL` / `CMUX_UITEST_STACK_PASSWORD`
+/// DEBUG launch by injecting `BMUX_UITEST_STACK_EMAIL` / `BMUX_UITEST_STACK_PASSWORD`
 /// into the app's environment (SIMCTL / devicectl), which the existing
-/// `CMUXAuthAutoLoginCredentials` path reads. The macOS app needs the same
-/// behavior, but a `cmux DEV` opened from Finder or the CMUX Tag Opener does
+/// `BMUXAuthAutoLoginCredentials` path reads. The macOS app needs the same
+/// behavior, but a `bmux DEV` opened from Finder or the BMUX Tag Opener does
 /// **not** inherit a shell's environment, so an env-only approach never fires on
 /// those launches. This resolver adds a file-read fallback so the creds are
 /// found regardless of how the app was launched.
 ///
 /// Resolution order is **dogfood account first, then agent account**, so the
 /// dog Mac comes up as the human dogfood account (`lawrence@manaflow.ai`) even
-/// when an agent's `CMUX_UITEST_*` creds are also present (the iOS dogfood flow
+/// when an agent's `BMUX_UITEST_*` creds are also present (the iOS dogfood flow
 /// commonly leaves those in the environment / `~/.secrets`). Within each
-/// account, env wins over `~/.secrets/cmuxterm-dev.env`, which wins over
-/// `~/.secrets/cmux.env`:
+/// account, env wins over `~/.secrets/bmuxterm-dev.env`, which wins over
+/// `~/.secrets/bmux.env`:
 ///
-///   1. env `CMUX_DOGFOOD_STACK_EMAIL` / `CMUX_DOGFOOD_STACK_PASSWORD`
-///   2. file `~/.secrets/cmuxterm-dev.env` dogfood keys
-///   3. file `~/.secrets/cmux.env` dogfood keys
-///   4. env `CMUX_UITEST_STACK_EMAIL` / `CMUX_UITEST_STACK_PASSWORD`
-///   5. file `~/.secrets/cmuxterm-dev.env` uitest keys
-///   6. file `~/.secrets/cmux.env` uitest keys
+///   1. env `BMUX_DOGFOOD_STACK_EMAIL` / `BMUX_DOGFOOD_STACK_PASSWORD`
+///   2. file `~/.secrets/bmuxterm-dev.env` dogfood keys
+///   3. file `~/.secrets/bmux.env` dogfood keys
+///   4. env `BMUX_UITEST_STACK_EMAIL` / `BMUX_UITEST_STACK_PASSWORD`
+///   5. file `~/.secrets/bmuxterm-dev.env` uitest keys
+///   6. file `~/.secrets/bmux.env` uitest keys
 ///
 /// The resolved pair is merged into the launch environment dict as the existing
-/// `CMUX_UITEST_STACK_*` keys, so the already-tested `CMUXAuthAutoLoginCredentials`
+/// `BMUX_UITEST_STACK_*` keys, so the already-tested `BMUXAuthAutoLoginCredentials`
 /// + `AuthLaunchOptions.shouldStartAutoLogin` gate (`hasCredentials && !hasStoredTokens`)
 /// fires unchanged. This type holds no autoLogin logic of its own.
 ///
@@ -61,8 +61,8 @@ struct DebugDogfoodCredentialResolver {
     /// - Parameters:
     ///   - environment: The launch environment (env-var credential source).
     ///   - secretFilePaths: Ordered secret-file candidates, highest precedence
-    ///     first. Defaults to `~/.secrets/cmuxterm-dev.env` then
-    ///     `~/.secrets/cmux.env`, resolved from the environment's `HOME`.
+    ///     first. Defaults to `~/.secrets/bmuxterm-dev.env` then
+    ///     `~/.secrets/bmux.env`, resolved from the environment's `HOME`.
     ///   - readFile: Reads a file's UTF-8 contents, or `nil` if unreadable.
     ///     Defaults to a `FileManager`-free `String(contentsOfFile:)` read.
     init(
@@ -78,14 +78,14 @@ struct DebugDogfoodCredentialResolver {
     }
 
     /// The default ordered secret-file candidates, resolved against `HOME`.
-    /// `cmuxterm-dev.env` (cmux-terminal-specific Stack creds) is preferred over
-    /// the broader `cmux.env`.
+    /// `bmuxterm-dev.env` (bmux-terminal-specific Stack creds) is preferred over
+    /// the broader `bmux.env`.
     private static func defaultSecretFilePaths(environment: [String: String]) -> [String] {
         guard let home = environment["HOME"], !home.isEmpty else { return [] }
         let base = home as NSString
         return [
-            base.appendingPathComponent(".secrets/cmuxterm-dev.env"),
-            base.appendingPathComponent(".secrets/cmux.env"),
+            base.appendingPathComponent(".secrets/bmuxterm-dev.env"),
+            base.appendingPathComponent(".secrets/bmux.env"),
         ]
     }
 
@@ -100,15 +100,15 @@ struct DebugDogfoodCredentialResolver {
 
         var emailKey: String {
             switch self {
-            case .dogfood: return "CMUX_DOGFOOD_STACK_EMAIL"
-            case .uitest: return "CMUX_UITEST_STACK_EMAIL"
+            case .dogfood: return "BMUX_DOGFOOD_STACK_EMAIL"
+            case .uitest: return "BMUX_UITEST_STACK_EMAIL"
             }
         }
 
         var passwordKey: String {
             switch self {
-            case .dogfood: return "CMUX_DOGFOOD_STACK_PASSWORD"
-            case .uitest: return "CMUX_UITEST_STACK_PASSWORD"
+            case .dogfood: return "BMUX_DOGFOOD_STACK_PASSWORD"
+            case .uitest: return "BMUX_UITEST_STACK_PASSWORD"
             }
         }
     }

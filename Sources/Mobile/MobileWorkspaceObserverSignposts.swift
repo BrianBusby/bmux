@@ -1,5 +1,5 @@
 enum MobileWorkspaceObserverSignposts {
-    private static let signposts = DynamicTracingSignposts(subsystem: "dev.cmux.mobile-workspace-observer")
+    private static let signposts = DynamicTracingSignposts(subsystem: "dev.bmux.mobile-workspace-observer")
 
     @inline(__always)
     static func begin(_ name: StaticString, _ message: @autoclosure () -> String) -> DynamicTracingSignpostInterval? {

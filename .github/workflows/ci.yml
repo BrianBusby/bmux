@@ -49,13 +49,13 @@ jobs:
 
           if [ "$EVENT_NAME" = "pull_request" ]; then
             if ! MERGE_BASE="$(git merge-base "$BASE_SHA" "$HEAD_SHA")" \
-              || ! git diff --name-only "$MERGE_BASE" "$HEAD_SHA" > /tmp/cmux-ci-changed-files.txt; then
+              || ! git diff --name-only "$MERGE_BASE" "$HEAD_SHA" > /tmp/bmux-ci-changed-files.txt; then
               echo "Could not compute PR diff; running all CI areas." >&2
               emit_all_areas
               exit 0
             fi
 
-            if [ ! -s /tmp/cmux-ci-changed-files.txt ]; then
+            if [ ! -s /tmp/bmux-ci-changed-files.txt ]; then
               echo "PR diff is empty; running all CI areas."
               emit_all_areas
               exit 0
@@ -64,7 +64,7 @@ jobs:
             # This guard lives in workflow YAML, before the PR-editable detector
             # runs. Router/workflow edits must fail open even if a PR breaks the
             # detector's own self-change classification.
-            if grep -Eq '^(\.github/workflows/ci\.yml|scripts/ci/[^/]+\.py|tests/test_ci_change_areas\.py)$' /tmp/cmux-ci-changed-files.txt; then
+            if grep -Eq '^(\.github/workflows/ci\.yml|scripts/ci/[^/]+\.py|tests/test_ci_change_areas\.py)$' /tmp/bmux-ci-changed-files.txt; then
               echo "CI router changed; running all CI areas."
               emit_all_areas
               exit 0
@@ -72,7 +72,7 @@ jobs:
 
             python3 scripts/ci/detect_ci_change_areas.py \
               --event-name "$EVENT_NAME" \
-              --files-from /tmp/cmux-ci-changed-files.txt
+              --files-from /tmp/bmux-ci-changed-files.txt
             exit 0
           fi
 
@@ -124,8 +124,8 @@ jobs:
       - name: Validate app-host xcodebuild attempt budget
         run: ./tests/test_ci_app_host_xcodebuild_attempts.sh
 
-      - name: Validate cmux profiling support scripts
-        run: ./tests/test_start_cmux_profiling.sh
+      - name: Validate bmux profiling support scripts
+        run: ./tests/test_start_bmux_profiling.sh
 
       - name: Validate Xcode SourcePackages cache sanitizer
         run: python3 tests/test_ci_sanitize_xcode_source_packages_cache.py
@@ -136,13 +136,13 @@ jobs:
       - name: Validate external TestFlight group assignment helper
         run: python3 tests/test_ios_testflight_external_distribution.py
 
-      - name: Validate cmux scheme test configuration
+      - name: Validate bmux scheme test configuration
         run: ./tests/test_ci_scheme_testaction_debug.sh
 
-      - name: Validate cmuxTests sharding
+      - name: Validate bmuxTests sharding
         run: |
-          python3 scripts/ci/cmux_unit_test_shard.py --validate
-          python3 tests/test_ci_cmux_unit_test_shard.py
+          python3 scripts/ci/bmux_unit_test_shard.py --validate
+          python3 tests/test_ci_bmux_unit_test_shard.py
 
       - name: Validate GhosttyKit checksum verification
         run: ./tests/test_ci_ghosttykit_checksum_verification.sh
@@ -299,7 +299,7 @@ jobs:
         # reproduce. Sorted order makes CI failures replayable locally.
         run: bun test $(ls tests/*.test.ts tests/*.test.tsx | sort)
 
-  # Checks for in-app React webviews (currently the diff viewer; more cmux React
+  # Checks for in-app React webviews (currently the diff viewer; more bmux React
   # surfaces will live alongside it).
   react-apps-check:
     needs: changes
@@ -345,13 +345,13 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: cmux_test
-          POSTGRES_PASSWORD: cmux
-          POSTGRES_USER: cmux
+          POSTGRES_DB: bmux_test
+          POSTGRES_PASSWORD: bmux
+          POSTGRES_USER: bmux
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U cmux -d cmux_test"
+          --health-cmd "pg_isready -U bmux -d bmux_test"
           --health-interval 1s
           --health-timeout 5s
           --health-retries 30
@@ -367,21 +367,21 @@ jobs:
 
       - name: Apply migrations
         env:
-          DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
-          DIRECT_DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
+          DATABASE_URL: postgres://bmux:bmux@localhost:5432/bmux_test
+          DIRECT_DATABASE_URL: postgres://bmux:bmux@localhost:5432/bmux_test
         run: bunx drizzle-kit migrate --config drizzle.config.ts
 
       - name: Re-apply migrations
         env:
-          DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
-          DIRECT_DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
+          DATABASE_URL: postgres://bmux:bmux@localhost:5432/bmux_test
+          DIRECT_DATABASE_URL: postgres://bmux:bmux@localhost:5432/bmux_test
         run: bunx drizzle-kit migrate --config drizzle.config.ts
 
       - name: Database behavior tests
         env:
-          CMUX_DB_TEST: "1"
-          DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
-          DIRECT_DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
+          BMUX_DB_TEST: "1"
+          DATABASE_URL: postgres://bmux:bmux@localhost:5432/bmux_test
+          DIRECT_DATABASE_URL: postgres://bmux:bmux@localhost:5432/bmux_test
         run: bun run test:db:behavior
 
   app-host-unit-tests:
@@ -406,17 +406,17 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4]
     env:
-      CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_15 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
-      CMUX_SKIP_ZIG_BUILD: "1"
+      BMUX_CI_XCODE_APP: ${{ vars.BMUX_CI_XCODE_APP_MACOS_15 }}
+      BMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      BMUX_SKIP_ZIG_BUILD: "1"
       # Keep one-off focused gates on the lightest measured shard so shard 1 no
       # longer carries the full shard plus every extra regression guard.
-      CMUX_APP_HOST_FOCUSED_REGRESSION_SHARD: "4"
+      BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD: "4"
       # XCTest app-host crashes can leave xcodebuild waiting in Swift's crash
       # backtracer until the job timeout. Keep crash handling non-interactive
       # and cheap so xcodebuild can restart/finish the suite.
       SWIFT_BACKTRACE: "interactive=no,timeout=0s,symbolicate=off,color=no"
-      CMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS: "45"
+      BMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS: "45"
     steps:
       - name: Clear stale git locks (self-hosted reused workspace)
         shell: bash
@@ -465,7 +465,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .ci-source-packages
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: spm-${{ hashFiles('bmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: spm-
 
       - name: Sanitize Swift package cache
@@ -474,10 +474,10 @@ jobs:
       - name: Prepare isolated DerivedData
         run: |
           set -euo pipefail
-          DERIVED_DATA_PATH="${RUNNER_TEMP}/cmux-derived-data-tests-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-shard-${{ matrix.shard }}"
+          DERIVED_DATA_PATH="${RUNNER_TEMP}/bmux-derived-data-tests-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-shard-${{ matrix.shard }}"
           rm -rf "$DERIVED_DATA_PATH"
           mkdir -p "$DERIVED_DATA_PATH"
-          echo "CMUX_DERIVED_DATA_PATH=$DERIVED_DATA_PATH" >> "$GITHUB_ENV"
+          echo "BMUX_DERIVED_DATA_PATH=$DERIVED_DATA_PATH" >> "$GITHUB_ENV"
 
       - name: Resolve Swift packages
         run: |
@@ -486,8 +486,8 @@ jobs:
           mkdir -p "$SOURCE_PACKAGES_DIR"
 
           for attempt in 1 2 3; do
-            if xcodebuild -project cmux.xcodeproj -scheme cmux-unit -configuration Debug \
-              -derivedDataPath "$CMUX_DERIVED_DATA_PATH" \
+            if xcodebuild -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+              -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
               -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
               -resolvePackageDependencies; then
               # Guard against a stale/poisoned Swift-package cache: a restored
@@ -509,20 +509,20 @@ jobs:
           done
 
       - name: Run Ghostty split-theme appearance regression
-        if: ${{ matrix.shard == fromJSON(env.CMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
         run: |
           set -euo pipefail
-          DERIVED_DATA_PATH="${RUNNER_TEMP:-/tmp}/cmux-terminal-core-split-theme"
+          DERIVED_DATA_PATH="${RUNNER_TEMP:-/tmp}/bmux-terminal-core-split-theme"
           rm -rf "$DERIVED_DATA_PATH"
           (
-            cd Packages/macOS/CmuxTerminalCore
+            cd Packages/macOS/BmuxTerminalCore
             xcodebuild \
-              -scheme CmuxTerminalCore-Package \
+              -scheme BmuxTerminalCore-Package \
               -destination "platform=macOS" \
               -derivedDataPath "$DERIVED_DATA_PATH" \
               build-for-testing
           )
-          xcrun xctest "$DERIVED_DATA_PATH/Build/Products/Debug/CmuxTerminalCoreTests.xctest"
+          xcrun xctest "$DERIVED_DATA_PATH/Build/Products/Debug/BmuxTerminalCoreTests.xctest"
 
       - name: Enable XCTest automation mode
         run: |
@@ -538,9 +538,9 @@ jobs:
           fi
 
       - name: Run browser system proxy mirror regression
-        if: ${{ matrix.shard == fromJSON(env.CMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
         run: |
-          # Focused gate for https://github.com/manaflow-ai/cmux/issues/5888.
+          # Focused gate for https://github.com/manaflow-ai/bmux/issues/5888.
           # The full "Run unit tests" step tolerates app-host crashes by
           # parsing only the last test summary, so suites that run late can
           # otherwise be skipped by an app-host abort that still reports
@@ -550,37 +550,37 @@ jobs:
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
           scripts/ci/run-in-console-session.sh \
             scripts/ci/run-app-host-xcodebuild.sh \
-            -project cmux.xcodeproj -scheme cmux-unit -configuration Debug \
-            -derivedDataPath "$CMUX_DERIVED_DATA_PATH" \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
             -disableAutomaticPackageResolution \
             -destination "platform=macOS" \
-            CMUX_SKIP_ZIG_BUILD=1 \
-            -only-testing:cmuxTests/BrowserSystemProxyMirrorTests \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/BrowserSystemProxyMirrorTests \
             test
 
       - name: Run Option/Alt sided-modifier regression
-        if: ${{ matrix.shard == fromJSON(env.CMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
         run: |
           set -euo pipefail
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
           scripts/ci/run-in-console-session.sh \
             scripts/ci/run-app-host-xcodebuild.sh \
-            -project cmux.xcodeproj -scheme cmux-unit -configuration Debug \
-            -derivedDataPath "$CMUX_DERIVED_DATA_PATH" \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
             -disableAutomaticPackageResolution \
             -destination "platform=macOS" \
-            CMUX_SKIP_ZIG_BUILD=1 \
-            -only-testing:cmuxTests/GhosttyOptionAsAltModsTests \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/GhosttyOptionAsAltModsTests \
             test
 
       - name: Run unit tests
         run: |
           set -euo pipefail
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
-          SHARD_ARGS="$RUNNER_TEMP/cmux-unit-shard-${{ matrix.shard }}.args"
-          python3 scripts/ci/cmux_unit_test_shard.py \
+          SHARD_ARGS="$RUNNER_TEMP/bmux-unit-shard-${{ matrix.shard }}.args"
+          python3 scripts/ci/bmux_unit_test_shard.py \
             --shard-index "${{ matrix.shard }}" \
             --shard-total 4 \
             --output "$SHARD_ARGS"
@@ -599,16 +599,16 @@ jobs:
             # while still allowing shards on separate Macs to run in parallel.
             scripts/ci/run-in-console-session.sh \
               scripts/ci/run-app-host-xcodebuild.sh \
-              -project cmux.xcodeproj -scheme cmux-unit -configuration Debug \
-              -derivedDataPath "$CMUX_DERIVED_DATA_PATH" \
+              -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+              -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
               -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
               -disableAutomaticPackageResolution \
               -destination "platform=macOS" \
               "${ONLY_TESTING_ARGS[@]}" \
-              CMUX_SKIP_ZIG_BUILD=1 \
+              BMUX_SKIP_ZIG_BUILD=1 \
               test 2>&1 &
             local xcodebuild_pid=$!
-            local timeout_seconds="${CMUX_UNIT_TEST_TIMEOUT_SECONDS:-900}"
+            local timeout_seconds="${BMUX_UNIT_TEST_TIMEOUT_SECONDS:-900}"
             local deadline=$((SECONDS + timeout_seconds))
             while kill -0 "$xcodebuild_pid" 2>/dev/null; do
               if [ "$SECONDS" -ge "$deadline" ]; then
@@ -626,7 +626,7 @@ jobs:
 
           # Stream output via tee so CI logs are visible in real time, while still
           # capturing for post-run analysis of expected vs unexpected failures.
-          TEST_OUTPUT="$RUNNER_TEMP/cmux-unit-output-shard-${{ matrix.shard }}.txt"
+          TEST_OUTPUT="$RUNNER_TEMP/bmux-unit-output-shard-${{ matrix.shard }}.txt"
           set +e
           run_unit_tests | tee "$TEST_OUTPUT"
           EXIT_CODE=${PIPESTATUS[0]}
@@ -640,8 +640,8 @@ jobs:
             echo "SwiftPM package resolution failed, clearing caches and retrying once"
             rm -rf ~/Library/Caches/org.swift.swiftpm
             mkdir -p ~/Library/Caches/org.swift.swiftpm
-            rm -rf "$CMUX_DERIVED_DATA_PATH"
-            mkdir -p "$CMUX_DERIVED_DATA_PATH"
+            rm -rf "$BMUX_DERIVED_DATA_PATH"
+            mkdir -p "$BMUX_DERIVED_DATA_PATH"
             set +e
             run_unit_tests | tee "$TEST_OUTPUT"
             EXIT_CODE=${PIPESTATUS[0]}
@@ -660,53 +660,53 @@ jobs:
           fi
 
       - name: Run bundled Ghostty theme picker helper regression
-        if: ${{ matrix.shard == fromJSON(env.CMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
         run: |
           set -euo pipefail
-          CMUX_SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages" \
+          BMUX_SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages" \
             ./tests/test_bundled_ghostty_theme_picker_helper.sh
 
       - name: Run CLI no-socket regressions
-        if: ${{ matrix.shard == fromJSON(env.CMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
         run: |
           set -euo pipefail
 
           CLI_BIN="$(
-            find "$CMUX_DERIVED_DATA_PATH" -path "*/Build/Products/Debug/cmux" -exec stat -f '%m %N' {} \; \
+            find "$BMUX_DERIVED_DATA_PATH" -path "*/Build/Products/Debug/bmux" -exec stat -f '%m %N' {} \; \
               | sort -nr \
               | head -1 \
               | cut -d' ' -f2-
           )"
           if [ -z "${CLI_BIN:-}" ] || [ ! -x "$CLI_BIN" ]; then
-            echo "cmux CLI binary not found in DerivedData" >&2
+            echo "bmux CLI binary not found in DerivedData" >&2
             exit 1
           fi
 
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_version_memory_guard.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_contract_help.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_layout_focus_contract.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_socket_operation_deadline.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_version_memory_guard.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_contract_help.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_layout_focus_contract.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_socket_operation_deadline.py
           python3 tests/test_stress_cli_socket_api.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_omo_openagent_plugin_migration.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_socket_autodiscovery.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_omo_openagent_plugin_migration.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_socket_autodiscovery.py
           python3 tests/test_claude_wrapper_hooks.py
           python3 tests/test_claude_wrapper_mutual_shim_loop.py
           python3 tests/test_claude_wrapper_user_binary_resolution.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_claude_teams_fallback_path.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_claude_teams_env.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_claude_teams_trust_optin.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_omo_fallback_path.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_omx_fallback_path.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_omc_fallback_path.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_claude_teams_fallback_path.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_claude_teams_env.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_claude_teams_trust_optin.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_omo_fallback_path.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_omx_fallback_path.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_omc_fallback_path.py
           python3 tests/test_issue_2448_shell_claude_wrapper_dispatch.py
           python3 tests/test_issue_6714_zsh_shim_noclobber.py
           python3 tests/test_shell_git_branch_stale_cwd.py
           python3 tests/test_shell_git_config_remote_url_parsing.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_claude_hook_stop_last_assistant.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_claude_hook_clear_running_status.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_claude_hook_push_notification.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_pi_extension_install.py
-          CMUX_CLI_BIN="$CLI_BIN" python3 tests/test_omp_extension_install.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_claude_hook_stop_last_assistant.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_claude_hook_clear_running_status.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_claude_hook_push_notification.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_pi_extension_install.py
+          BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_omp_extension_install.py
 
   tests:
     name: tests
@@ -786,9 +786,9 @@ jobs:
     runs-on: ${{ vars.MACOS_RUNNER_15 || 'warp-macos-15-arm64-6x' }}
     timeout-minutes: 40
     env:
-      CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_15 }}
-      CMUX_CI_HELPER_XCODE_APP: ${{ vars.CMUX_CI_HELPER_XCODE_APP_MACOS_15 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      BMUX_CI_XCODE_APP: ${{ vars.BMUX_CI_XCODE_APP_MACOS_15 }}
+      BMUX_CI_HELPER_XCODE_APP: ${{ vars.BMUX_CI_HELPER_XCODE_APP_MACOS_15 }}
+      BMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
     steps:
       - name: Clear stale git locks (self-hosted reused workspace)
         shell: bash
@@ -810,8 +810,8 @@ jobs:
       - name: Select helper Xcode
         run: |
           set -euo pipefail
-          CMUX_CI_XCODE_APP="$CMUX_CI_HELPER_XCODE_APP" \
-            CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15 \
+          BMUX_CI_XCODE_APP="$BMUX_CI_HELPER_XCODE_APP" \
+            BMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15 \
             ./scripts/select-ci-xcode.sh
 
       - name: Install zig
@@ -843,7 +843,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-ghostty-cli-helper
+          name: bmux-ghostty-cli-helper
           path: ghostty-cli-helper/ghostty
           if-no-files-found: error
 
@@ -851,7 +851,7 @@ jobs:
         if: steps.upload-ghostty-cli-helper.outcome == 'failure'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-ghostty-cli-helper
+          name: bmux-ghostty-cli-helper
           path: ghostty-cli-helper/ghostty
           if-no-files-found: error
           overwrite: true
@@ -897,41 +897,41 @@ jobs:
       - name: Run Swift package unit tests
         run: |
           set -euo pipefail
-          # CmuxCommandPalette's nucleo FFI tests load the Rust dylib through
-          # CMUX_NUCLEO_FFI_LIB (they skip when it is absent, so build it here
+          # BmuxCommandPalette's nucleo FFI tests load the Rust dylib through
+          # BMUX_NUCLEO_FFI_LIB (they skip when it is absent, so build it here
           # to keep the FFI parity suite a real gate).
           cargo build --manifest-path Native/CommandPaletteNucleoFFI/Cargo.toml --release
-          export CMUX_NUCLEO_FFI_LIB="$PWD/Native/CommandPaletteNucleoFFI/target/release/libcmux_command_palette_nucleo_ffi.dylib"
-          # The cmux-unit scheme only runs the cmuxTests app-host suite; it does
+          export BMUX_NUCLEO_FFI_LIB="$PWD/Native/CommandPaletteNucleoFFI/target/release/libbmux_command_palette_nucleo_ffi.dylib"
+          # The bmux-unit scheme only runs the bmuxTests app-host suite; it does
           # not execute the SPM package test targets. Run them here so package
           # tests (settings stores, secret-file migration, socket-control
           # convergence, etc.) are a real CI gate, not just compiled.
           # Scoped to packages that build headlessly via SwiftPM (no GhosttyKit /
           # app-target dependency). Add a package here once its `swift test`
           # is confirmed to resolve standalone. The GhosttyKit-referencing
-          # packages (CmuxTerminalCore and the terminal packages stacked on
+          # packages (BmuxTerminalCore and the terminal packages stacked on
           # it) are the exception: their binaryTarget only needs the
           # xcframework present at the repo root (downloaded earlier in this
           # job), and their test runners link a C stub for the @_silgen_name
           # symbol instead of the GhosttyKit archive.
           PACKAGES=(
-            CMUXAuthCore
-            CmuxCanvasUI
-            CmuxCore
-            CmuxRemoteDaemon
-            CmuxRemoteWorkspace
-            CmuxRemoteSession
-            CmuxAuthRuntime
-            CmuxCommandPalette
-            CmuxControlSocket
-            CmuxFoundation
-            CmuxGit
-            CmuxSettings
-            CmuxSettingsUI
-            CmuxTerminal
-            CmuxTerminalCore
-            CmuxUpdater
-            CMUXAgentLaunch
+            BMUXAuthCore
+            BmuxCanvasUI
+            BmuxCore
+            BmuxRemoteDaemon
+            BmuxRemoteWorkspace
+            BmuxRemoteSession
+            BmuxAuthRuntime
+            BmuxCommandPalette
+            BmuxControlSocket
+            BmuxFoundation
+            BmuxGit
+            BmuxSettings
+            BmuxSettingsUI
+            BmuxTerminal
+            BmuxTerminalCore
+            BmuxUpdater
+            BMUXAgentLaunch
           )
           # SwiftPM emits an error-severity diagnostic while planning the
           # GhosttyKit binaryTarget (the xcframework's static archive is not
@@ -953,7 +953,7 @@ jobs:
             fi
             echo "::group::swift test $pkgdir"
             case "$pkg" in
-            CmuxAuthRuntime)
+            BmuxAuthRuntime)
               suite_list="$(
                 find "$pkgdir/Tests" -name '*.swift' -print0 \
                   | xargs -0 perl -ne 'print "$1\n" if /^\s*@Suite(?:\([^)]*\))?\s+struct\s+([A-Za-z0-9_]+)/' \
@@ -969,7 +969,7 @@ jobs:
                 swift test --package-path "$pkgdir" --filter "$suite"
               done <<< "$suite_list"
               ;;
-            CmuxTerminal|CmuxTerminalCore)
+            BmuxTerminal|BmuxTerminalCore)
               test_status=0
               output="$(swift test --package-path "$pkgdir" 2>&1)" || test_status=$?
               printf '%s\n' "$output"
@@ -1092,19 +1092,19 @@ jobs:
     # transitive skip otherwise marks every macOS job skipped even when
     # linux-preflight itself succeeds. Require the direct needs explicitly.
     if: ${{ !cancelled() && needs.changes.result == 'success' && needs.linux-preflight.result == 'success' && needs.changes.outputs.macos == 'true' }}
-    # Build the full cmux scheme once, then run the required display/runtime
+    # Build the full bmux scheme once, then run the required display/runtime
     # regressions from the same DerivedData instead of queuing a second display
     # runner for UI-only checks.
     runs-on: ${{ vars.MACOS_RUNNER_DISPLAY || 'warp-macos-15-arm64-6x' }}
     # A cold DerivedData cache (any project.pbxproj or Package.resolved change
     # mints a new cache key with no restore-keys fallback) forces a full
-    # cmux build whose Swift codegen alone can run 20+ min. Project/package
+    # bmux build whose Swift codegen alone can run 20+ min. Project/package
     # changes from the sidebar extension kit pushed this full build plus the
     # CA, lag, and UI regressions beyond 35 min before the cache could repopulate.
     timeout-minutes: 75
     env:
-      CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_15 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      BMUX_CI_XCODE_APP: ${{ vars.BMUX_CI_XCODE_APP_MACOS_15 }}
+      BMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
     steps:
       - name: Validate display runner identity
         env:
@@ -1156,10 +1156,10 @@ jobs:
       - name: Prepare isolated DerivedData
         run: |
           set -euo pipefail
-          DERIVED_DATA_PATH="$RUNNER_TEMP/cmux-deriveddata-tests-build-and-lag"
+          DERIVED_DATA_PATH="$RUNNER_TEMP/bmux-deriveddata-tests-build-and-lag"
           rm -rf "$DERIVED_DATA_PATH"
           mkdir -p "$DERIVED_DATA_PATH"
-          echo "CMUX_DERIVED_DATA_PATH=$DERIVED_DATA_PATH" >> "$GITHUB_ENV"
+          echo "BMUX_DERIVED_DATA_PATH=$DERIVED_DATA_PATH" >> "$GITHUB_ENV"
 
       - name: Capture Ghostty revision
         id: ghostty-revision
@@ -1196,14 +1196,14 @@ jobs:
       - name: Cache DerivedData
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
-          path: ${{ runner.temp }}/cmux-deriveddata-tests-build-and-lag
-          key: deriveddata-build-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('cmux.xcodeproj/project.pbxproj') }}-${{ steps.ghostty-revision.outputs.sha }}
+          path: ${{ runner.temp }}/bmux-deriveddata-tests-build-and-lag
+          key: deriveddata-build-${{ hashFiles('bmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('bmux.xcodeproj/project.pbxproj') }}-${{ steps.ghostty-revision.outputs.sha }}
 
       - name: Cache Swift packages
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .ci-source-packages
-          key: spm-build-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: spm-build-${{ hashFiles('bmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: spm-build-
 
       - name: Sanitize Swift package cache
@@ -1213,12 +1213,12 @@ jobs:
         run: |
           set -euo pipefail
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
-          mkdir -p "$CMUX_DERIVED_DATA_PATH"
+          mkdir -p "$BMUX_DERIVED_DATA_PATH"
           mkdir -p "$SOURCE_PACKAGES_DIR"
 
           for attempt in 1 2 3; do
-            if xcodebuild -project cmux.xcodeproj -scheme cmux -configuration Debug \
-              -derivedDataPath "$CMUX_DERIVED_DATA_PATH" \
+            if xcodebuild -project bmux.xcodeproj -scheme bmux -configuration Debug \
+              -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
               -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
               -resolvePackageDependencies; then
               # Guard against a stale/poisoned Swift-package cache: a restored
@@ -1243,14 +1243,14 @@ jobs:
         run: |
           set -euo pipefail
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
-          xcodebuild -project cmux.xcodeproj -scheme cmux -configuration Debug \
-            -derivedDataPath "$CMUX_DERIVED_DATA_PATH" \
+          xcodebuild -project bmux.xcodeproj -scheme bmux -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
             -disableAutomaticPackageResolution \
-            -destination "platform=macOS" build-for-testing 2>&1 | tee /tmp/cmux-build-output.txt
+            -destination "platform=macOS" build-for-testing 2>&1 | tee /tmp/bmux-build-output.txt
 
       - name: Validate Swift warning budget
-        run: python3 scripts/swift_warning_budget.py --log /tmp/cmux-build-output.txt
+        run: python3 scripts/swift_warning_budget.py --log /tmp/bmux-build-output.txt
 
       - name: Run display UI regressions
         run: scripts/ci/run-display-ui-regressions.sh
@@ -1259,9 +1259,9 @@ jobs:
         run: |
           set -euo pipefail
           HELPER_PATH="$RUNNER_TEMP/create-virtual-display"
-          VDISPLAY_READY="$RUNNER_TEMP/cmux-build-lag-vdisplay.ready"
-          VDISPLAY_ID_PATH="$RUNNER_TEMP/cmux-build-lag-vdisplay.id"
-          VDISPLAY_LOG="$RUNNER_TEMP/cmux-build-lag-vdisplay.log"
+          VDISPLAY_READY="$RUNNER_TEMP/bmux-build-lag-vdisplay.ready"
+          VDISPLAY_ID_PATH="$RUNNER_TEMP/bmux-build-lag-vdisplay.id"
+          VDISPLAY_LOG="$RUNNER_TEMP/bmux-build-lag-vdisplay.log"
           VDISPLAY_PID=""
 
           clang -framework Foundation -framework CoreGraphics \
@@ -1288,10 +1288,10 @@ jobs:
             rm -f "$VDISPLAY_READY" "$VDISPLAY_ID_PATH" "$VDISPLAY_LOG"
             LOCK_ENV="$(scripts/ci/virtual-display-lock.sh acquire)"
             eval "$LOCK_ENV"
-            export CMUX_VDISPLAY_LOCK_DIR CMUX_VDISPLAY_LOCK_TOKEN
+            export BMUX_VDISPLAY_LOCK_DIR BMUX_VDISPLAY_LOCK_TOKEN
             {
-              echo "CMUX_VDISPLAY_LOCK_DIR=$CMUX_VDISPLAY_LOCK_DIR"
-              echo "CMUX_VDISPLAY_LOCK_TOKEN=$CMUX_VDISPLAY_LOCK_TOKEN"
+              echo "BMUX_VDISPLAY_LOCK_DIR=$BMUX_VDISPLAY_LOCK_DIR"
+              echo "BMUX_VDISPLAY_LOCK_TOKEN=$BMUX_VDISPLAY_LOCK_TOKEN"
             } >> "$GITHUB_ENV"
 
             # Now that we hold the lock, reap any leaked display helper so a
@@ -1346,43 +1346,43 @@ jobs:
         run: |
           set -euo pipefail
           APP="$(
-            find "$CMUX_DERIVED_DATA_PATH" -path "*/Build/Products/Debug/cmux DEV.app" -exec stat -f '%m %N' {} \; \
+            find "$BMUX_DERIVED_DATA_PATH" -path "*/Build/Products/Debug/bmux DEV.app" -exec stat -f '%m %N' {} \; \
               | sort -nr \
               | head -1 \
               | cut -d' ' -f2-
           )"
           if [ -z "${APP:-}" ] || [ ! -d "$APP" ]; then
-            echo "cmux DEV.app not found in DerivedData" >&2
+            echo "bmux DEV.app not found in DerivedData" >&2
             exit 1
           fi
 
-          CMUX_ALLOW_UNTAGGED_CA_REGRESSION=1 \
-          CMUX_CA_ASSERT_HOLD_SECONDS=15 \
-          CMUX_TAG="ci-ca-main-thread" \
+          BMUX_ALLOW_UNTAGGED_CA_REGRESSION=1 \
+          BMUX_CA_ASSERT_HOLD_SECONDS=15 \
+          BMUX_TAG="ci-ca-main-thread" \
           ./scripts/verify-main-thread-ca-transactions.sh "$APP"
 
       - name: Run workspace churn typing-lag regression
         run: |
           set -euo pipefail
 
-          APP="$(find "$CMUX_DERIVED_DATA_PATH" -path "*/Build/Products/Debug/cmux DEV.app" -print -quit)"
+          APP="$(find "$BMUX_DERIVED_DATA_PATH" -path "*/Build/Products/Debug/bmux DEV.app" -print -quit)"
           if [ -z "${APP:-}" ] || [ ! -d "$APP" ]; then
-            echo "cmux DEV.app not found in DerivedData" >&2
+            echo "bmux DEV.app not found in DerivedData" >&2
             exit 1
           fi
 
           TAG="ci-lag"
-          SOCK="/tmp/cmux-debug-${TAG}.sock"
+          SOCK="/tmp/bmux-debug-${TAG}.sock"
           BUNDLE_ID="$(
             /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist" 2>/dev/null \
-              || echo 'com.cmuxterm.app.debug'
+              || echo 'com.bmuxterm.app.debug'
           )"
 
-          pkill -x "cmux DEV" || true
-          rm -f "$SOCK" "/tmp/cmux-${TAG}.sock" || true
+          pkill -x "bmux DEV" || true
+          rm -f "$SOCK" "/tmp/bmux-${TAG}.sock" || true
           defaults write "$BUNDLE_ID" socketControlMode -string full >/dev/null 2>&1 || true
 
-          CMUX_TAG="$TAG" CMUX_SOCKET_PATH="$SOCK" CMUX_UI_TEST_MODE=1 "$APP/Contents/MacOS/cmux DEV" >/tmp/cmux-ci-lag.log 2>&1 &
+          BMUX_TAG="$TAG" BMUX_SOCKET_PATH="$SOCK" BMUX_UI_TEST_MODE=1 "$APP/Contents/MacOS/bmux DEV" >/tmp/bmux-ci-lag.log 2>&1 &
           APP_PID=$!
           trap 'kill "$APP_PID" >/dev/null 2>&1 || true' EXIT
 
@@ -1392,15 +1392,15 @@ jobs:
           done
           [ -S "$SOCK" ] || { echo "Socket not ready at $SOCK" >&2; exit 1; }
 
-          CMUX_SOCKET_PATH="$SOCK" \
-          CMUX_LAG_MAX_P95_RATIO=1.70 \
-          CMUX_LAG_MAX_AVG_RATIO=1.70 \
-          CMUX_LAG_MIN_BASELINE_P95_MS_FOR_RATIO=6.0 \
-          CMUX_LAG_MIN_BASELINE_AVG_MS_FOR_RATIO=4.0 \
-          CMUX_LAG_MAX_P95_DELTA_MS=20.0 \
-          CMUX_LAG_MAX_AVG_DELTA_MS=12.0 \
-          CMUX_LAG_MAX_CHURN_P95_MS=35 \
-          CMUX_LAG_KEY_EVENTS=180 \
+          BMUX_SOCKET_PATH="$SOCK" \
+          BMUX_LAG_MAX_P95_RATIO=1.70 \
+          BMUX_LAG_MAX_AVG_RATIO=1.70 \
+          BMUX_LAG_MIN_BASELINE_P95_MS_FOR_RATIO=6.0 \
+          BMUX_LAG_MIN_BASELINE_AVG_MS_FOR_RATIO=4.0 \
+          BMUX_LAG_MAX_P95_DELTA_MS=20.0 \
+          BMUX_LAG_MAX_AVG_DELTA_MS=12.0 \
+          BMUX_LAG_MAX_CHURN_P95_MS=35 \
+          BMUX_LAG_KEY_EVENTS=180 \
           python3 tests/test_workspace_churn_up_arrow_lag.py
 
       - name: Cleanup virtual display
@@ -1442,8 +1442,8 @@ jobs:
     runs-on: ${{ vars.MACOS_RUNNER_26_RELEASE || 'blacksmith-6vcpu-macos-26' }}
     timeout-minutes: 60
     env:
-      CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_26 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      BMUX_CI_XCODE_APP: ${{ vars.BMUX_CI_XCODE_APP_MACOS_26 }}
+      BMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
     steps:
       - name: Clear stale git locks (self-hosted reused workspace)
         shell: bash
@@ -1501,13 +1501,13 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: build-universal
-          key: deriveddata-release-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('cmux.xcodeproj/project.pbxproj') }}-${{ steps.ghostty-revision.outputs.sha }}
+          key: deriveddata-release-${{ hashFiles('bmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('bmux.xcodeproj/project.pbxproj') }}-${{ steps.ghostty-revision.outputs.sha }}
 
       - name: Cache Swift packages
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .spm-cache
-          key: spm-release-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: spm-release-${{ hashFiles('bmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
             spm-release-
             spm-
@@ -1518,7 +1518,7 @@ jobs:
       - name: Build universal app (Release)
         run: |
           set -euo pipefail
-          CMUX_SKIP_ZIG_BUILD=1 xcodebuild -project cmux.xcodeproj -scheme cmux -configuration Release -derivedDataPath build-universal \
+          BMUX_SKIP_ZIG_BUILD=1 xcodebuild -project bmux.xcodeproj -scheme bmux -configuration Release -derivedDataPath build-universal \
             -destination 'generic/platform=macOS' \
             -clonedSourcePackagesDirPath .spm-cache \
             ARCHS="arm64 x86_64" \
@@ -1528,7 +1528,7 @@ jobs:
       - name: Download universal Ghostty CLI helper
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-ghostty-cli-helper
+          name: bmux-ghostty-cli-helper
           path: ghostty-cli-helper
 
       - name: Install universal Ghostty CLI helper
@@ -1536,14 +1536,14 @@ jobs:
           set -euo pipefail
           ./scripts/install-prebuilt-ghostty-cli-helper.sh \
             ghostty-cli-helper/ghostty \
-            build-universal/Build/Products/Release/cmux.app
+            build-universal/Build/Products/Release/bmux.app
 
       - name: Validate Release artifact slices
         run: |
           set -euo pipefail
-          APP_BINARY="build-universal/Build/Products/Release/cmux.app/Contents/MacOS/cmux"
-          CLI_BINARY="build-universal/Build/Products/Release/cmux.app/Contents/Resources/bin/cmux"
-          HELPER_BINARY="build-universal/Build/Products/Release/cmux.app/Contents/Resources/bin/ghostty"
+          APP_BINARY="build-universal/Build/Products/Release/bmux.app/Contents/MacOS/bmux"
+          CLI_BINARY="build-universal/Build/Products/Release/bmux.app/Contents/Resources/bin/bmux"
+          HELPER_BINARY="build-universal/Build/Products/Release/bmux.app/Contents/Resources/bin/ghostty"
           test -x "$APP_BINARY"
           test -x "$CLI_BINARY"
           test -x "$HELPER_BINARY"

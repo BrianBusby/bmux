@@ -66,7 +66,7 @@ function s3Client(): S3Client {
 
 export async function presignPut(key: string, contentLength: number): Promise<string> {
   const config = vaultConfig();
-  if (!config.bucket) throw new Error("CMUX_VAULT_S3_BUCKET is required");
+  if (!config.bucket) throw new Error("BMUX_VAULT_S3_BUCKET is required");
   try {
     return await getSignedUrl(
       s3Client(),
@@ -86,7 +86,7 @@ export async function presignPut(key: string, contentLength: number): Promise<st
 
 export async function presignGet(key: string): Promise<string> {
   const config = vaultConfig();
-  if (!config.bucket) throw new Error("CMUX_VAULT_S3_BUCKET is required");
+  if (!config.bucket) throw new Error("BMUX_VAULT_S3_BUCKET is required");
   try {
     return await getSignedUrl(
       s3Client(),
@@ -104,7 +104,7 @@ export async function presignGet(key: string): Promise<string> {
 
 export async function deleteObject(key: string): Promise<void> {
   const config = vaultConfig();
-  if (!config.bucket) throw new Error("CMUX_VAULT_S3_BUCKET is required");
+  if (!config.bucket) throw new Error("BMUX_VAULT_S3_BUCKET is required");
   try {
     await s3Client().send(new DeleteObjectCommand({ Bucket: config.bucket, Key: key }));
   } catch (error) {
@@ -115,7 +115,7 @@ export async function deleteObject(key: string): Promise<void> {
 
 export async function copyObject(sourceKey: string, destinationKey: string): Promise<void> {
   const config = vaultConfig();
-  if (!config.bucket) throw new Error("CMUX_VAULT_S3_BUCKET is required");
+  if (!config.bucket) throw new Error("BMUX_VAULT_S3_BUCKET is required");
   const copySourceKey = encodeURIComponent(sourceKey).replace(/%2F/g, "/");
   try {
     await s3Client().send(new CopyObjectCommand({
@@ -132,7 +132,7 @@ export async function copyObject(sourceKey: string, destinationKey: string): Pro
 
 export async function headObject(key: string): Promise<HeadObjectResult | null> {
   const config = vaultConfig();
-  if (!config.bucket) throw new Error("CMUX_VAULT_S3_BUCKET is required");
+  if (!config.bucket) throw new Error("BMUX_VAULT_S3_BUCKET is required");
   try {
     const result = await s3Client().send(new HeadObjectCommand({ Bucket: config.bucket, Key: key }));
     return { contentLength: typeof result.ContentLength === "number" ? result.ContentLength : null };

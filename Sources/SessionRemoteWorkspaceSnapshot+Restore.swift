@@ -1,5 +1,5 @@
 import Foundation
-import CmuxCore
+import BmuxCore
 #if canImport(Security)
 import Security
 #endif
@@ -180,16 +180,16 @@ extension SessionRemoteWorkspaceSnapshot {
         WorkspaceRemoteConfiguration.hasSSHOptionKey(options, key: key)
     }
 
-    private static let defaultFreestylePersistentDaemonSlot = "cmux-default-freestyle-sshd-v1"
+    private static let defaultFreestylePersistentDaemonSlot = "bmux-default-freestyle-sshd-v1"
 
     private static func legacyDefaultFreestyleVMID(destination: String, skipDaemonBootstrap: Bool?) -> String? {
         guard skipDaemonBootstrap == true else { return nil }
-        let pattern = #"^([A-Za-z0-9._-]+)\+cmux@vm-ssh\.freestyle\.sh$"#
+        let pattern = #"^([A-Za-z0-9._-]+)\+bmux@vm-ssh\.freestyle\.sh$"#
         guard let match = destination.range(of: pattern, options: .regularExpression) else {
             return nil
         }
         let matched = String(destination[match])
-        guard let plusRange = matched.range(of: "+cmux@vm-ssh.freestyle.sh") else {
+        guard let plusRange = matched.range(of: "+bmux@vm-ssh.freestyle.sh") else {
             return nil
         }
         return String(matched[..<plusRange.lowerBound])
@@ -197,35 +197,35 @@ extension SessionRemoteWorkspaceSnapshot {
 
     private static func defaultFreestyleSSHAttachCommand(vmID: String) -> String {
         let lines = [
-            "cmux_freestyle_cli=\"${CMUX_BUNDLED_CLI_PATH:-}\"",
-            "if [ -z \"$cmux_freestyle_cli\" ] || [ ! -x \"$cmux_freestyle_cli\" ]; then cmux_freestyle_cli=\"$(command -v cmux 2>/dev/null || true)\"; fi",
-            "if [ -z \"$cmux_freestyle_cli\" ]; then printf '%s\\n' '[cmux] bundled CLI not found for Cloud VM SSH attach.' >&2; exit 127; fi",
-            "CMUX_SSH_RECONNECT_LIMIT=\"${CMUX_SSH_RECONNECT_LIMIT:-86400}\"",
-            "CMUX_SSH_RECONNECT_DELAY_SECONDS=\"${CMUX_SSH_RECONNECT_DELAY_SECONDS:-2}\"",
-            "CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT=\"${CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT:-$CMUX_SSH_RECONNECT_LIMIT}\"",
-            "CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS=\"${CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS:-$CMUX_SSH_RECONNECT_DELAY_SECONDS}\"",
-            "export CMUX_SSH_RECONNECT_LIMIT CMUX_SSH_RECONNECT_DELAY_SECONDS",
-            "export CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS",
-            "cmux_freestyle_attach() {",
-            "  if [ -n \"${CMUX_SOCKET_PATH:-}\" ]; then",
-            "    \"$cmux_freestyle_cli\" --socket \"$CMUX_SOCKET_PATH\" vm-pty-attach --id \(shellQuote(vmID)) --default-freestyle-sshd",
+            "bmux_freestyle_cli=\"${BMUX_BUNDLED_CLI_PATH:-}\"",
+            "if [ -z \"$bmux_freestyle_cli\" ] || [ ! -x \"$bmux_freestyle_cli\" ]; then bmux_freestyle_cli=\"$(command -v bmux 2>/dev/null || true)\"; fi",
+            "if [ -z \"$bmux_freestyle_cli\" ]; then printf '%s\\n' '[bmux] bundled CLI not found for Cloud VM SSH attach.' >&2; exit 127; fi",
+            "BMUX_SSH_RECONNECT_LIMIT=\"${BMUX_SSH_RECONNECT_LIMIT:-86400}\"",
+            "BMUX_SSH_RECONNECT_DELAY_SECONDS=\"${BMUX_SSH_RECONNECT_DELAY_SECONDS:-2}\"",
+            "BMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT=\"${BMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT:-$BMUX_SSH_RECONNECT_LIMIT}\"",
+            "BMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS=\"${BMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS:-$BMUX_SSH_RECONNECT_DELAY_SECONDS}\"",
+            "export BMUX_SSH_RECONNECT_LIMIT BMUX_SSH_RECONNECT_DELAY_SECONDS",
+            "export BMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT BMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS",
+            "bmux_freestyle_attach() {",
+            "  if [ -n \"${BMUX_SOCKET_PATH:-}\" ]; then",
+            "    \"$bmux_freestyle_cli\" --socket \"$BMUX_SOCKET_PATH\" vm-pty-attach --id \(shellQuote(vmID)) --default-freestyle-sshd",
             "  else",
-            "    \"$cmux_freestyle_cli\" vm-pty-attach --id \(shellQuote(vmID)) --default-freestyle-sshd",
+            "    \"$bmux_freestyle_cli\" vm-pty-attach --id \(shellQuote(vmID)) --default-freestyle-sshd",
             "  fi",
             "}",
-            "cmux_freestyle_retry=0",
+            "bmux_freestyle_retry=0",
             "while :; do",
-            "  if [ \"$cmux_freestyle_retry\" -gt 0 ]; then",
-            "    export CMUX_CLOUD_RECONNECT_ATTEMPT=\"$cmux_freestyle_retry\"",
+            "  if [ \"$bmux_freestyle_retry\" -gt 0 ]; then",
+            "    export BMUX_CLOUD_RECONNECT_ATTEMPT=\"$bmux_freestyle_retry\"",
             "  else",
-            "    unset CMUX_CLOUD_RECONNECT_ATTEMPT",
+            "    unset BMUX_CLOUD_RECONNECT_ATTEMPT",
             "  fi",
-            "  cmux_freestyle_attach",
-            "  cmux_freestyle_status=$?",
-            "  case \"$cmux_freestyle_status\" in 254|255) ;; *) exit \"$cmux_freestyle_status\" ;; esac",
-            "  if [ \"$cmux_freestyle_retry\" -ge \"$CMUX_SSH_RECONNECT_LIMIT\" ]; then exit \"$cmux_freestyle_status\"; fi",
-            "  cmux_freestyle_retry=$((cmux_freestyle_retry + 1))",
-            "  sleep \"$CMUX_SSH_RECONNECT_DELAY_SECONDS\"",
+            "  bmux_freestyle_attach",
+            "  bmux_freestyle_status=$?",
+            "  case \"$bmux_freestyle_status\" in 254|255) ;; *) exit \"$bmux_freestyle_status\" ;; esac",
+            "  if [ \"$bmux_freestyle_retry\" -ge \"$BMUX_SSH_RECONNECT_LIMIT\" ]; then exit \"$bmux_freestyle_status\"; fi",
+            "  bmux_freestyle_retry=$((bmux_freestyle_retry + 1))",
+            "  sleep \"$BMUX_SSH_RECONNECT_DELAY_SECONDS\"",
             "done",
         ]
         return "/bin/sh -c \(shellQuote(lines.joined(separator: "\n")))"

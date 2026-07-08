@@ -1,5 +1,5 @@
 import AppKit
-import CmuxSettings
+import BmuxSettings
 import WebKit
 
 struct ShortcutEventFocusContext {
@@ -28,8 +28,8 @@ struct ShortcutEventFocusContextCache {
 }
 
 extension Notification.Name {
-    static let debugBrowserReloadShortcutInvoked = Notification.Name("cmux.debugBrowserReloadShortcutInvoked")
-    static let debugBrowserHardReloadShortcutInvoked = Notification.Name("cmux.debugBrowserHardReloadShortcutInvoked")
+    static let debugBrowserReloadShortcutInvoked = Notification.Name("bmux.debugBrowserReloadShortcutInvoked")
+    static let debugBrowserHardReloadShortcutInvoked = Notification.Name("bmux.debugBrowserHardReloadShortcutInvoked")
 }
 
 extension AppDelegate {
@@ -195,7 +195,7 @@ extension AppDelegate {
     private func shortcutFileExplorerFocusView(for responder: NSResponder) -> NSView? {
         if let textView = responder as? NSTextView,
            textView.isFieldEditor,
-           let ownerView = cmuxFieldEditorOwnerView(textView) {
+           let ownerView = bmuxFieldEditorOwnerView(textView) {
             return fileExplorerShortcutFocusRoot(containing: ownerView)
         }
 
@@ -235,7 +235,7 @@ extension AppDelegate {
         }
 
         let responder = shortcutWindow.firstResponder
-        if cmuxOwningGhosttyView(for: responder) != nil {
+        if bmuxOwningGhosttyView(for: responder) != nil {
             return nil
         }
 
@@ -305,7 +305,7 @@ extension AppDelegate {
 
     private func shortcutWebInspectorFocusedBrowserPanel(in window: NSWindow?) -> BrowserPanel? {
         let responder = window?.firstResponder ?? NSApp.keyWindow?.firstResponder ?? NSApp.mainWindow?.firstResponder
-        guard cmuxIsLikelyWebInspectorResponder(responder) else { return nil }
+        guard bmuxIsLikelyWebInspectorResponder(responder) else { return nil }
 
         if let window,
            let context = mainWindowContexts[ObjectIdentifier(window)] ??
@@ -402,7 +402,7 @@ extension AppDelegate {
 
         if let textView = responder as? NSTextView,
            textView.isFieldEditor,
-           let ownerView = cmuxFieldEditorOwnerView(textView),
+           let ownerView = bmuxFieldEditorOwnerView(textView),
            let webView = shortcutOwningWebView(for: ownerView) {
             return webView
         }

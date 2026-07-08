@@ -24,7 +24,7 @@ export function FaqPlatformAnswer({ linkClass }: { linkClass: string }) {
             <button
               type="button"
               onClick={() => {
-                posthog.capture("cmuxterm_waitlist_opened", {
+                posthog.capture("bmuxterm_waitlist_opened", {
                   location: LOCATION,
                   platform: "any",
                 });

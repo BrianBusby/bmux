@@ -24,7 +24,7 @@ export function getProvider(id: ProviderId): VMProvider {
 }
 
 export function defaultProviderId(): ProviderId {
-  const configured = process.env.CMUX_VM_DEFAULT_PROVIDER as ProviderId | undefined;
+  const configured = process.env.BMUX_VM_DEFAULT_PROVIDER as ProviderId | undefined;
   if (configured === "e2b" || configured === "freestyle" || configured === "daytona") return configured;
   // Freestyle is the default for interactive work. The route layer still resolves
   // the provider image from the manifest/env before any paid create.

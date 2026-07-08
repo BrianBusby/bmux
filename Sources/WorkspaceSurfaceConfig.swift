@@ -1,42 +1,42 @@
 import Foundation
-import CmuxFoundation
-import CmuxTerminalCore
+import BmuxFoundation
+import BmuxTerminalCore
 
-// CmuxSurfaceConfigTemplate and the surface runtime probes moved to
-// CmuxTerminalCore (SurfaceValues/CmuxSurfaceConfigTemplate.swift and
+// BmuxSurfaceConfigTemplate and the surface runtime probes moved to
+// BmuxTerminalCore (SurfaceValues/BmuxSurfaceConfigTemplate.swift and
 // Interop/GhosttySurfaceRuntimeProbe.swift). The legacy free-function names
 // below are shims forwarding existing app callers to the probe.
 
-typealias CmuxSurfaceConfigTemplate = CmuxTerminalCore.CmuxSurfaceConfigTemplate
+typealias BmuxSurfaceConfigTemplate = BmuxTerminalCore.BmuxSurfaceConfigTemplate
 
-func cmuxSurfaceContextName(_ context: ghostty_surface_context_e) -> String {
+func bmuxSurfaceContextName(_ context: ghostty_surface_context_e) -> String {
     GhosttySurfaceRuntimeProbe.contextName(context)
 }
 
-func cmuxSurfacePointerAppearsLive(_ surface: ghostty_surface_t) -> Bool {
+func bmuxSurfacePointerAppearsLive(_ surface: ghostty_surface_t) -> Bool {
     GhosttySurfaceRuntimeProbe.surfacePointerAppearsLive(surface)
 }
 
-func cmuxCurrentSurfaceFontSizePoints(_ surface: ghostty_surface_t) -> Float? {
+func bmuxCurrentSurfaceFontSizePoints(_ surface: ghostty_surface_t) -> Float? {
     GhosttySurfaceRuntimeProbe.currentSurfaceFontSizePoints(surface)
 }
 
-func cmuxInheritedSurfaceConfig(
+func bmuxInheritedSurfaceConfig(
     sourceSurface: ghostty_surface_t,
     context: ghostty_surface_context_e
-) -> CmuxSurfaceConfigTemplate {
+) -> BmuxSurfaceConfigTemplate {
     let inherited = ghostty_surface_inherited_config(sourceSurface, context)
     let percent = GlobalFontMagnification.storedPercent
-    var config = CmuxSurfaceConfigTemplate(
+    var config = BmuxSurfaceConfigTemplate(
         cConfig: inherited,
         globalFontMagnificationPercent: percent
     )
 
     // Make runtime zoom inheritance explicit, even when Ghostty's
     // inherit-font-size config is disabled.
-    let runtimePoints = cmuxCurrentSurfaceFontSizePoints(sourceSurface)
+    let runtimePoints = bmuxCurrentSurfaceFontSizePoints(sourceSurface)
     if let points = runtimePoints {
-        config.fontSize = CmuxSurfaceConfigTemplate.baseFontSize(
+        config.fontSize = BmuxSurfaceConfigTemplate.baseFontSize(
             fromRuntimePoints: points,
             percent: percent
         )
@@ -46,8 +46,8 @@ func cmuxInheritedSurfaceConfig(
     let inheritedText = String(format: "%.2f", inherited.font_size)
     let runtimeText = runtimePoints.map { String(format: "%.2f", $0) } ?? "nil"
     let finalText = String(format: "%.2f", config.fontSize)
-    cmuxDebugLog(
-        "zoom.inherit context=\(cmuxSurfaceContextName(context)) " +
+    bmuxDebugLog(
+        "zoom.inherit context=\(bmuxSurfaceContextName(context)) " +
         "inherited=\(inheritedText) runtime=\(runtimeText) final=\(finalText)"
     )
 #endif

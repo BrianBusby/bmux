@@ -1,4 +1,4 @@
-import CmuxControlSocket
+import BmuxControlSocket
 import Foundation
 
 /// The mobile-host-domain witnesses are the byte-faithful bodies of the former

@@ -7,7 +7,7 @@
         {
           "type": "command",
           "request": { "id": 1, "cmd": "identify" },
-          "expect": { "id": 1, "ok": true, "data": { "app": "cmux-mux", "protocol": 6 } },
+          "expect": { "id": 1, "ok": true, "data": { "app": "bmux-mux", "protocol": 6 } },
           "match": "partial"
         }
       ]
@@ -23,7 +23,7 @@
         },
         {
           "type": "command",
-          "request": { "id": 2, "cmd": "set-window-title", "title": "cmux-conformance" },
+          "request": { "id": 2, "cmd": "set-window-title", "title": "bmux-conformance" },
           "expect": { "id": 2, "ok": true, "data": {} },
           "match": "exact"
         },
@@ -203,7 +203,7 @@
         },
         {
           "type": "command",
-          "request": { "id": 2, "cmd": "send", "surface": "$surface0", "text": "printf 'cmux-conformance-marker\\n'\r" },
+          "request": { "id": 2, "cmd": "send", "surface": "$surface0", "text": "printf 'bmux-conformance-marker\\n'\r" },
           "expect": { "id": 2, "ok": true },
           "match": "partial"
         },
@@ -211,7 +211,7 @@
           "type": "wait_contains",
           "request": { "id": 3, "cmd": "read-screen", "surface": "$surface0" },
           "path": "data.text",
-          "contains": "cmux-conformance-marker",
+          "contains": "bmux-conformance-marker",
           "timeout_ms": 10000
         }
       ]
@@ -224,7 +224,7 @@
       "steps": [
         {
           "type": "command",
-          "request": { "id": 1, "cmd": "run", "command": "printf 'cmux-run-marker\\n'; cat", "name": "conf-run", "cols": 80, "rows": 24 },
+          "request": { "id": 1, "cmd": "run", "command": "printf 'bmux-run-marker\\n'; cat", "name": "conf-run", "cols": 80, "rows": 24 },
           "expect": { "id": 1, "ok": true },
           "match": "partial",
           "bind": { "surface0": "data.surface" }
@@ -233,12 +233,12 @@
           "type": "wait_contains",
           "request": { "id": 2, "cmd": "copy", "surface": "$surface0", "mode": "screen" },
           "path": "data.text",
-          "contains": "cmux-run-marker",
+          "contains": "bmux-run-marker",
           "timeout_ms": 10000
         },
         {
           "type": "command",
-          "request": { "id": 3, "cmd": "wait-for", "surface": "$surface0", "pattern": "cmux-run-marker", "timeout_ms": 5000 },
+          "request": { "id": 3, "cmd": "wait-for", "surface": "$surface0", "pattern": "bmux-run-marker", "timeout_ms": 5000 },
           "expect": { "id": 3, "ok": true, "data": { "matched": true } },
           "match": "partial"
         },

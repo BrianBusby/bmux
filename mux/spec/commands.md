@@ -1,6 +1,6 @@
 # Command Contract
 
-This file specifies the JSON command contract for the cmux-mux protocol. Implemented commands match protocol v6 in `mux/crates/mux-core/src/server.rs`.
+This file specifies the JSON command contract for the bmux-mux protocol. Implemented commands match protocol v6 in `mux/crates/mux-core/src/server.rs`.
 
 ## Notation
 
@@ -101,14 +101,14 @@ The `dead` pane variant is serialized by the v5 server only if the tree referenc
 | status | implemented |
 | since | protocol 5 |
 
-Returns process and protocol metadata for the connected mux server. Clients use this command to verify that the socket endpoint is cmux-mux and to check feature compatibility.
+Returns process and protocol metadata for the connected mux server. Clients use this command to verify that the socket endpoint is bmux-mux and to check feature compatibility.
 
 Params: none.
 
 Result:
 
 ```text
-object{app:"cmux-mux",version:string,protocol:uint32,session:string,pid:uint32}
+object{app:"bmux-mux",version:string,protocol:uint32,session:string,pid:uint32}
 ```
 
 Errors:
@@ -123,7 +123,7 @@ CLI mapping:
 | --- | --- |
 | Verb | `identify` |
 | Flags | none |
-| Plain stdout | `cmux-mux session=<session> protocol=<protocol> pid=<pid>` |
+| Plain stdout | `bmux-mux session=<session> protocol=<protocol> pid=<pid>` |
 | JSON stdout | exact result object |
 | Exit codes | common |
 
@@ -131,7 +131,7 @@ Example:
 
 ```json
 {"id":1,"cmd":"identify"}
-{"id":1,"ok":true,"data":{"app":"cmux-mux","version":"0.1.0","protocol":6,"session":"main","pid":12345}}
+{"id":1,"ok":true,"data":{"app":"bmux-mux","version":"0.1.0","protocol":6,"session":"main","pid":12345}}
 ```
 
 ### ping
@@ -154,7 +154,7 @@ object{ok:true,version:string,protocol:uint32}
 
 Errors: `bad request: ...`.
 
-CLI mapping: verb `ping`; flags none; plain stdout prints `cmux-mux version=<version> protocol=<protocol>`; JSON stdout prints the exact result object.
+CLI mapping: verb `ping`; flags none; plain stdout prints `bmux-mux version=<version> protocol=<protocol>`; JSON stdout prints the exact result object.
 
 Example:
 
@@ -171,7 +171,7 @@ Example:
 | status | implemented |
 | since | protocol 6 |
 
-Requests that attached TUI frontends re-read the mux config from the same source as startup config loading (`CMUX_MUX_CONFIG`, then XDG config, then `~/.config/cmux/mux.json`) and redraw. Headless servers acknowledge the command but have no TUI state to update.
+Requests that attached TUI frontends re-read the mux config from the same source as startup config loading (`BMUX_MUX_CONFIG`, then XDG config, then `~/.config/bmux/mux.json`) and redraw. Headless servers acknowledge the command but have no TUI state to update.
 
 Params: none.
 
@@ -191,7 +191,7 @@ Example:
 
 ```json
 {"id":3,"cmd":"reload-config"}
-{"id":3,"ok":true,"data":{"reloaded":true,"path":"/Users/me/.config/cmux/mux.json"}}
+{"id":3,"ok":true,"data":{"reloaded":true,"path":"/Users/me/.config/bmux/mux.json"}}
 ```
 
 ### set-window-title
@@ -2236,7 +2236,7 @@ Example:
 
 ## Proposed Hooks Config
 
-Hooks are proposed protocol v6 config, not a socket command. They are declared in `~/.config/cmux/mux.json` under `hooks`.
+Hooks are proposed protocol v6 config, not a socket command. They are declared in `~/.config/bmux/mux.json` under `hooks`.
 
 Schema:
 
@@ -2271,16 +2271,16 @@ Common environment:
 
 | Env var | Meaning |
 | --- | --- |
-| `CMUX_MUX_SESSION` | Session name |
-| `CMUX_MUX_SOCKET` | Unix socket path when available |
-| `CMUX_MUX_EVENT` | Hook event name |
-| `CMUX_MUX_SURFACE` | Surface id when the event is surface-scoped |
-| `CMUX_MUX_WORKSPACE` | Workspace id when known |
-| `CMUX_MUX_SCREEN` | Screen id when known |
-| `CMUX_MUX_PANE` | Pane id when known |
-| `CMUX_MUX_AGENT_STATE` | Agent state for agent hooks |
-| `CMUX_MUX_AGENT_SOURCE` | Agent source for agent hooks |
-| `CMUX_MUX_AGENT_SESSION` | Upstream agent session id when reported |
+| `BMUX_MUX_SESSION` | Session name |
+| `BMUX_MUX_SOCKET` | Unix socket path when available |
+| `BMUX_MUX_EVENT` | Hook event name |
+| `BMUX_MUX_SURFACE` | Surface id when the event is surface-scoped |
+| `BMUX_MUX_WORKSPACE` | Workspace id when known |
+| `BMUX_MUX_SCREEN` | Screen id when known |
+| `BMUX_MUX_PANE` | Pane id when known |
+| `BMUX_MUX_AGENT_STATE` | Agent state for agent hooks |
+| `BMUX_MUX_AGENT_SOURCE` | Agent source for agent hooks |
+| `BMUX_MUX_AGENT_SESSION` | Upstream agent session id when reported |
 
 Hook event mapping:
 

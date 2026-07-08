@@ -101,11 +101,11 @@ export function GitHubStarsBadge({
 
   return (
     <a
-      href="https://github.com/manaflow-ai/cmux"
+      href="https://github.com/manaflow-ai/bmux"
       target="_blank"
       rel="noopener noreferrer"
       onClick={() =>
-        posthog.capture("cmuxterm_github_clicked", { location })
+        posthog.capture("bmuxterm_github_clicked", { location })
       }
       className={classes}
     >

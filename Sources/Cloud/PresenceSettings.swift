@@ -6,25 +6,25 @@ import Foundation
 /// enabled and a service URL is set (the production worker URL ships with the
 /// Settings surface as a follow-up). Debug default ON against the dev/staging
 /// instance: Debug builds sign into the dev Stack project, which is exactly
-/// what `cmux-presence-dev` verifies, so tagged dogfood builds get live
+/// what `bmux-presence-dev` verifies, so tagged dogfood builds get live
 /// presence with zero setup while both defaults stay explicitly overridable.
 enum PresenceSettings {
     /// Master gate. Resolved by ``isEnabled(defaults:)``; an explicit value
     /// always wins, otherwise Debug defaults on and Release off.
     static let enabledKey = "presenceHeartbeatEnabled"
-    /// Base URL of the presence service (the cmux-presence worker), e.g.
-    /// "https://cmux-presence.<account>.workers.dev". Empty means disabled.
+    /// Base URL of the presence service (the bmux-presence worker), e.g.
+    /// "https://bmux-presence.<account>.workers.dev". Empty means disabled.
     static let serviceURLKey = "presenceServiceURL"
-    /// Env override for dev/tagged builds, mirroring CMUX_VM_API_BASE_URL.
-    static let serviceURLEnvKey = "CMUX_PRESENCE_BASE_URL"
+    /// Env override for dev/tagged builds, mirroring BMUX_VM_API_BASE_URL.
+    static let serviceURLEnvKey = "BMUX_PRESENCE_BASE_URL"
     /// The dev/staging worker (dev Stack project), the Debug-build default.
     /// See workers/presence/README.md.
-    static let debugDefaultServiceURL = "https://cmux-presence-dev.debussy.workers.dev"
+    static let debugDefaultServiceURL = "https://bmux-presence-dev.debussy.workers.dev"
 
     /// The production presence worker (prod Stack project), the Release-build
-    /// default so stable cmux can announce presence once the user enables mobile.
+    /// default so stable bmux can announce presence once the user enables mobile.
     /// See workers/presence/README.md.
-    static let productionServiceURL = "https://presence.cmux.dev"
+    static let productionServiceURL = "https://presence.bmux.dev"
 
     /// Whether the heartbeat gate is on. An explicitly written value always wins.
     /// With no stored value, presence FOLLOWS the mobile feature: announcing the

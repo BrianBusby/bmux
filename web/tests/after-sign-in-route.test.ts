@@ -6,7 +6,7 @@ process.env.NEXT_PUBLIC_STACK_PROJECT_ID = "00000000-0000-4000-8000-000000000000
 process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY = "test-publishable-key";
 process.env.STACK_SECRET_SERVER_KEY = "test-secret-key";
 
-const HANDOFF_COOKIE = "cmux-native-auth-handoff";
+const HANDOFF_COOKIE = "bmux-native-auth-handoff";
 let handoffCookie: string | undefined;
 let rawRefreshCookie: string;
 let rawAccessCookie: string;
@@ -36,7 +36,7 @@ function signInRequest(nativeReturnTo: string, handoffNonce: string): NextReques
   const encodedReturnTo = encodeURIComponent(nativeReturnTo);
   const encodedNonce = encodeURIComponent(handoffNonce);
   return new NextRequest(
-    `https://cmux.test/handler/after-sign-in?native_app_return_to=${encodedReturnTo}&cmux_auth_handoff=${encodedNonce}`,
+    `https://bmux.test/handler/after-sign-in?native_app_return_to=${encodedReturnTo}&bmux_auth_handoff=${encodedNonce}`,
     {
       headers: {
         "accept-language": "en",
@@ -46,7 +46,7 @@ function signInRequest(nativeReturnTo: string, handoffNonce: string): NextReques
 }
 
 function returnHref(html: string): string {
-  const match = html.match(/<a class="primary" href="([^"]+)">Return to cmux<\/a>/);
+  const match = html.match(/<a class="primary" href="([^"]+)">Return to bmux<\/a>/);
   expect(match).toBeTruthy();
   return match![1].replaceAll("&amp;", "&");
 }
@@ -69,24 +69,24 @@ describe("after sign-in native handoff", () => {
 
   test("keeps an interactive return page for verified native handoffs", async () => {
     handoffCookie = "handoff-nonce";
-    const nativeReturnTo = "cmux://auth-callback?cmux_auth_state=state-123";
+    const nativeReturnTo = "bmux://auth-callback?bmux_auth_state=state-123";
 
     const response = await GET(signInRequest(nativeReturnTo, "handoff-nonce"));
 
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
     const html = await response.text();
-    expect(html).toContain("Signed in to cmux");
-    expect(html).toContain("Return to cmux");
+    expect(html).toContain("Signed in to bmux");
+    expect(html).toContain("Return to bmux");
     expect(html).toContain("window.location.replace");
     expect(html).toContain("window.clearTimeout");
     expect(html).toContain("document.querySelectorAll(\"a\")");
     expect(html).not.toContain("http-equiv=\"refresh\"");
 
     const callbackURL = new URL(returnHref(html));
-    expect(callbackURL.protocol).toBe("cmux:");
+    expect(callbackURL.protocol).toBe("bmux:");
     expect(callbackURL.hostname).toBe("auth-callback");
-    expect(callbackURL.searchParams.get("cmux_auth_state")).toBe("state-123");
+    expect(callbackURL.searchParams.get("bmux_auth_state")).toBe("state-123");
     expect(callbackURL.searchParams.get("stack_refresh")).toBe("refresh-token");
     expect(callbackURL.searchParams.get("stack_access")).toBe(
       JSON.stringify(["refresh-token", "access-token"])
@@ -96,16 +96,16 @@ describe("after sign-in native handoff", () => {
     expect(setCookie).toContain("Max-Age=0");
     expect(setCookie).toContain("Path=/handler/after-sign-in");
 
-    const switchURL = new URL(switchAccountHref(html), "https://cmux.test");
+    const switchURL = new URL(switchAccountHref(html), "https://bmux.test");
     expect(switchURL.pathname).toBe("/handler/sign-out-and-sign-in");
     const nativeSignInTarget = new URL(
       switchURL.searchParams.get("after_auth_return_to")!,
-      "https://cmux.test"
+      "https://bmux.test"
     );
     expect(nativeSignInTarget.pathname).toBe("/handler/native-sign-in");
     const afterSignInTarget = new URL(
       nativeSignInTarget.searchParams.get("after_auth_return_to")!,
-      "https://cmux.test"
+      "https://bmux.test"
     );
     expect(afterSignInTarget.pathname).toBe("/handler/after-sign-in");
     expect(afterSignInTarget.searchParams.get("native_app_return_to")).toBe(nativeReturnTo);
@@ -114,21 +114,21 @@ describe("after sign-in native handoff", () => {
 
   test("keeps the manual return page when the handoff nonce is not verified", async () => {
     handoffCookie = "different-nonce";
-    const nativeReturnTo = "cmux://auth-callback?cmux_auth_state=state-123";
+    const nativeReturnTo = "bmux://auth-callback?bmux_auth_state=state-123";
 
     const response = await GET(signInRequest(nativeReturnTo, "handoff-nonce"));
 
     expect(response.status).toBe(200);
     const html = await response.text();
-    expect(html).toContain("Signed in to cmux");
-    expect(html).toContain("Return to cmux");
+    expect(html).toContain("Signed in to bmux");
+    expect(html).toContain("Return to bmux");
     expect(html).not.toContain("window.location.replace");
-    expect(returnHref(html)).toContain("cmux://auth-callback");
+    expect(returnHref(html)).toContain("bmux://auth-callback");
   });
 
   test("omits account switching when there is no native return target to preserve", async () => {
     const response = await GET(
-      new NextRequest("https://cmux.test/handler/after-sign-in", {
+      new NextRequest("https://bmux.test/handler/after-sign-in", {
         headers: {
           "accept-language": "en",
         },
@@ -137,7 +137,7 @@ describe("after sign-in native handoff", () => {
 
     expect(response.status).toBe(200);
     const html = await response.text();
-    expect(html).toContain("Return to cmux");
+    expect(html).toContain("Return to bmux");
     expect(html).not.toContain("Use a different account");
   });
 
@@ -145,12 +145,12 @@ describe("after sign-in native handoff", () => {
     handoffCookie = "handoff-nonce";
     rawRefreshCookie = "%";
     rawAccessCookie = "%";
-    const nativeReturnTo = "cmux://auth-callback?cmux_auth_state=state-123";
+    const nativeReturnTo = "bmux://auth-callback?bmux_auth_state=state-123";
 
     const response = await GET(signInRequest(nativeReturnTo, "handoff-nonce"));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://cmux.test/");
+    expect(response.headers.get("location")).toBe("https://bmux.test/");
   });
 
   test("mints native handoff tokens for an existing anonymous purchaser session", async () => {
@@ -163,7 +163,7 @@ describe("after sign-in native handoff", () => {
       }),
     }));
     getUserResponses = [null, { createSession }];
-    const nativeReturnTo = "cmux://auth-callback";
+    const nativeReturnTo = "bmux://auth-callback";
 
     const response = await GET(signInRequest(nativeReturnTo, "unused"));
 
@@ -197,7 +197,7 @@ describe("sign out and sign back in", () => {
     includeDefaultFetchSite = true
   ): NextRequest {
     return new NextRequest(
-      `https://cmux.test/handler/sign-out-and-sign-in?after_auth_return_to=${encodeURIComponent(afterAuthReturnTo)}`,
+      `https://bmux.test/handler/sign-out-and-sign-in?after_auth_return_to=${encodeURIComponent(afterAuthReturnTo)}`,
       {
         headers: {
           ...(includeDefaultFetchSite ? { "sec-fetch-site": "same-origin" } : {}),
@@ -210,16 +210,16 @@ describe("sign out and sign back in", () => {
   }
 
   test("signs out and redirects back to the native sign-in flow", async () => {
-    const afterSignIn = "/handler/after-sign-in?native_app_return_to=cmux%3A%2F%2Fauth-callback%3Fcmux_auth_state%3Dstate-123";
+    const afterSignIn = "/handler/after-sign-in?native_app_return_to=bmux%3A%2F%2Fauth-callback%3Fbmux_auth_state%3Dstate-123";
     const nativeSignIn = `/handler/native-sign-in?after_auth_return_to=${encodeURIComponent(afterSignIn)}`;
 
     const response = await GET(switchRequest(nativeSignIn));
 
     expect(signOut).toHaveBeenCalledWith({
-      redirectUrl: `https://cmux.test${nativeSignIn}`,
+      redirectUrl: `https://bmux.test${nativeSignIn}`,
     });
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe(`https://cmux.test${nativeSignIn}`);
+    expect(response.headers.get("location")).toBe(`https://bmux.test${nativeSignIn}`);
 
     const setCookie = response.headers.get("set-cookie");
     expect(setCookie).toContain("stack-access=;");
@@ -246,13 +246,13 @@ describe("sign out and sign back in", () => {
         throw new Error("stack unavailable");
       },
     });
-    const afterSignIn = "/handler/after-sign-in?native_app_return_to=cmux%3A%2F%2Fauth-callback%3Fcmux_auth_state%3Dstate-123";
+    const afterSignIn = "/handler/after-sign-in?native_app_return_to=bmux%3A%2F%2Fauth-callback%3Fbmux_auth_state%3Dstate-123";
     const nativeSignIn = `/handler/native-sign-in?after_auth_return_to=${encodeURIComponent(afterSignIn)}`;
 
     const response = await GET(switchRequest(nativeSignIn));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe(`https://cmux.test${nativeSignIn}`);
+    expect(response.headers.get("location")).toBe(`https://bmux.test${nativeSignIn}`);
     const setCookie = response.headers.get("set-cookie");
     expect(setCookie).toContain("stack-access=;");
     expect(setCookie).toContain("__Host-stack-access=;");
@@ -263,51 +263,51 @@ describe("sign out and sign back in", () => {
 
     expect(signOut).not.toHaveBeenCalled();
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://cmux.test/");
+    expect(response.headers.get("location")).toBe("https://bmux.test/");
   });
 
   test("rejects nested after-sign-in redirect targets", async () => {
     const afterSignIn =
-      "/handler/after-sign-in?native_app_return_to=cmux%3A%2F%2Fauth-callback%3Fcmux_auth_state%3Dstate-123&after_auth_return_to=%2Fdocs";
+      "/handler/after-sign-in?native_app_return_to=bmux%3A%2F%2Fauth-callback%3Fbmux_auth_state%3Dstate-123&after_auth_return_to=%2Fdocs";
     const nativeSignIn = `/handler/native-sign-in?after_auth_return_to=${encodeURIComponent(afterSignIn)}`;
 
     const response = await GET(switchRequest(nativeSignIn));
 
     expect(signOut).not.toHaveBeenCalled();
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://cmux.test/");
+    expect(response.headers.get("location")).toBe("https://bmux.test/");
   });
 
   test("rejects cross-site attempts to force sign-out", async () => {
-    const afterSignIn = "/handler/after-sign-in?native_app_return_to=cmux%3A%2F%2Fauth-callback%3Fcmux_auth_state%3Dstate-123";
+    const afterSignIn = "/handler/after-sign-in?native_app_return_to=bmux%3A%2F%2Fauth-callback%3Fbmux_auth_state%3Dstate-123";
     const nativeSignIn = `/handler/native-sign-in?after_auth_return_to=${encodeURIComponent(afterSignIn)}`;
 
     const response = await GET(switchRequest(nativeSignIn, { "sec-fetch-site": "cross-site" }));
 
     expect(signOut).not.toHaveBeenCalled();
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://cmux.test/");
+    expect(response.headers.get("location")).toBe("https://bmux.test/");
   });
 
   test("rejects same-site attempts to force sign-out", async () => {
-    const afterSignIn = "/handler/after-sign-in?native_app_return_to=cmux%3A%2F%2Fauth-callback%3Fcmux_auth_state%3Dstate-123";
+    const afterSignIn = "/handler/after-sign-in?native_app_return_to=bmux%3A%2F%2Fauth-callback%3Fbmux_auth_state%3Dstate-123";
     const nativeSignIn = `/handler/native-sign-in?after_auth_return_to=${encodeURIComponent(afterSignIn)}`;
 
     const response = await GET(switchRequest(nativeSignIn, { "sec-fetch-site": "same-site" }));
 
     expect(signOut).not.toHaveBeenCalled();
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://cmux.test/");
+    expect(response.headers.get("location")).toBe("https://bmux.test/");
   });
 
   test("rejects sign-out attempts without a fetch metadata signal", async () => {
-    const afterSignIn = "/handler/after-sign-in?native_app_return_to=cmux%3A%2F%2Fauth-callback%3Fcmux_auth_state%3Dstate-123";
+    const afterSignIn = "/handler/after-sign-in?native_app_return_to=bmux%3A%2F%2Fauth-callback%3Fbmux_auth_state%3Dstate-123";
     const nativeSignIn = `/handler/native-sign-in?after_auth_return_to=${encodeURIComponent(afterSignIn)}`;
 
     const response = await GET(switchRequest(nativeSignIn, {}, false));
 
     expect(signOut).not.toHaveBeenCalled();
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://cmux.test/");
+    expect(response.headers.get("location")).toBe("https://bmux.test/");
   });
 });

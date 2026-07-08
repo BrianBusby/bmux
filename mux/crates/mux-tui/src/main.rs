@@ -1,9 +1,9 @@
-//! cmux-mux: a tmux-like terminal multiplexer TUI.
+//! bmux-mux: a tmux-like terminal multiplexer TUI.
 //!
 //! Runs the mux core (workspaces → split panes → tabs on real PTYs,
 //! terminal state from libghostty-vt) with a Ratatui frontend, and always
 //! exposes the JSON control socket so external frontends can attach.
-//! `cmux-mux attach` connects the same TUI to an existing (usually
+//! `bmux-mux attach` connects the same TUI to an existing (usually
 //! headless) session over that socket, which is how detach/reattach works.
 
 mod app;
@@ -41,12 +41,12 @@ fn install_signal_handlers() {
 }
 
 const USAGE: &str = "\
-cmux-mux - terminal multiplexer backed by libghostty-vt
+bmux-mux - terminal multiplexer backed by libghostty-vt
 
 USAGE:
-  cmux-mux [OPTIONS]           Start a session (TUI + control socket)
-  cmux-mux attach [OPTIONS]    Attach to an existing session's socket
-  cmux-mux <verb> [OPTIONS]    Run one control-socket command
+  bmux-mux [OPTIONS]           Start a session (TUI + control socket)
+  bmux-mux attach [OPTIONS]    Attach to an existing session's socket
+  bmux-mux <verb> [OPTIONS]    Run one control-socket command
 
 OPTIONS:
   --session <name>   Session name (default: main). Determines the socket path.
@@ -143,7 +143,7 @@ fn main() {
     let args = parse_args(raw_args);
     let result = if args.attach { run_attach(args) } else { run_server(args) };
     if let Err(e) = result {
-        eprintln!("cmux-mux: {e}");
+        eprintln!("bmux-mux: {e}");
         std::process::exit(1);
     }
 }
@@ -165,7 +165,7 @@ fn run_server(args: Args) -> anyhow::Result<()> {
     // Compute the socket path up front so surface children inherit it.
     let socket_path =
         args.socket.unwrap_or_else(|| mux_core::server::default_socket_path(&args.session));
-    surface_options.extra_env.push(("CMUX_MUX_SOCKET".into(), socket_path.display().to_string()));
+    surface_options.extra_env.push(("BMUX_MUX_SOCKET".into(), socket_path.display().to_string()));
 
     let mux = Mux::new(args.session.clone(), surface_options);
     mux_core::server::serve(mux.clone(), Some(socket_path.clone()))?;
@@ -186,14 +186,14 @@ fn run_tui(session: Session, session_label: String) -> anyhow::Result<()> {
     let color_result = session.set_default_colors(colors);
     let raw_result = crossterm::terminal::disable_raw_mode();
     if let Err(err) = color_result {
-        eprintln!("cmux-mux: failed to set default colors: {err}");
+        eprintln!("bmux-mux: failed to set default colors: {err}");
     }
     raw_result?;
     app::run(session, session_label)
 }
 
 fn run_headless(mux: &Arc<Mux>, socket_path: &std::path::Path) -> anyhow::Result<()> {
-    eprintln!("cmux-mux: headless, control socket at {}", socket_path.display());
+    eprintln!("bmux-mux: headless, control socket at {}", socket_path.display());
     // Keep the process alive; the control socket drives everything and
     // the mux reaps exited surfaces itself.
     let events = mux.subscribe();
@@ -212,6 +212,6 @@ fn run_headless(mux: &Arc<Mux>, socket_path: &std::path::Path) -> anyhow::Result
 }
 
 fn usage_exit(msg: &str) -> ! {
-    eprintln!("cmux-mux: {msg}\n\n{USAGE}");
+    eprintln!("bmux-mux: {msg}\n\n{USAGE}");
     std::process::exit(2);
 }

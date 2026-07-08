@@ -4,7 +4,7 @@ import type Stripe from "stripe";
 import { validatedNativeCallbackScheme } from "../../../lib/native-callback";
 import { captureBillingError } from "../../../../services/errors";
 import {
-  isCmuxCheckoutSession,
+  isBmuxCheckoutSession,
   recordCheckoutCompletion as recordCheckoutCompletionDefault,
 } from "../../../../services/billing/purchase";
 import { isStripeBillingConfigured, stripe } from "../../../../services/billing/stripe";
@@ -36,7 +36,7 @@ export function makeBillingCompleteHandler(
   return withApiRouteSpan(
     request,
     "/api/billing/complete",
-    { "cmux.subsystem": "billing", "cmux.billing.operation": "stripe_complete" },
+    { "bmux.subsystem": "billing", "bmux.billing.operation": "stripe_complete" },
     async (span) => {
       if (!dependencies.isConfigured()) {
         return NextResponse.redirect(new URL("/pricing?billing=unavailable", request.url));
@@ -48,14 +48,14 @@ export function makeBillingCompleteHandler(
       }
 
       const scheme = validatedNativeCallbackScheme(
-        request.nextUrl.searchParams.get("cmux_scheme"),
+        request.nextUrl.searchParams.get("bmux_scheme"),
         request,
       );
       try {
         const session = await dependencies.stripe().checkout.sessions.retrieve(sessionId, {
           expand: ["subscription", "customer"],
         });
-        if (!isCmuxCheckoutSession(session)) {
+        if (!isBmuxCheckoutSession(session)) {
           return NextResponse.redirect(new URL("/pricing?billing=error", request.url));
         }
         if (
@@ -74,7 +74,7 @@ export function makeBillingCompleteHandler(
           }
           const success = new URL("/billing/success", request.nextUrl.origin);
           success.searchParams.set("session_id", session.id);
-          success.searchParams.set("cmux_scheme", scheme);
+          success.searchParams.set("bmux_scheme", scheme);
           return NextResponse.redirect(success);
         }
         return NextResponse.redirect(new URL("/pricing?welcome=pending", request.url));

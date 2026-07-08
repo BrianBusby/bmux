@@ -21,7 +21,7 @@ import { readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename as pathBasename, extname, isAbsolute, join, relative, resolve } from "node:path";
 
-const PORT = Number(process.env.CMUX_AGENT_UI_PORT ?? 7739);
+const PORT = Number(process.env.BMUX_AGENT_UI_PORT ?? 7739);
 
 // The sidecar binds loopback only, but browsers can still reach loopback from
 // arbitrary web origins (CSRF against the WS control plane) and DNS rebinding
@@ -606,7 +606,7 @@ async function cachedCommands(provider: string, cwd: string): Promise<{ trigger:
 
 async function readKeyConfig(): Promise<{ ctrlJ: "newline" | "menu" }> {
   try {
-    const text = await Bun.file(resolve(homedir(), ".config/cmux/cmux.json")).text();
+    const text = await Bun.file(resolve(homedir(), ".config/bmux/bmux.json")).text();
     const parsed = JSON.parse(text);
     const value = parsed?.agentChat?.keys?.ctrlJ;
     return { ctrlJ: value === "menu" ? "menu" : "newline" };
@@ -636,7 +636,7 @@ function resolveUiConfig(): UiConfig {
 
 function readUiConfig(): UiConfig {
   try {
-    const text = readFileSync(resolve(homedir(), ".config/cmux/cmux.json"), "utf8");
+    const text = readFileSync(resolve(homedir(), ".config/bmux/bmux.json"), "utf8");
     const parsed = JSON.parse(text);
     const fonts = parsed?.agentChat?.fonts ?? {};
     const num = (value: unknown) => typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
@@ -1245,7 +1245,7 @@ function renderPage(url: URL): string {
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>cmux agent</title>
+<title>bmux agent</title>
 <link rel="stylesheet" href="/app.css">
 <style>${css}</style>
 </head><body>
@@ -1262,7 +1262,7 @@ interface StaticAsset {
 }
 
 // Bundle the frontend entries with Bun. Built once at startup and cached by
-// default; rebuilt on request only when CMUX_AGENT_UI_DEV=1 (dev iteration).
+// default; rebuilt on request only when BMUX_AGENT_UI_DEV=1 (dev iteration).
 let assetCache: Map<string, StaticAsset> | null = null;
 let cssAssetCache: StaticAsset | null = null;
 let assetBuildPromise: Promise<Map<string, StaticAsset>> | null = null;
@@ -1294,8 +1294,8 @@ function bundleSizeLine(assets: Map<string, StaticAsset>): string {
 }
 
 export async function buildBundles(): Promise<Map<string, StaticAsset>> {
-  if (assetCache && process.env.CMUX_AGENT_UI_DEV !== "1") return assetCache;
-  if (assetBuildPromise && process.env.CMUX_AGENT_UI_DEV !== "1") return assetBuildPromise;
+  if (assetCache && process.env.BMUX_AGENT_UI_DEV !== "1") return assetCache;
+  if (assetBuildPromise && process.env.BMUX_AGENT_UI_DEV !== "1") return assetBuildPromise;
   assetBuildPromise = buildBundlesFresh().finally(() => {
     assetBuildPromise = null;
   });
@@ -1309,7 +1309,7 @@ async function buildBundlesFresh(): Promise<Map<string, StaticAsset>> {
     target: "browser",
     minify: true,
     splitting: true,
-    outdir: `/tmp/cmux-agent-ui-${process.pid}`,
+    outdir: `/tmp/bmux-agent-ui-${process.pid}`,
     define: { "process.env.NODE_ENV": '"production"' },
   });
   if (!out.success) {
@@ -1329,8 +1329,8 @@ async function buildBundlesFresh(): Promise<Map<string, StaticAsset>> {
 }
 
 export async function cssAsset(): Promise<StaticAsset> {
-  if (cssAssetCache && process.env.CMUX_AGENT_UI_DEV !== "1") return cssAssetCache;
-  if (cssAssetPromise && process.env.CMUX_AGENT_UI_DEV !== "1") return cssAssetPromise;
+  if (cssAssetCache && process.env.BMUX_AGENT_UI_DEV !== "1") return cssAssetCache;
+  if (cssAssetPromise && process.env.BMUX_AGENT_UI_DEV !== "1") return cssAssetPromise;
   cssAssetPromise = cssAssetFresh().finally(() => {
     cssAssetPromise = null;
   });
@@ -1446,7 +1446,7 @@ function startServer() {
         kind: "hello",
         providers: PROVIDERS.map(providerInfo),
         capabilities: capabilitiesMap(),
-        defaultCwd: process.env.CMUX_AGENT_UI_CWD ?? DEFAULT_CWD,
+        defaultCwd: process.env.BMUX_AGENT_UI_CWD ?? DEFAULT_CWD,
         keys: keyConfig,
       }));
       ws.send(JSON.stringify({
@@ -1483,12 +1483,12 @@ function startServer() {
   );
 
   for (const p of PROVIDERS) {
-    refreshCatalog(p.id, process.env.CMUX_AGENT_UI_CWD ?? DEFAULT_CWD).catch((err) => {
+    refreshCatalog(p.id, process.env.BMUX_AGENT_UI_CWD ?? DEFAULT_CWD).catch((err) => {
       console.warn(`catalog warm failed for ${p.id}: ${String(err)}`);
     });
   }
 
-  console.log(`cmux-agent-ui listening on http://127.0.0.1:${server.port}`);
+  console.log(`bmux-agent-ui listening on http://127.0.0.1:${server.port}`);
 }
 
 function sendWsError(ws: Bun.ServerWebSocket<WsData>, op: string, err: unknown) {

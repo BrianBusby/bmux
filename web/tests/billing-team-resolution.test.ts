@@ -27,47 +27,47 @@ describe("billing team resolution", () => {
       selectedTeam: null,
       listTeams: async () => [
         freeTeam("team-free"),
-        { id: "team-empty", clientReadOnlyMetadata: { cmuxPlan: "" } },
+        { id: "team-empty", clientReadOnlyMetadata: { bmuxPlan: "" } },
       ],
     })).resolves.toBeNull();
   });
 
-  test("preserves raw cmuxVmPlan masking before checking cmuxPlan", async () => {
+  test("preserves raw bmuxVmPlan masking before checking bmuxPlan", async () => {
     await expect(resolveBillingTeam({
       selectedTeam: null,
       listTeams: async () => [
         freeTeam("team-free"),
-        { id: "team-masked", clientReadOnlyMetadata: { cmuxVmPlan: "", cmuxPlan: "team" } },
+        { id: "team-masked", clientReadOnlyMetadata: { bmuxVmPlan: "", bmuxPlan: "team" } },
       ],
     })).resolves.toBeNull();
   });
 
-  test("uses the only team paid through cmuxPlan", async () => {
+  test("uses the only team paid through bmuxPlan", async () => {
     await expect(resolveBillingTeam({
       selectedTeam: null,
       listTeams: async () => [
         freeTeam("team-free"),
-        { id: "team-paid", clientReadOnlyMetadata: { cmuxPlan: "team" } },
+        { id: "team-paid", clientReadOnlyMetadata: { bmuxPlan: "team" } },
       ],
     })).resolves.toMatchObject({ id: "team-paid" });
   });
 
-  test("uses the only team paid through cmuxVmPlan", async () => {
+  test("uses the only team paid through bmuxVmPlan", async () => {
     await expect(resolveBillingTeam({
       selectedTeam: null,
       listTeams: async () => [
         freeTeam("team-free"),
-        { id: "team-override", clientReadOnlyMetadata: { cmuxVmPlan: "pro" } },
+        { id: "team-override", clientReadOnlyMetadata: { bmuxVmPlan: "pro" } },
       ],
     })).resolves.toMatchObject({ id: "team-override" });
   });
 
-  test("prefers a real cmuxPlan subscription over a cmuxVmPlan override even with a larger id", async () => {
+  test("prefers a real bmuxPlan subscription over a bmuxVmPlan override even with a larger id", async () => {
     await expect(resolveBillingTeam({
       selectedTeam: null,
       listTeams: async () => [
-        { id: "team-z", clientReadOnlyMetadata: { cmuxPlan: "team" } },
-        { id: "team-a", clientReadOnlyMetadata: { cmuxVmPlan: "pro" } },
+        { id: "team-z", clientReadOnlyMetadata: { bmuxPlan: "team" } },
+        { id: "team-a", clientReadOnlyMetadata: { bmuxVmPlan: "pro" } },
       ],
     })).resolves.toMatchObject({ id: "team-z" });
   });
@@ -76,18 +76,18 @@ describe("billing team resolution", () => {
     await expect(resolveBillingTeam({
       selectedTeam: null,
       listTeams: async () => [
-        { id: "team-z", clientReadOnlyMetadata: { cmuxPlan: "team" } },
-        { id: "team-a", clientReadOnlyMetadata: { cmuxPlan: "team" } },
+        { id: "team-z", clientReadOnlyMetadata: { bmuxPlan: "team" } },
+        { id: "team-a", clientReadOnlyMetadata: { bmuxPlan: "team" } },
       ],
     })).resolves.toMatchObject({ id: "team-a" });
   });
 
-  test("falls back to a cmuxVmPlan override team deterministically when no team has a real subscription", async () => {
+  test("falls back to a bmuxVmPlan override team deterministically when no team has a real subscription", async () => {
     await expect(resolveBillingTeam({
       selectedTeam: null,
       listTeams: async () => [
-        { id: "team-z", clientReadOnlyMetadata: { cmuxVmPlan: "pro" } },
-        { id: "team-a", clientReadOnlyMetadata: { cmuxVmPlan: "enterprise" } },
+        { id: "team-z", clientReadOnlyMetadata: { bmuxVmPlan: "pro" } },
+        { id: "team-a", clientReadOnlyMetadata: { bmuxVmPlan: "enterprise" } },
       ],
     })).resolves.toMatchObject({ id: "team-a" });
   });
@@ -101,9 +101,9 @@ describe("billing team resolution", () => {
 });
 
 function paidTeam(id: string) {
-  return { id, clientReadOnlyMetadata: { cmuxPlan: "team" } };
+  return { id, clientReadOnlyMetadata: { bmuxPlan: "team" } };
 }
 
 function freeTeam(id: string) {
-  return { id, clientReadOnlyMetadata: { cmuxPlan: "free" } };
+  return { id, clientReadOnlyMetadata: { bmuxPlan: "free" } };
 }

@@ -1,0 +1,31 @@
+{
+  "actions": {
+    "bmux.newTerminal": {
+      "type": "command",
+      "title": "Dot BMUX Wins",
+      "subtitle": "Same-directory .bmux/bmux.json should beat bmux.json",
+      "command": "echo 'DOT BMUX WINS'; echo 'SOURCE=legacy/prefer-dot-bmux/.bmux/bmux.json'; pwd",
+      "target": "newTabInCurrentPane",
+      "shortcut": "cmd+shift+4",
+      "icon": { "type": "image", "path": "./icons/winner-terminal.svg" }
+    },
+    "winner.echo": {
+      "type": "command",
+      "title": "Winner Echo",
+      "subtitle": "If you see this, .bmux precedence is working",
+      "command": "echo 'WINNER ECHO'; echo 'SOURCE=legacy/prefer-dot-bmux/.bmux/bmux.json'; pwd",
+      "target": "newTabInCurrentPane",
+      "shortcut": "cmd+shift+p",
+      "icon": { "type": "emoji", "value": "🏆" }
+    }
+  },
+  "ui": {
+    "surfaceTabBar": {
+      "buttons": [
+        "bmux.newTerminal",
+        "winner.echo",
+        "bmux.newBrowser"
+      ]
+    }
+  }
+}

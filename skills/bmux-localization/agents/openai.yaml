@@ -1,0 +1,4 @@
+interface:
+  display_name: "bmux Localization"
+  short_description: "Localize and audit every bmux user-facing string change."
+  default_prompt: "Use this skill whenever changing bmux UI text, settings labels, menu items, shortcut metadata, schema/config text, docs, command/help output, alerts, tooltips, or web messages."

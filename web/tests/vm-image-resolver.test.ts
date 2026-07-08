@@ -19,7 +19,7 @@ describe("VM image resolver", () => {
   test("uses manifest local defaults outside deployed runtimes", () => {
     expect(resolveVmImage("e2b", undefined, {})).toMatchObject({
       provider: "e2b",
-      image: "cmuxd-ws:tooling-20260509f",
+      image: "bmuxd-ws:tooling-20260509f",
       imageVersion: "e2b-tooling-20260509f",
     });
     expect(resolveVmImage("freestyle", undefined, {})).toMatchObject({
@@ -42,11 +42,11 @@ describe("VM image resolver", () => {
   test("daytona local dev resolves DAYTONA_SANDBOX_SNAPSHOT even when unmanifested", () => {
     expect(
       resolveVmImage("daytona", undefined, {
-        DAYTONA_SANDBOX_SNAPSHOT: "cmuxd-ws-scratch",
+        DAYTONA_SANDBOX_SNAPSHOT: "bmuxd-ws-scratch",
       }),
     ).toMatchObject({
       provider: "daytona",
-      image: "cmuxd-ws-scratch",
+      image: "bmuxd-ws-scratch",
       imageVersion: null,
       manifestEntry: null,
     });
@@ -72,7 +72,7 @@ describe("VM image resolver", () => {
 
   test("rejects unknown deployed images", () => {
     expect(() =>
-      resolveVmImage("e2b", "cmuxd-ws:unknown", {
+      resolveVmImage("e2b", "bmuxd-ws:unknown", {
         VERCEL: "1",
         VERCEL_ENV: "production",
       }),
@@ -84,11 +84,11 @@ describe("VM image resolver", () => {
       resolveVmImage("e2b", undefined, {
         VERCEL: "1",
         VERCEL_ENV: "production",
-        E2B_CMUXD_WS_TEMPLATE: "cmuxd-ws:proxy-20260424a",
+        E2B_BMUXD_WS_TEMPLATE: "bmuxd-ws:proxy-20260424a",
       }),
     ).toMatchObject({
       provider: "e2b",
-      image: "cmuxd-ws:proxy-20260424a",
+      image: "bmuxd-ws:proxy-20260424a",
       imageVersion: "e2b-proxy-20260424a",
     });
   });
@@ -98,7 +98,7 @@ describe("VM image resolver", () => {
       resolveVmImage("freestyle", "scratch-image", {
         VERCEL: "1",
         VERCEL_ENV: "preview",
-        CMUX_VM_ALLOW_UNMANIFESTED_IMAGES: "1",
+        BMUX_VM_ALLOW_UNMANIFESTED_IMAGES: "1",
       }),
     ).toMatchObject({
       provider: "freestyle",

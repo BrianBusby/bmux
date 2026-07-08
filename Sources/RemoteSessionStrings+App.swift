@@ -1,4 +1,4 @@
-import CmuxRemoteSession
+import BmuxRemoteSession
 import Foundation
 
 // User-facing connection-state strings resolve here, in the app target, so

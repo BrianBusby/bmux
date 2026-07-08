@@ -41,7 +41,7 @@ extension RemoteTmuxController {
     ///   current. (`'{end}'` is an alias for `$`, available since tmux 2.1.) Plain
     ///   `new-window` instead fills the lowest free index, landing mid-list when
     ///   the session has gaps from closed windows.
-    /// - id -> `new-window -a -t @id`: insert right after that window. cmux never
+    /// - id -> `new-window -a -t @id`: insert right after that window. bmux never
     ///   `select-window`s the remote, so the selected tab's window is targeted by
     ///   id rather than relying on tmux's current window.
     ///

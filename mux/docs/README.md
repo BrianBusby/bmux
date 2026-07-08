@@ -1,6 +1,6 @@
-# cmux-mux docs
+# bmux-mux docs
 
-`cmux-mux` is a tmux-style multiplexer that speaks Ghostty's VT engine on both ends: PTY output is parsed into Ghostty terminal state, and attach clients receive Ghostty VT replay plus live output so another frontend can reconstruct the same surface.
+`bmux-mux` is a tmux-style multiplexer that speaks Ghostty's VT engine on both ends: PTY output is parsed into Ghostty terminal state, and attach clients receive Ghostty VT replay plus live output so another frontend can reconstruct the same surface.
 
 ## Contents
 

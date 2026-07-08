@@ -1,0 +1,4 @@
+interface:
+  display_name: "bmux Debugging"
+  short_description: "Use bmux debug logs, Debug menu, and runtime pitfall rules safely."
+  default_prompt: "Use this skill when adding debug probes, diagnosing bmux UI/runtime issues, touching typing-sensitive terminal paths, SwiftUI list rows, drag/drop UTTypes, search overlay layering, or Debug menu windows."

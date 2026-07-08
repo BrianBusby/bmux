@@ -10,8 +10,8 @@ const trimEnv = (value: string | undefined): string | undefined =>
 
 const defaultSubrouterBaseUrl = (): string =>
   process.env.VERCEL_ENV === "production"
-    ? "https://subrouter.cmux.dev"
-    : "https://subrouter-staging.cmux.dev";
+    ? "https://subrouter.bmux.dev"
+    : "https://subrouter-staging.bmux.dev";
 
 const skipEnvValidation =
   process.env.SKIP_ENV_VALIDATION === "1" ||
@@ -43,26 +43,26 @@ const stackEnv = (
 export const env = createEnv({
   server: {
     RESEND_API_KEY: z.string().min(1),
-    CMUX_FEEDBACK_FROM_EMAIL: z.string().email(),
-    CMUX_FEEDBACK_RATE_LIMIT_ID: z.string().min(1),
-    CMUX_CLIENT_CONFIG_RATE_LIMIT_ID: requireVercelNonPreviewValue("CMUX_CLIENT_CONFIG_RATE_LIMIT_ID"),
+    BMUX_FEEDBACK_FROM_EMAIL: z.string().email(),
+    BMUX_FEEDBACK_RATE_LIMIT_ID: z.string().min(1),
+    BMUX_CLIENT_CONFIG_RATE_LIMIT_ID: requireVercelNonPreviewValue("BMUX_CLIENT_CONFIG_RATE_LIMIT_ID"),
     STACK_SECRET_SERVER_KEY: z.string().min(1),
     // APNs push (iOS notifications). Optional: the app boots without them; the
     // push route returns a clear "not configured" error until they are set.
-    // CMUX_APNS_KEY_P8 holds the .p8 PEM (literal "\n" escapes are normalized
+    // BMUX_APNS_KEY_P8 holds the .p8 PEM (literal "\n" escapes are normalized
     // by the sender).
-    CMUX_APNS_KEY_P8: z.string().min(1).optional(),
-    CMUX_APNS_KEY_ID: z.string().min(1).optional(),
-    CMUX_APNS_TEAM_ID: z.string().min(1).optional(),
-    CMUX_PUSH_RATE_LIMIT_ID: z.string().min(1).optional(),
-    // cmux Founder's Edition welcome email (Stripe webhook -> Resend). Optional:
+    BMUX_APNS_KEY_P8: z.string().min(1).optional(),
+    BMUX_APNS_KEY_ID: z.string().min(1).optional(),
+    BMUX_APNS_TEAM_ID: z.string().min(1).optional(),
+    BMUX_PUSH_RATE_LIMIT_ID: z.string().min(1).optional(),
+    // bmux Founder's Edition welcome email (Stripe webhook -> Resend). Optional:
     // the /api/stripe/founders-welcome route returns "not configured" until the
-    // webhook signing secret is set. CMUX_FOUNDERS_FROM_EMAIL overrides the
+    // webhook signing secret is set. BMUX_FOUNDERS_FROM_EMAIL overrides the
     // sender (defaults to austin@manaflow.ai) so the verified Resend domain can
     // change without a code edit.
     STRIPE_FOUNDERS_WEBHOOK_SECRET: z.string().min(1).optional(),
-    CMUX_FOUNDERS_FROM_EMAIL: z.string().email().optional(),
-    // Direct Stripe billing for cmux Pro. Optional: when unset, checkout keeps
+    BMUX_FOUNDERS_FROM_EMAIL: z.string().email().optional(),
+    // Direct Stripe billing for bmux Pro. Optional: when unset, checkout keeps
     // using the legacy Stack-hosted product flow.
     STRIPE_SECRET_KEY: z.string().min(1).optional(),
     STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
@@ -77,13 +77,13 @@ export const env = createEnv({
     ASC_ISSUER_ID: z.string().min(1).optional(),
     ASC_PRIVATE_KEY: z.string().min(1).optional(),
     ASC_PRIVATE_KEY_PATH: z.string().min(1).optional(),
-    CMUX_TESTFLIGHT_APP_ID: z.string().min(1).optional(),
-    CMUX_TESTFLIGHT_GROUP_ID: z.string().min(1).optional(),
+    BMUX_TESTFLIGHT_APP_ID: z.string().min(1).optional(),
+    BMUX_TESTFLIGHT_GROUP_ID: z.string().min(1).optional(),
     SENTRY_DSN: z.string().url().optional(),
     CRON_SECRET: z.string().min(1).optional(),
-    CMUX_ALERTS_SLACK_WEBHOOK_URL: z.string().url().optional(),
-    CMUX_VM_ALERT_CREATE_FAILURES_15M: z.string().regex(/^\d+$/).optional(),
-    CMUX_VM_ALERT_EXPIRED_LEASES: z.string().regex(/^\d+$/).optional(),
+    BMUX_ALERTS_SLACK_WEBHOOK_URL: z.string().url().optional(),
+    BMUX_VM_ALERT_CREATE_FAILURES_15M: z.string().regex(/^\d+$/).optional(),
+    BMUX_VM_ALERT_EXPIRED_LEASES: z.string().regex(/^\d+$/).optional(),
     // Slack Incoming Webhook for the #website-waitlist channel. Optional: the
     // /api/waitlist route silently skips the Slack ping when it is unset.
     SLACK_WAITLIST_WEBHOOK_URL: z.string().url().optional(),
@@ -101,15 +101,15 @@ export const env = createEnv({
   },
   runtimeEnv: {
     RESEND_API_KEY: trimEnv(process.env.RESEND_API_KEY),
-    CMUX_FEEDBACK_FROM_EMAIL: trimEnv(process.env.CMUX_FEEDBACK_FROM_EMAIL),
-    CMUX_FEEDBACK_RATE_LIMIT_ID: trimEnv(process.env.CMUX_FEEDBACK_RATE_LIMIT_ID),
-    CMUX_CLIENT_CONFIG_RATE_LIMIT_ID: trimEnv(process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID),
-    CMUX_APNS_KEY_P8: trimEnv(process.env.CMUX_APNS_KEY_P8),
-    CMUX_APNS_KEY_ID: trimEnv(process.env.CMUX_APNS_KEY_ID),
-    CMUX_APNS_TEAM_ID: trimEnv(process.env.CMUX_APNS_TEAM_ID),
-    CMUX_PUSH_RATE_LIMIT_ID: trimEnv(process.env.CMUX_PUSH_RATE_LIMIT_ID),
+    BMUX_FEEDBACK_FROM_EMAIL: trimEnv(process.env.BMUX_FEEDBACK_FROM_EMAIL),
+    BMUX_FEEDBACK_RATE_LIMIT_ID: trimEnv(process.env.BMUX_FEEDBACK_RATE_LIMIT_ID),
+    BMUX_CLIENT_CONFIG_RATE_LIMIT_ID: trimEnv(process.env.BMUX_CLIENT_CONFIG_RATE_LIMIT_ID),
+    BMUX_APNS_KEY_P8: trimEnv(process.env.BMUX_APNS_KEY_P8),
+    BMUX_APNS_KEY_ID: trimEnv(process.env.BMUX_APNS_KEY_ID),
+    BMUX_APNS_TEAM_ID: trimEnv(process.env.BMUX_APNS_TEAM_ID),
+    BMUX_PUSH_RATE_LIMIT_ID: trimEnv(process.env.BMUX_PUSH_RATE_LIMIT_ID),
     STRIPE_FOUNDERS_WEBHOOK_SECRET: trimEnv(process.env.STRIPE_FOUNDERS_WEBHOOK_SECRET),
-    CMUX_FOUNDERS_FROM_EMAIL: trimEnv(process.env.CMUX_FOUNDERS_FROM_EMAIL),
+    BMUX_FOUNDERS_FROM_EMAIL: trimEnv(process.env.BMUX_FOUNDERS_FROM_EMAIL),
     STRIPE_SECRET_KEY: trimEnv(process.env.STRIPE_SECRET_KEY),
     STRIPE_WEBHOOK_SECRET: trimEnv(process.env.STRIPE_WEBHOOK_SECRET),
     STRIPE_PRO_MONTHLY_PRICE_ID: trimEnv(process.env.STRIPE_PRO_MONTHLY_PRICE_ID),
@@ -119,13 +119,13 @@ export const env = createEnv({
     ASC_ISSUER_ID: trimEnv(process.env.ASC_ISSUER_ID),
     ASC_PRIVATE_KEY: trimEnv(process.env.ASC_PRIVATE_KEY),
     ASC_PRIVATE_KEY_PATH: trimEnv(process.env.ASC_PRIVATE_KEY_PATH),
-    CMUX_TESTFLIGHT_APP_ID: trimEnv(process.env.CMUX_TESTFLIGHT_APP_ID),
-    CMUX_TESTFLIGHT_GROUP_ID: trimEnv(process.env.CMUX_TESTFLIGHT_GROUP_ID),
+    BMUX_TESTFLIGHT_APP_ID: trimEnv(process.env.BMUX_TESTFLIGHT_APP_ID),
+    BMUX_TESTFLIGHT_GROUP_ID: trimEnv(process.env.BMUX_TESTFLIGHT_GROUP_ID),
     SENTRY_DSN: trimEnv(process.env.SENTRY_DSN),
     CRON_SECRET: trimEnv(process.env.CRON_SECRET),
-    CMUX_ALERTS_SLACK_WEBHOOK_URL: trimEnv(process.env.CMUX_ALERTS_SLACK_WEBHOOK_URL),
-    CMUX_VM_ALERT_CREATE_FAILURES_15M: trimEnv(process.env.CMUX_VM_ALERT_CREATE_FAILURES_15M),
-    CMUX_VM_ALERT_EXPIRED_LEASES: trimEnv(process.env.CMUX_VM_ALERT_EXPIRED_LEASES),
+    BMUX_ALERTS_SLACK_WEBHOOK_URL: trimEnv(process.env.BMUX_ALERTS_SLACK_WEBHOOK_URL),
+    BMUX_VM_ALERT_CREATE_FAILURES_15M: trimEnv(process.env.BMUX_VM_ALERT_CREATE_FAILURES_15M),
+    BMUX_VM_ALERT_EXPIRED_LEASES: trimEnv(process.env.BMUX_VM_ALERT_EXPIRED_LEASES),
     SLACK_WAITLIST_WEBHOOK_URL: trimEnv(process.env.SLACK_WAITLIST_WEBHOOK_URL),
     SLACK_ENTERPRISE_WEBHOOK_URL: trimEnv(process.env.SLACK_ENTERPRISE_WEBHOOK_URL),
     SUBROUTER_BASE_URL: trimEnv(process.env.SUBROUTER_BASE_URL) ?? defaultSubrouterBaseUrl(),

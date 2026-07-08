@@ -129,7 +129,7 @@ jobs:
       - name: Upload distributions
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-python-dist
+          name: bmux-python-dist
           path: mux/bindings/python/dist/*
           if-no-files-found: error
 
@@ -141,12 +141,12 @@ jobs:
       id-token: write
     environment:
       name: pypi
-      url: https://pypi.org/p/cmux
+      url: https://pypi.org/p/bmux
     steps:
       - name: Download distributions
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-python-dist
+          name: bmux-python-dist
           path: dist
 
       - name: Publish package distributions to PyPI

@@ -254,7 +254,7 @@ export const deviceTokens = pgTable(
     deviceToken: text("device_token").notNull(),
     platform: text("platform").notNull().default("ios"),
     // The APNs topic the token belongs to (the iOS bundle id, which varies by
-    // build: dev.cmux.ios.<tag>, dev.cmux.app.beta, com.cmuxterm.app).
+    // build: dev.bmux.ios.<tag>, dev.bmux.app.beta, com.bmuxterm.app).
     bundleId: text("bundle_id").notNull(),
     // "sandbox" for development builds, "production" for TestFlight/App Store —
     // selects which APNs host the sender uses.
@@ -418,7 +418,7 @@ export const vaultSnapshots = pgTable(
 
 // Ledger of presigned PUT URLs that were minted but not yet committed.
 // Pending grants count against the per-user storage quota so a client cannot
-// bypass CMUX_VAULT_MAX_USER_BYTES by uploading objects and never committing;
+// bypass BMUX_VAULT_MAX_USER_BYTES by uploading objects and never committing;
 // expired uncommitted grants and their storage objects are opportunistically
 // GC'd by the uploads route.
 export const vaultUploadGrants = pgTable(
@@ -499,11 +499,11 @@ export const cloudVmBillingGrants = pgTable(
 
 /**
  * Device registry — the team-scoped record of which physical machines (Macs /
- * hosts) and their running cmux app instances exist, so a phone can auto-pair
+ * hosts) and their running bmux app instances exist, so a phone can auto-pair
  * on reload instead of re-scanning a QR.
  *
  * Two-level model:
- *   `devices` (a physical machine) -> `deviceAppInstances` (one running cmux
+ *   `devices` (a physical machine) -> `deviceAppInstances` (one running bmux
  *   build/tag on that machine).
  *
  * The registry is a best-effort *rendezvous* layer that lets a re-launched
@@ -512,7 +512,7 @@ export const cloudVmBillingGrants = pgTable(
  * falls back to it if the registry is unreachable, so pairing survives the
  * cloud registry being down.
  *
- * Device identity is a cmux-GENERATED persisted UUID (see Mac
+ * Device identity is a bmux-GENERATED persisted UUID (see Mac
  * `MobileHostIdentity.deviceID()` / iOS `MobileDeviceIdentity`), NOT
  * IOPlatformUUID. It is cross-platform, survives relaunch, and is
  * user-renamable via `displayName`.
@@ -523,9 +523,9 @@ export const devices = pgTable(
     // Surrogate primary key for the team-scoped device row.
     id: uuid("id").defaultRandom().primaryKey(),
     // Stack team that owns this device row. All registry reads/writes are
-    // scoped to a team the caller is a verified member of (`X-Cmux-Team-Id`).
+    // scoped to a team the caller is a verified member of (`X-Bmux-Team-Id`).
     teamId: text("team_id").notNull(),
-    // The cmux-generated persisted UUID supplied by the device. It is the
+    // The bmux-generated persisted UUID supplied by the device. It is the
     // device's stable, global identity (mirrors Mac `MobileHostIdentity` / iOS
     // `MobileDeviceIdentity`), but identity is modeled per team: one row per
     // (team, device), so a Mac in two teams registers a row in each and a phone
@@ -555,8 +555,8 @@ export const devices = pgTable(
 );
 
 /**
- * A running cmux app instance on a device, keyed by `(deviceId, tag)` so each
- * tagged build (`dev.cmux.<tag>`, stable, etc.) on the same machine is its own
+ * A running bmux app instance on a device, keyed by `(deviceId, tag)` so each
+ * tagged build (`dev.bmux.<tag>`, stable, etc.) on the same machine is its own
  * row. Holds the attach `routes` the phone uses to reconnect; the registry is
  * port-flexible, so the endpoint lives in `routes` jsonb rather than a fixed
  * column. A re-register updates the routes for the same `(deviceId, tag)`.
@@ -569,7 +569,7 @@ export const deviceAppInstances = pgTable(
       .notNull()
       .references(() => devices.id, { onDelete: "cascade" }),
     teamId: text("team_id").notNull(),
-    // The cmux build tag this instance is running (e.g. "stable" or a dev tag).
+    // The bmux build tag this instance is running (e.g. "stable" or a dev tag).
     // Defaults to "default" when the build does not distinguish tags.
     tag: text("tag").notNull().default("default"),
     // Attach routes advertised by this instance, ordered by priority. Shape

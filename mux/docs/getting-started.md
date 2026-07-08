@@ -21,7 +21,7 @@ cargo run -p mux-tui -- --session agents
 
 The default session is `main`. Quitting a local TUI shuts down that in-process session and removes its socket.
 
-Use `--term <value>` to set `TERM` for child PTYs. Without it, children get `xterm-256color`; the surface layer also honors `CMUX_MUX_TERM` when no CLI value is supplied.
+Use `--term <value>` to set `TERM` for child PTYs. Without it, children get `xterm-256color`; the surface layer also honors `BMUX_MUX_TERM` when no CLI value is supplied.
 
 ## Headless server and attach
 
@@ -46,16 +46,16 @@ Detach from an attached TUI with prefix `d`. With default keys, that is `Ctrl-b 
 The default socket path is:
 
 ```text
-$TMPDIR/cmux-mux-<uid>/<session>.sock
+$TMPDIR/bmux-mux-<uid>/<session>.sock
 ```
 
-The usual default is `$XDG_RUNTIME_DIR/cmux-mux-<uid>/main.sock` when `XDG_RUNTIME_DIR` is set, then `$TMPDIR/cmux-mux-<uid>/main.sock`, then `/tmp/cmux-mux-<uid>/main.sock`. `--session <name>` changes the final file name. `--socket <path>` bypasses the session-derived path. Server-started child processes receive `CMUX_MUX_SOCKET` with the socket path.
+The usual default is `$XDG_RUNTIME_DIR/bmux-mux-<uid>/main.sock` when `XDG_RUNTIME_DIR` is set, then `$TMPDIR/bmux-mux-<uid>/main.sock`, then `/tmp/bmux-mux-<uid>/main.sock`. `--session <name>` changes the final file name. `--socket <path>` bypasses the session-derived path. Server-started child processes receive `BMUX_MUX_SOCKET` with the socket path.
 
 ## Platforms and XDG
 
-cmux-mux supports macOS and Linux; Windows support via ConPTY is planned for phase 2. The TUI config path resolves `CMUX_MUX_CONFIG`, then `$XDG_CONFIG_HOME/cmux/mux.json`, then `~/.config/cmux/mux.json`.
+bmux-mux supports macOS and Linux; Windows support via ConPTY is planned for phase 2. The TUI config path resolves `BMUX_MUX_CONFIG`, then `$XDG_CONFIG_HOME/bmux/mux.json`, then `~/.config/bmux/mux.json`.
 
-Launched Chrome profile paths are platform-specific. On macOS the default is `~/Library/Application Support/cmux-mux/chrome-profile`. On Linux and other non-macOS targets, `XDG_DATA_HOME` is used when set, then `~/.local/share/cmux-mux/chrome-profile`.
+Launched Chrome profile paths are platform-specific. On macOS the default is `~/Library/Application Support/bmux-mux/chrome-profile`. On Linux and other non-macOS targets, `XDG_DATA_HOME` is used when set, then `~/.local/share/bmux-mux/chrome-profile`.
 
 ## Development flow
 
@@ -65,7 +65,7 @@ Run tests from `mux/`.
 cargo test
 ```
 
-Run the smoke scripts against a built binary. Set `CMUX_MUX_BIN` to test a non-default binary.
+Run the smoke scripts against a built binary. Set `BMUX_MUX_BIN` to test a non-default binary.
 
 ```bash
 cargo build -p mux-tui

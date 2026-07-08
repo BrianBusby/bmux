@@ -1,6 +1,6 @@
-import CmuxFoundation
+import BmuxFoundation
 import AppKit
-import CMUXMobileCore
+import BMUXMobileCore
 import SwiftUI
 
 /// Renders a payload string as a crisp, square QR code for the iOS pairing
@@ -14,7 +14,7 @@ import SwiftUI
 /// SwiftUI upscales it with interpolation disabled, so every module stays a
 /// sharp nearest-neighbor square at any display size and backing scale.
 struct MobilePairingQRImageView: View {
-    /// The string encoded into the QR (the `cmux-ios://attach?...` URL).
+    /// The string encoded into the QR (the `bmux-ios://attach?...` URL).
     let payload: String
 
     var body: some View {
@@ -36,7 +36,7 @@ struct MobilePairingQRImageView: View {
                     .aspectRatio(1, contentMode: .fit)
                     .overlay(
                         Image(systemName: "qrcode")
-                            .cmuxFont(size: 48)
+                            .bmuxFont(size: 48)
                             .foregroundStyle(.secondary)
                     )
                     .accessibilityLabel(

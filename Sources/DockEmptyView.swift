@@ -1,4 +1,4 @@
-import CmuxFoundation
+import BmuxFoundation
 import AppKit
 import SwiftUI
 
@@ -8,15 +8,15 @@ struct DockEmptyView: View {
     var body: some View {
         VStack(spacing: 10) {
             Image(systemName: "dock.rectangle")
-                .cmuxFont(size: 24)
+                .bmuxFont(size: 24)
                 .foregroundStyle(.secondary)
             Text(String(localized: "dock.empty.title", defaultValue: "No Dock Controls"))
-                .cmuxFont(size: 13, weight: .semibold)
+                .bmuxFont(size: 13, weight: .semibold)
             Text(String(
                 localized: "dock.empty.subtitle",
-                defaultValue: "Add controls to .cmux/dock.json."
+                defaultValue: "Add controls to .bmux/dock.json."
             ))
-            .cmuxFont(size: 12)
+            .bmuxFont(size: 12)
             .foregroundStyle(.secondary)
             VStack(spacing: 8) {
                 HStack(spacing: 4) {
@@ -67,10 +67,10 @@ struct DockEmptyView: View {
     private var agentPromptPopover: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(String(localized: "dock.empty.promptPopoverTitle", defaultValue: "Agent Prompt"))
-                .cmuxFont(size: 13, weight: .semibold)
+                .bmuxFont(size: 13, weight: .semibold)
             ScrollView {
                 Text(agentPrompt)
-                    .cmuxFont(size: 12)
+                    .bmuxFont(size: 12)
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -87,7 +87,7 @@ struct DockEmptyView: View {
     }
 
     private func openDockDocs() {
-        guard let url = URL(string: "https://cmux.com/docs/dock") else { return }
+        guard let url = URL(string: "https://bmux.com/docs/dock") else { return }
         NSWorkspace.shared.open(url)
     }
 
@@ -95,19 +95,19 @@ struct DockEmptyView: View {
         String(
             localized: "dock.empty.agentPrompt",
             defaultValue: """
-            Set up cmux Dock controls for the current context.
+            Set up bmux Dock controls for the current context.
 
             First, learn the feature before editing:
-            1. Run `cmux docs dock` if the cmux CLI is available. If it is not, read https://cmux.com/docs/dock.
+            1. Run `bmux docs dock` if the bmux CLI is available. If it is not, read https://bmux.com/docs/dock.
             2. Inspect the repository or current directory to understand the project type, scripts, package manager, dev servers, logs, task runners, test commands, and any existing TUI tools.
             3. If the desired Dock is ambiguous, ask the user what they want monitored or controlled before writing files.
 
-            Dock is cmux's right-sidebar terminal control area. A Dock config is JSON with a top-level `controls` array. Each control runs a command in its own Ghostty-backed terminal section using the user's login shell. Controls are useful for project dashboards, git/status views, dev server or build status, test watchers, log tails, queues, local services, or a custom TUI such as `cmux feed tui --opentui` when that feed is useful.
+            Dock is bmux's right-sidebar terminal control area. A Dock config is JSON with a top-level `controls` array. Each control runs a command in its own Ghostty-backed terminal section using the user's login shell. Controls are useful for project dashboards, git/status views, dev server or build status, test watchers, log tails, queues, local services, or a custom TUI such as `bmux feed tui --opentui` when that feed is useful.
 
             Choose where to write the config:
-            - In a repository or project directory, create or edit `.cmux/dock.json` so teammates can share it.
-            - For a personal default outside a repo, create or edit `~/.config/cmux/dock.json`.
-            - If both exist, project `.cmux/dock.json` is more specific for that project. Nested project configs apply to that directory tree; use the nearest relevant project config instead of writing unrelated controls globally.
+            - In a repository or project directory, create or edit `.bmux/dock.json` so teammates can share it.
+            - For a personal default outside a repo, create or edit `~/.config/bmux/dock.json`.
+            - If both exist, project `.bmux/dock.json` is more specific for that project. Nested project configs apply to that directory tree; use the nearest relevant project config instead of writing unrelated controls globally.
             - If there is no repo and no clear project root, use the global config only after confirming the user wants a personal Dock.
 
             Schema:

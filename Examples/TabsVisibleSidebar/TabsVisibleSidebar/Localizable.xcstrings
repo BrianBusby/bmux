@@ -6,13 +6,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keep this app installed. Enable Tabs Visible Sidebar from cmux Sidebar Extensions, then choose the extension sidebar provider from the sidebar footer puzzle button."
+            "value" : "Keep this app installed. Enable Tabs Visible Sidebar from bmux Sidebar Extensions, then choose the extension sidebar provider from the sidebar footer puzzle button."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "このアプリをインストールしたままにしてください。cmuxのサイドバー拡張機能でTabs Visible Sidebarを有効にし、サイドバーフッターのパズルボタンから拡張機能サイドバープロバイダーを選択してください。"
+            "value" : "このアプリをインストールしたままにしてください。bmuxのサイドバー拡張機能でTabs Visible Sidebarを有効にし、サイドバーフッターのパズルボタンから拡張機能サイドバープロバイダーを選択してください。"
           }
         }
       }

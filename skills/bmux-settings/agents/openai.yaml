@@ -1,0 +1,4 @@
+interface:
+  display_name: "bmux Settings"
+  short_description: "Inspect, edit, validate, and reload bmux.json settings."
+  default_prompt: "Use this skill to change bmux settings safely: map user-facing preferences to bmux.json paths, edit with the bundled helper, validate recognized keys, and rely on bmux's live config reload."

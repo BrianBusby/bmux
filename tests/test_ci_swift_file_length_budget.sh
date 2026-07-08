@@ -36,7 +36,7 @@ python3 scripts/swift_file_length_budget.py \
 
 git -C "$FIXTURE" init -q
 git -C "$FIXTURE" add .
-git -C "$FIXTURE" -c user.name='cmux CI' -c user.email='ci@example.invalid' commit -qm baseline
+git -C "$FIXTURE" -c user.name='bmux CI' -c user.email='ci@example.invalid' commit -qm baseline
 BASE_REF="$(git -C "$FIXTURE" rev-parse HEAD)"
 
 if ! grep -Fq $'5\tSources/Big.swift' "$BUDGET"; then
@@ -161,7 +161,7 @@ if ! grep -Fq 'Incidental growth allowed by PR gate' "$TMP_DIR/incidental.out"; 
 fi
 
 git -C "$FIXTURE" add .
-git -C "$FIXTURE" -c user.name='cmux CI' -c user.email='ci@example.invalid' commit -qm 'allow incidental growth'
+git -C "$FIXTURE" -c user.name='bmux CI' -c user.email='ci@example.invalid' commit -qm 'allow incidental growth'
 UNCHANGED_BASE_REF="$(git -C "$FIXTURE" rev-parse HEAD)"
 
 python3 scripts/swift_file_length_budget.py \
@@ -181,7 +181,7 @@ fi
 mkdir -p "$FIXTURE/.github"
 printf '6\tSources/Big.swift\n6\tCLI/Tool.swift\n7\tPackages/Fixture/Sources/Fixture.swift\n' >"$FIXTURE/.github/swift-file-length-budget.tsv"
 git -C "$FIXTURE" add .github/swift-file-length-budget.tsv
-git -C "$FIXTURE" -c user.name='cmux CI' -c user.email='ci@example.invalid' commit -qm 'record checked-in budget'
+git -C "$FIXTURE" -c user.name='bmux CI' -c user.email='ci@example.invalid' commit -qm 'record checked-in budget'
 CHECKED_IN_BUDGET_REF="$(git -C "$FIXTURE" rev-parse HEAD)"
 
 printf '5\tSources/Big.swift\n6\tCLI/Tool.swift\n7\tPackages/Fixture/Sources/Fixture.swift\n' >"$FIXTURE/.github/swift-file-length-budget.tsv"
@@ -368,7 +368,7 @@ git -C "$RACE_FIXTURE" init -q
 git -C "$RACE_FIXTURE" config merge.keepFeature.name 'keep feature side for race fixture'
 git -C "$RACE_FIXTURE" config merge.keepFeature.driver 'cp %B %A'
 git -C "$RACE_FIXTURE" add .
-git -C "$RACE_FIXTURE" -c user.name='cmux CI' -c user.email='ci@example.invalid' commit -qm baseline
+git -C "$RACE_FIXTURE" -c user.name='bmux CI' -c user.email='ci@example.invalid' commit -qm baseline
 git -C "$RACE_FIXTURE" branch -M main
 RACE_BASE="$(git -C "$RACE_FIXTURE" rev-parse HEAD)"
 
@@ -386,7 +386,7 @@ path.write_text(
 )
 PY
 git -C "$RACE_FIXTURE" add Sources/Racy.swift
-git -C "$RACE_FIXTURE" -c user.name='cmux CI' -c user.email='ci@example.invalid' commit -qm 'grow racy file'
+git -C "$RACE_FIXTURE" -c user.name='bmux CI' -c user.email='ci@example.invalid' commit -qm 'grow racy file'
 
 git -C "$RACE_FIXTURE" checkout -q main
 python3 - "$RACE_FIXTURE" <<'PY'
@@ -402,7 +402,7 @@ root = pathlib.Path(sys.argv[1])
 (root / "README.md").write_text("main readme\n", encoding="utf-8")
 PY
 git -C "$RACE_FIXTURE" add Sources/Racy.swift .github/test-budget.tsv README.md
-git -C "$RACE_FIXTURE" -c user.name='cmux CI' -c user.email='ci@example.invalid' commit -qm 'split racy file and lower budget'
+git -C "$RACE_FIXTURE" -c user.name='bmux CI' -c user.email='ci@example.invalid' commit -qm 'split racy file and lower budget'
 
 git -C "$RACE_FIXTURE" checkout -q feature
 RACE_MERGE_BASE="$(git -C "$RACE_FIXTURE" merge-base main feature)"
@@ -453,7 +453,7 @@ fi
 git -C "$RACE_FIXTURE" checkout -q -b conflict "$RACE_BASE"
 printf 'feature readme\n' >"$RACE_FIXTURE/README.md"
 git -C "$RACE_FIXTURE" add README.md
-git -C "$RACE_FIXTURE" -c user.name='cmux CI' -c user.email='ci@example.invalid' commit -qm 'conflict on readme'
+git -C "$RACE_FIXTURE" -c user.name='bmux CI' -c user.email='ci@example.invalid' commit -qm 'conflict on readme'
 
 CONFLICT_MERGE_BASE="$(git -C "$RACE_FIXTURE" merge-base main conflict)"
 set +e

@@ -1,0 +1,31 @@
+{
+  "actions": {
+    "bmux.newTerminal": {
+      "type": "command",
+      "title": "Legacy File New Terminal",
+      "subtitle": "Loaded from legacy/bmux.json",
+      "command": "echo 'LEGACY NEW TERMINAL'; echo 'SOURCE=legacy/bmux.json'; pwd",
+      "target": "newTabInCurrentPane",
+      "shortcut": "cmd+shift+3",
+      "icon": { "type": "image", "path": "./icons/legacy-terminal.svg" }
+    },
+    "legacy.echo": {
+      "type": "command",
+      "title": "Legacy Echo",
+      "subtitle": "Fallback bmux.json demo",
+      "command": "echo 'LEGACY ECHO'; echo 'SOURCE=legacy/bmux.json'; pwd",
+      "target": "newTabInCurrentPane",
+      "shortcut": "cmd+shift+l",
+      "icon": { "type": "emoji", "value": "📄", "scale": 0.8 }
+    }
+  },
+  "ui": {
+    "surfaceTabBar": {
+      "buttons": [
+        "bmux.newTerminal",
+        "legacy.echo",
+        "bmux.splitDown"
+      ]
+    }
+  }
+}

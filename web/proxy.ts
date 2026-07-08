@@ -13,10 +13,10 @@ const intlMiddleware = createMiddleware(routing);
 export default function middleware(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
 
-  // 301 redirect cmux.dev (and www.cmux.dev) to cmux.com, preserving path and query
-  if (host === "cmux.dev" || host === "www.cmux.dev") {
+  // 301 redirect bmux.dev (and www.bmux.dev) to bmux.com, preserving path and query
+  if (host === "bmux.dev" || host === "www.bmux.dev") {
     const url = new URL(request.url);
-    url.host = "cmux.com";
+    url.host = "bmux.com";
     url.protocol = "https:";
     return NextResponse.redirect(url.toString(), 301);
   }
@@ -36,7 +36,7 @@ export default function middleware(request: NextRequest) {
     url.pathname = "/agent-page-variant";
     url.searchParams.set("path", pathname);
     const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("x-cmux-agent-page-path", pathname);
+    requestHeaders.set("x-bmux-agent-page-path", pathname);
     return NextResponse.rewrite(url, {
       request: { headers: requestHeaders },
     });

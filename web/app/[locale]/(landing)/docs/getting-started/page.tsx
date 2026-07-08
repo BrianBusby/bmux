@@ -36,10 +36,10 @@ export default function GettingStartedPage() {
       <p>{t("dmgDesc")}</p>
 
       <DocsHeading level={3} id="homebrew">{t("homebrew")}</DocsHeading>
-      <CodeBlock lang="bash">{`brew tap manaflow-ai/cmux
-brew install --cask cmux`}</CodeBlock>
+      <CodeBlock lang="bash">{`brew tap manaflow-ai/bmux
+brew install --cask bmux`}</CodeBlock>
       <p>{t("updateLater")}</p>
-      <CodeBlock lang="bash">{`brew upgrade --cask cmux`}</CodeBlock>
+      <CodeBlock lang="bash">{`brew upgrade --cask bmux`}</CodeBlock>
 
       <Callout>
         {t.rich("firstLaunchCallout", {
@@ -57,10 +57,10 @@ brew install --cask cmux`}</CodeBlock>
 
       <DocsHeading level={2} id="cli-setup">{t("cliSetup")}</DocsHeading>
       <p>{t("cliDesc")}</p>
-      <CodeBlock lang="bash">{`sudo ln -sf "/Applications/cmux.app/Contents/Resources/bin/cmux" /usr/local/bin/cmux`}</CodeBlock>
+      <CodeBlock lang="bash">{`sudo ln -sf "/Applications/bmux.app/Contents/Resources/bin/bmux" /usr/local/bin/bmux`}</CodeBlock>
       <p>{t("cliThen")}</p>
-      <CodeBlock lang="bash">{`cmux list-workspaces
-cmux notify --title "Build Complete" --body "Your build finished"`}</CodeBlock>
+      <CodeBlock lang="bash">{`bmux list-workspaces
+bmux notify --title "Build Complete" --body "Your build finished"`}</CodeBlock>
 
       <DocsHeading level={2} id="auto-updates">{t("autoUpdates")}</DocsHeading>
       <p>{t("autoUpdatesDesc")}</p>

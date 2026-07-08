@@ -3,7 +3,7 @@ const out = await Bun.build({
   target: "browser",
   minify: true,
   splitting: true,
-  outdir: `/tmp/cmux-agent-chat-build-check`,
+  outdir: `/tmp/bmux-agent-chat-build-check`,
   define: { "process.env.NODE_ENV": '"production"' },
 });
 

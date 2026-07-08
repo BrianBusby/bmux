@@ -1,13 +1,13 @@
 import AppKit
-import CMUXMobileCore
-import CmuxWorkspaces
-import CmuxSettingsUI
-import CmuxFoundation
+import BMUXMobileCore
+import BmuxWorkspaces
+import BmuxSettingsUI
+import BmuxFoundation
 import Foundation
 import OSLog
 import SwiftUI
 
-private let hostSettingsLogger = Logger(subsystem: "com.cmuxterm.app", category: "Settings")
+private let hostSettingsLogger = Logger(subsystem: "com.bmuxterm.app", category: "Settings")
 
 /// App-side implementation of the package's `SettingsHostActions`
 /// protocol. Routes UI-triggered actions to the existing host
@@ -25,7 +25,7 @@ final class HostSettingsActions: SettingsHostActions {
     /// Matches the value `ConfigSettingsView.configureWindow` assigns so the
     /// host reuses a config window opened from any entrypoint (the legacy
     /// in-app button's SwiftUI scene or this host-presented window).
-    private let configWindowIdentifier = "cmux.configEditor"
+    private let configWindowIdentifier = "bmux.configEditor"
 
     /// Observes the `appIconMode` defaults key the settings package writes
     /// so the host can re-apply the dock/app-switcher icon when the user
@@ -93,12 +93,12 @@ final class HostSettingsActions: SettingsHostActions {
         // Honor the user's configured editor (`preferredEditorCommand`),
         // falling back to the OS default. Opening the config file directly
         // through `NSWorkspace.shared.open` would route to the default
-        // `.json` handler and ignore the cmux setting.
+        // `.json` handler and ignore the bmux setting.
         PreferredEditorService(defaults: .standard).open(configFileURL)
     }
 
     func sendFeedback() {
-        guard let url = URL(string: "https://github.com/manaflow-ai/cmux/issues/new") else { return }
+        guard let url = URL(string: "https://github.com/manaflow-ai/bmux/issues/new") else { return }
         NSWorkspace.shared.open(url)
     }
 
@@ -145,7 +145,7 @@ final class HostSettingsActions: SettingsHostActions {
 
         let appearanceMode = UserDefaults.standard.string(forKey: AppearanceSettings.appearanceModeKey)
         let root = ConfigSettingsView()
-            .cmuxAppearanceColorScheme(appearanceMode)
+            .bmuxAppearanceColorScheme(appearanceMode)
         let hostingController = NSHostingController(rootView: root)
 
         let window = NSWindow(contentViewController: hostingController)
@@ -202,16 +202,16 @@ final class HostSettingsActions: SettingsHostActions {
         // forcing a synchronous disk read on the main actor when Settings opens.
         SettingsFontSize(
             points: Double(GhosttyConfig.load().sidebarFontSize),
-            minimum: CmuxGhosttyConfigSettingEditor.minSidebarFontSize,
-            maximum: CmuxGhosttyConfigSettingEditor.maxSidebarFontSize,
-            defaultValue: CmuxGhosttyConfigSettingEditor.defaultSidebarFontSize
+            minimum: BmuxGhosttyConfigSettingEditor.minSidebarFontSize,
+            maximum: BmuxGhosttyConfigSettingEditor.maxSidebarFontSize,
+            defaultValue: BmuxGhosttyConfigSettingEditor.defaultSidebarFontSize
         )
     }
 
     func setSidebarFontSize(_ points: Double) async -> Bool {
         await persistFontSize(
-            key: CmuxGhosttyConfigSettingEditor.sidebarFontSizeKey,
-            points: CmuxGhosttyConfigSettingEditor().clampedSidebarFontSize(points),
+            key: BmuxGhosttyConfigSettingEditor.sidebarFontSizeKey,
+            points: BmuxGhosttyConfigSettingEditor().clampedSidebarFontSize(points),
             reloadSource: "settings.sidebar.fontSize"
         )
     }
@@ -220,22 +220,22 @@ final class HostSettingsActions: SettingsHostActions {
         // See ``sidebarFontSize()`` — uses the cached config to avoid main-actor disk I/O.
         SettingsFontSize(
             points: Double(GhosttyConfig.load().surfaceTabBarFontSize),
-            minimum: CmuxGhosttyConfigSettingEditor.minSurfaceTabBarFontSize,
-            maximum: CmuxGhosttyConfigSettingEditor.maxSurfaceTabBarFontSize,
-            defaultValue: CmuxGhosttyConfigSettingEditor.defaultSurfaceTabBarFontSize
+            minimum: BmuxGhosttyConfigSettingEditor.minSurfaceTabBarFontSize,
+            maximum: BmuxGhosttyConfigSettingEditor.maxSurfaceTabBarFontSize,
+            defaultValue: BmuxGhosttyConfigSettingEditor.defaultSurfaceTabBarFontSize
         )
     }
 
     func setSurfaceTabBarFontSize(_ points: Double) async -> Bool {
         await persistFontSize(
-            key: CmuxGhosttyConfigSettingEditor.surfaceTabBarFontSizeKey,
-            points: CmuxGhosttyConfigSettingEditor().clampedSurfaceTabBarFontSize(points),
+            key: BmuxGhosttyConfigSettingEditor.surfaceTabBarFontSizeKey,
+            points: BmuxGhosttyConfigSettingEditor().clampedSurfaceTabBarFontSize(points),
             reloadSource: "settings.terminal.tabBarFontSize"
         )
     }
 
     func formattedFontSize(_ points: Double) -> String {
-        CmuxGhosttyConfigSettingEditor().formattedFontSize(points)
+        BmuxGhosttyConfigSettingEditor().formattedFontSize(points)
     }
 
     func mobilePairingStatus() -> MobilePairingStatusSnapshot? {
@@ -332,7 +332,7 @@ final class HostSettingsActions: SettingsHostActions {
         }
     }
 
-    /// Writes a clamped font-size value to cmux's editable Ghostty config and
+    /// Writes a clamped font-size value to bmux's editable Ghostty config and
     /// triggers a live reload so open windows re-render at the new size.
     ///
     /// The disk write runs on the serial ``fontConfigWriter`` actor so the main
@@ -343,7 +343,7 @@ final class HostSettingsActions: SettingsHostActions {
     /// - Returns: `true` on success, `false` if the write failed (a generic
     ///   warning is logged here; the Settings UI surfaces a save-failed message).
     private func persistFontSize(key: String, points: Double, reloadSource: String) async -> Bool {
-        let formatted = CmuxGhosttyConfigSettingEditor().formattedFontSize(points)
+        let formatted = BmuxGhosttyConfigSettingEditor().formattedFontSize(points)
         guard await fontConfigWriter.write(key: key, value: formatted) else {
             hostSettingsLogger.warning("failed to persist \(key, privacy: .public)")
             return false
@@ -357,7 +357,7 @@ final class HostSettingsActions: SettingsHostActions {
 /// Wraps the opaque observer returned by `NotificationCenter.addObserver` so the
 /// `@Sendable` stream-termination closure can hold it for removal. Objective-C
 /// doesn't model `Sendable`; the token is immutable and only hands the opaque
-/// observer back to NotificationCenter's thread-safe removal API. CmuxSettings
+/// observer back to NotificationCenter's thread-safe removal API. BmuxSettings
 /// has an identical internal token, which isn't `public`, so it's duplicated.
 final class MobileHostStatusObserverToken: @unchecked Sendable {
     private let token: NSObjectProtocol
@@ -371,7 +371,7 @@ final class MobileHostStatusObserverToken: @unchecked Sendable {
     }
 }
 
-/// Serializes cmux Ghostty config writes for the font-size settings so rapid
+/// Serializes bmux Ghostty config writes for the font-size settings so rapid
 /// successive saves apply in submission order instead of racing.
 ///
 /// The Settings sliders fire a save on every release and Reset tap. Routed
@@ -379,7 +379,7 @@ final class MobileHostStatusObserverToken: @unchecked Sendable {
 /// each write is a full overwrite of the key, so the most recently submitted
 /// value is always the one left on disk. The work runs off the main actor.
 private actor FontConfigWriter {
-    /// Writes a single cmux-editable Ghostty config setting to disk.
+    /// Writes a single bmux-editable Ghostty config setting to disk.
     ///
     /// - Parameters:
     ///   - key: The Ghostty config key to write (e.g. `sidebar-font-size`).
@@ -387,7 +387,7 @@ private actor FontConfigWriter {
     /// - Returns: `true` if the write succeeded, `false` otherwise.
     func write(key: String, value: String) -> Bool {
         do {
-            try ConfigSourceEnvironment.live().writeCmuxConfigSetting(key: key, value: value)
+            try ConfigSourceEnvironment.live().writeBmuxConfigSetting(key: key, value: value)
             return true
         } catch {
             return false

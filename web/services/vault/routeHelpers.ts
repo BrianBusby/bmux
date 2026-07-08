@@ -39,7 +39,7 @@ export async function withVaultApiRoute(
   return withApiRouteSpan(
     request,
     route,
-    { "cmux.subsystem": "vault", ...attributes },
+    { "bmux.subsystem": "vault", ...attributes },
     async (span) => {
       return runVaultRoute(span, failureLog, async (context) => {
         if (!isVaultConfigured()) {
@@ -67,7 +67,7 @@ export async function withAuthedVaultApiRoute(
     if (!user) return unauthorized();
     const mutationForbidden = enforceBrowserMutationProtection(request);
     if (mutationForbidden) return mutationForbidden;
-    setSpanAttributes(context.span, { "cmux.vault.user_id": user.id });
+    setSpanAttributes(context.span, { "bmux.vault.user_id": user.id });
     return handler({ ...context, user });
   });
 }
@@ -86,7 +86,7 @@ async function runVaultRoute(
 
   const finalize = (response: Response): Response => {
     setSpanAttributes(span, {
-      "cmux.vault.outcome": outcomeFromStatus(response.status),
+      "bmux.vault.outcome": outcomeFromStatus(response.status),
     });
     if (!responseFinalizer) return response;
     try {

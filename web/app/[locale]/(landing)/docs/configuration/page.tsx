@@ -5,8 +5,8 @@ import { DocsSchema } from "../docs-schema";
 import { Link } from "@/i18n/navigation";
 import { CodeBlock } from "@/app/[locale]/components/code-block";
 import { Callout } from "@/app/[locale]/components/callout";
-import settingsSchema from "@/data/cmux.schema.json";
-import { localizedShortcutText, shortcutCategories } from "@/data/cmux-shortcuts";
+import settingsSchema from "@/data/bmux.schema.json";
+import { localizedShortcutText, shortcutCategories } from "@/data/bmux-shortcuts";
 import { DocsHeading } from "@/app/[locale]/components/docs-heading";
 
 type SchemaProperty = {
@@ -33,9 +33,9 @@ const typedSettingsSchema = settingsSchema as SchemaDocument;
 const schemaProperties = typedSettingsSchema.properties ?? {};
 const schemaUrl =
   typedSettingsSchema.$id ??
-  "https://raw.githubusercontent.com/manaflow-ai/cmux/main/web/data/cmux.schema.json";
+  "https://raw.githubusercontent.com/manaflow-ai/bmux/main/web/data/bmux.schema.json";
 const schemaSourceUrl =
-  "https://github.com/manaflow-ai/cmux/blob/main/web/data/cmux.schema.json";
+  "https://github.com/manaflow-ai/bmux/blob/main/web/data/bmux.schema.json";
 const sectionOrder = [
   "app",
   "terminal",
@@ -67,9 +67,9 @@ function buildSettingsFileExample(t: ConfigurationTranslation) {
   //   "appearance": "dark",
   //   "menuBarOnly": false,
   //   "newWorkspacePlacement": "afterCurrent",
-  //   "windowTitleTemplate": "[cmux:{windowToken}] {activeWorkspace}",
+  //   "windowTitleTemplate": "[bmux:{windowToken}] {activeWorkspace}",
   //   "confirmQuit": "always",
-  //   "openSupportedFilesInCmux": true,
+  //   "openSupportedFilesInBmux": true,
   //   "workspaceInheritWorkingDirectory": true,
   //   "iMessageMode": true
   // },
@@ -93,7 +93,7 @@ function buildSettingsFileExample(t: ConfigurationTranslation) {
   //   // For an unlisted provider, set "defaultSearchEngine": "custom" and fill these:
   //   "customSearchEngineName": "My Search",
   //   "customSearchEngineURLTemplate": "https://search.example.com/?q={query}",
-  //   "openTerminalLinksInCmuxBrowser": true,
+  //   "openTerminalLinksInBmuxBrowser": true,
   //   "hostsToOpenInEmbeddedBrowser": ["localhost", "*.internal.example"]
   // },
 
@@ -135,7 +135,7 @@ function buildSettingsFileExample(t: ConfigurationTranslation) {
 
   // "agentChat": {
   //   "url": "http://127.0.0.1:7739",
-  //   "startCommand": "cmux-chat"
+  //   "startCommand": "bmux-chat"
   // },
 
   // "shortcuts": {
@@ -324,38 +324,38 @@ scrollback-limit = 50000000
 split-divider-color = #3e4451
 working-directory = ~/code`}</CodeBlock>
 
-      <DocsHeading level={2} id="cmux-json" className="scroll-mt-24">cmux.json</DocsHeading>
+      <DocsHeading level={2} id="bmux-json" className="scroll-mt-24">bmux.json</DocsHeading>
       <p>
-        cmux keeps app-owned settings, shortcuts, actions, custom commands, and workspace layouts in{" "}
-        <code>~/.config/cmux/cmux.json</code>. Terminal rendering still lives in Ghostty config.
-        On launch, if the file is missing, cmux writes a commented template there.
+        bmux keeps app-owned settings, shortcuts, actions, custom commands, and workspace layouts in{" "}
+        <code>~/.config/bmux/bmux.json</code>. Terminal rendering still lives in Ghostty config.
+        On launch, if the file is missing, bmux writes a commented template there.
       </p>
       <p>
-        Open cmux Settings, then use the <code>cmux.json</code> section to open the canonical file
+        Open bmux Settings, then use the <code>bmux.json</code> section to open the canonical file
         in your preferred text editor.
       </p>
       <ol>
         <li>
-          <code>~/.config/cmux/cmux.json</code>
+          <code>~/.config/bmux/bmux.json</code>
         </li>
         <li>
-          <code>.cmux/cmux.json</code> in a project for project-scoped actions and workspace commands
+          <code>.bmux/bmux.json</code> in a project for project-scoped actions and workspace commands
         </li>
       </ol>
       <Callout type="info">
-        <strong>Precedence:</strong> global <code>~/.config/cmux/cmux.json</code> settings override
-        values saved in the Settings window. Legacy <code>~/.config/cmux/settings.json</code> and
+        <strong>Precedence:</strong> global <code>~/.config/bmux/bmux.json</code> settings override
+        values saved in the Settings window. Legacy <code>~/.config/bmux/settings.json</code> and
         Application Support settings files are read only as fallback for missing settings keys.
-        Project-local <code>.cmux/cmux.json</code> can override actions, commands, UI action
+        Project-local <code>.bmux/bmux.json</code> can override actions, commands, UI action
         wiring, and notification hooks, but not global app preferences.
       </Callout>
       <Callout type="info">
         <strong>Reload:</strong> edit the file, then use <code>Cmd+Shift+,</code> or{" "}
-        <code>cmux reload-config</code> to re-read it without restarting the app.
+        <code>bmux reload-config</code> to re-read it without restarting the app.
       </Callout>
       <Callout type="warn">
         <strong>Migrations:</strong> keep <code>schemaVersion</code> at <code>1</code> for now.
-        Future cmux versions will use that field for upgrades. If cmux sees a newer schema version,
+        Future bmux versions will use that field for upgrades. If bmux sees a newer schema version,
         it logs a warning and parses known keys only.
       </Callout>
       <p>
@@ -363,14 +363,14 @@ working-directory = ~/code`}</CodeBlock>
         at <a href={schemaUrl}>{schemaUrl}</a> and the source lives at{" "}
         <a href={schemaSourceUrl}>{schemaSourceUrl}</a>.
       </p>
-      <CodeBlock title="~/.config/cmux/cmux.json" lang="json">
+      <CodeBlock title="~/.config/bmux/bmux.json" lang="json">
         {buildSettingsFileExample(t)}
       </CodeBlock>
 
       <DocsHeading level={2} id="schema-reference">Schema reference</DocsHeading>
       <p>
-        This reference covers every supported global settings key in <code>cmux.json</code>. The embedded
-        browser, terminal, sidebar, notifications, automation, and cmux-owned keyboard shortcuts
+        This reference covers every supported global settings key in <code>bmux.json</code>. The embedded
+        browser, terminal, sidebar, notifications, automation, and bmux-owned keyboard shortcuts
         all live here. Actions and workspace commands are documented on the{" "}
         <Link href="/docs/custom-commands">custom commands page</Link>.
       </p>
@@ -436,7 +436,7 @@ working-directory = ~/code`}</CodeBlock>
         <code>9</code>.
       </p>
       <p>
-        The defaults below are the same cmux-owned actions listed on the{" "}
+        The defaults below are the same bmux-owned actions listed on the{" "}
         <Link href="/docs/keyboard-shortcuts">keyboard shortcuts page</Link>.
       </p>
       {shortcutCategories.map((category) => (

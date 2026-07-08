@@ -2,10 +2,10 @@ import Foundation
 
 struct CachedAgentProcessIdentityValidator: Sendable {
     func currentProcess(
-        _ process: CmuxTopProcessArguments,
+        _ process: BmuxTopProcessArguments,
         matches snapshot: SessionRestorableAgentSnapshot
     ) -> Bool {
-        if let liveKind = normalizedProcessValue(process.environment["CMUX_AGENT_LAUNCH_KIND"]),
+        if let liveKind = normalizedProcessValue(process.environment["BMUX_AGENT_LAUNCH_KIND"]),
            liveKind.compare(snapshot.kind.rawValue, options: [.caseInsensitive, .literal]) != .orderedSame {
             return false
         }
@@ -80,7 +80,7 @@ struct CachedAgentProcessIdentityValidator: Sendable {
     }
 
     private func registrationDetectRule(
-        _ rule: CmuxVaultAgentDetectRule,
+        _ rule: BmuxVaultAgentDetectRule,
         matchesExecutable liveExecutable: String,
         arguments: [String]
     ) -> Bool {

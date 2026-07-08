@@ -5,8 +5,8 @@ const requiredEnv = {
   PATH: process.env.PATH ?? "",
   HOME: process.env.HOME ?? "",
   RESEND_API_KEY: "test-resend",
-  CMUX_FEEDBACK_FROM_EMAIL: "hello@example.com",
-  CMUX_FEEDBACK_RATE_LIMIT_ID: "feedback-rule",
+  BMUX_FEEDBACK_FROM_EMAIL: "hello@example.com",
+  BMUX_FEEDBACK_RATE_LIMIT_ID: "feedback-rule",
   STACK_SECRET_SERVER_KEY: "stack-secret",
   NEXT_PUBLIC_STACK_PROJECT_ID: "stack-project",
   NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY: "stack-public",
@@ -21,7 +21,7 @@ describe("client config env validation", () => {
     });
 
     expect(result.exitCode).toBe(0);
-    expect(result.stderr).not.toContain("CMUX_CLIENT_CONFIG_RATE_LIMIT_ID is required");
+    expect(result.stderr).not.toContain("BMUX_CLIENT_CONFIG_RATE_LIMIT_ID is required");
   });
 
   test("requires the limiter id in explicit Vercel production deployments", () => {
@@ -32,7 +32,7 @@ describe("client config env validation", () => {
     });
 
     expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain("CMUX_CLIENT_CONFIG_RATE_LIMIT_ID is required");
+    expect(result.stderr).toContain("BMUX_CLIENT_CONFIG_RATE_LIMIT_ID is required");
   });
 
   test("accepts explicit Vercel production deployments with the limiter id", () => {
@@ -40,7 +40,7 @@ describe("client config env validation", () => {
       ...requiredEnv,
       VERCEL: "1",
       VERCEL_ENV: "production",
-      CMUX_CLIENT_CONFIG_RATE_LIMIT_ID: "client-config-rule",
+      BMUX_CLIENT_CONFIG_RATE_LIMIT_ID: "client-config-rule",
     });
 
     expect(result.exitCode).toBe(0);

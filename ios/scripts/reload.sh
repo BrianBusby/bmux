@@ -7,7 +7,7 @@ Usage: ios/scripts/reload.sh --tag <tag> [--simulator <name>] [--no-launch]
        ios/scripts/reload.sh --tag <tag> --device [--device-id <id>] [--device-name <name>] [--team <team-id>] [--no-launch]
        ios/scripts/reload.sh --tag <tag> --device-only [--device-id <id>] [--device-name <name>] [--team <team-id>] [--no-launch]
 
-Build, install, and launch the cmux iOS app with an isolated tag.
+Build, install, and launch the bmux iOS app with an isolated tag.
 
 By default this reloads only the simulator. Use --device to also reload the
 first available paired iPhone/iPad, or --device-only to skip the simulator.
@@ -19,7 +19,7 @@ the tagged Mac app. Opt out granularly:
   --no-setup     plain install + launch (today's behavior)
 
   --prod-auth    sign this DEV build in against PRODUCTION auth (bakes
-                 CMUXAuthEnvironment=production into Info.plist; the presence
+                 BMUXAuthEnvironment=production into Info.plist; the presence
                  worker and API base follow the channel in-app), so it can
                  pair with a real beta/stable Mac via QR. A plain dev build
                  uses the development Stack project, whose user ids can never
@@ -39,7 +39,7 @@ EOF
 # sourced below) so the bundle id this builds/installs always matches the one
 # scripts/mobile-dev-launch.sh later signs in / pairs against, including for edge
 # tags that sanitize to empty. Do not reintroduce a local sanitizer here.
-sanitize_tag() { cmux_attach__slug "$1"; }
+sanitize_tag() { bmux_attach__slug "$1"; }
 
 require_option_value() {
   local option="$1"
@@ -66,7 +66,7 @@ ALLOW_DEVICE_REGISTRATION=0
 NO_SIGN_IN=0
 NO_ATTACH=0
 NO_SETUP=0
-# --prod-auth: bake CMUXAuthEnvironment=production so the dev build signs in
+# --prod-auth: bake BMUXAuthEnvironment=production so the dev build signs in
 # against the production Stack project and can pair with a release Mac.
 PROD_AUTH=0
 
@@ -167,15 +167,15 @@ if [[ "$ALLOW_DEVICE_REGISTRATION" -eq 1 && "$ALLOW_PROVISIONING_UPDATES" -eq 0 
 fi
 
 # --prod-auth: point the build at the production auth channel so it can pair
-# with a real beta/stable Mac (https://github.com/manaflow-ai/cmux/issues/7145).
-# The value lands in the CMUXAuthEnvironment Info.plist key (a tapped device
+# with a real beta/stable Mac (https://github.com/manaflow-ai/bmux/issues/7145).
+# The value lands in the BMUXAuthEnvironment Info.plist key (a tapped device
 # build sees no shell env), read by MobileAuthComposition. Presence needs no
 # URL here: PresenceClient.resolvedServiceBaseURL follows the resolved auth
 # channel, so the worker URLs live only in Swift and cannot drift; an explicit
-# CMUX_PRESENCE_BASE_URL still wins as before.
-CMUX_IOS_AUTH_ENV_VALUE=""
+# BMUX_PRESENCE_BASE_URL still wins as before.
+BMUX_IOS_AUTH_ENV_VALUE=""
 if [[ "$PROD_AUTH" -eq 1 ]]; then
-  CMUX_IOS_AUTH_ENV_VALUE="production"
+  BMUX_IOS_AUTH_ENV_VALUE="production"
   # The dogfood auto-login creds are dev-Stack-project accounts; against
   # production auth they cannot sign in. Launch plain and sign in in-app with
   # the same account as the Mac you want to pair with.
@@ -194,16 +194,16 @@ IOS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$IOS_DIR/../scripts/lib/mobile-attach.sh"
 # Fail closed on tags with no alphanumerics (their slug collapses onto the shared
 # fallback identity), matching the macOS reload's reject-empty behavior.
-if ! cmux_attach_tag_has_alnum "$TAG"; then
+if ! bmux_attach_tag_has_alnum "$TAG"; then
   echo "error: --tag '$TAG' has no letters or digits; pick a tag with at least one alphanumeric character" >&2
   exit 1
 fi
-WORKSPACE="$IOS_DIR/cmux.xcworkspace"
-SCHEME="cmux-ios"
+WORKSPACE="$IOS_DIR/bmux.xcworkspace"
+SCHEME="bmux-ios"
 TAG_SLUG="$(sanitize_tag "$TAG")"
-DISPLAY_NAME="cmux DEV $TAG"
-BUNDLE_ID="dev.cmux.ios.$TAG_SLUG"
-DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData/cmux-ios-$TAG_SLUG"
+DISPLAY_NAME="bmux DEV $TAG"
+BUNDLE_ID="dev.bmux.ios.$TAG_SLUG"
+DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData/bmux-ios-$TAG_SLUG"
 DESTINATION="platform=iOS Simulator,name=$SIMULATOR_NAME"
 MOBILE_DEV_LAUNCH="$IOS_DIR/../scripts/mobile-dev-launch.sh"
 
@@ -235,7 +235,7 @@ auto_setup_launch() {
   "$MOBILE_DEV_LAUNCH" "${args[@]}"
 }
 
-# Dev-build identity baked into the app's Info.plist (CMUXGitSHA / CMUXDevTag),
+# Dev-build identity baked into the app's Info.plist (BMUXGitSHA / BMUXDevTag),
 # surfaced in-app under Settings > About so a dogfood build is tellable. The
 # short SHA marks "+" when the working tree is dirty. Use `git status --porcelain`
 # (not `git diff HEAD`) so an UNTRACKED new source file also flips the marker:
@@ -272,7 +272,7 @@ fi
 update_qr_tag_marker() {
   # FIXED /tmp path (not TMPDIR): the QR server runs in a different shell whose
   # per-session TMPDIR differs, so the rendezvous file must be machine-shared.
-  local marker="/tmp/cmux-mobile-attach-qr-tags.json"
+  local marker="/tmp/bmux-mobile-attach-qr-tags.json"
   command -v python3 >/dev/null 2>&1 || return 0
   IOS_TAG="$TAG" MARKER="$marker" python3 - <<'PY' 2>/dev/null || true
 import json, os
@@ -501,10 +501,10 @@ reload_simulator() {
     -derivedDataPath "$DERIVED_DATA" \
     PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
     PRODUCT_DISPLAY_NAME="$DISPLAY_NAME" \
-    CMUX_GIT_SHA="$GIT_SHA" \
-    CMUX_DEV_TAG="$TAG" \
-    CMUX_PRESENCE_BASE_URL="${CMUX_PRESENCE_BASE_URL:-}" \
-    CMUX_IOS_AUTH_ENV="$CMUX_IOS_AUTH_ENV_VALUE" \
+    BMUX_GIT_SHA="$GIT_SHA" \
+    BMUX_DEV_TAG="$TAG" \
+    BMUX_PRESENCE_BASE_URL="${BMUX_PRESENCE_BASE_URL:-}" \
+    BMUX_IOS_AUTH_ENV="$BMUX_IOS_AUTH_ENV_VALUE" \
     EXCLUDED_SOURCE_FILE_NAMES=Info.plist \
     CODE_SIGNING_ALLOWED=NO \
     SWIFT_OPTIMIZATION_LEVEL=-O \
@@ -512,7 +512,7 @@ reload_simulator() {
     GCC_OPTIMIZATION_LEVEL=s \
     build
 
-  APP_PATH="$DERIVED_DATA/Build/Products/Debug-iphonesimulator/cmux.app"
+  APP_PATH="$DERIVED_DATA/Build/Products/Debug-iphonesimulator/bmux.app"
   if [[ ! -d "$APP_PATH" ]]; then
     echo "error: built app not found at $APP_PATH" >&2
     exit 1
@@ -589,8 +589,8 @@ reload_device() {
   if [[ "$ALLOW_DEVICE_REGISTRATION" -eq 1 ]]; then
     device_destination="platform=iOS,id=$selected_device_id"
   fi
-  device_app_path="$DERIVED_DATA/Build/Products/Debug-iphoneos/cmux.app"
-  build_log="${TMPDIR:-/tmp}/cmux-ios-device-build-$TAG_SLUG.log"
+  device_app_path="$DERIVED_DATA/Build/Products/Debug-iphoneos/bmux.app"
+  build_log="${TMPDIR:-/tmp}/bmux-ios-device-build-$TAG_SLUG.log"
 
   echo "==> Building physical device app (tag: $TAG, device: $selected_device_name)"
 
@@ -616,10 +616,10 @@ reload_device() {
   build_args+=(
     PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID"
     PRODUCT_DISPLAY_NAME="$DISPLAY_NAME"
-    CMUX_GIT_SHA="$GIT_SHA"
-    CMUX_DEV_TAG="$TAG"
-    CMUX_PRESENCE_BASE_URL="${CMUX_PRESENCE_BASE_URL:-}"
-    CMUX_IOS_AUTH_ENV="$CMUX_IOS_AUTH_ENV_VALUE"
+    BMUX_GIT_SHA="$GIT_SHA"
+    BMUX_DEV_TAG="$TAG"
+    BMUX_PRESENCE_BASE_URL="${BMUX_PRESENCE_BASE_URL:-}"
+    BMUX_IOS_AUTH_ENV="$BMUX_IOS_AUTH_ENV_VALUE"
     EXCLUDED_SOURCE_FILE_NAMES=Info.plist
     CODE_SIGNING_ALLOWED=YES
     CODE_SIGN_STYLE=Automatic

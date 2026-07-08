@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>cmux Pro — badge & upgrade options</title>
+<title>bmux Pro — badge & upgrade options</title>
 <style>
   :root {
     color-scheme: light dark;
@@ -15,7 +15,7 @@
     --muted: #9aa4b2;
     --faint: #6b7482;
     --accent: #3a86ff;
-    /* cmux logo chevron gradient (web/public/cmux-icon.svg) */
+    /* bmux logo chevron gradient (web/public/bmux-icon.svg) */
     --logo-full: linear-gradient(90deg, #12c7f5 0%, #2d8cff 52%, #6c5cff 100%);
     /* narrow local slice used by the badge */
     --logo-subtle: linear-gradient(90deg, #249ffc 0%, #4b75ff 100%);
@@ -120,7 +120,7 @@
       <svg viewBox="0 0 256 256"><defs><linearGradient id="g" x1="91" y1="128" x2="179" y2="128" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#12c7f5"/><stop offset=".52" stop-color="#2d8cff"/><stop offset="1" stop-color="#6c5cff"/></linearGradient></defs><path d="M91 65 L179 128 L91 191 L91 151 L139 128 L91 105 Z" fill="url(#g)"/></svg>
     </span>
     <div>
-      <h1>cmux Pro — badge &amp; upgrade options</h1>
+      <h1>bmux Pro — badge &amp; upgrade options</h1>
     </div>
   </header>
   <p class="sub">Everything on the <code>feat-pro-plan</code> branch. Live in the tagged build <span class="kbd">pro1</span>. Pick a badge and I'll ship one, deleting the rest.</p>
@@ -148,7 +148,7 @@
 
   <h2>The gradient</h2>
   <div class="card">
-    <p>The badge uses the cmux logo chevron gradient, but a <strong>narrow slice</strong> of it. On the icon the ramp is spread across the whole chevron, so any small patch shifts hue only slightly — the tiny badge samples the middle stretch so it reads as a soft blue shimmer, not a full rainbow.</p>
+    <p>The badge uses the bmux logo chevron gradient, but a <strong>narrow slice</strong> of it. On the icon the ramp is spread across the whole chevron, so any small patch shifts hue only slightly — the tiny badge samples the middle stretch so it reads as a soft blue shimmer, not a full rainbow.</p>
     <div class="row" style="margin-top:10px">
       <div class="swatch"><div class="rail"></div><span class="name">full logo ramp&nbsp; #12c7f5 → #2d8cff → #6c5cff</span></div>
     </div>
@@ -172,16 +172,16 @@
       </ul>
       <p class="tight"><strong>Also reachable from</strong></p>
       <ul>
-        <li>Settings → Account (“cmux Pro” card)</li>
-        <li>Command palette → “Upgrade to cmux Pro”</li>
-        <li>Help menu → “Upgrade to cmux Pro…”</li>
+        <li>Settings → Account (“bmux Pro” card)</li>
+        <li>Command palette → “Upgrade to bmux Pro”</li>
+        <li>Help menu → “Upgrade to bmux Pro…”</li>
       </ul>
     </div>
   </div>
 
   <h2>iPhone button</h2>
   <div class="card">
-    <p>Separate from the badge: a small <strong>iPhone icon in the titlebar top-right</strong> that opens the <strong>Mobile Connect</strong> pairing window in one click. It's a real built-in tab-bar action (<code>cmux.mobileconnect</code>) too, so it's also configurable via <code>cmux.json</code>.</p>
+    <p>Separate from the badge: a small <strong>iPhone icon in the titlebar top-right</strong> that opens the <strong>Mobile Connect</strong> pairing window in one click. It's a real built-in tab-bar action (<code>bmux.mobileconnect</code>) too, so it's also configurable via <code>bmux.json</code>.</p>
   </div>
 
   <h2>Feature flags (PostHog project 244066)</h2>
@@ -196,7 +196,7 @@
 
   <h2>In-app pricing screen (native)</h2>
   <div class="card">
-    <p>Every upgrade entrypoint — badge, Settings → Account, command palette, Help menu — now opens a <strong>native SwiftUI pricing screen docked to the right of the window</strong>, inside cmux. It shows Free / Pro / Team / Enterprise cards (Pro highlighted with the logo gradient CTA); the plan buttons open the web checkout for the actual purchase.</p>
+    <p>Every upgrade entrypoint — badge, Settings → Account, command palette, Help menu — now opens a <strong>native SwiftUI pricing screen docked to the right of the window</strong>, inside bmux. It shows Free / Pro / Team / Enterprise cards (Pro highlighted with the logo gradient CTA); the plan buttons open the web checkout for the actual purchase.</p>
   </div>
 
   <h2>Pricing page (web)</h2>

@@ -22,13 +22,13 @@ export async function GET(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/sessions",
-    { "cmux.vm.operation": "list_sessions" },
+    { "bmux.vm.operation": "list_sessions" },
     "/api/vm/[id]/sessions failed",
     async ({ user, span }) => {
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
+      setSpanAttributes(span, { "bmux.vm.id": id });
       try {
         const sessions = await runVmWorkflow(listVmSessions({
           userId: user.id,
@@ -52,7 +52,7 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/sessions",
-    { "cmux.vm.operation": "open_session" },
+    { "bmux.vm.operation": "open_session" },
     "/api/vm/[id]/sessions failed",
     async ({ user, span }) => {
       const { id } = await params;
@@ -71,8 +71,8 @@ export async function POST(
       const title = optionalString(body.title);
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
-      if (sessionId) setSpanAttributes(span, { "cmux.vm.session.id": sessionId });
+      setSpanAttributes(span, { "bmux.vm.id": id });
+      if (sessionId) setSpanAttributes(span, { "bmux.vm.session.id": sessionId });
       try {
         const result = await runVmWorkflow(openVmSession({
           userId: user.id,

@@ -1,4 +1,4 @@
-import CmuxCommandPalette
+import BmuxCommandPalette
 import AppKit
 import Foundation
 

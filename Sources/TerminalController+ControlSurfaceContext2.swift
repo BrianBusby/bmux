@@ -1,6 +1,6 @@
 import AppKit
 import Bonsplit
-import CmuxControlSocket
+import BmuxControlSocket
 import Foundation
 
 /// The surface-domain lifecycle witnesses (`split` / `respawn` / `create` /

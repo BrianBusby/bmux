@@ -25,7 +25,7 @@ extension BrowserPanel {
         initialURL: URL?,
         profileID: UUID,
         websiteDataStore: WKWebsiteDataStore
-    ) -> CmuxWebView? {
+    ) -> BmuxWebView? {
         guard !isRemoteWorkspace,
               initialRequest == nil,
               renderInitialNavigation,

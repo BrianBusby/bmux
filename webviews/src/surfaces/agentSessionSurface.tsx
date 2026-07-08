@@ -14,8 +14,8 @@ import { installWebviewStyles } from "./installWebviewStyles";
 export function mountAgentSessionSurface(rootElement: HTMLElement): void {
   installWebviewStyles("agent-session", agentSessionStyles);
   applyCodexDocumentMetadata();
-  document.documentElement.dataset.cmuxWebviewKind = "agent-session";
-  document.body.dataset.cmuxWebviewKind = "agent-session";
+  document.documentElement.dataset.bmuxWebviewKind = "agent-session";
+  document.body.dataset.bmuxWebviewKind = "agent-session";
   const router = createWebviewsRouter(() => <AgentSessionApp />);
   createRoot(rootElement).render(<RouterProvider router={router} />);
 }

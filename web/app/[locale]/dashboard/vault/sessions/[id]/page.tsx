@@ -61,7 +61,7 @@ export default async function VaultSessionDetailPage({
     downloadUrl = null;
   }
 
-  const resumeCommand = `cmux-vault resume ${session.agentSessionId}`;
+  const resumeCommand = `bmux-vault resume ${session.agentSessionId}`;
   const cwd = session.cwd ?? t("unknownCwd");
 
   return (

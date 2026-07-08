@@ -4,7 +4,7 @@ import Bonsplit
 import OSLog
 
 private let closedItemHistoryLogger = Logger(
-    subsystem: "com.cmuxterm.app",
+    subsystem: "com.bmuxterm.app",
     category: "ClosedItemHistory"
 )
 
@@ -652,14 +652,14 @@ final class ClosedItemHistoryStore: ObservableObject {
         }
         let bundleId = (bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
             ? bundleIdentifier!
-            : "com.cmuxterm.app"
+            : "com.bmuxterm.app"
         let safeBundleId = bundleId.replacingOccurrences(
             of: "[^A-Za-z0-9._-]",
             with: "_",
             options: .regularExpression
         )
         return resolvedAppSupport
-            .appendingPathComponent("cmux", isDirectory: true)
+            .appendingPathComponent("bmux", isDirectory: true)
             .appendingPathComponent("closed-item-history-\(safeBundleId).json", isDirectory: false)
     }
 

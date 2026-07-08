@@ -1,9 +1,9 @@
 import AppKit
 import Bonsplit
 import Combine
-import CmuxAppKitSupportUI
-import CmuxCore
-import CmuxTerminal
+import BmuxAppKitSupportUI
+import BmuxCore
+import BmuxTerminal
 import Observation
 import SwiftUI
 
@@ -14,8 +14,8 @@ final class DockSplitStore: BonsplitDelegate {
     let bonsplitController: BonsplitController
 
     /// Which Dock this store backs: `.workspace` (per-workspace, seeded from the
-    /// project `.cmux/dock.json`) or `.global` (a per-window Dock seeded from
-    /// the global `~/.config/cmux/dock.json`, owner id == window id). Drives
+    /// project `.bmux/dock.json`) or `.global` (a per-window Dock seeded from
+    /// the global `~/.config/bmux/dock.json`, owner id == window id). Drives
     /// config resolution and how cross-container moves resolve a reference window.
     let scope: DockScope
 
@@ -510,8 +510,8 @@ final class DockSplitStore: BonsplitDelegate {
         controlTitle: String?
     ) -> TerminalPanel {
         var resolvedEnvironment = environment
-        if let controlId { resolvedEnvironment["CMUX_DOCK_CONTROL_ID"] = controlId }
-        if let controlTitle { resolvedEnvironment["CMUX_DOCK_CONTROL_TITLE"] = controlTitle }
+        if let controlId { resolvedEnvironment["BMUX_DOCK_CONTROL_ID"] = controlId }
+        if let controlTitle { resolvedEnvironment["BMUX_DOCK_CONTROL_TITLE"] = controlTitle }
 
         let initialCommand: String?
         if let command, !command.isEmpty {
@@ -661,7 +661,7 @@ final class DockSplitStore: BonsplitDelegate {
 
     func trustAndReload() {
         if let trustRequest {
-            CmuxActionTrust.shared.trust(trustRequest.descriptor)
+            BmuxActionTrust.shared.trust(trustRequest.descriptor)
         }
         reload()
     }
@@ -844,7 +844,7 @@ final class DockSplitStore: BonsplitDelegate {
     private func trustRequestIfNeeded(for resolution: DockConfigResolution) -> DockTrustRequest? {
         guard resolution.isProjectSource, let sourceURL = resolution.sourceURL else { return nil }
         let descriptor = Self.trustDescriptor(for: resolution)
-        guard !CmuxActionTrust.shared.isTrusted(descriptor) else { return nil }
+        guard !BmuxActionTrust.shared.isTrusted(descriptor) else { return nil }
         return DockTrustRequest(descriptor: descriptor, configPath: sourceURL.path)
     }
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "bmux Customization"
+  short_description: "Customize bmux actions, UI, layouts, and presets."
+  default_prompt: "Use $bmux-customization to pick an examples-library preset, wire it into bmux.json, and validate the bmux config."

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Regression test: cmux omo must not re-add the legacy oh-my-opencode plugin
+Regression test: bmux omo must not re-add the legacy oh-my-opencode plugin
 when the user's OpenCode config already contains the renamed oh-my-openagent
 package, including mixed current/legacy configs left by prior migrations.
 """
@@ -13,7 +13,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_bmux_cli
 
 
 def make_executable(path: Path, content: str) -> None:
@@ -38,12 +38,12 @@ def plugin_package_name(entry: object) -> str:
 
 def main() -> int:
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_bmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1
 
-    with tempfile.TemporaryDirectory(prefix="cmux-omo-openagent-") as td:
+    with tempfile.TemporaryDirectory(prefix="bmux-omo-openagent-") as td:
         root = Path(td)
         fake_bin = root / "bin"
         fake_bin.mkdir()
@@ -83,8 +83,8 @@ mkdir -p "node_modules/$package"
         env = os.environ.copy()
         env["HOME"] = str(root)
         env["PATH"] = f"{fake_bin}:{env.get('PATH', '')}"
-        env["CMUX_CLI_SENTRY_DISABLED"] = "1"
-        env["CMUX_SOCKET_PATH"] = str(root / "missing.sock")
+        env["BMUX_CLI_SENTRY_DISABLED"] = "1"
+        env["BMUX_SOCKET_PATH"] = str(root / "missing.sock")
 
         run = subprocess.run(
             [cli_path, "omo", "--model", "test"],
@@ -95,7 +95,7 @@ mkdir -p "node_modules/$package"
             timeout=20,
         )
 
-        shadow_config_json = root / ".cmuxterm" / "omo-config" / "opencode.json"
+        shadow_config_json = root / ".bmuxterm" / "omo-config" / "opencode.json"
         try:
             shadow_config = json.loads(shadow_config_json.read_text(encoding="utf-8"))
         except Exception as exc:
@@ -109,7 +109,7 @@ mkdir -p "node_modules/$package"
 
         package_names = [plugin_package_name(entry) for entry in plugins]
         if "oh-my-opencode" in package_names:
-            print(f"FAIL: cmux omo re-added legacy plugin name: {plugins!r}")
+            print(f"FAIL: bmux omo re-added legacy plugin name: {plugins!r}")
             return 1
         specs = [plugin_spec(entry) for entry in plugins]
         openagent_specs = [
@@ -118,7 +118,7 @@ mkdir -p "node_modules/$package"
         ]
         if openagent_specs != ["oh-my-openagent@3.17.5"]:
             print(
-                "FAIL: cmux omo did not prefer the existing renamed plugin entry; "
+                "FAIL: bmux omo did not prefer the existing renamed plugin entry; "
                 f"got {plugins!r}"
             )
             return 1
@@ -133,7 +133,7 @@ mkdir -p "node_modules/$package"
             return 1
         opencode_log_content = opencode_log.read_text(encoding="utf-8")
         opencode_config_dir = opencode_log_content.strip()
-        expected_config_dir = str(root / ".cmuxterm" / "omo-config")
+        expected_config_dir = str(root / ".bmuxterm" / "omo-config")
         if opencode_config_dir != expected_config_dir:
             print(
                 "FAIL: fake opencode received wrong OPENCODE_CONFIG_DIR; "
@@ -141,7 +141,7 @@ mkdir -p "node_modules/$package"
             )
             return 1
 
-        package_json = root / ".cmuxterm" / "omo-config" / "package.json"
+        package_json = root / ".bmuxterm" / "omo-config" / "package.json"
         try:
             package_manifest = json.loads(package_json.read_text(encoding="utf-8"))
         except Exception as exc:
@@ -160,14 +160,14 @@ mkdir -p "node_modules/$package"
             return 1
 
         if run.returncode != 0:
-            print("FAIL: cmux omo reached fake opencode but returned non-zero")
+            print("FAIL: bmux omo reached fake opencode but returned non-zero")
             print(f"exit={run.returncode}")
             print(f"opencode_log={opencode_log_content.strip()!r}")
             print(f"stdout={run.stdout.strip()}")
             print(f"stderr={run.stderr.strip()}")
             return 1
 
-    print("PASS: cmux omo preserves oh-my-openagent without legacy plugin loop")
+    print("PASS: bmux omo preserves oh-my-openagent without legacy plugin loop")
     return 0
 
 

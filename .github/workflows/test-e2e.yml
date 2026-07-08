@@ -101,7 +101,7 @@ jobs:
         run: |
           set -euo pipefail
           GHOSTTY_SHA=$(git -C ghostty rev-parse HEAD)
-          BUILD_FLAVOR="crashsubdir-cmux-crash-v1"
+          BUILD_FLAVOR="crashsubdir-bmux-crash-v1"
           TAG="xcframework-$GHOSTTY_SHA-$BUILD_FLAVOR"
           URL="https://github.com/manaflow-ai/ghostty/releases/download/$TAG/GhosttyKit.xcframework.tar.gz"
           echo "Downloading xcframework for ghostty $GHOSTTY_SHA"
@@ -146,9 +146,9 @@ jobs:
           echo ""
           clang -framework Foundation -framework CoreGraphics \
             -o /tmp/create-virtual-display scripts/create-virtual-display.m
-          VDISPLAY_READY="$RUNNER_TEMP/cmux-virtual-display.ready"
-          VDISPLAY_ID_PATH="$RUNNER_TEMP/cmux-virtual-display.id"
-          VDISPLAY_LOG="$RUNNER_TEMP/cmux-virtual-display.log"
+          VDISPLAY_READY="$RUNNER_TEMP/bmux-virtual-display.ready"
+          VDISPLAY_ID_PATH="$RUNNER_TEMP/bmux-virtual-display.id"
+          VDISPLAY_LOG="$RUNNER_TEMP/bmux-virtual-display.log"
           rm -f "$VDISPLAY_READY" "$VDISPLAY_ID_PATH" "$VDISPLAY_LOG"
 
           /tmp/create-virtual-display \
@@ -222,13 +222,13 @@ jobs:
           fi
 
       - name: Clean DerivedData
-        run: rm -rf ~/Library/Developer/Xcode/DerivedData/cmux-*
+        run: rm -rf ~/Library/Developer/Xcode/DerivedData/bmux-*
 
       - name: Cache Swift packages
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .ci-source-packages
-          key: spm-${{ (!inputs.runner || inputs.runner == 'auto') && (vars.MACOS_RUNNER_15 || 'blacksmith-6vcpu-macos-15') || inputs.runner }}-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: spm-${{ (!inputs.runner || inputs.runner == 'auto') && (vars.MACOS_RUNNER_15 || 'blacksmith-6vcpu-macos-15') || inputs.runner }}-${{ hashFiles('bmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: spm-${{ (!inputs.runner || inputs.runner == 'auto') && (vars.MACOS_RUNNER_15 || 'blacksmith-6vcpu-macos-15') || inputs.runner }}-
 
       - name: Sanitize Swift package cache
@@ -240,7 +240,7 @@ jobs:
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
           mkdir -p "$SOURCE_PACKAGES_DIR"
           for attempt in 1 2 3; do
-            if xcodebuild -project cmux.xcodeproj -scheme cmux-unit -configuration Debug \
+            if xcodebuild -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
               -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
               -resolvePackageDependencies; then
               exit 0
@@ -262,12 +262,12 @@ jobs:
         run: |
           set -euo pipefail
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
-          ONLY_TESTING="-only-testing:cmuxUITests/$TEST_FILTER"
+          ONLY_TESTING="-only-testing:bmuxUITests/$TEST_FILTER"
           DISPLAY_ENV_PREFIX=()
 
           if [ "$TEST_FILTER" = "DisplayResolutionRegressionUITests" ]; then
             HELPER_PATH="/tmp/create-virtual-display"
-            MANIFEST_PATH="/tmp/cmux-ui-test-display-harness.json"
+            MANIFEST_PATH="/tmp/bmux-ui-test-display-harness.json"
 
             rm -f "$MANIFEST_PATH"
             trap 'rm -f "$MANIFEST_PATH"' EXIT
@@ -346,7 +346,7 @@ jobs:
           fi
 
           XCODEBUILD_CMD=(
-            xcodebuild -project cmux.xcodeproj -scheme cmux -configuration Debug
+            xcodebuild -project bmux.xcodeproj -scheme bmux -configuration Debug
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR"
             -disableAutomaticPackageResolution
             -destination "platform=macOS"
@@ -434,7 +434,7 @@ jobs:
           path: /tmp/test-recording.mp4
           if-no-files-found: warn
 
-      - name: Post results to cmux-dev-artifacts
+      - name: Post results to bmux-dev-artifacts
         if: always()
         env:
           GH_TOKEN: ${{ secrets.DEV_ARTIFACTS_TOKEN }}
@@ -491,7 +491,7 @@ jobs:
           fi
 
           ISSUE_URL=$(gh issue create \
-            --repo manaflow-ai/cmux-dev-artifacts \
+            --repo manaflow-ai/bmux-dev-artifacts \
             --title "[$STATUS_EMOJI] $TEST_FILTER @ ${COMMIT_SHA:0:7} ($REF_DISPLAY)" \
             --body "$BODY" \
             --label "$LABEL")

@@ -1,11 +1,11 @@
-import CmuxExtensionKit
+import BmuxExtensionKit
 import Observation
 import SwiftUI
 
 @main
 @Observable
-public final class StubAgentSidebarExtension: @MainActor CmuxSidebarExtension {
-    public static let manifest = CmuxExtensionManifest(
+public final class StubAgentSidebarExtension: @MainActor BmuxSidebarExtension {
+    public static let manifest = BmuxExtensionManifest(
         id: "dev.example.stub-agent-sidebar",
         displayName: String(localized: "stubAgent.manifest.displayName", defaultValue: "Stub Agent Sidebar"),
         readScopes: [
@@ -20,11 +20,11 @@ public final class StubAgentSidebarExtension: @MainActor CmuxSidebarExtension {
         ]
     )
 
-    public private(set) var snapshot: CmuxSidebarSnapshot?
+    public private(set) var snapshot: BmuxSidebarSnapshot?
     public private(set) var errorText: String?
 
     @ObservationIgnored
-    private var host: CmuxSidebarHost?
+    private var host: BmuxSidebarHost?
 
     public required init() {}
 
@@ -53,7 +53,7 @@ public final class StubAgentSidebarExtension: @MainActor CmuxSidebarExtension {
         .padding()
     }
 
-    public func update(context: CmuxSidebarContext) {
+    public func update(context: BmuxSidebarContext) {
         snapshot = context.snapshot
         host = context.host
         errorText = nil
@@ -76,12 +76,12 @@ public final class StubAgentSidebarExtension: @MainActor CmuxSidebarExtension {
         do {
             try await operation()
             errorText = nil
-        } catch CmuxSidebarActionError.rejected(let message) {
+        } catch BmuxSidebarActionError.rejected(let message) {
             errorText = message
-        } catch CmuxSidebarActionError.cancelled {
+        } catch BmuxSidebarActionError.cancelled {
             errorText = nil
         } catch {
-            errorText = String(localized: "stubAgent.actionDenied", defaultValue: "cmux did not allow that action")
+            errorText = String(localized: "stubAgent.actionDenied", defaultValue: "bmux did not allow that action")
         }
     }
 }

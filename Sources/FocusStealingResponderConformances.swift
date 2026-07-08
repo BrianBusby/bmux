@@ -1,8 +1,8 @@
-import CmuxFoundation
+import BmuxFoundation
 import WebKit
 
 // Marker conformances for the terminal-surface and browser view types so the command
-// palette focus-stealing classification (in CmuxCommandPaletteUI) can test
+// palette focus-stealing classification (in BmuxCommandPaletteUI) can test
 // `any FocusStealingResponder` instead of importing these concrete app-target view
 // types upward across the package graph.
 //

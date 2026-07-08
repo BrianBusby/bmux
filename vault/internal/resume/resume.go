@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/klauspost/compress/zstd"
-	"github.com/manaflow-ai/cmux/vault/internal/agentdirs"
-	"github.com/manaflow-ai/cmux/vault/internal/api"
+	"github.com/manaflow-ai/bmux/vault/internal/agentdirs"
+	"github.com/manaflow-ai/bmux/vault/internal/api"
 )
 
 var uuidRe = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
@@ -71,9 +71,9 @@ func (r *Restorer) Resume(ctx context.Context, sessionID string, opts Options) (
 	}
 	if cloudSession == nil {
 		if local != nil {
-			return "", fmt.Errorf("session %s exists locally but was not found in cmux vault; rerun without --force to use the local transcript", sessionID)
+			return "", fmt.Errorf("session %s exists locally but was not found in bmux vault; rerun without --force to use the local transcript", sessionID)
 		}
-		return "", fmt.Errorf("session %s not found locally or in cmux vault", sessionID)
+		return "", fmt.Errorf("session %s not found locally or in bmux vault", sessionID)
 	}
 	detail, err := r.Client.GetSession(ctx, cloudSession.ID)
 	if err != nil {

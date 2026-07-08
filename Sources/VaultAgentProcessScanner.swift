@@ -1,5 +1,5 @@
 import Foundation
-import CMUXAgentLaunch
+import BMUXAgentLaunch
 import SQLite3
 
 extension AgentLaunchCommandSnapshot {
@@ -30,11 +30,11 @@ extension AgentLaunchCommandSnapshot {
 
 extension RestorableAgentSessionIndex {
     static func processDetectedSnapshots(
-        registry: CmuxVaultAgentRegistry,
+        registry: BmuxVaultAgentRegistry,
         fileManager: FileManager
     ) -> [PanelKey: ProcessDetectedSnapshotEntry] {
         let capturedAt = Date().timeIntervalSince1970
-        let processSnapshot = CmuxTopProcessSnapshot.capture(includeProcessDetails: true)
+        let processSnapshot = BmuxTopProcessSnapshot.capture(includeProcessDetails: true)
         return processDetectedSnapshots(
             registry: registry,
             fileManager: fileManager,
@@ -44,9 +44,9 @@ extension RestorableAgentSessionIndex {
     }
 
     static func processDetectedSnapshots(
-        registry: CmuxVaultAgentRegistry,
+        registry: BmuxVaultAgentRegistry,
         fileManager: FileManager,
-        processSnapshot: CmuxTopProcessSnapshot,
+        processSnapshot: BmuxTopProcessSnapshot,
         capturedAt: TimeInterval
     ) -> [PanelKey: ProcessDetectedSnapshotEntry] {
         return processDetectedSnapshots(
@@ -54,18 +54,18 @@ extension RestorableAgentSessionIndex {
             fileManager: fileManager,
             processSnapshot: processSnapshot,
             capturedAt: capturedAt,
-            processArgumentsProvider: { CmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0) }
+            processArgumentsProvider: { BmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0) }
         )
     }
 
     static func processDetectedSnapshots(
-        registry: CmuxVaultAgentRegistry,
+        registry: BmuxVaultAgentRegistry,
         fileManager: FileManager,
-        processSnapshot: CmuxTopProcessSnapshot,
+        processSnapshot: BmuxTopProcessSnapshot,
         capturedAt: TimeInterval,
-        processArgumentsProvider: (Int) -> CmuxTopProcessArguments?
+        processArgumentsProvider: (Int) -> BmuxTopProcessArguments?
     ) -> [PanelKey: ProcessDetectedSnapshotEntry] {
-        let scopedProcessIDsByPanelKey = processSnapshot.cmuxScopedProcessIDsByPanelKey()
+        let scopedProcessIDsByPanelKey = processSnapshot.bmuxScopedProcessIDsByPanelKey()
         var resolved = processDetectedOpenCodeSnapshots(
             processSnapshot: processSnapshot,
             capturedAt: capturedAt,
@@ -74,9 +74,9 @@ extension RestorableAgentSessionIndex {
         )
 
         guard !registry.registrations.isEmpty else { return resolved }
-        var registriesByWorkingDirectory: [String: CmuxVaultAgentRegistry] = [:]
+        var registriesByWorkingDirectory: [String: BmuxVaultAgentRegistry] = [:]
 
-        func registryForWorkingDirectory(_ workingDirectory: String?) -> CmuxVaultAgentRegistry {
+        func registryForWorkingDirectory(_ workingDirectory: String?) -> BmuxVaultAgentRegistry {
             guard let workingDirectory else { return registry }
             let key = (workingDirectory as NSString).standardizingPath
             if let cached = registriesByWorkingDirectory[key] {
@@ -90,9 +90,9 @@ extension RestorableAgentSessionIndex {
             return resolved
         }
 
-        for process in processSnapshot.cmuxScopedProcesses() {
-            guard let workspaceId = process.cmuxWorkspaceID,
-                  let panelId = process.cmuxSurfaceID,
+        for process in processSnapshot.bmuxScopedProcesses() {
+            guard let workspaceId = process.bmuxWorkspaceID,
+                  let panelId = process.bmuxSurfaceID,
                   let processArguments = processArgumentsProvider(process.pid) else {
                 continue
             }
@@ -102,7 +102,7 @@ extension RestorableAgentSessionIndex {
                 arguments: processArguments.arguments,
                 environment: processArguments.environment
             )
-            let cwd = normalized(observed.environment["CMUX_AGENT_LAUNCH_CWD"] ?? observed.environment["PWD"])
+            let cwd = normalized(observed.environment["BMUX_AGENT_LAUNCH_CWD"] ?? observed.environment["PWD"])
             let processRegistry = registryForWorkingDirectory(cwd)
             guard let registration = processRegistry.registrations.first(where: { $0.detect.matches(observed) }),
                   let sessionIDResolution = registration.sessionIdSource.sessionIDResolution(
@@ -222,7 +222,7 @@ extension RestorableAgentSessionIndex {
     }
 
     private static func processDetectedOpenCodeSnapshots(
-        processSnapshot: CmuxTopProcessSnapshot,
+        processSnapshot: BmuxTopProcessSnapshot,
         capturedAt: TimeInterval,
         fileManager: FileManager,
         scopedProcessIDsByPanelKey: [PanelKey: Set<Int>]
@@ -242,10 +242,10 @@ extension RestorableAgentSessionIndex {
         ] = []
         var panelKeysByWorkingDirectory: [String: Set<PanelKey>] = [:]
 
-        for process in processSnapshot.cmuxScopedProcesses() {
-            guard let workspaceId = process.cmuxWorkspaceID,
-                  let panelId = process.cmuxSurfaceID,
-                  let processArguments = CmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: process.pid) else {
+        for process in processSnapshot.bmuxScopedProcesses() {
+            guard let workspaceId = process.bmuxWorkspaceID,
+                  let panelId = process.bmuxSurfaceID,
+                  let processArguments = BmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: process.pid) else {
                 continue
             }
             let observed = VaultObservedAgentProcess(
@@ -386,7 +386,7 @@ extension RestorableAgentSessionIndex {
 
     private static func openCodeWorkingDirectory(observed: VaultObservedAgentProcess) -> String? {
         let fallbackWorkingDirectory = normalized(
-            observed.environment["CMUX_AGENT_LAUNCH_CWD"] ?? observed.environment["PWD"]
+            observed.environment["BMUX_AGENT_LAUNCH_CWD"] ?? observed.environment["PWD"]
         )
         return openCodeProjectWorkingDirectory(
             observed: observed,
@@ -521,7 +521,7 @@ extension RestorableAgentSessionIndex {
     ) -> String? {
         let snapshot: OpenCodeDatabaseSnapshot.Snapshot
         do {
-            guard let madeSnapshot = try OpenCodeDatabaseSnapshot.make(prefix: "cmux-opencode-process") else {
+            guard let madeSnapshot = try OpenCodeDatabaseSnapshot.make(prefix: "bmux-opencode-process") else {
                 return nil
             }
             snapshot = madeSnapshot
@@ -587,7 +587,7 @@ extension SurfaceResumeBindingIndex {
     ) -> [PanelKey: (binding: SurfaceResumeBindingSnapshot, updatedAt: TimeInterval)] {
         _ = fileManager
         let capturedAt = Date().timeIntervalSince1970
-        let processSnapshot = CmuxTopProcessSnapshot.capture(includeProcessDetails: true)
+        let processSnapshot = BmuxTopProcessSnapshot.capture(includeProcessDetails: true)
         return processDetectedTmuxBindings(
             fileManager: fileManager,
             processSnapshot: processSnapshot,
@@ -597,17 +597,17 @@ extension SurfaceResumeBindingIndex {
 
     static func processDetectedTmuxBindings(
         fileManager: FileManager,
-        processSnapshot: CmuxTopProcessSnapshot,
+        processSnapshot: BmuxTopProcessSnapshot,
         capturedAt: TimeInterval
     ) -> [PanelKey: (binding: SurfaceResumeBindingSnapshot, updatedAt: TimeInterval)] {
         _ = fileManager
         var resolved: [PanelKey: (binding: SurfaceResumeBindingSnapshot, updatedAt: TimeInterval)] = [:]
 
-        for process in processSnapshot.cmuxScopedProcesses() {
-            guard let workspaceId = process.cmuxWorkspaceID,
-                  let panelId = process.cmuxSurfaceID,
+        for process in processSnapshot.bmuxScopedProcesses() {
+            guard let workspaceId = process.bmuxWorkspaceID,
+                  let panelId = process.bmuxSurfaceID,
                   process.isTerminalForegroundProcessGroup,
-                  let processArguments = CmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: process.pid) else {
+                  let processArguments = BmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: process.pid) else {
                 continue
             }
             guard let binding = TmuxResumeParser.binding(
@@ -821,7 +821,7 @@ private struct VaultObservedAgentProcess: Sendable {
     }
 }
 
-private extension CmuxVaultAgentDetectRule {
+private extension BmuxVaultAgentDetectRule {
     func matches(_ process: VaultObservedAgentProcess) -> Bool {
         var expectedNames = processNames
         if let processName {
@@ -869,10 +869,10 @@ private struct VaultAgentSessionIDResolution {
     let source: RestorableAgentSessionIndex.ProcessDetectedSessionIDSource
 }
 
-private extension CmuxVaultAgentSessionIDSource {
+private extension BmuxVaultAgentSessionIDSource {
     func sessionIDResolution(
         from process: VaultObservedAgentProcess,
-        registration: CmuxVaultAgentRegistration,
+        registration: BmuxVaultAgentRegistration,
         fileManager: FileManager
     ) -> VaultAgentSessionIDResolution? {
         switch self {
@@ -906,11 +906,11 @@ private extension CmuxVaultAgentSessionIDSource {
     }
 }
 
-private extension CmuxTopProcessSnapshot {
-    func cmuxScopedProcessIDsByPanelKey() -> [RestorableAgentSessionIndex.PanelKey: Set<Int>] {
+private extension BmuxTopProcessSnapshot {
+    func bmuxScopedProcessIDsByPanelKey() -> [RestorableAgentSessionIndex.PanelKey: Set<Int>] {
         var result: [RestorableAgentSessionIndex.PanelKey: Set<Int>] = [:]
-        for process in cmuxScopedProcesses() {
-            if let workspaceId = process.cmuxWorkspaceID, let panelId = process.cmuxSurfaceID {
+        for process in bmuxScopedProcesses() {
+            if let workspaceId = process.bmuxWorkspaceID, let panelId = process.bmuxSurfaceID {
                 result[.init(workspaceId: workspaceId, panelId: panelId), default: []].insert(process.pid)
             }
         }
@@ -1035,7 +1035,7 @@ enum PiSessionLocator {
 
     fileprivate static func latestSessionPath(
         for process: VaultObservedAgentProcess,
-        registration: CmuxVaultAgentRegistration,
+        registration: BmuxVaultAgentRegistration,
         fileManager: FileManager
     ) -> String? {
         newestJSONLFile(in: candidateSessionDirectory(for: process, registration: registration), fileManager: fileManager)?.path
@@ -1044,7 +1044,7 @@ enum PiSessionLocator {
     fileprivate static func resolvedSessionPath(
         _ session: String,
         for process: VaultObservedAgentProcess,
-        registration: CmuxVaultAgentRegistration,
+        registration: BmuxVaultAgentRegistration,
         fileManager: FileManager
     ) -> String? {
         let trimmed = session.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1086,7 +1086,7 @@ enum PiSessionLocator {
 
     private static func candidateSessionDirectory(
         for process: VaultObservedAgentProcess,
-        registration: CmuxVaultAgentRegistration
+        registration: BmuxVaultAgentRegistration
     ) -> String {
         let sessionRoot = process.arguments.value(afterOption: "--session-dir")
             ?? process.environment["PI_CODING_AGENT_SESSION_DIR"]
@@ -1095,7 +1095,7 @@ enum PiSessionLocator {
             ?? registration.sessionDirectory
             ?? defaultSessionsRoot()
         let expandedRoot = (sessionRoot as NSString).expandingTildeInPath
-        if let cwd = process.environment["CMUX_AGENT_LAUNCH_CWD"] ?? process.environment["PWD"],
+        if let cwd = process.environment["BMUX_AGENT_LAUNCH_CWD"] ?? process.environment["PWD"],
            let projectDirectory = projectDirectoryName(for: cwd) {
             return (expandedRoot as NSString).appendingPathComponent(projectDirectory)
         }
@@ -1104,7 +1104,7 @@ enum PiSessionLocator {
 
     private static func ompAgentSessionsRoot(
         for process: VaultObservedAgentProcess,
-        registration: CmuxVaultAgentRegistration
+        registration: BmuxVaultAgentRegistration
     ) -> String? {
         guard registration.id == "omp" else { return nil }
         if let agentRoot = nonEmptyEnvironmentValue("PI_CODING_AGENT_DIR", in: process.environment) {
@@ -1127,10 +1127,10 @@ enum PiSessionLocator {
         return (agentRoot as NSString).appendingPathComponent("sessions")
     }
 
-    private static func configuredSessionDirectory(for registration: CmuxVaultAgentRegistration) -> String? {
+    private static func configuredSessionDirectory(for registration: BmuxVaultAgentRegistration) -> String? {
         guard let sessionDirectory = registration.sessionDirectory else { return nil }
         if registration.id == "omp",
-           sessionDirectory == CmuxVaultAgentRegistration.builtInOmp.sessionDirectory {
+           sessionDirectory == BmuxVaultAgentRegistration.builtInOmp.sessionDirectory {
             return nil
         }
         return sessionDirectory

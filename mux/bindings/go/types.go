@@ -1,4 +1,4 @@
-package cmux
+package bmux
 
 type IdentifyResult struct {
 	App      string `json:"app"`

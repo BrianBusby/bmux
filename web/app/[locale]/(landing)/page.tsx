@@ -64,13 +64,13 @@ function HomeContent() {
           <BrandLogoLink className="shrink-0">
             <img
               src="/logo.png"
-              alt="cmux icon"
+              alt="bmux icon"
               width={48}
               height={48}
               className="rounded-xl"
             />
           </BrandLogoLink>
-          <h1 className="text-2xl font-semibold tracking-tight">cmux</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">bmux</h1>
         </div>
 
         {/* Tagline */}
@@ -165,7 +165,7 @@ function HomeContent() {
               <span>
                 <strong className="font-medium">
                   <a
-                    href="https://github.com/manaflow-ai/cmux#founders-edition"
+                    href="https://github.com/manaflow-ai/bmux#founders-edition"
                     className={linkClass}
                   >
                     {t("feature.ios")}
@@ -224,7 +224,7 @@ function HomeContent() {
                 {t.rich("faqIosA", {
                   foundersLink: (chunks) => (
                     <a
-                      href="https://github.com/manaflow-ai/cmux#founders-edition"
+                      href="https://github.com/manaflow-ai/bmux#founders-edition"
                       className={linkClass}
                     >
                       {chunks}
@@ -324,7 +324,7 @@ function HomeContent() {
                 {t.rich("faqSkillsA", {
                   skillsLink: (chunks) => (
                     <a
-                      href="https://github.com/manaflow-ai/cmux-skills"
+                      href="https://github.com/manaflow-ai/bmux-skills"
                       className={linkClass}
                     >
                       {chunks}
@@ -407,7 +407,7 @@ function HomeContent() {
                 {t.rich("faqFreeA", {
                   link: (chunks) => (
                     <a
-                      href="https://github.com/manaflow-ai/cmux"
+                      href="https://github.com/manaflow-ai/bmux"
                       className={linkClass}
                     >
                       {chunks}
@@ -422,7 +422,7 @@ function HomeContent() {
                 {t.rich("faqSupportA", {
                   foundersLink: (chunks) => (
                     <a
-                      href="https://github.com/manaflow-ai/cmux#founders-edition"
+                      href="https://github.com/manaflow-ai/bmux#founders-edition"
                       className={linkClass}
                     >
                       {chunks}
@@ -437,7 +437,7 @@ function HomeContent() {
                 {t.rich("faqFeatureA", {
                   issuesLink: (chunks) => (
                     <a
-                      href="https://github.com/manaflow-ai/cmux/issues"
+                      href="https://github.com/manaflow-ai/bmux/issues"
                       className={linkClass}
                     >
                       {chunks}
@@ -445,7 +445,7 @@ function HomeContent() {
                   ),
                   prLink: (chunks) => (
                     <a
-                      href="https://github.com/manaflow-ai/cmux/pulls"
+                      href="https://github.com/manaflow-ai/bmux/pulls"
                       className={linkClass}
                     >
                       {chunks}
@@ -453,7 +453,7 @@ function HomeContent() {
                   ),
                   mailLink: (chunks) => (
                     <a
-                      href="mailto:founders@manaflow.com?subject=%5Bcmux%20feature%20request%20landing%5D&body=Hi%20cmux%20team%2C%20"
+                      href="mailto:founders@manaflow.com?subject=%5Bbmux%20feature%20request%20landing%5D&body=Hi%20bmux%20team%2C%20"
                       className={linkClass}
                     >
                       {chunks}

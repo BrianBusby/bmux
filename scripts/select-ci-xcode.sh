@@ -14,8 +14,8 @@
 # runner that lacks the newer Xcode. Exports DEVELOPER_DIR to GITHUB_ENV.
 set -euo pipefail
 
-APPLICATIONS_DIR="${CMUX_XCODE_APPLICATIONS_DIR:-/Applications}"
-REQUIRED_SDK_MAJOR="${CMUX_CI_REQUIRED_MACOS_SDK_MAJOR:-}"
+APPLICATIONS_DIR="${BMUX_XCODE_APPLICATIONS_DIR:-/Applications}"
+REQUIRED_SDK_MAJOR="${BMUX_CI_REQUIRED_MACOS_SDK_MAJOR:-}"
 
 sdk_major() {
   local v="$1" maj
@@ -28,7 +28,7 @@ validate_required_sdk() {
   local selected_dir="$1" sdk_version="$2" actual_major
   [ -n "$REQUIRED_SDK_MAJOR" ] || return 0
   case "$REQUIRED_SDK_MAJOR" in ''|*[!0-9]*)
-    echo "CMUX_CI_REQUIRED_MACOS_SDK_MAJOR must be numeric, got: $REQUIRED_SDK_MAJOR" >&2
+    echo "BMUX_CI_REQUIRED_MACOS_SDK_MAJOR must be numeric, got: $REQUIRED_SDK_MAJOR" >&2
     exit 1
     ;;
   esac
@@ -78,9 +78,9 @@ select_developer_dir() {
   xcrun --sdk macosx --show-sdk-path
 }
 
-PINNED_DEVELOPER_DIR="${CMUX_CI_DEVELOPER_DIR:-}"
-if [ -z "$PINNED_DEVELOPER_DIR" ] && [ -n "${CMUX_CI_XCODE_APP:-}" ]; then
-  PINNED_DEVELOPER_DIR="${CMUX_CI_XCODE_APP%/}/Contents/Developer"
+PINNED_DEVELOPER_DIR="${BMUX_CI_DEVELOPER_DIR:-}"
+if [ -z "$PINNED_DEVELOPER_DIR" ] && [ -n "${BMUX_CI_XCODE_APP:-}" ]; then
+  PINNED_DEVELOPER_DIR="${BMUX_CI_XCODE_APP%/}/Contents/Developer"
 fi
 
 if [ -n "$PINNED_DEVELOPER_DIR" ]; then
@@ -99,7 +99,7 @@ fi
 
 if [ -n "$REQUIRED_SDK_MAJOR" ]; then
   case "$REQUIRED_SDK_MAJOR" in ''|*[!0-9]*)
-    echo "CMUX_CI_REQUIRED_MACOS_SDK_MAJOR must be numeric, got: $REQUIRED_SDK_MAJOR" >&2
+    echo "BMUX_CI_REQUIRED_MACOS_SDK_MAJOR must be numeric, got: $REQUIRED_SDK_MAJOR" >&2
     exit 1
     ;;
   esac

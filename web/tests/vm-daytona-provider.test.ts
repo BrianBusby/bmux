@@ -24,12 +24,12 @@ class TestDaytonaProvider extends DaytonaProvider {
 }
 
 describe("DaytonaProvider attach", () => {
-  test("requires the cmuxd RPC daemon when the caller asks for one", async () => {
+  test("requires the bmuxd RPC daemon when the caller asks for one", async () => {
     const provider = new TestDaytonaProvider();
     provider.websocketResult = websocketEndpoint;
 
     await expect(provider.openAttach("sandbox-1", { requireDaemon: true })).rejects.toThrow(
-      "requires a cmuxd RPC endpoint",
+      "requires a bmuxd RPC endpoint",
     );
   });
 
@@ -54,10 +54,10 @@ describe("DaytonaProvider attach", () => {
 
   test("does not fall back to SSH when the WebSocket attach fails", async () => {
     const provider = new TestDaytonaProvider();
-    provider.websocketResult = new Error("Daytona cmuxd websocket health check returned 502");
+    provider.websocketResult = new Error("Daytona bmuxd websocket health check returned 502");
 
     await expect(provider.openAttach("sandbox-1")).rejects.toThrow(
-      "Daytona cmuxd websocket health check returned 502",
+      "Daytona bmuxd websocket health check returned 502",
     );
   });
 });

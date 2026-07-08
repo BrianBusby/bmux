@@ -1,4 +1,4 @@
-import CmuxCommandPalette
+import BmuxCommandPalette
 import AppKit
 import Foundation
 
@@ -17,7 +17,7 @@ extension ContentView {
         return [
             CommandPaletteCommandContribution(
                 commandId: commandPaletteProUpgradeCommandId,
-                title: constant(String(localized: "command.pro.upgrade.title", defaultValue: "Upgrade to cmux Pro")),
+                title: constant(String(localized: "command.pro.upgrade.title", defaultValue: "Upgrade to bmux Pro")),
                 subtitle: constant(String(localized: "command.auth.subtitle", defaultValue: "Account")),
                 keywords: ["pro", "upgrade", "subscription", "billing", "plan", "pricing", "cloud", "purchase", "buy"],
                 when: { context in
@@ -30,7 +30,7 @@ extension ContentView {
     func registerProCommandHandlers(_ registry: inout CommandPaletteHandlerRegistry) {
         registry.register(commandId: Self.commandPaletteProUpgradeCommandId) {
 #if DEBUG
-            cmuxDebugLog("palette.pro.upgrade.invoke")
+            bmuxDebugLog("palette.pro.upgrade.invoke")
 #endif
             ProUpgradePresenter.present()
         }

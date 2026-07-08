@@ -1,4 +1,4 @@
-import CmuxPanes
+import BmuxPanes
 import Foundation
 
 extension TabManager {

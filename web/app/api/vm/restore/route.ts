@@ -29,7 +29,7 @@ export async function POST(request: Request): Promise<Response> {
   return withAuthedVmApiRoute(
     request,
     "/api/vm/restore",
-    { "cmux.vm.operation": "restore" },
+    { "bmux.vm.operation": "restore" },
     "/api/vm/restore POST failed",
     async ({ user: initialUser, span, authDurationMs, routeStartedAtMs, setResponseFinalizer }) => {
       const timing = new VmTimingRecorder(span, "restore", { startedAt: routeStartedAtMs });
@@ -52,7 +52,7 @@ export async function POST(request: Request): Promise<Response> {
           error: "vm_invalid_request",
           status: 400,
           message: "`snapshotId` is required.",
-          action: "Run `cmux vm snapshot <id>` first, then restore the printed snapshot id.",
+          action: "Run `bmux vm snapshot <id>` first, then restore the printed snapshot id.",
           details: { field: "snapshotId" },
         });
       }
@@ -81,9 +81,9 @@ export async function POST(request: Request): Promise<Response> {
       }
       const idempotencyKey = idempotencyKeyFromRequest(request);
       setSpanAttributes(span, {
-        "cmux.snapshot.id": snapshotId,
-        "cmux.vm.provider": provider,
-        "cmux.idempotency_key_set": !!idempotencyKey,
+        "bmux.snapshot.id": snapshotId,
+        "bmux.vm.provider": provider,
+        "bmux.idempotency_key_set": !!idempotencyKey,
       });
       try {
         const restored = await runVmWorkflow(restoreVm({
@@ -171,7 +171,7 @@ function providerField(body: Record<string, unknown>): ProviderFieldResult {
 }
 
 function idempotencyKeyFromRequest(request: Request): string | undefined {
-  const raw = (request.headers.get("idempotency-key") || request.headers.get("x-cmux-idempotency-key") || "").trim();
+  const raw = (request.headers.get("idempotency-key") || request.headers.get("x-bmux-idempotency-key") || "").trim();
   return raw ? raw.slice(0, 128) : undefined;
 }
 
@@ -199,7 +199,7 @@ function createLikeErrorResponse(err: unknown): Response | null {
       error: "vm_active_limit_exceeded",
       status: 402,
       message: `This plan allows ${err.limit} active Cloud VM${err.limit === 1 ? "" : "s"} at a time.`,
-      action: "Run `cmux vm ls`, then stop or delete an active VM with `cmux vm rm <id>` before restoring another.",
+      action: "Run `bmux vm ls`, then stop or delete an active VM with `bmux vm rm <id>` before restoring another.",
       extra: { limit: err.limit },
       details: { limit: err.limit },
     });
@@ -234,10 +234,10 @@ function billingTeamErrorResponse(err: {
   return vmErrorResponse({
     error: err.code,
     status: err.status,
-    message: err.code === "vm_billing_team_not_found" ? "That team is not available for this account." : "cmux needs to know which team should own this Cloud VM.",
+    message: err.code === "vm_billing_team_not_found" ? "That team is not available for this account." : "bmux needs to know which team should own this Cloud VM.",
     action: err.code === "vm_billing_team_not_found"
-      ? "Switch to a team you belong to, or run `cmux auth login` again and retry with the correct team id."
-      : "Select a team in cmux, or pass the team id with `X-Cmux-Team-Id`.",
+      ? "Switch to a team you belong to, or run `bmux auth login` again and retry with the correct team id."
+      : "Select a team in bmux, or pass the team id with `X-Bmux-Team-Id`.",
     reason: err.message,
   });
 }

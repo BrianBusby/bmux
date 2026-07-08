@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# This runner is intended for the UTM macOS VM (ssh cmux-vm).
-# It is intentionally guarded so we don't accidentally kill the host user's cmux instances.
-if [ "$(id -un)" != "cmux" ]; then
-  echo "ERROR: This script is intended to be run on the cmux-vm (user: cmux)." >&2
-  echo "Run via: ssh cmux-vm 'cd /Users/cmux/cmux && ./scripts/run-tests-v2.sh'" >&2
+# This runner is intended for the UTM macOS VM (ssh bmux-vm).
+# It is intentionally guarded so we don't accidentally kill the host user's bmux instances.
+if [ "$(id -un)" != "bmux" ]; then
+  echo "ERROR: This script is intended to be run on the bmux-vm (user: bmux)." >&2
+  echo "Run via: ssh bmux-vm 'cd /Users/bmux/bmux && ./scripts/run-tests-v2.sh'" >&2
   exit 2
 fi
 
 cd "$(dirname "$0")/.."
 
-DERIVED_DATA_PATH="$HOME/Library/Developer/Xcode/DerivedData/cmux-tests-v2"
-APP="$DERIVED_DATA_PATH/Build/Products/Debug/cmux DEV.app"
+DERIVED_DATA_PATH="$HOME/Library/Developer/Xcode/DerivedData/bmux-tests-v2"
+APP="$DERIVED_DATA_PATH/Build/Products/Debug/bmux DEV.app"
 RUN_TAG="tests-v2"
 
 echo "== build =="
@@ -21,22 +21,22 @@ echo "== build =="
 # module file ... was built".
 rm -rf "$DERIVED_DATA_PATH/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules" || true
 xcodebuild \
-  -project cmux.xcodeproj \
-  -scheme cmux \
+  -project bmux.xcodeproj \
+  -scheme bmux \
   -configuration Debug \
   -destination "platform=macOS" \
   -derivedDataPath "$DERIVED_DATA_PATH" \
   build >/dev/null
 
 if [ ! -d "$APP" ]; then
-  echo "ERROR: cmux DEV.app not found at expected path: $APP" >&2
+  echo "ERROR: bmux DEV.app not found at expected path: $APP" >&2
   exit 1
 fi
 
 cleanup() {
-  pkill -x "cmux DEV" || true
-  pkill -x "cmux" || true
-  rm -f /tmp/cmux*.sock || true
+  pkill -x "bmux DEV" || true
+  pkill -x "bmux" || true
+  rm -f /tmp/bmux*.sock || true
 }
 
 launch_and_wait() {
@@ -44,19 +44,19 @@ launch_and_wait() {
   # Wait briefly for the previous instance to fully terminate; LaunchServices can flake if we
   # relaunch too quickly.
   for _ in {1..50}; do
-    pgrep -x "cmux DEV" >/dev/null 2>&1 || break
+    pgrep -x "bmux DEV" >/dev/null 2>&1 || break
     sleep 0.1
   done
 
   # Force socket mode for deterministic automation runs, independent of prior user settings.
-  defaults write com.cmuxterm.app.debug socketControlMode -string full >/dev/null 2>&1 || true
+  defaults write com.bmuxterm.app.debug socketControlMode -string full >/dev/null 2>&1 || true
 
   # Launch directly with UI test mode enabled so startup follows deterministic test codepaths.
-  CMUX_TAG="$RUN_TAG" CMUX_UI_TEST_MODE=1 "$APP/Contents/MacOS/cmux DEV" >/dev/null 2>&1 &
+  BMUX_TAG="$RUN_TAG" BMUX_UI_TEST_MODE=1 "$APP/Contents/MacOS/bmux DEV" >/dev/null 2>&1 &
 
   SOCK=""
   for _ in {1..120}; do
-    SOCK=$(ls -t /tmp/cmux-debug*.sock /tmp/cmux*.sock 2>/dev/null | head -1 || true)
+    SOCK=$(ls -t /tmp/bmux-debug*.sock /tmp/bmux*.sock 2>/dev/null | head -1 || true)
     if [ -n "$SOCK" ] && [ -S "$SOCK" ]; then
       break
     fi
@@ -64,13 +64,13 @@ launch_and_wait() {
   done
 
   if [ -z "$SOCK" ] || [ ! -S "$SOCK" ]; then
-    echo "ERROR: Socket not ready (looked for /tmp/cmux*.sock)" >&2
+    echo "ERROR: Socket not ready (looked for /tmp/bmux*.sock)" >&2
     exit 1
   fi
-  export CMUX_SOCKET_PATH="$SOCK"
+  export BMUX_SOCKET_PATH="$SOCK"
 
   # Ensure LaunchServices has a visible/main window attached for rendering checks.
-  CMUX_TAG="$RUN_TAG" open "$APP" >/dev/null 2>&1 || true
+  BMUX_TAG="$RUN_TAG" open "$APP" >/dev/null 2>&1 || true
   sleep 0.5
 
   echo "== wait ready =="
@@ -80,14 +80,14 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.getcwd(), "tests_v2"))
-from cmux import cmux  # type: ignore
+from bmux import bmux  # type: ignore
 
 deadline = time.time() + 30.0
 last = None
 client = None
 while time.time() < deadline:
     try:
-        client = cmux()
+        client = bmux()
         client.connect()
         break
     except Exception as e:
@@ -121,7 +121,7 @@ probe_deadline = time.time() + 10.0
 while time.time() < probe_deadline:
     probe = None
     try:
-        probe = cmux()
+        probe = bmux()
         probe.connect()
         if not probe.ping():
             raise RuntimeError("ping returned false")

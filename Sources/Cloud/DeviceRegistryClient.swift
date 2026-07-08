@@ -1,8 +1,8 @@
-import CMUXMobileCore
-import CmuxAuthRuntime
+import BMUXMobileCore
+import BmuxAuthRuntime
 import Foundation
 
-/// Registers this Mac (and its running cmux app instance's attach routes) in the
+/// Registers this Mac (and its running bmux app instance's attach routes) in the
 /// team-scoped device registry (`POST /api/devices`), so a phone can look up the
 /// Mac's current routes on reload and auto-pair instead of re-scanning a QR.
 ///
@@ -131,7 +131,7 @@ final class DeviceRegistryClient {
         req.setValue("Bearer \(tokens.accessToken)", forHTTPHeaderField: "Authorization")
         req.setValue(tokens.refreshToken, forHTTPHeaderField: "X-Stack-Refresh-Token")
         if let teamID, !teamID.isEmpty {
-            req.setValue(teamID, forHTTPHeaderField: "X-Cmux-Team-Id")
+            req.setValue(teamID, forHTTPHeaderField: "X-Bmux-Team-Id")
         }
         req.setValue("application/json", forHTTPHeaderField: "content-type")
         req.httpBody = try? JSONSerialization.data(withJSONObject: bodyDict, options: [])
@@ -144,7 +144,7 @@ final class DeviceRegistryClient {
                     // transient failure retries on the next status tick.
                     lastRegistration = registration
                 } else {
-                    NSLog("cmux.deviceRegistry register failed status=%d", http.statusCode)
+                    NSLog("bmux.deviceRegistry register failed status=%d", http.statusCode)
                 }
             }
         } catch {
@@ -152,11 +152,11 @@ final class DeviceRegistryClient {
         }
     }
 
-    /// The build tag for this cmux instance, distinguishing dev/tagged builds
+    /// The build tag for this bmux instance, distinguishing dev/tagged builds
     /// from stable. Defaults to "default" so untagged stable builds register
     /// under a stable instance key.
     private static func buildTag() -> String {
-        let tag = ProcessInfo.processInfo.environment["CMUX_TAG"]?
+        let tag = ProcessInfo.processInfo.environment["BMUX_TAG"]?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return (tag?.isEmpty == false) ? tag! : "default"
     }

@@ -37,8 +37,8 @@ export function resolveBillingTeamFromTeams(
     .sort((left, right) => {
       // Every billing surface (dashboard, portal, subscription, plan, TestFlight)
       // reads the real Stripe subscription by team id and never honors the
-      // operator-set cmuxVmPlan override. So a team paid only through a
-      // cmuxVmPlan override must not shadow a team holding a real cmuxPlan
+      // operator-set bmuxVmPlan override. So a team paid only through a
+      // bmuxVmPlan override must not shadow a team holding a real bmuxPlan
       // subscription, or the real subscription is masked as free.
       const leftReal = hasRealSubscriptionPlan(left.clientReadOnlyMetadata);
       const rightReal = hasRealSubscriptionPlan(right.clientReadOnlyMetadata);
@@ -65,8 +65,8 @@ export function billingTeamFromUnknown(value: unknown): BillingTeamLike | null {
 
 export function billingPlanIdFromMetadata(metadata: unknown): string | null {
   if (!metadata || typeof metadata !== "object") return null;
-  const value = (metadata as { cmuxVmPlan?: unknown }).cmuxVmPlan ??
-    (metadata as { cmuxPlan?: unknown }).cmuxPlan;
+  const value = (metadata as { bmuxVmPlan?: unknown }).bmuxVmPlan ??
+    (metadata as { bmuxPlan?: unknown }).bmuxPlan;
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
@@ -75,11 +75,11 @@ function hasActiveBillingPlan(metadata: unknown): boolean {
   return !!planId && planId !== "free";
 }
 
-// A real Stripe subscription is reflected only by cmuxPlan (written from active
-// subscription state); cmuxVmPlan is a manual override decoupled from billing.
+// A real Stripe subscription is reflected only by bmuxPlan (written from active
+// subscription state); bmuxVmPlan is a manual override decoupled from billing.
 function hasRealSubscriptionPlan(metadata: unknown): boolean {
   if (!metadata || typeof metadata !== "object") return false;
-  const value = (metadata as { cmuxPlan?: unknown }).cmuxPlan;
+  const value = (metadata as { bmuxPlan?: unknown }).bmuxPlan;
   const planId = typeof value === "string" && value.trim() ? value.trim() : null;
   return !!planId && planId !== "free";
 }

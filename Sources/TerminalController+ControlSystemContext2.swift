@@ -1,6 +1,6 @@
 import AppKit
 import Bonsplit
-import CmuxControlSocket
+import BmuxControlSocket
 import Foundation
 
 /// The system-domain action witnesses (`workspace.action`, `surface.action` /

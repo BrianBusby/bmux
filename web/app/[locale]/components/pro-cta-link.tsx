@@ -15,7 +15,7 @@ import { FEATURE_FLAGS } from "../../lib/feature-flags";
 // Resolution: build-time env force (local dev / previews), then the PostHog
 // flag, then the registry's safe default (the download link always works,
 // including while flags are still loading — no checkout flicker).
-const FORCE = process.env.NEXT_PUBLIC_CMUX_CHECKOUT_ENABLED;
+const FORCE = process.env.NEXT_PUBLIC_BMUX_CHECKOUT_ENABLED;
 const FORCED_ON = FORCE === "1" || (FORCE === undefined && process.env.NODE_ENV === "development");
 const FORCED_OFF = FORCE === "0";
 
@@ -44,7 +44,7 @@ export function ProCtaLink({
     <a
       href={checkout ? checkoutHref : fallbackHref}
       onClick={() =>
-        posthog.capture("cmuxterm_pro_cta_clicked", {
+        posthog.capture("bmuxterm_pro_cta_clicked", {
           location,
           checkout,
         })

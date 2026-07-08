@@ -1,19 +1,19 @@
 import AppKit
-import CmuxCommandPalette
+import BmuxCommandPalette
 
 extension ContentView {
     func commandPaletteConfigActionID(for commandId: String) -> String? {
         switch commandId {
         case "palette.newTerminalTab":
-            return CmuxSurfaceTabBarBuiltInAction.newTerminal.configID
+            return BmuxSurfaceTabBarBuiltInAction.newTerminal.configID
         case "palette.newBrowserTab":
-            return CmuxSurfaceTabBarBuiltInAction.newBrowser.configID
+            return BmuxSurfaceTabBarBuiltInAction.newBrowser.configID
         case "palette.newAgentChat":
-            return CmuxSurfaceTabBarBuiltInAction.newAgentChat.configID
+            return BmuxSurfaceTabBarBuiltInAction.newAgentChat.configID
         case "palette.terminalSplitRight":
-            return CmuxSurfaceTabBarBuiltInAction.splitRight.configID
+            return BmuxSurfaceTabBarBuiltInAction.splitRight.configID
         case "palette.terminalSplitDown":
-            return CmuxSurfaceTabBarBuiltInAction.splitDown.configID
+            return BmuxSurfaceTabBarBuiltInAction.splitDown.configID
         default:
             return nil
         }
@@ -35,8 +35,8 @@ extension ContentView {
                 NSSound.beep()
                 return
             }
-            if !appDelegate.executeConfiguredCmuxAction(
-                id: CmuxSurfaceTabBarBuiltInAction.newAgentChat.configID,
+            if !appDelegate.executeConfiguredBmuxAction(
+                id: BmuxSurfaceTabBarBuiltInAction.newAgentChat.configID,
                 tabManager: tabManager,
                 preferredWindow: appDelegate.mainWindow(for: windowId)
             ) {

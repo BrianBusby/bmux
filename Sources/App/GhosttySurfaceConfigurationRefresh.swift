@@ -1,34 +1,34 @@
 @MainActor
 enum GhosttySurfaceConfigurationRefresh {
     nonisolated static let forceRefreshReason = "appDelegate.refreshAfterGhosttyConfigReload"
-    nonisolated static let cmuxThemeReloadLegacySource = "distributed.cmux.themes"
-    nonisolated static let cmuxThemeReloadPreviewSource = "distributed.cmux.themes.preview"
-    nonisolated static let cmuxThemeReloadFinalSource = "distributed.cmux.themes.final"
-    nonisolated static let cmuxThemePreviewReloadDebounceMilliseconds = 180
+    nonisolated static let bmuxThemeReloadLegacySource = "distributed.bmux.themes"
+    nonisolated static let bmuxThemeReloadPreviewSource = "distributed.bmux.themes.preview"
+    nonisolated static let bmuxThemeReloadFinalSource = "distributed.bmux.themes.final"
+    nonisolated static let bmuxThemePreviewReloadDebounceMilliseconds = 180
 
-    nonisolated static func cmuxThemeReloadSource(phase: String?) -> String {
+    nonisolated static func bmuxThemeReloadSource(phase: String?) -> String {
         switch phase {
         case "final", "apply":
-            return cmuxThemeReloadFinalSource
+            return bmuxThemeReloadFinalSource
         case "preview":
-            return cmuxThemeReloadPreviewSource
+            return bmuxThemeReloadPreviewSource
         default:
-            return cmuxThemeReloadLegacySource
+            return bmuxThemeReloadLegacySource
         }
     }
 
-    nonisolated static func shouldDebounceCmuxThemeReload(source: String) -> Bool {
+    nonisolated static func shouldDebounceBmuxThemeReload(source: String) -> Bool {
         switch source {
-        case cmuxThemeReloadLegacySource, cmuxThemeReloadPreviewSource:
+        case bmuxThemeReloadLegacySource, bmuxThemeReloadPreviewSource:
             return true
         default:
             return false
         }
     }
 
-    nonisolated static func isCmuxThemeReloadSource(_ source: String) -> Bool {
+    nonisolated static func isBmuxThemeReloadSource(_ source: String) -> Bool {
         switch source {
-        case cmuxThemeReloadLegacySource, cmuxThemeReloadPreviewSource, cmuxThemeReloadFinalSource:
+        case bmuxThemeReloadLegacySource, bmuxThemeReloadPreviewSource, bmuxThemeReloadFinalSource:
             return true
         default:
             return false

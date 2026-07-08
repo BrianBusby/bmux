@@ -2,7 +2,7 @@
 
 ## Prefix Model
 
-`cmux-mux` uses a tmux-style prefix. The default prefix is `Ctrl-b`. After the prefix, the next key is interpreted as a mux command. Pressing the prefix twice sends a literal `Ctrl-b` to the active surface.
+`bmux-mux` uses a tmux-style prefix. The default prefix is `Ctrl-b`. After the prefix, the next key is interpreted as a mux command. Pressing the prefix twice sends a literal `Ctrl-b` to the active surface.
 
 Unknown prefixed keys are swallowed. Unprefixed non-Alt keys go to the active surface. Alt chords that are bound in the key table are modeless commands by default.
 
@@ -62,7 +62,7 @@ Set `keys.alt_shortcuts` to `false` to remove the default Alt bindings. This kil
 
 ## Remapping
 
-Keys are read from `~/.config/cmux/mux.json`, or from the file named by `CMUX_MUX_CONFIG`.
+Keys are read from `~/.config/bmux/mux.json`, or from the file named by `BMUX_MUX_CONFIG`.
 
 Each action accepts a string, an array of strings, or `"none"`. Setting an action replaces all default chords for that action before adding the configured chords. `"none"` leaves the action unbound.
 

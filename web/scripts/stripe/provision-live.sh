@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SECRET_FILE="${HOME}/.secrets/cmux-stripe-live.env"
-WEBHOOK_SECRET_FILE="/tmp/.cmux-live-whsec"
+SECRET_FILE="${HOME}/.secrets/bmux-stripe-live.env"
+WEBHOOK_SECRET_FILE="/tmp/.bmux-live-whsec"
 STRIPE_API_BASE="https://api.stripe.com/v1"
-PRODUCT_NAME="cmux Pro"
-WEBHOOK_URL="https://cmux.com/api/stripe/webhook"
-WEBHOOK_DESCRIPTION="cmux Pro billing (webhook-driven entitlements)"
+PRODUCT_NAME="bmux Pro"
+WEBHOOK_URL="https://bmux.com/api/stripe/webhook"
+WEBHOOK_DESCRIPTION="bmux Pro billing (webhook-driven entitlements)"
 EVENTS=(
   "checkout.session.completed"
   "customer.subscription.created"
@@ -74,7 +74,7 @@ else
   create_product_response="$(
     stripe_post "/products" \
       -d "name=${PRODUCT_NAME}" \
-      -d "metadata[app]=cmux" \
+      -d "metadata[app]=bmux" \
       -d "metadata[plan]=pro"
   )"
   product_id="$(jq -er '.id' <<<"$create_product_response")"
@@ -113,8 +113,8 @@ ensure_price() {
   echo "Created price ${lookup_key}: ${price_id}"
 }
 
-ensure_price "cmux-pro-monthly" "3000" "month" "cmux Pro Monthly"
-ensure_price "cmux-pro-yearly" "24000" "year" "cmux Pro Yearly"
+ensure_price "bmux-pro-monthly" "3000" "month" "bmux Pro Monthly"
+ensure_price "bmux-pro-yearly" "24000" "year" "bmux Pro Yearly"
 
 webhooks_response="$(stripe_get "/webhook_endpoints" --data-urlencode "limit=100")"
 webhook_id="$(
@@ -151,7 +151,7 @@ fi
 cat <<'EOF'
 
 Vercel production env commands
-Run these from a checkout linked to the cmux Vercel project:
+Run these from a checkout linked to the bmux Vercel project:
 
   vercel env add STRIPE_SECRET_KEY production --scope manaflow
   vercel env add STRIPE_WEBHOOK_SECRET production --scope manaflow

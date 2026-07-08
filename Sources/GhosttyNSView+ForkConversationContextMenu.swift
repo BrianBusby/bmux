@@ -62,13 +62,13 @@ extension GhosttyNSView {
     private func currentAgentConversationForkAvailability() -> WorkspaceForkAgentConversationAvailability {
         guard let panelId = terminalSurface?.id else {
 #if DEBUG
-            cmuxDebugLog("fork.contextMenu.hidden reason=missing_terminal_surface")
+            bmuxDebugLog("fork.contextMenu.hidden reason=missing_terminal_surface")
 #endif
             return .noAgentSnapshot
         }
         guard let located = AppDelegate.shared?.workspaceContainingPanel(panelId: panelId) else {
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "fork.contextMenu.hidden panel=\(panelId.uuidString.prefix(5)) " +
                 "reason=missing_workspace"
             )
@@ -84,7 +84,7 @@ extension GhosttyNSView {
         }
 #if DEBUG
         if !availability.isAvailable {
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "fork.contextMenu.hidden workspace=\(located.workspace.id.uuidString.prefix(5)) " +
                 "panel=\(panelId.uuidString.prefix(5)) reason=\(availability.diagnosticReason)"
             )

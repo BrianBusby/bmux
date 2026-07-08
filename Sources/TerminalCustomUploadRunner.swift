@@ -1,12 +1,12 @@
-import CmuxFoundation
-import CmuxRemoteSession
-import CmuxSettings
+import BmuxFoundation
+import BmuxRemoteSession
+import BmuxSettings
 import Darwin
 import Foundation
 
 /// Runs a user-configured custom upload command (see ``TerminalUploadCommand``)
 /// in place of the built-in `scp`, once per dropped/pasted file, and produces the
-/// single string cmux types into the terminal.
+/// single string bmux types into the terminal.
 ///
 /// Isolated from the built-in transport on purpose: when no rule matches the
 /// destination the terminal takes the normal `scp` path unchanged. Only when a
@@ -40,7 +40,7 @@ struct TerminalCustomUploadRunner {
 
     /// The command matching `endpoint.destination`, or nil when the built-in
     /// transport should be used. Reads the `terminal.uploadCommands` rules from the
-    /// settings catalog (cmux.json). Called on the main thread from the drop/paste
+    /// settings catalog (bmux.json). Called on the main thread from the drop/paste
     /// sites, so the catalog is read via `MainActor.assumeIsolated`.
     private func matchedCommand(for endpoint: Endpoint) -> String? {
         let rules = MainActor.assumeIsolated {
@@ -54,7 +54,7 @@ struct TerminalCustomUploadRunner {
     /// Runs `command` once per file and returns the space-joined string to type
     /// (see ``TerminalUploadCommand/emittedText(commandStdout:remotePath:)`` for
     /// how each file's piece is derived). Fails (fail-closed) on any non-zero
-    /// exit, timeout, or cancellation — cmux then types nothing, exactly like an
+    /// exit, timeout, or cancellation — bmux then types nothing, exactly like an
     /// `scp` failure today.
     func run(
         fileURLs: [URL],
@@ -165,7 +165,7 @@ struct TerminalCustomUploadRunner {
     // MARK: - Process bridge
 
     private static func uploadError(_ message: String) -> NSError {
-        NSError(domain: "cmux.upload.command", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+        NSError(domain: "bmux.upload.command", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
     }
 
     /// Default ``ProcessRunner``: spawns `/bin/sh -c command` as its own process
@@ -197,7 +197,7 @@ struct TerminalCustomUploadRunner {
         try operation.throwIfCancelled()
 
         // Inherit the app environment (so PATH/HOME etc. resolve the user's tools)
-        // and layer the CMUX_UPLOAD_* context on top.
+        // and layer the BMUX_UPLOAD_* context on top.
         var mergedEnvironment = ProcessInfo.processInfo.environment
         for (key, value) in environment {
             mergedEnvironment[key] = value

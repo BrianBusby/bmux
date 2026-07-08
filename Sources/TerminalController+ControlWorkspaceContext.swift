@@ -1,7 +1,7 @@
-import CmuxControlSocket
-import CmuxCore
-import CmuxPanes
-import CmuxWorkspaces
+import BmuxControlSocket
+import BmuxCore
+import BmuxPanes
+import BmuxWorkspaces
 import Foundation
 
 /// The workspace-domain witnesses for the stage-3c ``ControlCommandCoordinator``:
@@ -68,7 +68,7 @@ extension TerminalController: ControlWorkspaceContext {
             customColor: workspace.customColor,
             latestConversationMessage: workspace.latestConversationMessage,
             latestSubmittedMessage: workspace.latestSubmittedMessage,
-            latestSubmittedAt: workspace.latestSubmittedAt.map(CmuxEventBus.isoTimestamp)
+            latestSubmittedAt: workspace.latestSubmittedAt.map(BmuxEventBus.isoTimestamp)
         )
     }
 
@@ -635,7 +635,7 @@ extension TerminalController: ControlWorkspaceContext {
         }
 
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "workspace.remote.configure.request workspace=\(workspaceId.uuidString.prefix(8)) " +
             "target=\(destination) transport=\(transport.rawValue) port=\(sshPort.map(String.init) ?? "nil") " +
             "autoConnect=\(autoConnect ? 1 : 0) relayPort=\(relayPort.map(String.init) ?? "nil") " +

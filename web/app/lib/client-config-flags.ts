@@ -117,9 +117,9 @@ export function useClientConfigFlag(key: string): ClientConfigFlagValue | undefi
 }
 
 export const clientConfigFlags = {
-  cmuxForWindows: booleanClientConfigFlag("cmux-for-windows"),
-  cmuxForLinux: booleanClientConfigFlag("cmux-for-linux"),
-  cmuxForAndroid: booleanClientConfigFlag("cmux-for-android"),
+  bmuxForWindows: booleanClientConfigFlag("bmux-for-windows"),
+  bmuxForLinux: booleanClientConfigFlag("bmux-for-linux"),
+  bmuxForAndroid: booleanClientConfigFlag("bmux-for-android"),
   proUpgradeUIEnabledRelease: booleanClientConfigFlag("pro-upgrade-ui-enabled-release"),
   mobileConnectButtonEnabledRelease: booleanClientConfigFlag("mobile-connect-button-enabled-release"),
 } as const;

@@ -88,7 +88,7 @@ export async function POST(request: Request): Promise<Response> {
   return withAuthedVaultApiRoute(
     request,
     "/api/vault/uploads",
-    { "cmux.vault.operation": "uploads.presign" },
+    { "bmux.vault.operation": "uploads.presign" },
     "/api/vault/uploads POST failed",
     { allowCookie: false },
     async ({ user, span }) => {
@@ -105,9 +105,9 @@ async function handlePost(request: Request, userId: string, span: Span): Promise
   const batch = validateVaultBatch(body.value);
   if (!batch.ok) return jsonResponse({ error: batch.error }, 400);
   setSpanAttributes(span, {
-    "cmux.vault.item_count": batch.value.length,
-    "cmux.vault.raw_bytes": sumBatchRawBytes(batch.value),
-    "cmux.vault.compressed_bytes": sumBatchCompressedBytes(batch.value),
+    "bmux.vault.item_count": batch.value.length,
+    "bmux.vault.raw_bytes": sumBatchRawBytes(batch.value),
+    "bmux.vault.compressed_bytes": sumBatchCompressedBytes(batch.value),
   });
 
   const config = vaultConfig();
@@ -280,10 +280,10 @@ async function handlePost(request: Request, userId: string, span: Span): Promise
   });
   const results = await presignReservedUploads(db, reservedResults);
   setSpanAttributes(span, {
-    "cmux.vault.result_count": results.length,
-    "cmux.vault.result.upload_count": countResultStatus(results, "upload"),
-    "cmux.vault.result.unchanged_count": countResultStatus(results, "unchanged"),
-    "cmux.vault.result.error_count": countResultStatus(results, "error"),
+    "bmux.vault.result_count": results.length,
+    "bmux.vault.result.upload_count": countResultStatus(results, "upload"),
+    "bmux.vault.result.unchanged_count": countResultStatus(results, "unchanged"),
+    "bmux.vault.result.error_count": countResultStatus(results, "error"),
   });
   return jsonResponse({ items: results });
 }

@@ -1,6 +1,6 @@
-import CmuxFoundation
+import BmuxFoundation
 import Foundation
-import CMUXAgentLaunch
+import BMUXAgentLaunch
 import Darwin
 
 /// Coordinates cancellation with `Process.run()`: Foundation raises an

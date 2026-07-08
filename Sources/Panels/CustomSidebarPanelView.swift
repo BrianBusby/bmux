@@ -1,11 +1,11 @@
-import CmuxAppKitSupportUI
-import CmuxSettings
-import CmuxSettingsUI
-import CmuxSidebar
-import CmuxSidebarInterpreterClient
-import CmuxSidebarRemoteRender
-import CmuxSwiftRender
-import CmuxSwiftRenderUI
+import BmuxAppKitSupportUI
+import BmuxSettings
+import BmuxSettingsUI
+import BmuxSidebar
+import BmuxSidebarInterpreterClient
+import BmuxSidebarRemoteRender
+import BmuxSwiftRender
+import BmuxSwiftRenderUI
 import SwiftUI
 
 struct CustomSidebarPanelView: View {
@@ -30,7 +30,7 @@ struct CustomSidebarPanelView: View {
                     CustomSidebarSurface(
                         fileURL: panel.fileURL,
                         dataContext: customSidebarDataContext(now: timeline.date),
-                        dispatch: makeCmuxSidebarActionDispatch(),
+                        dispatch: makeBmuxSidebarActionDispatch(),
                         contentInsets: CustomSidebarContentInsets.zero,
                         rendersInProcess: customSidebarRenderer == .inProcess,
                         client: $renderWorkerClient

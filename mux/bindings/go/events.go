@@ -1,4 +1,4 @@
-package cmux
+package bmux
 
 import "encoding/json"
 

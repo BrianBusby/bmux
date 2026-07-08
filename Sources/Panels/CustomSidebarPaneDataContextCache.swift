@@ -1,5 +1,5 @@
-import CmuxSidebar
-import CmuxSwiftRender
+import BmuxSidebar
+import BmuxSwiftRender
 import Foundation
 
 @MainActor

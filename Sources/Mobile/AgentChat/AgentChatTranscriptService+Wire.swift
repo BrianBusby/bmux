@@ -1,4 +1,4 @@
-import CmuxAgentChat
+import BmuxAgentChat
 import Foundation
 
 extension AgentChatTranscriptService {

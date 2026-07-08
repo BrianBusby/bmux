@@ -1,6 +1,6 @@
-# cmux CLI Contract
+# bmux CLI Contract
 
-This document is the compatibility contract for migrating `CLI/cmux.swift` to
+This document is the compatibility contract for migrating `CLI/bmux.swift` to
 Swift ArgumentParser. The migration should preserve command names, aliases,
 global flags, exit behavior, socket routing, and no-socket help behavior unless
 a PR explicitly calls out an intentional contract change.
@@ -10,9 +10,9 @@ written around user-visible behavior so the implementation can change behind it.
 
 ## Migration Rules
 
-- Keep `cmux --help`, `cmux -h`, `cmux --version`, and `cmux -v` working without
-  connecting to the cmux socket.
-- Keep documented `cmux <command> --help` probes working without a socket where
+- Keep `bmux --help`, `bmux -h`, `bmux --version`, and `bmux -v` working without
+  connecting to the bmux socket.
+- Keep documented `bmux <command> --help` probes working without a socket where
   they already do.
 - Keep `--socket`, `--password`, and `--window` as global options before the
   command. Keep presentation options `--json` and `--id-format` accepted either
@@ -27,18 +27,18 @@ written around user-visible behavior so the implementation can change behind it.
 
 | Form | Contract |
 | --- | --- |
-| `cmux <path>` | Open a directory or file parent in cmux through the app's file-open path, without requiring control-socket access. Relative paths resolve from the current working directory. |
-| `cmux [global-options] <command> [options]` | Run a named command. Presentation options may appear before or after the command. |
-| `cmux --help`, `cmux -h` | Print top-level usage without a socket. |
-| `cmux help` | Print top-level usage without a socket. |
-| `cmux --version`, `cmux -v`, `cmux version` | Print version summary without a socket. |
+| `bmux <path>` | Open a directory or file parent in bmux through the app's file-open path, without requiring control-socket access. Relative paths resolve from the current working directory. |
+| `bmux [global-options] <command> [options]` | Run a named command. Presentation options may appear before or after the command. |
+| `bmux --help`, `bmux -h` | Print top-level usage without a socket. |
+| `bmux help` | Print top-level usage without a socket. |
+| `bmux --version`, `bmux -v`, `bmux version` | Print version summary without a socket. |
 
 Global options:
 
 | Option | Contract |
 | --- | --- |
 | `--socket <path>` | Override the socket path for this invocation. |
-| `--password <value>` | Use an explicit socket password. Takes precedence over `CMUX_SOCKET_PASSWORD`. |
+| `--password <value>` | Use an explicit socket password. Takes precedence over `BMUX_SOCKET_PASSWORD`. |
 | `--json` | Prefer machine-readable JSON output for commands that support it. |
 | `--id-format <refs\|uuids\|both>` | Select handle format in JSON and supported text output. |
 | `--window <id\|ref\|index>` | Route the command through a specific window when supported. |
@@ -47,12 +47,12 @@ Environment:
 
 | Variable | Contract |
 | --- | --- |
-| `CMUX_SOCKET_PATH` | Canonical socket path override. |
-| `CMUX_SOCKET` | Deprecated compatibility alias for `CMUX_SOCKET_PATH`. New scripts should use `CMUX_SOCKET_PATH`; if both variables are set and differ, the CLI fails before socket commands. |
-| `CMUX_SOCKET_PASSWORD` | Socket password fallback when `--password` is absent. |
-| `CMUX_WORKSPACE_ID` | Default workspace context inside cmux terminals. |
-| `CMUX_SURFACE_ID` | Default surface context inside cmux terminals. |
-| `CMUX_TAB_ID` | Default tab context for tab commands. |
+| `BMUX_SOCKET_PATH` | Canonical socket path override. |
+| `BMUX_SOCKET` | Deprecated compatibility alias for `BMUX_SOCKET_PATH`. New scripts should use `BMUX_SOCKET_PATH`; if both variables are set and differ, the CLI fails before socket commands. |
+| `BMUX_SOCKET_PASSWORD` | Socket password fallback when `--password` is absent. |
+| `BMUX_WORKSPACE_ID` | Default workspace context inside bmux terminals. |
+| `BMUX_SURFACE_ID` | Default surface context inside bmux terminals. |
+| `BMUX_TAB_ID` | Default tab context for tab commands. |
 
 ## Top-Level Commands
 
@@ -60,28 +60,28 @@ Environment:
 | --- | --- |
 | `welcome` | Print the welcome screen. |
 | `docs` | Print canonical docs URLs, raw GitHub resources, and useful commands for a topic. |
-| `settings` | Open Settings, print cmux.json paths, or print settings docs. |
-| `config` | Validate cmux.json syntax, print config references, or reload config. |
+| `settings` | Open Settings, print bmux.json paths, or print settings docs. |
+| `config` | Validate bmux.json syntax, print config references, or reload config. |
 | `shortcuts` | Open Settings to Keyboard Shortcuts. |
-| `disable-browser` | Disable cmux browser creation and link interception until re-enabled. |
-| `enable-browser` | Re-enable cmux browser creation and link interception. |
-| `browser-status` | Print whether cmux browser creation and link interception are enabled. |
+| `disable-browser` | Disable bmux browser creation and link interception until re-enabled. |
+| `enable-browser` | Re-enable bmux browser creation and link interception. |
+| `browser-status` | Print whether bmux browser creation and link interception are enabled. |
 | `agent-hibernation` | Enable or disable Agent Hibernation. |
-| `restore-session` | Restore the previously saved cmux session. |
-| `open` | Open files, directories, or URLs in cmux. |
+| `restore-session` | Restore the previously saved bmux session. |
+| `open` | Open files, directories, or URLs in bmux. |
 | `feedback` | Open feedback UI or submit feedback with `--email`, `--body`, and repeated `--image`. |
 | `feed` | Open the keyboard-first Feed TUI or manage persisted Feed workstream history. |
 | `themes` | List, set, clear, or interactively pick Ghostty themes. |
-| `claude-teams` | Launch Claude Code with cmux/tmux-style agent team integration. |
-| `codex-teams` | Launch Codex with cmux-managed subagent panes. |
+| `claude-teams` | Launch Claude Code with bmux/tmux-style agent team integration. |
+| `codex-teams` | Launch Codex with bmux-managed subagent panes. |
 | `omo` | Launch OpenCode with oh-my-openagent integration. |
-| `omx` | Launch Oh My Codex with cmux pane integration. |
-| `omc` | Launch Oh My Claude Code with cmux pane integration. |
+| `omx` | Launch Oh My Codex with bmux pane integration. |
+| `omc` | Launch Oh My Claude Code with bmux pane integration. |
 | `hooks` | Install, uninstall, and run agent hook integrations under one namespace. |
 | `codex` | Compatibility alias for installing or uninstalling Codex hooks. |
 | `ping` | Check socket connectivity. |
 | `capabilities` | Print server capabilities as JSON. |
-| `events` | Stream reconnectable cmux events as newline-delimited JSON. |
+| `events` | Stream reconnectable bmux events as newline-delimited JSON. |
 | `auth` | Manage auth status, login, and logout through the app. |
 | `vm`, `cloud` | Manage cloud VMs. `cloud` is an alias for `vm`. |
 | `remotes`, `remote` | Manage remote Macs in the team device registry so they appear in the iOS app's device list. `remote` is an alias for `remotes`. |
@@ -94,7 +94,7 @@ Environment:
 | `close-window` | Close a window by handle. |
 | `window displays` | List connected displays (name, index, main flag). |
 | `window display <name\|index>` | Move the instance's window(s) onto a display by name (exact, substring) or index, preserving size. Does not steal focus. With `--window`, targets that window; otherwise moves all main windows. `--list` aliases `window displays`. |
-| `window default-display [<name>\|--clear]` | Set, show (no arg), or clear (`--clear`) the shared, cross-tag default display that DEBUG dev builds open new windows on, stored in `~/.config/cmux/cmux.json` under `app.devWindowDisplay`. No running app required; applied at window creation. Also settable in Debug > Debug Windows > Dev Window Display. |
+| `window default-display [<name>\|--clear]` | Set, show (no arg), or clear (`--clear`) the shared, cross-tag default display that DEBUG dev builds open new windows on, stored in `~/.config/bmux/bmux.json` under `app.devWindowDisplay`. No running app required; applied at window creation. Also settable in Debug > Debug Windows > Dev Window Display. |
 | `move-workspace-to-window` | Move a workspace into a target window. |
 | `reorder-workspace` | Reorder a workspace inside a window. |
 | `reorder-workspaces` | Atomically reorder workspaces inside pinned and unpinned groups. |
@@ -112,7 +112,7 @@ Environment:
 | `list-panes` | List panes in a workspace. |
 | `list-pane-surfaces` | List surfaces in a pane. |
 | `tree` | Print a window, workspace, pane, and surface tree. |
-| `top` | Print process/resource usage for cmux windows, workspaces, panes, and surfaces. |
+| `top` | Print process/resource usage for bmux windows, workspaces, panes, and surfaces. |
 | `focus-pane` | Focus a pane. |
 | `new-pane` | Create a pane with terminal or browser content. |
 | `new-surface` | Create a surface inside a pane. |
@@ -124,7 +124,7 @@ Environment:
 | `rename-tab` | Rename a tab. Compatibility wrapper for `tab-action rename`. |
 | `drag-surface-to-split` | Move a surface into a split direction. |
 | `refresh-surfaces` | Ask the app to refresh terminal surfaces. |
-| `reload-config` | Ask cmux to reload configuration. |
+| `reload-config` | Ask bmux to reload configuration. |
 | `surface-health` | Print terminal surface health information. |
 | `debug-terminals` | Print debug terminal state. |
 | `trigger-flash` | Trigger a visual flash on a workspace or surface. |
@@ -194,7 +194,7 @@ VM subcommands:
 | `vm new`, `vm create` | Create a VM. Supports `--image`, `--provider`, `--detach`, and `-d`. |
 | `vm shell`, `vm attach` | Open an interactive shell for an existing VM. |
 | `vm rm`, `vm destroy`, `vm delete` | Destroy a VM. |
-| `vm ssh` | Open a cmux-managed SSH workspace for an existing VM. |
+| `vm ssh` | Open a bmux-managed SSH workspace for an existing VM. |
 | `vm ssh-info` | Print SSH connection info. |
 | `vm ssh-attach` | Internal attach helper. |
 | `vm exec` | Run a shell command inside a VM. |
@@ -216,7 +216,7 @@ Theme subcommands:
 | `themes set <theme>` | Set the same theme for light and dark appearance. |
 | `themes set --light <theme>` | Set the light appearance theme. |
 | `themes set --dark <theme>` | Set the dark appearance theme. |
-| `themes clear` | Remove the cmux theme override. |
+| `themes clear` | Remove the bmux theme override. |
 
 Workspace and tab action names:
 
@@ -232,16 +232,16 @@ shell spawned in it inherits.
 
 Setting them:
 
-- CLI: `cmux new-workspace --env KEY=VALUE [--env ...] [--env-file <path>]`
-  (and the same flags on `cmux workspace create`). `--env` is repeatable;
+- CLI: `bmux new-workspace --env KEY=VALUE [--env ...] [--env-file <path>]`
+  (and the same flags on `bmux workspace create`). `--env` is repeatable;
   `--env-file` reads `KEY=VALUE` lines (blank lines and `#` comments ignored, an
   optional leading `export ` stripped). When both are given, `--env` overrides a
   value from a file.
-- Project config (`cmux.json`): an `env` object on a workspace definition, e.g.
+- Project config (`bmux.json`): an `env` object on a workspace definition, e.g.
   `{ "name": "Build", "cwd": ".", "env": { "AWS_PROFILE": "prod" } }`.
 - Socket: the `workspace_env` param on `workspace.create`.
 
-Inspecting them: `cmux workspace env [<handle>] [--mask] [--json]` prints the
+Inspecting them: `bmux workspace env [<handle>] [--mask] [--json]` prints the
 configured set. `--mask` redacts the values so secrets are not echoed in full.
 The env set is intentionally omitted from `workspace list` output so a plain
 listing never leaks secrets.
@@ -261,9 +261,9 @@ Semantics:
   the variable is seeded). An explicit per-surface environment (a layout
   `surfaces[].env`, SSH startup env) overrides the workspace value for that
   surface.
-- **Protected `CMUX_*` variables.** Workspace env can never override the managed
-  variables cmux injects (e.g. `CMUX_WORKSPACE_ID`, `CMUX_SURFACE_ID`,
-  `CMUX_SOCKET_PATH`, `CMUX_SOCKET_PASSWORD`) or the terminal identity variables
+- **Protected `BMUX_*` variables.** Workspace env can never override the managed
+  variables bmux injects (e.g. `BMUX_WORKSPACE_ID`, `BMUX_SURFACE_ID`,
+  `BMUX_SOCKET_PATH`, `BMUX_SOCKET_PASSWORD`) or the terminal identity variables
   (`TERM`, `COLORTERM`, `TERM_PROGRAM`); those keys are protected at spawn time
   and silently win.
 - **Secrets.** Values may be secrets. They are never logged, are masked by
@@ -319,7 +319,7 @@ Browser subcommands:
 | `browser frame` | Select frame context. |
 | `browser dialog` | Accept or dismiss dialogs. |
 | `browser download` | Wait for or save downloads. |
-| `browser profiles` | List, add, rename, clear, or delete cmux browser profiles. `clear` refuses to wipe active profiles unless `--force` is passed. |
+| `browser profiles` | List, add, rename, clear, or delete bmux browser profiles. `clear` refuses to wipe active profiles unless `--force` is passed. |
 | `browser import` | Open the browser import wizard. In detected coding-agent environments, defaults to non-interactive cookie import; pass `--interactive` to force the wizard. Non-interactive import supports `--from`, `--profile`, `--all-profiles`, `--to-profile`, `--create-profile`, and `--domain`. |
 | `browser cookies` | Get, set, or clear cookies. |
 | `browser storage` | Get, set, or clear local/session storage. |
@@ -341,8 +341,8 @@ Hook subcommands:
 
 | Command | Contract |
 | --- | --- |
-| `hooks setup` | Install hooks for all supported agents whose binaries are on `PATH`. Supports `--agent <name>`, positional agent filters such as `cmux hooks setup rovo`, and `--yes`. |
-| `hooks uninstall` | Remove hooks for all supported agents. Supports `--agent <name>`, positional agent filters such as `cmux hooks uninstall rovo`, and `--yes`. |
+| `hooks setup` | Install hooks for all supported agents whose binaries are on `PATH`. Supports `--agent <name>`, positional agent filters such as `bmux hooks setup rovo`, and `--yes`. |
+| `hooks uninstall` | Remove hooks for all supported agents. Supports `--agent <name>`, positional agent filters such as `bmux hooks uninstall rovo`, and `--yes`. |
 | `hooks <agent> install` | Install hooks for one supported agent. `opencode` also supports `--project` for the project-local Feed plugin. |
 | `hooks <agent> uninstall` | Remove hooks for one supported agent. |
 | `hooks claude <event>` | Handle Claude Code hook events. `claude-hook <event>` remains as the main-compatibility alias. |
@@ -367,7 +367,7 @@ Custom sidebar commands:
 
 | Command | Contract |
 | --- | --- |
-| `sidebar validate [name]` | Validate all custom sidebars, or one named sidebar, under `~/.config/cmux/sidebars`. |
+| `sidebar validate [name]` | Validate all custom sidebars, or one named sidebar, under `~/.config/bmux/sidebars`. |
 | `sidebar reload [name]` | Validate all custom sidebars, then request a reload for every valid one. |
 | `sidebar select <name>` | Validate and activate one custom sidebar in the sidebar picker. |
 | `sidebar open <name>` | Validate and open one custom sidebar as a normal Bonsplit pane tab, preferring the right-side split from the focused surface. |
@@ -377,7 +377,7 @@ Docs topics:
 | Command | Contract |
 | --- | --- |
 | `docs` | List docs topics without a socket. |
-| `docs settings` | Print the configuration docs URL, raw schema URL, cmux.json paths, backup reminder, and reload command. |
+| `docs settings` | Print the configuration docs URL, raw schema URL, bmux.json paths, backup reminder, and reload command. |
 | `docs shortcuts` | Print shortcut docs and raw shortcut data resources. |
 | `docs api` | Print API docs and raw CLI contract resources. |
 | `docs browser` | Print browser automation docs and raw browser skill resources. |
@@ -387,25 +387,25 @@ Settings subcommands:
 
 | Command | Contract |
 | --- | --- |
-| `settings` | Open the Settings window, launching cmux if needed. |
+| `settings` | Open the Settings window, launching bmux if needed. |
 | `settings open [target]` | Open Settings to an optional target section. |
-| `settings path` | Print cmux.json paths, docs URL, schema URL, backup reminder, and reload command without a socket. |
+| `settings path` | Print bmux.json paths, docs URL, schema URL, backup reminder, and reload command without a socket. |
 | `settings docs` | Print the same output as `docs settings` without a socket. |
-| `settings <target>` | Open Settings to a target section. Supported aliases include `shortcuts`, `json`, `cmux-json`, `browser`, and `automation`. |
+| `settings <target>` | Open Settings to a target section. Supported aliases include `shortcuts`, `json`, `bmux-json`, `browser`, and `automation`. |
 
 Config subcommands:
 
 | Command | Contract |
 | --- | --- |
-| `config doctor [--path <file>]`, `config check`, `config validate` | Validate JSONC syntax for config files. When `--path` is absent, default discovery checks the primary config, project-level `.cmux/cmux.json` or `cmux.json`, and legacy config files. `--path <file>` may be repeated to validate multiple explicit files. Exits 0 on success and 1 on any error. Supports `--json`. Works without a socket. |
-| `config path`, `config paths` | Print cmux.json paths, docs URL, schema URL, backup reminder, and reload command without a socket. |
+| `config doctor [--path <file>]`, `config check`, `config validate` | Validate JSONC syntax for config files. When `--path` is absent, default discovery checks the primary config, project-level `.bmux/bmux.json` or `bmux.json`, and legacy config files. `--path <file>` may be repeated to validate multiple explicit files. Exits 0 on success and 1 on any error. Supports `--json`. Works without a socket. |
+| `config path`, `config paths` | Print bmux.json paths, docs URL, schema URL, backup reminder, and reload command without a socket. |
 | `config docs`, `config documentation` | Print the same output as `docs settings` without a socket. |
-| `config reload` | Ask the running cmux app to reload configuration. Requires a socket. |
+| `config reload` | Ask the running bmux app to reload configuration. Requires a socket. |
 | `config get sidebar-font-size` | Print the effective sidebar text size. |
-| `config set sidebar-font-size <points>` | Write the sidebar text size to cmux's editable Ghostty config and reload the running app when available. |
+| `config set sidebar-font-size <points>` | Write the sidebar text size to bmux's editable Ghostty config and reload the running app when available. |
 | `config sidebar-font-size [points]` | Get the sidebar text size, or set it when a point size is provided. |
 | `config get surface-tab-bar-font-size` | Print the effective workspace tab bar text size. |
-| `config set surface-tab-bar-font-size <points>` | Write the workspace tab bar text size to cmux's editable Ghostty config and reload the running app when available. |
+| `config set surface-tab-bar-font-size <points>` | Write the workspace tab bar text size to bmux's editable Ghostty config and reload the running app when available. |
 | `config surface-tab-bar-font-size [points]` | Get the workspace tab bar text size, or set it when a point size is provided. |
 | `config get <key>`, `config set <key> <points>` | Generic get/set for `sidebar-font-size` and `surface-tab-bar-font-size`. |
 
@@ -433,9 +433,9 @@ response frame is an `ack`; sequence resume metadata lives under `ack.resume` as
 carry a process-local monotonic `seq` and a stable `id` for dedupe. Clients
 should persist `seq` after processing each event and reconnect with that value.
 See [events.md](events.md) for the full protocol and event catalog. Every emitted event is also appended to
-`~/.cmuxterm/events.jsonl`, including model lifecycle events for window
+`~/.bmuxterm/events.jsonl`, including model lifecycle events for window
 creation, close, focus, key-window state, workspace selection, pane focus, and
-surface selection, focus, creation, or closure. The stream is bounded: cmux keeps
+surface selection, focus, creation, or closure. The stream is bounded: bmux keeps
 4,096 replay events in memory, caps each encoded event frame at 16 KiB, closes
 slow subscribers after 1,024 pending events, and rotates `events.jsonl` with one
 16 MiB archive at `events.jsonl.1`.
@@ -443,153 +443,153 @@ slow subscribers after 1,024 pending events, and rotates `events.jsonl` with one
 ## No-Socket Help Probes
 
 The following probes are executable contract checks. They must exit 0 and print
-the expected text without connecting to a cmux socket.
+the expected text without connecting to a bmux socket.
 
 <!-- cli-contract-help-probes:start -->
-- `cmux --help` -> `cmux - control cmux via Unix socket`
-- `cmux --help` -> `open <path-or-url>...`
-- `cmux help` -> `cmux - control cmux via Unix socket`
-- `cmux ping --help` -> `Usage: cmux ping`
-- `cmux capabilities --help` -> `Usage: cmux capabilities`
-- `cmux events --help` -> `Usage: cmux events [options]`
-- `cmux auth --help` -> `Usage: cmux auth <status|login|logout>`
-- `cmux vm --help` -> `Usage: cmux vm <base|new|ls|status|snapshot|fork|restore|rm|exec|shell|attach|ssh|ssh-info> [args...]`
-- `cmux cloud --help` -> `Usage: cmux cloud <base|new|ls|status|snapshot|fork|restore|rm|exec|shell|attach|ssh|ssh-info> [args...]`
-- `cmux remotes --help` -> `Usage: cmux remotes <list|add|remove> [options]`
-- `cmux remote --help` -> `Usage: cmux remotes <list|add|remove> [options]`
-- `cmux rpc --help` -> `Usage: cmux rpc <method> [json-params]`
-- `cmux help --help` -> `Usage: cmux help`
-- `cmux docs --help` -> `Usage: cmux docs [settings|shortcuts|api|browser|agents|dock]`
-- `cmux docs` -> `Topics:`
-- `cmux docs settings` -> `Config files:`
-- `cmux docs dock` -> `dock: Custom right-sidebar terminal controls`
-- `cmux settings --help` -> `Usage: cmux settings [open [target]|path|docs|<target>]`
-- `cmux settings path` -> `Config files:`
-- `cmux settings docs` -> `Config files:`
-- `cmux config --help` -> `Usage: cmux config <doctor|check|validate|path|paths|docs|documentation|reload|get|set|sidebar-font-size|surface-tab-bar-font-size>`
-- `cmux config path` -> `Config files:`
-- `cmux config docs` -> `Config files:`
-- `cmux welcome --help` -> `Usage: cmux welcome`
-- `cmux welcome` -> `Toggle Left Sidebar`
-- `cmux welcome` -> `Toggle Right Sidebar`
-- `cmux shortcuts --help` -> `Usage: cmux shortcuts`
-- `cmux disable-browser --help` -> `Usage: cmux disable-browser [--json]`
-- `cmux enable-browser --help` -> `Usage: cmux enable-browser [--json]`
-- `cmux browser-status --help` -> `Usage: cmux browser-status [--json]`
-- `cmux agent-hibernation --help` -> `Usage: cmux agent-hibernation <on|off> [--json]`
-- `cmux restore-session --help` -> `Usage: cmux restore-session`
-- `cmux open --help` -> `Usage: cmux open <path-or-url>...`
-- `cmux feedback --help` -> `Usage: cmux feedback`
-- `cmux feed --help` -> `Usage: cmux feed tui [--opentui|--legacy]`
-- `cmux hooks --help` -> `Usage: cmux hooks setup [agent] [--agent <name>] [--yes|-y]`
-- `cmux codex --help` -> `Usage: cmux codex <install-hooks|uninstall-hooks>`
-- `cmux themes --help` -> `Usage: cmux themes`
-- `cmux omo --help` -> `Usage: cmux omo [opencode-args...]`
-- `cmux omx --help` -> `Usage: cmux omx [omx-args...]`
-- `cmux omc --help` -> `Usage: cmux omc [omc-args...]`
-- `cmux identify --help` -> `Usage: cmux identify`
-- `cmux list-windows --help` -> `Usage: cmux list-windows`
-- `cmux current-window --help` -> `Usage: cmux current-window`
-- `cmux new-window --help` -> `Usage: cmux new-window`
-- `cmux focus-window --help` -> `Usage: cmux focus-window --window <id|ref|index>`
-- `cmux close-window --help` -> `Usage: cmux close-window --window <id|ref|index>`
-- `cmux move-workspace-to-window --help` -> `Usage: cmux move-workspace-to-window`
-- `cmux move-surface --help` -> `Usage: cmux move-surface`
-- `cmux split-off --help` -> `Usage: cmux split-off`
-- `cmux reorder-surface --help` -> `Usage: cmux reorder-surface`
-- `cmux reorder-workspace --help` -> `Usage: cmux reorder-workspace`
-- `cmux reorder-workspaces --help` -> `Usage: cmux reorder-workspaces`
-- `cmux workspace-action --help` -> `Usage: cmux workspace-action --action <name>`
-- `cmux move-tab-to-new-workspace --help` -> `Usage: cmux move-tab-to-new-workspace`
-- `cmux tab-action --help` -> `Usage: cmux tab-action --action <name>`
-- `cmux rename-tab --help` -> `Usage: cmux rename-tab`
-- `cmux new-workspace --help` -> `Usage: cmux new-workspace`
-- `cmux list-workspaces --help` -> `Usage: cmux list-workspaces`
-- `cmux ssh --help` -> `Usage: cmux ssh <destination>`
-- `cmux ssh --help` -> `--forward-agent`
-- `cmux ssh-session-list --help` -> `Usage: cmux ssh-session-list`
-- `cmux ssh-session-attach --help` -> `Usage: cmux ssh-session-attach --session-id <id>`
-- `cmux ssh-session-cleanup --help` -> `Usage: cmux ssh-session-cleanup`
-- `cmux new-split --help` -> `Usage: cmux new-split`
-- `cmux list-panes --help` -> `Usage: cmux list-panes`
-- `cmux list-pane-surfaces --help` -> `Usage: cmux list-pane-surfaces`
-- `cmux tree --help` -> `Usage: cmux tree`
-- `cmux top --help` -> `Usage: cmux top`
-- `cmux focus-pane --help` -> `Usage: cmux focus-pane`
-- `cmux new-pane --help` -> `Usage: cmux new-pane`
-- `cmux new-surface --help` -> `Usage: cmux new-surface`
-- `cmux close-surface --help` -> `Usage: cmux close-surface`
-- `cmux drag-surface-to-split --help` -> `Usage: cmux drag-surface-to-split`
-- `cmux refresh-surfaces --help` -> `Usage: cmux refresh-surfaces`
-- `cmux reload-config --help` -> `Usage: cmux reload-config`
-- `cmux surface-health --help` -> `Usage: cmux surface-health`
-- `cmux debug-terminals --help` -> `Usage: cmux debug-terminals`
-- `cmux trigger-flash --help` -> `Usage: cmux trigger-flash`
-- `cmux list-panels --help` -> `Usage: cmux list-panels`
-- `cmux focus-panel --help` -> `Usage: cmux focus-panel`
-- `cmux close-workspace --help` -> `Usage: cmux close-workspace`
-- `cmux select-workspace --help` -> `Usage: cmux select-workspace`
-- `cmux rename-workspace --help` -> `Usage: cmux rename-workspace`
-- `cmux rename-window --help` -> `Usage: cmux rename-workspace`
-- `cmux current-workspace --help` -> `Usage: cmux current-workspace`
-- `cmux capture-pane --help` -> `Usage: cmux capture-pane`
-- `cmux resize-pane --help` -> `Usage: cmux resize-pane`
-- `cmux pipe-pane --help` -> `Usage: cmux pipe-pane`
-- `cmux wait-for --help` -> `Usage: cmux wait-for`
-- `cmux swap-pane --help` -> `Usage: cmux swap-pane`
-- `cmux break-pane --help` -> `Usage: cmux break-pane`
-- `cmux join-pane --help` -> `Usage: cmux join-pane`
-- `cmux next-window --help` -> `Usage: cmux next-window`
-- `cmux previous-window --help` -> `Usage: cmux previous-window`
-- `cmux last-window --help` -> `Usage: cmux last-window`
-- `cmux last-pane --help` -> `Usage: cmux last-pane`
-- `cmux find-window --help` -> `Usage: cmux find-window`
-- `cmux clear-history --help` -> `Usage: cmux clear-history`
-- `cmux set-hook --help` -> `Usage: cmux set-hook`
-- `cmux popup --help` -> `Usage: cmux popup`
-- `cmux bind-key --help` -> `Usage: cmux bind-key`
-- `cmux unbind-key --help` -> `Usage: cmux unbind-key`
-- `cmux copy-mode --help` -> `Usage: cmux copy-mode`
-- `cmux set-buffer --help` -> `Usage: cmux set-buffer`
-- `cmux paste-buffer --help` -> `Usage: cmux paste-buffer`
-- `cmux list-buffers --help` -> `Usage: cmux list-buffers`
-- `cmux respawn-pane --help` -> `Usage: cmux respawn-pane`
-- `cmux display-message --help` -> `Usage: cmux display-message`
-- `cmux read-screen --help` -> `Usage: cmux read-screen`
-- `cmux send --help` -> `Usage: cmux send`
-- `cmux send-key --help` -> `Usage: cmux send-key`
-- `cmux send-panel --help` -> `Usage: cmux send-panel`
-- `cmux send-key-panel --help` -> `Usage: cmux send-key-panel`
-- `cmux notify --help` -> `Usage: cmux notify`
-- `cmux list-notifications --help` -> `Usage: cmux list-notifications`
-- `cmux dismiss-notification --help` -> `Usage: cmux dismiss-notification`
-- `cmux mark-notification-read --help` -> `Usage: cmux mark-notification-read`
-- `cmux open-notification --help` -> `Usage: cmux open-notification`
-- `cmux jump-to-unread --help` -> `Usage: cmux jump-to-unread`
-- `cmux clear-notifications --help` -> `Usage: cmux clear-notifications`
-- `cmux right-sidebar --help` -> `Usage: cmux right-sidebar <command> [flags]`
-- `cmux set-status --help` -> `Usage: cmux set-status`
-- `cmux clear-status --help` -> `Usage: cmux clear-status`
-- `cmux list-status --help` -> `Usage: cmux list-status`
-- `cmux set-progress --help` -> `Usage: cmux set-progress`
-- `cmux clear-progress --help` -> `Usage: cmux clear-progress`
-- `cmux log --help` -> `Usage: cmux log`
-- `cmux clear-log --help` -> `Usage: cmux clear-log`
-- `cmux list-log --help` -> `Usage: cmux list-log`
-- `cmux sidebar-state --help` -> `Usage: cmux sidebar-state`
-- `cmux set-app-focus --help` -> `Usage: cmux set-app-focus`
-- `cmux simulate-app-active --help` -> `Usage: cmux simulate-app-active`
-- `cmux claude-hook --help` -> `Usage: cmux claude-hook`
-- `cmux browser --help` -> `Usage: cmux browser`
-- `cmux open-browser --help` -> `Legacy alias for 'cmux browser open'`
-- `cmux navigate --help` -> `Legacy alias for 'cmux browser navigate'`
-- `cmux browser-back --help` -> `Legacy alias for 'cmux browser back'`
-- `cmux browser-forward --help` -> `Legacy alias for 'cmux browser forward'`
-- `cmux browser-reload --help` -> `Legacy alias for 'cmux browser reload'`
-- `cmux get-url --help` -> `Legacy alias for 'cmux browser get-url'`
-- `cmux focus-webview --help` -> `Legacy alias for 'cmux browser focus-webview'`
-- `cmux is-webview-focused --help` -> `Legacy alias for 'cmux browser is-webview-focused'`
-- `cmux markdown --help` -> `Usage: cmux markdown open <path>`
+- `bmux --help` -> `bmux - control bmux via Unix socket`
+- `bmux --help` -> `open <path-or-url>...`
+- `bmux help` -> `bmux - control bmux via Unix socket`
+- `bmux ping --help` -> `Usage: bmux ping`
+- `bmux capabilities --help` -> `Usage: bmux capabilities`
+- `bmux events --help` -> `Usage: bmux events [options]`
+- `bmux auth --help` -> `Usage: bmux auth <status|login|logout>`
+- `bmux vm --help` -> `Usage: bmux vm <base|new|ls|status|snapshot|fork|restore|rm|exec|shell|attach|ssh|ssh-info> [args...]`
+- `bmux cloud --help` -> `Usage: bmux cloud <base|new|ls|status|snapshot|fork|restore|rm|exec|shell|attach|ssh|ssh-info> [args...]`
+- `bmux remotes --help` -> `Usage: bmux remotes <list|add|remove> [options]`
+- `bmux remote --help` -> `Usage: bmux remotes <list|add|remove> [options]`
+- `bmux rpc --help` -> `Usage: bmux rpc <method> [json-params]`
+- `bmux help --help` -> `Usage: bmux help`
+- `bmux docs --help` -> `Usage: bmux docs [settings|shortcuts|api|browser|agents|dock]`
+- `bmux docs` -> `Topics:`
+- `bmux docs settings` -> `Config files:`
+- `bmux docs dock` -> `dock: Custom right-sidebar terminal controls`
+- `bmux settings --help` -> `Usage: bmux settings [open [target]|path|docs|<target>]`
+- `bmux settings path` -> `Config files:`
+- `bmux settings docs` -> `Config files:`
+- `bmux config --help` -> `Usage: bmux config <doctor|check|validate|path|paths|docs|documentation|reload|get|set|sidebar-font-size|surface-tab-bar-font-size>`
+- `bmux config path` -> `Config files:`
+- `bmux config docs` -> `Config files:`
+- `bmux welcome --help` -> `Usage: bmux welcome`
+- `bmux welcome` -> `Toggle Left Sidebar`
+- `bmux welcome` -> `Toggle Right Sidebar`
+- `bmux shortcuts --help` -> `Usage: bmux shortcuts`
+- `bmux disable-browser --help` -> `Usage: bmux disable-browser [--json]`
+- `bmux enable-browser --help` -> `Usage: bmux enable-browser [--json]`
+- `bmux browser-status --help` -> `Usage: bmux browser-status [--json]`
+- `bmux agent-hibernation --help` -> `Usage: bmux agent-hibernation <on|off> [--json]`
+- `bmux restore-session --help` -> `Usage: bmux restore-session`
+- `bmux open --help` -> `Usage: bmux open <path-or-url>...`
+- `bmux feedback --help` -> `Usage: bmux feedback`
+- `bmux feed --help` -> `Usage: bmux feed tui [--opentui|--legacy]`
+- `bmux hooks --help` -> `Usage: bmux hooks setup [agent] [--agent <name>] [--yes|-y]`
+- `bmux codex --help` -> `Usage: bmux codex <install-hooks|uninstall-hooks>`
+- `bmux themes --help` -> `Usage: bmux themes`
+- `bmux omo --help` -> `Usage: bmux omo [opencode-args...]`
+- `bmux omx --help` -> `Usage: bmux omx [omx-args...]`
+- `bmux omc --help` -> `Usage: bmux omc [omc-args...]`
+- `bmux identify --help` -> `Usage: bmux identify`
+- `bmux list-windows --help` -> `Usage: bmux list-windows`
+- `bmux current-window --help` -> `Usage: bmux current-window`
+- `bmux new-window --help` -> `Usage: bmux new-window`
+- `bmux focus-window --help` -> `Usage: bmux focus-window --window <id|ref|index>`
+- `bmux close-window --help` -> `Usage: bmux close-window --window <id|ref|index>`
+- `bmux move-workspace-to-window --help` -> `Usage: bmux move-workspace-to-window`
+- `bmux move-surface --help` -> `Usage: bmux move-surface`
+- `bmux split-off --help` -> `Usage: bmux split-off`
+- `bmux reorder-surface --help` -> `Usage: bmux reorder-surface`
+- `bmux reorder-workspace --help` -> `Usage: bmux reorder-workspace`
+- `bmux reorder-workspaces --help` -> `Usage: bmux reorder-workspaces`
+- `bmux workspace-action --help` -> `Usage: bmux workspace-action --action <name>`
+- `bmux move-tab-to-new-workspace --help` -> `Usage: bmux move-tab-to-new-workspace`
+- `bmux tab-action --help` -> `Usage: bmux tab-action --action <name>`
+- `bmux rename-tab --help` -> `Usage: bmux rename-tab`
+- `bmux new-workspace --help` -> `Usage: bmux new-workspace`
+- `bmux list-workspaces --help` -> `Usage: bmux list-workspaces`
+- `bmux ssh --help` -> `Usage: bmux ssh <destination>`
+- `bmux ssh --help` -> `--forward-agent`
+- `bmux ssh-session-list --help` -> `Usage: bmux ssh-session-list`
+- `bmux ssh-session-attach --help` -> `Usage: bmux ssh-session-attach --session-id <id>`
+- `bmux ssh-session-cleanup --help` -> `Usage: bmux ssh-session-cleanup`
+- `bmux new-split --help` -> `Usage: bmux new-split`
+- `bmux list-panes --help` -> `Usage: bmux list-panes`
+- `bmux list-pane-surfaces --help` -> `Usage: bmux list-pane-surfaces`
+- `bmux tree --help` -> `Usage: bmux tree`
+- `bmux top --help` -> `Usage: bmux top`
+- `bmux focus-pane --help` -> `Usage: bmux focus-pane`
+- `bmux new-pane --help` -> `Usage: bmux new-pane`
+- `bmux new-surface --help` -> `Usage: bmux new-surface`
+- `bmux close-surface --help` -> `Usage: bmux close-surface`
+- `bmux drag-surface-to-split --help` -> `Usage: bmux drag-surface-to-split`
+- `bmux refresh-surfaces --help` -> `Usage: bmux refresh-surfaces`
+- `bmux reload-config --help` -> `Usage: bmux reload-config`
+- `bmux surface-health --help` -> `Usage: bmux surface-health`
+- `bmux debug-terminals --help` -> `Usage: bmux debug-terminals`
+- `bmux trigger-flash --help` -> `Usage: bmux trigger-flash`
+- `bmux list-panels --help` -> `Usage: bmux list-panels`
+- `bmux focus-panel --help` -> `Usage: bmux focus-panel`
+- `bmux close-workspace --help` -> `Usage: bmux close-workspace`
+- `bmux select-workspace --help` -> `Usage: bmux select-workspace`
+- `bmux rename-workspace --help` -> `Usage: bmux rename-workspace`
+- `bmux rename-window --help` -> `Usage: bmux rename-workspace`
+- `bmux current-workspace --help` -> `Usage: bmux current-workspace`
+- `bmux capture-pane --help` -> `Usage: bmux capture-pane`
+- `bmux resize-pane --help` -> `Usage: bmux resize-pane`
+- `bmux pipe-pane --help` -> `Usage: bmux pipe-pane`
+- `bmux wait-for --help` -> `Usage: bmux wait-for`
+- `bmux swap-pane --help` -> `Usage: bmux swap-pane`
+- `bmux break-pane --help` -> `Usage: bmux break-pane`
+- `bmux join-pane --help` -> `Usage: bmux join-pane`
+- `bmux next-window --help` -> `Usage: bmux next-window`
+- `bmux previous-window --help` -> `Usage: bmux previous-window`
+- `bmux last-window --help` -> `Usage: bmux last-window`
+- `bmux last-pane --help` -> `Usage: bmux last-pane`
+- `bmux find-window --help` -> `Usage: bmux find-window`
+- `bmux clear-history --help` -> `Usage: bmux clear-history`
+- `bmux set-hook --help` -> `Usage: bmux set-hook`
+- `bmux popup --help` -> `Usage: bmux popup`
+- `bmux bind-key --help` -> `Usage: bmux bind-key`
+- `bmux unbind-key --help` -> `Usage: bmux unbind-key`
+- `bmux copy-mode --help` -> `Usage: bmux copy-mode`
+- `bmux set-buffer --help` -> `Usage: bmux set-buffer`
+- `bmux paste-buffer --help` -> `Usage: bmux paste-buffer`
+- `bmux list-buffers --help` -> `Usage: bmux list-buffers`
+- `bmux respawn-pane --help` -> `Usage: bmux respawn-pane`
+- `bmux display-message --help` -> `Usage: bmux display-message`
+- `bmux read-screen --help` -> `Usage: bmux read-screen`
+- `bmux send --help` -> `Usage: bmux send`
+- `bmux send-key --help` -> `Usage: bmux send-key`
+- `bmux send-panel --help` -> `Usage: bmux send-panel`
+- `bmux send-key-panel --help` -> `Usage: bmux send-key-panel`
+- `bmux notify --help` -> `Usage: bmux notify`
+- `bmux list-notifications --help` -> `Usage: bmux list-notifications`
+- `bmux dismiss-notification --help` -> `Usage: bmux dismiss-notification`
+- `bmux mark-notification-read --help` -> `Usage: bmux mark-notification-read`
+- `bmux open-notification --help` -> `Usage: bmux open-notification`
+- `bmux jump-to-unread --help` -> `Usage: bmux jump-to-unread`
+- `bmux clear-notifications --help` -> `Usage: bmux clear-notifications`
+- `bmux right-sidebar --help` -> `Usage: bmux right-sidebar <command> [flags]`
+- `bmux set-status --help` -> `Usage: bmux set-status`
+- `bmux clear-status --help` -> `Usage: bmux clear-status`
+- `bmux list-status --help` -> `Usage: bmux list-status`
+- `bmux set-progress --help` -> `Usage: bmux set-progress`
+- `bmux clear-progress --help` -> `Usage: bmux clear-progress`
+- `bmux log --help` -> `Usage: bmux log`
+- `bmux clear-log --help` -> `Usage: bmux clear-log`
+- `bmux list-log --help` -> `Usage: bmux list-log`
+- `bmux sidebar-state --help` -> `Usage: bmux sidebar-state`
+- `bmux set-app-focus --help` -> `Usage: bmux set-app-focus`
+- `bmux simulate-app-active --help` -> `Usage: bmux simulate-app-active`
+- `bmux claude-hook --help` -> `Usage: bmux claude-hook`
+- `bmux browser --help` -> `Usage: bmux browser`
+- `bmux open-browser --help` -> `Legacy alias for 'bmux browser open'`
+- `bmux navigate --help` -> `Legacy alias for 'bmux browser navigate'`
+- `bmux browser-back --help` -> `Legacy alias for 'bmux browser back'`
+- `bmux browser-forward --help` -> `Legacy alias for 'bmux browser forward'`
+- `bmux browser-reload --help` -> `Legacy alias for 'bmux browser reload'`
+- `bmux get-url --help` -> `Legacy alias for 'bmux browser get-url'`
+- `bmux focus-webview --help` -> `Legacy alias for 'bmux browser focus-webview'`
+- `bmux is-webview-focused --help` -> `Legacy alias for 'bmux browser is-webview-focused'`
+- `bmux markdown --help` -> `Usage: bmux markdown open <path>`
 <!-- cli-contract-help-probes:end -->
 
 ## No-Socket Negative Help Probes
@@ -598,7 +598,7 @@ The following probes must not print help. They protect argument forwarding after
 `--`, where a forwarded `--help` token belongs to the command payload.
 
 <!-- cli-contract-negative-help-probes:start -->
-- `cmux vm exec demo -- --help` !> `Usage: cmux vm`
+- `bmux vm exec demo -- --help` !> `Usage: bmux vm`
 <!-- cli-contract-negative-help-probes:end -->
 
 ## Current Help Caveats
@@ -606,13 +606,13 @@ The following probes must not print help. They protect argument forwarding after
 These are current contracts to preserve until a follow-up PR intentionally
 changes them:
 
-- `cmux version --help` currently prints the version summary because `version`
+- `bmux version --help` currently prints the version summary because `version`
   is handled before subcommand help dispatch.
-- `cmux claude-teams --help` is handled by the command launcher, not by the
+- `bmux claude-teams --help` is handled by the command launcher, not by the
   pre-socket help dispatcher.
-- `cmux codex-teams --help` is handled by the command launcher, not by the
+- `bmux codex-teams --help` is handled by the command launcher, not by the
   pre-socket help dispatcher.
-- `cmux remote-daemon-status --help` currently prints status because the command
+- `bmux remote-daemon-status --help` currently prints status because the command
   runs before subcommand help dispatch.
 
 ## ArgumentParser Migration Sequence
@@ -620,7 +620,7 @@ changes them:
 1. Keep this contract file and `tests/test_cli_contract_help.py` green.
 2. Add Swift ArgumentParser as a dependency without changing behavior.
 3. Introduce a parse-only facade that maps ArgumentParser command structs onto
-   existing `CMUXCLI` runner methods.
+   existing `BMUXCLI` runner methods.
 4. Move one command family at a time into small files, starting with no-socket
    commands (`version`, `themes`, hook installers), then socket commands, then
    browser and tmux compatibility.

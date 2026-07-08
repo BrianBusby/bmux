@@ -1,6 +1,6 @@
-const BASE = "https://cmux.com";
+const BASE = "https://bmux.com";
 
-/** Build an absolute cmux.com URL for a locale + path, matching i18n/seo.ts. */
+/** Build an absolute bmux.com URL for a locale + path, matching i18n/seo.ts. */
 export function localizedUrl(locale: string, path: string) {
   return locale === "en" ? `${BASE}${path}` : `${BASE}/${locale}${path}`;
 }
@@ -49,7 +49,7 @@ export function faqPage(qas: { question: string; answer: string }[]) {
   };
 }
 
-/** Build a schema.org Article for a blog post. Author defaults to cmux. */
+/** Build a schema.org Article for a blog post. Author defaults to bmux. */
 export function articleSchema(opts: {
   locale: string;
   path: string;
@@ -66,8 +66,8 @@ export function articleSchema(opts: {
     description: opts.description,
     datePublished: opts.datePublished,
     ...(opts.dateModified ? { dateModified: opts.dateModified } : {}),
-    author: { "@type": "Organization", name: opts.authorName ?? "cmux" },
-    publisher: { "@type": "Organization", name: "cmux", url: BASE },
+    author: { "@type": "Organization", name: opts.authorName ?? "bmux" },
+    publisher: { "@type": "Organization", name: "bmux", url: BASE },
     mainEntityOfPage: localizedUrl(opts.locale, opts.path),
   };
 }

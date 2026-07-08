@@ -1,11 +1,11 @@
 import SwiftUI
 import Foundation
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxFoundation
+import BmuxAppKitSupportUI
+import BmuxFoundation
 import Bonsplit
-import CmuxWorkspaces
-import CmuxTerminal
+import BmuxWorkspaces
+import BmuxTerminal
 
 private enum WorkspaceTitlebarInteractionMetrics {
     // Keep in sync with the minimal-mode titlebar strip so the monitor only
@@ -683,7 +683,7 @@ extension WorkspaceContentView {
         if !found {
             let ts = ISO8601DateFormatter().string(from: Date())
             let line = "[\(ts)] PANEL NOT FOUND for tabId=\(tab.id) ws=\(workspace.id) panelCount=\(workspace.panels.count)\n"
-            let logPath = "/tmp/cmux-panel-debug.log"
+            let logPath = "/tmp/bmux-panel-debug.log"
             if let handle = FileHandle(forWritingAtPath: logPath) {
                 defer { try? handle.close() }
                 guard (try? handle.seekToEnd()) != nil else { return }
@@ -712,7 +712,7 @@ struct EmptyPanelView: View {
 
         var body: some View {
             Text(text)
-                .cmuxFont(size: 11, weight: .semibold, design: .rounded)
+                .bmuxFont(size: 11, weight: .semibold, design: .rounded)
                 .foregroundStyle(.white.opacity(0.9))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
@@ -726,7 +726,7 @@ struct EmptyPanelView: View {
 
     private func createTerminal() {
         #if DEBUG
-        cmuxDebugLog("emptyPane.newTerminal pane=\(paneId.id.uuidString.prefix(5))")
+        bmuxDebugLog("emptyPane.newTerminal pane=\(paneId.id.uuidString.prefix(5))")
         #endif
         focusPane()
         _ = workspace.newTerminalSurface(inPane: paneId, inheritWorkingDirectoryFallback: true)
@@ -734,7 +734,7 @@ struct EmptyPanelView: View {
 
     private func createBrowser() {
         #if DEBUG
-        cmuxDebugLog("emptyPane.newBrowser pane=\(paneId.id.uuidString.prefix(5))")
+        bmuxDebugLog("emptyPane.newBrowser pane=\(paneId.id.uuidString.prefix(5))")
         #endif
         focusPane()
         _ = workspace.newBrowserSurface(inPane: paneId)
@@ -760,7 +760,7 @@ struct EmptyPanelView: View {
         let button = Button(action: action) {
             HStack(spacing: 10) {
                 HStack(spacing: 6) {
-                    CmuxSystemSymbolImage(systemName: systemImage, pointSize: 13)
+                    BmuxSystemSymbolImage(systemName: systemImage, pointSize: 13)
                     Text(title)
                 }
                 ShortcutHint(text: shortcut.displayString)
@@ -777,11 +777,11 @@ struct EmptyPanelView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            CmuxSystemSymbolImage(magnified: "terminal.fill", pointSize: 48)
+            BmuxSystemSymbolImage(magnified: "terminal.fill", pointSize: 48)
                 .foregroundStyle(.tertiary)
 
             Text(String(localized: "emptyPanel.title", defaultValue: "Empty Panel"))
-                .cmuxFont(.headline)
+                .bmuxFont(.headline)
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 12) {

@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import { cloudDb } from "../db/client";
 import { vaultSessions, vaultSnapshots, vaultUploadGrants, vaultUploadTombstones } from "../db/schema";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.BMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 const userId = "user-vault-upload-test";
 const sha256 = "a".repeat(64);
@@ -50,23 +50,23 @@ mock.module("../app/lib/stack", () => ({
 const { POST } = await import("../app/api/vault/uploads/route");
 
 const ORIGINAL_ENV = {
-  CMUX_VAULT_ENABLED: process.env.CMUX_VAULT_ENABLED,
-  CMUX_VAULT_S3_BUCKET: process.env.CMUX_VAULT_S3_BUCKET,
-  CMUX_VAULT_MAX_UPLOAD_BYTES: process.env.CMUX_VAULT_MAX_UPLOAD_BYTES,
-  CMUX_VAULT_MAX_USER_BYTES: process.env.CMUX_VAULT_MAX_USER_BYTES,
+  BMUX_VAULT_ENABLED: process.env.BMUX_VAULT_ENABLED,
+  BMUX_VAULT_S3_BUCKET: process.env.BMUX_VAULT_S3_BUCKET,
+  BMUX_VAULT_MAX_UPLOAD_BYTES: process.env.BMUX_VAULT_MAX_UPLOAD_BYTES,
+  BMUX_VAULT_MAX_USER_BYTES: process.env.BMUX_VAULT_MAX_USER_BYTES,
 };
 
 beforeAll(() => {
   if (runDbTests && !process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+    throw new Error("DATABASE_URL is required when BMUX_DB_TEST=1");
   }
 });
 
 beforeEach(async () => {
-  process.env.CMUX_VAULT_ENABLED = "1";
-  process.env.CMUX_VAULT_S3_BUCKET = "test-bucket";
-  process.env.CMUX_VAULT_MAX_UPLOAD_BYTES = "1000000";
-  process.env.CMUX_VAULT_MAX_USER_BYTES = "1000000";
+  process.env.BMUX_VAULT_ENABLED = "1";
+  process.env.BMUX_VAULT_S3_BUCKET = "test-bucket";
+  process.env.BMUX_VAULT_MAX_UPLOAD_BYTES = "1000000";
+  process.env.BMUX_VAULT_MAX_USER_BYTES = "1000000";
   presignFailure = null;
   beforeNextPresignFailure = null;
   beforeNextDelete = null;
@@ -78,10 +78,10 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  restoreEnvValue("CMUX_VAULT_ENABLED", ORIGINAL_ENV.CMUX_VAULT_ENABLED);
-  restoreEnvValue("CMUX_VAULT_S3_BUCKET", ORIGINAL_ENV.CMUX_VAULT_S3_BUCKET);
-  restoreEnvValue("CMUX_VAULT_MAX_UPLOAD_BYTES", ORIGINAL_ENV.CMUX_VAULT_MAX_UPLOAD_BYTES);
-  restoreEnvValue("CMUX_VAULT_MAX_USER_BYTES", ORIGINAL_ENV.CMUX_VAULT_MAX_USER_BYTES);
+  restoreEnvValue("BMUX_VAULT_ENABLED", ORIGINAL_ENV.BMUX_VAULT_ENABLED);
+  restoreEnvValue("BMUX_VAULT_S3_BUCKET", ORIGINAL_ENV.BMUX_VAULT_S3_BUCKET);
+  restoreEnvValue("BMUX_VAULT_MAX_UPLOAD_BYTES", ORIGINAL_ENV.BMUX_VAULT_MAX_UPLOAD_BYTES);
+  restoreEnvValue("BMUX_VAULT_MAX_USER_BYTES", ORIGINAL_ENV.BMUX_VAULT_MAX_USER_BYTES);
 });
 
 describe("Vault uploads route", () => {
@@ -527,7 +527,7 @@ describe("Vault uploads route", () => {
 });
 
 function uploadRequest(input: { readonly compressedSizeBytes: number }): Request {
-  return new Request("https://cmux.test/api/vault/uploads", {
+  return new Request("https://bmux.test/api/vault/uploads", {
     method: "POST",
     headers: {
       authorization: "Bearer access-token",
@@ -549,7 +549,7 @@ function uploadRequest(input: { readonly compressedSizeBytes: number }): Request
 }
 
 function duplicateUploadRequest(): Request {
-  return new Request("https://cmux.test/api/vault/uploads", {
+  return new Request("https://bmux.test/api/vault/uploads", {
     method: "POST",
     headers: {
       authorization: "Bearer access-token",

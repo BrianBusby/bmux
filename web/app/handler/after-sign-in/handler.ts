@@ -6,8 +6,8 @@ import {
 import type { Locale } from "../../../i18n/routing";
 import { locales, routing } from "../../../i18n/routing";
 
-const NATIVE_HANDOFF_COOKIE = "cmux-native-auth-handoff";
-const NATIVE_HANDOFF_PARAM = "cmux_auth_handoff";
+const NATIVE_HANDOFF_COOKIE = "bmux-native-auth-handoff";
+const NATIVE_HANDOFF_PARAM = "bmux_auth_handoff";
 const ANONYMOUS_IF_EXISTS = "anonymous-if-exists[deprecated]" as const;
 
 type AfterSignInMessages = {
@@ -121,7 +121,7 @@ function buildNativeHref(
 
 function hasAuthState(href: string): boolean {
   try {
-    return new URL(href).searchParams.has("cmux_auth_state");
+    return new URL(href).searchParams.has("bmux_auth_state");
   } catch {
     return false;
   }
@@ -190,7 +190,7 @@ function nativeReturnResponse(
     ? `      <a class="secondary" href="${escapeHtml(switchAccountHref)}">${escapeHtml(messages.switchAccountButton)}</a>\n`
     : "";
   const autoOpenScript = autoOpen
-    ? `  <script>\n    const cmuxAutoOpen = window.setTimeout(() => window.location.replace(${scriptHref}), 1200);\n    document.querySelectorAll("a").forEach((action) => action.addEventListener("click", () => window.clearTimeout(cmuxAutoOpen)));\n  </script>\n`
+    ? `  <script>\n    const bmuxAutoOpen = window.setTimeout(() => window.location.replace(${scriptHref}), 1200);\n    document.querySelectorAll("a").forEach((action) => action.addEventListener("click", () => window.clearTimeout(bmuxAutoOpen)));\n  </script>\n`
     : "";
   const escapedTitle = escapeHtml(messages.title);
   const escapedBody = escapeHtml(messages.body);

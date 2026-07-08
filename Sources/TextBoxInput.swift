@@ -1,9 +1,9 @@
-import CmuxFoundation
-import CmuxWorkspaces
+import BmuxFoundation
+import BmuxWorkspaces
 import AppKit
-import CmuxTerminal
+import BmuxTerminal
 import Carbon.HIToolbox
-import CmuxSettingsUI
+import BmuxSettingsUI
 import Observation
 import SwiftUI
 import UniformTypeIdentifiers
@@ -554,7 +554,7 @@ private enum TextBoxDraftAttachmentStorage {
             return nil
         }
         let directory = appSupportDirectory
-            .appendingPathComponent("cmux", isDirectory: true)
+            .appendingPathComponent("bmux", isDirectory: true)
             .appendingPathComponent(directoryName, isDirectory: true)
         if createIfMissing {
             do {
@@ -1036,7 +1036,7 @@ private struct TextBoxAttachmentPreviewPopoverView: View {
             if attachment.localURL != nil {
                 Button(action: openInPreview) {
                     Text(String(localized: "textbox.openWithPreview.button", defaultValue: "Open with Preview"))
-                        .cmuxFont(size: 12, weight: .semibold)
+                        .bmuxFont(size: 12, weight: .semibold)
                         .lineLimit(1)
                 }
                 .buttonStyle(TextBoxAttachmentPreviewOpenButtonStyle())
@@ -1076,9 +1076,9 @@ private struct TextBoxAttachmentPreviewPopoverView: View {
                 .background(Color.black.opacity(0.82))
         } else {
             VStack(spacing: 10) {
-                CmuxSystemSymbolImage(magnified: "doc", pointSize: 42, weight: .regular)
+                BmuxSystemSymbolImage(magnified: "doc", pointSize: 42, weight: .regular)
                 Text(attachment.displayName)
-                    .cmuxFont(size: 13, weight: .medium)
+                    .bmuxFont(size: 13, weight: .medium)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
                     .truncationMode(.middle)
@@ -1157,7 +1157,7 @@ private struct TextBoxAttachmentChip: View {
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
             } else {
-                CmuxSystemSymbolImage(magnified: "doc", pointSize: 12, weight: .medium)
+                BmuxSystemSymbolImage(magnified: "doc", pointSize: 12, weight: .medium)
                     .frame(
                         width: TextBoxLayout.attachmentImageSize,
                         height: TextBoxLayout.attachmentImageSize
@@ -1165,13 +1165,13 @@ private struct TextBoxAttachmentChip: View {
             }
 
             Text(attachment.displayName)
-                .cmuxFont(size: 11, weight: .medium)
+                .bmuxFont(size: 11, weight: .medium)
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .frame(maxWidth: 118, alignment: .leading)
 
             Button(action: onRemove) {
-                CmuxSystemSymbolImage(magnified: "xmark", pointSize: 8, weight: .bold)
+                BmuxSystemSymbolImage(magnified: "xmark", pointSize: 8, weight: .bold)
                     .frame(width: 14, height: 14)
             }
             .buttonStyle(.plain)
@@ -1267,7 +1267,7 @@ private struct TextBoxMentionCompletionPopoverView: View {
                                 onSelect(suggestion)
                             } label: {
                                 Text(Self.highlightedTitle(suggestion.title, query: searchTerm))
-                                    .cmuxFont(size: 12, weight: .semibold)
+                                    .bmuxFont(size: 12, weight: .semibold)
                                     .lineLimit(1)
                                     .truncationMode(.middle)
                                     .padding(.horizontal, 8)
@@ -1809,7 +1809,7 @@ private final class TextBoxSubmitEventRunner {
               !(pendingRun.usesPasteboard && activePasteboardRunID != nil) else {
             enqueue(pendingRun, for: surfaceKey)
 #if DEBUG
-            cmuxDebugLog("textbox.submit.queue surface=\(surfaceKey) count=\(queuedRunsBySurface[surfaceKey]?.count ?? 0)")
+            bmuxDebugLog("textbox.submit.queue surface=\(surfaceKey) count=\(queuedRunsBySurface[surfaceKey]?.count ?? 0)")
 #endif
             return
         }
@@ -1845,7 +1845,7 @@ private final class TextBoxSubmitEventRunner {
         while index < events.count {
             let event = events[index]
 #if DEBUG
-            cmuxDebugLog("textbox.submit.event id=\(id.uuidString.prefix(5)) index=\(index) event=\(Self.debugDescription(for: event))")
+            bmuxDebugLog("textbox.submit.event id=\(id.uuidString.prefix(5)) index=\(index) event=\(Self.debugDescription(for: event))")
 #endif
             index += 1
 
@@ -2000,7 +2000,7 @@ private final class TextBoxSubmitEventRunner {
     private func waitForVisibleText(_ expectedText: String) {
         if visibleTextReady(expectedText) {
 #if DEBUG
-            cmuxDebugLog("textbox.submit.wait.visible.ready id=\(id.uuidString.prefix(5)) expected=\(Self.debugText(expectedText))")
+            bmuxDebugLog("textbox.submit.wait.visible.ready id=\(id.uuidString.prefix(5)) expected=\(Self.debugText(expectedText))")
 #endif
             processNext()
             return
@@ -2012,14 +2012,14 @@ private final class TextBoxSubmitEventRunner {
                 return false
             }
 #if DEBUG
-            cmuxDebugLog("textbox.submit.wait.visible.observed id=\(self.id.uuidString.prefix(5)) expected=\(Self.debugText(expectedText))")
+            bmuxDebugLog("textbox.submit.wait.visible.observed id=\(self.id.uuidString.prefix(5)) expected=\(Self.debugText(expectedText))")
 #endif
             self.processNext()
             return true
         } onExhausted: { [weak self] in
             guard let self else { return }
 #if DEBUG
-            cmuxDebugLog("textbox.submit.wait.visible.exhausted.continuing id=\(self.id.uuidString.prefix(5)) expected=\(Self.debugText(expectedText))")
+            bmuxDebugLog("textbox.submit.wait.visible.exhausted.continuing id=\(self.id.uuidString.prefix(5)) expected=\(Self.debugText(expectedText))")
 #endif
             self.processNext()
         }
@@ -2029,7 +2029,7 @@ private final class TextBoxSubmitEventRunner {
         if filePasteFallbackSatisfiedClipboardRead {
             filePasteFallbackSatisfiedClipboardRead = false
 #if DEBUG
-            cmuxDebugLog("textbox.submit.wait.clipboard.fallback id=\(id.uuidString.prefix(5)) baseline=\(clipboardReadBaseline)")
+            bmuxDebugLog("textbox.submit.wait.clipboard.fallback id=\(id.uuidString.prefix(5)) baseline=\(clipboardReadBaseline)")
 #endif
             processNext()
             return
@@ -2037,7 +2037,7 @@ private final class TextBoxSubmitEventRunner {
 
         if clipboardReadReady() {
 #if DEBUG
-            cmuxDebugLog("textbox.submit.wait.clipboard.ready id=\(id.uuidString.prefix(5)) baseline=\(clipboardReadBaseline)")
+            bmuxDebugLog("textbox.submit.wait.clipboard.ready id=\(id.uuidString.prefix(5)) baseline=\(clipboardReadBaseline)")
 #endif
             processNext()
             return
@@ -2049,7 +2049,7 @@ private final class TextBoxSubmitEventRunner {
                 if self.filePasteFallbackSatisfiedClipboardRead {
                     self.filePasteFallbackSatisfiedClipboardRead = false
 #if DEBUG
-                    cmuxDebugLog("textbox.submit.wait.clipboard.fallback.observed id=\(self.id.uuidString.prefix(5)) baseline=\(self.clipboardReadBaseline)")
+                    bmuxDebugLog("textbox.submit.wait.clipboard.fallback.observed id=\(self.id.uuidString.prefix(5)) baseline=\(self.clipboardReadBaseline)")
 #endif
                     self.processNext()
                     return true
@@ -2058,7 +2058,7 @@ private final class TextBoxSubmitEventRunner {
                     return false
                 }
 #if DEBUG
-                cmuxDebugLog("textbox.submit.wait.clipboard.observed id=\(self.id.uuidString.prefix(5)) baseline=\(self.clipboardReadBaseline)")
+                bmuxDebugLog("textbox.submit.wait.clipboard.observed id=\(self.id.uuidString.prefix(5)) baseline=\(self.clipboardReadBaseline)")
 #endif
                 self.processNext()
                 return true
@@ -2066,7 +2066,7 @@ private final class TextBoxSubmitEventRunner {
             onExhausted: { [weak self] in
                 guard let self else { return }
 #if DEBUG
-                cmuxDebugLog("textbox.submit.wait.clipboard.exhausted.continuing id=\(self.id.uuidString.prefix(5)) baseline=\(self.clipboardReadBaseline)")
+                bmuxDebugLog("textbox.submit.wait.clipboard.exhausted.continuing id=\(self.id.uuidString.prefix(5)) baseline=\(self.clipboardReadBaseline)")
 #endif
                 self.processNext()
             },
@@ -2086,7 +2086,7 @@ private final class TextBoxSubmitEventRunner {
                 }
                 guard self.clipboardReadReady() else { return }
 #if DEBUG
-                cmuxDebugLog("textbox.submit.wait.clipboard.notification id=\(self.id.uuidString.prefix(5)) baseline=\(self.clipboardReadBaseline)")
+                bmuxDebugLog("textbox.submit.wait.clipboard.notification id=\(self.id.uuidString.prefix(5)) baseline=\(self.clipboardReadBaseline)")
 #endif
                 self.processNext()
             }
@@ -2100,7 +2100,7 @@ private final class TextBoxSubmitEventRunner {
     private func waitForClaudeImageToken(_ expectedText: String) {
         if claudeImageTokenReady() {
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "textbox.submit.wait.image.ready id=\(id.uuidString.prefix(5)) " +
                 "baseline=\(claudeImageTokenBaseline) expected=\(Self.debugText(expectedText))"
             )
@@ -2116,7 +2116,7 @@ private final class TextBoxSubmitEventRunner {
                 return false
             }
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "textbox.submit.wait.image.observed id=\(self.id.uuidString.prefix(5)) " +
                 "baseline=\(self.claudeImageTokenBaseline) expected=\(Self.debugText(expectedText))"
             )
@@ -2127,7 +2127,7 @@ private final class TextBoxSubmitEventRunner {
         } onExhausted: { [weak self] in
             guard let self else { return }
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "textbox.submit.wait.image.exhausted.continuing id=\(self.id.uuidString.prefix(5)) " +
                 "baseline=\(self.claudeImageTokenBaseline) expected=\(Self.debugText(expectedText))"
             )
@@ -2251,7 +2251,7 @@ private final class TextBoxSubmitEventRunner {
                     return
                 }
 #if DEBUG
-                cmuxDebugLog("textbox.submit.wait.timeout id=\(self.id.uuidString.prefix(5))")
+                bmuxDebugLog("textbox.submit.wait.timeout id=\(self.id.uuidString.prefix(5))")
 #endif
                 onExhausted?()
             }
@@ -2286,7 +2286,7 @@ private final class TextBoxSubmitEventRunner {
         )
 
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "textbox.submit.pasteFile id=\(id.uuidString.prefix(5)) pathLength=\(fileURL.path.utf8.count) wroteURL=\(wroteURL ? 1 : 0) " +
             "types=\((pasteboard.types ?? []).map(\.rawValue).joined(separator: ","))"
         )
@@ -2294,7 +2294,7 @@ private final class TextBoxSubmitEventRunner {
 
         let handled = surface.performBindingAction("paste_from_clipboard")
 #if DEBUG
-        cmuxDebugLog("textbox.submit.pasteFile.binding id=\(id.uuidString.prefix(5)) handled=\(handled ? 1 : 0)")
+        bmuxDebugLog("textbox.submit.pasteFile.binding id=\(id.uuidString.prefix(5)) handled=\(handled ? 1 : 0)")
 #endif
         if handled {
             return true
@@ -2547,7 +2547,7 @@ struct TextBoxInputContainer: View {
                     hasMarkedText: hasMarkedText
                 ) {
                     Text(String(localized: "textbox.placeholder", defaultValue: "Prompt or command"))
-                        .cmuxFont(size: textBasePointSize)
+                        .bmuxFont(size: textBasePointSize)
                         .foregroundStyle(Color(nsColor: terminalForegroundColor).opacity(0.36))
                         .padding(.leading, TextBoxLayout.textInset.width)
                         .frame(height: clampedHeight, alignment: .center)
@@ -2607,7 +2607,7 @@ struct TextBoxInputContainer: View {
 
     private func addFilesButton(foreground: Color) -> some View {
         Button(action: chooseFiles) {
-            CmuxSystemSymbolImage(magnified: "plus", pointSize: TextBoxLayout.iconSymbolSize, weight: .semibold)
+            BmuxSystemSymbolImage(magnified: "plus", pointSize: TextBoxLayout.iconSymbolSize, weight: .semibold)
                 .frame(width: TextBoxLayout.iconButtonSize, height: TextBoxLayout.iconButtonSize)
                 .background(
                     Circle()
@@ -2651,9 +2651,9 @@ struct TextBoxInputContainer: View {
                 showPendingCommentsPreview.toggle()
             } label: {
                 HStack(spacing: 5) {
-                    CmuxSystemSymbolImage(magnified: "text.bubble", pointSize: 11, weight: .medium)
+                    BmuxSystemSymbolImage(magnified: "text.bubble", pointSize: 11, weight: .medium)
                     Text(pendingCommentsLabel(count))
-                        .cmuxFont(size: 12, weight: .medium)
+                        .bmuxFont(size: 12, weight: .medium)
                         .lineLimit(1)
                 }
             }
@@ -2665,7 +2665,7 @@ struct TextBoxInputContainer: View {
             Button {
                 dismissPendingComments()
             } label: {
-                CmuxSystemSymbolImage(magnified: "xmark", pointSize: 9, weight: .bold)
+                BmuxSystemSymbolImage(magnified: "xmark", pointSize: 9, weight: .bold)
                     .frame(width: 16, height: 16)
                     .background(Circle().fill(foreground.opacity(0.12)))
             }
@@ -2699,7 +2699,7 @@ struct TextBoxInputContainer: View {
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(Array(entries.enumerated()), id: \.offset) { _, entry in
                     Text(entry.submissionText.trimmingCharacters(in: .whitespacesAndNewlines))
-                        .cmuxFont(size: 11, design: .monospaced)
+                        .bmuxFont(size: 11, design: .monospaced)
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -3105,7 +3105,7 @@ struct TextBoxInputContainer: View {
             guard let workspace = MainActor.assumeIsolated({
                 surface.owningWorkspace()
             }) else {
-                finish(.failure(NSError(domain: "cmux.textbox.attachment", code: 3)))
+                finish(.failure(NSError(domain: "bmux.textbox.attachment", code: 3)))
                 return
             }
             workspace.uploadDroppedFilesForRemoteTerminal(
@@ -3498,7 +3498,7 @@ final class TextBoxInputTextView: NSTextView {
     private static let localControlKeys: Set<String> = ["a", "e", "f", "b", "n", "p", "k", "h"]
     private static let pendingAttachmentUploadPlaceholderCharacter = "\u{200B}"
     private static let pendingAttachmentUploadPlaceholderAttribute = NSAttributedString.Key(
-        "cmux.textBoxPendingAttachmentUploadID"
+        "bmux.textBoxPendingAttachmentUploadID"
     )
     private var attachmentPreviewPopover: NSPopover?
     private var attachmentPreviewCharacterIndex: Int?
@@ -4592,7 +4592,7 @@ final class TextBoxInputTextView: NSTextView {
             backing: .buffered,
             defer: false
         )
-        panel.identifier = NSUserInterfaceItemIdentifier("cmux.textbox.mentionCompletionPanel")
+        panel.identifier = NSUserInterfaceItemIdentifier("bmux.textbox.mentionCompletionPanel")
         panel.isFloatingPanel = true
         panel.hidesOnDeactivate = true
         panel.becomesKeyOnlyIfNeeded = true

@@ -40,7 +40,7 @@ export function resolveVmEntitlements(
   options: VmEntitlementOptions = {},
 ): VmEntitlements {
   const billing = resolveBillingContext(user, options);
-  const planId = normalizedPlanId(billing.billingPlanId ?? env.CMUX_VM_DEFAULT_PLAN ?? "free");
+  const planId = normalizedPlanId(billing.billingPlanId ?? env.BMUX_VM_DEFAULT_PLAN ?? "free");
   return {
     planId,
     billingCustomerType: billing.billingCustomerType,
@@ -90,7 +90,7 @@ function resolveBillingContext(
     throw new VmBillingTeamResolutionError({
       code: "vm_billing_team_required",
       status: 409,
-      message: "This Stack Auth user has multiple teams. Send X-Cmux-Team-Id so Cloud VM billing is explicit.",
+      message: "This Stack Auth user has multiple teams. Send X-Bmux-Team-Id so Cloud VM billing is explicit.",
     });
   }
 
@@ -124,14 +124,14 @@ export function isPaidVmPlan(planId: string): boolean {
 
 /**
  * Whether Cloud VM provisioning is gated behind a paid plan. Ships dark: the
- * gate is OFF unless CMUX_VM_REQUIRE_PRO is explicitly truthy, so free users
+ * gate is OFF unless BMUX_VM_REQUIRE_PRO is explicitly truthy, so free users
  * keep provisioning until product flips the env to launch (mirrors the
- * CMUX_VM_CREATE_ENABLED opt-out convention, inverted to opt-in).
+ * BMUX_VM_CREATE_ENABLED opt-out convention, inverted to opt-in).
  */
 export function isVmProGateEnforced(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
-  return isVmRequireProFlag(env.CMUX_VM_REQUIRE_PRO);
+  return isVmRequireProFlag(env.BMUX_VM_REQUIRE_PRO);
 }
 
 /**
@@ -162,14 +162,14 @@ function isVmRequireProFlag(value: string | undefined): boolean {
 
 function activeVmLimitForPlan(planId: string, env: Record<string, string | undefined>): number {
   const planKey = planId.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase();
-  const specific = env[`CMUX_VM_PLAN_${planKey}_MAX_ACTIVE_VMS`];
-  if (specific?.trim()) return positiveInteger(specific, `CMUX_VM_PLAN_${planKey}_MAX_ACTIVE_VMS`);
+  const specific = env[`BMUX_VM_PLAN_${planKey}_MAX_ACTIVE_VMS`];
+  if (specific?.trim()) return positiveInteger(specific, `BMUX_VM_PLAN_${planKey}_MAX_ACTIVE_VMS`);
 
   if (planId === "free") {
-    return positiveInteger(env.CMUX_VM_FREE_MAX_ACTIVE_VMS ?? "5", "CMUX_VM_FREE_MAX_ACTIVE_VMS");
+    return positiveInteger(env.BMUX_VM_FREE_MAX_ACTIVE_VMS ?? "5", "BMUX_VM_FREE_MAX_ACTIVE_VMS");
   }
 
-  return positiveInteger(env.CMUX_VM_PAID_MAX_ACTIVE_VMS ?? "10", "CMUX_VM_PAID_MAX_ACTIVE_VMS");
+  return positiveInteger(env.BMUX_VM_PAID_MAX_ACTIVE_VMS ?? "10", "BMUX_VM_PAID_MAX_ACTIVE_VMS");
 }
 
 function normalizedPlanId(planId: string): string {

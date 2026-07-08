@@ -1,4 +1,4 @@
-import CmuxRemoteDaemon
+import BmuxRemoteDaemon
 import Foundation
 
 // User-facing daemon strings resolve here, in the app target, so
@@ -12,11 +12,11 @@ extension RemoteDaemonStrings {
         RemoteDaemonStrings(
             missingPersistentPTYCapability: String(
                 localized: "remoteDaemon.error.missingPersistentPTYCapability",
-                defaultValue: "remote daemon does not support persistent SSH PTY sessions; reconnect the remote workspace to update cmux"
+                defaultValue: "remote daemon does not support persistent SSH PTY sessions; reconnect the remote workspace to update bmux"
             ),
             missingRequiredFunctionality: String(
                 localized: "remoteDaemon.error.missingRequiredFunctionality",
-                defaultValue: "remote daemon is missing required functionality; reconnect the remote workspace to update cmux"
+                defaultValue: "remote daemon is missing required functionality; reconnect the remote workspace to update bmux"
             )
         )
     }

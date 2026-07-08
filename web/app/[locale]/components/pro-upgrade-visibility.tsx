@@ -6,7 +6,7 @@ import {
 } from "../../lib/client-config-flags";
 import { FEATURE_FLAGS } from "../../lib/feature-flags";
 
-const FORCE = process.env.NEXT_PUBLIC_CMUX_PRO_UPGRADE_UI_ENABLED;
+const FORCE = process.env.NEXT_PUBLIC_BMUX_PRO_UPGRADE_UI_ENABLED;
 const FORCED_ON = FORCE === "1";
 const FORCED_OFF = FORCE === "0";
 

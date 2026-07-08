@@ -1,4 +1,4 @@
-import CmuxSwiftRender
+import BmuxSwiftRender
 import Foundation
 
 extension Workspace {

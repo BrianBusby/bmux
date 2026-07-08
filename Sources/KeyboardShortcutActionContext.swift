@@ -1,5 +1,5 @@
-import CmuxCommandPalette
-import CmuxSettings
+import BmuxCommandPalette
+import BmuxSettings
 
 extension KeyboardShortcutSettings.Action {
     enum ShortcutContext: Equatable {

@@ -32,7 +32,7 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/fork",
-    { "cmux.vm.operation": "fork" },
+    { "bmux.vm.operation": "fork" },
     "/api/vm/[id]/fork POST failed",
     async ({ user: initialUser, span, authDurationMs, routeStartedAtMs, setResponseFinalizer }) => {
       const timing = new VmTimingRecorder(span, "fork", { startedAt: routeStartedAtMs });
@@ -65,9 +65,9 @@ export async function POST(
       const idempotencyKey = idempotencyKeyFromRequest(request);
       const name = stringField(body, "name");
       setSpanAttributes(span, {
-        "cmux.vm.id": id,
-        "cmux.billing.team_id_set": !!entitlements.billingTeamId,
-        "cmux.idempotency_key_set": !!idempotencyKey,
+        "bmux.vm.id": id,
+        "bmux.billing.team_id_set": !!entitlements.billingTeamId,
+        "bmux.idempotency_key_set": !!idempotencyKey,
       });
       try {
         const result = await runVmWorkflow(forkVm({
@@ -140,7 +140,7 @@ function stringField(body: Record<string, unknown>, key: string): string | undef
 }
 
 function idempotencyKeyFromRequest(request: Request): string | undefined {
-  const raw = (request.headers.get("idempotency-key") || request.headers.get("x-cmux-idempotency-key") || "").trim();
+  const raw = (request.headers.get("idempotency-key") || request.headers.get("x-bmux-idempotency-key") || "").trim();
   return raw ? raw.slice(0, 128) : undefined;
 }
 
@@ -168,7 +168,7 @@ function createLikeErrorResponse(err: unknown): Response | null {
       error: "vm_active_limit_exceeded",
       status: 402,
       message: `This plan allows ${err.limit} active Cloud VM${err.limit === 1 ? "" : "s"} at a time.`,
-      action: "Run `cmux vm ls`, then stop or delete an active VM with `cmux vm rm <id>` before forking another.",
+      action: "Run `bmux vm ls`, then stop or delete an active VM with `bmux vm rm <id>` before forking another.",
       extra: { limit: err.limit },
       details: { limit: err.limit },
     });
@@ -194,10 +194,10 @@ function billingTeamErrorResponse(err: {
   return vmErrorResponse({
     error: err.code,
     status: err.status,
-    message: err.code === "vm_billing_team_not_found" ? "That team is not available for this account." : "cmux needs to know which team should own this Cloud VM.",
+    message: err.code === "vm_billing_team_not_found" ? "That team is not available for this account." : "bmux needs to know which team should own this Cloud VM.",
     action: err.code === "vm_billing_team_not_found"
-      ? "Switch to a team you belong to, or run `cmux auth login` again and retry with the correct team id."
-      : "Select a team in cmux, or pass the team id with `X-Cmux-Team-Id`.",
+      ? "Switch to a team you belong to, or run `bmux auth login` again and retry with the correct team id."
+      : "Select a team in bmux, or pass the team id with `X-Bmux-Team-Id`.",
     reason: err.message,
   });
 }

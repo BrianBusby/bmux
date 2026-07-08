@@ -1,6 +1,6 @@
-# cmux Java Client
+# bmux Java Client
 
-Java 17 client for the cmux-mux Unix-socket JSON-lines protocol. The build is
+Java 17 client for the bmux-mux Unix-socket JSON-lines protocol. The build is
 javac-only and uses a small vendored JSON parser/serializer in the package.
 
 ## Build
@@ -8,20 +8,20 @@ javac-only and uses a small vendored JSON parser/serializer in the package.
 ```bash
 cd mux/bindings/java
 scripts/build.sh
-java -cp out com.cmux.JsonTest
+java -cp out com.bmux.JsonTest
 ```
 
 On a machine without a local JRE:
 
 ```bash
-docker run --rm -v "$PWD":/w -w /w eclipse-temurin:17 bash -lc 'scripts/build.sh && java -cp out com.cmux.JsonTest'
+docker run --rm -v "$PWD":/w -w /w eclipse-temurin:17 bash -lc 'scripts/build.sh && java -cp out com.bmux.JsonTest'
 ```
 
 ## Usage
 
 ```java
-try (CmuxClient client = CmuxClient.builder()
-    .socketPath(System.getenv("CMUX_MUX_SOCKET"))
+try (BmuxClient client = BmuxClient.builder()
+    .socketPath(System.getenv("BMUX_MUX_SOCKET"))
     .build()) {
     IdentifyResult info = client.identify();
     SurfaceResult surface = client.newWorkspace(
@@ -35,6 +35,6 @@ try (CmuxClient client = CmuxClient.builder()
 
 ```bash
 cd mux/bindings/java
-CMUX_MUX_SOCKET=/path/to/session.sock scripts/build.sh
-CMUX_MUX_SOCKET=/path/to/session.sock java -cp out com.cmux.E2e
+BMUX_MUX_SOCKET=/path/to/session.sock scripts/build.sh
+BMUX_MUX_SOCKET=/path/to/session.sock java -cp out com.bmux.E2e
 ```

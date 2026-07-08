@@ -13,7 +13,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_bmux_cli
 
 
 def make_executable(path: Path, content: str) -> None:
@@ -28,12 +28,12 @@ def main() -> int:
         return 0
 
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_bmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1
 
-    with tempfile.TemporaryDirectory(prefix="cmux-opencode-plugin-") as td:
+    with tempfile.TemporaryDirectory(prefix="bmux-opencode-plugin-") as td:
         root = Path(td)
         config_dir = root / "opencode"
         config_dir.mkdir(parents=True, exist_ok=True)
@@ -44,8 +44,8 @@ def main() -> int:
                     "plugin": [
                         "oh-my-opencode",
                         ["existing-plugin", {"enabled": True}],
-                        "cmux-session",
-                        "./plugins/cmux-session.js",
+                        "bmux-session",
+                        "./plugins/bmux-session.js",
                     ]
                 }
             ),
@@ -69,16 +69,16 @@ def main() -> int:
             print(f"stderr={install.stderr.strip()}")
             return 1
 
-        plugin_path = config_dir / "plugins" / "cmux-session.js"
+        plugin_path = config_dir / "plugins" / "bmux-session.js"
         if not plugin_path.exists():
             print(f"FAIL: expected plugin at {plugin_path}")
             return 1
-        feed_plugin_path = config_dir / "plugins" / "cmux-feed.js"
+        feed_plugin_path = config_dir / "plugins" / "bmux-feed.js"
         if not feed_plugin_path.exists():
             print(f"FAIL: expected feed plugin at {feed_plugin_path}")
             return 1
-        if "cmux-feed-plugin-marker" not in feed_plugin_path.read_text(encoding="utf-8"):
-            print(f"FAIL: expected cmux feed marker in {feed_plugin_path}")
+        if "bmux-feed-plugin-marker" not in feed_plugin_path.read_text(encoding="utf-8"):
+            print(f"FAIL: expected bmux feed marker in {feed_plugin_path}")
             return 1
 
         try:
@@ -94,13 +94,13 @@ def main() -> int:
             entry
             for entry in plugins
             if (entry if isinstance(entry, str) else entry[0] if isinstance(entry, list) and entry else "")
-            == "cmux-session"
+            == "bmux-session"
         ]
         if stale:
-            print(f"FAIL: expected stale cmux plugin registrations removed, got {plugins!r}")
+            print(f"FAIL: expected stale bmux plugin registrations removed, got {plugins!r}")
             return 1
-        if "./plugins/cmux-session.js" not in plugins:
-            print(f"FAIL: expected local cmux session plugin registration, got {plugins!r}")
+        if "./plugins/bmux-session.js" not in plugins:
+            print(f"FAIL: expected local bmux session plugin registration, got {plugins!r}")
             return 1
         if "oh-my-opencode" not in plugins or ["existing-plugin", {"enabled": True}] not in plugins:
             print(f"FAIL: installer did not preserve existing plugin entries: {plugins!r}")
@@ -122,51 +122,51 @@ def main() -> int:
                 print(f"exit={debug.returncode}")
                 print(debug_output[-4000:])
                 return 1
-            if "path=cmux-session loading plugin" in debug_output:
-                print("FAIL: opencode tried to resolve cmux-session as a package")
+            if "path=bmux-session loading plugin" in debug_output:
+                print("FAIL: opencode tried to resolve bmux-session as a package")
                 print(debug_output[-4000:])
                 return 1
             if f"file://{plugin_path}" not in debug_output:
-                print("FAIL: opencode did not auto-load cmux session plugin file")
+                print("FAIL: opencode did not auto-load bmux session plugin file")
                 print(debug_output[-4000:])
                 return 1
 
-        fake_cmux = root / "fake-cmux"
-        fake_args_log = root / "fake-cmux-args.log"
-        fake_stdin_log = root / "fake-cmux-stdin.log"
-        fake_env_log = root / "fake-cmux-env.log"
-        plugin_copy_path = config_dir / "plugins" / "cmux-session-copy.js"
+        fake_bmux = root / "fake-bmux"
+        fake_args_log = root / "fake-bmux-args.log"
+        fake_stdin_log = root / "fake-bmux-stdin.log"
+        fake_env_log = root / "fake-bmux-env.log"
+        plugin_copy_path = config_dir / "plugins" / "bmux-session-copy.js"
         shutil.copyfile(plugin_path, plugin_copy_path)
         make_executable(
-            fake_cmux,
+            fake_bmux,
             """#!/usr/bin/env bash
 set -euo pipefail
-printf '%s\\n' "$*" >> "$FAKE_CMUX_ARGS_LOG"
-cat >> "$FAKE_CMUX_STDIN_LOG"
-printf '\\n---\\n' >> "$FAKE_CMUX_STDIN_LOG"
+printf '%s\\n' "$*" >> "$FAKE_BMUX_ARGS_LOG"
+cat >> "$FAKE_BMUX_STDIN_LOG"
+printf '\\n---\\n' >> "$FAKE_BMUX_STDIN_LOG"
 {
-  printf 'kind=%s\\n' "${CMUX_AGENT_LAUNCH_KIND-}"
-  printf 'cwd=%s\\n' "${CMUX_AGENT_LAUNCH_CWD-}"
-  printf 'argv=%s\\n' "${CMUX_AGENT_LAUNCH_ARGV_B64-}"
-} >> "$FAKE_CMUX_ENV_LOG"
+  printf 'kind=%s\\n' "${BMUX_AGENT_LAUNCH_KIND-}"
+  printf 'cwd=%s\\n' "${BMUX_AGENT_LAUNCH_CWD-}"
+  printf 'argv=%s\\n' "${BMUX_AGENT_LAUNCH_ARGV_B64-}"
+} >> "$FAKE_BMUX_ENV_LOG"
 """,
         )
 
         check_env = env.copy()
-        check_env["CMUX_TEST_OPENCODE_PLUGIN_PATH"] = str(plugin_path)
-        check_env["CMUX_TEST_OPENCODE_PLUGIN_COPY_PATH"] = str(plugin_copy_path)
-        check_env["CMUX_SURFACE_ID"] = "surface-opencode-test"
-        check_env["CMUX_OPENCODE_CMUX_BIN"] = str(fake_cmux)
-        check_env["FAKE_CMUX_ARGS_LOG"] = str(fake_args_log)
-        check_env["FAKE_CMUX_STDIN_LOG"] = str(fake_stdin_log)
-        check_env["FAKE_CMUX_ENV_LOG"] = str(fake_env_log)
+        check_env["BMUX_TEST_OPENCODE_PLUGIN_PATH"] = str(plugin_path)
+        check_env["BMUX_TEST_OPENCODE_PLUGIN_COPY_PATH"] = str(plugin_copy_path)
+        check_env["BMUX_SURFACE_ID"] = "surface-opencode-test"
+        check_env["BMUX_OPENCODE_BMUX_BIN"] = str(fake_bmux)
+        check_env["FAKE_BMUX_ARGS_LOG"] = str(fake_args_log)
+        check_env["FAKE_BMUX_STDIN_LOG"] = str(fake_stdin_log)
+        check_env["FAKE_BMUX_ENV_LOG"] = str(fake_env_log)
         check_source = """
-const pluginPath = process.env.CMUX_TEST_OPENCODE_PLUGIN_PATH;
-const pluginCopyPath = process.env.CMUX_TEST_OPENCODE_PLUGIN_COPY_PATH;
+const pluginPath = process.env.BMUX_TEST_OPENCODE_PLUGIN_PATH;
+const pluginCopyPath = process.env.BMUX_TEST_OPENCODE_PLUGIN_COPY_PATH;
 const mod = await import(pluginPath);
 const duplicateMod = await import(pluginCopyPath);
-if (typeof mod.CMUXSessionRestore !== "function") {
-  throw new Error("missing CMUXSessionRestore export");
+if (typeof mod.BMUXSessionRestore !== "function") {
+  throw new Error("missing BMUXSessionRestore export");
 }
 if (typeof mod.default !== "function") {
   throw new Error("missing default export");

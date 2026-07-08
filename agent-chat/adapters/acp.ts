@@ -472,7 +472,7 @@ function handleAgentMessage(sess: SessionCtx, st: AcpState, def: ProviderDef, ms
     return;
   }
   if (msg.id != null) {
-    writeMsg({ jsonrpc: "2.0", id: msg.id, error: { code: -32601, message: "method not supported by cmux-agent-ui" } });
+    writeMsg({ jsonrpc: "2.0", id: msg.id, error: { code: -32601, message: "method not supported by bmux-agent-ui" } });
   }
 }
 

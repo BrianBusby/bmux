@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""High-precision static checker for test-code determinism in cmux.
+"""High-precision static checker for test-code determinism in bmux.
 
 Two principles are enforced:
 
@@ -56,9 +56,9 @@ from typing import Iterable, Optional
 # ---------------------------------------------------------------------------
 
 DEFAULT_ROOTS: tuple[str, ...] = (
-    "cmuxTests",
-    "cmuxUITests",
-    "ios/cmuxUITests",
+    "bmuxTests",
+    "bmuxUITests",
+    "ios/bmuxUITests",
     "Packages",
     "tests",
     "tests_v2",
@@ -602,7 +602,7 @@ def _self_test() -> int:
     # (filename, source, expected rules present, rules that must NOT be present)
     positives: list[tuple[str, str, set[str]]] = [
         (
-            "cmuxTests/a.swift",
+            "bmuxTests/a.swift",
             "let elapsed = end - start\nXCTAssertLessThan(elapsedMs, 250)\n",
             {RULE_ASSERT_ON_DURATION},
         ),
@@ -642,7 +642,7 @@ def _self_test() -> int:
             {RULE_SLEEP_THEN_ASSERT},
         ),
         (
-            "cmuxUITests/f.swift",
+            "bmuxUITests/f.swift",
             "try await Task.sleep(nanoseconds: 300_000_000)\nXCTAssertTrue(view.exists)\n",
             {RULE_SLEEP_THEN_ASSERT},
         ),
@@ -697,12 +697,12 @@ def _self_test() -> int:
         ),
         # Virtual-clock advance + invariant assert: not a wall-clock assert.
         (
-            "cmuxTests/n7.swift",
+            "bmuxTests/n7.swift",
             "clock.advance(by: .milliseconds(250))\nXCTAssertEqual(model.state, .timedOut)\n",
         ),
         # Awaiting a real expectation/signal then asserting an invariant.
         (
-            "cmuxTests/n8.swift",
+            "bmuxTests/n8.swift",
             "await fulfillment(of: [didFinish], timeout: 5)\nXCTAssertEqual(result, .ok)\n",
         ),
         # Asserting a count (non-duration) against a literal is fine.
@@ -742,22 +742,22 @@ def _self_test() -> int:
         ),
         # XCTAssertEqual on a non-duration value with a literal: not a latency assert.
         (
-            "cmuxTests/n16.swift",
+            "bmuxTests/n16.swift",
             "XCTAssertEqual(rows.count, 3)\n",
         ),
         # Public URL used as a STRING fixture (no network verb): not live network.
         (
             "web/tests/n17.ts",
-            'expect(text).toContain("Docs: https://cmux.com/docs/api")\n',
+            'expect(text).toContain("Docs: https://bmux.com/docs/api")\n',
         ),
         (
             "web/tests/n18.ts",
-            'const llms = buildLlmsText("https://cmux.com")\n',
+            'const llms = buildLlmsText("https://bmux.com")\n',
         ),
         # A quoted shell command embedded in a Swift terminal-parser fixture is a
         # STRING literal, not a real delay: "sleep 5" must not flag sleep-then-assert.
         (
-            "cmuxTests/n19.swift",
+            "bmuxTests/n19.swift",
             'parser.consume(mark("A") + "sleep 5" + mark("C"))\n#expect(parser.blocks.count == 1)\n',
         ),
         # Same bare-command form in Python source is also a string fixture, not a sleep.

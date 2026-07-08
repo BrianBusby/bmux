@@ -56,18 +56,18 @@ extension TabManager {
             activeWorkspace: workspaceTitle.isEmpty ? defaultTitle : workspaceTitle,
             activeDirectory: activeDirectory,
             windowId: windowId,
-            appName: "cmux"
+            appName: "bmux"
         ))
         let trimmedResolvedTitle = resolvedTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmedResolvedTitle.isEmpty ? defaultTitle : trimmedResolvedTitle
     }
 
     private func defaultWindowTitle(for tab: Workspace?) -> String {
-        guard let tab else { return "cmux" }
+        guard let tab else { return "bmux" }
         let trimmedTitle = resolvedWorkspaceDisplayTitle(for: tab).trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedTitle.isEmpty { return trimmedTitle }
         let trimmedDirectory = activeWindowTitleDirectory(for: tab)
-        return trimmedDirectory.isEmpty ? "cmux" : trimmedDirectory
+        return trimmedDirectory.isEmpty ? "bmux" : trimmedDirectory
     }
 
     private func activeWindowTitleDirectory(for tab: Workspace?) -> String {

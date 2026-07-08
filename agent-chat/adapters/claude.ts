@@ -271,7 +271,7 @@ function rejectPending(st: ClaudeState, message: string) {
 function control(sess: SessionCtx, subtype: string, request: Record<string, unknown> = {}): Promise<any> {
   const st = state(sess);
   const proc = ensureProc(sess);
-  const request_id = `cmux-${st.nextRequest++}`;
+  const request_id = `bmux-${st.nextRequest++}`;
   const payload = { type: "control_request", request_id, request: { subtype, ...request } };
   const promise = new Promise<any>((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -590,7 +590,7 @@ async function fetchClaudeModels(cwd: string): Promise<{ choices: OptionChoice[]
         const ev = tryParse(line);
         if (ev?.type !== "control_response") return;
         const response = ev.response;
-        if (response?.request_id !== "cmux-list-options") return;
+        if (response?.request_id !== "bmux-list-options") return;
         clearTimeout(timer);
         if (response.subtype !== "success") reject(new Error(response.error ?? response.message ?? "claude list_models failed"));
         else resolve(normalizeModelCatalog(response.response?.models, version));
@@ -600,7 +600,7 @@ async function fetchClaudeModels(cwd: string): Promise<{ choices: OptionChoice[]
       });
       proc.stdin.write(JSON.stringify({
         type: "control_request",
-        request_id: "cmux-list-options",
+        request_id: "bmux-list-options",
         request: { subtype: "list_models" },
       }) + "\n");
       proc.stdin.flush();

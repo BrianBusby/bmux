@@ -135,7 +135,7 @@ describe("billing portal route", () => {
 
   test("redirects signed-in users with a Stripe customer row to the portal session", async () => {
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://bmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
@@ -144,7 +144,7 @@ describe("billing portal route", () => {
     );
     expect(createPortalSession).toHaveBeenCalledWith({
       customer: "cus_123",
-      return_url: "https://cmux.test/pricing",
+      return_url: "https://bmux.test/pricing",
     });
     expect(getUser).toHaveBeenCalledWith({ or: "return-null" });
   });
@@ -155,7 +155,7 @@ describe("billing portal route", () => {
     customerRows = [{ id: "cus_anonymous" }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://bmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
@@ -167,7 +167,7 @@ describe("billing portal route", () => {
     expect(getUser).toHaveBeenCalledWith({ or: "anonymous-if-exists[deprecated]" });
     expect(createPortalSession).toHaveBeenCalledWith({
       customer: "cus_anonymous",
-      return_url: "https://cmux.test/pricing",
+      return_url: "https://bmux.test/pricing",
     });
   });
 
@@ -176,7 +176,7 @@ describe("billing portal route", () => {
     customerRows = [{ id: "cus_team" }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal?scope=team"),
+      new NextRequest("https://bmux.test/api/billing/portal?scope=team"),
     );
 
     expect(response.status).toBe(302);
@@ -185,7 +185,7 @@ describe("billing portal route", () => {
     );
     expect(createPortalSession).toHaveBeenCalledWith({
       customer: "cus_team",
-      return_url: "https://cmux.test/dashboard/billing",
+      return_url: "https://bmux.test/dashboard/billing",
     });
   });
 
@@ -193,13 +193,13 @@ describe("billing portal route", () => {
     customerRows = [{ id: "cus_user" }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal?scope=team"),
+      new NextRequest("https://bmux.test/api/billing/portal?scope=team"),
     );
 
     expect(response.status).toBe(302);
     expect(createPortalSession).toHaveBeenCalledWith({
       customer: "cus_user",
-      return_url: "https://cmux.test/pricing",
+      return_url: "https://bmux.test/pricing",
     });
   });
 
@@ -208,12 +208,12 @@ describe("billing portal route", () => {
     anonymousIfExistsUser = null;
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://bmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing",
+      "https://bmux.test/pricing",
     );
     expect(createPortalSession).not.toHaveBeenCalled();
   });
@@ -222,12 +222,12 @@ describe("billing portal route", () => {
     stripeConfigured = false;
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://bmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=unavailable",
+      "https://bmux.test/pricing?billing=unavailable",
     );
     expect(getUser).not.toHaveBeenCalled();
     expect(createPortalSession).not.toHaveBeenCalled();
@@ -238,12 +238,12 @@ describe("billing portal route", () => {
     stackProductsActive = true;
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://bmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=external",
+      "https://bmux.test/pricing?billing=external",
     );
     expect(captureBillingError).not.toHaveBeenCalled();
     expect(createPortalSession).not.toHaveBeenCalled();
@@ -254,12 +254,12 @@ describe("billing portal route", () => {
     stripeSubscriptionRows = [{ id: "sub_123" }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://bmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=external",
+      "https://bmux.test/pricing?billing=external",
     );
     expect(captureBillingError).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -280,12 +280,12 @@ describe("billing portal route", () => {
     });
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://bmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=error",
+      "https://bmux.test/pricing?billing=error",
     );
     expect(captureBillingError).toHaveBeenCalled();
   });
@@ -296,12 +296,12 @@ describe("billing portal route", () => {
     });
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://bmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=error",
+      "https://bmux.test/pricing?billing=error",
     );
     expect(captureBillingError).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -35,17 +35,17 @@ import {
 // an identity token the backend mints per attach session (short TTL, revoked on rm).
 const SSH_HOST = "vm-ssh.freestyle.sh";
 const SSH_PORT = 22;
-const CMUX_LINUX_USER = "cmux"; // must match Resources/install.sh in scratch/vm-experiments
-const CMUXD_WS_PTY_LEASE_PATH = "/tmp/cmux/attach-pty-lease.json";
-const CMUXD_WS_LEGACY_PTY_LEASE_PATH = "/tmp/cmux/attach-lease.json";
-const CMUXD_WS_RPC_CLIENT_PATH = "/tmp/cmux/attach-rpc-client.json";
-const CMUXD_WS_RPC_LEASE_PATH = "/tmp/cmux/attach-rpc-lease.json";
-const CMUXD_WS_PTY_LEASE_TTL_SECONDS = 5 * 60;
-const CMUXD_WS_RPC_LEASE_TTL_SECONDS = 12 * 60 * 60;
-const CMUXD_WS_RPC_RENEW_BEFORE_SECONDS = 60;
+const BMUX_LINUX_USER = "bmux"; // must match Resources/install.sh in scratch/vm-experiments
+const BMUXD_WS_PTY_LEASE_PATH = "/tmp/bmux/attach-pty-lease.json";
+const BMUXD_WS_LEGACY_PTY_LEASE_PATH = "/tmp/bmux/attach-lease.json";
+const BMUXD_WS_RPC_CLIENT_PATH = "/tmp/bmux/attach-rpc-client.json";
+const BMUXD_WS_RPC_LEASE_PATH = "/tmp/bmux/attach-rpc-lease.json";
+const BMUXD_WS_PTY_LEASE_TTL_SECONDS = 5 * 60;
+const BMUXD_WS_RPC_LEASE_TTL_SECONDS = 12 * 60 * 60;
+const BMUXD_WS_RPC_RENEW_BEFORE_SECONDS = 60;
 const FREESTYLE_WS_PORTS = [{ port: 443, targetPort: 7777 }];
 const FREESTYLE_DAEMON_ADMIN_TOKEN_METADATA_KEY = "freestyleDaemonAdminToken";
-const CMUX_CLOUD_SHELL_PATH = "/usr/local/bin/cmux-cloud-shell";
+const BMUX_CLOUD_SHELL_PATH = "/usr/local/bin/bmux-cloud-shell";
 
 const DEFAULT_TIMEOUT_MS = 60_000;
 const CREATE_TIMEOUT_MS = 15 * 60 * 1000;
@@ -94,13 +94,13 @@ export class FreestyleProvider implements VMProvider {
     if (options.bakedFreestyleSignedAdmin === true && !signedAdmin) {
       throw new ProviderError(
         "freestyle",
-        "create requires CMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED and CMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY for this Cloud VM image",
+        "create requires BMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED and BMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY for this Cloud VM image",
       );
     }
     const adminToken = signedAdmin
       ? null
       : freestyleDaemonAdminToken(options.providerMetadata)
-        ?? `cmux-freestyle-admin-${randomBytes(32).toString("hex")}`;
+        ?? `bmux-freestyle-admin-${randomBytes(32).toString("hex")}`;
     const providerMetadata = adminToken
       ? {
         ...(options.providerMetadata ?? {}),
@@ -108,12 +108,12 @@ export class FreestyleProvider implements VMProvider {
       }
       : { ...(options.providerMetadata ?? {}) };
     return withVmSpan(
-      "cmux.vm.provider.create",
+      "bmux.vm.provider.create",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "create",
-        "cmux.vm.image": image,
-        "cmux.timeout_ms": CREATE_TIMEOUT_MS,
+        "bmux.vm.provider": "freestyle",
+        "bmux.vm.operation": "create",
+        "bmux.vm.image": image,
+        "bmux.timeout_ms": CREATE_TIMEOUT_MS,
       },
       async (span) => {
         const fs = client(CREATE_TIMEOUT_MS);
@@ -130,7 +130,7 @@ export class FreestyleProvider implements VMProvider {
             };
           }
           const created = await fs.vms.create(createRequest);
-          setSpanAttributes(span, { "cmux.vm.id": created.vmId });
+          setSpanAttributes(span, { "bmux.vm.id": created.vmId });
           return {
             provider: "freestyle",
             providerVmId: created.vmId,
@@ -148,12 +148,12 @@ export class FreestyleProvider implements VMProvider {
 
   async destroy(vmId: string): Promise<void> {
     return withVmSpan(
-      "cmux.vm.provider.destroy",
+      "bmux.vm.provider.destroy",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "destroy",
-        "cmux.vm.id": vmId,
-        "cmux.timeout_ms": DEFAULT_TIMEOUT_MS,
+        "bmux.vm.provider": "freestyle",
+        "bmux.vm.operation": "destroy",
+        "bmux.vm.id": vmId,
+        "bmux.timeout_ms": DEFAULT_TIMEOUT_MS,
       },
       async () => {
         try {
@@ -169,18 +169,18 @@ export class FreestyleProvider implements VMProvider {
 
   async getStatus(vmId: string): Promise<VMStatus> {
     return withVmSpan(
-      "cmux.vm.provider.get_status",
+      "bmux.vm.provider.get_status",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "get_status",
-        "cmux.vm.id": vmId,
-        "cmux.timeout_ms": DEFAULT_TIMEOUT_MS,
+        "bmux.vm.provider": "freestyle",
+        "bmux.vm.operation": "get_status",
+        "bmux.vm.id": vmId,
+        "bmux.timeout_ms": DEFAULT_TIMEOUT_MS,
       },
       async (span) => {
         try {
           const info = await client().vms.ref({ vmId }).getInfo();
           const status = mapStatus(info.state);
-          setSpanAttributes(span, { "cmux.vm.provider_state": info.state, "cmux.vm.status": status });
+          setSpanAttributes(span, { "bmux.vm.provider_state": info.state, "bmux.vm.status": status });
           return status;
         } catch (err) {
           throw new ProviderError("freestyle", `getStatus(${vmId})`, err);
@@ -191,12 +191,12 @@ export class FreestyleProvider implements VMProvider {
 
   async pause(vmId: string): Promise<void> {
     return withVmSpan(
-      "cmux.vm.provider.pause",
+      "bmux.vm.provider.pause",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "pause",
-        "cmux.vm.id": vmId,
-        "cmux.timeout_ms": DEFAULT_TIMEOUT_MS,
+        "bmux.vm.provider": "freestyle",
+        "bmux.vm.operation": "pause",
+        "bmux.vm.id": vmId,
+        "bmux.timeout_ms": DEFAULT_TIMEOUT_MS,
       },
       async () => {
         try {
@@ -212,12 +212,12 @@ export class FreestyleProvider implements VMProvider {
 
   async resume(vmId: string): Promise<VMHandle> {
     return withVmSpan(
-      "cmux.vm.provider.resume",
+      "bmux.vm.provider.resume",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "resume",
-        "cmux.vm.id": vmId,
-        "cmux.timeout_ms": DEFAULT_TIMEOUT_MS,
+        "bmux.vm.provider": "freestyle",
+        "bmux.vm.operation": "resume",
+        "bmux.vm.id": vmId,
+        "bmux.timeout_ms": DEFAULT_TIMEOUT_MS,
       },
       async (span) => {
         try {
@@ -226,7 +226,7 @@ export class FreestyleProvider implements VMProvider {
           await ref.start();
           const info = await ref.getInfo();
           const status = mapStatus(info.state);
-          setSpanAttributes(span, { "cmux.vm.provider_state": info.state, "cmux.vm.status": status });
+          setSpanAttributes(span, { "bmux.vm.provider_state": info.state, "bmux.vm.status": status });
           return {
             provider: "freestyle",
             providerVmId: info.id,
@@ -248,13 +248,13 @@ export class FreestyleProvider implements VMProvider {
   ): Promise<ExecResult> {
     const timeoutMs = normalizeExecTimeout(opts?.timeoutMs);
     return withVmSpan(
-      "cmux.vm.provider.exec",
+      "bmux.vm.provider.exec",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "exec",
-        "cmux.vm.id": vmId,
-        "cmux.command_length": command.length,
-        "cmux.timeout_ms": timeoutMs,
+        "bmux.vm.provider": "freestyle",
+        "bmux.vm.operation": "exec",
+        "bmux.vm.id": vmId,
+        "bmux.command_length": command.length,
+        "bmux.timeout_ms": timeoutMs,
       },
       async (span) => {
         try {
@@ -262,7 +262,7 @@ export class FreestyleProvider implements VMProvider {
           const ref = fs.vms.ref({ vmId });
           const r = await ref.exec({ command, timeoutMs });
           const exitCode = (r as { statusCode?: number }).statusCode ?? 0;
-          setSpanAttributes(span, { "cmux.exec.exit_code": exitCode });
+          setSpanAttributes(span, { "bmux.exec.exit_code": exitCode });
           // ResponsePostV1VmsVmIdExecAwait200 shape: { stdout, stderr, statusCode }
           return {
             exitCode,
@@ -278,13 +278,13 @@ export class FreestyleProvider implements VMProvider {
 
   async snapshot(vmId: string, name?: string): Promise<SnapshotRef> {
     return withVmSpan(
-      "cmux.vm.provider.snapshot",
+      "bmux.vm.provider.snapshot",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "snapshot",
-        "cmux.vm.id": vmId,
-        "cmux.snapshot.named": !!name,
-        "cmux.timeout_ms": SNAPSHOT_TIMEOUT_MS,
+        "bmux.vm.provider": "freestyle",
+        "bmux.vm.operation": "snapshot",
+        "bmux.vm.id": vmId,
+        "bmux.snapshot.named": !!name,
+        "bmux.timeout_ms": SNAPSHOT_TIMEOUT_MS,
       },
       async (span) => {
         try {
@@ -296,7 +296,7 @@ export class FreestyleProvider implements VMProvider {
             (out as { id?: string }).id ??
             "";
           if (!id) throw new Error("snapshot response missing snapshotId");
-          setSpanAttributes(span, { "cmux.snapshot.id": id });
+          setSpanAttributes(span, { "bmux.snapshot.id": id });
           return { id, createdAt: Date.now(), name };
         } catch (err) {
           throw new ProviderError("freestyle", `snapshot(${vmId})`, err);
@@ -307,18 +307,18 @@ export class FreestyleProvider implements VMProvider {
 
   async restore(snapshotId: string): Promise<VMHandle> {
     return withVmSpan(
-      "cmux.vm.provider.restore",
+      "bmux.vm.provider.restore",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "restore",
-        "cmux.snapshot.id": snapshotId,
-        "cmux.timeout_ms": CREATE_TIMEOUT_MS,
+        "bmux.vm.provider": "freestyle",
+        "bmux.vm.operation": "restore",
+        "bmux.snapshot.id": snapshotId,
+        "bmux.timeout_ms": CREATE_TIMEOUT_MS,
       },
       async (span) => {
         try {
           const fs = client(CREATE_TIMEOUT_MS);
           const signedAdmin = freestyleAdminSigningConfig();
-          const adminToken = signedAdmin ? null : `cmux-freestyle-admin-${randomBytes(32).toString("hex")}`;
+          const adminToken = signedAdmin ? null : `bmux-freestyle-admin-${randomBytes(32).toString("hex")}`;
           const createRequest: Parameters<typeof fs.vms.create>[0] = {
             snapshotId,
             ports: FREESTYLE_WS_PORTS,
@@ -330,7 +330,7 @@ export class FreestyleProvider implements VMProvider {
             };
           }
           const created = await fs.vms.create(createRequest);
-          setSpanAttributes(span, { "cmux.vm.id": created.vmId });
+          setSpanAttributes(span, { "bmux.vm.id": created.vmId });
           return {
             provider: "freestyle",
             providerVmId: created.vmId,
@@ -350,12 +350,12 @@ export class FreestyleProvider implements VMProvider {
 
   async fork(vmId: string): Promise<VMHandle> {
     return withVmSpan(
-      "cmux.vm.provider.fork",
+      "bmux.vm.provider.fork",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "fork",
-        "cmux.vm.id": vmId,
-        "cmux.timeout_ms": SNAPSHOT_TIMEOUT_MS,
+        "bmux.vm.provider": "freestyle",
+        "bmux.vm.operation": "fork",
+        "bmux.vm.id": vmId,
+        "bmux.timeout_ms": SNAPSHOT_TIMEOUT_MS,
       },
       async (span) => {
         try {
@@ -367,9 +367,9 @@ export class FreestyleProvider implements VMProvider {
           const info = await fork.vm.getInfo();
           const status = mapStatus(info.state);
           setSpanAttributes(span, {
-            "cmux.vm.fork_id": fork.vmId,
-            "cmux.vm.provider_state": info.state,
-            "cmux.vm.status": status,
+            "bmux.vm.fork_id": fork.vmId,
+            "bmux.vm.provider_state": info.state,
+            "bmux.vm.status": status,
           });
           return {
             provider: "freestyle",
@@ -386,7 +386,7 @@ export class FreestyleProvider implements VMProvider {
   }
 
   /**
-   * Prefer the baked cmuxd WebSocket daemon. Older VMs without an exposed 443 -> 7777 port
+   * Prefer the baked bmuxd WebSocket daemon. Older VMs without an exposed 443 -> 7777 port
    * still fall back to Freestyle SSH, but the mac client must treat that as shell-only.
    */
   async openAttach(vmId: string, options?: AttachOptions): Promise<AttachEndpoint> {
@@ -395,7 +395,7 @@ export class FreestyleProvider implements VMProvider {
       if (options?.requireDaemon && !endpoint.daemon) {
         throw new ProviderError(
           "freestyle",
-          `openAttach(${vmId}) requires a cmuxd RPC endpoint, but this VM snapshot only exposes the PTY WebSocket. Rebuild it with the current cmuxd-remote snapshot.`,
+          `openAttach(${vmId}) requires a bmuxd RPC endpoint, but this VM snapshot only exposes the PTY WebSocket. Rebuild it with the current bmuxd-remote snapshot.`,
         );
       }
       return endpoint;
@@ -407,16 +407,16 @@ export class FreestyleProvider implements VMProvider {
         throw err;
       }
       return await withVmSpan(
-        "cmux.vm.provider.open_attach_ssh_fallback",
+        "bmux.vm.provider.open_attach_ssh_fallback",
         {
-          "cmux.vm.provider": "freestyle",
-          "cmux.vm.operation": "open_attach_ssh_fallback",
-          "cmux.vm.id": vmId,
-          "cmux.vm.attach.require_daemon": options?.requireDaemon === true,
+          "bmux.vm.provider": "freestyle",
+          "bmux.vm.operation": "open_attach_ssh_fallback",
+          "bmux.vm.id": vmId,
+          "bmux.vm.attach.require_daemon": options?.requireDaemon === true,
         },
         async (span) => {
           recordSpanError(span, err);
-          setSpanAttributes(span, { "cmux.vm.attach.fallback": "ssh" });
+          setSpanAttributes(span, { "bmux.vm.attach.fallback": "ssh" });
           return await this.openSSH(vmId);
         },
       );
@@ -425,18 +425,18 @@ export class FreestyleProvider implements VMProvider {
 
   async openWebSocketPty(vmId: string, options?: AttachOptions): Promise<WebSocketPtyEndpoint> {
     return withVmSpan(
-      "cmux.vm.provider.open_websocket_pty",
+      "bmux.vm.provider.open_websocket_pty",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "open_websocket_pty",
-        "cmux.vm.id": vmId,
+        "bmux.vm.provider": "freestyle",
+        "bmux.vm.operation": "open_websocket_pty",
+        "bmux.vm.id": vmId,
       },
       async (span) => {
         try {
           const fs = client();
           const vm = fs.vms.ref({ vmId });
           const domain = `${vmId}.vm.freestyle.sh`;
-          const pty = makeWebSocketLease("freestyle", "pty", true, CMUXD_WS_PTY_LEASE_TTL_SECONDS, options?.sessionId);
+          const pty = makeWebSocketLease("freestyle", "pty", true, BMUXD_WS_PTY_LEASE_TTL_SECONDS, options?.sessionId);
           const attachmentId = options?.attachmentId?.trim() || makeWebSocketAttachmentId("freestyle");
           let daemon: ReusableRpcLease | null = null;
           let daemonReused = false;
@@ -444,7 +444,7 @@ export class FreestyleProvider implements VMProvider {
           const signedAdmin = freestyleAdminSigningConfig();
           await ensureFreestyleWebSocketHealthyOrRepair(domain, vm, adminToken, signedAdmin);
           if (adminToken || signedAdmin) {
-            const daemonLease = makeWebSocketLease("freestyle", "rpc", false, CMUXD_WS_RPC_LEASE_TTL_SECONDS);
+            const daemonLease = makeWebSocketLease("freestyle", "rpc", false, BMUXD_WS_RPC_LEASE_TTL_SECONDS);
             daemon = daemonLease;
             await installFreestyleLeasesViaDaemon(domain, adminToken ? { kind: "bearer", token: adminToken } : {
               kind: "ed25519",
@@ -467,7 +467,7 @@ export class FreestyleProvider implements VMProvider {
               const existingDaemon = await readReusableRpcLease(vm, service.rpcLeasePath);
               const newDaemon = existingDaemon
                 ? null
-                : makeWebSocketLease("freestyle", "rpc", false, CMUXD_WS_RPC_LEASE_TTL_SECONDS);
+                : makeWebSocketLease("freestyle", "rpc", false, BMUXD_WS_RPC_LEASE_TTL_SECONDS);
               daemon = existingDaemon ?? newDaemon!;
               daemonReused = !!existingDaemon;
               if (newDaemon) {
@@ -477,19 +477,19 @@ export class FreestyleProvider implements VMProvider {
                   ensurePrivateDirectoryCommand(service.rpcLeasePath),
                   `printf '%s' '${encodedDaemon}' | base64 -d > ${shellQuote(service.rpcLeasePath)}`,
                   `chmod 600 ${shellQuote(service.rpcLeasePath)}`,
-                  `printf '%s' '${encodedDaemonClient}' | base64 -d > ${shellQuote(CMUXD_WS_RPC_CLIENT_PATH)}`,
-                  `chmod 600 ${shellQuote(CMUXD_WS_RPC_CLIENT_PATH)}`,
+                  `printf '%s' '${encodedDaemonClient}' | base64 -d > ${shellQuote(BMUXD_WS_RPC_CLIENT_PATH)}`,
+                  `chmod 600 ${shellQuote(BMUXD_WS_RPC_CLIENT_PATH)}`,
                 );
               }
             }
             await execFreestyleOrThrow(vm, commands.join(" && "));
           }
-          span.setAttribute("cmux.vm.attach.transport", "websocket");
-          span.setAttribute("cmux.vm.attach.expires_at_unix", pty.expiresAtUnix);
-          span.setAttribute("cmux.vm.attach.daemon_available", !!daemon);
+          span.setAttribute("bmux.vm.attach.transport", "websocket");
+          span.setAttribute("bmux.vm.attach.expires_at_unix", pty.expiresAtUnix);
+          span.setAttribute("bmux.vm.attach.daemon_available", !!daemon);
           if (daemon) {
-            span.setAttribute("cmux.vm.attach.daemon_expires_at_unix", daemon.expiresAtUnix);
-            span.setAttribute("cmux.vm.attach.daemon_reused", daemonReused);
+            span.setAttribute("bmux.vm.attach.daemon_expires_at_unix", daemon.expiresAtUnix);
+            span.setAttribute("bmux.vm.attach.daemon_reused", daemonReused);
           }
           return {
             transport: "websocket",
@@ -524,7 +524,7 @@ export class FreestyleProvider implements VMProvider {
     const existingDaemon = await readReusableRpcLease(vm, service.rpcLeasePath);
     const newDaemon = existingDaemon
       ? null
-      : makeWebSocketLease("freestyle", "rpc", false, CMUXD_WS_RPC_LEASE_TTL_SECONDS);
+      : makeWebSocketLease("freestyle", "rpc", false, BMUXD_WS_RPC_LEASE_TTL_SECONDS);
     const daemon = existingDaemon ?? newDaemon!;
     if (newDaemon) {
       const encodedDaemon = Buffer.from(JSON.stringify(newDaemon.lease)).toString("base64");
@@ -535,8 +535,8 @@ export class FreestyleProvider implements VMProvider {
           ensurePrivateDirectoryCommand(service.rpcLeasePath),
           `printf '%s' '${encodedDaemon}' | base64 -d > ${shellQuote(service.rpcLeasePath)}`,
           `chmod 600 ${shellQuote(service.rpcLeasePath)}`,
-          `printf '%s' '${encodedDaemonClient}' | base64 -d > ${shellQuote(CMUXD_WS_RPC_CLIENT_PATH)}`,
-          `chmod 600 ${shellQuote(CMUXD_WS_RPC_CLIENT_PATH)}`,
+          `printf '%s' '${encodedDaemonClient}' | base64 -d > ${shellQuote(BMUXD_WS_RPC_CLIENT_PATH)}`,
+          `chmod 600 ${shellQuote(BMUXD_WS_RPC_CLIENT_PATH)}`,
         ].join(" && "),
       );
     }
@@ -556,18 +556,18 @@ export class FreestyleProvider implements VMProvider {
    */
   async openSSH(vmId: string): Promise<SSHEndpoint> {
     return withVmSpan(
-      "cmux.vm.provider.open_ssh",
+      "bmux.vm.provider.open_ssh",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "open_ssh",
-        "cmux.vm.id": vmId,
-        "cmux.timeout_ms": DEFAULT_TIMEOUT_MS,
+        "bmux.vm.provider": "freestyle",
+        "bmux.vm.operation": "open_ssh",
+        "bmux.vm.id": vmId,
+        "bmux.timeout_ms": DEFAULT_TIMEOUT_MS,
       },
       async (span) => {
         const fs = client();
         // A fresh identity per attach session. The VM workflow persists the identityId so it can
         // call `revokeSSHIdentity` on VM destroy / before minting a replacement, otherwise
-        // every `cmux vm shell` invocation would leak a live credential under the Freestyle
+        // every `bmux vm shell` invocation would leak a live credential under the Freestyle
         // account indefinitely.
         let identity: Awaited<ReturnType<typeof fs.identities.create>>["identity"] | undefined;
         let identityId = "";
@@ -575,10 +575,10 @@ export class FreestyleProvider implements VMProvider {
           const created = await fs.identities.create({});
           identity = created.identity;
           identityId = created.identityId;
-          setSpanAttributes(span, { "cmux.ssh.identity_created": true });
+          setSpanAttributes(span, { "bmux.ssh.identity_created": true });
           await identity.permissions.vms.grant({
             vmId,
-            allowedUsers: [CMUX_LINUX_USER],
+            allowedUsers: [BMUX_LINUX_USER],
           });
           const { token } = await identity.tokens.create();
           let daemon: WebSocketPtyEndpoint["daemon"] | undefined;
@@ -591,7 +591,7 @@ export class FreestyleProvider implements VMProvider {
             transport: "ssh",
             host: SSH_HOST,
             port: SSH_PORT,
-            username: `${vmId}+${CMUX_LINUX_USER}`,
+            username: `${vmId}+${BMUX_LINUX_USER}`,
             publicKeyFingerprint: null,
             credential: { kind: "password", value: token },
             daemon,
@@ -616,11 +616,11 @@ export class FreestyleProvider implements VMProvider {
   async revokeSSHIdentity(identityHandle: string): Promise<void> {
     if (!identityHandle) return;
     await withVmSpan(
-      "cmux.vm.provider.revoke_ssh_identity",
+      "bmux.vm.provider.revoke_ssh_identity",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "revoke_ssh_identity",
-        "cmux.timeout_ms": DEFAULT_TIMEOUT_MS,
+        "bmux.vm.provider": "freestyle",
+        "bmux.vm.operation": "revoke_ssh_identity",
+        "bmux.timeout_ms": DEFAULT_TIMEOUT_MS,
       },
       async (span) => {
         try {
@@ -641,9 +641,9 @@ function shouldFallbackAttachToSSH(err: unknown): boolean {
     messages.push(errorMessage(err.cause));
   }
   return messages.some((message) =>
-    message.includes("requires a cmuxd RPC endpoint")
-    || message.includes("Freestyle cmuxd websocket health check returned")
-    || message.includes("Freestyle cmuxd websocket health check failed")
+    message.includes("requires a bmuxd RPC endpoint")
+    || message.includes("Freestyle bmuxd websocket health check returned")
+    || message.includes("Freestyle bmuxd websocket health check failed")
   );
 }
 
@@ -669,28 +669,28 @@ type FreestyleAdminAuth =
 type FreestyleAdminSigningConfig = { privateKeySeed: Buffer; publicKey: Buffer };
 
 function freestyleAdminSigningConfig(): FreestyleAdminSigningConfig | null {
-  const seedRaw = process.env.CMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED?.trim();
-  const publicRaw = process.env.CMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY?.trim();
+  const seedRaw = process.env.BMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED?.trim();
+  const publicRaw = process.env.BMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY?.trim();
   if (!seedRaw && !publicRaw) return null;
   if (!seedRaw || !publicRaw) {
     throw new Error(
-      "CMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED and CMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY must be set together",
+      "BMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED and BMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY must be set together",
     );
   }
   const privateKeySeed = decodeBase64Bytes(seedRaw);
   const publicKey = decodeBase64Bytes(publicRaw);
   if (privateKeySeed.length !== 32) {
-    throw new Error("CMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED must decode to 32 bytes");
+    throw new Error("BMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED must decode to 32 bytes");
   }
   if (publicKey.length !== 32) {
-    throw new Error("CMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY must decode to 32 bytes");
+    throw new Error("BMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY must decode to 32 bytes");
   }
   const auth = { kind: "ed25519" as const, privateKeySeed, publicKey };
-  const probe = Buffer.from("cmux-freestyle-admin-signing-config");
+  const probe = Buffer.from("bmux-freestyle-admin-signing-config");
   const signature = Buffer.from(signAdminLeaseBody(auth, probe.toString("utf8")), "base64");
   if (!verify(null, probe, ed25519PublicKeyFromRaw(publicKey), signature)) {
     throw new Error(
-      "CMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED does not match CMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY",
+      "BMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED does not match BMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY",
     );
   }
   return { privateKeySeed, publicKey };
@@ -730,26 +730,26 @@ function ed25519PublicKeyFromRaw(publicKey: Buffer) {
 
 function freestyleWebSocketService(adminToken: string) {
   return {
-    name: "cmuxd-ws",
+    name: "bmuxd-ws",
     mode: "service" as const,
     user: "root",
     after: ["network.target"],
     env: {
-      CMUXD_WS_ADMIN_TOKEN_SHA256: sha256Hex(adminToken),
+      BMUXD_WS_ADMIN_TOKEN_SHA256: sha256Hex(adminToken),
     },
     exec: [
       [
-        "/usr/local/bin/cmuxd-remote",
+        "/usr/local/bin/bmuxd-remote",
         "serve",
         "--ws",
         "--listen",
         "0.0.0.0:7777",
         "--auth-lease-file",
-        CMUXD_WS_PTY_LEASE_PATH,
+        BMUXD_WS_PTY_LEASE_PATH,
         "--rpc-auth-lease-file",
-        CMUXD_WS_RPC_LEASE_PATH,
+        BMUXD_WS_RPC_LEASE_PATH,
         "--shell",
-        CMUX_CLOUD_SHELL_PATH,
+        BMUX_CLOUD_SHELL_PATH,
       ].map(shellQuote).join(" "),
     ],
   };
@@ -759,17 +759,17 @@ function repairedFreestyleWebSocketService(
   auth: { readonly adminToken?: string | null; readonly publicKey?: string | null },
 ): string {
   const env = auth.publicKey
-    ? `Environment=CMUXD_WS_ADMIN_ED25519_PUBLIC_KEY=${auth.publicKey}`
-    : `Environment=CMUXD_WS_ADMIN_TOKEN_SHA256=${sha256Hex(auth.adminToken ?? "")}`;
+    ? `Environment=BMUXD_WS_ADMIN_ED25519_PUBLIC_KEY=${auth.publicKey}`
+    : `Environment=BMUXD_WS_ADMIN_TOKEN_SHA256=${sha256Hex(auth.adminToken ?? "")}`;
   return `[Unit]
-Description=cmux remote WebSocket daemon
+Description=bmux remote WebSocket daemon
 After=network.target
 
 [Service]
 Type=simple
 User=root
 ${env}
-ExecStart=/usr/local/bin/cmuxd-remote serve --ws --listen 0.0.0.0:7777 --auth-lease-file ${CMUXD_WS_PTY_LEASE_PATH} --rpc-auth-lease-file ${CMUXD_WS_RPC_LEASE_PATH} --shell /usr/local/bin/cmux-cloud-shell
+ExecStart=/usr/local/bin/bmuxd-remote serve --ws --listen 0.0.0.0:7777 --auth-lease-file ${BMUXD_WS_PTY_LEASE_PATH} --rpc-auth-lease-file ${BMUXD_WS_RPC_LEASE_PATH} --shell /usr/local/bin/bmux-cloud-shell
 Restart=always
 RestartSec=2
 
@@ -840,13 +840,13 @@ async function repairFreestyleWebSocketService(
   const encodedService = Buffer.from(service).toString("base64");
   const commands = [
     ...freestyleCloudShellSetupCommands(),
-    "mkdir -p /tmp/cmux /usr/local/bin /etc/systemd/system /etc/systemd/system/multi-user.target.wants",
-    "chmod 700 /tmp/cmux",
-    `printf '%s' '${encodedService}' | base64 -d > /etc/systemd/system/cmuxd-ws.service`,
-    "ln -sf /etc/systemd/system/cmuxd-ws.service /etc/systemd/system/multi-user.target.wants/cmuxd-ws.service",
+    "mkdir -p /tmp/bmux /usr/local/bin /etc/systemd/system /etc/systemd/system/multi-user.target.wants",
+    "chmod 700 /tmp/bmux",
+    `printf '%s' '${encodedService}' | base64 -d > /etc/systemd/system/bmuxd-ws.service`,
+    "ln -sf /etc/systemd/system/bmuxd-ws.service /etc/systemd/system/multi-user.target.wants/bmuxd-ws.service",
     "(systemctl daemon-reload >/dev/null 2>&1 || true)",
-    "(systemctl enable cmuxd-ws >/dev/null 2>&1 || true)",
-    "(systemctl restart cmuxd-ws >/dev/null 2>&1 || systemctl start cmuxd-ws >/dev/null 2>&1 || true)",
+    "(systemctl enable bmuxd-ws >/dev/null 2>&1 || true)",
+    "(systemctl restart bmuxd-ws >/dev/null 2>&1 || systemctl start bmuxd-ws >/dev/null 2>&1 || true)",
   ];
   await execFreestyleCommandsOrThrow(vm, commands, 180_000);
 }
@@ -855,21 +855,21 @@ function freestyleCloudShellSetupCommands(): string[] {
   return [
     "export PATH=\"/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}\"",
     "if command -v apt-get >/dev/null 2>&1 && { ! command -v zsh >/dev/null 2>&1 || ! command -v gh >/dev/null 2>&1 || ! command -v htop >/dev/null 2>&1 || ! command -v btop >/dev/null 2>&1 || ! command -v tmux >/dev/null 2>&1; }; then apt-get update >/dev/null 2>&1 || true; DEBIAN_FRONTEND=noninteractive apt-get install -y zsh zsh-autosuggestions gh htop btop tmux >/dev/null 2>&1 || true; fi",
-    "id -u cmux >/dev/null 2>&1 || useradd -m -s \"$(command -v zsh 2>/dev/null || printf /bin/bash)\" cmux",
-    "printf 'cmux ALL=(ALL) NOPASSWD:ALL\\n' > /etc/sudoers.d/90-cmux-nopasswd 2>/dev/null || true",
-    "chmod 0440 /etc/sudoers.d/90-cmux-nopasswd 2>/dev/null || true",
-    "mkdir -p /etc/cmux /home/cmux/.config/cmux /home/cmux/.cmux /tmp/cmux /usr/local/bin",
-    "chmod 700 /tmp/cmux",
-    "chown cmux:cmux /tmp/cmux /home/cmux/.config /home/cmux/.config/cmux /home/cmux/.cmux 2>/dev/null || true",
-    "if [ ! -x /usr/local/bin/cmux ] && [ -x /usr/local/bin/cmuxd-remote ]; then ln -sf /usr/local/bin/cmuxd-remote /usr/local/bin/cmux >/dev/null 2>&1 || true; fi",
-    "cat > /etc/cmux/zshrc <<'CMUX_ZSHRC'\n# cmux default zsh profile. Put personal overrides in ~/.zshrc.local.\nexport PATH=\"/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}\"\nexport SHELL=\"$(command -v zsh 2>/dev/null || printf /bin/bash)\"\nmkdir -p \"$HOME/.cmux\" 2>/dev/null || true\nprintf '%s' '/tmp/cmux-cloud-cli.sock' > \"$HOME/.cmux/socket_addr\" 2>/dev/null || true\nexport CMUX_SOCKET_PATH=\"${CMUX_SOCKET_PATH:-/tmp/cmux-cloud-cli.sock}\"\nautoload -Uz colors 2>/dev/null && colors\nsetopt prompt_subst interactivecomments no_beep hist_ignore_dups share_history 2>/dev/null || true\nPROMPT_EOL_MARK=''\nunsetopt prompt_sp 2>/dev/null || true\nHISTFILE=\"${HISTFILE:-$HOME/.zsh_history}\"\nHISTSIZE=\"${HISTSIZE:-50000}\"\nSAVEHIST=\"${SAVEHIST:-50000}\"\nbindkey -e 2>/dev/null || true\nif [ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then\n  source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh\n  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE=\"${ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE:-fg=8}\"\nfi\n: ${CMUX_PROMPT_USER:=cmux-cloud}\n: ${CMUX_PROMPT_CHAR:=$'\\u03bb'}\nPROMPT='%F{magenta}${CMUX_PROMPT_USER}%f in %F{green}%~%f ${CMUX_PROMPT_CHAR} '\nCMUX_ZSHRC",
-    "if [ ! -e /home/cmux/.zshrc ] || grep -q \"cmux-managed zsh defaults\" /home/cmux/.zshrc 2>/dev/null; then cat > /home/cmux/.zshrc <<'CMUX_USER_ZSHRC'\n# cmux-managed zsh defaults. Edit ~/.zshrc.local for personal overrides.\nmkdir -p \"$HOME/.cmux\" 2>/dev/null || true\nprintf '%s' '/tmp/cmux-cloud-cli.sock' > \"$HOME/.cmux/socket_addr\" 2>/dev/null || true\nexport CMUX_SOCKET_PATH=\"${CMUX_SOCKET_PATH:-/tmp/cmux-cloud-cli.sock}\"\n[ -r /etc/cmux/zshrc ] && source /etc/cmux/zshrc\n[ -r \"$HOME/.zshrc.local\" ] && source \"$HOME/.zshrc.local\"\nif [ \"${CMUX_CLOUD_WELCOME:-1}\" != \"0\" ] && [ -z \"${CMUX_CLOUD_WELCOME_SHOWN:-}\" ] && [ -t 1 ]; then\n  export CMUX_CLOUD_WELCOME_SHOWN=1\n  printf '\\033[38;2;0;212;255m  ::\\033[0m\\n'\n  printf '\\033[38;2;24;181;250m    ::::              \\033[38;2;0;212;255mc\\033[38;2;24;181;250mm\\033[38;2;48;150;245mu\\033[38;2;124;58;237mx cloud\\033[0m\\n'\n  printf '\\033[38;2;48;150;245m      ::::::\\033[0m\\n'\n  printf '\\033[38;2;72;119;241m        ::::::\\033[0m        \\033[38;2;130;130;140mpersistent cloud VM\\033[0m\\n'\n  printf '\\033[38;2;96;88;239m      ::::::\\033[0m          \\033[38;2;130;130;140mready for coding agents\\033[0m\\n'\n  printf '\\033[38;2;110;73;238m    ::::\\033[0m\\n'\n  printf '\\033[38;2;124;58;237m  ::\\033[0m\\n'\n  printf '\\n'\nfi\nCMUX_USER_ZSHRC\nfi",
-    "if [ ! -e /home/cmux/.zshrc.local ]; then cat > /home/cmux/.zshrc.local <<'CMUX_LOCAL_ZSHRC'\n# Personal zsh overrides for this cloud VM.\n# Examples:\n#   CMUX_CLOUD_WELCOME=0\n#   CMUX_PROMPT_USER='cmux-cloud'\n#   CMUX_PROMPT_CHAR='>'\n#   PROMPT='%F{cyan}%n%f:%F{green}%~%f %# '\nCMUX_LOCAL_ZSHRC\nfi",
-    "cat > /usr/local/bin/cmux-cloud-shell <<'CMUX_CLOUD_SHELL'\n#!/bin/sh\ncd /home/cmux 2>/dev/null || true\nexport HOME=/home/cmux\nexport USER=cmux\nexport LOGNAME=cmux\nif command -v zsh >/dev/null 2>&1; then\n  export SHELL=\"$(command -v zsh)\"\n  exec runuser -u cmux -- \"$SHELL\" -l\nfi\nexport SHELL=/bin/bash\nexec runuser -u cmux -- /bin/bash -l\nCMUX_CLOUD_SHELL",
-    "chmod 0755 /usr/local/bin/cmux-cloud-shell",
-    "touch /home/cmux/.hushlogin /etc/cmux/zsh-bootstrap-v6 2>/dev/null || true",
-    "chown cmux:cmux /home/cmux/.zshrc /home/cmux/.zshrc.local /home/cmux/.hushlogin 2>/dev/null || true",
-    "chsh -s \"$(command -v zsh 2>/dev/null || printf /bin/bash)\" cmux >/dev/null 2>&1 || true",
+    "id -u bmux >/dev/null 2>&1 || useradd -m -s \"$(command -v zsh 2>/dev/null || printf /bin/bash)\" bmux",
+    "printf 'bmux ALL=(ALL) NOPASSWD:ALL\\n' > /etc/sudoers.d/90-bmux-nopasswd 2>/dev/null || true",
+    "chmod 0440 /etc/sudoers.d/90-bmux-nopasswd 2>/dev/null || true",
+    "mkdir -p /etc/bmux /home/bmux/.config/bmux /home/bmux/.bmux /tmp/bmux /usr/local/bin",
+    "chmod 700 /tmp/bmux",
+    "chown bmux:bmux /tmp/bmux /home/bmux/.config /home/bmux/.config/bmux /home/bmux/.bmux 2>/dev/null || true",
+    "if [ ! -x /usr/local/bin/bmux ] && [ -x /usr/local/bin/bmuxd-remote ]; then ln -sf /usr/local/bin/bmuxd-remote /usr/local/bin/bmux >/dev/null 2>&1 || true; fi",
+    "cat > /etc/bmux/zshrc <<'BMUX_ZSHRC'\n# bmux default zsh profile. Put personal overrides in ~/.zshrc.local.\nexport PATH=\"/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}\"\nexport SHELL=\"$(command -v zsh 2>/dev/null || printf /bin/bash)\"\nmkdir -p \"$HOME/.bmux\" 2>/dev/null || true\nprintf '%s' '/tmp/bmux-cloud-cli.sock' > \"$HOME/.bmux/socket_addr\" 2>/dev/null || true\nexport BMUX_SOCKET_PATH=\"${BMUX_SOCKET_PATH:-/tmp/bmux-cloud-cli.sock}\"\nautoload -Uz colors 2>/dev/null && colors\nsetopt prompt_subst interactivecomments no_beep hist_ignore_dups share_history 2>/dev/null || true\nPROMPT_EOL_MARK=''\nunsetopt prompt_sp 2>/dev/null || true\nHISTFILE=\"${HISTFILE:-$HOME/.zsh_history}\"\nHISTSIZE=\"${HISTSIZE:-50000}\"\nSAVEHIST=\"${SAVEHIST:-50000}\"\nbindkey -e 2>/dev/null || true\nif [ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then\n  source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh\n  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE=\"${ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE:-fg=8}\"\nfi\n: ${BMUX_PROMPT_USER:=bmux-cloud}\n: ${BMUX_PROMPT_CHAR:=$'\\u03bb'}\nPROMPT='%F{magenta}${BMUX_PROMPT_USER}%f in %F{green}%~%f ${BMUX_PROMPT_CHAR} '\nBMUX_ZSHRC",
+    "if [ ! -e /home/bmux/.zshrc ] || grep -q \"bmux-managed zsh defaults\" /home/bmux/.zshrc 2>/dev/null; then cat > /home/bmux/.zshrc <<'BMUX_USER_ZSHRC'\n# bmux-managed zsh defaults. Edit ~/.zshrc.local for personal overrides.\nmkdir -p \"$HOME/.bmux\" 2>/dev/null || true\nprintf '%s' '/tmp/bmux-cloud-cli.sock' > \"$HOME/.bmux/socket_addr\" 2>/dev/null || true\nexport BMUX_SOCKET_PATH=\"${BMUX_SOCKET_PATH:-/tmp/bmux-cloud-cli.sock}\"\n[ -r /etc/bmux/zshrc ] && source /etc/bmux/zshrc\n[ -r \"$HOME/.zshrc.local\" ] && source \"$HOME/.zshrc.local\"\nif [ \"${BMUX_CLOUD_WELCOME:-1}\" != \"0\" ] && [ -z \"${BMUX_CLOUD_WELCOME_SHOWN:-}\" ] && [ -t 1 ]; then\n  export BMUX_CLOUD_WELCOME_SHOWN=1\n  printf '\\033[38;2;0;212;255m  ::\\033[0m\\n'\n  printf '\\033[38;2;24;181;250m    ::::              \\033[38;2;0;212;255mc\\033[38;2;24;181;250mm\\033[38;2;48;150;245mu\\033[38;2;124;58;237mx cloud\\033[0m\\n'\n  printf '\\033[38;2;48;150;245m      ::::::\\033[0m\\n'\n  printf '\\033[38;2;72;119;241m        ::::::\\033[0m        \\033[38;2;130;130;140mpersistent cloud VM\\033[0m\\n'\n  printf '\\033[38;2;96;88;239m      ::::::\\033[0m          \\033[38;2;130;130;140mready for coding agents\\033[0m\\n'\n  printf '\\033[38;2;110;73;238m    ::::\\033[0m\\n'\n  printf '\\033[38;2;124;58;237m  ::\\033[0m\\n'\n  printf '\\n'\nfi\nBMUX_USER_ZSHRC\nfi",
+    "if [ ! -e /home/bmux/.zshrc.local ]; then cat > /home/bmux/.zshrc.local <<'BMUX_LOCAL_ZSHRC'\n# Personal zsh overrides for this cloud VM.\n# Examples:\n#   BMUX_CLOUD_WELCOME=0\n#   BMUX_PROMPT_USER='bmux-cloud'\n#   BMUX_PROMPT_CHAR='>'\n#   PROMPT='%F{cyan}%n%f:%F{green}%~%f %# '\nBMUX_LOCAL_ZSHRC\nfi",
+    "cat > /usr/local/bin/bmux-cloud-shell <<'BMUX_CLOUD_SHELL'\n#!/bin/sh\ncd /home/bmux 2>/dev/null || true\nexport HOME=/home/bmux\nexport USER=bmux\nexport LOGNAME=bmux\nif command -v zsh >/dev/null 2>&1; then\n  export SHELL=\"$(command -v zsh)\"\n  exec runuser -u bmux -- \"$SHELL\" -l\nfi\nexport SHELL=/bin/bash\nexec runuser -u bmux -- /bin/bash -l\nBMUX_CLOUD_SHELL",
+    "chmod 0755 /usr/local/bin/bmux-cloud-shell",
+    "touch /home/bmux/.hushlogin /etc/bmux/zsh-bootstrap-v6 2>/dev/null || true",
+    "chown bmux:bmux /home/bmux/.zshrc /home/bmux/.zshrc.local /home/bmux/.hushlogin 2>/dev/null || true",
+    "chsh -s \"$(command -v zsh 2>/dev/null || printf /bin/bash)\" bmux >/dev/null 2>&1 || true",
   ];
 }
 
@@ -877,13 +877,13 @@ async function readFreestyleCloudShellState(vm: FreestyleVmRef): Promise<{ ok: t
   const command = [
     "set -u",
     "service_shell=\"\"",
-    "service_text=\"$(cat /etc/systemd/system/cmuxd-ws.service 2>/dev/null; cat /lib/systemd/system/cmuxd-ws.service 2>/dev/null; ps auxww | grep cmuxd-remote | grep -v grep || true)\"",
-    "case \"$service_text\" in *'--shell /usr/local/bin/cmux-cloud-shell'*|*'--shell=/usr/local/bin/cmux-cloud-shell'*) service_shell=ok ;; esac",
+    "service_text=\"$(cat /etc/systemd/system/bmuxd-ws.service 2>/dev/null; cat /lib/systemd/system/bmuxd-ws.service 2>/dev/null; ps auxww | grep bmuxd-remote | grep -v grep || true)\"",
+    "case \"$service_text\" in *'--shell /usr/local/bin/bmux-cloud-shell'*|*'--shell=/usr/local/bin/bmux-cloud-shell'*) service_shell=ok ;; esac",
     "test \"$service_shell\" = ok || { printf '%s\\n' service-shell-not-managed; exit 10; }",
-    "test -x /usr/local/bin/cmux-cloud-shell || { printf '%s\\n' cloud-shell-missing; exit 11; }",
-    "id -u cmux >/dev/null 2>&1 || { printf '%s\\n' cmux-user-missing; exit 12; }",
-    "test -r /etc/cmux/zshrc || { printf '%s\\n' etc-zshrc-missing; exit 13; }",
-    "test -r /home/cmux/.zshrc || { printf '%s\\n' home-zshrc-missing; exit 14; }",
+    "test -x /usr/local/bin/bmux-cloud-shell || { printf '%s\\n' cloud-shell-missing; exit 11; }",
+    "id -u bmux >/dev/null 2>&1 || { printf '%s\\n' bmux-user-missing; exit 12; }",
+    "test -r /etc/bmux/zshrc || { printf '%s\\n' etc-zshrc-missing; exit 13; }",
+    "test -r /home/bmux/.zshrc || { printf '%s\\n' home-zshrc-missing; exit 14; }",
     "command -v zsh >/dev/null 2>&1 || { printf '%s\\n' zsh-missing; exit 15; }",
     "printf '%s\\n' ok",
   ].join(" && ");
@@ -932,7 +932,7 @@ async function installFreestyleLeasesViaDaemon(
   if (auth.kind === "bearer") {
     headers.authorization = `Bearer ${auth.token}`;
   } else {
-    headers["x-cmux-admin-signature-ed25519"] = signAdminLeaseBody(auth, body);
+    headers["x-bmux-admin-signature-ed25519"] = signAdminLeaseBody(auth, body);
   }
   const response = await fetch(`https://${domain}/admin/leases`, {
     method: "POST",
@@ -940,12 +940,12 @@ async function installFreestyleLeasesViaDaemon(
     body,
     signal: AbortSignal.timeout(10_000),
   }).catch((err: unknown) => {
-    throw new Error(`Freestyle cmuxd lease install failed: ${errorMessage(err)}`);
+    throw new Error(`Freestyle bmuxd lease install failed: ${errorMessage(err)}`);
   });
   if (!response.ok) {
     const text = await response.text().catch(() => "");
     throw new Error(
-      `Freestyle cmuxd lease install returned ${response.status}${text ? `: ${text.trim()}` : ""}`,
+      `Freestyle bmuxd lease install returned ${response.status}${text ? `: ${text.trim()}` : ""}`,
     );
   }
 }
@@ -954,10 +954,10 @@ async function ensureFreestyleWebSocketHealthy(domain: string): Promise<void> {
   const response = await fetch(`https://${domain}/healthz`, {
     signal: AbortSignal.timeout(10_000),
   }).catch((err: unknown) => {
-    throw new Error(`Freestyle cmuxd websocket health check failed: ${errorMessage(err)}`);
+    throw new Error(`Freestyle bmuxd websocket health check failed: ${errorMessage(err)}`);
   });
   if (response.status !== 200) {
-    throw new Error(`Freestyle cmuxd websocket health check returned ${response.status}`);
+    throw new Error(`Freestyle bmuxd websocket health check returned ${response.status}`);
   }
 }
 
@@ -968,17 +968,17 @@ async function readFreestyleWebSocketService(vm: FreestyleVmRef): Promise<{
   const result = await execFreestyleOrThrow(
     vm,
     [
-      "cat /etc/systemd/system/cmuxd-ws.service 2>/dev/null || true",
-      "cat /lib/systemd/system/cmuxd-ws.service 2>/dev/null || true",
-      "ps auxww | grep cmuxd-remote | grep -v grep || true",
+      "cat /etc/systemd/system/bmuxd-ws.service 2>/dev/null || true",
+      "cat /lib/systemd/system/bmuxd-ws.service 2>/dev/null || true",
+      "ps auxww | grep bmuxd-remote | grep -v grep || true",
     ].join("; "),
   );
   const stdout = result.stdout ?? "";
   const ptyLeasePath =
     shellArgValue(stdout, "--auth-lease-file")
-    ?? (stdout.includes(CMUXD_WS_LEGACY_PTY_LEASE_PATH)
-      ? CMUXD_WS_LEGACY_PTY_LEASE_PATH
-      : CMUXD_WS_PTY_LEASE_PATH);
+    ?? (stdout.includes(BMUXD_WS_LEGACY_PTY_LEASE_PATH)
+      ? BMUXD_WS_LEGACY_PTY_LEASE_PATH
+      : BMUXD_WS_PTY_LEASE_PATH);
   const rpcLeasePath = shellArgValue(stdout, "--rpc-auth-lease-file");
   return { ptyLeasePath, rpcLeasePath };
 }
@@ -990,8 +990,8 @@ async function readReusableRpcLease(
   const result = await vm.exec({
     command: [
       `test -s ${shellQuote(rpcLeasePath)}`,
-      `test -s ${shellQuote(CMUXD_WS_RPC_CLIENT_PATH)}`,
-      `cat ${shellQuote(CMUXD_WS_RPC_CLIENT_PATH)}`,
+      `test -s ${shellQuote(BMUXD_WS_RPC_CLIENT_PATH)}`,
+      `cat ${shellQuote(BMUXD_WS_RPC_CLIENT_PATH)}`,
     ].join(" && "),
     timeoutMs: 30_000,
   }).catch(() => null);
@@ -1001,7 +1001,7 @@ async function readReusableRpcLease(
     const parsed = JSON.parse(raw) as unknown;
     if (!isReusableRpcLease(parsed)) return null;
     const nowUnix = Math.floor(Date.now() / 1000);
-    if (parsed.expiresAtUnix <= nowUnix + CMUXD_WS_RPC_RENEW_BEFORE_SECONDS) return null;
+    if (parsed.expiresAtUnix <= nowUnix + BMUXD_WS_RPC_RENEW_BEFORE_SECONDS) return null;
     return parsed;
   } catch {
     return null;

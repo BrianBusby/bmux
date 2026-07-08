@@ -83,15 +83,15 @@ describe("billing confirm route", () => {
 
   test("keeps Stripe-backed Pro metadata when the Stack poll sees no Pro product", async () => {
     stripeRows = [{ id: "sub_1" }];
-    getUser.mockResolvedValue(confirmUser({ cmuxPlan: "pro", theme: "dark" }));
+    getUser.mockResolvedValue(confirmUser({ bmuxPlan: "pro", theme: "dark" }));
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/confirm"),
+      new NextRequest("https://bmux.test/api/billing/confirm"),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?welcome=success",
+      "https://bmux.test/pricing?welcome=success",
     );
     expect(appListProducts).toHaveBeenCalledTimes(4);
     expect(userListProducts).toHaveBeenCalledTimes(1);
@@ -100,15 +100,15 @@ describe("billing confirm route", () => {
   });
 
   test("clears stale Pro metadata for a genuinely lapsed user", async () => {
-    getUser.mockResolvedValue(confirmUser({ cmuxPlan: "pro", theme: "dark" }));
+    getUser.mockResolvedValue(confirmUser({ bmuxPlan: "pro", theme: "dark" }));
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/confirm"),
+      new NextRequest("https://bmux.test/api/billing/confirm"),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?welcome=pending",
+      "https://bmux.test/pricing?welcome=pending",
     );
     expect(appListProducts).toHaveBeenCalledTimes(4);
     expect(userListProducts).toHaveBeenCalledTimes(1);

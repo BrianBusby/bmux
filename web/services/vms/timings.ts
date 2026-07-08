@@ -34,7 +34,7 @@ export class VmTimingRecorder implements VmTimingSink {
     options: { readonly startedAt?: number; readonly debugTimings?: boolean } = {},
   ) {
     this.startedAt = options.startedAt ?? performance.now();
-    this.debugTimings = options.debugTimings ?? process.env.CMUX_VM_DEBUG_TIMINGS === "1";
+    this.debugTimings = options.debugTimings ?? process.env.BMUX_VM_DEBUG_TIMINGS === "1";
   }
 
   record(stage: VmTimingStage, durationMs: number): void {
@@ -43,8 +43,8 @@ export class VmTimingRecorder implements VmTimingSink {
     const count = (this.counts.get(stage) ?? 0) + 1;
     this.durations.set(stage, total);
     this.counts.set(stage, count);
-    this.span.setAttribute(`cmux.vm.timing.${stage}_ms`, total);
-    this.span.setAttribute(`cmux.vm.timing.${stage}_count`, count);
+    this.span.setAttribute(`bmux.vm.timing.${stage}_ms`, total);
+    this.span.setAttribute(`bmux.vm.timing.${stage}_count`, count);
   }
 
   finish(context: Record<string, unknown> = {}): void {
@@ -52,7 +52,7 @@ export class VmTimingRecorder implements VmTimingSink {
     this.finished = true;
     this.record("total", performance.now() - this.startedAt);
     if (!this.debugTimings) return;
-    console.info("cmux vm timings", JSON.stringify({
+    console.info("bmux vm timings", JSON.stringify({
       operation: this.operation,
       ...context,
       timings: this.snapshot(),
@@ -67,7 +67,7 @@ export class VmTimingRecorder implements VmTimingSink {
 }
 
 export function recordSpanTiming(span: Span, stage: VmTimingStage, durationMs: number): void {
-  span.setAttribute(`cmux.vm.timing.${stage}_ms`, roundedMs(durationMs));
+  span.setAttribute(`bmux.vm.timing.${stage}_ms`, roundedMs(durationMs));
 }
 
 export function measureVmEffect<A, E, R>(

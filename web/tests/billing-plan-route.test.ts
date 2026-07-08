@@ -112,7 +112,7 @@ describe("billing plan route", () => {
     currentUser = planUser({
       selectedTeam: {
         id: "team-plan",
-        clientReadOnlyMetadata: { cmuxPlan: "team" },
+        clientReadOnlyMetadata: { bmuxPlan: "team" },
       },
     });
     stripeSubscriptionResults = [[], []];
@@ -134,7 +134,7 @@ describe("billing plan route", () => {
 });
 
 async function planResponse() {
-  const response = await GET(new NextRequest("https://cmux.test/api/billing/plan"));
+  const response = await GET(new NextRequest("https://bmux.test/api/billing/plan"));
   return response.json() as Promise<Record<string, unknown>>;
 }
 

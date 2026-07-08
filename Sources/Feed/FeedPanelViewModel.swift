@@ -1,5 +1,5 @@
-import CmuxFoundation
-import CMUXAgentLaunch
+import BmuxFoundation
+import BMUXAgentLaunch
 import Foundation
 import Observation
 import SwiftUI
@@ -68,7 +68,7 @@ struct FeedHistoryLoadMoreRow: View {
                         .frame(width: 12, height: 12)
                 }
                 Text(label)
-                    .cmuxFont(size: 11, weight: .medium)
+                    .bmuxFont(size: 11, weight: .medium)
                     .foregroundColor(.secondary)
             }
             .frame(maxWidth: .infinity)

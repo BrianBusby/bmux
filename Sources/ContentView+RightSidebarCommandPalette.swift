@@ -1,7 +1,7 @@
 import AppKit
-import CmuxCommandPalette
-import CmuxSidebar
-import CmuxSwiftRender
+import BmuxCommandPalette
+import BmuxSidebar
+import BmuxSwiftRender
 
 extension ContentView {
     static func commandPaletteShortcutAction(forCommandID commandId: String) -> KeyboardShortcutSettings.Action? {

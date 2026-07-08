@@ -17,7 +17,7 @@ import sys
 import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from cmux import cmux, cmuxError
+from bmux import bmux, bmuxError
 
 
 DRAG_EVENTS = [
@@ -50,7 +50,7 @@ NON_DRAG_EVENTS = [
 ]
 
 
-def wait_for_overlay_probe_ready(client: cmux, timeout_s: float = 8.0) -> None:
+def wait_for_overlay_probe_ready(client: bmux, timeout_s: float = 8.0) -> None:
     start = time.time()
     last_error = None
     while time.time() - start < timeout_s:
@@ -62,69 +62,69 @@ def wait_for_overlay_probe_ready(client: cmux, timeout_s: float = 8.0) -> None:
         except Exception as e:
             last_error = e
             time.sleep(0.1)
-    raise cmuxError(f"overlay_hit_gate probe unavailable: {last_error}")
+    raise bmuxError(f"overlay_hit_gate probe unavailable: {last_error}")
 
 
-def assert_gate(client: cmux, event_type: str, expected: bool, reason: str) -> None:
+def assert_gate(client: bmux, event_type: str, expected: bool, reason: str) -> None:
     got = client.overlay_hit_gate(event_type)
     if got != expected:
-        raise cmuxError(
+        raise bmuxError(
             f"overlay_hit_gate({event_type}) expected {expected} got {got} ({reason})"
         )
 
 
-def assert_drop_gate(client: cmux, source: str, expected: bool, reason: str) -> None:
+def assert_drop_gate(client: bmux, source: str, expected: bool, reason: str) -> None:
     got = client.overlay_drop_gate(source)
     if got != expected:
-        raise cmuxError(
+        raise bmuxError(
             f"overlay_drop_gate({source}) expected {expected} got {got} ({reason})"
         )
 
 
-def assert_portal_gate(client: cmux, event_type: str, expected: bool, reason: str) -> None:
+def assert_portal_gate(client: bmux, event_type: str, expected: bool, reason: str) -> None:
     got = client.portal_hit_gate(event_type)
     if got != expected:
-        raise cmuxError(
+        raise bmuxError(
             f"portal_hit_gate({event_type}) expected {expected} got {got} ({reason})"
         )
 
 
-def assert_sidebar_gate(client: cmux, state: str, expected: bool, reason: str) -> None:
+def assert_sidebar_gate(client: bmux, state: str, expected: bool, reason: str) -> None:
     got = client.sidebar_overlay_gate(state)
     if got != expected:
-        raise cmuxError(
+        raise bmuxError(
             f"sidebar_overlay_gate({state}) expected {expected} got {got} ({reason})"
         )
 
 
 def assert_hit_chain_routes_to_pane(
-    client: cmux,
+    client: bmux,
     x: float = 0.75,
     y: float = 0.50,
     reason: str = "",
 ) -> None:
     chain = client.drag_hit_chain(x, y)
     if chain == "none":
-        raise cmuxError(
+        raise bmuxError(
             f"drag_hit_chain({x},{y}) returned none ({reason})"
         )
     # This probe is intended to catch root-level overlay capture regressions.
     # Depending on current AppKit event context, drag hit-testing can resolve
     # through either pane-local SwiftUI wrappers or portal-hosted terminal views.
     if "FileDropOverlayView" in chain:
-        raise cmuxError(
+        raise bmuxError(
             f"drag_hit_chain({x},{y}) unexpectedly captured by FileDropOverlayView ({reason}); chain={chain}"
         )
 
 
 def main() -> int:
-    socket_path = cmux.default_socket_path()
+    socket_path = bmux.default_socket_path()
     if not os.path.exists(socket_path):
         print(f"SKIP: Socket not found at {socket_path}")
-        print("Tip: start cmux first (or set CMUX_TAG / CMUX_SOCKET_PATH).")
+        print("Tip: start bmux first (or set BMUX_TAG / BMUX_SOCKET_PATH).")
         return 0
 
-    with cmux(socket_path) as client:
+    with bmux(socket_path) as client:
         ws_id = None
         try:
             client.activate_app()
@@ -233,6 +233,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except cmuxError as e:
+    except bmuxError as e:
         print(f"FAIL: {e}")
         raise SystemExit(1)

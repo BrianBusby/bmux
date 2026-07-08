@@ -66,7 +66,7 @@ esac
 FIXTURE_ROOT="$TMP_DIR/fixture"
 ZIG_NAME="zig-${ZIG_ARCH}-${ZIG_OS}-${ZIG_REQUIRED}"
 ARCHIVE="$TMP_DIR/${ZIG_NAME}.tar.xz"
-DEFAULT_INSTALL_ROOT="/tmp/cmux-zig-ci/$ZIG_NAME"
+DEFAULT_INSTALL_ROOT="/tmp/bmux-zig-ci/$ZIG_NAME"
 SHARED_TMP_ZIG_DIR="/tmp/$ZIG_NAME"
 SHARED_TMP_MARKER="$SHARED_TMP_ZIG_DIR/keep.txt"
 BIN_DIR="$TMP_DIR/bin"
@@ -205,9 +205,9 @@ if ! grep -Fxq "$(dirname "$EXPECTED_INSTALLED_ZIG")" "$GITHUB_PATH_FILE"; then
   exit 1
 fi
 
-if ! grep -Fxq "CMUX_ZIG=$EXPECTED_INSTALLED_ZIG" "$GITHUB_ENV_FILE"; then
+if ! grep -Fxq "BMUX_ZIG=$EXPECTED_INSTALLED_ZIG" "$GITHUB_ENV_FILE"; then
   cat "$OUTPUT_FILE"
-  echo "FAIL: installer did not publish CMUX_ZIG" >&2
+  echo "FAIL: installer did not publish BMUX_ZIG" >&2
   exit 1
 fi
 
@@ -311,9 +311,9 @@ if ! grep -Fxq "$EXPECTED_SUDO_BIN_DIR" "$SUDO_GITHUB_PATH_FILE"; then
   exit 1
 fi
 
-if ! grep -Fxq "CMUX_ZIG=$EXPECTED_SUDO_BIN_DIR/zig" "$SUDO_GITHUB_ENV_FILE"; then
+if ! grep -Fxq "BMUX_ZIG=$EXPECTED_SUDO_BIN_DIR/zig" "$SUDO_GITHUB_ENV_FILE"; then
   cat "$SUDO_OUTPUT_FILE"
-  echo "FAIL: sudo install did not publish CMUX_ZIG" >&2
+  echo "FAIL: sudo install did not publish BMUX_ZIG" >&2
   exit 1
 fi
 
@@ -367,9 +367,9 @@ if ! grep -Fxq "$EXPECTED_FORCE_LOCAL_INSTALL_ROOT" "$FORCE_LOCAL_GITHUB_PATH_FI
   exit 1
 fi
 
-if ! grep -Fxq "CMUX_ZIG=$EXPECTED_FORCE_LOCAL_INSTALL_ROOT/zig" "$FORCE_LOCAL_GITHUB_ENV_FILE"; then
+if ! grep -Fxq "BMUX_ZIG=$EXPECTED_FORCE_LOCAL_INSTALL_ROOT/zig" "$FORCE_LOCAL_GITHUB_ENV_FILE"; then
   cat "$FORCE_LOCAL_OUTPUT_FILE"
-  echo "FAIL: force-local install did not publish CMUX_ZIG" >&2
+  echo "FAIL: force-local install did not publish BMUX_ZIG" >&2
   exit 1
 fi
 
@@ -410,9 +410,9 @@ if ! grep -Fxq "$EXPECTED_DEFAULT_INSTALL_ROOT" "$DEFAULT_GITHUB_PATH_FILE"; the
   exit 1
 fi
 
-if ! grep -Fxq "CMUX_ZIG=$EXPECTED_DEFAULT_INSTALL_ROOT/zig" "$DEFAULT_GITHUB_ENV_FILE"; then
+if ! grep -Fxq "BMUX_ZIG=$EXPECTED_DEFAULT_INSTALL_ROOT/zig" "$DEFAULT_GITHUB_ENV_FILE"; then
   cat "$DEFAULT_OUTPUT_FILE"
-  echo "FAIL: missing RUNNER_TEMP fallback did not publish CMUX_ZIG" >&2
+  echo "FAIL: missing RUNNER_TEMP fallback did not publish BMUX_ZIG" >&2
   exit 1
 fi
 

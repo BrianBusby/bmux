@@ -33,7 +33,7 @@ pub struct SurfaceOptions {
     pub cols: u16,
     pub rows: u16,
     pub scrollback: usize,
-    /// Extra environment for children (e.g. CMUX_MUX_SOCKET).
+    /// Extra environment for children (e.g. BMUX_MUX_SOCKET).
     pub extra_env: Vec<(String, String)>,
     /// Optional Chrome/Chromium binary for browser surfaces.
     pub chrome_binary: Option<String>,
@@ -60,7 +60,7 @@ impl Default for SurfaceOptions {
         SurfaceOptions {
             command: None,
             cwd: None,
-            term: std::env::var("CMUX_MUX_TERM").unwrap_or_else(|_| "xterm-256color".into()),
+            term: std::env::var("BMUX_MUX_TERM").unwrap_or_else(|_| "xterm-256color".into()),
             cols: 80,
             rows: 24,
             scrollback: 10_000,

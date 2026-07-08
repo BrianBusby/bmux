@@ -7,7 +7,7 @@ End-to-end release via PR flow: bump version, update changelog, create PR, merge
 ### Phase 1: Version bump, changelog, PR, merge, tag
 
 1. **Determine the new version number**
-   - Get the current version from `cmux.xcodeproj/project.pbxproj` (look for `MARKETING_VERSION`)
+   - Get the current version from `bmux.xcodeproj/project.pbxproj` (look for `MARKETING_VERSION`)
    - Bump the minor version unless the user specifies otherwise (e.g., 0.48.0 → 0.49.0)
 
 2. **Create a release branch**
@@ -20,11 +20,11 @@ End-to-end release via PR flow: bump version, update changelog, create PR, merge
    - Categorize changes into: Added, Changed, Fixed, Removed
    - **Collect contributors:** For each PR referenced in the commits, get the author:
      ```bash
-     gh pr view <N> --repo manaflow-ai/cmux --json author --jq '.author.login'
+     gh pr view <N> --repo manaflow-ai/bmux --json author --jq '.author.login'
      ```
    - Also check for linked issue reporters (the person who filed the bug):
      ```bash
-     gh issue view <N> --repo manaflow-ai/cmux --json author --jq '.author.login'
+     gh issue view <N> --repo manaflow-ai/bmux --json author --jq '.author.login'
      ```
    - Build a deduplicated list of all contributor `@handle`s for the release
 
@@ -40,7 +40,7 @@ End-to-end release via PR flow: bump version, update changelog, create PR, merge
    - Run `./scripts/bump-version.sh` (bumps minor by default)
 
 6. **Commit and push the release branch**
-   - Stage: `CHANGELOG.md`, `cmux.xcodeproj/project.pbxproj`
+   - Stage: `CHANGELOG.md`, `bmux.xcodeproj/project.pbxproj`
    - Commit message: `Bump version to X.Y.Z`
    - Push: `git push -u origin release/vX.Y.Z`
 
@@ -65,7 +65,7 @@ End-to-end release via PR flow: bump version, update changelog, create PR, merge
 
 This script handles: GhosttyKit build, xcodebuild, Sparkle key injection, codesigning, notarization (app + DMG), appcast generation, GitHub release upload, and cleanup.
 
-If the script fails, run `say "cmux release failed"`.
+If the script fails, run `say "bmux release failed"`.
 
 ## Changelog Guidelines
 

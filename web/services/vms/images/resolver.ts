@@ -12,7 +12,7 @@ export type VmImageManifestEntry = {
   readonly features?: {
     readonly bakedFreestyleSignedAdmin?: boolean;
   };
-  readonly cmuxdRemoteCommit: string;
+  readonly bmuxdRemoteCommit: string;
   readonly builtAt: string;
   readonly builderScriptVersion: string;
   readonly agentToolResolvedVersions?: Record<string, string>;
@@ -35,7 +35,7 @@ const typedManifest = manifest as {
 export function providerImageEnvKey(provider: ProviderId): string {
   switch (provider) {
     case "e2b":
-      return "E2B_CMUXD_WS_TEMPLATE";
+      return "E2B_BMUXD_WS_TEMPLATE";
     case "freestyle":
       return "FREESTYLE_SANDBOX_SNAPSHOT";
     case "daytona":

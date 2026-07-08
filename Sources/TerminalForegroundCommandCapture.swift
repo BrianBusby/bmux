@@ -1,4 +1,4 @@
-import CMUXAgentLaunch
+import BMUXAgentLaunch
 import Foundation
 
 /// Resolves the shell command to save for each live terminal when capturing a
@@ -8,15 +8,15 @@ enum TerminalForegroundCommandCapture {
 
     /// Foreground, non-shell command lines keyed by tty device id. Identity
     /// comes from the workspace-owned panel→tty mapping — never from the
-    /// child process's ambient CMUX_* environment, which any foreground
+    /// child process's ambient BMUX_* environment, which any foreground
     /// process can override or carry stale.
     static func liveCommands(forTTYDevices ttyDevices: Set<Int64>) -> [Int64: String] {
         guard !ttyDevices.isEmpty else { return [:] }
-        let processes = CmuxTopProcessSnapshot.allProcesses(
+        let processes = BmuxTopProcessSnapshot.allProcesses(
             includeProcessDetails: true,
-            includeCMUXScope: false
+            includeBMUXScope: false
         )
-        var bestByTTY: [Int64: CmuxTopProcessInfo] = [:]
+        var bestByTTY: [Int64: BmuxTopProcessInfo] = [:]
         for process in processes {
             guard let ttyDevice = process.ttyDevice,
                   ttyDevices.contains(ttyDevice),
@@ -45,7 +45,7 @@ enum TerminalForegroundCommandCapture {
 
     /// Prefer the process-group leader (the command the shell launched); break
     /// ties toward the older (lower) pid.
-    private static func isPreferred(_ candidate: CmuxTopProcessInfo, over existing: CmuxTopProcessInfo) -> Bool {
+    private static func isPreferred(_ candidate: BmuxTopProcessInfo, over existing: BmuxTopProcessInfo) -> Bool {
         let candidateIsLeader = candidate.processGroupID == candidate.pid
         let existingIsLeader = existing.processGroupID == existing.pid
         if candidateIsLeader != existingIsLeader {

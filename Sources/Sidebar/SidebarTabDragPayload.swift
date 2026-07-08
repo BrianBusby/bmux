@@ -3,10 +3,10 @@ import UniformTypeIdentifiers
 
 /// Internal workspace-sidebar drag payload for reordering and cross-window moves.
 struct SidebarTabDragPayload {
-    static let typeIdentifier = "com.cmux.sidebar-tab-reorder"
+    static let typeIdentifier = "com.bmux.sidebar-tab-reorder"
     static let dropContentType = UTType(exportedAs: typeIdentifier)
     static let dropContentTypes: [UTType] = [dropContentType]
-    static let prefix = "cmux.sidebar-tab."
+    static let prefix = "bmux.sidebar-tab."
 
     let tabId: UUID
 

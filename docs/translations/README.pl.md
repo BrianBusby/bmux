@@ -1,11 +1,11 @@
 > To tłumaczenie zostało wygenerowane przez Claude. Jeśli masz sugestie dotyczące poprawek, otwórz PR.
 
-<h1 align="center">cmux</h1>
+<h1 align="center">bmux</h1>
 <p align="center">Terminal macOS oparty na Ghostty z pionowymi kartami i powiadomieniami dla agentów kodowania AI</p>
 
 <p align="center">
-  <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-    <img src="../assets/macos-badge.png" alt="Pobierz cmux dla macOS" width="180" />
+  <a href="https://github.com/manaflow-ai/bmux/releases/latest/download/bmux-macos.dmg">
+    <img src="../assets/macos-badge.png" alt="Pobierz bmux dla macOS" width="180" />
   </a>
 </p>
 
@@ -16,15 +16,15 @@
 <p align="center">
   <a href="https://x.com/manaflowai"><img src="https://img.shields.io/badge/@manaflow-555?logo=x" alt="X / Twitter" /></a>
   <a href="https://discord.gg/xsgFEVrWCZ"><img src="https://img.shields.io/badge/Discord-555?logo=discord" alt="Discord" /></a>
-  <a href="https://github.com/manaflow-ai/cmux"><img src="https://img.shields.io/github/stars/manaflow-ai/cmux?style=flat&logo=github&label=stars&color=4c71f2" alt="GitHub stars" /></a>
+  <a href="https://github.com/manaflow-ai/bmux"><img src="https://img.shields.io/github/stars/manaflow-ai/bmux?style=flat&logo=github&label=stars&color=4c71f2" alt="GitHub stars" /></a>
 </p>
 
 <p align="center">
-  <img src="../assets/main-first-image.png" alt="Zrzut ekranu cmux" width="900" />
+  <img src="../assets/main-first-image.png" alt="Zrzut ekranu bmux" width="900" />
 </p>
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=i-WxO5YUTOs">▶ Film demonstracyjny</a> · <a href="https://cmux.com/blog/zen-of-cmux">The Zen of cmux</a>
+  <a href="https://www.youtube.com/watch?v=i-WxO5YUTOs">▶ Film demonstracyjny</a> · <a href="https://bmux.com/blog/zen-of-bmux">The Zen of bmux</a>
 </p>
 
 ## Funkcje
@@ -69,16 +69,16 @@ Pasek boczny pokazuje gałąź git, status/numer powiązanego PR, katalog robocz
 <tr>
 <td width="40%" valign="middle">
 <h3>SSH</h3>
-<code>cmux ssh user@remote</code> tworzy przestrzeń roboczą dla zdalnej maszyny. Panele przeglądarki kierowane są przez zdalną sieć, więc localhost po prostu działa. Przeciągnij obraz do sesji zdalnej, aby przesłać go przez scp.
+<code>bmux ssh user@remote</code> tworzy przestrzeń roboczą dla zdalnej maszyny. Panele przeglądarki kierowane są przez zdalną sieć, więc localhost po prostu działa. Przeciągnij obraz do sesji zdalnej, aby przesłać go przez scp.
 </td>
 <td width="60%">
-<img src="../assets/ssh.png" alt="cmux SSH" width="100%" />
+<img src="../assets/ssh.png" alt="bmux SSH" width="100%" />
 </td>
 </tr>
 <tr>
 <td width="40%" valign="middle">
 <h3>Claude Code Teams</h3>
-<code>cmux claude-teams</code> uruchamia tryb współpracy Claude Code jednym poleceniem. Współpracownicy pojawiają się jako natywne podziały z metadanymi w pasku bocznym i powiadomieniami. Nie wymaga tmux.
+<code>bmux claude-teams</code> uruchamia tryb współpracy Claude Code jednym poleceniem. Współpracownicy pojawiają się jako natywne podziały z metadanymi w pasku bocznym i powiadomieniami. Nie wymaga tmux.
 </td>
 <td width="60%">
 <img src="../assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
@@ -87,56 +87,56 @@ Pasek boczny pokazuje gałąź git, status/numer powiązanego PR, katalog robocz
 </table>
 
 - **Import z przeglądarki** — Importuj ciasteczka, historię i sesje z Chrome, Firefox, Arc i ponad 20 innych przeglądarek, aby panele przeglądarki uruchamiały się z autoryzacją
-- **Własne polecenia** — Definiuj akcje specyficzne dla projektu w [`cmux.json`](https://cmux.com/docs/custom-commands), które uruchamiają się z palety poleceń
+- **Własne polecenia** — Definiuj akcje specyficzne dla projektu w [`bmux.json`](https://bmux.com/docs/custom-commands), które uruchamiają się z palety poleceń
 - **Skryptowalny** — CLI i socket API do tworzenia przestrzeni roboczych, dzielenia paneli, wysyłania naciśnięć klawiszy i automatyzacji przeglądarki
 - **Natywna aplikacja macOS** — Zbudowana w Swift i AppKit, nie Electron. Szybki start, niskie zużycie pamięci.
 - **Kompatybilny z Ghostty** — Odczytuje istniejącą konfigurację `~/.config/ghostty/config` dla motywów, czcionek i kolorów
 - **Akceleracja GPU** — Napędzany przez libghostty dla płynnego renderowania
-- **Skróty klawiszowe** — [Rozbudowane skróty](https://cmux.com/docs/keyboard-shortcuts) dla przestrzeni roboczych, podziałów, przeglądarki i więcej
+- **Skróty klawiszowe** — [Rozbudowane skróty](https://bmux.com/docs/keyboard-shortcuts) dla przestrzeni roboczych, podziałów, przeglądarki i więcej
 - **Open source** — Darmowy i na licencji GPL
 
 ## Instalacja
 
 ### DMG (zalecane)
 
-<a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-  <img src="../assets/macos-badge.png" alt="Pobierz cmux dla macOS" width="180" />
+<a href="https://github.com/manaflow-ai/bmux/releases/latest/download/bmux-macos.dmg">
+  <img src="../assets/macos-badge.png" alt="Pobierz bmux dla macOS" width="180" />
 </a>
 
-Otwórz plik `.dmg` i przeciągnij cmux do folderu Aplikacje. cmux aktualizuje się automatycznie przez Sparkle, więc musisz pobrać go tylko raz.
+Otwórz plik `.dmg` i przeciągnij bmux do folderu Aplikacje. bmux aktualizuje się automatycznie przez Sparkle, więc musisz pobrać go tylko raz.
 
 ### Homebrew
 
 ```bash
-brew tap manaflow-ai/cmux
-brew install --cask cmux
+brew tap manaflow-ai/bmux
+brew install --cask bmux
 ```
 
 Aby zaktualizować później:
 
 ```bash
-brew upgrade --cask cmux
+brew upgrade --cask bmux
 ```
 
 Przy pierwszym uruchomieniu macOS może poprosić o potwierdzenie otwarcia aplikacji od zidentyfikowanego dewelopera. Kliknij **Otwórz**, aby kontynuować.
 
-## Dlaczego cmux?
+## Dlaczego bmux?
 
 Uruchamiam wiele sesji Claude Code i Codex równolegle. Używałem Ghostty z masą podzielonych paneli i polegałem na natywnych powiadomieniach macOS, żeby wiedzieć, kiedy agent mnie potrzebuje. Ale treść powiadomienia Claude Code to zawsze tylko „Claude is waiting for your input" bez kontekstu, a przy wystarczającej liczbie otwartych kart nie mogłem nawet przeczytać tytułów.
 
-Wypróbowałem kilka orkiestratorów kodowania, ale większość z nich to aplikacje Electron/Tauri, a ich wydajność mi przeszkadzała. Po prostu wolę też terminal, ponieważ orkiestratory GUI zamykają cię w swoim przepływie pracy. Dlatego zbudowałem cmux jako natywną aplikację macOS w Swift/AppKit. Używa libghostty do renderowania terminala i odczytuje istniejącą konfigurację Ghostty dla motywów, czcionek i kolorów.
+Wypróbowałem kilka orkiestratorów kodowania, ale większość z nich to aplikacje Electron/Tauri, a ich wydajność mi przeszkadzała. Po prostu wolę też terminal, ponieważ orkiestratory GUI zamykają cię w swoim przepływie pracy. Dlatego zbudowałem bmux jako natywną aplikację macOS w Swift/AppKit. Używa libghostty do renderowania terminala i odczytuje istniejącą konfigurację Ghostty dla motywów, czcionek i kolorów.
 
-Główne dodatki to pasek boczny i system powiadomień. Pasek boczny ma pionowe karty pokazujące gałąź git, status/numer powiązanego PR, katalog roboczy, nasłuchujące porty i tekst ostatniego powiadomienia dla każdej przestrzeni roboczej. System powiadomień przechwytuje sekwencje terminala (OSC 9/99/777) i ma CLI (`cmux notify`), który można podpiąć do hooków agentów dla Claude Code, OpenCode itp. Gdy agent czeka, jego panel otrzymuje niebieski pierścień, a karta podświetla się w pasku bocznym, więc mogę powiedzieć, który mnie potrzebuje, niezależnie od podziałów i kart. Cmd+Shift+U przeskakuje do najnowszego nieprzeczytanego.
+Główne dodatki to pasek boczny i system powiadomień. Pasek boczny ma pionowe karty pokazujące gałąź git, status/numer powiązanego PR, katalog roboczy, nasłuchujące porty i tekst ostatniego powiadomienia dla każdej przestrzeni roboczej. System powiadomień przechwytuje sekwencje terminala (OSC 9/99/777) i ma CLI (`bmux notify`), który można podpiąć do hooków agentów dla Claude Code, OpenCode itp. Gdy agent czeka, jego panel otrzymuje niebieski pierścień, a karta podświetla się w pasku bocznym, więc mogę powiedzieć, który mnie potrzebuje, niezależnie od podziałów i kart. Cmd+Shift+U przeskakuje do najnowszego nieprzeczytanego.
 
 Wbudowana przeglądarka ma skryptowalny API przeniesiony z [agent-browser](https://github.com/vercel-labs/agent-browser). Agenci mogą wykonać migawkę drzewa dostępności, uzyskać referencje elementów, klikać, wypełniać formularze i ewaluować JS. Możesz podzielić panel przeglądarki obok terminala i pozwolić Claude Code bezpośrednio komunikować się z Twoim serwerem deweloperskim.
 
 Wszystko jest skryptowalne przez CLI i socket API — tworzenie przestrzeni roboczych/kart, dzielenie paneli, wysyłanie naciśnięć klawiszy, otwieranie URL-ów w przeglądarce.
 
-## The Zen of cmux
+## The Zen of bmux
 
-cmux nie narzuca programistom sposobu korzystania z narzędzi. To terminal i przeglądarka z CLI, a reszta zależy od Ciebie.
+bmux nie narzuca programistom sposobu korzystania z narzędzi. To terminal i przeglądarka z CLI, a reszta zależy od Ciebie.
 
-cmux jest prymitywem, nie rozwiązaniem. Daje Ci terminal, przeglądarkę, powiadomienia, przestrzenie robocze, podziały, karty i CLI do kontrolowania tego wszystkiego. cmux nie zmusza Cię do określonego sposobu korzystania z agentów kodowania. To, co zbudujesz z tych prymitywów, jest Twoje.
+bmux jest prymitywem, nie rozwiązaniem. Daje Ci terminal, przeglądarkę, powiadomienia, przestrzenie robocze, podziały, karty i CLI do kontrolowania tego wszystkiego. bmux nie zmusza Cię do określonego sposobu korzystania z agentów kodowania. To, co zbudujesz z tych prymitywów, jest Twoje.
 
 Najlepsi programiści zawsze budowali własne narzędzia. Nikt jeszcze nie wymyślił najlepszego sposobu pracy z agentami, a zespoły budujące zamknięte produkty też tego nie odkryły. Programiści najbliżej swoich własnych baz kodu wymyślą to pierwsi.
 
@@ -144,7 +144,7 @@ Daj milionowi programistów kompozycyjne prymitywy, a wspólnie znajdą najefekt
 
 ## Dokumentacja
 
-Więcej informacji o konfiguracji cmux znajdziesz w [naszej dokumentacji](https://cmux.com/docs/getting-started?utm_source=readme).
+Więcej informacji o konfiguracji bmux znajdziesz w [naszej dokumentacji](https://bmux.com/docs/getting-started?utm_source=readme).
 
 ## Skróty Klawiszowe
 
@@ -242,43 +242,43 @@ Skróty nawigacji w palecie poleceń, w tym ⌃ P, również można dostosować 
 
 ## Wersje Nightly
 
-[Pobierz cmux NIGHTLY](https://github.com/manaflow-ai/cmux/releases/download/nightly/cmux-nightly-macos.dmg)
+[Pobierz bmux NIGHTLY](https://github.com/manaflow-ai/bmux/releases/download/nightly/bmux-nightly-macos.dmg)
 
-cmux NIGHTLY to osobna aplikacja z własnym identyfikatorem pakietu, więc działa obok wersji stabilnej. Budowana automatycznie z najnowszego commitu `main` i aktualizuje się automatycznie przez własny kanał Sparkle.
+bmux NIGHTLY to osobna aplikacja z własnym identyfikatorem pakietu, więc działa obok wersji stabilnej. Budowana automatycznie z najnowszego commitu `main` i aktualizuje się automatycznie przez własny kanał Sparkle.
 
-Zgłaszaj błędy wersji nightly w [GitHub Issues](https://github.com/manaflow-ai/cmux/issues) lub na [#nightly-bugs na Discordzie](https://discord.gg/xsgFEVrWCZ).
+Zgłaszaj błędy wersji nightly w [GitHub Issues](https://github.com/manaflow-ai/bmux/issues) lub na [#nightly-bugs na Discordzie](https://discord.gg/xsgFEVrWCZ).
 
 ## Przywracanie sesji
 
-Po zamknięciu cmux zapisuje bieżącą sesję. Po ponownym uruchomieniu cmux przywraca stan należący do aplikacji:
+Po zamknięciu bmux zapisuje bieżącą sesję. Po ponownym uruchomieniu bmux przywraca stan należący do aplikacji:
 - Układ okien/przestrzeni roboczych/paneli
 - Katalogi robocze
 - Scrollback terminala (najlepsza próba)
 - URL przeglądarki i historia nawigacji
 
-cmux nie tworzy checkpointów dowolnego stanu działających procesów. tmux, vim, powłoki i nieobsługiwane aplikacje terminalowe otwierają się ponownie jako zwykłe terminale.
+bmux nie tworzy checkpointów dowolnego stanu działających procesów. tmux, vim, powłoki i nieobsługiwane aplikacje terminalowe otwierają się ponownie jako zwykłe terminale.
 
 Obsługiwane sesje agentów mogą zostać wznowione, gdy hooks zapiszą natywny ID sesji. Zainstaluj hooks po zainstalowaniu CLI agenta, aby jego plik binarny znalazł się w `PATH`:
 
 ```bash
-cmux hooks setup
-cmux hooks setup codex
-cmux hooks setup --agent opencode
+bmux hooks setup
+bmux hooks setup codex
+bmux hooks setup --agent opencode
 ```
 
-`cmux hooks setup` instaluje obsługiwanych agentów, których może znaleźć, i wypisuje podsumowanie dla pominiętych agentów. Obsługiwane integracje wznawiania obejmują Claude Code, Codex, Grok, OpenCode, Pi, Amp, Cursor CLI, Gemini, Rovo Dev, Copilot, CodeBuddy, Factory i Qoder. Claude Code jest obsługiwany przez wrapper Claude cmux, gdy integracja Claude jest włączona w Ustawieniach.
+`bmux hooks setup` instaluje obsługiwanych agentów, których może znaleźć, i wypisuje podsumowanie dla pominiętych agentów. Obsługiwane integracje wznawiania obejmują Claude Code, Codex, Grok, OpenCode, Pi, Amp, Cursor CLI, Gemini, Rovo Dev, Copilot, CodeBuddy, Factory i Qoder. Claude Code jest obsługiwany przez wrapper Claude bmux, gdy integracja Claude jest włączona w Ustawieniach.
 
 Zaawansowani użytkownicy i integracje mogą przypiąć własne polecenie wznowienia do bieżącej terminal surface. Przydaje się to narzędziom z własnym trwałym stanem, takim jak sesje tmux lub niestandardowe agent CLI:
 
 ```bash
-cmux surface resume set --kind tmux --checkpoint work --shell "tmux attach -t work"
-cmux surface resume show --json
-cmux surface resume clear --checkpoint work
+bmux surface resume set --kind tmux --checkpoint work --shell "tmux attach -t work"
+bmux surface resume show --json
+bmux surface resume clear --checkpoint work
 ```
 
-Binding pozostaje powiązany z cmux surface. Bindingi utworzone przez publiczny CLI lub socket są zapisywane do inspekcji i ręcznego wznowienia, chyba że zatwierdzisz podpisany prefiks polecenia do automatycznego wznawiania. Zatwierdzone prefiksy są również powiązane z katalogiem roboczym i dokładnymi wartościami środowiska, gdy są obecne. Przeglądaj lub edytuj zatwierdzenia w **Ustawienia > Terminal > Resume Commands**. cmux automatycznie uruchamia tylko bindingi wznowienia oznaczone jako zaufane, na przykład bindingi tmux wykryte z działających procesów lub prefiksy zatwierdzone przez użytkownika. Wrażliwe klucze środowiska, takie jak tokeny, hasła, sekrety i klucze API, są odrzucane przed zapisaniem bindingu wznowienia.
+Binding pozostaje powiązany z bmux surface. Bindingi utworzone przez publiczny CLI lub socket są zapisywane do inspekcji i ręcznego wznowienia, chyba że zatwierdzisz podpisany prefiks polecenia do automatycznego wznawiania. Zatwierdzone prefiksy są również powiązane z katalogiem roboczym i dokładnymi wartościami środowiska, gdy są obecne. Przeglądaj lub edytuj zatwierdzenia w **Ustawienia > Terminal > Resume Commands**. bmux automatycznie uruchamia tylko bindingi wznowienia oznaczone jako zaufane, na przykład bindingi tmux wykryte z działających procesów lub prefiksy zatwierdzone przez użytkownika. Wrażliwe klucze środowiska, takie jak tokeny, hasła, sekrety i klucze API, są odrzucane przed zapisaniem bindingu wznowienia.
 
-Aby przywrócone terminale agentów pozostawały bezczynne zamiast automatycznie uruchamiać swoje polecenia wznowienia, wyłącz **Ustawienia > Terminal > Resume Agent Sessions on Reopen** lub ustaw to w `~/.config/cmux/cmux.json`:
+Aby przywrócone terminale agentów pozostawały bezczynne zamiast automatycznie uruchamiać swoje polecenia wznowienia, wyłącz **Ustawienia > Terminal > Resume Agent Sessions on Reopen** lub ustaw to w `~/.config/bmux/bmux.json`:
 
 ```json
 {
@@ -288,94 +288,94 @@ Aby przywrócone terminale agentów pozostawały bezczynne zamiast automatycznie
 }
 ```
 
-To wyłącza tylko automatyczne polecenia wznowienia agentów. cmux nadal przywraca zapisany układ, katalogi robocze, scrollback i historię przeglądarki.
+To wyłącza tylko automatyczne polecenia wznowienia agentów. bmux nadal przywraca zapisany układ, katalogi robocze, scrollback i historię przeglądarki.
 
 Jeśli chcesz ręcznie ponownie zastosować ostatnią zapisaną migawkę, użyj:
 - `File > Reopen Previous Session`
 - `⌘ ⇧ O`
-- `cmux restore-session`
+- `bmux restore-session`
 
-Pod maską cmux zapisuje wersjonowaną migawkę w `~/Library/Application Support/cmux/`, a hooks agentów zapisują mapowania sesji w `~/.cmuxterm/`. Przy przywracaniu cmux najpierw odbudowuje układ, a następnie uruchamia natywne polecenie wznowienia obsługiwanego agenta, gdy automatyczne wznawianie agentów jest włączone.
+Pod maską bmux zapisuje wersjonowaną migawkę w `~/Library/Application Support/bmux/`, a hooks agentów zapisują mapowania sesji w `~/.bmuxterm/`. Przy przywracaniu bmux najpierw odbudowuje układ, a następnie uruchamia natywne polecenie wznowienia obsługiwanego agenta, gdy automatyczne wznawianie agentów jest włączone.
 
-Przeczytaj pełny przewodnik na <https://cmux.com/docs/session-restore>.
+Przeczytaj pełny przewodnik na <https://bmux.com/docs/session-restore>.
 
 ## FAQ
 
-### Jak cmux ma się do Ghostty?
+### Jak bmux ma się do Ghostty?
 
-cmux nie jest forkiem Ghostty. Używa [libghostty](https://github.com/ghostty-org/ghostty) jako biblioteki do renderowania terminala, tak samo jak aplikacje używają WebKit do widoków internetowych. Ghostty to samodzielny terminal; cmux to inna aplikacja zbudowana na jego silniku renderowania.
+bmux nie jest forkiem Ghostty. Używa [libghostty](https://github.com/ghostty-org/ghostty) jako biblioteki do renderowania terminala, tak samo jak aplikacje używają WebKit do widoków internetowych. Ghostty to samodzielny terminal; bmux to inna aplikacja zbudowana na jego silniku renderowania.
 
 ### Jakie platformy są obsługiwane?
 
-Na razie tylko macOS. cmux to natywna aplikacja Swift + AppKit.
+Na razie tylko macOS. bmux to natywna aplikacja Swift + AppKit.
 
 ### Czy jest aplikacja na iOS?
 
-Tak, w wersji beta. Sparuj iPhone'a z Makiem z okna Mobile Connect i podłącz się do terminali z telefonu, z opcjonalnym przekazywaniem powiadomień terminala. Jest dostępna w TestFlight jako cmux BETA. Zobacz [dokumentację iOS](https://cmux.com/docs/ios).
+Tak, w wersji beta. Sparuj iPhone'a z Makiem z okna Mobile Connect i podłącz się do terminali z telefonu, z opcjonalnym przekazywaniem powiadomień terminala. Jest dostępna w TestFlight jako bmux BETA. Zobacz [dokumentację iOS](https://bmux.com/docs/ios).
 
-### Z jakimi agentami kodowania współpracuje cmux?
+### Z jakimi agentami kodowania współpracuje bmux?
 
-Ze wszystkimi. cmux to terminal, więc każdy agent działający w terminalu działa od razu: Claude Code, Codex, OpenCode, Gemini CLI, Kiro, Aider, Goose, Amp, Cline, Cursor Agent i wszystko inne, co możesz uruchomić z wiersza poleceń.
+Ze wszystkimi. bmux to terminal, więc każdy agent działający w terminalu działa od razu: Claude Code, Codex, OpenCode, Gemini CLI, Kiro, Aider, Goose, Amp, Cline, Cursor Agent i wszystko inne, co możesz uruchomić z wiersza poleceń.
 
-### Czy cmux może orkiestrować wielu agentów i subagentów?
+### Czy bmux może orkiestrować wielu agentów i subagentów?
 
-Tak. Gdy agent tworzy subagentów lub współpracowników, cmux zamienia ich w natywne panele i podziały zamiast ukrytych procesów w tle. Obsługuje [Claude Code teams](https://cmux.com/docs/agent-integrations/claude-code-teams) i orkiestrację wielu modeli [oh-my-opencode](https://cmux.com/docs/agent-integrations/oh-my-opencode), więc każdy agent w uruchomieniu jest widoczny i kontrolowalny.
+Tak. Gdy agent tworzy subagentów lub współpracowników, bmux zamienia ich w natywne panele i podziały zamiast ukrytych procesów w tle. Obsługuje [Claude Code teams](https://bmux.com/docs/agent-integrations/claude-code-teams) i orkiestrację wielu modeli [oh-my-opencode](https://bmux.com/docs/agent-integrations/oh-my-opencode), więc każdy agent w uruchomieniu jest widoczny i kontrolowalny.
 
-### Czy mogę używać cmux ze zdalnymi maszynami?
+### Czy mogę używać bmux ze zdalnymi maszynami?
 
-Tak. Otwieraj przestrzenie robocze przez SSH i podłączaj się do zdalnych sesji tmux, aby agenci mogli działać na zdalnym hoście, podczas gdy Ty sterujesz nimi z cmux. Zobacz [SSH i zdalne](https://cmux.com/docs/ssh).
+Tak. Otwieraj przestrzenie robocze przez SSH i podłączaj się do zdalnych sesji tmux, aby agenci mogli działać na zdalnym hoście, podczas gdy Ty sterujesz nimi z bmux. Zobacz [SSH i zdalne](https://bmux.com/docs/ssh).
 
 ### Jak działają powiadomienia?
 
-Gdy proces wymaga uwagi, cmux pokazuje pierścienie powiadomień wokół paneli, znaczniki nieprzeczytanych w pasku bocznym, popover powiadomień i powiadomienie pulpitu macOS. Są one wyzwalane automatycznie przez standardowe sekwencje ucieczki terminala (OSC 9/99/777) lub możesz je wyzwolić za pomocą [cmux CLI](https://cmux.com/docs/notifications#cli-usage) i [hooków agentów](https://cmux.com/docs/notifications#integration-examples). Działa każdy agent obsługujący hooki lub OSC, w tym Claude Code, Codex, OpenCode i pi.
+Gdy proces wymaga uwagi, bmux pokazuje pierścienie powiadomień wokół paneli, znaczniki nieprzeczytanych w pasku bocznym, popover powiadomień i powiadomienie pulpitu macOS. Są one wyzwalane automatycznie przez standardowe sekwencje ucieczki terminala (OSC 9/99/777) lub możesz je wyzwolić za pomocą [bmux CLI](https://bmux.com/docs/notifications#cli-usage) i [hooków agentów](https://bmux.com/docs/notifications#integration-examples). Działa każdy agent obsługujący hooki lub OSC, w tym Claude Code, Codex, OpenCode i pi.
 
-### Czy cmux jest programowalny?
+### Czy bmux jest programowalny?
 
-Tak. Każda akcja jest dostępna przez cmux CLI i gniazdo Unix: tworzenie przestrzeni roboczych, otwieranie podzielonych paneli, wysyłanie danych wejściowych, odczyt zawartości ekranu, wykonywanie zrzutów ekranu i sterowanie wbudowaną przeglądarką. Zobacz [referencję CLI](https://cmux.com/docs/api) i dokumentację [automatyzacji przeglądarki](https://cmux.com/docs/browser-automation).
+Tak. Każda akcja jest dostępna przez bmux CLI i gniazdo Unix: tworzenie przestrzeni roboczych, otwieranie podzielonych paneli, wysyłanie danych wejściowych, odczyt zawartości ekranu, wykonywanie zrzutów ekranu i sterowanie wbudowaną przeglądarką. Zobacz [referencję CLI](https://bmux.com/docs/api) i dokumentację [automatyzacji przeglądarki](https://bmux.com/docs/browser-automation).
 
 ### Co potrafi wbudowana przeglądarka?
 
-cmux może podzielić prawdziwy panel przeglądarki obok terminala i jest w pełni programowalny: nawiguj, wykonuj migawki DOM, klikaj, pisz, ewaluuj JavaScript oraz odczytuj aktywność konsoli i sieci przez to samo socket API. Agenci używają go do weryfikacji własnych zmian webowych bez opuszczania cmux. Zobacz [automatyzację przeglądarki](https://cmux.com/docs/browser-automation).
+bmux może podzielić prawdziwy panel przeglądarki obok terminala i jest w pełni programowalny: nawiguj, wykonuj migawki DOM, klikaj, pisz, ewaluuj JavaScript oraz odczytuj aktywność konsoli i sieci przez to samo socket API. Agenci używają go do weryfikacji własnych zmian webowych bez opuszczania bmux. Zobacz [automatyzację przeglądarki](https://bmux.com/docs/browser-automation).
 
-### Czy cmux ma skills?
+### Czy bmux ma skills?
 
-Tak. Skills to wielokrotnego użytku przepływy pracy, które możesz dać dowolnemu agentowi działającemu w cmux, do rzeczy takich jak sterowanie CLI, automatyzacja przestrzeni roboczych, ustawienia i powierzchnie przeglądarki. Przeglądaj otwartą kolekcję na [cmux-skills](https://github.com/manaflow-ai/cmux-skills) lub przeczytaj [dokumentację skills](https://cmux.com/docs/skills).
+Tak. Skills to wielokrotnego użytku przepływy pracy, które możesz dać dowolnemu agentowi działającemu w bmux, do rzeczy takich jak sterowanie CLI, automatyzacja przestrzeni roboczych, ustawienia i powierzchnie przeglądarki. Przeglądaj otwartą kolekcję na [bmux-skills](https://github.com/manaflow-ai/bmux-skills) lub przeczytaj [dokumentację skills](https://bmux.com/docs/skills).
 
 ### Czy mogę dostosować skróty klawiszowe?
 
-Skróty klawiszowe terminala są odczytywane z pliku konfiguracyjnego Ghostty (`~/.config/ghostty/config`). Skróty specyficzne dla cmux (przestrzenie robocze, podziały, przeglądarka, powiadomienia) można dostosować w Ustawieniach. Zobacz [domyślne skróty](https://cmux.com/docs/keyboard-shortcuts), aby uzyskać pełną listę.
+Skróty klawiszowe terminala są odczytywane z pliku konfiguracyjnego Ghostty (`~/.config/ghostty/config`). Skróty specyficzne dla bmux (przestrzenie robocze, podziały, przeglądarka, powiadomienia) można dostosować w Ustawieniach. Zobacz [domyślne skróty](https://bmux.com/docs/keyboard-shortcuts), aby uzyskać pełną listę.
 
-### Czy mogę dostosować cmux?
+### Czy mogę dostosować bmux?
 
-Tak. Renderowanie terminala używa Twojej konfiguracji Ghostty, więc motywy, czcionki, kolory i kursor przenoszą się bezpośrednio. Własne ustawienia cmux w `~/.config/cmux/cmux.json` kontrolują pasek boczny, pasek kart, podzielone panele i zachowanie, a każdy [skrót klawiszowy](https://cmux.com/docs/keyboard-shortcuts) można edytować. Zobacz [konfigurację](https://cmux.com/docs/configuration).
+Tak. Renderowanie terminala używa Twojej konfiguracji Ghostty, więc motywy, czcionki, kolory i kursor przenoszą się bezpośrednio. Własne ustawienia bmux w `~/.config/bmux/bmux.json` kontrolują pasek boczny, pasek kart, podzielone panele i zachowanie, a każdy [skrót klawiszowy](https://bmux.com/docs/keyboard-shortcuts) można edytować. Zobacz [konfigurację](https://bmux.com/docs/configuration).
 
 ### Czy moje sesje są zapisywane?
 
-Tak. cmux przywraca Twoje okna, przestrzenie robocze, panele, katalogi robocze i scrollback po ponownym uruchomieniu, a stan przetrwa pełny restart komputera, nie tylko zamknięcie aplikacji. Sesje agentów takich jak Claude Code, Codex i OpenCode również wracają. Zobacz [przywracanie sesji](https://cmux.com/docs/session-restore).
+Tak. bmux przywraca Twoje okna, przestrzenie robocze, panele, katalogi robocze i scrollback po ponownym uruchomieniu, a stan przetrwa pełny restart komputera, nie tylko zamknięcie aplikacji. Sesje agentów takich jak Claude Code, Codex i OpenCode również wracają. Zobacz [przywracanie sesji](https://bmux.com/docs/session-restore).
 
 ### Jak wypada w porównaniu z tmux?
 
-tmux to multiplekser terminala, który działa wewnątrz dowolnego terminala. cmux to natywna aplikacja macOS z GUI: pionowe karty, podzielone panele, wbudowana przeglądarka i socket API, wszystko wbudowane, bez potrzeby plików konfiguracyjnych ani klawiszy prefiksu. To powiedziawszy, wiele osób chętnie używa cmux razem z SSH i tmux, a cmux może natywnie podłączać się do Twoich zdalnych sesji tmux ([beta](https://cmux.com/docs/remote-tmux)).
+tmux to multiplekser terminala, który działa wewnątrz dowolnego terminala. bmux to natywna aplikacja macOS z GUI: pionowe karty, podzielone panele, wbudowana przeglądarka i socket API, wszystko wbudowane, bez potrzeby plików konfiguracyjnych ani klawiszy prefiksu. To powiedziawszy, wiele osób chętnie używa bmux razem z SSH i tmux, a bmux może natywnie podłączać się do Twoich zdalnych sesji tmux ([beta](https://bmux.com/docs/remote-tmux)).
 
-### Czy cmux jest darmowy?
+### Czy bmux jest darmowy?
 
-Tak, cmux jest darmowy w użyciu. Kod źródłowy jest dostępny na [GitHub](https://github.com/manaflow-ai/cmux).
+Tak, bmux jest darmowy w użyciu. Kod źródłowy jest dostępny na [GitHub](https://github.com/manaflow-ai/bmux).
 
-### Jak mogę wesprzeć cmux?
+### Jak mogę wesprzeć bmux?
 
-cmux jest darmowy i open source, i zawsze taki będzie. Jeśli chcesz wesprzeć rozwój i uzyskać wczesny dostęp do tego, co nadchodzi, w tym cmux AI, aplikacji iOS i Cloud VMs, sprawdź [cmux Founders Edition](https://github.com/manaflow-ai/cmux#founders-edition).
+bmux jest darmowy i open source, i zawsze taki będzie. Jeśli chcesz wesprzeć rozwój i uzyskać wczesny dostęp do tego, co nadchodzi, w tym bmux AI, aplikacji iOS i Cloud VMs, sprawdź [bmux Founders Edition](https://github.com/manaflow-ai/bmux#founders-edition).
 
 ### Mam prośbę o funkcję lub znalazłem błąd?
 
-Chcemy o tym usłyszeć. Otwórz [issue](https://github.com/manaflow-ai/cmux/issues) lub [pull request](https://github.com/manaflow-ai/cmux/pulls) na GitHub, albo [napisz do nas](mailto:founders@manaflow.com?subject=cmux%20feature%20request).
+Chcemy o tym usłyszeć. Otwórz [issue](https://github.com/manaflow-ai/bmux/issues) lub [pull request](https://github.com/manaflow-ai/bmux/pulls) na GitHub, albo [napisz do nas](mailto:founders@manaflow.com?subject=bmux%20feature%20request).
 
 ## Historia Gwiazdek
 
-<a href="https://star-history.com/#manaflow-ai/cmux&Date">
+<a href="https://star-history.com/#manaflow-ai/bmux&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=manaflow-ai/cmux&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=manaflow-ai/cmux&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=manaflow-ai/cmux&type=Date" width="600" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=manaflow-ai/bmux&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=manaflow-ai/bmux&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=manaflow-ai/bmux&type=Date" width="600" />
  </picture>
 </a>
 
@@ -385,31 +385,31 @@ Sposoby zaangażowania się:
 
 - Obserwuj nas na X po aktualizacje [@manaflowai](https://x.com/manaflowai), [@lawrencecchen](https://x.com/lawrencecchen) i [@austinywang](https://x.com/austinywang)
 - Dołącz do rozmowy na [Discordzie](https://discord.gg/xsgFEVrWCZ)
-- Twórz i uczestniczaj w [zgłoszeniach GitHub](https://github.com/manaflow-ai/cmux/issues) i [dyskusjach](https://github.com/manaflow-ai/cmux/discussions)
-- Daj nam znać, co budujesz z cmux
+- Twórz i uczestniczaj w [zgłoszeniach GitHub](https://github.com/manaflow-ai/bmux/issues) i [dyskusjach](https://github.com/manaflow-ai/bmux/discussions)
+- Daj nam znać, co budujesz z bmux
 
 ## Społeczność
 
 - [Discord](https://discord.gg/xsgFEVrWCZ)
-- [GitHub](https://github.com/manaflow-ai/cmux)
+- [GitHub](https://github.com/manaflow-ai/bmux)
 - [X / Twitter](https://twitter.com/manaflowai)
 - [YouTube](https://www.youtube.com/channel/UCAa89_j-TWkrXfk9A3CbASw)
 - [LinkedIn](https://www.linkedin.com/company/manaflow-ai/)
-- [Reddit](https://www.reddit.com/r/cmux/)
+- [Reddit](https://www.reddit.com/r/bmux/)
 
 <p>
   <strong>WeChat:</strong> Zeskanuj kod QR, aby dołączyć do społeczności.<br />
-  <img src="./docs/assets/wechat-community-qr.jpg" alt="Kod QR WeChat do dołączenia do społeczności cmux" width="240" />
+  <img src="./docs/assets/wechat-community-qr.jpg" alt="Kod QR WeChat do dołączenia do społeczności bmux" width="240" />
 </p>
 
 ## Edycja Założycielska
 
-cmux jest darmowy, open source i zawsze taki będzie. Jeśli chcesz wesprzeć rozwój i uzyskać wczesny dostęp do nadchodzących funkcji:
+bmux jest darmowy, open source i zawsze taki będzie. Jeśli chcesz wesprzeć rozwój i uzyskać wczesny dostęp do nadchodzących funkcji:
 
 **[Zdobądź Edycję Założycielską](https://buy.stripe.com/3cI00j2Ld0it5OU33r5EY0q)**
 
 - **Priorytetowe prośby o funkcje/poprawki błędów**
-- **Wczesny dostęp: cmux AI, które daje Ci kontekst każdej przestrzeni roboczej, karty i panelu**
+- **Wczesny dostęp: bmux AI, które daje Ci kontekst każdej przestrzeni roboczej, karty i panelu**
 - **Wczesny dostęp: aplikacja iOS z terminalami synchronizowanymi między komputerem a telefonem**
 - **Wczesny dostęp: maszyny wirtualne w chmurze**
 - **Wczesny dostęp: tryb głosowy**
@@ -417,6 +417,6 @@ cmux jest darmowy, open source i zawsze taki będzie. Jeśli chcesz wesprzeć ro
 
 ## Licencja
 
-cmux jest oprogramowaniem open source na licencji [GPL-3.0-or-later](LICENSE).
+bmux jest oprogramowaniem open source na licencji [GPL-3.0-or-later](LICENSE).
 
 Jeśli Twoja organizacja nie może spełnić wymogów GPL, dostępna jest licencja komercyjna. Skontaktuj się pod adresem [founders@manaflow.com](mailto:founders@manaflow.com), aby uzyskać szczegóły.

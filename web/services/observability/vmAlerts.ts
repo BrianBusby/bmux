@@ -30,8 +30,8 @@ export async function runVmAlertChecks(options: {
   const now = options.now ?? new Date();
   const send = options.sendAlert ?? ((input) => sendAlert(input, { fetch: options.fetch, env }));
 
-  const createFailureThreshold = positiveIntegerEnv(env.CMUX_VM_ALERT_CREATE_FAILURES_15M, 3);
-  const expiredLeaseThreshold = positiveIntegerEnv(env.CMUX_VM_ALERT_EXPIRED_LEASES, 50);
+  const createFailureThreshold = positiveIntegerEnv(env.BMUX_VM_ALERT_CREATE_FAILURES_15M, 3);
+  const expiredLeaseThreshold = positiveIntegerEnv(env.BMUX_VM_ALERT_EXPIRED_LEASES, 50);
   const createFailureSince = new Date(now.getTime() - 15 * 60 * 1000);
   const stuckProvisioningBefore = new Date(now.getTime() - 20 * 60 * 1000);
 

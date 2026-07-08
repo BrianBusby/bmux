@@ -1,4 +1,4 @@
-import CmuxFoundation
+import BmuxFoundation
 import Bonsplit
 import SwiftUI
 
@@ -91,7 +91,7 @@ struct NotificationsPage: View {
     private var header: some View {
         HStack {
             Text(String(localized: "notifications.title", defaultValue: "Notifications"))
-                .cmuxFont(.title2)
+                .bmuxFont(.title2)
                 .fontWeight(.semibold)
 
             Spacer()
@@ -114,8 +114,8 @@ struct NotificationsPage: View {
             Toggle(isOn: $forwardToPhone) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(String(localized: "notifications.forwardToPhone.title", defaultValue: "Forward notifications to my iPhone"))
-                    Text(String(localized: "notifications.forwardToPhone.subtitle", defaultValue: "Send agent notifications to the cmux iPhone app. Off by default; nothing is uploaded unless this is on."))
-                        .cmuxFont(.caption)
+                    Text(String(localized: "notifications.forwardToPhone.subtitle", defaultValue: "Send agent notifications to the bmux iPhone app. Off by default; nothing is uploaded unless this is on."))
+                        .bmuxFont(.caption)
                         .foregroundColor(.secondary)
                 }
             }
@@ -132,17 +132,17 @@ struct NotificationsPage: View {
                     }
                     .pickerStyle(.menu)
                     .fixedSize()
-                    .cmuxFont(.caption)
+                    .bmuxFont(.caption)
                     if forwardToPhoneMode == PhoneForwardingMode.onlyWhenAway.rawValue {
                         Text(awayModeExplanation)
-                            .cmuxFont(.caption)
+                            .bmuxFont(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
                 .padding(.leading, 20)
                 Toggle(isOn: $hidePhoneNotificationContent) {
                     Text(String(localized: "notifications.forwardToPhone.hideContent", defaultValue: "Hide content (send a generic message instead of the terminal text)"))
-                        .cmuxFont(.caption)
+                        .bmuxFont(.caption)
                 }
                 .padding(.leading, 20)
             }
@@ -161,12 +161,12 @@ struct NotificationsPage: View {
 
     private var emptyState: some View {
         VStack(spacing: 8) {
-            CmuxSystemSymbolImage(magnified: "bell.slash", pointSize: 32)
+            BmuxSystemSymbolImage(magnified: "bell.slash", pointSize: 32)
                 .foregroundColor(.secondary)
             Text(String(localized: "notifications.empty.title", defaultValue: "No notifications yet"))
-                .cmuxFont(.headline)
+                .bmuxFont(.headline)
             Text(String(localized: "notifications.empty.description", defaultValue: "Desktop notifications will appear here for quick review."))
-                .cmuxFont(.subheadline)
+                .bmuxFont(.subheadline)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -174,10 +174,10 @@ struct NotificationsPage: View {
 
     private var workspaceUnreadIndicatorState: some View {
         VStack(spacing: 8) {
-            CmuxSystemSymbolImage(magnified: "bell.badge", pointSize: 32)
+            BmuxSystemSymbolImage(magnified: "bell.badge", pointSize: 32)
                 .foregroundColor(.secondary)
             Text(notificationStore.notificationMenuSnapshot.stateHintTitle)
-                .cmuxFont(.headline)
+                .bmuxFont(.headline)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -241,7 +241,7 @@ struct ShortcutAnnotation: View {
 
     private var badge: some View {
         Text(text)
-            .cmuxFont(size: 10, weight: .semibold, design: .rounded)
+            .bmuxFont(size: 10, weight: .semibold, design: .rounded)
             .foregroundStyle(.primary)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -278,35 +278,35 @@ struct NotificationRow: View, Equatable {
             Button(action: onOpen) {
                 HStack(alignment: .top, spacing: 12) {
                     Circle()
-                        .fill(notification.isRead ? Color.clear : cmuxAccentColor())
+                        .fill(notification.isRead ? Color.clear : bmuxAccentColor())
                         .frame(width: 8, height: 8)
                         .overlay(
                             Circle()
-                                .stroke(cmuxAccentColor().opacity(notification.isRead ? 0.2 : 1), lineWidth: 1)
+                                .stroke(bmuxAccentColor().opacity(notification.isRead ? 0.2 : 1), lineWidth: 1)
                         )
                         .padding(.top, 6)
 
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
                             Text(notification.title)
-                                .cmuxFont(.headline)
+                                .bmuxFont(.headline)
                                 .foregroundColor(.primary)
                             Spacer()
                             Text(notification.createdAt.formatted(date: .omitted, time: .shortened))
-                                .cmuxFont(.caption)
+                                .bmuxFont(.caption)
                                 .foregroundColor(.secondary)
                         }
 
                         if !notification.body.isEmpty {
                             Text(notification.body)
-                                .cmuxFont(.subheadline)
+                                .bmuxFont(.subheadline)
                                 .foregroundColor(.secondary)
                                 .lineLimit(3)
                         }
 
                         if let tabTitle {
                             Text(tabTitle)
-                                .cmuxFont(.caption)
+                                .bmuxFont(.caption)
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -324,11 +324,11 @@ struct NotificationRow: View, Equatable {
             .modifier(DefaultActionModifier(isActive: isFocused))
 
             Button(action: onClear) {
-                CmuxSystemSymbolImage(systemName: "xmark.circle.fill", pointSize: 14)
+                BmuxSystemSymbolImage(systemName: "xmark.circle.fill", pointSize: 14)
                     .foregroundColor(.secondary)
             }
             .buttonStyle(.plain)
-            // CmuxSystemSymbolImage renders an AppKit NSImage with no accessibility
+            // BmuxSystemSymbolImage renders an AppKit NSImage with no accessibility
             // description, so the icon-only button needs an explicit label (the prior
             // SwiftUI system-symbol path used to supply one implicitly).
             .accessibilityLabel(String(localized: "notifications.row.clear", defaultValue: "Clear notification"))

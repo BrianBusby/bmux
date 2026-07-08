@@ -4,7 +4,7 @@ import { closeCloudDbForTests, cloudDb } from "../db/client";
 import { runVmAlertChecks } from "../services/observability/vmAlerts";
 import type { AlertInput, AlertResult } from "../services/observability/alerts";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.BMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 
 let sql: Sql | null = null;
@@ -12,7 +12,7 @@ let sql: Sql | null = null;
 function databaseURL() {
   const url = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!url) {
-    throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+    throw new Error("DATABASE_URL is required when BMUX_DB_TEST=1");
   }
   return url;
 }
@@ -109,8 +109,8 @@ describe("VM alert checks", () => {
       db: cloudDb(),
       now,
       env: {
-        CMUX_VM_ALERT_CREATE_FAILURES_15M: "3",
-        CMUX_VM_ALERT_EXPIRED_LEASES: "50",
+        BMUX_VM_ALERT_CREATE_FAILURES_15M: "3",
+        BMUX_VM_ALERT_EXPIRED_LEASES: "50",
       },
       sendAlert: async (input): Promise<AlertResult> => {
         alerts.push(input);

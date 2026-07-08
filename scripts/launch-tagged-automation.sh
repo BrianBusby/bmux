@@ -106,11 +106,11 @@ fi
 
 TAG_ID="$(sanitize_bundle "$TAG")"
 TAG_SLUG="$(sanitize_path "$TAG")"
-APP="$HOME/Library/Developer/Xcode/DerivedData/cmux-${TAG_SLUG}/Build/Products/Debug/cmux DEV ${TAG}.app"
-BID="com.cmuxterm.app.debug.${TAG_ID}"
-SOCK="/tmp/cmux-debug-${TAG_SLUG}.sock"
-DSOCK="$HOME/Library/Application Support/cmux/cmuxd-dev-${TAG_SLUG}.sock"
-LOG="/tmp/cmux-debug-${TAG_SLUG}.log"
+APP="$HOME/Library/Developer/Xcode/DerivedData/bmux-${TAG_SLUG}/Build/Products/Debug/bmux DEV ${TAG}.app"
+BID="com.bmuxterm.app.debug.${TAG_ID}"
+SOCK="/tmp/bmux-debug-${TAG_SLUG}.sock"
+DSOCK="$HOME/Library/Application Support/bmux/bmuxd-dev-${TAG_SLUG}.sock"
+LOG="/tmp/bmux-debug-${TAG_SLUG}.log"
 
 if [[ ! -d "$APP" ]]; then
   echo "error: tagged app not found at $APP" >&2
@@ -119,29 +119,29 @@ fi
 
 /usr/bin/osascript -e "tell application id \"${BID}\" to quit" >/dev/null 2>&1 || true
 sleep 0.5
-pkill -f "cmux DEV ${TAG}.app/Contents/MacOS/cmux DEV" || true
+pkill -f "bmux DEV ${TAG}.app/Contents/MacOS/bmux DEV" || true
 rm -f "$SOCK" "$DSOCK"
 sleep 0.5
 
 OPEN_ENV=(
   env
-  -u CMUX_SOCKET_PATH
-  -u CMUX_SOCKET_MODE
-  -u CMUX_TAB_ID
-  -u CMUX_PANEL_ID
-  -u CMUX_SURFACE_ID
-  -u CMUX_WORKSPACE_ID
-  -u CMUXD_UNIX_PATH
-  -u CMUX_TAG
-  -u CMUX_PORT
-  -u CMUX_PORT_END
-  -u CMUX_PORT_RANGE
-  -u CMUX_DEBUG_LOG
-  -u CMUX_BUNDLE_ID
-  -u CMUX_DISABLE_SESSION_RESTORE
-  -u CMUX_SHELL_INTEGRATION
-  -u CMUX_SHELL_INTEGRATION_DIR
-  -u CMUX_LOAD_GHOSTTY_ZSH_INTEGRATION
+  -u BMUX_SOCKET_PATH
+  -u BMUX_SOCKET_MODE
+  -u BMUX_TAB_ID
+  -u BMUX_PANEL_ID
+  -u BMUX_SURFACE_ID
+  -u BMUX_WORKSPACE_ID
+  -u BMUXD_UNIX_PATH
+  -u BMUX_TAG
+  -u BMUX_PORT
+  -u BMUX_PORT_END
+  -u BMUX_PORT_RANGE
+  -u BMUX_DEBUG_LOG
+  -u BMUX_BUNDLE_ID
+  -u BMUX_DISABLE_SESSION_RESTORE
+  -u BMUX_SHELL_INTEGRATION
+  -u BMUX_SHELL_INTEGRATION_DIR
+  -u BMUX_LOAD_GHOSTTY_ZSH_INTEGRATION
   -u GHOSTTY_BIN_DIR
   -u GHOSTTY_RESOURCES_DIR
   -u GHOSTTY_SHELL_FEATURES
@@ -149,11 +149,11 @@ OPEN_ENV=(
   -u GH_PAGER
   -u TERMINFO
   -u XDG_DATA_DIRS
-  "CMUX_SOCKET_MODE=${MODE}"
-  "CMUX_SOCKET_PATH=${SOCK}"
-  "CMUXD_UNIX_PATH=${DSOCK}"
-  "CMUX_DEBUG_LOG=${LOG}"
-  "CMUX_DISABLE_SESSION_RESTORE=1"
+  "BMUX_SOCKET_MODE=${MODE}"
+  "BMUX_SOCKET_PATH=${SOCK}"
+  "BMUXD_UNIX_PATH=${DSOCK}"
+  "BMUX_DEBUG_LOG=${LOG}"
+  "BMUX_DISABLE_SESSION_RESTORE=1"
 )
 
 if (( EXTRA_ENV_COUNT > 0 )); then
@@ -180,7 +180,7 @@ fi
 echo "app: $APP"
 echo "bundle_id: $BID"
 echo "socket: $SOCK"
-echo "cmuxd_socket: $DSOCK"
+echo "bmuxd_socket: $DSOCK"
 echo "log: $LOG"
 echo "mode: $MODE"
 echo "socket_ready: $(if [[ -S "$SOCK" ]]; then echo yes; else echo no; fi)"

@@ -1,6 +1,6 @@
 import Foundation
 import Darwin
-import CmuxAgentChat
+import BmuxAgentChat
 
 @MainActor
 final class AgentSessionProcessStore {
@@ -541,7 +541,7 @@ final class AgentSessionProcessStore {
         } catch {
             guard !Task.isCancelled else { return }
 #if DEBUG
-            cmuxDebugLog("agentSession.opencode.eventStream.failed error=\(error.localizedDescription)")
+            bmuxDebugLog("agentSession.opencode.eventStream.failed error=\(error.localizedDescription)")
 #endif
             await failStream()
         }

@@ -13,7 +13,7 @@ describe("VM expired lease cron route", () => {
     delete process.env.CRON_SECRET;
 
     const response = await route.POST(
-      new Request("https://cmux.test/api/internal/vm/leases/revoke-expired", {
+      new Request("https://bmux.test/api/internal/vm/leases/revoke-expired", {
         method: "POST",
       }),
     );
@@ -26,7 +26,7 @@ describe("VM expired lease cron route", () => {
     process.env.CRON_SECRET = "cron-secret";
 
     const response = await route.POST(
-      new Request("https://cmux.test/api/internal/vm/leases/revoke-expired", {
+      new Request("https://bmux.test/api/internal/vm/leases/revoke-expired", {
         method: "POST",
         headers: { authorization: "Bearer wrong" },
       }),

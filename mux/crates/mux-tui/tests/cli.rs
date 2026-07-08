@@ -57,12 +57,12 @@ fn cli_verbs_cover_command_output_errors_and_streams() {
 
     let identify = cli(&server, &["identify"]);
     assert_success(&identify);
-    assert!(String::from_utf8_lossy(&identify.stdout).starts_with("cmux-mux session="));
+    assert!(String::from_utf8_lossy(&identify.stdout).starts_with("bmux-mux session="));
 
     let identify_json = cli(&server, &["--json", "identify"]);
     assert_success(&identify_json);
     let value: serde_json::Value = serde_json::from_slice(&identify_json.stdout).unwrap();
-    assert_eq!(value.get("app").and_then(|v| v.as_str()), Some("cmux-mux"));
+    assert_eq!(value.get("app").and_then(|v| v.as_str()), Some("bmux-mux"));
     assert!(value.get("protocol").and_then(|v| v.as_u64()).unwrap_or(0) >= 5);
 
     let ping_json = cli(&server, &["--json", "ping"]);
@@ -115,7 +115,7 @@ fn cli_verbs_cover_command_output_errors_and_streams() {
     assert_eq!(zoom_json["zoomed"].as_bool(), Some(true));
     assert_eq!(zoom_json["zoomed_pane"].as_u64(), Some(pane1));
 
-    let marker = format!("cmux_cli_marker_{}", std::process::id());
+    let marker = format!("bmux_cli_marker_{}", std::process::id());
     let marker_suffix = std::process::id().to_string();
     let send = cli(
         &server,
@@ -124,7 +124,7 @@ fn cli_verbs_cover_command_output_errors_and_streams() {
             "--surface",
             &surface.to_string(),
             "--text",
-            &format!("printf 'cmux_cli_marker_%s\\n' '{marker_suffix}'\n"),
+            &format!("printf 'bmux_cli_marker_%s\\n' '{marker_suffix}'\n"),
         ],
     );
     assert_success(&send);
@@ -181,7 +181,7 @@ fn cli_verbs_cover_command_output_errors_and_streams() {
         .args(["--socket"])
         .arg(server.dir.join("missing.sock"))
         .arg("identify")
-        .env_remove("CMUX_MUX_SOCKET")
+        .env_remove("BMUX_MUX_SOCKET")
         .output()
         .unwrap();
     assert_eq!(bogus.status.code(), Some(3));
@@ -194,7 +194,7 @@ fn assert_subscribe_reports_tree_changed(server: &HeadlessServer) {
         .args(["--socket"])
         .arg(&server.socket)
         .arg("subscribe")
-        .env_remove("CMUX_MUX_SOCKET")
+        .env_remove("BMUX_MUX_SOCKET")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
@@ -259,7 +259,7 @@ fn stream_preserves_partial_line_across_read_timeout() {
         .args(["--socket"])
         .arg(&socket)
         .arg("subscribe")
-        .env_remove("CMUX_MUX_SOCKET")
+        .env_remove("BMUX_MUX_SOCKET")
         .output()
         .unwrap();
     server.join().unwrap();
@@ -293,7 +293,7 @@ fn cli(server: &HeadlessServer, args: &[&str]) -> Output {
         .args(["--socket"])
         .arg(&server.socket)
         .args(args)
-        .env_remove("CMUX_MUX_SOCKET")
+        .env_remove("BMUX_MUX_SOCKET")
         .output()
         .unwrap()
 }
@@ -310,9 +310,9 @@ fn assert_success(output: &Output) {
 
 fn unique_temp_dir(name: &str) -> PathBuf {
     let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
-    PathBuf::from("/tmp").join(format!("cmux-cli-{name}-{}-{stamp}", std::process::id()))
+    PathBuf::from("/tmp").join(format!("bmux-cli-{name}-{}-{stamp}", std::process::id()))
 }
 
 fn bin() -> &'static str {
-    env!("CARGO_BIN_EXE_cmux-mux")
+    env!("CARGO_BIN_EXE_bmux-mux")
 }

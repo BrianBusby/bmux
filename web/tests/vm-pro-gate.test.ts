@@ -18,14 +18,14 @@ describe("Cloud VM Pro gate", () => {
     expect(isPaidVmPlan("enterprise-unknown")).toBe(false);
   });
 
-  test("enforcement is off unless CMUX_VM_REQUIRE_PRO is truthy (ships dark)", () => {
+  test("enforcement is off unless BMUX_VM_REQUIRE_PRO is truthy (ships dark)", () => {
     expect(isVmProGateEnforced({})).toBe(false);
-    expect(isVmProGateEnforced({ CMUX_VM_REQUIRE_PRO: "" })).toBe(false);
-    expect(isVmProGateEnforced({ CMUX_VM_REQUIRE_PRO: "0" })).toBe(false);
-    expect(isVmProGateEnforced({ CMUX_VM_REQUIRE_PRO: "false" })).toBe(false);
-    expect(isVmProGateEnforced({ CMUX_VM_REQUIRE_PRO: "1" })).toBe(true);
-    expect(isVmProGateEnforced({ CMUX_VM_REQUIRE_PRO: "true" })).toBe(true);
-    expect(isVmProGateEnforced({ CMUX_VM_REQUIRE_PRO: "ON" })).toBe(true);
+    expect(isVmProGateEnforced({ BMUX_VM_REQUIRE_PRO: "" })).toBe(false);
+    expect(isVmProGateEnforced({ BMUX_VM_REQUIRE_PRO: "0" })).toBe(false);
+    expect(isVmProGateEnforced({ BMUX_VM_REQUIRE_PRO: "false" })).toBe(false);
+    expect(isVmProGateEnforced({ BMUX_VM_REQUIRE_PRO: "1" })).toBe(true);
+    expect(isVmProGateEnforced({ BMUX_VM_REQUIRE_PRO: "true" })).toBe(true);
+    expect(isVmProGateEnforced({ BMUX_VM_REQUIRE_PRO: "ON" })).toBe(true);
   });
 
   test("enforcement OFF never blocks any plan", () => {
@@ -34,7 +34,7 @@ describe("Cloud VM Pro gate", () => {
   });
 
   test("enforcement ON blocks free but allows pro/team", () => {
-    const env = { CMUX_VM_REQUIRE_PRO: "1" };
+    const env = { BMUX_VM_REQUIRE_PRO: "1" };
     expect(isVmProGateBlocked(ent("free"), env)).toBe(true);
     expect(isVmProGateBlocked(ent("pro"), env)).toBe(false);
     expect(isVmProGateBlocked(ent("team"), env)).toBe(false);

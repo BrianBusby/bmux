@@ -59,18 +59,18 @@ async function stripeProCheckout(request: NextRequest) {
   }
 
   const scheme = validatedNativeCallbackScheme(
-    request.nextUrl.searchParams.get("cmux_scheme"),
+    request.nextUrl.searchParams.get("bmux_scheme"),
     request,
   );
   const interval = checkoutInterval(request.nextUrl.searchParams.get("interval"));
   const successUrl =
     `${request.nextUrl.origin}/api/billing/complete` +
-    `?session_id={CHECKOUT_SESSION_ID}&cmux_scheme=${encodeURIComponent(scheme)}`;
+    `?session_id={CHECKOUT_SESSION_ID}&bmux_scheme=${encodeURIComponent(scheme)}`;
   const cancelUrl = new URL("/pricing?billing=cancelled", request.nextUrl.origin);
   const metadata = {
     stackUserId: user.id,
     plan: "pro",
-    app: "cmux",
+    app: "bmux",
   };
 
   try {
@@ -113,17 +113,17 @@ async function stripeTeamCheckout(request: NextRequest) {
   }
 
   const scheme = validatedNativeCallbackScheme(
-    request.nextUrl.searchParams.get("cmux_scheme"),
+    request.nextUrl.searchParams.get("bmux_scheme"),
     request,
   );
   const successUrl =
     `${request.nextUrl.origin}/api/billing/complete` +
-    `?session_id={CHECKOUT_SESSION_ID}&cmux_scheme=${encodeURIComponent(scheme)}`;
+    `?session_id={CHECKOUT_SESSION_ID}&bmux_scheme=${encodeURIComponent(scheme)}`;
   const cancelUrl = new URL("/pricing?billing=cancelled", request.nextUrl.origin);
   const metadata = {
     stackTeamId: teamId,
     plan: "team",
-    app: "cmux",
+    app: "bmux",
   };
 
   try {
@@ -241,7 +241,7 @@ async function checkoutTeamCustomer(user: CheckoutTeamUser): Promise<CheckoutTea
     throw new Error("Stack Auth user cannot create a team checkout customer");
   }
 
-  const team = await user.createTeam({ displayName: "cmux Team" });
+  const team = await user.createTeam({ displayName: "bmux Team" });
   return team;
 }
 
@@ -258,10 +258,10 @@ async function stripeCustomerForTeam(
   if (existing?.id) return existing.id;
 
   const customer = await stripe().customers.create({
-    name: team.displayName?.trim() || "cmux Team",
+    name: team.displayName?.trim() || "bmux Team",
     metadata: {
       stackTeamId: team.id,
-      app: "cmux",
+      app: "bmux",
     },
   });
 

@@ -2,19 +2,19 @@
 
 As of protocol v6, every server speaks JSON Lines over a Unix domain socket. Send one JSON object per line. Every request receives one response line. `subscribe` and `attach-surface` also push event lines on the same connection.
 
-For shell use, prefer `cmux-mux <verb>`; it wraps the same socket commands and preserves JSON output with `--json`.
+For shell use, prefer `bmux-mux <verb>`; it wraps the same socket commands and preserves JSON output with `--json`.
 
 Default socket path:
 
 ```text
-$TMPDIR/cmux-mux-<uid>/<session>.sock
+$TMPDIR/bmux-mux-<uid>/<session>.sock
 ```
 
 `identify` reports the protocol version:
 
 ```json
 {"id":1,"cmd":"identify"}
-{"id":1,"ok":true,"data":{"app":"cmux-mux","version":"...","protocol":6,"session":"main","pid":12345}}
+{"id":1,"ok":true,"data":{"app":"bmux-mux","version":"...","protocol":6,"session":"main","pid":12345}}
 ```
 
 Responses have this shape:

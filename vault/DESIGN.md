@@ -1,8 +1,8 @@
-# CMUX Vault cloud sync MVP design
+# BMUX Vault cloud sync MVP design
 
 ## Scope
 
-Round 1 adds a standalone Go CLI, `cmux-vault`, plus authenticated web API
+Round 1 adds a standalone Go CLI, `bmux-vault`, plus authenticated web API
 routes under `web/`. The CLI discovers Claude Code, Codex, and pi JSONL
 transcripts on disk, zstd-compresses changed files, uploads bytes directly to
 S3-compatible storage with presigned URLs, commits metadata to Postgres, and can
@@ -10,11 +10,11 @@ restore a missing transcript for agent resume.
 
 ## Upload cadence
 
-MVP cadence is manual: users run `cmux-vault sync` when they want a catch-up.
+MVP cadence is manual: users run `bmux-vault sync` when they want a catch-up.
 The sync path is incremental by size and mtime first, then sha256 for changed
 files, so frequent manual runs are cheap.
 
-Next recommendation: add a launchd job or cmux-managed daemon that watches file
+Next recommendation: add a launchd job or bmux-managed daemon that watches file
 close events for supported transcript directories, debounces for a few seconds,
 and runs an hourly catch-up scan. The hourly scan is still needed because agent
 write patterns and filesystem notifications are not perfectly reliable.
@@ -26,7 +26,7 @@ a future `wifi_only` boolean with these semantics: when true, background sync
 skips expensive or constrained networks, while explicit manual `sync` still runs
 after warning the user.
 
-Recommended implementation: use `NWPathMonitor` in the cmux mac app, or a tiny
+Recommended implementation: use `NWPathMonitor` in the bmux mac app, or a tiny
 Darwin sidecar, to surface `isExpensive` and `isConstrained` to the sync daemon.
 The pure Go CLI should remain portable and accept the policy decision from that
 host integration rather than guessing from interface names.
@@ -64,8 +64,8 @@ temporarily.
 ## Quotas and limits
 
 Round 1 enforces request shape limits, a max batch size of 25 items,
-`CMUX_VAULT_MAX_UPLOAD_BYTES` on compressed upload size (default 512 MiB), and
-`CMUX_VAULT_MAX_USER_BYTES` on total stored compressed bytes per user (default
+`BMUX_VAULT_MAX_UPLOAD_BYTES` on compressed upload size (default 512 MiB), and
+`BMUX_VAULT_MAX_USER_BYTES` on total stored compressed bytes per user (default
 50 GiB). The quota counts committed snapshots plus unexpired upload grants: the
 uploads route records a grant row per minted presigned URL (whose signed
 Content-Length bounds the actual upload size), so uploading objects and never
@@ -98,12 +98,12 @@ resume logic.
 
 ## Monorepo rationale and extraction path
 
-Keeping `vault/` and `web/` in the cmux monorepo lets the CLI, API routes,
+Keeping `vault/` and `web/` in the bmux monorepo lets the CLI, API routes,
 schema, migrations, and docs evolve atomically while the cloud contract is still
 small. This also keeps Stack Auth and database conventions consistent with the
 native app backend.
 
-If `cmux-vault` becomes useful outside cmux, extraction is straightforward:
+If `bmux-vault` becomes useful outside bmux, extraction is straightforward:
 freeze the HTTP API, move `vault/` to a new repository, keep the Go module path
 or add a compatibility module, and publish release binaries from the extracted
-repo while the `web/` API remains in cmux.
+repo while the `web/` API remains in bmux.

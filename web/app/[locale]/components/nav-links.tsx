@@ -37,7 +37,7 @@ export function NavLinks() {
         <Link
           href="/pricing"
           onClick={() =>
-            posthog.capture("cmuxterm_pricing_nav_clicked", { location: "nav" })
+            posthog.capture("bmuxterm_pricing_nav_clicked", { location: "nav" })
           }
           className="hover:text-foreground transition-colors"
         >
@@ -45,10 +45,10 @@ export function NavLinks() {
         </Link>
       </ProUpgradeVisibility>
       <a
-        href="https://github.com/manaflow-ai/cmux"
+        href="https://github.com/manaflow-ai/bmux"
         target="_blank"
         rel="noopener noreferrer"
-        onClick={() => posthog.capture("cmuxterm_github_clicked", { location: "navbar" })}
+        onClick={() => posthog.capture("bmuxterm_github_clicked", { location: "navbar" })}
         className="hover:text-foreground transition-colors"
       >
         {t("github")}

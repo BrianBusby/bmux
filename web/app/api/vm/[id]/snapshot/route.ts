@@ -18,7 +18,7 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/snapshot",
-    { "cmux.vm.operation": "snapshot" },
+    { "bmux.vm.operation": "snapshot" },
     "/api/vm/[id]/snapshot POST failed",
     async ({ user, span }) => {
       const parsedBody = await optionalObjectBody(request);
@@ -28,7 +28,7 @@ export async function POST(
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id, "cmux.snapshot.named": !!name });
+      setSpanAttributes(span, { "bmux.vm.id": id, "bmux.snapshot.named": !!name });
       try {
         const snapshot = await runVmWorkflow(snapshotVm({
           userId: user.id,

@@ -11,7 +11,7 @@ struct SampleSidebarView: View {
                     if let errorText = model.errorText {
                         statusBanner(errorText)
                     } else if !insights.canSelectWorkspace {
-                        statusBanner(String(localized: "sampleSidebar.selectionLimited", defaultValue: "Review access in cmux to enable selecting workspaces from this extension."))
+                        statusBanner(String(localized: "sampleSidebar.selectionLimited", defaultValue: "Review access in bmux to enable selecting workspaces from this extension."))
                     }
                     actionBar(insights)
                     workspaceList(insights)
@@ -34,7 +34,7 @@ struct SampleSidebarView: View {
             Text(String(localized: "sampleSidebar.title", defaultValue: "Workspace Signals"))
                 .font(.system(size: 14, weight: .semibold))
             Text(String.localizedStringWithFormat(
-                String(localized: "sampleSidebar.workspaceCount", defaultValue: "%d workspaces shared by cmux"),
+                String(localized: "sampleSidebar.workspaceCount", defaultValue: "%d workspaces shared by bmux"),
                 insights.totalCount
             ))
             .font(.system(size: 11))
@@ -120,12 +120,12 @@ struct SampleSidebarView: View {
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
             if !insights.hasWorkspaceMetadata {
-                Text(String(localized: "sampleSidebar.metadataLimited", defaultValue: "Workspace metadata has not been shared yet. Review access in cmux to show workspace rows."))
+                Text(String(localized: "sampleSidebar.metadataLimited", defaultValue: "Workspace metadata has not been shared yet. Review access in bmux to show workspace rows."))
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else if insights.allWorkspaces.isEmpty {
-                Text(String(localized: "sampleSidebar.noWorkspaces", defaultValue: "No workspaces were shared by cmux."))
+                Text(String(localized: "sampleSidebar.noWorkspaces", defaultValue: "No workspaces were shared by bmux."))
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             } else {
@@ -181,7 +181,7 @@ struct SampleSidebarView: View {
         VStack(alignment: .leading, spacing: 8) {
             ProgressView()
                 .controlSize(.small)
-            Text(model.errorText ?? String(localized: "sampleSidebar.waitingForHost", defaultValue: "Waiting for cmux"))
+            Text(model.errorText ?? String(localized: "sampleSidebar.waitingForHost", defaultValue: "Waiting for bmux"))
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

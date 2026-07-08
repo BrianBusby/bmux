@@ -107,7 +107,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=joined",
+      "https://bmux.test/dashboard/testflight?testflight=joined",
     );
     expect(ascFetch).toHaveBeenCalledWith(
       "/v1/betaTesters",
@@ -129,7 +129,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=ineligible",
+      "https://bmux.test/dashboard/testflight?testflight=ineligible",
     );
     expect(ascFetch).not.toHaveBeenCalled();
   });
@@ -139,7 +139,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=left",
+      "https://bmux.test/dashboard/testflight?testflight=left",
     );
     expect(ascFetch).toHaveBeenCalledWith(
       "/v1/betaGroups/3ee84bfa-10ad-4f23-a45c-f9a3b037373e/relationships/betaTesters",
@@ -151,12 +151,12 @@ describe("TestFlight route", () => {
     user = null;
 
     const response = await postAction("join", {
-      referer: "https://cmux.test/ja/dashboard/testflight",
+      referer: "https://bmux.test/ja/dashboard/testflight",
     });
     const location = new URL(response.headers.get("location")!);
     const afterSignIn = new URL(
       location.searchParams.get("after_auth_return_to")!,
-      "https://cmux.test",
+      "https://bmux.test",
     );
 
     expect(response.status).toBe(303);
@@ -175,7 +175,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=error",
+      "https://bmux.test/dashboard/testflight?testflight=error",
     );
     expect(getUser).not.toHaveBeenCalled();
     expect(ascFetch).not.toHaveBeenCalled();
@@ -188,7 +188,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=unavailable",
+      "https://bmux.test/dashboard/testflight?testflight=unavailable",
     );
     expect(ascFetch).not.toHaveBeenCalled();
   });
@@ -204,15 +204,15 @@ function postAction(
 ) {
   const headers = new Headers({
     "content-type": "application/x-www-form-urlencoded",
-    origin: options.origin ?? "https://cmux.test",
-    referer: options.referer ?? "https://cmux.test/dashboard/testflight",
+    origin: options.origin ?? "https://bmux.test",
+    referer: options.referer ?? "https://bmux.test/dashboard/testflight",
   });
   if (options.secFetchSite) {
     headers.set("sec-fetch-site", options.secFetchSite);
   }
 
   return POST(
-    new NextRequest("https://cmux.test/api/testflight", {
+    new NextRequest("https://bmux.test/api/testflight", {
       method: "POST",
       headers,
       body: new URLSearchParams({ action }),

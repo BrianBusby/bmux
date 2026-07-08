@@ -1,5 +1,5 @@
 import Bonsplit
-import CmuxSettings
+import BmuxSettings
 import Foundation
 
 extension Workspace {

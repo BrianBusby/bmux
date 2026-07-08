@@ -18,8 +18,8 @@ import Network
 /// keeps normal traffic on a faithfully representable proxy while the whole
 /// loopback family (including `*.localhost`) connects directly, matching
 /// Chromium's implicit proxy-bypass rules.
-/// https://github.com/manaflow-ai/cmux/issues/5888
-/// https://github.com/manaflow-ai/cmux/issues/5703
+/// https://github.com/manaflow-ai/bmux/issues/5888
+/// https://github.com/manaflow-ai/bmux/issues/5703
 struct BrowserSystemProxyMirror: Equatable {
     /// A system proxy expressible as a Network.framework `ProxyConfiguration`.
     ///

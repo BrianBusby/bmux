@@ -16,7 +16,7 @@ const retrieveSession = mock(async () => ({
   id: "cs_1",
   payment_status: "paid",
   client_reference_id: "user_1",
-  metadata: { app: "cmux", plan: "pro" },
+  metadata: { app: "bmux", plan: "pro" },
   subscription: { id: "sub_1" },
   customer: { id: "cus_1" },
 }));
@@ -24,7 +24,7 @@ const retrieveSubscription = mock(async () => ({
   id: "sub_1",
   customer: "cus_1",
   status: "active",
-  metadata: { stackUserId: "user_1", app: "cmux" },
+  metadata: { stackUserId: "user_1", app: "bmux" },
   cancel_at_period_end: false,
   items: { data: [{ current_period_end: 1_800_000_000, price: { id: "price_1" } }] },
 }));
@@ -87,7 +87,7 @@ describe("Stripe billing webhook route", () => {
         object: {
           id: "cs_1",
           client_reference_id: "user_1",
-          metadata: { app: "cmux", plan: "pro" },
+          metadata: { app: "bmux", plan: "pro" },
         },
       },
     };
@@ -136,7 +136,7 @@ describe("Stripe billing webhook route", () => {
     expect(recordCheckoutCompletion).not.toHaveBeenCalled();
   });
 
-  test("records cmux checkout completions", async () => {
+  test("records bmux checkout completions", async () => {
     const response = await POST(webhookRequest());
 
     expect(response.status).toBe(200);
@@ -156,7 +156,7 @@ describe("Stripe billing webhook route", () => {
           id: "sub_1",
           customer: "cus_1",
           status: "canceled",
-          metadata: { stackUserId: "user_1", app: "cmux" },
+          metadata: { stackUserId: "user_1", app: "bmux" },
         },
       },
     };
@@ -180,7 +180,7 @@ describe("Stripe billing webhook route", () => {
 });
 
 function webhookRequest(): Request {
-  return new Request("https://cmux.test/api/stripe/webhook", {
+  return new Request("https://bmux.test/api/stripe/webhook", {
     method: "POST",
     headers: { "stripe-signature": "t=1,v1=test" },
     body: JSON.stringify({ id: "evt_1" }),

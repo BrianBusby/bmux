@@ -1,4 +1,4 @@
-//! Platform decisions for cmux-mux.
+//! Platform decisions for bmux-mux.
 
 use std::path::{Path, PathBuf};
 
@@ -111,28 +111,28 @@ pub mod transport {
 
 /// Runtime socket/pidfile directory for the current user.
 pub fn runtime_dir() -> PathBuf {
-    runtime_base_dir().join(format!("cmux-mux-{}", user_id_component()))
+    runtime_base_dir().join(format!("bmux-mux-{}", user_id_component()))
 }
 
 /// User config file path, honoring the XDG override order.
 pub fn config_path() -> Option<PathBuf> {
-    if let Some(path) = env_path("CMUX_MUX_CONFIG") {
+    if let Some(path) = env_path("BMUX_MUX_CONFIG") {
         return Some(path);
     }
     if let Some(config_home) = env_path("XDG_CONFIG_HOME") {
-        return Some(config_home.join("cmux").join("mux.json"));
+        return Some(config_home.join("bmux").join("mux.json"));
     }
     platform_config_path()
 }
 
 #[cfg(not(windows))]
 fn platform_config_path() -> Option<PathBuf> {
-    home_dir().map(|home| home.join(".config").join("cmux").join("mux.json"))
+    home_dir().map(|home| home.join(".config").join("bmux").join("mux.json"))
 }
 
 #[cfg(windows)]
 fn platform_config_path() -> Option<PathBuf> {
-    env_path("APPDATA").map(|appdata| appdata.join("cmux").join("mux.json"))
+    env_path("APPDATA").map(|appdata| appdata.join("bmux").join("mux.json"))
 }
 
 /// Default interactive shell for spawned PTY surfaces.
@@ -267,32 +267,32 @@ pub fn chrome_user_data_dir() -> Option<PathBuf> {
     #[cfg(target_os = "macos")]
     {
         home_dir().map(|home| {
-            home.join("Library").join("Application Support").join("cmux-mux").join("chrome-profile")
+            home.join("Library").join("Application Support").join("bmux-mux").join("chrome-profile")
         })
     }
 
     #[cfg(target_os = "linux")]
     {
         env_path("XDG_DATA_HOME")
-            .map(|data_home| data_home.join("cmux-mux").join("chrome-profile"))
+            .map(|data_home| data_home.join("bmux-mux").join("chrome-profile"))
             .or_else(|| {
                 home_dir().map(|home| {
-                    home.join(".local").join("share").join("cmux-mux").join("chrome-profile")
+                    home.join(".local").join("share").join("bmux-mux").join("chrome-profile")
                 })
             })
     }
 
     #[cfg(windows)]
     {
-        env_path("LOCALAPPDATA").map(|dir| dir.join("cmux-mux").join("chrome-profile"))
+        env_path("LOCALAPPDATA").map(|dir| dir.join("bmux-mux").join("chrome-profile"))
     }
 
     #[cfg(all(not(target_os = "macos"), not(target_os = "linux"), not(windows)))]
     {
-        env_path("XDG_DATA_HOME").map(|dir| dir.join("cmux-mux").join("chrome-profile")).or_else(
+        env_path("XDG_DATA_HOME").map(|dir| dir.join("bmux-mux").join("chrome-profile")).or_else(
             || {
                 home_dir().map(|home| {
-                    home.join(".local").join("share").join("cmux-mux").join("chrome-profile")
+                    home.join(".local").join("share").join("bmux-mux").join("chrome-profile")
                 })
             },
         )

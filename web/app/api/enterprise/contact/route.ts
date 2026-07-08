@@ -42,8 +42,8 @@ export async function POST(request: Request) {
     request,
     "/api/enterprise/contact",
     {
-      "cmux.subsystem": "enterprise",
-      "cmux.enterprise.operation": "contact",
+      "bmux.subsystem": "enterprise",
+      "bmux.enterprise.operation": "contact",
     },
     async (span): Promise<Response> => {
       const config = resolveEnterpriseConfig();
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
           { request },
         );
         setSpanAttributes(span, {
-          "cmux.rate_limited": rateLimited || error === "blocked",
+          "bmux.rate_limited": rateLimited || error === "blocked",
         });
         if (rateLimited || error === "blocked") {
           return jsonError("Rate limit exceeded", 429);
@@ -86,13 +86,13 @@ export async function POST(request: Request) {
 
       const lead = parsed.data;
       setSpanAttributes(span, {
-        "cmux.enterprise.company": lead.companyName,
-        "cmux.enterprise.email_domain": emailDomain(lead.businessEmail),
+        "bmux.enterprise.company": lead.companyName,
+        "bmux.enterprise.email_domain": emailDomain(lead.businessEmail),
       });
 
       const deliverable = await checkEmailDeliverable(lead.businessEmail);
       setSpanAttributes(span, {
-        "cmux.enterprise.email_check": deliverable,
+        "bmux.enterprise.email_check": deliverable,
       });
       if (deliverable === "invalid") {
         return jsonError("Business email cannot receive mail", 400);
@@ -147,8 +147,8 @@ export async function POST(request: Request) {
 
 function resolveEnterpriseConfig() {
   const resendApiKey = env.RESEND_API_KEY;
-  const fromEmail = env.CMUX_FEEDBACK_FROM_EMAIL;
-  const rateLimitId = env.CMUX_FEEDBACK_RATE_LIMIT_ID;
+  const fromEmail = env.BMUX_FEEDBACK_FROM_EMAIL;
+  const rateLimitId = env.BMUX_FEEDBACK_RATE_LIMIT_ID;
   if (!resendApiKey || !fromEmail || !rateLimitId) return null;
   return {
     resendApiKey,
@@ -203,7 +203,7 @@ async function capturePostHog(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         api_key: POSTHOG_PROJECT_KEY,
-        event: "cmux_enterprise_contact_submitted",
+        event: "bmux_enterprise_contact_submitted",
         distinct_id: lead.businessEmail,
         properties: {
           ...lead,
@@ -269,7 +269,7 @@ function enterpriseLeadEntries(lead: EnterpriseLead): [string, string][] {
 
 function slackText(lead: EnterpriseLead): string {
   const lines = [
-    ":office: New cmux Enterprise inquiry",
+    ":office: New bmux Enterprise inquiry",
     `*Name:* ${escapeSlack(`${lead.firstName} ${lead.lastName}`)}`,
     `*Company:* ${escapeSlack(lead.companyName)}`,
     `*Email:* ${escapeSlack(lead.businessEmail)}`,

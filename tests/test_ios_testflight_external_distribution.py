@@ -45,7 +45,7 @@ def main():
     module._token = lambda: "jwt"
 
     groups = [
-        _group("internal-1", "cmux beta", True),
+        _group("internal-1", "bmux beta", True),
         _group("external-1", "Founders Edition", False),
     ]
     chosen = module._select_group(groups, "", "")
@@ -72,7 +72,7 @@ def main():
         _check(False, "missing group name fails loudly")
 
     try:
-        module._select_group(groups, "", "cmux beta")
+        module._select_group(groups, "", "bmux beta")
     except RuntimeError as exc:
         _check("internal" in str(exc), "explicit internal group is rejected")
     else:
@@ -87,7 +87,7 @@ def main():
         _check(False, "ambiguous external groups fail loudly")
 
     try:
-        module._select_group([_group("internal-1", "cmux beta", True)], "", "")
+        module._select_group([_group("internal-1", "bmux beta", True)], "", "")
     except RuntimeError as exc:
         _check("no external beta groups" in str(exc), "missing external group fails loudly")
     else:

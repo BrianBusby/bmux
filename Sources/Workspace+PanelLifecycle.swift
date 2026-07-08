@@ -1,14 +1,14 @@
 import Bonsplit
-import CmuxAgentChat
-import CmuxSettings
-import CmuxCore
+import BmuxAgentChat
+import BmuxSettings
+import BmuxCore
 import Darwin
 import Foundation
-import CmuxSidebar
+import BmuxSidebar
 
 extension Workspace {
     private static let structuredAgentHookStatusKeys = AgentHibernationLifecycleStatusKeys.allowedStatusKeys
-    private static let managedSubagentEnvironmentKey = "CMUX_AGENT_MANAGED_SUBAGENT"
+    private static let managedSubagentEnvironmentKey = "BMUX_AGENT_MANAGED_SUBAGENT"
     private static let truthyStartupEnvironmentValues: Set<String> = ["1", "true", "yes", "on", "enabled"]
 
     var agentPIDs: [String: pid_t] {
@@ -464,7 +464,7 @@ extension Workspace {
         cleanupControllerSurfaceState: Bool = false
     ) -> WorkspaceRemoteConfiguration? {
         if publishSurfaceClosedEvent {
-            publishCmuxSurfaceClosed(panelId, paneId: paneId, panel: panel, origin: origin)
+            publishBmuxSurfaceClosed(panelId, paneId: paneId, panel: panel, origin: origin)
         }
 
         let closedAgentRuntimeState = agentRuntimeState(forPanelId: panelId)

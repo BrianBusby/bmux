@@ -164,29 +164,29 @@ function metadataUser(metadata: unknown): MetadataUser {
 }
 
 describe("syncProPlanMetadata", () => {
-  test("sets cmuxPlan on upgrade and keeps other keys", async () => {
+  test("sets bmuxPlan on upgrade and keeps other keys", async () => {
     const user = metadataUser({ theme: "dark" });
     await syncProPlanMetadata(user, true);
-    expect(user.updates).toEqual([{ theme: "dark", cmuxPlan: PRO_PLAN_ID }]);
+    expect(user.updates).toEqual([{ theme: "dark", bmuxPlan: PRO_PLAN_ID }]);
   });
 
   test("no-op when already pro", async () => {
-    const user = metadataUser({ cmuxPlan: PRO_PLAN_ID });
+    const user = metadataUser({ bmuxPlan: PRO_PLAN_ID });
     await syncProPlanMetadata(user, true);
     expect(user.updates).toEqual([]);
   });
 
-  test("removes cmuxPlan when pro lapsed", async () => {
-    const user = metadataUser({ cmuxPlan: PRO_PLAN_ID, theme: "dark" });
+  test("removes bmuxPlan when pro lapsed", async () => {
+    const user = metadataUser({ bmuxPlan: PRO_PLAN_ID, theme: "dark" });
     await syncProPlanMetadata(user, false);
     expect(user.updates).toEqual([{ theme: "dark" }]);
   });
 
-  test("leaves cmuxVmPlan override untouched", async () => {
-    const user = metadataUser({ cmuxVmPlan: "enterprise" });
+  test("leaves bmuxVmPlan override untouched", async () => {
+    const user = metadataUser({ bmuxVmPlan: "enterprise" });
     await syncProPlanMetadata(user, true);
     expect(user.updates).toEqual([
-      { cmuxVmPlan: "enterprise", cmuxPlan: PRO_PLAN_ID },
+      { bmuxVmPlan: "enterprise", bmuxPlan: PRO_PLAN_ID },
     ]);
   });
 
@@ -199,7 +199,7 @@ describe("syncProPlanMetadata", () => {
   test("tolerates non-object metadata", async () => {
     const user = metadataUser("bogus");
     await syncProPlanMetadata(user, true);
-    expect(user.updates).toEqual([{ cmuxPlan: PRO_PLAN_ID }]);
+    expect(user.updates).toEqual([{ bmuxPlan: PRO_PLAN_ID }]);
   });
 });
 
@@ -218,23 +218,23 @@ describe("reconcileProPlanMetadata", () => {
   test("upgrades metadata when subscribed but unsynced", async () => {
     const user = reconcileUser({}, [activePro]);
     expect(await reconcileProPlanMetadata(user)).toBe(true);
-    expect(user.updates).toEqual([{ cmuxPlan: PRO_PLAN_ID }]);
+    expect(user.updates).toEqual([{ bmuxPlan: PRO_PLAN_ID }]);
   });
 
   test("clears metadata when subscription lapsed", async () => {
-    const user = reconcileUser({ cmuxPlan: PRO_PLAN_ID }, []);
+    const user = reconcileUser({ bmuxPlan: PRO_PLAN_ID }, []);
     expect(await reconcileProPlanMetadata(user)).toBe(true);
     expect(user.updates).toEqual([{}]);
   });
 
   test("no-op when already in sync", async () => {
-    const user = reconcileUser({ cmuxPlan: PRO_PLAN_ID }, [activePro]);
+    const user = reconcileUser({ bmuxPlan: PRO_PLAN_ID }, [activePro]);
     expect(await reconcileProPlanMetadata(user)).toBe(false);
     expect(user.updates).toEqual([]);
   });
 
-  test("skips when manual cmuxVmPlan override is set", async () => {
-    const user = reconcileUser({ cmuxVmPlan: "enterprise" }, []);
+  test("skips when manual bmuxVmPlan override is set", async () => {
+    const user = reconcileUser({ bmuxVmPlan: "enterprise" }, []);
     expect(await reconcileProPlanMetadata(user)).toBe(false);
     expect(user.updates).toEqual([]);
   });
@@ -262,11 +262,11 @@ describe("resolveProPlanStatus", () => {
       hasManualVmPlanOverride: false,
       metadataChanged: true,
     });
-    expect(user.updates).toEqual([{ cmuxPlan: PRO_PLAN_ID }]);
+    expect(user.updates).toEqual([{ bmuxPlan: PRO_PLAN_ID }]);
   });
 
   test("returns free and clears stale pro metadata after lapse", async () => {
-    const user = statusUser({ cmuxPlan: PRO_PLAN_ID }, []);
+    const user = statusUser({ bmuxPlan: PRO_PLAN_ID }, []);
     await expect(resolveProPlanStatus(user)).resolves.toEqual({
       planId: FREE_PLAN_ID,
       isPro: false,
@@ -279,7 +279,7 @@ describe("resolveProPlanStatus", () => {
   });
 
   test("does not mutate metadata when a manual VM plan override exists", async () => {
-    const user = statusUser({ cmuxVmPlan: "enterprise" }, [activePro]);
+    const user = statusUser({ bmuxVmPlan: "enterprise" }, [activePro]);
     await expect(resolveProPlanStatus(user)).resolves.toEqual({
       planId: PRO_PLAN_ID,
       isPro: true,
@@ -305,6 +305,6 @@ describe("resolveProPlanStatus", () => {
       hasManualVmPlanOverride: false,
       metadataChanged: true,
     });
-    expect(user.updates).toEqual([{ cmuxPlan: PRO_PLAN_ID }]);
+    expect(user.updates).toEqual([{ bmuxPlan: PRO_PLAN_ID }]);
   });
 });

@@ -17,7 +17,7 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/attach-endpoint",
-    { "cmux.vm.operation": "open_attach" },
+    { "bmux.vm.operation": "open_attach" },
     "/api/vm/[id]/attach-endpoint failed",
     async ({ user, span }) => {
       const { id } = await params;
@@ -37,9 +37,9 @@ export async function POST(
       const sessionTitle = optionalString(body.title ?? body.sessionTitle ?? body.session_title);
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
-      setSpanAttributes(span, { "cmux.vm.attach.require_daemon": requireDaemon });
-      if (sessionId) setSpanAttributes(span, { "cmux.vm.attach.session_id": sessionId });
+      setSpanAttributes(span, { "bmux.vm.id": id });
+      setSpanAttributes(span, { "bmux.vm.attach.require_daemon": requireDaemon });
+      if (sessionId) setSpanAttributes(span, { "bmux.vm.attach.session_id": sessionId });
       try {
         const endpoint = await runVmWorkflow(openAttachEndpoint({
           userId: user.id,
@@ -49,7 +49,7 @@ export async function POST(
           sessionTitle,
           options: { requireDaemon, sessionId, attachmentId },
         }));
-        setSpanAttributes(span, { "cmux.vm.attach.transport": endpoint.transport });
+        setSpanAttributes(span, { "bmux.vm.attach.transport": endpoint.transport });
         return jsonResponse(endpoint);
       } catch (err) {
         if (isVmNotFoundError(err)) return notFoundVm(id);

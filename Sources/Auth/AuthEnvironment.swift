@@ -29,27 +29,27 @@ enum AuthEnvironment {
         bundleIdentifier: String?,
         isDebugBuild: Bool
     ) -> String {
-        if let overridden = environment["CMUX_AUTH_CALLBACK_SCHEME"]?
+        if let overridden = environment["BMUX_AUTH_CALLBACK_SCHEME"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
            !overridden.isEmpty {
             return overridden
         }
         if isDebugBuild {
-            // Untagged Debug builds register cmux-dev:// so they can coexist
+            // Untagged Debug builds register bmux-dev:// so they can coexist
             // with the installed stable app. Tagged Debug builds use
-            // cmux-dev-<tag>://.
-            if let tag = environment["CMUX_TAG"]?
+            // bmux-dev-<tag>://.
+            if let tag = environment["BMUX_TAG"]?
                 .trimmingCharacters(in: .whitespacesAndNewlines),
                !tag.isEmpty,
                let schemeTag = sanitizedCallbackSchemeTag(tag) {
-                return "cmux-dev-\(schemeTag)"
+                return "bmux-dev-\(schemeTag)"
             }
-            return "cmux-dev"
+            return "bmux-dev"
         }
-        if bundleIdentifier == "com.cmuxterm.app.nightly" {
-            return "cmux-nightly"
+        if bundleIdentifier == "com.bmuxterm.app.nightly" {
+            return "bmux-nightly"
         }
-        return "cmux"
+        return "bmux"
     }
 
     static func sanitizedCallbackSchemeTag(_ rawTag: String) -> String? {
@@ -84,15 +84,15 @@ enum AuthEnvironment {
 
     static var websiteOrigin: URL {
         resolvedURL(
-            environmentKey: "CMUX_WWW_ORIGIN",
-            fallback: "https://cmux.com"
+            environmentKey: "BMUX_WWW_ORIGIN",
+            fallback: "https://bmux.com"
         )
     }
 
-    /// Pricing page used by every "Upgrade to cmux Pro" entrypoint
+    /// Pricing page used by every "Upgrade to bmux Pro" entrypoint
     /// (Settings, command palette, Help menu). Resolution order mirrors
-    /// ``vmAPIBaseURL``: process env `CMUX_WWW_ORIGIN`, then the DEBUG-only
-    /// `~/.cmux-dev.env` file (so a deeplink-launched dev build can point at
+    /// ``vmAPIBaseURL``: process env `BMUX_WWW_ORIGIN`, then the DEBUG-only
+    /// `~/.bmux-dev.env` file (so a deeplink-launched dev build can point at
     /// a local web server), then the production website.
     static var pricingURL: URL {
         resolvedPricingURL(environment: ProcessInfo.processInfo.environment)
@@ -110,7 +110,7 @@ enum AuthEnvironment {
         appWebOrigin(environment: environment).appendingPathComponent("app-pricing")
     }
 
-    /// Payment entrypoint used by native app UI. `CMUX_BILLING_WWW_ORIGIN`
+    /// Payment entrypoint used by native app UI. `BMUX_BILLING_WWW_ORIGIN`
     /// can explicitly pin checkout elsewhere, otherwise checkout follows the
     /// same app web origin as `/app-pricing`. Direct Stripe Checkout binds the
     /// purchaser to the server-created session, so dev builds must start the
@@ -138,7 +138,7 @@ enum AuthEnvironment {
     static var signInWebsiteOrigin: URL {
         canonicalizedLoopbackURL(
             resolvedURL(
-                environmentKey: "CMUX_AUTH_WWW_ORIGIN",
+                environmentKey: "BMUX_AUTH_WWW_ORIGIN",
                 fallback: defaultWebOrigin
             )
         )
@@ -147,40 +147,40 @@ enum AuthEnvironment {
     static var apiBaseURL: URL {
         canonicalizedLoopbackURL(
             resolvedURL(
-                environmentKey: "CMUX_API_BASE_URL",
+                environmentKey: "BMUX_API_BASE_URL",
                 fallback: defaultAPIBaseURL
             )
         )
     }
 
-    /// Base URL for the cmux-owned cloud VM backend (`/api/vm`).
+    /// Base URL for the bmux-owned cloud VM backend (`/api/vm`).
     ///
     /// Resolution order (first hit wins):
-    ///   1. process env `CMUX_VM_API_BASE_URL` — works when the app is launched from a shell.
-    ///   2. `~/.cmux-dev.env` file `CMUX_VM_API_BASE_URL=...` line — works regardless of how
+    ///   1. process env `BMUX_VM_API_BASE_URL` — works when the app is launched from a shell.
+    ///   2. `~/.bmux-dev.env` file `BMUX_VM_API_BASE_URL=...` line — works regardless of how
     ///      the app was launched (click-through, Dock, `open`, etc.). Only honored in DEBUG.
-    ///   3. VM backend dev origin (`http://localhost:$CMUX_PORT` in Debug, cmux.com in Release).
+    ///   3. VM backend dev origin (`http://localhost:$BMUX_PORT` in Debug, bmux.com in Release).
     static var vmAPIBaseURL: URL {
-        if let overridden = ProcessInfo.processInfo.environment["CMUX_VM_API_BASE_URL"]?
+        if let overridden = ProcessInfo.processInfo.environment["BMUX_VM_API_BASE_URL"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
            !overridden.isEmpty,
            let url = URL(string: overridden) {
             return canonicalizedLoopbackURL(url)
         }
-        if let override = devOverride(key: "CMUX_VM_API_BASE_URL"),
+        if let override = devOverride(key: "BMUX_VM_API_BASE_URL"),
            let url = URL(string: override) {
             return canonicalizedLoopbackURL(url)
         }
         return canonicalizedLoopbackURL(URL(string: defaultVMAPIOrigin)!)
     }
 
-    /// Look up `key=value` in `~/.cmux-dev.env` for the DEBUG build. Returns nil in Release.
+    /// Look up `key=value` in `~/.bmux-dev.env` for the DEBUG build. Returns nil in Release.
     /// Kept tiny on purpose — this is a "drop a file, restart the app, it picks up" override,
     /// not a real config system.
     private static func devOverride(key: String) -> String? {
         #if DEBUG
         guard let home = ProcessInfo.processInfo.environment["HOME"] else { return nil }
-        let path = (home as NSString).appendingPathComponent(".cmux-dev.env")
+        let path = (home as NSString).appendingPathComponent(".bmux-dev.env")
         guard let data = try? String(contentsOfFile: path, encoding: .utf8) else { return nil }
         for raw in data.split(separator: "\n") {
             let line = raw.trimmingCharacters(in: .whitespaces)
@@ -198,36 +198,36 @@ enum AuthEnvironment {
         #endif
     }
 
-    private static var cmuxPort: String {
-        resolvedCmuxPort(environment: ProcessInfo.processInfo.environment)
+    private static var bmuxPort: String {
+        resolvedBmuxPort(environment: ProcessInfo.processInfo.environment)
     }
 
     private static func billingWebsiteOrigin(environment: [String: String]) -> URL {
-        if let overridden = environmentURL("CMUX_BILLING_WWW_ORIGIN", environment: environment) {
+        if let overridden = environmentURL("BMUX_BILLING_WWW_ORIGIN", environment: environment) {
             return overridden
         }
         return appWebOrigin(environment: environment)
     }
 
     private static func appWebOrigin(environment: [String: String]) -> URL {
-        if let explicitWebsite = environmentURL("CMUX_WWW_ORIGIN", environment: environment) {
+        if let explicitWebsite = environmentURL("BMUX_WWW_ORIGIN", environment: environment) {
             return canonicalizedLoopbackURL(explicitWebsite)
         }
-        if let authWebsite = environmentURL("CMUX_AUTH_WWW_ORIGIN", environment: environment) {
+        if let authWebsite = environmentURL("BMUX_AUTH_WWW_ORIGIN", environment: environment) {
             return canonicalizedLoopbackURL(authWebsite)
         }
         #if DEBUG
-        if environmentPort("CMUX_PORT", environment: environment) != nil ||
+        if environmentPort("BMUX_PORT", environment: environment) != nil ||
             environmentPort("PORT", environment: environment) != nil {
             return URL(string: resolvedDefaultWebOrigin(environment: environment))!
         }
-        if let override = devOverride(key: "CMUX_WWW_ORIGIN"),
+        if let override = devOverride(key: "BMUX_WWW_ORIGIN"),
            let url = URL(string: override) {
             return canonicalizedLoopbackURL(url)
         }
         #endif
         return resolvedURL(
-            environmentKey: "CMUX_WWW_ORIGIN",
+            environmentKey: "BMUX_WWW_ORIGIN",
             fallback: resolvedDefaultWebOrigin(environment: environment),
             environment: environment
         )
@@ -239,16 +239,16 @@ enum AuthEnvironment {
             resolvingAgainstBaseURL: false
         )!
         var queryItems = components.queryItems ?? []
-        queryItems.removeAll { $0.name == "cmux_external_browser" }
-        queryItems.removeAll { $0.name == "cmux_scheme" }
-        queryItems.append(URLQueryItem(name: "cmux_external_browser", value: "1"))
-        queryItems.append(URLQueryItem(name: "cmux_scheme", value: callbackScheme))
+        queryItems.removeAll { $0.name == "bmux_external_browser" }
+        queryItems.removeAll { $0.name == "bmux_scheme" }
+        queryItems.append(URLQueryItem(name: "bmux_external_browser", value: "1"))
+        queryItems.append(URLQueryItem(name: "bmux_scheme", value: callbackScheme))
         components.queryItems = queryItems
         return components.url!
     }
 
-    private static func resolvedCmuxPort(environment: [String: String]) -> String {
-        environmentPort("CMUX_PORT", environment: environment)
+    private static func resolvedBmuxPort(environment: [String: String]) -> String {
+        environmentPort("BMUX_PORT", environment: environment)
             ?? environmentPort("PORT", environment: environment)
             ?? "3777"
     }
@@ -273,49 +273,49 @@ enum AuthEnvironment {
     }
 
     private static func resolvedDefaultWebOrigin(environment: [String: String]) -> String {
-        if let origin = environment["CMUX_WWW_ORIGIN"]?
+        if let origin = environment["BMUX_WWW_ORIGIN"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
            !origin.isEmpty {
             return origin
         }
         #if DEBUG
-        return "http://localhost:\(resolvedCmuxPort(environment: environment))"
+        return "http://localhost:\(resolvedBmuxPort(environment: environment))"
         #else
-        return "https://cmux.com"
+        return "https://bmux.com"
         #endif
     }
 
     private static var defaultVMAPIOrigin: String {
         #if DEBUG
-        return "http://localhost:\(cmuxPort)"
+        return "http://localhost:\(bmuxPort)"
         #else
-        return "https://cmux.com"
+        return "https://bmux.com"
         #endif
     }
 
     private static var defaultAPIBaseURL: String {
-        if let url = ProcessInfo.processInfo.environment["CMUX_API_BASE_URL"]?
+        if let url = ProcessInfo.processInfo.environment["BMUX_API_BASE_URL"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
            !url.isEmpty {
             return url
         }
         #if DEBUG
-        return "http://localhost:\(cmuxPort)"
+        return "http://localhost:\(bmuxPort)"
         #else
-        return "https://api.cmux.sh"
+        return "https://api.bmux.sh"
         #endif
     }
 
     static var stackBaseURL: URL {
         resolvedURL(
-            environmentKey: "CMUX_STACK_BASE_URL",
+            environmentKey: "BMUX_STACK_BASE_URL",
             fallback: "https://api.stack-auth.com"
         )
     }
 
     static var stackProjectID: String {
         let environment = ProcessInfo.processInfo.environment
-        if let projectID = environment["CMUX_STACK_PROJECT_ID"]?
+        if let projectID = environment["BMUX_STACK_PROJECT_ID"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
            !projectID.isEmpty {
             return projectID
@@ -329,7 +329,7 @@ enum AuthEnvironment {
 
     static var stackPublishableClientKey: String {
         let environment = ProcessInfo.processInfo.environment
-        if let clientKey = environment["CMUX_STACK_PUBLISHABLE_CLIENT_KEY"]?
+        if let clientKey = environment["BMUX_STACK_PUBLISHABLE_CLIENT_KEY"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
            !clientKey.isEmpty {
             return clientKey
@@ -348,7 +348,7 @@ enum AuthEnvironment {
 
     static func resolvedAfterSignInOrigin(environment: [String: String]) -> URL {
         resolvedURL(
-            environmentKey: "CMUX_AUTH_WWW_ORIGIN",
+            environmentKey: "BMUX_AUTH_WWW_ORIGIN",
             fallback: resolvedDefaultWebOrigin(environment: environment),
             environment: environment
         )
@@ -377,7 +377,7 @@ enum AuthEnvironment {
     ) -> URL {
         // Build the after-sign-in callback URL that includes the native app return scheme.
         // The after-sign-in handler extracts tokens from the Stack Auth session
-        // and redirects to the native app via the cmux:// callback scheme.
+        // and redirects to the native app via the bmux:// callback scheme.
         var afterSignInComponents = URLComponents(
             url: afterSignInOrigin.appendingPathComponent("handler/after-sign-in", isDirectory: false),
             resolvingAgainstBaseURL: false
@@ -385,7 +385,7 @@ enum AuthEnvironment {
         var nativeCallbackComponents = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)!
         if let callbackState {
             nativeCallbackComponents.queryItems = [
-                URLQueryItem(name: "cmux_auth_state", value: callbackState),
+                URLQueryItem(name: "bmux_auth_state", value: callbackState),
             ]
         }
 
@@ -396,7 +396,7 @@ enum AuthEnvironment {
             ),
         ]
 
-        // Enter through cmux's native sign-in wrapper, which sets a short-lived
+        // Enter through bmux's native sign-in wrapper, which sets a short-lived
         // server-side handoff nonce before redirecting to Stack's /sign-in.
         var components = URLComponents(
             url: afterSignInOrigin.appendingPathComponent("handler/native-sign-in", isDirectory: false),

@@ -11,11 +11,11 @@ const freestyleDriverSource = readFileSync(
 describe("Freestyle Cloud VM shell repair", () => {
   test("daemon creation and repair use the managed cloud shell", () => {
     expect(freestyleDriverSource).toContain(
-      'const CMUX_CLOUD_SHELL_PATH = "/usr/local/bin/cmux-cloud-shell"',
+      'const BMUX_CLOUD_SHELL_PATH = "/usr/local/bin/bmux-cloud-shell"',
     );
-    expect(freestyleDriverSource).toContain('"--shell",\n        CMUX_CLOUD_SHELL_PATH');
+    expect(freestyleDriverSource).toContain('"--shell",\n        BMUX_CLOUD_SHELL_PATH');
     expect(freestyleDriverSource).toContain(
-      "ExecStart=/usr/local/bin/cmuxd-remote serve --ws --listen 0.0.0.0:7777 --auth-lease-file ${CMUXD_WS_PTY_LEASE_PATH} --rpc-auth-lease-file ${CMUXD_WS_RPC_LEASE_PATH} --shell /usr/local/bin/cmux-cloud-shell",
+      "ExecStart=/usr/local/bin/bmuxd-remote serve --ws --listen 0.0.0.0:7777 --auth-lease-file ${BMUXD_WS_PTY_LEASE_PATH} --rpc-auth-lease-file ${BMUXD_WS_RPC_LEASE_PATH} --shell /usr/local/bin/bmux-cloud-shell",
     );
     expect(freestyleDriverSource).not.toContain('"--shell",\n        "/bin/bash"');
   });
@@ -23,7 +23,7 @@ describe("Freestyle Cloud VM shell repair", () => {
   test("healthy websocket daemons are still repaired when shell integration is missing", () => {
     expect(freestyleDriverSource).toContain("readFreestyleCloudShellState(vm)");
     expect(freestyleDriverSource).toContain("service-shell-not-managed");
-    expect(freestyleDriverSource).toContain("cmux-user-missing");
+    expect(freestyleDriverSource).toContain("bmux-user-missing");
     expect(freestyleDriverSource).toContain("home-zshrc-missing");
     expect(freestyleDriverSource).toContain("freestyleCloudShellSetupCommands()");
   });

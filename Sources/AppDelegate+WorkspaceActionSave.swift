@@ -35,7 +35,7 @@ extension AppDelegate {
     func appendWorkspaceActionAffordances(
         to menu: NSMenu,
         windowId: UUID,
-        cmuxConfigStore: CmuxConfigStore
+        bmuxConfigStore: BmuxConfigStore
     ) {
         if !menu.items.isEmpty {
             menu.addItem(.separator())
@@ -52,8 +52,8 @@ extension AppDelegate {
         saveItem.representedObject = windowId as NSUUID
         menu.addItem(saveItem)
 
-        let deletableActions = cmuxConfigStore.loadedActions
-            .filter { isDeletableGlobalAction($0, cmuxConfigStore: cmuxConfigStore) }
+        let deletableActions = bmuxConfigStore.loadedActions
+            .filter { isDeletableGlobalAction($0, bmuxConfigStore: bmuxConfigStore) }
             .sorted { ($0.title, $0.id) < ($1.title, $1.id) }
         if !deletableActions.isEmpty {
             let deleteParent = NSMenuItem(
@@ -79,7 +79,7 @@ extension AppDelegate {
                 )
                 item.image = action.icon?.contextMenuImage(
                     configSourcePath: action.iconSourcePath,
-                    globalConfigPath: cmuxConfigStore.globalConfigPath
+                    globalConfigPath: bmuxConfigStore.globalConfigPath
                 )
                 submenu.addItem(item)
             }
@@ -88,8 +88,8 @@ extension AppDelegate {
         }
 
         let defaultLayoutModel = NewWorkspaceDefaultLayoutMenuModel.build(
-            loadedActions: cmuxConfigStore.loadedActions,
-            newWorkspaceActionID: cmuxConfigStore.newWorkspaceActionID
+            loadedActions: bmuxConfigStore.loadedActions,
+            newWorkspaceActionID: bmuxConfigStore.newWorkspaceActionID
         )
         if !defaultLayoutModel.entries.isEmpty || defaultLayoutModel.hasDefault {
             let defaultParent = NSMenuItem(
@@ -125,10 +125,10 @@ extension AppDelegate {
                 item.target = self
                 item.representedObject = WorkspaceDefaultLayoutBox(windowId: windowId, actionID: entry.id)
                 item.state = entry.isCurrent ? .on : .off
-                if let action = cmuxConfigStore.actionLookup[entry.id] {
+                if let action = bmuxConfigStore.actionLookup[entry.id] {
                     item.image = action.icon?.contextMenuImage(
                         configSourcePath: action.iconSourcePath,
-                        globalConfigPath: cmuxConfigStore.globalConfigPath
+                        globalConfigPath: bmuxConfigStore.globalConfigPath
                     )
                 }
                 submenu.addItem(item)
@@ -142,7 +142,7 @@ extension AppDelegate {
                 localized: "menu.newWorkspace.customizeLayouts",
                 defaultValue: "Customize Workspace Layouts…"
             ),
-            action: #selector(customizeCmuxConfigActionsMenuItem(_:)),
+            action: #selector(customizeBmuxConfigActionsMenuItem(_:)),
             keyEquivalent: ""
         )
         customizeItem.target = self
@@ -154,20 +154,20 @@ extension AppDelegate {
     /// write) are deletable from the UI; project-local and built-in actions
     /// are not.
     func isDeletableGlobalAction(
-        _ action: CmuxResolvedConfigAction,
-        cmuxConfigStore: CmuxConfigStore
+        _ action: BmuxResolvedConfigAction,
+        bmuxConfigStore: BmuxConfigStore
     ) -> Bool {
         guard let sourcePath = action.actionSourcePath else { return false }
         func canonical(_ path: String) -> String {
             URL(fileURLWithPath: path).resolvingSymlinksInPath().standardizedFileURL.path
         }
-        return canonical(sourcePath) == canonical(cmuxConfigStore.globalConfigPath)
+        return canonical(sourcePath) == canonical(bmuxConfigStore.globalConfigPath)
     }
 
     @objc func deleteWorkspaceConfigActionMenuItem(_ sender: NSMenuItem) {
         guard let box = sender.representedObject as? WorkspaceActionDeleteBox,
               let context = mainWindowContexts.values.first(where: { $0.windowId == box.windowId }),
-              let cmuxConfigStore = context.cmuxConfigStore,
+              let bmuxConfigStore = context.bmuxConfigStore,
               let window = resolvedWindow(for: context) else {
             NSSound.beep()
             return
@@ -185,7 +185,7 @@ extension AppDelegate {
         alert.informativeText = String(
             format: messageFormat,
             box.actionTitle,
-            (cmuxConfigStore.globalConfigPath as NSString).abbreviatingWithTildeInPath
+            (bmuxConfigStore.globalConfigPath as NSString).abbreviatingWithTildeInPath
         )
         let deleteButton = alert.addButton(withTitle: String(
             localized: "dialog.deleteWorkspaceLayout.delete",
@@ -196,16 +196,16 @@ extension AppDelegate {
             localized: "dialog.deleteWorkspaceLayout.cancel",
             defaultValue: "Cancel"
         ))
-        alert.beginSheetModal(for: window) { [weak window, weak cmuxConfigStore] response in
-            guard response == .alertFirstButtonReturn, let cmuxConfigStore else { return }
+        alert.beginSheetModal(for: window) { [weak window, weak bmuxConfigStore] response in
+            guard response == .alertFirstButtonReturn, let bmuxConfigStore else { return }
             do {
-                try CmuxConfigActionSaver.deleteAction(
+                try BmuxConfigActionSaver.deleteAction(
                     id: box.actionID,
-                    globalConfigPath: cmuxConfigStore.globalConfigPath
+                    globalConfigPath: bmuxConfigStore.globalConfigPath
                 )
-                cmuxConfigStore.loadAll()
+                bmuxConfigStore.loadAll()
 #if DEBUG
-                cmuxDebugLog("deleteWorkspaceAction.deleted id=\(box.actionID)")
+                bmuxDebugLog("deleteWorkspaceAction.deleted id=\(box.actionID)")
 #endif
             } catch {
                 guard let window else { return }
@@ -237,30 +237,30 @@ extension AppDelegate {
     @objc private func setNewWorkspaceDefaultLayoutMenuItem(_ sender: NSMenuItem) {
         guard let box = sender.representedObject as? WorkspaceDefaultLayoutBox,
               let context = mainWindowContexts.values.first(where: { $0.windowId == box.windowId }),
-              let cmuxConfigStore = context.cmuxConfigStore,
+              let bmuxConfigStore = context.bmuxConfigStore,
               let window = resolvedWindow(for: context) else {
             NSSound.beep()
             return
         }
         do {
-            try CmuxConfigActionSaver.setNewWorkspaceDefaultAction(
+            try BmuxConfigActionSaver.setNewWorkspaceDefaultAction(
                 id: box.actionID,
-                globalConfigPath: cmuxConfigStore.globalConfigPath
+                globalConfigPath: bmuxConfigStore.globalConfigPath
             )
-            cmuxConfigStore.loadAll()
+            bmuxConfigStore.loadAll()
 #if DEBUG
-            cmuxDebugLog("newWorkspaceDefaultLayout.updated id=\(box.actionID ?? "<none>")")
+            bmuxDebugLog("newWorkspaceDefaultLayout.updated id=\(box.actionID ?? "<none>")")
 #endif
         } catch {
             presentNewWorkspaceDefaultLayoutError(error, for: window)
         }
     }
 
-    @objc private func customizeCmuxConfigActionsMenuItem(_ sender: NSMenuItem) {
-        // Open inside cmux's own file editor rather than an external app — the
+    @objc private func customizeBmuxConfigActionsMenuItem(_ sender: NSMenuItem) {
+        // Open inside bmux's own file editor rather than an external app — the
         // OS-default handler for .json can be Xcode, which is never what
         // "customize my workspace layouts" means.
-        let configURL = SidebarWorkspaceGroupConfigOpener.materializedCmuxConfigURL()
+        let configURL = SidebarWorkspaceGroupConfigOpener.materializedBmuxConfigURL()
         guard let windowId = (sender.representedObject as? NSUUID) as UUID?,
               let context = mainWindowContexts.values.first(where: { $0.windowId == windowId }),
               let workspace = context.tabManager.selectedWorkspace,
@@ -272,13 +272,13 @@ extension AppDelegate {
                   focus: true,
                   reuseExisting: true
               ).isEmpty else {
-            SidebarWorkspaceGroupConfigOpener.openCmuxConfigInEditor()
+            SidebarWorkspaceGroupConfigOpener.openBmuxConfigInEditor()
             return
         }
     }
 
     private func presentSaveWorkspaceActionDialog(context: MainWindowContext) {
-        guard let cmuxConfigStore = context.cmuxConfigStore,
+        guard let bmuxConfigStore = context.bmuxConfigStore,
               let workspace = context.tabManager.selectedWorkspace,
               let window = resolvedWindow(for: context) else {
             NSSound.beep()
@@ -286,18 +286,18 @@ extension AppDelegate {
         }
         presentSaveWorkspaceActionDialog(
             workspace: workspace,
-            cmuxConfigStore: cmuxConfigStore,
+            bmuxConfigStore: bmuxConfigStore,
             window: window
         )
     }
 
     private func presentSaveWorkspaceActionDialog(
         workspace: Workspace,
-        cmuxConfigStore: CmuxConfigStore,
+        bmuxConfigStore: BmuxConfigStore,
         window: NSWindow
     ) {
         let snapshot = workspace.captureConfigActionSnapshot()
-        let globalConfigPath = cmuxConfigStore.globalConfigPath
+        let globalConfigPath = bmuxConfigStore.globalConfigPath
 
         let alert = NSAlert()
         alert.messageText = String(
@@ -379,7 +379,7 @@ extension AppDelegate {
             defaultValue: "Cancel"
         ))
 
-        alert.beginSheetModal(for: window) { [weak window, weak cmuxConfigStore] response in
+        alert.beginSheetModal(for: window) { [weak window, weak bmuxConfigStore] response in
             guard response == .alertFirstButtonReturn else { return }
             let typedTitle = nameField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
             let title = typedTitle.isEmpty
@@ -391,19 +391,19 @@ extension AppDelegate {
             var definition = snapshot.definition
             definition.name = title
             do {
-                let result = try CmuxConfigActionSaver.saveWorkspaceAction(
+                let result = try BmuxConfigActionSaver.saveWorkspaceAction(
                     title: title,
                     definition: definition,
                     globalConfigPath: globalConfigPath,
                     // Reserve every id the active store resolved (including
                     // project-local actions) so the saved global action can't
                     // be shadowed into a no-op.
-                    reservedActionIDs: cmuxConfigStore.map { Set($0.actionLookup.keys) } ?? []
+                    reservedActionIDs: bmuxConfigStore.map { Set($0.actionLookup.keys) } ?? []
                 )
                 var defaultUpdateError: Error?
                 if makeDefaultCheckbox.state == .on {
                     do {
-                        try CmuxConfigActionSaver.setNewWorkspaceDefaultAction(
+                        try BmuxConfigActionSaver.setNewWorkspaceDefaultAction(
                             id: result.actionID,
                             globalConfigPath: globalConfigPath
                         )
@@ -413,12 +413,12 @@ extension AppDelegate {
                 }
                 // The app's store runs without file watchers; reload explicitly
                 // so the saved layout shows up in the menus right away.
-                cmuxConfigStore?.loadAll()
+                bmuxConfigStore?.loadAll()
                 if let defaultUpdateError, let window {
                     self.presentNewWorkspaceDefaultLayoutError(defaultUpdateError, for: window)
                 }
 #if DEBUG
-                cmuxDebugLog("saveWorkspaceAction.saved id=\(result.actionID)")
+                bmuxDebugLog("saveWorkspaceAction.saved id=\(result.actionID)")
 #endif
             } catch {
                 guard let window else { return }

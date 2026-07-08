@@ -25,17 +25,17 @@ export async function POST(request: Request): Promise<Response> {
   return withVaultApiRoute(
     request,
     "/api/vault/cli/auth/start",
-    { "cmux.vault.operation": "cli_auth.start" },
+    { "bmux.vault.operation": "cli_auth.start" },
     "/api/vault/cli/auth/start POST failed",
     async ({ span }) => {
       // Per-IP throttle through the platform firewall, same pattern as the other
       // public POST endpoints (waitlist, feedback). Only active on Vercel.
-      if (process.env.VERCEL === "1" && env.CMUX_FEEDBACK_RATE_LIMIT_ID) {
-        const { error, rateLimited } = await checkRateLimit(env.CMUX_FEEDBACK_RATE_LIMIT_ID, {
+      if (process.env.VERCEL === "1" && env.BMUX_FEEDBACK_RATE_LIMIT_ID) {
+        const { error, rateLimited } = await checkRateLimit(env.BMUX_FEEDBACK_RATE_LIMIT_ID, {
           request,
         });
         setSpanAttributes(span, {
-          "cmux.vault.rate_limited": rateLimited || error === "blocked",
+          "bmux.vault.rate_limited": rateLimited || error === "blocked",
         });
         if (rateLimited || error === "blocked") {
           return jsonResponse({ error: "throttled" }, 429);
@@ -70,7 +70,7 @@ export async function POST(request: Request): Promise<Response> {
           ),
         );
       const pendingCount = pending?.value ?? 0;
-      setSpanAttributes(span, { "cmux.vault.pending_auth_requests": pendingCount });
+      setSpanAttributes(span, { "bmux.vault.pending_auth_requests": pendingCount });
       if (pendingCount >= MAX_PENDING_REQUESTS) {
         return jsonResponse({ error: "throttled" }, 429);
       }
@@ -86,8 +86,8 @@ export async function POST(request: Request): Promise<Response> {
       const verification = new URL("/dashboard/vault/cli-auth", request.url);
       verification.searchParams.set("code", userCode);
       setSpanAttributes(span, {
-        "cmux.vault.result_count": 1,
-        "cmux.vault.cli_auth.expires_in_seconds": EXPIRES_IN_SECONDS,
+        "bmux.vault.result_count": 1,
+        "bmux.vault.cli_auth.expires_in_seconds": EXPIRES_IN_SECONDS,
       });
 
       return jsonResponse({

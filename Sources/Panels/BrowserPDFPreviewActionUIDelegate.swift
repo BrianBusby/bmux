@@ -18,18 +18,18 @@ class BrowserPDFPreviewActionUIDelegate: NSObject, WKUIDelegate {
     ) {
         guard !data.isEmpty else {
             #if DEBUG
-            cmuxDebugLog("browser.pdfPreview.save stage=rejectEmptyData")
+            bmuxDebugLog("browser.pdfPreview.save stage=rejectEmptyData")
             #endif
             return
         }
-        guard let downloadDelegate = (webView as? CmuxWebView)?.cmuxDownloadDelegate as? BrowserDownloadDelegate else {
+        guard let downloadDelegate = (webView as? BmuxWebView)?.bmuxDownloadDelegate as? BrowserDownloadDelegate else {
             #if DEBUG
-            cmuxDebugLog("browser.pdfPreview.save stage=rejectMissingDelegate")
+            bmuxDebugLog("browser.pdfPreview.save stage=rejectMissingDelegate")
             #endif
             return
         }
         #if DEBUG
-        cmuxDebugLog("browser.pdfPreview.save stage=accepted")
+        bmuxDebugLog("browser.pdfPreview.save stage=accepted")
         #endif
         downloadDelegate.savePDFPreviewData(
             data,
@@ -50,7 +50,7 @@ class BrowserPDFPreviewActionUIDelegate: NSObject, WKUIDelegate {
         completionHandler: @escaping () -> Void
     ) {
         #if DEBUG
-        cmuxDebugLog("browser.pdfPreview.print stage=accepted")
+        bmuxDebugLog("browser.pdfPreview.print stage=accepted")
         #endif
         printOperationRunner.runPrintOperation(
             for: webView,

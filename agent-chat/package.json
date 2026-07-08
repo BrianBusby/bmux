@@ -1,5 +1,5 @@
 {
-  "name": "cmux-agent-chat",
+  "name": "bmux-agent-chat",
   "private": true,
   "type": "module",
   "scripts": {

@@ -1,6 +1,6 @@
 # CLI Surface
 
-The generated CLI is `cmux-mux <verb> ...`. The current checked-in binary also has TUI server modes; this file specifies the future generated command verbs that map 1:1 to `commands.md`.
+The generated CLI is `bmux-mux <verb> ...`. The current checked-in binary also has TUI server modes; this file specifies the future generated command verbs that map 1:1 to `commands.md`.
 
 ## Global Conventions
 
@@ -11,8 +11,8 @@ The CLI resolves the target session in this order:
 | Priority | Source |
 | --- | --- |
 | 1 | `--socket <path>` |
-| 2 | `CMUX_MUX_SOCKET` |
-| 3 | `--session <name>` using `$TMPDIR/cmux-mux-<uid>/<session>.sock` |
+| 2 | `BMUX_MUX_SOCKET` |
+| 3 | `--session <name>` using `$TMPDIR/bmux-mux-<uid>/<session>.sock` |
 | 4 | default session `main` using the default socket path |
 
 `--session` and `--socket` are global flags and may appear before or after the verb.
@@ -105,39 +105,39 @@ The generated CLI requires one of `--index` or `--delta` for `select-tab`, `sele
 1. Identify a session:
 
 ```bash
-cmux-mux --session main identify
+bmux-mux --session main identify
 ```
 
 2. Create a workspace and capture the surface id:
 
 ```bash
-surface=$(cmux-mux new-workspace --name build)
+surface=$(bmux-mux new-workspace --name build)
 ```
 
 3. Send text from an argument:
 
 ```bash
-cmux-mux send --surface "$surface" --text "cargo test"$'\r'
+bmux-mux send --surface "$surface" --text "cargo test"$'\r'
 ```
 
 4. Send a script from stdin:
 
 ```bash
-printf 'printf "ready\\n"\r' | cmux-mux send --surface "$surface"
+printf 'printf "ready\\n"\r' | bmux-mux send --surface "$surface"
 ```
 
 5. Wait for a prompt, then send a command:
 
 ```bash
-cmux-mux wait-for --surface "$surface" --pattern 'ready' --timeout-ms 5000
-cmux-mux send --surface "$surface" --text "echo ok"$'\r'
+bmux-mux wait-for --surface "$surface" --pattern 'ready' --timeout-ms 5000
+bmux-mux send --surface "$surface" --text "echo ok"$'\r'
 ```
 
 6. Run a tool in a new tab and poll the screen:
 
 ```bash
-surface=$(cmux-mux run --name server -- python3 -m http.server)
-until cmux-mux read-screen --surface "$surface" | rg -q 'Serving HTTP'; do
+surface=$(bmux-mux run --name server -- python3 -m http.server)
+until bmux-mux read-screen --surface "$surface" | rg -q 'Serving HTTP'; do
   sleep 0.2
 done
 ```
@@ -145,34 +145,34 @@ done
 7. Split a pane and resize the split:
 
 ```bash
-new_surface=$(cmux-mux split --pane 2 --dir right)
-cmux-mux set-ratio --pane 2 --dir right --ratio 0.65
+new_surface=$(bmux-mux split --pane 2 --dir right)
+bmux-mux set-ratio --pane 2 --dir right --ratio 0.65
 ```
 
 8. Subscribe to events and react to bells:
 
 ```bash
-cmux-mux subscribe |
+bmux-mux subscribe |
   jq -rc 'select(.event == "bell") | .surface' |
   while read -r surface; do
-    cmux-mux notify --title "Bell" --body "Surface $surface rang" --surface "$surface"
+    bmux-mux notify --title "Bell" --body "Surface $surface rang" --surface "$surface"
   done
 ```
 
 9. Watch agent states from a shell script:
 
 ```bash
-cmux-mux subscribe |
+bmux-mux subscribe |
   jq -rc 'select(.event == "agent-state-changed") | select(.state == "blocked")' |
   while read -r event; do
     surface=$(jq -r '.surface' <<<"$event")
-    cmux-mux notify --title "Agent blocked" --body "Surface $surface needs attention" --level warning --surface "$surface"
+    bmux-mux notify --title "Agent blocked" --body "Surface $surface needs attention" --level warning --surface "$surface"
   done
 ```
 
 10. Use short ids when protocol v6 is available:
 
 ```bash
-sid=$(cmux-mux ids --kind surface | awk 'NR == 1 {print $3}')
-cmux-mux send-key --surface "$sid" enter
+sid=$(bmux-mux ids --kind surface | awk 'NR == 1 {print $3}')
+bmux-mux send-key --surface "$sid" enter
 ```

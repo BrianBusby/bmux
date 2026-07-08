@@ -19,7 +19,7 @@ export async function GET(
   return withAuthedVaultApiRoute(
     request,
     "/api/vault/sessions/[id]/content",
-    { "cmux.vault.operation": "sessions.content" },
+    { "bmux.vault.operation": "sessions.content" },
     "/api/vault/sessions/[id]/content GET failed",
     {},
     async ({ user, span }) => {
@@ -32,10 +32,10 @@ export async function GET(
         .where(and(eq(vaultSessions.id, id), eq(vaultSessions.userId, user.id)))
         .limit(1);
       if (!session) {
-        setSpanAttributes(span, { "cmux.vault.session_found": false });
+        setSpanAttributes(span, { "bmux.vault.session_found": false });
         return jsonResponse({ error: "not_found" }, 404);
       }
-      setSpanAttributes(span, { "cmux.vault.session_found": true });
+      setSpanAttributes(span, { "bmux.vault.session_found": true });
 
       let downloadUrl: string;
       try {
@@ -63,7 +63,7 @@ export async function GET(
         return jsonResponse({ error: "content_unavailable" }, 502);
       }
       setSpanAttributes(span, {
-        "cmux.vault.content_length": contentLength(upstream.headers.get("content-length")),
+        "bmux.vault.content_length": contentLength(upstream.headers.get("content-length")),
       });
 
       return new Response(upstream.body, {

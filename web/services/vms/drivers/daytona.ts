@@ -27,17 +27,17 @@ import {
 
 // Daytona sandboxes are reached exclusively through preview URLs
 // (`https://7777-<sandboxId>.<proxyDomain>` + `x-daytona-preview-token` header), so the attach
-// path is cmuxd-remote WebSocket PTY only. Daytona also has a token-based SSH gateway, but we
+// path is bmuxd-remote WebSocket PTY only. Daytona also has a token-based SSH gateway, but we
 // deliberately do not use it (unreliable in practice), so `openSSH` throws like the E2B driver.
-const CMUXD_WS_PORT = 7777;
-const CMUXD_WS_PTY_LEASE_PATH = "/tmp/cmux/attach-pty-lease.json";
-const CMUXD_WS_LEGACY_PTY_LEASE_PATH = "/tmp/cmux/attach-lease.json";
-const CMUXD_WS_RPC_LEASE_PATH = "/tmp/cmux/attach-rpc-lease.json";
-const CMUXD_WS_RPC_CLIENT_PATH = "/tmp/cmux/attach-rpc-client.json";
-const CMUXD_WS_PTY_LEASE_TTL_SECONDS = 5 * 60;
-const CMUXD_WS_RPC_LEASE_TTL_SECONDS = 12 * 60 * 60;
-const CMUXD_WS_RPC_RENEW_BEFORE_SECONDS = 60;
-const CMUX_CLOUD_SHELL_PATH = "/usr/local/bin/cmux-cloud-shell";
+const BMUXD_WS_PORT = 7777;
+const BMUXD_WS_PTY_LEASE_PATH = "/tmp/bmux/attach-pty-lease.json";
+const BMUXD_WS_LEGACY_PTY_LEASE_PATH = "/tmp/bmux/attach-lease.json";
+const BMUXD_WS_RPC_LEASE_PATH = "/tmp/bmux/attach-rpc-lease.json";
+const BMUXD_WS_RPC_CLIENT_PATH = "/tmp/bmux/attach-rpc-client.json";
+const BMUXD_WS_PTY_LEASE_TTL_SECONDS = 5 * 60;
+const BMUXD_WS_RPC_LEASE_TTL_SECONDS = 12 * 60 * 60;
+const BMUXD_WS_RPC_RENEW_BEFORE_SECONDS = 60;
+const BMUX_CLOUD_SHELL_PATH = "/usr/local/bin/bmux-cloud-shell";
 const DEFAULT_SANDBOX_ENVS = { LANG: "C.UTF-8" };
 
 const CREATE_TIMEOUT_SECONDS = 15 * 60;
@@ -104,12 +104,12 @@ export class DaytonaProvider implements VMProvider {
       throw new ProviderError("daytona", "create requires a resolved image");
     }
     return withVmSpan(
-      "cmux.vm.provider.create",
+      "bmux.vm.provider.create",
       {
-        "cmux.vm.provider": "daytona",
-        "cmux.vm.operation": "create",
-        "cmux.vm.image": image,
-        "cmux.timeout_ms": CREATE_TIMEOUT_SECONDS * 1000,
+        "bmux.vm.provider": "daytona",
+        "bmux.vm.operation": "create",
+        "bmux.vm.image": image,
+        "bmux.timeout_ms": CREATE_TIMEOUT_SECONDS * 1000,
       },
       async (span) => {
         try {
@@ -118,12 +118,12 @@ export class DaytonaProvider implements VMProvider {
               snapshot: image,
               envVars: DEFAULT_SANDBOX_ENVS,
               // Persistent cloud computer shape: never auto-stop. Pause/resume is an explicit
-              // cmux workflow, mapped onto Daytona stop/start below.
+              // bmux workflow, mapped onto Daytona stop/start below.
               autoStopInterval: 0,
             },
             { timeout: CREATE_TIMEOUT_SECONDS },
           );
-          setSpanAttributes(span, { "cmux.vm.id": sandbox.id });
+          setSpanAttributes(span, { "bmux.vm.id": sandbox.id });
           return {
             provider: "daytona",
             providerVmId: sandbox.id,
@@ -140,8 +140,8 @@ export class DaytonaProvider implements VMProvider {
 
   async destroy(vmId: string): Promise<void> {
     return withVmSpan(
-      "cmux.vm.provider.destroy",
-      { "cmux.vm.provider": "daytona", "cmux.vm.operation": "destroy", "cmux.vm.id": vmId },
+      "bmux.vm.provider.destroy",
+      { "bmux.vm.provider": "daytona", "bmux.vm.operation": "destroy", "bmux.vm.id": vmId },
       async () => {
         try {
           const sandbox = await client().get(vmId);
@@ -155,15 +155,15 @@ export class DaytonaProvider implements VMProvider {
 
   async getStatus(vmId: string): Promise<VMStatus> {
     return withVmSpan(
-      "cmux.vm.provider.get_status",
-      { "cmux.vm.provider": "daytona", "cmux.vm.operation": "get_status", "cmux.vm.id": vmId },
+      "bmux.vm.provider.get_status",
+      { "bmux.vm.provider": "daytona", "bmux.vm.operation": "get_status", "bmux.vm.id": vmId },
       async (span) => {
         try {
           const sandbox = await client().get(vmId);
           const status = mapStatus(sandbox.state);
           setSpanAttributes(span, {
-            "cmux.vm.provider_state": sandbox.state ?? "unknown",
-            "cmux.vm.status": status,
+            "bmux.vm.provider_state": sandbox.state ?? "unknown",
+            "bmux.vm.status": status,
           });
           return status;
         } catch (err) {
@@ -174,11 +174,11 @@ export class DaytonaProvider implements VMProvider {
   }
 
   // Daytona "stop" preserves the filesystem but kills processes (container-class sandbox), which
-  // is the pause semantics cmux exposes. Daytona's own memory-freeze `pause()` is not used.
+  // is the pause semantics bmux exposes. Daytona's own memory-freeze `pause()` is not used.
   async pause(vmId: string): Promise<void> {
     return withVmSpan(
-      "cmux.vm.provider.pause",
-      { "cmux.vm.provider": "daytona", "cmux.vm.operation": "pause", "cmux.vm.id": vmId },
+      "bmux.vm.provider.pause",
+      { "bmux.vm.provider": "daytona", "bmux.vm.operation": "pause", "bmux.vm.id": vmId },
       async () => {
         try {
           const sandbox = await client().get(vmId);
@@ -192,13 +192,13 @@ export class DaytonaProvider implements VMProvider {
 
   async resume(vmId: string): Promise<VMHandle> {
     return withVmSpan(
-      "cmux.vm.provider.resume",
-      { "cmux.vm.provider": "daytona", "cmux.vm.operation": "resume", "cmux.vm.id": vmId },
+      "bmux.vm.provider.resume",
+      { "bmux.vm.provider": "daytona", "bmux.vm.operation": "resume", "bmux.vm.id": vmId },
       async (span) => {
         try {
           const sandbox = await client().get(vmId);
           await sandbox.start(LIFECYCLE_TIMEOUT_SECONDS);
-          // Stop killed cmuxd-remote; the image entrypoint restarts it on start, but repair
+          // Stop killed bmuxd-remote; the image entrypoint restarts it on start, but repair
           // best-effort here so the first attach after resume doesn't race the entrypoint.
           try {
             await this.ensureWebSocketHealthyOrRepair(sandbox);
@@ -222,13 +222,13 @@ export class DaytonaProvider implements VMProvider {
   async exec(vmId: string, command: string, opts?: { timeoutMs?: number }): Promise<ExecResult> {
     const timeoutMs = normalizeExecTimeout(opts?.timeoutMs);
     return withVmSpan(
-      "cmux.vm.provider.exec",
+      "bmux.vm.provider.exec",
       {
-        "cmux.vm.provider": "daytona",
-        "cmux.vm.operation": "exec",
-        "cmux.vm.id": vmId,
-        "cmux.command_length": command.length,
-        "cmux.timeout_ms": timeoutMs,
+        "bmux.vm.provider": "daytona",
+        "bmux.vm.operation": "exec",
+        "bmux.vm.id": vmId,
+        "bmux.command_length": command.length,
+        "bmux.timeout_ms": timeoutMs,
       },
       async (span) => {
         try {
@@ -239,7 +239,7 @@ export class DaytonaProvider implements VMProvider {
             undefined,
             Math.ceil(timeoutMs / 1000),
           );
-          setSpanAttributes(span, { "cmux.exec.exit_code": r.exitCode });
+          setSpanAttributes(span, { "bmux.exec.exit_code": r.exitCode });
           // The Daytona toolbox merges stderr into `result`; there is no separate stderr stream.
           return { exitCode: r.exitCode, stdout: r.result ?? "", stderr: "" };
         } catch (err) {
@@ -251,22 +251,22 @@ export class DaytonaProvider implements VMProvider {
 
   async snapshot(vmId: string, name?: string): Promise<SnapshotRef> {
     return withVmSpan(
-      "cmux.vm.provider.snapshot",
+      "bmux.vm.provider.snapshot",
       {
-        "cmux.vm.provider": "daytona",
-        "cmux.vm.operation": "snapshot",
-        "cmux.vm.id": vmId,
-        "cmux.snapshot.named": !!name,
-        "cmux.timeout_ms": SNAPSHOT_TIMEOUT_SECONDS * 1000,
+        "bmux.vm.provider": "daytona",
+        "bmux.vm.operation": "snapshot",
+        "bmux.vm.id": vmId,
+        "bmux.snapshot.named": !!name,
+        "bmux.timeout_ms": SNAPSHOT_TIMEOUT_SECONDS * 1000,
       },
       async (span) => {
         try {
           const sandbox = await client().get(vmId);
           // Daytona snapshots are addressed by name; mint a unique one when the caller didn't
           // pick a name so repeat snapshots of the same VM don't collide.
-          const snapshotName = name?.trim() || `cmux-daytona-${randomBytes(8).toString("hex")}`;
+          const snapshotName = name?.trim() || `bmux-daytona-${randomBytes(8).toString("hex")}`;
           await sandbox._experimental_createSnapshot(snapshotName, SNAPSHOT_TIMEOUT_SECONDS);
-          setSpanAttributes(span, { "cmux.snapshot.id": snapshotName });
+          setSpanAttributes(span, { "bmux.snapshot.id": snapshotName });
           return { id: snapshotName, createdAt: Date.now(), name };
         } catch (err) {
           throw new ProviderError("daytona", `snapshot(${vmId})`, err);
@@ -277,12 +277,12 @@ export class DaytonaProvider implements VMProvider {
 
   async restore(snapshotId: string): Promise<VMHandle> {
     return withVmSpan(
-      "cmux.vm.provider.restore",
+      "bmux.vm.provider.restore",
       {
-        "cmux.vm.provider": "daytona",
-        "cmux.vm.operation": "restore",
-        "cmux.snapshot.id": snapshotId,
-        "cmux.timeout_ms": CREATE_TIMEOUT_SECONDS * 1000,
+        "bmux.vm.provider": "daytona",
+        "bmux.vm.operation": "restore",
+        "bmux.snapshot.id": snapshotId,
+        "bmux.timeout_ms": CREATE_TIMEOUT_SECONDS * 1000,
       },
       async (span) => {
         try {
@@ -294,7 +294,7 @@ export class DaytonaProvider implements VMProvider {
             },
             { timeout: CREATE_TIMEOUT_SECONDS },
           );
-          setSpanAttributes(span, { "cmux.vm.id": sandbox.id });
+          setSpanAttributes(span, { "bmux.vm.id": sandbox.id });
           return {
             provider: "daytona",
             providerVmId: sandbox.id,
@@ -311,17 +311,17 @@ export class DaytonaProvider implements VMProvider {
 
   async openSSH(vmId: string): Promise<SSHEndpoint> {
     return withVmSpan(
-      "cmux.vm.provider.open_ssh",
-      { "cmux.vm.provider": "daytona", "cmux.vm.operation": "open_ssh", "cmux.vm.id": vmId },
+      "bmux.vm.provider.open_ssh",
+      { "bmux.vm.provider": "daytona", "bmux.vm.operation": "open_ssh", "bmux.vm.id": vmId },
       async () => {
-        // Daytona attach is WebSocket-only in cmux. Daytona does offer a token-based SSH
+        // Daytona attach is WebSocket-only in bmux. Daytona does offer a token-based SSH
         // gateway, but we deliberately don't dial it, so there is no SSH endpoint to mint.
-        // `cmux vm ssh`/`attach` still work through the WebSocket PTY path above.
+        // `bmux vm ssh`/`attach` still work through the WebSocket PTY path above.
         throw new ProviderError(
           "daytona",
-          "Daytona attach is WebSocket-only; cmux does not use Daytona's SSH gateway. " +
-            "`cmux vm ssh <id>` and `cmux vm attach <id>` dial the WebSocket PTY instead. " +
-            "For provider SSH info, use `cmux vm new` without `--provider daytona` " +
+          "Daytona attach is WebSocket-only; bmux does not use Daytona's SSH gateway. " +
+            "`bmux vm ssh <id>` and `bmux vm attach <id>` dial the WebSocket PTY instead. " +
+            "For provider SSH info, use `bmux vm new` without `--provider daytona` " +
             "(Freestyle is the default).",
         );
       },
@@ -333,7 +333,7 @@ export class DaytonaProvider implements VMProvider {
     if (options?.requireDaemon && !endpoint.daemon) {
       throw new ProviderError(
         "daytona",
-        `openAttach(${vmId}) requires a cmuxd RPC endpoint, but this sandbox image only exposes the PTY WebSocket. Rebuild it with the current cmuxd-remote image.`,
+        `openAttach(${vmId}) requires a bmuxd RPC endpoint, but this sandbox image only exposes the PTY WebSocket. Rebuild it with the current bmuxd-remote image.`,
       );
     }
     return endpoint;
@@ -341,8 +341,8 @@ export class DaytonaProvider implements VMProvider {
 
   async openWebSocketPty(vmId: string, options?: AttachOptions): Promise<WebSocketPtyEndpoint> {
     return withVmSpan(
-      "cmux.vm.provider.open_websocket_pty",
-      { "cmux.vm.provider": "daytona", "cmux.vm.operation": "open_websocket_pty", "cmux.vm.id": vmId },
+      "bmux.vm.provider.open_websocket_pty",
+      { "bmux.vm.provider": "daytona", "bmux.vm.operation": "open_websocket_pty", "bmux.vm.id": vmId },
       async (span) => {
         try {
           const sandbox = await client().get(vmId);
@@ -351,7 +351,7 @@ export class DaytonaProvider implements VMProvider {
           const preview = await this.ensureWebSocketHealthyOrRepair(sandbox);
           const headers = { "x-daytona-preview-token": preview.token };
           const wsBase = httpsToWss(preview.url);
-          const pty = makeWebSocketLease("daytona", "pty", true, CMUXD_WS_PTY_LEASE_TTL_SECONDS, options?.sessionId);
+          const pty = makeWebSocketLease("daytona", "pty", true, BMUXD_WS_PTY_LEASE_TTL_SECONDS, options?.sessionId);
           const attachmentId = options?.attachmentId?.trim() || makeWebSocketAttachmentId("daytona");
           const service = await readDaytonaWebSocketService(sandbox);
           const encodedPTY = Buffer.from(JSON.stringify(pty.lease)).toString("base64");
@@ -366,7 +366,7 @@ export class DaytonaProvider implements VMProvider {
             const existingDaemon = await readReusableRpcLease(sandbox, service.rpcLeasePath);
             const newDaemon = existingDaemon
               ? null
-              : makeWebSocketLease("daytona", "rpc", false, CMUXD_WS_RPC_LEASE_TTL_SECONDS);
+              : makeWebSocketLease("daytona", "rpc", false, BMUXD_WS_RPC_LEASE_TTL_SECONDS);
             daemon = existingDaemon ?? newDaemon!;
             daemonReused = !!existingDaemon;
             if (newDaemon) {
@@ -376,18 +376,18 @@ export class DaytonaProvider implements VMProvider {
                 ensurePrivateDirectoryCommand(service.rpcLeasePath),
                 `printf '%s' '${encodedDaemon}' | base64 -d > ${shellQuote(service.rpcLeasePath)}`,
                 `chmod 600 ${shellQuote(service.rpcLeasePath)}`,
-                `printf '%s' '${encodedDaemonClient}' | base64 -d > ${shellQuote(CMUXD_WS_RPC_CLIENT_PATH)}`,
-                `chmod 600 ${shellQuote(CMUXD_WS_RPC_CLIENT_PATH)}`,
+                `printf '%s' '${encodedDaemonClient}' | base64 -d > ${shellQuote(BMUXD_WS_RPC_CLIENT_PATH)}`,
+                `chmod 600 ${shellQuote(BMUXD_WS_RPC_CLIENT_PATH)}`,
               );
             }
           }
           await execDaytonaOrThrow(sandbox, commands.join(" && "));
-          span.setAttribute("cmux.vm.attach.transport", "websocket");
-          span.setAttribute("cmux.vm.attach.expires_at_unix", pty.expiresAtUnix);
-          span.setAttribute("cmux.vm.attach.daemon_available", !!daemon);
+          span.setAttribute("bmux.vm.attach.transport", "websocket");
+          span.setAttribute("bmux.vm.attach.expires_at_unix", pty.expiresAtUnix);
+          span.setAttribute("bmux.vm.attach.daemon_available", !!daemon);
           if (daemon) {
-            span.setAttribute("cmux.vm.attach.daemon_expires_at_unix", daemon.expiresAtUnix);
-            span.setAttribute("cmux.vm.attach.daemon_reused", daemonReused);
+            span.setAttribute("bmux.vm.attach.daemon_expires_at_unix", daemon.expiresAtUnix);
+            span.setAttribute("bmux.vm.attach.daemon_reused", daemonReused);
           }
           return {
             transport: "websocket",
@@ -419,18 +419,18 @@ export class DaytonaProvider implements VMProvider {
   }
 
   /**
-   * Checks cmuxd-remote through the preview URL and, if it's down (fresh stop/start races the
+   * Checks bmuxd-remote through the preview URL and, if it's down (fresh stop/start races the
    * entrypoint, or the process died), restarts it via toolbox exec and waits for /healthz.
    * Returns the preview link so attach reuses the same URL + token it just verified.
    */
   private async ensureWebSocketHealthyOrRepair(sandbox: Sandbox): Promise<{ url: string; token: string }> {
-    const preview = await sandbox.getPreviewLink(CMUXD_WS_PORT);
+    const preview = await sandbox.getPreviewLink(BMUXD_WS_PORT);
     const previewToken = preview.token?.trim() ?? "";
     if (await isDaytonaWebSocketHealthy(preview.url, previewToken)) {
       return { url: preview.url, token: previewToken };
     }
     await execDaytonaOrThrow(sandbox, daytonaWebSocketRepairCommand(), 60_000);
-    let lastError: unknown = new Error("Daytona cmuxd websocket did not become healthy");
+    let lastError: unknown = new Error("Daytona bmuxd websocket did not become healthy");
     for (let attempt = 0; attempt < HEALTH_RETRY_ATTEMPTS; attempt += 1) {
       try {
         await ensureDaytonaWebSocketHealthy(preview.url, previewToken);
@@ -453,25 +453,25 @@ function errorMessage(err: unknown): string {
 }
 
 function daytonaWebSocketRepairCommand(): string {
-  // The image entrypoint (`cmux-daytona-entrypoint`) normally keeps cmuxd-remote alive; this is
+  // The image entrypoint (`bmux-daytona-entrypoint`) normally keeps bmuxd-remote alive; this is
   // the fallback when the daemon isn't up yet (or the sandbox predates the entrypoint script).
   const serve = [
-    "/usr/local/bin/cmuxd-remote",
+    "/usr/local/bin/bmuxd-remote",
     "serve",
     "--ws",
     "--listen",
-    `0.0.0.0:${CMUXD_WS_PORT}`,
+    `0.0.0.0:${BMUXD_WS_PORT}`,
     "--auth-lease-file",
-    CMUXD_WS_PTY_LEASE_PATH,
+    BMUXD_WS_PTY_LEASE_PATH,
     "--rpc-auth-lease-file",
-    CMUXD_WS_RPC_LEASE_PATH,
+    BMUXD_WS_RPC_LEASE_PATH,
     "--shell",
-    CMUX_CLOUD_SHELL_PATH,
+    BMUX_CLOUD_SHELL_PATH,
   ].map(shellQuote).join(" ");
   return [
-    "mkdir -p /tmp/cmux",
-    "chmod 700 /tmp/cmux",
-    `pgrep -f 'cmuxd-remote serve' >/dev/null 2>&1 || (setsid nohup ${serve} >>/tmp/cmux/cmuxd-ws.log 2>&1 &)`,
+    "mkdir -p /tmp/bmux",
+    "chmod 700 /tmp/bmux",
+    `pgrep -f 'bmuxd-remote serve' >/dev/null 2>&1 || (setsid nohup ${serve} >>/tmp/bmux/bmuxd-ws.log 2>&1 &)`,
   ].join(" && ");
 }
 
@@ -489,10 +489,10 @@ async function ensureDaytonaWebSocketHealthy(previewUrl: string, previewToken: s
     headers: previewToken ? { "x-daytona-preview-token": previewToken } : {},
     signal: AbortSignal.timeout(HEALTH_CHECK_TIMEOUT_MS),
   }).catch((err: unknown) => {
-    throw new Error(`Daytona cmuxd websocket health check failed: ${errorMessage(err)}`);
+    throw new Error(`Daytona bmuxd websocket health check failed: ${errorMessage(err)}`);
   });
   if (response.status !== 200) {
-    throw new Error(`Daytona cmuxd websocket health check returned ${response.status}`);
+    throw new Error(`Daytona bmuxd websocket health check returned ${response.status}`);
   }
 }
 
@@ -502,15 +502,15 @@ async function readDaytonaWebSocketService(sandbox: Sandbox): Promise<{
 }> {
   const result = await execDaytonaOrThrow(
     sandbox,
-    "ps auxww | grep cmuxd-remote | grep -v grep || true",
+    "ps auxww | grep bmuxd-remote | grep -v grep || true",
   );
   const stdout = result.result ?? "";
   return {
     ptyLeasePath:
       shellArgValue(stdout, "--auth-lease-file")
-      ?? (stdout.includes(CMUXD_WS_LEGACY_PTY_LEASE_PATH)
-        ? CMUXD_WS_LEGACY_PTY_LEASE_PATH
-        : CMUXD_WS_PTY_LEASE_PATH),
+      ?? (stdout.includes(BMUXD_WS_LEGACY_PTY_LEASE_PATH)
+        ? BMUXD_WS_LEGACY_PTY_LEASE_PATH
+        : BMUXD_WS_PTY_LEASE_PATH),
     rpcLeasePath: shellArgValue(stdout, "--rpc-auth-lease-file"),
   };
 }
@@ -523,8 +523,8 @@ async function readReusableRpcLease(
     sandbox,
     [
       `test -s ${shellQuote(rpcLeasePath)}`,
-      `test -s ${shellQuote(CMUXD_WS_RPC_CLIENT_PATH)}`,
-      `cat ${shellQuote(CMUXD_WS_RPC_CLIENT_PATH)}`,
+      `test -s ${shellQuote(BMUXD_WS_RPC_CLIENT_PATH)}`,
+      `cat ${shellQuote(BMUXD_WS_RPC_CLIENT_PATH)}`,
     ].join(" && "),
   ).catch(() => null);
   const raw = result?.result?.trim();
@@ -533,7 +533,7 @@ async function readReusableRpcLease(
     const parsed = JSON.parse(raw) as unknown;
     if (!isReusableRpcLease(parsed)) return null;
     const nowUnix = Math.floor(Date.now() / 1000);
-    if (parsed.expiresAtUnix <= nowUnix + CMUXD_WS_RPC_RENEW_BEFORE_SECONDS) return null;
+    if (parsed.expiresAtUnix <= nowUnix + BMUXD_WS_RPC_RENEW_BEFORE_SECONDS) return null;
     return parsed;
   } catch {
     return null;

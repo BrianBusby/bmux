@@ -25,8 +25,8 @@ if (!image) {
 }
 
 const keep = hasFlag("--keep");
-const ptyLeasePath = "/tmp/cmux/attach-pty-lease.json";
-const legacyPtyLeasePath = "/tmp/cmux/attach-lease.json";
+const ptyLeasePath = "/tmp/bmux/attach-pty-lease.json";
+const legacyPtyLeasePath = "/tmp/bmux/attach-lease.json";
 const freestyleTimeoutMs = 15 * 60 * 1000;
 
 const result = provider === "e2b"
@@ -71,13 +71,13 @@ async function testE2B(template: string, keep: boolean): Promise<Record<string, 
     }
     const service = await readE2BWebSocketService(sandbox);
     if (!service.rpcLeasePath) {
-      throw new Error("E2B cmuxd-ws service is missing --rpc-auth-lease-file; browser proxy cannot work");
+      throw new Error("E2B bmuxd-ws service is missing --rpc-auth-lease-file; browser proxy cannot work");
     }
 
     await installLeaseE2B(sandbox, service.ptyLeasePath, "wrong-e2b", "sess-e2b", true);
-    const wrongCmuxToken = await websocketAuthShouldFail(wsURL, headers, "wrong-token", "sess-e2b");
+    const wrongBmuxToken = await websocketAuthShouldFail(wsURL, headers, "wrong-token", "sess-e2b");
     const leaseStillThere = await e2bFileExists(sandbox, service.ptyLeasePath);
-    if (!leaseStillThere) throw new Error("wrong cmux token consumed E2B lease");
+    if (!leaseStillThere) throw new Error("wrong bmux token consumed E2B lease");
 
     const token = await installLeaseE2B(sandbox, service.ptyLeasePath, "right-e2b", "sess-e2b", true);
     const terminalOutput = await websocketShellRoundTrip(wsURL, headers, token, "sess-e2b");
@@ -104,7 +104,7 @@ async function testE2B(template: string, keep: boolean): Promise<Record<string, 
       rpcLeasePath: service.rpcLeasePath,
       trafficGate: { withoutToken: noTrafficAuth.status, withToken: trafficAuth.status },
       unauthenticatedTransport: "covered by healthz 403 without e2b-traffic-access-token",
-      wrongCmuxToken,
+      wrongBmuxToken,
       terminalOutput,
       replay,
       rpcHello,
@@ -144,13 +144,13 @@ async function testFreestyle(snapshotId: string, keep: boolean): Promise<Record<
     }
     const service = await readFreestyleWebSocketService(vm);
     if (!service.rpcLeasePath) {
-      throw new Error("Freestyle cmuxd-ws service is missing --rpc-auth-lease-file; browser proxy cannot work");
+      throw new Error("Freestyle bmuxd-ws service is missing --rpc-auth-lease-file; browser proxy cannot work");
     }
 
     await installLeaseFreestyle(vm, service.ptyLeasePath, "wrong-freestyle", "sess-fs", true);
-    const wrongCmuxToken = await websocketAuthShouldFail(wsURL, {}, "wrong-token", "sess-fs");
+    const wrongBmuxToken = await websocketAuthShouldFail(wsURL, {}, "wrong-token", "sess-fs");
     const leaseStillThere = await freestyleFileExists(vm, service.ptyLeasePath);
-    if (!leaseStillThere) throw new Error("wrong cmux token consumed Freestyle lease");
+    if (!leaseStillThere) throw new Error("wrong bmux token consumed Freestyle lease");
 
     const token = await installLeaseFreestyle(vm, service.ptyLeasePath, "right-freestyle", "sess-fs", true);
     const terminalOutput = await websocketShellRoundTrip(wsURL, {}, token, "sess-fs");
@@ -176,7 +176,7 @@ async function testFreestyle(snapshotId: string, keep: boolean): Promise<Record<
       ptyLeasePath: service.ptyLeasePath,
       rpcLeasePath: service.rpcLeasePath,
       health: health.status,
-      wrongCmuxToken,
+      wrongBmuxToken,
       terminalOutput,
       replay,
       rpcHello,
@@ -223,13 +223,13 @@ async function testDaytona(snapshot: string, keep: boolean): Promise<Record<stri
     }
     const service = await readDaytonaWebSocketService(sandbox);
     if (!service.rpcLeasePath) {
-      throw new Error("Daytona cmuxd-ws service is missing --rpc-auth-lease-file; browser proxy cannot work");
+      throw new Error("Daytona bmuxd-ws service is missing --rpc-auth-lease-file; browser proxy cannot work");
     }
 
     await installLeaseDaytona(sandbox, service.ptyLeasePath, "wrong-daytona", "sess-dt", true);
-    const wrongCmuxToken = await websocketAuthShouldFail(wsURL, headers, "wrong-token", "sess-dt");
+    const wrongBmuxToken = await websocketAuthShouldFail(wsURL, headers, "wrong-token", "sess-dt");
     const leaseStillThere = await daytonaFileExists(sandbox, service.ptyLeasePath);
-    if (!leaseStillThere) throw new Error("wrong cmux token consumed Daytona lease");
+    if (!leaseStillThere) throw new Error("wrong bmux token consumed Daytona lease");
 
     const token = await installLeaseDaytona(sandbox, service.ptyLeasePath, "right-daytona", "sess-dt", true);
     const terminalOutput = await websocketShellRoundTrip(wsURL, headers, token, "sess-dt");
@@ -255,7 +255,7 @@ async function testDaytona(snapshot: string, keep: boolean): Promise<Record<stri
       ptyLeasePath: service.ptyLeasePath,
       rpcLeasePath: service.rpcLeasePath,
       previewGate: { withoutToken: noPreviewAuth.status, withToken: previewAuth.status },
-      wrongCmuxToken,
+      wrongBmuxToken,
       terminalOutput,
       replay,
       rpcHello,
@@ -297,7 +297,7 @@ async function readE2BWebSocketService(sandbox: Sandbox): Promise<{
   rpcLeasePath: string | null;
 }> {
   const result = await sandbox.commands.run(
-    "ps auxww | grep cmuxd-remote | grep -v grep || true",
+    "ps auxww | grep bmuxd-remote | grep -v grep || true",
     { timeoutMs: 30_000 },
   );
   const stdout = result.stdout ?? "";
@@ -345,7 +345,7 @@ async function readDaytonaWebSocketService(sandbox: DaytonaSandbox): Promise<{
   ptyLeasePath: string;
   rpcLeasePath: string | null;
 }> {
-  const result = await execDaytona(sandbox, "ps auxww | grep cmuxd-remote | grep -v grep || true");
+  const result = await execDaytona(sandbox, "ps auxww | grep bmuxd-remote | grep -v grep || true");
   const stdout = result.result ?? "";
   return {
     ptyLeasePath:
@@ -365,7 +365,7 @@ async function execDaytona(sandbox: DaytonaSandbox, command: string) {
 }
 
 function makeLease(label: string, sessionId: string, singleUse: boolean): { token: string; lease: unknown } {
-  const token = `cmux-${label}-${randomBytes(24).toString("hex")}`;
+  const token = `bmux-${label}-${randomBytes(24).toString("hex")}`;
   const hash = createHash("sha256").update(token).digest("hex");
   return {
     token,
@@ -397,7 +397,7 @@ async function readFreestyleWebSocketService(vm: FreestyleVmRef): Promise<{
   rpcLeasePath: string | null;
 }> {
   const result = await vm.exec({
-    command: "systemctl cat cmuxd-ws 2>/dev/null || true; ps auxww | grep cmuxd-remote | grep -v grep || true",
+    command: "systemctl cat bmuxd-ws 2>/dev/null || true; ps auxww | grep bmuxd-remote | grep -v grep || true",
     timeoutMs: 30_000,
   });
   const stdout = result.stdout ?? "";
@@ -435,7 +435,7 @@ async function websocketShellRoundTrip(
   // POSIX %b octal needs the \0nnn form: zsh's printf prints bash-style \nnn literally, and the
   // cloud shell is zsh. \0nnn decodes in both shells while keeping the marker out of the echo.
   ws.send(Buffer.from("printf '%b\\n' '\\0103\\0115\\0125\\0130\\0137\\0103\\0114\\0117\\0125\\0104\\0137\\0127\\0123\\0137\\0117\\0113'; exit\r"));
-  const output = await waitForMessage(ws, (data, isBinary) => isBinary && data.toString().includes("CMUX_CLOUD_WS_OK"));
+  const output = await waitForMessage(ws, (data, isBinary) => isBinary && data.toString().includes("BMUX_CLOUD_WS_OK"));
   ws.close();
   return output.toString();
 }
@@ -554,14 +554,14 @@ class WebSocketTextFrameQueue {
       this.errors.push(error);
       while (this.waiters.length > 0) {
         const waiter = this.waiters.shift();
-        waiter?.("__CMUX_QUEUE_ERROR__");
+        waiter?.("__BMUX_QUEUE_ERROR__");
       }
     });
     ws.on("close", (code, reason) => {
       this.errors.push(new Error(`websocket closed: ${code} ${reason.toString()}`));
       while (this.waiters.length > 0) {
         const waiter = this.waiters.shift();
-        waiter?.("__CMUX_QUEUE_ERROR__");
+        waiter?.("__BMUX_QUEUE_ERROR__");
       }
     });
   }
@@ -588,7 +588,7 @@ class WebSocketTextFrameQueue {
       const timer = setTimeout(() => reject(new Error("timeout waiting for websocket text frame")), timeoutMs);
       this.waiters.push((frame) => {
         clearTimeout(timer);
-        if (frame === "__CMUX_QUEUE_ERROR__") {
+        if (frame === "__BMUX_QUEUE_ERROR__") {
           reject(this.errors[0] ?? new Error("websocket failed"));
           return;
         }

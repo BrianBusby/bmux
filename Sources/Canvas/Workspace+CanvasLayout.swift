@@ -1,14 +1,14 @@
 import Foundation
 import AppKit
 import Bonsplit
-import CmuxCanvas
-import CmuxCanvasUI
+import BmuxCanvas
+import BmuxCanvasUI
 
 extension Notification.Name {
     /// Posted (object = the `Workspace`) whenever its `layoutMode` changes,
     /// so window chrome can reflect canvas vs splits without observing the
     /// workspace directly.
-    static let workspaceLayoutModeDidChange = Notification.Name("cmux.workspaceLayoutModeDidChange")
+    static let workspaceLayoutModeDidChange = Notification.Name("bmux.workspaceLayoutModeDidChange")
 }
 
 /// Canvas-layout behavior for `Workspace`. The workspace stays the owner of

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxWorkspaces
+import BmuxWorkspaces
 import SwiftUI
 
 extension TextBoxInputContainer {
@@ -307,7 +307,7 @@ extension TextBoxInputContainer {
             submit()
         } label: {
             submitButtonActionImage(presentation.action, canSend: canSend)
-                .cmuxFont(size: TextBoxLayout.sendSymbolSize, weight: .bold)
+                .bmuxFont(size: TextBoxLayout.sendSymbolSize, weight: .bold)
                 .frame(
                     width: TextBoxSubmitActionImageSupport.iconSize,
                     height: TextBoxSubmitActionImageSupport.iconSize
@@ -584,7 +584,7 @@ extension TextBoxInputContainer {
     }
 
     func openSubmitActionsDocumentation() {
-        guard let url = URL(string: "https://github.com/manaflow-ai/cmux/blob/main/docs/configuration.md#terminaltextboxsubmitactions") else {
+        guard let url = URL(string: "https://github.com/manaflow-ai/bmux/blob/main/docs/configuration.md#terminaltextboxsubmitactions") else {
             return
         }
         NSWorkspace.shared.open(url)

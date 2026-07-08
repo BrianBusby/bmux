@@ -1,6 +1,6 @@
 # Configuration
 
-`cmux-mux` reads `~/.config/cmux/mux.json`, or `$XDG_CONFIG_HOME/cmux/mux.json` when `XDG_CONFIG_HOME` is set. Set `CMUX_MUX_CONFIG` to use another file; it takes precedence over both. Every documented key is optional. Unknown keys in the typed sections make the raw config invalid, so the TUI logs an error and falls back to defaults.
+`bmux-mux` reads `~/.config/bmux/mux.json`, or `$XDG_CONFIG_HOME/bmux/mux.json` when `XDG_CONFIG_HOME` is set. Set `BMUX_MUX_CONFIG` to use another file; it takes precedence over both. Every documented key is optional. Unknown keys in the typed sections make the raw config invalid, so the TUI logs an error and falls back to defaults.
 
 Colors accept `#rrggbb`, `#rgb`, an xterm-256 number, or a numeric string.
 
@@ -56,7 +56,7 @@ Live sidebar dragging also leaves at least 40 columns for pane content.
 
 When `browser.ephemeral` is true, it takes precedence over `browser.user_data_dir`: launched Chrome uses a fresh temporary profile, and the configured directory is not deleted.
 
-The default launched profile is `~/Library/Application Support/cmux-mux/chrome-profile` on macOS. On non-macOS targets it is `$XDG_DATA_HOME/cmux-mux/chrome-profile` when `XDG_DATA_HOME` is set, then `~/.local/share/cmux-mux/chrome-profile`.
+The default launched profile is `~/Library/Application Support/bmux-mux/chrome-profile` on macOS. On non-macOS targets it is `$XDG_DATA_HOME/bmux-mux/chrome-profile` when `XDG_DATA_HOME` is set, then `~/.local/share/bmux-mux/chrome-profile`.
 
 ## Scrollbar
 
@@ -137,7 +137,7 @@ Chord strings can be single characters or a key name with optional `ctrl`, `cont
     "cdp_url": "http://127.0.0.1:9222",
     "discover": true,
     "discover_ports": [9222, 9223],
-    "user_data_dir": "/Users/me/Library/Application Support/cmux-mux/chrome-profile",
+    "user_data_dir": "/Users/me/Library/Application Support/bmux-mux/chrome-profile",
     "ephemeral": false
   },
   "scrollbar": {

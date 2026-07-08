@@ -1,4 +1,4 @@
-# cmux mux SDK releases
+# bmux mux SDK releases
 
 The mux SDKs share one version and one tag:
 
@@ -11,28 +11,28 @@ package versions are `0.1.0`.
 
 ## One-time registry setup
 
-- PyPI: create or claim the `cmux` project, then add a trusted publisher for
-  `manaflow-ai/cmux`, workflow `.github/workflows/sdk-publish-python.yml`, and
+- PyPI: create or claim the `bmux` project, then add a trusted publisher for
+  `manaflow-ai/bmux`, workflow `.github/workflows/sdk-publish-python.yml`, and
   environment `pypi`. The workflow uses OIDC trusted publishing and PyPI
   attestations, so no PyPI token is stored in GitHub.
-- crates.io: publish or claim the first `cmux-client` crate release manually if
+- crates.io: publish or claim the first `bmux-client` crate release manually if
   crates.io still requires an initial release, then add a trusted publisher for
-  owner `manaflow-ai`, repo `cmux`, workflow
+  owner `manaflow-ai`, repo `bmux`, workflow
   `.github/workflows/sdk-publish-crates.yml`, and environment `crates-io`. The
   workflow exchanges GitHub OIDC for a short-lived crates.io token via
   `rust-lang/crates-io-auth-action`.
-- npm: configure trusted publishing and required 2FA policy for package `cmux`,
+- npm: configure trusted publishing and required 2FA policy for package `bmux`,
   workflow `.github/workflows/sdk-publish-npm.yml`, and environment `npm`.
-  Warning: the live npm package name `cmux` is currently a different cloud-VM CLI
+  Warning: the live npm package name `bmux` is currently a different cloud-VM CLI
   package. Publishing the SDK to that name is a deliberate coordinated breaking
   move; the npm workflow never publishes on tag push and requires manual
-  `workflow_dispatch` with `confirm_npm_cmux: true`.
-- Maven Central: verify the `com.cmux` namespace in Central Portal, add complete
+  `workflow_dispatch` with `confirm_npm_bmux: true`.
+- Maven Central: verify the `com.bmux` namespace in Central Portal, add complete
   Maven metadata, configure GPG signing, and decide the Central publishing
   workflow. Java publishing is intentionally a CI stub until those prerequisites
   are done.
 - Go: there is no registry publish step. Once the tag exists, users can install
-  with `go get github.com/manaflow-ai/cmux/mux/bindings/go@mux-sdk-vX.Y.Z`.
+  with `go get github.com/manaflow-ai/bmux/mux/bindings/go@mux-sdk-vX.Y.Z`.
 
 ## Cutting a release
 
@@ -54,7 +54,7 @@ package versions are `0.1.0`.
 5. Watch the SDK workflows. Python and Rust publish automatically after their
    conformance gates pass. Go validates only. Java reports the Maven Central
    TODO. npm validates on tag push but does not publish until a maintainer runs
-   `sdk publish npm` manually with `confirm_npm_cmux: true`.
+   `sdk publish npm` manually with `confirm_npm_bmux: true`.
 
 ## Safety checks
 

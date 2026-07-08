@@ -105,7 +105,7 @@ def is_agent_session_web_change(path: str) -> bool:
 
 
 def is_macos_neutral(path: str) -> bool:
-    # `mux/` is the standalone cmux-mux Rust project, gated by its own `mux`
+    # `mux/` is the standalone bmux-mux Rust project, gated by its own `mux`
     # workflow; it never affects the macOS app build or app-host tests.
     if path.startswith(("docs/", "design/", "plans/", "ios/", "web/", "webviews/", "daemon/remote/", "mux/")):
         return True

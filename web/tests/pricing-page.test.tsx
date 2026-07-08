@@ -15,7 +15,7 @@ const proUser = {
   id: "user-pro",
   isAnonymous: false,
   primaryEmail: "pro@example.com",
-  clientReadOnlyMetadata: { cmuxPlan: "pro" },
+  clientReadOnlyMetadata: { bmuxPlan: "pro" },
   listProducts: mock(async () =>
     Object.assign(
       proActive

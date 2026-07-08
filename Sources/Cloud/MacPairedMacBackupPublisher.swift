@@ -1,9 +1,9 @@
-import CMUXMobileCore
-import CmuxAuthRuntime
+import BMUXMobileCore
+import BmuxAuthRuntime
 import Foundation
 import os
 
-private let macPairedMacPublishLog = Logger(subsystem: "com.cmuxterm.app", category: "MacPairedMacPublish")
+private let macPairedMacPublishLog = Logger(subsystem: "com.bmuxterm.app", category: "MacPairedMacPublish")
 
 /// DEV convenience: publishes THIS Mac's own attach route into the signed-in
 /// user's per-user `pairedMacs` Durable Object backup (`POST /v1/sync/paired-macs`
@@ -23,7 +23,7 @@ private let macPairedMacPublishLog = Logger(subsystem: "com.cmuxterm.app", categ
 final class MacPairedMacBackupPublisher {
     static let shared = MacPairedMacBackupPublisher()
 
-    static let envKey = "CMUX_MAC_PAIRED_MAC_SELF_PUBLISH"
+    static let envKey = "BMUX_MAC_PAIRED_MAC_SELF_PUBLISH"
     static let defaultsKey = "macPairedMacSelfPublish"
 
     private let session: URLSession = .shared
@@ -122,7 +122,7 @@ final class MacPairedMacBackupPublisher {
         req.timeoutInterval = 10
         req.setValue("Bearer \(tokens.accessToken)", forHTTPHeaderField: "Authorization")
         if let teamID, !teamID.isEmpty {
-            req.setValue(teamID, forHTTPHeaderField: "X-Cmux-Team-Id")
+            req.setValue(teamID, forHTTPHeaderField: "X-Bmux-Team-Id")
         }
         req.setValue("application/json", forHTTPHeaderField: "content-type")
         req.httpBody = payload

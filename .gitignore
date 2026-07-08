@@ -24,8 +24,8 @@ GhosttyKit.xcframework
 GhosttyKit.xcframework.bak-*/
 
 # Release artifacts
-cmux-*.zip
-cmux-macos.dmg
+bmux-*.zip
+bmux-macos.dmg
 appcast.xml
 
 # Python

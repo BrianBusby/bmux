@@ -127,4 +127,4 @@ jobs:
       - name: Maven Central publish not implemented
         run: |
           echo "Java publishing is intentionally not automated yet."
-          echo "TODO: add Maven Central publishing after com.cmux namespace verification, project metadata, and signing/provenance setup are complete."
+          echo "TODO: add Maven Central publishing after com.bmux namespace verification, project metadata, and signing/provenance setup are complete."

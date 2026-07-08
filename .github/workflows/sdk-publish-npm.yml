@@ -10,8 +10,8 @@ on:
         description: "SDK version to validate/publish, for example 0.1.0"
         required: true
         type: string
-      confirm_npm_cmux:
-        description: "Set true only for the coordinated npm cmux SDK publish"
+      confirm_npm_bmux:
+        description: "Set true only for the coordinated npm bmux SDK publish"
         required: true
         default: false
         type: boolean
@@ -116,7 +116,7 @@ jobs:
         run: bash mux/bindings/conformance/e2e.sh --require typescript
 
   publish:
-    # The npm package name "cmux" is currently a different live package
+    # The npm package name "bmux" is currently a different live package
     # (the cloud-VM CLI). Publishing the SDK there is a coordinated breaking
     # action, so tag pushes never publish to npm and manual runs must opt in.
     if: github.event_name == 'workflow_dispatch'
@@ -127,12 +127,12 @@ jobs:
       id-token: write
     environment:
       name: npm
-      url: https://www.npmjs.com/package/cmux
+      url: https://www.npmjs.com/package/bmux
     steps:
-      - name: Require npm cmux confirmation
-        if: inputs.confirm_npm_cmux != true
+      - name: Require npm bmux confirmation
+        if: inputs.confirm_npm_bmux != true
         run: |
-          echo "Refusing to publish npm package cmux without confirm_npm_cmux=true." >&2
+          echo "Refusing to publish npm package bmux without confirm_npm_bmux=true." >&2
           exit 1
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

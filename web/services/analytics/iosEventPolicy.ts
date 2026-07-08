@@ -7,7 +7,7 @@ export const POSTHOG_PROJECT_KEY =
   process.env.POSTHOG_PROJECT_KEY ?? "phc_opOVu7oFzR9wD3I6ZahFGOV2h3mqGpl5EHyQvmHciDP";
 
 /** The PostHog capture host (no trailing slash). */
-export const POSTHOG_HOST = (process.env.POSTHOG_HOST ?? "https://r.cmux.com").replace(/\/$/, "");
+export const POSTHOG_HOST = (process.env.POSTHOG_HOST ?? "https://r.bmux.com").replace(/\/$/, "");
 
 /** Max request size for an analytics batch. */
 export const MAX_ANALYTICS_REQUEST_BYTES = 64 * 1024;

@@ -64,7 +64,7 @@ export default async function VaultPage({
 
       <p className="mt-6">
         {t.rich("blogCta", {
-          link: (chunks) => <Link href="/blog/cmux-vault">{chunks}</Link>,
+          link: (chunks) => <Link href="/blog/bmux-vault">{chunks}</Link>,
         })}
       </p>
     </>

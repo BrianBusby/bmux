@@ -1,10 +1,10 @@
-import CmuxFoundation
+import BmuxFoundation
 import SwiftUI
 import Foundation
 import Bonsplit
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxFeedback
+import BmuxAppKitSupportUI
+import BmuxFeedback
 
 /// View that renders the appropriate panel view based on panel type
 struct PanelContentView: View {
@@ -138,8 +138,8 @@ struct PanelContentView: View {
                 )
             }
         case .extensionBrowser:
-            if let extensionBrowserPanel = panel as? CMUXSidebarExtensionBrowserPanel {
-                CMUXSidebarExtensionBrowserPanelView(
+            if let extensionBrowserPanel = panel as? BMUXSidebarExtensionBrowserPanel {
+                BMUXSidebarExtensionBrowserPanelView(
                     panel: extensionBrowserPanel,
                     onRequestPanelFocus: onRequestPanelFocus
                 )
@@ -188,17 +188,17 @@ private struct CloudVMLoadingPanelView: View {
                     ProgressView()
                         .controlSize(.small)
                     Text(String(localized: "panel.cloudVM.loading.headline", defaultValue: "Opening Base"))
-                        .cmuxFont(size: 14, weight: .semibold)
+                        .bmuxFont(size: 14, weight: .semibold)
                         .foregroundStyle(.primary)
                     CloudVMLoadingStatusView(elapsedSeconds: elapsedSeconds)
                 case .failed(let message, let failedElapsedSeconds):
-                    CmuxSystemSymbolImage(systemName: "exclamationmark.triangle.fill", pointSize: 18)
+                    BmuxSystemSymbolImage(systemName: "exclamationmark.triangle.fill", pointSize: 18)
                         .foregroundStyle(.orange)
                     Text(String(localized: "panel.cloudVM.loading.failed.headline", defaultValue: "Base unavailable"))
-                        .cmuxFont(size: 14, weight: .semibold)
+                        .bmuxFont(size: 14, weight: .semibold)
                         .foregroundStyle(.primary)
                     Text(message)
-                        .cmuxFont(size: 12)
+                        .bmuxFont(size: 12)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: 460)
@@ -210,7 +210,7 @@ private struct CloudVMLoadingPanelView: View {
                                 String(localized: "panel.cloudVM.loading.failed.retry", defaultValue: "Retry"),
                                 systemImage: "arrow.clockwise"
                             )
-                            .cmuxFont(size: 12, weight: .semibold)
+                            .bmuxFont(size: 12, weight: .semibold)
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
@@ -222,7 +222,7 @@ private struct CloudVMLoadingPanelView: View {
                                 String(localized: "panel.cloudVM.loading.failed.feedback", defaultValue: "Send Feedback"),
                                 systemImage: "bubble.left.and.text.bubble.right"
                             )
-                            .cmuxFont(size: 12, weight: .semibold)
+                            .bmuxFont(size: 12, weight: .semibold)
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
@@ -231,7 +231,7 @@ private struct CloudVMLoadingPanelView: View {
                         localized: "panel.cloudVM.loading.failed.elapsed",
                         defaultValue: "Waited %ds before stopping."
                     ), failedElapsedSeconds))
-                    .cmuxFont(size: 11)
+                    .bmuxFont(size: 11)
                     .foregroundStyle(.tertiary)
                 }
             }
@@ -251,7 +251,7 @@ private struct CloudVMLoadingStatusView: View {
                 localized: "panel.cloudVM.loading.elapsed",
                 defaultValue: "%ds elapsed"
             ), elapsedSeconds))
-            .cmuxFont(size: 12, weight: .medium)
+            .bmuxFont(size: 12, weight: .medium)
             .foregroundStyle(.secondary)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -300,11 +300,11 @@ private struct CloudVMLoadingStatusRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            CmuxSystemSymbolImage(systemName: icon, pointSize: 12)
+            BmuxSystemSymbolImage(systemName: icon, pointSize: 12)
                 .foregroundStyle(isActive ? .secondary : .tertiary)
                 .frame(width: 14)
             Text(text)
-                .cmuxFont(size: 12)
+                .bmuxFont(size: 12)
                 .foregroundStyle(isActive ? .secondary : .tertiary)
                 .lineLimit(2)
         }
@@ -319,11 +319,11 @@ struct PanelFilePathHeader<TrailingContent: View>: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            CmuxSystemSymbolImage(systemName: iconSystemName, pointSize: 16)
+            BmuxSystemSymbolImage(systemName: iconSystemName, pointSize: 16)
                 .foregroundStyle(.secondary)
                 .frame(width: 16)
             Text(filePath)
-                .cmuxFont(size: 11, design: .monospaced)
+                .bmuxFont(size: 11, design: .monospaced)
                 .foregroundStyle(Color(nsColor: foregroundColor).opacity(0.68))
                 .lineLimit(1)
                 .truncationMode(.middle)
@@ -359,7 +359,7 @@ struct PanelHeaderIconGlyph: View {
     let systemName: String
 
     var body: some View {
-        CmuxSystemSymbolImage(systemName: systemName, pointSize: 13)
+        BmuxSystemSymbolImage(systemName: systemName, pointSize: 13)
             .frame(width: 20, height: 20, alignment: .center)
             .contentShape(Rectangle())
     }

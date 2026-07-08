@@ -7,7 +7,7 @@ import SwiftUI
 final class TaskManagerWindowController: ReleasingWindowController {
     static let shared = TaskManagerWindowController()
 
-    private let model = CmuxTaskManagerModel()
+    private let model = BmuxTaskManagerModel()
 
     private override init() {
         super.init()
@@ -25,10 +25,10 @@ final class TaskManagerWindowController: ReleasingWindowController {
             backing: .buffered,
             defer: false
         )
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.taskManager")
+        window.identifier = NSUserInterfaceItemIdentifier("bmux.taskManager")
         window.title = String(localized: "taskManager.windowTitle", defaultValue: "Task Manager")
         window.center()
-        window.contentView = NSHostingView(rootView: CmuxTaskManagerView(model: model))
+        window.contentView = NSHostingView(rootView: BmuxTaskManagerView(model: model))
         AppDelegate.shared?.applyWindowDecorations(to: window)
         return window
     }
@@ -51,13 +51,13 @@ final class TaskManagerWindowController: ReleasingWindowController {
 
 @MainActor
 @Observable
-final class CmuxTaskManagerModel {
-    private(set) var snapshot = CmuxTaskManagerSnapshot.empty {
+final class BmuxTaskManagerModel {
+    private(set) var snapshot = BmuxTaskManagerSnapshot.empty {
         didSet { updateSortedRows() }
     }
     private(set) var isRefreshing = false
     private(set) var errorMessage: String?
-    private(set) var sortOrder = CmuxTaskManagerSortOrder.defaultOrder {
+    private(set) var sortOrder = BmuxTaskManagerSortOrder.defaultOrder {
         didSet { updateSortedRows() }
     }
     var includesProcesses = false {
@@ -73,10 +73,10 @@ final class CmuxTaskManagerModel {
     private let refreshInterval: TimeInterval = 3.0
     private let terminationGraceInterval: TimeInterval = 2.0
 
-    private(set) var sortedRows: [CmuxTaskManagerRow] = []
-    private(set) var sortedAgentRows: [CmuxTaskManagerRow] = []
-    private(set) var sortedAggregateRows: [CmuxTaskManagerRow] = []
-    private(set) var sortedChildMemoryRows: [CmuxTaskManagerRow] = []
+    private(set) var sortedRows: [BmuxTaskManagerRow] = []
+    private(set) var sortedAgentRows: [BmuxTaskManagerRow] = []
+    private(set) var sortedAggregateRows: [BmuxTaskManagerRow] = []
+    private(set) var sortedChildMemoryRows: [BmuxTaskManagerRow] = []
 
     init() {
         updateSortedRows()
@@ -90,7 +90,7 @@ final class CmuxTaskManagerModel {
         snapshot.hasLoadedResourceUsage
     }
 
-    func sort(by column: CmuxTaskManagerSortOrder.Column) {
+    func sort(by column: BmuxTaskManagerSortOrder.Column) {
         sortOrder = sortOrder.toggled(for: column)
     }
 
@@ -134,13 +134,13 @@ final class CmuxTaskManagerModel {
             do {
                 let payload = try await TerminalController.shared.taskManagerTopPayload(includeProcesses: includeProcesses)
                 guard !Task.isCancelled else { return }
-                let snapshot = CmuxTaskManagerSnapshot(payload: payload)
+                let snapshot = BmuxTaskManagerSnapshot(payload: payload)
                 self?.snapshot = snapshot
                 self?.errorMessage = nil
             } catch {
                 guard !Task.isCancelled else { return }
                 #if DEBUG
-                cmuxDebugLog("taskManager.refresh.error \(String(describing: error))")
+                bmuxDebugLog("taskManager.refresh.error \(String(describing: error))")
                 #endif
                 self?.errorMessage = String(
                     localized: "taskManager.refresh.error",
@@ -154,7 +154,7 @@ final class CmuxTaskManagerModel {
         }
     }
 
-    func viewBestTarget(for row: CmuxTaskManagerRow) {
+    func viewBestTarget(for row: BmuxTaskManagerRow) {
         if row.canViewTerminal {
             viewTerminal(for: row)
         } else if row.canViewWorkspace {
@@ -162,7 +162,7 @@ final class CmuxTaskManagerModel {
         }
     }
 
-    func viewWorkspace(for row: CmuxTaskManagerRow) {
+    func viewWorkspace(for row: BmuxTaskManagerRow) {
         guard let workspaceId = row.workspaceId,
               let appDelegate = AppDelegate.shared,
               let manager = appDelegate.tabManagerFor(tabId: workspaceId) else { return }
@@ -178,7 +178,7 @@ final class CmuxTaskManagerModel {
         flashSelection(workspaceId: workspaceId, surfaceId: row.surfaceId)
     }
 
-    func viewTerminal(for row: CmuxTaskManagerRow) {
+    func viewTerminal(for row: BmuxTaskManagerRow) {
         guard let workspaceId = row.workspaceId,
               let terminalSurfaceId = row.terminalSurfaceId,
               let appDelegate = AppDelegate.shared,
@@ -195,7 +195,7 @@ final class CmuxTaskManagerModel {
         flashSelection(workspaceId: workspaceId, surfaceId: terminalSurfaceId)
     }
 
-    func killProcess(for row: CmuxTaskManagerRow) {
+    func killProcess(for row: BmuxTaskManagerRow) {
         let processIds = row.killableProcessIds
         guard !processIds.isEmpty else { return }
         guard confirmKillProcess(row: row, processIds: processIds) else { return }
@@ -237,20 +237,20 @@ final class CmuxTaskManagerModel {
         }
     }
 
-    private func confirmKillProcess(row: CmuxTaskManagerRow, processIds: [Int]) -> Bool {
+    private func confirmKillProcess(row: BmuxTaskManagerRow, processIds: [Int]) -> Bool {
         let alert = NSAlert()
         if processIds.count == 1, let processId = processIds.first {
             alert.messageText = String(localized: "taskManager.killProcess.title.one", defaultValue: "Kill process?")
             alert.informativeText = String(format: String(
                 localized: "taskManager.killProcess.message.one",
-                defaultValue: "Ask %@ (PID %lld) to terminate gracefully. cmux will force-kill it if it is still running after a short grace period."
+                defaultValue: "Ask %@ (PID %lld) to terminate gracefully. bmux will force-kill it if it is still running after a short grace period."
             ), row.title, Int64(processId))
         } else {
             let pidList = processIds.map(String.init).joined(separator: ", ")
             alert.messageText = String(localized: "taskManager.killProcess.title.other", defaultValue: "Kill processes?")
             alert.informativeText = String(format: String(
                 localized: "taskManager.killProcess.message.other",
-                defaultValue: "Ask %lld processes to terminate gracefully. cmux will force-kill remaining processes after a short grace period. PIDs: %@."
+                defaultValue: "Ask %lld processes to terminate gracefully. bmux will force-kill remaining processes after a short grace period. PIDs: %@."
             ), Int64(processIds.count), pidList)
         }
         alert.alertStyle = .warning

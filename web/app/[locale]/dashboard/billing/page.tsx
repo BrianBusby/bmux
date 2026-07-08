@@ -468,8 +468,8 @@ function billingBanner(value: string | undefined) {
 
 function priceCopy(subscription: StripeSubscriptionRow): string | null {
   const lookupKey = priceLookupKey(subscription) ?? subscription.priceId;
-  if (lookupKey === "cmux-pro-monthly") return "$30/month";
-  if (lookupKey === "cmux-pro-yearly") return "$240/year";
+  if (lookupKey === "bmux-pro-monthly") return "$30/month";
+  if (lookupKey === "bmux-pro-yearly") return "$240/year";
   return null;
 }
 

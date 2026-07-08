@@ -19,7 +19,7 @@
 
 # production
 /build
-/.cmux-cloud-build
+/.bmux-cloud-build
 
 # misc
 .DS_Store

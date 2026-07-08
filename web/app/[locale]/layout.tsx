@@ -80,7 +80,7 @@ export async function generateMetadata({
       title: t("title"),
       description: t("ogDescription"),
       url: alternates.canonical,
-      siteName: "cmux",
+      siteName: "bmux",
       type: "website",
     },
     twitter: {
@@ -89,7 +89,7 @@ export async function generateMetadata({
       description: t("ogDescription"),
     },
     alternates,
-    metadataBase: new URL("https://cmux.com"),
+    metadataBase: new URL("https://bmux.com"),
   };
 }
 
@@ -117,17 +117,17 @@ export default async function LocaleLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "cmux",
+    name: "bmux",
     operatingSystem: "macOS",
     applicationCategory: "DeveloperApplication",
-    url: "https://cmux.com",
+    url: "https://bmux.com",
     downloadUrl: DOWNLOAD_URL,
     description:
       "Free and open source native macOS terminal built on Ghostty. Works with Claude Code, Codex, OpenCode, Gemini CLI, Kiro, Aider, and any CLI tool. Vertical tabs, notification rings, split panes, and a socket API.",
     keywords:
       "terminal, macOS, open source terminal, Claude Code, Codex, OpenCode, Gemini CLI, Kiro, Aider, AI coding agents, Ghostty",
     isAccessibleForFree: true,
-    license: "https://github.com/manaflow-ai/cmux/blob/main/LICENSE",
+    license: "https://github.com/manaflow-ai/bmux/blob/main/LICENSE",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   };
   const jsonLdScript = JSON.stringify(jsonLd).replace(/</g, "\\u003c");

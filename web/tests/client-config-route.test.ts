@@ -6,10 +6,10 @@ import {
 
 const originalSkipEnvValidation = process.env.SKIP_ENV_VALIDATION;
 const originalPostHogProjectKey = process.env.POSTHOG_PROJECT_KEY;
-const originalClientConfigRateLimitId = process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID;
+const originalClientConfigRateLimitId = process.env.BMUX_CLIENT_CONFIG_RATE_LIMIT_ID;
 process.env.SKIP_ENV_VALIDATION = "1";
 process.env.POSTHOG_PROJECT_KEY = "test-project-key";
-process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "cmux-client-config-test";
+process.env.BMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "bmux-client-config-test";
 
 const originalVercel = process.env.VERCEL;
 installVercelFirewallMock();
@@ -27,7 +27,7 @@ const originalConsoleError = console.error;
 afterEach(() => {
   globalThis.fetch = originalFetch;
   console.error = originalConsoleError;
-  process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "cmux-client-config-test";
+  process.env.BMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "bmux-client-config-test";
   checkRateLimit.mockClear();
   checkRateLimit.mockResolvedValue({ rateLimited: false, error: null });
   if (typeof originalVercel === "undefined") {
@@ -40,7 +40,7 @@ afterEach(() => {
 afterAll(() => {
   restoreEnv("SKIP_ENV_VALIDATION", originalSkipEnvValidation);
   restoreEnv("POSTHOG_PROJECT_KEY", originalPostHogProjectKey);
-  restoreEnv("CMUX_CLIENT_CONFIG_RATE_LIMIT_ID", originalClientConfigRateLimitId);
+  restoreEnv("BMUX_CLIENT_CONFIG_RATE_LIMIT_ID", originalClientConfigRateLimitId);
 });
 
 describe("client config", () => {
@@ -179,7 +179,7 @@ describe("client config", () => {
     });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-    const response = await POST(new Request("https://cmux.test/api/client-config", {
+    const response = await POST(new Request("https://bmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -236,7 +236,7 @@ describe("client config", () => {
       ));
       globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-      const response = await POST(new Request("https://cmux.test/api/client-config", {
+      const response = await POST(new Request("https://bmux.test/api/client-config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ distinctId: "browser-id" }),
@@ -250,14 +250,14 @@ describe("client config", () => {
 
   test("applies the Vercel limiter before proxying flags", async () => {
     process.env.VERCEL = "1";
-    process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID = " cmux-client-config-test\n";
+    process.env.BMUX_CLIENT_CONFIG_RATE_LIMIT_ID = " bmux-client-config-test\n";
     checkRateLimit.mockResolvedValue({ rateLimited: true, error: null });
     const fetchMock = mock(async () => {
       throw new Error("PostHog flags should not be reached after a rate-limit block");
     });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-    const response = await POST(new Request("https://cmux.test/api/client-config", {
+    const response = await POST(new Request("https://bmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: "{",
@@ -269,14 +269,14 @@ describe("client config", () => {
     const calls = (checkRateLimit as unknown as {
       mock: { calls: Array<[string, { request: Request }]> };
     }).mock.calls;
-    expect(calls[0]?.[0]).toBe("cmux-client-config-test");
-    expect(calls[0]?.[1]?.request.url).toBe("https://cmux.test/api/client-config");
+    expect(calls[0]?.[0]).toBe("bmux-client-config-test");
+    expect(calls[0]?.[1]?.request.url).toBe("https://bmux.test/api/client-config");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   test("fails closed on Vercel when the client-config limiter is missing", async () => {
     process.env.VERCEL = "1";
-    delete process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID;
+    delete process.env.BMUX_CLIENT_CONFIG_RATE_LIMIT_ID;
     const consoleError = mock(() => {});
     console.error = consoleError as unknown as typeof console.error;
     const fetchMock = mock(async () => {
@@ -284,7 +284,7 @@ describe("client config", () => {
     });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-    const response = await POST(new Request("https://cmux.test/api/client-config", {
+    const response = await POST(new Request("https://bmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ distinctId: "browser-id" }),
@@ -307,7 +307,7 @@ describe("client config", () => {
     });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-    const response = await POST(new Request("https://cmux.test/api/client-config", {
+    const response = await POST(new Request("https://bmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ distinctId: "browser-id" }),
@@ -317,7 +317,7 @@ describe("client config", () => {
     expect(await response.json()).toEqual({ error: "client_config_unavailable" });
     expect(consoleError).toHaveBeenCalledWith(
       "client-config.route.rate_limit_not_found",
-      "cmux-client-config-test",
+      "bmux-client-config-test",
     );
     expect(checkRateLimit).toHaveBeenCalledTimes(1);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -333,7 +333,7 @@ describe("client config", () => {
     });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-    const response = await POST(new Request("https://cmux.test/api/client-config", {
+    const response = await POST(new Request("https://bmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ distinctId: "browser-id" }),

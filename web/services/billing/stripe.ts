@@ -5,10 +5,10 @@ import { env } from "../../app/env";
 export type ProBillingInterval = "month" | "year";
 
 const PRO_PRICE_LOOKUP_KEYS: Record<ProBillingInterval, string> = {
-  month: "cmux-pro-monthly",
-  year: "cmux-pro-yearly",
+  month: "bmux-pro-monthly",
+  year: "bmux-pro-yearly",
 };
-const TEAM_PRICE_LOOKUP_KEY = "cmux-team-monthly";
+const TEAM_PRICE_LOOKUP_KEY = "bmux-team-monthly";
 
 let stripeClient: Stripe | null = null;
 const resolvedPriceIds = new Map<ProBillingInterval, string>();

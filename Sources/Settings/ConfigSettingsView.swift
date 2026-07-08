@@ -1,15 +1,15 @@
 import AppKit
-import CmuxFoundation
-import CmuxWorkspaces
+import BmuxFoundation
+import BmuxWorkspaces
 import SwiftUI
 
 struct ConfigSettingsView: View {
     static let windowID = "config-editor"
 
-    @State private var configSource: ConfigSource = .cmux
+    @State private var configSource: ConfigSource = .bmux
     @State private var snapshots: [ConfigSource: ConfigSourceSnapshot] = [:]
-    @State private var cmuxDraft = ""
-    @State private var cmuxLastLoadedContents = ""
+    @State private var bmuxDraft = ""
+    @State private var bmuxLastLoadedContents = ""
     @State private var statusMessage = ""
     @State private var statusIsError = false
 
@@ -17,27 +17,27 @@ struct ConfigSettingsView: View {
         snapshots[configSource] ?? configSource.snapshot(environment: .live())
     }
 
-    private var hasUnsavedCmuxChanges: Bool {
-        cmuxDraft != cmuxLastLoadedContents
+    private var hasUnsavedBmuxChanges: Bool {
+        bmuxDraft != bmuxLastLoadedContents
     }
 
     private var currentBannerText: String? {
         switch configSource {
-        case .cmux:
+        case .bmux:
             return String(
-                localized: "settings.config.banner.cmux",
-                defaultValue: "This is the cmux Ghostty config selected for this build. Edit it here, then Save to reload cmux."
+                localized: "settings.config.banner.bmux",
+                defaultValue: "This is the bmux Ghostty config selected for this build. Edit it here, then Save to reload bmux."
             )
         case .synced:
             if currentSnapshot.hasStandaloneGhosttyConfig {
                 return String(
                     localized: "settings.config.banner.synced",
-                    defaultValue: "This is a generated preview of the effective config. Edit the cmux tab to change what cmux reads."
+                    defaultValue: "This is a generated preview of the effective config. Edit the bmux tab to change what bmux reads."
                 )
             }
             return String(
                 localized: "settings.config.banner.syncedNoGhostty",
-                defaultValue: "This is a generated preview of the effective config. No base Ghostty config file was found, so only cmux overrides are shown."
+                defaultValue: "This is a generated preview of the effective config. No base Ghostty config file was found, so only bmux overrides are shown."
             )
         }
     }
@@ -65,7 +65,7 @@ struct ConfigSettingsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 ForEach(currentSnapshot.displayPaths, id: \.self) { path in
                     Text(verbatim: path)
-                        .cmuxFont(size: 12, weight: .regular, design: .monospaced)
+                        .bmuxFont(size: 12, weight: .regular, design: .monospaced)
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
                 }
@@ -77,11 +77,11 @@ struct ConfigSettingsView: View {
             }
 
             Group {
-                if configSource == .cmux {
-                    ConfigSettingsTextView(text: $cmuxDraft, isEditable: true)
+                if configSource == .bmux {
+                    ConfigSettingsTextView(text: $bmuxDraft, isEditable: true)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         .background(editorBackground)
-                        .accessibilityIdentifier("ConfigSettingsCmuxEditor")
+                        .accessibilityIdentifier("ConfigSettingsBmuxEditor")
                 } else {
                     ConfigSettingsTextView(text: .constant(currentSnapshot.contents), isEditable: false)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -99,7 +99,7 @@ struct ConfigSettingsView: View {
             HStack(spacing: 8) {
                 if !statusMessage.isEmpty {
                     Text(statusMessage)
-                        .cmuxFont(.caption)
+                        .bmuxFont(.caption)
                         .foregroundColor(statusIsError ? .red : .secondary)
                 }
 
@@ -124,11 +124,11 @@ struct ConfigSettingsView: View {
                 .controlSize(.small)
 
                 Button(String(localized: "settings.config.action.save", defaultValue: "Save")) {
-                    saveCmuxConfig()
+                    saveBmuxConfig()
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
-                .disabled(configSource != .cmux || !hasUnsavedCmuxChanges)
+                .disabled(configSource != .bmux || !hasUnsavedBmuxChanges)
             }
         }
         .padding(16)
@@ -140,14 +140,14 @@ struct ConfigSettingsView: View {
             }
         )
         .onAppear {
-            refreshSnapshots(preserveCmuxDraft: false)
+            refreshSnapshots(preserveBmuxDraft: false)
         }
         .onChange(of: configSource) { _ in
             statusMessage = ""
             statusIsError = false
         }
         .onReceive(NotificationCenter.default.publisher(for: .ghosttyConfigDidReload)) { _ in
-            refreshSnapshots(preserveCmuxDraft: true)
+            refreshSnapshots(preserveBmuxDraft: true)
         }
     }
 
@@ -177,19 +177,19 @@ struct ConfigSettingsView: View {
     }
 
     private func configureWindow(_ window: NSWindow) {
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.configEditor")
+        window.identifier = NSUserInterfaceItemIdentifier("bmux.configEditor")
         window.minSize = NSSize(width: 700, height: 500)
         window.tabbingMode = .disallowed
         window.animationBehavior = .utilityWindow
         // The Config editor is a top-level peer window, not a floating
         // inspector: clicking the main window must be able to raise it above
-        // the editor (https://github.com/manaflow-ai/cmux/issues/5081).
-        window.adoptCmuxPeerWindowLevel()
+        // the editor (https://github.com/manaflow-ai/bmux/issues/5081).
+        window.adoptBmuxPeerWindowLevel()
         window.collectionBehavior.insert(.fullScreenAuxiliary)
     }
 
-    private func refreshSnapshots(preserveCmuxDraft: Bool) {
-        let wasDirty = hasUnsavedCmuxChanges
+    private func refreshSnapshots(preserveBmuxDraft: Bool) {
+        let wasDirty = hasUnsavedBmuxChanges
         let environment = ConfigSourceEnvironment.live()
         let newSnapshots = Dictionary(
             uniqueKeysWithValues: ConfigSource.allCases.map { source in
@@ -198,15 +198,15 @@ struct ConfigSettingsView: View {
         )
         snapshots = newSnapshots
 
-        let latestCmuxContents = newSnapshots[.cmux]?.contents ?? ""
-        if !preserveCmuxDraft || !wasDirty {
-            cmuxDraft = latestCmuxContents
+        let latestBmuxContents = newSnapshots[.bmux]?.contents ?? ""
+        if !preserveBmuxDraft || !wasDirty {
+            bmuxDraft = latestBmuxContents
         }
-        cmuxLastLoadedContents = latestCmuxContents
+        bmuxLastLoadedContents = latestBmuxContents
     }
 
     private func reloadFromDisk() {
-        refreshSnapshots(preserveCmuxDraft: false)
+        refreshSnapshots(preserveBmuxDraft: false)
         if let appDelegate = AppDelegate.shared {
             appDelegate.reloadConfiguration(source: "settings.configWindow.reload")
         } else {
@@ -219,13 +219,13 @@ struct ConfigSettingsView: View {
         statusIsError = false
     }
 
-    private func saveCmuxConfig() {
+    private func saveBmuxConfig() {
         let environment = ConfigSourceEnvironment.live()
 
         do {
-            try environment.writeCmuxConfigContents(cmuxDraft)
-            cmuxLastLoadedContents = cmuxDraft
-            refreshSnapshots(preserveCmuxDraft: true)
+            try environment.writeBmuxConfigContents(bmuxDraft)
+            bmuxLastLoadedContents = bmuxDraft
+            refreshSnapshots(preserveBmuxDraft: true)
             if let appDelegate = AppDelegate.shared {
                 appDelegate.reloadConfiguration(source: "settings.configWindow.save")
             } else {
@@ -233,26 +233,26 @@ struct ConfigSettingsView: View {
             }
             statusMessage = String(
                 localized: "settings.config.status.saved",
-                defaultValue: "Saved to cmux config and reloaded."
+                defaultValue: "Saved to bmux config and reloaded."
             )
             statusIsError = false
         } catch {
             NSSound.beep()
             statusMessage = String(
                 localized: "settings.config.status.saveFailed",
-                defaultValue: "Couldn't save the cmux config."
+                defaultValue: "Couldn't save the bmux config."
             )
             statusIsError = true
         }
     }
 
     private func openCurrentSourceInEditor() {
-        guard let url = materializedCmuxConfigURL() else { return }
+        guard let url = materializedBmuxConfigURL() else { return }
         PreferredEditorService(defaults: .standard).open(url)
     }
 
     private func revealCurrentSourceInFinder() {
-        guard let url = materializedCmuxConfigURL() else { return }
+        guard let url = materializedBmuxConfigURL() else { return }
         if FileManager.default.fileExists(atPath: url.path) {
             NSWorkspace.shared.activateFileViewerSelecting([url])
         } else {
@@ -260,15 +260,15 @@ struct ConfigSettingsView: View {
         }
     }
 
-    private func materializedCmuxConfigURL() -> URL? {
+    private func materializedBmuxConfigURL() -> URL? {
         let environment = ConfigSourceEnvironment.live()
         do {
-            return try environment.materializeCmuxConfigFileIfNeeded()
+            return try environment.materializeBmuxConfigFileIfNeeded()
         } catch {
             NSSound.beep()
             statusMessage = String(
                 localized: "settings.config.status.openFailed",
-                defaultValue: "Couldn't open the cmux config."
+                defaultValue: "Couldn't open the bmux config."
             )
             statusIsError = true
             return nil
@@ -284,7 +284,7 @@ private struct ConfigSettingsBanner: View {
             Image(systemName: "info.circle")
                 .foregroundStyle(.secondary)
             Text(text)
-                .cmuxFont(.footnote)
+                .bmuxFont(.footnote)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -385,8 +385,8 @@ private struct ConfigSettingsTextView: NSViewRepresentable {
 private extension ConfigSource {
     var localizedTitle: String {
         switch self {
-        case .cmux:
-            return String(localized: "settings.config.source.cmux", defaultValue: "cmux")
+        case .bmux:
+            return String(localized: "settings.config.source.bmux", defaultValue: "bmux")
         case .synced:
             return String(localized: "settings.config.source.synced", defaultValue: "synced")
         }

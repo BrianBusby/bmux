@@ -1,33 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_NAME="cmux DEV"
-BUNDLE_ID="com.cmuxterm.app.debug"
-BASE_APP_NAME="cmux DEV"
-PROJECT_FILE="cmux.xcodeproj/project.pbxproj"
+APP_NAME="bmux DEV"
+BUNDLE_ID="com.bmuxterm.app.debug"
+BASE_APP_NAME="bmux DEV"
+PROJECT_FILE="bmux.xcodeproj/project.pbxproj"
 DERIVED_DATA=""
 NAME_SET=0
 BUNDLE_SET=0
 DERIVED_SET=0
 TAG=""
 LAUNCH=0
-CMUX_DEBUG_LOG=""
-CMUX_DEV_PORT=""
-CMUX_DEV_PORT_END=""
-CMUX_DEV_PORT_RANGE=""
-CMUX_DEV_ORIGIN=""
+BMUX_DEBUG_LOG=""
+BMUX_DEV_PORT=""
+BMUX_DEV_PORT_END=""
+BMUX_DEV_PORT_RANGE=""
+BMUX_DEV_ORIGIN=""
 CLI_PATH=""
-NO_GLOBAL_CLI_LINKS="${CMUX_RELOAD_NO_GLOBAL_CLI_LINKS:-0}"
-# Matches CmuxStateDirectory (non-TCC ~/.local/state/cmux) where the app/CLI now
-# read the last-socket-path markers (https://github.com/manaflow-ai/cmux/issues/5146).
+NO_GLOBAL_CLI_LINKS="${BMUX_RELOAD_NO_GLOBAL_CLI_LINKS:-0}"
+# Matches BmuxStateDirectory (non-TCC ~/.local/state/bmux) where the app/CLI now
+# read the last-socket-path markers (https://github.com/manaflow-ai/bmux/issues/5146).
 # Resolve the real account home via getpwuid (the same syscall
 # homeDirectoryForCurrentUser uses) rather than $HOME, which a shell can override.
 # perl ships with macOS and returns the full home path even when it contains spaces;
 # `dscl ... | awk` mis-parses such paths because dscl wraps a value with spaces onto
 # a second line. `|| true` keeps the lookup from aborting the script under
 # `set -euo pipefail`; an empty result falls back to $HOME.
-_cmux_account_home="$(perl -e 'print((getpwuid($<))[7])' 2>/dev/null || true)"
-LAST_SOCKET_PATH_DIR="${_cmux_account_home:-$HOME}/.local/state/cmux"
+_bmux_account_home="$(perl -e 'print((getpwuid($<))[7])' 2>/dev/null || true)"
+LAST_SOCKET_PATH_DIR="${_bmux_account_home:-$HOME}/.local/state/bmux"
 AUTO_SKIP_ZIG_BUILD_REASON=""
 SWIFT_FRONTEND_WORKAROUND=0
 XCODEBUILD_STARTED=0
@@ -38,12 +38,12 @@ LOCAL_BUILD_NUMBER_FILE=""
 LOCAL_BUILD_NUMBER_LEGACY_FILE=""
 
 should_skip_ghostty_cli_helper_zig_build() {
-  if [[ "${CMUX_SKIP_ZIG_BUILD:-}" == "1" ]]; then
-    AUTO_SKIP_ZIG_BUILD_REASON="CMUX_SKIP_ZIG_BUILD=1"
+  if [[ "${BMUX_SKIP_ZIG_BUILD:-}" == "1" ]]; then
+    AUTO_SKIP_ZIG_BUILD_REASON="BMUX_SKIP_ZIG_BUILD=1"
     return 0
   fi
 
-  if [[ "${CMUX_REQUIRE_GHOSTTY_CLI_HELPER:-}" == "1" ]]; then
+  if [[ "${BMUX_REQUIRE_GHOSTTY_CLI_HELPER:-}" == "1" ]]; then
     AUTO_SKIP_ZIG_BUILD_REASON=""
     return 1
   fi
@@ -53,7 +53,7 @@ should_skip_ghostty_cli_helper_zig_build() {
   sdk_version="$(xcrun --sdk macosx --show-sdk-version 2>/dev/null || true)"
   sdk_major="${sdk_version%%.*}"
   if [[ "$sdk_major" =~ ^[0-9]+$ ]] && [[ "$sdk_major" -ge 26 ]]; then
-    AUTO_SKIP_ZIG_BUILD_REASON="macOS SDK ${sdk_version} cannot link the Zig 0.15.2 Ghostty CLI helper in local reloads; set CMUX_REQUIRE_GHOSTTY_CLI_HELPER=1 to force the real helper build"
+    AUTO_SKIP_ZIG_BUILD_REASON="macOS SDK ${sdk_version} cannot link the Zig 0.15.2 Ghostty CLI helper in local reloads; set BMUX_REQUIRE_GHOSTTY_CLI_HELPER=1 to force the real helper build"
     return 0
   fi
 
@@ -67,10 +67,10 @@ write_dev_cli_shim() {
   mkdir -p "$(dirname "$target")"
   cat > "$target" <<EOF
 #!/usr/bin/env bash
-# cmux dev shim (managed by scripts/reload.sh)
+# bmux dev shim (managed by scripts/reload.sh)
 set -euo pipefail
 
-CLI_PATH_FILE="/tmp/cmux-last-cli-path"
+CLI_PATH_FILE="/tmp/bmux-last-cli-path"
 SOCKET_ARG=""
 EXPECT_SOCKET_VALUE=0
 for arg in "\$@"; do
@@ -90,19 +90,19 @@ for arg in "\$@"; do
 done
 if [[ -n "\$SOCKET_ARG" ]]; then
   SOCKET_NAME="\$(basename "\$SOCKET_ARG")"
-  if [[ "\$SOCKET_NAME" == cmux-debug-*.sock ]]; then
-    TAG="\${SOCKET_NAME#cmux-debug-}"
+  if [[ "\$SOCKET_NAME" == bmux-debug-*.sock ]]; then
+    TAG="\${SOCKET_NAME#bmux-debug-}"
     TAG="\${TAG%.sock}"
     if [[ "\$TAG" =~ ^[A-Za-z0-9_-]+$ ]]; then
-      TAG_CLI="\$HOME/Library/Developer/Xcode/DerivedData/cmux-\$TAG/Build/Products/Debug/cmux DEV \$TAG.app/Contents/Resources/bin/cmux"
+      TAG_CLI="\$HOME/Library/Developer/Xcode/DerivedData/bmux-\$TAG/Build/Products/Debug/bmux DEV \$TAG.app/Contents/Resources/bin/bmux"
       if [[ -x "\$TAG_CLI" ]] && [[ "\$TAG_CLI" != "\$0" ]]; then
         exec "\$TAG_CLI" "\$@"
       fi
     fi
   fi
 fi
-if [[ -n "\${CMUX_BUNDLED_CLI_PATH:-}" ]] && [[ -f "\$CMUX_BUNDLED_CLI_PATH" ]] && [[ -x "\$CMUX_BUNDLED_CLI_PATH" ]] && [[ "\$CMUX_BUNDLED_CLI_PATH" != "\$0" ]]; then
-  exec "\$CMUX_BUNDLED_CLI_PATH" "\$@"
+if [[ -n "\${BMUX_BUNDLED_CLI_PATH:-}" ]] && [[ -f "\$BMUX_BUNDLED_CLI_PATH" ]] && [[ -x "\$BMUX_BUNDLED_CLI_PATH" ]] && [[ "\$BMUX_BUNDLED_CLI_PATH" != "\$0" ]]; then
+  exec "\$BMUX_BUNDLED_CLI_PATH" "\$@"
 fi
 
 CLI_PATH_OWNER="\$(stat -f '%u' "\$CLI_PATH_FILE" 2>/dev/null || stat -c '%u' "\$CLI_PATH_FILE" 2>/dev/null || echo -1)"
@@ -117,15 +117,15 @@ if [[ -x "$fallback_bin" ]]; then
   exec "$fallback_bin" "\$@"
 fi
 
-echo "error: no reload-selected dev cmux CLI found. Run ./scripts/reload.sh --tag <name> first." >&2
+echo "error: no reload-selected dev bmux CLI found. Run ./scripts/reload.sh --tag <name> first." >&2
 exit 1
 EOF
   chmod +x "$target"
 }
 
-select_cmux_shim_target() {
-  local app_cli_dir="/Applications/cmux.app/Contents/Resources/bin"
-  local marker="cmux dev shim (managed by scripts/reload.sh)"
+select_bmux_shim_target() {
+  local app_cli_dir="/Applications/bmux.app/Contents/Resources/bin"
+  local marker="bmux dev shim (managed by scripts/reload.sh)"
   local target=""
   local path_entry=""
   local candidate=""
@@ -140,7 +140,7 @@ select_cmux_shim_target() {
       break
     fi
     [[ -d "$path_entry" && -w "$path_entry" ]] || continue
-    candidate="$path_entry/cmux"
+    candidate="$path_entry/bmux"
     if [[ ! -e "$candidate" ]]; then
       target="$candidate"
       break
@@ -159,7 +159,7 @@ select_cmux_shim_target() {
   # Fallback for PATH layouts where app CLI isn't listed or no earlier entries were writable.
   for path_entry in /opt/homebrew/bin /usr/local/bin "$HOME/.local/bin" "$HOME/bin"; do
     [[ -d "$path_entry" && -w "$path_entry" ]] || continue
-    candidate="$path_entry/cmux"
+    candidate="$path_entry/bmux"
     if [[ ! -e "$candidate" ]]; then
       echo "$candidate"
       return 0
@@ -182,76 +182,76 @@ publish_reload_cli_path() {
     return 0
   fi
 
-  (umask 077; printf '%s\n' "$cli_path" > /tmp/cmux-last-cli-path) || true
-  ln -sfn "$cli_path" /tmp/cmux-cli || true
+  (umask 077; printf '%s\n' "$cli_path" > /tmp/bmux-last-cli-path) || true
+  ln -sfn "$cli_path" /tmp/bmux-cli || true
 
   # Stable shim that always follows the last reload-selected dev CLI.
-  DEV_CLI_SHIM="$HOME/.local/bin/cmux-dev"
-  write_dev_cli_shim "$DEV_CLI_SHIM" "/Applications/cmux.app/Contents/Resources/bin/cmux"
+  DEV_CLI_SHIM="$HOME/.local/bin/bmux-dev"
+  write_dev_cli_shim "$DEV_CLI_SHIM" "/Applications/bmux.app/Contents/Resources/bin/bmux"
 
-  CMUX_SHIM_TARGET="$(select_cmux_shim_target || true)"
-  if [[ -n "${CMUX_SHIM_TARGET:-}" ]]; then
-    write_dev_cli_shim "$CMUX_SHIM_TARGET" "/Applications/cmux.app/Contents/Resources/bin/cmux"
+  BMUX_SHIM_TARGET="$(select_bmux_shim_target || true)"
+  if [[ -n "${BMUX_SHIM_TARGET:-}" ]]; then
+    write_dev_cli_shim "$BMUX_SHIM_TARGET" "/Applications/bmux.app/Contents/Resources/bin/bmux"
   fi
 }
 
 write_last_socket_path() {
   local socket_path="$1"
   local marker_name="dev-last-socket-path"
-  local tmp_marker="/tmp/cmux-dev-last-socket-path"
+  local tmp_marker="/tmp/bmux-dev-last-socket-path"
   local bundle_id="${BUNDLE_ID:-}"
   local slug=""
 
   case "$bundle_id" in
-    com.cmuxterm.app)
+    com.bmuxterm.app)
       marker_name="last-socket-path"
-      tmp_marker="/tmp/cmux-last-socket-path"
+      tmp_marker="/tmp/bmux-last-socket-path"
       ;;
-    com.cmuxterm.app.nightly)
+    com.bmuxterm.app.nightly)
       marker_name="nightly-last-socket-path"
-      tmp_marker="/tmp/cmux-nightly-last-socket-path"
+      tmp_marker="/tmp/bmux-nightly-last-socket-path"
       ;;
-    com.cmuxterm.app.nightly.*)
-      slug="$(sanitize_path "${bundle_id#com.cmuxterm.app.nightly.}")"
+    com.bmuxterm.app.nightly.*)
+      slug="$(sanitize_path "${bundle_id#com.bmuxterm.app.nightly.}")"
       if [[ -n "$slug" ]]; then
         marker_name="nightly-${slug}-last-socket-path"
-        tmp_marker="/tmp/cmux-nightly-${slug}-last-socket-path"
+        tmp_marker="/tmp/bmux-nightly-${slug}-last-socket-path"
       else
         marker_name="nightly-last-socket-path"
-        tmp_marker="/tmp/cmux-nightly-last-socket-path"
+        tmp_marker="/tmp/bmux-nightly-last-socket-path"
       fi
       ;;
-    com.cmuxterm.app.staging)
+    com.bmuxterm.app.staging)
       marker_name="staging-last-socket-path"
-      tmp_marker="/tmp/cmux-staging-last-socket-path"
+      tmp_marker="/tmp/bmux-staging-last-socket-path"
       ;;
-    com.cmuxterm.app.staging.*)
-      slug="$(sanitize_path "${bundle_id#com.cmuxterm.app.staging.}")"
+    com.bmuxterm.app.staging.*)
+      slug="$(sanitize_path "${bundle_id#com.bmuxterm.app.staging.}")"
       if [[ -n "$slug" ]]; then
         marker_name="staging-${slug}-last-socket-path"
-        tmp_marker="/tmp/cmux-staging-${slug}-last-socket-path"
+        tmp_marker="/tmp/bmux-staging-${slug}-last-socket-path"
       else
         marker_name="staging-last-socket-path"
-        tmp_marker="/tmp/cmux-staging-last-socket-path"
+        tmp_marker="/tmp/bmux-staging-last-socket-path"
       fi
       ;;
-    com.cmuxterm.app.debug)
+    com.bmuxterm.app.debug)
       slug="${TAG_SLUG:-}"
       if [[ -n "$slug" ]]; then
         marker_name="dev-${slug}-last-socket-path"
-        tmp_marker="/tmp/cmux-dev-${slug}-last-socket-path"
+        tmp_marker="/tmp/bmux-dev-${slug}-last-socket-path"
       fi
       ;;
-    com.cmuxterm.app.debug.*)
-      slug="$(sanitize_path "${bundle_id#com.cmuxterm.app.debug.}")"
+    com.bmuxterm.app.debug.*)
+      slug="$(sanitize_path "${bundle_id#com.bmuxterm.app.debug.}")"
       if [[ -n "$slug" ]]; then
         marker_name="dev-${slug}-last-socket-path"
-        tmp_marker="/tmp/cmux-dev-${slug}-last-socket-path"
+        tmp_marker="/tmp/bmux-dev-${slug}-last-socket-path"
       fi
       ;;
     *)
       marker_name="last-socket-path"
-      tmp_marker="/tmp/cmux-last-socket-path"
+      tmp_marker="/tmp/bmux-last-socket-path"
       ;;
   esac
 
@@ -274,13 +274,13 @@ Options:
   --name <app name>      Override app display/bundle name.
   --bundle-id <id>       Override bundle identifier.
   --derived-data <path>  Override derived data path.
-  --no-global-cli-links  Do not update /tmp/cmux-cli, /tmp/cmux-last-cli-path,
-                         or PATH cmux-dev shims. Useful for isolated dogfood.
+  --no-global-cli-links  Do not update /tmp/bmux-cli, /tmp/bmux-last-cli-path,
+                         or PATH bmux-dev shims. Useful for isolated dogfood.
   --swift-frontend-workaround
                          Work around Swift arm64 frontend spins for this reload
                          only by disabling batch mode, debug symbol emission,
                          and AArch64 GlobalISel. Also enabled by
-                         CMUX_SWIFT_FRONTEND_WORKAROUND=1.
+                         BMUX_SWIFT_FRONTEND_WORKAROUND=1.
   --swift-disable-global-isel
                          Alias for --swift-frontend-workaround.
   -h, --help             Show this help.
@@ -329,7 +329,7 @@ resolve_local_build_number() {
   fi
 
   local legacy_file legacy_stored
-  for legacy_file in "$legacy_derived_data_root"/cmux-*/cmux-local-build-number; do
+  for legacy_file in "$legacy_derived_data_root"/bmux-*/bmux-local-build-number; do
     [[ -r "$legacy_file" ]] || continue
     legacy_stored="$(tr -d '[:space:]' < "$legacy_file")"
     if [[ "$legacy_stored" =~ ^[0-9]+$ ]] && (( legacy_stored > current )); then
@@ -362,9 +362,9 @@ is_positive_integer() {
   (( numeric > 0 ))
 }
 
-choose_cmux_dev_port() {
-  if is_valid_port "${CMUX_PORT:-}"; then
-    echo "$CMUX_PORT"
+choose_bmux_dev_port() {
+  if is_valid_port "${BMUX_PORT:-}"; then
+    echo "$BMUX_PORT"
     return 0
   fi
   if is_valid_port "${PORT:-}"; then
@@ -374,19 +374,19 @@ choose_cmux_dev_port() {
   echo "3777"
 }
 
-choose_cmux_dev_port_range() {
-  if is_positive_integer "${CMUX_PORT_RANGE:-}"; then
-    echo "$CMUX_PORT_RANGE"
+choose_bmux_dev_port_range() {
+  if is_positive_integer "${BMUX_PORT_RANGE:-}"; then
+    echo "$BMUX_PORT_RANGE"
     return 0
   fi
   echo "1"
 }
 
-choose_cmux_dev_port_end() {
+choose_bmux_dev_port_end() {
   local start="$1"
   local range="$2"
-  if is_valid_port "${CMUX_PORT_END:-}"; then
-    echo "$CMUX_PORT_END"
+  if is_valid_port "${BMUX_PORT_END:-}"; then
+    echo "$BMUX_PORT_END"
     return 0
   fi
   local start_num=$((10#$start))
@@ -415,7 +415,7 @@ set_plist_url_scheme() {
 
 tagged_derived_data_path() {
   local slug="$1"
-  echo "$HOME/Library/Developer/Xcode/DerivedData/cmux-${slug}"
+  echo "$HOME/Library/Developer/Xcode/DerivedData/bmux-${slug}"
 }
 
 remove_app_bundle_output() {
@@ -475,10 +475,10 @@ print_tag_cleanup_reminder() {
   local -a stale_tags=()
 
   while IFS= read -r -d '' path; do
-    if [[ "$path" == /tmp/cmux-* ]]; then
-      tag="${path#/tmp/cmux-}"
-    elif [[ "$path" == "$HOME/Library/Developer/Xcode/DerivedData/cmux-"* ]]; then
-      tag="${path#$HOME/Library/Developer/Xcode/DerivedData/cmux-}"
+    if [[ "$path" == /tmp/bmux-* ]]; then
+      tag="${path#/tmp/bmux-}"
+    elif [[ "$path" == "$HOME/Library/Developer/Xcode/DerivedData/bmux-"* ]]; then
+      tag="${path#$HOME/Library/Developer/Xcode/DerivedData/bmux-}"
     else
       continue
     fi
@@ -495,8 +495,8 @@ print_tag_cleanup_reminder() {
     seen="${seen}${tag} "
     stale_tags+=("$tag")
   done < <(
-    find /tmp -maxdepth 1 -name 'cmux-*' -print0 2>/dev/null
-    find "$HOME/Library/Developer/Xcode/DerivedData" -maxdepth 1 -type d -name 'cmux-*' -print0 2>/dev/null
+    find /tmp -maxdepth 1 -name 'bmux-*' -print0 2>/dev/null
+    find "$HOME/Library/Developer/Xcode/DerivedData" -maxdepth 1 -type d -name 'bmux-*' -print0 2>/dev/null
   )
 
   echo
@@ -512,17 +512,17 @@ print_tag_cleanup_reminder() {
     done
     echo "Cleanup stale tags only:"
     for tag in "${stale_tags[@]}"; do
-      echo "  pkill -f \"cmux DEV ${tag}.app/Contents/MacOS/cmux DEV\""
-      echo "  rm -rf \"$(tagged_derived_data_path "$tag")\" \"/tmp/cmux-${tag}\" \"/tmp/cmux-debug-${tag}.sock\""
-      echo "  rm -f \"/tmp/cmux-debug-${tag}.log\""
-      echo "  rm -f \"$HOME/Library/Application Support/cmux/cmuxd-dev-${tag}.sock\""
+      echo "  pkill -f \"bmux DEV ${tag}.app/Contents/MacOS/bmux DEV\""
+      echo "  rm -rf \"$(tagged_derived_data_path "$tag")\" \"/tmp/bmux-${tag}\" \"/tmp/bmux-debug-${tag}.sock\""
+      echo "  rm -f \"/tmp/bmux-debug-${tag}.log\""
+      echo "  rm -f \"$HOME/Library/Application Support/bmux/bmuxd-dev-${tag}.sock\""
     done
   fi
   echo "After you verify current tag, cleanup command:"
-  echo "  pkill -f \"cmux DEV ${current_slug}.app/Contents/MacOS/cmux DEV\""
-  echo "  rm -rf \"$(tagged_derived_data_path "$current_slug")\" \"/tmp/cmux-${current_slug}\" \"/tmp/cmux-debug-${current_slug}.sock\""
-  echo "  rm -f \"/tmp/cmux-debug-${current_slug}.log\""
-  echo "  rm -f \"$HOME/Library/Application Support/cmux/cmuxd-dev-${current_slug}.sock\""
+  echo "  pkill -f \"bmux DEV ${current_slug}.app/Contents/MacOS/bmux DEV\""
+  echo "  rm -rf \"$(tagged_derived_data_path "$current_slug")\" \"/tmp/bmux-${current_slug}\" \"/tmp/bmux-debug-${current_slug}.sock\""
+  echo "  rm -f \"/tmp/bmux-debug-${current_slug}.log\""
+  echo "  rm -f \"$HOME/Library/Application Support/bmux/bmuxd-dev-${current_slug}.sock\""
 }
 
 while [[ $# -gt 0 ]]; do
@@ -604,28 +604,28 @@ if [[ -n "$TAG" ]]; then
     exit 1
   fi
   if [[ "$NAME_SET" -eq 0 ]]; then
-    APP_NAME="cmux DEV ${TAG_SLUG}"
+    APP_NAME="bmux DEV ${TAG_SLUG}"
   fi
   if [[ "$BUNDLE_SET" -eq 0 ]]; then
-    BUNDLE_ID="com.cmuxterm.app.debug.${TAG_ID}"
+    BUNDLE_ID="com.bmuxterm.app.debug.${TAG_ID}"
   fi
   if [[ "$DERIVED_SET" -eq 0 ]]; then
     DERIVED_DATA="$(tagged_derived_data_path "$TAG_SLUG")"
   fi
   LOCAL_BUILD_NUMBER_FILE="${LAST_SOCKET_PATH_DIR}/local-build-number"
-  LOCAL_BUILD_NUMBER_LEGACY_FILE="${DERIVED_DATA}/cmux-local-build-number"
+  LOCAL_BUILD_NUMBER_LEGACY_FILE="${DERIVED_DATA}/bmux-local-build-number"
   LOCAL_BUILD_NUMBER="$(resolve_local_build_number "$(current_project_build_number)" "$LOCAL_BUILD_NUMBER_FILE")"
 fi
 
-CMUX_DEV_PORT="$(choose_cmux_dev_port)"
-CMUX_DEV_PORT_RANGE="$(choose_cmux_dev_port_range)"
-CMUX_DEV_PORT_END="$(choose_cmux_dev_port_end "$CMUX_DEV_PORT" "$CMUX_DEV_PORT_RANGE")"
-CMUX_DEV_ORIGIN="http://localhost:${CMUX_DEV_PORT}"
+BMUX_DEV_PORT="$(choose_bmux_dev_port)"
+BMUX_DEV_PORT_RANGE="$(choose_bmux_dev_port_range)"
+BMUX_DEV_PORT_END="$(choose_bmux_dev_port_end "$BMUX_DEV_PORT" "$BMUX_DEV_PORT_RANGE")"
+BMUX_DEV_ORIGIN="http://localhost:${BMUX_DEV_PORT}"
 
 # Quiet logging: capture all noisy build output (xcodebuild, zig, codesign,
 # plistbuddy, etc.) to a single log file. On success we print only a one-line
 # summary plus the App/CLI paths. On failure we dump the log.
-RELOAD_LOG="/tmp/cmux-reload-${TAG_SLUG}.log"
+RELOAD_LOG="/tmp/bmux-reload-${TAG_SLUG}.log"
 RELOAD_START_TIME="$(date +%s)"
 : > "$RELOAD_LOG"
 
@@ -679,13 +679,13 @@ reload_finalize() {
     echo "App path:"
     echo "  $APP_PATH"
   fi
-  if [[ -n "${CMUX_DEV_ORIGIN:-}" ]]; then
+  if [[ -n "${BMUX_DEV_ORIGIN:-}" ]]; then
     echo
     echo "Dev web origin:"
-    echo "  $CMUX_DEV_ORIGIN"
+    echo "  $BMUX_DEV_ORIGIN"
   if [[ -n "${TAG_SLUG:-}" ]]; then
       echo "Dev web command:"
-      echo "  cd web && CMUX_PORT=$CMUX_DEV_PORT CMUX_PORT_RANGE=$CMUX_DEV_PORT_RANGE CMUX_PORT_END=$CMUX_DEV_PORT_END CMUX_AUTH_CALLBACK_SCHEME=cmux-dev-$TAG_SLUG bun dev"
+      echo "  cd web && BMUX_PORT=$BMUX_DEV_PORT BMUX_PORT_RANGE=$BMUX_DEV_PORT_RANGE BMUX_PORT_END=$BMUX_DEV_PORT_END BMUX_AUTH_CALLBACK_SCHEME=bmux-dev-$TAG_SLUG bun dev"
     fi
   fi
   if [[ -n "${LOCAL_BUILD_NUMBER:-}" ]]; then
@@ -699,14 +699,14 @@ reload_finalize() {
     echo "  $CLI_PATH"
     echo "CLI helpers:"
     if [[ "$NO_GLOBAL_CLI_LINKS" == "1" ]]; then
-      echo "  preserved existing global cmux CLI links (--no-global-cli-links)"
+      echo "  preserved existing global bmux CLI links (--no-global-cli-links)"
     else
-      echo "  /tmp/cmux-cli ..."
-      echo "  $HOME/.local/bin/cmux-dev ..."
-      if [[ -n "${CMUX_SHIM_TARGET:-}" ]]; then
-        echo "  $CMUX_SHIM_TARGET ..."
+      echo "  /tmp/bmux-cli ..."
+      echo "  $HOME/.local/bin/bmux-dev ..."
+      if [[ -n "${BMUX_SHIM_TARGET:-}" ]]; then
+        echo "  $BMUX_SHIM_TARGET ..."
       fi
-      echo "If your shell still resolves the old cmux, run: rehash"
+      echo "If your shell still resolves the old bmux, run: rehash"
     fi
   fi
   if [[ "${SWIFT_FRONTEND_WORKAROUND_EFFECTIVE:-0}" -eq 1 ]]; then
@@ -727,24 +727,24 @@ echo "==> reload starting (tag: ${TAG}, log: ${RELOAD_LOG})" >&3
 "$PWD/scripts/ensure-ghosttykit.sh"
 
 if should_skip_ghostty_cli_helper_zig_build; then
-  export CMUX_SKIP_ZIG_BUILD=1
+  export BMUX_SKIP_ZIG_BUILD=1
   echo "==> skipping Ghostty CLI helper Zig build: ${AUTO_SKIP_ZIG_BUILD_REASON}" >&3
 fi
 
 XCODEBUILD_ARGS=(
-  -project cmux.xcodeproj
-  -scheme cmux
+  -project bmux.xcodeproj
+  -scheme bmux
   -configuration Debug
   -destination 'platform=macOS'
 )
 if [[ -n "$DERIVED_DATA" ]]; then
   XCODEBUILD_ARGS+=(-derivedDataPath "$DERIVED_DATA")
 fi
-if [[ -n "${CMUX_SOURCE_PACKAGES_DIR:-}" ]]; then
-  mkdir -p "$CMUX_SOURCE_PACKAGES_DIR"
-  XCODEBUILD_ARGS+=(-clonedSourcePackagesDirPath "$CMUX_SOURCE_PACKAGES_DIR")
+if [[ -n "${BMUX_SOURCE_PACKAGES_DIR:-}" ]]; then
+  mkdir -p "$BMUX_SOURCE_PACKAGES_DIR"
+  XCODEBUILD_ARGS+=(-clonedSourcePackagesDirPath "$BMUX_SOURCE_PACKAGES_DIR")
 fi
-if [[ "${CMUX_DISABLE_AUTOMATIC_PACKAGE_RESOLUTION:-}" == "1" ]]; then
+if [[ "${BMUX_DISABLE_AUTOMATIC_PACKAGE_RESOLUTION:-}" == "1" ]]; then
   XCODEBUILD_ARGS+=(-disableAutomaticPackageResolution)
 fi
 if [[ -z "$TAG" ]]; then
@@ -761,13 +761,13 @@ XCODEBUILD_ARGS+=(PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID")
 # their tagged sample extensions) don't share one point. The host bundle declares
 # the point under Contents/Extensions, and Info.plist carries the same identifier.
 if [[ -n "$TAG" ]]; then
-  XCODEBUILD_ARGS+=(CMUX_SIDEBAR_EXTENSION_POINT_ID="${BUNDLE_ID}.cmux.sidebar")
+  XCODEBUILD_ARGS+=(BMUX_SIDEBAR_EXTENSION_POINT_ID="${BUNDLE_ID}.bmux.sidebar")
 fi
-# Forward explicit CMUX_SKIP_ZIG_BUILD to xcodebuild run script phases.
-if [[ "${CMUX_SKIP_ZIG_BUILD:-}" == "1" ]]; then
-  XCODEBUILD_ARGS+=(CMUX_SKIP_ZIG_BUILD=1)
+# Forward explicit BMUX_SKIP_ZIG_BUILD to xcodebuild run script phases.
+if [[ "${BMUX_SKIP_ZIG_BUILD:-}" == "1" ]]; then
+  XCODEBUILD_ARGS+=(BMUX_SKIP_ZIG_BUILD=1)
 fi
-if [[ "$SWIFT_FRONTEND_WORKAROUND" -eq 1 || "${CMUX_SWIFT_FRONTEND_WORKAROUND:-}" == "1" || "${CMUX_SWIFT_DISABLE_GLOBAL_ISEL:-}" == "1" ]]; then
+if [[ "$SWIFT_FRONTEND_WORKAROUND" -eq 1 || "${BMUX_SWIFT_FRONTEND_WORKAROUND:-}" == "1" || "${BMUX_SWIFT_DISABLE_GLOBAL_ISEL:-}" == "1" ]]; then
   SWIFT_FRONTEND_WORKAROUND_EFFECTIVE=1
   echo "==> Swift frontend workaround enabled for this reload"
   XCODEBUILD_ARGS+=(SWIFT_ENABLE_BATCH_MODE=NO)
@@ -785,13 +785,13 @@ if [[ -n "$BUILD_PRODUCTS_DEBUG_DIR" ]]; then
   XCODEBUILD_CLEANED_OUTPUTS=0
 fi
 
-XCODEBUILD_LOCK_DIR="${TMPDIR:-/tmp}/cmux-xcodebuild-$(id -u).locks"
-XCODEBUILD_LOCK_CONCURRENCY="${CMUX_XCODEBUILD_LOCK_CONCURRENCY:-5}"
+XCODEBUILD_LOCK_DIR="${TMPDIR:-/tmp}/bmux-xcodebuild-$(id -u).locks"
+XCODEBUILD_LOCK_CONCURRENCY="${BMUX_XCODEBUILD_LOCK_CONCURRENCY:-5}"
 if ! is_positive_integer "$XCODEBUILD_LOCK_CONCURRENCY"; then
   echo "error: xcodebuild lock concurrency must be a positive integer" >&2
   exit 1
 fi
-XCODEBUILD_LOCK_WAIT_SECONDS="${CMUX_XCODEBUILD_LOCK_WAIT_SECONDS:-1800}"
+XCODEBUILD_LOCK_WAIT_SECONDS="${BMUX_XCODEBUILD_LOCK_WAIT_SECONDS:-1800}"
 if ! is_positive_integer "$XCODEBUILD_LOCK_WAIT_SECONDS"; then
   echo "error: xcodebuild lock wait timeout must be a positive integer" >&2
   exit 1
@@ -998,7 +998,7 @@ validate_app_bundle "$APP_PATH" "$APP_EXECUTABLE_NAME"
 XCODEBUILD_OUTPUT_VALID=1
 
 if [[ -n "${TAG_SLUG:-}" ]]; then
-  TMP_COMPAT_DERIVED_LINK="/tmp/cmux-${TAG_SLUG}"
+  TMP_COMPAT_DERIVED_LINK="/tmp/bmux-${TAG_SLUG}"
   if [[ "$DERIVED_DATA" != "$TMP_COMPAT_DERIVED_LINK" ]]; then
     ABS_DERIVED_DATA="$(cd "$DERIVED_DATA" && pwd)"
     rm -rf "$TMP_COMPAT_DERIVED_LINK"
@@ -1020,80 +1020,80 @@ if [[ -n "$TAG" && "$APP_NAME" != "$SEARCH_APP_NAME" ]]; then
     /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $BUNDLE_ID" "$INFO_PLIST" 2>/dev/null \
       || /usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string $BUNDLE_ID" "$INFO_PLIST"
     if [[ -n "${TAG_SLUG:-}" ]]; then
-      APP_SUPPORT_DIR="$HOME/Library/Application Support/cmux"
-      CMUXD_SOCKET="${APP_SUPPORT_DIR}/cmuxd-dev-${TAG_SLUG}.sock"
-      CMUX_SOCKET_PATH_VALUE="/tmp/cmux-debug-${TAG_SLUG}.sock"
-      CMUX_DEBUG_LOG="/tmp/cmux-debug-${TAG_SLUG}.log"
-      CMUX_AUTH_CALLBACK_SCHEME_VALUE="cmux-dev-${TAG_SLUG}"
-      write_last_socket_path "$CMUX_SOCKET_PATH_VALUE"
-      echo "$CMUX_DEBUG_LOG" > /tmp/cmux-last-debug-log-path || true
+      APP_SUPPORT_DIR="$HOME/Library/Application Support/bmux"
+      BMUXD_SOCKET="${APP_SUPPORT_DIR}/bmuxd-dev-${TAG_SLUG}.sock"
+      BMUX_SOCKET_PATH_VALUE="/tmp/bmux-debug-${TAG_SLUG}.sock"
+      BMUX_DEBUG_LOG="/tmp/bmux-debug-${TAG_SLUG}.log"
+      BMUX_AUTH_CALLBACK_SCHEME_VALUE="bmux-dev-${TAG_SLUG}"
+      write_last_socket_path "$BMUX_SOCKET_PATH_VALUE"
+      echo "$BMUX_DEBUG_LOG" > /tmp/bmux-last-debug-log-path || true
       /usr/libexec/PlistBuddy -c "Add :LSEnvironment dict" "$INFO_PLIST" 2>/dev/null || true
-      set_plist_url_scheme "$INFO_PLIST" "$CMUX_AUTH_CALLBACK_SCHEME_VALUE"
-      set_plist_env "$INFO_PLIST" CMUX_BUNDLE_ID "$BUNDLE_ID"
-      set_plist_env "$INFO_PLIST" CMUXD_UNIX_PATH "$CMUXD_SOCKET"
-      set_plist_env "$INFO_PLIST" CMUX_SOCKET_PATH "$CMUX_SOCKET_PATH_VALUE"
-      set_plist_env "$INFO_PLIST" CMUX_DEBUG_LOG "$CMUX_DEBUG_LOG"
-      set_plist_env "$INFO_PLIST" CMUX_TAG "$TAG_SLUG"
-      set_plist_env "$INFO_PLIST" CMUX_AUTH_CALLBACK_SCHEME "$CMUX_AUTH_CALLBACK_SCHEME_VALUE"
-      set_plist_env "$INFO_PLIST" CMUX_SOCKET_ENABLE "1"
-      set_plist_env "$INFO_PLIST" CMUX_SOCKET_MODE "allowAll"
-      set_plist_env "$INFO_PLIST" CMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD "1"
-      set_plist_env "$INFO_PLIST" CMUXTERM_REPO_ROOT "$PWD"
-      set_plist_env "$INFO_PLIST" CMUX_BUNDLED_CLI_PATH "$TAG_APP_FINAL_PATH/Contents/Resources/bin/cmux"
-      set_plist_env "$INFO_PLIST" CMUX_SHELL_INTEGRATION_DIR "$TAG_APP_FINAL_PATH/Contents/Resources/shell-integration"
-      set_plist_env "$INFO_PLIST" CMUX_PORT "$CMUX_DEV_PORT"
-      set_plist_env "$INFO_PLIST" CMUX_PORT_END "$CMUX_DEV_PORT_END"
-      set_plist_env "$INFO_PLIST" CMUX_PORT_RANGE "$CMUX_DEV_PORT_RANGE"
-      set_plist_env "$INFO_PLIST" PORT "$CMUX_DEV_PORT"
-      set_plist_env "$INFO_PLIST" CMUX_AUTH_WWW_ORIGIN "$CMUX_DEV_ORIGIN"
-      set_plist_env "$INFO_PLIST" CMUX_API_BASE_URL "$CMUX_DEV_ORIGIN"
-      set_plist_env "$INFO_PLIST" CMUX_VM_API_BASE_URL "$CMUX_DEV_ORIGIN"
-      if [[ -S "$CMUXD_SOCKET" ]]; then
-        for PID in $(lsof -t "$CMUXD_SOCKET" 2>/dev/null); do
+      set_plist_url_scheme "$INFO_PLIST" "$BMUX_AUTH_CALLBACK_SCHEME_VALUE"
+      set_plist_env "$INFO_PLIST" BMUX_BUNDLE_ID "$BUNDLE_ID"
+      set_plist_env "$INFO_PLIST" BMUXD_UNIX_PATH "$BMUXD_SOCKET"
+      set_plist_env "$INFO_PLIST" BMUX_SOCKET_PATH "$BMUX_SOCKET_PATH_VALUE"
+      set_plist_env "$INFO_PLIST" BMUX_DEBUG_LOG "$BMUX_DEBUG_LOG"
+      set_plist_env "$INFO_PLIST" BMUX_TAG "$TAG_SLUG"
+      set_plist_env "$INFO_PLIST" BMUX_AUTH_CALLBACK_SCHEME "$BMUX_AUTH_CALLBACK_SCHEME_VALUE"
+      set_plist_env "$INFO_PLIST" BMUX_SOCKET_ENABLE "1"
+      set_plist_env "$INFO_PLIST" BMUX_SOCKET_MODE "allowAll"
+      set_plist_env "$INFO_PLIST" BMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD "1"
+      set_plist_env "$INFO_PLIST" BMUXTERM_REPO_ROOT "$PWD"
+      set_plist_env "$INFO_PLIST" BMUX_BUNDLED_CLI_PATH "$TAG_APP_FINAL_PATH/Contents/Resources/bin/bmux"
+      set_plist_env "$INFO_PLIST" BMUX_SHELL_INTEGRATION_DIR "$TAG_APP_FINAL_PATH/Contents/Resources/shell-integration"
+      set_plist_env "$INFO_PLIST" BMUX_PORT "$BMUX_DEV_PORT"
+      set_plist_env "$INFO_PLIST" BMUX_PORT_END "$BMUX_DEV_PORT_END"
+      set_plist_env "$INFO_PLIST" BMUX_PORT_RANGE "$BMUX_DEV_PORT_RANGE"
+      set_plist_env "$INFO_PLIST" PORT "$BMUX_DEV_PORT"
+      set_plist_env "$INFO_PLIST" BMUX_AUTH_WWW_ORIGIN "$BMUX_DEV_ORIGIN"
+      set_plist_env "$INFO_PLIST" BMUX_API_BASE_URL "$BMUX_DEV_ORIGIN"
+      set_plist_env "$INFO_PLIST" BMUX_VM_API_BASE_URL "$BMUX_DEV_ORIGIN"
+      if [[ -S "$BMUXD_SOCKET" ]]; then
+        for PID in $(lsof -t "$BMUXD_SOCKET" 2>/dev/null); do
           kill "$PID" 2>/dev/null || true
         done
-        rm -f "$CMUXD_SOCKET"
+        rm -f "$BMUXD_SOCKET"
       fi
-      if [[ -S "$CMUX_SOCKET_PATH_VALUE" ]]; then
-        rm -f "$CMUX_SOCKET_PATH_VALUE"
+      if [[ -S "$BMUX_SOCKET_PATH_VALUE" ]]; then
+        rm -f "$BMUX_SOCKET_PATH_VALUE"
       fi
     fi
   fi
   APP_PATH="$TAG_APP_STAGING_PATH"
 fi
 
-CLI_PATH="$(dirname "$APP_PATH")/cmux"
+CLI_PATH="$(dirname "$APP_PATH")/bmux"
 publish_reload_cli_path "$CLI_PATH"
 
-# Build cmuxd and ensure helper binaries are present (needed for both launch and no-launch).
-CMUXD_SRC="$PWD/cmuxd/zig-out/bin/cmuxd"
-if [[ -d "$PWD/cmuxd" ]]; then
-  (cd "$PWD/cmuxd" && zig build -Doptimize=ReleaseFast)
+# Build bmuxd and ensure helper binaries are present (needed for both launch and no-launch).
+BMUXD_SRC="$PWD/bmuxd/zig-out/bin/bmuxd"
+if [[ -d "$PWD/bmuxd" ]]; then
+  (cd "$PWD/bmuxd" && zig build -Doptimize=ReleaseFast)
 fi
 if [[ -d "$PWD/ghostty" ]]; then
   BIN_DIR="$APP_PATH/Contents/Resources/bin"
   GHOSTTY_HELPER_DEST="$BIN_DIR/ghostty"
   if [[ -x "$GHOSTTY_HELPER_DEST" ]]; then
     echo "Preserving Xcode-built ghostty CLI helper at $GHOSTTY_HELPER_DEST"
-  elif [[ "${CMUX_SKIP_ZIG_BUILD:-}" == "1" ]]; then
-    echo "Skipping direct ghostty CLI helper zig build (CMUX_SKIP_ZIG_BUILD=1)"
+  elif [[ "${BMUX_SKIP_ZIG_BUILD:-}" == "1" ]]; then
+    echo "Skipping direct ghostty CLI helper zig build (BMUX_SKIP_ZIG_BUILD=1)"
   else
     mkdir -p "$BIN_DIR"
     "$PWD/scripts/build-ghostty-cli-helper.sh" --output "$GHOSTTY_HELPER_DEST"
   fi
 fi
-if [[ -x "$CMUXD_SRC" ]]; then
+if [[ -x "$BMUXD_SRC" ]]; then
   BIN_DIR="$APP_PATH/Contents/Resources/bin"
   mkdir -p "$BIN_DIR"
-  cp "$CMUXD_SRC" "$BIN_DIR/cmuxd"
-  chmod +x "$BIN_DIR/cmuxd"
+  cp "$BMUXD_SRC" "$BIN_DIR/bmuxd"
+  chmod +x "$BIN_DIR/bmuxd"
 fi
 if command -v xattr >/dev/null 2>&1; then
   xattr -cr "$APP_PATH" || true
 fi
 if ! /usr/bin/codesign --force --sign - --timestamp=none --generate-entitlement-der "$APP_PATH" >/dev/null 2>&1; then
-  if [[ "${CMUX_ALLOW_UNSIGNED_DEV_APP:-}" == "1" ]]; then
-    echo "warning: codesign failed for $APP_PATH; continuing because CMUX_ALLOW_UNSIGNED_DEV_APP=1" >&2
+  if [[ "${BMUX_ALLOW_UNSIGNED_DEV_APP:-}" == "1" ]]; then
+    echo "warning: codesign failed for $APP_PATH; continuing because BMUX_ALLOW_UNSIGNED_DEV_APP=1" >&2
   else
     echo "error: codesign failed for $APP_PATH" >&2
     exit 1
@@ -1104,7 +1104,7 @@ if [[ -n "${TAG_APP_FINAL_PATH:-}" && -n "${TAG_APP_STAGING_PATH:-}" ]]; then
   mv "$TAG_APP_STAGING_PATH" "$TAG_APP_FINAL_PATH"
   APP_PATH="$TAG_APP_FINAL_PATH"
 fi
-CLI_PATH="$APP_PATH/Contents/Resources/bin/cmux"
+CLI_PATH="$APP_PATH/Contents/Resources/bin/bmux"
 publish_reload_cli_path "$CLI_PATH"
 
 # Tag mode: always terminate the existing same-tag instance after a successful build,
@@ -1127,32 +1127,32 @@ if [[ "$LAUNCH" -eq 1 ]]; then
     sleep 0.3
   fi
 
-  # Avoid inheriting cmux/ghostty environment variables from the terminal that
-  # runs this script (often inside another cmux instance), which can cause
+  # Avoid inheriting bmux/ghostty environment variables from the terminal that
+  # runs this script (often inside another bmux instance), which can cause
   # socket and resource-path conflicts.
   OPEN_CLEAN_ENV=(
     env
-    -u CMUX_SOCKET
-    -u CMUX_SOCKET_PASSWORD
-    -u CMUX_SOCKET_PATH
-    -u CMUX_WORKSPACE_ID
-    -u CMUX_SURFACE_ID
-    -u CMUX_TAB_ID
-    -u CMUX_PANEL_ID
-    -u CMUXD_UNIX_PATH
-    -u CMUX_TAG
-    -u CMUX_DEBUG_LOG
-    -u CMUX_BUNDLE_ID
-    -u CMUX_BUNDLED_CLI_PATH
-    -u CMUX_SHELL_INTEGRATION
-    -u CMUX_SHELL_INTEGRATION_DIR
-    -u CMUX_LOAD_GHOSTTY_ZSH_INTEGRATION
+    -u BMUX_SOCKET
+    -u BMUX_SOCKET_PASSWORD
+    -u BMUX_SOCKET_PATH
+    -u BMUX_WORKSPACE_ID
+    -u BMUX_SURFACE_ID
+    -u BMUX_TAB_ID
+    -u BMUX_PANEL_ID
+    -u BMUXD_UNIX_PATH
+    -u BMUX_TAG
+    -u BMUX_DEBUG_LOG
+    -u BMUX_BUNDLE_ID
+    -u BMUX_BUNDLED_CLI_PATH
+    -u BMUX_SHELL_INTEGRATION
+    -u BMUX_SHELL_INTEGRATION_DIR
+    -u BMUX_LOAD_GHOSTTY_ZSH_INTEGRATION
     -u GHOSTTY_BIN_DIR
     -u GHOSTTY_RESOURCES_DIR
     -u GHOSTTY_SHELL_FEATURES
     -u GHOSTTY_SURFACE_ID
     # Dev shells (including CI/Codex) often force-disable paging by exporting these.
-    # Don't leak that into cmux, otherwise `git diff` won't page even with PAGER=less.
+    # Don't leak that into bmux, otherwise `git diff` won't page even with PAGER=less.
     -u GIT_PAGER
     -u GH_PAGER
     -u TERMINFO
@@ -1160,34 +1160,34 @@ if [[ "$LAUNCH" -eq 1 ]]; then
   )
 
   # DEBUG dogfood auto-sign-in needs no env injection here: the in-app resolver
-  # reads ~/.secrets/cmuxterm-dev.env (then ~/.secrets/cmux.env) directly on
-  # launch, which fires for every launch method including Finder / the CMUX Tag
+  # reads ~/.secrets/bmuxterm-dev.env (then ~/.secrets/bmux.env) directly on
+  # launch, which fires for every launch method including Finder / the BMUX Tag
   # Opener that this script's TAG_LAUNCH_ENV never reaches. Exporting the Stack
   # password into the long-lived GUI process environment would leak it to every
   # child terminal/CLI it spawns, for zero added coverage, so we deliberately do
-  # not set CMUX_UITEST_STACK_* here.
-  LAUNCH_AUTH_CALLBACK_SCHEME="cmux-dev"
+  # not set BMUX_UITEST_STACK_* here.
+  LAUNCH_AUTH_CALLBACK_SCHEME="bmux-dev"
   if [[ -n "${TAG_SLUG:-}" ]]; then
-    LAUNCH_AUTH_CALLBACK_SCHEME="cmux-dev-${TAG_SLUG}"
+    LAUNCH_AUTH_CALLBACK_SCHEME="bmux-dev-${TAG_SLUG}"
   fi
   TAG_LAUNCH_ENV=(
-    CMUX_TAG="${TAG_SLUG:-}"
-    CMUX_BUNDLE_ID="$BUNDLE_ID"
-    CMUX_AUTH_CALLBACK_SCHEME="$LAUNCH_AUTH_CALLBACK_SCHEME"
-    CMUX_SOCKET_ENABLE=1
-    CMUX_SOCKET_MODE=allowAll
-    CMUX_DEBUG_LOG="$CMUX_DEBUG_LOG"
-    CMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD=1
-    CMUXTERM_REPO_ROOT="$PWD"
-    CMUX_BUNDLED_CLI_PATH="$CLI_PATH"
-    CMUX_SHELL_INTEGRATION_DIR="$APP_PATH/Contents/Resources/shell-integration"
-    CMUX_PORT="$CMUX_DEV_PORT"
-    CMUX_PORT_END="$CMUX_DEV_PORT_END"
-    CMUX_PORT_RANGE="$CMUX_DEV_PORT_RANGE"
-    PORT="$CMUX_DEV_PORT"
-    CMUX_AUTH_WWW_ORIGIN="$CMUX_DEV_ORIGIN"
-    CMUX_API_BASE_URL="$CMUX_DEV_ORIGIN"
-    CMUX_VM_API_BASE_URL="$CMUX_DEV_ORIGIN"
+    BMUX_TAG="${TAG_SLUG:-}"
+    BMUX_BUNDLE_ID="$BUNDLE_ID"
+    BMUX_AUTH_CALLBACK_SCHEME="$LAUNCH_AUTH_CALLBACK_SCHEME"
+    BMUX_SOCKET_ENABLE=1
+    BMUX_SOCKET_MODE=allowAll
+    BMUX_DEBUG_LOG="$BMUX_DEBUG_LOG"
+    BMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD=1
+    BMUXTERM_REPO_ROOT="$PWD"
+    BMUX_BUNDLED_CLI_PATH="$CLI_PATH"
+    BMUX_SHELL_INTEGRATION_DIR="$APP_PATH/Contents/Resources/shell-integration"
+    BMUX_PORT="$BMUX_DEV_PORT"
+    BMUX_PORT_END="$BMUX_DEV_PORT_END"
+    BMUX_PORT_RANGE="$BMUX_DEV_PORT_RANGE"
+    PORT="$BMUX_DEV_PORT"
+    BMUX_AUTH_WWW_ORIGIN="$BMUX_DEV_ORIGIN"
+    BMUX_API_BASE_URL="$BMUX_DEV_ORIGIN"
+    BMUX_VM_API_BASE_URL="$BMUX_DEV_ORIGIN"
   )
 
   LAUNCH_CMD=()
@@ -1200,19 +1200,19 @@ if [[ "$LAUNCH" -eq 1 ]]; then
       echo "error: tagged app executable not found: $APP_EXECUTABLE" >&2
       exit 1
     fi
-    TAG_LAUNCH_LOG="/tmp/cmux-launch-${TAG_SLUG}.out"
-    if [[ -n "${CMUX_SOCKET_PATH_VALUE:-}" ]]; then
-      nohup "${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" CMUX_SOCKET_PATH="$CMUX_SOCKET_PATH_VALUE" CMUXD_UNIX_PATH="$CMUXD_SOCKET" "$APP_EXECUTABLE" >"$TAG_LAUNCH_LOG" 2>&1 &
+    TAG_LAUNCH_LOG="/tmp/bmux-launch-${TAG_SLUG}.out"
+    if [[ -n "${BMUX_SOCKET_PATH_VALUE:-}" ]]; then
+      nohup "${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" BMUX_SOCKET_PATH="$BMUX_SOCKET_PATH_VALUE" BMUXD_UNIX_PATH="$BMUXD_SOCKET" "$APP_EXECUTABLE" >"$TAG_LAUNCH_LOG" 2>&1 &
     else
       nohup "${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" "$APP_EXECUTABLE" >"$TAG_LAUNCH_LOG" 2>&1 &
     fi
   else
-    echo "/tmp/cmux-debug.sock" > /tmp/cmux-last-socket-path || true
-    echo "/tmp/cmux-debug.log" > /tmp/cmux-last-debug-log-path || true
-    if [[ -n "${CMUX_SOCKET_PATH_VALUE:-}" ]]; then
-      # Ensure explicit socket paths win even if the caller has CMUX_* overrides.
-      LAUNCH_CMD=("${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" CMUX_SOCKET_PATH="$CMUX_SOCKET_PATH_VALUE" CMUXD_UNIX_PATH="$CMUXD_SOCKET" open -g "$APP_PATH")
-      LAUNCH_RETRY_CMD=("${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" CMUX_SOCKET_PATH="$CMUX_SOCKET_PATH_VALUE" CMUXD_UNIX_PATH="$CMUXD_SOCKET" open -n -g "$APP_PATH")
+    echo "/tmp/bmux-debug.sock" > /tmp/bmux-last-socket-path || true
+    echo "/tmp/bmux-debug.log" > /tmp/bmux-last-debug-log-path || true
+    if [[ -n "${BMUX_SOCKET_PATH_VALUE:-}" ]]; then
+      # Ensure explicit socket paths win even if the caller has BMUX_* overrides.
+      LAUNCH_CMD=("${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" BMUX_SOCKET_PATH="$BMUX_SOCKET_PATH_VALUE" BMUXD_UNIX_PATH="$BMUXD_SOCKET" open -g "$APP_PATH")
+      LAUNCH_RETRY_CMD=("${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" BMUX_SOCKET_PATH="$BMUX_SOCKET_PATH_VALUE" BMUXD_UNIX_PATH="$BMUXD_SOCKET" open -n -g "$APP_PATH")
     else
       LAUNCH_CMD=("${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" open -g "$APP_PATH")
       LAUNCH_RETRY_CMD=("${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" open -n -g "$APP_PATH")
@@ -1251,10 +1251,10 @@ if [[ "$LAUNCH" -eq 1 ]]; then
       fi
     done
   fi
-  if [[ -n "${TAG_SLUG:-}" && -n "${CMUX_SOCKET_PATH_VALUE:-}" ]]; then
+  if [[ -n "${TAG_SLUG:-}" && -n "${BMUX_SOCKET_PATH_VALUE:-}" ]]; then
     SOCKET_READY=0
     for _ in {1..80}; do
-      if [[ -S "$CMUX_SOCKET_PATH_VALUE" ]]; then
+      if [[ -S "$BMUX_SOCKET_PATH_VALUE" ]]; then
         SOCKET_READY=1
         break
       fi
@@ -1264,7 +1264,7 @@ if [[ "$LAUNCH" -eq 1 ]]; then
       sleep 0.1
     done
     if [[ "$SOCKET_READY" -ne 1 ]]; then
-      echo "error: tagged app did not create socket: $CMUX_SOCKET_PATH_VALUE" >&2
+      echo "error: tagged app did not create socket: $BMUX_SOCKET_PATH_VALUE" >&2
       if [[ -n "${TAG_LAUNCH_LOG:-}" && -f "$TAG_LAUNCH_LOG" ]]; then
         echo "Launch log: $TAG_LAUNCH_LOG" >&2
         tail -n 80 "$TAG_LAUNCH_LOG" >&2 || true

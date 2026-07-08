@@ -19,7 +19,7 @@ export async function GET(
   return withAuthedVaultApiRoute(
     request,
     "/api/vault/sessions/[id]",
-    { "cmux.vault.operation": "sessions.detail" },
+    { "bmux.vault.operation": "sessions.detail" },
     "/api/vault/sessions/[id] GET failed",
     {},
     async ({ user, span }) => {
@@ -33,12 +33,12 @@ export async function GET(
         .where(and(eq(vaultSessions.userId, user.id), eq(vaultSessions.id, id)))
         .limit(1);
       if (!session) {
-        setSpanAttributes(span, { "cmux.vault.session_found": false });
+        setSpanAttributes(span, { "bmux.vault.session_found": false });
         return jsonResponse({ error: "not_found" }, 404);
       }
       setSpanAttributes(span, {
-        "cmux.vault.session_found": true,
-        "cmux.vault.agent": session.agent,
+        "bmux.vault.session_found": true,
+        "bmux.vault.agent": session.agent,
       });
 
       const snapshots = await db
@@ -62,8 +62,8 @@ export async function GET(
         logVaultStorageError("session_download_presign", session.latestObjectKey, error);
       }
       setSpanAttributes(span, {
-        "cmux.vault.snapshot_count": snapshots.length,
-        "cmux.vault.download_url_present": Boolean(downloadUrl),
+        "bmux.vault.snapshot_count": snapshots.length,
+        "bmux.vault.download_url_present": Boolean(downloadUrl),
       });
 
       return jsonResponse({

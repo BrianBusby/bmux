@@ -1,4 +1,4 @@
-# Contributing to cmux
+# Contributing to bmux
 
 ## Prerequisites
 
@@ -10,8 +10,8 @@
 
 1. Clone the repository with submodules:
    ```bash
-   git clone --recursive https://github.com/manaflow-ai/cmux.git
-   cd cmux
+   git clone --recursive https://github.com/manaflow-ai/bmux.git
+   cd bmux
    ```
 
 2. Run the setup script:
@@ -20,7 +20,7 @@
    ```
 
    This will:
-   - Initialize git submodules (ghostty, homebrew-cmux)
+   - Initialize git submodules (ghostty, homebrew-bmux)
    - Build the GhosttyKit.xcframework from source
    - Create the necessary symlinks
 
@@ -50,7 +50,7 @@ Run this once:
 scripts/setup-team-dev.sh
 ```
 
-It prompts for your Stack email and password (the password is never echoed), verifies them against Stack, and writes `~/.secrets/cmuxterm-dev.env` with `chmod 600`. Re-running it is safe; if you are already configured it prints the account and exits. To reset, delete `~/.secrets/cmuxterm-dev.env` and run it again.
+It prompts for your Stack email and password (the password is never echoed), verifies them against Stack, and writes `~/.secrets/bmuxterm-dev.env` with `chmod 600`. Re-running it is safe; if you are already configured it prints the account and exits. To reset, delete `~/.secrets/bmuxterm-dev.env` and run it again.
 
 After that, every dev build signs you in automatically:
 
@@ -60,7 +60,7 @@ scripts/dev-setup.sh --tag <your-initials>
 
 That builds the tagged macOS DEBUG app auto-signed-in as you, enables the iOS pairing host, mints an attach ticket, and launches the iOS dev build auto-attached to your Mac. Use `--surface mac` for macOS only. See `scripts/dev-setup.sh --help` for all flags.
 
-This is DEBUG-only and per-user. The credentials file lives outside the repo and is never committed; `scripts/cmuxterm-dev.env.example` is the in-repo template. Release builds never read these credentials (the auto-sign-in path is compiled out of release).
+This is DEBUG-only and per-user. The credentials file lives outside the repo and is never committed; `scripts/bmuxterm-dev.env.example` is the in-repo template. Release builds never read these credentials (the auto-sign-in path is compiled out of release).
 
 ## Web and JS Tooling
 
@@ -90,13 +90,13 @@ zig build -Demit-xcframework=true -Doptimize=ReleaseFast
 ### Basic tests (run on VM)
 
 ```bash
-ssh cmux-vm 'cd /Users/cmux/cmux && xcodebuild -project cmux.xcodeproj -scheme cmux -configuration Debug -destination "platform=macOS" build && pkill -x "cmux DEV" || true && APP=$(find /Users/cmux/Library/Developer/Xcode/DerivedData -path "*/Build/Products/Debug/cmux DEV.app" -print -quit) && open "$APP" && for i in {1..20}; do [ -S /tmp/cmux.sock ] && break; sleep 0.5; done && python3 tests/test_update_timing.py && python3 tests/test_signals_auto.py && python3 tests/test_ctrl_socket.py && python3 tests/test_notifications.py'
+ssh bmux-vm 'cd /Users/bmux/bmux && xcodebuild -project bmux.xcodeproj -scheme bmux -configuration Debug -destination "platform=macOS" build && pkill -x "bmux DEV" || true && APP=$(find /Users/bmux/Library/Developer/Xcode/DerivedData -path "*/Build/Products/Debug/bmux DEV.app" -print -quit) && open "$APP" && for i in {1..20}; do [ -S /tmp/bmux.sock ] && break; sleep 0.5; done && python3 tests/test_update_timing.py && python3 tests/test_signals_auto.py && python3 tests/test_ctrl_socket.py && python3 tests/test_notifications.py'
 ```
 
 ### UI tests (run on VM)
 
 ```bash
-ssh cmux-vm 'cd /Users/cmux/cmux && xcodebuild -project cmux.xcodeproj -scheme cmux -configuration Debug -destination "platform=macOS" -only-testing:cmuxUITests test'
+ssh bmux-vm 'cd /Users/bmux/bmux && xcodebuild -project bmux.xcodeproj -scheme bmux -configuration Debug -destination "platform=macOS" -only-testing:bmuxUITests test'
 ```
 
 ## Ghostty Submodule

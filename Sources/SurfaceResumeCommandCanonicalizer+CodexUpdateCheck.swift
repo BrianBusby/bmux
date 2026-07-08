@@ -1,4 +1,4 @@
-import CMUXAgentLaunch
+import BMUXAgentLaunch
 import Foundation
 
 extension SurfaceResumeCommandCanonicalizer {
@@ -6,8 +6,8 @@ extension SurfaceResumeCommandCanonicalizer {
     /// persisted codex resume binding command that predates the override.
     ///
     /// Agent-hook resume bindings are persisted as rendered shell strings, so a
-    /// binding saved by a cmux build without the override replays verbatim on
-    /// the first relaunch after updating cmux — exactly the restart where
+    /// binding saved by a bmux build without the override replays verbatim on
+    /// the first relaunch after updating bmux — exactly the restart where
     /// codex's blocking "Update available!" startup picker used to swallow the
     /// restored session. Normalizing at replay time (not persistence) upgrades
     /// stale bindings without a migration. The override is inserted directly

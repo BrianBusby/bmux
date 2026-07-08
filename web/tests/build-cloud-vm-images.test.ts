@@ -25,29 +25,29 @@ import {
 
 describe("Cloud VM image build helpers", () => {
   test("disabled tool env values skip the tool install", () => {
-    const previous = process.env.CMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC;
-    process.env.CMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC = "none";
+    const previous = process.env.BMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC;
+    process.env.BMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC = "none";
     try {
       expect(cloudAgentToolPackageSpecs().some((tool) => tool.name === "claude")).toBe(false);
     } finally {
       if (previous === undefined) {
-        delete process.env.CMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC;
+        delete process.env.BMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC;
       } else {
-        process.env.CMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC = previous;
+        process.env.BMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC = previous;
       }
     }
   });
 
   test("enabled tool specs must be pinned to exact versions", () => {
-    const previous = process.env.CMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC;
-    process.env.CMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC = "@anthropic-ai/claude-code";
+    const previous = process.env.BMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC;
+    process.env.BMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC = "@anthropic-ai/claude-code";
     try {
       expect(() => cloudAgentToolPackageSpecs()).toThrow("must be pinned");
     } finally {
       if (previous === undefined) {
-        delete process.env.CMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC;
+        delete process.env.BMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC;
       } else {
-        process.env.CMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC = previous;
+        process.env.BMUX_CLOUD_IMAGE_CLAUDE_CODE_NPM_SPEC = previous;
       }
     }
   });
@@ -63,7 +63,7 @@ describe("Cloud VM image build helpers", () => {
   });
 
   test("positive integer env overrides fail closed when malformed", () => {
-    const key = "CMUX_TEST_POSITIVE_INT";
+    const key = "BMUX_TEST_POSITIVE_INT";
     const previous = process.env[key];
     try {
       delete process.env[key];
@@ -87,7 +87,7 @@ describe("Cloud VM image build helpers", () => {
   });
 
   test("semver env overrides fail closed when malformed", () => {
-    const key = "CMUX_TEST_SEMVER";
+    const key = "BMUX_TEST_SEMVER";
     const previous = process.env[key];
     try {
       delete process.env[key];
@@ -109,7 +109,7 @@ describe("Cloud VM image build helpers", () => {
 
   test("Bun install command is version-pinned and checksum-verified", () => {
     const bunInstall = cloudToolInstallCommands().find((command) =>
-      command.includes("cmux-bun-install.txt")
+      command.includes("bmux-bun-install.txt")
     );
     expect(bunInstall).toContain("bun-v1.3.13");
     expect(bunInstall).toContain("SHASUMS256.txt.asc");
@@ -161,7 +161,7 @@ describe("Cloud VM image build helpers", () => {
 
   test("toolchain profile and environment are wired for non-login commands", () => {
     const profileInstall = cloudToolInstallCommands().find((command) =>
-      command.includes("/etc/profile.d/cmux-toolchains.sh")
+      command.includes("/etc/profile.d/bmux-toolchains.sh")
     );
 
     expect(profileInstall).toContain("/etc/environment");
@@ -173,7 +173,7 @@ describe("Cloud VM image build helpers", () => {
   });
 
   test("Freestyle systemd service inherits toolchain runtime environment", () => {
-    const dockerfile = freestyleBaseDockerfileContent("https://example.com/cmuxd-remote");
+    const dockerfile = freestyleBaseDockerfileContent("https://example.com/bmuxd-remote");
     const systemdEnv = systemdEnvironmentLines(cloudImageRuntimeEnvironment());
 
     for (const line of systemdEnv) {
@@ -184,11 +184,11 @@ describe("Cloud VM image build helpers", () => {
     expect(dockerfile).not.toContain("Environment=CARGO_HOME=");
   });
 
-  test("image smoke checks exercise the cmux browser entrypoint without a daemon", () => {
+  test("image smoke checks exercise the bmux browser entrypoint without a daemon", () => {
     const browserSmoke = cloudImageSmokeTestCommands().find((command) =>
-      command.includes("cmux-browser-help.txt")
+      command.includes("bmux-browser-help.txt")
     );
-    expect(browserSmoke).toContain("--socket /tmp/cmux-browser-smoke.sock browser");
+    expect(browserSmoke).toContain("--socket /tmp/bmux-browser-smoke.sock browser");
     expect(browserSmoke).toContain("requires a subcommand");
   });
 
@@ -202,46 +202,46 @@ describe("Cloud VM image build helpers", () => {
     expect(smoke).toContain("/usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh");
   });
 
-  test("image smoke checks require the VM-local cmux CLI on PATH", () => {
+  test("image smoke checks require the VM-local bmux CLI on PATH", () => {
     const smoke = cloudImageSmokeTestCommands().join("\n");
-    expect(smoke).toContain("test -x /usr/local/bin/cmuxd-remote && test -x /usr/local/bin/cmux");
-    expect(smoke).toContain("cmux --help");
+    expect(smoke).toContain("test -x /usr/local/bin/bmuxd-remote && test -x /usr/local/bin/bmux");
+    expect(smoke).toContain("bmux --help");
   });
 
   test("Freestyle Dockerfile bakes signed-admin service from public key only", () => {
-    const previousPublic = process.env.CMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY;
-    const previousPrivate = process.env.CMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED;
+    const previousPublic = process.env.BMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY;
+    const previousPrivate = process.env.BMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED;
     try {
-      process.env.CMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY = "LFxQT06qOOAKo9Wr+kaq7npatVr4nYW2kPSb3RoebVQ=";
-      process.env.CMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED = "private-seed-must-not-be-baked";
-      const dockerfile = freestyleBaseDockerfileContent("https://example.com/cmuxd-remote");
+      process.env.BMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY = "LFxQT06qOOAKo9Wr+kaq7npatVr4nYW2kPSb3RoebVQ=";
+      process.env.BMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED = "private-seed-must-not-be-baked";
+      const dockerfile = freestyleBaseDockerfileContent("https://example.com/bmuxd-remote");
       expect(dockerfile).toContain(
-        "CMUXD_WS_ADMIN_ED25519_PUBLIC_KEY=LFxQT06qOOAKo9Wr+kaq7npatVr4nYW2kPSb3RoebVQ=",
+        "BMUXD_WS_ADMIN_ED25519_PUBLIC_KEY=LFxQT06qOOAKo9Wr+kaq7npatVr4nYW2kPSb3RoebVQ=",
       );
-      expect(dockerfile).toContain("multi-user.target.wants/cmuxd-ws.service");
+      expect(dockerfile).toContain("multi-user.target.wants/bmuxd-ws.service");
       expect(dockerfile).not.toContain("private-seed-must-not-be-baked");
     } finally {
       if (previousPublic === undefined) {
-        delete process.env.CMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY;
+        delete process.env.BMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY;
       } else {
-        process.env.CMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY = previousPublic;
+        process.env.BMUX_FREESTYLE_ADMIN_SIGNING_PUBLIC_KEY = previousPublic;
       }
       if (previousPrivate === undefined) {
-        delete process.env.CMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED;
+        delete process.env.BMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED;
       } else {
-        process.env.CMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED = previousPrivate;
+        process.env.BMUX_FREESTYLE_ADMIN_SIGNING_PRIVATE_KEY_SEED = previousPrivate;
       }
     }
   });
 
-  test("Daytona image bakes the entrypoint supervisor for cmuxd-remote on 7777", () => {
+  test("Daytona image bakes the entrypoint supervisor for bmuxd-remote on 7777", () => {
     // Image.addLocalFile validates the context file at construction time.
-    const daemonPath = path.join(tmpdir(), `cmuxd-remote-test-${process.pid}`);
+    const daemonPath = path.join(tmpdir(), `bmuxd-remote-test-${process.pid}`);
     writeFileSync(daemonPath, "stub");
     const dockerfile = daytonaSnapshotImage(daemonPath).dockerfile;
     expect(dockerfile).toContain("FROM ubuntu:24.04");
-    expect(dockerfile).toContain("/usr/local/bin/cmuxd-remote");
-    expect(dockerfile).toContain('ENTRYPOINT ["/usr/local/bin/cmux-daytona-entrypoint"]');
+    expect(dockerfile).toContain("/usr/local/bin/bmuxd-remote");
+    expect(dockerfile).toContain('ENTRYPOINT ["/usr/local/bin/bmux-daytona-entrypoint"]');
     // Every line must be a real Dockerfile instruction: multi-line shell (heredoc profile and
     // entrypoint writers) has to be wrapped by toDockerfileRunCommand, or the Daytona builder
     // fails with "unknown instruction" at snapshot-create time.
@@ -268,21 +268,21 @@ describe("Cloud VM image build helpers", () => {
 
   test("Daytona entrypoint restarts the daemon and keeps lease dir private", () => {
     const script = daytonaEntrypointCommands().join("\n");
-    expect(script).toContain("mkdir -p /tmp/cmux");
-    expect(script).toContain("chmod 700 /tmp/cmux");
+    expect(script).toContain("mkdir -p /tmp/bmux");
+    expect(script).toContain("chmod 700 /tmp/bmux");
     expect(script).toContain("while true; do");
-    expect(script).toContain("chmod 0755 /usr/local/bin/cmux-daytona-entrypoint");
+    expect(script).toContain("chmod 0755 /usr/local/bin/bmux-daytona-entrypoint");
   });
 
   test("image smoke checks cover baked toolchain commands", () => {
     const smoke = cloudImageSmokeTestCommands().join("\n");
 
-    expect(smoke).toContain("gcc /tmp/cmux-build-smoke.c -o /tmp/cmux-build-smoke");
+    expect(smoke).toContain("gcc /tmp/bmux-build-smoke.c -o /tmp/bmux-build-smoke");
     expect(smoke).toContain("g++ --version");
     expect(smoke).toContain("make --version");
     expect(smoke).toContain("pkg-config --version");
     expect(smoke).toContain("python3 -m pip --version");
-    expect(smoke).toContain("python3 -m venv /tmp/cmux-venv-smoke");
+    expect(smoke).toContain("python3 -m venv /tmp/bmux-venv-smoke");
     expect(smoke).toContain("test \"$(command -v node)\" = \"/usr/local/share/mise/shims/node\"");
     expect(smoke).toContain("mise which node");
     expect(smoke).toContain("go version");
@@ -305,13 +305,13 @@ describe("Cloud VM image build helpers", () => {
           snapshots: [
             {
               snapshotId: "sh-old",
-              name: "cmuxd-ws-review",
+              name: "bmuxd-ws-review",
               state: "ready",
               createdAt: "2026-05-09T04:00:00.000Z",
             },
             {
               snapshotId: "sh-new",
-              name: "cmuxd-ws-review",
+              name: "bmuxd-ws-review",
               state: "ready",
               createdAt: "2026-05-09T05:00:00.000Z",
             },
@@ -322,7 +322,7 @@ describe("Cloud VM image build helpers", () => {
 
     const recovered = await waitForFreestyleSnapshotByName(
       freestyle as never,
-      "cmuxd-ws-review",
+      "bmuxd-ws-review",
       "2026-05-09T04:30:00.000Z",
       100,
     );
@@ -337,7 +337,7 @@ describe("Cloud VM image build helpers", () => {
           snapshots: [
             {
               snapshotId: "sh-stale",
-              name: "cmuxd-ws-review",
+              name: "bmuxd-ws-review",
               state: "ready",
               createdAt: "2026-05-09T04:00:00.000Z",
             },
@@ -347,7 +347,7 @@ describe("Cloud VM image build helpers", () => {
 
     const recovered = await waitForFreestyleSnapshotByName(
       freestyle as never,
-      "cmuxd-ws-review",
+      "bmuxd-ws-review",
       "2026-05-09T04:30:00.000Z",
       10,
     );
@@ -356,7 +356,7 @@ describe("Cloud VM image build helpers", () => {
   });
 
   test("snapshot recovery uses Freestyle authenticated fetch transport", async () => {
-    const name = "cmuxd-ws-auth";
+    const name = "bmuxd-ws-auth";
     let requestUrl = "";
     let requestHeaders = new Headers();
     const freestyle = new Freestyle({

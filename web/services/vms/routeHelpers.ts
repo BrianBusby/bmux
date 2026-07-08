@@ -45,7 +45,7 @@ export async function withAuthedVmApiRoute(
   return withApiRouteSpan(
     request,
     route,
-    { "cmux.subsystem": "vm-cloud", ...attributes },
+    { "bmux.subsystem": "vm-cloud", ...attributes },
     async (span) => {
       let responseFinalizer: ((response: Response) => void) | null = null;
       const setResponseFinalizer = (finalizer: ((response: Response) => void) | null) => {
@@ -188,7 +188,7 @@ export function notFoundVm(vmId: string): Response {
     error: "vm_not_found",
     status: 404,
     message: `Cloud VM ${vmId} was not found.`,
-    action: "Run `cmux vm ls` to see available Cloud VMs. If the VM stopped while idle, start a new one with `cmux vm new`.",
+    action: "Run `bmux vm ls` to see available Cloud VMs. If the VM stopped while idle, start a new one with `bmux vm new`.",
     details: { vmId },
   });
 }
@@ -237,10 +237,10 @@ export function vmBillingTeamErrorResponse(err: {
     status: err.status,
     message: err.code === "vm_billing_team_not_found"
       ? "That team is not available for this account."
-      : "cmux needs to know which team should own this Cloud VM.",
+      : "bmux needs to know which team should own this Cloud VM.",
     action: err.code === "vm_billing_team_not_found"
-      ? "Switch to a team you belong to, or run `cmux auth login` again and retry with the correct team id."
-      : "Select a team in cmux, or pass the team id with `X-Cmux-Team-Id`.",
+      ? "Switch to a team you belong to, or run `bmux auth login` again and retry with the correct team id."
+      : "Select a team in bmux, or pass the team id with `X-Bmux-Team-Id`.",
     reason: err.message,
   });
 }
@@ -249,8 +249,8 @@ export function vmRequiresProResponse(): Response {
   return vmErrorResponse({
     error: "vm_requires_pro",
     status: 402,
-    message: "Cloud VMs require a cmux Pro plan.",
-    action: "Upgrade to cmux Pro at https://cmux.com/pricing to create Cloud VMs.",
+    message: "Cloud VMs require a bmux Pro plan.",
+    action: "Upgrade to bmux Pro at https://bmux.com/pricing to create Cloud VMs.",
   });
 }
 
@@ -348,18 +348,18 @@ function providerCauseSummary(cause: unknown): { code?: string; message?: string
 
 function cloudServiceAction(operation: string, retryAfterSeconds: number | undefined): string {
   const retryPrefix = retryAfterSeconds
-    ? `cmux will retry in about ${retryAfterSeconds}s when this request is part of an attach loop. `
+    ? `bmux will retry in about ${retryAfterSeconds}s when this request is part of an attach loop. `
     : "";
   switch (operation) {
     case "create":
-      return `${retryPrefix}Retry once. If it fails again, run \`cmux vm ls\` to check whether a VM was created, then try \`cmux vm new\` again or contact support.`;
+      return `${retryPrefix}Retry once. If it fails again, run \`bmux vm ls\` to check whether a VM was created, then try \`bmux vm new\` again or contact support.`;
     case "openAttach":
     case "openSSH":
-      return `${retryPrefix}cmux is retrying attach while the Cloud VM service recovers. Run \`cmux vm ls\` to confirm the VM still exists.`;
+      return `${retryPrefix}bmux is retrying attach while the Cloud VM service recovers. Run \`bmux vm ls\` to confirm the VM still exists.`;
     case "exec":
-      return `${retryPrefix}Check that the VM is still running with \`cmux vm ls\`, then retry the command. For long commands, increase the exec timeout.`;
+      return `${retryPrefix}Check that the VM is still running with \`bmux vm ls\`, then retry the command. For long commands, increase the exec timeout.`;
     case "destroy":
-      return `${retryPrefix}Run \`cmux vm ls\` to see whether the VM is already gone. If it still appears, retry \`cmux vm rm <id>\`.`;
+      return `${retryPrefix}Run \`bmux vm ls\` to see whether the VM is already gone. If it still appears, retry \`bmux vm rm <id>\`.`;
     default:
       return `${retryPrefix}Retry the command. If it keeps failing, copy this error and contact support.`;
   }
@@ -434,17 +434,17 @@ function vmUnavailableTitle(phase: VmLifecyclePhase): string {
 function vmUnavailableMessage(phase: VmLifecyclePhase): string {
   switch (phase) {
     case "attach":
-      return "cmux could not attach to the Cloud VM yet.";
+      return "bmux could not attach to the Cloud VM yet.";
     case "ssh":
-      return "cmux could not refresh Cloud VM SSH credentials yet.";
+      return "bmux could not refresh Cloud VM SSH credentials yet.";
     case "create":
-      return "cmux could not create the Cloud VM yet.";
+      return "bmux could not create the Cloud VM yet.";
     case "restore":
-      return "cmux could not restore the Cloud VM yet.";
+      return "bmux could not restore the Cloud VM yet.";
     case "fork":
-      return "cmux could not fork the Cloud VM yet.";
+      return "bmux could not fork the Cloud VM yet.";
     case "exec":
-      return "cmux could not run the Cloud VM command yet.";
+      return "bmux could not run the Cloud VM command yet.";
     default:
       return "The Cloud VM service could not complete this request yet.";
   }
@@ -489,8 +489,8 @@ function inferredProviderCode(message: string | null): string | null {
 
 export function requestedVmTeamIdFromRequest(request: Request): string | null {
   const fromHeader = normalizedOptionalString(
-    request.headers.get("x-cmux-team-id") ??
-      request.headers.get("x-cmux-billing-team-id"),
+    request.headers.get("x-bmux-team-id") ??
+      request.headers.get("x-bmux-billing-team-id"),
   );
   if (fromHeader) return fromHeader;
 
@@ -539,11 +539,11 @@ function requestURLOrigin(request: Request): string | null {
 let cachedAllowedOriginsEnv: string | undefined;
 let cachedAllowedOrigins: Set<string> | null = null;
 
-// CMUX_VM_ALLOWED_ORIGINS is a comma-separated list of full origins that must match
+// BMUX_VM_ALLOWED_ORIGINS is a comma-separated list of full origins that must match
 // the Origin header exactly, for example `https://app.example.com,https://staging.example.com`.
 // Do not include paths, schemeless hosts, or trailing slashes.
 function allowedBrowserOrigins(): Set<string> {
-  const raw = process.env.CMUX_VM_ALLOWED_ORIGINS;
+  const raw = process.env.BMUX_VM_ALLOWED_ORIGINS;
   if (cachedAllowedOrigins && cachedAllowedOriginsEnv === raw) return cachedAllowedOrigins;
   cachedAllowedOriginsEnv = raw;
   const configured = raw?.split(",") ?? [];

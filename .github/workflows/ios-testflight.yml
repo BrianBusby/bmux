@@ -266,9 +266,9 @@ jobs:
       ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
       ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
       ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
-      CMUX_TESTFLIGHT_EXTERNAL_GROUP_ID: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUP_ID }}
-      CMUX_TESTFLIGHT_EXTERNAL_GROUP_NAME: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUP_NAME }}
-      CMUX_TESTFLIGHT_ASSIGN_EXTERNAL_GROUP: "0"
+      BMUX_TESTFLIGHT_EXTERNAL_GROUP_ID: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUP_ID }}
+      BMUX_TESTFLIGHT_EXTERNAL_GROUP_NAME: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUP_NAME }}
+      BMUX_TESTFLIGHT_ASSIGN_EXTERNAL_GROUP: "0"
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -377,13 +377,13 @@ jobs:
             exit 1
           fi
 
-          TMP_PROFILE="$RUNNER_TEMP/cmux-beta.mobileprovision"
-          TMP_PLIST="$RUNNER_TEMP/cmux-beta-profile.plist"
+          TMP_PROFILE="$RUNNER_TEMP/bmux-beta.mobileprovision"
+          TMP_PLIST="$RUNNER_TEMP/bmux-beta-profile.plist"
           printf '%s' "$IOS_BETA_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$TMP_PROFILE"
           security cms -D -i "$TMP_PROFILE" > "$TMP_PLIST"
 
           APP_ID="$(/usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" "$TMP_PLIST")"
-          if [ "$APP_ID" != "7WLXT3NR37.dev.cmux.app.beta" ]; then
+          if [ "$APP_ID" != "7WLXT3NR37.dev.bmux.app.beta" ]; then
             echo "Beta provisioning profile targets unexpected app ID: $APP_ID" >&2
             exit 1
           fi
@@ -412,7 +412,7 @@ jobs:
           INPUT_BUILD_NUMBER: ${{ github.event.inputs.build_number }}
           # The script writes the CFBundleVersion that actually shipped here (the
           # monotonic guard may bump it), so the summary reports the real value.
-          CMUX_BUILD_NUMBER_OUT_FILE: ${{ runner.temp }}/cmux-final-build-number.txt
+          BMUX_BUILD_NUMBER_OUT_FILE: ${{ runner.temp }}/bmux-final-build-number.txt
           # The previous beta's commit (the last successful run's head_sha): base
           # of the per-build "What to Test" commit range. Empty on the very first
           # run / a missing history, where the generator falls back gracefully.
@@ -454,8 +454,8 @@ jobs:
             fi
             ./ios/scripts/upload-testflight.sh "${ARGS[@]}"
           fi
-          if [ -f "$CMUX_BUILD_NUMBER_OUT_FILE" ]; then
-            FINAL_BN="$(cat "$CMUX_BUILD_NUMBER_OUT_FILE")"
+          if [ -f "$BMUX_BUILD_NUMBER_OUT_FILE" ]; then
+            FINAL_BN="$(cat "$BMUX_BUILD_NUMBER_OUT_FILE")"
           else
             FINAL_BN="${INPUT_BUILD_NUMBER:-unknown}"
           fi
@@ -471,7 +471,7 @@ jobs:
           {
             echo "### iOS TestFlight upload"
             echo
-            echo "- lane: \`beta\` (bundle id \`dev.cmux.app.beta\`, external-eligible)"
+            echo "- lane: \`beta\` (bundle id \`dev.bmux.app.beta\`, external-eligible)"
             echo "- signing: manual (CI-imported iOS distribution cert + beta profile)"
             if [ -n "${INPUT_MARKETING_VERSION_OVERRIDE:-}" ]; then
               echo "- marketing version override: \`${INPUT_MARKETING_VERSION_OVERRIDE}\`"
@@ -521,8 +521,8 @@ jobs:
       ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
       ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
       ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
-      CMUX_TESTFLIGHT_EXTERNAL_GROUP_ID: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUP_ID }}
-      CMUX_TESTFLIGHT_EXTERNAL_GROUP_NAME: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUP_NAME }}
+      BMUX_TESTFLIGHT_EXTERNAL_GROUP_ID: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUP_ID }}
+      BMUX_TESTFLIGHT_EXTERNAL_GROUP_NAME: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUP_NAME }}
       GH_TOKEN: ${{ github.token }}
       SHOULD_BUILD: ${{ needs.decide.outputs.should_build }}
       SHOULD_ASSIGN_ONLY: ${{ needs.decide.outputs.should_assign_only }}
@@ -536,7 +536,7 @@ jobs:
         if: env.SHOULD_ASSIGN_ONLY == 'true'
         run: |
           set -euo pipefail
-          gh run download "$LAST_UPLOADED_RUN_ID" --repo manaflow-ai/cmux \
+          gh run download "$LAST_UPLOADED_RUN_ID" --repo manaflow-ai/bmux \
             -n ios-testflight-build-metadata \
             -D "$RUNNER_TEMP/ios-testflight-build"
           BUILD_NUMBER="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["build_number"])' "$RUNNER_TEMP/ios-testflight-build/ios-testflight-build.json")"
@@ -546,17 +546,17 @@ jobs:
         id: assign
         run: |
           set -euo pipefail
-          export CMUX_TESTFLIGHT_ASSIGN_STATE_OUT_FILE="$RUNNER_TEMP/ios-testflight-assign-state.txt"
+          export BMUX_TESTFLIGHT_ASSIGN_STATE_OUT_FILE="$RUNNER_TEMP/ios-testflight-assign-state.txt"
           if [ -z "${BUILD_NUMBER:-}" ] || [ "$BUILD_NUMBER" = "unknown" ]; then
             echo "missing uploaded build number for external TestFlight assignment" >&2
             exit 1
           fi
           python3 ./ios/scripts/asc_assign_external_testflight_group.py \
-            --bundle-id dev.cmux.app.beta \
+            --bundle-id dev.bmux.app.beta \
             --build-number "$BUILD_NUMBER"
           ASSIGNMENT_STATE="unknown"
-          if [ -f "$CMUX_TESTFLIGHT_ASSIGN_STATE_OUT_FILE" ]; then
-            ASSIGNMENT_STATE="$(cat "$CMUX_TESTFLIGHT_ASSIGN_STATE_OUT_FILE")"
+          if [ -f "$BMUX_TESTFLIGHT_ASSIGN_STATE_OUT_FILE" ]; then
+            ASSIGNMENT_STATE="$(cat "$BMUX_TESTFLIGHT_ASSIGN_STATE_OUT_FILE")"
           fi
           echo "assignment_state=$ASSIGNMENT_STATE" >> "$GITHUB_OUTPUT"
 

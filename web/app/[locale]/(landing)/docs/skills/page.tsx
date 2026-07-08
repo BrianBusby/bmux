@@ -9,57 +9,57 @@ import { DocsHeading } from "@/app/[locale]/components/docs-heading";
 
 const skills = [
   {
-    id: "cmux",
-    path: "skills/cmux/SKILL.md",
-    command: "cmux identify --json",
-    nameKey: "cmuxName",
-    descriptionKey: "cmuxDescription",
-    useKey: "cmuxUse",
+    id: "bmux",
+    path: "skills/bmux/SKILL.md",
+    command: "bmux identify --json",
+    nameKey: "bmuxName",
+    descriptionKey: "bmuxDescription",
+    useKey: "bmuxUse",
   },
   {
-    id: "cmux-workspace",
-    path: "skills/cmux-workspace/SKILL.md",
-    command: "cmux current-workspace --json",
+    id: "bmux-workspace",
+    path: "skills/bmux-workspace/SKILL.md",
+    command: "bmux current-workspace --json",
     nameKey: "workspaceName",
     descriptionKey: "workspaceDescription",
     useKey: "workspaceUse",
   },
   {
-    id: "cmux-settings",
-    path: "skills/cmux-settings/SKILL.md",
-    command: "skills/cmux-settings/scripts/cmux-settings list-supported",
+    id: "bmux-settings",
+    path: "skills/bmux-settings/SKILL.md",
+    command: "skills/bmux-settings/scripts/bmux-settings list-supported",
     nameKey: "settingsName",
     descriptionKey: "settingsDescription",
     useKey: "settingsUse",
   },
   {
-    id: "cmux-customization",
-    path: "skills/cmux-customization/SKILL.md",
-    command: "cmux reload-config",
+    id: "bmux-customization",
+    path: "skills/bmux-customization/SKILL.md",
+    command: "bmux reload-config",
     nameKey: "customizationName",
     descriptionKey: "customizationDescription",
     useKey: "customizationUse",
   },
   {
-    id: "cmux-diagnostics",
-    path: "skills/cmux-diagnostics/SKILL.md",
-    command: "skills/cmux-diagnostics/scripts/cmux-diagnostics",
+    id: "bmux-diagnostics",
+    path: "skills/bmux-diagnostics/SKILL.md",
+    command: "skills/bmux-diagnostics/scripts/bmux-diagnostics",
     nameKey: "diagnosticsName",
     descriptionKey: "diagnosticsDescription",
     useKey: "diagnosticsUse",
   },
   {
-    id: "cmux-browser",
-    path: "skills/cmux-browser/SKILL.md",
-    command: "cmux browser surface:2 snapshot --interactive",
+    id: "bmux-browser",
+    path: "skills/bmux-browser/SKILL.md",
+    command: "bmux browser surface:2 snapshot --interactive",
     nameKey: "browserName",
     descriptionKey: "browserDescription",
     useKey: "browserUse",
   },
   {
-    id: "cmux-markdown",
-    path: "skills/cmux-markdown/SKILL.md",
-    command: "cmux markdown open plan.md",
+    id: "bmux-markdown",
+    path: "skills/bmux-markdown/SKILL.md",
+    command: "bmux markdown open plan.md",
     nameKey: "markdownName",
     descriptionKey: "markdownDescription",
     useKey: "markdownUse",
@@ -68,43 +68,43 @@ const skills = [
 
 const skillCoverage = [
   {
-    id: "cmux",
-    nameKey: "cmuxName",
-    scopeKey: "cmuxScope",
-    referencesKey: "cmuxReferences",
+    id: "bmux",
+    nameKey: "bmuxName",
+    scopeKey: "bmuxScope",
+    referencesKey: "bmuxReferences",
   },
   {
-    id: "cmux-workspace",
+    id: "bmux-workspace",
     nameKey: "workspaceName",
     scopeKey: "workspaceScope",
     referencesKey: "workspaceReferences",
   },
   {
-    id: "cmux-settings",
+    id: "bmux-settings",
     nameKey: "settingsName",
     scopeKey: "settingsScope",
     referencesKey: "settingsReferences",
   },
   {
-    id: "cmux-customization",
+    id: "bmux-customization",
     nameKey: "customizationName",
     scopeKey: "customizationScope",
     referencesKey: "customizationReferences",
   },
   {
-    id: "cmux-diagnostics",
+    id: "bmux-diagnostics",
     nameKey: "diagnosticsName",
     scopeKey: "diagnosticsScope",
     referencesKey: "diagnosticsReferences",
   },
   {
-    id: "cmux-browser",
+    id: "bmux-browser",
     nameKey: "browserName",
     scopeKey: "browserScope",
     referencesKey: "browserReferences",
   },
   {
-    id: "cmux-markdown",
+    id: "bmux-markdown",
     nameKey: "markdownName",
     scopeKey: "markdownScope",
     referencesKey: "markdownReferences",
@@ -113,19 +113,19 @@ const skillCoverage = [
 
 const suggestedSkills = [
   {
-    id: "cmux-ssh",
+    id: "bmux-ssh",
     nameKey: "suggestSshName",
     useKey: "suggestSshUse",
     whyKey: "suggestSshWhy",
   },
   {
-    id: "cmux-cloud-vm",
+    id: "bmux-cloud-vm",
     nameKey: "suggestCloudVmName",
     useKey: "suggestCloudVmUse",
     whyKey: "suggestCloudVmWhy",
   },
   {
-    id: "cmux-vault",
+    id: "bmux-vault",
     nameKey: "suggestVaultName",
     useKey: "suggestVaultUse",
     whyKey: "suggestVaultWhy",
@@ -206,12 +206,12 @@ export default function SkillsPage() {
           code: (chunks) => <code>{chunks}</code>,
         })}
       </p>
-      <CodeBlock title={t("installWithVercel")} lang="bash">{`# Install all cmux skills
-npx skills add manaflow-ai/cmux -g -y
+      <CodeBlock title={t("installWithVercel")} lang="bash">{`# Install all bmux skills
+npx skills add manaflow-ai/bmux -g -y
 
 # Or install just diagnostics
-npx skills add manaflow-ai/cmux --skill cmux-diagnostics -g -y`}</CodeBlock>
-      <CodeBlock title={t("installWithSkillsSh")} lang="bash">{`curl -fsSL https://raw.githubusercontent.com/manaflow-ai/cmux/main/skills.sh | bash`}</CodeBlock>
+npx skills add manaflow-ai/bmux --skill bmux-diagnostics -g -y`}</CodeBlock>
+      <CodeBlock title={t("installWithSkillsSh")} lang="bash">{`curl -fsSL https://raw.githubusercontent.com/manaflow-ai/bmux/main/skills.sh | bash`}</CodeBlock>
       <Callout type="info">
         {t.rich("installDestination", {
           code: (chunks) => <code>{chunks}</code>,
@@ -222,11 +222,11 @@ npx skills add manaflow-ai/cmux --skill cmux-diagnostics -g -y`}</CodeBlock>
       <p>{t("localInstallIntro")}</p>
       <CodeBlock title={t("localInstallCommands")} lang="bash">{`./skills.sh
 ./skills.sh --list
-./skills.sh --skill cmux --skill cmux-browser
+./skills.sh --skill bmux --skill bmux-browser
 ./skills.sh --dest ~/.codex/skills
 ./skills.sh --dry-run`}</CodeBlock>
       <p>{t("pinRefIntro")}</p>
-      <CodeBlock lang="bash">{`curl -fsSL https://raw.githubusercontent.com/manaflow-ai/cmux/main/skills.sh | bash -s -- --ref main`}</CodeBlock>
+      <CodeBlock lang="bash">{`curl -fsSL https://raw.githubusercontent.com/manaflow-ai/bmux/main/skills.sh | bash -s -- --ref main`}</CodeBlock>
 
       <DocsHeading level={2} id="included-title">{t("includedTitle")}</DocsHeading>
       <p>{t("includedIntro")}</p>

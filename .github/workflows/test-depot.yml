@@ -60,7 +60,7 @@ jobs:
         run: |
           set -euo pipefail
           GHOSTTY_SHA=$(git -C ghostty rev-parse HEAD)
-          BUILD_FLAVOR="crashsubdir-cmux-crash-v1"
+          BUILD_FLAVOR="crashsubdir-bmux-crash-v1"
           TAG="xcframework-$GHOSTTY_SHA-$BUILD_FLAVOR"
           URL="https://github.com/manaflow-ai/ghostty/releases/download/$TAG/GhosttyKit.xcframework.tar.gz"
           echo "Downloading xcframework for ghostty $GHOSTTY_SHA"
@@ -107,7 +107,7 @@ jobs:
 
       - name: Clean DerivedData
         run: |
-          rm -rf ~/Library/Developer/Xcode/DerivedData/cmux-*
+          rm -rf ~/Library/Developer/Xcode/DerivedData/bmux-*
 
       - name: Resolve Swift packages
         run: |
@@ -117,7 +117,7 @@ jobs:
           mkdir -p "$SOURCE_PACKAGES_DIR"
 
           for attempt in 1 2 3; do
-            if xcodebuild -project cmux.xcodeproj -scheme cmux-unit -configuration Debug \
+            if xcodebuild -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
               -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
               -resolvePackageDependencies; then
               exit 0
@@ -137,7 +137,7 @@ jobs:
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
           run_unit_tests() {
             scripts/ci/xcodebuild_noninteractive.py \
-              xcodebuild -project cmux.xcodeproj -scheme cmux-unit -configuration Debug \
+              xcodebuild -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
               -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
               -disableAutomaticPackageResolution \
               -destination "platform=macOS" test 2>&1
@@ -154,7 +154,7 @@ jobs:
           if [ "$EXIT_CODE" -ne 0 ] && echo "$OUTPUT" | grep -q "Could not resolve package dependencies"; then
             echo "SwiftPM package resolution failed, clearing caches and retrying once"
             rm -rf ~/Library/Caches/org.swift.swiftpm
-            rm -rf ~/Library/Developer/Xcode/DerivedData/cmux-*
+            rm -rf ~/Library/Developer/Xcode/DerivedData/bmux-*
             set +e
             OUTPUT=$(run_unit_tests)
             EXIT_CODE=$?
@@ -183,12 +183,12 @@ jobs:
 
           # Build the -only-testing argument
           if [ -n "$TEST_FILTER" ]; then
-            ONLY_TESTING="-only-testing:cmuxUITests/$TEST_FILTER"
+            ONLY_TESTING="-only-testing:bmuxUITests/$TEST_FILTER"
           else
-            ONLY_TESTING="-only-testing:cmuxUITests"
+            ONLY_TESTING="-only-testing:bmuxUITests"
           fi
 
-          xcodebuild -project cmux.xcodeproj -scheme cmux -configuration Debug \
+          xcodebuild -project bmux.xcodeproj -scheme bmux -configuration Debug \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
             -disableAutomaticPackageResolution \
             -destination "platform=macOS" \

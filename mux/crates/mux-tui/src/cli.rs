@@ -386,7 +386,7 @@ pub fn run(args: &[String], usage: &str) -> i32 {
         }
         Ok(Parsed::Command(args)) => run_command(args),
         Err(err) => {
-            eprintln!("cmux-mux: {}", err.0);
+            eprintln!("bmux-mux: {}", err.0);
             2
         }
     }
@@ -520,7 +520,7 @@ fn run_command(args: CliArgs) -> i32 {
             value
         }
         Err(err) => {
-            eprintln!("cmux-mux: {}", err.0);
+            eprintln!("bmux-mux: {}", err.0);
             return 2;
         }
     };
@@ -562,7 +562,7 @@ fn resolve_socket(global: &GlobalArgs) -> PathBuf {
     if let Some(path) = &global.socket {
         return path.clone();
     }
-    if let Some(path) = std::env::var_os("CMUX_MUX_SOCKET") {
+    if let Some(path) = std::env::var_os("BMUX_MUX_SOCKET") {
         if !path.is_empty() {
             return PathBuf::from(path);
         }
@@ -1122,7 +1122,7 @@ fn print_empty(_: &Value, _: &mut dyn Write) -> io::Result<()> {
 fn print_identify(data: &Value, out: &mut dyn Write) -> io::Result<()> {
     writeln!(
         out,
-        "cmux-mux session={} protocol={} pid={}",
+        "bmux-mux session={} protocol={} pid={}",
         data.get("session").and_then(Value::as_str).unwrap_or(""),
         data.get("protocol").and_then(Value::as_u64).unwrap_or(0),
         data.get("pid").and_then(Value::as_u64).unwrap_or(0)
@@ -1132,7 +1132,7 @@ fn print_identify(data: &Value, out: &mut dyn Write) -> io::Result<()> {
 fn print_ping(data: &Value, out: &mut dyn Write) -> io::Result<()> {
     writeln!(
         out,
-        "cmux-mux version={} protocol={}",
+        "bmux-mux version={} protocol={}",
         data.get("version").and_then(Value::as_str).unwrap_or(""),
         data.get("protocol").and_then(Value::as_u64).unwrap_or(0)
     )

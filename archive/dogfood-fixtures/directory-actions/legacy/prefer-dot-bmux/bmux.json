@@ -1,0 +1,27 @@
+{
+  "actions": {
+    "bmux.newTerminal": {
+      "type": "command",
+      "title": "Losing bmux.json",
+      "subtitle": "You should not see this in prefer-dot-bmux",
+      "command": "echo 'LOSING BMUX.JSON'; echo 'THIS SHOULD NOT WIN'; pwd",
+      "target": "newTabInCurrentPane",
+      "icon": { "type": "emoji", "value": "❌" }
+    },
+    "legacy.loser": {
+      "type": "command",
+      "title": "Losing Action",
+      "command": "echo 'LOSING ACTION'; pwd",
+      "target": "newTabInCurrentPane",
+      "icon": { "type": "emoji", "value": "❌" }
+    }
+  },
+  "ui": {
+    "surfaceTabBar": {
+      "buttons": [
+        "bmux.newTerminal",
+        "legacy.loser"
+      ]
+    }
+  }
+}

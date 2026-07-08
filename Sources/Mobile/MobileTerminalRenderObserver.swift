@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxTerminal
+import BMUXMobileCore
+import BmuxTerminal
 import Foundation
 
 /// Pushes terminal render events only while a mobile client is actively subscribed.
@@ -188,7 +188,7 @@ final class MobileTerminalRenderObserver {
         guard let payload = try? frame.jsonObject() else { return }
         MobileHostService.emitEvent(topic: "terminal.render_grid", payload: payload)
         #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "mobile.render_grid surface=\(surfaceID.uuidString.prefix(8)) full=\(frame.full) " +
                 "cleared=\(frame.clearedRows.count) spans=\(frame.rowSpans.count) seq=\(frame.stateSeq)"
         )

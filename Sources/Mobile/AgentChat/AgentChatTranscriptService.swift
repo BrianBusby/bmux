@@ -1,7 +1,7 @@
-import CMUXAgentLaunch
-import CmuxAgentChat
-import CmuxSettings
-import CmuxTerminal
+import BMUXAgentLaunch
+import BmuxAgentChat
+import BmuxSettings
+import BmuxTerminal
 import Foundation
 
 /// Mac-side facade for the agent chat surface: tracks sessions from hook
@@ -90,7 +90,7 @@ final class AgentChatTranscriptService {
         return surface.mobileRenderGridFrame(stateSeq: 0, full: true)?.rows
     }
 
-    /// A `(session, surface)` resume re-bind cmux authored during session
+    /// A `(session, surface)` resume re-bind bmux authored during session
     /// restore, buffered until the service is live (restore can run before app
     /// setup assigns this service, so a direct call would be a silent no-op).
     private struct PendingResumeIntent {
@@ -106,7 +106,7 @@ final class AgentChatTranscriptService {
     /// The started service, used to apply resume re-binds immediately once live.
     private static weak var liveInstance: AgentChatTranscriptService?
 
-    /// Records, from cmux's own authority, that it is resuming `sessionID` onto
+    /// Records, from bmux's own authority, that it is resuming `sessionID` onto
     /// `surfaceID` (see
     /// ``AgentChatSessionRegistry/noteResumeInitiated(sessionID:source:surfaceID:workspaceID:workingDirectory:)``).
     /// Static so the restore path need not hold a service reference: before the
@@ -270,9 +270,9 @@ final class AgentChatTranscriptService {
         await registry.refreshBindingsFromHookStore(sessionID: sessionID)
     }
 
-    /// cmux-authored resume re-bind (see
+    /// bmux-authored resume re-bind (see
     /// ``AgentChatSessionRegistry/noteResumeInitiated(sessionID:source:surfaceID:workspaceID:workingDirectory:)``).
-    /// Called from the session-restore path when cmux auto-resumes an agent, so
+    /// Called from the session-restore path when bmux auto-resumes an agent, so
     /// the GUI reflects the live session immediately instead of waiting for a
     /// SessionStart hook the agent (codex) does not fire on resume.
     func noteResumeInitiated(
@@ -292,7 +292,7 @@ final class AgentChatTranscriptService {
     }
 
     /// Re-stamps a session's stored workspace id to the workspace its surface
-    /// currently lives in. cmux workspace ids regenerate on every Mac relaunch
+    /// currently lives in. bmux workspace ids regenerate on every Mac relaunch
     /// while surface ids are stable, so a session created before the last
     /// relaunch carries a stale `workspaceID`. The caller resolves the session's
     /// live surface to its current workspace and calls this so the seed and the
@@ -361,7 +361,7 @@ final class AgentChatTranscriptService {
         guard let path = resolver.transcriptPath(for: record) else {
             failedResolutions.insert(record.sessionID)
             #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "agentChat.transcript.resolve session=\(record.sessionID.prefix(8)) "
                 + "kind=\(record.agentKind.sourceName) cwd=\(record.workingDirectory ?? "nil") UNRESOLVED"
             )
@@ -369,7 +369,7 @@ final class AgentChatTranscriptService {
             return nil
         }
         #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "agentChat.transcript.resolve session=\(record.sessionID.prefix(8)) "
             + "file=\((path as NSString).lastPathComponent)"
         )
@@ -395,7 +395,7 @@ final class AgentChatTranscriptService {
 
     private func publishBatch(_ batch: AgentChatTranscriptTailer.Batch, sessionID: String) {
         #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "agentChat.transcript.batch session=\(sessionID.prefix(8)) "
             + "appended=\(batch.appended.count) updated=\(batch.updated.count) "
             + "reset=\(batch.didReset ? 1 : 0) title=\(batch.discoveredTitle != nil ? 1 : 0)"
@@ -514,14 +514,14 @@ final class AgentChatTranscriptService {
             ?? FileManager.default.temporaryDirectory
         return ChatRawTerminalOutputFileStore(
             rootDirectory: root
-                .appendingPathComponent("cmux", isDirectory: true)
+                .appendingPathComponent("bmux", isDirectory: true)
                 .appendingPathComponent("agent-raw-output", isDirectory: true)
         )
     }
 
     nonisolated static func defaultTokenOptimizationModeProvider() -> () -> TokenOptimizationMode {
         let catalog = SettingCatalog()
-        let store = JSONConfigStore(fileURL: CmuxConfigLocation().userConfigFile)
+        let store = JSONConfigStore(fileURL: BmuxConfigLocation().userConfigFile)
         let key = catalog.terminal.agentTokenOptimizationMode
         return {
             TokenOptimizationMode(setting: store.snapshotValue(for: key))

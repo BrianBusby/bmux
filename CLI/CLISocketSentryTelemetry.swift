@@ -1,4 +1,4 @@
-import CmuxFoundation
+import BmuxFoundation
 import Darwin
 import Foundation
 
@@ -11,19 +11,19 @@ import Foundation
 
 enum CLISocketEnvironment {
     static func socketPath(in environment: [String: String]) throws -> String? {
-        let socketPath = normalized(environment["CMUX_SOCKET_PATH"])
-        let legacySocketPath = normalized(environment["CMUX_SOCKET"])
+        let socketPath = normalized(environment["BMUX_SOCKET_PATH"])
+        let legacySocketPath = normalized(environment["BMUX_SOCKET"])
         if let socketPath, let legacySocketPath, socketPath != legacySocketPath {
             throw CLIError(message: String(
                 localized: "cli.socket.error.conflictingEnvironment",
-                defaultValue: "Refusing to choose socket: CMUX_SOCKET_PATH and CMUX_SOCKET differ. Use CMUX_SOCKET_PATH or unset CMUX_SOCKET."
+                defaultValue: "Refusing to choose socket: BMUX_SOCKET_PATH and BMUX_SOCKET differ. Use BMUX_SOCKET_PATH or unset BMUX_SOCKET."
             ))
         }
         return socketPath ?? legacySocketPath
     }
 
     static func socketPathForTelemetry(in environment: [String: String]) -> String? {
-        normalized(environment["CMUX_SOCKET_PATH"]) ?? normalized(environment["CMUX_SOCKET"])
+        normalized(environment["BMUX_SOCKET_PATH"]) ?? normalized(environment["BMUX_SOCKET"])
     }
 
     private static func normalized(_ raw: String?) -> String? {
@@ -65,7 +65,7 @@ final class CLISocketSentryTelemetry {
     }
 
     private static func currentSentryBundleIdentifier() -> String? {
-        if let bundleIdentifier = ProcessInfo.processInfo.environment["CMUX_BUNDLE_ID"]?
+        if let bundleIdentifier = ProcessInfo.processInfo.environment["BMUX_BUNDLE_ID"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
            !bundleIdentifier.isEmpty {
             return bundleIdentifier
@@ -111,11 +111,11 @@ final class CLISocketSentryTelemetry {
         self.socketPath = socketPath
         self.envSocketPath = CLISocketEnvironment.socketPathForTelemetry(in: processEnv)
         self.processEnv = processEnv
-        self.workspaceId = processEnv["CMUX_WORKSPACE_ID"]
-        self.surfaceId = processEnv["CMUX_SURFACE_ID"]
+        self.workspaceId = processEnv["BMUX_WORKSPACE_ID"]
+        self.surfaceId = processEnv["BMUX_SURFACE_ID"]
         self.disabledByEnv =
-            processEnv["CMUX_CLI_SENTRY_DISABLED"] == "1" ||
-            processEnv["CMUX_CLAUDE_HOOK_SENTRY_DISABLED"] == "1"
+            processEnv["BMUX_CLI_SENTRY_DISABLED"] == "1" ||
+            processEnv["BMUX_CLAUDE_HOOK_SENTRY_DISABLED"] == "1"
         self.noiseFilter = SentryNoiseFilter()
     }
 
@@ -185,7 +185,7 @@ final class CLISocketSentryTelemetry {
 
 #if DEBUG
     private func recordCaptureProbe(stage: String, error: Error) {
-        guard let path = processEnv["CMUX_CLI_SENTRY_CAPTURE_PROBE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+        guard let path = processEnv["BMUX_CLI_SENTRY_CAPTURE_PROBE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
               !path.isEmpty else {
             return
         }
@@ -195,7 +195,7 @@ final class CLISocketSentryTelemetry {
 
 #if canImport(Sentry)
     private func recordStoreProbe(eventId: String) {
-        guard let path = processEnv["CMUX_CLI_SENTRY_STORE_PROBE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+        guard let path = processEnv["BMUX_CLI_SENTRY_STORE_PROBE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
               !path.isEmpty else {
             return
         }
@@ -224,7 +224,7 @@ final class CLISocketSentryTelemetry {
         event.environment = "production-cli"
 #endif
         event.tags = [
-            "component": "cmux-cli",
+            "component": "bmux-cli",
             "cli_command": command,
             "cli_subcommand": subcommand
         ]
@@ -284,7 +284,7 @@ final class CLISocketSentryTelemetry {
         for (key, value) in data {
             payload[key] = value
         }
-        let crumb = Breadcrumb(level: .info, category: "cmux.cli")
+        let crumb = Breadcrumb(level: .info, category: "bmux.cli")
         crumb.message = message
         crumb.data = payload
         return crumb
@@ -330,7 +330,7 @@ final class CLISocketSentryTelemetry {
 
         let tmpSockets = Self.discoverSockets(in: "/tmp", limit: 10)
         if !tmpSockets.isEmpty {
-            context["tmp_cmux_sockets"] = tmpSockets
+            context["tmp_bmux_sockets"] = tmpSockets
         }
         let taggedSockets = tmpSockets.filter { $0 != CLISocketPathResolver.legacyDefaultSocketPath }
         if CLISocketPathResolver.isImplicitDefaultPath(
@@ -340,7 +340,7 @@ final class CLISocketSentryTelemetry {
         ),
            (envSocketPath?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true),
            !taggedSockets.isEmpty {
-            context["possible_root_cause"] = "CMUX_SOCKET_PATH missing while tagged sockets exist"
+            context["possible_root_cause"] = "BMUX_SOCKET_PATH missing while tagged sockets exist"
         }
 
         return context
@@ -367,7 +367,7 @@ final class CLISocketSentryTelemetry {
         }
         var sockets: [String] = []
         for name in entries.sorted() {
-            guard name.hasPrefix("cmux"), name.hasSuffix(".sock") else { continue }
+            guard name.hasPrefix("bmux"), name.hasSuffix(".sock") else { continue }
             let fullPath = URL(fileURLWithPath: directory)
                 .appendingPathComponent(name, isDirectory: false)
                 .path

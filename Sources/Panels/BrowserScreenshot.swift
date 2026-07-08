@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import BmuxFoundation
 import ObjectiveC
 import QuartzCore
 
@@ -292,20 +292,20 @@ private final class BrowserScreenshotSelectionOverlayView: NSView {
     }
 }
 
-private var cmuxWebViewScreenshotCaptureGateKey: UInt8 = 0
-private var cmuxWebViewScreenshotSelectionOverlayKey: UInt8 = 0
+private var bmuxWebViewScreenshotCaptureGateKey: UInt8 = 0
+private var bmuxWebViewScreenshotSelectionOverlayKey: UInt8 = 0
 
-extension CmuxWebView {
+extension BmuxWebView {
     @MainActor
     private var screenshotCaptureGate: BrowserScreenshotCaptureGate {
-        if let gate = objc_getAssociatedObject(self, &cmuxWebViewScreenshotCaptureGateKey) as? BrowserScreenshotCaptureGate {
+        if let gate = objc_getAssociatedObject(self, &bmuxWebViewScreenshotCaptureGateKey) as? BrowserScreenshotCaptureGate {
             return gate
         }
 
         let gate = BrowserScreenshotCaptureGate()
         objc_setAssociatedObject(
             self,
-            &cmuxWebViewScreenshotCaptureGateKey,
+            &bmuxWebViewScreenshotCaptureGateKey,
             gate,
             .OBJC_ASSOCIATION_RETAIN_NONATOMIC
         )
@@ -314,12 +314,12 @@ extension CmuxWebView {
 
     private var screenshotSelectionOverlay: BrowserScreenshotSelectionOverlayView? {
         get {
-            objc_getAssociatedObject(self, &cmuxWebViewScreenshotSelectionOverlayKey) as? BrowserScreenshotSelectionOverlayView
+            objc_getAssociatedObject(self, &bmuxWebViewScreenshotSelectionOverlayKey) as? BrowserScreenshotSelectionOverlayView
         }
         set {
             objc_setAssociatedObject(
                 self,
-                &cmuxWebViewScreenshotSelectionOverlayKey,
+                &bmuxWebViewScreenshotSelectionOverlayKey,
                 newValue,
                 .OBJC_ASSOCIATION_RETAIN_NONATOMIC
             )
@@ -362,7 +362,7 @@ extension CmuxWebView {
                 )
             }) else {
                 #if DEBUG
-                cmuxDebugLog("browser.screenshot.page.ignored reason=captureInProgress")
+                bmuxDebugLog("browser.screenshot.page.ignored reason=captureInProgress")
                 #endif
                 return false
             }
@@ -370,7 +370,7 @@ extension CmuxWebView {
             return true
         } catch {
             #if DEBUG
-            cmuxDebugLog("browser.screenshot.page.failed error=\(error.localizedDescription)")
+            bmuxDebugLog("browser.screenshot.page.failed error=\(error.localizedDescription)")
             #endif
             NSSound.beep()
             return false
@@ -407,14 +407,14 @@ extension CmuxWebView {
                         )
                     }) else {
                         #if DEBUG
-                        cmuxDebugLog("browser.screenshot.section.ignored reason=captureInProgress")
+                        bmuxDebugLog("browser.screenshot.section.ignored reason=captureInProgress")
                         #endif
                         return
                     }
                     BrowserScreenshotFlash.show(over: self)
                 } catch {
                     #if DEBUG
-                    cmuxDebugLog("browser.screenshot.section.failed error=\(error.localizedDescription)")
+                    bmuxDebugLog("browser.screenshot.section.failed error=\(error.localizedDescription)")
                     #endif
                     NSSound.beep()
                 }
@@ -429,7 +429,7 @@ extension CmuxWebView {
 extension BrowserPanel {
     @MainActor
     func captureScreenshotPageToClipboard() async -> Bool {
-        guard let webView = webView as? CmuxWebView else {
+        guard let webView = webView as? BmuxWebView else {
             NSSound.beep()
             return false
         }

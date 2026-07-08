@@ -10,7 +10,7 @@ export async function POST(request: Request): Promise<Response> {
   return withAuthedVmApiRoute(
     request,
     "/api/vm/base/reset",
-    { "cmux.vm.operation": "base.reset" },
+    { "bmux.vm.operation": "base.reset" },
     "/api/vm/base/reset POST failed",
     async ({ user, span, authDurationMs, routeStartedAtMs, setResponseFinalizer }) => {
       const timing = new VmTimingRecorder(span, "base.reset", { startedAt: routeStartedAtMs });

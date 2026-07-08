@@ -1,8 +1,8 @@
 import Foundation
-import CmuxCore
+import BmuxCore
 
 /// Pure decision logic for the SSH remote workspace auto-reconnect loop
-/// (https://github.com/manaflow-ai/cmux/issues/5734).
+/// (https://github.com/manaflow-ai/bmux/issues/5734).
 ///
 /// While the host stays reachable the loop keeps its existing exponential
 /// backoff behavior. Once consecutive reachability probes keep failing, the

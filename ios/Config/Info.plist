@@ -12,14 +12,14 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
-	<key>CMUXAuthEnvironment</key>
-	<string>$(CMUX_IOS_AUTH_ENV)</string>
-	<key>CMUXDevTag</key>
-	<string>$(CMUX_DEV_TAG)</string>
-	<key>CMUXGitSHA</key>
-	<string>$(CMUX_GIT_SHA)</string>
-	<key>CMUXPresenceBaseURL</key>
-	<string>$(CMUX_PRESENCE_BASE_URL)</string>
+	<key>BMUXAuthEnvironment</key>
+	<string>$(BMUX_IOS_AUTH_ENV)</string>
+	<key>BMUXDevTag</key>
+	<string>$(BMUX_DEV_TAG)</string>
+	<key>BMUXGitSHA</key>
+	<string>$(BMUX_GIT_SHA)</string>
+	<key>BMUXPresenceBaseURL</key>
+	<string>$(BMUX_PRESENCE_BASE_URL)</string>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
@@ -32,22 +32,22 @@
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 			<key>CFBundleURLName</key>
-			<string>dev.cmux.ios.attach</string>
+			<string>dev.bmux.ios.attach</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<!-- Channel-specific pairing scheme (CMUX_IOS_URL_SCHEME in
+				<!-- Channel-specific pairing scheme (BMUX_IOS_URL_SCHEME in
 				     Config/Shared.xcconfig + Config/Release.xcconfig): dev builds
-				     register cmux-ios-dev, Release (beta/prod) registers cmux-ios,
+				     register bmux-ios-dev, Release (beta/prod) registers bmux-ios,
 				     so a beta/prod QR scanned with the Camera app can never open a
 				     dev build. Keep the values in sync with CmxPairingURLScheme. -->
-				<string>$(CMUX_IOS_URL_SCHEME)</string>
+				<string>$(BMUX_IOS_URL_SCHEME)</string>
 			</array>
 		</dict>
 		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 			<key>CFBundleURLName</key>
-			<string>dev.cmux.ios.stack-auth</string>
+			<string>dev.bmux.ios.stack-auth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>stack-auth-mobile-oauth-url</string>
@@ -61,9 +61,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Scan cmux pairing QR codes from your Mac terminal.</string>
+	<string>Scan bmux pairing QR codes from your Mac terminal.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Connect to your Mac on the local network for cmux mobile pairing and terminal sync.</string>
+	<string>Connect to your Mac on the local network for bmux mobile pairing and terminal sync.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Record audio to transcribe your voice into the message box.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

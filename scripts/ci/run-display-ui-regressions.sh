@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "${CMUX_DERIVED_DATA_PATH:?CMUX_DERIVED_DATA_PATH is required}"
-SOURCE_PACKAGES_DIR="${CMUX_SOURCE_PACKAGES_DIR:-$PWD/.ci-source-packages}"
+: "${BMUX_DERIVED_DATA_PATH:?BMUX_DERIVED_DATA_PATH is required}"
+SOURCE_PACKAGES_DIR="${BMUX_SOURCE_PACKAGES_DIR:-$PWD/.ci-source-packages}"
 
 DRC_HELPER_PATH=""
 DRC_DIAG_PATH=""
@@ -29,8 +29,8 @@ release_lock() {
   local lock_dir="$1"
   local lock_token="$2"
   if [ -n "$lock_dir" ]; then
-    CMUX_VDISPLAY_LOCK_DIR="$lock_dir" \
-      CMUX_VDISPLAY_LOCK_TOKEN="$lock_token" \
+    BMUX_VDISPLAY_LOCK_DIR="$lock_dir" \
+      BMUX_VDISPLAY_LOCK_TOKEN="$lock_token" \
       scripts/ci/virtual-display-lock.sh release || true
   fi
 }
@@ -49,9 +49,9 @@ cleanup_display_churn() {
   release_lock "$DRC_DISPLAY_LOCK_DIR" "$DRC_DISPLAY_LOCK_TOKEN"
   DRC_DISPLAY_LOCK_DIR=""
   DRC_DISPLAY_LOCK_TOKEN=""
-  pkill -x "cmux DEV" 2>/dev/null || true
+  pkill -x "bmux DEV" 2>/dev/null || true
   rm -f "$DRC_DIAG_PATH" "$DRC_DISPLAY_READY" "$DRC_DISPLAY_ID_PATH" "$DRC_DISPLAY_START" "$DRC_DISPLAY_DONE" "$DRC_HELPER_LOG" "$DRC_XCODEBUILD_LOG"
-  rm -f /tmp/cmux-ui-test-prelaunch.json /tmp/cmux-ui-test-display-harness.json
+  rm -f /tmp/bmux-ui-test-prelaunch.json /tmp/bmux-ui-test-display-harness.json
 }
 
 cleanup_persistent_display() {
@@ -90,21 +90,21 @@ enable_xctest_automation_mode() {
 }
 
 find_app_binary() {
-  find "$CMUX_DERIVED_DATA_PATH" -path "*/Build/Products/Debug/cmux DEV.app/Contents/MacOS/cmux DEV" -print -quit 2>/dev/null || true
+  find "$BMUX_DERIVED_DATA_PATH" -path "*/Build/Products/Debug/bmux DEV.app/Contents/MacOS/bmux DEV" -print -quit 2>/dev/null || true
 }
 
 run_display_resolution_churn() {
   local token app_binary display_id app_pid app_ready render_ready xcodebuild_ok
   token="$(uuidgen)"
   DRC_HELPER_PATH="$RUNNER_TEMP/create-virtual-display-display-churn-${token}"
-  DRC_DIAG_PATH="/tmp/cmux-ui-test-display-churn-${token}.json"
-  DRC_DISPLAY_READY="/tmp/cmux-ui-test-display-${token}.ready"
-  DRC_DISPLAY_ID_PATH="/tmp/cmux-ui-test-display-${token}.id"
-  DRC_DISPLAY_START="/tmp/cmux-ui-test-display-${token}.start"
-  DRC_DISPLAY_DONE="/tmp/cmux-ui-test-display-${token}.done"
-  DRC_HELPER_LOG="/tmp/cmux-ui-test-display-${token}-helper.log"
-  DRC_XCODEBUILD_LOG="/tmp/cmux-ui-test-display-${token}-xcodebuild.log"
-  local baseline_ready_marker="CMUX_DISPLAY_CHURN_BASELINE_READY_${token}"
+  DRC_DIAG_PATH="/tmp/bmux-ui-test-display-churn-${token}.json"
+  DRC_DISPLAY_READY="/tmp/bmux-ui-test-display-${token}.ready"
+  DRC_DISPLAY_ID_PATH="/tmp/bmux-ui-test-display-${token}.id"
+  DRC_DISPLAY_START="/tmp/bmux-ui-test-display-${token}.start"
+  DRC_DISPLAY_DONE="/tmp/bmux-ui-test-display-${token}.done"
+  DRC_HELPER_LOG="/tmp/bmux-ui-test-display-${token}-helper.log"
+  DRC_XCODEBUILD_LOG="/tmp/bmux-ui-test-display-${token}-xcodebuild.log"
+  local baseline_ready_marker="BMUX_DISPLAY_CHURN_BASELINE_READY_${token}"
 
   clang -framework Foundation -framework CoreGraphics \
     -o "$DRC_HELPER_PATH" scripts/create-virtual-display.m
@@ -122,9 +122,9 @@ run_display_resolution_churn() {
     local lock_env
     lock_env="$(scripts/ci/virtual-display-lock.sh acquire)"
     eval "$lock_env"
-    export CMUX_VDISPLAY_LOCK_DIR CMUX_VDISPLAY_LOCK_TOKEN
-    DRC_DISPLAY_LOCK_DIR="$CMUX_VDISPLAY_LOCK_DIR"
-    DRC_DISPLAY_LOCK_TOKEN="$CMUX_VDISPLAY_LOCK_TOKEN"
+    export BMUX_VDISPLAY_LOCK_DIR BMUX_VDISPLAY_LOCK_TOKEN
+    DRC_DISPLAY_LOCK_DIR="$BMUX_VDISPLAY_LOCK_DIR"
+    DRC_DISPLAY_LOCK_TOKEN="$BMUX_VDISPLAY_LOCK_TOKEN"
 
     scripts/ci/virtual-display-lock.sh reap-strays || true
 
@@ -169,12 +169,12 @@ run_display_resolution_churn() {
     display_id="$(tr -d '\n' < "$DRC_DISPLAY_ID_PATH")"
     echo "Virtual display ready: ID=$display_id"
 
-    CMUX_UI_TEST_MODE=1 \
-      CMUX_UI_TEST_DIAGNOSTICS_PATH="$DRC_DIAG_PATH" \
-      CMUX_UI_TEST_DISPLAY_RENDER_STATS=1 \
-      CMUX_UI_TEST_TARGET_DISPLAY_ID="$display_id" \
-      CMUX_TAG="ui-tests-display-resolution" \
-      "$app_binary" > /tmp/cmux-ui-test-app.log 2>&1 &
+    BMUX_UI_TEST_MODE=1 \
+      BMUX_UI_TEST_DIAGNOSTICS_PATH="$DRC_DIAG_PATH" \
+      BMUX_UI_TEST_DISPLAY_RENDER_STATS=1 \
+      BMUX_UI_TEST_TARGET_DISPLAY_ID="$display_id" \
+      BMUX_TAG="ui-tests-display-resolution" \
+      "$app_binary" > /tmp/bmux-ui-test-app.log 2>&1 &
     app_pid=$!
     echo "App launched: PID=$app_pid"
 
@@ -189,7 +189,7 @@ run_display_resolution_churn() {
       fi
       if ! kill -0 "$app_pid" 2>/dev/null; then
         echo "ERROR: App crashed during startup"
-        cat /tmp/cmux-ui-test-app.log 2>/dev/null | tail -30 || true
+        cat /tmp/bmux-ui-test-app.log 2>/dev/null | tail -30 || true
         break
       fi
       sleep 0.5
@@ -197,12 +197,12 @@ run_display_resolution_churn() {
 
     if [ "$app_ready" != "true" ]; then
       echo "Attempt $attempt: App not ready after 15s"
-      pkill -x "cmux DEV" 2>/dev/null || true
+      pkill -x "bmux DEV" 2>/dev/null || true
       kill "$DRC_HELPER_PID" 2>/dev/null || true
       if [ "$attempt" -eq 2 ]; then
         echo "Display resolution UI regression failed after 2 attempts" >&2
         echo "--- App log ---"
-        cat /tmp/cmux-ui-test-app.log 2>/dev/null | tail -50 || true
+        cat /tmp/bmux-ui-test-app.log 2>/dev/null | tail -50 || true
         echo "--- Helper log ---"
         cat "$DRC_HELPER_LOG" 2>/dev/null | tail -20 || true
         echo "--- Diagnostics ---"
@@ -230,14 +230,14 @@ run_display_resolution_churn() {
       echo "WARNING: Render stats not available after 20s. Diagnostics:"
       cat "$DRC_DIAG_PATH" 2>/dev/null || true
       echo "--- App log ---"
-      cat /tmp/cmux-ui-test-app.log 2>/dev/null | tail -30 || true
+      cat /tmp/bmux-ui-test-app.log 2>/dev/null | tail -30 || true
     fi
 
-    cat >"/tmp/cmux-ui-test-display-harness.json" <<MANIFEST_EOF
+    cat >"/tmp/bmux-ui-test-display-harness.json" <<MANIFEST_EOF
 {"readyPath":"$DRC_DISPLAY_READY","displayIDPath":"$DRC_DISPLAY_ID_PATH","startPath":"$DRC_DISPLAY_START","donePath":"$DRC_DISPLAY_DONE","logPath":"$DRC_HELPER_LOG"}
 MANIFEST_EOF
 
-    cat >"/tmp/cmux-ui-test-prelaunch.json" <<PRELAUNCH_EOF
+    cat >"/tmp/bmux-ui-test-prelaunch.json" <<PRELAUNCH_EOF
 {"diagnosticsPath":"$DRC_DIAG_PATH","baselineReadyMarker":"$baseline_ready_marker"}
 PRELAUNCH_EOF
 
@@ -260,12 +260,12 @@ PRELAUNCH_EOF
     DRC_START_SIGNAL_PID=$!
 
     xcodebuild_ok=false
-    if xcodebuild -project cmux.xcodeproj -scheme cmux -configuration Debug \
-      -derivedDataPath "$CMUX_DERIVED_DATA_PATH" \
+    if xcodebuild -project bmux.xcodeproj -scheme bmux -configuration Debug \
+      -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
       -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
       -disableAutomaticPackageResolution \
       -destination "platform=macOS" \
-      -only-testing:cmuxUITests/DisplayResolutionRegressionUITests \
+      -only-testing:bmuxUITests/DisplayResolutionRegressionUITests \
       test-without-building 2>&1 | tee "$DRC_XCODEBUILD_LOG"; then
       xcodebuild_ok=true
     fi
@@ -296,17 +296,17 @@ create_persistent_display() {
   local lock_env
   lock_env="$(scripts/ci/virtual-display-lock.sh acquire)"
   eval "$lock_env"
-  export CMUX_VDISPLAY_LOCK_DIR CMUX_VDISPLAY_LOCK_TOKEN
-  PERSISTENT_LOCK_DIR="$CMUX_VDISPLAY_LOCK_DIR"
-  PERSISTENT_LOCK_TOKEN="$CMUX_VDISPLAY_LOCK_TOKEN"
+  export BMUX_VDISPLAY_LOCK_DIR BMUX_VDISPLAY_LOCK_TOKEN
+  PERSISTENT_LOCK_DIR="$BMUX_VDISPLAY_LOCK_DIR"
+  PERSISTENT_LOCK_TOKEN="$BMUX_VDISPLAY_LOCK_TOKEN"
 
   PERSISTENT_HELPER_PATH="$RUNNER_TEMP/create-virtual-display-persistent"
   clang -framework Foundation -framework CoreGraphics \
     -o "$PERSISTENT_HELPER_PATH" scripts/create-virtual-display.m
 
-  PERSISTENT_READY="$RUNNER_TEMP/cmux-vdisplay-persistent.ready"
-  PERSISTENT_ID_PATH="$RUNNER_TEMP/cmux-vdisplay-persistent.id"
-  PERSISTENT_LOG="$RUNNER_TEMP/cmux-vdisplay-persistent.log"
+  PERSISTENT_READY="$RUNNER_TEMP/bmux-vdisplay-persistent.ready"
+  PERSISTENT_ID_PATH="$RUNNER_TEMP/bmux-vdisplay-persistent.id"
+  PERSISTENT_LOG="$RUNNER_TEMP/bmux-vdisplay-persistent.log"
   rm -f "$PERSISTENT_READY" "$PERSISTENT_ID_PATH" "$PERSISTENT_LOG"
 
   scripts/ci/virtual-display-lock.sh reap-strays || true
@@ -355,14 +355,14 @@ run_browser_find_focus() {
   fi
   persistent_display_id="$(tr -d '\n' < "$PERSISTENT_ID_PATH")"
 
-  CMUX_UI_TEST_TARGET_DISPLAY_ID="$persistent_display_id" \
-    xcodebuild -project cmux.xcodeproj -scheme cmux -configuration Debug \
-    -derivedDataPath "$CMUX_DERIVED_DATA_PATH" \
+  BMUX_UI_TEST_TARGET_DISPLAY_ID="$persistent_display_id" \
+    xcodebuild -project bmux.xcodeproj -scheme bmux -configuration Debug \
+    -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
     -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
     -disableAutomaticPackageResolution \
     -destination "platform=macOS" \
     -maximum-test-execution-time-allowance 180 \
-    -only-testing:cmuxUITests/BrowserPaneNavigationKeybindUITests/testCmdFOpensBrowserFindAfterCmdDCmdLNavigation \
+    -only-testing:bmuxUITests/BrowserPaneNavigationKeybindUITests/testCmdFOpensBrowserFindAfterCmdDCmdLNavigation \
     test-without-building
 }
 

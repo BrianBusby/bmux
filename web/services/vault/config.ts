@@ -45,34 +45,34 @@ function parsePositiveInteger(value: string | undefined, key: string, fallback: 
 }
 
 export function vaultConfig(env: Env = process.env): VaultStorageConfig {
-  const bucket = envValue(env, "CMUX_VAULT_S3_BUCKET") ?? null;
-  const accessKeyId = envValue(env, "CMUX_VAULT_S3_ACCESS_KEY_ID");
-  const secretAccessKey = envValue(env, "CMUX_VAULT_S3_SECRET_ACCESS_KEY");
+  const bucket = envValue(env, "BMUX_VAULT_S3_BUCKET") ?? null;
+  const accessKeyId = envValue(env, "BMUX_VAULT_S3_ACCESS_KEY_ID");
+  const secretAccessKey = envValue(env, "BMUX_VAULT_S3_SECRET_ACCESS_KEY");
   if ((accessKeyId && !secretAccessKey) || (!accessKeyId && secretAccessKey)) {
-    throw new Error("CMUX_VAULT_S3_ACCESS_KEY_ID and CMUX_VAULT_S3_SECRET_ACCESS_KEY must be set together");
+    throw new Error("BMUX_VAULT_S3_ACCESS_KEY_ID and BMUX_VAULT_S3_SECRET_ACCESS_KEY must be set together");
   }
 
-  const enabled = parseBoolean(envValue(env, "CMUX_VAULT_ENABLED"), Boolean(bucket));
+  const enabled = parseBoolean(envValue(env, "BMUX_VAULT_ENABLED"), Boolean(bucket));
   return {
     enabled,
     bucket,
-    region: envValue(env, "CMUX_VAULT_S3_REGION") ?? "auto",
-    endpoint: envValue(env, "CMUX_VAULT_S3_ENDPOINT"),
+    region: envValue(env, "BMUX_VAULT_S3_REGION") ?? "auto",
+    endpoint: envValue(env, "BMUX_VAULT_S3_ENDPOINT"),
     accessKeyId,
     secretAccessKey,
     presignTtlSeconds: parsePositiveInteger(
-      envValue(env, "CMUX_VAULT_PRESIGN_TTL_SECONDS"),
-      "CMUX_VAULT_PRESIGN_TTL_SECONDS",
+      envValue(env, "BMUX_VAULT_PRESIGN_TTL_SECONDS"),
+      "BMUX_VAULT_PRESIGN_TTL_SECONDS",
       DEFAULT_PRESIGN_TTL_SECONDS,
     ),
     maxUploadBytes: parsePositiveInteger(
-      envValue(env, "CMUX_VAULT_MAX_UPLOAD_BYTES"),
-      "CMUX_VAULT_MAX_UPLOAD_BYTES",
+      envValue(env, "BMUX_VAULT_MAX_UPLOAD_BYTES"),
+      "BMUX_VAULT_MAX_UPLOAD_BYTES",
       DEFAULT_MAX_UPLOAD_BYTES,
     ),
     maxUserBytes: parsePositiveInteger(
-      envValue(env, "CMUX_VAULT_MAX_USER_BYTES"),
-      "CMUX_VAULT_MAX_USER_BYTES",
+      envValue(env, "BMUX_VAULT_MAX_USER_BYTES"),
+      "BMUX_VAULT_MAX_USER_BYTES",
       DEFAULT_MAX_USER_BYTES,
     ),
   };

@@ -1,5 +1,5 @@
-import CMUXAgentLaunch
-import CmuxAgentChat
+import BMUXAgentLaunch
+import BmuxAgentChat
 import Foundation
 
 extension AgentChatSessionRegistry {
@@ -181,29 +181,29 @@ extension AgentChatSessionRegistry {
         return inFlight.handle
     }
 
-    /// Off-main: one entry per distinct live codex/claude session under any cmux
+    /// Off-main: one entry per distinct live codex/claude session under any bmux
     /// surface, identity resolved without hooks.
     private nonisolated static func scanObservedAgentSessions(
         onlySurfaceIDs surfaceIDs: Set<UUID>? = nil
     ) -> [ObservedAgentSession] {
         guard !Task.isCancelled else { return [] }
-        let snapshot = CmuxTopProcessSnapshot.capture(
+        let snapshot = BmuxTopProcessSnapshot.capture(
             includeProcessDetails: true,
-            includeCMUXScope: true
+            includeBMUXScope: true
         )
         guard !Task.isCancelled else { return [] }
         return scanObservedAgentSessions(
             in: snapshot,
             onlySurfaceIDs: surfaceIDs,
-            processArgumentsAndEnvironment: CmuxTopProcessSnapshot.processArgumentsAndEnvironment(for:),
+            processArgumentsAndEnvironment: BmuxTopProcessSnapshot.processArgumentsAndEnvironment(for:),
             codexRolloutPath: openCodexRolloutPath(pid:)
         )
     }
 
     nonisolated static func scanObservedAgentSessions(
-        in snapshot: CmuxTopProcessSnapshot,
+        in snapshot: BmuxTopProcessSnapshot,
         onlySurfaceIDs surfaceIDs: Set<UUID>? = nil,
-        processArgumentsAndEnvironment: (Int) -> CmuxTopProcessArguments?,
+        processArgumentsAndEnvironment: (Int) -> BmuxTopProcessArguments?,
         codexRolloutPath: (Int) -> String?
     ) -> [ObservedAgentSession] {
         struct Candidate {
@@ -215,21 +215,21 @@ extension AgentChatSessionRegistry {
         var rootPIDsBySurfaceID: [UUID: Set<Int>] = [:]
         func rootPIDs(for surfaceID: UUID) -> Set<Int> {
             if let cached = rootPIDsBySurfaceID[surfaceID] { return cached }
-            let roots = cmuxSurfaceRootPIDs(surfaceID: surfaceID, snapshot: snapshot)
+            let roots = bmuxSurfaceRootPIDs(surfaceID: surfaceID, snapshot: snapshot)
             rootPIDsBySurfaceID[surfaceID] = roots
             return roots
         }
-        for process in snapshot.cmuxScopedProcesses() {
+        for process in snapshot.bmuxScopedProcesses() {
             if Task.isCancelled { return [] }
-            var details: CmuxTopProcessArguments?
-            func loadDetails() -> CmuxTopProcessArguments? {
+            var details: BmuxTopProcessArguments?
+            func loadDetails() -> BmuxTopProcessArguments? {
                 if details == nil {
                     details = processArgumentsAndEnvironment(process.pid)
                 }
                 return details
             }
             guard process.isTerminalForegroundProcessGroup,
-                  let surfaceID = process.cmuxSurfaceID,
+                  let surfaceID = process.bmuxSurfaceID,
                   surfaceIDs.map({ $0.contains(surfaceID) }) ?? true else { continue }
             let rootPIDs = rootPIDs(for: surfaceID)
             guard let def = codingAgentDefinition(
@@ -268,7 +268,7 @@ extension AgentChatSessionRegistry {
                     sessionID: resolved,
                     agentKind: ChatAgentKind(source: def.id),
                     surfaceID: surfaceID.uuidString,
-                    workspaceID: process.cmuxWorkspaceID?.uuidString,
+                    workspaceID: process.bmuxWorkspaceID?.uuidString,
                     pid: process.pid,
                     workingDirectory: observedWorkingDirectory(details?.environment),
                     transcriptPath: transcriptPath,
@@ -292,7 +292,7 @@ extension AgentChatSessionRegistry {
     }
 
     nonisolated static func allowsLaunchKindEnvironment(
-        for process: CmuxTopProcessInfo,
+        for process: BmuxTopProcessInfo,
         rootPIDs: Set<Int>,
         arguments: [String]?
     ) -> Bool {
@@ -304,7 +304,7 @@ extension AgentChatSessionRegistry {
               let arguments else {
             return false
         }
-        if CmuxTaskManagerCodingAgentDefinition.matchingDefinition(
+        if BmuxTaskManagerCodingAgentDefinition.matchingDefinition(
             processName: process.name,
             processPath: process.path,
             arguments: arguments,
@@ -313,16 +313,16 @@ extension AgentChatSessionRegistry {
             return true
         }
         return arguments.dropFirst().contains { argument in
-            normalizedObserverValue(argument)?.contains("/.cmux-agent-wrapper/") == true
+            normalizedObserverValue(argument)?.contains("/.bmux-agent-wrapper/") == true
         }
     }
 
     nonisolated static func codingAgentDefinition(
-        for process: CmuxTopProcessInfo,
+        for process: BmuxTopProcessInfo,
         allowLaunchKindEnvironment: Bool,
-        processArgumentsAndEnvironment: (Int) -> CmuxTopProcessArguments?
-    ) -> CmuxTaskManagerCodingAgentDefinition? {
-        let shouldReadDetails = CmuxTaskManagerCodingAgentDefinition.shouldReadArguments(
+        processArgumentsAndEnvironment: (Int) -> BmuxTopProcessArguments?
+    ) -> BmuxTaskManagerCodingAgentDefinition? {
+        let shouldReadDetails = BmuxTaskManagerCodingAgentDefinition.shouldReadArguments(
             processName: process.name,
             processPath: process.path
         )
@@ -354,10 +354,10 @@ extension AgentChatSessionRegistry {
         arguments: [String],
         environment: [String: String],
         allowLaunchKindEnvironment: Bool
-    ) -> CmuxTaskManagerCodingAgentDefinition? {
-        let definitions = CmuxTaskManagerCodingAgentDefinition.builtIns
+    ) -> BmuxTaskManagerCodingAgentDefinition? {
+        let definitions = BmuxTaskManagerCodingAgentDefinition.builtIns
         if allowLaunchKindEnvironment,
-           let launchKind = normalizedObserverValue(environment["CMUX_AGENT_LAUNCH_KIND"]),
+           let launchKind = normalizedObserverValue(environment["BMUX_AGENT_LAUNCH_KIND"]),
            let def = definitions.first(where: { $0.launchKinds.contains(launchKind) }) {
             return def
         }
@@ -386,7 +386,7 @@ extension AgentChatSessionRegistry {
 
     private nonisolated static func observedWorkingDirectory(_ environment: [String: String]?) -> String? {
         guard let environment else { return nil }
-        for key in ["CMUX_AGENT_LAUNCH_CWD", "PWD"] {
+        for key in ["BMUX_AGENT_LAUNCH_CWD", "PWD"] {
             if let value = environment[key]?.trimmingCharacters(in: .whitespacesAndNewlines),
                !value.isEmpty {
                 return value

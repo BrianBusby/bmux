@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
 
-export const DEFAULT_NATIVE_CALLBACK_SCHEME = "cmux";
+export const DEFAULT_NATIVE_CALLBACK_SCHEME = "bmux";
 export const NATIVE_CALLBACK_HOST = "auth-callback";
 
-const NATIVE_SCHEMES = new Set([DEFAULT_NATIVE_CALLBACK_SCHEME, "cmux-nightly"]);
+const NATIVE_SCHEMES = new Set([DEFAULT_NATIVE_CALLBACK_SCHEME, "bmux-nightly"]);
 
 export function nativeCallbackHrefForScheme(scheme: string): string {
   return `${scheme}://${NATIVE_CALLBACK_HOST}`;
@@ -37,8 +37,8 @@ export function isAllowedNativeScheme(
   request: NextRequest,
 ): boolean {
   if (NATIVE_SCHEMES.has(scheme)) return true;
-  if (scheme === "cmux-dev") return isLocalRequest(request);
-  if (!/^cmux-dev-[a-z0-9-]+$/.test(scheme)) return false;
+  if (scheme === "bmux-dev") return isLocalRequest(request);
+  if (!/^bmux-dev-[a-z0-9-]+$/.test(scheme)) return false;
   return isLocalRequest(request) && localAllowedNativeSchemes().has(scheme);
 }
 
@@ -50,15 +50,15 @@ export function isLocalRequest(request: NextRequest): boolean {
 
 function localAllowedNativeSchemes(): Set<string> {
   const values = [
-    process.env.CMUX_AUTH_CALLBACK_SCHEME,
-    process.env.CMUX_ALLOWED_NATIVE_CALLBACK_SCHEMES,
-    process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES,
+    process.env.BMUX_AUTH_CALLBACK_SCHEME,
+    process.env.BMUX_ALLOWED_NATIVE_CALLBACK_SCHEMES,
+    process.env.BMUX_DEV_NATIVE_CALLBACK_SCHEMES,
   ];
   const schemes = new Set<string>();
   for (const value of values) {
     for (const raw of value?.split(/[\s,]+/) ?? []) {
       const scheme = raw.trim().replace(/:\/\/.*$/, "").replace(/:$/, "");
-      if (/^cmux-dev-[a-z0-9-]+$/.test(scheme)) schemes.add(scheme);
+      if (/^bmux-dev-[a-z0-9-]+$/.test(scheme)) schemes.add(scheme);
     }
   }
   return schemes;

@@ -27,7 +27,7 @@ final class SharedLiveAgentIndex {
 
     private var directoryWatchSource: DispatchSourceFileSystemObject?
     // DispatchSource file watching requires a delivery queue; state hops back to MainActor.
-    private let watchQueue = DispatchQueue(label: "com.cmuxterm.app.sharedLiveAgentIndexWatch")
+    private let watchQueue = DispatchQueue(label: "com.bmuxterm.app.sharedLiveAgentIndexWatch")
 
     private let indexLoader: @Sendable () -> SharedLiveAgentIndexLoader.LoadResult
     private let hookStoreDirectoryProvider: @MainActor () -> String
@@ -328,5 +328,5 @@ final class SharedLiveAgentIndex {
 }
 
 extension Notification.Name {
-    static let sharedLiveAgentIndexDidChange = Notification.Name("cmux.sharedLiveAgentIndexDidChange")
+    static let sharedLiveAgentIndexDidChange = Notification.Name("bmux.sharedLiveAgentIndexDidChange")
 }

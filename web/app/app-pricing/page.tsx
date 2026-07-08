@@ -37,17 +37,17 @@ export default async function AppPricingPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  if (firstParam(params.cmux_app) !== "1") redirect("/pricing");
+  if (firstParam(params.bmux_app) !== "1") redirect("/pricing");
 
   const snapshot = await currentPlanSnapshot();
   const headersList = await headers();
   const requestOrigin = appPricingRequestOrigin(headersList);
-  const cmuxScheme = validatedNativeCallbackScheme(
-    firstParam(params.cmux_scheme),
+  const bmuxScheme = validatedNativeCallbackScheme(
+    firstParam(params.bmux_scheme),
     appPricingRequest(headersList),
   );
-  const proCheckoutURL = appPricingCheckoutURL("pro", requestOrigin, cmuxScheme);
-  const teamCheckoutURL = appPricingCheckoutURL("team", requestOrigin, cmuxScheme);
+  const proCheckoutURL = appPricingCheckoutURL("pro", requestOrigin, bmuxScheme);
+  const teamCheckoutURL = appPricingCheckoutURL("team", requestOrigin, bmuxScheme);
   const banner = appPricingBanner(params);
   const appearance = appPricingAppearance(params);
   const pageBackground = appPricingPageBackground(params, appearance);
@@ -402,7 +402,7 @@ function appPricingRequestOrigin(headersList: Headers): string | null {
 }
 
 function appPricingRequest(headersList: Headers): NextRequest {
-  return new NextRequest(appPricingRequestOrigin(headersList) ?? "https://cmux.com", {
+  return new NextRequest(appPricingRequestOrigin(headersList) ?? "https://bmux.com", {
     headers: headersList,
   });
 }

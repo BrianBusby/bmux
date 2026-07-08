@@ -43,13 +43,13 @@ struct HostedInspectorDockControlScript {
                 return String(configuration).toLowerCase() === literal;
             }
             function enforceDockControls() {
-                const disallowSideDock = !WI.__cmuxAllowSideDock;
+                const disallowSideDock = !WI.__bmuxAllowSideDock;
                 const dockConfiguration = WI.DockConfiguration || {};
                 const dockedLeft = dockMatches(dockConfiguration.Left, "left");
                 const dockedRight = dockMatches(dockConfiguration.Right, "right");
-                const dockedBottom = !WI.__cmuxDetachedFromHostWindow &&
+                const dockedBottom = !WI.__bmuxDetachedFromHostWindow &&
                     dockMatches(dockConfiguration.Bottom, "bottom");
-                const detached = WI.__cmuxDetachedFromHostWindow ||
+                const detached = WI.__bmuxDetachedFromHostWindow ||
                     dockMatches(dockConfiguration.Detached, "detached") ||
                     dockMatches(dockConfiguration.Undocked, "undocked");
                 updateButton(WI._dockLeftTabBarButton, disallowSideDock || (!detached && dockedLeft));
@@ -66,36 +66,36 @@ struct HostedInspectorDockControlScript {
                     WI._undockButton,
                 ], detached);
             }
-            WI.__cmuxAllowSideDock = allowSideDock;
-            WI.__cmuxDetachedFromHostWindow = detachedFromHostWindow;
-            installWrapper("_dockLeft", "__cmuxOriginalDockLeft", function(event) {
-                if (!WI.__cmuxAllowSideDock)
+            WI.__bmuxAllowSideDock = allowSideDock;
+            WI.__bmuxDetachedFromHostWindow = detachedFromHostWindow;
+            installWrapper("_dockLeft", "__bmuxOriginalDockLeft", function(event) {
+                if (!WI.__bmuxAllowSideDock)
                     return callOriginal(WI._dockBottom, event);
-                return callOriginal(WI.__cmuxOriginalDockLeft, event);
+                return callOriginal(WI.__bmuxOriginalDockLeft, event);
             });
-            installWrapper("_dockRight", "__cmuxOriginalDockRight", function(event) {
-                if (!WI.__cmuxAllowSideDock)
+            installWrapper("_dockRight", "__bmuxOriginalDockRight", function(event) {
+                if (!WI.__bmuxAllowSideDock)
                     return callOriginal(WI._dockBottom, event);
-                return callOriginal(WI.__cmuxOriginalDockRight, event);
+                return callOriginal(WI.__bmuxOriginalDockRight, event);
             });
-            installWrapper("_togglePreviousDockConfiguration", "__cmuxOriginalTogglePreviousDockConfiguration", function(event) {
+            installWrapper("_togglePreviousDockConfiguration", "__bmuxOriginalTogglePreviousDockConfiguration", function(event) {
                 const dockConfiguration = WI.DockConfiguration || {};
                 const previousSideDock = WI._previousDockConfiguration === dockConfiguration.Left ||
                     WI._previousDockConfiguration === dockConfiguration.Right;
-                if (!WI.__cmuxAllowSideDock && previousSideDock)
+                if (!WI.__bmuxAllowSideDock && previousSideDock)
                     return callOriginal(WI._dockBottom, event);
-                return callOriginal(WI.__cmuxOriginalTogglePreviousDockConfiguration, event);
+                return callOriginal(WI.__bmuxOriginalTogglePreviousDockConfiguration, event);
             });
-            installWrapper("_updateDockNavigationItems", "__cmuxOriginalUpdateDockNavigationItems", function(...args) {
-                if (typeof WI.__cmuxOriginalUpdateDockNavigationItems === "function")
-                    WI.__cmuxOriginalUpdateDockNavigationItems.apply(WI, args);
+            installWrapper("_updateDockNavigationItems", "__bmuxOriginalUpdateDockNavigationItems", function(...args) {
+                if (typeof WI.__bmuxOriginalUpdateDockNavigationItems === "function")
+                    WI.__bmuxOriginalUpdateDockNavigationItems.apply(WI, args);
                 enforceDockControls();
             });
             if (typeof WI._updateDockNavigationItems === "function")
                 WI._updateDockNavigationItems();
             else
                 enforceDockControls();
-            return WI.__cmuxAllowSideDock;
+            return WI.__bmuxAllowSideDock;
         })();
         """
     }

@@ -65,7 +65,7 @@ export default function ClaudeCodeBestWorktreeManagerPage() {
       <p className="mt-6">{t("p1")}</p>
       <p>
         {t.rich("p2", {
-          zen: (chunks) => <Link href="/blog/zen-of-cmux">{chunks}</Link>,
+          zen: (chunks) => <Link href="/blog/zen-of-bmux">{chunks}</Link>,
         })}
       </p>
 
@@ -81,9 +81,9 @@ export default function ClaudeCodeBestWorktreeManagerPage() {
       <p>{t("limitsP1")}</p>
       <p>{t("limitsP2")}</p>
 
-      <h2>{t("cmuxTitle")}</h2>
+      <h2>{t("bmuxTitle")}</h2>
       <p>
-        {t.rich("cmuxP1", {
+        {t.rich("bmuxP1", {
           customCommands: (chunks) => (
             <Link href="/docs/custom-commands#new-workspace-button">
               {chunks}
@@ -94,8 +94,8 @@ export default function ClaudeCodeBestWorktreeManagerPage() {
         })}
       </p>
       <p>
-        {t.rich("cmuxP2", {
-          home: (chunks) => <Link href="/blog/cmux-home">{chunks}</Link>,
+        {t.rich("bmuxP2", {
+          home: (chunks) => <Link href="/blog/bmux-home">{chunks}</Link>,
         })}
       </p>
     </>

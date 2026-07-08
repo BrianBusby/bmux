@@ -1,8 +1,8 @@
 import Foundation
-import CmuxSettings
+import BmuxSettings
 import OSLog
 
-/// Coordinates cmux's mirroring of remote tmux servers.
+/// Coordinates bmux's mirroring of remote tmux servers.
 ///
 /// Owns one ``RemoteTmuxSSHTransport`` per endpoint (keyed by
 /// ``RemoteTmuxHost/connectionHash`` — destination + port + identity) and
@@ -20,7 +20,7 @@ final class RemoteTmuxController {
 
     /// Diagnostic logger (not user-facing) for mirror lifecycle events such as a
     /// ControlMaster that couldn't be confirmed ready before the attach burst.
-    nonisolated static let logger = Logger(subsystem: "com.cmuxterm.app", category: "RemoteTmux")
+    nonisolated static let logger = Logger(subsystem: "com.bmuxterm.app", category: "RemoteTmux")
 
     /// Per-endpoint SSH transports (keyed by ``RemoteTmuxHost/connectionHash``),
     /// owned by ``RemoteTmuxController`` and delegated to for discovery + master teardown.
@@ -261,7 +261,7 @@ final class RemoteTmuxController {
     private var sessionMirrors: [String: RemoteTmuxSessionMirror] = [:]
 
     /// Dedicated-window bindings (host↔window) and the in-flight-attach guard for
-    /// the "one cmux window per remote endpoint" mirror mode (Option 1), owned by
+    /// the "one bmux window per remote endpoint" mirror mode (Option 1), owned by
     /// ``RemoteTmuxController`` and delegated to.
     private let windowRegistry = RemoteTmuxWindowRegistry()
 
@@ -282,7 +282,7 @@ final class RemoteTmuxController {
     }
 #endif
 
-    /// Opens a NEW cmux window dedicated to `host` and mirrors every tmux session
+    /// Opens a NEW bmux window dedicated to `host` and mirrors every tmux session
     /// on it 1:1 (each session a workspace, each window a tab). This keeps remote
     /// work in its own window so the user's local windows are untouched.
     ///
@@ -299,7 +299,7 @@ final class RemoteTmuxController {
     ///   sessions are mirrored into the dedicated (or reused) window, or
     ///   ``RemoteTmuxAttachOutcome/authRequired(sshArgv:)`` when the host needs
     ///   interactive authentication — in which case **no window is created** and
-    ///   the caller (the `cmux ssh-tmux` CLI) runs `sshArgv` in the user's terminal to
+    ///   the caller (the `bmux ssh-tmux` CLI) runs `sshArgv` in the user's terminal to
     ///   open the shared master, then retries.
     /// - Throws: ``RemoteTmuxError`` if the host is unreachable or has no tmux
     ///   sessions (no empty dedicated window is created in that case).
@@ -343,7 +343,7 @@ final class RemoteTmuxController {
         // non-tty callers (scripts). A host that needs interactive auth fails here
         // (BatchMode can't prompt); classify recoverable stderr via
         // ``RemoteTmuxSSHTransport/indicatesInteractiveRetryWillHelp`` and hand back
-        // the interactive `ssh` argv so the `cmux ssh-tmux` CLI authenticates in the
+        // the interactive `ssh` argv so the `bmux ssh-tmux` CLI authenticates in the
         // user's terminal and retries on the now-open master. `transport.run()` creates
         // the control-socket dir, so the returned auth `ssh` can open the master. No
         // window has been created yet — nothing to tear down here. Both discovery calls
@@ -461,7 +461,7 @@ final class RemoteTmuxController {
                 try mirrorSession(host: host, sessionName: session.name, sessionId: Self.tmuxSessionNumericId(session.id), into: manager)
             } catch {
                 #if DEBUG
-                cmuxDebugLog("remote-tmux: mirror session \(session.name) on \(host.destination) failed: \(error)")
+                bmuxDebugLog("remote-tmux: mirror session \(session.name) on \(host.destination) failed: \(error)")
                 #endif
             }
         }
@@ -529,7 +529,7 @@ final class RemoteTmuxController {
     /// that session. The new tab arrives via the `%window-add` notification (one
     /// source of truth), so the caller must NOT also create a local tab.
     ///
-    /// `placement` mirrors cmux's `newTabPosition` for the workspace tab strip so
+    /// `placement` mirrors bmux's `newTabPosition` for the workspace tab strip so
     /// a remote new tab lands where a local one would (after the selected tab, or
     /// at the end), instead of wherever tmux's bare `new-window` picks (the lowest
     /// free index, which lands mid-list when the session has window-index gaps).
@@ -541,7 +541,7 @@ final class RemoteTmuxController {
     ///
     /// - Parameter workingDirectory: the directory the new tmux window should
     ///   start in (the active tab's cwd, resolved by the caller), so a new tab
-    ///   inherits the active tab's directory the way local cmux does. A
+    ///   inherits the active tab's directory the way local bmux does. A
     ///   nil/blank/unsafe value, or a source panel that is not backed by a live
     ///   mirror window, omits `-c` and lets tmux pick its default-path.
     /// - Returns: `true` if routed to the remote; `false` if there is no live
@@ -574,7 +574,7 @@ final class RemoteTmuxController {
     }
 
     /// A mirrored workspace was renamed → `rename-session` on the remote so the
-    /// tmux session name tracks the cmux workspace title.
+    /// tmux session name tracks the bmux workspace title.
     func handleMirrorWorkspaceRenamed(workspaceId: UUID, title: String?) {
         guard let name = RemoteTmuxHost.controlModeCommandName(title),
               let entry = sessionMirrors.first(where: { $0.value.mirroredWorkspaceId == workspaceId })
@@ -611,7 +611,7 @@ final class RemoteTmuxController {
 
         mirror.setSessionName(safeName)
         mirror.connection.setSessionName(safeName)
-        // Reverse of the cmux→tmux rename push: a remote `rename-session` (or an
+        // Reverse of the bmux→tmux rename push: a remote `rename-session` (or an
         // automatic session rename) re-titles the mirror's sidebar workspace.
         // This updates the workspace title directly (no `rename-session`
         // feedback); see `applySessionNameToWorkspaceTitle`.
@@ -633,7 +633,7 @@ final class RemoteTmuxController {
     /// Uses `swap-window` (selection-sort over the current order), NOT
     /// `move-window`: `move-window` unlinks+relinks a window, which in control
     /// mode emits `%window-close`/`%window-add` and transiently empties the
-    /// mirror workspace — causing cmux to auto-seed a stray local terminal tab.
+    /// mirror workspace — causing bmux to auto-seed a stray local terminal tab.
     /// `swap-window` only swaps two windows' indices (no unlink), so there is no
     /// churn. `-d` keeps the active window unchanged.
     func handleMirrorWindowsReordered(workspaceId: UUID, orderedPanelIds: [UUID]) {
@@ -656,7 +656,7 @@ final class RemoteTmuxController {
             current.swapAt(index, swapFrom)
             swapped = true
         }
-        // `swap-window` changes window indices but emits no notification cmux
+        // `swap-window` changes window indices but emits no notification bmux
         // re-reads the order from, so update the tracked order locally. The swaps
         // achieve exactly `desired`, so this matches tmux and a rapid follow-up
         // drag computes against the just-applied order. (Deliberately NOT a
@@ -861,7 +861,7 @@ final class RemoteTmuxController {
                 try self.mirrorSession(host: host, sessionName: name, into: manager)
             } catch {
                 #if DEBUG
-                cmuxDebugLog("remote-tmux: new-session on \(host.destination) failed: \(error)")
+                bmuxDebugLog("remote-tmux: new-session on \(host.destination) failed: \(error)")
                 #endif
             }
         }
@@ -950,7 +950,7 @@ final class RemoteTmuxController {
             windowRegistry.unbind(hostHash: host.connectionHash)
         }
         #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "remote-tmux: session ended host=\(host.destination) session=\(sessionName) " +
             "hostHasOtherMirrors=\(hostHasOtherMirrors) dedicatedWindowOpen=\(dedicatedWindowIsOpen) " +
             "ownedByEndingHost=\(ownedByEndingHost) otherWindows=\(otherMainWindowCount) action=\(action)"
@@ -1030,7 +1030,7 @@ final class RemoteTmuxController {
 
     /// App-quit path for a tab/session close of a remote window's LAST tab: tears down
     /// each marked window's mirror sessions on the MainActor, then AWAITS killing them
-    /// (bounded by `timeout`) so the session is gone before cmux exits. No
+    /// (bounded by `timeout`) so the session is gone before bmux exits. No
     /// `spawnControlMasterExit` — the kill multiplexes over the live master (ControlPersist reaps it).
     func killMarkedSessionsBeforeTerminate(timeout: Duration = .seconds(3)) async {
         var jobs: [(transport: RemoteTmuxSSHTransport, target: String)] = []
@@ -1130,7 +1130,7 @@ final class RemoteTmuxController {
             // session dies. The no-kill detach cleanup still exits the master here.
             if isLastSession {
                 // …and only if no reattach reclaimed this endpoint during the kill
-                // round-trip (a concurrent `cmux ssh-tmux` rebuilds on the same
+                // round-trip (a concurrent `bmux ssh-tmux` rebuilds on the same
                 // ControlPath); this Task is @MainActor so check + exit is atomic.
                 let reclaimed = transportRegistry.contains(connectionHash: host.connectionHash)
                     || sessionMirrors.values.contains { $0.host.connectionHash == host.connectionHash }
@@ -1175,14 +1175,14 @@ final class RemoteTmuxController {
     }
 
     /// Detaches every control connection on app quit and closes the shared SSH
-    /// ControlMasters, so quitting cmux closes the ssh connections it opened (the
+    /// ControlMasters, so quitting bmux closes the ssh connections it opened (the
     /// CLI's `ssh -f` left them persistent). Does NOT kill any remote tmux
     /// server/session — only the local control clients and masters.
     func detachAll() {
         let connections = Array(connectionsByHostSession.keys).compactMap { removeCachedConnection(forKey: $0) }
         for connection in connections { connection.stop() }
         // Fire-and-forget `ssh -O exit` per endpoint: it hits the local control
-        // socket and runs independently of cmux, so the masters are torn down even as
+        // socket and runs independently of bmux, so the masters are torn down even as
         // the app exits — no lingering ssh after quit. Collect endpoints from BOTH
         // transports AND control connections (the remote.tmux.attach path opens a
         // ControlPersist master via the connection without ever creating a transport),

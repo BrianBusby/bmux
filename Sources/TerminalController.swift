@@ -1,35 +1,35 @@
-import CmuxSettingsUI
+import BmuxSettingsUI
 import AppKit
-import CmuxRemoteSession
-import CmuxCore
-import CmuxAuthRuntime
-import CmuxFeedback
-import CmuxBrowser
-import CmuxControlSocket
-import CmuxFoundation
-import CmuxPanes
-import CmuxRemoteDaemon
-import CmuxRemoteWorkspace
-import CmuxTerminal
-import CmuxSettings
-import CmuxSwiftRenderUI
+import BmuxRemoteSession
+import BmuxCore
+import BmuxAuthRuntime
+import BmuxFeedback
+import BmuxBrowser
+import BmuxControlSocket
+import BmuxFoundation
+import BmuxPanes
+import BmuxRemoteDaemon
+import BmuxRemoteWorkspace
+import BmuxTerminal
+import BmuxSettings
+import BmuxSwiftRenderUI
 import Carbon.HIToolbox
-import CMUXMobileCore
-import CMUXAgentLaunch
+import BMUXMobileCore
+import BMUXAgentLaunch
 import Foundation
 import os
 import Bonsplit
 import WebKit
-import CmuxSidebar
-import CmuxWorkspaces
+import BmuxSidebar
+import BmuxWorkspaces
 
 extension Notification.Name {
-    static let socketListenerDidStart = Notification.Name("cmux.socketListenerDidStart")
-    // terminalSurfaceDidBecomeReady moved to CmuxTerminal (posted by TerminalSurface).
-    static let terminalSurfaceHostedViewDidMoveToWindow = Notification.Name("cmux.terminalSurfaceHostedViewDidMoveToWindow")
-    static let mainWindowContextsDidChange = Notification.Name("cmux.mainWindowContextsDidChange")
-    static let browserDownloadEventDidArrive = Notification.Name("cmux.browserDownloadEventDidArrive")
-    static let reactGrabDidCopySelection = Notification.Name("cmux.reactGrabDidCopySelection")
+    static let socketListenerDidStart = Notification.Name("bmux.socketListenerDidStart")
+    // terminalSurfaceDidBecomeReady moved to BmuxTerminal (posted by TerminalSurface).
+    static let terminalSurfaceHostedViewDidMoveToWindow = Notification.Name("bmux.terminalSurfaceHostedViewDidMoveToWindow")
+    static let mainWindowContextsDidChange = Notification.Name("bmux.mainWindowContextsDidChange")
+    static let browserDownloadEventDidArrive = Notification.Name("bmux.browserDownloadEventDidArrive")
+    static let reactGrabDidCopySelection = Notification.Name("bmux.reactGrabDidCopySelection")
 }
 
 nonisolated private struct SocketLineProcessingResult: Sendable {
@@ -64,7 +64,7 @@ nonisolated private struct RemotePTYSocketTarget {
 
 nonisolated func remotePTYSessionListErrorIsUnsupportedDaemon(_ error: Error) -> Bool {
     let nsError = error as NSError
-    guard nsError.domain == "cmux.remote.daemon.rpc", nsError.code == 14 else {
+    guard nsError.domain == "bmux.remote.daemon.rpc", nsError.code == 14 else {
         return false
     }
     return error.localizedDescription
@@ -82,7 +82,7 @@ nonisolated private func v2RemotePTYUserFacingErrorMessage(_ message: String) ->
     if lowered.contains("missing required capability") ||
         lowered.contains("pty.session") ||
         lowered.contains("method_not_found") {
-        return "remote daemon does not support persistent SSH PTY sessions; reconnect the remote workspace to update cmux"
+        return "remote daemon does not support persistent SSH PTY sessions; reconnect the remote workspace to update bmux"
     }
     if lowered.contains("pty_session_not_found") ||
         (lowered.contains("persistent ssh pty session") && lowered.contains("not running")) ||
@@ -132,8 +132,8 @@ class TerminalController {
     /// `WorkspaceRemoteSessionController`; ownership moves to the composition root with the
     /// planned `RemoteSessionCoordinator` wiring.
     nonisolated let remoteProxyBroker: any RemoteProxyBrokering
-    // Stateless Sendable structs from CmuxControlSocket; injected at construction.
-    // `transport` is internal so sibling-file extensions (CmuxEventStream) can write through it.
+    // Stateless Sendable structs from BmuxControlSocket; injected at construction.
+    // `transport` is internal so sibling-file extensions (BmuxEventStream) can write through it.
     nonisolated let transport: SocketTransport
     // The package-owned listener: path/bind/lock lifecycle, accept source,
     // backoff/rearm recovery, and the generation-counted state machine.
@@ -151,13 +151,13 @@ class TerminalController {
     // do not downgrade its locking on the assumption that all callers are
     // main-isolated.
     let socketFastPathState = SocketFastPathState()
-    // Stateless sidebar-metadata/command argument parser (CmuxSidebar).
+    // Stateless sidebar-metadata/command argument parser (BmuxSidebar).
     // Pure transforms over the raw arg string; holds no state and reaches no
     // app singletons, so the `report_*`/sidebar-mutation handlers forward to it.
     private nonisolated let sidebarMetadataArgumentParser = SidebarMetadataArgumentParser()
     private nonisolated let myPid = getpid()
-    private nonisolated static let socketCommandFocusAllowanceStackKey = "cmux.socketCommandFocusAllowanceStack"
-    private nonisolated static let socketCommandKeyStackKey = "cmux.socketCommandKeyStack"
+    private nonisolated static let socketCommandFocusAllowanceStackKey = "bmux.socketCommandFocusAllowanceStack"
+    private nonisolated static let socketCommandKeyStackKey = "bmux.socketCommandKeyStack"
     /// Signposter for the worker→main `v2MainSync` hop. Intervals are named
     /// "main-hop" and carry the active socket command key plus queue-wait and
     /// body durations, so Instruments can attribute main-thread occupancy per
@@ -171,7 +171,7 @@ class TerminalController {
     /// tool such as Instruments records signposts, so
     /// `socketMainHopSignpostingActive` genuinely gates all per-hop work.
     private nonisolated static let socketMainHopSignposter = OSSignposter(
-        subsystem: "com.cmux.socket",
+        subsystem: "com.bmux.socket",
         category: .dynamicTracing
     )
 
@@ -202,7 +202,7 @@ class TerminalController {
     private var mobileViewportReportsBySurfaceID: [UUID: [String: MobileViewportReport]] = [:]; private var mobileViewportGenerationsBySurfaceID: [UUID: [String: UInt64]] = [:]
     private var mobileViewportReportCleanupTimersBySurfaceID: [UUID: DispatchSourceTimer] = [:]
 #if DEBUG
-    private nonisolated static let socketCommandDebugLogEnvironmentKey = "CMUX_DEBUG_SOCKET_COMMAND_LOG"
+    private nonisolated static let socketCommandDebugLogEnvironmentKey = "BMUX_DEBUG_SOCKET_COMMAND_LOG"
     private nonisolated static let socketCommandSlowThresholdMs: Double = 500
 #endif
     // The terminal-input message/error statics are nonisolated: pure,
@@ -278,7 +278,7 @@ class TerminalController {
         "feed.jump"
     ]
 
-    /// The main-actor RPC dispatch coordinator (CmuxControlSocket). Owns the
+    /// The main-actor RPC dispatch coordinator (BmuxControlSocket). Owns the
     /// `kind:N` handle registry and the moved command domains (window so far,
     /// growing per stage-3c sub-stage); this controller is its interim
     /// composition owner and ``ControlCommandContext`` conformer. Constructed in
@@ -299,8 +299,8 @@ class TerminalController {
 
     private final class V2BrowserUndefinedSentinel: Sendable {}
 
-    private nonisolated static let v2BrowserEvalEnvelopeTypeKey = "__cmux_t"
-    private nonisolated static let v2BrowserEvalEnvelopeValueKey = "__cmux_v"
+    private nonisolated static let v2BrowserEvalEnvelopeTypeKey = "__bmux_t"
+    private nonisolated static let v2BrowserEvalEnvelopeValueKey = "__bmux_v"
     private nonisolated static let v2BrowserEvalEnvelopeTypeUndefined = "undefined"
     private nonisolated static let v2BrowserEvalEnvelopeTypeValue = "value"
 
@@ -315,7 +315,7 @@ class TerminalController {
     private var v2BrowserUnsupportedNetworkRequestsBySurface: [UUID: [[String: Any]]] = [:]
     private nonisolated let v2BrowserUndefinedSentinel = V2BrowserUndefinedSentinel()
     /// Stateless browser-control logic (JS builders, value normalization,
-    /// diagnostics, failure classification) extracted to `CmuxBrowser`.
+    /// diagnostics, failure classification) extracted to `BmuxBrowser`.
     /// The per-surface mutable state and WebKit evaluation seam stay here.
     private nonisolated let v2BrowserControl = BrowserControlService(
         evalEnvelope: BrowserEvalEnvelope(
@@ -1035,7 +1035,7 @@ class TerminalController {
     /// main thread and keeps the connection thread (not the main queue) as
     /// the place the command waits. The hop keeps each reply synchronous with
     /// its effect — the deliberately-synchronous first relay
-    /// `surface.report_tty` (cmux-zsh-integration.zsh `_cmux_report_tty_once`)
+    /// `surface.report_tty` (bmux-zsh-integration.zsh `_bmux_report_tty_once`)
     /// must see the TTY registration applied before its reply so subsequent
     /// `surface.ports_kick` scans resolve the surface.
     private nonisolated static let socketWorkerCoordinatorHopMethods: Set<String> = [
@@ -1472,13 +1472,13 @@ class TerminalController {
     private nonisolated func handleClient(_ socket: Int32, peerPid: pid_t? = nil) {
         defer { close(socket) }
 
-        // In cmuxOnly mode, verify the connecting process is a descendant of cmux.
+        // In bmuxOnly mode, verify the connecting process is a descendant of bmux.
         // In allowAll mode (env-var only), skip the ancestry check.
-        if socketServer.accessMode == .cmuxOnly {
+        if socketServer.accessMode == .bmuxOnly {
             // Use pre-captured peer PID if available (captured in accept loop before
             // the peer can disconnect), falling back to live lookup.
             let pid = peerPid ?? transport.peerProcessID(of: socket)
-            guard SocketClientAuthorization().isCmuxOnlyClientAllowed(
+            guard SocketClientAuthorization().isBmuxOnlyClientAllowed(
                 peerProcessID: pid,
                 peerHasSameUID: false,
                 isDescendant: { isDescendant($0) }
@@ -1486,7 +1486,7 @@ class TerminalController {
                 _ = writeSocketResponse(
                     pid == nil
                         ? "ERROR: Unable to verify client process"
-                        : "ERROR: Access denied — only processes started inside cmux can connect",
+                        : "ERROR: Access denied — only processes started inside bmux can connect",
                     to: socket
                 )
                 return
@@ -1787,10 +1787,10 @@ class TerminalController {
     }
 
     private nonisolated static func debugLogSocketCommand(_ message: @autoclosure () -> String) {
-        cmuxDebugLog(message())
+        bmuxDebugLog(message())
     }
 
-    private nonisolated static let socketCommandMainHopAccumulatorKey = "cmux.socketCommandMainHopAccumulator"
+    private nonisolated static let socketCommandMainHopAccumulatorKey = "bmux.socketCommandMainHopAccumulator"
 
     /// Installs a fresh per-command main-hop accumulator on the current
     /// (socket worker) thread. Called once per socket line so the totals in
@@ -1898,7 +1898,7 @@ class TerminalController {
 
         let policyParams = cmd == "right_sidebar" ? ["args": args] : [:]
         return withSocketCommandPolicy(commandKey: cmd, isV2: false, params: policyParams) {
-            // V1 domains migrated into CmuxControlSocket's ControlCommandCoordinator
+            // V1 domains migrated into BmuxControlSocket's ControlCommandCoordinator
             // (the sidebar metadata/pane/surface commands and the browser panel
             // commands) answer here; everything else falls through to the legacy
             // switch below.
@@ -2165,7 +2165,7 @@ class TerminalController {
     private func v2MainActorResponse(request: ControlRequest, id: Any?, method: String, params: [String: Any]) -> V2MainHopOutcome {
         v2RefreshKnownRefs()
 
-        // Domains migrated into CmuxControlSocket's ControlCommandCoordinator
+        // Domains migrated into BmuxControlSocket's ControlCommandCoordinator
         // answer here, on the main actor, through the same encoder/id as the
         // legacy switch (the worker encodes the typed result after the hop);
         // everything else falls through to the legacy switch below.
@@ -2581,7 +2581,7 @@ class TerminalController {
 #endif
 
         return [
-            "protocol": "cmux-socket",
+            "protocol": "bmux-socket",
             "version": 2,
             "socket_path": socketServer.currentSocketPath,
             "access_mode": socketServer.accessMode.rawValue,
@@ -2682,7 +2682,7 @@ class TerminalController {
         }
         if let cliPath = Bundle.main.resourceURL?
             .appendingPathComponent("bin", isDirectory: true)
-            .appendingPathComponent("cmux", isDirectory: false)
+            .appendingPathComponent("bmux", isDirectory: false)
             .path {
             result["app_cli_path"] = cliPath
         }
@@ -2724,7 +2724,7 @@ class TerminalController {
                 nil,
                 .err(
                     code: "invalid_params",
-                    message: "Invalid window selector. Use --window <id|ref|index> to target one window, or run `cmux list-windows` to see available windows and retry.",
+                    message: "Invalid window selector. Use --window <id|ref|index> to target one window, or run `bmux list-windows` to see available windows and retry.",
                     data: v2WindowSelectorDetails(params: params)
                 )
             )
@@ -2734,7 +2734,7 @@ class TerminalController {
                 nil,
                 .err(
                     code: "invalid_params",
-                    message: "Choose either --window <id|ref|index> or --all-windows, not both. Run `cmux list-windows` to see available windows and retry.",
+                    message: "Choose either --window <id|ref|index> or --all-windows, not both. Run `bmux list-windows` to see available windows and retry.",
                     data: v2WindowSelectorDetails(params: params)
                 )
             )
@@ -2766,7 +2766,7 @@ class TerminalController {
     private func v2WindowNotFoundResult(params: [String: Any], windowId: UUID) -> V2CallResult {
         .err(
             code: "not_found",
-            message: "Window not found. Run `cmux list-windows` to see available windows, then retry with --window <id|ref|index>.",
+            message: "Window not found. Run `bmux list-windows` to see available windows, then retry with --window <id|ref|index>.",
             data: v2WindowSelectorDetails(params: params) ?? ["window_id": windowId.uuidString]
         )
     }
@@ -2805,11 +2805,11 @@ class TerminalController {
         v2AttachTopApplicationProcess(to: &windowNodes)
 
         let processSnapshot = await withTaskGroup(
-            of: CmuxTopProcessSnapshot.self,
-            returning: CmuxTopProcessSnapshot.self
+            of: BmuxTopProcessSnapshot.self,
+            returning: BmuxTopProcessSnapshot.self
         ) { group in
             group.addTask(priority: .utility) {
-                CmuxTopProcessSnapshot.capture(includeProcessDetails: includeProcesses)
+                BmuxTopProcessSnapshot.capture(includeProcessDetails: includeProcesses)
             }
             return await group.next()!
         }
@@ -2840,7 +2840,7 @@ class TerminalController {
     }
 
     private nonisolated func processAggregates(
-        from processSnapshot: CmuxTopProcessSnapshot,
+        from processSnapshot: BmuxTopProcessSnapshot,
         totalPIDs: Set<Int>
     ) -> (programs: [[String: Any]], codingAgents: [[String: Any]]) {
         (
@@ -2860,7 +2860,7 @@ class TerminalController {
               var windowNodes = payload.removeValue(forKey: "windows") as? [[String: Any]] else {
             return .err(code: "internal_error", message: "Invalid system.top payload", data: nil)
         }
-        let processSnapshot = CmuxTopProcessSnapshot.capture(includeProcessDetails: includeProcesses)
+        let processSnapshot = BmuxTopProcessSnapshot.capture(includeProcessDetails: includeProcesses)
         let browserPIDOccurrences = v2TopBrowserPIDOccurrences(in: windowNodes)
         let totalPIDs = v2AnnotateTopWindows(
             &windowNodes,
@@ -2936,7 +2936,7 @@ class TerminalController {
             return .err(code: "invalid_params", message: "\(invalidLimitKey) must be an integer from 1 to 100", data: nil)
         }
         let topGroupLimit = topGroupLimitValue ?? groupLimitValue ?? 12
-        let processSnapshot = CmuxTopProcessSnapshot.captureCached(
+        let processSnapshot = BmuxTopProcessSnapshot.captureCached(
             includeProcessDetails: true,
             maximumAge: 2
         )
@@ -3115,7 +3115,7 @@ class TerminalController {
             ]
 
             if panel.panelType == .browser, let browserPanel = panel as? BrowserPanel {
-                let webContentPID = CmuxWebContentProcessIdentifier.pid(for: browserPanel.webView)
+                let webContentPID = BmuxWebContentProcessIdentifier.pid(for: browserPanel.webView)
                 let url = browserPanel.currentURL?.absoluteString ?? ""
                 let webViewLifecycle = browserPanel.webViewLifecycleTopPayload()
                 item["url"] = url
@@ -4027,7 +4027,7 @@ class TerminalController {
     /// Resolves the workspace by `workspace_id` / surface / pane, falling back to the
     /// selected workspace only when no explicit target is supplied, and returns the
     /// raw configured set. An explicit-but-unresolvable target errors. Secret masking is a
-    /// CLI presentation concern (`cmux workspace env --mask`): the local control
+    /// CLI presentation concern (`bmux workspace env --mask`): the local control
     /// socket already exposes the surrounding workspace state, so values are returned
     /// verbatim and the env set is deliberately kept out of `workspace.list` so a
     /// plain listing never echoes secrets.
@@ -4964,7 +4964,7 @@ class TerminalController {
                 }
 
                 guard let raw = window.identifier?.rawValue else { return (nil, nil) }
-                let prefix = "cmux.main."
+                let prefix = "bmux.main."
                 guard raw.hasPrefix(prefix),
                       let parsedWindowId = UUID(uuidString: String(raw.dropFirst(prefix.count))) else {
                     return (nil, nil)
@@ -5486,7 +5486,7 @@ class TerminalController {
             return ok
         }
         #if DEBUG
-        cmuxDebugLog("mobile.vtExport action=\(bindingAction) succeeded=\(actionSucceeded) hasPath=\(exportedPath != nil)")
+        bmuxDebugLog("mobile.vtExport action=\(bindingAction) succeeded=\(actionSucceeded) hasPath=\(exportedPath != nil)")
         #endif
         guard let exportedPath = Self.normalizedExportedScreenPath(exportedPath) else {
             return nil
@@ -5693,7 +5693,7 @@ class TerminalController {
             )
         }
 
-        CmuxEventBus.shared.publishWorkstreamEvent(event, phase: "received")
+        BmuxEventBus.shared.publishWorkstreamEvent(event, phase: "received")
         v2ApplyIMessageModeSideEffects(for: event)
         Task { @MainActor in self.agentChatTranscriptService?.noteHookEvent(event) }
 
@@ -5701,7 +5701,7 @@ class TerminalController {
             event: event,
             waitTimeout: waitTimeout
         )
-        CmuxEventBus.shared.publishWorkstreamEvent(
+        BmuxEventBus.shared.publishWorkstreamEvent(
             event,
             phase: "completed",
             result: FeedSocketEncoding.payload(for: result)
@@ -6065,7 +6065,7 @@ class TerminalController {
 
         guard let outcome else {
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "browser.jsRun.timeout preferAsync=\(preferAsync) " +
                 "world=\(world == .page ? "page" : "isolated") timeout=\(timeoutSeconds)"
             )
@@ -6094,7 +6094,7 @@ class TerminalController {
         let timeout = Double(timeoutMs) / 1000.0
         let waitScript = """
         (() => {
-          const __cmuxEvaluate = () => {
+          const __bmuxEvaluate = () => {
             try {
               return !!(\(conditionScript));
             } catch (_) {
@@ -6102,7 +6102,7 @@ class TerminalController {
             }
           };
 
-          if (__cmuxEvaluate()) {
+          if (__bmuxEvaluate()) {
             return true;
           }
 
@@ -6120,7 +6120,7 @@ class TerminalController {
               resolve(value);
             };
             const recheck = () => {
-              if (__cmuxEvaluate()) {
+              if (__bmuxEvaluate()) {
                 finish(true);
               }
             };
@@ -6237,7 +6237,7 @@ class TerminalController {
                   let browserPanel = workspace.browserPanel(for: surfaceId),
                   let blankURL = URL(string: "about:blank") else {
 #if DEBUG
-                cmuxDebugLog("browser.jsKick.locateFailed surface=\(surfaceId.uuidString.prefix(5))")
+                bmuxDebugLog("browser.jsKick.locateFailed surface=\(surfaceId.uuidString.prefix(5))")
 #endif
                 return false
             }
@@ -6271,7 +6271,7 @@ class TerminalController {
             observation = nil
         }
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "browser.jsKick surface=\(surfaceId.uuidString.prefix(5)) " +
             "committed=\(committed == true) url=\(v2MainSync { webView.url?.absoluteString ?? "nil" })"
         )
@@ -6292,16 +6292,16 @@ class TerminalController {
         if let frameSelector = v2BrowserCurrentFrameSelector(surfaceId: surfaceId) {
             let selectorLiteral = v2JSONLiteral(frameSelector)
             framePrelude = """
-            let __cmuxDoc = document;
+            let __bmuxDoc = document;
             try {
-              const __cmuxFrame = document.querySelector(\(selectorLiteral));
-              if (__cmuxFrame && __cmuxFrame.contentDocument) {
-                __cmuxDoc = __cmuxFrame.contentDocument;
+              const __bmuxFrame = document.querySelector(\(selectorLiteral));
+              if (__bmuxFrame && __bmuxFrame.contentDocument) {
+                __bmuxDoc = __bmuxFrame.contentDocument;
               }
             } catch (_) {}
             """
         } else {
-            framePrelude = "const __cmuxDoc = document;"
+            framePrelude = "const __bmuxDoc = document;"
         }
 
         let executionBlock: String
@@ -6314,24 +6314,24 @@ class TerminalController {
         let asyncFunctionBody = """
         \(framePrelude)
 
-        const __cmuxMaybeAwait = async (__r) => {
+        const __bmuxMaybeAwait = async (__r) => {
           if (__r !== null && (typeof __r === 'object' || typeof __r === 'function') && typeof __r.then === 'function') {
             return await __r;
           }
           return __r;
         };
 
-        const __cmuxEvalInFrame = async function() {
-          const document = __cmuxDoc;
+        const __bmuxEvalInFrame = async function() {
+          const document = __bmuxDoc;
           \(executionBlock)
-          const __value = await __cmuxMaybeAwait(__r);
+          const __value = await __bmuxMaybeAwait(__r);
           return {
-            __cmux_t: (typeof __value === 'undefined') ? 'undefined' : 'value',
-            __cmux_v: __value
+            __bmux_t: (typeof __value === 'undefined') ? 'undefined' : 'value',
+            __bmux_v: __value
           };
         };
 
-        return await __cmuxEvalInFrame();
+        return await __bmuxEvalInFrame();
         """
 
         var rawResult: V2JavaScriptResult
@@ -6461,7 +6461,7 @@ class TerminalController {
 
         let injector = """
         (() => {
-          window.__cmuxInitScriptsApplied = window.__cmuxInitScriptsApplied || { scripts: [], styles: [] };
+          window.__bmuxInitScriptsApplied = window.__bmuxInitScriptsApplied || { scripts: [], styles: [] };
           return true;
         })()
         """
@@ -6474,7 +6474,7 @@ class TerminalController {
             let cssLiteral = v2JSONLiteral(css)
             let styleScript = """
             (() => {
-              const id = 'cmux-init-style-' + btoa(unescape(encodeURIComponent(\(cssLiteral)))).replace(/=+$/g, '');
+              const id = 'bmux-init-style-' + btoa(unescape(encodeURIComponent(\(cssLiteral)))).replace(/=+$/g, '');
               if (document.getElementById(id)) return true;
               const el = document.createElement('style');
               el.id = id;
@@ -6556,7 +6556,7 @@ class TerminalController {
             )
         }
         guard let url else {
-            return .err(code: "browser_disabled", message: "cmux browser is disabled", data: nil)
+            return .err(code: "browser_disabled", message: "bmux browser is disabled", data: nil)
         }
 
         var result: V2CallResult = .err(
@@ -6601,7 +6601,7 @@ class TerminalController {
                 url = navigable
             } else if let parsed = URL(string: trimmedURLStr), parsed.scheme != nil {
                 // Preserve any real-scheme URL the navigable resolver rejects: about:blank,
-                // the trusted cmux-diff-viewer:// scheme, and external app/deep-link schemes
+                // the trusted bmux-diff-viewer:// scheme, and external app/deep-link schemes
                 // (mailto:, xcode://, ...). The downstream browser-disabled, external-open, and
                 // diff-viewer-registration paths act on the original URL; only scheme-less,
                 // non-navigable input should fall through to a search query.
@@ -6622,7 +6622,7 @@ class TerminalController {
 
         if BrowserAvailabilitySettings.isDisabled() {
             if v2IsDiffViewerURL(url) {
-                return .err(code: "browser_disabled", message: "cmux browser is disabled", data: nil)
+                return .err(code: "browser_disabled", message: "bmux browser is disabled", data: nil)
             }
             return v2BrowserDisabledExternalOpenResult(rawURL: urlStr, url: url, tabManager: tabManager)
         }
@@ -6746,34 +6746,34 @@ class TerminalController {
 
     private func v2IsDiffViewerURL(_ url: URL?) -> Bool {
         guard let url else { return false }
-        if url.scheme?.lowercased() == CmuxDiffViewerURLSchemeHandler.scheme {
+        if url.scheme?.lowercased() == BmuxDiffViewerURLSchemeHandler.scheme {
             return true
         }
         return url.scheme?.lowercased() == "http" &&
             url.host == "127.0.0.1" &&
-            url.fragment == "cmux-diff-viewer"
+            url.fragment == "bmux-diff-viewer"
     }
 
     private func v2RegisterDiffViewerURLIfNeeded(params: [String: Any], url: URL?) -> V2CallResult? {
         guard let url,
-              url.scheme == CmuxDiffViewerURLSchemeHandler.scheme else {
+              url.scheme == BmuxDiffViewerURLSchemeHandler.scheme else {
             return nil
         }
         guard let token = v2String(params, "diff_viewer_token"),
               token == url.host,
               let rawFiles = params["diff_viewer_files"] as? [[String: Any]],
               !rawFiles.isEmpty,
-              rawFiles.count <= CmuxDiffViewerURLSchemeHandler.maxRegisteredFiles else {
+              rawFiles.count <= BmuxDiffViewerURLSchemeHandler.maxRegisteredFiles else {
             return .err(code: "invalid_params", message: "Missing or invalid trusted diff viewer allowlist", data: nil)
         }
 
-        let files = rawFiles.compactMap(CmuxDiffViewerURLSchemeHandler.registeredFile(from:))
+        let files = rawFiles.compactMap(BmuxDiffViewerURLSchemeHandler.registeredFile(from:))
         guard files.count == rawFiles.count else {
             return .err(code: "invalid_params", message: "Invalid trusted diff viewer allowlist", data: nil)
         }
 
         do {
-            try CmuxDiffViewerURLSchemeHandler.shared.register(token: token, files: files)
+            try BmuxDiffViewerURLSchemeHandler.shared.register(token: token, files: files)
             return nil
         } catch {
             return .err(
@@ -7448,7 +7448,7 @@ class TerminalController {
                 data: [
                     "timeout_ms": timeoutMs,
                     "url": v2MainSync { webView.url?.absoluteString ?? "about:blank" },
-                    "hint": "Verify the page loaded with 'cmux browser <surface> get url' before waiting"
+                    "hint": "Verify the page loaded with 'bmux browser <surface> get url' before waiting"
                 ]
             )
         }
@@ -7463,7 +7463,7 @@ class TerminalController {
               if (!el) return { ok: false, error: 'not_found' };
               if (el.disabled) return { ok: false, error: 'disabled' };
               el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-              __cmuxClick(el);
+              __bmuxClick(el);
               return { ok: true };
             })()
             """
@@ -7479,10 +7479,10 @@ class TerminalController {
               if (!el) return { ok: false, error: 'not_found' };
               if (el.disabled) return { ok: false, error: 'disabled' };
               el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-              __cmuxClick(el);
-              __cmuxClick(el);
-              const c = __cmuxCenter(el);
-              __cmuxMouse(el, 'dblclick', c, 0, 2);
+              __bmuxClick(el);
+              __bmuxClick(el);
+              const c = __bmuxCenter(el);
+              __bmuxMouse(el, 'dblclick', c, 0, 2);
               return { ok: true };
             })()
             """
@@ -7497,7 +7497,7 @@ class TerminalController {
               const el = document.querySelector(\(selectorLiteral));
               if (!el) return { ok: false, error: 'not_found' };
               el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-              __cmuxHover(el);
+              __bmuxHover(el);
               return { ok: true };
             })()
             """
@@ -7544,26 +7544,26 @@ class TerminalController {
     /// mouse sequence (not just `click`) or need legacy KeyboardEvent fields (keyCode/which/code).
     /// These helpers reproduce a real user gesture so React, Vue, Svelte, Angular, Solid, and
     /// vanilla handlers all fire. Define them once at the top of an injected snippet, then call
-    /// `__cmuxClick(el)`, `__cmuxHover(el)`, `__cmuxSetChecked(el, desired)`, and `__cmuxKey(t,type,key)`.
+    /// `__bmuxClick(el)`, `__bmuxHover(el)`, `__bmuxSetChecked(el, desired)`, and `__bmuxKey(t,type,key)`.
     private nonisolated static let browserInputHelpers = """
-    function __cmuxCenter(el){const r=el.getBoundingClientRect();return {x:Math.floor(r.left+Math.min(r.width,r.width/2)),y:Math.floor(r.top+Math.min(r.height,r.height/2))};}
-    function __cmuxPointer(el,type,c,buttons,bubbles){try{el.dispatchEvent(new PointerEvent(type,{bubbles:(bubbles===false?false:true),cancelable:true,composed:true,view:window,pointerId:1,pointerType:'mouse',isPrimary:true,button:0,buttons:buttons,clientX:c.x,clientY:c.y,screenX:c.x,screenY:c.y}));}catch(e){}}
-    function __cmuxMouse(el,type,c,buttons,detail,bubbles){el.dispatchEvent(new MouseEvent(type,{bubbles:(bubbles===false?false:true),cancelable:true,composed:true,view:window,button:0,buttons:buttons,detail:detail||0,clientX:c.x,clientY:c.y,screenX:c.x,screenY:c.y}));}
-    function __cmuxClick(el){const c=__cmuxCenter(el);
-      __cmuxPointer(el,'pointerover',c,0);__cmuxMouse(el,'mouseover',c,0);
-      __cmuxPointer(el,'pointerenter',c,0,false);__cmuxMouse(el,'mouseenter',c,0,0,false);
-      __cmuxPointer(el,'pointermove',c,0);__cmuxMouse(el,'mousemove',c,0);
-      __cmuxPointer(el,'pointerdown',c,1);__cmuxMouse(el,'mousedown',c,1,1);
+    function __bmuxCenter(el){const r=el.getBoundingClientRect();return {x:Math.floor(r.left+Math.min(r.width,r.width/2)),y:Math.floor(r.top+Math.min(r.height,r.height/2))};}
+    function __bmuxPointer(el,type,c,buttons,bubbles){try{el.dispatchEvent(new PointerEvent(type,{bubbles:(bubbles===false?false:true),cancelable:true,composed:true,view:window,pointerId:1,pointerType:'mouse',isPrimary:true,button:0,buttons:buttons,clientX:c.x,clientY:c.y,screenX:c.x,screenY:c.y}));}catch(e){}}
+    function __bmuxMouse(el,type,c,buttons,detail,bubbles){el.dispatchEvent(new MouseEvent(type,{bubbles:(bubbles===false?false:true),cancelable:true,composed:true,view:window,button:0,buttons:buttons,detail:detail||0,clientX:c.x,clientY:c.y,screenX:c.x,screenY:c.y}));}
+    function __bmuxClick(el){const c=__bmuxCenter(el);
+      __bmuxPointer(el,'pointerover',c,0);__bmuxMouse(el,'mouseover',c,0);
+      __bmuxPointer(el,'pointerenter',c,0,false);__bmuxMouse(el,'mouseenter',c,0,0,false);
+      __bmuxPointer(el,'pointermove',c,0);__bmuxMouse(el,'mousemove',c,0);
+      __bmuxPointer(el,'pointerdown',c,1);__bmuxMouse(el,'mousedown',c,1,1);
       if(typeof el.focus==='function'){try{el.focus({preventScroll:true});}catch(e){try{el.focus();}catch(e2){}}}
-      __cmuxPointer(el,'pointerup',c,0);__cmuxMouse(el,'mouseup',c,0,1);
-      if(typeof el.click==='function'){el.click();}else{__cmuxMouse(el,'click',c,0,1);}
+      __bmuxPointer(el,'pointerup',c,0);__bmuxMouse(el,'mouseup',c,0,1);
+      if(typeof el.click==='function'){el.click();}else{__bmuxMouse(el,'click',c,0,1);}
     }
-    function __cmuxHover(el){const c=__cmuxCenter(el);
-      __cmuxPointer(el,'pointerover',c,0);__cmuxMouse(el,'mouseover',c,0);
-      __cmuxPointer(el,'pointerenter',c,0,false);__cmuxMouse(el,'mouseenter',c,0,0,false);
-      __cmuxPointer(el,'pointermove',c,0);__cmuxMouse(el,'mousemove',c,0);
+    function __bmuxHover(el){const c=__bmuxCenter(el);
+      __bmuxPointer(el,'pointerover',c,0);__bmuxMouse(el,'mouseover',c,0);
+      __bmuxPointer(el,'pointerenter',c,0,false);__bmuxMouse(el,'mouseenter',c,0,0,false);
+      __bmuxPointer(el,'pointermove',c,0);__bmuxMouse(el,'mousemove',c,0);
     }
-    function __cmuxSetChecked(el,desired){
+    function __bmuxSetChecked(el,desired){
       // A click event runs the checkbox/radio activation behavior (it TOGGLES a checkbox / SELECTS a
       // radio) even when dispatched, and is also what React maps onChange to. So the correct way to
       // reach a target state is to click only when it differs; that fires input + change + (React)
@@ -7583,9 +7583,9 @@ class TerminalController {
         return;
       }
       if(typeof el.click==='function'){el.click();}
-      else {const c=__cmuxCenter(el); __cmuxMouse(el,'click',c,0,1);}
+      else {const c=__bmuxCenter(el); __bmuxMouse(el,'click',c,0,1);}
     }
-    function __cmuxKeyMeta(key){
+    function __bmuxKeyMeta(key){
       const map={Enter:[13,'Enter'],Tab:[9,'Tab'],Backspace:[8,'Backspace'],Delete:[46,'Delete'],Escape:[27,'Escape'],' ':[32,'Space'],ArrowUp:[38,'ArrowUp'],ArrowDown:[40,'ArrowDown'],ArrowLeft:[37,'ArrowLeft'],ArrowRight:[39,'ArrowRight'],Home:[36,'Home'],End:[35,'End'],PageUp:[33,'PageUp'],PageDown:[34,'PageDown']};
       if(map[key])return {keyCode:map[key][0],code:map[key][1]};
       if(key&&key.length===1){const u=key.toUpperCase();
@@ -7594,8 +7594,8 @@ class TerminalController {
         return {keyCode:key.charCodeAt(0),code:''};}
       return {keyCode:0,code:key||''};
     }
-    function __cmuxKey(target,type,key){
-      const meta=__cmuxKeyMeta(key);
+    function __bmuxKey(target,type,key){
+      const meta=__bmuxKeyMeta(key);
       const ev=new KeyboardEvent(type,{key:key,code:meta.code,location:0,repeat:false,isComposing:false,bubbles:true,cancelable:true,composed:true,view:window});
       try{Object.defineProperty(ev,'keyCode',{get(){return meta.keyCode;}});}catch(e){}
       try{Object.defineProperty(ev,'which',{get(){return meta.keyCode;}});}catch(e){}
@@ -7695,12 +7695,12 @@ class TerminalController {
               const target = document.activeElement || document.body || document.documentElement;
               if (!target) return { ok: false, error: 'not_found' };
               const k = String(\(keyLiteral));
-              const kdNotPrevented = __cmuxKey(target, 'keydown', k);
+              const kdNotPrevented = __bmuxKey(target, 'keydown', k);
               // keypress historically fires for character-producing keys, which includes Enter and
               // Space; many pages still bind submit/search to keypress for Enter.
               let kpNotPrevented = true;
-              if (k.length === 1 || k === 'Enter') { kpNotPrevented = __cmuxKey(target, 'keypress', k); }
-              __cmuxKey(target, 'keyup', k);
+              if (k.length === 1 || k === 'Enter') { kpNotPrevented = __bmuxKey(target, 'keypress', k); }
+              __bmuxKey(target, 'keyup', k);
               // Synthetic key events do not run WebKit's native "Enter submits the form" default
               // action. Mirror real-user behavior, but only when neither keydown nor keypress was
               // canceled (pages cancel Enter to run their own handling) and the native HTML implicit
@@ -7748,7 +7748,7 @@ class TerminalController {
               const target = document.activeElement || document.body || document.documentElement;
               if (!target) return { ok: false, error: 'not_found' };
               const k = String(\(keyLiteral));
-              __cmuxKey(target, 'keydown', k);
+              __bmuxKey(target, 'keydown', k);
               return { ok: true };
             })()
             """
@@ -7781,7 +7781,7 @@ class TerminalController {
               const target = document.activeElement || document.body || document.documentElement;
               if (!target) return { ok: false, error: 'not_found' };
               const k = String(\(keyLiteral));
-              __cmuxKey(target, 'keyup', k);
+              __bmuxKey(target, 'keyup', k);
               return { ok: true };
             })()
             """
@@ -7812,7 +7812,7 @@ class TerminalController {
               if (el.disabled) return { ok: false, error: 'disabled' };
               el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
               if (typeof el.focus === 'function') { try { el.focus({ preventScroll: true }); } catch (e) {} }
-              __cmuxSetChecked(el, \(checked ? "true" : "false"));
+              __bmuxSetChecked(el, \(checked ? "true" : "false"));
               if (el.checked !== \(checked ? "true" : "false")) return { ok: false, error: 'not_changed' };
               return { ok: true };
             })()
@@ -7978,7 +7978,7 @@ class TerminalController {
 
         // Best effort: keep screenshot data available even when temp-file writes fail.
         let screenshotsDirectory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("cmux-browser-screenshots", isDirectory: true)
+            .appendingPathComponent("bmux-browser-screenshots", isDirectory: true)
         if (try? FileManager.default.createDirectory(at: screenshotsDirectory, withIntermediateDirectories: true)) != nil {
             bestEffortPruneTemporaryFiles(in: screenshotsDirectory)
             let timestampMs = Int(Date().timeIntervalSince1970 * 1000)
@@ -8986,19 +8986,19 @@ class TerminalController {
             let textLiteral = text.map(v2JSONLiteral) ?? "null"
             let script = """
             (() => {
-              const q = window.__cmuxDialogQueue || [];
+              const q = window.__bmuxDialogQueue || [];
               if (!q.length) return { ok: false, error: 'not_found' };
               const entry = q.shift();
               if (entry.type === 'confirm') {
-                window.__cmuxDialogDefaults = window.__cmuxDialogDefaults || { confirm: false, prompt: null };
-                window.__cmuxDialogDefaults.confirm = \(acceptLiteral);
+                window.__bmuxDialogDefaults = window.__bmuxDialogDefaults || { confirm: false, prompt: null };
+                window.__bmuxDialogDefaults.confirm = \(acceptLiteral);
               }
               if (entry.type === 'prompt') {
-                window.__cmuxDialogDefaults = window.__cmuxDialogDefaults || { confirm: false, prompt: null };
+                window.__bmuxDialogDefaults = window.__bmuxDialogDefaults || { confirm: false, prompt: null };
                 if (\(acceptLiteral)) {
-                  window.__cmuxDialogDefaults.prompt = \(textLiteral);
+                  window.__bmuxDialogDefaults.prompt = \(textLiteral);
                 } else {
-                  window.__cmuxDialogDefaults.prompt = null;
+                  window.__bmuxDialogDefaults.prompt = null;
                 }
               }
               return { ok: true, dialog: entry, remaining: q.length };
@@ -9345,7 +9345,7 @@ class TerminalController {
             semaphore.signal()
         }
 
-        let watcherQueue = DispatchQueue(label: "com.cmux.browser.download.wait.file")
+        let watcherQueue = DispatchQueue(label: "com.bmux.browser.download.wait.file")
         let source = DispatchSource.makeFileSystemObjectSource(
             fileDescriptor: fd,
             eventMask: [.write, .extend, .attrib, .link, .rename],
@@ -9476,7 +9476,7 @@ class TerminalController {
             } else {
                 return .err(
                     code: "invalid_params",
-                    message: "destination_profile does not match a cmux browser profile",
+                    message: "destination_profile does not match a bmux browser profile",
                     data: ["param": "destination_profile"]
                 )
             }
@@ -10067,9 +10067,9 @@ class TerminalController {
             let clearLiteral = clear ? "true" : "false"
             let script = """
             (() => {
-              const items = Array.isArray(window.__cmuxConsoleLog) ? window.__cmuxConsoleLog.slice() : [];
+              const items = Array.isArray(window.__bmuxConsoleLog) ? window.__bmuxConsoleLog.slice() : [];
               if (\(clearLiteral)) {
-                window.__cmuxConsoleLog = [];
+                window.__bmuxConsoleLog = [];
               }
               return { ok: true, items };
             })()
@@ -10101,9 +10101,9 @@ class TerminalController {
             let clearLiteral = clear ? "true" : "false"
             let script = """
             (() => {
-              const items = Array.isArray(window.__cmuxErrorLog) ? window.__cmuxErrorLog.slice() : [];
+              const items = Array.isArray(window.__bmuxErrorLog) ? window.__bmuxErrorLog.slice() : [];
               if (\(clearLiteral)) {
-                window.__cmuxErrorLog = [];
+                window.__bmuxErrorLog = [];
               }
               return { ok: true, items };
             })()
@@ -10851,7 +10851,7 @@ class TerminalController {
           focus_pane <pane-id|index>      - Focus a pane
           focus_surface_by_panel <panel_id> - Focus surface by panel ID
           close_surface [id|idx]          - Close surface (collapse split)
-          reload_config                   - Reload Ghostty config, cmux settings, and refresh terminals
+          reload_config                   - Reload Ghostty config, bmux settings, and refresh terminals
           refresh_surfaces                - Force refresh all terminals
           surface_health [workspace]      - Check view health of all surfaces
 
@@ -11421,7 +11421,7 @@ class TerminalController {
         case "tabtransfer", "tab-transfer", "com.splittabbar.tabtransfer":
             return DragOverlayRoutingPolicy.bonsplitTabTransferType
         case "sidebarreorder", "sidebar-reorder", "sidebar_tab_reorder",
-            "com.cmux.sidebar-tab-reorder":
+            "com.bmux.sidebar-tab-reorder":
             return DragOverlayRoutingPolicy.sidebarTabReorderType
         default:
             // Allow explicit UTI strings for ad-hoc debug probes.
@@ -11448,7 +11448,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                    return raw == "bmux.main" || raw.hasPrefix("bmux.main.")
                 }),
                   let contentView = window.contentView,
                   let themeFrame = contentView.superview else { return }
@@ -11489,7 +11489,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                    return raw == "bmux.main" || raw.hasPrefix("bmux.main.")
                 }),
                   let contentView = window.contentView,
                   let themeFrame = contentView.superview else { return }
@@ -12316,7 +12316,7 @@ class TerminalController {
         guard shouldDeliverAgentNotification(meta) else {
 #if DEBUG
             if let meta {
-                cmuxDebugLog(
+                bmuxDebugLog(
                     "socket.notifyTargetAsync.gated category=\(meta.category.rawValue) pending=\(meta.pending) workspace=\(tabId.uuidString.prefix(8)) surface=\(surfaceId.uuidString.prefix(8))"
                 )
             }
@@ -12324,7 +12324,7 @@ class TerminalController {
             return "OK"
         }
 #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "socket.notifyTargetAsync.enqueue workspace=\(tabId.uuidString.prefix(8)) surface=\(surfaceId.uuidString.prefix(8)) titleLen=\(title.count) subtitleLen=\(subtitle.count) bodyLen=\(body.count) coalesces=0"
         )
 #endif
@@ -12705,7 +12705,7 @@ class TerminalController {
         let snapshotId = "\(timestamp)_\(shortId)"
 
         let outputDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("cmux-screenshots")
+            .appendingPathComponent("bmux-screenshots")
         try? FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
         let filename = label.isEmpty ? "\(snapshotId).png" : "\(label)_\(snapshotId).png"
         let outputPath = outputDir.appendingPathComponent(filename)
@@ -13024,7 +13024,7 @@ class TerminalController {
 
         // Determine output path
         let outputDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("cmux-screenshots")
+            .appendingPathComponent("bmux-screenshots")
         try? FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
 
         let filename = label.isEmpty ? "\(screenshotId).png" : "\(label)_\(screenshotId).png"
@@ -13199,7 +13199,7 @@ class TerminalController {
             // ("|c=turn-complete;p=<0|1>", "|c=needs-permission;p=<0|1>",
             // "|c=idle-reminder;p=<0|1>") in notify payloads; any other "c=..."
             // tail (unknown categories included) stays part of the body. Accepted
-            // because the only meta producers are cmux's own agent hooks (whose
+            // because the only meta producers are bmux's own agent hooks (whose
             // fields are |-sanitized) and a collision requires one of those exact
             // suffixes.
             let candidate = parts[3].trimmingCharacters(in: .whitespacesAndNewlines)
@@ -13662,7 +13662,7 @@ class TerminalController {
         options: [String: String]
     ) -> (target: SidebarMutationTabTarget?, error: String?) {
         // `SidebarMetadataArgumentParser.parseMutationTabTarget` already returns the
-        // `CmuxSidebar.SidebarMutationTabTarget` cases this controller resolves, so
+        // `BmuxSidebar.SidebarMutationTabTarget` cases this controller resolves, so
         // forward the parsed target verbatim instead of re-mapping it case-for-case
         // onto a duplicate local enum.
         let resolution = sidebarMetadataArgumentParser.parseMutationTabTarget(options: options)
@@ -13899,10 +13899,10 @@ class TerminalController {
             return true
         }
         guard let tab = resolveSidebarMutationTab(target),
-              CmuxVaultAgentRegistration.isValidID(key) else {
+              BmuxVaultAgentRegistration.isValidID(key) else {
             return false
         }
-        let registry = CmuxVaultAgentRegistry.load(
+        let registry = BmuxVaultAgentRegistry.load(
             workingDirectory: agentLifecycleRegistryWorkingDirectory(tab: tab, panelId: panelId)
         )
         return registry.registration(id: key) != nil
@@ -14062,9 +14062,9 @@ class TerminalController {
     ///
     /// Reads `{ text, terminal_text, build_stamp, diagnostic_blob_base64 }` off
     /// the wire and hands them to ``DogfoodFeedbackService`` (in the
-    /// `CmuxFeedback` package), which caps the fields, rejects an oversized
+    /// `BmuxFeedback` package), which caps the fields, rejects an oversized
     /// base64 blob without decoding, and writes a self-contained bundle
-    /// directory under `~/.cache/cmux-dogfood-feedback/<ISO8601>_<shortid>/`
+    /// directory under `~/.cache/bmux-dogfood-feedback/<ISO8601>_<shortid>/`
     /// (a `bundle.json` manifest plus the decoded `diagnostic.log`) off the main
     /// actor. This method owns only the trust-boundary privilege check and the
     /// wire mapping; the validation, allocation caps, and filesystem I/O live in
@@ -14117,7 +14117,7 @@ class TerminalController {
     /// Publish a `terminal.set_font` event to connected iOS device(s) so the
     /// mirrored terminal live-zooms its font (the grid reflows automatically on
     /// the phone). Drives the same iOS apply path as a pinch/zoom step, just
-    /// initiated from the Mac for automation (`cmux mobile set-font <size>`).
+    /// initiated from the Mac for automation (`bmux mobile set-font <size>`).
     ///
     /// Params: `{ "font_size": Number, optional "surface_id": String,
     /// optional "workspace_id": String }`. When `surface_id` is omitted the
@@ -14456,7 +14456,7 @@ class TerminalController {
               let surfaceId = resolved.surfaceId,
               let terminalPanel = resolved.workspace.terminalPanel(for: surfaceId) else {
             #if DEBUG
-            cmuxDebugLog("mobile.terminal.replay NOT_FOUND surface=\(v2RawString(params, "surface_id") ?? "nil")")
+            bmuxDebugLog("mobile.terminal.replay NOT_FOUND surface=\(v2RawString(params, "surface_id") ?? "nil")")
             #endif
             return .err(code: "not_found", message: "Terminal surface not found", data: nil)
         }
@@ -14473,7 +14473,7 @@ class TerminalController {
             seq: seq
         )
         #if DEBUG
-        cmuxDebugLog("mobile.terminal.replay surface=\(surfaceId.uuidString.prefix(8)) renderGrid=\(renderGrid != nil) seq=\(seq) hasState=\(state != nil)")
+        bmuxDebugLog("mobile.terminal.replay surface=\(surfaceId.uuidString.prefix(8)) renderGrid=\(renderGrid != nil) seq=\(seq) hasState=\(state != nil)")
         #endif
         var payload: [String: Any] = [
             "workspace_id": resolved.workspace.id.uuidString,
@@ -14657,7 +14657,7 @@ class TerminalController {
         }
         #if DEBUG
         let sendMs = (ProcessInfo.processInfo.systemUptime - sendStart) * 1000.0
-        cmuxDebugLog(
+        bmuxDebugLog(
             "mobile.terminal.input workspace=\(resolved.workspace.id.uuidString.prefix(8)) surface=\(surfaceId.uuidString.prefix(8)) queued=\(sendResult == .queued ? 1 : 0) chars=\(text.count) ms=\(String(format: "%.2f", sendMs))"
         )
         #endif
@@ -14715,7 +14715,7 @@ class TerminalController {
             return .err(code: "process_exited", message: Self.terminalProcessExitedMessage, data: ["surface_id": surfaceId.uuidString])
         }
         #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "mobile.terminal.paste_image workspace=\(resolved.workspace.id.uuidString.prefix(8)) surface=\(surfaceId.uuidString.prefix(8)) bytes=\(imageData.count) format=\(format)"
         )
         #endif
@@ -14833,7 +14833,7 @@ class TerminalController {
         terminalPanel.surface.forceRefresh(reason: "mobileHost.terminalPaste")
 
         #if DEBUG
-        cmuxDebugLog(
+        bmuxDebugLog(
             "mobile.terminal.paste workspace=\(resolved.workspace.id.uuidString.prefix(8)) surface=\(surfaceId.uuidString.prefix(8)) chars=\(text.count) submitted=\(submitted ? 1 : 0)"
         )
         #endif

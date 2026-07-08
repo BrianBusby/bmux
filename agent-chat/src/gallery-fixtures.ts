@@ -89,7 +89,7 @@ export const galleryCommands: CommandGroup[] = [
 
 const assistantMarkdown = (i: number) => `### Review pass ${i}
 
-This assistant message mixes **markdown**, inline \`code_${i}\`, links like [cmux](https://cmux.dev), and enough prose to wrap across several lines in the transcript.
+This assistant message mixes **markdown**, inline \`code_${i}\`, links like [bmux](https://bmux.dev), and enough prose to wrap across several lines in the transcript.
 
 - Bullet item one for spacing checks
 - Bullet item two with \`inline_code\`

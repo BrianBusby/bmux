@@ -20,7 +20,7 @@ import subprocess
 import termios
 import time
 
-BIN = os.environ.get("CMUX_MUX_BIN", "target/debug/cmux-mux")
+BIN = os.environ.get("BMUX_MUX_BIN", "target/debug/bmux-mux")
 SESSION = f"smoke-attach-{os.getpid()}"
 SOCK = None
 CONTROL_SOCKET_RE = re.compile(r"control socket at (.+)$")
@@ -29,7 +29,7 @@ MARKER = f"reattach-marker-{os.getpid()}"
 
 def fallback_socket_path():
     base = os.environ.get("XDG_RUNTIME_DIR") or os.environ.get("TMPDIR") or "/tmp"
-    return os.path.join(base, f"cmux-mux-{os.getuid()}", f"{SESSION}.sock")
+    return os.path.join(base, f"bmux-mux-{os.getuid()}", f"{SESSION}.sock")
 
 
 def wait_for_control_socket(server, seconds=15):

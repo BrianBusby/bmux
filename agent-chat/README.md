@@ -1,22 +1,22 @@
-# cmux-agent-ui
+# bmux-agent-ui
 
-MVP of the "UI mode" for cmux: a web chat surface (initial composer + chat view) rendered in cmux's existing browser surface, backed by any coding agent CLI. No Swift changes; the app side is just `cmux browser open http://127.0.0.1:7739`.
+MVP of the "UI mode" for bmux: a web chat surface (initial composer + chat view) rendered in bmux's existing browser surface, backed by any coding agent CLI. No Swift changes; the app side is just `bmux browser open http://127.0.0.1:7739`.
 
 ## Run
 
 Three entrypoints, all landing on the same server:
 
-- **CLI** (`cmux-chat`, symlinked into `~/.local/bin`): `cmux-chat` opens a composer as a new workspace tab; `cmux-chat -p codex fix the tests` starts the chat immediately; `--split` opens in the current workspace instead; `--no-open` prints the URL. It auto-starts the server if needed.
-- **Command palette**: `Cmd+Shift+P` → "New Agent Chat". Wired via `~/.config/cmux/cmux.json` (`actions.agent-chat` → `workspaceCommand` "Agent Chat" with a browser-surface layout), cmux's designed extension point, so no app build. When this productizes it becomes a built-in palette command in the cmux repo.
-- **Server** runs under launchd (`~/Library/LaunchAgents/com.cmux.agent-ui.plist`, KeepAlive) on http://127.0.0.1:7739. Remove with `launchctl bootout gui/501/com.cmux.agent-ui && rm ~/Library/LaunchAgents/com.cmux.agent-ui.plist`. Manual run: `bun server.ts`.
+- **CLI** (`bmux-chat`, symlinked into `~/.local/bin`): `bmux-chat` opens a composer as a new workspace tab; `bmux-chat -p codex fix the tests` starts the chat immediately; `--split` opens in the current workspace instead; `--no-open` prints the URL. It auto-starts the server if needed.
+- **Command palette**: `Cmd+Shift+P` → "New Agent Chat". Wired via `~/.config/bmux/bmux.json` (`actions.agent-chat` → `workspaceCommand` "Agent Chat" with a browser-surface layout), bmux's designed extension point, so no app build. When this productizes it becomes a built-in palette command in the bmux repo.
+- **Server** runs under launchd (`~/Library/LaunchAgents/com.bmux.agent-ui.plist`, KeepAlive) on http://127.0.0.1:7739. Remove with `launchctl bootout gui/501/com.bmux.agent-ui && rm ~/Library/LaunchAgents/com.bmux.agent-ui.plist`. Manual run: `bun server.ts`.
 
-One page = one session: `/` is the composer, `/s/<id>` a chat. There is deliberately no in-page session list or header; each chat is its own cmux workspace tab (page title = first prompt), so cmux's sidebar is the session list.
+One page = one session: `/` is the composer, `/s/<id>` a chat. There is deliberately no in-page session list or header; each chat is its own bmux workspace tab (page title = first prompt), so bmux's sidebar is the session list.
 
 ## Theming
 
-The server resolves the terminal's colors from `~/.config/ghostty/config` (theme file from `~/.config/ghostty/themes` or the cmux/Ghostty app bundle, explicit `background`/`foreground` overrides, `palette = N=#rrggbb` ANSI colors, `selection-background`, `cursor-color`, `background-opacity`, blur) and injects them as CSS variables at serve time, so the page paints with the terminal background on first frame. Syntax highlighting maps token colors to the injected Ghostty ANSI palette (`--ansi-*`), so code colors track the active terminal theme without rebuilding the client bundle. `/api/theme` exposes the resolved values. Splits opened by `cmux-chat --split` use `browser.open_split` with `transparent_background: true` plus `?transparent=1`, so the body is `rgba(bg, background-opacity)` and Ghostty transparency/blur shows through. Workspace-tab chats (palette, default CLI) are solid theme-bg because cmux workspace layout definitions don't carry a transparency flag yet; adding `transparent` to `CmuxSurfaceDefinition` in cmux would close that gap. Theme changes apply on page reload.
+The server resolves the terminal's colors from `~/.config/ghostty/config` (theme file from `~/.config/ghostty/themes` or the bmux/Ghostty app bundle, explicit `background`/`foreground` overrides, `palette = N=#rrggbb` ANSI colors, `selection-background`, `cursor-color`, `background-opacity`, blur) and injects them as CSS variables at serve time, so the page paints with the terminal background on first frame. Syntax highlighting maps token colors to the injected Ghostty ANSI palette (`--ansi-*`), so code colors track the active terminal theme without rebuilding the client bundle. `/api/theme` exposes the resolved values. Splits opened by `bmux-chat --split` use `browser.open_split` with `transparent_background: true` plus `?transparent=1`, so the body is `rgba(bg, background-opacity)` and Ghostty transparency/blur shows through. Workspace-tab chats (palette, default CLI) are solid theme-bg because bmux workspace layout definitions don't carry a transparency flag yet; adding `transparent` to `BmuxSurfaceDefinition` in bmux would close that gap. Theme changes apply on page reload.
 
-Agent-chat also reads optional font settings from `~/.config/cmux/cmux.json`:
+Agent-chat also reads optional font settings from `~/.config/bmux/bmux.json`:
 
 ```json
 {
@@ -44,7 +44,7 @@ bun test/e2e.ts               # or: bun test/e2e.ts codex pi
 
 The frontend is a small React app built with Bun and styled to match the
 terminal. Dropdowns and controls use `@base-ui-components/react` (Base UI),
-the same component library the cmux web app uses: `Select` for the provider
+the same component library the bmux web app uses: `Select` for the provider
 picker and `Popover` for the working-directory editor and overflow menus.
 Base UI ships unstyled, so every part is themed with the resolved Ghostty
 colors. The server bundles `src/main.tsx` with `Bun.build` on startup and
@@ -121,7 +121,7 @@ keyboard handler both call the same `setOption` path:
 | `ArrowDown` / `Ctrl+N` | next item while a `/`, `$`, or `@` popup is open |
 | `ArrowUp` / `Ctrl+P` | previous item while a `/`, `$`, or `@` popup is open |
 | `Enter` / `Tab` | accept the selected popup item |
-| `Ctrl+J` | insert newline by default; set `agentChat.keys.ctrlJ` to `"menu"` in `~/.config/cmux/cmux.json` to make it next-item while a popup is open |
+| `Ctrl+J` | insert newline by default; set `agentChat.keys.ctrlJ` to `"menu"` in `~/.config/bmux/bmux.json` to make it next-item while a popup is open |
 
 When focus is in a text input and no popup is open, plain `Ctrl+<letter>`
 combinations are left to the native macOS text editor bindings.
@@ -137,9 +137,9 @@ Adding a provider is either one registry entry (ACP-speaking: id + cmd) or one s
 - gemini: Google now blocks Gemini Code Assist for individuals (`IneligibleTierError`, migrate-to-Antigravity). ACP handshake works; auth fails upstream. Registry keeps it; it errors fast in the UI.
 - claude: TTFT is ~1-2 min on this machine when an `ANTHROPIC_API_KEY`/proxy auth source is active; the UI streams fine once tokens start.
 
-## What the real cmux feature needs beyond this MVP
+## What the real bmux feature needs beyond this MVP
 
-- A native `AgentChatSurface` (or a pinned browser surface type) with the composer as the new-workspace view; the server becomes a cmux-owned daemon keyed by workspace, sessions persisted to disk (each provider already has resume: claude `--resume`, codex thread ids, ACP `session/load`).
-- Permission requests routed to native cmux dialogs/notifications instead of the auto-approve toggle; ACP already models this, and claude gets it via `--permission-prompt-tool` or the ACP adapter.
-- Attach chat sessions to the workspace's terminal/worktree (cwd = worktree, show diffs via `cmux-diff`), and a "open in terminal" escape hatch that resumes the same session in the provider's TUI (`claude --resume <id>`, `codex resume <thread>`).
-- Provider registry in `~/.config/cmux/agents.json` so users can add any ACP/stream-JSON agent without code.
+- A native `AgentChatSurface` (or a pinned browser surface type) with the composer as the new-workspace view; the server becomes a bmux-owned daemon keyed by workspace, sessions persisted to disk (each provider already has resume: claude `--resume`, codex thread ids, ACP `session/load`).
+- Permission requests routed to native bmux dialogs/notifications instead of the auto-approve toggle; ACP already models this, and claude gets it via `--permission-prompt-tool` or the ACP adapter.
+- Attach chat sessions to the workspace's terminal/worktree (cwd = worktree, show diffs via `bmux-diff`), and a "open in terminal" escape hatch that resumes the same session in the provider's TUI (`claude --resume <id>`, `codex resume <thread>`).
+- Provider registry in `~/.config/bmux/agents.json` so users can add any ACP/stream-JSON agent without code.

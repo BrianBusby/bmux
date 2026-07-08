@@ -10,7 +10,7 @@ private struct SnapshotPayload: Encodable {
 
 private struct Payload: Encodable {
     let sources: [String]
-    let cmux: SnapshotPayload
+    let bmux: SnapshotPayload
     let synced: SnapshotPayload
     let loadPaths: [String]
 }
@@ -28,12 +28,12 @@ private struct ConfigSourceProbe {
         if CommandLine.arguments.count >= 3 {
             bundleIdentifier = CommandLine.arguments[2]
         } else {
-            bundleIdentifier = "com.cmuxterm.app"
+            bundleIdentifier = "com.bmuxterm.app"
         }
         let previewDirectoryURL = homeDirectoryURL
             .appendingPathComponent("Library", isDirectory: true)
             .appendingPathComponent("Caches", isDirectory: true)
-            .appendingPathComponent("cmux-config-probe", isDirectory: true)
+            .appendingPathComponent("bmux-config-probe", isDirectory: true)
         let appSupportDirectoryURL = homeDirectoryURL
             .appendingPathComponent("Library", isDirectory: true)
             .appendingPathComponent("Application Support", isDirectory: true)
@@ -45,9 +45,9 @@ private struct ConfigSourceProbe {
 
         let payload = Payload(
             sources: ConfigSource.allCases.map(\.rawValue),
-            cmux: encodedSnapshot(for: .cmux, environment: environment),
+            bmux: encodedSnapshot(for: .bmux, environment: environment),
             synced: encodedSnapshot(for: .synced, environment: environment),
-            loadPaths: CmuxGhosttyConfigPathResolver().loadConfigURLs(
+            loadPaths: BmuxGhosttyConfigPathResolver().loadConfigURLs(
                 currentBundleIdentifier: bundleIdentifier,
                 appSupportDirectory: appSupportDirectoryURL
             )

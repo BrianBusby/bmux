@@ -23,7 +23,7 @@ type BillingSuccessMessages = {
   body: string;
   emailLabel: string;
   whatUnlockedTitle: string;
-  openCmux: string;
+  openBmux: string;
   manageBilling: string;
   manageSignInMethods: string;
   features: Record<BillingSuccessFeatureKey, BillingSuccessFeatureMessage>;
@@ -60,7 +60,7 @@ export default async function BillingSuccessPage({
   if (!sessionId) redirect("/pricing?billing=error");
 
   const request = requestFromHeaders(requestHeaders, "/billing/success");
-  const scheme = validatedNativeCallbackScheme(firstParam(params.cmux_scheme), request);
+  const scheme = validatedNativeCallbackScheme(firstParam(params.bmux_scheme), request);
   let session: Stripe.Checkout.Session;
   try {
     session = await stripe().checkout.sessions.retrieve(sessionId, {
@@ -91,13 +91,13 @@ export default async function BillingSuccessPage({
 
   const email = purchaseEmail(session) ?? "";
   const { locale, messages } = await billingSuccessMessages(requestHeaders);
-  const openCmuxHref = new URL("/handler/after-sign-in", request.nextUrl.origin);
-  openCmuxHref.searchParams.set("native_app_return_to", nativeCallbackHrefForScheme(scheme));
+  const openBmuxHref = new URL("/handler/after-sign-in", request.nextUrl.origin);
+  openBmuxHref.searchParams.set("native_app_return_to", nativeCallbackHrefForScheme(scheme));
   const featureCards: readonly {
     key: BillingSuccessFeatureKey;
     href: string;
   }[] = [
-    { key: "cloudAgents", href: openCmuxHref.toString() },
+    { key: "cloudAgents", href: openBmuxHref.toString() },
     { key: "modelGateway", href: "/dashboard/subrouter" },
     { key: "aiAccounts", href: "/dashboard/ai-accounts" },
     { key: "iosApp", href: "/dashboard/testflight" },
@@ -115,9 +115,9 @@ export default async function BillingSuccessPage({
           </p>
           <a
             className="mt-8 inline-flex rounded-md bg-[#171717] px-4 py-2 text-sm font-medium text-white"
-            href={openCmuxHref.toString()}
+            href={openBmuxHref.toString()}
           >
-            {messages.openCmux}
+            {messages.openBmux}
           </a>
         </section>
 
@@ -206,7 +206,7 @@ function preferredLocale(headersList: Headers): Locale {
 }
 
 function requestFromHeaders(headersList: Headers, pathname: string): NextRequest {
-  const host = headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "cmux.com";
+  const host = headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "bmux.com";
   const proto = headersList.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   return new NextRequest(`${proto}://${host}${pathname}`, { headers: headersList });
 }

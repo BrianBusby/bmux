@@ -1,5 +1,5 @@
-import CMUXAgentLaunch
-import CmuxAgentChat
+import BMUXAgentLaunch
+import BmuxAgentChat
 import Foundation
 
 extension AgentChatSessionRegistry {
@@ -23,9 +23,9 @@ extension AgentChatSessionRegistry {
         allowUnidentifiedFallback: Bool = false
     ) -> Int? {
         guard !expectedSessionIDs.isEmpty else { return nil }
-        let snapshot = CmuxTopProcessSnapshot.capture(
+        let snapshot = BmuxTopProcessSnapshot.capture(
             includeProcessDetails: true,
-            includeCMUXScope: true
+            includeBMUXScope: true
         )
         return liveAgentPID(
             in: snapshot,
@@ -33,15 +33,15 @@ extension AgentChatSessionRegistry {
             kind: kind,
             matchingSessionIDs: expectedSessionIDs,
             allowUnidentifiedFallback: allowUnidentifiedFallback,
-            processArgumentsAndEnvironment: CmuxTopProcessSnapshot.processArgumentsAndEnvironment(for:)
+            processArgumentsAndEnvironment: BmuxTopProcessSnapshot.processArgumentsAndEnvironment(for:)
         )
     }
 
     nonisolated static func liveAgentPID(
-        in snapshot: CmuxTopProcessSnapshot,
+        in snapshot: BmuxTopProcessSnapshot,
         surfaceID: String,
         kind: ChatAgentKind,
-        processArgumentsAndEnvironment: (Int) -> CmuxTopProcessArguments?
+        processArgumentsAndEnvironment: (Int) -> BmuxTopProcessArguments?
     ) -> Int? {
         liveAgentPID(
             in: snapshot,
@@ -54,15 +54,15 @@ extension AgentChatSessionRegistry {
     }
 
     nonisolated static func liveAgentPID(
-        in snapshot: CmuxTopProcessSnapshot,
+        in snapshot: BmuxTopProcessSnapshot,
         surfaceID: String,
         kind: ChatAgentKind,
         matchingSessionIDs expectedSessionIDs: Set<String>?,
         allowUnidentifiedFallback: Bool = false,
-        processArgumentsAndEnvironment: (Int) -> CmuxTopProcessArguments?
+        processArgumentsAndEnvironment: (Int) -> BmuxTopProcessArguments?
     ) -> Int? {
         guard let surfaceUUID = UUID(uuidString: surfaceID) else { return nil }
-        let rootPIDs = cmuxSurfaceRootPIDs(surfaceID: surfaceUUID, snapshot: snapshot)
+        let rootPIDs = bmuxSurfaceRootPIDs(surfaceID: surfaceUUID, snapshot: snapshot)
         guard !rootPIDs.isEmpty else { return nil }
         let wantedID = kind.sourceName
         var matchedPID: (pid: Int, depth: Int)?
@@ -71,8 +71,8 @@ extension AgentChatSessionRegistry {
         let expandedPIDs = snapshot.expandedPIDs(rootPIDs: rootPIDs)
         for pid in expandedPIDs.sorted() {
             let depth = processTreeDepth(pid: pid, rootPIDs: rootPIDs, snapshot: snapshot)
-            var details: CmuxTopProcessArguments?
-            func loadDetails() -> CmuxTopProcessArguments? {
+            var details: BmuxTopProcessArguments?
+            func loadDetails() -> BmuxTopProcessArguments? {
                 if details == nil {
                     details = processArgumentsAndEnvironment(pid)
                 }
@@ -143,11 +143,11 @@ extension AgentChatSessionRegistry {
         return current
     }
 
-    nonisolated static func cmuxSurfaceRootPIDs(
+    nonisolated static func bmuxSurfaceRootPIDs(
         surfaceID: UUID,
-        snapshot: CmuxTopProcessSnapshot
+        snapshot: BmuxTopProcessSnapshot
     ) -> Set<Int> {
-        let pids = snapshot.pids(forCMUXSurfaceID: surfaceID)
+        let pids = snapshot.pids(forBMUXSurfaceID: surfaceID)
         return Set(pids.filter { pid in
             guard let parentPID = snapshot.process(pid: pid)?.parentPID else {
                 return true
@@ -159,7 +159,7 @@ extension AgentChatSessionRegistry {
     nonisolated static func processTreeDepth(
         pid: Int,
         rootPIDs: Set<Int>,
-        snapshot: CmuxTopProcessSnapshot
+        snapshot: BmuxTopProcessSnapshot
     ) -> Int {
         guard pid > 0 else { return 0 }
         var currentPID = pid
@@ -192,7 +192,7 @@ extension AgentChatSessionRegistry {
     private nonisolated static func observedSessionID(
         agentID: String,
         pid: Int,
-        details: CmuxTopProcessArguments?
+        details: BmuxTopProcessArguments?
     ) -> String? {
         if agentID == "codex",
            let rollout = openCodexRolloutPath(pid: pid) {

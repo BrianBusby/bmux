@@ -1,4 +1,4 @@
-import CmuxTerminalCore
+import BmuxTerminalCore
 
 extension GhosttyNSView {
     func terminalPointerShouldForwardActivation() -> Bool {

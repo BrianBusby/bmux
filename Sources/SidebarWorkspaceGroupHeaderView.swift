@@ -1,9 +1,9 @@
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxFoundation
-import CmuxSidebar
+import BmuxAppKitSupportUI
+import BmuxFoundation
+import BmuxSidebar
 import SwiftUI
-import CmuxSettings
+import BmuxSettings
 
 /// Collapsible group header that doubles as the anchor workspace row.
 struct SidebarWorkspaceGroupHeaderView: View, Equatable {
@@ -62,7 +62,7 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
     let shortcutHintXOffset: Double
     let shortcutHintYOffset: Double
     let fontScale: CGFloat
-    let cwdContextMenuItems: [CmuxResolvedConfigContextMenuItem]
+    let cwdContextMenuItems: [BmuxResolvedConfigContextMenuItem]
     let newWorkspacePlacement: WorkspaceGroupNewPlacement?
     let rowSpacing: CGFloat
     let isFirstRow: Bool
@@ -73,7 +73,7 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
     let onToggleCollapsed: () -> Void
     let onFocusAnchor: () -> Void
     let onTapPlus: () -> Void
-    let onRunResolvedItem: (CmuxResolvedConfigMenuAction) -> Void
+    let onRunResolvedItem: (BmuxResolvedConfigMenuAction) -> Void
     let onRename: () -> Void
     let onTogglePinned: () -> Void
     let onMarkRead: () -> Void
@@ -126,7 +126,7 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
 #endif
         HStack(spacing: 4) {
             if isPinned {
-                CmuxSystemSymbolImage(
+                BmuxSystemSymbolImage(
                     magnified: "pin.fill",
                     pointSize: metrics.pinnedIconFontSize,
                     weight: .semibold
@@ -136,7 +136,7 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
                 .safeHelp(pinnedGroupTooltip)
                 .accessibilityLabel(Text(pinnedGroupTooltip))
             }
-            CmuxSystemSymbolImage(
+            BmuxSystemSymbolImage(
                 systemName: isCollapsed ? "chevron.right" : "chevron.down",
                 pointSize: metrics.chevronFontSize,
                 weight: .semibold,
@@ -156,7 +156,7 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
                 )
 
             HStack(spacing: 6) {
-                CmuxSystemSymbolImage(
+                BmuxSystemSymbolImage(
                     systemName: displayedIconSymbol,
                     pointSize: metrics.iconFontSize,
                     weight: .semibold,
@@ -166,13 +166,13 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
                     .frame(width: metrics.iconFrame, height: metrics.iconFrame)
                     .accessibilityHidden(true)
                 Text(name)
-                    .cmuxFont(size: metrics.nameFontSize, weight: .semibold)
+                    .bmuxFont(size: metrics.nameFontSize, weight: .semibold)
                     .foregroundStyle(isAnchorActive ? Color.primary : Color.primary.opacity(0.9))
                     .lineLimit(1)
                     .truncationMode(.tail)
                 if anchorUnreadCount > 0 {
                     Text("\(anchorUnreadCount)")
-                        .cmuxFont(size: metrics.unreadFontSize, weight: .semibold)
+                        .bmuxFont(size: metrics.unreadFontSize, weight: .semibold)
                         .foregroundStyle(.white)
                         .padding(.horizontal, metrics.unreadHorizontalPadding)
                         .padding(.vertical, metrics.unreadVerticalPadding)
@@ -198,7 +198,7 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
                 shortcutHintModeActive: showsShortcutHint
             )
             Button(action: onTapPlus) {
-                CmuxSystemSymbolImage(
+                BmuxSystemSymbolImage(
                     systemName: "plus",
                     pointSize: metrics.plusFontSize,
                     weight: .medium,

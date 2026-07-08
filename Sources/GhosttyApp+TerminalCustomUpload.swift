@@ -1,5 +1,5 @@
 import AppKit
-import CmuxTerminalCore
+import BmuxTerminalCore
 
 extension GhosttyApp {
     @discardableResult
@@ -23,7 +23,7 @@ extension GhosttyApp {
                 case .failure:
                     NSSound.beep()
 #if DEBUG
-                    cmuxDebugLog("terminal.remotePasteUpload.customFailed surface=\(callbackContext.surfaceId.uuidString.prefix(5))")
+                    bmuxDebugLog("terminal.remotePasteUpload.customFailed surface=\(callbackContext.surfaceId.uuidString.prefix(5))")
 #endif
                     completeClipboardRequest("")
                 }

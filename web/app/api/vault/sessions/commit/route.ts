@@ -25,7 +25,7 @@ export async function POST(request: Request): Promise<Response> {
   return withAuthedVaultApiRoute(
     request,
     "/api/vault/sessions/commit",
-    { "cmux.vault.operation": "sessions.commit" },
+    { "bmux.vault.operation": "sessions.commit" },
     "/api/vault/sessions/commit POST failed",
     { allowCookie: false },
     async ({ user, span }) => handlePost(request, user.id, span),
@@ -40,9 +40,9 @@ async function handlePost(request: Request, userId: string, span: Span): Promise
   const batch = validateVaultBatch(body.value);
   if (!batch.ok) return jsonResponse({ error: batch.error }, 400);
   setSpanAttributes(span, {
-    "cmux.vault.item_count": batch.value.length,
-    "cmux.vault.raw_bytes": sumBatchRawBytes(batch.value),
-    "cmux.vault.compressed_bytes": sumBatchCompressedBytes(batch.value),
+    "bmux.vault.item_count": batch.value.length,
+    "bmux.vault.raw_bytes": sumBatchRawBytes(batch.value),
+    "bmux.vault.compressed_bytes": sumBatchCompressedBytes(batch.value),
   });
 
   const config = vaultConfig();
@@ -156,9 +156,9 @@ async function handlePost(request: Request, userId: string, span: Span): Promise
   }
   await cleanupCommittedStagingGrants(db, stagingCleanups);
   setSpanAttributes(span, {
-    "cmux.vault.result_count": results.length,
-    "cmux.vault.result.committed_count": countResultStatus(results, "committed"),
-    "cmux.vault.result.error_count": countResultStatus(results, "error"),
+    "bmux.vault.result_count": results.length,
+    "bmux.vault.result.committed_count": countResultStatus(results, "committed"),
+    "bmux.vault.result.error_count": countResultStatus(results, "error"),
   });
   return jsonResponse({ items: results });
 }

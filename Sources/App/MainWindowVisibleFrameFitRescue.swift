@@ -1,5 +1,5 @@
 import AppKit
-import CmuxWindowing
+import BmuxWindowing
 
 /// Fits cut-off main windows back into a current visible frame after AppDelegate
 /// observes and guards a real display-topology change. This complements the
@@ -22,7 +22,7 @@ final class MainWindowVisibleFrameFitRescue {
         guard !displays.isEmpty else { return }
 
         let mainWindows = windows
-            .compactMap { $0 as? CmuxMainWindow }
+            .compactMap { $0 as? BmuxMainWindow }
             .filter { window in
                 !window.styleMask.contains(.fullScreen)
             }
@@ -38,7 +38,7 @@ final class MainWindowVisibleFrameFitRescue {
             guard let targetFrame, targetFrame != window.frame else { continue }
             let originalFrame = window.frame
 #if DEBUG
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "mainWindow.visibleFrameFit.clamp win=\(window.windowNumber) " +
                     "from={\(Self.rectDescription(originalFrame))} to={\(Self.rectDescription(targetFrame))}"
             )

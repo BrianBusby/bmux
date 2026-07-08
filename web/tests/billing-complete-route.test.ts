@@ -28,7 +28,7 @@ describe("billing complete route", () => {
       id: "cs_123",
       payment_status: "paid",
       client_reference_id: "user-1",
-      metadata: { app: "cmux", plan: "pro" },
+      metadata: { app: "bmux", plan: "pro" },
       subscription: { id: "sub_1" },
       customer: { id: "cus_1" },
     };
@@ -37,10 +37,10 @@ describe("billing complete route", () => {
   });
 
   test("records paid sessions and redirects to success with the validated scheme", async () => {
-    process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES = "cmux-dev-local";
+    process.env.BMUX_DEV_NATIVE_CALLBACK_SCHEMES = "bmux-dev-local";
     const response = await GET(
       new NextRequest(
-        "http://localhost:3777/api/billing/complete?session_id=cs_123&cmux_scheme=cmux-dev-local",
+        "http://localhost:3777/api/billing/complete?session_id=cs_123&bmux_scheme=bmux-dev-local",
       ),
     );
 
@@ -54,7 +54,7 @@ describe("billing complete route", () => {
     });
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost:3777/billing/success?session_id=cs_123&cmux_scheme=cmux-dev-local",
+      "http://localhost:3777/billing/success?session_id=cs_123&bmux_scheme=bmux-dev-local",
     );
   });
 
@@ -63,15 +63,15 @@ describe("billing complete route", () => {
       id: "cs_123",
       payment_status: "unpaid",
       client_reference_id: "user-1",
-      metadata: { app: "cmux", plan: "pro" },
+      metadata: { app: "bmux", plan: "pro" },
     };
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/complete?session_id=cs_123"),
+      new NextRequest("https://bmux.test/api/billing/complete?session_id=cs_123"),
     );
 
     expect(recordCheckoutCompletion).not.toHaveBeenCalled();
-    expect(response.headers.get("location")).toBe("https://cmux.test/pricing?welcome=pending");
+    expect(response.headers.get("location")).toBe("https://bmux.test/pricing?welcome=pending");
   });
 
   test("redirects paid Team sessions to dashboard billing after recording", async () => {
@@ -79,19 +79,19 @@ describe("billing complete route", () => {
       id: "cs_team",
       payment_status: "paid",
       client_reference_id: "team-1",
-      metadata: { app: "cmux", plan: "team", stackTeamId: "team-1" },
+      metadata: { app: "bmux", plan: "team", stackTeamId: "team-1" },
       subscription: { id: "sub_team" },
       customer: { id: "cus_team" },
     };
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/complete?session_id=cs_team"),
+      new NextRequest("https://bmux.test/api/billing/complete?session_id=cs_team"),
     );
 
     expect(recordCheckoutCompletion).toHaveBeenCalled();
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?welcome=team",
+      "https://bmux.test/dashboard/billing?welcome=team",
     );
   });
 
@@ -104,10 +104,10 @@ describe("billing complete route", () => {
     };
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/complete?session_id=cs_foreign"),
+      new NextRequest("https://bmux.test/api/billing/complete?session_id=cs_foreign"),
     );
 
     expect(recordCheckoutCompletion).not.toHaveBeenCalled();
-    expect(response.headers.get("location")).toBe("https://cmux.test/pricing?billing=error");
+    expect(response.headers.get("location")).toBe("https://bmux.test/pricing?billing=error");
   });
 });

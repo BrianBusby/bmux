@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   return withApiRouteSpan(
     request,
     "/api/waitlist",
-    { "cmux.subsystem": "waitlist", "cmux.waitlist.operation": "notify" },
+    { "bmux.subsystem": "waitlist", "bmux.waitlist.operation": "notify" },
     async (span): Promise<Response> => {
       // Rate-limit the whole public endpoint up front, before the DNS lookups
       // below. The validate phase resolves a user-supplied domain (MX + A/AAAA),
@@ -57,17 +57,17 @@ export async function POST(request: Request) {
       // rule. Only active on Vercel.
       if (process.env.VERCEL === "1") {
         const { error, rateLimited } = await checkRateLimit(
-          env.CMUX_FEEDBACK_RATE_LIMIT_ID,
+          env.BMUX_FEEDBACK_RATE_LIMIT_ID,
           { request },
         );
         setSpanAttributes(span, {
-          "cmux.rate_limited": rateLimited || error === "blocked",
+          "bmux.rate_limited": rateLimited || error === "blocked",
         });
         if (rateLimited || error === "blocked") {
           return jsonError("Rate limit exceeded", 429);
         }
         if (error === "not-found") {
-          console.error("waitlist.route.rate_limit_not_found", env.CMUX_FEEDBACK_RATE_LIMIT_ID);
+          console.error("waitlist.route.rate_limit_not_found", env.BMUX_FEEDBACK_RATE_LIMIT_ID);
           return jsonError("service_unavailable", 503);
         } else if (error) {
           console.error("waitlist.route.rate_limit_error", error);
@@ -88,8 +88,8 @@ export async function POST(request: Request) {
       }
       const { email, platforms, location, notify } = parsed.data;
       setSpanAttributes(span, {
-        "cmux.waitlist.platform_count": platforms.length,
-        "cmux.waitlist.location": location,
+        "bmux.waitlist.platform_count": platforms.length,
+        "bmux.waitlist.location": location,
       });
 
       // Reject addresses whose domain can't receive mail (typos, fake domains,
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
       // failures resolve to "unknown" and fail open so a resolver hiccup never
       // blocks a real signup.
       const deliverable = await checkEmailDeliverable(email);
-      setSpanAttributes(span, { "cmux.waitlist.email_check": deliverable });
+      setSpanAttributes(span, { "bmux.waitlist.email_check": deliverable });
       if (deliverable === "invalid") {
         return ok({ valid: false });
       }

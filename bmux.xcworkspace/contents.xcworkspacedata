@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:bmux.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:ios/bmux-ios.xcodeproj">
+   </FileRef>
+   <Group
+      location = "container:Packages/Shared"
+      name = "Packages (Shared)">
+      <FileRef
+         location = "group:BmuxAgentChat">
+      </FileRef>
+      <FileRef
+         location = "group:BMUXAuthCore">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxAuthRuntime">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxClientConfig">
+      </FileRef>
+      <FileRef
+         location = "group:BMUXMobileCore">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxSyncStore">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:Packages/iOS"
+      name = "Packages (iOS)">
+      <FileRef
+         location = "container:ios/bmuxPackage">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxAgentChatUI">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileAnalytics">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileBrowser">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileCamera">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileDiagnostics">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobilePairedMac">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileRPC">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileShell">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileShellModel">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileShellUI">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileSupport">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileTerminal">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileTerminalKit">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileTransport">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxMobileWorkspace">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:Packages/macOS"
+      name = "Packages (macOS)">
+      <FileRef
+         location = "group:BMUXAgentLaunch">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxAppKitSupportUI">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxBrowser">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxCanvas">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxCanvasUI">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxCommandPalette">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxControlSocket">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxCore">
+      </FileRef>
+      <FileRef
+         location = "group:BMUXDebugLog">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxExtensionKit">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxFeedback">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxFoundation">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxGit">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxLiveEval">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxNotifications">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxPanes">
+      </FileRef>
+      <FileRef
+         location = "group:BMUXProjectModel">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxRemoteDaemon">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxRemoteSession">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxRemoteWorkspace">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxSettings">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxSettingsUI">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxSidebar">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxSidebarGit">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxSidebarInterpreterService">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxSidebarProviderKit">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxSwiftRender">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxSwiftRenderUI">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxTerminal">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxTerminalCore">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxTestSupport">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxUpdater">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxUpdaterUI">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxWindowing">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxWorkspaces">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:Examples"
+      name = "Examples">
+      <FileRef
+         location = "group:TabsVisibleSidebar/TabsVisibleSidebar.xcodeproj">
+      </FileRef>
+      <FileRef
+         location = "group:SampleSidebarExtensionApp/SampleSidebarExtensionApp.xcodeproj">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxExtensionSidebarExamples">
+      </FileRef>
+   </Group>
+</Workspace>

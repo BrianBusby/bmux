@@ -1,5 +1,5 @@
 import AppKit
-import CmuxControlSocket
+import BmuxControlSocket
 import Foundation
 
 /// The app-focus-domain witnesses are the byte-faithful bodies of the former

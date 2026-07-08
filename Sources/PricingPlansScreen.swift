@@ -3,7 +3,7 @@ import Bonsplit
 import Foundation
 import SwiftUI
 
-/// Shared entrypoint for every "Upgrade to cmux Pro" surface (sidebar badge,
+/// Shared entrypoint for every "Upgrade to bmux Pro" surface (sidebar badge,
 /// titlebar badge, Settings Account card, command palette, Help menu). Opens
 /// the app-specific pricing page in a dedicated browser workspace in the
 /// current window, falling back through the older in-window browser paths if
@@ -76,7 +76,7 @@ enum ProUpgradePresenter {
             workspaceReuseState.clear()
         }
 
-        let title = String(localized: "pricing.pro.workspace.title", defaultValue: "cmux Pro")
+        let title = String(localized: "pricing.pro.workspace.title", defaultValue: "bmux Pro")
         guard let workspace = appDelegate.performProUpgradeWorkspaceAction(
             title: title,
             url: url,
@@ -119,16 +119,16 @@ enum ProUpgradePresenter {
         var queryItems = components?.queryItems ?? []
         queryItems.removeAll { $0.name == "appearance" }
         queryItems.removeAll { $0.name == "background" }
-        queryItems.removeAll { $0.name == "cmux_app" }
-        queryItems.removeAll { $0.name == "cmux_scheme" }
+        queryItems.removeAll { $0.name == "bmux_app" }
+        queryItems.removeAll { $0.name == "bmux_scheme" }
         let backgroundColor = GhosttyBackgroundTheme.currentColor()
-        let appearance = cmuxReadableColorScheme(for: backgroundColor) == .dark
+        let appearance = bmuxReadableColorScheme(for: backgroundColor) == .dark
             ? "dark"
             : "light"
         queryItems.append(URLQueryItem(name: "appearance", value: appearance))
         queryItems.append(URLQueryItem(name: "background", value: backgroundColor.hexString()))
-        queryItems.append(URLQueryItem(name: "cmux_app", value: "1"))
-        queryItems.append(URLQueryItem(name: "cmux_scheme", value: AuthEnvironment.callbackScheme))
+        queryItems.append(URLQueryItem(name: "bmux_app", value: "1"))
+        queryItems.append(URLQueryItem(name: "bmux_scheme", value: AuthEnvironment.callbackScheme))
         components?.queryItems = queryItems
         return components?.url ?? AuthEnvironment.appPricingURL
     }
@@ -166,7 +166,7 @@ private final class NativePricingWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = String(localized: "pricing.native.window.title", defaultValue: "cmux Upgrade")
+        window.title = String(localized: "pricing.native.window.title", defaultValue: "bmux Upgrade")
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true
         window.minSize = NSSize(width: 760, height: 520)
@@ -408,7 +408,7 @@ private struct NativePricingPlansView: View {
                     String(localized: "pricing.native.pro.feature.vms", defaultValue: "Cloud agents on isolated Cloud VMs"),
                     String(localized: "pricing.native.pro.feature.hours", defaultValue: "20 active compute-hours per month, then usage-based"),
                     String(localized: "pricing.native.pro.feature.gateway", defaultValue: "Model gateway with usage and cost analytics"),
-                    String(localized: "pricing.native.pro.feature.ios", defaultValue: "cmux iOS app and email support"),
+                    String(localized: "pricing.native.pro.feature.ios", defaultValue: "bmux iOS app and email support"),
                 ]
             )
             NativePricingPlanCard(

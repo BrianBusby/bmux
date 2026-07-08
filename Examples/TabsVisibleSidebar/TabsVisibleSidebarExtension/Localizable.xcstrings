@@ -3,8 +3,8 @@
   "strings" : {
     "tabsVisible.actionDenied" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "cmux did not allow that action" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "cmux はその操作を許可しませんでした" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "bmux did not allow that action" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "bmux はその操作を許可しませんでした" } }
       }
     },
     "tabsVisible.manifest.displayName" : {
@@ -21,8 +21,8 @@
     },
     "tabsVisible.noWorkspaces" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No workspaces shared by cmux" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "cmux から共有されたワークスペースはありません" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No workspaces shared by bmux" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "bmux から共有されたワークスペースはありません" } }
       }
     },
     "tabsVisible.title" : {
@@ -33,14 +33,14 @@
     },
     "tabsVisible.waiting" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting for cmux" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "cmux を待機中" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting for bmux" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "bmux を待機中" } }
       }
     },
     "tabsVisible.waitingForHost" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting for cmux" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "cmux を待機中" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting for bmux" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "bmux を待機中" } }
       }
     }
   },

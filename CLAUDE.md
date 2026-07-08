@@ -1,4 +1,4 @@
-# cmux agent notes
+# bmux agent notes
 
 ## Initial setup
 
@@ -32,14 +32,14 @@ Example. If `reload.sh` output contains:
 
 ```text
 App path:
-  /Users/someone/Library/Developer/Xcode/DerivedData/cmux-my-tag/Build/Products/Debug/cmux DEV my-tag.app
+  /Users/someone/Library/Developer/Xcode/DerivedData/bmux-my-tag/Build/Products/Debug/bmux DEV my-tag.app
 ```
 
 **Claude Code** outputs:
 
 ```markdown
 -------------------------------------------------------
-[cmux DEV my-tag.app](file:///Users/someone/Library/Developer/Xcode/DerivedData/cmux-my-tag/Build/Products/Debug/cmux%20DEV%20my-tag.app)
+[bmux DEV my-tag.app](file:///Users/someone/Library/Developer/Xcode/DerivedData/bmux-my-tag/Build/Products/Debug/bmux%20DEV%20my-tag.app)
 -------------------------------------------------------
 ```
 
@@ -47,23 +47,23 @@ App path:
 
 ```markdown
 -------------------------------------------------------
-[my-tag: file:///Users/someone/Library/Developer/Xcode/DerivedData/cmux-my-tag/Build/Products/Debug/cmux%20DEV%20my-tag.app](file:///Users/someone/Library/Developer/Xcode/DerivedData/cmux-my-tag/Build/Products/Debug/cmux%20DEV%20my-tag.app)
+[my-tag: file:///Users/someone/Library/Developer/Xcode/DerivedData/bmux-my-tag/Build/Products/Debug/bmux%20DEV%20my-tag.app](file:///Users/someone/Library/Developer/Xcode/DerivedData/bmux-my-tag/Build/Products/Debug/bmux%20DEV%20my-tag.app)
 -------------------------------------------------------
 ```
 
-Never use `/tmp/cmux-<tag>/...` app links in chat output.
+Never use `/tmp/bmux-<tag>/...` app links in chat output.
 
-For CLI or socket dogfood against a tagged Debug app, use the tag-bound helper and set `CMUX_TAG`.
-Do not use `/tmp/cmux-cli` for tagged dogfood, since that symlink points at the most recently reloaded build and can target the user's main app socket.
+For CLI or socket dogfood against a tagged Debug app, use the tag-bound helper and set `BMUX_TAG`.
+Do not use `/tmp/bmux-cli` for tagged dogfood, since that symlink points at the most recently reloaded build and can target the user's main app socket.
 
 ```bash
-CMUX_TAG=<tag> scripts/cmux-debug-cli.sh list-workspaces
-CMUX_TAG=<tag> scripts/cmux-debug-cli.sh send --workspace workspace:1 --surface surface:1 "echo ok"
+BMUX_TAG=<tag> scripts/bmux-debug-cli.sh list-workspaces
+BMUX_TAG=<tag> scripts/bmux-debug-cli.sh send --workspace workspace:1 --surface surface:1 "echo ok"
 ```
 
-The helper refuses to run without `CMUX_TAG`, targets `/tmp/cmux-debug-<tag>.sock`, and uses the matching tagged CLI from `~/Library/Developer/Xcode/DerivedData/cmux-<tag>/...`. It also scrubs ambient cmux terminal context (`CMUX_SOCKET`, `CMUX_SOCKET_PASSWORD`, workspace/surface/tab/panel IDs, cmuxd socket, and debug log), then sets `CMUX_SOCKET_PATH`, `CMUX_BUNDLE_ID`, and `CMUX_BUNDLED_CLI_PATH` for the selected tag.
+The helper refuses to run without `BMUX_TAG`, targets `/tmp/bmux-debug-<tag>.sock`, and uses the matching tagged CLI from `~/Library/Developer/Xcode/DerivedData/bmux-<tag>/...`. It also scrubs ambient bmux terminal context (`BMUX_SOCKET`, `BMUX_SOCKET_PASSWORD`, workspace/surface/tab/panel IDs, bmuxd socket, and debug log), then sets `BMUX_SOCKET_PATH`, `BMUX_BUNDLE_ID`, and `BMUX_BUNDLED_CLI_PATH` for the selected tag.
 
-After making code changes, always use `reload.sh --tag` to build. **Never run bare `xcodebuild` or `open` an untagged `cmux DEV.app`.** Untagged builds share the default debug socket and bundle ID with other agents, causing conflicts and stealing focus.
+After making code changes, always use `reload.sh --tag` to build. **Never run bare `xcodebuild` or `open` an untagged `bmux DEV.app`.** Untagged builds share the default debug socket and bundle ID with other agents, causing conflicts and stealing focus.
 
 ```bash
 ./scripts/reload.sh --tag <your-branch-slug>
@@ -72,7 +72,7 @@ After making code changes, always use `reload.sh --tag` to build. **Never run ba
 If you only need to verify the build compiles (no launch), use a tagged derivedDataPath:
 
 ```bash
-xcodebuild -project cmux.xcodeproj -scheme cmux -configuration Debug -destination 'platform=macOS' -derivedDataPath /tmp/cmux-<your-tag> build
+xcodebuild -project bmux.xcodeproj -scheme bmux -configuration Debug -destination 'platform=macOS' -derivedDataPath /tmp/bmux-<your-tag> build
 ```
 
 When rebuilding GhosttyKit.xcframework, always use Release optimizations:
@@ -81,10 +81,10 @@ When rebuilding GhosttyKit.xcframework, always use Release optimizations:
 cd ghostty && zig build -Demit-xcframework=true -Dxcframework-target=universal -Doptimize=ReleaseFast
 ```
 
-When rebuilding cmuxd for release/bundling, always use ReleaseFast:
+When rebuilding bmuxd for release/bundling, always use ReleaseFast:
 
 ```bash
-cd cmuxd && zig build -Doptimize=ReleaseFast
+cd bmuxd && zig build -Doptimize=ReleaseFast
 ```
 
 `reload` = build the Debug app (tag required) and terminate any running app with the same tag. Pass `--launch` to also open the freshly-built app:
@@ -100,7 +100,7 @@ cd cmuxd && zig build -Doptimize=ReleaseFast
 ./scripts/reloadp.sh
 ```
 
-`reloads` = kill and launch the Release app as "cmux STAGING" (isolated from production cmux):
+`reloads` = kill and launch the Release app as "bmux STAGING" (isolated from production bmux):
 
 ```bash
 ./scripts/reloads.sh
@@ -122,7 +122,7 @@ This creates an isolated app with its own name, bundle ID, socket, and derived d
 
 Before launching a new tagged run, clean up any older tags you started in this session (quit old tagged app + remove its `/tmp` socket/derived data).
 
-For iOS dev auth, `ios/scripts/reload.sh` and `scripts/mobile-dev-launch.sh` auto-sign-in from `~/.secrets/cmuxterm-dev.env`. If the phone lands on the login screen or the helper reports missing dev sign-in credentials, do not ask the user to manually authenticate every build. Tell them to run `scripts/setup-team-dev.sh` once from any cmux checkout; it prompts for and verifies their Stack login, writes `~/.secrets/cmuxterm-dev.env` with chmod 600, and future agents can auto-auth iOS DEBUG reloads. Manual fallback: create that file with `CMUX_DOGFOOD_STACK_EMAIL=...` and `CMUX_DOGFOOD_STACK_PASSWORD=...`.
+For iOS dev auth, `ios/scripts/reload.sh` and `scripts/mobile-dev-launch.sh` auto-sign-in from `~/.secrets/bmuxterm-dev.env`. If the phone lands on the login screen or the helper reports missing dev sign-in credentials, do not ask the user to manually authenticate every build. Tell them to run `scripts/setup-team-dev.sh` once from any bmux checkout; it prompts for and verifies their Stack login, writes `~/.secrets/bmuxterm-dev.env` with chmod 600, and future agents can auto-auth iOS DEBUG reloads. Manual fallback: create that file with `BMUX_DOGFOOD_STACK_EMAIL=...` and `BMUX_DOGFOOD_STACK_PASSWORD=...`.
 
 ## Regression test commit policy
 
@@ -141,7 +141,7 @@ At handoff, launch one background `$autoreview` subagent with a bounded prompt (
 
 The loop may commit and push scoped fixes but never merges and never rebuilds the user's tagged build. The main agent inspects every pushed commit, rejects out-of-scope edits, and owns dogfood, approval, and merge. Merging app/runtime/UI changes still requires the user's explicit approval after dogfood; if a pushed fix changes runtime behavior mid-dogfood, rebuild the tag and re-notify, since the earlier verdict covers only the build the user tested.
 
-Notify through `cmux notify` so the user can leave and return. At handoff the main agent sends `cmux notify --title "Dogfood ready: <short task>" --subtitle "<branch> · <tag>" --body "Was: <prior bad behavior>. Now: <expected behavior>. <concrete check>. CI + review in background. PR: <pr-url>"`. The loop sends its outcome when done or blocked, e.g. `--title "CI green: <branch>"`, `--title "Review clean: <branch>" --body "fixed <n> findings, pushed"`, or `--title "CI blocked: <branch>" --body "<check>: <one-line cause>, needs your decision"`. Titles carry the outcome and branch; bodies say what happened and the single next action. If there is no cmux socket, skip notify and rely on the chat handoff.
+Notify through `bmux notify` so the user can leave and return. At handoff the main agent sends `bmux notify --title "Dogfood ready: <short task>" --subtitle "<branch> · <tag>" --body "Was: <prior bad behavior>. Now: <expected behavior>. <concrete check>. CI + review in background. PR: <pr-url>"`. The loop sends its outcome when done or blocked, e.g. `--title "CI green: <branch>"`, `--title "Review clean: <branch>" --body "fixed <n> findings, pushed"`, or `--title "CI blocked: <branch>" --body "<check>: <one-line cause>, needs your decision"`. Titles carry the outcome and branch; bodies say what happened and the single next action. If there is no bmux socket, skip notify and rely on the chat handoff.
 
 ## Shared behavior policy
 
@@ -151,7 +151,7 @@ Notify through `cmux notify` so the user can leave and return. At handoff the ma
 
 ## Pitfalls
 
-- **Custom UTTypes** for drag-and-drop must be declared in `Resources/Info.plist` under `UTExportedTypeDeclarations` (e.g. `com.splittabbar.tabtransfer`, `com.cmux.sidebar-tab-reorder`).
+- **Custom UTTypes** for drag-and-drop must be declared in `Resources/Info.plist` under `UTExportedTypeDeclarations` (e.g. `com.splittabbar.tabtransfer`, `com.bmux.sidebar-tab-reorder`).
 - Do not add an app-level display link or manual `ghostty_surface_draw` loop; rely on Ghostty wakeups/renderer to avoid typing lag.
 - **Typing-latency-sensitive paths** (read carefully before touching these areas):
   - `WindowTerminalHostView.hitTest()` in `TerminalWindowPortal.swift`: called on every event including keyboard. All divider/sidebar/drag routing is gated to pointer events only. Do not add work outside the `isPointerEvent` guard.
@@ -161,13 +161,13 @@ Notify through `cmux notify` so the user can leave and return. At handoff the ma
 - **Submodule safety:** When modifying a submodule (ghostty, vendor/bonsplit, etc.), always push the submodule commit to its remote `main` branch BEFORE committing the updated pointer in the parent repo. Never commit on a detached HEAD or temporary branch — the commit will be orphaned and lost. Verify with: `cd <submodule> && git merge-base --is-ancestor HEAD origin/main`.
 - **All user-facing strings must be localized.** Use `String(localized: "key.name", defaultValue: "English text")` for every string shown in the UI (labels, buttons, menus, dialogs, tooltips, error messages). Keys go in `Resources/Localizable.xcstrings` with translations for all supported languages (currently English and Japanese). Never use bare string literals in SwiftUI `Text()`, `Button()`, alert titles, etc.
 - **Localization audit is required for every user-facing change.** Before finishing a task that changes UI, Settings rows, menus, shortcut metadata, schema/config text, docs, command/help text, alerts, or tooltips, enumerate the changed user-facing surfaces and verify each one has entries for every supported locale. `defaultValue`, English fallback text, schema descriptions, or copied English strings do not count as localization. For Swift/AppKit strings, update `Resources/Localizable.xcstrings`; for localized web/docs content, update every supported message catalog (currently `web/messages/en.json` and `web/messages/ja.json`) and any localized data structures that carry inline translations. Parse touched localization files, compare changed message keys across locales, and use `rg` over changed Swift/TS/TSX/docs files for newly introduced bare English. The final handoff must state what localization audit was performed or explicitly say what could not be verified.
-- **Shortcut policy:** Every new cmux-owned keyboard shortcut must be added to `KeyboardShortcutSettings`, visible/editable in Settings, supported in `~/.config/cmux/cmux.json`, and documented in the keyboard shortcut and configuration docs.
-- **Snapshot boundary for list subtrees.** In any SwiftUI panel whose `body` contains a `LazyVStack` / `LazyHStack` / `List` / `ForEach` of rows, no view below that boundary may hold a reference to an `ObservableObject` / `@Observable` store (no `@ObservedObject`, `@EnvironmentObject`, `@StateObject`, `@Bindable`, or even a plain `let store: SomeStore` property). Rows and drop-gaps receive immutable value snapshots plus closure action bundles only. Violating this reintroduces the "orthogonal @Published change invalidates every row and thrashes `LazyLayoutViewCache`" class of 100% CPU spin loop that hit the Sessions panel and the workspace sidebar (https://github.com/manaflow-ai/cmux/issues/2586). Reference pattern: `IndexSectionActions` / `SectionGapActions` / `SessionSearchFn` in `Sources/SessionIndexView.swift`.
+- **Shortcut policy:** Every new bmux-owned keyboard shortcut must be added to `KeyboardShortcutSettings`, visible/editable in Settings, supported in `~/.config/bmux/bmux.json`, and documented in the keyboard shortcut and configuration docs.
+- **Snapshot boundary for list subtrees.** In any SwiftUI panel whose `body` contains a `LazyVStack` / `LazyHStack` / `List` / `ForEach` of rows, no view below that boundary may hold a reference to an `ObservableObject` / `@Observable` store (no `@ObservedObject`, `@EnvironmentObject`, `@StateObject`, `@Bindable`, or even a plain `let store: SomeStore` property). Rows and drop-gaps receive immutable value snapshots plus closure action bundles only. Violating this reintroduces the "orthogonal @Published change invalidates every row and thrashes `LazyLayoutViewCache`" class of 100% CPU spin loop that hit the Sessions panel and the workspace sidebar (https://github.com/manaflow-ai/bmux/issues/2586). Reference pattern: `IndexSectionActions` / `SectionGapActions` / `SessionSearchFn` in `Sources/SessionIndexView.swift`.
 - **No state mutation inside view-body computations.** A function called from `body` (directly or through a helper) must not write `@Published` state, schedule a `Task { @MainActor in store.x = … }`, or `DispatchQueue.main.async` a store write. That creates a re-render feedback loop and pegs the main thread (same root-cause family as the snapshot-boundary rule). State-changing work triggered by "new data appeared" belongs in a `reload()` completion, a `didSet`, or a property-observer — never in the projection that feeds `ForEach`.
-- **Foundation, SwiftUI, AttributeGraph, and WebKit semantics change silently between macOS major versions.** A function that "obviously" returns the same value on every macOS is not a reliable assumption. Concrete case from https://github.com/manaflow-ai/cmux/issues/4529: `URL(fileURLWithPath: "/").deletingLastPathComponent().path` returns `"/.."` on macOS 14 and 15 but `"/"` on macOS 26 — Apple silently fixed the underlying CFURL normalization. The repo's `macos-26` CI and every maintainer's dev machine were on the fixed-behavior side; every reporter on the issue was on the broken side. Always test on the reporter's macOS before declaring a user-reported repro disproven. AWS M4 Pro builders (`cmux-aws-mac`, `cmux-aws-m4pro`, `aws-m4pro-1..6`) are pre-provisioned on macOS 15.7.4 and the preferred empirical-repro path; see the `regression-hunt` skill in the cmuxterm-hq sibling repo for the full playbook.
-- **Test files in `cmuxTests/` must be wired into `cmux.xcodeproj/project.pbxproj`.** A `.swift` file added to the worktree without a matching `PBXFileReference` + `PBXSourcesBuildPhase` entry is silently ignored by Xcode and never compiles or runs on CI. Both `xcodebuild test -only-testing:cmuxTests/<TestClass>` and bot reviews pass with "Executed 0 tests" — so the missing wiring is indistinguishable from a clean two-commit red/green regression test until a real user hits the bug. The `workflow-guard-tests` job runs `./scripts/lint-pbxproj-test-wiring.sh` to catch this at PR time; surfaced during the https://github.com/manaflow-ai/cmux/issues/4529 investigation against https://github.com/manaflow-ai/cmux/pull/4536. Add via Xcode (drag the file into the cmuxTests target) or hand-edit the four pbxproj entries; reference any wired sibling like `TabManagerUnitTests.swift` as a template.
-- **SPM packages live in group folders, and the root workspace mirrors that folder shape exactly.** Every Swift package lives physically under exactly one group directory — `Packages/Shared/<pkg>` (used by both apps), `Packages/iOS/<pkg>` (iOS app only), or `Packages/macOS/<pkg>` (macOS app only) — and `cmux.xcworkspace/contents.xcworkspacedata` has three groups whose container locations are those folders, with every package directory appearing as a FileRef under its folder's group. So opening the workspace shows all packages grouped exactly like the directory tree. The folder is the source of truth: to move a package between groups, `git mv` its directory, then run `python3 scripts/check-workspace-package-groups.py --write` to regenerate the workspace. A new package goes in the group folder matching its consumers (both apps → Shared, iOS only → iOS, macOS only → macOS). Cross-group `.package(path:)` deps use `../../<Group>/<Name>`; never hand-edit the workspace group membership. CI's `python3 scripts/check-workspace-package-groups.py --check` fails on drift.
-- **Do not ignore cmux-owned `Package.resolved` files.** SwiftPM resolution changes must be visible in PR diffs. Track the root Xcode lockfile and every cmux-owned package-local `Package.resolved` generated by standalone `swift package resolve`, `swift build`, or `swift test`; a package-local lockfile is the source of truth for that package's standalone resolution and is not replaced by `cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`. Vendored third-party directories may preserve their upstream ignore policy, but cmux-owned package `.gitignore` files must not ignore `Package.resolved`. CI's `python3 scripts/check-package-resolved-policy.py` fails if this drifts.
+- **Foundation, SwiftUI, AttributeGraph, and WebKit semantics change silently between macOS major versions.** A function that "obviously" returns the same value on every macOS is not a reliable assumption. Concrete case from https://github.com/manaflow-ai/bmux/issues/4529: `URL(fileURLWithPath: "/").deletingLastPathComponent().path` returns `"/.."` on macOS 14 and 15 but `"/"` on macOS 26 — Apple silently fixed the underlying CFURL normalization. The repo's `macos-26` CI and every maintainer's dev machine were on the fixed-behavior side; every reporter on the issue was on the broken side. Always test on the reporter's macOS before declaring a user-reported repro disproven. AWS M4 Pro builders (`bmux-aws-mac`, `bmux-aws-m4pro`, `aws-m4pro-1..6`) are pre-provisioned on macOS 15.7.4 and the preferred empirical-repro path; see the `regression-hunt` skill in the bmuxterm-hq sibling repo for the full playbook.
+- **Test files in `bmuxTests/` must be wired into `bmux.xcodeproj/project.pbxproj`.** A `.swift` file added to the worktree without a matching `PBXFileReference` + `PBXSourcesBuildPhase` entry is silently ignored by Xcode and never compiles or runs on CI. Both `xcodebuild test -only-testing:bmuxTests/<TestClass>` and bot reviews pass with "Executed 0 tests" — so the missing wiring is indistinguishable from a clean two-commit red/green regression test until a real user hits the bug. The `workflow-guard-tests` job runs `./scripts/lint-pbxproj-test-wiring.sh` to catch this at PR time; surfaced during the https://github.com/manaflow-ai/bmux/issues/4529 investigation against https://github.com/manaflow-ai/bmux/pull/4536. Add via Xcode (drag the file into the bmuxTests target) or hand-edit the four pbxproj entries; reference any wired sibling like `TabManagerUnitTests.swift` as a template.
+- **SPM packages live in group folders, and the root workspace mirrors that folder shape exactly.** Every Swift package lives physically under exactly one group directory — `Packages/Shared/<pkg>` (used by both apps), `Packages/iOS/<pkg>` (iOS app only), or `Packages/macOS/<pkg>` (macOS app only) — and `bmux.xcworkspace/contents.xcworkspacedata` has three groups whose container locations are those folders, with every package directory appearing as a FileRef under its folder's group. So opening the workspace shows all packages grouped exactly like the directory tree. The folder is the source of truth: to move a package between groups, `git mv` its directory, then run `python3 scripts/check-workspace-package-groups.py --write` to regenerate the workspace. A new package goes in the group folder matching its consumers (both apps → Shared, iOS only → iOS, macOS only → macOS). Cross-group `.package(path:)` deps use `../../<Group>/<Name>`; never hand-edit the workspace group membership. CI's `python3 scripts/check-workspace-package-groups.py --check` fails on drift.
+- **Do not ignore bmux-owned `Package.resolved` files.** SwiftPM resolution changes must be visible in PR diffs. Track the root Xcode lockfile and every bmux-owned package-local `Package.resolved` generated by standalone `swift package resolve`, `swift build`, or `swift test`; a package-local lockfile is the source of truth for that package's standalone resolution and is not replaced by `bmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`. Vendored third-party directories may preserve their upstream ignore policy, but bmux-owned package `.gitignore` files must not ignore `Package.resolved`. CI's `python3 scripts/check-package-resolved-policy.py` fails if this drifts.
 
 ## Ghostty submodule workflow
 
@@ -235,31 +235,31 @@ Manual release steps (if not using the command):
 ./scripts/release-pretag-guard.sh
 git tag vX.Y.Z
 git push origin vX.Y.Z
-gh run watch --repo manaflow-ai/cmux
+gh run watch --repo manaflow-ai/bmux
 ```
 
 Notes:
 - Requires GitHub secrets: `APPLE_CERTIFICATE_BASE64`, `APPLE_CERTIFICATE_PASSWORD`,
   `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`.
-- The release asset is `cmux-macos.dmg` attached to the tag.
-- README download button points to `releases/latest/download/cmux-macos.dmg`.
+- The release asset is `bmux-macos.dmg` attached to the tag.
+- README download button points to `releases/latest/download/bmux-macos.dmg`.
 - Versioning: bump the minor version for updates unless explicitly asked otherwise.
 - Changelog: update `CHANGELOG.md`; docs changelog is rendered from it.
 
 ## Skills
 
-Detailed cmux contributor rules live in repo skills under `skills/`; use the task-specific skill before changing that area.
+Detailed bmux contributor rules live in repo skills under `skills/`; use the task-specific skill before changing that area.
 
 Core skill map:
 
-- `cmux-dev-workflow`: setup, tagged reloads, Xcode project normalization, sidebar extension tagging, local dev build isolation.
-- `cmux-architecture`: package boundaries, refactor architecture, file/API discipline, testability, Swift concurrency rules.
-- `cmux-backend`: backend TypeScript, Effect, Cloud VM control plane, provider secrets, Postgres and migrations.
-- `cmux-billing`: Stripe checkout, entitlements, webhooks, pricing dev stack, live provisioning.
-- `cmux-debugging`: debug event log, Debug menu, runtime pitfalls, typing-sensitive paths, SwiftUI list boundaries.
-- `cmux-localization`: user-facing strings, localization files, shortcut text, and localization audit.
-- `cmux-testing`: regression policy, Swift Testing, test quality, test wiring, local vs CI validation.
-- `cmux-socket-policy`: socket command threading and focus preservation.
-- `cmux-shared-behavior`: shared action paths for multi-entrypoint behavior and optimistic updates.
-- `cmux-ghostty`: Ghostty submodule and GhosttyKit workflow.
-- `cmux-release`: release, version bump, changelog, pretag guard, and release asset workflow.
+- `bmux-dev-workflow`: setup, tagged reloads, Xcode project normalization, sidebar extension tagging, local dev build isolation.
+- `bmux-architecture`: package boundaries, refactor architecture, file/API discipline, testability, Swift concurrency rules.
+- `bmux-backend`: backend TypeScript, Effect, Cloud VM control plane, provider secrets, Postgres and migrations.
+- `bmux-billing`: Stripe checkout, entitlements, webhooks, pricing dev stack, live provisioning.
+- `bmux-debugging`: debug event log, Debug menu, runtime pitfalls, typing-sensitive paths, SwiftUI list boundaries.
+- `bmux-localization`: user-facing strings, localization files, shortcut text, and localization audit.
+- `bmux-testing`: regression policy, Swift Testing, test quality, test wiring, local vs CI validation.
+- `bmux-socket-policy`: socket command threading and focus preservation.
+- `bmux-shared-behavior`: shared action paths for multi-entrypoint behavior and optimistic updates.
+- `bmux-ghostty`: Ghostty submodule and GhosttyKit workflow.
+- `bmux-release`: release, version bump, changelog, pretag guard, and release asset workflow.

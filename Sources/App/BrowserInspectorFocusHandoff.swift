@@ -3,22 +3,22 @@ import WebKit
 
 @MainActor
 extension AppDelegate {
-    func browserInspectorOwningWebView(for responder: NSResponder?, in window: NSWindow, event: NSEvent?) -> CmuxWebView? {
-        guard cmuxIsLikelyWebInspectorResponder(responder) else { return nil }
+    func browserInspectorOwningWebView(for responder: NSResponder?, in window: NSWindow, event: NSEvent?) -> BmuxWebView? {
+        guard bmuxIsLikelyWebInspectorResponder(responder) else { return nil }
         guard let event,
               WindowInputRoutingContext(event: event).allowsFirstResponderHitTesting,
               browserInspectorPointerEventTargets(event, window) else {
             return nil
         }
         if let webView = BrowserWindowPortalRegistry.webViewAtWindowPoint(event.locationInWindow, in: window)
-            as? CmuxWebView {
+            as? BmuxWebView {
             return webView
         }
         guard let responder else { return nil }
         guard let browserPanel = browserPanelOwningInspectorResponder(responder) else {
             return nil
         }
-        return browserPanel.webView as? CmuxWebView
+        return browserPanel.webView as? BmuxWebView
     }
 
     func postBrowserInspectorClickIntentIfNeeded(for responder: NSResponder?, in window: NSWindow, event: NSEvent?) {
@@ -28,7 +28,7 @@ extension AppDelegate {
 
     func browserPanelOwningInspectorResponder(_ responder: NSResponder) -> BrowserPanel? {
         for browserPanel in browserPanelsForInspectorFocusHandoff() {
-            guard let frontendWebView = browserPanel.webView.cmuxInspectorFrontendWebView(),
+            guard let frontendWebView = browserPanel.webView.bmuxInspectorFrontendWebView(),
                   browserInspectorResponder(responder, belongsTo: frontendWebView) else {
                 continue
             }

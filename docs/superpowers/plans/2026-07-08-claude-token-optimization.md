@@ -2,28 +2,28 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Route eligible Claude Code Bash tool calls through cmux's existing token optimization proxy using the shared `terminal.agentTokenOptimization.mode` setting.
+**Goal:** Route eligible Claude Code Bash tool calls through bmux's existing token optimization proxy using the shared `terminal.agentTokenOptimization.mode` setting.
 
 **Architecture:** Add a synchronous Claude `PreToolUse` hook for `Bash` tool calls before the existing async telemetry hook. Reuse the Codex optimizer parsing, eligibility, proxy command construction, and proxy execution path by generalizing Codex-specific helpers into agent-neutral helpers. Preserve Claude's existing CronCreate guard, Feed telemetry, and permission semantics.
 
-**Tech Stack:** Bash wrapper settings JSON, Swift CLI hook handling, Python regression tests, cmux `TokenOptimizationLayer`.
+**Tech Stack:** Bash wrapper settings JSON, Swift CLI hook handling, Python regression tests, bmux `TokenOptimizationLayer`.
 
 ---
 
 ## File Structure
 
 - Modify `tests/test_claude_wrapper_hooks.py`: assert the Claude wrapper injects a synchronous `Bash` optimizer hook while retaining the sync `CronCreate` guard and async status hook.
-- Modify `tests/test_codex_feed_hooks.py`: add Claude optimizer hook CLI regressions next to the existing Codex optimizer/proxy tests, because this file already owns `resolve_cmux_cli`, fake socket helpers, and direct CLI hook execution.
-- Modify `Resources/bin/cmux-claude-wrapper`: add the new `PreToolUse` matcher group for `Bash` before the async `pre-tool-use` telemetry group.
-- Modify `CLI/CMUXCLI+CodexFireAndForgetHooks.swift`: generalize the existing Codex optimizer helpers and add `runClaudeOptimizePreToolUseHook()`.
-- Modify `CLI/cmux.swift`: dispatch `cmux hooks claude optimize-pre-tool-use` and optionally update the hidden usage text.
+- Modify `tests/test_codex_feed_hooks.py`: add Claude optimizer hook CLI regressions next to the existing Codex optimizer/proxy tests, because this file already owns `resolve_bmux_cli`, fake socket helpers, and direct CLI hook execution.
+- Modify `Resources/bin/bmux-claude-wrapper`: add the new `PreToolUse` matcher group for `Bash` before the async `pre-tool-use` telemetry group.
+- Modify `CLI/BMUXCLI+CodexFireAndForgetHooks.swift`: generalize the existing Codex optimizer helpers and add `runClaudeOptimizePreToolUseHook()`.
+- Modify `CLI/bmux.swift`: dispatch `bmux hooks claude optimize-pre-tool-use` and optionally update the hidden usage text.
 - No localization updates are expected because no new user-facing text is added.
 
 ## Task 1: Wrapper Hook Regression
 
 **Files:**
 - Modify: `tests/test_claude_wrapper_hooks.py`
-- Modify: `Resources/bin/cmux-claude-wrapper`
+- Modify: `Resources/bin/bmux-claude-wrapper`
 
 - [ ] **Step 1: Write the failing wrapper test**
 
@@ -36,7 +36,7 @@ In `test_live_socket_injects_supported_hooks_without_unlocking_bypass`, after th
         optimizer_hooks = optimizer_groups[0].get("hooks", [])
         expect(
             any(
-                h.get("command") == '"${CMUX_CLAUDE_HOOK_CMUX_BIN:-cmux}" hooks claude optimize-pre-tool-use'
+                h.get("command") == '"${BMUX_CLAUDE_HOOK_BMUX_BIN:-bmux}" hooks claude optimize-pre-tool-use'
                 and h.get("async") is not True
                 for h in optimizer_hooks
             ),
@@ -64,23 +64,23 @@ In `test_live_socket_injects_supported_hooks_without_unlocking_bypass`, after th
 Run:
 
 ```bash
-PYTHONPYCACHEPREFIX=/private/tmp/cmux-pycache python3 tests/test_claude_wrapper_hooks.py
+PYTHONPYCACHEPREFIX=/private/tmp/bmux-pycache python3 tests/test_claude_wrapper_hooks.py
 ```
 
 Expected: FAIL with a message containing `PreToolUse should install a Bash optimizer hook`.
 
 - [ ] **Step 3: Add the wrapper hook**
 
-In `Resources/bin/cmux-claude-wrapper`, update the `PreToolUse` section of `HOOKS_JSON` from:
+In `Resources/bin/bmux-claude-wrapper`, update the `PreToolUse` section of `HOOKS_JSON` from:
 
 ```json
-"PreToolUse":[{"matcher":"CronCreate","hooks":[{"type":"command","command":"\"${CMUX_CLAUDE_HOOK_CMUX_BIN:-cmux}\" hooks claude cron-create-guard","timeout":5}]},{"matcher":"","hooks":[{"type":"command","command":"\"${CMUX_CLAUDE_HOOK_CMUX_BIN:-cmux}\" hooks claude pre-tool-use","timeout":5,"async":true}]}]
+"PreToolUse":[{"matcher":"CronCreate","hooks":[{"type":"command","command":"\"${BMUX_CLAUDE_HOOK_BMUX_BIN:-bmux}\" hooks claude cron-create-guard","timeout":5}]},{"matcher":"","hooks":[{"type":"command","command":"\"${BMUX_CLAUDE_HOOK_BMUX_BIN:-bmux}\" hooks claude pre-tool-use","timeout":5,"async":true}]}]
 ```
 
 to:
 
 ```json
-"PreToolUse":[{"matcher":"CronCreate","hooks":[{"type":"command","command":"\"${CMUX_CLAUDE_HOOK_CMUX_BIN:-cmux}\" hooks claude cron-create-guard","timeout":5}]},{"matcher":"Bash","hooks":[{"type":"command","command":"\"${CMUX_CLAUDE_HOOK_CMUX_BIN:-cmux}\" hooks claude optimize-pre-tool-use","timeout":5}]},{"matcher":"","hooks":[{"type":"command","command":"\"${CMUX_CLAUDE_HOOK_CMUX_BIN:-cmux}\" hooks claude pre-tool-use","timeout":5,"async":true}]}]
+"PreToolUse":[{"matcher":"CronCreate","hooks":[{"type":"command","command":"\"${BMUX_CLAUDE_HOOK_BMUX_BIN:-bmux}\" hooks claude cron-create-guard","timeout":5}]},{"matcher":"Bash","hooks":[{"type":"command","command":"\"${BMUX_CLAUDE_HOOK_BMUX_BIN:-bmux}\" hooks claude optimize-pre-tool-use","timeout":5}]},{"matcher":"","hooks":[{"type":"command","command":"\"${BMUX_CLAUDE_HOOK_BMUX_BIN:-bmux}\" hooks claude pre-tool-use","timeout":5,"async":true}]}]
 ```
 
 Also update the nearby wrapper comment to mention that the synchronous Bash optimizer may rewrite eligible commands before execution.
@@ -90,7 +90,7 @@ Also update the nearby wrapper comment to mention that the synchronous Bash opti
 Run:
 
 ```bash
-PYTHONPYCACHEPREFIX=/private/tmp/cmux-pycache python3 tests/test_claude_wrapper_hooks.py
+PYTHONPYCACHEPREFIX=/private/tmp/bmux-pycache python3 tests/test_claude_wrapper_hooks.py
 ```
 
 Expected: PASS.
@@ -99,15 +99,15 @@ Expected: PASS.
 
 **Files:**
 - Modify: `tests/test_codex_feed_hooks.py`
-- Modify: `CLI/CMUXCLI+CodexFireAndForgetHooks.swift`
-- Modify: `CLI/cmux.swift`
+- Modify: `CLI/BMUXCLI+CodexFireAndForgetHooks.swift`
+- Modify: `CLI/bmux.swift`
 
 - [ ] **Step 1: Write failing Claude optimizer tests**
 
 In `tests/test_codex_feed_hooks.py`, add:
 
 ```python
-CMUX_AGENT_OPTIMIZER_HOOK_SUBCOMMAND = "optimize-pre-tool-use"
+BMUX_AGENT_OPTIMIZER_HOOK_SUBCOMMAND = "optimize-pre-tool-use"
 ```
 
 Then add these test functions after `test_codex_optimize_pre_tool_use_ignores_ineligible_command`:
@@ -122,11 +122,11 @@ def test_claude_optimize_pre_tool_use_rewrites_bash_command(cli_path: str, root:
         "tool_input": {"command": "rg token Sources", "description": "Search token references"},
     }
     env = os.environ.copy()
-    env["CMUX_SURFACE_ID"] = FAKE_SURFACE_ID
-    env["CMUX_BUNDLED_CLI_PATH"] = cli_path
+    env["BMUX_SURFACE_ID"] = FAKE_SURFACE_ID
+    env["BMUX_BUNDLED_CLI_PATH"] = cli_path
 
     result = subprocess.run(
-        [cli_path, "hooks", "claude", CMUX_AGENT_OPTIMIZER_HOOK_SUBCOMMAND],
+        [cli_path, "hooks", "claude", BMUX_AGENT_OPTIMIZER_HOOK_SUBCOMMAND],
         input=json.dumps(payload),
         capture_output=True,
         text=True,
@@ -167,11 +167,11 @@ def test_claude_optimize_pre_tool_use_ignores_ineligible_command(cli_path: str, 
         "tool_input": {"command": "echo plain"},
     }
     env = os.environ.copy()
-    env["CMUX_SURFACE_ID"] = FAKE_SURFACE_ID
-    env["CMUX_BUNDLED_CLI_PATH"] = cli_path
+    env["BMUX_SURFACE_ID"] = FAKE_SURFACE_ID
+    env["BMUX_BUNDLED_CLI_PATH"] = cli_path
 
     result = subprocess.run(
-        [cli_path, "hooks", "claude", CMUX_AGENT_OPTIMIZER_HOOK_SUBCOMMAND],
+        [cli_path, "hooks", "claude", BMUX_AGENT_OPTIMIZER_HOOK_SUBCOMMAND],
         input=json.dumps(payload),
         capture_output=True,
         text=True,
@@ -195,20 +195,20 @@ Call both tests from `main()` immediately after the Codex optimizer tests.
 Run with a built CLI:
 
 ```bash
-CMUX_CLI_BIN="/Users/brianbusby/Library/Developer/Xcode/DerivedData/cmux-token-proxy/Build/Products/Debug/cmux DEV token-proxy.app/Contents/Resources/bin/cmux" PYTHONPYCACHEPREFIX=/private/tmp/cmux-pycache python3 tests/test_codex_feed_hooks.py
+BMUX_CLI_BIN="/Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-token-proxy/Build/Products/Debug/bmux DEV token-proxy.app/Contents/Resources/bin/bmux" PYTHONPYCACHEPREFIX=/private/tmp/bmux-pycache python3 tests/test_codex_feed_hooks.py
 ```
 
 Expected: FAIL because `hooks claude optimize-pre-tool-use` is not dispatched.
 
 - [ ] **Step 3: Generalize optimizer helpers and add Claude hook**
 
-In `CLI/CMUXCLI+CodexFireAndForgetHooks.swift`, implement:
+In `CLI/BMUXCLI+CodexFireAndForgetHooks.swift`, implement:
 
 ```swift
 func runClaudeOptimizePreToolUseHook() throws {
     let env = ProcessInfo.processInfo.environment
-    guard env["CMUX_SURFACE_ID"]?.isEmpty == false,
-          env["CMUX_CLAUDE_HOOKS_DISABLED"] != "1",
+    guard env["BMUX_SURFACE_ID"]?.isEmpty == false,
+          env["BMUX_CLAUDE_HOOKS_DISABLED"] != "1",
           Self.currentAgentTokenOptimizationMode() != .off
     else {
         print("{}")
@@ -268,7 +268,7 @@ Update `runCodexOptimizePreToolUseHook()` to call the renamed helpers.
 
 - [ ] **Step 4: Dispatch the Claude hook**
 
-In `CLI/cmux.swift`, inside the `runHooksPreSocketCommand` `case "claude"` handling, add a hidden branch for:
+In `CLI/bmux.swift`, inside the `runHooksPreSocketCommand` `case "claude"` handling, add a hidden branch for:
 
 ```swift
 if subcommand == "optimize-pre-tool-use" {
@@ -277,7 +277,7 @@ if subcommand == "optimize-pre-tool-use" {
 }
 ```
 
-Place it before socket-requiring Claude hook handling so it can run without contacting the cmux socket, like the Codex optimizer hook.
+Place it before socket-requiring Claude hook handling so it can run without contacting the bmux socket, like the Codex optimizer hook.
 
 - [ ] **Step 5: Run CLI tests to verify pass**
 
@@ -290,7 +290,7 @@ First build the tagged Debug app so the CLI includes the Swift changes:
 Then run:
 
 ```bash
-CMUX_CLI_BIN="/Users/brianbusby/Library/Developer/Xcode/DerivedData/cmux-claude-token-proxy/Build/Products/Debug/cmux DEV claude-token-proxy.app/Contents/Resources/bin/cmux" PYTHONPYCACHEPREFIX=/private/tmp/cmux-pycache python3 tests/test_codex_feed_hooks.py
+BMUX_CLI_BIN="/Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-claude-token-proxy/Build/Products/Debug/bmux DEV claude-token-proxy.app/Contents/Resources/bin/bmux" PYTHONPYCACHEPREFIX=/private/tmp/bmux-pycache python3 tests/test_codex_feed_hooks.py
 ```
 
 Expected: PASS.
@@ -305,7 +305,7 @@ Expected: PASS.
 Run:
 
 ```bash
-PYTHONPYCACHEPREFIX=/private/tmp/cmux-pycache python3 -m py_compile tests/test_claude_wrapper_hooks.py tests/test_codex_feed_hooks.py
+PYTHONPYCACHEPREFIX=/private/tmp/bmux-pycache python3 -m py_compile tests/test_claude_wrapper_hooks.py tests/test_codex_feed_hooks.py
 ```
 
 Expected: no output and exit 0.
@@ -315,7 +315,7 @@ Expected: no output and exit 0.
 Run:
 
 ```bash
-PYTHONPYCACHEPREFIX=/private/tmp/cmux-pycache python3 tests/test_claude_wrapper_hooks.py
+PYTHONPYCACHEPREFIX=/private/tmp/bmux-pycache python3 tests/test_claude_wrapper_hooks.py
 ```
 
 Expected: PASS.
@@ -328,14 +328,14 @@ Run:
 ./scripts/reload.sh --tag claude-token-proxy
 ```
 
-Expected: Debug build succeeds and prints an `App path:` for `cmux DEV claude-token-proxy.app`.
+Expected: Debug build succeeds and prints an `App path:` for `bmux DEV claude-token-proxy.app`.
 
 - [ ] **Step 4: Run CLI hook regression against built CLI**
 
 Run with the CLI path from the tagged build:
 
 ```bash
-CMUX_CLI_BIN="/Users/brianbusby/Library/Developer/Xcode/DerivedData/cmux-claude-token-proxy/Build/Products/Debug/cmux DEV claude-token-proxy.app/Contents/Resources/bin/cmux" PYTHONPYCACHEPREFIX=/private/tmp/cmux-pycache python3 tests/test_codex_feed_hooks.py
+BMUX_CLI_BIN="/Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-claude-token-proxy/Build/Products/Debug/bmux DEV claude-token-proxy.app/Contents/Resources/bin/bmux" PYTHONPYCACHEPREFIX=/private/tmp/bmux-pycache python3 tests/test_codex_feed_hooks.py
 ```
 
 Expected: PASS.
@@ -346,7 +346,7 @@ Run:
 
 ```bash
 scripts/check-pbxproj.sh
-git diff --check -- Resources/bin/cmux-claude-wrapper CLI/CMUXCLI+CodexFireAndForgetHooks.swift CLI/cmux.swift tests/test_claude_wrapper_hooks.py tests/test_codex_feed_hooks.py
+git diff --check -- Resources/bin/bmux-claude-wrapper CLI/BMUXCLI+CodexFireAndForgetHooks.swift CLI/bmux.swift tests/test_claude_wrapper_hooks.py tests/test_codex_feed_hooks.py
 ```
 
 Expected: both commands exit 0.

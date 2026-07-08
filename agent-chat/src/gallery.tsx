@@ -19,7 +19,7 @@ import {
 } from "./gallery-fixtures";
 import { groupTurns } from "./turns";
 
-const cwd = "/Users/lawrence/fun/cmuxterm-hq/worktrees/feat-agent-chat-ui/agent-chat";
+const cwd = "/Users/lawrence/fun/bmuxterm-hq/worktrees/feat-agent-chat-ui/agent-chat";
 
 function setOption(options: SessionOption[], id: string, value: OptionValue): SessionOption[] {
   return options.map((o) => o.id === id ? { ...o, value } : o);

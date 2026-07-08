@@ -10,7 +10,7 @@ import { stripeWebhookEvents } from "../../../../db/schema";
 import { captureBillingError } from "../../../../services/errors";
 import {
   applySubscriptionUpdate as applySubscriptionUpdateDefault,
-  isCmuxCheckoutSession,
+  isBmuxCheckoutSession,
   recordCheckoutCompletion as recordCheckoutCompletionDefault,
 } from "../../../../services/billing/purchase";
 import { isStripeBillingConfigured, stripe } from "../../../../services/billing/stripe";
@@ -50,7 +50,7 @@ export function makeStripeWebhookHandler(
   return withApiRouteSpan(
     request,
     "/api/stripe/webhook",
-    { "cmux.subsystem": "stripe", "cmux.stripe.operation": "billing_webhook" },
+    { "bmux.subsystem": "stripe", "bmux.stripe.operation": "billing_webhook" },
     async (span): Promise<Response> => {
       const webhookSecret = dependencies.webhookSecret();
       if (!webhookSecret || !dependencies.isConfigured()) {
@@ -69,7 +69,7 @@ export function makeStripeWebhookHandler(
         return jsonError("Invalid Stripe signature", 400);
       }
 
-      setSpanAttributes(span, { "cmux.stripe.event_type": event.type });
+      setSpanAttributes(span, { "bmux.stripe.event_type": event.type });
       const db = dependencies.db();
       const [inserted] = await db
         .insert(stripeWebhookEvents)
@@ -128,7 +128,7 @@ async function processStripeEvent(
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object;
-      if (!isCmuxCheckoutSession(session)) return { skipped: "foreign_checkout" };
+      if (!isBmuxCheckoutSession(session)) return { skipped: "foreign_checkout" };
       const expanded = await dependencies.stripe().checkout.sessions.retrieve(session.id, {
         expand: ["subscription", "customer"],
       });

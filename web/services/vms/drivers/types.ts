@@ -10,7 +10,7 @@ export type VMHandle = {
   provider: ProviderId;
   providerVmId: string;
   status: VMStatus;
-  image: string; // e.g. "cmux-sandbox:v0-71a954b8e53b" for e2b
+  image: string; // e.g. "bmux-sandbox:v0-71a954b8e53b" for e2b
   createdAt: number;
   providerMetadata?: Record<string, unknown>;
 };
@@ -67,7 +67,7 @@ export type AttachEndpoint = SSHEndpoint | WebSocketPtyEndpoint;
 
 export type AttachOptions = {
   /**
-   * Workspace attaches need a cmuxd RPC endpoint so browser panels can proxy remote
+   * Workspace attaches need a bmuxd RPC endpoint so browser panels can proxy remote
    * loopback URLs. PTY-only split attaches can omit it and only mint a terminal lease.
    */
   requireDaemon?: boolean;
@@ -117,7 +117,7 @@ export interface VMProvider {
   restore(snapshotId: string): Promise<VMHandle>;
   fork?(vmId: string): Promise<VMHandle>;
 
-  // Returns a live attach endpoint the client can dial into. Providers prefer cmuxd-remote
+  // Returns a live attach endpoint the client can dial into. Providers prefer bmuxd-remote
   // WebSocket PTY with a short-lived one-use lease, with provider-specific fallbacks.
   openAttach(vmId: string, options?: AttachOptions): Promise<AttachEndpoint>;
 

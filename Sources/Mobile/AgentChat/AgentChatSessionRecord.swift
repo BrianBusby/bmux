@@ -1,4 +1,4 @@
-import CmuxAgentChat
+import BmuxAgentChat
 import Foundation
 
 /// One chat-capable agent session the Mac knows about: hook-derived
@@ -10,10 +10,10 @@ struct AgentChatSessionRecord: Sendable {
     /// Which agent runtime owns the session.
     let agentKind: ChatAgentKind
 
-    /// Owning cmux workspace UUID string, when known.
+    /// Owning bmux workspace UUID string, when known.
     var workspaceID: String?
 
-    /// Hosting cmux terminal surface UUID string, when known. Required for
+    /// Hosting bmux terminal surface UUID string, when known. Required for
     /// the send/interrupt path.
     var surfaceID: String?
 
@@ -79,7 +79,7 @@ struct AgentChatSessionRecord: Sendable {
         }
     }
 
-    /// Fills gaps from the hook store without replacing live cmux bindings.
+    /// Fills gaps from the hook store without replacing live bmux bindings.
     mutating func adoptMissingBindings(
         from entry: AgentChatHookSessionStore.Entry,
         includingPID: Bool = true

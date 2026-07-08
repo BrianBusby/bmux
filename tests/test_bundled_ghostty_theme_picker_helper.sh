@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SOURCE_PACKAGES_DIR="${CMUX_SOURCE_PACKAGES_DIR:-$PWD/.ci-source-packages}"
-DERIVED_DATA_PATH="${CMUX_DERIVED_DATA_PATH:-$PWD/.ci-bundled-ghostty-helper}"
-CONFIGURATION="${CMUX_CONFIGURATION:-Debug}"
-APP_PATH="${CMUX_APP_PATH:-}"
-TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/cmux-theme-picker-helper.XXXXXX")"
+SOURCE_PACKAGES_DIR="${BMUX_SOURCE_PACKAGES_DIR:-$PWD/.ci-source-packages}"
+DERIVED_DATA_PATH="${BMUX_DERIVED_DATA_PATH:-$PWD/.ci-bundled-ghostty-helper}"
+CONFIGURATION="${BMUX_CONFIGURATION:-Debug}"
+APP_PATH="${BMUX_APP_PATH:-}"
+TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/bmux-theme-picker-helper.XXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-if [ "${CMUX_SKIP_ZIG_BUILD:-0}" = "1" ]; then
+if [ "${BMUX_SKIP_ZIG_BUILD:-0}" = "1" ]; then
   echo "SKIP: bundled Ghostty helper regression requires the real Zig-built helper"
   exit 0
 fi
@@ -21,10 +21,10 @@ if [ -n "$APP_PATH" ]; then
 else
   case "$CONFIGURATION" in
     Debug)
-      APP_NAME="cmux DEV.app"
+      APP_NAME="bmux DEV.app"
       ;;
     Release)
-      APP_NAME="cmux.app"
+      APP_NAME="bmux.app"
       ;;
     *)
       echo "FAIL: unsupported configuration $CONFIGURATION" >&2
@@ -36,8 +36,8 @@ else
   rm -rf "$DERIVED_DATA_PATH"
 
   xcodebuild \
-    -project cmux.xcodeproj \
-    -scheme cmux \
+    -project bmux.xcodeproj \
+    -scheme bmux \
     -configuration "$CONFIGURATION" \
     -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
     -disableAutomaticPackageResolution \
@@ -102,10 +102,10 @@ def helper_environment(scenario_config_path):
     env = os.environ.copy()
     env.update(
         {
-            "CMUX_THEME_PICKER_CONFIG": scenario_config_path,
-            "CMUX_THEME_PICKER_BUNDLE_ID": "com.cmuxterm.test",
-            "CMUX_THEME_PICKER_TARGET": "both",
-            "CMUX_THEME_PICKER_COLOR_SCHEME": "dark",
+            "BMUX_THEME_PICKER_CONFIG": scenario_config_path,
+            "BMUX_THEME_PICKER_BUNDLE_ID": "com.bmuxterm.test",
+            "BMUX_THEME_PICKER_TARGET": "both",
+            "BMUX_THEME_PICKER_COLOR_SCHEME": "dark",
             "GHOSTTY_RESOURCES_DIR": ghostty_resources_dir,
             "TERM": "xterm-256color",
             "XDG_CONFIG_HOME": isolated_config_home,
@@ -236,7 +236,7 @@ def run_picker(label, scenario_config_path, scripted_input, expected_theme=None)
         assert_theme_written(label, scenario_config_path, expected_theme)
 
 # The test's XDG_CONFIG_HOME starts empty and each scenario writes to a fresh
-# CMUX_THEME_PICKER_CONFIG path, so the picker opens on the first listed theme.
+# BMUX_THEME_PICKER_CONFIG path, so the picker opens on the first listed theme.
 first_theme = theme_names[0]
 second_theme = theme_names[1]
 
@@ -254,27 +254,27 @@ PY
 
 while IFS= read -r CONFIG_PATH; do
   if [ ! -f "$CONFIG_PATH" ]; then
-    echo "FAIL: Enter did not write the cmux theme override file at $CONFIG_PATH" >&2
+    echo "FAIL: Enter did not write the bmux theme override file at $CONFIG_PATH" >&2
     exit 1
   fi
 
-  if ! grep -qx '# cmux themes start' "$CONFIG_PATH"; then
-    echo "FAIL: cmux theme override start marker missing" >&2
+  if ! grep -qx '# bmux themes start' "$CONFIG_PATH"; then
+    echo "FAIL: bmux theme override start marker missing" >&2
     cat "$CONFIG_PATH" >&2
     exit 1
   fi
 
   if ! grep -Eq '^theme = light:.+,dark:.+$' "$CONFIG_PATH"; then
-    echo "FAIL: cmux theme override did not set both light and dark themes" >&2
+    echo "FAIL: bmux theme override did not set both light and dark themes" >&2
     cat "$CONFIG_PATH" >&2
     exit 1
   fi
 
-  if ! grep -qx '# cmux themes end' "$CONFIG_PATH"; then
-    echo "FAIL: cmux theme override end marker missing" >&2
+  if ! grep -qx '# bmux themes end' "$CONFIG_PATH"; then
+    echo "FAIL: bmux theme override end marker missing" >&2
     cat "$CONFIG_PATH" >&2
     exit 1
   fi
 done < "$RESULTS_PATH"
 
-echo "PASS: bundled Ghostty theme picker helper applies highlighted cmux theme on Enter"
+echo "PASS: bundled Ghostty theme picker helper applies highlighted bmux theme on Enter"

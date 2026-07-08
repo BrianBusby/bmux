@@ -1,8 +1,8 @@
 import Foundation
-import CmuxCore
+import BmuxCore
 import Darwin
-import CmuxNotifications
-import CmuxSidebar
+import BmuxNotifications
+import BmuxSidebar
 
 extension Workspace {
     struct DetachedAgentRuntimeState {

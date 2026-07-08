@@ -188,7 +188,7 @@ describe("subrouter accounts route", () => {
       request("/api/subrouter/accounts?validate=1", {
         auth: "cookie",
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://bmux.test" },
         body: JSON.stringify({
           provider: "openai-apikey",
           apiKey: "sk-test-openai",
@@ -375,7 +375,7 @@ describe("subrouter accounts route", () => {
       request("/api/subrouter/accounts/acct-1?teamId=team-a", {
         auth: "cookie",
         method: "DELETE",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://bmux.test" },
       }),
       { params: Promise.resolve({ accountId: "acct-1" }) },
     );
@@ -431,7 +431,7 @@ function request(path: string, init: TestRequestInit = {}): Request {
     headers.set("authorization", "Bearer access-token");
     headers.set("x-stack-refresh-token", "refresh-token");
   }
-  return new Request(`https://cmux.test${path}`, {
+  return new Request(`https://bmux.test${path}`, {
     method: init.method ?? "GET",
     headers,
     body: init.body,

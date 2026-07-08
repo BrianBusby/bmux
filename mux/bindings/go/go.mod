@@ -1,3 +1,3 @@
-module github.com/manaflow-ai/cmux/mux/bindings/go
+module github.com/manaflow-ai/bmux/mux/bindings/go
 
 go 1.22

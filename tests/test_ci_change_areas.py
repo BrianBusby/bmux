@@ -56,7 +56,7 @@ def test_web_only_runs_web_without_macos() -> None:
 
 
 def test_mux_only_skips_macos() -> None:
-    # cmux-mux is a standalone Rust project with its own `mux` workflow; its
+    # bmux-mux is a standalone Rust project with its own `mux` workflow; its
     # changes must not require the macOS app-host tests.
     assert_areas(
         ["mux/crates/mux-core/src/browser.rs", "mux/README.md", "mux/docs/protocol.md"],
@@ -129,7 +129,7 @@ def test_agent_session_resources_run_web_and_macos() -> None:
 
 
 def test_ios_only_skips_main_macos_ci() -> None:
-    assert_areas(["ios/cmux/ContentView.swift"], macos=False, web=False, go=False)
+    assert_areas(["ios/bmux/ContentView.swift"], macos=False, web=False, go=False)
 
 
 def test_remote_daemon_runs_go_only() -> None:
@@ -574,12 +574,12 @@ def test_macos_jobs_use_lane_specific_xcode_pin_vars() -> None:
         "tests-build-and-lag",
     ]:
         block = workflow_job_block(job_name)
-        assert "CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_15 }}" in block
-        assert 'CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"' in block
+        assert "BMUX_CI_XCODE_APP: ${{ vars.BMUX_CI_XCODE_APP_MACOS_15 }}" in block
+        assert 'BMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"' in block
 
     release_block = workflow_job_block("release-build")
-    assert "CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_26 }}" in release_block
-    assert 'CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"' in release_block
+    assert "BMUX_CI_XCODE_APP: ${{ vars.BMUX_CI_XCODE_APP_MACOS_26 }}" in release_block
+    assert 'BMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"' in release_block
 
 
 def test_required_macos_topology_collapses_display_and_release_helper_jobs() -> None:
@@ -598,10 +598,10 @@ def test_required_macos_topology_collapses_display_and_release_helper_jobs() -> 
     assert "scripts/ci/virtual-display-lock.sh reap-strays" in runtime_block
     assert runtime_block.rfind("scripts/ci/virtual-display-lock.sh reap-strays") < runtime_block.rfind("scripts/ci/virtual-display-lock.sh release")
     assert "timeout-minutes: 40" in package_block
-    assert "CMUX_CI_HELPER_XCODE_APP" in package_block
+    assert "BMUX_CI_HELPER_XCODE_APP" in package_block
     assert "/Applications/Xcode_16.4.app" not in package_block
     assert "Select helper Xcode" in package_block
-    assert "CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15" in package_block
+    assert "BMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15" in package_block
     assert "Build universal Ghostty CLI helper" in package_block
     assert "./scripts/build-ghostty-cli-helper.sh --universal --output ghostty-cli-helper/ghostty" in package_block
     assert '[[ "$HELPER_SDK_VERSION" == 15.* ]]' in package_block

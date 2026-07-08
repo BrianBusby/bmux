@@ -1,7 +1,7 @@
 //! Control socket: a JSON-lines protocol over the platform transport.
 //!
-//! This is the attach surface for external frontends (the cmux app, the
-//! bundled `cmux-mux attach` client, scripts). One JSON request per line;
+//! This is the attach surface for external frontends (the bmux app, the
+//! bundled `bmux-mux attach` client, scripts). One JSON request per line;
 //! every request gets one JSON response line. Two commands additionally
 //! turn the connection full-duplex:
 //!
@@ -15,7 +15,7 @@
 //!
 //! ```text
 //! {"id":1,"cmd":"identify"}
-//! {"id":1,"ok":true,"data":{"app":"cmux-mux","session":"main",...}}
+//! {"id":1,"ok":true,"data":{"app":"bmux-mux","session":"main",...}}
 //! ```
 
 use std::collections::HashMap;
@@ -858,7 +858,7 @@ fn spawn_attach_notification_stream(
 fn handle_command(mux: &Arc<Mux>, cmd: Command, writer: &LineWriter) -> anyhow::Result<Value> {
     match cmd {
         Command::Identify => Ok(json!({
-            "app": "cmux-mux",
+            "app": "bmux-mux",
             "version": env!("CARGO_PKG_VERSION"),
             "protocol": PROTOCOL_VERSION,
             "session": mux.session,

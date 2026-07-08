@@ -1,7 +1,7 @@
 // End-to-end option controls: fetch provider options, start a session, set
 // runtime options through the shared WS op, then verify a prompt still
 // completes. Usage: bun test/options.e2e.ts [provider ...]
-const PORT = Number(process.env.CMUX_AGENT_UI_PORT ?? 7739);
+const PORT = Number(process.env.BMUX_AGENT_UI_PORT ?? 7739);
 const providersToTest = Bun.argv.slice(2).length
   ? Bun.argv.slice(2)
   : ["codex", "pi", "opencode"];

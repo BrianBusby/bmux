@@ -11,7 +11,7 @@ describe("docs search utilities", () => {
       "/docs/getting-started",
     );
     expect(
-      normalizePagefindUrl("https://cmux.com/ja/docs/api/index.html#surface"),
+      normalizePagefindUrl("https://bmux.com/ja/docs/api/index.html#surface"),
     ).toBe("/ja/docs/api#surface");
     expect(normalizePagefindUrl("/docs/configuration/index.html")).toBe(
       "/docs/configuration",
@@ -21,8 +21,8 @@ describe("docs search utilities", () => {
   test("prefers section-level Pagefind matches", () => {
     const result = normalizeDocsSearchResult({
       url: "/docs/configuration/",
-      excerpt: "Configure <mark>cmux</mark>.",
-      plain_excerpt: "Configure cmux.",
+      excerpt: "Configure <mark>bmux</mark>.",
+      plain_excerpt: "Configure bmux.",
       meta: {
         title: "Configuration",
         section: "Docs",
@@ -31,15 +31,15 @@ describe("docs search utilities", () => {
         {
           title: "Configuration",
           url: "/docs/configuration/#title",
-          excerpt: "Configure <mark>cmux</mark>.",
-          plain_excerpt: "Configure cmux.",
+          excerpt: "Configure <mark>bmux</mark>.",
+          plain_excerpt: "Configure bmux.",
           weighted_locations: [{ balanced_score: 100 }],
         },
         {
           title: "Keyboard shortcuts",
           url: "/docs/configuration/#keyboard-shortcuts",
-          excerpt: "Set <mark>shortcuts</mark> in cmux.json.",
-          plain_excerpt: "Set shortcuts in cmux.json.",
+          excerpt: "Set <mark>shortcuts</mark> in bmux.json.",
+          plain_excerpt: "Set shortcuts in bmux.json.",
           weighted_locations: [{ balanced_score: 1000 }],
         },
       ],
@@ -49,8 +49,8 @@ describe("docs search utilities", () => {
       href: "/docs/configuration#keyboard-shortcuts",
       title: "Keyboard shortcuts",
       section: "Docs",
-      excerptHtml: "Set <mark>shortcuts</mark> in cmux.json.",
-      plainExcerpt: "Set shortcuts in cmux.json.",
+      excerptHtml: "Set <mark>shortcuts</mark> in bmux.json.",
+      plainExcerpt: "Set shortcuts in bmux.json.",
     });
   });
 

@@ -1,6 +1,6 @@
 import AppKit
 import Combine
-import CmuxTestSupport
+import BmuxTestSupport
 import SwiftUI
 
 struct MinimalModeSidebarControlActionProxyView: NSViewRepresentable {
@@ -207,8 +207,8 @@ final class MinimalModeSidebarControlActionView: NSView {
         }
         guard shouldAcceptAction(at: point) else { return nil }
         #if DEBUG
-        if ProcessInfo.processInfo.environment["CMUX_UI_TEST_BONSPLIT_TAB_DRAG_SETUP"] == "1" {
-            _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "CMUX_UI_TEST_BONSPLIT_TAB_DRAG_PATH") { payload in
+        if ProcessInfo.processInfo.environment["BMUX_UI_TEST_BONSPLIT_TAB_DRAG_SETUP"] == "1" {
+            _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "BMUX_UI_TEST_BONSPLIT_TAB_DRAG_PATH") { payload in
                 payload["\(telemetryPrefix)LastHitTestSlot"] = slot.debugName
                 payload["\(telemetryPrefix)LastHitTestPoint"] = windowDragHandleFormatPoint(point)
                 payload["\(telemetryPrefix)LastHitTestWindowNumber"] = window.map { String($0.windowNumber) } ?? "nil"
@@ -241,7 +241,7 @@ final class MinimalModeSidebarControlActionView: NSView {
         }
         switch slot {
         case .toggleSidebar:
-            CmuxExtensionSidebarSelection.showMenu(anchorView: self, event: event)
+            BmuxExtensionSidebarSelection.showMenu(anchorView: self, event: event)
         case .newTab:
             _ = AppDelegate.shared?.showNewWorkspaceContextMenu(anchorView: self, event: event)
         case .cloudVM:
@@ -293,8 +293,8 @@ final class MinimalModeSidebarControlActionView: NSView {
         guard isEnabled else { return }
 
         #if DEBUG
-        if ProcessInfo.processInfo.environment["CMUX_UI_TEST_BONSPLIT_TAB_DRAG_SETUP"] == "1" {
-            _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "CMUX_UI_TEST_BONSPLIT_TAB_DRAG_PATH") { payload in
+        if ProcessInfo.processInfo.environment["BMUX_UI_TEST_BONSPLIT_TAB_DRAG_SETUP"] == "1" {
+            _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "BMUX_UI_TEST_BONSPLIT_TAB_DRAG_PATH") { payload in
                 payload["\(telemetryPrefix)LastAction"] = slot.debugName
                 payload["\(telemetryPrefix)LastPoint"] = windowDragHandleFormatPoint(convert(locationInWindow, from: nil))
                 payload["\(telemetryPrefix)WindowNumber"] = window.map { String($0.windowNumber) } ?? "nil"

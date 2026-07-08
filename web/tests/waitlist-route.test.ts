@@ -48,7 +48,7 @@ mock.module("node:dns", () => ({
 const { POST } = await import("../app/api/waitlist/route");
 
 function post(body: unknown): Request {
-  return new Request("https://cmux.test/api/waitlist", {
+  return new Request("https://bmux.test/api/waitlist", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

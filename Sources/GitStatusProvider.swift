@@ -1,4 +1,4 @@
-import CmuxFoundation
+import BmuxFoundation
 import Foundation
 
 /// Runs non-locking `git status --porcelain` and parses results into a path-to-status map.

@@ -1,11 +1,11 @@
 import Foundation
-import CmuxGit
-import CmuxSidebarGit
-import CmuxSidebar
+import BmuxGit
+import BmuxSidebarGit
+import BmuxSidebar
 
 // MARK: - SidebarGitHosting conformance
 //
-// TabManager is the window-side host of the extracted CmuxSidebarGit
+// TabManager is the window-side host of the extracted BmuxSidebarGit
 // services: snapshot reads of workspace/panel state, synchronous projection
 // writes of branch and PR badge state onto Workspace, and the environment
 // toggles (settings + mobile-host activity) the schedulers honor. Every

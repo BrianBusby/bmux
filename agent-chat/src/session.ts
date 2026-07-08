@@ -219,7 +219,7 @@ export function useSession(): SessionState {
     pendingStartRef.current = null;
     restoreComposerDraft(sessionStorage, pending.prompt);
     history.replaceState(null, "", "/");
-    document.title = "cmux agent";
+    document.title = "bmux agent";
     sessionIdRef.current = null;
     optimisticUsersRef.current = [];
     setSession(null);
@@ -278,7 +278,7 @@ export function useSession(): SessionState {
           case "session-created":
             sessionIdRef.current = msg.session.id;
             history.replaceState(null, "", "/s/" + msg.session.id);
-            document.title = msg.session.title || "cmux agent";
+            document.title = msg.session.title || "bmux agent";
             if (msg.requestId && pendingStartRef.current?.requestId === msg.requestId) {
               const queuedReplies = pendingStartRef.current.queuedReplies;
               clearPendingStartTimeout();
@@ -301,7 +301,7 @@ export function useSession(): SessionState {
             break;
           case "history":
             sessionIdRef.current = msg.session.id;
-            document.title = msg.session.title || "cmux agent";
+            document.title = msg.session.title || "bmux agent";
             setSession(msg.session);
             setBlocks((msg.events as AgentEvent[]).reduce(foldEvent, [] as Block[]));
             optimisticUsersRef.current = [];
@@ -427,7 +427,7 @@ export function useSession(): SessionState {
     clearPendingStartTimeout();
     pendingStartRef.current = null;
     history.replaceState(null, "", "/");
-    document.title = "cmux agent";
+    document.title = "bmux agent";
     sessionIdRef.current = null;
     setSession(null);
     setBlocks([]);

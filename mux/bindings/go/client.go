@@ -1,4 +1,4 @@
-package cmux
+package bmux
 
 import (
 	"bufio"
@@ -16,11 +16,11 @@ import (
 )
 
 var (
-	ErrCommand          = errors.New("cmux mux command error")
-	ErrConnection       = errors.New("cmux mux connection error")
-	ErrTimeout          = errors.New("cmux mux timeout")
-	ErrProtocolMismatch = errors.New("cmux mux protocol mismatch")
-	ErrDecode           = errors.New("cmux mux decode error")
+	ErrCommand          = errors.New("bmux mux command error")
+	ErrConnection       = errors.New("bmux mux connection error")
+	ErrTimeout          = errors.New("bmux mux timeout")
+	ErrProtocolMismatch = errors.New("bmux mux protocol mismatch")
+	ErrDecode           = errors.New("bmux mux decode error")
 )
 
 type CommandError struct {
@@ -108,7 +108,7 @@ func DefaultSocketPath(session string) string {
 	if base == "" {
 		base = os.TempDir()
 	}
-	return filepath.Join(base, fmt.Sprintf("cmux-mux-%d", os.Getuid()), session+".sock")
+	return filepath.Join(base, fmt.Sprintf("bmux-mux-%d", os.Getuid()), session+".sock")
 }
 
 func (c *Client) Close() error {

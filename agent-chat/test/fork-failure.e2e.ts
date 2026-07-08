@@ -1,4 +1,4 @@
-const PORT = Number(process.env.CMUX_AGENT_UI_PORT ?? 7739);
+const PORT = Number(process.env.BMUX_AGENT_UI_PORT ?? 7739);
 const TIMEOUT_MS = Number(process.env.E2E_TIMEOUT_MS ?? 30_000);
 
 export {};

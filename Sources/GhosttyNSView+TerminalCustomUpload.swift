@@ -30,7 +30,7 @@ extension GhosttyNSView {
                 case .failure:
                     NSSound.beep()
 #if DEBUG
-                    cmuxDebugLog("terminal.remoteDropUpload.customFailed surface=\(self?.terminalSurface?.id.uuidString.prefix(5) ?? "nil")")
+                    bmuxDebugLog("terminal.remoteDropUpload.customFailed surface=\(self?.terminalSurface?.id.uuidString.prefix(5) ?? "nil")")
 #endif
                 }
             }

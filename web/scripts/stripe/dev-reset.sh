@@ -92,8 +92,8 @@ resolve_stack_env() {
 
   if [[ -z "${NEXT_PUBLIC_STACK_PROJECT_ID:-}" || -z "${STACK_SECRET_SERVER_KEY:-}" ]]; then
     # Reuse the same env loader as web/scripts/dev-local.sh: optional
-    # ~/.secrets/cmux.env first, then Stack/web secrets from
-    # ~/.secrets/cmuxterm-dev.env or the documented legacy fallbacks.
+    # ~/.secrets/bmux.env first, then Stack/web secrets from
+    # ~/.secrets/bmuxterm-dev.env or the documented legacy fallbacks.
     # shellcheck disable=SC1091
     source "$WEB_DIR/scripts/load-dev-env.sh"
   fi
@@ -253,7 +253,7 @@ if [[ "$ALLOW_PROJECT" != "1" && "$NEXT_PUBLIC_STACK_PROJECT_ID" != "$DEV_STACK_
   die "refusing Stack project ${NEXT_PUBLIC_STACK_PROJECT_ID}; pass --allow-project for non-prod test projects"
 fi
 
-echo "cmux billing dev reset"
+echo "bmux billing dev reset"
 echo "  Stack project: $NEXT_PUBLIC_STACK_PROJECT_ID"
 echo "  Email: $EMAIL"
 if [[ -n "$DB_PORT" ]]; then
@@ -440,44 +440,44 @@ process.stdin.on("end", () => {
   const user = JSON.parse(input);
   const raw = user.client_read_only_metadata ?? user.clientReadOnlyMetadata ?? {};
   const metadata = raw && typeof raw === "object" && !Array.isArray(raw) ? { ...raw } : {};
-  const hadCmuxPlan = Object.prototype.hasOwnProperty.call(metadata, "cmuxPlan");
-  const vmPlan = typeof metadata.cmuxVmPlan === "string" && metadata.cmuxVmPlan.trim() ? metadata.cmuxVmPlan.trim() : "";
-  delete metadata.cmuxPlan;
+  const hadBmuxPlan = Object.prototype.hasOwnProperty.call(metadata, "bmuxPlan");
+  const vmPlan = typeof metadata.bmuxVmPlan === "string" && metadata.bmuxVmPlan.trim() ? metadata.bmuxVmPlan.trim() : "";
+  delete metadata.bmuxPlan;
   console.log(JSON.stringify({
-    hadCmuxPlan,
+    hadBmuxPlan,
     vmPlan,
     patchBody: { client_read_only_metadata: metadata },
   }));
 });
   '
 )"
-had_cmux_plan="$(
-  printf '%s' "$metadata_state" | node -e 'let s="";process.stdin.on("data",c=>s+=c);process.stdin.on("end",()=>process.stdout.write(JSON.parse(s).hadCmuxPlan ? "1" : "0"));'
+had_bmux_plan="$(
+  printf '%s' "$metadata_state" | node -e 'let s="";process.stdin.on("data",c=>s+=c);process.stdin.on("end",()=>process.stdout.write(JSON.parse(s).hadBmuxPlan ? "1" : "0"));'
 )"
-cmux_vm_plan="$(
+bmux_vm_plan="$(
   printf '%s' "$metadata_state" | node -e 'let s="";process.stdin.on("data",c=>s+=c);process.stdin.on("end",()=>process.stdout.write(JSON.parse(s).vmPlan || ""));'
 )"
-if [[ -n "$cmux_vm_plan" ]]; then
-  SUMMARY+=("WARNING cmuxVmPlan is set to '${cmux_vm_plan}' and still overrides cmuxPlan")
+if [[ -n "$bmux_vm_plan" ]]; then
+  SUMMARY+=("WARNING bmuxVmPlan is set to '${bmux_vm_plan}' and still overrides bmuxPlan")
 fi
-if [[ "$had_cmux_plan" == "1" ]]; then
+if [[ "$had_bmux_plan" == "1" ]]; then
   patch_body="$(
     printf '%s' "$metadata_state" | node -e 'let s="";process.stdin.on("data",c=>s+=c);process.stdin.on("end",()=>process.stdout.write(JSON.stringify(JSON.parse(s).patchBody)));'
   )"
   encoded_user_id="$(urlencode "$stack_user_id")"
   stack_request PATCH "/users/${encoded_user_id}" "$patch_body" >/dev/null
-  SUMMARY+=("Removed clientReadOnlyMetadata.cmuxPlan")
+  SUMMARY+=("Removed clientReadOnlyMetadata.bmuxPlan")
 else
-  SUMMARY+=("clientReadOnlyMetadata.cmuxPlan was already absent")
+  SUMMARY+=("clientReadOnlyMetadata.bmuxPlan was already absent")
 fi
 
 if [[ -n "$DB_PORT" ]]; then
   db_output="$(
-    PGPASSWORD="${CMUX_DB_PASSWORD:-cmux}" psql \
+    PGPASSWORD="${BMUX_DB_PASSWORD:-bmux}" psql \
       -h localhost \
       -p "$DB_PORT" \
-      -U "${CMUX_DB_USER:-cmux}" \
-      -d "${CMUX_DB_NAME:-cmux}" \
+      -U "${BMUX_DB_USER:-bmux}" \
+      -d "${BMUX_DB_NAME:-bmux}" \
       -v ON_ERROR_STOP=1 \
       -v stack_user_id="$stack_user_id" \
       -c "delete from stripe_subscriptions where stack_user_id = :'stack_user_id';" \
@@ -508,7 +508,7 @@ if [ "${residual:-0}" != "0" ]; then
   SUMMARY+=("WARNING: Stack product 'pro' still present (paid period not over or comped grant; no API early-revoke). This account stays Pro until it lapses; use a private window to dogfood checkout.")
 fi
 
-checkout_port="${CMUX_PORT:-${PORT:-3777}}"
+checkout_port="${BMUX_PORT:-${PORT:-3777}}"
 checkout_url="http://localhost:${checkout_port}/api/billing/checkout?plan=pro"
 
 echo

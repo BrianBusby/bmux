@@ -148,7 +148,7 @@ export async function applySubscriptionUpdate(
   | { scope: "team"; stackTeamId: string; isActive: boolean }
   | { skipped: true }
 > {
-  if (subscription.metadata?.app !== "cmux") return { skipped: true };
+  if (subscription.metadata?.app !== "bmux") return { skipped: true };
 
   const db = dependencies.db ?? cloudDb();
   const customerId = customerIdFromSubscription(subscription);
@@ -220,10 +220,10 @@ export function isActiveStripeSubscriptionStatus(status: string): boolean {
   return ACTIVE_STRIPE_SUBSCRIPTION_STATUSES.has(status);
 }
 
-export function isCmuxCheckoutSession(
+export function isBmuxCheckoutSession(
   session: Pick<Stripe.Checkout.Session, "client_reference_id" | "metadata">,
 ): boolean {
-  if (session.metadata?.app === "cmux") return true;
+  if (session.metadata?.app === "bmux") return true;
   if (session.metadata?.app) return false;
   return Boolean(session.client_reference_id && session.metadata?.plan === "pro");
 }

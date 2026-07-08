@@ -1,5 +1,5 @@
-//! TUI configuration: `~/.config/cmux/mux.json` (override the path with
-//! `CMUX_MUX_CONFIG`), with colors seeded from the user's Ghostty config
+//! TUI configuration: `~/.config/bmux/mux.json` (override the path with
+//! `BMUX_MUX_CONFIG`), with colors seeded from the user's Ghostty config
 //! where sensible.
 //!
 //! ```json
@@ -33,7 +33,7 @@
 //!     "cdp_url": "http://127.0.0.1:9222",
 //!     "discover": false,
 //!     "discover_ports": [9222],
-//!     "user_data_dir": "/Users/me/Library/Application Support/cmux-mux/chrome-profile",
+//!     "user_data_dir": "/Users/me/Library/Application Support/bmux-mux/chrome-profile",
 //!     "ephemeral": false,
 //!     "max_capture_megapixels": 2.0,
 //!     "capture_scale": null
@@ -484,11 +484,11 @@ impl Keys {
             }
             if name == "prefix" {
                 let Some(value) = value.as_str() else {
-                    eprintln!("cmux-mux: ignoring non-string prefix binding {value:?}");
+                    eprintln!("bmux-mux: ignoring non-string prefix binding {value:?}");
                     continue;
                 };
                 let Some(chord) = parse_chord(value) else {
-                    eprintln!("cmux-mux: ignoring unparseable key binding prefix = {value:?}");
+                    eprintln!("bmux-mux: ignoring unparseable key binding prefix = {value:?}");
                     continue;
                 };
                 self.prefix = chord;
@@ -507,7 +507,7 @@ impl Keys {
                         }
                         let Some(chord) = parse_chord(raw_chord) else {
                             eprintln!(
-                                "cmux-mux: ignoring unparseable key binding {name} = {raw_chord:?}"
+                                "bmux-mux: ignoring unparseable key binding {name} = {raw_chord:?}"
                             );
                             continue;
                         };
@@ -515,7 +515,7 @@ impl Keys {
                         self.bindings.push((chord, *action));
                     }
                 }
-                None => eprintln!("cmux-mux: ignoring unknown key action {name:?}"),
+                None => eprintln!("bmux-mux: ignoring unknown key action {name:?}"),
             }
         }
     }
@@ -710,7 +710,7 @@ pub fn load() -> Config {
             config.browser.max_capture_megapixels = megapixels;
         } else {
             eprintln!(
-                "cmux-mux: ignoring browser.max_capture_megapixels={megapixels:?}; expected > 0"
+                "bmux-mux: ignoring browser.max_capture_megapixels={megapixels:?}; expected > 0"
             );
         }
     }
@@ -719,7 +719,7 @@ pub fn load() -> Config {
             config.browser.capture_scale = Some(scale);
         } else {
             eprintln!(
-                "cmux-mux: ignoring browser.capture_scale={scale:?}; expected 0 < scale <= 1"
+                "bmux-mux: ignoring browser.capture_scale={scale:?}; expected 0 < scale <= 1"
             );
         }
     }
@@ -778,7 +778,7 @@ fn load_raw_config() -> RawConfig {
         Err(e) => {
             // A broken config should not take the TUI down; complain on
             // stderr (visible pre-alternate-screen and in logs).
-            eprintln!("cmux-mux: ignoring invalid config {}: {e}", path.display());
+            eprintln!("bmux-mux: ignoring invalid config {}: {e}", path.display());
             RawConfig::default()
         }
     }
@@ -829,7 +829,7 @@ mod tests {
     use super::*;
     use std::sync::Mutex;
 
-    /// `CMUX_MUX_CONFIG` is process-global state; tests that set it must not
+    /// `BMUX_MUX_CONFIG` is process-global state; tests that set it must not
     /// run concurrently with each other.
     static CONFIG_ENV_LOCK: Mutex<()> = Mutex::new(());
 
@@ -889,9 +889,9 @@ mod tests {
             }"##,
         )
         .unwrap();
-        std::env::set_var("CMUX_MUX_CONFIG", &path);
+        std::env::set_var("BMUX_MUX_CONFIG", &path);
         let config = load();
-        std::env::remove_var("CMUX_MUX_CONFIG");
+        std::env::remove_var("BMUX_MUX_CONFIG");
         let _ = std::fs::remove_file(&path);
         assert_eq!(config.theme.selection_bg, Color::Rgb(0x10, 0x10, 0x10));
         assert_eq!(config.theme.sidebar_rail, Color::Indexed(42));
@@ -972,13 +972,13 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("mux.json");
         std::fs::write(&path, r##"{"theme": {"selection_foreground": null}}"##).unwrap();
-        std::env::set_var("CMUX_MUX_CONFIG", &path);
+        std::env::set_var("BMUX_MUX_CONFIG", &path);
         // `load()` always seeds `selection_fg` from the Ghostty selection
         // colors (or leaves it `None` if there aren't any) before applying
         // this override, so regardless of the ambient Ghostty config, an
         // explicit `null` here must land back on `None`.
         let config = load();
-        std::env::remove_var("CMUX_MUX_CONFIG");
+        std::env::remove_var("BMUX_MUX_CONFIG");
         let _ = std::fs::remove_file(&path);
         assert_eq!(config.theme.selection_fg, None);
     }
@@ -995,7 +995,7 @@ mod tests {
             r##"{"browser": {"max_capture_megapixels": 3.5, "capture_scale": 0.5}}"##,
         )
         .unwrap();
-        std::env::set_var("CMUX_MUX_CONFIG", &path);
+        std::env::set_var("BMUX_MUX_CONFIG", &path);
         let config = load();
         assert_eq!(config.browser.max_capture_megapixels, 3.5);
         assert_eq!(config.browser.capture_scale, Some(0.5));
@@ -1006,7 +1006,7 @@ mod tests {
         )
         .unwrap();
         let config = load();
-        std::env::remove_var("CMUX_MUX_CONFIG");
+        std::env::remove_var("BMUX_MUX_CONFIG");
         let _ = std::fs::remove_file(&path);
         assert_eq!(
             config.browser.max_capture_megapixels,

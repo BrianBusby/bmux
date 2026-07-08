@@ -1,7 +1,7 @@
-import CmuxSettings
+import BmuxSettings
 import Foundation
 
-extension CmuxSettingsFileStore {
+extension BmuxSettingsFileStore {
     static func defaultTemplate() -> String {
         var lines: [String] = [
             "{",
@@ -11,7 +11,7 @@ extension CmuxSettingsFileStore {
             "  // This file uses JSON with comments (JSONC).",
             "  // Uncomment and edit any setting to make it file-managed.",
             "  // Remove a setting to fall back to the value saved in Settings.",
-            "  // cmux creates this template on launch when ~/.config/cmux/cmux.json is missing.",
+            "  // bmux creates this template on launch when ~/.config/bmux/bmux.json is missing.",
             "  // Legacy settings.json files are read only as fallback for keys not present here.",
             "",
         ]
@@ -69,8 +69,8 @@ extension CmuxSettingsFileStore {
                     "keepWorkspaceOpenWhenClosingLastSurface": !SettingCatalog().app.keepWorkspaceOpenWhenClosingLastSurface.defaultValue,
                     "focusPaneOnFirstClick": PaneFirstClickFocusSettings.defaultEnabled,
                     "preferredEditor": "",
-                    "openSupportedFilesInCmux": AppCatalogSection().openSupportedFilesInCmux.defaultValue,
-                    "openMarkdownInCmuxViewer": AppCatalogSection().openMarkdownInCmuxViewer.defaultValue,
+                    "openSupportedFilesInBmux": AppCatalogSection().openSupportedFilesInBmux.defaultValue,
+                    "openMarkdownInBmuxViewer": AppCatalogSection().openMarkdownInBmuxViewer.defaultValue,
                     "reorderOnNotification": SettingCatalog().app.reorderOnNotification.defaultValue,
                     "iMessageMode": IMessageModeSettings.defaultValue,
                     "sendAnonymousTelemetry": AppCatalogSection().sendAnonymousTelemetry.defaultValue,
@@ -137,8 +137,8 @@ extension CmuxSettingsFileStore {
                     "showPullRequests": SidebarWorkspaceDetailDefaults.showPullRequests,
                     "watchGitStatus": SidebarWorkspaceDetailDefaults.watchGitStatus,
                     "makePullRequestsClickable": SettingCatalog().sidebar.makePullRequestsClickable.defaultValue,
-                    "openPullRequestLinksInCmuxBrowser": BrowserLinkOpenSettings.defaultOpenSidebarPullRequestLinksInCmuxBrowser,
-                    "openPortLinksInCmuxBrowser": BrowserLinkOpenSettings.defaultOpenSidebarPortLinksInCmuxBrowser,
+                    "openPullRequestLinksInBmuxBrowser": BrowserLinkOpenSettings.defaultOpenSidebarPullRequestLinksInBmuxBrowser,
+                    "openPortLinksInBmuxBrowser": BrowserLinkOpenSettings.defaultOpenSidebarPortLinksInBmuxBrowser,
                     "showSSH": SidebarWorkspaceDetailDefaults.showSSH,
                     "showPorts": SidebarWorkspaceDetailDefaults.showPorts,
                     "showLog": SidebarWorkspaceDetailDefaults.showLog,
@@ -192,8 +192,8 @@ extension CmuxSettingsFileStore {
                     "discardHiddenWebViews": BrowserHiddenWebViewDiscardPolicy.defaultEnabled,
                     "hiddenWebViewDiscardDelaySeconds": BrowserHiddenWebViewDiscardPolicy.defaultHiddenDelay,
                     "askWhereToSaveDownloads": SettingCatalog().browser.askWhereToSaveDownloads.defaultValue,
-                    "openTerminalLinksInCmuxBrowser": BrowserLinkOpenSettings.defaultOpenTerminalLinksInCmuxBrowser,
-                    "interceptTerminalOpenCommandInCmuxBrowser": BrowserLinkOpenSettings.defaultInterceptTerminalOpenCommandInCmuxBrowser,
+                    "openTerminalLinksInBmuxBrowser": BrowserLinkOpenSettings.defaultOpenTerminalLinksInBmuxBrowser,
+                    "interceptTerminalOpenCommandInBmuxBrowser": BrowserLinkOpenSettings.defaultInterceptTerminalOpenCommandInBmuxBrowser,
                     "hostsToOpenInEmbeddedBrowser": [String](),
                     "urlsToAlwaysOpenExternally": [String](),
                     "insecureHttpHostsAllowedInEmbeddedBrowser": BrowserInsecureHTTPSettings.defaultAllowlistPatterns,

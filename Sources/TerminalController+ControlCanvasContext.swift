@@ -1,6 +1,6 @@
-import CmuxCanvas
-import CmuxCanvasUI
-import CmuxControlSocket
+import BmuxCanvas
+import BmuxCanvasUI
+import BmuxControlSocket
 import Foundation
 
 /// Canvas-domain witnesses. Reads snapshot the workspace's `canvasModel`;

@@ -1,6 +1,6 @@
 import SwiftUI
 import AppKit
-import CmuxSettings
+import BmuxSettings
 
 enum TitlebarNewWorkspaceCloudSplitButtonMetrics {
     static func primaryWidth(config: TitlebarControlsStyleConfig) -> CGFloat { max(config.iconSize + 4, config.buttonSize - 3) }
@@ -346,7 +346,7 @@ struct TitlebarCloudVMButton: View {
             accessibilityLabel: String(localized: "titlebar.cloudVM.accessibilityLabel", defaultValue: "Cloud VM"),
             action: {
 #if DEBUG
-                cmuxDebugLog("titlebar.cloudVM")
+                bmuxDebugLog("titlebar.cloudVM")
 #endif
                 _ = AppDelegate.shared?.performCloudVMAction(debugSource: "titlebar.cloudVM")
             },

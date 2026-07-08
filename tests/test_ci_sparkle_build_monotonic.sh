@@ -13,7 +13,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PROJECT_FILE="$ROOT_DIR/cmux.xcodeproj/project.pbxproj"
+PROJECT_FILE="$ROOT_DIR/bmux.xcodeproj/project.pbxproj"
 
 if [[ ! -f "$PROJECT_FILE" ]]; then
   echo "FAIL: $PROJECT_FILE not found" >&2
@@ -36,7 +36,7 @@ if [[ "$MISMATCHED" != "1" ]]; then
 fi
 
 PUBLISHED_BUILD=$(curl -fsSL --max-time 15 \
-  https://github.com/manaflow-ai/cmux/releases/latest/download/appcast.xml 2>/dev/null \
+  https://github.com/manaflow-ai/bmux/releases/latest/download/appcast.xml 2>/dev/null \
   | sed -n 's#.*<sparkle:version>\([0-9][0-9]*\)</sparkle:version>.*#\1#p' \
   | head -n1 || true)
 

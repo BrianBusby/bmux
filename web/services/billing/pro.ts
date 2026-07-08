@@ -1,13 +1,13 @@
-// cmux Pro subscription helpers.
+// bmux Pro subscription helpers.
 //
-// The `pro` product (user-scoped, product line `cmux-pro`) lives in the Stack
+// The `pro` product (user-scoped, product line `bmux-pro`) lives in the Stack
 // Auth project config, not in this repo. Prices: yearly $240 (listed first so
 // the hosted purchase page pre-selects it) and monthly $30.
 //
 // VM entitlements (services/vms/auth.ts) read the plan id from the user's
-// `clientReadOnlyMetadata.cmuxPlan`, so syncing that key after a verified
+// `clientReadOnlyMetadata.bmuxPlan`, so syncing that key after a verified
 // purchase is what upgrades Cloud VM limits — no VM code changes needed.
-// `cmuxVmPlan` takes precedence over `cmuxPlan` there and is left untouched
+// `bmuxVmPlan` takes precedence over `bmuxPlan` there and is left untouched
 // here so manual overrides survive.
 
 import { inArray, eq, and } from "drizzle-orm";
@@ -17,11 +17,11 @@ import { stripeSubscriptions } from "../../db/schema";
 import { resolveBillingTeam, type BillingTeamUserLike } from "./teamResolution";
 
 export const PRO_PRODUCT_ID = "pro";
-export const TEAM_PRODUCT_ID = process.env.CMUX_TEAM_PRODUCT_ID?.trim() || "team";
+export const TEAM_PRODUCT_ID = process.env.BMUX_TEAM_PRODUCT_ID?.trim() || "team";
 export const PRO_PLAN_ID = "pro";
 export const TEAM_PLAN_ID = "team";
 export const FREE_PLAN_ID = "free";
-export const PRO_ACCESS_ITEM_ID = "cmux-pro-access";
+export const PRO_ACCESS_ITEM_ID = "bmux-pro-access";
 export const ACTIVE_STRIPE_PRO_STATUSES = ["active", "trialing", "past_due"] as const;
 
 const PRODUCTS_PAGE_LIMIT = 50;
@@ -94,7 +94,7 @@ export async function hasActiveProSubscription(
 }
 
 /**
- * Writes `cmuxPlan: "pro"` into the user's clientReadOnlyMetadata when Pro is
+ * Writes `bmuxPlan: "pro"` into the user's clientReadOnlyMetadata when Pro is
  * active, and removes it when Pro lapsed. No-op when already in sync.
  */
 export async function syncProPlanMetadata(
@@ -106,14 +106,14 @@ export async function syncProPlanMetadata(
     raw && typeof raw === "object" && !Array.isArray(raw)
       ? { ...(raw as Record<string, unknown>) }
       : {};
-  const current = metadata.cmuxPlan;
+  const current = metadata.bmuxPlan;
 
   if (isPro) {
     if (current === PRO_PLAN_ID) return;
-    metadata.cmuxPlan = PRO_PLAN_ID;
+    metadata.bmuxPlan = PRO_PLAN_ID;
   } else {
     if (current !== PRO_PLAN_ID) return;
-    delete metadata.cmuxPlan;
+    delete metadata.bmuxPlan;
   }
   // Existing metadata came from Stack as JSON; the only value added is a string.
   await user.update({ clientReadOnlyMetadata: metadata as ProMetadataJson });
@@ -136,10 +136,10 @@ export type ProPlanStatus = {
 };
 
 /**
- * Read-time reconciliation: compares the `cmuxPlan` metadata against the
+ * Read-time reconciliation: compares the `bmuxPlan` metadata against the
  * actual Pro subscription state and syncs it in either direction (upgrade
  * that never hit /api/billing/confirm, or a lapse the user never revisited
- * billing to observe). Skipped when a manual `cmuxVmPlan` override is set —
+ * billing to observe). Skipped when a manual `bmuxVmPlan` override is set —
  * that key wins in plan resolution and is operator-owned. Returns true when
  * metadata was changed.
  */
@@ -152,11 +152,11 @@ export async function reconcileProPlanMetadata(
     raw && typeof raw === "object" && !Array.isArray(raw)
       ? (raw as Record<string, unknown>)
       : {};
-  const override = metadata.cmuxVmPlan;
+  const override = metadata.bmuxVmPlan;
   if (typeof override === "string" && override.trim()) return false;
 
   const isPro = await hasAnyActiveProSubscription(user, options.hasActiveStripeSubscription);
-  if (isPro === (metadata.cmuxPlan === PRO_PLAN_ID)) return false;
+  if (isPro === (metadata.bmuxPlan === PRO_PLAN_ID)) return false;
   await syncProPlanMetadata(user, isPro);
   return true;
 }
@@ -254,8 +254,8 @@ export function metadataPlanId(raw: unknown): string | null {
 }
 
 /**
- * Writes `cmuxPlan: "team"` into a Stack team's clientReadOnlyMetadata while a
- * Stripe Team subscription is active. `cmuxVmPlan` is operator-owned and left
+ * Writes `bmuxPlan: "team"` into a Stack team's clientReadOnlyMetadata while a
+ * Stripe Team subscription is active. `bmuxVmPlan` is operator-owned and left
  * untouched.
  */
 export async function syncTeamPlanMetadata(
@@ -267,14 +267,14 @@ export async function syncTeamPlanMetadata(
     raw && typeof raw === "object" && !Array.isArray(raw)
       ? { ...(raw as Record<string, unknown>) }
       : {};
-  const current = metadata.cmuxPlan;
+  const current = metadata.bmuxPlan;
 
   if (isTeam) {
     if (current === TEAM_PLAN_ID) return;
-    metadata.cmuxPlan = TEAM_PLAN_ID;
+    metadata.bmuxPlan = TEAM_PLAN_ID;
   } else {
     if (current !== TEAM_PLAN_ID) return;
-    delete metadata.cmuxPlan;
+    delete metadata.bmuxPlan;
   }
   await team.update({ clientReadOnlyMetadata: metadata as ProMetadataJson });
 }
@@ -306,12 +306,12 @@ function proMetadataRecord(raw: unknown): Record<string, unknown> {
 }
 
 function hasManualVmOverride(metadata: Record<string, unknown>): boolean {
-  const override = metadata.cmuxVmPlan;
+  const override = metadata.bmuxVmPlan;
   return typeof override === "string" && override.trim().length > 0;
 }
 
 function planIdFromMetadata(metadata: Record<string, unknown>): string | null {
-  const value = metadata.cmuxPlan;
+  const value = metadata.bmuxPlan;
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 

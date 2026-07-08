@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxSettings
+import BMUXMobileCore
+import BmuxSettings
 import Foundation
 #if canImport(Security)
 import Security
@@ -199,7 +199,7 @@ struct MobileAttachTicketAuthorization {
 enum MobileHostIdentity {
     private static let deviceIDKey = "mobileHost.deviceID"
     private static let sharedDeviceIDFileName = "mobile-host-device-id"
-    private static let stableBundleIdentifier = "com.cmuxterm.app"
+    private static let stableBundleIdentifier = "com.bmuxterm.app"
 
     static func deviceID() -> String {
         let stableDefaults = Bundle.main.bundleIdentifier == stableBundleIdentifier
@@ -246,7 +246,7 @@ enum MobileHostIdentity {
         ) else {
             return nil
         }
-        let directory = appSupport.appendingPathComponent("cmux", isDirectory: true)
+        let directory = appSupport.appendingPathComponent("bmux", isDirectory: true)
         if !fileManager.fileExists(atPath: directory.path) {
             try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
         }

@@ -1,4 +1,4 @@
-import CmuxFoundation
+import BmuxFoundation
 import AppKit
 import Foundation
 
@@ -46,19 +46,19 @@ final class CloudVMActionLauncher {
         environmentOverrides: [String: String] = [:],
         onCompletion: ((Completion) -> Void)? = nil
     ) -> Bool {
-        let cliURL = Bundle.main.resourceURL?.appendingPathComponent("bin/cmux")
+        let cliURL = Bundle.main.resourceURL?.appendingPathComponent("bin/bmux")
         guard let cliURL,
               FileManager.default.isExecutableFile(atPath: cliURL.path) else {
             if presentsFailureAlert {
                 presentStartFailure(
                     summary: String(
                         localized: "command.cloudVM.failed.missingCLI",
-                        defaultValue: "The bundled cmux CLI is missing from this app build."
+                        defaultValue: "The bundled bmux CLI is missing from this app build."
                     ),
                     output: "",
                     action: String(
                         localized: "command.cloudVM.failed.action.missingCLI",
-                        defaultValue: "Install or reload a fresh cmux build, then try Start Cloud VM again. You can also run `cmux vm base open` in a terminal to see the full error."
+                        defaultValue: "Install or reload a fresh bmux build, then try Start Cloud VM again. You can also run `bmux vm base open` in a terminal to see the full error."
                     ),
                     preferredWindow: preferredWindow
                 )
@@ -70,12 +70,12 @@ final class CloudVMActionLauncher {
         process.executableURL = cliURL
         process.arguments = ["--socket", socketPath, "--id-format", "uuids"] + arguments
         var environment = ProcessInfo.processInfo.environment
-        environment["CMUX_SOCKET_PATH"] = socketPath
-        environment["CMUX_BUNDLED_CLI_PATH"] = cliURL.path
+        environment["BMUX_SOCKET_PATH"] = socketPath
+        environment["BMUX_BUNDLED_CLI_PATH"] = cliURL.path
         for (key, value) in environmentOverrides {
             environment[key] = value
         }
-        environment.removeValue(forKey: "CMUX_SOCKET")
+        environment.removeValue(forKey: "BMUX_SOCKET")
         process.environment = environment
 
         let outputPipe = Pipe()
@@ -124,7 +124,7 @@ final class CloudVMActionLauncher {
                     output: output,
                     action: String(
                         localized: "command.cloudVM.failed.action.exit",
-                        defaultValue: "Open a terminal and run `cmux auth status`, `cmux vm ls`, then `cmux vm base open`. If you hit the active VM limit, delete one with `cmux vm rm <id>` and retry."
+                        defaultValue: "Open a terminal and run `bmux auth status`, `bmux vm ls`, then `bmux vm base open`. If you hit the active VM limit, delete one with `bmux vm rm <id>` and retry."
                     ),
                     preferredWindow: launchWindow
                 )
@@ -139,7 +139,7 @@ final class CloudVMActionLauncher {
                 progressControllers[process.processIdentifier] = progressController
             }
 #if DEBUG
-            cmuxDebugLog("cloudVM.launch pid=\(process.processIdentifier) socket=\(socketPath)")
+            bmuxDebugLog("cloudVM.launch pid=\(process.processIdentifier) socket=\(socketPath)")
 #endif
             return true
         } catch {
@@ -149,12 +149,12 @@ final class CloudVMActionLauncher {
                 presentStartFailure(
                     summary: String(
                         localized: "command.cloudVM.failed.launch",
-                        defaultValue: "cmux vm base open could not be launched."
+                        defaultValue: "bmux vm base open could not be launched."
                     ),
                     output: error.localizedDescription,
                     action: String(
                         localized: "command.cloudVM.failed.action.launch",
-                        defaultValue: "Reload cmux so the bundled CLI is available, then try again. If it still fails, run `cmux vm base open` in a terminal and send us the output."
+                        defaultValue: "Reload bmux so the bundled CLI is available, then try again. If it still fails, run `bmux vm base open` in a terminal and send us the output."
                     ),
                     preferredWindow: preferredWindow
                 )
@@ -272,7 +272,7 @@ final class CloudVMActionLauncher {
             "bearer",
             "billingcustomer",
             "billingteam",
-            "cmux_vm_",
+            "bmux_vm_",
             "cookie",
             "credential",
             "database",
@@ -304,7 +304,7 @@ final class CloudVMActionLauncher {
             "bearer",
             "billingcustomer",
             "billingteam",
-            "cmuxvmapi",
+            "bmuxvmapi",
             "cookie",
             "credential",
             "database",

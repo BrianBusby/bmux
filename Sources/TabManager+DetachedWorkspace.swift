@@ -1,5 +1,5 @@
 import Foundation
-import CmuxSettings
+import BmuxSettings
 
 extension TabManager {
     struct WorkspaceCreationTabSnapshot {

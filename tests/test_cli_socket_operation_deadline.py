@@ -33,24 +33,24 @@ def output_text(value: str | bytes | None) -> str:
     return value
 
 
-def resolve_cmux_cli() -> str:
-    explicit = os.environ.get("CMUX_CLI_BIN") or os.environ.get("CMUX_CLI")
+def resolve_bmux_cli() -> str:
+    explicit = os.environ.get("BMUX_CLI_BIN") or os.environ.get("BMUX_CLI")
     if explicit and os.path.exists(explicit) and os.access(explicit, os.X_OK):
         return explicit
 
     candidates: list[str] = []
-    candidates.extend(glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/*/Build/Products/Debug/cmux")))
-    candidates.extend(glob.glob("/tmp/cmux-*/Build/Products/Debug/cmux"))
+    candidates.extend(glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/*/Build/Products/Debug/bmux")))
+    candidates.extend(glob.glob("/tmp/bmux-*/Build/Products/Debug/bmux"))
     candidates = [path for path in candidates if os.path.exists(path) and os.access(path, os.X_OK)]
     if candidates:
         candidates.sort(key=os.path.getmtime, reverse=True)
         return candidates[0]
 
-    in_path = shutil.which("cmux")
+    in_path = shutil.which("bmux")
     if in_path:
         return in_path
 
-    raise RuntimeError("Unable to find cmux CLI binary. Set CMUX_CLI_BIN.")
+    raise RuntimeError("Unable to find bmux CLI binary. Set BMUX_CLI_BIN.")
 
 
 class FakeUnixServer:
@@ -58,7 +58,7 @@ class FakeUnixServer:
         self.handler = handler
         self.stop_event = threading.Event()
         self.ready_event = threading.Event()
-        self.root = tempfile.TemporaryDirectory(prefix="cmuxsock-", dir="/tmp")
+        self.root = tempfile.TemporaryDirectory(prefix="bmuxsock-", dir="/tmp")
         self.path = os.path.join(self.root.name, f"s-{uuid.uuid4().hex[:8]}.sock")
         self.thread = threading.Thread(target=self._serve, daemon=True)
         self.server: socket.socket | None = None
@@ -143,18 +143,18 @@ def capabilities_response_handler(conn: socket.socket, stop_event: threading.Eve
     if not isinstance(request, dict) or request.get("method") != "system.capabilities":
         return
     conn.sendall(
-        b'{"ok":true,"result":{"socket_path":"/tmp/cmux.sock","protocol":"cmux-socket",'
-        b'"access_mode":"cmuxOnly","version":"test","methods":["zeta","alpha"]}}\n'
+        b'{"ok":true,"result":{"socket_path":"/tmp/bmux.sock","protocol":"bmux-socket",'
+        b'"access_mode":"bmuxOnly","version":"test","methods":["zeta","alpha"]}}\n'
     )
 
 
 def run_cli(cli_path: str, socket_path: str, timeout: float = 3.0, args: tuple[str, ...] = ("ping",)) -> RunResult:
     env = dict(os.environ)
-    env["CMUX_SOCKET_PATH"] = socket_path
-    env["CMUX_SOCKET"] = socket_path
-    env["CMUXTERM_CLI_RESPONSE_TIMEOUT_SEC"] = "0.2"
-    env["CMUX_CLI_SENTRY_DISABLED"] = "1"
-    env["CMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
+    env["BMUX_SOCKET_PATH"] = socket_path
+    env["BMUX_SOCKET"] = socket_path
+    env["BMUXTERM_CLI_RESPONSE_TIMEOUT_SEC"] = "0.2"
+    env["BMUX_CLI_SENTRY_DISABLED"] = "1"
+    env["BMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
     started = time.monotonic()
     try:
         proc = subprocess.run(
@@ -184,7 +184,7 @@ def run_cli(cli_path: str, socket_path: str, timeout: float = 3.0, args: tuple[s
 
 def main() -> int:
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_bmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1

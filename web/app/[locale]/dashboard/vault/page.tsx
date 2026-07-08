@@ -74,7 +74,7 @@ export default async function VaultOverviewPage({
           <h2 className="text-sm font-medium">{t("emptyTitle")}</h2>
           <p className="mt-1 text-muted">{t("emptyBody")}</p>
           <code className="mt-3 inline-block border border-border bg-code-bg px-3 py-1.5 font-mono text-xs">
-            cmux-vault sync
+            bmux-vault sync
           </code>
         </div>
       ) : (

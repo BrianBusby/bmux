@@ -27,7 +27,7 @@ mock.module("next/headers", () => ({
   headers: async () =>
     new Headers({
       "accept-language": acceptLanguage,
-      host: "cmux.test",
+      host: "bmux.test",
       "x-forwarded-proto": "https",
     }),
   cookies: async () => ({
@@ -65,7 +65,7 @@ describe("billing success page", () => {
         searchParams: Promise.resolve({ session_id: "cs_123" }),
       });
       const html = renderToStaticMarkup(element);
-      expect(html).toContain("cmux Pro is active");
+      expect(html).toContain("bmux Pro is active");
       expect(html).toContain("What you unlocked");
     } finally {
       acceptLanguage = "en";
@@ -78,7 +78,7 @@ describe("billing success page", () => {
     });
     const html = renderToStaticMarkup(element);
 
-    expect(html).toContain("cmux Pro is active");
+    expect(html).toContain("bmux Pro is active");
     expect(html).toContain("buyer@example.com");
     expect(html).toContain("What you unlocked");
     expect(html).toContain("Cloud agents on Cloud VMs");
@@ -86,17 +86,17 @@ describe("billing success page", () => {
     expect(html).toContain("Model gateway");
     expect(html).toContain("Route across providers with usage and cost analytics, plus 20 compute-hours a month.");
     expect(html).toContain("Connect your AI accounts");
-    expect(html).toContain("Add provider accounts so cmux can route work through them.");
-    expect(html).toContain("cmux iOS app");
-    expect(html).toContain("Use cmux on your phone.");
-    expect(html).toContain('href="https://cmux.test/handler/after-sign-in?native_app_return_to=cmux%3A%2F%2Fauth-callback"');
+    expect(html).toContain("Add provider accounts so bmux can route work through them.");
+    expect(html).toContain("bmux iOS app");
+    expect(html).toContain("Use bmux on your phone.");
+    expect(html).toContain('href="https://bmux.test/handler/after-sign-in?native_app_return_to=bmux%3A%2F%2Fauth-callback"');
     expect(html).toContain('href="/dashboard/subrouter"');
     expect(html).toContain('href="/dashboard/ai-accounts"');
     expect(html).toContain('href="/dashboard/testflight"');
     expect(html).toContain('href="/api/billing/portal"');
     expect(html).toContain('href="/handler/account-settings"');
     expect(html).toContain("Manage billing");
-    expect(html).toContain("Open cmux");
+    expect(html).toContain("Open bmux");
     expect(html).toContain("Manage sign-in methods");
     expect(redirect).not.toHaveBeenCalled();
     expect(retrieveSession).toHaveBeenCalledWith("cs_123", {

@@ -22,14 +22,14 @@ import {
   Tree,
   VtStateResult,
 } from "./types.js";
-import { CmuxCommandError, CmuxConnectionError, CmuxProtocolError, CmuxTimeoutError } from "./errors.js";
+import { BmuxCommandError, BmuxConnectionError, BmuxProtocolError, BmuxTimeoutError } from "./errors.js";
 
 type ResponseEnvelope = { id?: unknown; ok: true; data: unknown } | { id?: unknown; ok: false; error: string };
 type EventObject = { event: string; [key: string]: unknown };
 
 export function defaultSocketPath(session = "main"): string {
   const base = process.env.TMPDIR || os.tmpdir();
-  return path.join(base, `cmux-mux-${process.getuid?.() ?? 0}`, `${session}.sock`);
+  return path.join(base, `bmux-mux-${process.getuid?.() ?? 0}`, `${session}.sock`);
 }
 
 class JsonLineConnection {
@@ -47,15 +47,15 @@ class JsonLineConnection {
     this.socket = socket;
     socket.setEncoding("utf8");
     socket.on("data", (chunk: string) => this.onData(chunk));
-    socket.on("error", (err: Error) => this.closeWith(new CmuxConnectionError(`socket error: ${err.message}`)));
-    socket.on("close", () => this.closeWith(new CmuxConnectionError("session socket closed")));
+    socket.on("error", (err: Error) => this.closeWith(new BmuxConnectionError(`socket error: ${err.message}`)));
+    socket.on("close", () => this.closeWith(new BmuxConnectionError("session socket closed")));
   }
 
   static connect(socketPath: string): Promise<JsonLineConnection> {
     return new Promise((resolve, reject) => {
       const socket = net.createConnection({ path: socketPath });
       socket.once("connect", () => resolve(new JsonLineConnection(socket)));
-      socket.once("error", (err: Error) => reject(new CmuxConnectionError(`cannot connect to session socket ${socketPath}: ${err.message}`)));
+      socket.once("error", (err: Error) => reject(new BmuxConnectionError(`cannot connect to session socket ${socketPath}: ${err.message}`)));
     });
   }
 
@@ -63,7 +63,7 @@ class JsonLineConnection {
     const line = `${JSON.stringify(value)}\n`;
     return new Promise((resolve, reject) => {
       this.socket.write(line, "utf8", (err?: Error | null) => {
-        if (err) reject(new CmuxConnectionError(`socket write failed: ${err.message}`));
+        if (err) reject(new BmuxConnectionError(`socket write failed: ${err.message}`));
         else resolve();
       });
     });
@@ -75,12 +75,12 @@ class JsonLineConnection {
     try {
       const value = JSON.parse(line) as unknown;
       if (!value || typeof value !== "object" || Array.isArray(value)) {
-        throw new CmuxProtocolError("server sent non-object JSON line");
+        throw new BmuxProtocolError("server sent non-object JSON line");
       }
       return value as JsonObject;
     } catch (err) {
-      if (err instanceof CmuxProtocolError) throw err;
-      throw new CmuxProtocolError(`bad JSON from server: ${(err as Error).message}`);
+      if (err instanceof BmuxProtocolError) throw err;
+      throw new BmuxProtocolError(`bad JSON from server: ${(err as Error).message}`);
     }
   }
 
@@ -147,7 +147,7 @@ class JsonLineConnection {
   }
 }
 
-export class CmuxStream<T extends EventObject> implements AsyncIterable<T> {
+export class BmuxStream<T extends EventObject> implements AsyncIterable<T> {
   private readonly buffered: T[] = [];
   private closed = false;
 
@@ -163,7 +163,7 @@ export class CmuxStream<T extends EventObject> implements AsyncIterable<T> {
     socketPath: string,
     timeoutMs: number,
     request: JsonObject,
-  ): Promise<CmuxStream<T>> {
+  ): Promise<BmuxStream<T>> {
     const conn = await JsonLineConnection.connect(socketPath);
     await conn.send(request);
     const requestId = request.id;
@@ -176,13 +176,13 @@ export class CmuxStream<T extends EventObject> implements AsyncIterable<T> {
       }
       if (value.id !== requestId) continue;
       const response = value as ResponseEnvelope;
-      if (response.ok === true) return new CmuxStream(conn, timeoutMs, buffered);
-      throw new CmuxCommandError(response.error || "unknown error", response.id, response);
+      if (response.ok === true) return new BmuxStream(conn, timeoutMs, buffered);
+      throw new BmuxCommandError(response.error || "unknown error", response.id, response);
     }
   }
 
   async next(timeoutMs = this.timeoutMs): Promise<T> {
-    if (this.closed) throw new CmuxConnectionError("stream is closed");
+    if (this.closed) throw new BmuxConnectionError("stream is closed");
     if (this.buffered.length > 0) return this.buffered.shift()!;
     for (;;) {
       const value = await this.conn.recv(timeoutMs);
@@ -207,7 +207,7 @@ export class CmuxStream<T extends EventObject> implements AsyncIterable<T> {
   }
 }
 
-export class CmuxClient {
+export class BmuxClient {
   readonly socketPath: string;
   readonly timeoutMs: number;
   readonly allowProtocolV6Attach: boolean;
@@ -244,7 +244,7 @@ export class CmuxClient {
   async request(cmd: string, params: JsonObject = {}): Promise<unknown> {
     const response = await this.sendRaw({ id: this.nextId(), cmd, ...dropUndefined(params) });
     if (response.ok === true) return response.data;
-    throw new CmuxCommandError(response.error || "unknown error", response.id, response);
+    throw new BmuxCommandError(response.error || "unknown error", response.id, response);
   }
 
   async identify(): Promise<IdentifyResult> {
@@ -285,16 +285,16 @@ export class CmuxClient {
   async moveWorkspace(workspace: number, index: number): Promise<EmptyResult> { await this.request("move-workspace", { workspace, index }); return {}; }
   async scrollSurface(surface: number, delta: number): Promise<EmptyResult> { await this.request("scroll-surface", { surface, delta }); return {}; }
 
-  async subscribe(): Promise<CmuxStream<SubscribeEvent>> {
-    return CmuxStream.open<SubscribeEvent>(this.socketPath, this.timeoutMs, { id: this.nextId(), cmd: "subscribe" });
+  async subscribe(): Promise<BmuxStream<SubscribeEvent>> {
+    return BmuxStream.open<SubscribeEvent>(this.socketPath, this.timeoutMs, { id: this.nextId(), cmd: "subscribe" });
   }
 
-  async attachSurface(surface: number): Promise<CmuxStream<AttachEvent>> {
+  async attachSurface(surface: number): Promise<BmuxStream<AttachEvent>> {
     const protocol = this.protocol ?? (await this.identify()).protocol;
     if (protocol > 6 || (protocol > 5 && !this.allowProtocolV6Attach)) {
-      throw new CmuxProtocolError(`unsupported attach protocol ${protocol}`);
+      throw new BmuxProtocolError(`unsupported attach protocol ${protocol}`);
     }
-    return CmuxStream.open<AttachEvent>(this.socketPath, this.timeoutMs, { id: this.nextId(), cmd: "attach-surface", surface });
+    return BmuxStream.open<AttachEvent>(this.socketPath, this.timeoutMs, { id: this.nextId(), cmd: "attach-surface", surface });
   }
 
   private nextId(): number {
@@ -311,7 +311,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string,
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
       onTimeout?.();
-      reject(new CmuxTimeoutError(message));
+      reject(new BmuxTimeoutError(message));
     }, timeoutMs);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer!));

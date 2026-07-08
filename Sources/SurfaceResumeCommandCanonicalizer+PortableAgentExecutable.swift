@@ -1,4 +1,4 @@
-import CMUXAgentLaunch
+import BMUXAgentLaunch
 import Darwin
 import Foundation
 
@@ -140,8 +140,8 @@ extension SurfaceResumeCommandCanonicalizer {
         } else if executableName == "codex" {
             // Mirror claude: route a stale codex executable (a PATH-managed path
             // whose file is gone) through the codex wrapper token instead of a
-            // bare `codex`, so the restored codex surface keeps cmux hooks.
-            // https://github.com/manaflow-ai/cmux/issues/5639
+            // bare `codex`, so the restored codex surface keeps bmux hooks.
+            // https://github.com/manaflow-ai/bmux/issues/5639
             return replacingStaleWrapperRoutedExecutable(
                 in: command,
                 words: words,
@@ -187,7 +187,7 @@ extension SurfaceResumeCommandCanonicalizer {
     private static func isPATHManagedAgentExecutablePath(_ path: String, executableName: String) -> Bool {
         let standardized = (path as NSString).standardizingPath
         let components = standardized.split(separator: "/").map(String.init)
-        if components.contains("cmux-cli-shims") {
+        if components.contains("bmux-cli-shims") {
             return isLocalManagedAgentExecutableCandidate(standardized) ||
                 standardized.hasPrefix("/tmp/") ||
                 standardized.hasPrefix("/private/tmp/")

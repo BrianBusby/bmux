@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request): Promise<Response> {
   if (process.env.VERCEL === "1") {
-    const rateLimitId = process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID?.trim();
+    const rateLimitId = process.env.BMUX_CLIENT_CONFIG_RATE_LIMIT_ID?.trim();
     if (!rateLimitId) {
       console.error("client-config.route.rate_limit_not_configured");
       return json({ error: "client_config_unavailable" }, 503);

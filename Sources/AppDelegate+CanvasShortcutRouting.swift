@@ -1,14 +1,14 @@
 import AppKit
-import CmuxCanvas
-import CmuxPanes
-import CmuxSettings
+import BmuxCanvas
+import BmuxPanes
+import BmuxSettings
 
 extension AppDelegate {
     @discardableResult
     func performBrowserSplitShortcut(direction: SplitDirection) -> Bool {
         guard BrowserAvailabilitySettings.isEnabled() else {
 #if DEBUG
-            cmuxDebugLog("split.browser.shortcut blocked reason=browser_disabled")
+            bmuxDebugLog("split.browser.shortcut blocked reason=browser_disabled")
 #endif
             return false
         }
@@ -37,7 +37,7 @@ extension AppDelegate {
         }
         let selectedTabBefore = tabManager?.selectedTabId?.uuidString.prefix(5) ?? "nil"
         let focusedPanelBefore = tabManager?.selectedWorkspace?.focusedPanelId?.uuidString.prefix(5) ?? "nil"
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.browser.shortcut pre dir=\(directionLabel) " +
             "tab=\(selectedTabBefore) focusedPanel=\(focusedPanelBefore)"
         )
@@ -45,7 +45,7 @@ extension AppDelegate {
 
         guard let panelId = tabManager?.createBrowserSplit(direction: direction) else {
 #if DEBUG
-            cmuxDebugLog("split.browser.shortcut failed dir=\(directionLabel)")
+            bmuxDebugLog("split.browser.shortcut failed dir=\(directionLabel)")
 #endif
             return false
         }
@@ -53,7 +53,7 @@ extension AppDelegate {
 #if DEBUG
         let selectedTabAfter = tabManager?.selectedTabId?.uuidString.prefix(5) ?? "nil"
         let focusedPanelAfter = tabManager?.selectedWorkspace?.focusedPanelId?.uuidString.prefix(5) ?? "nil"
-        cmuxDebugLog(
+        bmuxDebugLog(
             "split.browser.shortcut post dir=\(directionLabel) " +
             "created=\(panelId.uuidString.prefix(5)) tab=\(selectedTabAfter) focusedPanel=\(focusedPanelAfter)"
         )

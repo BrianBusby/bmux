@@ -124,7 +124,7 @@ WITH candidates AS (
     "status",
     "created_at"
   FROM "cloud_vms"
-  WHERE "idempotency_key" = 'cmux-default-freestyle-sshd-v1'
+  WHERE "idempotency_key" = 'bmux-default-freestyle-sshd-v1'
     AND "billing_team_id" IS NOT NULL
     AND "status" != 'destroyed'
   ORDER BY

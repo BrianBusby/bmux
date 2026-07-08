@@ -32,27 +32,27 @@ extension AppDelegate {
         preferredWindow: NSWindow?,
         onExecuted: (() -> Void)?
     ) -> Bool {
-        let cmuxConfigStore = context.cmuxConfigStore
+        let bmuxConfigStore = context.bmuxConfigStore
         return performNewAgentChatAction(
             tabManager: context.tabManager,
-            agentChat: cmuxConfigStore?.agentChat ?? .default,
-            globalConfigPath: cmuxConfigStore?.globalConfigPath,
+            agentChat: bmuxConfigStore?.agentChat ?? .default,
+            globalConfigPath: bmuxConfigStore?.globalConfigPath,
             preferredWindow: resolvedWindow(for: context) ?? preferredWindow,
             onExecuted: onExecuted
         )
     }
 
     @discardableResult
-    func executeConfiguredCmuxAction(
+    func executeConfiguredBmuxAction(
         id actionID: String,
         tabManager: TabManager,
         preferredWindow: NSWindow? = nil
     ) -> Bool {
         guard let context = mainWindowContext(for: tabManager),
-              let action = context.cmuxConfigStore?.resolvedAction(id: actionID) else {
+              let action = context.bmuxConfigStore?.resolvedAction(id: actionID) else {
             return false
         }
-        return executeConfiguredCmuxAction(
+        return executeConfiguredBmuxAction(
             action,
             context: context,
             preferredWindow: preferredWindow
@@ -62,7 +62,7 @@ extension AppDelegate {
     @discardableResult
     func performNewAgentChatAction(
         tabManager: TabManager,
-        agentChat: CmuxAgentChatConfiguration,
+        agentChat: BmuxAgentChatConfiguration,
         globalConfigPath: String?,
         preferredWindow: NSWindow?,
         onExecuted: (() -> Void)? = nil
@@ -105,17 +105,17 @@ extension AppDelegate {
     @discardableResult
     private func openAgentChatWorkspace(
         tabManager: TabManager,
-        agentChat: CmuxAgentChatConfiguration
+        agentChat: BmuxAgentChatConfiguration
     ) -> Workspace? {
         let beforeIds = Set(tabManager.tabs.map(\.id))
         let workspaceName = String(
             localized: "workspace.agentChat.defaultTitle",
             defaultValue: "Agent Chat"
         )
-        let workspaceDefinition = CmuxWorkspaceDefinition(
+        let workspaceDefinition = BmuxWorkspaceDefinition(
             name: workspaceName,
-            layout: .pane(CmuxPaneDefinition(surfaces: [
-                CmuxSurfaceDefinition(
+            layout: .pane(BmuxPaneDefinition(surfaces: [
+                BmuxSurfaceDefinition(
                     type: .browser,
                     name: workspaceName,
                     command: nil,
@@ -126,13 +126,13 @@ extension AppDelegate {
                 ),
             ]))
         )
-        let command = CmuxCommandDefinition(
+        let command = BmuxCommandDefinition(
             name: workspaceName,
             workspace: workspaceDefinition
         )
         let baseCwd = tabManager.selectedWorkspace?.currentDirectory
             ?? FileManager.default.homeDirectoryForCurrentUser.path
-        guard CmuxConfigExecutor.executeWorkspaceCommand(
+        guard BmuxConfigExecutor.executeWorkspaceCommand(
             command: command,
             workspace: workspaceDefinition,
             tabManager: tabManager,
@@ -145,19 +145,19 @@ extension AppDelegate {
 
     private func postAgentChatServerUnavailableNotification(
         workspace: Workspace,
-        agentChat: CmuxAgentChatConfiguration
+        agentChat: BmuxAgentChatConfiguration
     ) {
         let body: String
         if let startCommand = agentChat.startCommand {
             let format = String(
                 localized: "notification.agentChat.serverUnavailable.bodyWithCommand",
-                defaultValue: "cmux couldn't reach %@. Start it with: %@"
+                defaultValue: "bmux couldn't reach %@. Start it with: %@"
             )
             body = String(format: format, agentChat.url.absoluteString, startCommand)
         } else {
             let format = String(
                 localized: "notification.agentChat.serverUnavailable.bodyDefault",
-                defaultValue: "cmux couldn't reach %@. Start the server with cmux-chat or configure agentChat.startCommand in cmux.json."
+                defaultValue: "bmux couldn't reach %@. Start the server with bmux-chat or configure agentChat.startCommand in bmux.json."
             )
             body = String(format: format, agentChat.url.absoluteString)
         }
@@ -179,7 +179,7 @@ extension AppDelegate {
     }
 
     private func ensureAgentChatServerAvailable(
-        _ agentChat: CmuxAgentChatConfiguration,
+        _ agentChat: BmuxAgentChatConfiguration,
         globalConfigPath: String?,
         preferredWindow: NSWindow?
     ) async -> Bool {
@@ -220,7 +220,7 @@ extension AppDelegate {
     }
 
     private func authorizeAgentChatStartCommandIfNeeded(
-        _ agentChat: CmuxAgentChatConfiguration,
+        _ agentChat: BmuxAgentChatConfiguration,
         command: String,
         globalConfigPath: String?,
         preferredWindow: NSWindow?
@@ -235,7 +235,7 @@ extension AppDelegate {
             sourcePath: sourcePath
         )
         return await withCheckedContinuation { continuation in
-            _ = CmuxConfigExecutor.authorizeProjectAutomationIfNeeded(
+            _ = BmuxConfigExecutor.authorizeProjectAutomationIfNeeded(
                 descriptor: descriptor,
                 confirm: false,
                 configSourcePath: sourcePath,
@@ -256,15 +256,15 @@ extension AppDelegate {
     nonisolated private static func agentChatStartCommandTrustDescriptor(
         command: String,
         sourcePath: String
-    ) -> CmuxActionTrustDescriptor {
-        CmuxActionTrustDescriptor(
-            actionID: "\(CmuxSurfaceTabBarBuiltInAction.newAgentChat.configID).startCommand",
+    ) -> BmuxActionTrustDescriptor {
+        BmuxActionTrustDescriptor(
+            actionID: "\(BmuxSurfaceTabBarBuiltInAction.newAgentChat.configID).startCommand",
             kind: "agentChatStartCommand",
             command: command,
             target: "agentChatServer",
             workspaceCommand: nil,
             configPath: canonicalAgentChatPath(sourcePath),
-            projectRoot: canonicalAgentChatPath(CmuxButtonIcon.projectRoot(forConfigPath: sourcePath)),
+            projectRoot: canonicalAgentChatPath(BmuxButtonIcon.projectRoot(forConfigPath: sourcePath)),
             iconFingerprint: nil
         )
     }
@@ -289,11 +289,11 @@ extension AppDelegate {
     }
 
     nonisolated private static func agentChatStartCommandDirectoryURL(
-        for agentChat: CmuxAgentChatConfiguration
+        for agentChat: BmuxAgentChatConfiguration
     ) -> URL {
         if case .local(let sourcePath) = agentChat.source {
             return URL(
-                fileURLWithPath: canonicalAgentChatPath(CmuxButtonIcon.projectRoot(forConfigPath: sourcePath)),
+                fileURLWithPath: canonicalAgentChatPath(BmuxButtonIcon.projectRoot(forConfigPath: sourcePath)),
                 isDirectory: true
             )
         }

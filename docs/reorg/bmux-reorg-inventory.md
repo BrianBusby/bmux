@@ -1,7 +1,7 @@
 # BMUX Reorganization Inventory
 
 This inventory records the first conservative repo-organization pass. The goal
-is to reduce root noise while keeping the cmux app buildable and preserving
+is to reduce root noise while keeping the bmux app buildable and preserving
 uncertain material.
 
 ## Top-Level Classification
@@ -12,8 +12,8 @@ uncertain material.
 | `Resources/` | Core app resources and bundled assets | Kept in place. |
 | `CLI/` | Core CLI source | Kept in place; needs later decomposition before any directory move. |
 | `Packages/` | Shared/macOS/iOS Swift packages | Kept in place. |
-| `cmux.xcodeproj`, `cmux.xcworkspace` | Xcode build metadata | Kept in place. |
-| `cmuxTests/`, `cmuxUITests/`, `tests/`, `tests_v2/` | Tests | Kept in place. |
+| `bmux.xcodeproj`, `bmux.xcworkspace` | Xcode build metadata | Kept in place. |
+| `bmuxTests/`, `bmuxUITests/`, `tests/`, `tests_v2/` | Tests | Kept in place. |
 | `webviews/` | Embedded webview bundles | Kept in place. |
 | `daemon/remote/` | Remote daemon service | Kept in place. |
 | `web/` | Web/backend product infrastructure | Kept in place; active package with scripts and dependencies. |
@@ -35,7 +35,7 @@ Measured with `wc -l` over source/test/config/doc files:
 
 | File | Lines | Notes |
 | --- | ---: | --- |
-| `CLI/cmux.swift` | 34,427 | Highest-priority CLI decomposition target. |
+| `CLI/bmux.swift` | 34,427 | Highest-priority CLI decomposition target. |
 | `Sources/AppDelegate.swift` | 18,487 | App lifecycle/window/menu/socket responsibilities are mixed. |
 | `Sources/ContentView.swift` | 16,630 | Workspace/sidebar/titlebar/view composition responsibilities are mixed. |
 | `Sources/TerminalController.swift` | 14,224 | Socket/control/mobile routing responsibilities are mixed. |
@@ -43,7 +43,7 @@ Measured with `wc -l` over source/test/config/doc files:
 | `Sources/GhosttyTerminalView.swift` | 12,214 | Terminal rendering/input/search boundaries need careful extraction. |
 | `Sources/Panels/BrowserPanel.swift` | 11,671 | Browser runtime and panel orchestration are mixed. |
 | `Sources/Panels/BrowserPanelView.swift` | 8,032 | Browser UI surface is large enough to split by controls/overlays. |
-| `Sources/CmuxConfig.swift` | 3,443 | Config schema, decoding, resolution, and issue reporting should split. |
+| `Sources/BmuxConfig.swift` | 3,443 | Config schema, decoding, resolution, and issue reporting should split. |
 | `Sources/Update/UpdateTitlebarAccessory.swift` | 3,124 | Titlebar UI, layout metrics, AppKit accessory controller should split. |
 
 ## Generated, Vendored, Or Heavy Material
@@ -53,7 +53,7 @@ Measured with `wc -l` over source/test/config/doc files:
 - `vendor/` contains vendored third-party material.
 - `bun.lock` and package-local lockfiles are retained because active package
   managers depend on them.
-- `cmux.xcodeproj/project.pbxproj` is large but expected for an Xcode project.
+- `bmux.xcodeproj/project.pbxproj` is large but expected for an Xcode project.
 
 ## Deferred Moves
 

@@ -1,9 +1,9 @@
-import CmuxSettings
+import BmuxSettings
 import Darwin
 import Foundation
 
 /// The user-configured custom upload rules (`terminal.uploadCommands` in
-/// `cmux.json`, see ``TerminalUploadCommandRule``), resolved against an ssh
+/// `bmux.json`, see ``TerminalUploadCommandRule``), resolved against an ssh
 /// destination. Constructed at the call site (see ``TerminalCustomUploadRunner``)
 /// from the rules read out of the settings catalog, so the rule set can be
 /// supplied directly in tests.
@@ -65,29 +65,29 @@ struct TerminalUploadCommand: Sendable, Equatable {
         sshOptions: [String]
     ) -> [String: String] {
         var env: [String: String] = [
-            "CMUX_UPLOAD_LOCAL_PATH": localPath,
-            "CMUX_UPLOAD_REMOTE_PATH": remotePath,
-            "CMUX_UPLOAD_DESTINATION": destination,
+            "BMUX_UPLOAD_LOCAL_PATH": localPath,
+            "BMUX_UPLOAD_REMOTE_PATH": remotePath,
+            "BMUX_UPLOAD_DESTINATION": destination,
         ]
         if let port {
-            env["CMUX_UPLOAD_PORT"] = String(port)
+            env["BMUX_UPLOAD_PORT"] = String(port)
         }
         if let identityFile, !identityFile.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            env["CMUX_UPLOAD_IDENTITY_FILE"] = identityFile
+            env["BMUX_UPLOAD_IDENTITY_FILE"] = identityFile
         }
         if !sshOptions.isEmpty {
-            env["CMUX_UPLOAD_SSH_OPTIONS"] = sshOptions.joined(separator: "\n")
+            env["BMUX_UPLOAD_SSH_OPTIONS"] = sshOptions.joined(separator: "\n")
         }
         return env
     }
 
-    /// The ready-to-type string cmux inserts for one file after the command runs.
+    /// The ready-to-type string bmux inserts for one file after the command runs.
     ///
     /// Non-empty command output is typed verbatim — a path, URL, or any reference
     /// the command chose — with C0 control characters and DEL stripped so output
     /// (which is often server-influenced, e.g. a URL an upload service returns)
     /// can't inject escape sequences or newlines into the terminal. When the
-    /// command prints nothing, cmux falls back to the shell-escaped remote path it
+    /// command prints nothing, bmux falls back to the shell-escaped remote path it
     /// delivered to, matching the built-in `scp` transport.
     ///
     /// Trust model: the output is *inserted, not executed*. Verbatim insertion is

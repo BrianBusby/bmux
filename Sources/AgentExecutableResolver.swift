@@ -1,8 +1,8 @@
-import CmuxSettings
+import BmuxSettings
 import Foundation
 
 struct RepoAgentLauncherAgentOption: Equatable {
-    let agent: CmuxConfigAgentKind
+    let agent: BmuxConfigAgentKind
     let executablePath: String
 }
 
@@ -14,7 +14,7 @@ struct RepoAgentLauncherAgentDetector {
     init(
         environment: [String: String] = ProcessInfo.processInfo.environment,
         fileManager: FileManager = .default,
-        configuredExecutablePaths: [AgentSessionProviderID: String] = AgentExecutableResolver.cmuxConfiguredExecutablePaths()
+        configuredExecutablePaths: [AgentSessionProviderID: String] = AgentExecutableResolver.bmuxConfiguredExecutablePaths()
     ) {
         self.environment = environment
         self.fileManager = fileManager
@@ -38,7 +38,7 @@ struct RepoAgentLauncherAgentDetector {
         }
     }
 
-    private var supportedAgents: [(agent: CmuxConfigAgentKind, provider: AgentSessionProviderID)] {
+    private var supportedAgents: [(agent: BmuxConfigAgentKind, provider: AgentSessionProviderID)] {
         [
             (.codex, .codex),
             (.claudeCode, .claude),
@@ -85,8 +85,8 @@ struct AgentExecutableResolver {
             let candidatePath = candidateURL.path
             guard fileManager.isExecutableFile(atPath: candidatePath) else { continue }
             guard !isBundledProviderExecutable(candidateURL) else { continue }
-            guard !isKnownCmuxClaudeCommandShim(candidateURL, provider: provider) else { continue }
-            guard !isKnownCmuxClaudeWrapper(candidateURL, provider: provider) else { continue }
+            guard !isKnownBmuxClaudeCommandShim(candidateURL, provider: provider) else { continue }
+            guard !isKnownBmuxClaudeWrapper(candidateURL, provider: provider) else { continue }
 
             return launchPlan(provider: provider, executableURL: candidateURL, searchDirectories: searchDirectories)
         }
@@ -98,7 +98,7 @@ struct AgentExecutableResolver {
         )
     }
 
-    static func cmuxConfiguredExecutablePaths(defaults: UserDefaults = .standard) -> [AgentSessionProviderID: String] {
+    static func bmuxConfiguredExecutablePaths(defaults: UserDefaults = .standard) -> [AgentSessionProviderID: String] {
         guard let claudePath = AgentIntegrationSettingsStore(defaults: defaults).customClaudePath else {
             return [:]
         }
@@ -226,8 +226,8 @@ struct AgentExecutableResolver {
               !isDirectory.boolValue,
               fileManager.isExecutableFile(atPath: candidateURL.path),
               !isBundledProviderExecutable(candidateURL),
-              !isKnownCmuxClaudeCommandShim(candidateURL, provider: provider),
-              !isKnownCmuxClaudeWrapper(candidateURL, provider: provider) else {
+              !isKnownBmuxClaudeCommandShim(candidateURL, provider: provider),
+              !isKnownBmuxClaudeWrapper(candidateURL, provider: provider) else {
             return nil
         }
         return candidateURL
@@ -242,28 +242,28 @@ struct AgentExecutableResolver {
            standardized == bundleBin {
             return true
         }
-        if Self.isCmuxAppBundleResourceBinDirectory(standardized) {
+        if Self.isBmuxAppBundleResourceBinDirectory(standardized) {
             return true
         }
         return false
     }
 
-    private func isKnownCmuxClaudeCommandShim(_ url: URL, provider: AgentSessionProviderID) -> Bool {
+    private func isKnownBmuxClaudeCommandShim(_ url: URL, provider: AgentSessionProviderID) -> Bool {
         guard provider == .claude else { return false }
         let candidatePath = url.standardizedFileURL.path
-        if let shimPath = environment["CMUX_CLAUDE_WRAPPER_SHIM"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+        if let shimPath = environment["BMUX_CLAUDE_WRAPPER_SHIM"]?.trimmingCharacters(in: .whitespacesAndNewlines),
            !shimPath.isEmpty,
            candidatePath == URL(fileURLWithPath: shimPath, isDirectory: false).standardizedFileURL.path {
             return true
         }
 
         let shimRoots: [String?] = [
-            environment["CMUX_CLAUDE_WRAPPER_SHIM_ROOT"],
+            environment["BMUX_CLAUDE_WRAPPER_SHIM_ROOT"],
             URL(fileURLWithPath: environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true)
-                .appendingPathComponent("cmux-cli-shims", isDirectory: true)
+                .appendingPathComponent("bmux-cli-shims", isDirectory: true)
                 .standardizedFileURL
                 .path,
-            "/tmp/cmux-cli-shims",
+            "/tmp/bmux-cli-shims",
         ]
         for shimRoot in shimRoots {
             guard let shimRoot = shimRoot?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -280,40 +280,40 @@ struct AgentExecutableResolver {
 
     private func isBundledProviderExecutable(_ url: URL) -> Bool {
         let path = url.standardizedFileURL.path
-        if Self.isCmuxAppBundleResourceBinChild(path) {
+        if Self.isBmuxAppBundleResourceBinChild(path) {
             return true
         }
         guard let resourcePath = bundleResourceURL?.standardizedFileURL.path else { return false }
         return path.hasPrefix(resourcePath + "/")
     }
 
-    private func isKnownCmuxClaudeWrapper(_ url: URL, provider: AgentSessionProviderID) -> Bool {
+    private func isKnownBmuxClaudeWrapper(_ url: URL, provider: AgentSessionProviderID) -> Bool {
         guard provider == .claude,
               let data = fileManager.contents(atPath: url.path),
               let prefix = String(data: data.prefix(512), encoding: .utf8) else {
             return false
         }
-        return prefix.contains("cmux claude wrapper - injects hooks and session tracking")
+        return prefix.contains("bmux claude wrapper - injects hooks and session tracking")
     }
 
-    private static func isCmuxAppBundleResourceBinDirectory(_ path: String) -> Bool {
-        cmuxAppBundleResourceBinComponentIndex(path).map { index in
+    private static func isBmuxAppBundleResourceBinDirectory(_ path: String) -> Bool {
+        bmuxAppBundleResourceBinComponentIndex(path).map { index in
             URL(fileURLWithPath: path, isDirectory: true).standardizedFileURL.pathComponents.count == index + 4
         } ?? false
     }
 
-    private static func isCmuxAppBundleResourceBinChild(_ path: String) -> Bool {
-        cmuxAppBundleResourceBinComponentIndex(path).map { index in
+    private static func isBmuxAppBundleResourceBinChild(_ path: String) -> Bool {
+        bmuxAppBundleResourceBinComponentIndex(path).map { index in
             URL(fileURLWithPath: path, isDirectory: false).standardizedFileURL.pathComponents.count > index + 4
         } ?? false
     }
 
-    private static func cmuxAppBundleResourceBinComponentIndex(_ path: String) -> Int? {
+    private static func bmuxAppBundleResourceBinComponentIndex(_ path: String) -> Int? {
         let components = URL(fileURLWithPath: path).standardizedFileURL.pathComponents
         guard components.count >= 4 else { return nil }
         for index in components.indices {
             guard components[index].hasSuffix(".app"),
-                  components[index].lowercased().contains("cmux"),
+                  components[index].lowercased().contains("bmux"),
                   components.indices.contains(index + 3),
                   components[index + 1] == "Contents",
                   components[index + 2] == "Resources",

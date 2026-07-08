@@ -172,7 +172,7 @@ jobs:
         run: |
           ./scripts/install-rust-ci.sh
           ./scripts/install-zig-ci.sh
-          CMUX_NODE_BIN="$(command -v node)"
+          BMUX_NODE_BIN="$(command -v node)"
           export npm_config_prefix="$RUNNER_TEMP/npm-global"
           mkdir -p "$npm_config_prefix"
           npm install --global "create-dmg@${CREATE_DMG_VERSION}"
@@ -180,7 +180,7 @@ jobs:
           mkdir -p "$wrapper_dir"
           cat > "$wrapper_dir/create-dmg" <<EOF
           #!/usr/bin/env bash
-          exec "$CMUX_NODE_BIN" "$npm_config_prefix/lib/node_modules/create-dmg/cli.js" "\$@"
+          exec "$BMUX_NODE_BIN" "$npm_config_prefix/lib/node_modules/create-dmg/cli.js" "\$@"
           EOF
           chmod +x "$wrapper_dir/create-dmg"
           echo "$wrapper_dir" >> "$GITHUB_PATH"
@@ -195,7 +195,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .spm-cache
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: spm-${{ hashFiles('bmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: spm-
 
       - name: Sanitize Swift package cache
@@ -225,12 +225,12 @@ jobs:
         if: needs.decide.outputs.should_publish != 'true' || steps.current_head_prebuild.outputs.still_current == 'true'
         run: |
           set -euo pipefail
-          HELPER_LOG="$RUNNER_TEMP/cmux-nightly-ghostty-helper.log"
+          HELPER_LOG="$RUNNER_TEMP/bmux-nightly-ghostty-helper.log"
           (
             set -euo pipefail
             export DEVELOPER_DIR="$HELPER_DEVELOPER_DIR"
-            ./scripts/build-ghostty-cli-helper.sh --universal --output /tmp/cmux-ghostty-helper-universal
-            ARCHS_OUT="$(lipo -archs /tmp/cmux-ghostty-helper-universal)"
+            ./scripts/build-ghostty-cli-helper.sh --universal --output /tmp/bmux-ghostty-helper-universal
+            ARCHS_OUT="$(lipo -archs /tmp/bmux-ghostty-helper-universal)"
             echo "Universal Ghostty CLI helper architectures: $ARCHS_OUT"
             case " $ARCHS_OUT " in *" arm64 "*) ;; *) echo "helper missing arm64 slice" >&2; exit 1 ;; esac
             case " $ARCHS_OUT " in *" x86_64 "*) ;; *) echo "helper missing x86_64 slice" >&2; exit 1 ;; esac
@@ -241,7 +241,7 @@ jobs:
           set +e
           # Skip only the in-Xcode helper build; the background helper process
           # above must build the real universal Zig helper, not the CI stub.
-          CMUX_SKIP_ZIG_BUILD=1 xcodebuild -scheme cmux -configuration Release -derivedDataPath build-universal \
+          BMUX_SKIP_ZIG_BUILD=1 xcodebuild -scheme bmux -configuration Release -derivedDataPath build-universal \
             -destination 'generic/platform=macOS' \
             -clonedSourcePackagesDirPath .spm-cache \
             ARCHS="arm64 x86_64" \
@@ -265,30 +265,30 @@ jobs:
         if: needs.decide.outputs.should_publish != 'true' || steps.current_head_prebuild.outputs.still_current == 'true'
         run: |
           set -euo pipefail
-          APP_DIR="build-universal/Build/Products/Release/cmux.app"
+          APP_DIR="build-universal/Build/Products/Release/bmux.app"
           if [ ! -d "$APP_DIR" ]; then
             echo "Built app not found at $APP_DIR" >&2
             exit 1
           fi
           DEST="$APP_DIR/Contents/Resources/bin/ghostty"
           mkdir -p "$(dirname "$DEST")"
-          install -m 755 /tmp/cmux-ghostty-helper-universal "$DEST"
+          install -m 755 /tmp/bmux-ghostty-helper-universal "$DEST"
           echo "Injected Ghostty CLI helper architectures: $(lipo -archs "$DEST")"
 
       - name: Run bundled Ghostty theme picker helper regression
         if: needs.decide.outputs.should_publish != 'true' || steps.current_head_prebuild.outputs.still_current == 'true'
         run: |
           set -euo pipefail
-          CMUX_APP_PATH="build-universal/Build/Products/Release/cmux.app" \
+          BMUX_APP_PATH="build-universal/Build/Products/Release/bmux.app" \
             ./tests/test_bundled_ghostty_theme_picker_helper.sh
 
       - name: Verify nightly binary architectures
         if: needs.decide.outputs.should_publish != 'true' || steps.current_head_prebuild.outputs.still_current == 'true'
         run: |
           set -euo pipefail
-          APP_BINARY="build-universal/Build/Products/Release/cmux.app/Contents/MacOS/cmux"
-          CLI_BINARY="build-universal/Build/Products/Release/cmux.app/Contents/Resources/bin/cmux"
-          HELPER_BINARY="build-universal/Build/Products/Release/cmux.app/Contents/Resources/bin/ghostty"
+          APP_BINARY="build-universal/Build/Products/Release/bmux.app/Contents/MacOS/bmux"
+          CLI_BINARY="build-universal/Build/Products/Release/bmux.app/Contents/Resources/bin/bmux"
+          HELPER_BINARY="build-universal/Build/Products/Release/bmux.app/Contents/Resources/bin/ghostty"
           APP_ARCHS="$(lipo -archs "$APP_BINARY")"
           CLI_ARCHS="$(lipo -archs "$CLI_BINARY")"
           HELPER_ARCHS="$(lipo -archs "$HELPER_BINARY")"
@@ -303,9 +303,9 @@ jobs:
         if: needs.decide.outputs.should_publish != 'true' || steps.current_head_prebuild.outputs.still_current == 'true'
         run: |
           set -euo pipefail
-          CLI_BINARY="build-universal/Build/Products/Release/cmux.app/Contents/Resources/bin/cmux"
-          [ -x "$CLI_BINARY" ] || { echo "cmux CLI binary not found at $CLI_BINARY" >&2; exit 1; }
-          CMUX_CLI_BIN="$CLI_BINARY" python3 tests/test_cli_version_memory_guard.py
+          CLI_BINARY="build-universal/Build/Products/Release/bmux.app/Contents/Resources/bin/bmux"
+          [ -x "$CLI_BINARY" ] || { echo "bmux CLI binary not found at $CLI_BINARY" >&2; exit 1; }
+          BMUX_CLI_BIN="$CLI_BINARY" python3 tests/test_cli_version_memory_guard.py
 
       - name: Check whether build commit is still current main HEAD after build
         if: needs.decide.outputs.should_publish == 'true' && steps.current_head_prebuild.outputs.still_current == 'true'
@@ -335,7 +335,7 @@ jobs:
           SHORT_SHA="${{ needs.decide.outputs.short_sha }}"
           APP_DIR="build-universal/Build/Products/Release"
 
-          BASE_MARKETING=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "${APP_DIR}/cmux.app/Contents/Info.plist")
+          BASE_MARKETING=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "${APP_DIR}/bmux.app/Contents/Info.plist")
           NIGHTLY_DATE=$(date -u +%Y%m%d)
 
           # Build number: unique/monotonic per workflow run attempt so same-day
@@ -348,7 +348,7 @@ jobs:
           fi
           NIGHTLY_MARKETING_VERSION="${BASE_MARKETING}-nightly.${NIGHTLY_BUILD}"
 
-          NIGHTLY_DMG_IMMUTABLE="cmux-nightly-macos-${NIGHTLY_BUILD}.dmg"
+          NIGHTLY_DMG_IMMUTABLE="bmux-nightly-macos-${NIGHTLY_BUILD}.dmg"
           {
             echo "NIGHTLY_BUILD=${NIGHTLY_BUILD}"
             echo "NIGHTLY_MARKETING_VERSION=${NIGHTLY_MARKETING_VERSION}"
@@ -360,10 +360,10 @@ jobs:
             local app_dir="$1"
             local bundle_id="$2"
             local feed_url="$3"
-            local app_plist="$app_dir/cmux.app/Contents/Info.plist"
+            local app_plist="$app_dir/bmux.app/Contents/Info.plist"
 
-            /usr/libexec/PlistBuddy -c "Set :CFBundleName cmux NIGHTLY" "$app_plist"
-            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName cmux NIGHTLY" "$app_plist"
+            /usr/libexec/PlistBuddy -c "Set :CFBundleName bmux NIGHTLY" "$app_plist"
+            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName bmux NIGHTLY" "$app_plist"
             /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier ${bundle_id}" "$app_plist"
             local url_type_name
             url_type_name="$(/usr/libexec/PlistBuddy -c "Print :CFBundleURLTypes:1:CFBundleURLName" "$app_plist")"
@@ -371,25 +371,25 @@ jobs:
               echo "Expected CFBundleURLTypes[1] to be the auth URL type, found: $url_type_name" >&2
               exit 1
             fi
-            /usr/libexec/PlistBuddy -c "Set :CFBundleURLTypes:1:CFBundleURLSchemes:0 cmux-nightly" "$app_plist"
+            /usr/libexec/PlistBuddy -c "Set :CFBundleURLTypes:1:CFBundleURLSchemes:0 bmux-nightly" "$app_plist"
             /usr/libexec/PlistBuddy -c "Delete :SUPublicEDKey" "$app_plist" >/dev/null 2>&1 || true
             /usr/libexec/PlistBuddy -c "Delete :SUFeedURL" "$app_plist" >/dev/null 2>&1 || true
             /usr/libexec/PlistBuddy -c "Add :SUPublicEDKey string ${SPARKLE_PUBLIC_KEY}" "$app_plist"
             /usr/libexec/PlistBuddy -c "Add :SUFeedURL string ${feed_url}" "$app_plist"
             /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${NIGHTLY_MARKETING_VERSION}" "$app_plist"
             /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${NIGHTLY_BUILD}" "$app_plist"
-            /usr/libexec/PlistBuddy -c "Delete :CMUXCommit" "$app_plist" >/dev/null 2>&1 || true
-            /usr/libexec/PlistBuddy -c "Add :CMUXCommit string ${SHORT_SHA}" "$app_plist"
-            mv "$app_dir/cmux.app" "$app_dir/cmux NIGHTLY.app"
+            /usr/libexec/PlistBuddy -c "Delete :BMUXCommit" "$app_plist" >/dev/null 2>&1 || true
+            /usr/libexec/PlistBuddy -c "Add :BMUXCommit string ${SHORT_SHA}" "$app_plist"
+            mv "$app_dir/bmux.app" "$app_dir/bmux NIGHTLY.app"
           }
 
           prepare_variant \
             "$APP_DIR" \
-            "com.cmuxterm.app.nightly" \
-            "https://files.cmux.com/nightly/appcast.xml"
+            "com.bmuxterm.app.nightly" \
+            "https://files.bmux.com/nightly/appcast.xml"
 
-          echo "Nightly app name: cmux NIGHTLY"
-          echo "Nightly bundle ID: com.cmuxterm.app.nightly"
+          echo "Nightly app name: bmux NIGHTLY"
+          echo "Nightly bundle ID: com.bmuxterm.app.nightly"
           echo "Nightly marketing version: ${NIGHTLY_MARKETING_VERSION}"
           echo "Nightly build number: ${NIGHTLY_BUILD}"
           echo "Nightly immutable DMG: ${NIGHTLY_DMG_IMMUTABLE}"
@@ -400,23 +400,23 @@ jobs:
         run: |
           set -euo pipefail
           # Build with --asset-suffix so manifest download URLs point to
-          # immutable, build-specific asset names (e.g. cmuxd-remote-darwin-arm64-2362248028801).
+          # immutable, build-specific asset names (e.g. bmuxd-remote-darwin-arm64-2362248028801).
           # This prevents checksum mismatches when a newer nightly overwrites
           # the shared "latest" assets on the release.
           ./scripts/build_remote_daemon_release_assets.sh \
             --version "$NIGHTLY_REMOTE_DAEMON_VERSION" \
             --release-tag "nightly" \
-            --repo "manaflow-ai/cmux" \
+            --repo "manaflow-ai/bmux" \
             --output-dir "remote-daemon-assets" \
             --asset-suffix "$NIGHTLY_BUILD"
-          MANIFEST_JSON="$(python3 -c 'import json,sys; print(json.dumps(json.load(open(sys.argv[1], encoding="utf-8")), separators=(",",":")))' "remote-daemon-assets/cmuxd-remote-manifest-${NIGHTLY_BUILD}.json")"
-          APP_PLIST="build-universal/Build/Products/Release/cmux NIGHTLY.app/Contents/Info.plist"
+          MANIFEST_JSON="$(python3 -c 'import json,sys; print(json.dumps(json.load(open(sys.argv[1], encoding="utf-8")), separators=(",",":")))' "remote-daemon-assets/bmuxd-remote-manifest-${NIGHTLY_BUILD}.json")"
+          APP_PLIST="build-universal/Build/Products/Release/bmux NIGHTLY.app/Contents/Info.plist"
           if [ ! -f "$APP_PLIST" ]; then
             echo "Missing nightly app Info.plist at $APP_PLIST" >&2
             exit 1
           fi
-          plutil -remove CMUXRemoteDaemonManifestJSON "$APP_PLIST" >/dev/null 2>&1 || true
-          plutil -insert CMUXRemoteDaemonManifestJSON -string "$MANIFEST_JSON" "$APP_PLIST"
+          plutil -remove BMUXRemoteDaemonManifestJSON "$APP_PLIST" >/dev/null 2>&1 || true
+          plutil -insert BMUXRemoteDaemonManifestJSON -string "$MANIFEST_JSON" "$APP_PLIST"
           # Also create unsuffixed "latest" copies for the release page and
           # any tooling that fetches the generic asset names. The manifest's
           # downloadURLs still point to the versioned filenames (intentional:
@@ -425,22 +425,22 @@ jobs:
           # are convenience aliases and don't carry build-provenance
           # attestation (attested versioned files are canonical).
           for platform in darwin-arm64 darwin-amd64 linux-arm64 linux-amd64; do
-            cp "remote-daemon-assets/cmuxd-remote-${platform}-${NIGHTLY_BUILD}" \
-               "remote-daemon-assets/cmuxd-remote-${platform}"
+            cp "remote-daemon-assets/bmuxd-remote-${platform}-${NIGHTLY_BUILD}" \
+               "remote-daemon-assets/bmuxd-remote-${platform}"
           done
           # Regenerate unsuffixed checksums with generic filenames so
-          # `shasum -c cmuxd-remote-checksums.txt` works against the aliases.
+          # `shasum -c bmuxd-remote-checksums.txt` works against the aliases.
           (
             cd remote-daemon-assets
             shasum -a 256 \
-              cmuxd-remote-darwin-arm64 \
-              cmuxd-remote-darwin-amd64 \
-              cmuxd-remote-linux-arm64 \
-              cmuxd-remote-linux-amd64 \
-              > cmuxd-remote-checksums.txt
+              bmuxd-remote-darwin-arm64 \
+              bmuxd-remote-darwin-amd64 \
+              bmuxd-remote-linux-arm64 \
+              bmuxd-remote-linux-amd64 \
+              > bmuxd-remote-checksums.txt
           )
-          cp "remote-daemon-assets/cmuxd-remote-manifest-${NIGHTLY_BUILD}.json" \
-             "remote-daemon-assets/cmuxd-remote-manifest.json"
+          cp "remote-daemon-assets/bmuxd-remote-manifest-${NIGHTLY_BUILD}.json" \
+             "remote-daemon-assets/bmuxd-remote-manifest.json"
 
       - name: Import signing cert
         if: needs.decide.outputs.should_publish != 'true' || (steps.current_head_prebuild.outputs.still_current == 'true' && steps.current_head_postbuild.outputs.still_current == 'true')
@@ -477,17 +477,17 @@ jobs:
             exit 1
           fi
 
-          APP_PATH="build-universal/Build/Products/Release/cmux NIGHTLY.app"
+          APP_PATH="build-universal/Build/Products/Release/bmux NIGHTLY.app"
           PROFILE_PATH="$APP_PATH/Contents/embedded.provisionprofile"
-          TMP_PROFILE="$(mktemp /tmp/cmux-nightly-profile.XXXXXX)"
-          TMP_PLIST="$(mktemp /tmp/cmux-nightly-profile.XXXXXX.plist)"
+          TMP_PROFILE="$(mktemp /tmp/bmux-nightly-profile.XXXXXX)"
+          TMP_PLIST="$(mktemp /tmp/bmux-nightly-profile.XXXXXX.plist)"
           trap 'rm -f "$TMP_PROFILE" "$TMP_PLIST"' EXIT
 
           echo "$APPLE_NIGHTLY_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$TMP_PROFILE"
           security cms -D -i "$TMP_PROFILE" > "$TMP_PLIST"
 
           APP_ID="$(/usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.application-identifier" "$TMP_PLIST")"
-          if [ "$APP_ID" != "7WLXT3NR37.com.cmuxterm.app.nightly" ]; then
+          if [ "$APP_ID" != "7WLXT3NR37.com.bmuxterm.app.nightly" ]; then
             echo "Nightly provisioning profile targets unexpected app ID: $APP_ID" >&2
             exit 1
           fi
@@ -516,11 +516,11 @@ jobs:
             exit 1
           fi
           for APP_PATH in \
-            "build-universal/Build/Products/Release/cmux NIGHTLY.app"
+            "build-universal/Build/Products/Release/bmux NIGHTLY.app"
           do
-            ./scripts/sign-cmux-bundle.sh \
+            ./scripts/sign-bmux-bundle.sh \
               "$APP_PATH" \
-              cmux.nightly.entitlements \
+              bmux.nightly.entitlements \
               "$APPLE_SIGNING_IDENTITY"
           done
 
@@ -556,8 +556,8 @@ jobs:
             xcrun stapler staple "$app_path"
             xcrun stapler validate "$app_path"
             spctl -a -vv --type execute "$app_path"
-            CMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1 ./scripts/smoke-launch-macos-app.sh "$app_path"
-            CMUX_SMOKE_DIRECT_EXEC=1 ./scripts/smoke-launch-macos-app.sh "$app_path"
+            BMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1 ./scripts/smoke-launch-macos-app.sh "$app_path"
+            BMUX_SMOKE_DIRECT_EXEC=1 ./scripts/smoke-launch-macos-app.sh "$app_path"
             ./scripts/verify-app-bundle-channel-metadata.sh "$app_path" nightly
             rm -f "$zip_submit"
 
@@ -592,8 +592,8 @@ jobs:
           }
 
           notarize_and_package \
-            "build-universal/Build/Products/Release/cmux NIGHTLY.app" \
-            "cmux-nightly-macos.dmg" \
+            "build-universal/Build/Products/Release/bmux NIGHTLY.app" \
+            "bmux-nightly-macos.dmg" \
             "$NIGHTLY_DMG_IMMUTABLE"
 
       - name: Upload dSYMs to Sentry
@@ -601,7 +601,7 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: manaflow
-          SENTRY_PROJECT: cmuxterm-macos
+          SENTRY_PROJECT: bmuxterm-macos
         run: |
           if [ -z "$SENTRY_AUTH_TOKEN" ]; then
             echo "SENTRY_AUTH_TOKEN not set, skipping dSYM upload"
@@ -632,34 +632,34 @@ jobs:
         uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
         with:
           subject-path: |
-            remote-daemon-assets/cmuxd-remote-darwin-arm64-${{ env.NIGHTLY_BUILD }}
-            remote-daemon-assets/cmuxd-remote-darwin-amd64-${{ env.NIGHTLY_BUILD }}
-            remote-daemon-assets/cmuxd-remote-linux-arm64-${{ env.NIGHTLY_BUILD }}
-            remote-daemon-assets/cmuxd-remote-linux-amd64-${{ env.NIGHTLY_BUILD }}
-            remote-daemon-assets/cmuxd-remote-checksums-${{ env.NIGHTLY_BUILD }}.txt
-            remote-daemon-assets/cmuxd-remote-manifest-${{ env.NIGHTLY_BUILD }}.json
+            remote-daemon-assets/bmuxd-remote-darwin-arm64-${{ env.NIGHTLY_BUILD }}
+            remote-daemon-assets/bmuxd-remote-darwin-amd64-${{ env.NIGHTLY_BUILD }}
+            remote-daemon-assets/bmuxd-remote-linux-arm64-${{ env.NIGHTLY_BUILD }}
+            remote-daemon-assets/bmuxd-remote-linux-amd64-${{ env.NIGHTLY_BUILD }}
+            remote-daemon-assets/bmuxd-remote-checksums-${{ env.NIGHTLY_BUILD }}.txt
+            remote-daemon-assets/bmuxd-remote-manifest-${{ env.NIGHTLY_BUILD }}.json
 
       - name: Retry remote daemon nightly asset attestation
         if: (needs.decide.outputs.should_publish != 'true' || (steps.current_head_prebuild.outputs.still_current == 'true' && steps.current_head_postbuild.outputs.still_current == 'true')) && steps.attest-remote-daemon-nightly-assets.outcome == 'failure'
         uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
         with:
           subject-path: |
-            remote-daemon-assets/cmuxd-remote-darwin-arm64-${{ env.NIGHTLY_BUILD }}
-            remote-daemon-assets/cmuxd-remote-darwin-amd64-${{ env.NIGHTLY_BUILD }}
-            remote-daemon-assets/cmuxd-remote-linux-arm64-${{ env.NIGHTLY_BUILD }}
-            remote-daemon-assets/cmuxd-remote-linux-amd64-${{ env.NIGHTLY_BUILD }}
-            remote-daemon-assets/cmuxd-remote-checksums-${{ env.NIGHTLY_BUILD }}.txt
-            remote-daemon-assets/cmuxd-remote-manifest-${{ env.NIGHTLY_BUILD }}.json
+            remote-daemon-assets/bmuxd-remote-darwin-arm64-${{ env.NIGHTLY_BUILD }}
+            remote-daemon-assets/bmuxd-remote-darwin-amd64-${{ env.NIGHTLY_BUILD }}
+            remote-daemon-assets/bmuxd-remote-linux-arm64-${{ env.NIGHTLY_BUILD }}
+            remote-daemon-assets/bmuxd-remote-linux-amd64-${{ env.NIGHTLY_BUILD }}
+            remote-daemon-assets/bmuxd-remote-checksums-${{ env.NIGHTLY_BUILD }}.txt
+            remote-daemon-assets/bmuxd-remote-manifest-${{ env.NIGHTLY_BUILD }}.json
 
       - name: Upload branch nightly artifacts
         if: needs.decide.outputs.should_publish != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-nightly-${{ needs.decide.outputs.short_sha }}
+          name: bmux-nightly-${{ needs.decide.outputs.short_sha }}
           path: |
-            cmux-nightly-macos*.dmg
+            bmux-nightly-macos*.dmg
             appcast.xml
-            remote-daemon-assets/cmuxd-remote-*
+            remote-daemon-assets/bmuxd-remote-*
             appcast-universal.xml
           if-no-files-found: error
 
@@ -687,7 +687,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 ./scripts/prune_nightly_release_assets.py \
-            --repo manaflow-ai/cmux \
+            --repo manaflow-ai/bmux \
             --release-tag nightly \
             --keep-builds 100 \
             --execute
@@ -703,17 +703,17 @@ jobs:
           body: |
             Automated nightly build for `${{ needs.decide.outputs.short_sha }}`.
 
-            **cmux NIGHTLY** is published as a universal app:
-            - bundle ID `com.cmuxterm.app.nightly`
+            **bmux NIGHTLY** is published as a universal app:
+            - bundle ID `com.bmuxterm.app.nightly`
             - feed `appcast.xml`
             - compatibility feed `appcast-universal.xml` for older universal nightlies
 
-            [Download cmux-nightly-macos.dmg](https://github.com/manaflow-ai/cmux/releases/download/nightly/cmux-nightly-macos.dmg)
+            [Download bmux-nightly-macos.dmg](https://github.com/manaflow-ai/bmux/releases/download/nightly/bmux-nightly-macos.dmg)
           files: |
-            cmux-nightly-macos-${{ github.run_id }}*.dmg
-            cmux-nightly-macos.dmg
+            bmux-nightly-macos-${{ github.run_id }}*.dmg
+            bmux-nightly-macos.dmg
             appcast.xml
-            remote-daemon-assets/cmuxd-remote-*
+            remote-daemon-assets/bmuxd-remote-*
             appcast-universal.xml
           overwrite_files: true
 
@@ -733,11 +733,11 @@ jobs:
           python3 scripts/ci/upload-r2-object.py \
             --file appcast.xml \
             --endpoint-url "$R2_ENDPOINT" \
-            --bucket cmux-binaries \
+            --bucket bmux-binaries \
             --key nightly/appcast.xml \
             --cache-control "no-cache, no-store, must-revalidate"
 
-          echo "R2 appcast upload complete: https://files.cmux.com/nightly/appcast.xml"
+          echo "R2 appcast upload complete: https://files.bmux.com/nightly/appcast.xml"
 
       - name: Cleanup keychain
         if: always()

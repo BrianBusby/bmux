@@ -1,13 +1,13 @@
 const priorSkipEnvValidation = process.env.SKIP_ENV_VALIDATION;
 const priorResendApiKey = process.env.RESEND_API_KEY;
-const priorFeedbackFromEmail = process.env.CMUX_FEEDBACK_FROM_EMAIL;
-const priorFeedbackRateLimitId = process.env.CMUX_FEEDBACK_RATE_LIMIT_ID;
+const priorFeedbackFromEmail = process.env.BMUX_FEEDBACK_FROM_EMAIL;
+const priorFeedbackRateLimitId = process.env.BMUX_FEEDBACK_RATE_LIMIT_ID;
 const priorVercel = process.env.VERCEL;
 
 process.env.SKIP_ENV_VALIDATION = "1";
 process.env.RESEND_API_KEY = "resend-test-key";
-process.env.CMUX_FEEDBACK_FROM_EMAIL = "feedback@example.test";
-process.env.CMUX_FEEDBACK_RATE_LIMIT_ID = "feedback-rate-limit-test";
+process.env.BMUX_FEEDBACK_FROM_EMAIL = "feedback@example.test";
+process.env.BMUX_FEEDBACK_RATE_LIMIT_ID = "feedback-rate-limit-test";
 
 import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
 import {
@@ -22,9 +22,9 @@ installVercelFirewallMock();
 mock.module("@/app/env", () => ({
   env: {
     RESEND_API_KEY: "resend-test-key",
-    CMUX_FEEDBACK_FROM_EMAIL: "feedback@example.test",
-    CMUX_FEEDBACK_RATE_LIMIT_ID: "feedback-rate-limit-test",
-    CMUX_PUSH_RATE_LIMIT_ID: "cmux-push-test",
+    BMUX_FEEDBACK_FROM_EMAIL: "feedback@example.test",
+    BMUX_FEEDBACK_RATE_LIMIT_ID: "feedback-rate-limit-test",
+    BMUX_PUSH_RATE_LIMIT_ID: "bmux-push-test",
   },
 }));
 
@@ -50,8 +50,8 @@ afterEach(() => {
 afterAll(() => {
   restoreEnv("SKIP_ENV_VALIDATION", priorSkipEnvValidation);
   restoreEnv("RESEND_API_KEY", priorResendApiKey);
-  restoreEnv("CMUX_FEEDBACK_FROM_EMAIL", priorFeedbackFromEmail);
-  restoreEnv("CMUX_FEEDBACK_RATE_LIMIT_ID", priorFeedbackRateLimitId);
+  restoreEnv("BMUX_FEEDBACK_FROM_EMAIL", priorFeedbackFromEmail);
+  restoreEnv("BMUX_FEEDBACK_RATE_LIMIT_ID", priorFeedbackRateLimitId);
   restoreEnv("VERCEL", priorVercel);
 });
 
@@ -83,7 +83,7 @@ function feedbackRequest(): Request {
   const form = new FormData();
   form.set("email", "user@example.test");
   form.set("message", "The app crashed while opening a workspace.");
-  return new Request("https://cmux.test/api/feedback", {
+  return new Request("https://bmux.test/api/feedback", {
     method: "POST",
     body: form,
   });

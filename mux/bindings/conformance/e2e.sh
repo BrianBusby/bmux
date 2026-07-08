@@ -24,11 +24,11 @@ is_required() {
   [[ -n "$REQUIRE" && ",$REQUIRE," == *",$lang,"* ]]
 }
 
-if [[ -n "${CMUX_MUX_BIN:-}" ]]; then
-  MUX_BIN="$CMUX_MUX_BIN"
+if [[ -n "${BMUX_MUX_BIN:-}" ]]; then
+  MUX_BIN="$BMUX_MUX_BIN"
 else
   (cd "$MUX_DIR" && cargo build -p mux-tui)
-  MUX_BIN="$MUX_DIR/target/debug/cmux-mux"
+  MUX_BIN="$MUX_DIR/target/debug/bmux-mux"
 fi
 
 passed=0
@@ -62,7 +62,7 @@ run_lang() {
 
   local session="bindings-${lang}-$$-$RANDOM"
   local log
-  log="$(mktemp "${TMPDIR:-/tmp}/cmux-mux-${lang}.XXXXXX.log")"
+  log="$(mktemp "${TMPDIR:-/tmp}/bmux-mux-${lang}.XXXXXX.log")"
   "$MUX_BIN" --headless --session "$session" >"$log" 2>&1 &
   local server_pid=$!
   local socket=""
@@ -88,7 +88,7 @@ run_lang() {
     return
   fi
 
-  if CMUX_MUX_SOCKET="$socket" "$@" run; then
+  if BMUX_MUX_SOCKET="$socket" "$@" run; then
     echo "PASS $lang"
     passed=$((passed + 1))
   else
@@ -123,9 +123,9 @@ rust_cmd() {
   case "$1" in
     check)
       command -v cargo >/dev/null || { echo "cargo not found"; return 127; }
-      (cd "$MUX_DIR" && cargo build -p cmux-client --example e2e --locked)
+      (cd "$MUX_DIR" && cargo build -p bmux-client --example e2e --locked)
       ;;
-    run) (cd "$MUX_DIR" && cargo run -p cmux-client --example e2e --locked --quiet) ;;
+    run) (cd "$MUX_DIR" && cargo run -p bmux-client --example e2e --locked --quiet) ;;
   esac
 }
 
@@ -146,9 +146,9 @@ java_cmd() {
       command -v java >/dev/null || { echo "java not found"; return 127; }
       javac -version >/dev/null 2>&1 || { javac -version 2>&1; return 127; }
       java -version >/dev/null 2>&1 || { java -version 2>&1; return 127; }
-      (cd "$ROOT/mux/bindings/java" && bash scripts/build.sh && java -cp out com.cmux.JsonTest && java -cp out com.cmux.StreamOpenTest && java -cp out com.cmux.WireCaptureTest)
+      (cd "$ROOT/mux/bindings/java" && bash scripts/build.sh && java -cp out com.bmux.JsonTest && java -cp out com.bmux.StreamOpenTest && java -cp out com.bmux.WireCaptureTest)
       ;;
-    run) (cd "$ROOT/mux/bindings/java" && java -cp out com.cmux.E2e) ;;
+    run) (cd "$ROOT/mux/bindings/java" && java -cp out com.bmux.E2e) ;;
   esac
 }
 

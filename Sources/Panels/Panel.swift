@@ -195,12 +195,12 @@ enum PanelOverlayRingMetrics {
 }
 
 #if DEBUG
-func cmuxFlashDebugID(_ id: UUID?) -> String {
+func bmuxFlashDebugID(_ id: UUID?) -> String {
     guard let id else { return "nil" }
     return String(id.uuidString.prefix(6))
 }
 
-func cmuxFlashDebugRect(_ rect: CGRect?) -> String {
+func bmuxFlashDebugRect(_ rect: CGRect?) -> String {
     guard let rect else { return "nil" }
     return String(
         format: "%.1f,%.1f %.1fx%.1f",
@@ -211,7 +211,7 @@ func cmuxFlashDebugRect(_ rect: CGRect?) -> String {
     )
 }
 
-func cmuxFlashDebugBool(_ value: Bool) -> Int {
+func bmuxFlashDebugBool(_ value: Bool) -> Int {
     value ? 1 : 0
 }
 #endif
@@ -444,10 +444,10 @@ final class CloudVMLoadingPanel: Panel {
         let joined = cleaned.joined(separator: "\n")
         let lowercased = joined.lowercased()
 
-        if lowercased.contains("local cmux web server") || lowercased.contains("localhost:") || lowercased.contains("127.0.0.1:") {
+        if lowercased.contains("local bmux web server") || lowercased.contains("localhost:") || lowercased.contains("127.0.0.1:") {
             return String(
                 localized: "panel.cloudVM.loading.failed.localServer",
-                defaultValue: "The local cmux web server is offline. Start it and retry Open Cloud VM."
+                defaultValue: "The local bmux web server is offline. Start it and retry Open Cloud VM."
             )
         }
         if lowercased.contains("waiting for the cloud vm service")
@@ -457,13 +457,13 @@ final class CloudVMLoadingPanel: Panel {
             || lowercased.contains("service unavailable") {
             return String(
                 localized: "panel.cloudVM.loading.failed.serviceUnavailable",
-                defaultValue: "The Cloud VM service could not create a VM yet. Retry keeps using this pinned Cloud VM slot, and once a VM exists cmux will always reattach to that same VM."
+                defaultValue: "The Cloud VM service could not create a VM yet. Retry keeps using this pinned Cloud VM slot, and once a VM exists bmux will always reattach to that same VM."
             )
         }
         if lowercased.contains("password") || lowercased.contains("permission denied") {
             return String(
                 localized: "panel.cloudVM.loading.failed.auth",
-                defaultValue: "cmux could not open a passwordless terminal session. Try opening the Cloud VM again."
+                defaultValue: "bmux could not open a passwordless terminal session. Try opening the Cloud VM again."
             )
         }
 
@@ -473,7 +473,7 @@ final class CloudVMLoadingPanel: Panel {
             if seen.contains(key) { return false }
             seen.insert(key)
             return !key.contains("created cloud vm")
-                && !key.contains("[cmux]")
+                && !key.contains("[bmux]")
                 && !key.contains("freestyle")
                 && !key.contains("provider")
                 && !key.contains("http://")

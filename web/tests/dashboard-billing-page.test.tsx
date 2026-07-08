@@ -101,8 +101,8 @@ describe("dashboard billing page", () => {
     expect(html).toContain("Free");
     expect(html).toContain("You are currently on the Free plan.");
     expect(html).toContain("Upgrade when you need cloud agents or team billing.");
-    expect(html).toContain('href="/api/billing/checkout?plan=pro&amp;cmux_external_browser=1"');
-    expect(html).toContain('href="/api/billing/checkout?plan=team&amp;cmux_external_browser=1"');
+    expect(html).toContain('href="/api/billing/checkout?plan=pro&amp;bmux_external_browser=1"');
+    expect(html).toContain('href="/api/billing/checkout?plan=team&amp;bmux_external_browser=1"');
     expect(html).toContain("Get Pro");
     expect(html).toContain("Get Teams");
     expect(html).toContain('href="/dashboard/testflight"');
@@ -116,7 +116,7 @@ describe("dashboard billing page", () => {
 
     const html = await renderBillingPage();
 
-    expect(html).toContain("cmux Pro");
+    expect(html).toContain("bmux Pro");
     expect(html).toContain("Your plan renews on");
     expect(html).toContain("$30/month");
     expect(html).toContain("Cancel plan");
@@ -154,7 +154,7 @@ describe("dashboard billing page", () => {
 
     const html = await renderBillingPage();
 
-    expect(html).toContain("cmux Team");
+    expect(html).toContain("bmux Team");
     expect(html).toContain("Team Pro renews on");
     expect(html).toContain("Seats");
     expect(html).toContain(">4<");
@@ -165,8 +165,8 @@ describe("dashboard billing page", () => {
 
   test("renders active Stripe Team for a paid team when no team is selected", async () => {
     mockImplementation(proUser.listTeams, async () => [
-      { id: "team-free", displayName: "Team Free", clientReadOnlyMetadata: { cmuxPlan: "free" } },
-      { id: "team-pro", displayName: "Team Pro", clientReadOnlyMetadata: { cmuxPlan: "team" } },
+      { id: "team-free", displayName: "Team Free", clientReadOnlyMetadata: { bmuxPlan: "free" } },
+      { id: "team-pro", displayName: "Team Pro", clientReadOnlyMetadata: { bmuxPlan: "team" } },
     ]);
     subscriptionResults = [
       [],
@@ -184,7 +184,7 @@ describe("dashboard billing page", () => {
 
     const html = await renderBillingPage();
 
-    expect(html).toContain("cmux Team");
+    expect(html).toContain("bmux Team");
     expect(html).toContain("Team Pro renews on");
     expect(html).toContain('name="scope" value="team"');
     expect(html).not.toContain("Upgrade when you need cloud agents or team billing.");
@@ -195,7 +195,7 @@ describe("dashboard billing page", () => {
 
     const html = await renderBillingPage();
 
-    expect(html).toContain("cmux Pro");
+    expect(html).toContain("bmux Pro");
     expect(html).toContain(
       "Your subscription is managed by our previous billing system. Contact support to make changes.",
     );
@@ -265,7 +265,7 @@ function stripeSubscriptionRow({
         data: [
           {
             price: {
-              lookup_key: "cmux-pro-monthly",
+              lookup_key: "bmux-pro-monthly",
             },
           },
         ],

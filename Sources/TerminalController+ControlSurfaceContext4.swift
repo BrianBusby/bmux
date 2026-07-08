@@ -1,9 +1,9 @@
 import AppKit
-import CmuxRemoteSession
+import BmuxRemoteSession
 import Bonsplit
-import CmuxControlSocket
+import BmuxControlSocket
 import Foundation
-import CmuxWorkspaces
+import BmuxWorkspaces
 
 /// The surface-domain resume (`resume.set` / `.get` / `.clear`) and reporting
 /// (`report_tty` / `report_pwd` / `report_shell_state` / `ports_kick`) witnesses,
@@ -134,7 +134,7 @@ extension TerminalController {
         alert.informativeText = String(
             format: String(
                 localized: "surfaceResumeApproval.proposal.message",
-                defaultValue: "A process wants cmux to keep this resume command for the current terminal:\n\n%@\n\nWorking directory: %@"
+                defaultValue: "A process wants bmux to keep this resume command for the current terminal:\n\n%@\n\nWorking directory: %@"
             ),
             binding.command,
             cwd

@@ -14,13 +14,13 @@ type Tokens struct {
 }
 
 func DefaultDir(home string, env map[string]string) (string, error) {
-	if dir := strings.TrimSpace(env["CMUX_VAULT_CONFIG_DIR"]); dir != "" {
+	if dir := strings.TrimSpace(env["BMUX_VAULT_CONFIG_DIR"]); dir != "" {
 		return dir, nil
 	}
 	if strings.TrimSpace(home) == "" {
 		return "", errors.New("home directory is empty")
 	}
-	return filepath.Join(home, ".config", "cmux-vault"), nil
+	return filepath.Join(home, ".config", "bmux-vault"), nil
 }
 
 func path(home string, env map[string]string) (string, error) {

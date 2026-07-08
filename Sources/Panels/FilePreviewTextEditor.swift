@@ -1,6 +1,6 @@
 import AppKit
-import CmuxFoundation
-import CmuxSettings
+import BmuxFoundation
+import BmuxSettings
 import SwiftUI
 
 @MainActor
@@ -122,14 +122,14 @@ extension SavingTextView {
     ///
     /// File Preview opens files up to `FilePreviewPanel.maximumLoadedTextBytes` (16 MB), which can
     /// be hundreds of thousands of lines. Selection responsiveness on that content is the reason
-    /// this configuration is centralized; see `manaflow-ai/cmux#4576`.
+    /// this configuration is centralized; see `manaflow-ai/bmux#4576`.
     static func makeFilePreviewTextView() -> SavingTextView {
         // Build an EXPLICIT TextKit 1 stack so this view is never TextKit 2.
         //
         // A default `NSTextView()` is TextKit 2: selection/hit-testing then runs through
         // `NSTextSelectionNavigation`, whose work is O(N) in line-fragment count, so clicking or
         // drag-selecting in a large document pegs the main thread inside AppKit's modal
-        // mouse-tracking loop and freezes the whole app (`manaflow-ai/cmux#4576`, `#5255`).
+        // mouse-tracking loop and freezes the whole app (`manaflow-ai/bmux#4576`, `#5255`).
         //
         // Merely *reading* `.layoutManager` afterward — the previous mitigation — only drops the
         // view to TextKit 2 *compatibility* mode: `textLayoutManager` stays non-nil and the slow

@@ -1,8 +1,8 @@
 import CoreGraphics
-import CmuxCore
+import BmuxCore
 import Foundation
 import Bonsplit
-import CmuxWorkspaces
+import BmuxWorkspaces
 #if canImport(CryptoKit)
 import CryptoKit
 #endif
@@ -127,10 +127,10 @@ enum SessionRestorePolicy {
     static func isRunningUnderAutomatedTests(
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool {
-        if environment["CMUX_UI_TEST_MODE"] == "1" {
+        if environment["BMUX_UI_TEST_MODE"] == "1" {
             return true
         }
-        if environment.keys.contains(where: { $0.hasPrefix("CMUX_UI_TEST_") }) {
+        if environment.keys.contains(where: { $0.hasPrefix("BMUX_UI_TEST_") }) {
             return true
         }
         if environment["XCTestConfigurationFilePath"] != nil {
@@ -158,7 +158,7 @@ enum SessionRestorePolicy {
         arguments: [String] = CommandLine.arguments,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool {
-        if environment["CMUX_DISABLE_SESSION_RESTORE"] == "1" {
+        if environment["BMUX_DISABLE_SESSION_RESTORE"] == "1" {
             return false
         }
         if isRunningUnderAutomatedTests(environment: environment) {
@@ -702,12 +702,12 @@ enum SurfaceResumeApprovalSignature {
 }
 
 enum SurfaceResumeApprovalStore {
-    static let didChangeNotification = Notification.Name("cmux.surfaceResumeApprovalsDidChange")
+    static let didChangeNotification = Notification.Name("bmux.surfaceResumeApprovalsDidChange")
     private static let legacyFileName = "resume-commands.json"
     private static let secretFileName = ".surface-resume-approval-secret"
     private static let settingsTerminalSectionKey = "terminal"
     private static let settingsRecordsKey = "resumeCommands"
-    private static let keychainService = "com.cmuxterm.app.surface-resume-approvals"
+    private static let keychainService = "com.bmuxterm.app.surface-resume-approvals"
     private static let keychainAccount = "hmac-secret-v1"
 
     struct StoredFile: Codable {
@@ -715,18 +715,18 @@ enum SurfaceResumeApprovalStore {
         var records: [SurfaceResumeApprovalRecord]
     }
 
-    private enum CmuxSettingsRootLoadResult {
+    private enum BmuxSettingsRootLoadResult {
         case missing
         case invalid
         case parsed([String: Any])
     }
 
     static func defaultURL(environment: [String: String] = ProcessInfo.processInfo.environment) -> URL {
-        if let override = environment["CMUX_SURFACE_RESUME_APPROVAL_STORE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+        if let override = environment["BMUX_SURFACE_RESUME_APPROVAL_STORE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
            !override.isEmpty {
             return URL(fileURLWithPath: (override as NSString).expandingTildeInPath, isDirectory: false)
         }
-        return URL(fileURLWithPath: CmuxSettingsFileStore.defaultPrimaryPath, isDirectory: false)
+        return URL(fileURLWithPath: BmuxSettingsFileStore.defaultPrimaryPath, isDirectory: false)
     }
 
     static func loadRecords(
@@ -734,15 +734,15 @@ enum SurfaceResumeApprovalStore {
         fileManager: FileManager = .default,
         defaultSettingsURL: URL = defaultURL()
     ) -> [SurfaceResumeApprovalRecord] {
-        if storesRecordsInCmuxSettings(fileURL) {
-            let loaded = loadRecordsFromCmuxSettings(fileURL: fileURL)
+        if storesRecordsInBmuxSettings(fileURL) {
+            let loaded = loadRecordsFromBmuxSettings(fileURL: fileURL)
             if loaded.hasResumeCommandsKey {
                 return loaded.records
             }
             guard fileURL.standardizedFileURL.path == defaultSettingsURL.standardizedFileURL.path else {
                 return loaded.records
             }
-            let legacyURL = legacyURL(forCmuxSettingsURL: fileURL)
+            let legacyURL = legacyURL(forBmuxSettingsURL: fileURL)
             let legacyRecords = loadStandaloneRecords(fileURL: legacyURL, fileManager: fileManager)
             guard !legacyRecords.isEmpty else {
                 return loaded.records
@@ -766,22 +766,22 @@ enum SurfaceResumeApprovalStore {
         fileManager: FileManager = .default,
         legacyFileURL: URL? = nil
     ) -> Bool {
-        guard storesRecordsInCmuxSettings(fileURL) else {
+        guard storesRecordsInBmuxSettings(fileURL) else {
             return false
         }
-        let loaded = loadRecordsFromCmuxSettings(fileURL: fileURL)
+        let loaded = loadRecordsFromBmuxSettings(fileURL: fileURL)
         guard !loaded.hasResumeCommandsKey else {
             return false
         }
         guard loaded.canWriteSettings else {
             return false
         }
-        let legacyURL = legacyFileURL ?? legacyURL(forCmuxSettingsURL: fileURL)
+        let legacyURL = legacyFileURL ?? legacyURL(forBmuxSettingsURL: fileURL)
         let legacyRecords = loadStandaloneRecords(fileURL: legacyURL, fileManager: fileManager)
         guard !legacyRecords.isEmpty else {
             return false
         }
-        return writeRecordsToCmuxSettings(records: legacyRecords, fileURL: fileURL, fileManager: fileManager)
+        return writeRecordsToBmuxSettings(records: legacyRecords, fileURL: fileURL, fileManager: fileManager)
     }
 
     private static func loadStandaloneRecords(
@@ -1006,7 +1006,7 @@ enum SurfaceResumeApprovalStore {
         fileURL: URL = defaultURL(),
         fileManager: FileManager = .default
     ) -> Bool {
-        if storesRecordsInCmuxSettings(fileURL) {
+        if storesRecordsInBmuxSettings(fileURL) {
             return write(records: [], fileURL: fileURL, fileManager: fileManager)
         }
         try? fileManager.removeItem(at: fileURL)
@@ -1021,7 +1021,7 @@ enum SurfaceResumeApprovalStore {
 
     static func defaultSigningSecret(fileManager: FileManager = .default) -> Data? {
         let env = ProcessInfo.processInfo.environment
-        if let encoded = env["CMUX_SURFACE_RESUME_APPROVAL_SECRET_B64"],
+        if let encoded = env["BMUX_SURFACE_RESUME_APPROVAL_SECRET_B64"],
            let data = Data(base64Encoded: encoded),
            !data.isEmpty {
             return data
@@ -1056,8 +1056,8 @@ enum SurfaceResumeApprovalStore {
         fileURL: URL,
         fileManager: FileManager
     ) -> Bool {
-        if storesRecordsInCmuxSettings(fileURL) {
-            return writeRecordsToCmuxSettings(records: records, fileURL: fileURL, fileManager: fileManager)
+        if storesRecordsInBmuxSettings(fileURL) {
+            return writeRecordsToBmuxSettings(records: records, fileURL: fileURL, fileManager: fileManager)
         }
         return writeStandaloneRecords(records: records, fileURL: fileURL, fileManager: fileManager)
     }
@@ -1086,20 +1086,20 @@ enum SurfaceResumeApprovalStore {
         }
     }
 
-    private static func storesRecordsInCmuxSettings(_ fileURL: URL) -> Bool {
-        fileURL.lastPathComponent == "cmux.json"
+    private static func storesRecordsInBmuxSettings(_ fileURL: URL) -> Bool {
+        fileURL.lastPathComponent == "bmux.json"
     }
 
-    private static func legacyURL(forCmuxSettingsURL fileURL: URL) -> URL {
+    private static func legacyURL(forBmuxSettingsURL fileURL: URL) -> URL {
         fileURL.deletingLastPathComponent()
             .appendingPathComponent(legacyFileName, isDirectory: false)
     }
 
-    private static func loadRecordsFromCmuxSettings(
+    private static func loadRecordsFromBmuxSettings(
         fileURL: URL
     ) -> (records: [SurfaceResumeApprovalRecord], hasResumeCommandsKey: Bool, canWriteSettings: Bool) {
         let root: [String: Any]
-        switch loadCmuxSettingsRoot(fileURL: fileURL) {
+        switch loadBmuxSettingsRoot(fileURL: fileURL) {
         case .missing:
             return ([], false, true)
         case .invalid:
@@ -1119,7 +1119,7 @@ enum SurfaceResumeApprovalStore {
         return (records, true, true)
     }
 
-    private static func loadCmuxSettingsRoot(fileURL: URL) -> CmuxSettingsRootLoadResult {
+    private static func loadBmuxSettingsRoot(fileURL: URL) -> BmuxSettingsRootLoadResult {
         guard let data = try? Data(contentsOf: fileURL), !data.isEmpty else {
             return .missing
         }
@@ -1135,13 +1135,13 @@ enum SurfaceResumeApprovalStore {
     }
 
     @discardableResult
-    private static func writeRecordsToCmuxSettings(
+    private static func writeRecordsToBmuxSettings(
         records: [SurfaceResumeApprovalRecord],
         fileURL: URL,
         fileManager: FileManager
     ) -> Bool {
         do {
-            let rootLoadResult = loadCmuxSettingsRoot(fileURL: fileURL)
+            let rootLoadResult = loadBmuxSettingsRoot(fileURL: fileURL)
 
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -1155,8 +1155,8 @@ enum SurfaceResumeApprovalStore {
             switch rootLoadResult {
             case .missing:
                 let root: [String: Any] = [
-                    "$schema": CmuxSettingsFileStore.schemaURLString,
-                    "schemaVersion": CmuxSettingsFileStore.currentSchemaVersion,
+                    "$schema": BmuxSettingsFileStore.schemaURLString,
+                    "schemaVersion": BmuxSettingsFileStore.currentSchemaVersion,
                     settingsTerminalSectionKey: [
                         settingsRecordsKey: recordsValue,
                     ],
@@ -1272,25 +1272,25 @@ enum SurfaceResumeApprovalStore {
 }
 
 nonisolated enum TerminalStartupReturnShellScript {
-    private static let shellLine = #"_cmux_resume_shell="${SHELL:-/bin/zsh}""#
+    private static let shellLine = #"_bmux_resume_shell="${SHELL:-/bin/zsh}""#
     private static let zshIntegrationReentryLines = [
-        #"if [[ "${_cmux_resume_shell:t}" == "zsh" ]]; then"#,
-        #"  _cmux_resume_zdotdir_is_integration() { [[ -n "${1:-}" && ( "$1" == "${CMUX_SHELL_INTEGRATION_DIR:-}" || "$1" == */Contents/Resources/shell-integration ) ]]; }"#,
-        #"  if [[ -n "${CMUX_SHELL_INTEGRATION_DIR:-}" && -r "${CMUX_SHELL_INTEGRATION_DIR}/.zshenv" ]]; then"#,
-        #"    if [[ -n "${ZDOTDIR+X}" ]] && ! _cmux_resume_zdotdir_is_integration "$ZDOTDIR"; then export CMUX_ZSH_ZDOTDIR="$ZDOTDIR"; elif [[ -n "${CMUX_ZSH_ZDOTDIR+X}" ]] && _cmux_resume_zdotdir_is_integration "$CMUX_ZSH_ZDOTDIR"; then unset CMUX_ZSH_ZDOTDIR; fi; export ZDOTDIR="$CMUX_SHELL_INTEGRATION_DIR""#,
+        #"if [[ "${_bmux_resume_shell:t}" == "zsh" ]]; then"#,
+        #"  _bmux_resume_zdotdir_is_integration() { [[ -n "${1:-}" && ( "$1" == "${BMUX_SHELL_INTEGRATION_DIR:-}" || "$1" == */Contents/Resources/shell-integration ) ]]; }"#,
+        #"  if [[ -n "${BMUX_SHELL_INTEGRATION_DIR:-}" && -r "${BMUX_SHELL_INTEGRATION_DIR}/.zshenv" ]]; then"#,
+        #"    if [[ -n "${ZDOTDIR+X}" ]] && ! _bmux_resume_zdotdir_is_integration "$ZDOTDIR"; then export BMUX_ZSH_ZDOTDIR="$ZDOTDIR"; elif [[ -n "${BMUX_ZSH_ZDOTDIR+X}" ]] && _bmux_resume_zdotdir_is_integration "$BMUX_ZSH_ZDOTDIR"; then unset BMUX_ZSH_ZDOTDIR; fi; export ZDOTDIR="$BMUX_SHELL_INTEGRATION_DIR""#,
         #"  else"#,
-        #"    if [[ -n "${GHOSTTY_ZSH_ZDOTDIR+X}" ]]; then export ZDOTDIR="$GHOSTTY_ZSH_ZDOTDIR"; unset GHOSTTY_ZSH_ZDOTDIR; elif [[ -n "${CMUX_ZSH_ZDOTDIR+X}" ]] && ! _cmux_resume_zdotdir_is_integration "$CMUX_ZSH_ZDOTDIR"; then export ZDOTDIR="$CMUX_ZSH_ZDOTDIR"; unset CMUX_ZSH_ZDOTDIR; elif [[ -n "${ZDOTDIR+X}" ]] && _cmux_resume_zdotdir_is_integration "$ZDOTDIR"; then unset ZDOTDIR; unset CMUX_ZSH_ZDOTDIR; fi"#,
-        #"  fi; unfunction _cmux_resume_zdotdir_is_integration 2>/dev/null || true"#,
+        #"    if [[ -n "${GHOSTTY_ZSH_ZDOTDIR+X}" ]]; then export ZDOTDIR="$GHOSTTY_ZSH_ZDOTDIR"; unset GHOSTTY_ZSH_ZDOTDIR; elif [[ -n "${BMUX_ZSH_ZDOTDIR+X}" ]] && ! _bmux_resume_zdotdir_is_integration "$BMUX_ZSH_ZDOTDIR"; then export ZDOTDIR="$BMUX_ZSH_ZDOTDIR"; unset BMUX_ZSH_ZDOTDIR; elif [[ -n "${ZDOTDIR+X}" ]] && _bmux_resume_zdotdir_is_integration "$ZDOTDIR"; then unset ZDOTDIR; unset BMUX_ZSH_ZDOTDIR; fi"#,
+        #"  fi; unfunction _bmux_resume_zdotdir_is_integration 2>/dev/null || true"#,
         #"fi"#,
     ]
 
     static func commandThenReturnLines(command: String, workingDirectory: String? = nil) -> [String] {
         let quotedCommand = TerminalStartupShellQuoting.singleQuoted(command)
         var lines = [shellLine] + zshIntegrationReentryLines + [
-            #"case "${_cmux_resume_shell:t}" in"#,
-            #"  zsh|bash) "$_cmux_resume_shell" -lic \#(quotedCommand) ;;"#,
-            #"  csh|tcsh) "$_cmux_resume_shell" -c \#(quotedCommand) ;;"#,
-            #"  *) "$_cmux_resume_shell" -c \#(quotedCommand) ;;"#,
+            #"case "${_bmux_resume_shell:t}" in"#,
+            #"  zsh|bash) "$_bmux_resume_shell" -lic \#(quotedCommand) ;;"#,
+            #"  csh|tcsh) "$_bmux_resume_shell" -c \#(quotedCommand) ;;"#,
+            #"  *) "$_bmux_resume_shell" -c \#(quotedCommand) ;;"#,
             #"esac"#,
         ] + zshIntegrationReentryLines
         // The resume command's `cd` runs inside the child shell above, so after the resumed agent
@@ -1301,13 +1301,13 @@ nonisolated enum TerminalStartupReturnShellScript {
             let quotedDirectory = TerminalStartupShellQuoting.singleQuoted(workingDirectory)
             lines.append(#"{ cd -- \#(quotedDirectory) 2>/dev/null || true; }"#)
         }
-        lines.append(#"exec -l "$_cmux_resume_shell""#)
+        lines.append(#"exec -l "$_bmux_resume_shell""#)
         return lines
     }
 }
 
 enum SurfaceResumeBindingScriptStore {
-    private static let directoryName = "cmux-surface-resume"
+    private static let directoryName = "bmux-surface-resume"
     private static let scriptTTL: TimeInterval = 24 * 60 * 60
 
     static func writeLauncherScript(
@@ -1519,12 +1519,12 @@ struct SessionBrowserPanelSnapshot: Codable, Sendable {
     var omnibarVisible: Bool? = nil
     var backHistoryURLStrings: [String]?
     var forwardHistoryURLStrings: [String]?
-    /// True when the surface is a transparent internal cmux UI (e.g. the diff
+    /// True when the surface is a transparent internal bmux UI (e.g. the diff
     /// viewer). Restored so the surface comes back transparent, not opaque.
     var transparentBackground: Bool? = nil
     /// Diff viewer token + request path, when this browser surface hosts a diff
     /// viewer. Restored by re-registering the token with the app-owned
-    /// `CmuxDiffViewerURLSchemeHandler` and navigating via the custom scheme,
+    /// `BmuxDiffViewerURLSchemeHandler` and navigating via the custom scheme,
     /// independent of the (possibly-dead) local HTTP server.
     var diffViewerToken: String? = nil
     var diffViewerRequestPath: String? = nil
@@ -1849,7 +1849,7 @@ struct AppSessionSnapshot: Codable, Sendable {
 }
 
 extension AppSessionSnapshot: SessionSnapshotRepresenting {
-    /// Whether the snapshot carries at least one window. The `CmuxSession`
+    /// Whether the snapshot carries at least one window. The `BmuxSession`
     /// repository treats an empty-window snapshot as unusable (empty states
     /// remove the file instead of writing it), matching the legacy
     /// `!snapshot.windows.isEmpty` usability check.
@@ -1857,8 +1857,8 @@ extension AppSessionSnapshot: SessionSnapshotRepresenting {
 }
 
 enum SessionScrollbackReplayStore {
-    static let environmentKey = "CMUX_RESTORE_SCROLLBACK_FILE"
-    private static let directoryName = "cmux-session-scrollback"
+    static let environmentKey = "BMUX_RESTORE_SCROLLBACK_FILE"
+    private static let directoryName = "bmux-session-scrollback"
     private static let ansiEscape = "\u{001B}"
     private static let ansiReset = "\u{001B}[0m"
 

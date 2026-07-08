@@ -11,7 +11,7 @@ import WebKit
 /// refresh pass must fire WebKit's re-enter selectors or the first paint
 /// keeps the stale layer tree from the hidden host.
 
-private var cmuxBrowserPortalNeedsRenderingStateReattachKey: UInt8 = 0
+private var bmuxBrowserPortalNeedsRenderingStateReattachKey: UInt8 = 0
 
 #if DEBUG
 private func browserPortalRenderingStateDebugToken(_ view: NSView?) -> String {
@@ -36,13 +36,13 @@ private extension NSObject {
 extension WKWebView {
     fileprivate var browserPortalNeedsRenderingStateReattach: Bool {
         get {
-            (objc_getAssociatedObject(self, &cmuxBrowserPortalNeedsRenderingStateReattachKey) as? NSNumber)?
+            (objc_getAssociatedObject(self, &bmuxBrowserPortalNeedsRenderingStateReattachKey) as? NSNumber)?
                 .boolValue ?? false
         }
         set {
             objc_setAssociatedObject(
                 self,
-                &cmuxBrowserPortalNeedsRenderingStateReattachKey,
+                &bmuxBrowserPortalNeedsRenderingStateReattachKey,
                 NSNumber(value: newValue),
                 .OBJC_ASSOCIATION_RETAIN_NONATOMIC
             )
@@ -69,7 +69,7 @@ extension WKWebView {
         }
 #if DEBUG
         if !firedSelectors.isEmpty {
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "browser.portal.webview.hidden web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) selectors=\(firedSelectors.joined(separator: ","))"
             )
@@ -104,7 +104,7 @@ extension WKWebView {
 
 #if DEBUG
         if !firedSelectors.isEmpty {
-            cmuxDebugLog(
+            bmuxDebugLog(
                 "browser.portal.webview.reattach web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) selectors=\(firedSelectors.joined(separator: ",")) " +
                 "frame=\(String(format: "%.1f,%.1f %.1fx%.1f", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height))"

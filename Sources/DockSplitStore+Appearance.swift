@@ -1,7 +1,7 @@
 import Bonsplit
-import CmuxAppKitSupportUI
-import CmuxSettings
-import CmuxTerminal
+import BmuxAppKitSupportUI
+import BmuxSettings
+import BmuxTerminal
 import CoreGraphics
 
 extension DockSplitStore {

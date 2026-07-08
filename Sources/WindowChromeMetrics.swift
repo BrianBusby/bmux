@@ -1,4 +1,4 @@
-import CmuxFoundation
+import BmuxFoundation
 import CoreGraphics
 
 enum WindowChromeMetrics {
@@ -106,7 +106,7 @@ enum SidebarWorkspaceScrollLayout {
         // Flooring to a whole point keeps `content + insets <= viewportHeight`
         // regardless of the display's backing scale, so the phantom scrollbar
         // stays hidden when content fits
-        // (https://github.com/manaflow-ai/cmux/issues/3241).
+        // (https://github.com/manaflow-ai/bmux/issues/3241).
         return max(0, (viewportHeight - insets.total).rounded(.down))
     }
 }

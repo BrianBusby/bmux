@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/manaflow-ai/cmux/vault/internal/api"
-	"github.com/manaflow-ai/cmux/vault/internal/authstore"
+	"github.com/manaflow-ai/bmux/vault/internal/api"
+	"github.com/manaflow-ai/bmux/vault/internal/authstore"
 )
 
 type Printer interface {
@@ -21,7 +21,7 @@ func Login(ctx context.Context, client *api.Client, out Printer) (authstore.Toke
 		return authstore.Tokens{}, err
 	}
 
-	out.Printf("Open this URL to approve cmux-vault:\n  %s\n\n", start.VerificationURL)
+	out.Printf("Open this URL to approve bmux-vault:\n  %s\n\n", start.VerificationURL)
 	out.Printf("Code: %s\n", start.UserCode)
 	if runtime.GOOS == "darwin" {
 		_ = exec.Command("open", start.VerificationURL).Start()

@@ -2,8 +2,8 @@
 # Select Xcodes for the nightly macOS build.
 set -euo pipefail
 
-APPLICATIONS_DIR="${CMUX_XCODE_APPLICATIONS_DIR:-/Applications}"
-PRINT_VERSION="${CMUX_SELECT_XCODE_PRINT_VERSION:-1}"
+APPLICATIONS_DIR="${BMUX_XCODE_APPLICATIONS_DIR:-/Applications}"
+PRINT_VERSION="${BMUX_SELECT_XCODE_PRINT_VERSION:-1}"
 
 sdk_major() {
   local v="$1" maj

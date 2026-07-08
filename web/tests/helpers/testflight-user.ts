@@ -1,6 +1,6 @@
 import { mock } from "bun:test";
 
-const testflightEligibilityKey = Symbol.for("cmux.tests.testflightEligibility");
+const testflightEligibilityKey = Symbol.for("bmux.tests.testflightEligibility");
 
 export function createTestflightUser({
   eligible = true,

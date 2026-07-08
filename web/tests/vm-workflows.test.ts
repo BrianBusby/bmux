@@ -45,7 +45,7 @@ import {
   reconcileVmProviderStatuses,
 } from "../services/vms/workflows";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.BMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 
 let sql: Sql | null = null;
@@ -58,7 +58,7 @@ type LeaseRevocationRetry = Parameters<NonNullable<VmRepositoryShape["markLeaseR
 function databaseURL() {
   const url = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!url) {
-    throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+    throw new Error("DATABASE_URL is required when BMUX_DB_TEST=1");
   }
   return url;
 }
@@ -1176,7 +1176,7 @@ describe("VM Effect workflows", () => {
           transport: "ssh" as const,
           host: "vm-ssh.freestyle.sh",
           port: 22,
-          username: "provider-vm-ssh-cleanup-before-resume+cmux",
+          username: "provider-vm-ssh-cleanup-before-resume+bmux",
           publicKeyFingerprint: null,
           credential: { kind: "password" as const, value: "secret" },
           identityHandle: "new-identity",
@@ -1513,7 +1513,7 @@ describe("VM Effect workflows", () => {
             provider: "e2b" as const,
             providerVmId: `provider-vm-idem-${createCalls}`,
             status: "running" as const,
-            image: "cmuxd-ws:test",
+            image: "bmuxd-ws:test",
             createdAt: Date.now(),
           };
         }),
@@ -1531,7 +1531,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 1,
       provider: "e2b",
-      image: "cmuxd-ws:test",
+      image: "bmuxd-ws:test",
       imageVersion: "test-version",
       idempotencyKey: "idem-1",
     });
@@ -1546,7 +1546,7 @@ describe("VM Effect workflows", () => {
         billingPlanId: "free",
         maxActiveVms: 1,
         provider: "e2b",
-        image: "cmuxd-ws:test",
+        image: "bmuxd-ws:test",
         imageVersion: "test-version",
         idempotencyKey: "idem-1",
       }).pipe(Effect.provide(layer)),
@@ -1559,7 +1559,7 @@ describe("VM Effect workflows", () => {
         billingPlanId: "free",
         maxActiveVms: 1,
         provider: "e2b",
-        image: "cmuxd-ws:test",
+        image: "bmuxd-ws:test",
         imageVersion: "test-version",
         idempotencyKey: "idem-1",
       }).pipe(Effect.provide(layer)),
@@ -1598,7 +1598,7 @@ describe("VM Effect workflows", () => {
             provider: "e2b" as const,
             providerVmId: `provider-vm-base-open-${createCalls}`,
             status: "running" as const,
-            image: "cmuxd-ws:test",
+            image: "bmuxd-ws:test",
             createdAt: Date.now(),
           };
         }),
@@ -1616,7 +1616,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 5,
       provider: "e2b",
-      image: "cmuxd-ws:test",
+      image: "bmuxd-ws:test",
       imageVersion: "test-version",
     }).pipe(Effect.provide(layer)));
     const second = await Effect.runPromise(openBaseVm({
@@ -1626,7 +1626,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 5,
       provider: "e2b",
-      image: "cmuxd-ws:test",
+      image: "bmuxd-ws:test",
       imageVersion: "test-version",
     }).pipe(Effect.provide(layer)));
     const otherTeam = await Effect.runPromise(openBaseVm({
@@ -1636,7 +1636,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 5,
       provider: "e2b",
-      image: "cmuxd-ws:test",
+      image: "bmuxd-ws:test",
       imageVersion: "test-version",
     }).pipe(Effect.provide(layer)));
     const personal = await Effect.runPromise(openBaseVm({
@@ -1646,7 +1646,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 5,
       provider: "e2b",
-      image: "cmuxd-ws:test",
+      image: "bmuxd-ws:test",
       imageVersion: "test-version",
     }).pipe(Effect.provide(layer)));
     const personalReopen = await Effect.runPromise(openBaseVm({
@@ -1656,7 +1656,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 5,
       provider: "e2b",
-      image: "cmuxd-ws:test",
+      image: "bmuxd-ws:test",
       imageVersion: "test-version",
     }).pipe(Effect.provide(layer)));
 
@@ -2068,7 +2068,7 @@ describe("VM Effect workflows", () => {
             transport: "ssh" as const,
             host: "vm-ssh.freestyle.sh",
             port: 22,
-            username: "provider-vm-ssh-1+cmux",
+            username: "provider-vm-ssh-1+bmux",
             publicKeyFingerprint: null,
             credential: { kind: "password" as const, value: `token-${mintCount}` },
             identityHandle: `identity-${mintCount}`,
@@ -2130,7 +2130,7 @@ describe("VM Effect workflows", () => {
             transport: "ssh" as const,
             host: "vm-ssh.freestyle.sh",
             port: 22,
-            username: "provider-vm-ssh-revoke-failure+cmux",
+            username: "provider-vm-ssh-revoke-failure+bmux",
             publicKeyFingerprint: null,
             credential: { kind: "password" as const, value: `token-${mintCount}` },
             identityHandle: `identity-revoke-failure-${mintCount}`,
@@ -2199,7 +2199,7 @@ describe("VM Effect workflows", () => {
             transport: "ssh" as const,
             host: "vm-ssh.freestyle.sh",
             port: 22,
-            username: "provider-vm-ssh-cleanup-bound+cmux",
+            username: "provider-vm-ssh-cleanup-bound+bmux",
             publicKeyFingerprint: null,
             credential: { kind: "password" as const, value: "token" },
             identityHandle: "identity-cleanup-bound-new",
@@ -2271,7 +2271,7 @@ describe("VM Effect workflows", () => {
             transport: "ssh" as const,
             host: "vm-ssh.freestyle.sh",
             port: 22,
-            username: "provider-vm-resume-ssh+cmux",
+            username: "provider-vm-resume-ssh+bmux",
             publicKeyFingerprint: null,
             credential: { kind: "password" as const, value: "token" },
             identityHandle: "identity-resumed",
@@ -2320,7 +2320,7 @@ describe("VM Effect workflows", () => {
     await sql`truncate cloud_vm_billing_grants, cloud_vm_usage_events, cloud_vm_leases, cloud_vms restart identity cascade`;
     await sql`
       insert into cloud_vms (user_id, billing_team_id, billing_plan_id, provider, provider_vm_id, image_id, status)
-      values ('user-workflow-limit-owner', 'team-workflow-limit', 'free', 'e2b', 'provider-vm-limit-1', 'cmuxd-ws:test', 'running')
+      values ('user-workflow-limit-owner', 'team-workflow-limit', 'free', 'e2b', 'provider-vm-limit-1', 'bmuxd-ws:test', 'running')
     `;
 
     let createCalls = 0;
@@ -2332,7 +2332,7 @@ describe("VM Effect workflows", () => {
             provider: "e2b" as const,
             providerVmId: "provider-vm-limit-2",
             status: "running" as const,
-            image: "cmuxd-ws:test",
+            image: "bmuxd-ws:test",
             createdAt: Date.now(),
           };
         }),
@@ -2351,7 +2351,7 @@ describe("VM Effect workflows", () => {
         billingPlanId: "free",
         maxActiveVms: 1,
         provider: "e2b",
-        image: "cmuxd-ws:test",
+        image: "bmuxd-ws:test",
         idempotencyKey: "limit-new-1",
       }).pipe(
         Effect.flip,
@@ -2425,8 +2425,8 @@ describe("VM Effect workflows", () => {
         ('user-workflow-resume-limit', 'team-workflow-resume-limit', 'resume-limit-one', 'freestyle', 'provider-vm-resume-paused', 'snapshot-test', 'paused')
     `;
 
-    const previousLimit = process.env.CMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS;
-    process.env.CMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS = "1";
+    const previousLimit = process.env.BMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS;
+    process.env.BMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS = "1";
     let resumeCalls = 0;
     let openAttachCalls = 0;
     const provider: VmProviderGatewayShape = {
@@ -2451,7 +2451,7 @@ describe("VM Effect workflows", () => {
             transport: "ssh" as const,
             host: "vm-ssh.example.invalid",
             port: 22,
-            username: "cmux",
+            username: "bmux",
             publicKeyFingerprint: null,
             credential: { kind: "password" as const, value: "token" },
             identityHandle: "identity-unused",
@@ -2484,9 +2484,9 @@ describe("VM Effect workflows", () => {
       expect(pausedVm?.status).toBe("paused");
     } finally {
       if (previousLimit === undefined) {
-        delete process.env.CMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS;
+        delete process.env.BMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS;
       } else {
-        process.env.CMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS = previousLimit;
+        process.env.BMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS = previousLimit;
       }
     }
   });
@@ -2522,7 +2522,7 @@ describe("VM Effect workflows", () => {
             transport: "ssh" as const,
             host: "vm-ssh.example.invalid",
             port: 22,
-            username: "cmux",
+            username: "bmux",
             publicKeyFingerprint: null,
             credential: { kind: "password" as const, value: "token" },
             identityHandle: "identity-unused",
@@ -3210,7 +3210,7 @@ describe("VM Effect workflows", () => {
             provider: "e2b" as const,
             providerVmId: "provider-vm-concurrent-idem",
             status: "running" as const,
-            image: "cmuxd-ws:test",
+            image: "bmuxd-ws:test",
             createdAt: Date.now(),
           };
         }),
@@ -3228,7 +3228,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 1,
       provider: "e2b" as const,
-      image: "cmuxd-ws:test",
+      image: "bmuxd-ws:test",
       idempotencyKey: "concurrent-idem-1",
     };
     const locker = postgres(databaseURL(), { max: 1 });
@@ -3284,7 +3284,7 @@ describe("VM Effect workflows", () => {
     await sql`truncate cloud_vm_billing_grants, cloud_vm_usage_events, cloud_vm_leases, cloud_vms restart identity cascade`;
     await sql`
       insert into cloud_vms (user_id, billing_team_id, billing_plan_id, provider, provider_vm_id, image_id, status)
-      values ('user-workflow-reuse-slot', 'team-workflow-reuse-slot', 'free', 'e2b', 'provider-vm-reuse-old', 'cmuxd-ws:test', 'running')
+      values ('user-workflow-reuse-slot', 'team-workflow-reuse-slot', 'free', 'e2b', 'provider-vm-reuse-old', 'bmuxd-ws:test', 'running')
     `;
 
     let createCalls = 0;
@@ -3297,7 +3297,7 @@ describe("VM Effect workflows", () => {
             provider: "e2b" as const,
             providerVmId: "provider-vm-reuse-new",
             status: "running" as const,
-            image: "cmuxd-ws:test",
+            image: "bmuxd-ws:test",
             createdAt: Date.now(),
           };
         }),
@@ -3330,7 +3330,7 @@ describe("VM Effect workflows", () => {
         billingPlanId: "free",
         maxActiveVms: 1,
         provider: "e2b",
-        image: "cmuxd-ws:test",
+        image: "bmuxd-ws:test",
         idempotencyKey: "reuse-slot-new",
       }).pipe(Effect.provide(layer)),
     );
@@ -3379,7 +3379,7 @@ describe("VM Effect workflows", () => {
           reserveCalls += 1;
           return {
             kind: "stack_item" as const,
-            itemId: "cmux-vm-create-credit",
+            itemId: "bmux-vm-create-credit",
             customerType: "team" as const,
             customerId: "team-workflow-credit-idem",
             amount: 1,
@@ -3428,7 +3428,7 @@ describe("VM Effect workflows", () => {
             provider: "e2b" as const,
             providerVmId: `provider-vm-credit-grant-${createCalls}`,
             status: "running" as const,
-            image: "cmuxd-ws:credit-grant",
+            image: "bmuxd-ws:credit-grant",
             createdAt: Date.now(),
           };
         }),
@@ -3445,7 +3445,7 @@ describe("VM Effect workflows", () => {
       ...noOpVmBillingGateway(),
       resolveInitialCreateCreditGrant: () => ({
         kind: "stack_item" as const,
-        itemId: "cmux-vm-create-credit",
+        itemId: "bmux-vm-create-credit",
         customerType: "team" as const,
         customerId: "team-workflow-credit-grant",
         amount: 20,
@@ -3460,7 +3460,7 @@ describe("VM Effect workflows", () => {
           reserveCalls += 1;
           return {
             kind: "stack_item" as const,
-            itemId: "cmux-vm-create-credit",
+            itemId: "bmux-vm-create-credit",
             customerType: "team" as const,
             customerId: "team-workflow-credit-grant",
             amount: 1,
@@ -3478,7 +3478,7 @@ describe("VM Effect workflows", () => {
           billingPlanId: "free",
           maxActiveVms: 10,
           provider: "e2b",
-          image: "cmuxd-ws:credit-grant",
+          image: "bmuxd-ws:credit-grant",
           idempotencyKey,
         }).pipe(Effect.provide(layer)),
       );
@@ -3492,7 +3492,7 @@ describe("VM Effect workflows", () => {
       select count(*)::int as total, count(applied_at)::int as applied
       from cloud_vm_billing_grants
       where billing_customer_id = 'team-workflow-credit-grant'
-        and item_id = 'cmux-vm-create-credit'
+        and item_id = 'bmux-vm-create-credit'
     `;
     expect(grantRow).toEqual({ total: 1, applied: 1 });
 
@@ -3525,7 +3525,7 @@ describe("VM Effect workflows", () => {
     const billing: VmBillingGatewayShape = {
       ...noOpVmBillingGateway(),
       reserveCreate: () => Effect.fail(new VmCreateCreditsInsufficientError({
-        itemId: "cmux-vm-create-credit",
+        itemId: "bmux-vm-create-credit",
         billingCustomerId: "team-workflow-credit-empty",
         amount: 1,
       })),
@@ -3821,7 +3821,7 @@ describe("VM Effect workflows", () => {
       ...noOpVmBillingGateway(),
       reserveCreate: () => Effect.succeed({
         kind: "stack_item" as const,
-        itemId: "cmux-vm-create-credit",
+        itemId: "bmux-vm-create-credit",
         customerType: "team" as const,
         customerId: "team-workflow-credit-refund",
         amount: 1,
@@ -4040,7 +4040,7 @@ describe("VM Effect workflows", () => {
           transport: "ssh" as const,
           host: "vm-ssh.freestyle.sh",
           port: 22,
-          username: "provider-vm-private-2+cmux",
+          username: "provider-vm-private-2+bmux",
           publicKeyFingerprint: null,
           credential: { kind: "password" as const, value: "token" },
           identityHandle: "identity",
@@ -4406,7 +4406,7 @@ function testSshEndpoint(): SSHEndpoint {
     transport: "ssh",
     host: "vm-ssh.freestyle.sh",
     port: 22,
-    username: "provider-vm-ssh-resume+cmux",
+    username: "provider-vm-ssh-resume+bmux",
     publicKeyFingerprint: null,
     credential: { kind: "password", value: "token" },
     identityHandle: "identity-ssh-resume",

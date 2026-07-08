@@ -1,4 +1,4 @@
-import CMUXMobileCore
+import BMUXMobileCore
 import Darwin
 import Foundation
 

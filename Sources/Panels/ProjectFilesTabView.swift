@@ -1,6 +1,6 @@
-import CmuxFoundation
+import BmuxFoundation
 import AppKit
-import CMUXProjectModel
+import BMUXProjectModel
 import SwiftUI
 
 /// Files tab inside ``ProjectPanelView``.
@@ -46,7 +46,7 @@ struct ProjectFilesTabView: View {
                 .foregroundStyle(.secondary)
             TextField("Filter files (e.g. AppDelegate)", text: $panel.filesSearchText)
                 .textFieldStyle(.plain)
-                .cmuxFont(size: 12)
+                .bmuxFont(size: 12)
             if !panel.filesSearchText.isEmpty {
                 Button {
                     panel.filesSearchText = ""
@@ -58,7 +58,7 @@ struct ProjectFilesTabView: View {
             }
             Spacer()
             Text("\(rowCount)")
-                .cmuxFont(size: 11)
+                .bmuxFont(size: 11)
                 .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 14)
@@ -254,7 +254,7 @@ private struct ProjectFilesGroupRow: View {
     let depth: Int
     let isExpanded: Bool
     let onToggle: () -> Void
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var globalFontPercent
+    @Environment(\.bmuxGlobalFontMagnificationPercent) private var globalFontPercent
 
     var body: some View {
         let scale = GlobalFontMagnification.scale(for: globalFontPercent)
@@ -263,16 +263,16 @@ private struct ProjectFilesGroupRow: View {
         Button(action: onToggle) {
             HStack(spacing: 4) {
                 Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                    .cmuxFont(size: 9, weight: .semibold)
+                    .bmuxFont(size: 9, weight: .semibold)
                     .frame(width: chevronWidth)
                     .foregroundStyle(.secondary)
                 Image(systemName: glyph(for: group.style))
-                    .cmuxFont(size: 12)
+                    .bmuxFont(size: 12)
                     .imageScale(.small)
                     .frame(width: symbolFrame, height: symbolFrame)
                     .foregroundStyle(.secondary)
                 Text(group.displayName)
-                    .cmuxFont(size: 12)
+                    .bmuxFont(size: 12)
                     .lineLimit(1)
                     .truncationMode(.tail)
                 Spacer(minLength: 0)
@@ -302,7 +302,7 @@ private struct ProjectFilesFileRow: View {
     let module: ProjectModule
     let isSelected: Bool
     let onSelect: () -> Void
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var globalFontPercent
+    @Environment(\.bmuxGlobalFontMagnificationPercent) private var globalFontPercent
 
     var body: some View {
         let scale = GlobalFontMagnification.scale(for: globalFontPercent)
@@ -312,12 +312,12 @@ private struct ProjectFilesFileRow: View {
             HStack(spacing: 4) {
                 Spacer().frame(width: spacerWidth)
                 Image(systemName: glyph(for: file.fileType))
-                    .cmuxFont(size: 12)
+                    .bmuxFont(size: 12)
                     .imageScale(.small)
                     .frame(width: symbolFrame, height: symbolFrame)
                     .foregroundStyle(file.existsOnDisk ? Color.secondary : Color.orange)
                 Text(file.displayName)
-                    .cmuxFont(size: 12)
+                    .bmuxFont(size: 12)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .strikethrough(!file.existsOnDisk)
@@ -326,7 +326,7 @@ private struct ProjectFilesFileRow: View {
                     HStack(spacing: 2) {
                         ForEach(memberships, id: \.targetID) { membership in
                             Text(targetLabel(for: membership.targetID))
-                                .cmuxFont(size: 9, weight: .medium)
+                                .bmuxFont(size: 9, weight: .medium)
                                 .lineLimit(1)
                                 .padding(.horizontal, 4)
                                 .padding(.vertical, 1)
@@ -381,7 +381,7 @@ private struct ProjectFilesDetailStrip: View {
             HStack {
                 Image(systemName: "doc.text")
                 Text(file.displayName)
-                    .cmuxFont(size: 13, weight: .semibold)
+                    .bmuxFont(size: 13, weight: .semibold)
                 Spacer()
             }
             if let path = file.resolvedPath?.path {
@@ -394,7 +394,7 @@ private struct ProjectFilesDetailStrip: View {
             if !file.memberships.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Targets")
-                        .cmuxFont(size: 11, weight: .semibold)
+                        .bmuxFont(size: 11, weight: .semibold)
                         .foregroundStyle(.secondary)
                     ForEach(file.memberships, id: \.targetID) { membership in
                         membershipRow(for: membership)
@@ -411,11 +411,11 @@ private struct ProjectFilesDetailStrip: View {
     private func row(label: String, value: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Text(label)
-                .cmuxFont(size: 11, weight: .semibold)
+                .bmuxFont(size: 11, weight: .semibold)
                 .foregroundStyle(.secondary)
                 .frame(width: 70, alignment: .leading)
             Text(value)
-                .cmuxFont(size: 11, design: .monospaced)
+                .bmuxFont(size: 11, design: .monospaced)
                 .textSelection(.enabled)
         }
     }
@@ -427,13 +427,13 @@ private struct ProjectFilesDetailStrip: View {
             Image(systemName: "checkmark.square")
                 .foregroundStyle(Color.accentColor)
             Text(target?.displayName ?? String(membership.targetID.rawValue.prefix(8)))
-                .cmuxFont(size: 12)
+                .bmuxFont(size: 12)
             Text("· \(membership.role.rawValue)")
-                .cmuxFont(size: 11)
+                .bmuxFont(size: 11)
                 .foregroundStyle(.secondary)
             if !membership.compilerFlags.isEmpty {
                 Text("flags: \(membership.compilerFlags.joined(separator: " "))")
-                    .cmuxFont(size: 10, design: .monospaced)
+                    .bmuxFont(size: 10, design: .monospaced)
                     .foregroundStyle(.secondary)
             }
             Spacer()

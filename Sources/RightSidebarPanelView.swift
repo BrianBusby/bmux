@@ -1,10 +1,10 @@
 import AppKit
 import Bonsplit
-import CMUXAgentLaunch
-import CmuxAppKitSupportUI
-import CmuxFoundation
-import CmuxSettings
-import CmuxSettingsUI
+import BMUXAgentLaunch
+import BmuxAppKitSupportUI
+import BmuxFoundation
+import BmuxSettings
+import BmuxSettingsUI
 import SwiftUI
 
 private func rightSidebarDebugResponder(_ responder: NSResponder?) -> String {
@@ -481,7 +481,7 @@ final class RightSidebarKeyboardFocusView: NSView {
         AppDelegate.shared?.keyboardFocusCoordinator(for: window)?.registerRightSidebarHost(self)
 #if DEBUG
         dlog(
-            "rs.focus.host.attach win=\(window.windowNumber) canAccept=\(cmuxCanAcceptRightSidebarKeyboardFocus ? 1 : 0) " +
+            "rs.focus.host.attach win=\(window.windowNumber) canAccept=\(bmuxCanAcceptRightSidebarKeyboardFocus ? 1 : 0) " +
             "fr=\(rightSidebarDebugResponder(window.firstResponder))"
         )
 #endif
@@ -539,7 +539,7 @@ final class RightSidebarKeyboardFocusView: NSView {
 }
 
 extension NSView {
-    var cmuxCanAcceptRightSidebarKeyboardFocus: Bool {
+    var bmuxCanAcceptRightSidebarKeyboardFocus: Bool {
         guard window != nil, !isHiddenOrHasHiddenAncestor else { return false }
         var view: NSView? = self
         while let current = view {

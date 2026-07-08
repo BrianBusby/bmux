@@ -12,7 +12,7 @@ extension AppDelegate {
         scrollPosition: TerminalNotificationScrollPosition? = nil
     ) -> Bool {
 #if DEBUG
-        let isJumpUnreadUITest = ProcessInfo.processInfo.environment["CMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1"
+        let isJumpUnreadUITest = ProcessInfo.processInfo.environment["BMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1"
         if isJumpUnreadUITest {
             writeJumpUnreadTestData([
                 "jumpUnreadOpenCalled": "1",
@@ -70,7 +70,7 @@ extension AppDelegate {
         notificationId: UUID?,
         scrollPosition: TerminalNotificationScrollPosition? = nil
     ) -> Bool {
-        let expectedIdentifier = "cmux.main.\(context.windowId.uuidString)"
+        let expectedIdentifier = "bmux.main.\(context.windowId.uuidString)"
         let window: NSWindow? = context.window ?? NSApp.windows.first(where: { $0.identifier?.rawValue == expectedIdentifier })
         guard let window else {
 #if DEBUG
@@ -95,7 +95,7 @@ extension AppDelegate {
                 notificationId: notificationId,
                 reason: "focus_failed"
             )
-            if ProcessInfo.processInfo.environment["CMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
+            if ProcessInfo.processInfo.environment["BMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
                 writeJumpUnreadTestData(["jumpUnreadOpenResult": "0"])
             }
 #endif
@@ -128,7 +128,7 @@ extension AppDelegate {
             surfaceId: surfaceId,
             sidebarSelection: context.sidebarSelectionState.selection
         )
-        if ProcessInfo.processInfo.environment["CMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
+        if ProcessInfo.processInfo.environment["BMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
             writeJumpUnreadTestData(["jumpUnreadOpenInContext": "1", "jumpUnreadOpenResult": "1"])
         }
 #endif
@@ -144,7 +144,7 @@ extension AppDelegate {
     ) -> Bool {
         guard let tabManager else {
 #if DEBUG
-            if ProcessInfo.processInfo.environment["CMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
+            if ProcessInfo.processInfo.environment["BMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
                 writeJumpUnreadTestData(["jumpUnreadFallbackFail": "missing_tabManager"])
             }
 #endif
@@ -152,7 +152,7 @@ extension AppDelegate {
         }
         guard tabManager.tabs.contains(where: { $0.id == tabId }) else {
 #if DEBUG
-            if ProcessInfo.processInfo.environment["CMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
+            if ProcessInfo.processInfo.environment["BMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
                 writeJumpUnreadTestData(["jumpUnreadFallbackFail": "tab_not_in_active_manager"])
             }
 #endif
@@ -160,7 +160,7 @@ extension AppDelegate {
         }
         guard let window = (NSApp.keyWindow ?? NSApp.windows.first(where: { isMainTerminalWindow($0) })) else {
 #if DEBUG
-            if ProcessInfo.processInfo.environment["CMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
+            if ProcessInfo.processInfo.environment["BMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
                 writeJumpUnreadTestData(["jumpUnreadFallbackFail": "missing_window"])
             }
 #endif
@@ -172,7 +172,7 @@ extension AppDelegate {
         let focusSurfaceId = panelId ?? surfaceId
         guard tabManager.focusTabFromNotification(tabId, surfaceId: focusSurfaceId) else {
 #if DEBUG
-            if ProcessInfo.processInfo.environment["CMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
+            if ProcessInfo.processInfo.environment["BMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
                 writeJumpUnreadTestData([
                     "jumpUnreadFallbackFail": "focus_failed",
                     "jumpUnreadOpenResult": "0",
@@ -201,7 +201,7 @@ extension AppDelegate {
             workspace: tabManager.tabs.first(where: { $0.id == tabId })
         )
 #if DEBUG
-        if ProcessInfo.processInfo.environment["CMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
+        if ProcessInfo.processInfo.environment["BMUX_UI_TEST_JUMP_UNREAD_SETUP"] == "1" {
             writeJumpUnreadTestData(["jumpUnreadOpenInFallback": "1", "jumpUnreadOpenResult": "1"])
         }
 #endif

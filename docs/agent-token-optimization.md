@@ -1,12 +1,12 @@
 # Agent Token Optimization
 
-cmux has a native token optimization layer for agent terminal output. The goal is
+bmux has a native token optimization layer for agent terminal output. The goal is
 to keep complete terminal output available to users while sending shorter,
 classified output through transcript consumers.
 
 ## Architecture
 
-The shared entrypoint is `TokenOptimizationLayer` in `CmuxAgentChat`.
+The shared entrypoint is `TokenOptimizationLayer` in `BmuxAgentChat`.
 Callers provide:
 
 - a stable message id
@@ -51,11 +51,11 @@ are compressed first.
 
 ## Codex Integration Boundary
 
-Today this layer optimizes cmux's transcript and session-display path. It
-preserves raw terminal output locally and reduces what cmux stores or forwards
+Today this layer optimizes bmux's transcript and session-display path. It
+preserves raw terminal output locally and reduces what bmux stores or forwards
 through those chat surfaces.
 
-Actual Codex model-token reduction requires a Codex-side hook where cmux can
+Actual Codex model-token reduction requires a Codex-side hook where bmux can
 replace terminal tool-result payloads before Codex consumes them. The current
 Codex app-server integration observes command-output deltas and answers approval
 requests, but it does not execute tools or rewrite tool-result payloads. That is
@@ -66,4 +66,4 @@ the remaining integration target.
 RTK can still be evaluated behind the same boundary. A future adapter should
 implement the same shape as `TokenOptimizationLayer`: raw output in, optimized
 text plus raw-output record out. Native compression remains the default because
-it can preserve cmux and Codex workflow semantics directly.
+it can preserve bmux and Codex workflow semantics directly.

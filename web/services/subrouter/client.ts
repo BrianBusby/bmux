@@ -204,8 +204,8 @@ export function createSubrouterClient(options: {
 
 function defaultSubrouterBaseUrl(env: SubrouterRuntimeEnv): string {
   return env.VERCEL_ENV === "production"
-    ? "https://subrouter.cmux.dev"
-    : "https://subrouter-staging.cmux.dev";
+    ? "https://subrouter.bmux.dev"
+    : "https://subrouter-staging.bmux.dev";
 }
 
 function trimEnv(value: string | undefined): string | undefined {

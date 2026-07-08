@@ -1,13 +1,13 @@
-import CMUXMobileCore
-import CmuxFoundation
-import CmuxTerminalCore
+import BMUXMobileCore
+import BmuxFoundation
+import BmuxTerminalCore
 import Foundation
 
 extension TerminalTheme {
     /// Builds the wire ``TerminalTheme`` from the Mac's resolved terminal config.
     ///
     /// `GhosttyConfig.load()` already folds a named `theme = <name>` directive
-    /// (any of ghostty's bundled themes, e.g. `catppuccin-mocha`), cmux's managed
+    /// (any of ghostty's bundled themes, e.g. `catppuccin-mocha`), bmux's managed
     /// default appearance, and the user's explicit `background=`/`palette=`
     /// overrides into concrete `NSColor`s, so reading those resolved colors here
     /// captures the *effective* palette for both custom configs and named ghostty
