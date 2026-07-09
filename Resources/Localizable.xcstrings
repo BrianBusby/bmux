@@ -230128,6 +230128,142 @@
           }
         }
       }
+    },
+    "command.pushToTalkVoiceInput.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Input"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入力"
+          }
+        }
+      }
+    },
+    "command.pushToTalkVoiceInput.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Push-to-Talk Voice Input"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プッシュトゥトーク音声入力"
+          }
+        }
+      }
+    },
+    "menu.file.pushToTalkVoiceInput": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Push-to-Talk Voice Input"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プッシュトゥトーク音声入力"
+          }
+        }
+      }
+    },
+    "shortcut.pushToTalkVoiceInput.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Push-to-Talk Voice Input"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プッシュトゥトーク音声入力"
+          }
+        }
+      }
+    },
+    "voiceInput.permissionDenied.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow microphone and speech recognition access in System Settings to use push-to-talk."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プッシュトゥトークを使用するには、システム設定でマイクと音声認識へのアクセスを許可してください。"
+          }
+        }
+      }
+    },
+    "voiceInput.permissionDenied.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice Input Needs Permission"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音声入力には権限が必要です"
+          }
+        }
+      }
+    },
+    "voiceInput.unavailable.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech recognition is not available for the current language or microphone input."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在の言語またはマイク入力では音声認識を使用できません。"
+          }
+        }
+      }
+    },
+    "voiceInput.unavailable.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice Input Unavailable"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音声入力を使用できません"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

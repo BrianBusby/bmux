@@ -16,6 +16,7 @@ public enum ShortcutAction: String, CaseIterable, Sendable, Hashable, SettingCod
     case reloadConfiguration
     case showHideAllWindows
     case globalSearch
+    case pushToTalkVoiceInput
     case newWindow
     case closeWindow
     case toggleFullScreen
@@ -174,7 +175,7 @@ extension ShortcutAction {
     public var group: Group {
         switch self {
         case .openSettings, .reloadConfiguration, .showHideAllWindows, .globalSearch,
-             .newWindow, .closeWindow, .toggleFullScreen, .quit:
+             .pushToTalkVoiceInput, .newWindow, .closeWindow, .toggleFullScreen, .quit:
             return .app
         case .toggleSidebar, .newTab, .newBrowserWorkspace, .saveLayoutTemplate, .openFolder, .reopenPreviousSession, .goToWorkspace,
              .commandPalette, .commandPaletteNext, .commandPalettePrevious, .sendFeedback,
@@ -333,6 +334,8 @@ extension ShortcutAction {
         case .reloadConfiguration: return "Reload Configuration"
         case .showHideAllWindows: return "Show/Hide All Windows"
         case .globalSearch: return "Global Search"
+        case .pushToTalkVoiceInput:
+            return String(localized: "shortcut.pushToTalkVoiceInput.label", defaultValue: "Push-to-Talk Voice Input")
         case .newWindow: return "New Window"
         case .closeWindow: return "Close Window"
         case .toggleFullScreen: return "Toggle Full Screen"

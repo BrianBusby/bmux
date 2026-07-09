@@ -67,6 +67,7 @@ enum KeyboardShortcutSettings {
         case reloadConfiguration
         case showHideAllWindows
         case globalSearch
+        case pushToTalkVoiceInput
         case newWindow
         case closeWindow
         case toggleFullScreen
@@ -193,6 +194,7 @@ enum KeyboardShortcutSettings {
             case .reloadConfiguration: return String(localized: "menu.app.reloadConfiguration", defaultValue: "Reload Configuration")
             case .showHideAllWindows: return String(localized: "settings.globalHotkey.shortcut", defaultValue: "Show/Hide All Windows")
             case .globalSearch: return String(localized: "shortcut.globalSearch.label", defaultValue: "Global Search")
+            case .pushToTalkVoiceInput: return String(localized: "shortcut.pushToTalkVoiceInput.label", defaultValue: "Push-to-Talk Voice Input")
             case .newWindow: return String(localized: "shortcut.newWindow.label", defaultValue: "New Window")
             case .closeWindow: return String(localized: "shortcut.closeWindow.label", defaultValue: "Close Window")
             case .toggleFullScreen: return String(localized: "command.toggleFullScreen.title", defaultValue: "Toggle Full Screen")
@@ -334,6 +336,8 @@ enum KeyboardShortcutSettings {
                 return StoredShortcut(key: ".", command: true, shift: false, option: true, control: true)
             case .globalSearch:
                 return StoredShortcut(key: "f", command: true, shift: false, option: true, control: false)
+            case .pushToTalkVoiceInput:
+                return StoredShortcut(key: "space", command: true, shift: true, option: false, control: false)
             case .newWindow:
                 return StoredShortcut(key: "n", command: true, shift: true, option: false, control: false)
             case .closeWindow:

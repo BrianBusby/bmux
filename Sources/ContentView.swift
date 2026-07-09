@@ -6373,6 +6373,14 @@ struct ContentView: View {
         )
         contributions.append(
             CommandPaletteCommandContribution(
+                commandId: "palette.pushToTalkVoiceInput",
+                title: constant(String(localized: "command.pushToTalkVoiceInput.title", defaultValue: "Push-to-Talk Voice Input")),
+                subtitle: constant(String(localized: "command.pushToTalkVoiceInput.subtitle", defaultValue: "Input")),
+                keywords: ["voice", "dictation", "speech", "microphone", "talk", "transcribe"]
+            )
+        )
+        contributions.append(
+            CommandPaletteCommandContribution(
                 commandId: "palette.installCLI",
                 title: constant(String(localized: "command.installCLI.title", defaultValue: "Shell Command: Install 'bmux' in PATH")),
                 subtitle: constant(String(localized: "command.installCLI.subtitle", defaultValue: "CLI")),
@@ -7619,6 +7627,11 @@ struct ContentView: View {
         registry.register(commandId: "palette.newWindow") {
             guard let appDelegate = AppDelegate.shared else { return }
             appDelegate.openNewMainWindow(preferredWindow: appDelegate.mainWindow(for: windowId))
+        }
+        registry.register(commandId: "palette.pushToTalkVoiceInput") {
+            if AppDelegate.shared?.togglePushToTalkVoiceInput(preferredWindow: observedWindow ?? NSApp.keyWindow ?? NSApp.mainWindow) != true {
+                NSSound.beep()
+            }
         }
         registry.register(commandId: "palette.installCLI") {
             AppDelegate.shared?.installBmuxCLIInPath(nil)

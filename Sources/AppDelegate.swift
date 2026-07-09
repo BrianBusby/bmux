@@ -801,6 +801,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     /// Combine subscriptions that publish workspace.updated to mobile clients.
     private var mobileWorkspaceListObservers: [ObjectIdentifier: MobileWorkspaceListObserver] = [:]
     private let agentChatTranscriptService = AgentChatTranscriptService()
+    let pushToTalkVoiceInputController = PushToTalkVoiceInputController()
     /// The app's settings dependency container, handed over by `bmuxApp` via
     /// `configure(...)` before any main window is created. AppKit builds the
     /// main window's `NSHostingView` itself, so it injects this into the
@@ -13061,6 +13062,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 }
                 return event // Pass through
             }
+            if event.type == .keyUp,
+               self.stopPushToTalkVoiceInputIfMatchingRelease(event: event) {
+                return nil
+            }
             self.handleBrowserOmnibarSelectionRepeatLifecycleEvent(event)
             if self.clearEscapeSuppressionForKeyUp(event: event, consumeIfSuppressed: true) {
                 return nil
@@ -13932,6 +13937,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         if matchConfiguredShortcut(event: event, action: .reloadConfiguration) {
             reloadConfiguration(source: "shortcut.reloadConfiguration")
             return true
+        }
+        if matchConfiguredShortcut(event: event, action: .pushToTalkVoiceInput) {
+            return beginPushToTalkVoiceInput(
+                event: event,
+                preferredWindow: mainWindowForShortcutEvent(event) ?? event.window ?? shortcutRoutingActiveWindow
+            )
         }
 
         if matchConfiguredShortcut(event: event, action: .toggleFullScreen) {
@@ -15488,6 +15499,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         }
         if event.type == .keyDown {
             return handleCustomShortcut(event: event)
+        }
+        if event.type == .keyUp,
+           stopPushToTalkVoiceInputIfMatchingRelease(event: event) {
+            return true
         }
         handleBrowserOmnibarSelectionRepeatLifecycleEvent(event)
         return clearEscapeSuppressionForKeyUp(event: event, consumeIfSuppressed: true)

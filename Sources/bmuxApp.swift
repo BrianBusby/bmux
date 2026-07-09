@@ -776,6 +776,12 @@ struct bmuxApp: App {
                     NotificationCenter.default.post(name: .commandPaletteRequested, object: targetWindow)
                 }
 
+                splitCommandButton(title: String(localized: "menu.file.pushToTalkVoiceInput", defaultValue: "Push-to-Talk Voice Input"), shortcut: menuShortcut(for: .pushToTalkVoiceInput)) {
+                    if AppDelegate.shared?.togglePushToTalkVoiceInput(preferredWindow: NSApp.keyWindow ?? NSApp.mainWindow) != true {
+                        NSSound.beep()
+                    }
+                }
+
                 Divider()
 
                 // Terminal semantics:

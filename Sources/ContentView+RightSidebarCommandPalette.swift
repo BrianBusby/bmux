@@ -16,6 +16,8 @@ extension ContentView {
             return .newBrowserWorkspace
         case "palette.newWindow":
             return .newWindow
+        case "palette.pushToTalkVoiceInput":
+            return .pushToTalkVoiceInput
         case "palette.openFolder":
             return .openFolder
         case "palette.reopenPreviousSession":
