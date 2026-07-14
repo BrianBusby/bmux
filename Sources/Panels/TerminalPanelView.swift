@@ -77,12 +77,18 @@ struct TerminalPanelView: View {
                 inactiveOverlayColor: appearance.unfocusedOverlayNSColor,
                 inactiveOverlayOpacity: appearance.unfocusedOverlayOpacity,
                 searchState: panel.searchState,
+                promptNavigationHasBookmarks: panel.promptNavigationHasBookmarks,
+                promptNavigationCanMoveBackward: panel.promptNavigationCanMoveBackward,
+                promptNavigationCanMoveForward: panel.promptNavigationCanMoveForward,
                 reattachToken: panel.viewReattachToken,
                 onFocus: { _ in
                     panel.terminalDidBecomeFocused()
                     onFocus()
                 },
-                onTriggerFlash: onTriggerFlash
+                onTriggerFlash: onTriggerFlash,
+                onNavigatePrompt: { delta in
+                    _ = panel.navigatePromptBookmark(delta: delta)
+                }
             )
             // Keep the NSViewRepresentable identity stable across bonsplit structural updates.
             // This prevents transient teardown/recreate that can momentarily detach the hosted terminal view.
@@ -140,6 +146,12 @@ struct TerminalPanelView: View {
                         panel.preserveTextBoxContentForUnmount(from: view)
                     }
                 )
+                .overlay {
+                    TextBoxPromptNavigationPulseView(
+                        pulseSeed: panel.promptNavigationTextBoxPulseSeed
+                    )
+                    .allowsHitTesting(false)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -185,6 +197,88 @@ struct TerminalPanelView: View {
         } else {
             context += "\n\(marker)"
         }
+    }
+}
+
+private struct TextBoxPromptNavigationPulseView: NSViewRepresentable {
+    let pulseSeed: UInt64
+
+    func makeNSView(context: Context) -> TextBoxPromptNavigationPulseNSView {
+        TextBoxPromptNavigationPulseNSView(frame: .zero)
+    }
+
+    func updateNSView(_ nsView: TextBoxPromptNavigationPulseNSView, context: Context) {
+        nsView.pulse(seed: pulseSeed)
+    }
+}
+
+private final class TextBoxPromptNavigationPulseNSView: NSView {
+    private let pulseLayer = CAShapeLayer()
+    private var lastPulseSeed: UInt64 = 0
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.clear.cgColor
+        layer?.masksToBounds = false
+
+        let pulseColor = bmuxAccentNSColor()
+        pulseLayer.fillColor = pulseColor.withAlphaComponent(0.2).cgColor
+        pulseLayer.strokeColor = pulseColor.withAlphaComponent(0.55).cgColor
+        pulseLayer.lineWidth = 1
+        pulseLayer.shadowColor = pulseColor.cgColor
+        pulseLayer.shadowOpacity = 0.26
+        pulseLayer.shadowRadius = 12
+        pulseLayer.shadowOffset = .zero
+        pulseLayer.opacity = 0
+        layer?.addSublayer(pulseLayer)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        nil
+    }
+
+    override func layout() {
+        super.layout()
+        updatePath()
+    }
+
+    func pulse(seed: UInt64) {
+        guard seed != 0,
+              seed != lastPulseSeed else { return }
+        lastPulseSeed = seed
+        updatePath()
+        pulseLayer.removeAllAnimations()
+        let animation = CAKeyframeAnimation(keyPath: "opacity")
+        animation.values = FocusFlashPattern.values.map { NSNumber(value: $0 * 0.5) }
+        animation.keyTimes = FocusFlashPattern.keyTimes.map { NSNumber(value: $0) }
+        animation.duration = FocusFlashPattern.duration
+        animation.timingFunctions = FocusFlashPattern.curves.map { curve in
+            switch curve {
+            case .easeIn:
+                return CAMediaTimingFunction(name: .easeIn)
+            case .easeOut:
+                return CAMediaTimingFunction(name: .easeOut)
+            }
+        }
+        pulseLayer.add(animation, forKey: "bmux.textBoxPromptNavigationPulse")
+    }
+
+    private func updatePath() {
+        let rect = bounds.insetBy(dx: 8, dy: 4)
+        guard rect.width > 0,
+              rect.height > 0 else { return }
+        pulseLayer.path = CGPath(
+            roundedRect: rect,
+            cornerWidth: min(14, rect.height / 2),
+            cornerHeight: min(14, rect.height / 2),
+            transform: nil
+        )
     }
 }
 

@@ -68,6 +68,8 @@ struct WorkspacePromptSubmitTests {
         let first = manager.tabs[0]
         let second = manager.addWorkspace(select: false, placementOverride: .end)
         let third = manager.addWorkspace(select: false, placementOverride: .end)
+        let terminalPanel = try #require(third.focusedTerminalPanel)
+        #expect(!terminalPanel.promptNavigationHasBookmarks)
 
         let outcome = try #require(
             manager.handlePromptSubmit(
@@ -83,6 +85,47 @@ struct WorkspacePromptSubmitTests {
         #expect(manager.tabs.map(\.id) == [first.id, second.id, third.id])
         #expect(third.latestConversationMessage == "do not show")
         #expect(third.latestSubmittedAt != nil)
+        #expect(terminalPanel.promptNavigationHasBookmarks)
+        #expect(terminalPanel.promptNavigationCanMoveBackward)
+        #expect(!terminalPanel.promptNavigationCanMoveForward)
+
+        var scrolledRows: [Int] = []
+        #expect(terminalPanel.recordPromptNavigationBookmark(row: 20))
+        #expect(terminalPanel.navigatePromptBookmark(delta: -1) { row in
+            scrolledRows.append(row)
+            return true
+        })
+        #expect(scrolledRows == [20])
+        #expect(terminalPanel.promptNavigationCanMoveForward)
+
+        var scrolledToCurrentPrompt = 0
+        let pulseSeedBeforeCurrentPrompt = terminalPanel.promptNavigationTextBoxPulseSeed
+        #expect(terminalPanel.navigatePromptBookmark(delta: 1, scrollToCurrentPrompt: {
+            scrolledToCurrentPrompt += 1
+            return true
+        }) { row in
+            scrolledRows.append(row)
+            return true
+        })
+        #expect(scrolledRows == [20])
+        #expect(scrolledToCurrentPrompt == 1)
+        #expect(terminalPanel.isTextBoxActive)
+        #expect(terminalPanel.promptNavigationTextBoxPulseSeed == pulseSeedBeforeCurrentPrompt + 1)
+        #expect(terminalPanel.promptNavigationCanMoveBackward)
+        #expect(!terminalPanel.promptNavigationCanMoveForward)
+
+        #expect(terminalPanel.navigatePromptBookmark(delta: -1) { row in
+            scrolledRows.append(row)
+            return true
+        })
+        #expect(scrolledRows == [20, 20])
+        #expect(terminalPanel.navigatePromptBookmark(delta: -1) { row in
+            scrolledRows.append(row)
+            return true
+        })
+        #expect(scrolledRows == [20, 20, 0])
+        #expect(!terminalPanel.promptNavigationCanMoveBackward)
+        #expect(terminalPanel.promptNavigationCanMoveForward)
     }
 
     @Test func testAssistantFinalMessageRecordsMessageAndMovesWorkspaceToTopWhenIMessageModeEnabled() throws {
@@ -170,6 +213,85 @@ struct WorkspacePromptSubmitTests {
         #expect(second.latestConversationMessage == nil)
         #expect(second.latestSubmittedAt == nil)
         #expect(BmuxEventBus.shared.latestSequence == sequenceBeforeSubmit)
+    }
+
+    @Test func testPromptSubmitRecordsGithubPullRequestMention() throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        let panelId = try #require(workspace.focusedPanelId)
+
+        let outcome = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: "look at https://github.com/manaflow-ai/bmux/pull/5314 and fix the review notes",
+                surfaceId: panelId,
+                iMessageModeEnabled: false
+            )
+        )
+
+        #expect(outcome.messageRecorded)
+        let pullRequest = try #require(workspace.panelPullRequests[panelId])
+        #expect(pullRequest.number == 5314)
+        #expect(pullRequest.label == "PR")
+        #expect(pullRequest.url.absoluteString == "https://github.com/manaflow-ai/bmux/pull/5314")
+        #expect(pullRequest.branch == nil)
+        #expect(workspace.sidebarPullRequestsInDisplayOrder().map(\.number) == [5314])
+    }
+
+    @Test func testPromptSubmitPullRequestMentionSurvivesBranchRefresh() throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        let panelId = try #require(workspace.focusedPanelId)
+
+        workspace.updatePanelGitBranch(panelId: panelId, branch: "main", isDirty: false)
+        _ = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: "review https://github.com/manaflow-ai/bmux/pull/5314",
+                surfaceId: panelId,
+                iMessageModeEnabled: false
+            )
+        )
+
+        workspace.updatePanelGitBranch(panelId: panelId, branch: "feature/review", isDirty: false)
+
+        #expect(workspace.panelPullRequests[panelId]?.number == 5314)
+        #expect(workspace.pullRequest?.number == 5314)
+        #expect(workspace.sidebarPullRequestsInDisplayOrder().map(\.number) == [5314])
+    }
+
+    @Test func testAssistantFinalMessageReplacesStalePullRequestMentionWhenIMessageModeDisabled() throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        let panelId = try #require(workspace.focusedPanelId)
+
+        workspace.updatePanelPullRequest(
+            panelId: panelId,
+            number: 10356,
+            label: "PR",
+            url: try #require(URL(string: "https://github.com/CompanyCam/companycam-mobile/pull/10356")),
+            status: .open,
+            branch: "ste-1000-old-work"
+        )
+
+        let outcome = try #require(
+            manager.handleAssistantFinalMessage(
+                workspaceId: workspace.id,
+                message: "Created branch ste-1890-rename-checklist-description-mobile and draft PR: https://github.com/CompanyCam/companycam-mobile/pull/10379",
+                surfaceId: panelId,
+                iMessageModeEnabled: false
+            )
+        )
+
+        #expect(!outcome.messageRecorded)
+        #expect(!outcome.reordered)
+        let pullRequest = try #require(workspace.panelPullRequests[panelId])
+        #expect(pullRequest.number == 10379)
+        #expect(pullRequest.label == "PR")
+        #expect(pullRequest.url.absoluteString == "https://github.com/CompanyCam/companycam-mobile/pull/10379")
+        #expect(pullRequest.branch == nil)
+        #expect(workspace.latestConversationMessage == nil)
+        #expect(workspace.sidebarPullRequestsInDisplayOrder().map(\.number) == [10379])
     }
 
     @Test func testFeedPromptSubmitEventExtractsToolInputMessage() throws {

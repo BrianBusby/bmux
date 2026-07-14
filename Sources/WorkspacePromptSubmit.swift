@@ -1,4 +1,6 @@
 import BMUXAgentLaunch
+import BmuxSidebar
+import Bonsplit
 import Foundation
 
 enum IMessageModeSettings {
@@ -146,11 +148,13 @@ extension TabManager {
     func handlePromptSubmit(
         workspaceId: UUID,
         message: String?,
+        surfaceId: UUID? = nil,
         iMessageModeEnabled: Bool = IMessageModeSettings.isEnabled()
     ) -> (messageRecorded: Bool, reordered: Bool, index: Int)? {
         handleConversationMessage(
             workspaceId: workspaceId,
             message: message,
+            surfaceId: surfaceId,
             iMessageModeEnabled: iMessageModeEnabled,
             kind: .promptSubmission,
             reorderWithoutMessage: true
@@ -161,11 +165,13 @@ extension TabManager {
     func handleAssistantFinalMessage(
         workspaceId: UUID,
         message: String?,
+        surfaceId: UUID? = nil,
         iMessageModeEnabled: Bool = IMessageModeSettings.isEnabled()
     ) -> (messageRecorded: Bool, reordered: Bool, index: Int)? {
         handleConversationMessage(
             workspaceId: workspaceId,
             message: message,
+            surfaceId: surfaceId,
             iMessageModeEnabled: iMessageModeEnabled,
             kind: .assistantFinal,
             reorderWithoutMessage: false
@@ -175,6 +181,7 @@ extension TabManager {
     private func handleConversationMessage(
         workspaceId: UUID,
         message: String?,
+        surfaceId: UUID? = nil,
         iMessageModeEnabled: Bool,
         kind: ConversationMessageKind,
         reorderWithoutMessage: Bool
@@ -188,7 +195,9 @@ extension TabManager {
         let messageRecorded: Bool
         switch kind {
         case .promptSubmission:
+            _ = workspace.recordPromptNavigationBookmark(surfaceId: surfaceId, message: message)
             messageRecorded = workspace.recordSubmittedMessage(message)
+            _ = workspace.recordSubmittedPullRequestMention(message, surfaceId: surfaceId)
             if messageRecorded {
                 BmuxEventBus.shared.publishWorkspacePromptSubmitted(
                     workspaceId: workspaceId,
@@ -197,6 +206,7 @@ extension TabManager {
                 )
             }
         case .assistantFinal:
+            _ = workspace.recordSubmittedPullRequestMention(message, surfaceId: surfaceId)
             guard iMessageModeEnabled else {
                 return (false, false, originalIndex)
             }
@@ -224,5 +234,67 @@ extension Workspace {
         guard !collapsed.isEmpty else { return nil }
         guard collapsed.count > maxLength else { return collapsed }
         return "\(collapsed.prefix(maxLength))..."
+    }
+
+    @discardableResult
+    func recordSubmittedPullRequestMention(_ message: String?, surfaceId: UUID?) -> Bool {
+        guard let mention = Self.submittedPromptPullRequestMention(from: message),
+              let panelId = promptMentionPanelId(from: surfaceId) ?? focusedPanelId else {
+            return false
+        }
+        updatePanelPullRequest(
+            panelId: panelId,
+            number: mention.number,
+            label: "PR",
+            url: mention.url,
+            status: .open,
+            bindToCurrentBranch: false
+        )
+        return true
+    }
+
+    @discardableResult
+    func recordPromptNavigationBookmark(surfaceId: UUID?, message: String? = nil) -> Bool {
+        guard let terminalPanel = promptNavigationTerminalPanel(from: surfaceId) else {
+            return false
+        }
+        return terminalPanel.recordPromptNavigationBookmark(message: message)
+    }
+
+    private func promptNavigationTerminalPanel(from surfaceId: UUID?) -> TerminalPanel? {
+        if let panelId = promptMentionPanelId(from: surfaceId),
+           let terminalPanel = panels[panelId] as? TerminalPanel {
+            return terminalPanel
+        }
+        return focusedTerminalPanel
+    }
+
+    private func promptMentionPanelId(from surfaceId: UUID?) -> UUID? {
+        guard let surfaceId else { return nil }
+        if panels[surfaceId] != nil {
+            return surfaceId
+        }
+        return panelIdFromSurfaceId(TabID(uuid: surfaceId))
+    }
+
+    static func submittedPromptPullRequestMention(from message: String?) -> (number: Int, url: URL)? {
+        guard let message else { return nil }
+        let pattern = #"https?://github\.com/([^/\s"'<>]+)/([^/\s"'<>]+)/pull/([0-9]+)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return nil
+        }
+        let nsMessage = message as NSString
+        let range = NSRange(location: 0, length: nsMessage.length)
+        guard let match = regex.firstMatch(in: message, range: range),
+              match.numberOfRanges == 4,
+              let number = Int(nsMessage.substring(with: match.range(at: 3))) else {
+            return nil
+        }
+        let owner = nsMessage.substring(with: match.range(at: 1))
+        let repo = nsMessage.substring(with: match.range(at: 2))
+        guard let url = URL(string: "https://github.com/\(owner)/\(repo)/pull/\(number)") else {
+            return nil
+        }
+        return (number, url)
     }
 }

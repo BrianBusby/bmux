@@ -1379,6 +1379,39 @@ enum SurfaceResumeBindingScriptStore {
     }
 }
 
+struct SessionPromptNavigationBookmarkSnapshot: Codable, Equatable, Sendable {
+    var row: Int
+    var message: String?
+
+    init(row: Int, message: String? = nil) {
+        self.row = row
+        self.message = message
+    }
+}
+
+struct SessionPromptNavigationSnapshot: Codable, Equatable, Sendable {
+    var bookmarkRows: [Int]
+    var bookmarks: [SessionPromptNavigationBookmarkSnapshot]?
+    var selectedIndex: Int?
+
+    init(
+        bookmarkRows: [Int],
+        bookmarks: [SessionPromptNavigationBookmarkSnapshot]? = nil,
+        selectedIndex: Int? = nil
+    ) {
+        self.bookmarkRows = bookmarkRows
+        self.bookmarks = bookmarks
+        self.selectedIndex = selectedIndex
+    }
+
+    var effectiveBookmarks: [SessionPromptNavigationBookmarkSnapshot] {
+        guard let bookmarks, !bookmarks.isEmpty else {
+            return bookmarkRows.map { SessionPromptNavigationBookmarkSnapshot(row: $0) }
+        }
+        return bookmarks
+    }
+}
+
 struct SessionTerminalPanelSnapshot: Codable, Sendable {
     var workingDirectory: String?
     var scrollback: String?
@@ -1387,6 +1420,7 @@ struct SessionTerminalPanelSnapshot: Codable, Sendable {
     var hibernation: SessionAgentHibernationSnapshot?
     var resumeBinding: SurfaceResumeBindingSnapshot?
     var textBoxDraft: SessionTextBoxInputDraftSnapshot?
+    var promptNavigation: SessionPromptNavigationSnapshot?
     var isRemoteTerminal: Bool?
     var remotePTYSessionID: String?
     /// Whether the agent process was actively running when this snapshot was captured.
@@ -1401,6 +1435,7 @@ struct SessionTerminalPanelSnapshot: Codable, Sendable {
         hibernation: SessionAgentHibernationSnapshot? = nil,
         resumeBinding: SurfaceResumeBindingSnapshot? = nil,
         textBoxDraft: SessionTextBoxInputDraftSnapshot? = nil,
+        promptNavigation: SessionPromptNavigationSnapshot? = nil,
         isRemoteTerminal: Bool? = nil,
         remotePTYSessionID: String? = nil,
         wasAgentRunning: Bool? = nil
@@ -1412,6 +1447,7 @@ struct SessionTerminalPanelSnapshot: Codable, Sendable {
         self.hibernation = hibernation
         self.resumeBinding = resumeBinding
         self.textBoxDraft = textBoxDraft
+        self.promptNavigation = promptNavigation
         self.isRemoteTerminal = isRemoteTerminal
         self.remotePTYSessionID = remotePTYSessionID
         self.wasAgentRunning = wasAgentRunning
@@ -1640,7 +1676,7 @@ struct SessionPanelSnapshot: Codable, Sendable {
     var type: PanelType
     var title: String?
     var customTitle: String?
-    /// Provenance of `customTitle`; absent provenance restores as user-set for compatibility.
+    /// Provenance of `customTitle`; absent provenance leaves ownership undecided.
     var customTitleSource: Workspace.CustomTitleSource? = nil
     var directory: String?
     var directoryIsTrustedRemoteReport: Bool? = nil
@@ -1761,7 +1797,7 @@ struct SessionWorkspaceSnapshot: Codable, Sendable {
     var stableId: UUID? = nil
     var processTitle: String
     var customTitle: String?
-    /// Provenance of `customTitle`; absent provenance restores as user-set for compatibility.
+    /// Provenance of `customTitle`; absent provenance leaves ownership undecided.
     var customTitleSource: Workspace.CustomTitleSource? = nil
     var customDescription: String?
     var customColor: String?
