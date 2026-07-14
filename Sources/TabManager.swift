@@ -193,6 +193,7 @@ class TabManager: ObservableObject {
     // side effects in didSet).
     let workspaces = WorkspacesModel<Workspace>()
     private var workspacesById: [UUID: Workspace] = [:]
+    var workProvenanceRuntime: WorkProvenanceRuntime?
 
     var tabs: [Workspace] {
         get { workspaces.tabs }
@@ -246,6 +247,7 @@ class TabManager: ObservableObject {
         workspacesById = Dictionary(newValue.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         objectWillChange.send()
         tabsPublisher.send(newValue)
+        workProvenanceRuntime?.observeWorkspaces(newValue)
     }
 
     /// Legacy `@Published workspaceGroups` willSet.
@@ -1114,7 +1116,7 @@ class TabManager: ObservableObject {
             )
             newWorkspace.owningTabManager = self
             if title != nil {
-                newWorkspace.setCustomTitle(title)
+                newWorkspace.setCustomTitle(title, source: .auto)
             }
             wireClosedBrowserTracking(for: newWorkspace)
             if eagerLoadTerminal && !select {

@@ -316,6 +316,7 @@ struct BmuxConfigWorkspaceActionTests {
 
         #expect(manager.tabs.count == 2)
         #expect(manager.selectedWorkspace?.customTitle == "Dev Setup")
+        #expect(manager.selectedWorkspace?.effectiveCustomTitleSource == .auto)
     }
 
     @MainActor
@@ -344,6 +345,7 @@ struct BmuxConfigWorkspaceActionTests {
 
         #expect(manager.tabs.count == 2, "inline workspace button click should create the workspace")
         #expect(manager.selectedWorkspace?.customTitle == "Review")
+        #expect(manager.selectedWorkspace?.effectiveCustomTitleSource == .auto)
     }
 
     @MainActor

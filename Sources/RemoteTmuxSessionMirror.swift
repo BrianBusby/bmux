@@ -27,8 +27,9 @@ final class RemoteTmuxSessionMirror {
     /// title path so selected-window chrome refreshes, while suppressing the
     /// `rename-session` propagation that would otherwise feed back on itself.
     /// The remote session name is the source of truth for a mirror workspace's
-    /// title, mirroring how a remote window rename unconditionally re-titles its
-    /// tab, so this overwrites any local custom title.
+    /// title. Remote-originated names use `.auto` provenance so they do not
+    /// convert into user-owned titles and can still be superseded only by later
+    /// explicit user renames.
     func applySessionNameToWorkspaceTitle(_ name: String) {
         guard let safe = RemoteTmuxHost.controlModeLineSafeName(name) else { return }
         guard let workspace else { return }
@@ -42,7 +43,7 @@ final class RemoteTmuxSessionMirror {
         ) == true {
             return
         }
-        _ = workspace.setCustomTitle(safe)
+        _ = workspace.setCustomTitle(safe, source: .auto)
     }
 
     private weak var tabManager: TabManager?
