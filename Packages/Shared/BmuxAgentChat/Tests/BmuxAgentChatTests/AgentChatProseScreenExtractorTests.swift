@@ -117,6 +117,16 @@ struct AgentChatProseScreenExtractorTests {
         #expect(result == "Here is the summary you asked for.\nIt spans two lines of streaming prose.")
     }
 
+    @Test("detects Codex bullet working line with minute timer")
+    func codexBulletWorkingLineWithMinuteTimer() {
+        let rows = [
+            "• Running bmux_cli=...",
+            "• Working (15m 49s • esc to interrupt)",
+            "› Summarize recent commits",
+        ]
+        #expect(AgentChatProseScreenExtractor.containsActiveStatusLine(in: rows))
+    }
+
     @Test("elapsed-timer scanner matches seconds and minutes forms")
     func elapsedTimer() {
         #expect(AgentChatProseScreenExtractor.containsElapsedTimer("(4s"))

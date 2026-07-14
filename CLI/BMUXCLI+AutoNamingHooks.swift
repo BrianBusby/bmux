@@ -115,6 +115,43 @@ extension BMUXCLI {
         }
     }
 
+    /// Probes auto-naming state and spawns a detached pass when the workspace is eligible.
+    func spawnDetachedAgentAutoNameIfEligible(
+        def: AgentHookDef,
+        sessionId: String,
+        workspaceId: String,
+        surfaceId: String,
+        transcriptPath: String?,
+        cwd: String?,
+        trigger: String?,
+        client: SocketClient,
+        env: [String: String],
+        telemetry: CLISocketSentryTelemetry,
+        force: Bool = false
+    ) {
+        guard autoNamingSource(for: def) != nil,
+              !sessionId.isEmpty,
+              let autoNameProbe = try? client.sendV2(
+                  method: "workspace.set_auto_title",
+                  params: ["probe": true, "workspace_id": workspaceId]
+              ),
+              autoNameProbe["enabled"] as? Bool == true,
+              force || autoNameProbe["workspace_user_owned"] as? Bool != true else {
+            return
+        }
+        spawnDetachedAgentAutoName(
+            def: def,
+            sessionId: sessionId,
+            workspaceId: workspaceId,
+            surfaceId: surfaceId,
+            transcriptPath: transcriptPath,
+            cwd: cwd,
+            trigger: trigger,
+            env: env,
+            telemetry: telemetry
+        )
+    }
+
     /// Spawns a detached generic-agent auto-name pass via a bounded shell wrapper.
     func spawnDetachedAgentAutoName(
         def: AgentHookDef,
@@ -123,6 +160,7 @@ extension BMUXCLI {
         surfaceId: String,
         transcriptPath: String?,
         cwd: String?,
+        trigger: String?,
         env: [String: String],
         telemetry: CLISocketSentryTelemetry
     ) {
@@ -142,14 +180,15 @@ extension BMUXCLI {
         process.executableURL = URL(fileURLWithPath: "/bin/sh")
         process.arguments = [
             "-c",
-            "\"$0\" hooks \"$1\" auto-name --session \"$2\" --workspace \"$3\" --surface \"$4\" --transcript \"$5\" --cwd \"$6\" </dev/null >/dev/null 2>&1 &",
+            "\"$0\" hooks \"$1\" auto-name --session \"$2\" --workspace \"$3\" --surface \"$4\" --transcript \"$5\" --cwd \"$6\" --trigger \"$7\" </dev/null >/dev/null 2>&1 &",
             selfPath,
             def.name,
             sessionId,
             workspaceId,
             surfaceId,
             transcriptPath ?? "",
-            cwd ?? ""
+            cwd ?? "",
+            trigger ?? ""
         ]
         var spawnEnv = env
         spawnEnv["BMUX_CLAUDE_HOOK_STATE_PATH"] = agentHookStatePath(sessionStoreSuffix: def.sessionStoreSuffix, env: env)
@@ -201,30 +240,123 @@ extension BMUXCLI {
             telemetry.breadcrumb("codex-hook.auto-name.stale")
             return
         }
+        let preferCachedMessages = optionValue(commandArgs, name: "--trigger") == "prompt-submit"
+        if preferCachedMessages,
+           runCodexCachedMessagesAutoName(
+               sessionId: sessionId,
+               workspaceId: workspaceId,
+               surfaceId: surfaceId,
+               sessionStore: sessionStore,
+               probe: probe,
+               client: client,
+               telemetry: telemetry,
+               env: env
+           ) {
+            return
+        }
         let transcriptPath = normalizedHookValue(optionValue(commandArgs, name: "--transcript"))
             ?? findCodexTranscriptPath(sessionId: sessionId, env: env)
-        guard let transcriptPath,
-              let lines = readRecentTextFileLines(path: transcriptPath, maxBytes: 512 * 1024),
-              !lines.isEmpty else {
+        let lines = transcriptPath.flatMap {
+            readRecentTextFileLines(path: $0, maxBytes: 512 * 1024)
+        } ?? []
+        if !lines.isEmpty {
+            let engine = AutoNamingEngine()
+            let messages = engine.extractCodexMessages(fromRolloutLines: lines)
+            guard !messages.isEmpty else {
+                _ = runCodexCachedMessagesAutoName(
+                    sessionId: sessionId,
+                    workspaceId: workspaceId,
+                    surfaceId: surfaceId,
+                    sessionStore: sessionStore,
+                    probe: probe,
+                    client: client,
+                    telemetry: telemetry,
+                    env: env
+                )
+                return
+            }
+            let resolution = resolvedSummarizerAgent(
+                probe: probe, sessionAgent: "codex", env: env, telemetry: telemetry
+            )
+            runFileBackedAutoName(
+                sessionId: sessionId,
+                workspaceId: workspaceId,
+                surfaceId: surfaceId,
+                lines: lines,
+                lineCount: transcriptPath.map {
+                    textFileGrowthMetric(path: $0, fallbackLineCount: lines.count)
+                } ?? lines.count,
+                sessionStore: sessionStore,
+                client: client,
+                missingOverride: resolution.missingOverride,
+                telemetryKey: "codex-hook.auto-name",
+                telemetry: telemetry
+            ) { engine, outcome in
+                guard let context = engine.buildContext(from: messages) else { return nil }
+                let prompt = engine.buildPrompt(currentTitle: outcome.lastTitle, context: context)
+                guard let raw = summarize(
+                    summarizerAgent: resolution.agent,
+                    prompt: prompt,
+                    env: env,
+                    timeout: engine.config.llmTimeout,
+                    telemetry: telemetry
+                ) else {
+                    telemetry.breadcrumb("codex-hook.auto-name.llm-failed")
+                    reportAutoNamingProblem("failed", agent: resolution.agent, workspaceId: workspaceId, client: client)
+                    return nil
+                }
+                return raw
+            }
             return
+        }
+
+        _ = runCodexCachedMessagesAutoName(
+            sessionId: sessionId,
+            workspaceId: workspaceId,
+            surfaceId: surfaceId,
+            sessionStore: sessionStore,
+            probe: probe,
+            client: client,
+            telemetry: telemetry,
+            env: env
+        )
+    }
+
+    @discardableResult
+    private func runCodexCachedMessagesAutoName(
+        sessionId: String,
+        workspaceId: String,
+        surfaceId: String,
+        sessionStore: ClaudeHookSessionStore,
+        probe: [String: Any],
+        client: SocketClient,
+        telemetry: CLISocketSentryTelemetry,
+        env: [String: String]
+    ) -> Bool {
+        guard let snapshot = try? sessionStore.autoNamingRecentMessagesSnapshot(sessionId: sessionId),
+              !snapshot.messages.isEmpty else {
+            return false
         }
         let resolution = resolvedSummarizerAgent(
             probe: probe, sessionAgent: "codex", env: env, telemetry: telemetry
         )
-        runFileBackedAutoName(
+        let engine = AutoNamingEngine()
+        runMessageBackedAutoName(
             sessionId: sessionId,
             workspaceId: workspaceId,
             surfaceId: surfaceId,
-            lines: lines,
-            lineCount: textFileGrowthMetric(path: transcriptPath, fallbackLineCount: lines.count),
+            messages: snapshot.messages,
+            lineCount: engine.hookMessageLineEquivalentCount(
+                snapshot.messages,
+                totalMessageCount: snapshot.totalMessageCount
+            ),
             sessionStore: sessionStore,
             client: client,
             missingOverride: resolution.missingOverride,
             telemetryKey: "codex-hook.auto-name",
             telemetry: telemetry
         ) { engine, outcome in
-            let messages = engine.extractCodexMessages(fromRolloutLines: lines)
-            guard let context = engine.buildContext(from: messages) else { return nil }
+            guard let context = engine.buildContext(from: snapshot.messages) else { return nil }
             let prompt = engine.buildPrompt(currentTitle: outcome.lastTitle, context: context)
             guard let raw = summarize(
                 summarizerAgent: resolution.agent,
@@ -239,5 +371,6 @@ extension BMUXCLI {
             }
             return raw
         }
+        return true
     }
 }

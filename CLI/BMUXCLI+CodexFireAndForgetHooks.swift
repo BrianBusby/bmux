@@ -4,6 +4,8 @@ import Darwin
 import Foundation
 
 extension BMUXCLI {
+    private static let agentRawOutputRetentionInterval: TimeInterval = 7 * 24 * 60 * 60
+
     /// The per-invocation Codex hook events the wrapper injects, paired with the
     /// bmux subcommand they call and the codex hook timeout (ms). Lifecycle
     /// events are short; feed events (`PreToolUse`/`PermissionRequest`) are long
@@ -89,7 +91,93 @@ extension BMUXCLI {
             command = ff
         }
         hookGroups.append(try codexWrapperHookGroupTOML(command: command, timeoutMs: event.timeoutMs))
+        hookGroups.append(contentsOf: codexWrapperCustomAutoTitleHookGroups(for: event, codexDef: codexDef))
         return "[\(hookGroups.joined(separator: ","))]"
+    }
+
+    private static func codexWrapperCustomAutoTitleHookGroups(
+        for event: (agentEvent: String, bmuxSubcommand: String, timeoutMs: Int),
+        codexDef: AgentHookDef
+    ) -> [String] {
+        guard event.agentEvent == "UserPromptSubmit" || event.agentEvent == "Stop" else {
+            return []
+        }
+        guard let groups = codexWrapperConfiguredHookGroups(for: event.agentEvent, codexDef: codexDef) else {
+            return []
+        }
+
+        var preservedGroups: [String] = []
+        for group in groups {
+            guard let hooks = group["hooks"] as? [[String: Any]],
+                  hooks.count == 1,
+                  let hook = hooks.first,
+                  let type = hook["type"] as? String,
+                  type == "command",
+                  let configuredCommand = hook["command"] as? String,
+                  !Self.isBmuxOwnedHookCommand(configuredCommand, for: codexDef),
+                  codexWrapperIsCustomAutoTitleHookCommand(configuredCommand)
+            else {
+                continue
+            }
+
+            let command = codexWrapperBMUXCompatibleCustomAutoTitleCommand(configuredCommand)
+            let timeoutMs = codexWrapperHookTimeoutMs(hook["timeout"] ?? group["timeout"]) ?? 5_000
+            if let hookGroup = try? codexWrapperHookGroupTOML(command: command, timeoutMs: timeoutMs) {
+                preservedGroups.append(hookGroup)
+            }
+        }
+        return preservedGroups
+    }
+
+    private static func codexWrapperConfiguredHookGroups(
+        for eventName: String,
+        codexDef: AgentHookDef
+    ) -> [[String: Any]]? {
+        let configURL = URL(fileURLWithPath: codexDef.resolvedConfigDir(), isDirectory: true)
+            .appendingPathComponent(codexDef.configFile, isDirectory: false)
+        guard let data = try? Data(contentsOf: configURL),
+              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let hooksByEvent = root["hooks"] as? [String: Any],
+              let groups = hooksByEvent[eventName] as? [[String: Any]]
+        else {
+            return nil
+        }
+        return groups
+    }
+
+    private static func codexWrapperIsCustomAutoTitleHookCommand(_ command: String) -> Bool {
+        let lowercased = command.lowercased()
+        return lowercased.contains("two_line_title")
+            && lowercased.contains("workspace.set_auto_title")
+    }
+
+    private static func codexWrapperBMUXCompatibleCustomAutoTitleCommand(_ command: String) -> String {
+        command
+            .replacingOccurrences(
+                of: "cmux_cli=\"${CMUX_BUNDLED_CLI_PATH:-}\"",
+                with: "cmux_cli=\"${BMUX_CODEX_HOOK_BMUX_BIN:-${BMUX_BUNDLED_CLI_PATH:-}}\""
+            )
+            .replacingOccurrences(
+                of: "bmux_cli=\"${CMUX_BUNDLED_CLI_PATH:-}\"",
+                with: "bmux_cli=\"${BMUX_CODEX_HOOK_BMUX_BIN:-${BMUX_BUNDLED_CLI_PATH:-}}\""
+            )
+            .replacingOccurrences(of: "CMUX_", with: "BMUX_")
+            .replacingOccurrences(of: "command -v cmux", with: "command -v bmux")
+    }
+
+    private static func codexWrapperHookTimeoutMs(_ value: Any?) -> Int? {
+        let rawTimeout: Int?
+        if let intValue = value as? Int {
+            rawTimeout = intValue
+        } else if let numberValue = value as? NSNumber {
+            rawTimeout = numberValue.intValue
+        } else {
+            rawTimeout = nil
+        }
+        guard let rawTimeout, rawTimeout > 0 else {
+            return nil
+        }
+        return rawTimeout < 1_000 ? rawTimeout * 1_000 : rawTimeout
     }
 
     private static func codexWrapperHookGroupTOML(command: String, timeoutMs: Int) throws -> String {
@@ -180,8 +268,7 @@ extension BMUXCLI {
             return
         }
 
-        let cwd = Self.agentHookString(in: payload, keys: ["cwd"])
-            ?? Self.agentHookString(in: updatedInput, keys: ["cwd", "workdir", "working_directory"])
+        let cwd = Self.agentHookEffectiveWorkingDirectory(payload: payload, toolInput: updatedInput)
         updatedInput[commandKey] = Self.agentTokenProxyShellCommand(command: command, cwd: cwd)
 
         try Self.writeAgentHookJSONObject([
@@ -228,8 +315,7 @@ extension BMUXCLI {
             return
         }
 
-        let cwd = Self.agentHookString(in: payload, keys: ["cwd"])
-            ?? Self.agentHookString(in: updatedInput, keys: ["cwd", "workdir", "working_directory"])
+        let cwd = Self.agentHookEffectiveWorkingDirectory(payload: payload, toolInput: updatedInput)
         updatedInput[commandKey] = Self.agentTokenProxyShellCommand(command: command, cwd: cwd)
 
         try Self.writeAgentHookJSONObject([
@@ -281,6 +367,11 @@ extension BMUXCLI {
         if optimization.wasOptimized {
             Self.persistAgentTokenProxyRawOutput(optimization.rawOutputRecord)
             var output = optimization.output
+            if let rawOutputRef = optimization.metadata.rawOutputRef,
+               !rawOutputRef.isEmpty {
+                output.append("\n")
+                output.append(Self.agentTokenProxyRawOutputHint(ref: rawOutputRef))
+            }
             if !output.hasSuffix("\n") {
                 output.append("\n")
             }
@@ -289,6 +380,102 @@ extension BMUXCLI {
             Self.writeAgentTokenProxyRawResult(result)
         }
         Darwin.exit(result.status)
+    }
+
+    func runAgentTokenOutputCommand(commandArgs: [String], jsonOutput: Bool) throws {
+        let subcommand = commandArgs.first?.lowercased()
+        switch subcommand {
+        case "show":
+            try runAgentTokenOutputShow(
+                commandArgs: Array(commandArgs.dropFirst()),
+                jsonOutput: jsonOutput
+            )
+        case "help", "--help", "-h", nil:
+            print(agentTokenOutputUsage())
+        default:
+            throw CLIError(message: String.localizedStringWithFormat(
+                String(
+                    localized: "cli.agentTokenOutput.error.unknownSubcommand",
+                    defaultValue: "Unknown agent-token-output subcommand: %@\n\n%@"
+                ),
+                subcommand ?? "",
+                agentTokenOutputUsage()
+            ))
+        }
+    }
+
+    private func runAgentTokenOutputShow(commandArgs: [String], jsonOutput: Bool) throws {
+        var ref: String?
+        var useJSONOutput = jsonOutput
+        var unexpectedArgument: String?
+        for argument in commandArgs {
+            if argument == "--json" {
+                useJSONOutput = true
+                continue
+            }
+            let trimmed = argument.trimmingCharacters(in: .whitespacesAndNewlines)
+            if ref == nil, !trimmed.isEmpty {
+                ref = trimmed
+            } else {
+                unexpectedArgument = argument
+                break
+            }
+        }
+
+        guard let ref else {
+            throw CLIError(message: String(
+                localized: "cli.agentTokenOutput.error.requiresReference",
+                defaultValue: "Usage: bmux agent-token-output show <raw-output-ref> [--json]"
+            ))
+        }
+        if let unexpectedArgument {
+            throw CLIError(message: String.localizedStringWithFormat(
+                String(
+                    localized: "cli.agentTokenOutput.error.unexpectedArgument",
+                    defaultValue: "agent-token-output show: unexpected argument '%@'"
+                ),
+                unexpectedArgument
+            ))
+        }
+
+        let url = Self.agentRawOutputFileURL(ref: ref)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            throw CLIError(message: String.localizedStringWithFormat(
+                String(
+                    localized: "cli.agentTokenOutput.error.notFound",
+                    defaultValue: "No raw terminal output found for %@"
+                ),
+                ref
+            ), exitCode: 2)
+        }
+
+        let record: ChatRawTerminalOutputRecord
+        do {
+            let data = try Data(contentsOf: url)
+            record = try JSONDecoder().decode(ChatRawTerminalOutputRecord.self, from: data)
+        } catch {
+            throw CLIError(message: String.localizedStringWithFormat(
+                String(
+                    localized: "cli.agentTokenOutput.error.decodeFailed",
+                    defaultValue: "Raw terminal output record for %@ could not be decoded"
+                ),
+                ref
+            ))
+        }
+
+        if useJSONOutput {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+            let data = try encoder.encode(record)
+            cliWriteStdout(data)
+            cliWriteStdout(Data("\n".utf8))
+            return
+        }
+
+        cliWriteStdout(record.rawOutput)
+        if !record.rawOutput.hasSuffix("\n") {
+            cliWriteStdout(Data("\n".utf8))
+        }
     }
 
     private static func agentHookToolInputDictionary(from payload: [String: Any]) -> [String: Any]? {
@@ -339,6 +526,14 @@ extension BMUXCLI {
         return nil
     }
 
+    private static func agentHookEffectiveWorkingDirectory(
+        payload: [String: Any],
+        toolInput: [String: Any]
+    ) -> String? {
+        Self.agentHookString(in: toolInput, keys: ["cwd", "workdir", "working_directory"])
+            ?? Self.agentHookString(in: payload, keys: ["cwd", "workdir", "working_directory"])
+    }
+
     private static func agentHookCommandEligibleForTokenProxy(_ command: String) -> Bool {
         let trimmed = command.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty,
@@ -364,6 +559,18 @@ extension BMUXCLI {
             || lowercased.contains("typescript")
             || lowercased.contains("typecheck")
             || lowercased.contains("types:check") {
+            return true
+        }
+        if lowercased.contains("swift build")
+            || lowercased.contains("swift package build")
+            || lowercased.contains("xcodebuild build")
+            || (lowercased.contains("xcodebuild") && lowercased.contains(" build"))
+            || lowercased.contains("cargo build")
+            || lowercased.contains("go build")
+            || lowercased.contains("npm run build")
+            || lowercased.contains("yarn build")
+            || lowercased.contains("bun run build")
+            || lowercased.contains("pnpm build") {
             return true
         }
         if lowercased == "npm install"
@@ -422,16 +629,8 @@ extension BMUXCLI {
               !rawOutputRef.isEmpty else {
             return
         }
-        let root = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
-            ?? FileManager.default.temporaryDirectory
-        let directory = root
-            .appendingPathComponent("bmux", isDirectory: true)
-            .appendingPathComponent("agent-raw-output", isDirectory: true)
-        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))
-        let fileName = rawOutputRef.unicodeScalars.map { scalar in
-            allowed.contains(scalar) ? String(scalar) : "_"
-        }.joined()
-        guard !fileName.isEmpty else { return }
+        let url = agentRawOutputFileURL(ref: rawOutputRef)
+        let directory = url.deletingLastPathComponent()
 
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -439,12 +638,56 @@ extension BMUXCLI {
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             let data = try encoder.encode(record)
             try data.write(
-                to: directory.appendingPathComponent(fileName).appendingPathExtension("json"),
+                to: url,
                 options: [.atomic]
             )
         } catch {
             return
         }
+        let cutoff = Date(timeIntervalSinceNow: -agentRawOutputRetentionInterval)
+        _ = try? ChatRawTerminalOutputFileStore.pruneRecords(
+            in: directory,
+            olderThan: cutoff
+        )
+    }
+
+    private static func agentRawOutputDirectory() -> URL {
+        let root = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        return root
+            .appendingPathComponent("bmux", isDirectory: true)
+            .appendingPathComponent("agent-raw-output", isDirectory: true)
+    }
+
+    private static func agentRawOutputFileURL(ref: String) -> URL {
+        let directory = agentRawOutputDirectory()
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))
+        let fileName = ref.unicodeScalars.map { scalar in
+            allowed.contains(scalar) ? String(scalar) : "_"
+        }.joined()
+        return directory.appendingPathComponent(fileName, isDirectory: false)
+            .appendingPathExtension("json")
+    }
+
+    private static func agentTokenProxyRawOutputHint(ref: String) -> String {
+        String.localizedStringWithFormat(
+            String(
+                localized: "cli.agentTokenProxy.rawOutputHint",
+                defaultValue: "Raw output: bmux agent-token-output show %@"
+            ),
+            ref
+        )
+    }
+
+    func agentTokenOutputUsage() -> String {
+        String(
+            localized: "cli.agentTokenOutput.usage",
+            defaultValue: """
+            Usage: bmux agent-token-output show <raw-output-ref> [--json]
+
+            Print the complete raw terminal output captured by the token optimizer.
+            """
+        )
     }
 
     private static func currentAgentTokenOptimizationMode() -> TokenOptimizationMode {

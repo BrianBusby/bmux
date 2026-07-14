@@ -79,6 +79,7 @@ extension BMUXCLI {
         "cloud",
         "codex",
         "codex-hook",
+        "codex-token-audit",
         "codex-teams",
         "config",
         "copy-mode",

@@ -124,4 +124,68 @@ struct CommandOutputOptimizerTests {
         #expect(result.text.contains("warning left-pad@1.0.0: deprecated package"))
         #expect(!result.text.contains("24.0 MB/24.0 MB"))
     }
+
+    @Test("build output keeps diagnostics and omits repetitive compiler chatter")
+    func buildOutputSummary() {
+        var lines = [
+            "Command line invocation:",
+            "    xcodebuild -project bmux.xcodeproj -scheme bmux build",
+            "Resolve Package Graph"
+        ]
+        for index in 1...120 {
+            lines.append("CompileSwift normal arm64 Sources/Generated\(index).swift")
+        }
+        lines.append("Sources/App.swift:12:8: warning: initialization of immutable value \"unused\" was never used")
+        lines.append("Sources/App.swift:20:13: error: cannot find \"missingSymbol\" in scope")
+        lines.append("note: referenced by Sources/App.swift")
+        lines.append("** BUILD FAILED **")
+        let output = lines.joined(separator: "\n")
+
+        let result = CommandOutputOptimizer().optimize(
+            command: "xcodebuild -project bmux.xcodeproj -scheme bmux build",
+            output: output,
+            exitCode: 65
+        )
+
+        #expect(result.kind == .build)
+        #expect(result.wasOptimized)
+        #expect(result.text.contains("build output summary"))
+        #expect(result.text.contains("exit code: 65"))
+        #expect(result.text.contains("warning: initialization"))
+        #expect(result.text.contains("error: cannot find"))
+        #expect(result.text.contains("** BUILD FAILED **"))
+        #expect(result.text.contains("raw output"))
+        #expect(!result.text.contains("Generated50.swift"))
+    }
+
+    @Test("build output reports repeated compiler diagnostics once")
+    func buildOutputDeduplicatesRepeatedDiagnostics() {
+        var lines = [
+            "Command line invocation:",
+            "    xcodebuild -project bmux.xcodeproj -scheme bmux build",
+            "Resolve Package Graph"
+        ]
+        for index in 1...120 {
+            lines.append("CompileSwift normal arm64 Sources/Generated\(index).swift")
+        }
+        for _ in 1...4 {
+            lines.append("Sources/App.swift:12:8: warning: initialization of immutable value \"unused\" was never used")
+        }
+        lines.append("** BUILD FAILED **")
+        let output = lines.joined(separator: "\n")
+
+        let result = CommandOutputOptimizer().optimize(
+            command: "xcodebuild -project bmux.xcodeproj -scheme bmux build",
+            output: output,
+            exitCode: 65
+        )
+
+        #expect(result.kind == .build)
+        #expect(result.wasOptimized)
+        #expect(result.text.components(separatedBy: "warning: initialization").count == 2)
+        #expect(result.text.contains("3 duplicate diagnostic lines omitted"))
+        #expect(result.text.contains("** BUILD FAILED **"))
+        #expect(!result.text.contains("Generated50.swift"))
+    }
+
 }

@@ -29,9 +29,17 @@ extension BMUXCLI {
         parsedInput: ClaudeHookParsedInput,
         client: SocketClient,
         workspaceId: String,
+        force: Bool = false,
         engine: AutoNamingEngine = AutoNamingEngine()
     ) -> [AutoNamingTranscriptMessage] {
-        guard usesHookMessageCacheForAutoNaming(def),
+        let rawObject = parsedInput.rawObject ?? parsedInput.object
+        let hookEventName = rawObject.flatMap {
+            firstString(in: $0, keys: ["hook_event_name", "hookEventName", "event", "event_name"])
+        }
+        let isCodexPromptSubmit = def.name == "codex"
+            && hookEventName == "UserPromptSubmit"
+            && rawObject.flatMap({ firstString(in: $0, keys: ["prompt", "text", "message", "body"]) }) != nil
+        guard (usesHookMessageCacheForAutoNaming(def) || isCodexPromptSubmit),
               let object = parsedInput.rawObject ?? parsedInput.object else {
             return []
         }
@@ -39,7 +47,7 @@ extension BMUXCLI {
             method: "workspace.set_auto_title",
             params: ["probe": true, "workspace_id": workspaceId]
         ), probe["enabled"] as? Bool == true,
-           probe["workspace_user_owned"] as? Bool != true else {
+           force || probe["workspace_user_owned"] as? Bool != true else {
             return []
         }
         return engine.extractHookMessages(fromPayloadObjects: [object])
@@ -51,7 +59,8 @@ extension BMUXCLI {
         commandArgs: [String],
         client: SocketClient,
         telemetry: CLISocketSentryTelemetry,
-        env: [String: String]
+        env: [String: String],
+        force: Bool = false
     ) {
         guard let source = autoNamingSource(for: def) else { return }
         if case .codexRollout = source { return }
@@ -67,7 +76,7 @@ extension BMUXCLI {
             telemetry.breadcrumb("\(def.name)-hook.auto-name.disabled")
             return
         }
-        guard probe["workspace_user_owned"] as? Bool != true else {
+        guard force || probe["workspace_user_owned"] as? Bool != true else {
             telemetry.breadcrumb("\(def.name)-hook.auto-name.user-owned")
             return
         }
@@ -125,7 +134,8 @@ extension BMUXCLI {
             client: client,
             missingOverride: resolution.missingOverride,
             telemetryKey: "\(def.name)-hook.auto-name",
-            telemetry: telemetry
+            telemetry: telemetry,
+            force: force
         ) { engine, outcome in
             guard let context = engine.buildContext(from: sourceResult.messages) else { return nil }
             let prompt = engine.buildPrompt(currentTitle: outcome.lastTitle, context: context)
@@ -154,6 +164,7 @@ extension BMUXCLI {
         missingOverride: String?,
         telemetryKey: String,
         telemetry: CLISocketSentryTelemetry,
+        force: Bool = false,
         rawResponse: (AutoNamingEngine, ClaudeHookSessionStore.AutoNamingBeginOutcome) -> String?
     ) {
         guard !lines.isEmpty else { return }
@@ -167,6 +178,7 @@ extension BMUXCLI {
             missingOverride: missingOverride,
             telemetryKey: telemetryKey,
             telemetry: telemetry,
+            force: force,
             rawResponse: rawResponse
         )
     }
@@ -182,6 +194,7 @@ extension BMUXCLI {
         missingOverride: String?,
         telemetryKey: String,
         telemetry: CLISocketSentryTelemetry,
+        force: Bool = false,
         rawResponse: (AutoNamingEngine, ClaudeHookSessionStore.AutoNamingBeginOutcome) -> String?
     ) {
         guard !messages.isEmpty else { return }
@@ -195,6 +208,7 @@ extension BMUXCLI {
             missingOverride: missingOverride,
             telemetryKey: telemetryKey,
             telemetry: telemetry,
+            force: force,
             rawResponse: rawResponse
         )
     }
@@ -209,6 +223,7 @@ extension BMUXCLI {
         missingOverride: String?,
         telemetryKey: String,
         telemetry: CLISocketSentryTelemetry,
+        force: Bool = false,
         rawResponse: (AutoNamingEngine, ClaudeHookSessionStore.AutoNamingBeginOutcome) -> String?
     ) {
         let engine = AutoNamingEngine()
@@ -249,6 +264,7 @@ extension BMUXCLI {
                 surfaceId: surfaceId,
                 previousTitle: outcome.lastTitle,
                 client: client,
+                force: force,
                 telemetryKey: telemetryKey,
                 telemetry: telemetry
             )
@@ -269,6 +285,7 @@ extension BMUXCLI {
         surfaceId: String,
         previousTitle: String?,
         client: SocketClient,
+        force: Bool = false,
         telemetryKey: String,
         telemetry: CLISocketSentryTelemetry
     ) -> String? {
@@ -276,6 +293,7 @@ extension BMUXCLI {
             "workspace_id": workspaceId,
             "panel_id": surfaceId,
             "panel_only_if_multiple": true,
+            "force": force,
             "title": title
         ]) else {
             telemetry.breadcrumb("\(telemetryKey).socket-failed")
