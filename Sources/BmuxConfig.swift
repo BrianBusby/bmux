@@ -937,6 +937,7 @@ struct BmuxSurfaceTabBarButton: Codable, Sendable, Hashable, Identifiable {
     static let newBrowser = actionReference(BmuxSurfaceTabBarBuiltInAction.newBrowser.configID)
     static let splitRight = actionReference(BmuxSurfaceTabBarBuiltInAction.splitRight.configID)
     static let splitDown = actionReference(BmuxSurfaceTabBarBuiltInAction.splitDown.configID)
+    static let pushToTalkVoiceInput = actionReference(BmuxSurfaceTabBarBuiltInAction.pushToTalkVoiceInput.configID)
 
     static let mobileConnect = actionReference(BmuxSurfaceTabBarBuiltInAction.mobileConnect.configID)
 
@@ -944,7 +945,8 @@ struct BmuxSurfaceTabBarButton: Codable, Sendable, Hashable, Identifiable {
         .newTerminal,
         .newBrowser,
         .splitRight,
-        .splitDown
+        .splitDown,
+        .pushToTalkVoiceInput
     ]
 
     static func builtIn(
@@ -1392,6 +1394,9 @@ struct BmuxResolvedConfigAction: Identifiable, Sendable, Hashable {
         case .splitDown:
             title = String(localized: "command.terminalSplitDown.title", defaultValue: "Split Down")
             keywords = ["terminal", "split", "down"]
+        case .pushToTalkVoiceInput:
+            title = String(localized: "command.pushToTalkVoiceInput.title", defaultValue: "Push-to-Talk Voice Input")
+            keywords = ["voice", "dictation", "speech", "microphone", "talk", "transcribe"]
         }
 
         return BmuxResolvedConfigAction(

@@ -10,6 +10,7 @@ enum BmuxSurfaceTabBarBuiltInAction: String, Codable, Sendable, CaseIterable, Ha
     case newBrowser = "bmux.newBrowser"
     case splitRight = "bmux.splitRight"
     case splitDown = "bmux.splitDown"
+    case pushToTalkVoiceInput = "bmux.pushToTalkVoiceInput"
 
     init?(configID: String) {
         switch configID {
@@ -32,6 +33,8 @@ enum BmuxSurfaceTabBarBuiltInAction: String, Codable, Sendable, CaseIterable, Ha
             self = .splitRight
         case "bmux.splitDown", "splitDown":
             self = .splitDown
+        case "bmux.pushToTalkVoiceInput", "pushToTalkVoiceInput", "voiceInput", "mic", "microphone":
+            self = .pushToTalkVoiceInput
         default:
             return nil
         }
@@ -59,12 +62,14 @@ enum BmuxSurfaceTabBarBuiltInAction: String, Codable, Sendable, CaseIterable, Ha
             return "square.split.2x1"
         case .splitDown:
             return "square.split.1x2"
+        case .pushToTalkVoiceInput:
+            return "mic"
         }
     }
 
     var bonsplitAction: BonsplitConfiguration.SplitActionButton.Action? {
         switch self {
-        case .newWorkspace, .newAgentChat, .cloudVM, .mobileConnect:
+        case .newWorkspace, .newAgentChat, .cloudVM, .mobileConnect, .pushToTalkVoiceInput:
             return nil
         case .newTerminal:
             return .newTerminal

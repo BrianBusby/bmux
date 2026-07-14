@@ -483,6 +483,7 @@ func titlebarShortcutHintVerticalOffset(for config: TitlebarControlsStyleConfig)
 enum TitlebarShortcutHintActionSlot: Int, CaseIterable {
     case toggleSidebar
     case showNotifications
+    case voiceInput
     case newTab
     case focusHistoryBack
     case focusHistoryForward
@@ -493,6 +494,8 @@ enum TitlebarShortcutHintActionSlot: Int, CaseIterable {
             return .toggleSidebar
         case .showNotifications:
             return .showNotifications
+        case .voiceInput:
+            return .pushToTalkVoiceInput
         case .newTab:
             return .newTab
         case .focusHistoryBack:
@@ -540,6 +543,8 @@ enum TitlebarControlsLayoutMetrics {
             .toggleSidebar
         case .showNotifications:
             .showNotifications
+        case .voiceInput:
+            .voiceInput
         case .newTab:
             .newTab
         case .focusHistoryBack:
@@ -910,6 +915,7 @@ struct TitlebarControlsView: View {
     @ObservedObject var viewModel: TitlebarControlsViewModel
     let onToggleSidebar: () -> Void
     let onToggleNotifications: () -> Void
+    let onToggleVoiceInput: () -> Void
     let onNewTab: () -> Void
     let onFocusHistoryBack: () -> Void
     let onFocusHistoryForward: () -> Void
@@ -1098,6 +1104,25 @@ struct TitlebarControlsView: View {
             }
             .background(NotificationsAnchorView { viewModel.notificationsAnchorView = $0 })
             .safeHelp(KeyboardShortcutSettings.Action.showNotifications.tooltip(String(localized: "titlebar.notifications.tooltip", defaultValue: "Show notifications")))
+
+            TitlebarControlButton(
+                config: config,
+                foregroundColor: foregroundColor,
+                accessibilityIdentifier: "titlebarControl.voiceInput",
+                accessibilityLabel: String(localized: "titlebar.voiceInput.accessibilityLabel", defaultValue: "Push-to-Talk Voice Input"),
+                action: {
+                #if DEBUG
+                bmuxDebugLog("titlebar.voiceInput")
+                #endif
+                onToggleVoiceInput()
+            }) {
+                iconLabel(
+                    systemName: "mic",
+                    config: config,
+                    iconGeometryKeyPrefix: "titlebarControl_voiceInputIcon"
+                )
+            }
+            .safeHelp(KeyboardShortcutSettings.Action.pushToTalkVoiceInput.tooltip(String(localized: "titlebar.voiceInput.tooltip", defaultValue: "Push-to-talk voice input")))
 
             TitlebarNewWorkspaceCloudSplitButton(
                 config: config,
@@ -1445,6 +1470,7 @@ struct HiddenTitlebarSidebarControlsView: View {
     @ObservedObject var notificationStore: TerminalNotificationStore
     let onToggleSidebar: () -> Void
     let onToggleNotifications: (NSView?) -> Void
+    let onToggleVoiceInput: () -> Void
     let onNewTab: () -> Void
     let onFocusHistoryBack: () -> Void
     let onFocusHistoryForward: () -> Void
@@ -1502,6 +1528,7 @@ struct HiddenTitlebarSidebarControlsView: View {
                 onToggleNotifications: { [viewModel] in
                     onToggleNotifications(viewModel.notificationsAnchorView)
                 },
+                onToggleVoiceInput: onToggleVoiceInput,
                 onNewTab: onNewTab,
                 onFocusHistoryBack: onFocusHistoryBack,
                 onFocusHistoryForward: onFocusHistoryForward,
@@ -1536,6 +1563,8 @@ struct HiddenTitlebarSidebarControlsView: View {
                     onToggleSidebar()
                 case .showNotifications:
                     onToggleNotifications(anchorView)
+                case .voiceInput:
+                    onToggleVoiceInput()
                 case .newTab:
                     onNewTab()
                 case .cloudVM:
@@ -1877,6 +1906,11 @@ final class TitlebarControlsAccessoryViewController: NSTitlebarAccessoryViewCont
         let toggleNotifications: () -> Void = { [weak containerView] in
             _ = AppDelegate.shared?.toggleNotificationsPopover(animated: true, anchorView: containerView)
         }
+        let toggleVoiceInput: () -> Void = { [weak containerView] in
+            if AppDelegate.shared?.togglePushToTalkVoiceInput(preferredWindow: containerView?.window) != true {
+                NSSound.beep()
+            }
+        }
         let newTab = { _ = AppDelegate.shared?.performNewWorkspaceAction(debugSource: "titlebar.accessoryNewWorkspace") }
         let focusHistoryBack = { [weak containerView] in
             _ = AppDelegate.shared?.activeTabManagerForCommands(preferredWindow: containerView?.window)?.navigateBack()
@@ -1892,6 +1926,7 @@ final class TitlebarControlsAccessoryViewController: NSTitlebarAccessoryViewCont
             viewModel: viewModel,
             onToggleSidebar: toggleSidebar,
             onToggleNotifications: toggleNotifications,
+            onToggleVoiceInput: toggleVoiceInput,
             onNewTab: newTab,
             onFocusHistoryBack: focusHistoryBack,
             onFocusHistoryForward: focusHistoryForward,

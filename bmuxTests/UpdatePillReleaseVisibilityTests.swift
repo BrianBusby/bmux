@@ -375,7 +375,7 @@ final class TitlebarControlsHoverPolicyTests: XCTestCase {
                     TitlebarNewWorkspaceCloudSplitButtonMetrics.primaryWidth(config: config)
                 case .some(.cloudVM):
                     TitlebarNewWorkspaceCloudSplitButtonMetrics.dropdownWidth(config: config)
-                case .some(.toggleSidebar), .some(.showNotifications), .some(.focusHistoryBack), .some(.focusHistoryForward), nil:
+                case .some(.toggleSidebar), .some(.showNotifications), .some(.voiceInput), .some(.focusHistoryBack), .some(.focusHistoryForward), nil:
                     config.buttonSize
                 }
                 XCTAssertEqual(

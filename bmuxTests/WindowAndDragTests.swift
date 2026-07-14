@@ -885,6 +885,7 @@ final class WindowDragHandleHitTests: XCTestCase {
             [
                 "titlebarControl.toggleSidebar",
                 "titlebarControl.showNotifications",
+                "titlebarControl.voiceInput",
                 "titlebarControl.newTab",
                 "titlebarControl.cloudVM",
                 "titlebarControl.focusHistoryBack",

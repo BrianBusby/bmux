@@ -8,7 +8,8 @@ extension WindowTerminalHostView {
                   hostedView.alphaValue > 0,
                   hostedView.frame.contains(point) else { continue }
 
-            return hostedView.hitTest(point) ?? hostedView
+            let pointInHostedView = hostedView.convert(point, from: self)
+            return hostedView.hitTest(pointInHostedView) ?? hostedView
         }
         return nil
     }

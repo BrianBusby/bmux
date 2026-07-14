@@ -15969,6 +15969,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 MobilePairingWindowController.shared.show()
                 onExecuted?()
                 return true
+            case .pushToTalkVoiceInput:
+                guard togglePushToTalkVoiceInput(preferredWindow: preferredWindow ?? resolvedWindow(for: context)) else {
+                    return false
+                }
+                onExecuted?()
+                return true
             case .newTerminal:
                 context.tabManager.newSurface()
                 onExecuted?()
