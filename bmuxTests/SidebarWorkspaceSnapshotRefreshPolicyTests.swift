@@ -131,6 +131,7 @@ import Testing
         customColorHex: String? = nil,
         remoteConnectionStatusText: String = "Disconnected",
         latestConversationMessage: String? = nil,
+        latestSubmittedMessage: String? = nil,
         listeningPorts: [Int] = [],
         finderDirectoryPath: String? = nil,
         repoBadgeAppearance: WorkspaceRepoBadgeAppearance? = nil,
@@ -149,6 +150,7 @@ import Testing
             showsRemoteReconnectAffordance: false,
             copyableSidebarSSHError: nil,
             latestConversationMessage: latestConversationMessage,
+            latestSubmittedMessage: latestSubmittedMessage,
             metadataEntries: [],
             metadataBlocks: [],
             latestLog: nil,
@@ -222,6 +224,43 @@ import Testing
 
         #expect(subtitle.text == "Build finished")
         #expect(subtitle.lineLimit == 2)
+    }
+
+    @Test func conversationSubtitlePrefersSubmittedPromptOverAssistantReply() {
+        let subtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
+            latestSubmittedMessage: "last prompt I submitted",
+            latestConversationMessage: "assistant response that arrived later",
+            hidesAllDetails: false,
+            iMessageModeEnabled: true
+        )
+
+        #expect(subtitle == "last prompt I submitted")
+    }
+
+    @Test func conversationSubtitleDoesNotFallBackToAssistantReply() {
+        let subtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
+            latestSubmittedMessage: nil,
+            latestConversationMessage: "assistant response that arrived later",
+            hidesAllDetails: false,
+            iMessageModeEnabled: true
+        )
+
+        #expect(subtitle == nil)
+    }
+
+    @Test func conversationSubtitleIsHiddenOutsideIMessageDetails() {
+        #expect(SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
+            latestSubmittedMessage: "last prompt I submitted",
+            latestConversationMessage: "assistant response",
+            hidesAllDetails: true,
+            iMessageModeEnabled: true
+        ) == nil)
+        #expect(SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
+            latestSubmittedMessage: "last prompt I submitted",
+            latestConversationMessage: "assistant response",
+            hidesAllDetails: false,
+            iMessageModeEnabled: false
+        ) == nil)
     }
 
     @Test func blankConversationSubtitleIsHidden() {
@@ -316,6 +355,41 @@ import Testing
         )
 
         #expect(colorHex == "#56CCF2")
+    }
+
+    @Test func foregroundIsBlackInLightAppearance() {
+        let foreground = WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
+            repoColorHex: "#56CCF2",
+            colorScheme: .light
+        )
+
+        #expect(foreground.usingColorSpace(.sRGB)?.hexString(includeAlpha: true) == "#000000FF")
+    }
+
+    @Test func foregroundUsesBrightRepoColorInDarkAppearance() {
+        let foreground = WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
+            repoColorHex: "#2F80ED",
+            colorScheme: .dark
+        )
+        let matchingRepoForeground = WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
+            repoColorHex: "#2F80ED",
+            colorScheme: .dark
+        )
+        let otherRepoForeground = WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
+            repoColorHex: "#F2C94C",
+            colorScheme: .dark
+        )
+        let foregroundHex = foreground.usingColorSpace(.sRGB)?.hexString(includeAlpha: true)
+        let matchingRepoForegroundHex = matchingRepoForeground
+            .usingColorSpace(.sRGB)?
+            .hexString(includeAlpha: true)
+        let otherRepoForegroundHex = otherRepoForeground
+            .usingColorSpace(.sRGB)?
+            .hexString(includeAlpha: true)
+
+        #expect(foregroundHex == matchingRepoForegroundHex)
+        #expect(foregroundHex != otherRepoForegroundHex)
+        #expect(bmuxContrastRatio(foreground: foreground, background: .black) >= 4.5)
     }
 }
 

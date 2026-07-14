@@ -1976,6 +1976,11 @@ struct ContentView: View {
                     anchorView: fullscreenControlsViewModel.notificationsAnchorView
                 )
             },
+            onToggleVoiceInput: {
+                if AppDelegate.shared?.togglePushToTalkVoiceInput(preferredWindow: observedWindow ?? NSApp.keyWindow ?? NSApp.mainWindow) != true {
+                    NSSound.beep()
+                }
+            },
             onNewTab: {
                 AppDelegate.shared?.performNewWorkspaceAction(
                     tabManager: tabManager,
@@ -9642,14 +9647,13 @@ struct SidebarTabItemSettingsSnapshot: Equatable {
         let showsLog = Self.bool(defaults: defaults, key: "sidebarShowLog", defaultValue: SidebarWorkspaceDetailDefaults.showLog)
         let showsProgress = Self.bool(defaults: defaults, key: "sidebarShowProgress", defaultValue: SidebarWorkspaceDetailDefaults.showProgress)
         let showsBranchDirectory = Self.bool(defaults: defaults, key: "sidebarShowBranchDirectory", defaultValue: SidebarWorkspaceDetailDefaults.showBranchDirectory)
-        let showsPullRequests = Self.bool(defaults: defaults, key: "sidebarShowPullRequest", defaultValue: SidebarWorkspaceDetailDefaults.showPullRequests)
         let showsPorts = Self.bool(defaults: defaults, key: "sidebarShowPorts", defaultValue: SidebarWorkspaceDetailDefaults.showPorts)
         visibleAuxiliaryDetails = SidebarWorkspaceAuxiliaryDetailVisibility.resolved(
             showMetadata: showsMetadata,
             showLog: showsLog,
             showProgress: showsProgress,
             showBranchDirectory: showsBranchDirectory,
-            showPullRequests: showsPullRequests,
+            showPullRequests: true,
             showPorts: showsPorts,
             hideAllDetails: hidesAllDetails
         )
@@ -10303,6 +10307,11 @@ struct VerticalTabsSidebar: View {
                     animated: true,
                     anchorView: anchorView
                 )
+            },
+            onToggleVoiceInput: {
+                if AppDelegate.shared?.togglePushToTalkVoiceInput(preferredWindow: observedWindow ?? NSApp.keyWindow ?? NSApp.mainWindow) != true {
+                    NSSound.beep()
+                }
             },
             onNewTab: onNewTab,
             onFocusHistoryBack: {
@@ -13207,6 +13216,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         let showsRemoteReconnectAffordance: Bool
         let copyableSidebarSSHError: String?
         let latestConversationMessage: String?
+        let latestSubmittedMessage: String?
         let metadataEntries: [SidebarStatusEntry]
         let metadataBlocks: [SidebarMetadataBlock]
         let latestLog: SidebarLogEntry?
@@ -13242,6 +13252,18 @@ struct SidebarWorkspaceRowLineLimitPolicy {
 
     static func titleLineLimit(wrapsWorkspaceTitles: Bool) -> Int {
         wrapsWorkspaceTitles ? wrappedWorkspaceTitleLines : 1
+    }
+
+    static func conversationMessage(
+        latestSubmittedMessage: String?,
+        latestConversationMessage _: String?,
+        hidesAllDetails: Bool,
+        iMessageModeEnabled: Bool
+    ) -> String? {
+        guard !hidesAllDetails, iMessageModeEnabled else { return nil }
+        return latestSubmittedMessage?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .nilIfEmpty
     }
 
     static func subtitle(notificationText: String?, conversationMessage: String?) -> Subtitle? {
@@ -13357,6 +13379,7 @@ struct TabItemView: View, Equatable {
     @State private var rowInteractionState = SidebarWorkspaceRowInteractionState()
     @State private var workspaceFinderDirectoryOpenRequest: WorkspaceFinderDirectoryOpenRequest?
     @State private var releaseTerminalAgentStatusLineTickNotifications: (() -> Void)?
+    @State private var releaseTerminalAgentStatusLineRenderedFrameNotifications: (() -> Void)?
     @State private var isEditing = false
     @State private var renameDraft = ""
     @State private var renameBaselineHadUserCustomTitle = false
@@ -13496,7 +13519,7 @@ struct TabItemView: View, Equatable {
 
     private var activeBorderColor: Color {
         guard isActive else { return .clear }
-        return Color.white.opacity(colorScheme == .dark ? 0.92 : 0.78)
+        return colorScheme == .dark ? Color.white.opacity(0.92) : .black
     }
 
     private var activeElevationShadowColor: Color {
@@ -13715,9 +13738,12 @@ struct TabItemView: View, Equatable {
         let accessibilityHintText = String(localized: "sidebar.workspace.accessibilityHint", defaultValue: "Activate to focus this workspace. Drag to reorder, or use Move Up and Move Down actions.")
         let moveUpActionText = String(localized: "sidebar.workspace.moveUpAction", defaultValue: "Move Up")
         let moveDownActionText = String(localized: "sidebar.workspace.moveDownAction", defaultValue: "Move Down")
-        let conversationMessageSubtitle = !settings.hidesAllDetails && settings.iMessageModeEnabled
-            ? workspaceSnapshot.latestConversationMessage
-            : nil
+        let conversationMessageSubtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
+            latestSubmittedMessage: workspaceSnapshot.latestSubmittedMessage,
+            latestConversationMessage: workspaceSnapshot.latestConversationMessage,
+            hidesAllDetails: settings.hidesAllDetails,
+            iMessageModeEnabled: settings.iMessageModeEnabled
+        )
         let subtitle = SidebarWorkspaceRowLineLimitPolicy.subtitle(
             notificationText: latestNotificationText,
             conversationMessage: conversationMessageSubtitle
@@ -13842,7 +13868,7 @@ struct TabItemView: View, Equatable {
                         if let repoBadgeAppearance = workspaceSnapshot.repoBadgeAppearance {
                             Text(repoBadgeAppearance.name)
                                 .font(magnifiedFont(scaledFontSize(9), weight: .medium))
-                                .foregroundColor(repoBadgeColor(for: repoBadgeAppearance.colorHex))
+                                .foregroundColor(repoBadgeForegroundColor(for: repoBadgeAppearance))
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                         }
@@ -14053,35 +14079,8 @@ struct TabItemView: View, Equatable {
             }
 
             // Pull request rows
-            if detailVisibility.showsPullRequests, !workspaceSnapshot.pullRequestRows.isEmpty {
-                VStack(alignment: .leading, spacing: 1) {
-                    ForEach(workspaceSnapshot.pullRequestRows) { pullRequest in
-                        let pullRequestNumber = String(pullRequest.number)
-                        let pullRequestTitle = "\(pullRequest.label) #\(pullRequestNumber)"
-                        let rowContent = HStack(spacing: 4) {
-                            PullRequestStatusIcon(
-                                status: pullRequest.status,
-                                color: pullRequestForegroundColor,
-                                fontScale: fontScale
-                            )
-                            Text(pullRequestTitle).underline(settings.makesPullRequestsClickable).lineLimit(1).truncationMode(.tail)
-                            Text(pullRequestStatusLabel(pullRequest.status)).lineLimit(1)
-                            Spacer(minLength: 0)
-                        }
-                        .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
-                        .foregroundColor(pullRequestForegroundColor)
-                        .opacity(pullRequest.isStale ? 0.5 : 1)
-                        if settings.makesPullRequestsClickable {
-                            Button(action: { openPullRequestLink(pullRequest.url) }) { rowContent }
-                                .buttonStyle(.plain)
-                                .tint(pullRequestForegroundColor)
-                                .safeHelp(String(localized: "sidebar.pullRequest.openTooltip", defaultValue: "Open \(pullRequestTitle)"))
-                                .accessibilityIdentifier("SidebarPullRequestRow")
-                        } else {
-                            rowContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarPullRequestRow")
-                        }
-                    }
-                }
+            if !workspaceSnapshot.pullRequestRows.isEmpty {
+                pullRequestRowsView(workspaceSnapshot.pullRequestRows)
             }
 
             // Ports row
@@ -14253,6 +14252,16 @@ struct TabItemView: View, Equatable {
         ) { _ in
             refreshWorkspaceSnapshotFromTerminalAgentStatusLine()
         }
+        .onReceive(
+            tab.terminalAgentStatusLineRenderedFramePublisher()
+                .throttle(
+                    for: Self.terminalAgentStatusLineRefreshInterval,
+                    scheduler: RunLoop.main,
+                    latest: true
+                )
+        ) { _ in
+            refreshWorkspaceSnapshotFromTerminalAgentStatusLine()
+        }
         .onChange(of: settings) { _ in
             refreshWorkspaceSnapshot(force: true)
         }
@@ -14336,8 +14345,17 @@ struct TabItemView: View, Equatable {
 
     private func updateTerminalAgentStatusLineObservation() {
         if tab.hasTerminalPanelsForVisibleAgentWorkObservation {
+            var didBeginObservation = false
             if releaseTerminalAgentStatusLineTickNotifications == nil {
                 releaseTerminalAgentStatusLineTickNotifications = GhosttyApp.retainTickNotifications()
+                didBeginObservation = true
+            }
+            if releaseTerminalAgentStatusLineRenderedFrameNotifications == nil {
+                releaseTerminalAgentStatusLineRenderedFrameNotifications = GhosttyNSView.retainRenderedFrameNotifications()
+                didBeginObservation = true
+            }
+            if didBeginObservation {
+                GhosttyApp.shared.scheduleTick()
             }
         } else {
             releaseTerminalAgentStatusLineObservation()
@@ -14347,10 +14365,13 @@ struct TabItemView: View, Equatable {
     private func releaseTerminalAgentStatusLineObservation() {
         releaseTerminalAgentStatusLineTickNotifications?()
         releaseTerminalAgentStatusLineTickNotifications = nil
+        releaseTerminalAgentStatusLineRenderedFrameNotifications?()
+        releaseTerminalAgentStatusLineRenderedFrameNotifications = nil
     }
 
     private func refreshWorkspaceSnapshotFromTerminalAgentStatusLine() {
-        guard releaseTerminalAgentStatusLineTickNotifications != nil else { return }
+        guard releaseTerminalAgentStatusLineTickNotifications != nil ||
+              releaseTerminalAgentStatusLineRenderedFrameNotifications != nil else { return }
         refreshWorkspaceSnapshot()
     }
 
@@ -14692,12 +14713,11 @@ struct TabItemView: View, Equatable {
         ) ?? NSColor(hex: hex) ?? .gray
     }
 
-    private func repoBadgeColor(for hex: String) -> Color {
-        WorkspaceTabColorSettings.displayColor(
-            hex: hex,
-            colorScheme: colorScheme,
-            forceBright: usesInvertedActiveForeground
-        ) ?? activeSecondaryColor(0.86)
+    private func repoBadgeForegroundColor(for appearance: WorkspaceRepoBadgeAppearance) -> Color {
+        Color(nsColor: WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
+            repoColorHex: appearance.colorHex,
+            colorScheme: colorScheme
+        ))
     }
 
     private var accessibilityTitle: String {
@@ -14926,14 +14946,12 @@ struct TabItemView: View, Equatable {
     private func makeWorkspaceSnapshot() -> SidebarWorkspaceSnapshotBuilder.Snapshot {
         let signpost = SidebarProfilingSignposts.begin("sidebar-workspace-snapshot", "workspace=\(sidebarShortTabId(tab.id)) details=\(settings.visibleAuxiliaryDetails)"); defer { SidebarProfilingSignposts.end(signpost) }
         let detailVisibility = visibleAuxiliaryDetails
-        let orderedPanelIds: [UUID]? = (detailVisibility.showsBranchDirectory || detailVisibility.showsPullRequests)
-            ? tab.sidebarOrderedPanelIds()
-            : nil
+        let orderedPanelIds = tab.sidebarOrderedPanelIds()
         let compactGitBranchSummaryText: String? = {
             guard detailVisibility.showsBranchDirectory,
                   !sidebarBranchVerticalLayout,
                   sidebarShowGitBranch,
-                  let orderedPanelIds else {
+                  !orderedPanelIds.isEmpty else {
                 return nil
             }
             return gitBranchSummaryText(orderedPanelIds: orderedPanelIds)
@@ -14941,7 +14959,7 @@ struct TabItemView: View, Equatable {
         let compactDirectoryCandidates: [String] = {
             guard detailVisibility.showsBranchDirectory,
                   !sidebarBranchVerticalLayout,
-                  let orderedPanelIds else {
+                  !orderedPanelIds.isEmpty else {
                 return []
             }
             return compactDirectoryCandidatesList(orderedPanelIds: orderedPanelIds)
@@ -14953,14 +14971,14 @@ struct TabItemView: View, Equatable {
         let branchDirectoryLines: [SidebarWorkspaceSnapshotBuilder.VerticalBranchDirectoryLine] = {
             guard detailVisibility.showsBranchDirectory,
                   sidebarBranchVerticalLayout,
-                  let orderedPanelIds else {
+                  !orderedPanelIds.isEmpty else {
                 return []
             }
             return verticalBranchDirectoryLines(orderedPanelIds: orderedPanelIds)
         }()
         let branchLinesContainBranch = sidebarShowGitBranch && branchDirectoryLines.contains { $0.branch != nil }
         let pullRequestRows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay] = {
-            guard detailVisibility.showsPullRequests, let orderedPanelIds else { return [] }
+            guard !orderedPanelIds.isEmpty else { return [] }
             return pullRequestDisplays(orderedPanelIds: orderedPanelIds)
         }()
 
@@ -14977,6 +14995,7 @@ struct TabItemView: View, Equatable {
                 && (tab.remoteConnectionState == .suspended || tab.remoteConnectionState == .disconnected),
             copyableSidebarSSHError: copyableSidebarSSHError,
             latestConversationMessage: tab.latestConversationMessage,
+            latestSubmittedMessage: tab.latestSubmittedMessage,
             metadataEntries: detailVisibility.showsMetadata ? tab.sidebarStatusEntriesInDisplayOrder() : [],
             metadataBlocks: detailVisibility.showsMetadata ? tab.sidebarMetadataBlocksInDisplayOrder() : [],
             latestLog: detailVisibility.showsLog ? tab.logEntries.last : nil,
@@ -15165,8 +15184,40 @@ struct TabItemView: View, Equatable {
         }
     }
 
+    @ViewBuilder
+    private func pullRequestRowsView(_ rows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay]) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            ForEach(rows) { pullRequest in
+                let pullRequestNumber = String(pullRequest.number)
+                let pullRequestTitle = "\(pullRequest.label) #\(pullRequestNumber)"
+                let rowContent = HStack(spacing: 4) {
+                    PullRequestStatusIcon(
+                        status: pullRequest.status,
+                        color: pullRequestForegroundColor,
+                        fontScale: fontScale
+                    )
+                    Text(pullRequestTitle).underline(settings.makesPullRequestsClickable).lineLimit(1).truncationMode(.tail)
+                    Text(pullRequestStatusLabel(pullRequest.status)).lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
+                .foregroundColor(pullRequestForegroundColor)
+                .opacity(pullRequest.isStale ? 0.5 : 1)
+                if settings.makesPullRequestsClickable {
+                    Button(action: { openPullRequestLink(pullRequest.url) }) { rowContent }
+                        .buttonStyle(.plain)
+                        .tint(pullRequestForegroundColor)
+                        .safeHelp(String(localized: "sidebar.pullRequest.openTooltip", defaultValue: "Open \(pullRequestTitle)"))
+                        .accessibilityIdentifier("SidebarPullRequestRow")
+                } else {
+                    rowContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarPullRequestRow")
+                }
+            }
+        }
+    }
+
     private var pullRequestForegroundColor: Color {
-        isActive ? activeSecondaryColor(0.75) : .secondary
+        colorScheme == .dark ? .white : .black
     }
 
     private func openPullRequestLink(_ url: URL) {

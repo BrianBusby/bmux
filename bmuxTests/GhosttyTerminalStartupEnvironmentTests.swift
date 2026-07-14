@@ -106,7 +106,7 @@ struct GhosttyTerminalStartupEnvironmentTests {
     }
 
     @Test
-    func testApplyManagedGitWatchEnvironmentDisablesShellPullRequestWatchWhenHidden() {
+    func testApplyManagedGitWatchEnvironmentDisablesShellPullRequestWatchWhenExplicitlyDisabled() {
         var environment = [
             "BMUX_NO_PR_WATCH": ""
         ]

@@ -501,6 +501,41 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         XCTAssertEqual(workspace.sidebarPullRequestsInDisplayOrder(orderedPanelIds: [panelId]), [])
     }
 
+    @objc(testBranchlessPRClears)
+    func branchlessPullRequestProbe() {
+        let workspace = Workspace(title: "Test")
+        let panelId = UUID()
+        let url = URL(string: "https://github.com/companycam/companycam-mobile/pull/10379")!
+
+        workspace.updatePanelGitBranch(
+            panelId: panelId,
+            branch: "companycam-mobile-pr-10379",
+            isDirty: false
+        )
+        workspace.updatePanelPullRequest(
+            panelId: panelId,
+            number: 10379,
+            label: "PR",
+            url: url,
+            status: .open,
+            bindToCurrentBranch: false
+        )
+
+        XCTAssertEqual(
+            workspace.sidebarPullRequestsInDisplayOrder(orderedPanelIds: [panelId]).first?.number,
+            10379
+        )
+
+        workspace.updatePanelGitBranch(
+            panelId: panelId,
+            branch: "companycam-mobile-pr-10356",
+            isDirty: false
+        )
+
+        XCTAssertNil(workspace.panelPullRequests[panelId])
+        XCTAssertEqual(workspace.sidebarPullRequestsInDisplayOrder(orderedPanelIds: [panelId]), [])
+    }
+
     func testSidebarPullRequestsPreferBestStateAcrossPanels() throws {
         let workspace = Workspace(title: "Test")
         let firstPanelId = UUID()
@@ -855,7 +890,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         )
     }
 
-    func testHiddenPullRequestsDoNotSchedulePullRequestPollingFromBranchReports() throws {
+    func testLegacyHiddenPullRequestsSettingStillSchedulesPullRequestPollingFromBranchReports() throws {
         let defaults = UserDefaults.standard
         let previousWatchGitStatus = defaults.object(forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
         let previousShowPullRequests = defaults.object(forKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey)
@@ -879,13 +914,14 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         )
 
         XCTAssertEqual(workspace.panelGitBranches[panelId]?.branch, "issue-2746-rate-limit")
-        XCTAssertTrue(
-            manager.workspacePullRequestTrackedPanelIdsForTesting(workspaceId: workspace.id).isEmpty,
-            "Branch reports should keep branch metadata but must not arm any PR polling while sidebar.showPullRequests is false."
+        XCTAssertEqual(
+            manager.workspacePullRequestTrackedPanelIdsForTesting(workspaceId: workspace.id),
+            Set([panelId]),
+            "Branch reports should arm PR polling even when the legacy sidebar.showPullRequests setting is false."
         )
     }
 
-    func testDisablingPullRequestSidebarClearsCachedPullRequestsWithoutClearingBranches() throws {
+    func testLegacyHiddenPullRequestsSettingDoesNotClearCachedPullRequests() throws {
         let defaults = UserDefaults.standard
         let previousWatchGitStatus = defaults.object(forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
         let previousShowPullRequests = defaults.object(forKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey)
@@ -895,7 +931,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey)
+        defaults.set(false, forKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey)
 
         let manager = TabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
@@ -917,25 +953,15 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         )
         XCTAssertNotNil(workspace.panelPullRequests[panelId])
 
-        defaults.set(false, forKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey)
         manager.sidebarGitMetadataWatchSettingsDidChangeForTesting()
 
         XCTAssertEqual(workspace.panelGitBranches[panelId]?.branch, "issue-2746-rate-limit")
-        XCTAssertNil(workspace.panelPullRequests[panelId])
-        XCTAssertNil(workspace.pullRequest)
-        XCTAssertTrue(
-            manager.workspacePullRequestTrackedPanelIdsForTesting(workspaceId: workspace.id).isEmpty,
-            "Disabling PR visibility should clear PR state and polling without disabling branch metadata."
-        )
-
-        defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey)
-        manager.sidebarGitMetadataWatchSettingsDidChangeForTesting()
-
-        XCTAssertEqual(workspace.panelGitBranches[panelId]?.branch, "issue-2746-rate-limit")
+        XCTAssertNotNil(workspace.panelPullRequests[panelId])
+        XCTAssertFalse(workspace.sidebarPullRequestsInDisplayOrder(orderedPanelIds: [panelId]).isEmpty)
         XCTAssertEqual(
             manager.workspacePullRequestTrackedPanelIdsForTesting(workspaceId: workspace.id),
             Set([panelId]),
-            "Re-enabling PR visibility should restart PR polling from preserved branch metadata."
+            "The legacy sidebar.showPullRequests setting must not clear PR state or polling."
         )
     }
 

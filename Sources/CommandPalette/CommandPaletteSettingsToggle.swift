@@ -136,9 +136,7 @@ enum CommandPaletteSettingsToggleCommands {
             !UserDefaultsSettingsClient(defaults: defaults).value(for: SettingCatalog().sidebar.hideAllDetails)
         }
         let sidebarPullRequestLinksAvailable: @Sendable (UserDefaults) -> Bool = { defaults in
-            sidebarDetailsAvailable(defaults)
-                && SidebarWorkspaceDetailDefaults.showPullRequestsValue(defaults: defaults)
-                && UserDefaultsSettingsClient(defaults: defaults).value(for: SettingCatalog().sidebar.makePullRequestsClickable)
+            UserDefaultsSettingsClient(defaults: defaults).value(for: SettingCatalog().sidebar.makePullRequestsClickable)
         }
         let sidebarPortLinksAvailable: @Sendable (UserDefaults) -> Bool = { defaults in
             sidebarDetailsAvailable(defaults)
@@ -595,18 +593,6 @@ enum CommandPaletteSettingsToggleCommands {
                 isAvailable: sidebarDetailsAvailable
             ),
             CommandPaletteSettingToggleDescriptor(
-                commandId: commandIdPrefix + "showPullRequestsInSidebar",
-                settingsKey: "sidebar.showPullRequests",
-                title: {
-                    String(localized: "settings.app.showPullRequests", defaultValue: "Show Pull Requests in Sidebar")
-                },
-                sectionTitle: sidebar,
-                keywords: ["sidebar.showPullRequests", "sidebar", "pull", "request", "pr", "review", "github"],
-                defaultValue: SidebarWorkspaceDetailDefaults.showPullRequests,
-                defaultsKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey,
-                isAvailable: sidebarDetailsAvailable
-            ),
-            CommandPaletteSettingToggleDescriptor(
                 commandId: commandIdPrefix + "watchGitStatusInSidebar",
                 settingsKey: "sidebar.watchGitStatus",
                 title: {
@@ -630,11 +616,7 @@ enum CommandPaletteSettingsToggleCommands {
                 sectionTitle: sidebar,
                 keywords: ["sidebar.makePullRequestsClickable", "sidebar", "pull", "request", "pr", "click", "link"],
                 defaultValue: SettingCatalog().sidebar.makePullRequestsClickable.defaultValue,
-                defaultsKey: SettingCatalog().sidebar.makePullRequestsClickable.userDefaultsKey,
-                isAvailable: { defaults in
-                    sidebarDetailsAvailable(defaults)
-                        && SidebarWorkspaceDetailDefaults.showPullRequestsValue(defaults: defaults)
-                }
+                defaultsKey: SettingCatalog().sidebar.makePullRequestsClickable.userDefaultsKey
             ),
             CommandPaletteSettingToggleDescriptor(
                 commandId: commandIdPrefix + "openSidebarPullRequestLinksInBmuxBrowser",
