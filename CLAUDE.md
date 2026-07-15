@@ -133,6 +133,10 @@ When adding a regression test for a bug fix, use a two-commit structure so CI pr
 
 This makes it visible in the GitHub PR UI (Commits tab, check statuses) that the test genuinely fails without the fix.
 
+## Feature completion commit policy
+
+When finishing work on a bmux feature, commit and push the scoped changes before handing off so the worktree returns to a clean state for the next task. Do not include unrelated dirty files in that commit; if unrelated local changes prevent a clean handoff, call them out explicitly.
+
 ## First pass, then dogfood
 
 A task's first pass ends when the change is implemented, the tagged build succeeded on the pushed HEAD, focused tests ran, and the PR is open (for `web/` PRs, also the live Vercel preview URL given to the user). Then hand off to the user for dogfood. Do not fix CI failures, merge conflicts, or review findings inline in the main conversation after that point.
