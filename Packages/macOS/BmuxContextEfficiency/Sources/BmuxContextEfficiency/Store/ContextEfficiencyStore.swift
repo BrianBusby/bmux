@@ -3,6 +3,7 @@ public import Foundation
 /// Durable read-only telemetry import store for context-efficiency analysis.
 public actor ContextEfficiencyStore {
     private let database: ContextEfficiencySQLiteDatabase
+    private let fileManager: FileManager
     private let idFactory = ContextEfficiencyStableIDFactory()
     private let fileIdentity = CodexRolloutFileIdentity()
 
@@ -17,6 +18,7 @@ public actor ContextEfficiencyStore {
             at: databaseURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
+        self.fileManager = fileManager
         self.database = try ContextEfficiencySQLiteDatabase(url: databaseURL)
         try ContextEfficiencySQLiteMigration().migrateIfNeeded(database: database)
     }
@@ -60,6 +62,9 @@ public actor ContextEfficiencyStore {
 
         try database.execute("BEGIN IMMEDIATE TRANSACTION")
         do {
+            if resetCursor {
+                try removeImportedRows(forSourcePath: sourcePath, importedAt: importedAt)
+            }
             try upsertImportSource(
                 sourcePath: sourcePath,
                 fileSize: sourceInfo.fileSize,
@@ -250,8 +255,157 @@ public actor ContextEfficiencyStore {
     }
 
     private func sourceFileInfo(for url: URL) throws -> (fileSize: Int64, modifiedAt: Date?) {
-        let values = try url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
-        return (Int64(values.fileSize ?? 0), values.contentModificationDate)
+        let attributes = try fileManager.attributesOfItem(atPath: url.path)
+        let fileSize = (attributes[.size] as? NSNumber)?.int64Value ?? 0
+        let modifiedAt = attributes[.modificationDate] as? Date
+        return (fileSize, modifiedAt)
+    }
+
+    private func removeImportedRows(forSourcePath sourcePath: String, importedAt: Date) throws {
+        let affectedThreadIDs = try threadIDsReferencedBySource(sourcePath)
+        for statementText in [
+            "DELETE FROM rollout_events WHERE source_path = ?",
+            "DELETE FROM parser_errors WHERE source_path = ?",
+            "DELETE FROM token_telemetry_events WHERE source_path = ?",
+            "DELETE FROM model_calls WHERE source_path = ?",
+            "DELETE FROM tool_calls WHERE source_path = ?",
+            "DELETE FROM tool_outputs WHERE source_path = ?",
+        ] {
+            let statement = try database.prepare(statementText)
+            defer { statement.finalize() }
+            try statement.bind(sourcePath, at: 1)
+            _ = try statement.step()
+        }
+        for threadID in affectedThreadIDs {
+            if try hasImportedRows(threadID: threadID) {
+                try refreshThreadCountersFromStoredRows(threadID: threadID, importedAt: importedAt)
+            } else {
+                try deleteThread(id: threadID)
+            }
+        }
+    }
+
+    private func threadIDsReferencedBySource(_ sourcePath: String) throws -> [String] {
+        let statement = try database.prepare(
+            """
+            SELECT DISTINCT thread_id FROM (
+                SELECT thread_id FROM rollout_events WHERE source_path = ?
+                UNION
+                SELECT thread_id FROM parser_errors WHERE source_path = ?
+                UNION
+                SELECT thread_id FROM token_telemetry_events WHERE source_path = ?
+                UNION
+                SELECT thread_id FROM model_calls WHERE source_path = ?
+                UNION
+                SELECT thread_id FROM tool_calls WHERE source_path = ?
+                UNION
+                SELECT thread_id FROM tool_outputs WHERE source_path = ?
+            )
+            """
+        )
+        defer { statement.finalize() }
+        for index in 1...6 {
+            try statement.bind(sourcePath, at: Int32(index))
+        }
+        var threadIDs: [String] = []
+        while try statement.step() {
+            if let threadID = statement.string(at: 0) {
+                threadIDs.append(threadID)
+            }
+        }
+        return threadIDs
+    }
+
+    private func hasImportedRows(threadID: String) throws -> Bool {
+        let statement = try database.prepare(
+            """
+            SELECT EXISTS(
+                SELECT 1 FROM rollout_events WHERE thread_id = ?
+            )
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(threadID, at: 1)
+        guard try statement.step() else {
+            return false
+        }
+        return statement.int(at: 0) != 0
+    }
+
+    private func deleteThread(id threadID: String) throws {
+        let statement = try database.prepare("DELETE FROM agent_threads WHERE id = ?")
+        defer { statement.finalize() }
+        try statement.bind(threadID, at: 1)
+        _ = try statement.step()
+    }
+
+    private func refreshThreadCountersFromStoredRows(threadID: String, importedAt: Date) throws {
+        let tokenUsage = try latestStoredTokenUsage(threadID: threadID)
+        let statement = try database.prepare(
+            """
+            UPDATE agent_threads SET
+                first_observed_at = (
+                    SELECT MIN(timestamp) FROM rollout_events WHERE thread_id = ?
+                ),
+                last_observed_at = (
+                    SELECT MAX(timestamp) FROM rollout_events WHERE thread_id = ?
+                ),
+                cumulative_input_tokens = ?,
+                cumulative_cached_input_tokens = ?,
+                cumulative_non_cached_input_tokens = ?,
+                cumulative_output_tokens = ?,
+                cumulative_reasoning_output_tokens = ?,
+                cumulative_total_tokens = ?,
+                estimated_context_tokens = ?,
+                context_window_tokens = ?,
+                model_call_count = (
+                    SELECT COUNT(*) FROM model_calls WHERE thread_id = ?
+                ),
+                compaction_count = (
+                    SELECT COUNT(*) FROM rollout_events
+                    WHERE thread_id = ? AND kind = ?
+                ),
+                updated_at = ?
+            WHERE id = ?
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(threadID, at: 1)
+        try statement.bind(threadID, at: 2)
+        try statement.bind(tokenUsage?.inputTokens, at: 3)
+        try statement.bind(tokenUsage?.cachedInputTokens, at: 4)
+        try statement.bind(tokenUsage?.nonCachedInputTokens, at: 5)
+        try statement.bind(tokenUsage?.outputTokens, at: 6)
+        try statement.bind(tokenUsage?.reasoningOutputTokens, at: 7)
+        try statement.bind(tokenUsage?.totalTokens, at: 8)
+        try statement.bind(tokenUsage?.estimatedContextTokens, at: 9)
+        try statement.bind(tokenUsage?.contextWindowTokens, at: 10)
+        try statement.bind(threadID, at: 11)
+        try statement.bind(threadID, at: 12)
+        try statement.bind(CodexRolloutEventKind.compactionObserved.rawValue, at: 13)
+        try statement.bind(timestamp(importedAt), at: 14)
+        try statement.bind(threadID, at: 15)
+        _ = try statement.step()
+    }
+
+    private func latestStoredTokenUsage(threadID: String) throws -> ContextEfficiencyTokenUsage? {
+        let statement = try database.prepare(
+            """
+            SELECT input_tokens, cached_input_tokens, non_cached_input_tokens,
+                   output_tokens, reasoning_output_tokens, total_tokens,
+                   estimated_context_tokens, context_window_tokens
+            FROM token_telemetry_events
+            WHERE thread_id = ?
+            ORDER BY rowid DESC
+            LIMIT 1
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(threadID, at: 1)
+        guard try statement.step() else {
+            return nil
+        }
+        return tokenUsage(statement: statement, startingAt: 0)
     }
 
     private func upsertImportSource(
