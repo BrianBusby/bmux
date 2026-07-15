@@ -185,6 +185,31 @@ import Testing
         }
     }
 
+    @Test func probeTreatsGeneratedAgentSeedTitleAsAutoOwned() throws {
+        try withAutoNamingSetting(true) {
+            try withManager { _, workspace in
+                let directoryName = (workspace.currentDirectory as NSString).lastPathComponent
+                workspace.setCustomTitle("\(directoryName) (Codex)")
+
+                let envelope = try call(method: "workspace.set_auto_title", params: [
+                    "probe": true,
+                    "workspace_id": workspace.id.uuidString
+                ])
+                let result = try #require(envelope["result"] as? [String: Any])
+                #expect(result["workspace_user_owned"] as? Bool == false)
+
+                let applyEnvelope = try call(method: "workspace.set_auto_title", params: [
+                    "workspace_id": workspace.id.uuidString,
+                    "title": "Fix workspace titles"
+                ])
+                let applyResult = try #require(applyEnvelope["result"] as? [String: Any])
+                #expect(applyResult["workspace_applied"] as? Bool == true)
+                #expect(workspace.title == "Fix workspace titles")
+                #expect(workspace.effectiveCustomTitleSource == .auto)
+            }
+        }
+    }
+
     @Test func panelOnlyIfMultipleSuppressesSinglePanelWorkspace() throws {
         try withAutoNamingSetting(true) {
             try withManager { _, workspace in

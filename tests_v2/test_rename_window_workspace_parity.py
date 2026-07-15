@@ -54,12 +54,19 @@ def _run_cli(cli: str, args: List[str], env_overrides: Optional[Dict[str, str]] 
     return proc.stdout
 
 
-def _workspace_title(c: bmux, workspace_id: str) -> str:
+def _workspace_row(c: bmux, workspace_id: str) -> Dict[str, object]:
     payload = c._call("workspace.list") or {}
     for row in payload.get("workspaces") or []:
         if str(row.get("id") or "") == workspace_id:
-            return str(row.get("title") or "")
+            return row
     raise bmuxError(f"workspace.list missing workspace {workspace_id}: {payload}")
+
+
+def _assert_workspace_custom_title(c: bmux, workspace_id: str, expected: str, reason: str) -> None:
+    row = _workspace_row(c, workspace_id)
+    _must(str(row.get("title") or "") == expected, f"{reason}: workspace title mismatch: {row}")
+    _must(str(row.get("custom_title") or "") == expected, f"{reason}: workspace custom_title mismatch: {row}")
+    _must(bool(row.get("has_custom_title")) is True, f"{reason}: workspace should report has_custom_title: {row}")
 
 
 def main() -> int:
@@ -74,54 +81,61 @@ def main() -> int:
         created = c._call("workspace.create") or {}
         ws_id = str(created.get("workspace_id") or "")
         _must(bool(ws_id), f"workspace.create returned no workspace_id: {created}")
-        c._call("workspace.select", {"workspace_id": ws_id})
+        try:
+            c._call("workspace.select", {"workspace_id": ws_id})
 
-        api_title = f"tmux-api-{stamp}"
-        c.rename_workspace(api_title, workspace=ws_id)
-        _must(_workspace_title(c, ws_id) == api_title, "workspace.rename API did not update workspace title")
+            api_title = f"tmux-api-{stamp}"
+            c.rename_workspace(api_title, workspace=ws_id)
+            _assert_workspace_custom_title(c, ws_id, api_title, "workspace.rename API")
 
-        cli_title = f"tmux cli {stamp}"
-        _run_cli(cli, ["rename-workspace", "--workspace", ws_id, cli_title])
-        _must(_workspace_title(c, ws_id) == cli_title, "bmux rename-workspace did not update workspace title")
+            cli_title = f"tmux cli {stamp}"
+            _run_cli(cli, ["rename-workspace", "--workspace", ws_id, cli_title])
+            _assert_workspace_custom_title(c, ws_id, cli_title, "bmux rename-workspace")
 
-        alias_title = f"tmux alias {stamp}"
-        _run_cli(cli, ["rename-window", "--workspace", ws_id, alias_title])
-        _must(_workspace_title(c, ws_id) == alias_title, "bmux rename-window did not update workspace title")
+            alias_title = f"tmux alias {stamp}"
+            _run_cli(cli, ["rename-window", "--workspace", ws_id, alias_title])
+            _assert_workspace_custom_title(c, ws_id, alias_title, "bmux rename-window")
 
-        current_title = f"tmux current {stamp}"
-        _run_cli(cli, ["rename-window", current_title])
-        _must(
-            _workspace_title(c, ws_id) == current_title,
-            "bmux rename-window without --workspace should target current workspace",
-        )
+            current_title = f"tmux current {stamp}"
+            _run_cli(cli, ["rename-window", current_title])
+            _assert_workspace_custom_title(
+                c,
+                ws_id,
+                current_title,
+                "bmux rename-window without --workspace should target current workspace",
+            )
 
-        env_title = f"tmux env {stamp}"
-        _run_cli(
-            cli,
-            ["rename-workspace", env_title],
-            env_overrides={"BMUX_WORKSPACE_ID": ws_id},
-        )
-        _must(
-            _workspace_title(c, ws_id) == env_title,
-            "bmux rename-workspace should default to BMUX_WORKSPACE_ID",
-        )
+            env_title = f"tmux env {stamp}"
+            _run_cli(
+                cli,
+                ["rename-workspace", env_title],
+                env_overrides={"BMUX_WORKSPACE_ID": ws_id},
+            )
+            _assert_workspace_custom_title(
+                c,
+                ws_id,
+                env_title,
+                "bmux rename-workspace should default to BMUX_WORKSPACE_ID",
+            )
 
-        env = dict(os.environ)
-        env.pop("BMUX_WORKSPACE_ID", None)
-        env.pop("BMUX_SURFACE_ID", None)
-        invalid = subprocess.run(
-            [cli, "--socket", SOCKET_PATH, "rename-window", "--workspace", ws_id],
-            capture_output=True,
-            text=True,
-            check=False,
-            env=env,
-        )
-        invalid_output = f"{invalid.stdout}\n{invalid.stderr}"
-        _must(invalid.returncode != 0, "Expected rename-window without title to fail")
-        _must(
-            "rename-window requires a title" in invalid_output,
-            f"Unexpected error for rename-window without title: {invalid_output!r}",
-        )
+            env = dict(os.environ)
+            env.pop("BMUX_WORKSPACE_ID", None)
+            env.pop("BMUX_SURFACE_ID", None)
+            invalid = subprocess.run(
+                [cli, "--socket", SOCKET_PATH, "rename-window", "--workspace", ws_id],
+                capture_output=True,
+                text=True,
+                check=False,
+                env=env,
+            )
+            invalid_output = f"{invalid.stdout}\n{invalid.stderr}"
+            _must(invalid.returncode != 0, "Expected rename-window without title to fail")
+            _must(
+                "rename-window requires a title" in invalid_output,
+                f"Unexpected error for rename-window without title: {invalid_output!r}",
+            )
+        finally:
+            c.close_workspace(ws_id)
 
     print("PASS: tmux rename-window parity works via workspace.rename and CLI aliases")
     return 0

@@ -84,6 +84,46 @@ import Testing
         #expect(workspace.customTitle == "Carried Title")
     }
 
+    @Test func generatedAgentSeedTitleIsAutoReplaceableEvenWithUserProvenance() {
+        let workspace = Workspace(
+            title: "bmux (Codex)",
+            workingDirectory: "/Users/example/repos/bmux"
+        )
+        workspace.setCustomTitle("bmux (Codex)")
+
+        #expect(workspace.effectiveCustomTitleSource == .auto)
+        #expect(workspace.setCustomTitle("Fix workspace titles", source: .auto))
+        #expect(workspace.title == "Fix workspace titles")
+        #expect(workspace.customTitle == "Fix workspace titles")
+        #expect(workspace.customTitleSource == .auto)
+    }
+
+    @Test func generatedAgentSeedTitleIsAutoReplaceableWithoutRecordedProvenance() {
+        let workspace = Workspace(
+            title: "bmux (Codex)",
+            workingDirectory: "/Users/example/repos/bmux"
+        )
+        workspace.customTitle = "bmux (Codex)"
+
+        #expect(workspace.effectiveCustomTitleSource == .auto)
+        #expect(workspace.setCustomTitle("Fix workspace titles", source: .auto))
+        #expect(workspace.title == "Fix workspace titles")
+        #expect(workspace.customTitle == "Fix workspace titles")
+        #expect(workspace.customTitleSource == .auto)
+    }
+
+    @Test func arbitraryAgentLookingUserTitleStillBlocksAutoWrite() {
+        let workspace = Workspace(
+            title: "Personal (Codex)",
+            workingDirectory: "/Users/example/repos/bmux"
+        )
+        workspace.setCustomTitle("Personal (Codex)")
+
+        #expect(workspace.effectiveCustomTitleSource == .user)
+        #expect(!workspace.setCustomTitle("Fix workspace titles", source: .auto))
+        #expect(workspace.title == "Personal (Codex)")
+    }
+
     // MARK: - Panel titles
 
     @Test func panelProvenanceMirrorsWorkspaceRules() throws {
