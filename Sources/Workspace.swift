@@ -4314,7 +4314,31 @@ final class Workspace: Identifiable, ObservableObject {
     /// `nil` when no custom title is set; `.user` when a title exists but
     /// provenance was never recorded (pre-provenance snapshots, carried moves).
     var effectiveCustomTitleSource: CustomTitleSource? {
-        hasCustomTitle ? (customTitleSource ?? .user) : nil
+        guard hasCustomTitle else { return nil }
+        if isAutoReplaceableAgentSeedTitle {
+            return .auto
+        }
+        return customTitleSource ?? .user
+    }
+
+    /// App-generated starter titles such as `bmux (Codex)` should not block the
+    /// auto-naming engine. Older builds stored them as user custom titles, so
+    /// recognize the shape from the workspace directory and known agent names.
+    private var isAutoReplaceableAgentSeedTitle: Bool {
+        guard let customTitle = customTitle?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !customTitle.isEmpty else {
+            return false
+        }
+        return Self.autoReplaceableAgentSeedTitles(forDirectory: currentDirectory)
+            .contains(customTitle)
+    }
+
+    private static func autoReplaceableAgentSeedTitles(forDirectory directory: String) -> Set<String> {
+        let directoryName = (directory.trimmingCharacters(in: .whitespacesAndNewlines) as NSString)
+            .lastPathComponent
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !directoryName.isEmpty else { return [] }
+        return Set(AgentSessionProviderID.allCases.map { "\(directoryName) (\($0.displayName))" })
     }
 
     var hasCustomDescription: Bool {
@@ -4373,7 +4397,7 @@ final class Workspace: Identifiable, ObservableObject {
         let trimmed = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if source == .auto {
             guard !trimmed.isEmpty else { return false }
-            if hasCustomTitle, (customTitleSource ?? .user) == .user { return false }
+            if hasCustomTitle, effectiveCustomTitleSource == .user { return false }
         }
         if trimmed.isEmpty {
             customTitle = nil
