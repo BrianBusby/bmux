@@ -84,6 +84,47 @@ struct ContextEfficiencyStoreTests {
     }
 
     @Test
+    func replacesPreviouslyImportedSourceRowsWhenRolloutFileShrinks() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let databaseURL = directory.appendingPathComponent("context-efficiency.sqlite")
+        let rolloutURL = directory.appendingPathComponent("rollout-thread-a.jsonl")
+        try Data(initialRollout.utf8).write(to: rolloutURL)
+
+        let store = try ContextEfficiencyStore(databaseURL: databaseURL)
+        _ = try await store.importRollout(at: rolloutURL, fallbackThreadID: "thread-a")
+
+        try FileManager.default.removeItem(at: rolloutURL)
+        try Data(replacementRollout.utf8).write(to: rolloutURL)
+
+        let result = try await store.importRollout(at: rolloutURL, fallbackThreadID: "thread-b")
+        #expect(result.resetCursor)
+        #expect(result.lineCount == 1)
+        #expect(result.modelCallCount == 1)
+        #expect(result.cursor.lineNumber == 1)
+
+        let staleInspection = try await store.inspectThread("codex:thread-a")
+        #expect(staleInspection.thread == nil)
+        #expect(staleInspection.modelCalls.isEmpty)
+        #expect(staleInspection.tokenTelemetryEvents.isEmpty)
+        #expect(staleInspection.parserErrors.isEmpty)
+
+        let replacementInspection = try await store.inspectThread("codex:thread-b")
+        #expect(replacementInspection.thread?.cumulativeTotalTokens == 42)
+        #expect(replacementInspection.modelCalls.count == 1)
+
+        let staleDaySummary = try await store.summarizeDay("2026-07-13")
+        #expect(staleDaySummary.threadCount == 0)
+        #expect(staleDaySummary.modelCallCount == 0)
+        #expect(staleDaySummary.parserErrorCount == 0)
+
+        let replacementDaySummary = try await store.summarizeDay("2026-07-15")
+        #expect(replacementDaySummary.threadCount == 1)
+        #expect(replacementDaySummary.modelCallCount == 1)
+        #expect(replacementDaySummary.totalTokens == 42)
+    }
+
+    @Test
     func recordsInvalidUTF8LinesAsParserErrorsAndContinuesImporting() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -242,6 +283,12 @@ struct ContextEfficiencyStoreTests {
     private var appendedTelemetry: String {
         """
         {"type":"event_msg","timestamp":"2026-07-13T12:01:00Z","payload":{"type":"token_usage","threadID":"thread-a","tokenUsage":{"inputTokens":120500,"cachedInputTokens":100500,"outputTokens":1000,"totalTokens":121500}}}
+        """ + "\n"
+    }
+
+    private var replacementRollout: String {
+        """
+        {"type":"event_msg","timestamp":"2026-07-15T12:00:00Z","payload":{"type":"token_usage","threadID":"thread-b","tokenUsage":{"inputTokens":40,"cachedInputTokens":30,"outputTokens":2,"totalTokens":42}}}
         """ + "\n"
     }
 
