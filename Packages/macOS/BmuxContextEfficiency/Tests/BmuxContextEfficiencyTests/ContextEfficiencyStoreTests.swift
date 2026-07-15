@@ -84,6 +84,34 @@ struct ContextEfficiencyStoreTests {
     }
 
     @Test
+    func recordsInvalidUTF8LinesAsParserErrorsAndContinuesImporting() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let databaseURL = directory.appendingPathComponent("context-efficiency.sqlite")
+        let rolloutURL = directory.appendingPathComponent("rollout-thread-a.jsonl")
+        var rolloutData = Data()
+        rolloutData.append(Data(utf8BeforeInvalidLine.utf8))
+        rolloutData.append(contentsOf: [0xff, 0xfe, 0x0a])
+        rolloutData.append(Data(utf8AfterInvalidLine.utf8))
+        try rolloutData.write(to: rolloutURL)
+
+        let store = try ContextEfficiencyStore(databaseURL: databaseURL)
+        let result = try await store.importRollout(at: rolloutURL, fallbackThreadID: "thread-a")
+
+        #expect(result.lineCount == 3)
+        #expect(result.rolloutEventCount == 3)
+        #expect(result.modelCallCount == 2)
+        #expect(result.parserErrorCount == 1)
+        #expect(result.cursor.lineNumber == 3)
+
+        let inspection = try await store.inspectThread("codex:thread-a")
+        #expect(inspection.modelCalls.count == 2)
+        #expect(inspection.parserErrors.count == 1)
+        #expect(inspection.parserErrors.first?.message == "line is not UTF-8")
+        #expect(inspection.parserErrors.first?.sourceReference.lineNumber == 2)
+    }
+
+    @Test
     func encodedReportsExposeCompactFactsAndSourceReferences() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -212,6 +240,18 @@ struct ContextEfficiencyStoreTests {
     }
 
     private var appendedTelemetry: String {
+        """
+        {"type":"event_msg","timestamp":"2026-07-13T12:01:00Z","payload":{"type":"token_usage","threadID":"thread-a","tokenUsage":{"inputTokens":120500,"cachedInputTokens":100500,"outputTokens":1000,"totalTokens":121500}}}
+        """ + "\n"
+    }
+
+    private var utf8BeforeInvalidLine: String {
+        """
+        {"type":"event_msg","timestamp":"2026-07-13T12:00:00Z","payload":{"type":"token_usage","threadID":"thread-a","tokenUsage":{"inputTokens":120000,"cachedInputTokens":100000,"outputTokens":800,"totalTokens":120800}}}
+        """ + "\n"
+    }
+
+    private var utf8AfterInvalidLine: String {
         """
         {"type":"event_msg","timestamp":"2026-07-13T12:01:00Z","payload":{"type":"token_usage","threadID":"thread-a","tokenUsage":{"inputTokens":120500,"cachedInputTokens":100500,"outputTokens":1000,"totalTokens":121500}}}
         """ + "\n"
