@@ -44,11 +44,13 @@ Expected branch:
 
 - `context-efficiency-wip-20260715`
 
-Latest known pushed HEAD:
+Latest completed implementation HEAD:
 
 - `3286c182d559311ec50a72b149ba08eac68302f2`
 
-Latest completed slice:
+The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
+
+Latest completed implementation slice:
 
 - `3e7de1343 Add rollout truncation import regression`
 - `3286c182d Reset rollout source imports after truncation`
@@ -125,7 +127,7 @@ Use the bundled CLI from that rebuilt app:
 
 At the end of every context-efficiency slice:
 
-1. Update `Latest known pushed HEAD`.
+1. Update `Latest completed implementation HEAD` when the slice changes implementation behavior.
 2. Record the completed commit or commits.
 3. Summarize behavior changes in facts, not intentions.
 4. List changed files.
