@@ -994,7 +994,8 @@
         "showPullRequests": {
           "type": "boolean",
           "default": true,
-          "description": "Show pull request metadata in the sidebar."
+          "deprecated": true,
+          "description": "Deprecated and ignored. Pull request metadata is shown automatically when a workspace has pull request context."
         },
         "watchGitStatus": {
           "type": "boolean",
@@ -1499,6 +1500,7 @@
               "reloadConfiguration",
               "showHideAllWindows",
               "globalSearch",
+              "pushToTalkVoiceInput",
               "newWindow",
               "closeWindow",
               "toggleFullScreen",

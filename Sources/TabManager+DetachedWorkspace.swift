@@ -75,7 +75,7 @@ extension TabManager {
             applyCreationChromeInheritance(to: newWorkspace, from: sourceWorkspace ?? capturedTabs.first)
             newWorkspace.owningTabManager = self
             if title != nil {
-                newWorkspace.setCustomTitle(title)
+                newWorkspace.setCustomTitle(title, source: .auto)
             }
             wireClosedBrowserTracking(for: newWorkspace)
 

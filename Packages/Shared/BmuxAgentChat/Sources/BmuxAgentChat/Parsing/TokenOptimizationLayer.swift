@@ -80,7 +80,7 @@ public struct TokenOptimizationLayer: Sendable {
             switch optimization.kind {
             case .tests, .packageInstall:
                 return optimization
-            case .git, .typescript, .search, .generic:
+            case .build, .git, .typescript, .search, .generic:
                 return rawOptimization(rawOutput, kind: optimization.kind)
             }
         case .balanced, .aggressive:

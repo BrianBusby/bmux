@@ -66,6 +66,91 @@ FAKE_WORKSPACE_ID = "11111111-1111-1111-1111-111111111111"
 FAKE_SURFACE_ID = "22222222-2222-2222-2222-222222222222"
 
 
+def check_wrapper_inject_args_chains_custom_auto_title_hook_with_bmux_env(
+    cli_path: str,
+    root: Path,
+) -> None:
+    codex_home = root / "codex-home-wrapper-custom-title"
+    codex_home.mkdir(exist_ok=True)
+    home = root / "home-wrapper-custom-title"
+    home.mkdir(exist_ok=True)
+    legacy_custom_title_command = (
+        'cmux_cli="${CMUX_BUNDLED_CLI_PATH:-}"; '
+        'if [ -z "$cmux_cli" ]; then cmux_cli="$(command -v cmux)"; fi; '
+        'cmux_two_line_title="$HOME/.codex/scripts/cmux_two_line_title.mjs"; '
+        'if [ -n "$CMUX_WORKSPACE_ID" ] && [ -n "$CMUX_SOCKET_PATH" ] '
+        '&& [ "$CMUX_CODEX_HOOKS_DISABLED" != "1" ] && [ -n "$cmux_cli" ]; then '
+        '"$cmux_cli" --socket "$CMUX_SOCKET_PATH" rpc workspace.set_auto_title "{}"; '
+        'fi; echo "{}"'
+    )
+    (codex_home / "hooks.json").write_text(
+        json.dumps(
+            {
+                "hooks": {
+                    "UserPromptSubmit": [
+                        {
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": 'printf "third-party unrelated"',
+                                    "timeout": 5,
+                                }
+                            ]
+                        },
+                        {
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": legacy_custom_title_command,
+                                    "timeout": 5,
+                                }
+                            ]
+                        },
+                    ],
+                    "Stop": [
+                        {
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": legacy_custom_title_command,
+                                    "timeout": 5,
+                                }
+                            ]
+                        }
+                    ],
+                }
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    env = os.environ.copy()
+    env["CODEX_HOME"] = str(codex_home)
+    env["HOME"] = str(home)
+    args = codex_wrapper_inject_args(cli_path, env)
+    if "--dangerously-bypass-hook-trust" not in args:
+        raise AssertionError(f"wrapper injection should still enable Codex hook trust bypass: {args!r}")
+
+    for event_name, subcommand in [("UserPromptSubmit", "prompt-submit"), ("Stop", "stop")]:
+        config = codex_wrapper_hook_config(args, event_name)
+        if f"bmux-codex-hook-{subcommand}.sh" not in config and f"hooks codex {subcommand}" not in config:
+            raise AssertionError(f"wrapper did not include bmux's {event_name} hook: {config!r}")
+        for expected in [
+            "workspace.set_auto_title",
+            "BMUX_WORKSPACE_ID",
+            "BMUX_SOCKET_PATH",
+            "BMUX_CODEX_HOOKS_DISABLED",
+            "BMUX_CODEX_HOOK_BMUX_BIN",
+            "command -v bmux",
+        ]:
+            if expected not in config:
+                raise AssertionError(f"wrapper did not preserve normalized auto-title hook {expected}: {config!r}")
+        for forbidden in ["CMUX_", "command -v cmux", "third-party unrelated"]:
+            if forbidden in config:
+                raise AssertionError(f"wrapper preserved unsafe or legacy hook content {forbidden}: {config!r}")
+
+
 def _toml_has_line(content: str, line: str) -> bool:
     return any(raw.strip() == line for raw in content.splitlines())
 
@@ -208,6 +293,7 @@ def assert_monitor_remains_present(session_id: str, *, duration: float) -> None:
 
 
 def test_codex_stop_reaps_transcript_monitor(cli_path: str, root: Path) -> None:
+    check_wrapper_inject_args_chains_custom_auto_title_hook_with_bmux_env(cli_path, root)
     socket_path = root / "bmux-monitor.sock"
     state_dir = root / "hook-state"
     transcript_path = root / "codex-session.jsonl"
@@ -503,6 +589,18 @@ def run_feed_hook_optional_frame(
     decision: dict | None,
     source: str = "codex",
 ) -> tuple[dict, dict | None]:
+    stdout, frames = run_feed_hook_frames(cli_path, socket_path, payload, decision, source)
+    frame = next((frame for frame in frames if frame.get("method") == "feed.push"), None)
+    return stdout, frame
+
+
+def run_feed_hook_frames(
+    cli_path: str,
+    socket_path: Path,
+    payload: dict,
+    decision: dict | None,
+    source: str = "codex",
+) -> tuple[dict, list[dict]]:
     env = os.environ.copy()
     env["BMUX_SURFACE_ID"] = FAKE_SURFACE_ID
     env["BMUX_WORKSPACE_ID"] = FAKE_WORKSPACE_ID
@@ -531,7 +629,49 @@ def run_feed_hook_optional_frame(
                 f"hooks feed failed exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}"
             )
         stdout = json.loads(result.stdout.strip() or "{}")
-        return stdout, fake.frames[0] if fake.frames else None
+        return stdout, fake.frames
+
+
+# Feed hook helpers return the feed frame separately from status side effects.
+def check_pre_tool_use_reconciles_agent_visible_state_to_running(cli_path, root):
+    for source, status_key in [("codex", "codex"), ("claude", "claude_code")]:
+        socket_path = root / ("bmux-" + source + "-pretool-state.sock")
+        stdout, frames = run_feed_hook_frames(
+            cli_path,
+            socket_path,
+            {
+                "session_id": source + "-session",
+                "turn_id": "turn-running-recovery",
+                "cwd": "/tmp/project",
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Bash",
+                "tool_input": {"command": "printf hi"},
+            },
+            None,
+            source=source,
+        )
+        if stdout != {}:
+            raise AssertionError(source + " PreToolUse telemetry should not emit a decision: " + repr(stdout))
+        raw_commands = [frame.get("raw", "") for frame in frames]
+        tab_and_panel = "--tab=" + FAKE_WORKSPACE_ID + " --panel=" + FAKE_SURFACE_ID
+        if not any(
+            command.startswith("set_agent_lifecycle " + status_key + " running ")
+            and tab_and_panel in command
+            for command in raw_commands
+        ):
+            raise AssertionError(source + " PreToolUse did not mark lifecycle running: " + repr(frames))
+        if not any(
+            command.startswith("clear_notifications ")
+            and tab_and_panel in command
+            for command in raw_commands
+        ):
+            raise AssertionError(source + " PreToolUse did not clear stale notifications: " + repr(frames))
+        if not any(
+            command.startswith("set_status " + status_key + " Running --icon=bolt.fill --color=#4C8DFF ")
+            and tab_and_panel in command
+            for command in raw_commands
+        ):
+            raise AssertionError(source + " PreToolUse did not replace visible status with Running: " + repr(frames))
 
 
 def run_feed_hook(
@@ -646,6 +786,14 @@ def bmux_hook_command_matches(command: str, expected_body: str) -> bool:
 
 def normalized_bmux_hook_command(command: str) -> str:
     return bmux_hook_command_body(command)
+
+
+def decoded_agent_token_proxy_cwd(command: str) -> str | None:
+    marker = "--cwd-hex '"
+    if marker not in command:
+        return None
+    encoded = command.split(marker, 1)[1].split("'", 1)[0]
+    return bytes.fromhex(encoded).decode("utf-8")
 
 
 def bmux_codex_lifecycle_command_matches(command: str, subcommand: str) -> bool:
@@ -771,6 +919,34 @@ def codex_hook_commands(hooks: dict) -> list[str]:
                 if isinstance(command, str):
                     commands.append(command)
     return commands
+
+
+def codex_wrapper_inject_args(cli_path: str, env: dict[str, str]) -> list[str]:
+    result = subprocess.run(
+        [cli_path, "hooks", "codex", "inject-args"],
+        capture_output=True,
+        check=False,
+        env=env,
+        timeout=20,
+    )
+    if result.returncode != 0:
+        stdout = result.stdout.decode("utf-8", errors="replace")
+        stderr = result.stderr.decode("utf-8", errors="replace")
+        raise AssertionError(
+            f"hooks codex inject-args failed exit={result.returncode}; stdout={stdout!r}; stderr={stderr!r}"
+        )
+    chunks = result.stdout.split(bytes([0]))
+    if chunks and chunks[-1] == b"":
+        chunks = chunks[:-1]
+    return [chunk.decode("utf-8") for chunk in chunks]
+
+
+def codex_wrapper_hook_config(args: list[str], event_name: str) -> str:
+    prefix = f"hooks.{event_name}="
+    for index, arg in enumerate(args):
+        if arg == "-c" and index + 1 < len(args) and args[index + 1].startswith(prefix):
+            return args[index + 1]
+    raise AssertionError(f"missing wrapper hook config for {event_name}: {args!r}")
 
 
 def test_install_adds_codex_permission_request_hook(cli_path: str, root: Path) -> None:
@@ -2103,6 +2279,7 @@ def test_codex_permission_request_is_nonblocking_telemetry(cli_path: str, root: 
         "tool_input": {"command": "printf hi"},
     }
 
+    check_pre_tool_use_reconciles_agent_visible_state_to_running(cli_path, root)
     stdout, frame = run_feed_hook(
         cli_path,
         socket_path,
@@ -2163,14 +2340,85 @@ def test_codex_pre_tool_use_is_telemetry_not_actionable(cli_path: str, root: Pat
         raise AssertionError(f"wrong PreToolUse event: {frame!r}")
 
 
+def test_codex_wrapper_pre_tool_use_reconciles_agent_visible_state_to_running(cli_path: str, root: Path) -> None:
+    socket_path = root / "bmux-codex-wrapper-pretool-state.sock"
+    state_dir = root / "hook-state-wrapper-pretool"
+    state_dir.mkdir()
+    env = os.environ.copy()
+    env["BMUX_SOCKET_PATH"] = str(socket_path)
+    env["BMUX_SURFACE_ID"] = FAKE_SURFACE_ID
+    env["BMUX_WORKSPACE_ID"] = FAKE_WORKSPACE_ID
+    env["BMUX_AGENT_HOOK_STATE_DIR"] = str(state_dir)
+    payload = {
+        "session_id": "codex-wrapper-session",
+        "turn_id": "turn-running-recovery",
+        "cwd": "/tmp/project",
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "printf hi"},
+    }
+
+    with FakeBmuxSocket(socket_path, None) as fake:
+        result = subprocess.run(
+            [cli_path, "--socket", str(socket_path), "hooks", "codex", "pre-tool-use"],
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            check=False,
+            env=env,
+            timeout=10,
+        )
+        if result.returncode != 0:
+            raise AssertionError(
+                f"hooks codex pre-tool-use failed exit={result.returncode}\n"
+                f"stdout={result.stdout}\nstderr={result.stderr}"
+            )
+        stdout = json.loads(result.stdout.strip() or "{}")
+        if stdout != {}:
+            raise AssertionError(f"Codex wrapper PreToolUse should emit empty hook output: {stdout!r}")
+
+        feed_frame = next((frame for frame in fake.frames if frame.get("method") == "feed.push"), None)
+        if feed_frame is None:
+            raise AssertionError(f"Codex wrapper PreToolUse did not send feed telemetry: {fake.frames!r}")
+        params = feed_frame["params"]
+        if params.get("wait_timeout_seconds") != 0:
+            raise AssertionError(f"Codex wrapper PreToolUse should not wait for Feed reply: {feed_frame!r}")
+        event = params["event"]
+        if event.get("hook_event_name") != "PreToolUse" or event.get("_source") != "codex":
+            raise AssertionError(f"wrong wrapper PreToolUse feed event: {event!r}")
+
+        raw_commands = [frame.get("raw", "") for frame in fake.frames]
+        tab_and_panel = "--tab=" + FAKE_WORKSPACE_ID + " --panel=" + FAKE_SURFACE_ID
+        if not any(
+            command.startswith("set_agent_lifecycle codex running ")
+            and tab_and_panel in command
+            for command in raw_commands
+        ):
+            raise AssertionError(f"Codex wrapper PreToolUse did not mark lifecycle running: {fake.frames!r}")
+        if not any(
+            command.startswith("clear_notifications ")
+            and tab_and_panel in command
+            for command in raw_commands
+        ):
+            raise AssertionError(f"Codex wrapper PreToolUse did not clear stale notifications: {fake.frames!r}")
+        if not any(
+            command.startswith("set_status codex Running --icon=bolt.fill --color=#4C8DFF ")
+            and tab_and_panel in command
+            for command in raw_commands
+        ):
+            raise AssertionError(f"Codex wrapper PreToolUse did not replace visible status with Running: {fake.frames!r}")
+
+
 def test_codex_optimize_pre_tool_use_rewrites_shell_command(cli_path: str, root: Path) -> None:
+    tool_workdir = root / "package"
+    tool_workdir.mkdir()
     payload = {
         "session_id": "codex-session",
         "turn_id": "turn-token-opt",
         "cwd": str(root),
         "hook_event_name": "PreToolUse",
         "tool_name": "Bash",
-        "tool_input": {"command": "rg token Sources"},
+        "tool_input": {"command": "rg token Sources", "workdir": str(tool_workdir)},
     }
     env = os.environ.copy()
     env["BMUX_SURFACE_ID"] = FAKE_SURFACE_ID
@@ -2204,7 +2452,9 @@ def test_codex_optimize_pre_tool_use_rewrites_shell_command(cli_path: str, root:
     if not isinstance(command, str) or "agent-token-proxy" not in command:
         raise AssertionError(f"expected proxy command, got {command!r}")
     if "rg token Sources" in command:
-        raise AssertionError(f"original command should be base64-wrapped, got {command!r}")
+        raise AssertionError(f"original command should be hex-wrapped, got {command!r}")
+    if decoded_agent_token_proxy_cwd(command) != str(tool_workdir):
+        raise AssertionError(f"proxy should use tool workdir, got command {command!r}")
 
 
 def test_codex_optimize_pre_tool_use_ignores_ineligible_command(cli_path: str, root: Path) -> None:
@@ -2238,13 +2488,59 @@ def test_codex_optimize_pre_tool_use_ignores_ineligible_command(cli_path: str, r
         raise AssertionError(f"ineligible command should not be rewritten: {stdout!r}")
 
 
+def test_codex_optimize_pre_tool_use_rewrites_build_command(cli_path: str, root: Path) -> None:
+    payload = {
+        "session_id": "codex-session",
+        "turn_id": "turn-token-opt-build",
+        "cwd": str(root),
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "swift build"},
+    }
+    env = os.environ.copy()
+    env["BMUX_SURFACE_ID"] = FAKE_SURFACE_ID
+    env["BMUX_BUNDLED_CLI_PATH"] = cli_path
+
+    result = subprocess.run(
+        [cli_path, "hooks", "codex", BMUX_CODEX_OPTIMIZER_HOOK_SUBCOMMAND],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+        timeout=10,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            f"optimize-pre-tool-use failed exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}"
+        )
+    stdout = json.loads(result.stdout)
+    hook_output = stdout.get("hookSpecificOutput")
+    if not isinstance(hook_output, dict):
+        raise AssertionError(f"missing hookSpecificOutput: {stdout!r}")
+    updated_input = hook_output.get("updatedInput")
+    if not isinstance(updated_input, dict):
+        raise AssertionError(f"missing updatedInput: {hook_output!r}")
+    command = updated_input.get("command")
+    if not isinstance(command, str) or "agent-token-proxy" not in command:
+        raise AssertionError(f"expected proxy command for build, got {command!r}")
+    if "swift build" in command:
+        raise AssertionError(f"original build command should be hex-wrapped, got {command!r}")
+
+
 def test_claude_optimize_pre_tool_use_rewrites_bash_command(cli_path: str, root: Path) -> None:
+    tool_workdir = root / "package"
+    tool_workdir.mkdir(exist_ok=True)
     payload = {
         "session_id": "claude-session",
         "cwd": str(root),
         "hook_event_name": "PreToolUse",
         "tool_name": "Bash",
-        "tool_input": {"command": "rg token Sources", "description": "Search token references"},
+        "tool_input": {
+            "command": "rg token Sources",
+            "description": "Search token references",
+            "workdir": str(tool_workdir),
+        },
     }
     env = os.environ.copy()
     env["BMUX_SURFACE_ID"] = FAKE_SURFACE_ID
@@ -2281,6 +2577,8 @@ def test_claude_optimize_pre_tool_use_rewrites_bash_command(cli_path: str, root:
         raise AssertionError(f"expected proxy command, got {command!r}")
     if "rg token Sources" in command:
         raise AssertionError(f"original command should be hex-wrapped, got {command!r}")
+    if decoded_agent_token_proxy_cwd(command) != str(tool_workdir):
+        raise AssertionError(f"proxy should use tool workdir, got command {command!r}")
 
 
 def test_claude_optimize_pre_tool_use_ignores_ineligible_command(cli_path: str, root: Path) -> None:
@@ -2355,6 +2653,62 @@ def test_agent_token_proxy_optimizes_search_output(cli_path: str, root: Path) ->
         raise AssertionError(f"expected omitted-match count, got stdout={result.stdout!r}")
     if "Sources/File8.swift" in result.stdout:
         raise AssertionError(f"optimized output should omit later raw lines, got stdout={result.stdout!r}")
+    raw_hint = next(
+        (line for line in result.stdout.splitlines() if line.startswith("Raw output: bmux agent-token-output show ")),
+        None,
+    )
+    if raw_hint is None:
+        raise AssertionError(f"optimized output should include raw-output recovery hint, got stdout={result.stdout!r}")
+    raw_ref = raw_hint.rsplit(" ", 1)[-1]
+
+    raw_result = subprocess.run(
+        [cli_path, "agent-token-output", "show", raw_ref],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=10,
+    )
+    if raw_result.returncode != 0:
+        raise AssertionError(
+            f"agent-token-output show failed exit={raw_result.returncode}\n"
+            f"stdout={raw_result.stdout}\nstderr={raw_result.stderr}"
+        )
+    if "Sources/File8.swift:8:match line 8" not in raw_result.stdout:
+        raise AssertionError(f"raw output retrieval should include omitted lines, got {raw_result.stdout!r}")
+
+    json_result = subprocess.run(
+        [cli_path, "--json", "agent-token-output", "show", raw_ref],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=10,
+    )
+    if json_result.returncode != 0:
+        raise AssertionError(
+            f"agent-token-output show --json failed exit={json_result.returncode}\n"
+            f"stdout={json_result.stdout}\nstderr={json_result.stderr}"
+        )
+    raw_payload = json.loads(json_result.stdout)
+    if raw_payload.get("metadata", {}).get("raw_output_ref") != raw_ref:
+        raise AssertionError(f"json raw output ref mismatch: {raw_payload!r}")
+    if "Sources/File8.swift:8:match line 8" not in raw_payload.get("raw_output", ""):
+        raise AssertionError(f"json raw output should include omitted lines, got {raw_payload!r}")
+
+    local_json_result = subprocess.run(
+        [cli_path, "agent-token-output", "show", raw_ref, "--json"],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=10,
+    )
+    if local_json_result.returncode != 0:
+        raise AssertionError(
+            f"agent-token-output show <ref> --json failed exit={local_json_result.returncode}\n"
+            f"stdout={local_json_result.stdout}\nstderr={local_json_result.stderr}"
+        )
+    local_raw_payload = json.loads(local_json_result.stdout)
+    if local_raw_payload.get("metadata", {}).get("raw_output_ref") != raw_ref:
+        raise AssertionError(f"local json raw output ref mismatch: {local_raw_payload!r}")
 
 
 def test_agent_token_proxy_preserves_nonzero_exit_and_raw_output(cli_path: str, root: Path) -> None:
@@ -2735,8 +3089,10 @@ def main() -> int:
             test_codex_permission_request_is_nonblocking_telemetry(cli_path, root)
             test_codex_permission_decisions_do_not_block_approval_reviewer(cli_path, root)
             test_codex_pre_tool_use_is_telemetry_not_actionable(cli_path, root)
+            test_codex_wrapper_pre_tool_use_reconciles_agent_visible_state_to_running(cli_path, root)
             test_codex_optimize_pre_tool_use_rewrites_shell_command(cli_path, root)
             test_codex_optimize_pre_tool_use_ignores_ineligible_command(cli_path, root)
+            test_codex_optimize_pre_tool_use_rewrites_build_command(cli_path, root)
             test_claude_optimize_pre_tool_use_rewrites_bash_command(cli_path, root)
             test_claude_optimize_pre_tool_use_ignores_ineligible_command(cli_path, root)
             test_agent_token_proxy_optimizes_search_output(cli_path, root)

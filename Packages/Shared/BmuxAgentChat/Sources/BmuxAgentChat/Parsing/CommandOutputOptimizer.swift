@@ -4,6 +4,12 @@ struct CommandOutputOptimizer: Sendable {
     private let pathLimit = 6
     private let searchLineLimit = 5
     private let typescriptErrorLimitPerFile = 4
+    private let testFailureLineLimit = 80
+    private let testFailureHeadLineLimit = 3
+    private let testFailureTailLineLimit = 12
+    private let buildOutputLineLimit = 80
+    private let buildOutputHeadLineLimit = 3
+    private let buildOutputTailLineLimit = 12
 
     func optimize(
         command: String,
@@ -34,6 +40,10 @@ struct CommandOutputOptimizer: Sendable {
         }
         if isPackageInstallCommand(trimmedCommand),
            let optimized = optimizePackageInstallOutput(trimmedOutput) {
+            return optimized
+        }
+        if isBuildCommand(trimmedCommand),
+           let optimized = optimizeBuildOutput(trimmedOutput, exitCode: exitCode) {
             return optimized
         }
         if isSearchCommand(trimmedCommand),
@@ -90,6 +100,23 @@ struct CommandOutputOptimizer: Sendable {
             || lowercased.hasPrefix("bundle install ")
             || lowercased == "pod install"
             || lowercased.hasPrefix("pod install ")
+    }
+
+    private func isBuildCommand(_ command: String) -> Bool {
+        let lowercased = command.lowercased()
+        if lowercased.contains("swift build")
+            || lowercased.contains("swift package build")
+            || lowercased.contains("xcodebuild build")
+            || (lowercased.contains("xcodebuild") && lowercased.contains(" build"))
+            || lowercased.contains("cargo build")
+            || lowercased.contains("go build")
+            || lowercased.contains("npm run build")
+            || lowercased.contains("yarn build")
+            || lowercased.contains("bun run build")
+            || lowercased.contains("pnpm build") {
+            return true
+        }
+        return false
     }
 
     private func optimizeGitStatus(_ output: String) -> CommandOutputOptimization? {
@@ -178,7 +205,9 @@ struct CommandOutputOptimizer: Sendable {
     }
 
     private func optimizeTestOutput(_ output: String, exitCode: Int?) -> CommandOutputOptimization? {
-        guard exitCode == nil || exitCode == 0 else { return nil }
+        if let exitCode, exitCode != 0 {
+            return optimizeFailedTestOutput(output, exitCode: exitCode)
+        }
         let patterns: [Regex<(Substring, Substring, Substring, Substring)>] = [
             /Executed\s+(\d+)\s+tests?,\s+with\s+(\d+)\s+failures?.*?in\s+([0-9.]+)\s+seconds/,
             /(\d+)\s+tests?\s+passed.*?(\d+)\s+failed.*?Elapsed:\s+([0-9.]+)s/,
@@ -196,6 +225,91 @@ struct CommandOutputOptimizer: Sendable {
             )
         }
         return nil
+    }
+
+    private func optimizeFailedTestOutput(_ output: String, exitCode: Int) -> CommandOutputOptimization? {
+        let lines = output.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        guard lines.count > testFailureLineLimit || output.utf8.count > 8_000 else {
+            return nil
+        }
+
+        var selected = Set<Int>()
+        func include(_ index: Int) {
+            guard lines.indices.contains(index) else { return }
+            selected.insert(index)
+        }
+
+        var includedHead = 0
+        for index in lines.indices {
+            guard includedHead < testFailureHeadLineLimit else { break }
+            guard !lines[index].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
+            include(index)
+            includedHead += 1
+        }
+
+        for index in lines.indices where testFailureLineShouldBeKept(lines[index]) {
+            include(index - 1)
+            include(index)
+            include(index + 1)
+        }
+
+        var includedTail = 0
+        for index in lines.indices.reversed() {
+            guard includedTail < testFailureTailLineLimit else { break }
+            guard !lines[index].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
+            include(index)
+            includedTail += 1
+        }
+
+        let ordered = selected.sorted()
+        guard ordered.count < lines.count else { return nil }
+        let kept = Array(ordered.prefix(testFailureLineLimit))
+        let selectedOmitted = max(0, ordered.count - kept.count)
+        let rawOmitted = max(0, lines.count - kept.count)
+
+        var summary = [
+            "test failure summary",
+            "exit code: \(exitCode)",
+            "raw lines: \(lines.count)",
+            "selected diagnostics:"
+        ]
+        summary.append(contentsOf: kept.map { index in
+            "[line \(index + 1)] \(lines[index])"
+        })
+        if selectedOmitted > 0 {
+            summary.append("\(selectedOmitted) additional selected diagnostic \(selectedOmitted == 1 ? "line" : "lines") omitted")
+        }
+        summary.append("\(rawOmitted) raw output \(rawOmitted == 1 ? "line" : "lines") omitted")
+
+        return CommandOutputOptimization(
+            kind: .tests,
+            text: summary.joined(separator: "\n"),
+            wasOptimized: true,
+            omittedLineCount: rawOmitted
+        )
+    }
+
+    private func testFailureLineShouldBeKept(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        let lowercased = trimmed.lowercased()
+        if lowercased.contains("error:")
+            || lowercased.contains(" failure")
+            || lowercased.contains(" failed")
+            || lowercased.hasPrefix("fail ")
+            || lowercased.hasPrefix("fail:")
+            || lowercased.hasPrefix("failures:")
+            || lowercased.contains("xctassert")
+            || lowercased.contains("assertion failed")
+            || lowercased.contains("expectation failed")
+            || lowercased.contains("expected")
+            || lowercased.contains("received")
+            || lowercased.contains("actual")
+            || lowercased.hasPrefix("diff")
+            || lowercased.hasPrefix("\u{25cf}") {
+            return true
+        }
+        return trimmed.firstMatch(of: /(?:^|\s)[A-Za-z0-9_\/\.\-]+\.(?:swift|tsx?|jsx?|rb):\d+(?::\d+)?/) != nil
     }
 
     private func optimizeTypeScriptOutput(_ output: String) -> CommandOutputOptimization? {
@@ -288,6 +402,126 @@ struct CommandOutputOptimizer: Sendable {
             || lowercased.contains("audited ")
             || lowercased.contains("installed")
             || lowercased.contains("done")
+    }
+
+    private func optimizeBuildOutput(_ output: String, exitCode: Int?) -> CommandOutputOptimization? {
+        let lines = output.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        guard lines.count > buildOutputLineLimit || output.utf8.count > 8_000 else {
+            return nil
+        }
+
+        var selected = Set<Int>()
+        func include(_ index: Int) {
+            guard lines.indices.contains(index) else { return }
+            selected.insert(index)
+        }
+
+        var includedHead = 0
+        for index in lines.indices {
+            guard includedHead < buildOutputHeadLineLimit else { break }
+            guard !lines[index].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
+            include(index)
+            includedHead += 1
+        }
+
+        var seenDiagnosticIdentities = Set<String>()
+        var duplicateDiagnosticLineIndexes = Set<Int>()
+        for index in lines.indices where buildOutputLineShouldBeKept(lines[index]) {
+            if let identity = buildOutputDiagnosticIdentity(lines[index]),
+               !seenDiagnosticIdentities.insert(identity).inserted {
+                duplicateDiagnosticLineIndexes.insert(index)
+                continue
+            }
+            include(index - 1)
+            include(index)
+            include(index + 1)
+        }
+
+        var includedTail = 0
+        for index in lines.indices.reversed() {
+            guard includedTail < buildOutputTailLineLimit else { break }
+            guard !lines[index].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
+            include(index)
+            includedTail += 1
+        }
+
+        let ordered = selected.sorted()
+        guard ordered.count < lines.count || !duplicateDiagnosticLineIndexes.isEmpty else { return nil }
+        let kept = Array(ordered.prefix(buildOutputLineLimit))
+        let selectedOmitted = max(0, ordered.count - kept.count)
+        var selectedSummaryLines: [String] = []
+        selectedSummaryLines.reserveCapacity(kept.count)
+        for index in kept {
+            guard !duplicateDiagnosticLineIndexes.contains(index) else { continue }
+            selectedSummaryLines.append("[line \(index + 1)] \(lines[index])")
+        }
+        let rawOmitted = max(0, lines.count - selectedSummaryLines.count)
+
+        var summary = ["build output summary"]
+        if let exitCode {
+            summary.append("exit code: \(exitCode)")
+        }
+        summary.append("raw lines: \(lines.count)")
+        summary.append("selected diagnostics:")
+        summary.append(contentsOf: selectedSummaryLines)
+        if selectedOmitted > 0 {
+            summary.append("\(selectedOmitted) additional selected diagnostic \(selectedOmitted == 1 ? "line" : "lines") omitted")
+        }
+        let duplicateOmitted = duplicateDiagnosticLineIndexes.count
+        if duplicateOmitted > 0 {
+            summary.append("\(duplicateOmitted) duplicate diagnostic \(duplicateOmitted == 1 ? "line" : "lines") omitted")
+        }
+        summary.append("\(rawOmitted) raw output \(rawOmitted == 1 ? "line" : "lines") omitted")
+
+        return CommandOutputOptimization(
+            kind: .build,
+            text: summary.joined(separator: "\n"),
+            wasOptimized: true,
+            omittedLineCount: rawOmitted
+        )
+    }
+
+    private func buildOutputDiagnosticIdentity(_ line: String) -> String? {
+        let normalized = line
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacing(/\s+/, with: " ")
+        guard !normalized.isEmpty else { return nil }
+        let lowercased = normalized.lowercased()
+        if lowercased.contains("error:")
+            || lowercased.contains("warning:")
+            || lowercased.contains("fatal error")
+            || lowercased.contains("undefined symbol")
+            || lowercased.contains("build failed")
+            || lowercased.contains("build succeeded")
+            || lowercased.contains("build complete")
+            || lowercased.hasPrefix("ld: ")
+            || lowercased.hasPrefix("note: referenced by") {
+            return lowercased
+        }
+        if normalized.firstMatch(of: /(?:^|\s)[A-Za-z0-9_\/\.\-]+\.(?:swift|m|mm|c|cc|cpp|cxx|h|hpp|tsx?|jsx?|rb|go|rs):\d+(?::\d+)?/) != nil {
+            return lowercased
+        }
+        return nil
+    }
+
+    private func buildOutputLineShouldBeKept(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        let lowercased = trimmed.lowercased()
+        if lowercased.contains("error:")
+            || lowercased.contains("warning:")
+            || lowercased.contains("fatal error")
+            || lowercased.contains("undefined symbol")
+            || lowercased.contains("build failed")
+            || lowercased.contains("build succeeded")
+            || lowercased.contains("build complete")
+            || lowercased.contains("** build failed **")
+            || lowercased.contains("** build succeeded **")
+            || lowercased.hasPrefix("ld: ")
+            || lowercased.hasPrefix("note: referenced by") {
+            return true
+        }
+        return trimmed.firstMatch(of: /(?:^|\s)[A-Za-z0-9_\/\.\-]+\.(?:swift|m|mm|c|cc|cpp|cxx|h|hpp|tsx?|jsx?|rb|go|rs):\d+(?::\d+)?/) != nil
     }
 
     private func optimizeSearchOutput(_ output: String) -> CommandOutputOptimization? {

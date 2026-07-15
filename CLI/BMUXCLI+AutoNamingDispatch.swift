@@ -163,7 +163,7 @@ extension BMUXCLI {
                 "-c", "default_tools_enabled=false",
                 "-c", "tools={}",
                 "-c", "mcp_servers={}",
-                "-c", "web_search=false",
+                "-c", "web_search=\"disabled\"",
                 "-c", "approval_policy=never",
                 "-c", "shell_environment_policy.inherit=none",
                 "--skip-git-repo-check",

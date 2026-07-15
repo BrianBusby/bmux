@@ -28,16 +28,6 @@ extension View {
     }
 }
 
-private struct SidebarImmediateObservationState: Equatable {
-    let title: String
-    let customDescription: String?
-    let isPinned: Bool
-    let customColor: String?
-    let latestConversationMessage: String?
-    let latestSubmittedMessage: String?
-    let latestSubmittedAt: Date?
-}
-
 private struct SidebarObservationState: Equatable {
     let currentDirectory: String
     let extensionSidebarProjectRootPath: String?
@@ -73,45 +63,24 @@ extension Workspace {
     // Agents (e.g. Codex) rewrite a workspace title every turn, and
     // removeDuplicates() cannot collapse distinct titles, so without coalescing
     // each rewrite drives a snapshot rebuild per consumer per workspace.
-    // coalesceLatest (below) keeps the first change in a burst synchronous
-    // (a user pin/color/title edit stays immediate, which Combine's throttle
-    // cannot guarantee because it schedules every emission onto the scheduler)
-    // and collapses the tail of the burst into one trailing emission per window.
+    // `sidebarImmediateObservationChangeSubject` is sent from didSet hooks,
+    // after @Published storage has the new value; using $title/$latestSubmitted
+    // directly would deliver willSet events and let row snapshots read stale
+    // workspace fields. coalesceLatest keeps the first change in a burst
+    // synchronous (a user pin/color/title edit stays immediate, which Combine's
+    // throttle cannot guarantee because it schedules every emission onto the
+    // scheduler) and collapses the tail of the burst into one trailing emission
+    // per window.
     // See https://github.com/manaflow-ai/bmux/issues/4127.
     static let sidebarImmediateObservationCoalesceInterval: RunLoop.SchedulerTimeType.Stride = .milliseconds(50)
 
     func makeSidebarImmediateObservationPublisher() -> AnyPublisher<Void, Never> {
-        let workspaceFields = Publishers.CombineLatest4(
-            $title,
-            $customDescription,
-            $isPinned,
-            $customColor
-        )
-        let conversationFields = Publishers.CombineLatest3(
-            $latestConversationMessage,
-            $latestSubmittedMessage,
-            $latestSubmittedAt
-        )
-
-        return workspaceFields
-            .combineLatest(conversationFields)
-            .map { workspaceFields, conversationFields in
-                SidebarImmediateObservationState(
-                    title: workspaceFields.0,
-                    customDescription: workspaceFields.1,
-                    isPinned: workspaceFields.2,
-                    customColor: workspaceFields.3,
-                    latestConversationMessage: conversationFields.0,
-                    latestSubmittedMessage: conversationFields.1,
-                    latestSubmittedAt: conversationFields.2
-                )
-            }
-            .removeDuplicates()
+        sidebarImmediateObservationChangeSubject
+            .prepend(())
             .coalesceLatest(
                 for: Self.sidebarImmediateObservationCoalesceInterval,
                 scheduler: RunLoop.main
             )
-            .map { _ in () }
             .eraseToAnyPublisher()
     }
 

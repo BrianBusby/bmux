@@ -42,13 +42,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A program running within bmux would like to use your microphone."
+            "value": "bmux uses your microphone for push-to-talk voice input and for programs running within bmux that request audio."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "bmux 内で実行中のプログラムがマイクの使用を求めています。"
+            "value": "bmux はプッシュトゥトーク音声入力と、bmux 内で実行中のプログラムが音声を要求する場合にマイクを使用します。"
           }
         },
         "zh-Hans": {
@@ -145,6 +145,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "bmux içinde çalışan bir program mikrofonunuzu kullanmak istiyor."
+          }
+        }
+      }
+    },
+    "NSSpeechRecognitionUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux transcribes your speech into the focused input when you use push-to-talk voice input."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux はプッシュトゥトーク音声入力を使用するときに、音声を文字起こししてフォーカス中の入力欄へ挿入します。"
           }
         }
       }

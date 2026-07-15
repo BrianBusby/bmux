@@ -54,6 +54,61 @@ public actor ChatRawTerminalOutputFileStore {
         return try decoder.decode(ChatRawTerminalOutputRecord.self, from: data)
     }
 
+    /// Removes cached raw-output records older than a cutoff date.
+    ///
+    /// - Parameter cutoff: Modification-date cutoff; records older than this
+    ///   value are removed.
+    /// - Returns: Number of cached record files removed.
+    /// - Throws: Filesystem errors encountered while enumerating or deleting.
+    public func pruneRecords(olderThan cutoff: Date) throws -> Int {
+        try Self.pruneRecords(
+            in: rootDirectory,
+            fileManager: fileManager,
+            olderThan: cutoff
+        )
+    }
+
+    /// Removes cached raw-output records in a directory older than a cutoff date.
+    ///
+    /// - Parameters:
+    ///   - rootDirectory: Directory containing raw-output record JSON files.
+    ///   - fileManager: File manager used for filesystem access.
+    ///   - cutoff: Modification-date cutoff; records older than this value are removed.
+    /// - Returns: Number of cached record files removed.
+    /// - Throws: Filesystem errors encountered while enumerating or deleting.
+    public static func pruneRecords(
+        in rootDirectory: URL,
+        fileManager: FileManager = .default,
+        olderThan cutoff: Date
+    ) throws -> Int {
+        guard fileManager.fileExists(atPath: rootDirectory.path) else {
+            return 0
+        }
+
+        let resourceKeys: [URLResourceKey] = [
+            .contentModificationDateKey,
+            .isRegularFileKey,
+        ]
+        let urls = try fileManager.contentsOfDirectory(
+            at: rootDirectory,
+            includingPropertiesForKeys: resourceKeys,
+            options: [.skipsHiddenFiles]
+        )
+
+        var removed = 0
+        for url in urls where url.pathExtension == "json" {
+            let values = try url.resourceValues(forKeys: Set(resourceKeys))
+            guard values.isRegularFile == true,
+                  let modified = values.contentModificationDate,
+                  modified < cutoff else {
+                continue
+            }
+            try fileManager.removeItem(at: url)
+            removed += 1
+        }
+        return removed
+    }
+
     private func fileURL(rawOutputRef: String) -> URL? {
         guard !rawOutputRef.isEmpty else { return nil }
         let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))

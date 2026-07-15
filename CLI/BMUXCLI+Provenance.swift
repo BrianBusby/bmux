@@ -1,0 +1,496 @@
+import Foundation
+
+extension BMUXCLI {
+    func runProvenanceCommand(commandArgs: [String], jsonOutput: Bool) throws {
+        let subcommand = commandArgs.first?.lowercased()
+        switch subcommand {
+        case "explain":
+            try runProvenanceExplain(
+                commandArgs: Array(commandArgs.dropFirst()),
+                jsonOutput: jsonOutput
+            )
+        case "context":
+            try runProvenanceContext(
+                commandArgs: Array(commandArgs.dropFirst()),
+                jsonOutput: jsonOutput
+            )
+        case "worktrees":
+            try runProvenanceWorktrees(
+                commandArgs: Array(commandArgs.dropFirst()),
+                jsonOutput: jsonOutput
+            )
+        case "help", "--help", "-h", nil:
+            print(provenanceUsage())
+        default:
+            throw CLIError(message: String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.error.unknownSubcommand",
+                    defaultValue: "Unknown provenance subcommand: %@\n\n%@"
+                ),
+                subcommand ?? "",
+                provenanceUsage()
+            ))
+        }
+    }
+
+    private func runProvenanceExplain(commandArgs: [String], jsonOutput: Bool) throws {
+        let commandName = "provenance explain"
+        let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
+        var remaining = remainingAfterDatabase
+        try rejectProvenanceUnknownFlags(remaining, commandName: commandName)
+        guard let path = remaining.first else {
+            throw CLIError(message: String(localized: "cli.provenance.error.requiresPath", defaultValue: "Usage: bmux provenance explain <path> [--json]"))
+        }
+        remaining.removeFirst()
+        guard remaining.isEmpty else {
+            throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
+        }
+
+        let databaseURL = provenanceDatabaseURL(databasePath: databasePath)
+        let target = try CLIProvenanceGitResolver().resolve(path: path, commandLabel: commandName)
+        guard FileManager.default.fileExists(atPath: databaseURL.path) else {
+            let explanation = CLIProvenanceExplanation(
+                requestedPath: target.requestedPath,
+                repositoryPath: target.repositoryRoot,
+                relativePath: target.relativePath,
+                found: false,
+                reason: String(localized: "cli.provenance.reason.noDatabase", defaultValue: "no provenance database exists yet"),
+                fileStatus: nil,
+                attributionSource: nil,
+                attributionConfidence: nil,
+                updatedAt: nil,
+                worktree: ["path": target.repositoryRoot],
+                repository: ["path": target.repositoryRoot],
+                changeSet: nil,
+                checkpoint: nil,
+                contribution: nil,
+                session: nil,
+                workItem: nil
+            )
+            printProvenanceExplanation(explanation, jsonOutput: jsonOutput)
+            return
+        }
+
+        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
+        let explanation = try reader.explain(target: target)
+        printProvenanceExplanation(explanation, jsonOutput: jsonOutput)
+    }
+
+    private func runProvenanceContext(commandArgs: [String], jsonOutput: Bool) throws {
+        let commandName = "provenance context current"
+        let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
+        var remaining = remainingAfterDatabase
+        try rejectProvenanceUnknownFlags(remaining, commandName: commandName)
+        guard remaining.first?.lowercased() == "current" else {
+            throw CLIError(message: String(localized: "cli.provenance.context.usage", defaultValue: "Usage: bmux provenance context current [--json]"))
+        }
+        remaining.removeFirst()
+        guard remaining.isEmpty else {
+            throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
+        }
+
+        let target = try CLIProvenanceGitResolver().resolve(path: ".", commandLabel: commandName)
+        let databaseURL = provenanceDatabaseURL(databasePath: databasePath)
+        guard FileManager.default.fileExists(atPath: databaseURL.path) else {
+            let context = CLIProvenanceContext(
+                found: false,
+                reason: String(localized: "cli.provenance.reason.noDatabase", defaultValue: "no provenance database exists yet"),
+                repositoryPath: target.repositoryRoot,
+                worktree: ["path": target.repositoryRoot],
+                repository: ["path": target.repositoryRoot],
+                activeSessions: [],
+                dirtyFiles: [],
+                unattributedChanges: [],
+                recentCheckpoints: [],
+                validationRuns: [],
+                conflicts: []
+            )
+            printProvenanceContext(context, jsonOutput: jsonOutput)
+            return
+        }
+
+        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
+        let context = try reader.context(target: target)
+        printProvenanceContext(context, jsonOutput: jsonOutput)
+    }
+
+    private func runProvenanceWorktrees(commandArgs: [String], jsonOutput: Bool) throws {
+        let commandName = "provenance worktrees list"
+        let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
+        var remaining = remainingAfterDatabase
+        try rejectProvenanceUnknownFlags(remaining, commandName: commandName)
+        guard remaining.first?.lowercased() == "list" else {
+            throw CLIError(message: String(localized: "cli.provenance.worktrees.usage", defaultValue: "Usage: bmux provenance worktrees list [--json]"))
+        }
+        remaining.removeFirst()
+        guard remaining.isEmpty else {
+            throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
+        }
+
+        let databaseURL = provenanceDatabaseURL(databasePath: databasePath)
+        guard FileManager.default.fileExists(atPath: databaseURL.path) else {
+            let list = CLIProvenanceWorktreeList(
+                worktrees: [],
+                reason: String(localized: "cli.provenance.reason.noDatabase", defaultValue: "no provenance database exists yet")
+            )
+            printProvenanceWorktreeList(list, jsonOutput: jsonOutput)
+            return
+        }
+
+        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
+        let list = try reader.worktreeList()
+        printProvenanceWorktreeList(list, jsonOutput: jsonOutput)
+    }
+
+    private func rejectProvenanceUnknownFlags(_ args: [String], commandName: String) throws {
+        if let unknown = args.first(where: { $0.hasPrefix("--") }) {
+            throw CLIError(message: String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.error.commandUnknownFlag",
+                    defaultValue: "%@: unknown flag '%@'"
+                ),
+                commandName,
+                unknown
+            ))
+        }
+    }
+
+    private func provenanceUnexpectedArgumentMessage(commandName: String, argument: String) -> String {
+        String.localizedStringWithFormat(
+            String(
+                localized: "cli.provenance.error.commandUnexpectedArgument",
+                defaultValue: "%@: unexpected argument '%@'"
+            ),
+            commandName,
+            argument
+        )
+    }
+
+    private func provenanceDatabaseURL(databasePath: String?) -> URL {
+        if let databasePath = databasePath?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !databasePath.isEmpty {
+            return URL(fileURLWithPath: NSString(string: databasePath).expandingTildeInPath)
+        }
+        return FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".local", isDirectory: true)
+            .appendingPathComponent("state", isDirectory: true)
+            .appendingPathComponent("bmux", isDirectory: true)
+            .appendingPathComponent("work-provenance", isDirectory: true)
+            .appendingPathComponent("bmux-work-provenance.sqlite", isDirectory: false)
+    }
+
+    private func printProvenanceExplanation(_ explanation: CLIProvenanceExplanation, jsonOutput: Bool) {
+        if jsonOutput {
+            print(jsonString(explanation.payload))
+            return
+        }
+        print(renderProvenanceExplanation(explanation))
+    }
+
+    private func printProvenanceContext(_ context: CLIProvenanceContext, jsonOutput: Bool) {
+        if jsonOutput {
+            print(jsonString(context.payload))
+            return
+        }
+        print(renderProvenanceContext(context))
+    }
+
+    private func printProvenanceWorktreeList(_ list: CLIProvenanceWorktreeList, jsonOutput: Bool) {
+        if jsonOutput {
+            print(jsonString(list.payload))
+            return
+        }
+        print(renderProvenanceWorktreeList(list))
+    }
+
+    private func renderProvenanceExplanation(_ explanation: CLIProvenanceExplanation) -> String {
+        if !explanation.found {
+            return [
+                String.localizedStringWithFormat(
+                    String(localized: "cli.provenance.output.noProvenance", defaultValue: "No provenance found for %@"),
+                    explanation.relativePath
+                ),
+                explanation.reason.map {
+                    String.localizedStringWithFormat(
+                        String(localized: "cli.provenance.output.reason", defaultValue: "Reason: %@"),
+                        $0
+                    )
+                },
+                String.localizedStringWithFormat(
+                    String(localized: "cli.provenance.output.repository", defaultValue: "Repository: %@"),
+                    explanation.repositoryPath
+                )
+            ].compactMap(\.self).joined(separator: "\n")
+        }
+
+        var lines: [String] = [
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.output.header", defaultValue: "Provenance for %@"),
+                explanation.relativePath
+            )
+        ]
+        if let fileStatus = explanation.fileStatus {
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.output.status", defaultValue: "Status: %@"),
+                fileStatus
+            ))
+        }
+        if let source = explanation.attributionSource,
+           let confidence = explanation.attributionConfidence {
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.output.attribution", defaultValue: "Attribution: %@ (%@ confidence)"),
+                source,
+                confidence
+            ))
+        }
+        if let updatedAt = explanation.updatedAt {
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.output.observed", defaultValue: "Observed: %@"),
+                formattedProvenanceDate(updatedAt)
+            ))
+        }
+        if let summary = explanation.changeSet?["summary"] as? String {
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.output.changeSet", defaultValue: "Change set: %@"),
+                summary
+            ))
+        }
+        if let fingerprint = explanation.changeSet?["diff_fingerprint"] as? String {
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.output.diffFingerprint", defaultValue: "Diff fingerprint: %@"),
+                fingerprint
+            ))
+        }
+        if let contribution = explanation.contribution {
+            let id = contribution["id"] as? String
+            let status = contribution["status"] as? String
+            let intent = contribution["declared_intent"] as? String
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.output.contribution", defaultValue: "Contribution: %@"),
+                [id, status].compactMap(\.self).joined(separator: " · ")
+            ))
+            if let intent, !intent.isEmpty {
+                lines.append(String.localizedStringWithFormat(
+                    String(localized: "cli.provenance.output.intent", defaultValue: "Intent: %@"),
+                    intent
+                ))
+            }
+        }
+        if let session = explanation.session,
+           let sessionID = session["id"] as? String {
+            let agent = session["agent_kind"] as? String
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.output.session", defaultValue: "Session: %@"),
+                [sessionID, agent].compactMap(\.self).joined(separator: " · ")
+            ))
+        }
+        if let workItem = explanation.workItem,
+           let title = workItem["title"] as? String {
+            let id = workItem["id"] as? String
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.output.workItem", defaultValue: "Work item: %@"),
+                [id, title].compactMap(\.self).joined(separator: " · ")
+            ))
+        }
+        if let branch = explanation.worktree["branch"] as? String,
+           !branch.isEmpty {
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.output.worktreeBranch", defaultValue: "Worktree branch: %@"),
+                branch
+            ))
+        }
+        lines.append(String.localizedStringWithFormat(
+            String(localized: "cli.provenance.output.repository", defaultValue: "Repository: %@"),
+            explanation.repositoryPath
+        ))
+        if explanation.attributionSource == "unattributed" {
+            lines.append(String(localized: "cli.provenance.output.unattributedNote", defaultValue: "Note: bmux observed this dirty file, but no session has claimed it yet."))
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private func renderProvenanceContext(_ context: CLIProvenanceContext) -> String {
+        if !context.found {
+            return [
+                String.localizedStringWithFormat(
+                    String(localized: "cli.provenance.context.output.notFound", defaultValue: "No provenance context found for %@"),
+                    context.repositoryPath
+                ),
+                context.reason.map {
+                    String.localizedStringWithFormat(
+                        String(localized: "cli.provenance.output.reason", defaultValue: "Reason: %@"),
+                        $0
+                    )
+                }
+            ].compactMap(\.self).joined(separator: "\n")
+        }
+
+        let worktreeSummary = [
+            context.worktree["branch"] as? String,
+            context.worktree["status"] as? String,
+            (context.worktree["is_dirty"] as? Bool) == true
+                ? String(localized: "cli.provenance.context.output.dirty", defaultValue: "dirty")
+                : String(localized: "cli.provenance.context.output.clean", defaultValue: "clean")
+        ].compactMap { value in
+            guard let value, !value.isEmpty else { return nil }
+            return value
+        }.joined(separator: " · ")
+
+        var lines: [String] = [
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.context.output.header", defaultValue: "Provenance context for %@"),
+                context.repositoryPath
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.context.output.worktree", defaultValue: "Worktree: %@"),
+                worktreeSummary.isEmpty ? context.repositoryPath : worktreeSummary
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.context.output.activeSessions", defaultValue: "Active sessions: %d"),
+                context.activeSessions.count
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.context.output.dirtyFiles", defaultValue: "Dirty files: %d"),
+                context.dirtyFiles.count
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.context.output.unattributedChanges", defaultValue: "Unattributed changes: %d"),
+                context.unattributedChanges.count
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.context.output.recentCheckpoints", defaultValue: "Recent checkpoints: %d"),
+                context.recentCheckpoints.count
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.context.output.validationRuns", defaultValue: "Validation runs: %d"),
+                context.validationRuns.count
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.context.output.conflicts", defaultValue: "Conflicts: %d"),
+                context.conflicts.count
+            )
+        ]
+
+        appendProvenanceRows(
+            context.activeSessions,
+            title: String(localized: "cli.provenance.context.output.activeSessionRows", defaultValue: "Active session rows:"),
+            to: &lines,
+            render: renderProvenanceSessionRow
+        )
+        appendProvenanceRows(
+            context.unattributedChanges,
+            title: String(localized: "cli.provenance.context.output.unattributedRows", defaultValue: "Unattributed files:"),
+            to: &lines,
+            render: renderProvenanceFileRow
+        )
+        appendProvenanceRows(
+            context.conflicts,
+            title: String(localized: "cli.provenance.context.output.conflictRows", defaultValue: "Potential file overlaps:"),
+            to: &lines,
+            render: renderProvenanceConflictRow
+        )
+        return lines.joined(separator: "\n")
+    }
+
+    private func renderProvenanceWorktreeList(_ list: CLIProvenanceWorktreeList) -> String {
+        guard !list.worktrees.isEmpty else {
+            if let reason = list.reason {
+                return reason
+            }
+            return String(localized: "cli.provenance.worktrees.output.empty", defaultValue: "No provenance worktrees recorded.")
+        }
+        var lines = [
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.worktrees.output.header", defaultValue: "Known provenance worktrees: %d"),
+                list.worktrees.count
+            )
+        ]
+        for row in list.worktrees.prefix(25) {
+            let dirty = row.isDirty
+                ? String(localized: "cli.provenance.context.output.dirty", defaultValue: "dirty")
+                : String(localized: "cli.provenance.context.output.clean", defaultValue: "clean")
+            let parts = [row.branch, row.status, dirty].compactMap { value in
+                guard let value, !value.isEmpty else { return nil }
+                return value
+            }.joined(separator: " · ")
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.worktrees.output.row", defaultValue: "  %@ · %@"),
+                row.path,
+                parts
+            ))
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private func appendProvenanceRows(
+        _ rows: [[String: AnyHashable]],
+        title: String,
+        to lines: inout [String],
+        render: ([String: AnyHashable]) -> String
+    ) {
+        guard !rows.isEmpty else { return }
+        lines.append(title)
+        for row in rows.prefix(5) {
+            lines.append(render(row))
+        }
+    }
+
+    private func renderProvenanceSessionRow(_ row: [String: AnyHashable]) -> String {
+        let identity = [
+            row["id"] as? String,
+            row["agent_kind"] as? String,
+            row["status"] as? String
+        ].compactMap { value in
+            guard let value, !value.isEmpty else { return nil }
+            return value
+        }.joined(separator: " · ")
+        return String.localizedStringWithFormat(
+            String(localized: "cli.provenance.context.output.sessionRow", defaultValue: "  %@"),
+            identity
+        )
+    }
+
+    private func renderProvenanceFileRow(_ row: [String: AnyHashable]) -> String {
+        let status = row["status"] as? String ?? "?"
+        let path = row["path"] as? String ?? "?"
+        let source = row["attribution_source"] as? String ?? "?"
+        let confidence = row["attribution_confidence"] as? String ?? "?"
+        return String.localizedStringWithFormat(
+            String(localized: "cli.provenance.context.output.fileRow", defaultValue: "  %@ %@ · %@/%@"),
+            status,
+            path,
+            source,
+            confidence
+        )
+    }
+
+    private func renderProvenanceConflictRow(_ row: [String: AnyHashable]) -> String {
+        let path = row["path"] as? String ?? "?"
+        let contributionIDs = row["contribution_ids"] as? String ?? "?"
+        return String.localizedStringWithFormat(
+            String(localized: "cli.provenance.context.output.conflictRow", defaultValue: "  %@ · contributions %@"),
+            path,
+            contributionIDs
+        )
+    }
+
+    private func formattedProvenanceDate(_ timestamp: TimeInterval) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.string(from: Date(timeIntervalSince1970: timestamp))
+    }
+
+    private func provenanceUsage() -> String {
+        String(
+            localized: "cli.provenance.usage",
+            defaultValue: """
+            Usage:
+              bmux provenance explain <path> [--json]
+              bmux provenance context current [--json]
+              bmux provenance worktrees list [--json]
+
+            Inspect bmux work provenance without requiring a live app socket.
+            """
+        )
+    }
+}

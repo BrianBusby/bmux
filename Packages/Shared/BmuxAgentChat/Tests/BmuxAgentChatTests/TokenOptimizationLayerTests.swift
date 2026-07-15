@@ -122,4 +122,39 @@ struct TokenOptimizationLayerTests {
         #expect(result.output.contains("tests passed"))
         #expect(!result.output.contains("testOne"))
     }
+
+    @Test("summarizes failing test output while preserving diagnostics")
+    func summarizesFailingTestOutput() {
+        var lines = [
+            "Test Suite 'All tests' started",
+            "Build settings loaded",
+            "Running ExampleTests"
+        ]
+        for index in 1...120 {
+            lines.append("Test Case '-[ExampleTests testPass\(index)]' passed (0.001 seconds)")
+        }
+        lines.append("/tmp/project/Tests/ExampleTests.swift:42: error: ExampleTests.testFailure : XCTAssertEqual failed")
+        lines.append("Expected: \"ready\"")
+        lines.append("Received: \"blocked\"")
+        lines.append("Test Case '-[ExampleTests testFailure]' failed (0.004 seconds)")
+        lines.append("Executed 121 tests, with 1 failure (0 unexpected) in 0.500 seconds")
+        let rawOutput = lines.joined(separator: "\n")
+
+        let result = TokenOptimizationLayer().optimizeTerminalOutput(
+            messageID: "message-6",
+            command: "swift test",
+            rawOutput: rawOutput,
+            exitCode: 1
+        )
+
+        #expect(result.kind == .tests)
+        #expect(result.wasOptimized)
+        #expect(result.output.contains("test failure summary"))
+        #expect(result.output.contains("ExampleTests.swift:42"))
+        #expect(result.output.contains("Expected: \"ready\""))
+        #expect(result.output.contains("Received: \"blocked\""))
+        #expect(result.output.contains("raw output"))
+        #expect(!result.output.contains("testPass50"))
+        #expect(result.rawOutputRecord.rawOutput == rawOutput)
+    }
 }

@@ -227,7 +227,13 @@ extension Workspace {
         applySessionDividerPositions(snapshotNode: snapshot.layout, liveNode: bonsplitController.treeSnapshot())
 
         applyProcessTitle(snapshot.processTitle)
-        setCustomTitle(snapshot.customTitle, source: snapshot.customTitleSource ?? .user)
+        if let source = snapshot.customTitleSource {
+            setCustomTitle(snapshot.customTitle, source: source)
+        } else if snapshot.customTitle != nil {
+            setCustomTitle(snapshot.customTitle, source: .auto)
+        } else {
+            setCustomTitle(nil)
+        }
         setCustomDescription(snapshot.customDescription)
         setCustomColor(snapshot.customColor)
         isPinned = snapshot.isPinned
@@ -438,7 +444,7 @@ extension Workspace {
         let panelTitle = panelTitle(panelId: panelId)
         let customTitle = panelCustomTitles[panelId]
         let customTitleSource: CustomTitleSource? = customTitle != nil
-            ? (panelCustomTitleSources[panelId] ?? .user)
+            ? panelCustomTitleSources[panelId]
             : nil
         let directory: String? = {
             if let directory = panelDirectories[panelId]?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -565,6 +571,7 @@ extension Workspace {
                 },
                 resumeBinding: resumeBinding,
                 textBoxDraft: terminalPanel.sessionTextBoxDraftSnapshot(),
+                promptNavigation: terminalPanel.sessionPromptNavigationSnapshot(),
                 isRemoteTerminal: activeRemoteTerminalSurfaceIds.contains(panelId),
                 remotePTYSessionID: remotePTYSessionIDForSnapshot(panelId: panelId),
                 wasAgentRunning: agentWasRunning
@@ -1587,6 +1594,7 @@ extension Workspace {
                 restoredResumeSessionWorkingDirectoriesByPanelId.removeValue(forKey: terminalPanel.id)
             }
             terminalPanel.restoreSessionTextBoxDraft(snapshot.terminal?.textBoxDraft)
+            terminalPanel.restoreSessionPromptNavigationSnapshot(snapshot.terminal?.promptNavigation)
             applySessionPanelMetadata(snapshot, toPanelId: terminalPanel.id)
             return terminalPanel.id
         case .browser:
@@ -1675,7 +1683,13 @@ extension Workspace {
             panelTitles[panelId] = title
         }
 
-        setPanelCustomTitle(panelId: panelId, title: snapshot.customTitle, source: snapshot.customTitleSource ?? .user)
+        if let source = snapshot.customTitleSource {
+            setPanelCustomTitle(panelId: panelId, title: snapshot.customTitle, source: source)
+        } else if snapshot.customTitle != nil {
+            setPanelCustomTitle(panelId: panelId, title: snapshot.customTitle, source: .auto)
+        } else {
+            setPanelCustomTitle(panelId: panelId, title: nil)
+        }
         setPanelPinned(panelId: panelId, pinned: snapshot.isPinned)
 
         // The bonsplit tab header only refreshes when `updateTab` is called; the writes
@@ -1953,7 +1967,9 @@ final class Workspace: Identifiable, ObservableObject {
     /// fallback: a workspace that never fired a notification still carries a
     /// real timestamp instead of nothing.
     let createdAt = Date()
-    @Published var title: String
+    @Published var title: String {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: title) }
+    }
     @Published var customTitle: String?
     /// Provenance of `customTitle`: `.user` for manual renames (sidebar,
     /// CLI, command palette), `.auto` for AI auto-naming. `nil` when no
@@ -1961,12 +1977,19 @@ final class Workspace: Identifiable, ObservableObject {
     /// treated as `.user` so auto-naming never overwrites a title it
     /// cannot prove it owns.
     @Published var customTitleSource: CustomTitleSource?
-    @Published var customDescription: String?
-    @Published var isPinned: Bool = false
+    @Published var customDescription: String? {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: customDescription) }
+    }
+    @Published var isPinned: Bool = false {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: isPinned) }
+    }
     /// Identifier of the WorkspaceGroup this workspace belongs to, or nil if ungrouped.
     /// The group entity itself lives in `TabManager.workspaceGroups`.
     @Published var groupId: UUID?
-    @Published var customColor: String?  // hex string, e.g. "#C0392B"
+    /// Custom workspace color hex string, e.g. "#C0392B".
+    @Published var customColor: String? {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: customColor) }
+    }
     /// User-defined environment variables applied to every shell spawned in this
     /// workspace: the initial terminal, every later pane/surface/split, and every
     /// surface recreated on session restore. Managed `BMUX_*` and terminal-identity
@@ -2259,9 +2282,15 @@ final class Workspace: Identifiable, ObservableObject {
         get { sidebarMetadata.metadataBlocks }
         set { sidebarMetadata.metadataBlocks = newValue }
     }
-    @Published private(set) var latestConversationMessage: String?
-    @Published private(set) var latestSubmittedMessage: String?
-    @Published private(set) var latestSubmittedAt: Date?
+    @Published private(set) var latestConversationMessage: String? {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: latestConversationMessage) }
+    }
+    @Published private(set) var latestSubmittedMessage: String? {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: latestSubmittedMessage) }
+    }
+    @Published private(set) var latestSubmittedAt: Date? {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: latestSubmittedAt) }
+    }
     var logEntries: [SidebarLogEntry] {
         get { sidebarMetadata.logEntries }
         set { sidebarMetadata.logEntries = newValue }
@@ -2392,10 +2421,19 @@ final class Workspace: Identifiable, ObservableObject {
     typealias SurfaceResumeStartupLaunch = WorkspaceSurfaceResumeStartupLaunch
 
     // Sidebar rows cache snapshots, so observation must begin with the current
-    // workspace state. Build state publishers from @Published current values
-    // instead of dropping the first value and repairing timing with a Void event.
+    // workspace state. Changes are sent from property didSet hooks because
+    // @Published emits in willSet, before row snapshots can read the new value.
+    let sidebarImmediateObservationChangeSubject = PassthroughSubject<Void, Never>()
     lazy var sidebarImmediateObservationPublisher: AnyPublisher<Void, Never> = makeSidebarImmediateObservationPublisher()
     lazy var sidebarObservationPublisher: AnyPublisher<Void, Never> = makeSidebarObservationPublisher()
+
+    private func publishSidebarImmediateObservationChangeIfNeeded<Value: Equatable>(
+        oldValue: Value,
+        newValue: Value
+    ) {
+        guard oldValue != newValue else { return }
+        sidebarImmediateObservationChangeSubject.send(())
+    }
 
     private func scheduleExtensionSidebarProjectRootRefresh(for directory: String) {
         extensionSidebarProjectRootRefreshID &+= 1
@@ -4037,7 +4075,7 @@ final class Workspace: Identifiable, ObservableObject {
         let previous = panelCustomTitles[panelId]
         if source == .auto {
             guard !trimmed.isEmpty else { return false }
-            if previous != nil, (panelCustomTitleSources[panelId] ?? .user) == .user { return false }
+            if previous != nil, panelCustomTitleSources[panelId] == .user { return false }
         }
         if trimmed.isEmpty {
             guard previous != nil else { return false }
@@ -4310,11 +4348,10 @@ final class Workspace: Identifiable, ObservableObject {
         return !trimmed.isEmpty
     }
 
-    /// The provenance of the current custom title, normalizing legacy state:
-    /// `nil` when no custom title is set; `.user` when a title exists but
-    /// provenance was never recorded (pre-provenance snapshots, carried moves).
+    /// The provenance of the current custom title. `nil` means provenance was not
+    /// recorded, so title ownership is undecided.
     var effectiveCustomTitleSource: CustomTitleSource? {
-        hasCustomTitle ? (customTitleSource ?? .user) : nil
+        hasCustomTitle ? customTitleSource : nil
     }
 
     var hasCustomDescription: Bool {
@@ -4373,7 +4410,7 @@ final class Workspace: Identifiable, ObservableObject {
         let trimmed = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if source == .auto {
             guard !trimmed.isEmpty else { return false }
-            if hasCustomTitle, (customTitleSource ?? .user) == .user { return false }
+            if hasCustomTitle, customTitleSource == .user { return false }
         }
         if trimmed.isEmpty {
             customTitle = nil
@@ -4939,6 +4976,22 @@ final class Workspace: Identifiable, ObservableObject {
         panels.values.contains { $0 is TerminalPanel }
     }
 
+    func terminalAgentStatusLineRenderedFramePublisher() -> AnyPublisher<Void, Never> {
+        let publishers = panels.values.compactMap { panel -> AnyPublisher<Void, Never>? in
+            guard let terminalPanel = panel as? TerminalPanel else { return nil }
+            return NotificationCenter.default.publisher(
+                for: .ghosttyDidRenderFrame,
+                object: terminalPanel.surface.hostedView.surfaceView
+            )
+            .map { _ in () }
+            .eraseToAnyPublisher()
+        }
+        guard !publishers.isEmpty else {
+            return Empty().eraseToAnyPublisher()
+        }
+        return Publishers.MergeMany(publishers).eraseToAnyPublisher()
+    }
+
     private func terminalPanelHasVisibleActiveAgentStatusLine(panelId: UUID) -> Bool {
         guard terminalPanel(for: panelId) != nil,
               let rows = renderedTerminalRowsForActiveWork(panelId: panelId) else {
@@ -4974,15 +5027,17 @@ final class Workspace: Identifiable, ObservableObject {
     func updatePanelGitBranch(panelId: UUID, branch: String, isDirty: Bool) {
         let state = SidebarGitBranchState(branch: branch, isDirty: isDirty)
         let existing = panelGitBranches[panelId]
-        let branchChanged = existing?.branch != nil && existing?.branch != branch
+        let branchChanged = existing?.branch.normalizedSidebarBranchName != state.branch.normalizedSidebarBranchName
         if existing?.branch != branch || existing?.isDirty != isDirty {
             panelGitBranches[panelId] = state
         }
         if branchChanged {
-            if panelPullRequests[panelId] != nil {
+            let nextBranch = state.branch.normalizedSidebarBranchName
+            if panelPullRequests[panelId]?.branch?.normalizedSidebarBranchName != nextBranch {
                 panelPullRequests.removeValue(forKey: panelId)
             }
-            if panelId == focusedPanelId, pullRequest != nil {
+            if panelId == focusedPanelId,
+               pullRequest?.branch?.normalizedSidebarBranchName != nextBranch {
                 pullRequest = nil
             }
         }
@@ -5015,7 +5070,8 @@ final class Workspace: Identifiable, ObservableObject {
         url: URL,
         status: SidebarPullRequestStatus,
         branch: String? = nil,
-        isStale: Bool = false
+        isStale: Bool = false,
+        bindToCurrentBranch: Bool = true
     ) {
         let existing = panelPullRequests[panelId]
         let normalizedBranch = branch?.normalizedSidebarBranchName
@@ -5024,7 +5080,7 @@ final class Workspace: Identifiable, ObservableObject {
             if let normalizedBranch {
                 return normalizedBranch
             }
-            if let currentPanelBranch {
+            if bindToCurrentBranch, let currentPanelBranch {
                 return currentPanelBranch
             }
             guard let existing,
@@ -5346,9 +5402,9 @@ final class Workspace: Identifiable, ObservableObject {
     @discardableResult
     func recordSubmittedMessage(_ message: String?) -> Bool {
         guard let preview = Self.conversationMessagePreview(from: message) else { return false }
-        _ = recordConversationMessage(preview)
         latestSubmittedMessage = preview
         latestSubmittedAt = Date()
+        _ = recordConversationMessage(preview)
         return true
     }
 
@@ -8175,7 +8231,11 @@ final class Workspace: Identifiable, ObservableObject {
         panelTitles[panelId] = replacementPanel.displayTitle
         if let customTitle {
             panelCustomTitles[panelId] = customTitle
-            panelCustomTitleSources[panelId] = customTitleSource ?? .user
+            if let customTitleSource {
+                panelCustomTitleSources[panelId] = customTitleSource
+            } else {
+                panelCustomTitleSources[panelId] = .auto
+            }
         }
         if wasPinned {
             pinnedPanelIds.insert(panelId)
@@ -9651,7 +9711,7 @@ final class Workspace: Identifiable, ObservableObject {
         }
         if let customTitle = detached.customTitle {
             panelCustomTitles[detached.panelId] = customTitle
-            panelCustomTitleSources[detached.panelId] = detached.customTitleSource ?? .user
+            panelCustomTitleSources[detached.panelId] = detached.customTitleSource ?? .auto
         }
         if detached.isPinned {
             pinnedPanelIds.insert(detached.panelId)
@@ -12586,9 +12646,7 @@ extension Workspace: BonsplitDelegate {
                 ttyName: surfaceTTYNames[panelId],
                 cachedTitle: cachedTitle,
                 customTitle: panelCustomTitles[panelId],
-                customTitleSource: panelCustomTitles[panelId] != nil
-                    ? (panelCustomTitleSources[panelId] ?? .user)
-                    : nil,
+                customTitleSource: panelCustomTitleSources[panelId],
                 manuallyUnread: manualUnreadPanelIds.contains(panelId),
                 restoredUnreadIndicator: restoredUnreadPanelIndicators[panelId],
                 restorableAgent: restorableAgent,
@@ -13098,6 +13156,10 @@ extension Workspace: BonsplitDelegate {
                 _ = AppDelegate.shared?.performCloudVMAction(tabManager: owningTabManager, preferredWindow: presentingWindow, debugSource: "surfaceTabBar.cloudVM")
             case .mobileConnect:
                 MobilePairingWindowController.shared.show()
+            case .pushToTalkVoiceInput:
+                if AppDelegate.shared?.togglePushToTalkVoiceInput(preferredWindow: presentingWindow) != true {
+                    NSSound.beep()
+                }
             case .newTerminal, .newBrowser, .splitRight, .splitDown:
                 break
             }

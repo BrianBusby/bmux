@@ -136,6 +136,47 @@ struct WorkspaceSidebarObservationTests {
         )
     }
 
+    @Test func sidebarImmediateObservationPublisherLetsSubscriberReadUpdatedCustomTitleSynchronously() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+
+        var observedTitles: [String] = []
+        let cancellable = workspace.sidebarImmediateObservationPublisher.sink {
+            observedTitles.append(workspace.title)
+        }
+        defer { cancellable.cancel() }
+        observedTitles.removeAll()
+
+        let applied = manager.setCustomTitle(
+            tabId: workspace.id,
+            title: "Explain codebase workspace"
+        )
+
+        #expect(applied)
+        #expect(
+            observedTitles == ["Explain codebase workspace"],
+            "Sidebar rows must rebuild after the workspace title is stored, not during @Published willSet while the old title is still visible."
+        )
+    }
+
+    @Test func sidebarImmediateObservationPublisherReadsLatestSubmittedPromptSynchronously() {
+        let workspace = Workspace()
+
+        var observedPrompts: [String?] = []
+        let cancellable = workspace.sidebarImmediateObservationPublisher.sink {
+            observedPrompts.append(workspace.latestSubmittedMessage)
+        }
+        defer { cancellable.cancel() }
+        observedPrompts.removeAll()
+
+        #expect(workspace.recordSubmittedMessage("Explain this codebase"))
+
+        #expect(
+            observedPrompts.first == "Explain this codebase",
+            "The first prompt-submit row invalidation must already expose the latest submitted message."
+        )
+    }
+
     @Test func sidebarImmediateObservationPublisherCoalescesTitleBursts() {
         let workspace = Workspace()
 

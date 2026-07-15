@@ -2993,16 +2993,16 @@ struct BMUXCLI {
     private static let commandOptionsWithValues: Set<String> = [
         "--action", "--after-workspace", "--agent", "--amount", "--arch",
         "--attr", "--before-workspace", "--body", "--color", "--command",
-        "--config", "--cwd", "--description", "--direction", "--domain",
+        "--codex-home", "--config", "--cwd", "--db", "--description", "--direction", "--domain",
         "--dx", "--dy", "--email", "--event", "--expires", "--focus",
         "--function", "--id", "--image", "--index", "--key", "--kind",
-        "--label", "--layout", "--lines", "--load-state", "--max-depth", "--name", "--os",
+        "--label", "--layout", "--limit", "--lines", "--load-state", "--max-depth", "--name", "--os",
         "--order", "--out", "--pane", "--panel", "--path", "--profile", "--property",
         "--provider", "--relay-port", "--script", "--selector", "--session",
         "--shell", "--source", "--subtitle", "--surface", "--tab", "--target-pane", "--team",
         "--text", "--timeout", "--timeout-ms", "--title", "--transcript",
         "--turn", "--type", "--url", "--url-contains", "--value", "--window",
-        "--workspace", "--checkpoint", "--checkpoint-id",
+        "--workspace", "--checkpoint", "--checkpoint-id", "--database",
     ]
 
     private func parsePresentationOptions(
@@ -3230,6 +3230,31 @@ struct BMUXCLI {
         if command == "__sigpipe-stdin-pipe-probe" { try runSIGPIPEStdinPipeProbe(); return }
         if command == "__sigpipe-inspect" { try runSIGPIPEInspect(commandArgs: commandArgs); return }
         if command == "agent-token-proxy" { try runAgentTokenProxy(commandArgs: commandArgs); return }
+        if command == "agent-token-output" { try runAgentTokenOutputCommand(commandArgs: commandArgs, jsonOutput: jsonOutput); return }
+        if command == "codex-token-audit" || command == "token-audit" {
+            try runCodexTokenAuditCommand(
+                commandArgs: commandArgs,
+                jsonOutput: jsonOutput,
+                processEnv: processEnv
+            )
+            return
+        }
+        if command == "codex", commandArgs.first?.lowercased() == "token-audit" {
+            try runCodexTokenAuditCommand(
+                commandArgs: Array(commandArgs.dropFirst()),
+                jsonOutput: jsonOutput,
+                processEnv: processEnv
+            )
+            return
+        }
+        if command == "context-efficiency" {
+            try runContextEfficiencyCommand(
+                commandArgs: commandArgs,
+                jsonOutput: jsonOutput,
+                processEnv: processEnv
+            )
+            return
+        }
         if command == "diff-viewer-server" { try runDiffViewerServerCommand(commandArgs: commandArgs); return }
         if command == "__diff-viewer-refs" { try runDiffViewerRefsCommand(commandArgs: commandArgs); return }
         if command == "__diff-viewer-branch" { try runDiffViewerBranchRegenerateCommand(commandArgs: commandArgs); return }
@@ -3268,6 +3293,11 @@ struct BMUXCLI {
                 explicitPassword: socketPasswordArg,
                 jsonOutput: jsonOutput
             )
+            return
+        }
+
+        if command == "provenance" {
+            try runProvenanceCommand(commandArgs: commandArgs, jsonOutput: jsonOutput)
             return
         }
 
@@ -15285,6 +15315,10 @@ struct BMUXCLI {
             return settingsUsage()
         case "config":
             return configUsage()
+        case "agent-token-output":
+            return agentTokenOutputUsage()
+        case "context-efficiency":
+            return contextEfficiencyUsage()
         case "welcome":
             return """
             Usage: bmux welcome
@@ -17018,15 +17052,27 @@ struct BMUXCLI {
               echo '{}' | bmux claude-hook stop
             """
         case "codex":
-            return """
-            Usage: bmux codex <install-hooks|uninstall-hooks>
+            return String(localized: "cli.codex.usage", defaultValue: """
+            Usage: bmux codex <install-hooks|uninstall-hooks|token-audit>
 
             Manage Codex CLI hooks integration.
 
             Subcommands:
               install-hooks     Install bmux hooks into ~/.codex/hooks.json
               uninstall-hooks   Remove bmux hooks from ~/.codex/hooks.json
-            """
+              token-audit       Audit local Codex session token totals
+            """)
+        case "codex-token-audit", "token-audit":
+            return codexTokenAuditUsage()
+        case "provenance":
+            return String(localized: "cli.provenance.usage", defaultValue: """
+            Usage:
+              bmux provenance explain <path> [--json]
+              bmux provenance context current [--json]
+              bmux provenance worktrees list [--json]
+
+            Inspect bmux work provenance without requiring a live app socket.
+            """)
         case "browser":
             return """
             Usage: bmux browser [--surface <id|ref|index> | <surface>] <subcommand> [args]
@@ -24197,20 +24243,13 @@ struct BMUXCLI {
             }
             if isClearSessionStart, !suppressVisibleMutations {
                 _ = try? sendV1Command("clear_notifications --tab=\(workspaceId)", client: client)
-                setAgentLifecycle(
+                setAgentVisibleRuntimeState(
                     client: client,
                     key: Self.claudeCodeStatusKey,
-                    lifecycle: .running,
-                    workspaceId: workspaceId,
-                    surfaceId: surfaceId
-                )
-                try setClaudeStatus(
-                    client: client,
+                    displayName: String(localized: "cli.claude-hook.notification.title", defaultValue: "Claude Code"),
+                    state: .running,
                     workspaceId: workspaceId,
                     surfaceId: surfaceId,
-                    value: "Running",
-                    icon: "bolt.fill",
-                    color: "#4C8DFF",
                     pid: claudePid
                 )
             }
@@ -24309,36 +24348,14 @@ struct BMUXCLI {
                     )
                 }
 
-                setAgentLifecycle(
+                setAgentVisibleRuntimeState(
                     client: client,
                     key: Self.claudeCodeStatusKey,
-                    lifecycle: hasPendingBackgroundWork ? .running : .idle,
+                    displayName: String(localized: "cli.claude-hook.notification.title", defaultValue: "Claude Code"),
+                    state: hasPendingBackgroundWork ? .running : .idle,
                     workspaceId: workspaceId,
                     surfaceId: surfaceId
                 )
-                if hasPendingBackgroundWork {
-                    // The turn ended but a background task or scheduled wakeup is
-                    // still live, so the pane is not idle — show it as still
-                    // running rather than the misleading "Idle". Reuse the shared
-                    // generic-agent status strings so the pill stays localized.
-                    try? setClaudeStatus(
-                        client: client,
-                        workspaceId: workspaceId,
-                        surfaceId: surfaceId,
-                        value: String(localized: "agent.generic.status.running", defaultValue: "Running"),
-                        icon: "bolt.fill",
-                        color: "#4C8DFF"
-                    )
-                } else {
-                    try? setClaudeStatus(
-                        client: client,
-                        workspaceId: workspaceId,
-                        surfaceId: surfaceId,
-                        value: String(localized: "agent.generic.notification.status.idle", defaultValue: "Idle"),
-                        icon: "pause.circle.fill",
-                        color: "#8E8E93"
-                    )
-                }
                 if let completion {
                     let title = String(
                         localized: "cli.claude-hook.notification.title",
@@ -24457,20 +24474,13 @@ struct BMUXCLI {
                 )
             }
             _ = try sendV1Command("clear_notifications --tab=\(workspaceId)", client: client)
-            setAgentLifecycle(
+            setAgentVisibleRuntimeState(
                 client: client,
                 key: Self.claudeCodeStatusKey,
-                lifecycle: .running,
+                displayName: String(localized: "cli.claude-hook.notification.title", defaultValue: "Claude Code"),
+                state: .running,
                 workspaceId: workspaceId,
                 surfaceId: surfaceId
-            )
-            try setClaudeStatus(
-                client: client,
-                workspaceId: workspaceId,
-                surfaceId: surfaceId,
-                value: "Running",
-                icon: "bolt.fill",
-                color: "#4C8DFF"
             )
             print("OK")
 
@@ -24998,28 +25008,21 @@ struct BMUXCLI {
                 )
             }
             _ = try? sendV1Command("clear_notifications --tab=\(workspaceId)", client: client)
-            setAgentLifecycle(
-                client: client,
-                key: Self.claudeCodeStatusKey,
-                lifecycle: .running,
-                workspaceId: workspaceId,
-                surfaceId: surfaceId
-            )
-
-            let statusValue: String
+            let statusValue: String?
             if UserDefaults.standard.bool(forKey: "claudeCodeVerboseStatus"),
                let toolStatus = describeToolUse(parsedInput.object) {
                 statusValue = toolStatus
             } else {
-                statusValue = "Running"
+                statusValue = nil
             }
-            try setClaudeStatus(
+            setAgentVisibleRuntimeState(
                 client: client,
+                key: Self.claudeCodeStatusKey,
+                displayName: String(localized: "cli.claude-hook.notification.title", defaultValue: "Claude Code"),
+                state: .running,
                 workspaceId: workspaceId,
                 surfaceId: surfaceId,
-                value: statusValue,
-                icon: "bolt.fill",
-                color: "#4C8DFF",
+                statusValue: statusValue,
                 pid: claudePid
             )
             print("OK")
@@ -25088,6 +25091,13 @@ struct BMUXCLI {
         _ = try client.send(command: cmd)
     }
 
+    private enum AgentVisibleRuntimeState {
+        case running
+        case idle
+        case needsInput
+        case error
+    }
+
     private func setAgentLifecycle(
         client: SocketClient,
         key: String,
@@ -25107,6 +25117,75 @@ struct BMUXCLI {
         } catch {
             cliWriteStderr("Warning: failed to set agent lifecycle\n")
         }
+    }
+
+    private func setAgentVisibleRuntimeState(
+        client: SocketClient,
+        key: String,
+        displayName: String,
+        state: AgentVisibleRuntimeState,
+        workspaceId: String,
+        surfaceId: String?,
+        statusValue explicitStatusValue: String? = nil,
+        clearNotifications: Bool = false,
+        priority: Int? = nil,
+        pid: Int? = nil
+    ) {
+        let lifecycle: AgentHibernationLifecycleState
+        let statusValue: String
+        let icon: String
+        let color: String
+        switch state {
+        case .running:
+            lifecycle = .running
+            statusValue = explicitStatusValue ?? String(localized: "agent.generic.status.running", defaultValue: "Running")
+            icon = "bolt.fill"
+            color = "#4C8DFF"
+        case .idle:
+            lifecycle = .idle
+            statusValue = explicitStatusValue ?? String(localized: "agent.generic.notification.status.idle", defaultValue: "Idle")
+            icon = "pause.circle.fill"
+            color = "#8E8E93"
+        case .needsInput:
+            lifecycle = .needsInput
+            statusValue = explicitStatusValue ?? String.localizedStringWithFormat(
+                String(localized: "agent.generic.notification.status.needsInput", defaultValue: "%@ needs input"),
+                displayName
+            )
+            icon = "bell.fill"
+            color = "#4C8DFF"
+        case .error:
+            lifecycle = .needsInput
+            statusValue = explicitStatusValue ?? String.localizedStringWithFormat(
+                String(localized: "agent.generic.notification.status.error", defaultValue: "%@ error"),
+                displayName
+            )
+            icon = "exclamationmark.triangle.fill"
+            color = "#FF453A"
+        }
+
+        setAgentLifecycle(
+            client: client,
+            key: key,
+            lifecycle: lifecycle,
+            workspaceId: workspaceId,
+            surfaceId: surfaceId
+        )
+        if clearNotifications {
+            _ = try? sendV1Command(
+                "clear_notifications --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
+                client: client
+            )
+        }
+        var command = "set_status \(key) \(statusValue) --icon=\(icon) --color=\(color)"
+        if let priority {
+            command += " --priority=\(priority)"
+        }
+        command += " --tab=\(workspaceId)\(socketPanelOption(surfaceId))"
+        if let pid {
+            command += " --pid=\(pid)"
+        }
+        _ = try? sendV1Command(command, client: client)
     }
 
     private func runAgentHibernation(
@@ -26918,9 +26997,15 @@ struct BMUXCLI {
             _ = try? sendV1Command("notify_target \(workspaceId) \(surfaceId) \(payload)", client: client)
         }
         let statusValue = String(localized: "agent.codex.input.status.needsInput", defaultValue: "Codex needs input")
-        _ = try? sendV1Command(
-            "set_status codex \(statusValue) --icon=bell.fill --color=#4C8DFF --priority=100 --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-            client: client
+        setAgentVisibleRuntimeState(
+            client: client,
+            key: "codex",
+            displayName: "Codex",
+            state: .needsInput,
+            workspaceId: workspaceId,
+            surfaceId: surfaceId,
+            statusValue: statusValue,
+            priority: 100
         )
     }
 
@@ -30418,6 +30503,11 @@ export default BMUXSessionRestore;
 
     // MARK: Generic hook handler
 
+    private func shouldForceCustomAutoNaming(for def: AgentHookDef) -> Bool {
+        guard let source = autoNamingSource(for: def), source != .codexRollout else { return false }
+        return source == .grokHistory || source == .hookMessageCache
+    }
+
     private func resolvedAgentHookSessionId(
         def: AgentHookDef,
         input: ClaudeHookParsedInput,
@@ -30467,7 +30557,8 @@ export default BMUXSessionRestore;
                     commandArgs: hookArgs,
                     client: client,
                     telemetry: telemetry,
-                    env: env
+                    env: env,
+                    force: shouldForceCustomAutoNaming(for: def)
                 )
             }
             print("OK")
@@ -30646,10 +30737,13 @@ export default BMUXSessionRestore;
 #endif
                 return
             }
-            let idleStatus = String(localized: "agent.generic.notification.status.idle", defaultValue: "Idle")
-            _ = try? sendV1Command(
-                "set_status \(def.statusKey) \(idleStatus) --icon=pause.circle.fill --color=#8E8E93 --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                client: client
+            setAgentVisibleRuntimeState(
+                client: client,
+                key: def.statusKey,
+                displayName: def.displayName,
+                state: .idle,
+                workspaceId: workspaceId,
+                surfaceId: surfaceId
             )
         }
         func sendAgentFeedTelemetry(workspaceId: String? = nil, surfaceId: String? = nil) {
@@ -31003,17 +31097,13 @@ export default BMUXSessionRestore;
                 }
                 switch latest.runtimeStatus {
                 case .running?:
-                    setAgentLifecycle(
+                    setAgentVisibleRuntimeState(
                         client: client,
                         key: def.statusKey,
-                        lifecycle: .running,
+                        displayName: def.displayName,
+                        state: .running,
                         workspaceId: workspaceId,
                         surfaceId: surfaceId
-                    )
-                    let runningStatus = String(localized: "agent.generic.status.running", defaultValue: "Running")
-                    _ = try? sendV1Command(
-                        "set_status \(def.statusKey) \(runningStatus) --icon=bolt.fill --color=#4C8DFF --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                        client: client
                     )
                 case .idle?:
                     if !hasNewerRunningSession(workspaceId: workspaceId, surfaceId: surfaceId) {
@@ -31027,36 +31117,24 @@ export default BMUXSessionRestore;
                     }
                     setIdleStatusUnlessAnotherSessionIsRunning(workspaceId: workspaceId, surfaceId: surfaceId)
                 case .needsInput?:
-                    setAgentLifecycle(
+                    setAgentVisibleRuntimeState(
                         client: client,
                         key: def.statusKey,
-                        lifecycle: .needsInput,
+                        displayName: def.displayName,
+                        state: .needsInput,
                         workspaceId: workspaceId,
-                        surfaceId: surfaceId
-                    )
-                    let statusValue = String.localizedStringWithFormat(
-                        String(localized: "agent.generic.notification.status.needsInput", defaultValue: "%@ needs input"),
-                        def.displayName
-                    )
-                    _ = try? sendV1Command(
-                        "set_status \(def.statusKey) \(statusValue) --icon=bell.fill --color=#4C8DFF --priority=100 --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                        client: client
+                        surfaceId: surfaceId,
+                        priority: 100
                     )
                 case .error?:
-                    setAgentLifecycle(
+                    setAgentVisibleRuntimeState(
                         client: client,
                         key: def.statusKey,
-                        lifecycle: .needsInput,
+                        displayName: def.displayName,
+                        state: .error,
                         workspaceId: workspaceId,
-                        surfaceId: surfaceId
-                    )
-                    let statusValue = String.localizedStringWithFormat(
-                        String(localized: "agent.generic.notification.status.error", defaultValue: "%@ error"),
-                        def.displayName
-                    )
-                    _ = try? sendV1Command(
-                        "set_status \(def.statusKey) \(statusValue) --icon=exclamationmark.triangle.fill --color=#FF453A --priority=100 --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                        client: client
+                        surfaceId: surfaceId,
+                        priority: 100
                     )
                 case nil:
                     break
@@ -31109,7 +31187,8 @@ export default BMUXSessionRestore;
                             for: def,
                             parsedInput: input,
                             client: client,
-                            workspaceId: workspaceId
+                            workspaceId: workspaceId,
+                            force: shouldForceCustomAutoNaming(for: def)
                         ),
                         rejectTerminalTurn: def.name == "codex"
                     )) ?? (staleTerminalTurn: false, nested: false)
@@ -31216,26 +31295,19 @@ export default BMUXSessionRestore;
                     stopStaleCodexPromptSubmit()
                     return
                 }
-                setAgentLifecycle(
+                setAgentVisibleRuntimeState(
                     client: client,
                     key: def.statusKey,
-                    lifecycle: .running,
+                    displayName: def.displayName,
+                    state: .running,
                     workspaceId: workspaceId,
-                    surfaceId: surfaceId
+                    surfaceId: surfaceId,
+                    clearNotifications: true
                 )
                 if codexPromptTurnWentTerminal() {
                     stopStaleCodexPromptSubmit(restoreVisibleState: true)
                     return
                 }
-                _ = try? sendV1Command(
-                    "clear_notifications --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                    client: client
-                )
-                let runningStatus = String(localized: "agent.generic.status.running", defaultValue: "Running")
-                _ = try sendV1Command(
-                    "set_status \(def.statusKey) \(runningStatus) --icon=bolt.fill --color=#4C8DFF --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                    client: client
-                )
                 if codexPromptTurnWentTerminal() {
                     stopStaleCodexPromptSubmit(restoreVisibleState: true)
                     return
@@ -31280,6 +31352,24 @@ export default BMUXSessionRestore;
                     telemetry: telemetry
                 )
             }
+            spawnDetachedAgentAutoNameIfEligible(
+                def: def,
+                sessionId: sessionId,
+                workspaceId: workspaceId,
+                surfaceId: surfaceId,
+                transcriptPath: normalizedHookValue(input.transcriptPath ?? mapped?.transcriptPath),
+                cwd: preferredAgentHookResumeWorkingDirectory(
+                    kind: def.name,
+                    current: launchCommand,
+                    currentCwd: hookCwd,
+                    mapped: mapped
+                ),
+                trigger: "prompt-submit",
+                client: client,
+                env: env,
+                telemetry: telemetry,
+                force: shouldForceCustomAutoNaming(for: def)
+            )
 
         case .stop:
             if def.name == "codex", !sessionId.isEmpty {
@@ -31290,7 +31380,12 @@ export default BMUXSessionRestore;
             }
             let mapped = sessionId.isEmpty ? nil : (try? store.lookup(sessionId: sessionId))
             guard let target = resolveAgentHookTarget(mapped: mapped) else {
-                didSendFeedTelemetry = true
+                switch action {
+                case .approvalResponse:
+                    didSendFeedTelemetry = true
+                default:
+                    break
+                }
                 print("{}")
                 return
             }
@@ -31425,7 +31520,8 @@ export default BMUXSessionRestore;
                         for: def,
                         parsedInput: input,
                         client: client,
-                        workspaceId: workspaceId
+                        workspaceId: workspaceId,
+                        force: shouldForceCustomAutoNaming(for: def)
                     )
                 )) ?? false
             } else {
@@ -31542,83 +31638,67 @@ export default BMUXSessionRestore;
             }
             if !suppressVisibleMutations {
                 if let codexFailure {
-                    setAgentLifecycle(
+                    setAgentVisibleRuntimeState(
                         client: client,
                         key: def.statusKey,
-                        lifecycle: .needsInput,
+                        displayName: def.displayName,
+                        state: .error,
                         workspaceId: workspaceId,
-                        surfaceId: surfaceId
-                    )
-                    _ = try? sendV1Command(
-                        "set_status \(def.statusKey) \(codexFailure.statusValue) --icon=exclamationmark.triangle.fill --color=#FF453A --priority=100 --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                        client: client
+                        surfaceId: surfaceId,
+                        statusValue: codexFailure.statusValue,
+                        priority: 100
                     )
                 } else if antigravityFailure != nil {
-                    setAgentLifecycle(
+                    setAgentVisibleRuntimeState(
                         client: client,
                         key: def.statusKey,
-                        lifecycle: .needsInput,
+                        displayName: def.displayName,
+                        state: .error,
                         workspaceId: workspaceId,
-                        surfaceId: surfaceId
-                    )
-                    let statusValue = String.localizedStringWithFormat(
-                        String(localized: "agent.generic.notification.status.error", defaultValue: "%@ error"),
-                        def.displayName
-                    )
-                    _ = try? sendV1Command(
-                        "set_status \(def.statusKey) \(statusValue) --icon=exclamationmark.triangle.fill --color=#FF453A --priority=100 --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                        client: client
+                        surfaceId: surfaceId,
+                        priority: 100
                     )
                 } else if antigravityHasActiveBackgroundWork {
-                    setAgentLifecycle(
+                    setAgentVisibleRuntimeState(
                         client: client,
                         key: def.statusKey,
-                        lifecycle: .running,
+                        displayName: def.displayName,
+                        state: .running,
                         workspaceId: workspaceId,
                         surfaceId: surfaceId
-                    )
-                    let runningStatus = String(localized: "agent.generic.status.running", defaultValue: "Running")
-                    _ = try? sendV1Command(
-                        "set_status \(def.statusKey) \(runningStatus) --icon=bolt.fill --color=#4C8DFF --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                        client: client
                     )
                 } else {
-                    setAgentLifecycle(
-                        client: client,
-                        key: def.statusKey,
-                        lifecycle: .idle,
-                        workspaceId: workspaceId,
-                        surfaceId: surfaceId
-                    )
                     setIdleStatusUnlessAnotherSessionIsRunning(workspaceId: workspaceId, surfaceId: surfaceId)
                 }
             }
 
-            // Opt-in auto-naming for generic-agent sessions: a detached pass so the
-            // summarization subprocess never blocks this short sync hook.
-            // Gate the fork on the live setting (one cheap socket probe) so a
-            // disabled feature spawns nothing extra on turn end; the detached
-            // process re-probes to honor a toggle that lands mid-pass.
-            if autoNamingSource(for: def) != nil, !suppressVisibleMutations, !sessionId.isEmpty,
-               let autoNameProbe = try? client.sendV2(
-                   method: "workspace.set_auto_title",
-                   params: ["probe": true, "workspace_id": workspaceId]
-               ),
-               autoNameProbe["enabled"] as? Bool == true,
-               autoNameProbe["workspace_user_owned"] as? Bool != true {
-                spawnDetachedAgentAutoName(
-                    def: def,
-                    sessionId: sessionId,
-                    workspaceId: workspaceId,
-                    surfaceId: surfaceId,
-                    transcriptPath: normalizedHookValue(input.transcriptPath ?? mapped?.transcriptPath),
-                    cwd: cwd,
-                    env: env,
-                    telemetry: telemetry
-                )
-            }
+            // Opt-in auto-naming runs detached so summarization never blocks this
+            // short sync hook. The helper probes the live setting before spawning,
+            // and the detached process re-probes to honor mid-pass toggles.
+            spawnDetachedAgentAutoNameIfEligible(
+                def: def,
+                sessionId: sessionId,
+                workspaceId: workspaceId,
+                surfaceId: surfaceId,
+                transcriptPath: normalizedHookValue(input.transcriptPath ?? mapped?.transcriptPath),
+                cwd: cwd,
+                trigger: "stop",
+                client: client,
+                env: env,
+                telemetry: telemetry,
+                force: shouldForceCustomAutoNaming(for: def)
+            )
 
-        case .approvalResponse:
+        case .toolStart, .approvalResponse:
+            let telemetryName: String
+            switch action {
+            case .toolStart:
+                telemetryName = "tool-start"
+            case .approvalResponse:
+                telemetryName = "approval-response"
+            default:
+                telemetryName = "running-reconcile"
+            }
             let mapped = sessionId.isEmpty ? nil : (try? store.lookup(sessionId: sessionId))
             guard let target = resolveAgentHookTarget(mapped: mapped) else {
                 didSendFeedTelemetry = true
@@ -31666,24 +31746,17 @@ export default BMUXSessionRestore;
                 )
             }
             if !suppressVisibleMutations {
-                setAgentLifecycle(
+                setAgentVisibleRuntimeState(
                     client: client,
                     key: def.statusKey,
-                    lifecycle: .running,
+                    displayName: def.displayName,
+                    state: .running,
                     workspaceId: workspaceId,
-                    surfaceId: surfaceId
-                )
-                _ = try? sendV1Command(
-                    "clear_notifications --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                    client: client
-                )
-                let runningStatus = String(localized: "agent.generic.status.running", defaultValue: "Running")
-                _ = try? sendV1Command(
-                    "set_status \(def.statusKey) \(runningStatus) --icon=bolt.fill --color=#4C8DFF --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                    client: client
+                    surfaceId: surfaceId,
+                    clearNotifications: true
                 )
             } else {
-                telemetry.breadcrumb("\(def.name)-hook.approval-response.nested-suppressed")
+                telemetry.breadcrumb("\(def.name)-hook.\(telemetryName).nested-suppressed")
             }
 
         case .notification:
@@ -31851,7 +31924,8 @@ export default BMUXSessionRestore;
                             for: def,
                             parsedInput: input,
                             client: client,
-                            workspaceId: workspaceId
+                            workspaceId: workspaceId,
+                            force: shouldForceCustomAutoNaming(for: def)
                         )
                     )
                 } else {
@@ -31936,36 +32010,24 @@ export default BMUXSessionRestore;
                 // lifecycle in place; the fullyIdle turn boundary reconciles.
                 break
             case .needsInput?:
-                setAgentLifecycle(
+                setAgentVisibleRuntimeState(
                     client: client,
                     key: def.statusKey,
-                    lifecycle: .needsInput,
+                    displayName: def.displayName,
+                    state: .needsInput,
                     workspaceId: workspaceId,
-                    surfaceId: surfaceId
-                )
-                let statusValue = String.localizedStringWithFormat(
-                    String(localized: "agent.generic.notification.status.needsInput", defaultValue: "%@ needs input"),
-                    def.displayName
-                )
-                _ = try? sendV1Command(
-                    "set_status \(def.statusKey) \(statusValue) --icon=bell.fill --color=#4C8DFF --priority=100 --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                    client: client
+                    surfaceId: surfaceId,
+                    priority: 100
                 )
             case .error?:
-                setAgentLifecycle(
+                setAgentVisibleRuntimeState(
                     client: client,
                     key: def.statusKey,
-                    lifecycle: .needsInput,
+                    displayName: def.displayName,
+                    state: .error,
                     workspaceId: workspaceId,
-                    surfaceId: surfaceId
-                )
-                let statusValue = String.localizedStringWithFormat(
-                    String(localized: "agent.generic.notification.status.error", defaultValue: "%@ error"),
-                    def.displayName
-                )
-                _ = try? sendV1Command(
-                    "set_status \(def.statusKey) \(statusValue) --icon=exclamationmark.triangle.fill --color=#FF453A --priority=100 --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
-                    client: client
+                    surfaceId: surfaceId,
+                    priority: 100
                 )
             case .idle?:
                 if !hasNewerRunningSession(workspaceId: workspaceId, surfaceId: surfaceId) {
@@ -32004,7 +32066,8 @@ export default BMUXSessionRestore;
                             for: def,
                             parsedInput: input,
                             client: client,
-                            workspaceId: mapped.workspaceId
+                            workspaceId: mapped.workspaceId,
+                            force: shouldForceCustomAutoNaming(for: def)
                         )
                     )
                 }
@@ -32226,6 +32289,86 @@ export default BMUXSessionRestore;
             return direct
         }
         return nil
+    }
+
+    private func feedSurfaceId(rawObject: [String: Any]?, fallback: String?) -> String? {
+        if let fallback = normalizedHookValue(fallback) {
+            return fallback
+        }
+        if let rawObject,
+           let direct = firstString(
+                in: rawObject,
+                keys: ["surface_id", "surfaceId", "panel_id", "panelId"]
+           ) {
+            return normalizedHookValue(direct)
+        }
+        return nil
+    }
+
+    private func agentStatusIdentity(forFeedSource source: String) -> (key: String, displayName: String)? {
+        switch source {
+        case "claude":
+            return (
+                Self.claudeCodeStatusKey,
+                String(localized: "cli.claude-hook.notification.title", defaultValue: "Claude Code")
+            )
+        case "codex":
+            guard let def = Self.agentDef(named: source) else { return nil }
+            return (def.statusKey, def.displayName)
+        default:
+            return nil
+        }
+    }
+
+    private func reconcileAgentRunningStateFromFeedEvent(
+        source: String,
+        hookEventName: String,
+        rawObject: [String: Any],
+        client: SocketClient?,
+        socketPath: String?,
+        socketPassword: String?,
+        env: [String: String]
+    ) {
+        guard hookEventName == "PreToolUse",
+              let identity = agentStatusIdentity(forFeedSource: source),
+              let workspaceId = feedWorkspaceId(rawObject: rawObject, fallback: env["BMUX_WORKSPACE_ID"])
+        else {
+            return
+        }
+
+        var ownedClient: SocketClient?
+        defer { ownedClient?.close() }
+        let activeClient: SocketClient
+        if let client {
+            activeClient = client
+        } else if let socketPath {
+            let feedStateClient = SocketClient(path: socketPath)
+            do {
+                try feedStateClient.connectWithoutRetry(responseTimeout: 0.1)
+                try authenticateClientIfNeeded(
+                    feedStateClient,
+                    explicitPassword: socketPassword,
+                    socketPath: socketPath,
+                    responseTimeout: 0.1
+                )
+            } catch {
+                feedStateClient.close()
+                return
+            }
+            ownedClient = feedStateClient
+            activeClient = feedStateClient
+        } else {
+            return
+        }
+        setAgentVisibleRuntimeState(
+            client: activeClient,
+            key: identity.key,
+            displayName: identity.displayName,
+            state: .running,
+            workspaceId: workspaceId,
+            surfaceId: feedSurfaceId(rawObject: rawObject, fallback: env["BMUX_SURFACE_ID"]),
+            clearNotifications: true
+        )
     }
 
     private func agentPidForFeedSource(
@@ -34161,6 +34304,16 @@ export default BMUXSessionRestore;
             ?? firstString(in: stdinObj, keys: ["request_id", "tool_use_id", "toolUseID"])
             ?? "\(source)-\(sessionId)-\(rawEvent)-\(toolName)-\(Int(Date().timeIntervalSince1970 * 1000))"
         eventDict["_opencode_request_id"] = requestId
+
+        reconcileAgentRunningStateFromFeedEvent(
+            source: source,
+            hookEventName: hookEventName,
+            rawObject: stdinObj,
+            client: client,
+            socketPath: socketPath,
+            socketPassword: socketPassword,
+            env: env
+        )
 
         // Sync. For actionable events we block up to 120s waiting
         // for the user's Feed click; the hook's stdout is then a

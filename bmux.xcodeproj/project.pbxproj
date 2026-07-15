@@ -75,10 +75,10 @@
 		F4350A110000000000000001 /* AppBundleIconPersistencePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4350A130000000000000001 /* AppBundleIconPersistencePolicy.swift */; };
 		F4350A120000000000000001 /* AppBundleIconPersistencePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4350A130000000000000001 /* AppBundleIconPersistencePolicy.swift */; };
 		C0DE45AC0000000000000001 /* AppDelegate+AgentChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE45AC0000000000000002 /* AppDelegate+AgentChat.swift */; };
-		C4A570010000000000000001 /* AppDelegate+CanvasShortcutRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A570010000000000000002 /* AppDelegate+CanvasShortcutRouting.swift */; };
-		C4160A030000000000000001 /* AppDelegate+ClosedItemHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4160A030000000000000002 /* AppDelegate+ClosedItemHistory.swift */; };
 		C54860050000000000000001 /* AppDelegate+BmuxNavigationDeepLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860050000000000000002 /* AppDelegate+BmuxNavigationDeepLinks.swift */; };
 		C3677004000000000000001 /* AppDelegate+BmuxSSHURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3677004000000000000002 /* AppDelegate+BmuxSSHURL.swift */; };
+		C4A570010000000000000001 /* AppDelegate+CanvasShortcutRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A570010000000000000002 /* AppDelegate+CanvasShortcutRouting.swift */; };
+		C4160A030000000000000001 /* AppDelegate+ClosedItemHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4160A030000000000000002 /* AppDelegate+ClosedItemHistory.swift */; };
 		C65930010000000000000003 /* AppDelegate+CrashSessionSnapshotRemoval.swift in Sources */ = {isa = PBXBuildFile; fileRef = C65930010000000000000004 /* AppDelegate+CrashSessionSnapshotRemoval.swift */; };
 		DCDC3000000000000000E001 /* AppDelegate+DockShortcutRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDC3000000000000000E002 /* AppDelegate+DockShortcutRouting.swift */; };
 		DCDC1000000000000000C000 /* AppDelegate+DockSurfaceMove.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDC1000000000000000C001 /* AppDelegate+DockSurfaceMove.swift */; };
@@ -94,6 +94,7 @@
 		A5F100000000000000000011 /* AppDelegate+NotificationOpen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F100000000000000000012 /* AppDelegate+NotificationOpen.swift */; };
 		A5F100000000000000000003 /* AppDelegate+NotificationScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F100000000000000000004 /* AppDelegate+NotificationScroll.swift */; };
 		6313C7A00000000000000001 /* AppDelegate+PaneMemoryGuardrail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6313C7A00000000000000002 /* AppDelegate+PaneMemoryGuardrail.swift */; };
+		B71000000000000000000001 /* AppDelegate+PushToTalkVoiceInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71000000000000000000002 /* AppDelegate+PushToTalkVoiceInput.swift */; };
 		2907A0012907A0012907A001 /* AppDelegate+RecoverableMainWindowRoutes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2907A0022907A0022907A002 /* AppDelegate+RecoverableMainWindowRoutes.swift */; };
 		C0DE74140000000000000001 /* AppDelegate+SavedLayoutMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE74140000000000000002 /* AppDelegate+SavedLayoutMenu.swift */; };
 		6419A0016419A0016419A001 /* AppDelegate+ShortcutRoutingTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6419A0026419A0026419A002 /* AppDelegate+ShortcutRoutingTesting.swift */; };
@@ -134,6 +135,206 @@
 		74AB3F34FE3B4974A3A5D264 /* AutoNamingHookPayloadAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46792DAA478444ED87B17B31 /* AutoNamingHookPayloadAdapterTests.swift */; };
 		C0DE35860000000000000001 /* BackgroundWorkspacePrimeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE35860000000000000002 /* BackgroundWorkspacePrimeCoordinator.swift */; };
 		A50012F1 /* Backport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50012F0 /* Backport.swift */; };
+		B900000BA1B2C3D4E5F60719 /* bmux in Copy CLI */ = {isa = PBXBuildFile; fileRef = B9000004A1B2C3D4E5F60719 /* bmux */; };
+		C1ADE20002A1B2C3D4E5F719 /* bmux-claude-wrapper in Copy CLI */ = {isa = PBXBuildFile; fileRef = C1ADE20001A1B2C3D4E5F719 /* bmux-claude-wrapper */; };
+		C1ADE30002A1B2C3D4E5F719 /* bmux-codex-wrapper in Copy CLI */ = {isa = PBXBuildFile; fileRef = C1ADE30001A1B2C3D4E5F719 /* bmux-codex-wrapper */; };
+		A5001623 /* bmux.sdef in Resources */ = {isa = PBXBuildFile; fileRef = A5001622 /* bmux.sdef */; };
+		B9000002A1B2C3D4E5F60719 /* bmux.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000001A1B2C3D4E5F60719 /* bmux.swift */; };
+		C0DE1A060000000000000001 /* bmux_layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE1A060000000000000002 /* bmux_layout.swift */; };
+		B9000034A1B2C3D4E5F60719 /* bmux_open.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000030A1B2C3D4E5F60719 /* bmux_open.swift */; };
+		A5001654 /* BmuxActionTrust.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001655 /* BmuxActionTrust.swift */; };
+		AC4A6E7C4A700001AC4A0001 /* BmuxAgentChat in Frameworks */ = {isa = PBXBuildFile; productRef = AC4A6E7C4A700001AC4A0002 /* BmuxAgentChat */; };
+		AC4A6E7C4A700001AC4A0101 /* BmuxAgentChat in Frameworks */ = {isa = PBXBuildFile; productRef = AC4A6E7C4A700001AC4A0002 /* BmuxAgentChat */; };
+		C0DE43000000000000000001 /* BmuxAgentChatConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE43000000000000000002 /* BmuxAgentChatConfig.swift */; };
+		C0DE43000000000000000009 /* BmuxAgentChatConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE4300000000000000000A /* BmuxAgentChatConfigTests.swift */; };
+		A5B00003A1B2C3D4E5F60718 /* BMUXAgentLaunch in Frameworks */ = {isa = PBXBuildFile; productRef = A5B00002A1B2C3D4E5F60718 /* BMUXAgentLaunch */; };
+		A5B00004A1B2C3D4E5F60718 /* BMUXAgentLaunch in Frameworks */ = {isa = PBXBuildFile; productRef = A5B00002A1B2C3D4E5F60718 /* BMUXAgentLaunch */; };
+		A5B00005A1B2C3D4E5F60718 /* BMUXAgentLaunch in Frameworks */ = {isa = PBXBuildFile; productRef = A5B00002A1B2C3D4E5F60718 /* BMUXAgentLaunch */; };
+		E3309A07 /* bmuxApp+EqualizeSplitsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3309A08 /* bmuxApp+EqualizeSplitsMenu.swift */; };
+		C4160A010000000000000001 /* bmuxApp+HistoryMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4160A010000000000000002 /* bmuxApp+HistoryMenu.swift */; };
+		A5001001 /* bmuxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001011 /* bmuxApp.swift */; };
+		C9A2B00000000000000000B3 /* BmuxAppKitSupportUI in Frameworks */ = {isa = PBXBuildFile; productRef = C9A2B00000000000000000B2 /* BmuxAppKitSupportUI */; };
+		C9A2B00000000000000000C3 /* BmuxAppKitSupportUI in Frameworks */ = {isa = PBXBuildFile; productRef = C9A2B00000000000000000C2 /* BmuxAppKitSupportUI */; };
+		5EDB6027B346C46521A93C74 /* BMUXAuthCore in Frameworks */ = {isa = PBXBuildFile; productRef = 29813FE5A6CBC1019289A251 /* BMUXAuthCore */; };
+		53750003A0B1C2D3E4F50003 /* BmuxAuthRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 53750002A0B1C2D3E4F50002 /* BmuxAuthRuntime */; };
+		D7032A060000000000000001 /* BmuxBrowser in Frameworks */ = {isa = PBXBuildFile; productRef = D7032A060000000000000002 /* BmuxBrowser */; };
+		E3B7A30000000000000000C3 /* BmuxBrowser in Frameworks */ = {isa = PBXBuildFile; productRef = E3B7A30000000000000000C2 /* BmuxBrowser */; };
+		CA52A003CA52A003CA52A003 /* BmuxCanvas in Frameworks */ = {isa = PBXBuildFile; productRef = CA52A005CA52A005CA52A005 /* BmuxCanvas */; };
+		CA52A007CA52A007CA52A007 /* BmuxCanvas in Frameworks */ = {isa = PBXBuildFile; productRef = CA52A005CA52A005CA52A005 /* BmuxCanvas */; };
+		CA53A003CA53A003CA53A003 /* BmuxCanvasUI in Frameworks */ = {isa = PBXBuildFile; productRef = CA53A005CA53A005CA53A005 /* BmuxCanvasUI */; };
+		D4461A487C13945177EEE9A1 /* BMUXCLI+AgentHookCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61AD48A9E6C3F1BE2B547FFE /* BMUXCLI+AgentHookCatalog.swift */; };
+		B9000063A1B2C3D4E5F60719 /* BMUXCLI+AgentHookDefinitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000062A1B2C3D4E5F60719 /* BMUXCLI+AgentHookDefinitions.swift */; };
+		6D9C51AB30A64B1ABC819146 /* BMUXCLI+AgentHookPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B1211170 /* BMUXCLI+AgentHookPayload.swift */; };
+		C6711A050000000000000001 /* BMUXCLI+AgentHookRestoreEvidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6711B050000000000000001 /* BMUXCLI+AgentHookRestoreEvidence.swift */; };
+		B9000068A1B2C3D4E5F60719 /* BMUXCLI+AmpExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000069A1B2C3D4E5F60719 /* BMUXCLI+AmpExtension.swift */; };
+		0CB4E9797AD54D3BB9CF06F9 /* BMUXCLI+AutoNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B1211166 /* BMUXCLI+AutoNaming.swift */; };
+		6D9C51AB30A64B1ABC819142 /* BMUXCLI+AutoNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B1211166 /* BMUXCLI+AutoNaming.swift */; };
+		6D9C51AB30A64B1ABC81914A /* BMUXCLI+AutoNamingDispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B121116A /* BMUXCLI+AutoNamingDispatch.swift */; };
+		6D9C51AB30A64B1ABC819143 /* BMUXCLI+AutoNamingGenericHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B1211167 /* BMUXCLI+AutoNamingGenericHooks.swift */; };
+		6D9C51AB30A64B1ABC819144 /* BMUXCLI+AutoNamingHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B1211168 /* BMUXCLI+AutoNamingHooks.swift */; };
+		6D9C51AB30A64B1ABC819145 /* BMUXCLI+AutoNamingSummarizers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B1211169 /* BMUXCLI+AutoNamingSummarizers.swift */; };
+		C72280000000000000000002 /* BMUXCLI+ClaudeHookWorkspaceRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = C72280000000000000000001 /* BMUXCLI+ClaudeHookWorkspaceRouting.swift */; };
+		2DA8D48D99FB520EB179B015 /* BMUXCLI+ClaudePushNotificationHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF59318F1D5B2195AC77C28 /* BMUXCLI+ClaudePushNotificationHook.swift */; };
+		C0D3F1F00000000000000101 /* BMUXCLI+CodexFireAndForgetHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3F1F00000000000000102 /* BMUXCLI+CodexFireAndForgetHooks.swift */; };
+		C0DE71000000000000000001 /* BMUXCLI+CodexTokenAudit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE71000000000000000002 /* BMUXCLI+CodexTokenAudit.swift */; };
+		B90000D2A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B90000D1A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift */; };
+		B9000050A1B2C3D4E5F60719 /* BMUXCLI+Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000051A1B2C3D4E5F60719 /* BMUXCLI+Config.swift */; };
+		C0DE72000000000000000001 /* BMUXCLI+ContextEfficiency.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE72000000000000000002 /* BMUXCLI+ContextEfficiency.swift */; };
+		B9000035A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000031A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift */; };
+		B9000064A1B2C3D4E5F60719 /* BMUXCLI+Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000065A1B2C3D4E5F60719 /* BMUXCLI+Events.swift */; };
+		B9000046A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000047A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift */; };
+		B9000061A1B2C3D4E5F60719 /* BMUXCLI+HermesAgentHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000060A1B2C3D4E5F60719 /* BMUXCLI+HermesAgentHooks.swift */; };
+		B9000052A1B2C3D4E5F60719 /* BMUXCLI+InstallPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000053A1B2C3D4E5F60719 /* BMUXCLI+InstallPreview.swift */; };
+		489F4CF9B768C42D87B5EB2F /* BMUXCLI+KimiHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3D532FF0A00E20DA31667F /* BMUXCLI+KimiHooks.swift */; };
+		B9000071A1B2C3D4E5F60719 /* BMUXCLI+Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000070A1B2C3D4E5F60719 /* BMUXCLI+Memory.swift */; };
+		D7AB0000000000000000000D /* BMUXCLI+MoveTabToNewWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB0000000000000000000E /* BMUXCLI+MoveTabToNewWorkspace.swift */; };
+		B9000072A1B2C3D4E5F60719 /* BMUXCLI+OmpExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000073A1B2C3D4E5F60719 /* BMUXCLI+OmpExtension.swift */; };
+		C05555010000000000000001 /* BMUXCLI+PiExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05555010000000000000002 /* BMUXCLI+PiExtension.swift */; };
+		C05555010000000000000003 /* BMUXCLI+PiExtensionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05555010000000000000004 /* BMUXCLI+PiExtensionSource.swift */; };
+		C05555010000000000000005 /* BMUXCLI+PiExtensionSourcePart1.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05555010000000000000006 /* BMUXCLI+PiExtensionSourcePart1.swift */; };
+		C05555010000000000000007 /* BMUXCLI+PiExtensionSourcePart2.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05555010000000000000008 /* BMUXCLI+PiExtensionSourcePart2.swift */; };
+		B9000054A1B2C3D4E5F60719 /* BMUXCLI+Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000055A1B2C3D4E5F60719 /* BMUXCLI+Process.swift */; };
+		C0DE70200000000000000001 /* BMUXCLI+Provenance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70200000000000000002 /* BMUXCLI+Provenance.swift */; };
+		C73660010000000000000001 /* BMUXCLI+RemotePTYErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = C73660010000000000000002 /* BMUXCLI+RemotePTYErrors.swift */; };
+		REE0CA0000000000000000C2 /* BMUXCLI+Remotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = REE0CA0000000000000000C1 /* BMUXCLI+Remotes.swift */; };
+		888222D96880953F33F554F1 /* BMUXCLI+RovoDevHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF43B7BD28A755A6280428D6 /* BMUXCLI+RovoDevHooks.swift */; };
+		C0DE64950000000000000001 /* BMUXCLI+SessionsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64950000000000000002 /* BMUXCLI+SessionsList.swift */; };
+		C0DE64960000000000000005 /* BMUXCLI+SessionsListClaudeWorkflow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64960000000000000006 /* BMUXCLI+SessionsListClaudeWorkflow.swift */; };
+		C0DE64950000000000000007 /* BMUXCLI+SessionsListForkDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64950000000000000008 /* BMUXCLI+SessionsListForkDiagnostics.swift */; };
+		C0DE64960000000000000003 /* BMUXCLI+SessionsListForkStartupInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64960000000000000004 /* BMUXCLI+SessionsListForkStartupInput.swift */; };
+		C0DE64960000000000000001 /* BMUXCLI+SessionsListProcessArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64960000000000000002 /* BMUXCLI+SessionsListProcessArguments.swift */; };
+		C12984000000000000000002 /* BMUXCLI+SIGPIPEProbes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12984000000000000000001 /* BMUXCLI+SIGPIPEProbes.swift */; };
+		B9000041A1B2C3D4E5F60719 /* BMUXCLI+SSHCommandSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000040A1B2C3D4E5F60719 /* BMUXCLI+SSHCommandSupport.swift */; };
+			6702F211735472DC14581CA7 /* BMUXCLI+SSHReconnectPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCF61A4F72B75DC4EA47DF6F /* BMUXCLI+SSHReconnectPrompt.swift */; };
+			CBF07000000000000000002 /* BMUXCLI+SSHStartupScripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF07000000000000000001 /* BMUXCLI+SSHStartupScripts.swift */; };
+		B900002EA1B2C3D4E5F60719 /* BMUXCLI+Themes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B900002CA1B2C3D4E5F60719 /* BMUXCLI+Themes.swift */; };
+		B900002FA1B2C3D4E5F60719 /* BMUXCLI+ThemeSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B900002DA1B2C3D4E5F60719 /* BMUXCLI+ThemeSupport.swift */; };
+		B9000048A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatHUDSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000049A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatHUDSupport.swift */; };
+		B9000044A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000045A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatSupport.swift */; };
+		B9000033A1B2C3D4E5F60719 /* BMUXCLI+TopRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000032A1B2C3D4E5F60719 /* BMUXCLI+TopRendering.swift */; };
+		C0DE31390000000000000105 /* BMUXCLIErrorOutputRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE31390000000000000106 /* BMUXCLIErrorOutputRegressionTests.swift */; };
+		A72C9F4179B54DF38E99A021 /* BmuxCLIPathInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A4FE96C3F394FC6A6D4B018 /* BmuxCLIPathInstaller.swift */; };
+		C12985000000000000000004 /* BMUXCLISentryTelemetryRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12985000000000000000003 /* BMUXCLISentryTelemetryRegressionTests.swift */; };
+		C0DE64950000000000000009 /* BMUXCLISessionsListForkDiagnosticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE6495000000000000000A /* BMUXCLISessionsListForkDiagnosticsTests.swift */; };
+		C0DE64970000000000000001 /* BMUXCLISessionsListOpenCodeTrustTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64970000000000000002 /* BMUXCLISessionsListOpenCodeTrustTests.swift */; };
+		C0DE64970000000000000003 /* BMUXCLISessionsListProcessArgumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64970000000000000004 /* BMUXCLISessionsListProcessArgumentTests.swift */; };
+		C0DE64950000000000000005 /* BMUXCLISessionsListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64950000000000000006 /* BMUXCLISessionsListTests.swift */; };
+		C0DE6495000000000000000B /* BMUXCLISessionsListTranscriptPidTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE6495000000000000000C /* BMUXCLISessionsListTranscriptPidTests.swift */; };
+		C0DE64950000000000000003 /* BMUXCLITestAssertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64950000000000000004 /* BMUXCLITestAssertions.swift */; };
+		5E55500000000000000000E3 /* BmuxCommandPalette in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55500000000000000000E2 /* BmuxCommandPalette */; };
+		5E55500000000000000000E4 /* BmuxCommandPalette in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55500000000000000000E2 /* BmuxCommandPalette */; };
+		A5001650 /* BmuxConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001651 /* BmuxConfig.swift */; };
+		A5FB1209 /* BmuxConfigActionDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB120A /* BmuxConfigActionDefinition.swift */; };
+		A5FB1201 /* BmuxConfigActionSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB1202 /* BmuxConfigActionSaver.swift */; };
+		A5FB1305 /* BmuxConfigActionSaverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB1306 /* BmuxConfigActionSaverTests.swift */; };
+		C0DEF0A40000000000000001 /* BmuxConfigContextMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEF0A40000000000000002 /* BmuxConfigContextMenuTests.swift */; };
+		A5FB120B /* BmuxConfigExecutor+WorkspaceLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB120C /* BmuxConfigExecutor+WorkspaceLaunch.swift */; };
+		A5001652 /* BmuxConfigExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001653 /* BmuxConfigExecutor.swift */; };
+		E30750000000000000000006 /* BmuxConfigNamedColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30750000000000000000005 /* BmuxConfigNamedColorTests.swift */; };
+		A5FB130C /* BmuxConfigNewWorkspaceDefaultLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB130D /* BmuxConfigNewWorkspaceDefaultLayoutTests.swift */; };
+		A5FB130A /* BmuxConfigNewWorkspaceMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB130B /* BmuxConfigNewWorkspaceMenuTests.swift */; };
+		C5D0DEC0CF00000000000A1 /* BmuxConfigStore+ConfigStoreReloading.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5D0DEC0CF00000000000B1 /* BmuxConfigStore+ConfigStoreReloading.swift */; };
+		C1A2B3C4D5E6F70800000001 /* BmuxConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3C4D5E6F70800000002 /* BmuxConfigTests.swift */; };
+		C0DEF0A10000000000000001 /* BmuxConfigUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEF0A10000000000000002 /* BmuxConfigUI.swift */; };
+		A5FB1205 /* BmuxConfigWorkspaceActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB1206 /* BmuxConfigWorkspaceActionTests.swift */; };
+		C0DE72010000000000000003 /* BmuxContextEfficiency in Frameworks */ = {isa = PBXBuildFile; productRef = C0DE72010000000000000002 /* BmuxContextEfficiency */; };
+		C750100000000000000000A3 /* BmuxControlSocket in Frameworks */ = {isa = PBXBuildFile; productRef = C750100000000000000000A2 /* BmuxControlSocket */; };
+		CC0DE00000000000000000A3 /* BmuxCore in Frameworks */ = {isa = PBXBuildFile; productRef = CC0DE00000000000000000A2 /* BmuxCore */; };
+		CC0DE00000000000000000A4 /* BmuxCore in Frameworks */ = {isa = PBXBuildFile; productRef = CC0DE00000000000000000A2 /* BmuxCore */; };
+		D1320AA0D1320AA0D1320AA2 /* BmuxDockTilePlugin.plugin in Copy Dock Tile Plugin */ = {isa = PBXBuildFile; fileRef = D1320AA0D1320AA0D1320AA5 /* BmuxDockTilePlugin.plugin */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C54860040000000000000001 /* BmuxDurableDeepLinkRestoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860040000000000000002 /* BmuxDurableDeepLinkRestoreTests.swift */; };
+		E7E000000000000000000005 /* BmuxEventBus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E000000000000000000006 /* BmuxEventBus.swift */; };
+		E7E000000000000000000003 /* BmuxEventBusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E000000000000000000004 /* BmuxEventBusTests.swift */; };
+		E7E00000000000000000000D /* BmuxEventLogWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E00000000000000000000E /* BmuxEventLogWriter.swift */; };
+		E7E000000000000000000007 /* BmuxEventPublishing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E000000000000000000008 /* BmuxEventPublishing.swift */; };
+		E7E000000000000000000001 /* BmuxEventStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E000000000000000000002 /* BmuxEventStream.swift */; };
+		C0DE45000000000000000001 /* BmuxExtensionKit in Frameworks */ = {isa = PBXBuildFile; productRef = C0DE45000000000000000002 /* BmuxExtensionKit */; };
+		C0DE49000000000000000001 /* BmuxExtensionSidebarExamples in Frameworks */ = {isa = PBXBuildFile; productRef = C0DE49000000000000000002 /* BmuxExtensionSidebarExamples */; };
+		C57B00050000000000000001 /* BmuxExtensionSidebarSelection+CustomSidebarName.swift in Sources */ = {isa = PBXBuildFile; fileRef = C57B00050000000000000002 /* BmuxExtensionSidebarSelection+CustomSidebarName.swift */; };
+		C9A2C00000000000000000C3 /* BmuxFeedback in Frameworks */ = {isa = PBXBuildFile; productRef = C9A2C00000000000000000C2 /* BmuxFeedback */; };
+		5E2701040000000000000004 /* BmuxFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 5E2701040000000000000002 /* BmuxFoundation */; };
+		CF00F00000000000000000A3 /* BmuxFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = CF00F00000000000000000A2 /* BmuxFoundation */; };
+		CF00F00000000000000000A4 /* BmuxFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = CF00F00000000000000000A2 /* BmuxFoundation */; };
+		C617000000000000000000A3 /* BmuxGit in Frameworks */ = {isa = PBXBuildFile; productRef = C617000000000000000000A2 /* BmuxGit */; };
+		C0DE34020000000000000001 /* BmuxHelpCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE34020000000000000003 /* BmuxHelpCommands.swift */; };
+		C0DE34020000000000000002 /* BmuxHelpResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE34020000000000000004 /* BmuxHelpResource.swift */; };
+		C0DE46010000000000000001 /* BMUXInstalledExtensionSidebarHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE46010000000000000002 /* BMUXInstalledExtensionSidebarHostView.swift */; };
+		E7E00000000000000000000B /* BmuxLifecycleEventPublishing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E00000000000000000000C /* BmuxLifecycleEventPublishing.swift */; };
+		2F0C07000000000000000002 /* BmuxMainWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F0C07000000000000000001 /* BmuxMainWindow.swift */; };
+		D36090010000000000000005 /* BmuxMainWindowConstrainFrameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36090010000000000000006 /* BmuxMainWindowConstrainFrameTests.swift */; };
+		D36090020000000000000005 /* BmuxMainWindowFullScreenCapabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36090020000000000000006 /* BmuxMainWindowFullScreenCapabilityTests.swift */; };
+		799F1BEF876006EEB8CD1035 /* BMUXMobileCore in Frameworks */ = {isa = PBXBuildFile; productRef = EFB18E3B3099DFE2ECA3C263 /* BMUXMobileCore */; };
+		EFB18E3C0000000000000001 /* BMUXMobileCore in Frameworks */ = {isa = PBXBuildFile; productRef = EFB18E3B3099DFE2ECA3C263 /* BMUXMobileCore */; };
+		CA1F0A01CA1F0A01CA1F0A01 /* BmuxModalAlertPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1F0A02CA1F0A02CA1F0A02 /* BmuxModalAlertPresentation.swift */; };
+		C54860110000000000000001 /* BmuxNavigationResolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860110000000000000002 /* BmuxNavigationResolution.swift */; };
+		C54860120000000000000001 /* BmuxNavigationSurfaceDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860120000000000000002 /* BmuxNavigationSurfaceDescriptor.swift */; };
+		C54860010000000000000001 /* BmuxNavigationTargetResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860010000000000000002 /* BmuxNavigationTargetResolver.swift */; };
+		C54860030000000000000001 /* BmuxNavigationTargetResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860030000000000000002 /* BmuxNavigationTargetResolverTests.swift */; };
+		C54860130000000000000001 /* BmuxNavigationWorkspaceDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860130000000000000002 /* BmuxNavigationWorkspaceDescriptor.swift */; };
+		E3B7A30000000000000000D3 /* BmuxNotifications in Frameworks */ = {isa = PBXBuildFile; productRef = E3B7A30000000000000000D2 /* BmuxNotifications */; };
+		C0DE31390000000000000101 /* BMUXOpenCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE31390000000000000102 /* BMUXOpenCommandTests.swift */; };
+		C0DE31390000000000000111 /* BMUXOpenHTMLFocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE31390000000000000112 /* BMUXOpenHTMLFocusTests.swift */; };
+		E3B7A30000000000000000F3 /* BmuxPanes in Frameworks */ = {isa = PBXBuildFile; productRef = E3B7A30000000000000000F2 /* BmuxPanes */; };
+		A5C0DE0000000000000000A3 /* BMUXProjectModel in Frameworks */ = {isa = PBXBuildFile; productRef = A5C0DE0000000000000000A2 /* BMUXProjectModel */; };
+		CC0DE10000000000000000A3 /* BmuxRemoteDaemon in Frameworks */ = {isa = PBXBuildFile; productRef = CC0DE10000000000000000A2 /* BmuxRemoteDaemon */; };
+		CC0DE30000000000000000A3 /* BmuxRemoteSession in Frameworks */ = {isa = PBXBuildFile; productRef = CC0DE30000000000000000A2 /* BmuxRemoteSession */; };
+		CC0DE20000000000000000A3 /* BmuxRemoteWorkspace in Frameworks */ = {isa = PBXBuildFile; productRef = CC0DE20000000000000000A2 /* BmuxRemoteWorkspace */; };
+		A9F200000000000000000005 /* BmuxRuntimeDebugCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000005 /* BmuxRuntimeDebugCapture.swift */; };
+		A9F200000000000000000006 /* BmuxRuntimeDebugCaptureConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000006 /* BmuxRuntimeDebugCaptureConfiguration.swift */; };
+		A9F20000000000000000001A /* BmuxRuntimeDebugCaptureSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000001A /* BmuxRuntimeDebugCaptureSender.swift */; };
+		A9F200000000000000000007 /* BmuxRuntimeDebugCaptureSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000007 /* BmuxRuntimeDebugCaptureSequence.swift */; };
+		CD0CFE5300000000CD0CFE53 /* BmuxSettings in Frameworks */ = {isa = PBXBuildFile; productRef = CD0CFE5200000000CD0CFE52 /* BmuxSettings */; };
+		CD0CFE5700000000CD0CFE57 /* BmuxSettings in Frameworks */ = {isa = PBXBuildFile; productRef = CD0CFE5200000000CD0CFE52 /* BmuxSettings */; };
+		D3610C010000000000000001 /* BmuxSettingsJSONPathSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3610C010000000000000002 /* BmuxSettingsJSONPathSupport.swift */; };
+		CD0CFE5600000000CD0CFE56 /* BmuxSettingsUI in Frameworks */ = {isa = PBXBuildFile; productRef = CD0CFE5500000000CD0CFE55 /* BmuxSettingsUI */; };
+		E3B7A30000000000000000B3 /* BmuxSidebar in Frameworks */ = {isa = PBXBuildFile; productRef = E3B7A30000000000000000B2 /* BmuxSidebar */; };
+		DC5DC5DC0000000000000001 /* BmuxSidebarActionDispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC5DC5DC0000000000000002 /* BmuxSidebarActionDispatch.swift */; };
+		C0DE46030000000000000001 /* BMUXSidebarExtensionBrowserPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE46030000000000000002 /* BMUXSidebarExtensionBrowserPanel.swift */; };
+		C5B6A10000000000000000A3 /* BmuxSidebarGit in Frameworks */ = {isa = PBXBuildFile; productRef = C5B6A10000000000000000A2 /* BmuxSidebarGit */; };
+		C5A1FED200000000000000E1 /* BmuxSidebarInterpreterClient in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED200000000000000E3 /* BmuxSidebarInterpreterClient */; };
+		C5A1FED200000000000000E2 /* BmuxSidebarInterpreterClient in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED200000000000000E3 /* BmuxSidebarInterpreterClient */; };
+		C0DE4A000000000000000001 /* BmuxSidebarProviderKit in Frameworks */ = {isa = PBXBuildFile; productRef = C0DE4A000000000000000002 /* BmuxSidebarProviderKit */; };
+		C0DE4A000000000000000005 /* BmuxSidebarProviderKit in Frameworks */ = {isa = PBXBuildFile; productRef = C0DE4A000000000000000004 /* BmuxSidebarProviderKit */; };
+		C5A1FED200000000000000E5 /* BmuxSidebarRemoteRender in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED200000000000000E6 /* BmuxSidebarRemoteRender */; };
+		E7E000000000000000000009 /* BmuxSocketEventMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E00000000000000000000A /* BmuxSocketEventMapper.swift */; };
+		C3677002000000000000001 /* BmuxSSHURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3677002000000000000002 /* BmuxSSHURLRequest.swift */; };
+		C3677001000000000000001 /* BmuxSSHURLRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3677001000000000000002 /* BmuxSSHURLRequestTests.swift */; };
+		C0DE43000000000000000003 /* BmuxSurfaceTabBarBuiltInAction+Codable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE43000000000000000004 /* BmuxSurfaceTabBarBuiltInAction+Codable.swift */; };
+		C10D00030000000000000003 /* BmuxSurfaceTabBarBuiltInAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10D00040000000000000004 /* BmuxSurfaceTabBarBuiltInAction.swift */; };
+		C5A1FED000000000000000C1 /* BmuxSwiftRender in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED000000000000000C3 /* BmuxSwiftRender */; };
+		C5A1FED000000000000000C2 /* BmuxSwiftRender in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED000000000000000C3 /* BmuxSwiftRender */; };
+		C5A1FED100000000000000D1 /* BmuxSwiftRenderUI in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED100000000000000D3 /* BmuxSwiftRenderUI */; };
+		C5A1FED100000000000000D2 /* BmuxSwiftRenderUI in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED100000000000000D3 /* BmuxSwiftRenderUI */; };
+		C750500000000000000000A3 /* BmuxTerminal in Frameworks */ = {isa = PBXBuildFile; productRef = C750500000000000000000A2 /* BmuxTerminal */; };
+		C750200000000000000000A3 /* BmuxTerminalCore in Frameworks */ = {isa = PBXBuildFile; productRef = C750200000000000000000A2 /* BmuxTerminalCore */; };
+		CFF12E0000000000000000A3 /* BmuxTestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = CFF12E0000000000000000A2 /* BmuxTestSupport */; };
+		C7A510000000000000000002 /* BmuxTopMemoryDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A510000000000000000001 /* BmuxTopMemoryDiagnostics.swift */; };
+		B35750000000000000000004 /* BmuxTopProcessArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = B35750000000000000000003 /* BmuxTopProcessArguments.swift */; };
+		C7A50C000000000000000003 /* BmuxTopProcessArgumentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A50C000000000000000004 /* BmuxTopProcessArgumentsTests.swift */; };
+		C7A50C000000000000000002 /* BmuxTopProcessCPUTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A50C000000000000000001 /* BmuxTopProcessCPUTests.swift */; };
+		C7A50D000000000000000002 /* BmuxTopProcessCPUTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A50D000000000000000001 /* BmuxTopProcessCPUTracker.swift */; };
+		C7A50E000000000000000002 /* BmuxTopProcessDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A50E000000000000000001 /* BmuxTopProcessDetails.swift */; };
+		C7A511000000000000000002 /* BmuxTopProcessEnumeration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A511000000000000000001 /* BmuxTopProcessEnumeration.swift */; };
+		C7A512000000000000000002 /* BmuxTopProcessSnapshotCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A512000000000000000001 /* BmuxTopProcessSnapshotCache.swift */; };
+		C7A501000000000000000002 /* BmuxTopSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A501000000000000000001 /* BmuxTopSnapshot.swift */; };
+		C7A508000000000000000002 /* BmuxTopSnapshotScopeCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A508000000000000000001 /* BmuxTopSnapshotScopeCache.swift */; };
+		C7A5090000000000000005A2 /* BmuxTopSnapshotScopeCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A5090000000000000005A1 /* BmuxTopSnapshotScopeCacheTests.swift */; };
+		C7A509000000000000000002 /* BmuxTopSnapshotScopeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A509000000000000000001 /* BmuxTopSnapshotScopeTests.swift */; };
+		CDFEED0300000000CDFEED03 /* BmuxUpdater in Frameworks */ = {isa = PBXBuildFile; productRef = CDFEED0200000000CDFEED02 /* BmuxUpdater */; };
+		CDFEED0600000000CDFEED06 /* BmuxUpdaterUI in Frameworks */ = {isa = PBXBuildFile; productRef = CDFEED0500000000CDFEED05 /* BmuxUpdaterUI */; };
+		D7C0DE00000000000000A101 /* BmuxWebView+ContextMenuLinkCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C0DE00000000000000A102 /* BmuxWebView+ContextMenuLinkCapture.swift */; };
+		D7AB00000000000000000009 /* BmuxWebView+MoveTabToNewWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB0000000000000000000A /* BmuxWebView+MoveTabToNewWorkspace.swift */; };
+		C6255D010000000000000001 /* BmuxWebView+ScriptedDownloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6255D010000000000000002 /* BmuxWebView+ScriptedDownloads.swift */; };
+		C67540030000000000000001 /* BmuxWebView+SubframeDownloadIntentScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67540030000000000000002 /* BmuxWebView+SubframeDownloadIntentScript.swift */; };
+		A5001500 /* BmuxWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001510 /* BmuxWebView.swift */; };
+		D7C0DE00000000000000A103 /* BmuxWebViewContextMenuLinkCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C0DE00000000000000A104 /* BmuxWebViewContextMenuLinkCaptureTests.swift */; };
+		D0B1000CA1B2C3D4E5F60001 /* BmuxWebViewDragRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B1000DA1B2C3D4E5F60001 /* BmuxWebViewDragRoutingTests.swift */; };
+		C0DE58990000000000000004 /* BmuxWebViewKeyDownReentryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE58990000000000000002 /* BmuxWebViewKeyDownReentryTests.swift */; };
+		7D5DA4DC51454ECDBF9AC978 /* BmuxWebViewMouseNavigationButtonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43F90FAF3FD44F11BF547BE9 /* BmuxWebViewMouseNavigationButtonTests.swift */; };
+		5E55200000000000000000B3 /* BmuxWindowing in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55200000000000000000B2 /* BmuxWindowing */; };
+		730600040000000000000001 /* BmuxWindowing in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55200000000000000000B2 /* BmuxWindowing */; };
+		E30750000000000000000004 /* BmuxWorkspaceDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30750000000000000000003 /* BmuxWorkspaceDefinition.swift */; };
+		E3B7A3000000000000000103 /* BmuxWorkspaces in Frameworks */ = {isa = PBXBuildFile; productRef = E3B7A3000000000000000102 /* BmuxWorkspaces */; };
 		B057B0017E57B0017E57B001 /* Bonsplit in Frameworks */ = {isa = PBXBuildFile; productRef = A5001262 /* Bonsplit */; };
 		D0B10010A1B2C3D4E5F60001 /* BonsplitTabBarDebug.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B10011A1B2C3D4E5F60001 /* BonsplitTabBarDebug.swift */; };
 		D0B10002A1B2C3D4E5F60001 /* BonsplitTabBarPassThrough.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B10003A1B2C3D4E5F60001 /* BonsplitTabBarPassThrough.swift */; };
@@ -297,6 +498,14 @@
 		C72280000000000000000004 /* CLINotifyClaudeHookWorkspaceRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C72280000000000000000003 /* CLINotifyClaudeHookWorkspaceRoutingTests.swift */; };
 		A5D41203A1B2C3D4E5F60718 /* CLINotifyProcessIntegrationRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D41204A1B2C3D4E5F60718 /* CLINotifyProcessIntegrationRegressionTests.swift */; };
 		A5D41205A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D41206A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift */; };
+		C0DE70270000000000000001 /* CLIProvenanceContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70270000000000000002 /* CLIProvenanceContext.swift */; };
+		C0DE70210000000000000001 /* CLIProvenanceExplanation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70210000000000000002 /* CLIProvenanceExplanation.swift */; };
+		C0DE70220000000000000001 /* CLIProvenanceExplanationRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70220000000000000002 /* CLIProvenanceExplanationRow.swift */; };
+		C0DE70230000000000000001 /* CLIProvenanceGitResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */; };
+		C0DE70240000000000000001 /* CLIProvenanceResolvedTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70240000000000000002 /* CLIProvenanceResolvedTarget.swift */; };
+		C0DE70250000000000000001 /* CLIProvenanceSQLiteReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70250000000000000002 /* CLIProvenanceSQLiteReader.swift */; };
+		C0DE70280000000000000001 /* CLIProvenanceWorktreeList.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70280000000000000002 /* CLIProvenanceWorktreeList.swift */; };
+		C0DE70260000000000000001 /* CLIProvenanceWorktreeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70260000000000000002 /* CLIProvenanceWorktreeRow.swift */; };
 		C0F16B000000000000000001 /* CLIRemoteShellStartupPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0F16B000000000000000002 /* CLIRemoteShellStartupPerformanceTests.swift */; };
 		A5D41209A1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D4120AA1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift */; };
 		B900004AA1B2C3D4E5F60719 /* CLISocketPathResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = B900004BA1B2C3D4E5F60719 /* CLISocketPathResolver.swift */; };
@@ -314,202 +523,6 @@
 		B900001BA1B2C3D4E5F60719 /* CloseWorkspacesConfirmDialogUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B900001CA1B2C3D4E5F60719 /* CloseWorkspacesConfirmDialogUITests.swift */; };
 		C10D00010000000000000001 /* CloudVMActionLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10D00020000000000000002 /* CloudVMActionLauncher.swift */; };
 		C75740010000000000000001 /* CloudVMMenuItemMetricsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C75740010000000000000002 /* CloudVMMenuItemMetricsTests.swift */; };
-		B900000BA1B2C3D4E5F60719 /* bmux in Copy CLI */ = {isa = PBXBuildFile; fileRef = B9000004A1B2C3D4E5F60719 /* bmux */; };
-		C1ADE20002A1B2C3D4E5F719 /* bmux-claude-wrapper in Copy CLI */ = {isa = PBXBuildFile; fileRef = C1ADE20001A1B2C3D4E5F719 /* bmux-claude-wrapper */; };
-		C1ADE30002A1B2C3D4E5F719 /* bmux-codex-wrapper in Copy CLI */ = {isa = PBXBuildFile; fileRef = C1ADE30001A1B2C3D4E5F719 /* bmux-codex-wrapper */; };
-		A5001623 /* bmux.sdef in Resources */ = {isa = PBXBuildFile; fileRef = A5001622 /* bmux.sdef */; };
-		B9000002A1B2C3D4E5F60719 /* bmux.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000001A1B2C3D4E5F60719 /* bmux.swift */; };
-		C0DE1A060000000000000001 /* bmux_layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE1A060000000000000002 /* bmux_layout.swift */; };
-		B9000034A1B2C3D4E5F60719 /* bmux_open.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000030A1B2C3D4E5F60719 /* bmux_open.swift */; };
-		A5001654 /* BmuxActionTrust.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001655 /* BmuxActionTrust.swift */; };
-		AC4A6E7C4A700001AC4A0001 /* BmuxAgentChat in Frameworks */ = {isa = PBXBuildFile; productRef = AC4A6E7C4A700001AC4A0002 /* BmuxAgentChat */; };
-		AC4A6E7C4A700001AC4A0101 /* BmuxAgentChat in Frameworks */ = {isa = PBXBuildFile; productRef = AC4A6E7C4A700001AC4A0002 /* BmuxAgentChat */; };
-		C0DE43000000000000000001 /* BmuxAgentChatConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE43000000000000000002 /* BmuxAgentChatConfig.swift */; };
-		C0DE43000000000000000009 /* BmuxAgentChatConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE4300000000000000000A /* BmuxAgentChatConfigTests.swift */; };
-		A5B00003A1B2C3D4E5F60718 /* BMUXAgentLaunch in Frameworks */ = {isa = PBXBuildFile; productRef = A5B00002A1B2C3D4E5F60718 /* BMUXAgentLaunch */; };
-		A5B00004A1B2C3D4E5F60718 /* BMUXAgentLaunch in Frameworks */ = {isa = PBXBuildFile; productRef = A5B00002A1B2C3D4E5F60718 /* BMUXAgentLaunch */; };
-		A5B00005A1B2C3D4E5F60718 /* BMUXAgentLaunch in Frameworks */ = {isa = PBXBuildFile; productRef = A5B00002A1B2C3D4E5F60718 /* BMUXAgentLaunch */; };
-		E3309A07 /* bmuxApp+EqualizeSplitsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3309A08 /* bmuxApp+EqualizeSplitsMenu.swift */; };
-		C4160A010000000000000001 /* bmuxApp+HistoryMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4160A010000000000000002 /* bmuxApp+HistoryMenu.swift */; };
-		A5001001 /* bmuxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001011 /* bmuxApp.swift */; };
-		C9A2B00000000000000000B3 /* BmuxAppKitSupportUI in Frameworks */ = {isa = PBXBuildFile; productRef = C9A2B00000000000000000B2 /* BmuxAppKitSupportUI */; };
-		C9A2B00000000000000000C3 /* BmuxAppKitSupportUI in Frameworks */ = {isa = PBXBuildFile; productRef = C9A2B00000000000000000C2 /* BmuxAppKitSupportUI */; };
-		5EDB6027B346C46521A93C74 /* BMUXAuthCore in Frameworks */ = {isa = PBXBuildFile; productRef = 29813FE5A6CBC1019289A251 /* BMUXAuthCore */; };
-		53750003A0B1C2D3E4F50003 /* BmuxAuthRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 53750002A0B1C2D3E4F50002 /* BmuxAuthRuntime */; };
-		D7032A060000000000000001 /* BmuxBrowser in Frameworks */ = {isa = PBXBuildFile; productRef = D7032A060000000000000002 /* BmuxBrowser */; };
-		E3B7A30000000000000000C3 /* BmuxBrowser in Frameworks */ = {isa = PBXBuildFile; productRef = E3B7A30000000000000000C2 /* BmuxBrowser */; };
-		CA52A003CA52A003CA52A003 /* BmuxCanvas in Frameworks */ = {isa = PBXBuildFile; productRef = CA52A005CA52A005CA52A005 /* BmuxCanvas */; };
-		CA52A007CA52A007CA52A007 /* BmuxCanvas in Frameworks */ = {isa = PBXBuildFile; productRef = CA52A005CA52A005CA52A005 /* BmuxCanvas */; };
-		CA53A003CA53A003CA53A003 /* BmuxCanvasUI in Frameworks */ = {isa = PBXBuildFile; productRef = CA53A005CA53A005CA53A005 /* BmuxCanvasUI */; };
-		D4461A487C13945177EEE9A1 /* BMUXCLI+AgentHookCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61AD48A9E6C3F1BE2B547FFE /* BMUXCLI+AgentHookCatalog.swift */; };
-		B9000063A1B2C3D4E5F60719 /* BMUXCLI+AgentHookDefinitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000062A1B2C3D4E5F60719 /* BMUXCLI+AgentHookDefinitions.swift */; };
-		6D9C51AB30A64B1ABC819146 /* BMUXCLI+AgentHookPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B1211170 /* BMUXCLI+AgentHookPayload.swift */; };
-		C6711A050000000000000001 /* BMUXCLI+AgentHookRestoreEvidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6711B050000000000000001 /* BMUXCLI+AgentHookRestoreEvidence.swift */; };
-		B9000068A1B2C3D4E5F60719 /* BMUXCLI+AmpExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000069A1B2C3D4E5F60719 /* BMUXCLI+AmpExtension.swift */; };
-		0CB4E9797AD54D3BB9CF06F9 /* BMUXCLI+AutoNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B1211166 /* BMUXCLI+AutoNaming.swift */; };
-		6D9C51AB30A64B1ABC819142 /* BMUXCLI+AutoNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B1211166 /* BMUXCLI+AutoNaming.swift */; };
-		6D9C51AB30A64B1ABC81914A /* BMUXCLI+AutoNamingDispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B121116A /* BMUXCLI+AutoNamingDispatch.swift */; };
-		6D9C51AB30A64B1ABC819143 /* BMUXCLI+AutoNamingGenericHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B1211167 /* BMUXCLI+AutoNamingGenericHooks.swift */; };
-		6D9C51AB30A64B1ABC819144 /* BMUXCLI+AutoNamingHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B1211168 /* BMUXCLI+AutoNamingHooks.swift */; };
-		6D9C51AB30A64B1ABC819145 /* BMUXCLI+AutoNamingSummarizers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5257257034CA4729B1211169 /* BMUXCLI+AutoNamingSummarizers.swift */; };
-		C72280000000000000000002 /* BMUXCLI+ClaudeHookWorkspaceRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = C72280000000000000000001 /* BMUXCLI+ClaudeHookWorkspaceRouting.swift */; };
-		2DA8D48D99FB520EB179B015 /* BMUXCLI+ClaudePushNotificationHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF59318F1D5B2195AC77C28 /* BMUXCLI+ClaudePushNotificationHook.swift */; };
-		C0D3F1F00000000000000101 /* BMUXCLI+CodexFireAndForgetHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3F1F00000000000000102 /* BMUXCLI+CodexFireAndForgetHooks.swift */; };
-		B90000D2A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B90000D1A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift */; };
-		B9000050A1B2C3D4E5F60719 /* BMUXCLI+Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000051A1B2C3D4E5F60719 /* BMUXCLI+Config.swift */; };
-		B9000035A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000031A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift */; };
-		B9000064A1B2C3D4E5F60719 /* BMUXCLI+Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000065A1B2C3D4E5F60719 /* BMUXCLI+Events.swift */; };
-		B9000046A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000047A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift */; };
-		B9000061A1B2C3D4E5F60719 /* BMUXCLI+HermesAgentHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000060A1B2C3D4E5F60719 /* BMUXCLI+HermesAgentHooks.swift */; };
-		B9000052A1B2C3D4E5F60719 /* BMUXCLI+InstallPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000053A1B2C3D4E5F60719 /* BMUXCLI+InstallPreview.swift */; };
-		489F4CF9B768C42D87B5EB2F /* BMUXCLI+KimiHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3D532FF0A00E20DA31667F /* BMUXCLI+KimiHooks.swift */; };
-		B9000071A1B2C3D4E5F60719 /* BMUXCLI+Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000070A1B2C3D4E5F60719 /* BMUXCLI+Memory.swift */; };
-		D7AB0000000000000000000D /* BMUXCLI+MoveTabToNewWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB0000000000000000000E /* BMUXCLI+MoveTabToNewWorkspace.swift */; };
-		B9000072A1B2C3D4E5F60719 /* BMUXCLI+OmpExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000073A1B2C3D4E5F60719 /* BMUXCLI+OmpExtension.swift */; };
-		C05555010000000000000001 /* BMUXCLI+PiExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05555010000000000000002 /* BMUXCLI+PiExtension.swift */; };
-		C05555010000000000000003 /* BMUXCLI+PiExtensionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05555010000000000000004 /* BMUXCLI+PiExtensionSource.swift */; };
-		C05555010000000000000005 /* BMUXCLI+PiExtensionSourcePart1.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05555010000000000000006 /* BMUXCLI+PiExtensionSourcePart1.swift */; };
-		C05555010000000000000007 /* BMUXCLI+PiExtensionSourcePart2.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05555010000000000000008 /* BMUXCLI+PiExtensionSourcePart2.swift */; };
-		B9000054A1B2C3D4E5F60719 /* BMUXCLI+Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000055A1B2C3D4E5F60719 /* BMUXCLI+Process.swift */; };
-		C73660010000000000000001 /* BMUXCLI+RemotePTYErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = C73660010000000000000002 /* BMUXCLI+RemotePTYErrors.swift */; };
-		REE0CA0000000000000000C2 /* BMUXCLI+Remotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = REE0CA0000000000000000C1 /* BMUXCLI+Remotes.swift */; };
-		888222D96880953F33F554F1 /* BMUXCLI+RovoDevHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF43B7BD28A755A6280428D6 /* BMUXCLI+RovoDevHooks.swift */; };
-		C0DE64950000000000000001 /* BMUXCLI+SessionsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64950000000000000002 /* BMUXCLI+SessionsList.swift */; };
-		C0DE64960000000000000005 /* BMUXCLI+SessionsListClaudeWorkflow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64960000000000000006 /* BMUXCLI+SessionsListClaudeWorkflow.swift */; };
-		C0DE64950000000000000007 /* BMUXCLI+SessionsListForkDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64950000000000000008 /* BMUXCLI+SessionsListForkDiagnostics.swift */; };
-		C0DE64960000000000000003 /* BMUXCLI+SessionsListForkStartupInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64960000000000000004 /* BMUXCLI+SessionsListForkStartupInput.swift */; };
-		C0DE64960000000000000001 /* BMUXCLI+SessionsListProcessArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64960000000000000002 /* BMUXCLI+SessionsListProcessArguments.swift */; };
-		C12984000000000000000002 /* BMUXCLI+SIGPIPEProbes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12984000000000000000001 /* BMUXCLI+SIGPIPEProbes.swift */; };
-		B9000041A1B2C3D4E5F60719 /* BMUXCLI+SSHCommandSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000040A1B2C3D4E5F60719 /* BMUXCLI+SSHCommandSupport.swift */; };
-			6702F211735472DC14581CA7 /* BMUXCLI+SSHReconnectPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCF61A4F72B75DC4EA47DF6F /* BMUXCLI+SSHReconnectPrompt.swift */; };
-			CBF07000000000000000002 /* BMUXCLI+SSHStartupScripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF07000000000000000001 /* BMUXCLI+SSHStartupScripts.swift */; };
-		B900002EA1B2C3D4E5F60719 /* BMUXCLI+Themes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B900002CA1B2C3D4E5F60719 /* BMUXCLI+Themes.swift */; };
-		B900002FA1B2C3D4E5F60719 /* BMUXCLI+ThemeSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B900002DA1B2C3D4E5F60719 /* BMUXCLI+ThemeSupport.swift */; };
-		B9000048A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatHUDSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000049A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatHUDSupport.swift */; };
-		B9000044A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000045A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatSupport.swift */; };
-		B9000033A1B2C3D4E5F60719 /* BMUXCLI+TopRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000032A1B2C3D4E5F60719 /* BMUXCLI+TopRendering.swift */; };
-		C0DE31390000000000000105 /* BMUXCLIErrorOutputRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE31390000000000000106 /* BMUXCLIErrorOutputRegressionTests.swift */; };
-		A72C9F4179B54DF38E99A021 /* BmuxCLIPathInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A4FE96C3F394FC6A6D4B018 /* BmuxCLIPathInstaller.swift */; };
-		C12985000000000000000004 /* BMUXCLISentryTelemetryRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12985000000000000000003 /* BMUXCLISentryTelemetryRegressionTests.swift */; };
-		C0DE64950000000000000009 /* BMUXCLISessionsListForkDiagnosticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE6495000000000000000A /* BMUXCLISessionsListForkDiagnosticsTests.swift */; };
-		C0DE64970000000000000001 /* BMUXCLISessionsListOpenCodeTrustTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64970000000000000002 /* BMUXCLISessionsListOpenCodeTrustTests.swift */; };
-		C0DE64970000000000000003 /* BMUXCLISessionsListProcessArgumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64970000000000000004 /* BMUXCLISessionsListProcessArgumentTests.swift */; };
-		C0DE64950000000000000005 /* BMUXCLISessionsListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64950000000000000006 /* BMUXCLISessionsListTests.swift */; };
-		C0DE6495000000000000000B /* BMUXCLISessionsListTranscriptPidTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE6495000000000000000C /* BMUXCLISessionsListTranscriptPidTests.swift */; };
-		C0DE64950000000000000003 /* BMUXCLITestAssertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64950000000000000004 /* BMUXCLITestAssertions.swift */; };
-		5E55500000000000000000E3 /* BmuxCommandPalette in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55500000000000000000E2 /* BmuxCommandPalette */; };
-		5E55500000000000000000E4 /* BmuxCommandPalette in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55500000000000000000E2 /* BmuxCommandPalette */; };
-		A5001650 /* BmuxConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001651 /* BmuxConfig.swift */; };
-		A5FB1209 /* BmuxConfigActionDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB120A /* BmuxConfigActionDefinition.swift */; };
-		A5FB1201 /* BmuxConfigActionSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB1202 /* BmuxConfigActionSaver.swift */; };
-		A5FB1305 /* BmuxConfigActionSaverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB1306 /* BmuxConfigActionSaverTests.swift */; };
-		C0DEF0A40000000000000001 /* BmuxConfigContextMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEF0A40000000000000002 /* BmuxConfigContextMenuTests.swift */; };
-		A5FB120B /* BmuxConfigExecutor+WorkspaceLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB120C /* BmuxConfigExecutor+WorkspaceLaunch.swift */; };
-		A5001652 /* BmuxConfigExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001653 /* BmuxConfigExecutor.swift */; };
-		E30750000000000000000006 /* BmuxConfigNamedColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30750000000000000000005 /* BmuxConfigNamedColorTests.swift */; };
-		A5FB130C /* BmuxConfigNewWorkspaceDefaultLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB130D /* BmuxConfigNewWorkspaceDefaultLayoutTests.swift */; };
-		A5FB130A /* BmuxConfigNewWorkspaceMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB130B /* BmuxConfigNewWorkspaceMenuTests.swift */; };
-		C5D0DEC0CF00000000000A1 /* BmuxConfigStore+ConfigStoreReloading.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5D0DEC0CF00000000000B1 /* BmuxConfigStore+ConfigStoreReloading.swift */; };
-		C1A2B3C4D5E6F70800000001 /* BmuxConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3C4D5E6F70800000002 /* BmuxConfigTests.swift */; };
-		C0DEF0A10000000000000001 /* BmuxConfigUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEF0A10000000000000002 /* BmuxConfigUI.swift */; };
-		A5FB1205 /* BmuxConfigWorkspaceActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB1206 /* BmuxConfigWorkspaceActionTests.swift */; };
-		C750100000000000000000A3 /* BmuxControlSocket in Frameworks */ = {isa = PBXBuildFile; productRef = C750100000000000000000A2 /* BmuxControlSocket */; };
-		CC0DE00000000000000000A3 /* BmuxCore in Frameworks */ = {isa = PBXBuildFile; productRef = CC0DE00000000000000000A2 /* BmuxCore */; };
-		CC0DE00000000000000000A4 /* BmuxCore in Frameworks */ = {isa = PBXBuildFile; productRef = CC0DE00000000000000000A2 /* BmuxCore */; };
-		D1320AA0D1320AA0D1320AA2 /* BmuxDockTilePlugin.plugin in Copy Dock Tile Plugin */ = {isa = PBXBuildFile; fileRef = D1320AA0D1320AA0D1320AA5 /* BmuxDockTilePlugin.plugin */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C54860040000000000000001 /* BmuxDurableDeepLinkRestoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860040000000000000002 /* BmuxDurableDeepLinkRestoreTests.swift */; };
-		E7E000000000000000000005 /* BmuxEventBus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E000000000000000000006 /* BmuxEventBus.swift */; };
-		E7E000000000000000000003 /* BmuxEventBusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E000000000000000000004 /* BmuxEventBusTests.swift */; };
-		E7E00000000000000000000D /* BmuxEventLogWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E00000000000000000000E /* BmuxEventLogWriter.swift */; };
-		E7E000000000000000000007 /* BmuxEventPublishing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E000000000000000000008 /* BmuxEventPublishing.swift */; };
-		E7E000000000000000000001 /* BmuxEventStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E000000000000000000002 /* BmuxEventStream.swift */; };
-		C0DE45000000000000000001 /* BmuxExtensionKit in Frameworks */ = {isa = PBXBuildFile; productRef = C0DE45000000000000000002 /* BmuxExtensionKit */; };
-		C0DE49000000000000000001 /* BmuxExtensionSidebarExamples in Frameworks */ = {isa = PBXBuildFile; productRef = C0DE49000000000000000002 /* BmuxExtensionSidebarExamples */; };
-		C57B00050000000000000001 /* BmuxExtensionSidebarSelection+CustomSidebarName.swift in Sources */ = {isa = PBXBuildFile; fileRef = C57B00050000000000000002 /* BmuxExtensionSidebarSelection+CustomSidebarName.swift */; };
-		C9A2C00000000000000000C3 /* BmuxFeedback in Frameworks */ = {isa = PBXBuildFile; productRef = C9A2C00000000000000000C2 /* BmuxFeedback */; };
-		5E2701040000000000000004 /* BmuxFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 5E2701040000000000000002 /* BmuxFoundation */; };
-		CF00F00000000000000000A3 /* BmuxFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = CF00F00000000000000000A2 /* BmuxFoundation */; };
-		CF00F00000000000000000A4 /* BmuxFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = CF00F00000000000000000A2 /* BmuxFoundation */; };
-		C617000000000000000000A3 /* BmuxGit in Frameworks */ = {isa = PBXBuildFile; productRef = C617000000000000000000A2 /* BmuxGit */; };
-		C0DE34020000000000000001 /* BmuxHelpCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE34020000000000000003 /* BmuxHelpCommands.swift */; };
-		C0DE34020000000000000002 /* BmuxHelpResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE34020000000000000004 /* BmuxHelpResource.swift */; };
-		C0DE46010000000000000001 /* BMUXInstalledExtensionSidebarHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE46010000000000000002 /* BMUXInstalledExtensionSidebarHostView.swift */; };
-		E7E00000000000000000000B /* BmuxLifecycleEventPublishing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E00000000000000000000C /* BmuxLifecycleEventPublishing.swift */; };
-		2F0C07000000000000000002 /* BmuxMainWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F0C07000000000000000001 /* BmuxMainWindow.swift */; };
-		D36090010000000000000005 /* BmuxMainWindowConstrainFrameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36090010000000000000006 /* BmuxMainWindowConstrainFrameTests.swift */; };
-		D36090020000000000000005 /* BmuxMainWindowFullScreenCapabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36090020000000000000006 /* BmuxMainWindowFullScreenCapabilityTests.swift */; };
-		799F1BEF876006EEB8CD1035 /* BMUXMobileCore in Frameworks */ = {isa = PBXBuildFile; productRef = EFB18E3B3099DFE2ECA3C263 /* BMUXMobileCore */; };
-		EFB18E3C0000000000000001 /* BMUXMobileCore in Frameworks */ = {isa = PBXBuildFile; productRef = EFB18E3B3099DFE2ECA3C263 /* BMUXMobileCore */; };
-		CA1F0A01CA1F0A01CA1F0A01 /* BmuxModalAlertPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1F0A02CA1F0A02CA1F0A02 /* BmuxModalAlertPresentation.swift */; };
-		C54860110000000000000001 /* BmuxNavigationResolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860110000000000000002 /* BmuxNavigationResolution.swift */; };
-		C54860120000000000000001 /* BmuxNavigationSurfaceDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860120000000000000002 /* BmuxNavigationSurfaceDescriptor.swift */; };
-		C54860010000000000000001 /* BmuxNavigationTargetResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860010000000000000002 /* BmuxNavigationTargetResolver.swift */; };
-		C54860030000000000000001 /* BmuxNavigationTargetResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860030000000000000002 /* BmuxNavigationTargetResolverTests.swift */; };
-		C54860130000000000000001 /* BmuxNavigationWorkspaceDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860130000000000000002 /* BmuxNavigationWorkspaceDescriptor.swift */; };
-		E3B7A30000000000000000D3 /* BmuxNotifications in Frameworks */ = {isa = PBXBuildFile; productRef = E3B7A30000000000000000D2 /* BmuxNotifications */; };
-		C0DE31390000000000000101 /* BMUXOpenCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE31390000000000000102 /* BMUXOpenCommandTests.swift */; };
-		C0DE31390000000000000111 /* BMUXOpenHTMLFocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE31390000000000000112 /* BMUXOpenHTMLFocusTests.swift */; };
-		E3B7A30000000000000000F3 /* BmuxPanes in Frameworks */ = {isa = PBXBuildFile; productRef = E3B7A30000000000000000F2 /* BmuxPanes */; };
-		A5C0DE0000000000000000A3 /* BMUXProjectModel in Frameworks */ = {isa = PBXBuildFile; productRef = A5C0DE0000000000000000A2 /* BMUXProjectModel */; };
-		CC0DE10000000000000000A3 /* BmuxRemoteDaemon in Frameworks */ = {isa = PBXBuildFile; productRef = CC0DE10000000000000000A2 /* BmuxRemoteDaemon */; };
-		CC0DE30000000000000000A3 /* BmuxRemoteSession in Frameworks */ = {isa = PBXBuildFile; productRef = CC0DE30000000000000000A2 /* BmuxRemoteSession */; };
-		CC0DE20000000000000000A3 /* BmuxRemoteWorkspace in Frameworks */ = {isa = PBXBuildFile; productRef = CC0DE20000000000000000A2 /* BmuxRemoteWorkspace */; };
-		A9F200000000000000000005 /* BmuxRuntimeDebugCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000005 /* BmuxRuntimeDebugCapture.swift */; };
-		A9F200000000000000000006 /* BmuxRuntimeDebugCaptureConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000006 /* BmuxRuntimeDebugCaptureConfiguration.swift */; };
-		A9F20000000000000000001A /* BmuxRuntimeDebugCaptureSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000001A /* BmuxRuntimeDebugCaptureSender.swift */; };
-		A9F200000000000000000007 /* BmuxRuntimeDebugCaptureSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000007 /* BmuxRuntimeDebugCaptureSequence.swift */; };
-		CD0CFE5300000000CD0CFE53 /* BmuxSettings in Frameworks */ = {isa = PBXBuildFile; productRef = CD0CFE5200000000CD0CFE52 /* BmuxSettings */; };
-		CD0CFE5700000000CD0CFE57 /* BmuxSettings in Frameworks */ = {isa = PBXBuildFile; productRef = CD0CFE5200000000CD0CFE52 /* BmuxSettings */; };
-		D3610C010000000000000001 /* BmuxSettingsJSONPathSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3610C010000000000000002 /* BmuxSettingsJSONPathSupport.swift */; };
-		CD0CFE5600000000CD0CFE56 /* BmuxSettingsUI in Frameworks */ = {isa = PBXBuildFile; productRef = CD0CFE5500000000CD0CFE55 /* BmuxSettingsUI */; };
-		E3B7A30000000000000000B3 /* BmuxSidebar in Frameworks */ = {isa = PBXBuildFile; productRef = E3B7A30000000000000000B2 /* BmuxSidebar */; };
-		DC5DC5DC0000000000000001 /* BmuxSidebarActionDispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC5DC5DC0000000000000002 /* BmuxSidebarActionDispatch.swift */; };
-		C0DE46030000000000000001 /* BMUXSidebarExtensionBrowserPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE46030000000000000002 /* BMUXSidebarExtensionBrowserPanel.swift */; };
-		C5B6A10000000000000000A3 /* BmuxSidebarGit in Frameworks */ = {isa = PBXBuildFile; productRef = C5B6A10000000000000000A2 /* BmuxSidebarGit */; };
-		C5A1FED200000000000000E1 /* BmuxSidebarInterpreterClient in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED200000000000000E3 /* BmuxSidebarInterpreterClient */; };
-		C5A1FED200000000000000E2 /* BmuxSidebarInterpreterClient in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED200000000000000E3 /* BmuxSidebarInterpreterClient */; };
-		C0DE4A000000000000000001 /* BmuxSidebarProviderKit in Frameworks */ = {isa = PBXBuildFile; productRef = C0DE4A000000000000000002 /* BmuxSidebarProviderKit */; };
-		C0DE4A000000000000000005 /* BmuxSidebarProviderKit in Frameworks */ = {isa = PBXBuildFile; productRef = C0DE4A000000000000000004 /* BmuxSidebarProviderKit */; };
-		C5A1FED200000000000000E5 /* BmuxSidebarRemoteRender in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED200000000000000E6 /* BmuxSidebarRemoteRender */; };
-		E7E000000000000000000009 /* BmuxSocketEventMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E00000000000000000000A /* BmuxSocketEventMapper.swift */; };
-		C3677002000000000000001 /* BmuxSSHURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3677002000000000000002 /* BmuxSSHURLRequest.swift */; };
-		C3677001000000000000001 /* BmuxSSHURLRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3677001000000000000002 /* BmuxSSHURLRequestTests.swift */; };
-		C0DE43000000000000000003 /* BmuxSurfaceTabBarBuiltInAction+Codable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE43000000000000000004 /* BmuxSurfaceTabBarBuiltInAction+Codable.swift */; };
-		C10D00030000000000000003 /* BmuxSurfaceTabBarBuiltInAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10D00040000000000000004 /* BmuxSurfaceTabBarBuiltInAction.swift */; };
-		C5A1FED000000000000000C1 /* BmuxSwiftRender in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED000000000000000C3 /* BmuxSwiftRender */; };
-		C5A1FED000000000000000C2 /* BmuxSwiftRender in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED000000000000000C3 /* BmuxSwiftRender */; };
-		C5A1FED100000000000000D1 /* BmuxSwiftRenderUI in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED100000000000000D3 /* BmuxSwiftRenderUI */; };
-		C5A1FED100000000000000D2 /* BmuxSwiftRenderUI in Frameworks */ = {isa = PBXBuildFile; productRef = C5A1FED100000000000000D3 /* BmuxSwiftRenderUI */; };
-		C750500000000000000000A3 /* BmuxTerminal in Frameworks */ = {isa = PBXBuildFile; productRef = C750500000000000000000A2 /* BmuxTerminal */; };
-		C750200000000000000000A3 /* BmuxTerminalCore in Frameworks */ = {isa = PBXBuildFile; productRef = C750200000000000000000A2 /* BmuxTerminalCore */; };
-		CFF12E0000000000000000A3 /* BmuxTestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = CFF12E0000000000000000A2 /* BmuxTestSupport */; };
-		C7A510000000000000000002 /* BmuxTopMemoryDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A510000000000000000001 /* BmuxTopMemoryDiagnostics.swift */; };
-		B35750000000000000000004 /* BmuxTopProcessArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = B35750000000000000000003 /* BmuxTopProcessArguments.swift */; };
-		C7A50C000000000000000003 /* BmuxTopProcessArgumentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A50C000000000000000004 /* BmuxTopProcessArgumentsTests.swift */; };
-		C7A50C000000000000000002 /* BmuxTopProcessCPUTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A50C000000000000000001 /* BmuxTopProcessCPUTests.swift */; };
-		C7A50D000000000000000002 /* BmuxTopProcessCPUTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A50D000000000000000001 /* BmuxTopProcessCPUTracker.swift */; };
-		C7A50E000000000000000002 /* BmuxTopProcessDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A50E000000000000000001 /* BmuxTopProcessDetails.swift */; };
-		C7A511000000000000000002 /* BmuxTopProcessEnumeration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A511000000000000000001 /* BmuxTopProcessEnumeration.swift */; };
-		C7A512000000000000000002 /* BmuxTopProcessSnapshotCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A512000000000000000001 /* BmuxTopProcessSnapshotCache.swift */; };
-		C7A501000000000000000002 /* BmuxTopSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A501000000000000000001 /* BmuxTopSnapshot.swift */; };
-		C7A508000000000000000002 /* BmuxTopSnapshotScopeCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A508000000000000000001 /* BmuxTopSnapshotScopeCache.swift */; };
-		C7A5090000000000000005A2 /* BmuxTopSnapshotScopeCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A5090000000000000005A1 /* BmuxTopSnapshotScopeCacheTests.swift */; };
-		C7A509000000000000000002 /* BmuxTopSnapshotScopeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A509000000000000000001 /* BmuxTopSnapshotScopeTests.swift */; };
-		CDFEED0300000000CDFEED03 /* BmuxUpdater in Frameworks */ = {isa = PBXBuildFile; productRef = CDFEED0200000000CDFEED02 /* BmuxUpdater */; };
-		CDFEED0600000000CDFEED06 /* BmuxUpdaterUI in Frameworks */ = {isa = PBXBuildFile; productRef = CDFEED0500000000CDFEED05 /* BmuxUpdaterUI */; };
-		D7C0DE00000000000000A101 /* BmuxWebView+ContextMenuLinkCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C0DE00000000000000A102 /* BmuxWebView+ContextMenuLinkCapture.swift */; };
-		D7AB00000000000000000009 /* BmuxWebView+MoveTabToNewWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB0000000000000000000A /* BmuxWebView+MoveTabToNewWorkspace.swift */; };
-		C6255D010000000000000001 /* BmuxWebView+ScriptedDownloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6255D010000000000000002 /* BmuxWebView+ScriptedDownloads.swift */; };
-		C67540030000000000000001 /* BmuxWebView+SubframeDownloadIntentScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67540030000000000000002 /* BmuxWebView+SubframeDownloadIntentScript.swift */; };
-		A5001500 /* BmuxWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001510 /* BmuxWebView.swift */; };
-		D7C0DE00000000000000A103 /* BmuxWebViewContextMenuLinkCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C0DE00000000000000A104 /* BmuxWebViewContextMenuLinkCaptureTests.swift */; };
-		D0B1000CA1B2C3D4E5F60001 /* BmuxWebViewDragRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B1000DA1B2C3D4E5F60001 /* BmuxWebViewDragRoutingTests.swift */; };
-		C0DE58990000000000000004 /* BmuxWebViewKeyDownReentryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE58990000000000000002 /* BmuxWebViewKeyDownReentryTests.swift */; };
-		7D5DA4DC51454ECDBF9AC978 /* BmuxWebViewMouseNavigationButtonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43F90FAF3FD44F11BF547BE9 /* BmuxWebViewMouseNavigationButtonTests.swift */; };
-		5E55200000000000000000B3 /* BmuxWindowing in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55200000000000000000B2 /* BmuxWindowing */; };
-		730600040000000000000001 /* BmuxWindowing in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55200000000000000000B2 /* BmuxWindowing */; };
-		E30750000000000000000004 /* BmuxWorkspaceDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30750000000000000000003 /* BmuxWorkspaceDefinition.swift */; };
-		E3B7A3000000000000000103 /* BmuxWorkspaces in Frameworks */ = {isa = PBXBuildFile; productRef = E3B7A3000000000000000102 /* BmuxWorkspaces */; };
 		C0A1E5CE01C0A1E5CE01A001 /* CoalesceLatestPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1E5CE01C0A1E5CE01A002 /* CoalesceLatestPublisher.swift */; };
 		A9F200000000000000000016 /* CodexAppServerQueuedInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000016 /* CodexAppServerQueuedInput.swift */; };
 		A9E02000000000000000000E /* CodexAppServerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000E /* CodexAppServerSession.swift */; };
@@ -920,6 +933,7 @@
 		A5C0DE0000000000000000B4 /* ProjectPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000B3 /* ProjectPanelView.swift */; };
 		A5C0DE0000000000000000BC /* ProjectSchemesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000BB /* ProjectSchemesTabView.swift */; };
 		A5C0DE0000000000000000B8 /* ProjectTargetsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000B7 /* ProjectTargetsTabView.swift */; };
+		B71000000000000000000003 /* PushToTalkVoiceInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71000000000000000000004 /* PushToTalkVoiceInputController.swift */; };
 		A64610010000000000000001 /* QuitConfirmationAlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64610010000000000000002 /* QuitConfirmationAlertPresenter.swift */; };
 		A64610020000000000000001 /* QuitConfirmationAlertPresenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64610020000000000000002 /* QuitConfirmationAlertPresenterTests.swift */; };
 		A500RG01 /* ReactGrab.swift in Sources */ = {isa = PBXBuildFile; fileRef = A500RG00 /* ReactGrab.swift */; };
@@ -1413,9 +1427,44 @@
 		604500100000000000000003 /* WindowTitleTemplateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604500100000000000000004 /* WindowTitleTemplateTests.swift */; };
 		E30760080000000000000002 /* WindowTmuxWorkspacePaneOverlayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30760080000000000000001 /* WindowTmuxWorkspacePaneOverlayController.swift */; };
 		A5001209 /* WindowToolbarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001219 /* WindowToolbarController.swift */; };
+		70F48B3441FC810F8676C94F /* WorkProvenanceChangeSetRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */; };
+		740D49C5400756EF2E733E31 /* WorkProvenanceCheckpointRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */; };
+		DC4C271089CB9AD62EDB2011 /* WorkProvenanceConfidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C26C989BEBFA4B46E0200B /* WorkProvenanceConfidence.swift */; };
+		A7922EC65BA23500B8A1701D /* WorkProvenanceContributionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6F5C92F6635A34AEA3316E3 /* WorkProvenanceContributionRecord.swift */; };
+		9C781FD93B69A794C73400D4 /* WorkProvenanceEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E5CD1397A128BCADC627D7C /* WorkProvenanceEvent.swift */; };
+		3B011F688FB9988D8E79FDB4 /* WorkProvenanceEventPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A6C539CBB75A24F62E16605 /* WorkProvenanceEventPayload.swift */; };
+		4388F7BA10B93A7B912383BE /* WorkProvenanceEventType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EEBFF20EC9F40CE41A44411 /* WorkProvenanceEventType.swift */; };
+		159BDE59D7EF1EF6F6957714 /* WorkProvenanceFileChangeRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 551E43CA9A0612FD95C9FFC1 /* WorkProvenanceFileChangeRecord.swift */; };
+		514CE422D6AE04D04F3BB780 /* WorkProvenanceFileExplanation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 510F8A75D123185FB9B1FAB7 /* WorkProvenanceFileExplanation.swift */; };
+		8F8D42DC292DA91C0414BAE4 /* WorkProvenanceGitCommandResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0249B2F5626865AD48C6631 /* WorkProvenanceGitCommandResult.swift */; };
+		D89012A6791CAB63645BC4BC /* WorkProvenanceGitCommandRunning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B359CAAF748DEC78DF85972 /* WorkProvenanceGitCommandRunning.swift */; };
+		1E5E54C50421C308F5CC6FA6 /* WorkProvenanceGitInspecting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */; };
+		918962BA99BFA9005D41242F /* WorkProvenanceGitInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */; };
+		D98713E6CE24785E075BF87F /* WorkProvenanceGitSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */; };
+		B53E0C6CEEEEFBE91CE39E0F /* WorkProvenanceGitStatusEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */; };
+		36915A74F7AA3930F34DF634 /* WorkProvenanceObservationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */; };
+		8DCF06522BB39B4A966FFC83 /* WorkProvenanceObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */; };
+		0B11704B4770CA402725B958 /* WorkProvenanceProcessGitCommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC5AF6B03C2A9B1ADE669E4 /* WorkProvenanceProcessGitCommandRunner.swift */; };
+		C0DE70110000000000000001 /* WorkProvenancePruneResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */; };
+		2EA18EC835B56F4B9A3AE420 /* WorkProvenanceRepositoryRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D42FFA90AFE883FD6C8EF8A /* WorkProvenanceRepositoryRecord.swift */; };
+		C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
+		756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */; };
+		A801809D8020AD996B4C0997 /* WorkProvenanceSessionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 447E35CF777CC9B4432D5BFA /* WorkProvenanceSessionRecord.swift */; };
+		85F5448A921FB8E003C27C30 /* WorkProvenanceSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398559F2CDF3DE88E7D65BDE /* WorkProvenanceSource.swift */; };
+		64D01BCF87DD42A09D0D2649 /* WorkProvenanceSQLiteDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F450598D29975B2FD348489 /* WorkProvenanceSQLiteDatabase.swift */; };
+		796C1363040412DD2768987A /* WorkProvenanceSQLiteStatement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AD4D726F26DF9FED2713BE6 /* WorkProvenanceSQLiteStatement.swift */; };
+		48A91734B0908DBEFF52445F /* WorkProvenanceStableIDFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E58AA160D397E44554E0EBB /* WorkProvenanceStableIDFactory.swift */; };
+		2F23C7CCE50C7034B7FC32DA /* WorkProvenanceStorageLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C750C2129178A43E2E64EE /* WorkProvenanceStorageLocation.swift */; };
+		E361FBA90CC7ED4D10E9FF08 /* WorkProvenanceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B101A5E8045CF2BD5561744 /* WorkProvenanceStore.swift */; };
+		B7918D20E231280A40E91D19 /* WorkProvenanceStoreError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320F50E85539F6327F8EB9EC /* WorkProvenanceStoreError.swift */; };
+		B1581966C6355C46BC3ABE62 /* WorkProvenanceStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1211A332D826E19C7A6463C8 /* WorkProvenanceStoreTests.swift */; };
+		325D6087DAE009D97B24D4EF /* WorkProvenanceValidationRunRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59911A9C30F6E3E5FA86A5E9 /* WorkProvenanceValidationRunRecord.swift */; };
+		C2C1613D6327DBD7F58D5FB6 /* WorkProvenanceWorkItemRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4B8B1CDBF4DFC8201D7D95 /* WorkProvenanceWorkItemRecord.swift */; };
+		9537A3EC66F94ED444031D42 /* WorkProvenanceWorkspaceSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28D2640EA59ABFD3DD5CA59B /* WorkProvenanceWorkspaceSnapshot.swift */; };
+		3FAEB848F6302C52776D369B /* WorkProvenanceWorktreeRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBEF2CC451F2458E5150EEF3 /* WorkProvenanceWorktreeRecord.swift */; };
 		C0DE43000000000000000007 /* Workspace+AgentChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE43000000000000000008 /* Workspace+AgentChat.swift */; };
-		CA52B0150000000000000000 /* Workspace+CanvasLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA52C0150000000000000000 /* Workspace+CanvasLayout.swift */; };
 		C54860020000000000000001 /* Workspace+BmuxNavigationDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860020000000000000002 /* Workspace+BmuxNavigationDescriptor.swift */; };
+		CA52B0150000000000000000 /* Workspace+CanvasLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA52C0150000000000000000 /* Workspace+CanvasLayout.swift */; };
 		A5FB120D /* Workspace+CustomLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB120E /* Workspace+CustomLayout.swift */; };
 		C57B00030000000000000001 /* Workspace+CustomSidebarPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C57B00030000000000000002 /* Workspace+CustomSidebarPane.swift */; };
 		9FC97DA1B422776BB1EEC821 /* Workspace+CustomSidebarPullRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C2726A34F27E7A43B77368 /* Workspace+CustomSidebarPullRequests.swift */; };
@@ -1641,10 +1690,10 @@
 		REE0CA0000000000000000E1 /* AIAccountsClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AIAccountsClient.swift; sourceTree = "<group>"; };
 		F4350A130000000000000001 /* AppBundleIconPersistencePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AppBundleIconPersistencePolicy.swift; sourceTree = "<group>"; };
 		C0DE45AC0000000000000002 /* AppDelegate+AgentChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+AgentChat.swift"; sourceTree = "<group>"; };
-		C4A570010000000000000002 /* AppDelegate+CanvasShortcutRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+CanvasShortcutRouting.swift"; sourceTree = "<group>"; };
-		C4160A030000000000000002 /* AppDelegate+ClosedItemHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+ClosedItemHistory.swift"; sourceTree = "<group>"; };
 		C54860050000000000000002 /* AppDelegate+BmuxNavigationDeepLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+BmuxNavigationDeepLinks.swift"; sourceTree = "<group>"; };
 		C3677004000000000000002 /* AppDelegate+BmuxSSHURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+BmuxSSHURL.swift"; sourceTree = "<group>"; };
+		C4A570010000000000000002 /* AppDelegate+CanvasShortcutRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+CanvasShortcutRouting.swift"; sourceTree = "<group>"; };
+		C4160A030000000000000002 /* AppDelegate+ClosedItemHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+ClosedItemHistory.swift"; sourceTree = "<group>"; };
 		C65930010000000000000004 /* AppDelegate+CrashSessionSnapshotRemoval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+CrashSessionSnapshotRemoval.swift"; sourceTree = "<group>"; };
 		DCDC3000000000000000E002 /* AppDelegate+DockShortcutRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+DockShortcutRouting.swift"; sourceTree = "<group>"; };
 		DCDC1000000000000000C001 /* AppDelegate+DockSurfaceMove.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+DockSurfaceMove.swift"; sourceTree = "<group>"; };
@@ -1660,6 +1709,7 @@
 		A5F100000000000000000012 /* AppDelegate+NotificationOpen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+NotificationOpen.swift"; sourceTree = "<group>"; };
 		A5F100000000000000000004 /* AppDelegate+NotificationScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+NotificationScroll.swift"; sourceTree = "<group>"; };
 		6313C7A00000000000000002 /* AppDelegate+PaneMemoryGuardrail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+PaneMemoryGuardrail.swift"; sourceTree = "<group>"; };
+		B71000000000000000000002 /* AppDelegate+PushToTalkVoiceInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+PushToTalkVoiceInput.swift"; sourceTree = "<group>"; };
 		2907A0022907A0022907A002 /* AppDelegate+RecoverableMainWindowRoutes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+RecoverableMainWindowRoutes.swift"; sourceTree = "<group>"; };
 		C0DE74140000000000000002 /* AppDelegate+SavedLayoutMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+SavedLayoutMenu.swift"; sourceTree = "<group>"; };
 		6419A0026419A0026419A002 /* AppDelegate+ShortcutRoutingTesting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+ShortcutRoutingTesting.swift"; sourceTree = "<group>"; };
@@ -1701,6 +1751,152 @@
 		46792DAA478444ED87B17B31 /* AutoNamingHookPayloadAdapterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoNamingHookPayloadAdapterTests.swift; sourceTree = "<group>"; };
 		C0DE35860000000000000002 /* BackgroundWorkspacePrimeCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundWorkspacePrimeCoordinator.swift; sourceTree = "<group>"; };
 		A50012F0 /* Backport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backport.swift; sourceTree = "<group>"; };
+		B9000004A1B2C3D4E5F60719 /* bmux */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bmux; sourceTree = BUILT_PRODUCTS_DIR; };
+		A5001018 /* bmux-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "bmux-Bridging-Header.h"; sourceTree = "<group>"; };
+		C1ADE20001A1B2C3D4E5F719 /* bmux-claude-wrapper */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Resources/bin/bmux-claude-wrapper"; sourceTree = SOURCE_ROOT; };
+		C1ADE30001A1B2C3D4E5F719 /* bmux-codex-wrapper */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Resources/bin/bmux-codex-wrapper"; sourceTree = SOURCE_ROOT; };
+		A5001000 /* bmux.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = bmux.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A5001622 /* bmux.sdef */ = {isa = PBXFileReference; lastKnownFileType = text.sdef; path = bmux.sdef; sourceTree = "<group>"; };
+		B9000001A1B2C3D4E5F60719 /* bmux.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bmux.swift; sourceTree = "<group>"; };
+		C0DE1A060000000000000002 /* bmux_layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bmux_layout.swift; sourceTree = "<group>"; };
+		B9000030A1B2C3D4E5F60719 /* bmux_open.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bmux_open.swift; sourceTree = "<group>"; };
+		A5001655 /* BmuxActionTrust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxActionTrust.swift; sourceTree = "<group>"; };
+		C0DE43000000000000000002 /* BmuxAgentChatConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxAgentChatConfig.swift; sourceTree = "<group>"; };
+		C0DE4300000000000000000A /* BmuxAgentChatConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxAgentChatConfigTests.swift; sourceTree = "<group>"; };
+		E3309A08 /* bmuxApp+EqualizeSplitsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "bmuxApp+EqualizeSplitsMenu.swift"; sourceTree = "<group>"; };
+		C4160A010000000000000002 /* bmuxApp+HistoryMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "bmuxApp+HistoryMenu.swift"; sourceTree = "<group>"; };
+		A5001011 /* bmuxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bmuxApp.swift; sourceTree = "<group>"; };
+		61AD48A9E6C3F1BE2B547FFE /* BMUXCLI+AgentHookCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookCatalog.swift"; sourceTree = "<group>"; };
+		B9000062A1B2C3D4E5F60719 /* BMUXCLI+AgentHookDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookDefinitions.swift"; sourceTree = "<group>"; };
+		5257257034CA4729B1211170 /* BMUXCLI+AgentHookPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookPayload.swift"; sourceTree = "<group>"; };
+		C6711B050000000000000001 /* BMUXCLI+AgentHookRestoreEvidence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookRestoreEvidence.swift"; sourceTree = "<group>"; };
+		B9000069A1B2C3D4E5F60719 /* BMUXCLI+AmpExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AmpExtension.swift"; sourceTree = "<group>"; };
+		5257257034CA4729B1211166 /* BMUXCLI+AutoNaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AutoNaming.swift"; sourceTree = "<group>"; };
+		5257257034CA4729B121116A /* BMUXCLI+AutoNamingDispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AutoNamingDispatch.swift"; sourceTree = "<group>"; };
+		5257257034CA4729B1211167 /* BMUXCLI+AutoNamingGenericHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AutoNamingGenericHooks.swift"; sourceTree = "<group>"; };
+		5257257034CA4729B1211168 /* BMUXCLI+AutoNamingHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AutoNamingHooks.swift"; sourceTree = "<group>"; };
+		5257257034CA4729B1211169 /* BMUXCLI+AutoNamingSummarizers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AutoNamingSummarizers.swift"; sourceTree = "<group>"; };
+		C72280000000000000000001 /* BMUXCLI+ClaudeHookWorkspaceRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ClaudeHookWorkspaceRouting.swift"; sourceTree = "<group>"; };
+		4CF59318F1D5B2195AC77C28 /* BMUXCLI+ClaudePushNotificationHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ClaudePushNotificationHook.swift"; sourceTree = "<group>"; };
+		C0D3F1F00000000000000102 /* BMUXCLI+CodexFireAndForgetHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexFireAndForgetHooks.swift"; sourceTree = "<group>"; };
+		C0DE71000000000000000002 /* BMUXCLI+CodexTokenAudit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexTokenAudit.swift"; sourceTree = "<group>"; };
+		B90000D1A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CommandSuggestions.swift"; sourceTree = "<group>"; };
+		B9000051A1B2C3D4E5F60719 /* BMUXCLI+Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Config.swift"; sourceTree = "<group>"; };
+		C0DE72000000000000000002 /* BMUXCLI+ContextEfficiency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ContextEfficiency.swift"; sourceTree = "<group>"; };
+		B9000031A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+DocsSettings.swift"; sourceTree = "<group>"; };
+		B9000065A1B2C3D4E5F60719 /* BMUXCLI+Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Events.swift"; sourceTree = "<group>"; };
+		B9000047A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ExecutableResolution.swift"; sourceTree = "<group>"; };
+		B9000060A1B2C3D4E5F60719 /* BMUXCLI+HermesAgentHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+HermesAgentHooks.swift"; sourceTree = "<group>"; };
+		B9000053A1B2C3D4E5F60719 /* BMUXCLI+InstallPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+InstallPreview.swift"; sourceTree = "<group>"; };
+		7A3D532FF0A00E20DA31667F /* BMUXCLI+KimiHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+KimiHooks.swift"; sourceTree = "<group>"; };
+		B9000070A1B2C3D4E5F60719 /* BMUXCLI+Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Memory.swift"; sourceTree = "<group>"; };
+		D7AB0000000000000000000E /* BMUXCLI+MoveTabToNewWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+MoveTabToNewWorkspace.swift"; sourceTree = "<group>"; };
+		B9000073A1B2C3D4E5F60719 /* BMUXCLI+OmpExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+OmpExtension.swift"; sourceTree = "<group>"; };
+		C05555010000000000000002 /* BMUXCLI+PiExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+PiExtension.swift"; sourceTree = "<group>"; };
+		C05555010000000000000004 /* BMUXCLI+PiExtensionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+PiExtensionSource.swift"; sourceTree = "<group>"; };
+		C05555010000000000000006 /* BMUXCLI+PiExtensionSourcePart1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+PiExtensionSourcePart1.swift"; sourceTree = "<group>"; };
+		C05555010000000000000008 /* BMUXCLI+PiExtensionSourcePart2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+PiExtensionSourcePart2.swift"; sourceTree = "<group>"; };
+		B9000055A1B2C3D4E5F60719 /* BMUXCLI+Process.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Process.swift"; sourceTree = "<group>"; };
+		C0DE70200000000000000002 /* BMUXCLI+Provenance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Provenance.swift"; sourceTree = "<group>"; };
+		C73660010000000000000002 /* BMUXCLI+RemotePTYErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+RemotePTYErrors.swift"; sourceTree = "<group>"; };
+		REE0CA0000000000000000C1 /* BMUXCLI+Remotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Remotes.swift"; sourceTree = "<group>"; };
+		DF43B7BD28A755A6280428D6 /* BMUXCLI+RovoDevHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+RovoDevHooks.swift"; sourceTree = "<group>"; };
+		C0DE64950000000000000002 /* BMUXCLI+SessionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SessionsList.swift"; sourceTree = "<group>"; };
+		C0DE64960000000000000006 /* BMUXCLI+SessionsListClaudeWorkflow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SessionsListClaudeWorkflow.swift"; sourceTree = "<group>"; };
+		C0DE64950000000000000008 /* BMUXCLI+SessionsListForkDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SessionsListForkDiagnostics.swift"; sourceTree = "<group>"; };
+		C0DE64960000000000000004 /* BMUXCLI+SessionsListForkStartupInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SessionsListForkStartupInput.swift"; sourceTree = "<group>"; };
+		C0DE64960000000000000002 /* BMUXCLI+SessionsListProcessArguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SessionsListProcessArguments.swift"; sourceTree = "<group>"; };
+		C12984000000000000000001 /* BMUXCLI+SIGPIPEProbes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SIGPIPEProbes.swift"; sourceTree = "<group>"; };
+		B9000040A1B2C3D4E5F60719 /* BMUXCLI+SSHCommandSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SSHCommandSupport.swift"; sourceTree = "<group>"; };
+			DCF61A4F72B75DC4EA47DF6F /* BMUXCLI+SSHReconnectPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SSHReconnectPrompt.swift"; sourceTree = "<group>"; };
+			CBF07000000000000000001 /* BMUXCLI+SSHStartupScripts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SSHStartupScripts.swift"; sourceTree = "<group>"; };
+		B900002CA1B2C3D4E5F60719 /* BMUXCLI+Themes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Themes.swift"; sourceTree = "<group>"; };
+		B900002DA1B2C3D4E5F60719 /* BMUXCLI+ThemeSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ThemeSupport.swift"; sourceTree = "<group>"; };
+		B9000049A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatHUDSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+TmuxCompatHUDSupport.swift"; sourceTree = "<group>"; };
+		B9000045A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+TmuxCompatSupport.swift"; sourceTree = "<group>"; };
+		B9000032A1B2C3D4E5F60719 /* BMUXCLI+TopRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+TopRendering.swift"; sourceTree = "<group>"; };
+		C0DE31390000000000000106 /* BMUXCLIErrorOutputRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLIErrorOutputRegressionTests.swift; sourceTree = "<group>"; };
+		8A4FE96C3F394FC6A6D4B018 /* BmuxCLIPathInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxCLIPathInstaller.swift; sourceTree = "<group>"; };
+		C12985000000000000000003 /* BMUXCLISentryTelemetryRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLISentryTelemetryRegressionTests.swift; sourceTree = "<group>"; };
+		C0DE6495000000000000000A /* BMUXCLISessionsListForkDiagnosticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLISessionsListForkDiagnosticsTests.swift; sourceTree = "<group>"; };
+		C0DE64970000000000000002 /* BMUXCLISessionsListOpenCodeTrustTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLISessionsListOpenCodeTrustTests.swift; sourceTree = "<group>"; };
+		C0DE64970000000000000004 /* BMUXCLISessionsListProcessArgumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLISessionsListProcessArgumentTests.swift; sourceTree = "<group>"; };
+		C0DE64950000000000000006 /* BMUXCLISessionsListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLISessionsListTests.swift; sourceTree = "<group>"; };
+		C0DE6495000000000000000C /* BMUXCLISessionsListTranscriptPidTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLISessionsListTranscriptPidTests.swift; sourceTree = "<group>"; };
+		C0DE64950000000000000004 /* BMUXCLITestAssertions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLITestAssertions.swift; sourceTree = "<group>"; };
+		A5001651 /* BmuxConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfig.swift; sourceTree = "<group>"; };
+		A5FB120A /* BmuxConfigActionDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigActionDefinition.swift; sourceTree = "<group>"; };
+		A5FB1202 /* BmuxConfigActionSaver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigActionSaver.swift; sourceTree = "<group>"; };
+		A5FB1306 /* BmuxConfigActionSaverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigActionSaverTests.swift; sourceTree = "<group>"; };
+		C0DEF0A40000000000000002 /* BmuxConfigContextMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigContextMenuTests.swift; sourceTree = "<group>"; };
+		A5FB120C /* BmuxConfigExecutor+WorkspaceLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BmuxConfigExecutor+WorkspaceLaunch.swift"; sourceTree = "<group>"; };
+		A5001653 /* BmuxConfigExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigExecutor.swift; sourceTree = "<group>"; };
+		E30750000000000000000005 /* BmuxConfigNamedColorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigNamedColorTests.swift; sourceTree = "<group>"; };
+		A5FB130D /* BmuxConfigNewWorkspaceDefaultLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigNewWorkspaceDefaultLayoutTests.swift; sourceTree = "<group>"; };
+		A5FB130B /* BmuxConfigNewWorkspaceMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigNewWorkspaceMenuTests.swift; sourceTree = "<group>"; };
+		C5D0DEC0CF00000000000B1 /* BmuxConfigStore+ConfigStoreReloading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BmuxConfigStore+ConfigStoreReloading.swift"; sourceTree = "<group>"; };
+		C1A2B3C4D5E6F70800000002 /* BmuxConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigTests.swift; sourceTree = "<group>"; };
+		C0DEF0A10000000000000002 /* BmuxConfigUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigUI.swift; sourceTree = "<group>"; };
+		A5FB1206 /* BmuxConfigWorkspaceActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigWorkspaceActionTests.swift; sourceTree = "<group>"; };
+		D1320AA0D1320AA0D1320AA5 /* BmuxDockTilePlugin.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BmuxDockTilePlugin.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		C54860040000000000000002 /* BmuxDurableDeepLinkRestoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxDurableDeepLinkRestoreTests.swift; sourceTree = "<group>"; };
+		E7E000000000000000000006 /* BmuxEventBus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxEventBus.swift; sourceTree = "<group>"; };
+		E7E000000000000000000004 /* BmuxEventBusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxEventBusTests.swift; sourceTree = "<group>"; };
+		E7E00000000000000000000E /* BmuxEventLogWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxEventLogWriter.swift; sourceTree = "<group>"; };
+		E7E000000000000000000008 /* BmuxEventPublishing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxEventPublishing.swift; sourceTree = "<group>"; };
+		E7E000000000000000000002 /* BmuxEventStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxEventStream.swift; sourceTree = "<group>"; };
+		C57B00050000000000000002 /* BmuxExtensionSidebarSelection+CustomSidebarName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BmuxExtensionSidebarSelection+CustomSidebarName.swift"; sourceTree = "<group>"; };
+		C0DE34020000000000000003 /* BmuxHelpCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxHelpCommands.swift; sourceTree = "<group>"; };
+		C0DE34020000000000000004 /* BmuxHelpResource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxHelpResource.swift; sourceTree = "<group>"; };
+		C0DE46010000000000000002 /* BMUXInstalledExtensionSidebarHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXInstalledExtensionSidebarHostView.swift; sourceTree = "<group>"; };
+		E7E00000000000000000000C /* BmuxLifecycleEventPublishing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxLifecycleEventPublishing.swift; sourceTree = "<group>"; };
+		2F0C07000000000000000001 /* BmuxMainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxMainWindow.swift; sourceTree = "<group>"; };
+		D36090010000000000000006 /* BmuxMainWindowConstrainFrameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxMainWindowConstrainFrameTests.swift; sourceTree = "<group>"; };
+		D36090020000000000000006 /* BmuxMainWindowFullScreenCapabilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxMainWindowFullScreenCapabilityTests.swift; sourceTree = "<group>"; };
+		CA1F0A02CA1F0A02CA1F0A02 /* BmuxModalAlertPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxModalAlertPresentation.swift; sourceTree = "<group>"; };
+		C54860110000000000000002 /* BmuxNavigationResolution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxNavigationResolution.swift; sourceTree = "<group>"; };
+		C54860120000000000000002 /* BmuxNavigationSurfaceDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxNavigationSurfaceDescriptor.swift; sourceTree = "<group>"; };
+		C54860010000000000000002 /* BmuxNavigationTargetResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxNavigationTargetResolver.swift; sourceTree = "<group>"; };
+		C54860030000000000000002 /* BmuxNavigationTargetResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxNavigationTargetResolverTests.swift; sourceTree = "<group>"; };
+		C54860130000000000000002 /* BmuxNavigationWorkspaceDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxNavigationWorkspaceDescriptor.swift; sourceTree = "<group>"; };
+		C0DE31390000000000000102 /* BMUXOpenCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXOpenCommandTests.swift; sourceTree = "<group>"; };
+		C0DE31390000000000000112 /* BMUXOpenHTMLFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXOpenHTMLFocusTests.swift; sourceTree = "<group>"; };
+		A9F100000000000000000005 /* BmuxRuntimeDebugCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxRuntimeDebugCapture.swift; sourceTree = "<group>"; };
+		A9F100000000000000000006 /* BmuxRuntimeDebugCaptureConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxRuntimeDebugCaptureConfiguration.swift; sourceTree = "<group>"; };
+		A9F10000000000000000001A /* BmuxRuntimeDebugCaptureSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxRuntimeDebugCaptureSender.swift; sourceTree = "<group>"; };
+		A9F100000000000000000007 /* BmuxRuntimeDebugCaptureSequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxRuntimeDebugCaptureSequence.swift; sourceTree = "<group>"; };
+		D3610C010000000000000002 /* BmuxSettingsJSONPathSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxSettingsJSONPathSupport.swift; sourceTree = "<group>"; };
+		DC5DC5DC0000000000000002 /* BmuxSidebarActionDispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxSidebarActionDispatch.swift; sourceTree = "<group>"; };
+		C0DE46030000000000000002 /* BMUXSidebarExtensionBrowserPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXSidebarExtensionBrowserPanel.swift; sourceTree = "<group>"; };
+		E7E00000000000000000000A /* BmuxSocketEventMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxSocketEventMapper.swift; sourceTree = "<group>"; };
+		C3677002000000000000002 /* BmuxSSHURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxSSHURLRequest.swift; sourceTree = "<group>"; };
+		C3677001000000000000002 /* BmuxSSHURLRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxSSHURLRequestTests.swift; sourceTree = "<group>"; };
+		C0DE43000000000000000004 /* BmuxSurfaceTabBarBuiltInAction+Codable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BmuxSurfaceTabBarBuiltInAction+Codable.swift"; sourceTree = "<group>"; };
+		C10D00040000000000000004 /* BmuxSurfaceTabBarBuiltInAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxSurfaceTabBarBuiltInAction.swift; sourceTree = "<group>"; };
+		F1000002A1B2C3D4E5F60718 /* bmuxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = bmuxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7A510000000000000000001 /* BmuxTopMemoryDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopMemoryDiagnostics.swift; sourceTree = "<group>"; };
+		B35750000000000000000003 /* BmuxTopProcessArguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessArguments.swift; sourceTree = "<group>"; };
+		C7A50C000000000000000004 /* BmuxTopProcessArgumentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessArgumentsTests.swift; sourceTree = "<group>"; };
+		C7A50C000000000000000001 /* BmuxTopProcessCPUTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessCPUTests.swift; sourceTree = "<group>"; };
+		C7A50D000000000000000001 /* BmuxTopProcessCPUTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessCPUTracker.swift; sourceTree = "<group>"; };
+		C7A50E000000000000000001 /* BmuxTopProcessDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessDetails.swift; sourceTree = "<group>"; };
+		C7A511000000000000000001 /* BmuxTopProcessEnumeration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessEnumeration.swift; sourceTree = "<group>"; };
+		C7A512000000000000000001 /* BmuxTopProcessSnapshotCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessSnapshotCache.swift; sourceTree = "<group>"; };
+		C7A501000000000000000001 /* BmuxTopSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopSnapshot.swift; sourceTree = "<group>"; };
+		C7A508000000000000000001 /* BmuxTopSnapshotScopeCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopSnapshotScopeCache.swift; sourceTree = "<group>"; };
+		C7A5090000000000000005A1 /* BmuxTopSnapshotScopeCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopSnapshotScopeCacheTests.swift; sourceTree = "<group>"; };
+		C7A509000000000000000001 /* BmuxTopSnapshotScopeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopSnapshotScopeTests.swift; sourceTree = "<group>"; };
+		7E7E6EF344A568AC7FEE3715 /* bmuxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = bmuxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D7C0DE00000000000000A102 /* BmuxWebView+ContextMenuLinkCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BmuxWebView+ContextMenuLinkCapture.swift"; sourceTree = "<group>"; };
+		D7AB0000000000000000000A /* BmuxWebView+MoveTabToNewWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BmuxWebView+MoveTabToNewWorkspace.swift"; sourceTree = "<group>"; };
+		C6255D010000000000000002 /* BmuxWebView+ScriptedDownloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BmuxWebView+ScriptedDownloads.swift"; sourceTree = "<group>"; };
+		C67540030000000000000002 /* BmuxWebView+SubframeDownloadIntentScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BmuxWebView+SubframeDownloadIntentScript.swift"; sourceTree = "<group>"; };
+		A5001510 /* BmuxWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BmuxWebView.swift; sourceTree = "<group>"; };
+		D7C0DE00000000000000A104 /* BmuxWebViewContextMenuLinkCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxWebViewContextMenuLinkCaptureTests.swift; sourceTree = "<group>"; };
+		D0B1000DA1B2C3D4E5F60001 /* BmuxWebViewDragRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxWebViewDragRoutingTests.swift; sourceTree = "<group>"; };
+		C0DE58990000000000000002 /* BmuxWebViewKeyDownReentryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxWebViewKeyDownReentryTests.swift; sourceTree = "<group>"; };
+		43F90FAF3FD44F11BF547BE9 /* BmuxWebViewMouseNavigationButtonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxWebViewMouseNavigationButtonTests.swift; sourceTree = "<group>"; };
+		E30750000000000000000003 /* BmuxWorkspaceDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxWorkspaceDefinition.swift; sourceTree = "<group>"; };
 		D0B10011A1B2C3D4E5F60001 /* BonsplitTabBarDebug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonsplitTabBarDebug.swift; sourceTree = "<group>"; };
 		D0B10003A1B2C3D4E5F60001 /* BonsplitTabBarPassThrough.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonsplitTabBarPassThrough.swift; sourceTree = "<group>"; };
 		AA1B2C3D4E5F60719 /* BonsplitTabDragUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonsplitTabDragUITests.swift; sourceTree = "<group>"; };
@@ -1863,6 +2059,14 @@
 		C72280000000000000000003 /* CLINotifyClaudeHookWorkspaceRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLINotifyClaudeHookWorkspaceRoutingTests.swift; sourceTree = "<group>"; };
 		A5D41204A1B2C3D4E5F60718 /* CLINotifyProcessIntegrationRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLINotifyProcessIntegrationRegressionTests.swift; sourceTree = "<group>"; };
 		A5D41206A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLINotifyProcessTestSupport.swift; sourceTree = "<group>"; };
+		C0DE70270000000000000002 /* CLIProvenanceContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceContext.swift; sourceTree = "<group>"; };
+		C0DE70210000000000000002 /* CLIProvenanceExplanation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceExplanation.swift; sourceTree = "<group>"; };
+		C0DE70220000000000000002 /* CLIProvenanceExplanationRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceExplanationRow.swift; sourceTree = "<group>"; };
+		C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceGitResolver.swift; sourceTree = "<group>"; };
+		C0DE70240000000000000002 /* CLIProvenanceResolvedTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceResolvedTarget.swift; sourceTree = "<group>"; };
+		C0DE70250000000000000002 /* CLIProvenanceSQLiteReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceSQLiteReader.swift; sourceTree = "<group>"; };
+		C0DE70280000000000000002 /* CLIProvenanceWorktreeList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceWorktreeList.swift; sourceTree = "<group>"; };
+		C0DE70260000000000000002 /* CLIProvenanceWorktreeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceWorktreeRow.swift; sourceTree = "<group>"; };
 		C0F16B000000000000000002 /* CLIRemoteShellStartupPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIRemoteShellStartupPerformanceTests.swift; sourceTree = "<group>"; };
 		A5D4120AA1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIRovoDevHookPersistenceTests.swift; sourceTree = "<group>"; };
 		B900004BA1B2C3D4E5F60719 /* CLISocketPathResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLISocketPathResolver.swift; sourceTree = "<group>"; };
@@ -1880,149 +2084,6 @@
 		B900001CA1B2C3D4E5F60719 /* CloseWorkspacesConfirmDialogUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloseWorkspacesConfirmDialogUITests.swift; sourceTree = "<group>"; };
 		C10D00020000000000000002 /* CloudVMActionLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudVMActionLauncher.swift; sourceTree = "<group>"; };
 		C75740010000000000000002 /* CloudVMMenuItemMetricsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudVMMenuItemMetricsTests.swift; sourceTree = "<group>"; };
-		B9000004A1B2C3D4E5F60719 /* bmux */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bmux; sourceTree = BUILT_PRODUCTS_DIR; };
-		A5001018 /* bmux-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "bmux-Bridging-Header.h"; sourceTree = "<group>"; };
-		C1ADE20001A1B2C3D4E5F719 /* bmux-claude-wrapper */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Resources/bin/bmux-claude-wrapper"; sourceTree = SOURCE_ROOT; };
-		C1ADE30001A1B2C3D4E5F719 /* bmux-codex-wrapper */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Resources/bin/bmux-codex-wrapper"; sourceTree = SOURCE_ROOT; };
-		A5001000 /* bmux.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = bmux.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A5001622 /* bmux.sdef */ = {isa = PBXFileReference; lastKnownFileType = text.sdef; path = bmux.sdef; sourceTree = "<group>"; };
-		B9000001A1B2C3D4E5F60719 /* bmux.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bmux.swift; sourceTree = "<group>"; };
-		C0DE1A060000000000000002 /* bmux_layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bmux_layout.swift; sourceTree = "<group>"; };
-		B9000030A1B2C3D4E5F60719 /* bmux_open.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bmux_open.swift; sourceTree = "<group>"; };
-		A5001655 /* BmuxActionTrust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxActionTrust.swift; sourceTree = "<group>"; };
-		C0DE43000000000000000002 /* BmuxAgentChatConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxAgentChatConfig.swift; sourceTree = "<group>"; };
-		C0DE4300000000000000000A /* BmuxAgentChatConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxAgentChatConfigTests.swift; sourceTree = "<group>"; };
-		E3309A08 /* bmuxApp+EqualizeSplitsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "bmuxApp+EqualizeSplitsMenu.swift"; sourceTree = "<group>"; };
-		C4160A010000000000000002 /* bmuxApp+HistoryMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "bmuxApp+HistoryMenu.swift"; sourceTree = "<group>"; };
-		A5001011 /* bmuxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bmuxApp.swift; sourceTree = "<group>"; };
-		61AD48A9E6C3F1BE2B547FFE /* BMUXCLI+AgentHookCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookCatalog.swift"; sourceTree = "<group>"; };
-		B9000062A1B2C3D4E5F60719 /* BMUXCLI+AgentHookDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookDefinitions.swift"; sourceTree = "<group>"; };
-		5257257034CA4729B1211170 /* BMUXCLI+AgentHookPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookPayload.swift"; sourceTree = "<group>"; };
-		C6711B050000000000000001 /* BMUXCLI+AgentHookRestoreEvidence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookRestoreEvidence.swift"; sourceTree = "<group>"; };
-		B9000069A1B2C3D4E5F60719 /* BMUXCLI+AmpExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AmpExtension.swift"; sourceTree = "<group>"; };
-		5257257034CA4729B1211166 /* BMUXCLI+AutoNaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AutoNaming.swift"; sourceTree = "<group>"; };
-		5257257034CA4729B121116A /* BMUXCLI+AutoNamingDispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AutoNamingDispatch.swift"; sourceTree = "<group>"; };
-		5257257034CA4729B1211167 /* BMUXCLI+AutoNamingGenericHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AutoNamingGenericHooks.swift"; sourceTree = "<group>"; };
-		5257257034CA4729B1211168 /* BMUXCLI+AutoNamingHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AutoNamingHooks.swift"; sourceTree = "<group>"; };
-		5257257034CA4729B1211169 /* BMUXCLI+AutoNamingSummarizers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AutoNamingSummarizers.swift"; sourceTree = "<group>"; };
-		C72280000000000000000001 /* BMUXCLI+ClaudeHookWorkspaceRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ClaudeHookWorkspaceRouting.swift"; sourceTree = "<group>"; };
-		4CF59318F1D5B2195AC77C28 /* BMUXCLI+ClaudePushNotificationHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ClaudePushNotificationHook.swift"; sourceTree = "<group>"; };
-		C0D3F1F00000000000000102 /* BMUXCLI+CodexFireAndForgetHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexFireAndForgetHooks.swift"; sourceTree = "<group>"; };
-		B90000D1A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CommandSuggestions.swift"; sourceTree = "<group>"; };
-		B9000051A1B2C3D4E5F60719 /* BMUXCLI+Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Config.swift"; sourceTree = "<group>"; };
-		B9000031A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+DocsSettings.swift"; sourceTree = "<group>"; };
-		B9000065A1B2C3D4E5F60719 /* BMUXCLI+Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Events.swift"; sourceTree = "<group>"; };
-		B9000047A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ExecutableResolution.swift"; sourceTree = "<group>"; };
-		B9000060A1B2C3D4E5F60719 /* BMUXCLI+HermesAgentHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+HermesAgentHooks.swift"; sourceTree = "<group>"; };
-		B9000053A1B2C3D4E5F60719 /* BMUXCLI+InstallPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+InstallPreview.swift"; sourceTree = "<group>"; };
-		7A3D532FF0A00E20DA31667F /* BMUXCLI+KimiHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+KimiHooks.swift"; sourceTree = "<group>"; };
-		B9000070A1B2C3D4E5F60719 /* BMUXCLI+Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Memory.swift"; sourceTree = "<group>"; };
-		D7AB0000000000000000000E /* BMUXCLI+MoveTabToNewWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+MoveTabToNewWorkspace.swift"; sourceTree = "<group>"; };
-		B9000073A1B2C3D4E5F60719 /* BMUXCLI+OmpExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+OmpExtension.swift"; sourceTree = "<group>"; };
-		C05555010000000000000002 /* BMUXCLI+PiExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+PiExtension.swift"; sourceTree = "<group>"; };
-		C05555010000000000000004 /* BMUXCLI+PiExtensionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+PiExtensionSource.swift"; sourceTree = "<group>"; };
-		C05555010000000000000006 /* BMUXCLI+PiExtensionSourcePart1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+PiExtensionSourcePart1.swift"; sourceTree = "<group>"; };
-		C05555010000000000000008 /* BMUXCLI+PiExtensionSourcePart2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+PiExtensionSourcePart2.swift"; sourceTree = "<group>"; };
-		B9000055A1B2C3D4E5F60719 /* BMUXCLI+Process.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Process.swift"; sourceTree = "<group>"; };
-		C73660010000000000000002 /* BMUXCLI+RemotePTYErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+RemotePTYErrors.swift"; sourceTree = "<group>"; };
-		REE0CA0000000000000000C1 /* BMUXCLI+Remotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Remotes.swift"; sourceTree = "<group>"; };
-		DF43B7BD28A755A6280428D6 /* BMUXCLI+RovoDevHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+RovoDevHooks.swift"; sourceTree = "<group>"; };
-		C0DE64950000000000000002 /* BMUXCLI+SessionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SessionsList.swift"; sourceTree = "<group>"; };
-		C0DE64960000000000000006 /* BMUXCLI+SessionsListClaudeWorkflow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SessionsListClaudeWorkflow.swift"; sourceTree = "<group>"; };
-		C0DE64950000000000000008 /* BMUXCLI+SessionsListForkDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SessionsListForkDiagnostics.swift"; sourceTree = "<group>"; };
-		C0DE64960000000000000004 /* BMUXCLI+SessionsListForkStartupInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SessionsListForkStartupInput.swift"; sourceTree = "<group>"; };
-		C0DE64960000000000000002 /* BMUXCLI+SessionsListProcessArguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SessionsListProcessArguments.swift"; sourceTree = "<group>"; };
-		C12984000000000000000001 /* BMUXCLI+SIGPIPEProbes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SIGPIPEProbes.swift"; sourceTree = "<group>"; };
-		B9000040A1B2C3D4E5F60719 /* BMUXCLI+SSHCommandSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SSHCommandSupport.swift"; sourceTree = "<group>"; };
-			DCF61A4F72B75DC4EA47DF6F /* BMUXCLI+SSHReconnectPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SSHReconnectPrompt.swift"; sourceTree = "<group>"; };
-			CBF07000000000000000001 /* BMUXCLI+SSHStartupScripts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+SSHStartupScripts.swift"; sourceTree = "<group>"; };
-		B900002CA1B2C3D4E5F60719 /* BMUXCLI+Themes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Themes.swift"; sourceTree = "<group>"; };
-		B900002DA1B2C3D4E5F60719 /* BMUXCLI+ThemeSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ThemeSupport.swift"; sourceTree = "<group>"; };
-		B9000049A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatHUDSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+TmuxCompatHUDSupport.swift"; sourceTree = "<group>"; };
-		B9000045A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+TmuxCompatSupport.swift"; sourceTree = "<group>"; };
-		B9000032A1B2C3D4E5F60719 /* BMUXCLI+TopRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+TopRendering.swift"; sourceTree = "<group>"; };
-		C0DE31390000000000000106 /* BMUXCLIErrorOutputRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLIErrorOutputRegressionTests.swift; sourceTree = "<group>"; };
-		8A4FE96C3F394FC6A6D4B018 /* BmuxCLIPathInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxCLIPathInstaller.swift; sourceTree = "<group>"; };
-		C12985000000000000000003 /* BMUXCLISentryTelemetryRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLISentryTelemetryRegressionTests.swift; sourceTree = "<group>"; };
-		C0DE6495000000000000000A /* BMUXCLISessionsListForkDiagnosticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLISessionsListForkDiagnosticsTests.swift; sourceTree = "<group>"; };
-		C0DE64970000000000000002 /* BMUXCLISessionsListOpenCodeTrustTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLISessionsListOpenCodeTrustTests.swift; sourceTree = "<group>"; };
-		C0DE64970000000000000004 /* BMUXCLISessionsListProcessArgumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLISessionsListProcessArgumentTests.swift; sourceTree = "<group>"; };
-		C0DE64950000000000000006 /* BMUXCLISessionsListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLISessionsListTests.swift; sourceTree = "<group>"; };
-		C0DE6495000000000000000C /* BMUXCLISessionsListTranscriptPidTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLISessionsListTranscriptPidTests.swift; sourceTree = "<group>"; };
-		C0DE64950000000000000004 /* BMUXCLITestAssertions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXCLITestAssertions.swift; sourceTree = "<group>"; };
-		A5001651 /* BmuxConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfig.swift; sourceTree = "<group>"; };
-		A5FB120A /* BmuxConfigActionDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigActionDefinition.swift; sourceTree = "<group>"; };
-		A5FB1202 /* BmuxConfigActionSaver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigActionSaver.swift; sourceTree = "<group>"; };
-		A5FB1306 /* BmuxConfigActionSaverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigActionSaverTests.swift; sourceTree = "<group>"; };
-		C0DEF0A40000000000000002 /* BmuxConfigContextMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigContextMenuTests.swift; sourceTree = "<group>"; };
-		A5FB120C /* BmuxConfigExecutor+WorkspaceLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BmuxConfigExecutor+WorkspaceLaunch.swift"; sourceTree = "<group>"; };
-		A5001653 /* BmuxConfigExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigExecutor.swift; sourceTree = "<group>"; };
-		E30750000000000000000005 /* BmuxConfigNamedColorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigNamedColorTests.swift; sourceTree = "<group>"; };
-		A5FB130D /* BmuxConfigNewWorkspaceDefaultLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigNewWorkspaceDefaultLayoutTests.swift; sourceTree = "<group>"; };
-		A5FB130B /* BmuxConfigNewWorkspaceMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigNewWorkspaceMenuTests.swift; sourceTree = "<group>"; };
-		C5D0DEC0CF00000000000B1 /* BmuxConfigStore+ConfigStoreReloading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BmuxConfigStore+ConfigStoreReloading.swift"; sourceTree = "<group>"; };
-		C1A2B3C4D5E6F70800000002 /* BmuxConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigTests.swift; sourceTree = "<group>"; };
-		C0DEF0A10000000000000002 /* BmuxConfigUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigUI.swift; sourceTree = "<group>"; };
-		A5FB1206 /* BmuxConfigWorkspaceActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxConfigWorkspaceActionTests.swift; sourceTree = "<group>"; };
-		D1320AA0D1320AA0D1320AA5 /* BmuxDockTilePlugin.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BmuxDockTilePlugin.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
-		C54860040000000000000002 /* BmuxDurableDeepLinkRestoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxDurableDeepLinkRestoreTests.swift; sourceTree = "<group>"; };
-		E7E000000000000000000006 /* BmuxEventBus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxEventBus.swift; sourceTree = "<group>"; };
-		E7E000000000000000000004 /* BmuxEventBusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxEventBusTests.swift; sourceTree = "<group>"; };
-		E7E00000000000000000000E /* BmuxEventLogWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxEventLogWriter.swift; sourceTree = "<group>"; };
-		E7E000000000000000000008 /* BmuxEventPublishing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxEventPublishing.swift; sourceTree = "<group>"; };
-		E7E000000000000000000002 /* BmuxEventStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxEventStream.swift; sourceTree = "<group>"; };
-		C57B00050000000000000002 /* BmuxExtensionSidebarSelection+CustomSidebarName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BmuxExtensionSidebarSelection+CustomSidebarName.swift"; sourceTree = "<group>"; };
-		C0DE34020000000000000003 /* BmuxHelpCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxHelpCommands.swift; sourceTree = "<group>"; };
-		C0DE34020000000000000004 /* BmuxHelpResource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxHelpResource.swift; sourceTree = "<group>"; };
-		C0DE46010000000000000002 /* BMUXInstalledExtensionSidebarHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXInstalledExtensionSidebarHostView.swift; sourceTree = "<group>"; };
-		E7E00000000000000000000C /* BmuxLifecycleEventPublishing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxLifecycleEventPublishing.swift; sourceTree = "<group>"; };
-		2F0C07000000000000000001 /* BmuxMainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxMainWindow.swift; sourceTree = "<group>"; };
-		D36090010000000000000006 /* BmuxMainWindowConstrainFrameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxMainWindowConstrainFrameTests.swift; sourceTree = "<group>"; };
-		D36090020000000000000006 /* BmuxMainWindowFullScreenCapabilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxMainWindowFullScreenCapabilityTests.swift; sourceTree = "<group>"; };
-		CA1F0A02CA1F0A02CA1F0A02 /* BmuxModalAlertPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxModalAlertPresentation.swift; sourceTree = "<group>"; };
-		C54860110000000000000002 /* BmuxNavigationResolution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxNavigationResolution.swift; sourceTree = "<group>"; };
-		C54860120000000000000002 /* BmuxNavigationSurfaceDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxNavigationSurfaceDescriptor.swift; sourceTree = "<group>"; };
-		C54860010000000000000002 /* BmuxNavigationTargetResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxNavigationTargetResolver.swift; sourceTree = "<group>"; };
-		C54860030000000000000002 /* BmuxNavigationTargetResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxNavigationTargetResolverTests.swift; sourceTree = "<group>"; };
-		C54860130000000000000002 /* BmuxNavigationWorkspaceDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxNavigationWorkspaceDescriptor.swift; sourceTree = "<group>"; };
-		C0DE31390000000000000102 /* BMUXOpenCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXOpenCommandTests.swift; sourceTree = "<group>"; };
-		C0DE31390000000000000112 /* BMUXOpenHTMLFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXOpenHTMLFocusTests.swift; sourceTree = "<group>"; };
-		A9F100000000000000000005 /* BmuxRuntimeDebugCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxRuntimeDebugCapture.swift; sourceTree = "<group>"; };
-		A9F100000000000000000006 /* BmuxRuntimeDebugCaptureConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxRuntimeDebugCaptureConfiguration.swift; sourceTree = "<group>"; };
-		A9F10000000000000000001A /* BmuxRuntimeDebugCaptureSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxRuntimeDebugCaptureSender.swift; sourceTree = "<group>"; };
-		A9F100000000000000000007 /* BmuxRuntimeDebugCaptureSequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxRuntimeDebugCaptureSequence.swift; sourceTree = "<group>"; };
-		D3610C010000000000000002 /* BmuxSettingsJSONPathSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxSettingsJSONPathSupport.swift; sourceTree = "<group>"; };
-		DC5DC5DC0000000000000002 /* BmuxSidebarActionDispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxSidebarActionDispatch.swift; sourceTree = "<group>"; };
-		C0DE46030000000000000002 /* BMUXSidebarExtensionBrowserPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMUXSidebarExtensionBrowserPanel.swift; sourceTree = "<group>"; };
-		E7E00000000000000000000A /* BmuxSocketEventMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxSocketEventMapper.swift; sourceTree = "<group>"; };
-		C3677002000000000000002 /* BmuxSSHURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxSSHURLRequest.swift; sourceTree = "<group>"; };
-		C3677001000000000000002 /* BmuxSSHURLRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxSSHURLRequestTests.swift; sourceTree = "<group>"; };
-		C0DE43000000000000000004 /* BmuxSurfaceTabBarBuiltInAction+Codable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BmuxSurfaceTabBarBuiltInAction+Codable.swift"; sourceTree = "<group>"; };
-		C10D00040000000000000004 /* BmuxSurfaceTabBarBuiltInAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxSurfaceTabBarBuiltInAction.swift; sourceTree = "<group>"; };
-		F1000002A1B2C3D4E5F60718 /* bmuxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = bmuxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		C7A510000000000000000001 /* BmuxTopMemoryDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopMemoryDiagnostics.swift; sourceTree = "<group>"; };
-		B35750000000000000000003 /* BmuxTopProcessArguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessArguments.swift; sourceTree = "<group>"; };
-		C7A50C000000000000000004 /* BmuxTopProcessArgumentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessArgumentsTests.swift; sourceTree = "<group>"; };
-		C7A50C000000000000000001 /* BmuxTopProcessCPUTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessCPUTests.swift; sourceTree = "<group>"; };
-		C7A50D000000000000000001 /* BmuxTopProcessCPUTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessCPUTracker.swift; sourceTree = "<group>"; };
-		C7A50E000000000000000001 /* BmuxTopProcessDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessDetails.swift; sourceTree = "<group>"; };
-		C7A511000000000000000001 /* BmuxTopProcessEnumeration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessEnumeration.swift; sourceTree = "<group>"; };
-		C7A512000000000000000001 /* BmuxTopProcessSnapshotCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopProcessSnapshotCache.swift; sourceTree = "<group>"; };
-		C7A501000000000000000001 /* BmuxTopSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopSnapshot.swift; sourceTree = "<group>"; };
-		C7A508000000000000000001 /* BmuxTopSnapshotScopeCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopSnapshotScopeCache.swift; sourceTree = "<group>"; };
-		C7A5090000000000000005A1 /* BmuxTopSnapshotScopeCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopSnapshotScopeCacheTests.swift; sourceTree = "<group>"; };
-		C7A509000000000000000001 /* BmuxTopSnapshotScopeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxTopSnapshotScopeTests.swift; sourceTree = "<group>"; };
-		7E7E6EF344A568AC7FEE3715 /* bmuxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = bmuxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		D7C0DE00000000000000A102 /* BmuxWebView+ContextMenuLinkCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BmuxWebView+ContextMenuLinkCapture.swift"; sourceTree = "<group>"; };
-		D7AB0000000000000000000A /* BmuxWebView+MoveTabToNewWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BmuxWebView+MoveTabToNewWorkspace.swift"; sourceTree = "<group>"; };
-		C6255D010000000000000002 /* BmuxWebView+ScriptedDownloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BmuxWebView+ScriptedDownloads.swift"; sourceTree = "<group>"; };
-		C67540030000000000000002 /* BmuxWebView+SubframeDownloadIntentScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BmuxWebView+SubframeDownloadIntentScript.swift"; sourceTree = "<group>"; };
-		A5001510 /* BmuxWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BmuxWebView.swift; sourceTree = "<group>"; };
-		D7C0DE00000000000000A104 /* BmuxWebViewContextMenuLinkCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxWebViewContextMenuLinkCaptureTests.swift; sourceTree = "<group>"; };
-		D0B1000DA1B2C3D4E5F60001 /* BmuxWebViewDragRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxWebViewDragRoutingTests.swift; sourceTree = "<group>"; };
-		C0DE58990000000000000002 /* BmuxWebViewKeyDownReentryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxWebViewKeyDownReentryTests.swift; sourceTree = "<group>"; };
-		43F90FAF3FD44F11BF547BE9 /* BmuxWebViewMouseNavigationButtonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxWebViewMouseNavigationButtonTests.swift; sourceTree = "<group>"; };
-		E30750000000000000000003 /* BmuxWorkspaceDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BmuxWorkspaceDefinition.swift; sourceTree = "<group>"; };
 		C0A1E5CE01C0A1E5CE01A002 /* CoalesceLatestPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoalesceLatestPublisher.swift; sourceTree = "<group>"; };
 		A9F100000000000000000016 /* CodexAppServerQueuedInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/CodexAppServerQueuedInput.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000E /* CodexAppServerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/CodexAppServerSession.swift; sourceTree = "<group>"; };
@@ -2427,6 +2488,7 @@
 		A5C0DE0000000000000000B3 /* ProjectPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectPanelView.swift; sourceTree = "<group>"; };
 		A5C0DE0000000000000000BB /* ProjectSchemesTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectSchemesTabView.swift; sourceTree = "<group>"; };
 		A5C0DE0000000000000000B7 /* ProjectTargetsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectTargetsTabView.swift; sourceTree = "<group>"; };
+		B71000000000000000000004 /* PushToTalkVoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/PushToTalkVoiceInputController.swift; sourceTree = "<group>"; };
 		A64610010000000000000002 /* QuitConfirmationAlertPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitConfirmationAlertPresenter.swift; sourceTree = "<group>"; };
 		A64610020000000000000002 /* QuitConfirmationAlertPresenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitConfirmationAlertPresenterTests.swift; sourceTree = "<group>"; };
 		A500RG00 /* ReactGrab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ReactGrab.swift; sourceTree = "<group>"; };
@@ -2909,9 +2971,44 @@
 		604500100000000000000004 /* WindowTitleTemplateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowTitleTemplateTests.swift; sourceTree = "<group>"; };
 		E30760080000000000000001 /* WindowTmuxWorkspacePaneOverlayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowTmuxWorkspacePaneOverlayController.swift; sourceTree = "<group>"; };
 		A5001219 /* WindowToolbarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowToolbarController.swift; sourceTree = "<group>"; };
+		11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceChangeSetRecord.swift; sourceTree = "<group>"; };
+		0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceCheckpointRecord.swift; sourceTree = "<group>"; };
+		20C26C989BEBFA4B46E0200B /* WorkProvenanceConfidence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceConfidence.swift; sourceTree = "<group>"; };
+		D6F5C92F6635A34AEA3316E3 /* WorkProvenanceContributionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceContributionRecord.swift; sourceTree = "<group>"; };
+		9E5CD1397A128BCADC627D7C /* WorkProvenanceEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceEvent.swift; sourceTree = "<group>"; };
+		5A6C539CBB75A24F62E16605 /* WorkProvenanceEventPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceEventPayload.swift; sourceTree = "<group>"; };
+		1EEBFF20EC9F40CE41A44411 /* WorkProvenanceEventType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceEventType.swift; sourceTree = "<group>"; };
+		551E43CA9A0612FD95C9FFC1 /* WorkProvenanceFileChangeRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceFileChangeRecord.swift; sourceTree = "<group>"; };
+		510F8A75D123185FB9B1FAB7 /* WorkProvenanceFileExplanation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceFileExplanation.swift; sourceTree = "<group>"; };
+		F0249B2F5626865AD48C6631 /* WorkProvenanceGitCommandResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitCommandResult.swift; sourceTree = "<group>"; };
+		1B359CAAF748DEC78DF85972 /* WorkProvenanceGitCommandRunning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitCommandRunning.swift; sourceTree = "<group>"; };
+		2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitInspecting.swift; sourceTree = "<group>"; };
+		95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitInspector.swift; sourceTree = "<group>"; };
+		3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitSnapshot.swift; sourceTree = "<group>"; };
+		BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitStatusEntry.swift; sourceTree = "<group>"; };
+		3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceObservationService.swift; sourceTree = "<group>"; };
+		642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceObserverTests.swift; sourceTree = "<group>"; };
+		ABC5AF6B03C2A9B1ADE669E4 /* WorkProvenanceProcessGitCommandRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceProcessGitCommandRunner.swift; sourceTree = "<group>"; };
+		C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePruneResult.swift; sourceTree = "<group>"; };
+		9D42FFA90AFE883FD6C8EF8A /* WorkProvenanceRepositoryRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRepositoryRecord.swift; sourceTree = "<group>"; };
+		C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRetentionPolicy.swift; sourceTree = "<group>"; };
+		B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRuntime.swift; sourceTree = "<group>"; };
+		447E35CF777CC9B4432D5BFA /* WorkProvenanceSessionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionRecord.swift; sourceTree = "<group>"; };
+		398559F2CDF3DE88E7D65BDE /* WorkProvenanceSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSource.swift; sourceTree = "<group>"; };
+		2F450598D29975B2FD348489 /* WorkProvenanceSQLiteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSQLiteDatabase.swift; sourceTree = "<group>"; };
+		6AD4D726F26DF9FED2713BE6 /* WorkProvenanceSQLiteStatement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSQLiteStatement.swift; sourceTree = "<group>"; };
+		7E58AA160D397E44554E0EBB /* WorkProvenanceStableIDFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceStableIDFactory.swift; sourceTree = "<group>"; };
+		A7C750C2129178A43E2E64EE /* WorkProvenanceStorageLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceStorageLocation.swift; sourceTree = "<group>"; };
+		8B101A5E8045CF2BD5561744 /* WorkProvenanceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceStore.swift; sourceTree = "<group>"; };
+		320F50E85539F6327F8EB9EC /* WorkProvenanceStoreError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceStoreError.swift; sourceTree = "<group>"; };
+		1211A332D826E19C7A6463C8 /* WorkProvenanceStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceStoreTests.swift; sourceTree = "<group>"; };
+		59911A9C30F6E3E5FA86A5E9 /* WorkProvenanceValidationRunRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceValidationRunRecord.swift; sourceTree = "<group>"; };
+		1D4B8B1CDBF4DFC8201D7D95 /* WorkProvenanceWorkItemRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceWorkItemRecord.swift; sourceTree = "<group>"; };
+		28D2640EA59ABFD3DD5CA59B /* WorkProvenanceWorkspaceSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceWorkspaceSnapshot.swift; sourceTree = "<group>"; };
+		FBEF2CC451F2458E5150EEF3 /* WorkProvenanceWorktreeRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceWorktreeRecord.swift; sourceTree = "<group>"; };
 		C0DE43000000000000000008 /* Workspace+AgentChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Workspace+AgentChat.swift"; sourceTree = "<group>"; };
-		CA52C0150000000000000000 /* Workspace+CanvasLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Workspace+CanvasLayout.swift"; sourceTree = "<group>"; };
 		C54860020000000000000002 /* Workspace+BmuxNavigationDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Workspace+BmuxNavigationDescriptor.swift"; sourceTree = "<group>"; };
+		CA52C0150000000000000000 /* Workspace+CanvasLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Workspace+CanvasLayout.swift"; sourceTree = "<group>"; };
 		A5FB120E /* Workspace+CustomLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Workspace+CustomLayout.swift"; sourceTree = "<group>"; };
 		C57B00030000000000000002 /* Workspace+CustomSidebarPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Workspace+CustomSidebarPane.swift"; sourceTree = "<group>"; };
 		42C2726A34F27E7A43B77368 /* Workspace+CustomSidebarPullRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Workspace+CustomSidebarPullRequests.swift"; sourceTree = "<group>"; };
@@ -3064,6 +3161,7 @@
 			files = (
 				AC4A6E7C4A700001AC4A0101 /* BmuxAgentChat in Frameworks */,
 				A5B00004A1B2C3D4E5F60718 /* BMUXAgentLaunch in Frameworks */,
+				C0DE72010000000000000003 /* BmuxContextEfficiency in Frameworks */,
 				CF00F00000000000000000A4 /* BmuxFoundation in Frameworks */,
 				CD0CFE5700000000CD0CFE57 /* BmuxSettings in Frameworks */,
 				C5A1FED200000000000000E2 /* BmuxSidebarInterpreterClient in Frameworks */,
@@ -3085,7 +3183,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B057B0017E57B0017E57B001 /* Bonsplit in Frameworks */,
 				C9A2B00000000000000000C3 /* BmuxAppKitSupportUI in Frameworks */,
 				D7032A060000000000000001 /* BmuxBrowser in Frameworks */,
 				CA52A007CA52A007CA52A007 /* BmuxCanvas in Frameworks */,
@@ -3095,6 +3192,7 @@
 				EFB18E3C0000000000000001 /* BMUXMobileCore in Frameworks */,
 				C0DE4A000000000000000005 /* BmuxSidebarProviderKit in Frameworks */,
 				730600040000000000000001 /* BmuxWindowing in Frameworks */,
+				B057B0017E57B0017E57B001 /* Bonsplit in Frameworks */,
 				5E2701040000000000000003 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3724,6 +3822,8 @@
 				D1320AA0D1320AA0D1320AA4 /* AppIconDockTilePlugin.swift */,
 				A5001090 /* AppDelegate.swift */,
 				C0DE45AC0000000000000002 /* AppDelegate+AgentChat.swift */,
+				B71000000000000000000002 /* AppDelegate+PushToTalkVoiceInput.swift */,
+				B71000000000000000000004 /* PushToTalkVoiceInputController.swift */,
 				B1F0C0080000000000000002 /* AppDelegateDetachedInspectorClose.swift */,
 				B1F0C0010000000000000002 /* BrowserInspectorFocusHandoff.swift */,
 				B1F0C0030000000000000002 /* HostedInspectorDockControlScript.swift */,
@@ -4130,6 +4230,8 @@
 				C57B00050000000000000002 /* BmuxExtensionSidebarSelection+CustomSidebarName.swift */,
 				59065015952E1B5BE5E23519 /* Mobile */,
 				31B04B98376C9BA8B9E44DCB /* TerminalViewportUITestRecorder.swift */,
+
+				B8C2E8CB1ADEEC44521D006B /* WorkProvenance */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -4203,6 +4305,8 @@
 				C72280000000000000000001 /* BMUXCLI+ClaudeHookWorkspaceRouting.swift */,
 				B9000069A1B2C3D4E5F60719 /* BMUXCLI+AmpExtension.swift */,
 				C0D3F1F00000000000000102 /* BMUXCLI+CodexFireAndForgetHooks.swift */,
+				C0DE71000000000000000002 /* BMUXCLI+CodexTokenAudit.swift */,
+				C0DE72000000000000000002 /* BMUXCLI+ContextEfficiency.swift */,
 				B9000073A1B2C3D4E5F60719 /* BMUXCLI+OmpExtension.swift */,
 				C05555010000000000000002 /* BMUXCLI+PiExtension.swift */,
 				C05555010000000000000004 /* BMUXCLI+PiExtensionSource.swift */,
@@ -4217,13 +4321,22 @@
 					B9000032A1B2C3D4E5F60719 /* BMUXCLI+TopRendering.swift */,
 					B9000065A1B2C3D4E5F60719 /* BMUXCLI+Events.swift */,
 					B9000055A1B2C3D4E5F60719 /* BMUXCLI+Process.swift */,
+					C0DE70200000000000000002 /* BMUXCLI+Provenance.swift */,
 					C0DE64950000000000000002 /* BMUXCLI+SessionsList.swift */,
 					C0DE64960000000000000006 /* BMUXCLI+SessionsListClaudeWorkflow.swift */,
 					C0DE64950000000000000008 /* BMUXCLI+SessionsListForkDiagnostics.swift */,
 					C0DE64960000000000000002 /* BMUXCLI+SessionsListProcessArguments.swift */,
 					C0DE64960000000000000004 /* BMUXCLI+SessionsListForkStartupInput.swift */,
-					C12984000000000000000001 /* BMUXCLI+SIGPIPEProbes.swift */,
+				C12984000000000000000001 /* BMUXCLI+SIGPIPEProbes.swift */,
 				C12985000000000000000001 /* CLISocketSentryTelemetry.swift */,
+				C0DE70270000000000000002 /* CLIProvenanceContext.swift */,
+				C0DE70210000000000000002 /* CLIProvenanceExplanation.swift */,
+				C0DE70220000000000000002 /* CLIProvenanceExplanationRow.swift */,
+				C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */,
+				C0DE70240000000000000002 /* CLIProvenanceResolvedTarget.swift */,
+				C0DE70250000000000000002 /* CLIProvenanceSQLiteReader.swift */,
+				C0DE70280000000000000002 /* CLIProvenanceWorktreeList.swift */,
+				C0DE70260000000000000002 /* CLIProvenanceWorktreeRow.swift */,
 			);
 			path = CLI;
 			sourceTree = "<group>";
@@ -4612,6 +4725,9 @@
 				C0DE73840000000000000002 /* MobileHostWorkspaceTicketAuthorizationTests.swift */,
 				B8B056D80000000000000002 /* MobileHostIdentityTests.swift */,
 				5E2701030000000000000002 /* SentryEventScrubberTests.swift */,
+
+				642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
+				1211A332D826E19C7A6463C8 /* WorkProvenanceStoreTests.swift */,
 			);
 			path = bmuxTests;
 			sourceTree = "<group>";
@@ -4629,6 +4745,46 @@
 			);
 			name = Feed;
 			path = Feed;
+			sourceTree = "<group>";
+		};
+		B8C2E8CB1ADEEC44521D006B /* WorkProvenance */ = {
+			isa = PBXGroup;
+			children = (
+				11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */,
+				0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */,
+				20C26C989BEBFA4B46E0200B /* WorkProvenanceConfidence.swift */,
+				D6F5C92F6635A34AEA3316E3 /* WorkProvenanceContributionRecord.swift */,
+				9E5CD1397A128BCADC627D7C /* WorkProvenanceEvent.swift */,
+				5A6C539CBB75A24F62E16605 /* WorkProvenanceEventPayload.swift */,
+				1EEBFF20EC9F40CE41A44411 /* WorkProvenanceEventType.swift */,
+				551E43CA9A0612FD95C9FFC1 /* WorkProvenanceFileChangeRecord.swift */,
+				510F8A75D123185FB9B1FAB7 /* WorkProvenanceFileExplanation.swift */,
+				F0249B2F5626865AD48C6631 /* WorkProvenanceGitCommandResult.swift */,
+				1B359CAAF748DEC78DF85972 /* WorkProvenanceGitCommandRunning.swift */,
+				2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */,
+				95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */,
+				3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */,
+				BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */,
+				3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */,
+				ABC5AF6B03C2A9B1ADE669E4 /* WorkProvenanceProcessGitCommandRunner.swift */,
+				C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */,
+				9D42FFA90AFE883FD6C8EF8A /* WorkProvenanceRepositoryRecord.swift */,
+				C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */,
+				B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */,
+				2F450598D29975B2FD348489 /* WorkProvenanceSQLiteDatabase.swift */,
+				6AD4D726F26DF9FED2713BE6 /* WorkProvenanceSQLiteStatement.swift */,
+				447E35CF777CC9B4432D5BFA /* WorkProvenanceSessionRecord.swift */,
+				398559F2CDF3DE88E7D65BDE /* WorkProvenanceSource.swift */,
+				7E58AA160D397E44554E0EBB /* WorkProvenanceStableIDFactory.swift */,
+				A7C750C2129178A43E2E64EE /* WorkProvenanceStorageLocation.swift */,
+				8B101A5E8045CF2BD5561744 /* WorkProvenanceStore.swift */,
+				320F50E85539F6327F8EB9EC /* WorkProvenanceStoreError.swift */,
+				59911A9C30F6E3E5FA86A5E9 /* WorkProvenanceValidationRunRecord.swift */,
+				1D4B8B1CDBF4DFC8201D7D95 /* WorkProvenanceWorkItemRecord.swift */,
+				28D2640EA59ABFD3DD5CA59B /* WorkProvenanceWorkspaceSnapshot.swift */,
+				FBEF2CC451F2458E5150EEF3 /* WorkProvenanceWorktreeRecord.swift */,
+			);
+			path = WorkProvenance;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -4725,6 +4881,7 @@
 				C5A1FED100000000000000D3 /* BmuxSwiftRenderUI */,
 				C5A1FED200000000000000E3 /* BmuxSidebarInterpreterClient */,
 				CD0CFE5200000000CD0CFE52 /* BmuxSettings */,
+				C0DE72010000000000000002 /* BmuxContextEfficiency */,
 				CF00F00000000000000000A2 /* BmuxFoundation */,
 			);
 			productName = bmux;
@@ -4848,6 +5005,7 @@
 				C0DE45000000000000000003 /* XCLocalSwiftPackageReference "BmuxExtensionKit" */,
 				C0DE4A000000000000000003 /* XCLocalSwiftPackageReference "BmuxSidebarProviderKit" */,
 				C0DE49000000000000000003 /* XCLocalSwiftPackageReference "BmuxExtensionSidebarExamples" */,
+				C0DE72010000000000000001 /* XCLocalSwiftPackageReference "BmuxContextEfficiency" */,
 				A5C0DE0000000000000000A1 /* XCLocalSwiftPackageReference "BMUXProjectModel" */,
 				A5B00001A1B2C3D4E5F60718 /* XCLocalSwiftPackageReference "BMUXAgentLaunch" */,
 				A500D012A1B2C3D4E5F60718 /* XCLocalSwiftPackageReference "BMUXDebugLog" */,
@@ -5048,7 +5206,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-
 					C7A52E000000000000000002 /* AgentChatEndedTranscriptListabilityCache.swift in Sources */,
 				ACA7C4A70000000000000003 /* AgentChatHookSessionStore.swift in Sources */,
 				C7A531000000000000000002 /* AgentChatObservationHandle.swift in Sources */,
@@ -5098,10 +5255,10 @@
 				REE0CA0000000000000000E2 /* AIAccountsClient.swift in Sources */,
 				F4350A110000000000000001 /* AppBundleIconPersistencePolicy.swift in Sources */,
 				C0DE45AC0000000000000001 /* AppDelegate+AgentChat.swift in Sources */,
-				C4A570010000000000000001 /* AppDelegate+CanvasShortcutRouting.swift in Sources */,
-				C4160A030000000000000001 /* AppDelegate+ClosedItemHistory.swift in Sources */,
 				C54860050000000000000001 /* AppDelegate+BmuxNavigationDeepLinks.swift in Sources */,
 				C3677004000000000000001 /* AppDelegate+BmuxSSHURL.swift in Sources */,
+				C4A570010000000000000001 /* AppDelegate+CanvasShortcutRouting.swift in Sources */,
+				C4160A030000000000000001 /* AppDelegate+ClosedItemHistory.swift in Sources */,
 				C65930010000000000000003 /* AppDelegate+CrashSessionSnapshotRemoval.swift in Sources */,
 				DCDC3000000000000000E001 /* AppDelegate+DockShortcutRouting.swift in Sources */,
 				DCDC1000000000000000C000 /* AppDelegate+DockSurfaceMove.swift in Sources */,
@@ -5117,6 +5274,7 @@
 				A5F100000000000000000011 /* AppDelegate+NotificationOpen.swift in Sources */,
 				A5F100000000000000000003 /* AppDelegate+NotificationScroll.swift in Sources */,
 				6313C7A00000000000000001 /* AppDelegate+PaneMemoryGuardrail.swift in Sources */,
+				B71000000000000000000001 /* AppDelegate+PushToTalkVoiceInput.swift in Sources */,
 				2907A0012907A0012907A001 /* AppDelegate+RecoverableMainWindowRoutes.swift in Sources */,
 				C0DE74140000000000000001 /* AppDelegate+SavedLayoutMenu.swift in Sources */,
 				6419A0016419A0016419A001 /* AppDelegate+ShortcutRoutingTesting.swift in Sources */,
@@ -5134,6 +5292,59 @@
 					D9FEC58D5BACCF76459F1BBE /* AuthEnvironment.swift in Sources */,
 					C0DE35860000000000000001 /* BackgroundWorkspacePrimeCoordinator.swift in Sources */,
 					A50012F1 /* Backport.swift in Sources */,
+				A5001654 /* BmuxActionTrust.swift in Sources */,
+				C0DE43000000000000000001 /* BmuxAgentChatConfig.swift in Sources */,
+				E3309A07 /* bmuxApp+EqualizeSplitsMenu.swift in Sources */,
+				C4160A010000000000000001 /* bmuxApp+HistoryMenu.swift in Sources */,
+				A5001001 /* bmuxApp.swift in Sources */,
+				A72C9F4179B54DF38E99A021 /* BmuxCLIPathInstaller.swift in Sources */,
+				A5001650 /* BmuxConfig.swift in Sources */,
+				A5FB1209 /* BmuxConfigActionDefinition.swift in Sources */,
+				A5FB1201 /* BmuxConfigActionSaver.swift in Sources */,
+				A5FB120B /* BmuxConfigExecutor+WorkspaceLaunch.swift in Sources */,
+				A5001652 /* BmuxConfigExecutor.swift in Sources */,
+				C5D0DEC0CF00000000000A1 /* BmuxConfigStore+ConfigStoreReloading.swift in Sources */,
+				C0DEF0A10000000000000001 /* BmuxConfigUI.swift in Sources */,
+				E7E000000000000000000005 /* BmuxEventBus.swift in Sources */,
+				E7E00000000000000000000D /* BmuxEventLogWriter.swift in Sources */,
+				E7E000000000000000000007 /* BmuxEventPublishing.swift in Sources */,
+				E7E000000000000000000001 /* BmuxEventStream.swift in Sources */,
+				C57B00050000000000000001 /* BmuxExtensionSidebarSelection+CustomSidebarName.swift in Sources */,
+				C0DE34020000000000000001 /* BmuxHelpCommands.swift in Sources */,
+				C0DE34020000000000000002 /* BmuxHelpResource.swift in Sources */,
+				C0DE46010000000000000001 /* BMUXInstalledExtensionSidebarHostView.swift in Sources */,
+				E7E00000000000000000000B /* BmuxLifecycleEventPublishing.swift in Sources */,
+				2F0C07000000000000000002 /* BmuxMainWindow.swift in Sources */,
+				CA1F0A01CA1F0A01CA1F0A01 /* BmuxModalAlertPresentation.swift in Sources */,
+				C54860110000000000000001 /* BmuxNavigationResolution.swift in Sources */,
+				C54860120000000000000001 /* BmuxNavigationSurfaceDescriptor.swift in Sources */,
+				C54860010000000000000001 /* BmuxNavigationTargetResolver.swift in Sources */,
+				C54860130000000000000001 /* BmuxNavigationWorkspaceDescriptor.swift in Sources */,
+				A9F200000000000000000005 /* BmuxRuntimeDebugCapture.swift in Sources */,
+				A9F200000000000000000006 /* BmuxRuntimeDebugCaptureConfiguration.swift in Sources */,
+				A9F20000000000000000001A /* BmuxRuntimeDebugCaptureSender.swift in Sources */,
+				A9F200000000000000000007 /* BmuxRuntimeDebugCaptureSequence.swift in Sources */,
+				D3610C010000000000000001 /* BmuxSettingsJSONPathSupport.swift in Sources */,
+				DC5DC5DC0000000000000001 /* BmuxSidebarActionDispatch.swift in Sources */,
+				C0DE46030000000000000001 /* BMUXSidebarExtensionBrowserPanel.swift in Sources */,
+				E7E000000000000000000009 /* BmuxSocketEventMapper.swift in Sources */,
+				C3677002000000000000001 /* BmuxSSHURLRequest.swift in Sources */,
+				C0DE43000000000000000003 /* BmuxSurfaceTabBarBuiltInAction+Codable.swift in Sources */,
+				C10D00030000000000000003 /* BmuxSurfaceTabBarBuiltInAction.swift in Sources */,
+				C7A510000000000000000002 /* BmuxTopMemoryDiagnostics.swift in Sources */,
+				B35750000000000000000004 /* BmuxTopProcessArguments.swift in Sources */,
+				C7A50D000000000000000002 /* BmuxTopProcessCPUTracker.swift in Sources */,
+				C7A50E000000000000000002 /* BmuxTopProcessDetails.swift in Sources */,
+				C7A511000000000000000002 /* BmuxTopProcessEnumeration.swift in Sources */,
+				C7A512000000000000000002 /* BmuxTopProcessSnapshotCache.swift in Sources */,
+				C7A501000000000000000002 /* BmuxTopSnapshot.swift in Sources */,
+				C7A508000000000000000002 /* BmuxTopSnapshotScopeCache.swift in Sources */,
+				D7C0DE00000000000000A101 /* BmuxWebView+ContextMenuLinkCapture.swift in Sources */,
+				D7AB00000000000000000009 /* BmuxWebView+MoveTabToNewWorkspace.swift in Sources */,
+				C6255D010000000000000001 /* BmuxWebView+ScriptedDownloads.swift in Sources */,
+				C67540030000000000000001 /* BmuxWebView+SubframeDownloadIntentScript.swift in Sources */,
+				A5001500 /* BmuxWebView.swift in Sources */,
+				E30750000000000000000004 /* BmuxWorkspaceDefinition.swift in Sources */,
 					D0B10010A1B2C3D4E5F60001 /* BonsplitTabBarDebug.swift in Sources */,
 				D0B10002A1B2C3D4E5F60001 /* BonsplitTabBarPassThrough.swift in Sources */,
 				D7032A070000000000000001 /* BrowserAuthPromptTextFormatter.swift in Sources */,
@@ -5229,7 +5440,7 @@
 				C0DE58990000000000000003 /* BrowserWebKitKeyDownDispatch.swift in Sources */,
 				A5001534 /* BrowserWindowPortal.swift in Sources */,
 				B1F0C00A0000000000000001 /* BrowserWindowPortalInspectorLayout.swift in Sources */,
-				F0ACC0E00000000000000001 /* CachedAgentProcessIdentityValidator.swift in Sources */,
+					F0ACC0E00000000000000001 /* CachedAgentProcessIdentityValidator.swift in Sources */,
 				CA52B0010000000000000000 /* CanvasAction.swift in Sources */,
 				CA5CADF00000000000000002 /* CanvasDebugMenuButtons.swift in Sources */,
 				CA52B0050000000000000000 /* CanvasHostedPanelContentView.swift in Sources */,
@@ -5241,59 +5452,6 @@
 				C46790000000000000000003 /* CLIForwardingLaunchRouter.swift in Sources */,
 				C10D51700000000000000002 /* ClosedItemHistory.swift in Sources */,
 				C10D00010000000000000001 /* CloudVMActionLauncher.swift in Sources */,
-				A5001654 /* BmuxActionTrust.swift in Sources */,
-				C0DE43000000000000000001 /* BmuxAgentChatConfig.swift in Sources */,
-				E3309A07 /* bmuxApp+EqualizeSplitsMenu.swift in Sources */,
-				C4160A010000000000000001 /* bmuxApp+HistoryMenu.swift in Sources */,
-				A5001001 /* bmuxApp.swift in Sources */,
-				A72C9F4179B54DF38E99A021 /* BmuxCLIPathInstaller.swift in Sources */,
-				A5001650 /* BmuxConfig.swift in Sources */,
-				A5FB1209 /* BmuxConfigActionDefinition.swift in Sources */,
-				A5FB1201 /* BmuxConfigActionSaver.swift in Sources */,
-				A5FB120B /* BmuxConfigExecutor+WorkspaceLaunch.swift in Sources */,
-				A5001652 /* BmuxConfigExecutor.swift in Sources */,
-				C5D0DEC0CF00000000000A1 /* BmuxConfigStore+ConfigStoreReloading.swift in Sources */,
-				C0DEF0A10000000000000001 /* BmuxConfigUI.swift in Sources */,
-				E7E000000000000000000005 /* BmuxEventBus.swift in Sources */,
-				E7E00000000000000000000D /* BmuxEventLogWriter.swift in Sources */,
-				E7E000000000000000000007 /* BmuxEventPublishing.swift in Sources */,
-				E7E000000000000000000001 /* BmuxEventStream.swift in Sources */,
-				C57B00050000000000000001 /* BmuxExtensionSidebarSelection+CustomSidebarName.swift in Sources */,
-				C0DE34020000000000000001 /* BmuxHelpCommands.swift in Sources */,
-				C0DE34020000000000000002 /* BmuxHelpResource.swift in Sources */,
-				C0DE46010000000000000001 /* BMUXInstalledExtensionSidebarHostView.swift in Sources */,
-				E7E00000000000000000000B /* BmuxLifecycleEventPublishing.swift in Sources */,
-				2F0C07000000000000000002 /* BmuxMainWindow.swift in Sources */,
-				CA1F0A01CA1F0A01CA1F0A01 /* BmuxModalAlertPresentation.swift in Sources */,
-				C54860110000000000000001 /* BmuxNavigationResolution.swift in Sources */,
-				C54860120000000000000001 /* BmuxNavigationSurfaceDescriptor.swift in Sources */,
-				C54860010000000000000001 /* BmuxNavigationTargetResolver.swift in Sources */,
-				C54860130000000000000001 /* BmuxNavigationWorkspaceDescriptor.swift in Sources */,
-				A9F200000000000000000005 /* BmuxRuntimeDebugCapture.swift in Sources */,
-				A9F200000000000000000006 /* BmuxRuntimeDebugCaptureConfiguration.swift in Sources */,
-				A9F20000000000000000001A /* BmuxRuntimeDebugCaptureSender.swift in Sources */,
-				A9F200000000000000000007 /* BmuxRuntimeDebugCaptureSequence.swift in Sources */,
-				D3610C010000000000000001 /* BmuxSettingsJSONPathSupport.swift in Sources */,
-				DC5DC5DC0000000000000001 /* BmuxSidebarActionDispatch.swift in Sources */,
-				C0DE46030000000000000001 /* BMUXSidebarExtensionBrowserPanel.swift in Sources */,
-				E7E000000000000000000009 /* BmuxSocketEventMapper.swift in Sources */,
-				C3677002000000000000001 /* BmuxSSHURLRequest.swift in Sources */,
-				C0DE43000000000000000003 /* BmuxSurfaceTabBarBuiltInAction+Codable.swift in Sources */,
-				C10D00030000000000000003 /* BmuxSurfaceTabBarBuiltInAction.swift in Sources */,
-				C7A510000000000000000002 /* BmuxTopMemoryDiagnostics.swift in Sources */,
-				B35750000000000000000004 /* BmuxTopProcessArguments.swift in Sources */,
-				C7A50D000000000000000002 /* BmuxTopProcessCPUTracker.swift in Sources */,
-				C7A50E000000000000000002 /* BmuxTopProcessDetails.swift in Sources */,
-				C7A511000000000000000002 /* BmuxTopProcessEnumeration.swift in Sources */,
-				C7A512000000000000000002 /* BmuxTopProcessSnapshotCache.swift in Sources */,
-				C7A501000000000000000002 /* BmuxTopSnapshot.swift in Sources */,
-				C7A508000000000000000002 /* BmuxTopSnapshotScopeCache.swift in Sources */,
-				D7C0DE00000000000000A101 /* BmuxWebView+ContextMenuLinkCapture.swift in Sources */,
-				D7AB00000000000000000009 /* BmuxWebView+MoveTabToNewWorkspace.swift in Sources */,
-				C6255D010000000000000001 /* BmuxWebView+ScriptedDownloads.swift in Sources */,
-				C67540030000000000000001 /* BmuxWebView+SubframeDownloadIntentScript.swift in Sources */,
-				A5001500 /* BmuxWebView.swift in Sources */,
-				E30750000000000000000004 /* BmuxWorkspaceDefinition.swift in Sources */,
 				C0A1E5CE01C0A1E5CE01A001 /* CoalesceLatestPublisher.swift in Sources */,
 				A9F200000000000000000016 /* CodexAppServerQueuedInput.swift in Sources */,
 				A9E02000000000000000000E /* CodexAppServerSession.swift in Sources */,
@@ -5397,7 +5555,7 @@
 				D0B10016A1B2C3D4E5F60001 /* FilePreviewTextEditor.swift in Sources */,
 					F11E52270000000000005227 /* FilePreviewWordWrapSettings.swift in Sources */,
 				A5001445A5001445A5001445 /* FilePreviewWorkspaceOpenSupport.swift in Sources */,
-				F1A0C0DE0000000000000002 /* FindTextFieldSupport.swift in Sources */,
+					F1A0C0DE0000000000000002 /* FindTextFieldSupport.swift in Sources */,
 				F0C05170000000000000002 /* FocusHistory.swift in Sources */,
 				C4160A020000000000000001 /* FocusHistoryMenuInvalidator.swift in Sources */,
 				5E55400000000000000000D1 /* FocusStealingResponderConformances.swift in Sources */,
@@ -5572,6 +5730,7 @@
 					A5C0DE0000000000000000B4 /* ProjectPanelView.swift in Sources */,
 					A5C0DE0000000000000000BC /* ProjectSchemesTabView.swift in Sources */,
 					A5C0DE0000000000000000B8 /* ProjectTargetsTabView.swift in Sources */,
+				B71000000000000000000003 /* PushToTalkVoiceInputController.swift in Sources */,
 					A64610010000000000000001 /* QuitConfirmationAlertPresenter.swift in Sources */,
 				A500RG01 /* ReactGrab.swift in Sources */,
 				A6D1F0000000000000000002 /* ReleasingWindowController.swift in Sources */,
@@ -5906,9 +6065,42 @@
 				604500200000000000000001 /* WindowTitleTemplateContext.swift in Sources */,
 				E30760080000000000000002 /* WindowTmuxWorkspacePaneOverlayController.swift in Sources */,
 				A5001209 /* WindowToolbarController.swift in Sources */,
-				C0DE43000000000000000007 /* Workspace+AgentChat.swift in Sources */,
-				CA52B0150000000000000000 /* Workspace+CanvasLayout.swift in Sources */,
+				70F48B3441FC810F8676C94F /* WorkProvenanceChangeSetRecord.swift in Sources */,
+				740D49C5400756EF2E733E31 /* WorkProvenanceCheckpointRecord.swift in Sources */,
+				DC4C271089CB9AD62EDB2011 /* WorkProvenanceConfidence.swift in Sources */,
+				A7922EC65BA23500B8A1701D /* WorkProvenanceContributionRecord.swift in Sources */,
+				9C781FD93B69A794C73400D4 /* WorkProvenanceEvent.swift in Sources */,
+				3B011F688FB9988D8E79FDB4 /* WorkProvenanceEventPayload.swift in Sources */,
+				4388F7BA10B93A7B912383BE /* WorkProvenanceEventType.swift in Sources */,
+				159BDE59D7EF1EF6F6957714 /* WorkProvenanceFileChangeRecord.swift in Sources */,
+				514CE422D6AE04D04F3BB780 /* WorkProvenanceFileExplanation.swift in Sources */,
+				8F8D42DC292DA91C0414BAE4 /* WorkProvenanceGitCommandResult.swift in Sources */,
+				D89012A6791CAB63645BC4BC /* WorkProvenanceGitCommandRunning.swift in Sources */,
+				1E5E54C50421C308F5CC6FA6 /* WorkProvenanceGitInspecting.swift in Sources */,
+				918962BA99BFA9005D41242F /* WorkProvenanceGitInspector.swift in Sources */,
+				D98713E6CE24785E075BF87F /* WorkProvenanceGitSnapshot.swift in Sources */,
+				B53E0C6CEEEEFBE91CE39E0F /* WorkProvenanceGitStatusEntry.swift in Sources */,
+				36915A74F7AA3930F34DF634 /* WorkProvenanceObservationService.swift in Sources */,
+				0B11704B4770CA402725B958 /* WorkProvenanceProcessGitCommandRunner.swift in Sources */,
+				C0DE70110000000000000001 /* WorkProvenancePruneResult.swift in Sources */,
+				2EA18EC835B56F4B9A3AE420 /* WorkProvenanceRepositoryRecord.swift in Sources */,
+				C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */,
+				756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */,
+				A801809D8020AD996B4C0997 /* WorkProvenanceSessionRecord.swift in Sources */,
+				85F5448A921FB8E003C27C30 /* WorkProvenanceSource.swift in Sources */,
+				64D01BCF87DD42A09D0D2649 /* WorkProvenanceSQLiteDatabase.swift in Sources */,
+				796C1363040412DD2768987A /* WorkProvenanceSQLiteStatement.swift in Sources */,
+				48A91734B0908DBEFF52445F /* WorkProvenanceStableIDFactory.swift in Sources */,
+				2F23C7CCE50C7034B7FC32DA /* WorkProvenanceStorageLocation.swift in Sources */,
+				E361FBA90CC7ED4D10E9FF08 /* WorkProvenanceStore.swift in Sources */,
+				B7918D20E231280A40E91D19 /* WorkProvenanceStoreError.swift in Sources */,
+				325D6087DAE009D97B24D4EF /* WorkProvenanceValidationRunRecord.swift in Sources */,
+				C2C1613D6327DBD7F58D5FB6 /* WorkProvenanceWorkItemRecord.swift in Sources */,
+				9537A3EC66F94ED444031D42 /* WorkProvenanceWorkspaceSnapshot.swift in Sources */,
+				3FAEB848F6302C52776D369B /* WorkProvenanceWorktreeRecord.swift in Sources */,
+					C0DE43000000000000000007 /* Workspace+AgentChat.swift in Sources */,
 				C54860020000000000000001 /* Workspace+BmuxNavigationDescriptor.swift in Sources */,
+				CA52B0150000000000000000 /* Workspace+CanvasLayout.swift in Sources */,
 				A5FB120D /* Workspace+CustomLayout.swift in Sources */,
 				C57B00030000000000000001 /* Workspace+CustomSidebarPane.swift in Sources */,
 				9FC97DA1B422776BB1EEC821 /* Workspace+CustomSidebarPullRequests.swift in Sources */,
@@ -5972,8 +6164,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				D36A00030000000000000003 /* AgentHibernationLifecycleState.swift in Sources */,
-				B900004AA1B2C3D4E5F60719 /* CLISocketPathResolver.swift in Sources */,
-				C12985000000000000000002 /* CLISocketSentryTelemetry.swift in Sources */,
 				B9000002A1B2C3D4E5F60719 /* bmux.swift in Sources */,
 				C0DE1A060000000000000001 /* bmux_layout.swift in Sources */,
 				B9000034A1B2C3D4E5F60719 /* bmux_open.swift in Sources */,
@@ -5990,8 +6180,10 @@
 				C72280000000000000000002 /* BMUXCLI+ClaudeHookWorkspaceRouting.swift in Sources */,
 				2DA8D48D99FB520EB179B015 /* BMUXCLI+ClaudePushNotificationHook.swift in Sources */,
 				C0D3F1F00000000000000101 /* BMUXCLI+CodexFireAndForgetHooks.swift in Sources */,
+				C0DE71000000000000000001 /* BMUXCLI+CodexTokenAudit.swift in Sources */,
 				B90000D2A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift in Sources */,
 				B9000050A1B2C3D4E5F60719 /* BMUXCLI+Config.swift in Sources */,
+				C0DE72000000000000000001 /* BMUXCLI+ContextEfficiency.swift in Sources */,
 				B9000035A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift in Sources */,
 				B9000064A1B2C3D4E5F60719 /* BMUXCLI+Events.swift in Sources */,
 				B9000046A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift in Sources */,
@@ -6006,6 +6198,7 @@
 						C05555010000000000000005 /* BMUXCLI+PiExtensionSourcePart1.swift in Sources */,
 						C05555010000000000000007 /* BMUXCLI+PiExtensionSourcePart2.swift in Sources */,
 						B9000054A1B2C3D4E5F60719 /* BMUXCLI+Process.swift in Sources */,
+						C0DE70200000000000000001 /* BMUXCLI+Provenance.swift in Sources */,
 				C73660010000000000000001 /* BMUXCLI+RemotePTYErrors.swift in Sources */,
 					REE0CA0000000000000000C2 /* BMUXCLI+Remotes.swift in Sources */,
 				888222D96880953F33F554F1 /* BMUXCLI+RovoDevHooks.swift in Sources */,
@@ -6023,6 +6216,16 @@
 				B9000048A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatHUDSupport.swift in Sources */,
 				B9000044A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatSupport.swift in Sources */,
 				B9000033A1B2C3D4E5F60719 /* BMUXCLI+TopRendering.swift in Sources */,
+				C0DE70270000000000000001 /* CLIProvenanceContext.swift in Sources */,
+				C0DE70210000000000000001 /* CLIProvenanceExplanation.swift in Sources */,
+				C0DE70220000000000000001 /* CLIProvenanceExplanationRow.swift in Sources */,
+				C0DE70230000000000000001 /* CLIProvenanceGitResolver.swift in Sources */,
+				C0DE70240000000000000001 /* CLIProvenanceResolvedTarget.swift in Sources */,
+				C0DE70250000000000000001 /* CLIProvenanceSQLiteReader.swift in Sources */,
+				C0DE70280000000000000001 /* CLIProvenanceWorktreeList.swift in Sources */,
+				C0DE70260000000000000001 /* CLIProvenanceWorktreeRow.swift in Sources */,
+				B900004AA1B2C3D4E5F60719 /* CLISocketPathResolver.swift in Sources */,
+				C12985000000000000000002 /* CLISocketSentryTelemetry.swift in Sources */,
 				C0DECAFE0000000000000001 /* CodexTeamsApprovalBridge.swift in Sources */,
 				FEEDC1A50000000000000001 /* FeedEventClassifier.swift in Sources */,
 				A5FB1308 /* JSONCObjectEditor+Remove.swift in Sources */,
@@ -6098,6 +6301,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+
 				CDFE000000000000000000C1 /* AgentChatProseStreamerTests.swift in Sources */,
 				C7A51F000000000000000002 /* AgentChatSessionRegistryClaudeObservationTests.swift in Sources */,
 				C7A51C000000000000000002 /* AgentChatSessionRegistryHookStoreTests.swift in Sources */,
@@ -6133,6 +6337,39 @@
 				7C592156DCB3419BB95383E5 /* AutoNamingEngineTests.swift in Sources */,
 				A4ECF22C62724853A72D6BDE /* AutoNamingGrokAdapterTests.swift in Sources */,
 				74AB3F34FE3B4974A3A5D264 /* AutoNamingHookPayloadAdapterTests.swift in Sources */,
+				C0DE43000000000000000009 /* BmuxAgentChatConfigTests.swift in Sources */,
+					0CB4E9797AD54D3BB9CF06F9 /* BMUXCLI+AutoNaming.swift in Sources */,
+					C0DE31390000000000000105 /* BMUXCLIErrorOutputRegressionTests.swift in Sources */,
+					C12985000000000000000004 /* BMUXCLISentryTelemetryRegressionTests.swift in Sources */,
+					C0DE64950000000000000009 /* BMUXCLISessionsListForkDiagnosticsTests.swift in Sources */,
+					C0DE64970000000000000001 /* BMUXCLISessionsListOpenCodeTrustTests.swift in Sources */,
+					C0DE64970000000000000003 /* BMUXCLISessionsListProcessArgumentTests.swift in Sources */,
+					C0DE64950000000000000005 /* BMUXCLISessionsListTests.swift in Sources */,
+					C0DE6495000000000000000B /* BMUXCLISessionsListTranscriptPidTests.swift in Sources */,
+					C0DE64950000000000000003 /* BMUXCLITestAssertions.swift in Sources */,
+				A5FB1305 /* BmuxConfigActionSaverTests.swift in Sources */,
+				C0DEF0A40000000000000001 /* BmuxConfigContextMenuTests.swift in Sources */,
+				E30750000000000000000006 /* BmuxConfigNamedColorTests.swift in Sources */,
+				A5FB130C /* BmuxConfigNewWorkspaceDefaultLayoutTests.swift in Sources */,
+				A5FB130A /* BmuxConfigNewWorkspaceMenuTests.swift in Sources */,
+				C1A2B3C4D5E6F70800000001 /* BmuxConfigTests.swift in Sources */,
+				A5FB1205 /* BmuxConfigWorkspaceActionTests.swift in Sources */,
+				C54860040000000000000001 /* BmuxDurableDeepLinkRestoreTests.swift in Sources */,
+				E7E000000000000000000003 /* BmuxEventBusTests.swift in Sources */,
+				D36090010000000000000005 /* BmuxMainWindowConstrainFrameTests.swift in Sources */,
+				D36090020000000000000005 /* BmuxMainWindowFullScreenCapabilityTests.swift in Sources */,
+				C54860030000000000000001 /* BmuxNavigationTargetResolverTests.swift in Sources */,
+				C0DE31390000000000000101 /* BMUXOpenCommandTests.swift in Sources */,
+				C0DE31390000000000000111 /* BMUXOpenHTMLFocusTests.swift in Sources */,
+				C3677001000000000000001 /* BmuxSSHURLRequestTests.swift in Sources */,
+				C7A50C000000000000000003 /* BmuxTopProcessArgumentsTests.swift in Sources */,
+				C7A50C000000000000000002 /* BmuxTopProcessCPUTests.swift in Sources */,
+				C7A5090000000000000005A2 /* BmuxTopSnapshotScopeCacheTests.swift in Sources */,
+				C7A509000000000000000002 /* BmuxTopSnapshotScopeTests.swift in Sources */,
+				D7C0DE00000000000000A103 /* BmuxWebViewContextMenuLinkCaptureTests.swift in Sources */,
+				D0B1000CA1B2C3D4E5F60001 /* BmuxWebViewDragRoutingTests.swift in Sources */,
+				C0DE58990000000000000004 /* BmuxWebViewKeyDownReentryTests.swift in Sources */,
+				7D5DA4DC51454ECDBF9AC978 /* BmuxWebViewMouseNavigationButtonTests.swift in Sources */,
 				D3622000A1B2C3D4E5F60718 /* BrowserArrowKeyForwardingTests.swift in Sources */,
 				BCBC0A0E0000000000000D01 /* BrowserChromeMetricsTests.swift in Sources */,
 				D7032A030000000000000001 /* BrowserClientCertificateCredentialPickerTests.swift in Sources */,
@@ -6193,39 +6430,6 @@
 				B05553B10000000000000001 /* CLITmuxCompatRemoteSplitTests.swift in Sources */,
 				7375A0037375A0037375A003 /* ClosedMainWindowRoutingTests.swift in Sources */,
 				C75740010000000000000001 /* CloudVMMenuItemMetricsTests.swift in Sources */,
-				C0DE43000000000000000009 /* BmuxAgentChatConfigTests.swift in Sources */,
-					0CB4E9797AD54D3BB9CF06F9 /* BMUXCLI+AutoNaming.swift in Sources */,
-					C0DE31390000000000000105 /* BMUXCLIErrorOutputRegressionTests.swift in Sources */,
-					C12985000000000000000004 /* BMUXCLISentryTelemetryRegressionTests.swift in Sources */,
-					C0DE64950000000000000009 /* BMUXCLISessionsListForkDiagnosticsTests.swift in Sources */,
-					C0DE64970000000000000001 /* BMUXCLISessionsListOpenCodeTrustTests.swift in Sources */,
-					C0DE64970000000000000003 /* BMUXCLISessionsListProcessArgumentTests.swift in Sources */,
-					C0DE64950000000000000005 /* BMUXCLISessionsListTests.swift in Sources */,
-					C0DE6495000000000000000B /* BMUXCLISessionsListTranscriptPidTests.swift in Sources */,
-					C0DE64950000000000000003 /* BMUXCLITestAssertions.swift in Sources */,
-				A5FB1305 /* BmuxConfigActionSaverTests.swift in Sources */,
-				C0DEF0A40000000000000001 /* BmuxConfigContextMenuTests.swift in Sources */,
-				E30750000000000000000006 /* BmuxConfigNamedColorTests.swift in Sources */,
-				A5FB130C /* BmuxConfigNewWorkspaceDefaultLayoutTests.swift in Sources */,
-				A5FB130A /* BmuxConfigNewWorkspaceMenuTests.swift in Sources */,
-				C1A2B3C4D5E6F70800000001 /* BmuxConfigTests.swift in Sources */,
-				A5FB1205 /* BmuxConfigWorkspaceActionTests.swift in Sources */,
-				C54860040000000000000001 /* BmuxDurableDeepLinkRestoreTests.swift in Sources */,
-				E7E000000000000000000003 /* BmuxEventBusTests.swift in Sources */,
-				D36090010000000000000005 /* BmuxMainWindowConstrainFrameTests.swift in Sources */,
-				D36090020000000000000005 /* BmuxMainWindowFullScreenCapabilityTests.swift in Sources */,
-				C54860030000000000000001 /* BmuxNavigationTargetResolverTests.swift in Sources */,
-				C0DE31390000000000000101 /* BMUXOpenCommandTests.swift in Sources */,
-				C0DE31390000000000000111 /* BMUXOpenHTMLFocusTests.swift in Sources */,
-				C3677001000000000000001 /* BmuxSSHURLRequestTests.swift in Sources */,
-				C7A50C000000000000000003 /* BmuxTopProcessArgumentsTests.swift in Sources */,
-				C7A50C000000000000000002 /* BmuxTopProcessCPUTests.swift in Sources */,
-				C7A5090000000000000005A2 /* BmuxTopSnapshotScopeCacheTests.swift in Sources */,
-				C7A509000000000000000002 /* BmuxTopSnapshotScopeTests.swift in Sources */,
-				D7C0DE00000000000000A103 /* BmuxWebViewContextMenuLinkCaptureTests.swift in Sources */,
-				D0B1000CA1B2C3D4E5F60001 /* BmuxWebViewDragRoutingTests.swift in Sources */,
-				C0DE58990000000000000004 /* BmuxWebViewKeyDownReentryTests.swift in Sources */,
-				7D5DA4DC51454ECDBF9AC978 /* BmuxWebViewMouseNavigationButtonTests.swift in Sources */,
 				A9E040000000000000000002 /* CodexAppServerSessionTests.swift in Sources */,
 				C0DECAFE0000000000000003 /* CodexTeamsApprovalBridge.swift in Sources */,
 				C0DEC0DE000000000000F302 /* CommandPaletteEmojiTitleSearchTests.swift in Sources */,
@@ -6460,6 +6664,8 @@
 				8770D0F2D2BB45359D6BE5E3 /* WindowKeyDownReplayGuardTests.swift in Sources */,
 				606600010000000000000001 /* WindowTerminalHostViewTitlebarHitTests.swift in Sources */,
 				604500100000000000000003 /* WindowTitleTemplateTests.swift in Sources */,
+				8DCF06522BB39B4A966FFC83 /* WorkProvenanceObserverTests.swift in Sources */,
+				B1581966C6355C46BC3ABE62 /* WorkProvenanceStoreTests.swift in Sources */,
 				7F0A0E04A8CADC84BB4F1DF7 /* WorkspaceActionDispatcherTests.swift in Sources */,
 				D7AB00000000000000000011 /* WorkspaceAdjacentPaneMoveTests.swift in Sources */,
 				A11EAE000000000000000000 /* WorkspaceAppearanceConfigResolutionTests.swift in Sources */,
@@ -6935,6 +7141,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Examples/BmuxExtensionSidebarExamples;
 		};
+		C0DE72010000000000000001 /* XCLocalSwiftPackageReference "BmuxContextEfficiency" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/macOS/BmuxContextEfficiency;
+		};
 		C0DE4A000000000000000003 /* XCLocalSwiftPackageReference "BmuxSidebarProviderKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/macOS/BmuxSidebarProviderKit;
@@ -7119,6 +7329,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C0DE4A000000000000000003 /* XCLocalSwiftPackageReference "BmuxSidebarProviderKit" */;
 			productName = BmuxSidebarProviderKit;
+		};
+		C0DE72010000000000000002 /* BmuxContextEfficiency */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C0DE72010000000000000001 /* XCLocalSwiftPackageReference "BmuxContextEfficiency" */;
+			productName = BmuxContextEfficiency;
 		};
 		A5C0DE0000000000000000A2 /* BMUXProjectModel */ = {
 			isa = XCSwiftPackageProductDependency;

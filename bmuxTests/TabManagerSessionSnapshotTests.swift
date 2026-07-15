@@ -62,6 +62,54 @@ final class TabManagerSessionSnapshotTests: XCTestCase {
         XCTAssertEqual(restored.tabs[1].customTitle, "Second")
     }
 
+    func testSessionSnapshotRestoresTerminalPromptNavigationBookmarks() throws {
+        let manager = TabManager()
+        let workspace = try XCTUnwrap(manager.selectedWorkspace)
+        let terminalPanel = try XCTUnwrap(workspace.focusedTerminalPanel)
+
+        XCTAssertTrue(terminalPanel.recordPromptNavigationBookmark(row: 12))
+        XCTAssertTrue(terminalPanel.recordPromptNavigationBookmark(row: 40))
+        XCTAssertTrue(terminalPanel.navigatePromptBookmark(delta: -1) { _ in true })
+
+        let snapshot = manager.sessionSnapshot(includeScrollback: false)
+
+        let restored = TabManager()
+        restored.restoreSessionSnapshot(snapshot)
+        let restoredWorkspace = try XCTUnwrap(restored.selectedWorkspace)
+        let restoredPanel = try XCTUnwrap(restoredWorkspace.focusedTerminalPanel)
+
+        XCTAssertTrue(restoredPanel.promptNavigationHasBookmarks)
+        XCTAssertTrue(restoredPanel.promptNavigationCanMoveBackward)
+        XCTAssertTrue(restoredPanel.promptNavigationCanMoveForward)
+
+        var scrolledRows: [Int] = []
+        XCTAssertTrue(restoredPanel.navigatePromptBookmark(delta: -1) { row in
+            scrolledRows.append(row)
+            return true
+        })
+        XCTAssertEqual(scrolledRows, [12])
+        XCTAssertTrue(restoredPanel.promptNavigationCanMoveForward)
+
+        XCTAssertTrue(restoredPanel.navigatePromptBookmark(delta: 1) { row in
+            scrolledRows.append(row)
+            return true
+        })
+        XCTAssertEqual(scrolledRows, [12, 40])
+
+        var scrolledToCurrentPrompt = 0
+        XCTAssertTrue(restoredPanel.navigatePromptBookmark(delta: 1, scrollToCurrentPrompt: {
+            scrolledToCurrentPrompt += 1
+            return true
+        }) { row in
+            scrolledRows.append(row)
+            return true
+        })
+        XCTAssertEqual(scrolledRows, [12, 40])
+        XCTAssertEqual(scrolledToCurrentPrompt, 1)
+        XCTAssertTrue(restoredPanel.promptNavigationCanMoveBackward)
+        XCTAssertFalse(restoredPanel.promptNavigationCanMoveForward)
+    }
+
     func testFocusHistoryNavigatesWithinWorkspacePanels() throws {
         let manager = TabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)

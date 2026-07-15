@@ -56,12 +56,6 @@ public struct SidebarCatalogSection: SettingCatalogSection {
         userDefaultsKey: "sidebarShowBranchDirectory"
     )
 
-    public let showPullRequests = DefaultsKey<Bool>(
-        id: "sidebar.showPullRequests",
-        defaultValue: true,
-        userDefaultsKey: "sidebarShowPullRequest"
-    )
-
     public let watchGitStatus = DefaultsKey<Bool>(
         id: "sidebar.watchGitStatus",
         defaultValue: true,

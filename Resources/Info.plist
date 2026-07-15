@@ -75,7 +75,9 @@
 	<key>NSMainStoryboardFile</key>
 	<string></string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>A program running within bmux would like to use your microphone.</string>
+	<string>bmux uses your microphone for push-to-talk voice input and for programs running within bmux that request audio.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>bmux transcribes your speech into the focused input when you use push-to-talk voice input.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>A program running within bmux would like to use your camera.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>

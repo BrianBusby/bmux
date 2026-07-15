@@ -146,7 +146,6 @@ extension Array where Element == CuratedSettingEntry {
             .init(section: .sidebarAppearance, id: "path-last-segment-only", title: "Truncate Path From Start", synonyms: "sidebar.pathLastSegmentOnly cwd path directory last segment basename short truncate folder repo"),
             .init(section: .sidebarAppearance, id: "show-notification-message", title: "Show Notification Message in Sidebar", synonyms: "sidebar.showNotificationMessage latest message unread notification text sidebar"),
             .init(section: .sidebarAppearance, id: "show-branch-directory", title: "Show Branch + Directory in Sidebar", synonyms: "sidebar.showBranchDirectory git branch cwd path directory folder repo sidebar"),
-            .init(section: .sidebarAppearance, id: "show-pull-requests", title: "Show Pull Requests in Sidebar", synonyms: "sidebar.showPullRequests pr mr review github gitlab bitbucket pull request merge request"),
             .init(section: .sidebarAppearance, id: "watch-git-status", title: "Watch Git Status in Sidebar", synonyms: "sidebar.watchGitStatus git status branch watcher index lock"),
             .init(section: .sidebarAppearance, id: "make-pr-clickable", title: "Make Sidebar PR Clickable", synonyms: "sidebar.makePullRequestsClickable clickable pull requests pr mr reviews links select workspace row"),
             .init(section: .sidebarAppearance, id: "open-pr-links", title: "Open Sidebar PR Links in bmux Browser", synonyms: "sidebar.openPullRequestLinksInBmuxBrowser pr links github browser default external embedded"),

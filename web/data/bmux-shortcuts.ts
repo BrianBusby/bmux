@@ -44,6 +44,12 @@ export const shortcutCategories: ShortcutCategory[] = [
         description: { en: "Global search", ja: "グローバル検索" },
         note: { en: "system-wide hotkey", ja: "システム全体のホットキー" },
       },
+      {
+        id: "pushToTalkVoiceInput",
+        combos: [["⌘", "⇧", "Space"]],
+        description: { en: "Push-to-talk voice input", ja: "プッシュトゥトーク音声入力" },
+        note: { en: "hold to record; release to insert the transcription", ja: "押している間録音し、離すと文字起こしを挿入します" },
+      },
       { id: "commandPalette", combos: [["⌘", "⇧", "P"]], description: { en: "Command palette", ja: "コマンドパレット" } },
       {
         id: "commandPaletteNext",

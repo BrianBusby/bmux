@@ -1,5 +1,9 @@
 # bmux agent notes
 
+## Context efficiency roadmap
+
+Before continuing the context-efficiency, thread-lifecycle, provenance, and handoff system work, read `docs/context-efficiency/roadmap.md`. That file preserves the user's requested roadmap verbatim and should be treated as durable project memory for this effort.
+
 ## Initial setup
 
 Run the setup script to initialize submodules, build GhosttyKit, and install the pbxproj normalization pre-commit hook:
