@@ -219,7 +219,13 @@ public actor ContextEfficiencyStore {
             """
             SELECT COUNT(*)
             FROM parser_errors
-            WHERE imported_at >= ? AND imported_at < ?
+            WHERE EXISTS (
+                SELECT 1
+                FROM rollout_events
+                WHERE rollout_events.source_path = parser_errors.source_path
+                  AND rollout_events.timestamp >= ?
+                  AND rollout_events.timestamp < ?
+            )
             """
         )
         defer { parserErrorStatement.finalize() }

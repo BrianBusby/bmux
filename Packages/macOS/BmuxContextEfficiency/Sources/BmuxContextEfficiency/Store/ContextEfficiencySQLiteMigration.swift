@@ -197,12 +197,14 @@ struct ContextEfficiencySQLiteMigration {
             )
             """,
             "CREATE INDEX idx_rollout_events_thread ON rollout_events(thread_id, timestamp)",
+            "CREATE INDEX idx_rollout_events_source_timestamp ON rollout_events(source_path, timestamp)",
             "CREATE INDEX idx_model_calls_thread ON model_calls(thread_id, timestamp)",
             "CREATE INDEX idx_model_calls_timestamp ON model_calls(timestamp)",
             "CREATE INDEX idx_token_telemetry_thread ON token_telemetry_events(thread_id, timestamp)",
             "CREATE INDEX idx_tool_calls_thread ON tool_calls(thread_id, timestamp)",
             "CREATE INDEX idx_tool_outputs_thread ON tool_outputs(thread_id, timestamp)",
             "CREATE INDEX idx_parser_errors_thread ON parser_errors(thread_id, imported_at)",
+            "CREATE INDEX idx_parser_errors_source ON parser_errors(source_path, imported_at)",
         ]
     }
 }
