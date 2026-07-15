@@ -71,12 +71,14 @@ struct CodexRolloutJSONLStreamReader: Sendable {
             if lineData.last == 13 {
                 lineData.removeLast()
             }
-            guard let text = String(data: lineData, encoding: .utf8) else {
-                throw CodexRolloutStreamReaderError.invalidUTF8(
-                    sourcePath: sourcePath,
-                    byteOffset: lineStartOffset,
-                    lineNumber: completedLineNumber + 1
-                )
+            let text: String
+            let parserErrorMessage: String?
+            if let decoded = String(data: lineData, encoding: .utf8) {
+                text = decoded
+                parserErrorMessage = nil
+            } else {
+                text = String(decoding: lineData, as: UTF8.self)
+                parserErrorMessage = "line is not UTF-8"
             }
 
             let sourceReference = ContextEfficiencySourceReference(
@@ -85,7 +87,11 @@ struct CodexRolloutJSONLStreamReader: Sendable {
                 lineNumber: completedLineNumber + 1,
                 parserVersion: parserVersion
             )
-            try processLine(CodexRolloutImportedLine(text: text, sourceReference: sourceReference))
+            try processLine(CodexRolloutImportedLine(
+                text: text,
+                sourceReference: sourceReference,
+                parserErrorMessage: parserErrorMessage
+            ))
             importedLineCount += 1
             completedLineNumber += 1
             lineStartOffset += Int64(consumedByteCount)

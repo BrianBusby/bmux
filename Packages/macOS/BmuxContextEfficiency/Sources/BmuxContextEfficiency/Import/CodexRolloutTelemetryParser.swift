@@ -15,6 +15,9 @@ struct CodexRolloutTelemetryParser: Sendable {
     }
 
     func parse(line: CodexRolloutImportedLine, fallbackThreadID: String) -> CodexRolloutParsedEvent {
+        if let parserErrorMessage = line.parserErrorMessage {
+            return parserError(line: line, fallbackThreadID: fallbackThreadID, message: parserErrorMessage)
+        }
         guard let data = line.text.data(using: .utf8) else {
             return parserError(line: line, fallbackThreadID: fallbackThreadID, message: "line is not UTF-8")
         }
