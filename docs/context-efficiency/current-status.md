@@ -46,25 +46,26 @@ Expected branch:
 
 Latest completed implementation HEAD:
 
-- `73b98ee9d32c4515647dca1a379a1af2d66fb87c`
+- `f90790b04e96c9ee6b775e484dc860fa4fd34f9c`
 
 The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
 
 Latest completed implementation slice:
 
-- `ff8e024b5 Add string payload rollout regression`
-- `73b98ee9d Import string encoded rollout payload objects`
+- `b194b8b1 Add missing timestamp rollout regression`
+- `f90790b0 Report missing rollout timestamps`
 
 Behavior in that slice:
 
-- Codex rollout `payload` fields that arrive as JSON strings containing objects now import through the same compact fact path as object payloads.
-- String-encoded function-call payloads now record tool name, call id, command summary, and serialized argument byte counts.
-- String payloads that are not JSON objects remain non-fatal and do not create raw payload records.
+- Rollout events that produce compact facts but have no usable timestamp now keep importing those facts with a nil event timestamp.
+- The importer records a bounded parser diagnostic, `missing rollout event timestamp`, for missing-timestamp fact rows.
+- Unknown scalar payload imports remain non-fatal and quiet, so they do not become parser errors solely because they lack timestamps.
 
 Files changed in the latest slice:
 
 - `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutTelemetryParser.swift`
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/CodexRolloutTelemetryParserTests.swift`
+- `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 
 ## Good Next Phase 2 Targets
 
@@ -72,14 +73,11 @@ Stay narrow and read-only. Prefer package-level Swift tests unless a CLI regress
 
 Good next targets:
 
-1. Defensive parser behavior for unstable rollout fields:
-   - array/scalar payload fallbacks that should remain bounded and non-fatal;
-   - missing timestamp fallback/reporting behavior.
-2. Import status and error-reporting edge cases:
+1. Import status and error-reporting edge cases:
    - bounded counts only;
    - no raw payload leakage;
    - JSON report shape coverage where it exercises runtime behavior.
-3. Bounded CLI JSON shape coverage:
+2. Bounded CLI JSON shape coverage:
    - only when it exercises real CLI behavior from the rebuilt tagged binary;
    - avoid tests that merely assert source text or implementation shape.
 
