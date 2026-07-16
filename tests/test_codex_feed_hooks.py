@@ -147,6 +147,20 @@ class FakeBmuxSocket:
                             self._dropped_surface_list = True
                             continue
                         result = {"surfaces": self.surfaces}
+                    elif frame.get("method") == "workspace.set_auto_title":
+                        params = frame.get("params") or {}
+                        if params.get("probe") is True:
+                            result = {
+                                "enabled": True,
+                                "summarizer_agent": None,
+                                "workspace_user_owned": False,
+                            }
+                        else:
+                            result = {
+                                "source": params.get("source"),
+                                "workspace_applied": True,
+                                "panel_applied": None,
+                            }
                     elif self.decision is not None:
                         result = {
                             "status": "resolved",
@@ -389,6 +403,63 @@ def test_codex_prompt_submit_starts_monitor_when_lease_write_fails(cli_path: str
                     f"stdout={result.stdout}\nstderr={result.stderr}"
                 )
             wait_for_monitor_pids(session_id, present=True, timeout=5)
+        finally:
+            for pid in monitor_pids_for_session(session_id):
+                subprocess.run(["/bin/kill", str(pid)], check=False)
+
+
+def test_codex_prompt_submit_applies_provisional_workspace_title(cli_path: str, root: Path) -> None:
+    socket_path = root / "bmux-prompt-title.sock"
+    transcript_path = root / "codex-prompt-title.jsonl"
+    state_dir = root / "hook-state-prompt-title"
+    state_dir.mkdir()
+    transcript_path.write_text("", encoding="utf-8")
+
+    session_id = f"codex-prompt-title-session-{os.getpid()}"
+    turn_id = f"codex-prompt-title-turn-{os.getpid()}"
+    prompt_title = "Fix bmux workspace titles after prompt submit"
+    env = os.environ.copy()
+    env["BMUX_SOCKET_PATH"] = str(socket_path)
+    env["BMUX_SURFACE_ID"] = FAKE_SURFACE_ID
+    env["BMUX_WORKSPACE_ID"] = FAKE_WORKSPACE_ID
+    env["BMUX_AGENT_HOOK_STATE_DIR"] = str(state_dir)
+
+    with FakeBmuxSocket(socket_path, None) as fake:
+        try:
+            prompt = {
+                "session_id": session_id,
+                "turn_id": turn_id,
+                "cwd": str(root),
+                "transcript_path": str(transcript_path),
+                "prompt": prompt_title,
+            }
+            result = subprocess.run(
+                [cli_path, "--socket", str(socket_path), "hooks", "codex", "prompt-submit"],
+                input=json.dumps(prompt),
+                capture_output=True,
+                text=True,
+                check=False,
+                env=env,
+                timeout=10,
+            )
+            if result.returncode != 0:
+                raise AssertionError(
+                    f"hooks codex prompt-submit failed exit={result.returncode}\n"
+                    f"stdout={result.stdout}\nstderr={result.stderr}"
+                )
+            apply_frames = [
+                frame for frame in fake.frames
+                if frame.get("method") == "workspace.set_auto_title"
+                and not (frame.get("params") or {}).get("probe")
+            ]
+            if not apply_frames:
+                raise AssertionError(f"prompt-submit did not apply an auto title: {fake.frames!r}")
+            params = apply_frames[-1].get("params") or {}
+            assert params.get("workspace_id") == FAKE_WORKSPACE_ID
+            assert params.get("panel_id") == FAKE_SURFACE_ID
+            assert params.get("panel_only_if_multiple") is True
+            assert params.get("source") == "auto_prompt"
+            assert params.get("title") == prompt_title
         finally:
             for pid in monitor_pids_for_session(session_id):
                 subprocess.run(["/bin/kill", str(pid)], check=False)
