@@ -7676,6 +7676,128 @@ final class CLINotifyProcessIntegrationRegressionTests: XCTestCase {
         )
     }
 
+    func testCodexPromptSubmitCachesPromptForAutoNaming() throws {
+        let cliPath = try bundledCLIPath()
+        let socketPath = makeSocketPath("codex-auto-name-prompt-cache")
+        let listenerFD = try bindUnixSocket(at: socketPath)
+        let state = MockSocketServerState()
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-codex-auto-name-prompt-cache-\(UUID().uuidString)", isDirectory: true)
+        let workspaceId = "33333333-3333-3333-3333-333333333333"
+        let surfaceId = "44444444-4444-4444-4444-444444444444"
+        let sessionId = "codex-auto-name-prompt-cache-session"
+        let prompt = "debug first prompt workspace auto naming"
+        let autoNameLogURL = root.appendingPathComponent("codex-auto-name-prompt-cache.log")
+        let detachedHookPath = root.appendingPathComponent("bmux-codex-auto-name-detached.sh")
+
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer {
+            Darwin.close(listenerFD)
+            unlink(socketPath)
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let serverHandled = startMockServer(listenerFD: listenerFD, state: state, connectionCount: 8) { line in
+            guard let payload = self.jsonObject(line) else {
+                return line.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("{")
+                    ? self.malformedRequestResponse(raw: line)
+                    : "OK"
+            }
+            guard let id = payload["id"] as? String, let method = payload["method"] as? String else {
+                return self.malformedRequestResponse(id: payload["id"] as? String, raw: line)
+            }
+            switch method {
+            case "surface.list":
+                let params = payload["params"] as? [String: Any] ?? [:]
+                if params["workspace_id"] as? String == workspaceId {
+                    return self.surfaceListResponse(id: id, surfaceId: surfaceId)
+                }
+                return self.v2Response(id: id, ok: false, error: ["code": "not_found", "message": "workspace not found"])
+            case "feed.push", "surface.resume.set":
+                return self.v2Response(id: id, ok: true, result: [:])
+            case "workspace.set_auto_title":
+                return self.v2Response(
+                    id: id,
+                    ok: true,
+                    result: ["enabled": true, "workspace_user_owned": false, "summarizer_agent": "auto"]
+                )
+            default:
+                return self.v2Response(id: id, ok: false, error: ["code": "unrecognized_method", "message": "unexpected method: \(method)"])
+            }
+        }
+
+        var environment = ProcessInfo.processInfo.environment
+        environment["BMUX_SOCKET_PATH"] = socketPath
+        environment["BMUX_WORKSPACE_ID"] = workspaceId
+        environment["BMUX_SURFACE_ID"] = surfaceId
+        environment["BMUX_AGENT_HOOK_STATE_DIR"] = root.path
+        environment["BMUX_CLI_SENTRY_DISABLED"] = "1"
+        let launcherScript = """
+#!/bin/sh
+log_file=\"$BMUX_AUTO_NAME_TRIGGER_LOG\"
+if [ -n \"$log_file\" ]; then
+  printf '%s\n' "$@" >> \"$log_file\"
+fi
+"""
+        FileManager.default.createFile(
+            atPath: detachedHookPath.path,
+            contents: launcherScript.data(using: .utf8),
+            attributes: nil
+        )
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: detachedHookPath.path)
+        environment["BMUX_BUNDLED_CLI_PATH"] = detachedHookPath.path
+        environment["BMUX_AUTO_NAME_TRIGGER_LOG"] = autoNameLogURL.path
+        environment["CODEX_HOME"] = root.appendingPathComponent("codex-home", isDirectory: true).path
+
+        let result = runProcess(
+            executablePath: cliPath,
+            arguments: ["hooks", "codex", "prompt-submit"],
+            environment: environment,
+            standardInput: #"{"session_id":"\#(sessionId)","cwd":"\#(root.path)","hook_event_name":"UserPromptSubmit","prompt":"\#(prompt)"}"#,
+            timeout: 5
+        )
+
+        wait(for: [serverHandled], timeout: 5)
+        XCTAssertFalse(result.timedOut, result.stderr)
+        XCTAssertEqual(result.status, 0, result.stderr)
+        XCTAssertEqual(result.stdout, "{}\n")
+        let logDeadline = Date(timeIntervalSinceNow: 1)
+        while !FileManager.default.fileExists(atPath: autoNameLogURL.path) && Date() < logDeadline {
+            RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0.05))
+        }
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: autoNameLogURL.path),
+            "Expected detached auto-name launcher to run, saw log path missing: \(autoNameLogURL.path)"
+        )
+        let autoNameLog = try XCTUnwrap(
+            String(
+                contentsOf: autoNameLogURL,
+                encoding: .utf8
+            )
+        )
+        XCTAssertTrue(
+            autoNameLog.contains("hooks") && autoNameLog.contains("codex") && autoNameLog.contains("auto-name"),
+            "Expected codex auto-name launch args, saw \(autoNameLog)"
+        )
+        XCTAssertTrue(
+            autoNameLog.contains("--trigger") && autoNameLog.contains("prompt-submit"),
+            "Expected prompt-submit trigger to be passed to detached auto-name, saw \(autoNameLog)"
+        )
+
+        let storeURL = root.appendingPathComponent("codex-hook-sessions.json", isDirectory: false)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: storeURL)) as? [String: Any])
+        let sessions = try XCTUnwrap(json["sessions"] as? [String: Any])
+        let session = try XCTUnwrap(sessions[sessionId] as? [String: Any])
+        let recentMessages = try XCTUnwrap(session["autoNameRecentMessages"] as? [[String: Any]])
+        XCTAssertTrue(
+            recentMessages.contains {
+                $0["role"] as? String == "user" && $0["text"] as? String == prompt
+            },
+            "Expected Codex prompt-submit to seed auto-name messages, saw \(recentMessages)"
+        )
+        XCTAssertEqual(session["autoNameMessageSequence"] as? Int, 1)
+    }
+
     func testCodexPromptSubmitWithInvalidMappedWorkspaceDoesNotFallbackToSelectedWorkspace() throws {
         let cliPath = try bundledCLIPath()
         let socketPath = makeSocketPath("codex-invalid-mapped")

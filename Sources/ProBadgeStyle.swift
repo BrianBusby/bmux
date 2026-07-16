@@ -241,11 +241,17 @@ struct ProBadgeLabel: View {
     }
 }
 
-/// The Pro badge: renders the active ``ProBadgeStyle`` and opens the shared
-/// pricing destination. On hover the capsule widens to reveal a dismiss X
-/// inside it. Gated on the pro-upgrade-ui feature flag.
+/// The Pro badge: renders the active ``ProBadgeStyle`` and can open the
+/// shared pricing destination. On hover the capsule widens to reveal a
+/// dismiss X inside it. Gated on the pro-upgrade-ui feature flag.
 struct ProBadgeView: View {
+    let isUpgradeActionEnabled: Bool
+
     @State private var isHovered = false
+
+    init(isUpgradeActionEnabled: Bool = true) {
+        self.isUpgradeActionEnabled = isUpgradeActionEnabled
+    }
 
     private var helpTitle: String {
         String(localized: "menu.help.upgradeToPro", defaultValue: "Upgrade to bmux Pro…")
@@ -262,12 +268,14 @@ struct ProBadgeView: View {
             let foreground = ProBadgePalette.foreground(for: style)
             HStack(spacing: 0) {
                 Button {
+                    guard isUpgradeActionEnabled else { return }
                     ProUpgradePresenter.present()
                 } label: {
                     ProBadgeContent(style: style)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .disabled(!isUpgradeActionEnabled)
                 .safeHelp(helpTitle)
                 .accessibilityLabel(helpTitle)
                 .accessibilityIdentifier("ProBadgeButton")
@@ -301,7 +309,7 @@ struct ProBadgeView: View {
                 withAnimation(.easeOut(duration: 0.15)) {
                     isHovered = hovering
                 }
-                if hovering {
+                if hovering, isUpgradeActionEnabled {
                     ProUpgradePresenter.prefetch()
                 }
             }

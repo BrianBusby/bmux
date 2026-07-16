@@ -1,4 +1,6 @@
+import AppKit
 import Foundation
+import SwiftUI
 
 struct WorkspaceRepoBadgeAppearance: Equatable {
     let name: String
@@ -14,6 +16,24 @@ enum WorkspaceRepoBadgeAppearanceColorPolicy {
             return customColorHex
         }
         return repoBadgeAppearance?.colorHex
+    }
+
+    static func foregroundNSColor(
+        repoColorHex: String,
+        colorScheme: ColorScheme
+    ) -> NSColor {
+        switch colorScheme {
+        case .light:
+            return .black
+        case .dark:
+            return WorkspaceTabColorSettings.displayNSColor(
+                hex: repoColorHex,
+                colorScheme: colorScheme,
+                forceBright: true
+            ) ?? NSColor.white.withAlphaComponent(0.86)
+        @unknown default:
+            return .black
+        }
     }
 }
 

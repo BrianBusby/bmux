@@ -54,7 +54,8 @@ enum TitlebarControlsHitRegions {
         let startX = outerLeadingPadding + config.groupPadding.leading
         let sidebarX = startX
         let notificationsX = sidebarX + config.buttonSize + config.spacing
-        let newTabX = notificationsX + config.buttonSize + config.spacing
+        let voiceInputX = notificationsX + config.buttonSize + config.spacing
+        let newTabX = voiceInputX + config.buttonSize + config.spacing
         let newTabWidth = TitlebarNewWorkspaceCloudSplitButtonMetrics.primaryWidth(config: config)
         let cloudMenuX = newTabX + newTabWidth
         let cloudMenuWidth = TitlebarNewWorkspaceCloudSplitButtonMetrics.dropdownWidth(config: config)
@@ -66,6 +67,8 @@ enum TitlebarControlsHitRegions {
             sidebarX
         case .showNotifications:
             notificationsX
+        case .voiceInput:
+            voiceInputX
         case .newTab:
             newTabX
         case .cloudVM:
@@ -80,7 +83,7 @@ enum TitlebarControlsHitRegions {
             newTabWidth
         case .cloudVM:
             cloudMenuWidth
-        case .toggleSidebar, .showNotifications, .focusHistoryBack, .focusHistoryForward:
+        case .toggleSidebar, .showNotifications, .voiceInput, .focusHistoryBack, .focusHistoryForward:
             config.buttonSize
         }
         return minX...(minX + width)
@@ -242,6 +245,8 @@ final class MinimalModeSidebarControlActionView: NSView {
         switch slot {
         case .toggleSidebar:
             BmuxExtensionSidebarSelection.showMenu(anchorView: self, event: event)
+        case .voiceInput:
+            super.rightMouseDown(with: event)
         case .newTab:
             _ = AppDelegate.shared?.showNewWorkspaceContextMenu(anchorView: self, event: event)
         case .cloudVM:

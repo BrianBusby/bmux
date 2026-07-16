@@ -12,6 +12,8 @@ public enum CommandOutputKind: String, Sendable, Codable {
     case typescript
     /// Package manager install output.
     case packageInstall = "package_install"
+    /// Build tool output.
+    case build
     /// Search or recursive listing output.
     case search
 }

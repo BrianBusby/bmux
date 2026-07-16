@@ -3557,6 +3557,473 @@ final class TerminalNotificationDirectInteractionTests: XCTestCase {
 
 
 @MainActor
+@Suite("Terminal prompt navigation pulse geometry")
+struct TerminalPromptNavigationPulseGeometryTests {
+    @Test func pulseFrameCoversPromptRowsInMiddleOfViewport() {
+        let frame = pulseFrame(promptRow: 13, viewportTopRow: 10)
+
+        #expect(rectApproximatelyEqual(
+            frame,
+            CGRect(x: 8, y: 544, width: 784, height: 48)
+        ))
+        #expect(frame.maxY == rowTopY(visibleRow: 3))
+        #expect(frame.minY == rowBottomY(visibleRow: 5))
+    }
+
+    @Test func pulseFrameStaysFlushWithTopPromptRow() {
+        let frame = pulseFrame(promptRow: 10, viewportTopRow: 10)
+
+        #expect(rectApproximatelyEqual(
+            frame,
+            CGRect(x: 8, y: 592, width: 784, height: 48)
+        ))
+        #expect(frame.maxY == rowTopY(visibleRow: 0))
+        #expect(frame.minY == rowBottomY(visibleRow: 2))
+    }
+
+    @Test func pulseFrameClampsToViewportBottomWhenBandWouldOverflow() {
+        let frame = pulseFrame(promptRow: 49, viewportTopRow: 10)
+
+        #expect(rectApproximatelyEqual(
+            frame,
+            CGRect(x: 8, y: 0, width: 784, height: 48)
+        ))
+    }
+
+    @Test func pulseFrameUsesTallCellHeightAndLongerPromptBand() {
+        let frame = pulseFrame(
+            promptRow: 22,
+            viewportTopRow: 20,
+            bounds: CGRect(x: 0, y: 0, width: 500, height: 300),
+            cellHeight: 24,
+            pulseRows: 4
+        )
+
+        #expect(rectApproximatelyEqual(
+            frame,
+            CGRect(x: 8, y: 156, width: 484, height: 96)
+        ))
+        #expect(frame.maxY == 252)
+    }
+
+    @Test func pulseFrameUsesBoundsOriginWhenBoundsAreOffset() {
+        let frame = pulseFrame(
+            promptRow: 12,
+            viewportTopRow: 10,
+            bounds: CGRect(x: 12, y: 24, width: 400, height: 200),
+            cellHeight: 20,
+            pulseRows: 2
+        )
+
+        #expect(rectApproximatelyEqual(
+            frame,
+            CGRect(x: 20, y: 144, width: 384, height: 40)
+        ))
+    }
+
+    @Test func pulseFrameNeverProducesNegativeWidthInNarrowBounds() {
+        let frame = pulseFrame(
+            promptRow: 1,
+            viewportTopRow: 0,
+            bounds: CGRect(x: 0, y: 0, width: 10, height: 120)
+        )
+
+        #expect(rectApproximatelyEqual(
+            frame,
+            CGRect(x: 5, y: 56, width: 0, height: 48)
+        ))
+    }
+
+    @Test func pulseFrameTreatsInvalidCellHeightAsOnePointRows() {
+        let frame = pulseFrame(
+            promptRow: 4,
+            viewportTopRow: 0,
+            bounds: CGRect(x: 0, y: 0, width: 80, height: 20),
+            cellHeight: 0,
+            pulseRows: 3
+        )
+
+        #expect(rectApproximatelyEqual(
+            frame,
+            CGRect(x: 8, y: 13, width: 64, height: 3)
+        ))
+    }
+
+    @Test func scrollTargetRevealsPromptWithContextAndClampsAtTop() {
+        #expect(GhosttySurfaceScrollView.promptNavigationScrollTargetRow(
+            forPromptRow: 2,
+            revealRows: 3,
+            bottomScrollRow: 100
+        ) == 0)
+        #expect(GhosttySurfaceScrollView.promptNavigationScrollTargetRow(
+            forPromptRow: 9,
+            revealRows: 3,
+            bottomScrollRow: 100
+        ) == 6)
+    }
+
+    @Test func scrollTargetClampsAtBottomOnlyWhenScrollbarBoundsExist() {
+        #expect(GhosttySurfaceScrollView.promptNavigationScrollTargetRow(
+            forPromptRow: 120,
+            revealRows: 3,
+            bottomScrollRow: 40
+        ) == 40)
+        #expect(GhosttySurfaceScrollView.promptNavigationScrollTargetRow(
+            forPromptRow: 120,
+            revealRows: 3,
+            bottomScrollRow: nil
+        ) == 117)
+    }
+
+    @Test func recordedPromptRowTracksVisibleViewportBottom() {
+        #expect(GhosttySurfaceScrollView.promptNavigationRecordedPromptRow(
+            viewportTopRow: 100,
+            visibleRows: 30,
+            bottomInsetRows: 0
+        ) == 129)
+        #expect(GhosttySurfaceScrollView.promptNavigationRecordedPromptRow(
+            viewportTopRow: 100,
+            visibleRows: 30,
+            bottomInsetRows: 3
+        ) == 126)
+        #expect(GhosttySurfaceScrollView.promptNavigationRecordedPromptRow(
+            viewportTopRow: 0,
+            visibleRows: 1,
+            bottomInsetRows: 3
+        ) == 0)
+    }
+
+    @Test func referenceRowsUseViewportBottomForBackAndRevealLineForForward() {
+        #expect(GhosttySurfaceScrollView.promptNavigationReferenceRow(
+            viewportTopRow: 50,
+            visibleRows: 30,
+            revealRows: 3,
+            delta: -1
+        ) == 80)
+        #expect(GhosttySurfaceScrollView.promptNavigationReferenceRow(
+            viewportTopRow: 50,
+            visibleRows: 30,
+            revealRows: 3,
+            delta: 1
+        ) == 53)
+    }
+
+    @Test func textResolverFindsPromptBeforeLaterOutputRows() {
+        var rows: [Int: String] = [
+            120: "\u{203A} give me 50 lines after each prompt",
+        ]
+        for index in 1...50 {
+            rows[120 + index] = String(format: "%02d", index)
+        }
+
+        #expect(GhosttySurfaceScrollView.promptNavigationResolvedPromptRow(
+            message: "give me 50 lines after each prompt",
+            newestRow: 170,
+            oldestRow: 100,
+            rowText: { rows[$0] }
+        ) == 120)
+        #expect(GhosttySurfaceScrollView.promptNavigationResolvedPromptRow(
+            message: "ok",
+            newestRow: 122,
+            oldestRow: 120,
+            rowText: { _ in "ok output" }
+        ) == nil)
+    }
+
+    @Test func textResolverPrefersPromptNearStoredBookmarkRow() {
+        let rows: [Int: String] = [
+            50: "\u{203A} repeat prompt",
+            70: "\u{203A} repeat prompt",
+        ]
+
+        #expect(GhosttySurfaceScrollView.promptNavigationResolvedPromptRow(
+            message: "repeat prompt",
+            newestRow: 80,
+            oldestRow: 40,
+            preferredRow: 51,
+            rowText: { rows[$0] }
+        ) == 50)
+        #expect(GhosttySurfaceScrollView.promptNavigationResolvedPromptRow(
+            message: "repeat prompt",
+            newestRow: 80,
+            oldestRow: 40,
+            preferredRow: 72,
+            rowText: { rows[$0] }
+        ) == 70)
+    }
+
+    @Test func nearestPromptMarkerRepairsOutputRowBookmark() {
+        var rows: [Int: String] = [
+            120: "\u{203A} give me 50 lines after each prompt",
+        ]
+        for index in 1...50 {
+            rows[120 + index] = String(format: "%02d", index)
+        }
+
+        #expect(GhosttySurfaceScrollView.promptNavigationNearestPromptMarkerRow(
+            fallbackRow: 142,
+            newestRow: 170,
+            oldestRow: 100,
+            rowText: { rows[$0] }
+        ) == 120)
+        #expect(GhosttySurfaceScrollView.promptNavigationNearestPromptMarkerRow(
+            fallbackRow: 119,
+            newestRow: 170,
+            oldestRow: 100,
+            rowText: { rows[$0] }
+        ) == nil)
+    }
+
+    private func pulseFrame(
+        promptRow: Int,
+        viewportTopRow: Int,
+        bounds: CGRect = CGRect(x: 0, y: 0, width: 800, height: 640),
+        cellHeight: CGFloat = 16,
+        pulseRows: Int = 3,
+        horizontalInset: CGFloat = 8
+    ) -> CGRect {
+        GhosttySurfaceScrollView.promptNavigationPulseFrame(
+            promptRow: promptRow,
+            viewportTopRow: viewportTopRow,
+            bounds: bounds,
+            cellHeight: cellHeight,
+            pulseRows: pulseRows,
+            horizontalInset: horizontalInset
+        )
+    }
+
+    private func rowTopY(
+        visibleRow: Int,
+        bounds: CGRect = CGRect(x: 0, y: 0, width: 800, height: 640),
+        cellHeight: CGFloat = 16
+    ) -> CGFloat {
+        bounds.maxY - (CGFloat(visibleRow) * cellHeight)
+    }
+
+    private func rowBottomY(
+        visibleRow: Int,
+        bounds: CGRect = CGRect(x: 0, y: 0, width: 800, height: 640),
+        cellHeight: CGFloat = 16
+    ) -> CGFloat {
+        bounds.maxY - (CGFloat(visibleRow + 1) * cellHeight)
+    }
+
+    private func rectApproximatelyEqual(_ lhs: CGRect, _ rhs: CGRect, epsilon: CGFloat = 0.0001) -> Bool {
+        abs(lhs.origin.x - rhs.origin.x) <= epsilon &&
+            abs(lhs.origin.y - rhs.origin.y) <= epsilon &&
+            abs(lhs.size.width - rhs.size.width) <= epsilon &&
+            abs(lhs.size.height - rhs.size.height) <= epsilon
+    }
+}
+
+
+@MainActor
+@Suite("Terminal prompt navigation controls")
+struct TerminalPromptNavigationControlsTests {
+    @Test func visualPaddingClickNavigatesEnabledPromptButtonOnly() throws {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 360, height: 220),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        defer { window.orderOut(nil) }
+
+        let contentView = try #require(window.contentView, "Expected window content view")
+        let hostedView = makeHostedTerminalView(frame: contentView.bounds)
+        contentView.addSubview(hostedView)
+
+        var deltas: [Int] = []
+        hostedView.setPromptNavigationControls(
+            hasBookmarks: true,
+            canMoveBackward: true,
+            canMoveForward: false,
+            hidesForSearchOverlay: false
+        ) { delta in
+            deltas.append(delta)
+        }
+
+        contentView.layoutSubtreeIfNeeded()
+        hostedView.layoutSubtreeIfNeeded()
+
+        let buttons = visibleButtons(in: hostedView)
+        #expect(buttons.count == 2)
+        let previousButton = try #require(buttons.first, "Expected previous prompt button")
+        let nextButton = try #require(buttons.dropFirst().first, "Expected next prompt button")
+
+        let previousCenterPoint = hostedView.convert(
+            NSPoint(x: previousButton.bounds.midX, y: previousButton.bounds.midY),
+            from: previousButton
+        )
+        let previousCenterHit = try #require(
+            hostedView.hitTest(previousCenterPoint),
+            "Expected prompt navigation button center to win the parent hit test"
+        )
+        try click(previousCenterHit, at: previousCenterPoint, in: hostedView, window: window)
+
+        #expect(deltas == [-1])
+
+        let previousPaddingPoint = hostedView.convert(
+            NSPoint(x: previousButton.bounds.midX, y: previousButton.bounds.minY - 3),
+            from: previousButton
+        )
+        let previousHit = try #require(
+            hostedView.hitTest(previousPaddingPoint),
+            "Expected prompt navigation controls to own their visible padded hit area"
+        )
+        try click(previousHit, at: previousPaddingPoint, in: hostedView, window: window)
+
+        #expect(deltas == [-1, -1])
+
+        let disabledNextPaddingPoint = hostedView.convert(
+            NSPoint(x: nextButton.bounds.midX, y: nextButton.bounds.minY - 3),
+            from: nextButton
+        )
+        let disabledNextHit = try #require(
+            hostedView.hitTest(disabledNextPaddingPoint),
+            "Disabled prompt navigation button should still occupy its visible control area"
+        )
+        try click(disabledNextHit, at: disabledNextPaddingPoint, in: hostedView, window: window)
+
+        #expect(deltas == [-1, -1])
+
+        let previousVisibleEdgePoint = hostedView.convert(
+            NSPoint(x: previousButton.bounds.minX - 4, y: previousButton.bounds.midY),
+            from: previousButton
+        )
+        let previousVisibleEdgeHit = try #require(
+            hostedView.hitTest(previousVisibleEdgePoint),
+            "The visible prompt navigation pill edge should not fall through to terminal text selection"
+        )
+        try click(previousVisibleEdgeHit, at: previousVisibleEdgePoint, in: hostedView, window: window)
+
+        #expect(deltas == [-1, -1])
+    }
+
+    @Test func terminalSurfaceMousePathReroutesPromptNavigationClick() throws {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 360, height: 220),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        defer { window.orderOut(nil) }
+
+        let contentView = try #require(window.contentView, "Expected window content view")
+        let hostedView = makeHostedTerminalView(frame: contentView.bounds)
+        contentView.addSubview(hostedView)
+
+        var deltas: [Int] = []
+        hostedView.setPromptNavigationControls(
+            hasBookmarks: true,
+            canMoveBackward: true,
+            canMoveForward: false,
+            hidesForSearchOverlay: false
+        ) { delta in
+            deltas.append(delta)
+        }
+
+        contentView.layoutSubtreeIfNeeded()
+        hostedView.layoutSubtreeIfNeeded()
+
+        let surfaceView = try #require(
+            firstDescendant(ofType: GhosttyNSView.self, in: hostedView),
+            "Expected terminal surface view"
+        )
+        let previousButton = try #require(visibleButtons(in: hostedView).first, "Expected previous prompt button")
+        let previousCenterPoint = hostedView.convert(
+            NSPoint(x: previousButton.bounds.midX, y: previousButton.bounds.midY),
+            from: previousButton
+        )
+
+        surfaceView.mouseDown(with: try mouseEvent(.leftMouseDown, at: previousCenterPoint, in: hostedView, window: window))
+        surfaceView.mouseUp(with: try mouseEvent(.leftMouseUp, at: previousCenterPoint, in: hostedView, window: window))
+
+        #expect(deltas == [-1])
+    }
+
+    private func makeHostedTerminalView(frame: NSRect) -> GhosttySurfaceScrollView {
+        let surfaceView = GhosttyNSView(frame: frame)
+        let hostedView = GhosttySurfaceScrollView(surfaceView: surfaceView)
+        hostedView.frame = frame
+        hostedView.autoresizingMask = [.width, .height]
+        return hostedView
+    }
+
+    private func visibleButtons(in view: NSView) -> [NSButton] {
+        allButtons(in: view)
+            .filter(isVisibleInHierarchy)
+            .sorted {
+                view.convert($0.bounds, from: $0).minX < view.convert($1.bounds, from: $1).minX
+            }
+    }
+
+    private func allButtons(in view: NSView) -> [NSButton] {
+        var buttons = view.subviews.flatMap(allButtons(in:))
+        if let button = view as? NSButton {
+            buttons.append(button)
+        }
+        return buttons
+    }
+
+    private func firstDescendant<View: NSView>(ofType type: View.Type, in view: NSView) -> View? {
+        if let matched = view as? View {
+            return matched
+        }
+        for subview in view.subviews {
+            if let matched = firstDescendant(ofType: type, in: subview) {
+                return matched
+            }
+        }
+        return nil
+    }
+
+    private func isVisibleInHierarchy(_ view: NSView) -> Bool {
+        var current: NSView? = view
+        while let candidate = current {
+            if candidate.isHidden || candidate.alphaValue <= 0 {
+                return false
+            }
+            current = candidate.superview
+        }
+        return true
+    }
+
+    private func click(
+        _ hitView: NSView,
+        at pointInHostedView: NSPoint,
+        in hostedView: GhosttySurfaceScrollView,
+        window: NSWindow
+    ) throws {
+        hitView.mouseDown(with: try mouseEvent(.leftMouseDown, at: pointInHostedView, in: hostedView, window: window))
+        hitView.mouseUp(with: try mouseEvent(.leftMouseUp, at: pointInHostedView, in: hostedView, window: window))
+    }
+
+    private func mouseEvent(
+        _ type: NSEvent.EventType,
+        at pointInHostedView: NSPoint,
+        in hostedView: GhosttySurfaceScrollView,
+        window: NSWindow
+    ) throws -> NSEvent {
+        try #require(
+            NSEvent.mouseEvent(
+                with: type,
+                location: hostedView.convert(pointInHostedView, to: nil),
+                modifierFlags: [],
+                timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: window.windowNumber,
+                context: nil,
+                eventNumber: 0,
+                clickCount: 1,
+                pressure: 1.0
+            ),
+            "Failed to create mouse event"
+        )
+    }
+}
+
+
+@MainActor
 final class WindowTerminalHostViewTests: XCTestCase {
     private final class CapturingView: NSView {
         override func hitTest(_ point: NSPoint) -> NSView? {
@@ -3644,8 +4111,12 @@ final class WindowTerminalHostViewTests: XCTestCase {
     }
 
     private func makeMouseDownEvent(at locationInWindow: NSPoint, window: NSWindow) -> NSEvent {
+        makeMouseEvent(.leftMouseDown, at: locationInWindow, window: window)
+    }
+
+    private func makeMouseEvent(_ type: NSEvent.EventType, at locationInWindow: NSPoint, window: NSWindow) -> NSEvent {
         guard let event = NSEvent.mouseEvent(
-            with: .leftMouseDown,
+            with: type,
             location: locationInWindow,
             modifierFlags: [],
             timestamp: ProcessInfo.processInfo.systemUptime,
@@ -3658,6 +4129,33 @@ final class WindowTerminalHostViewTests: XCTestCase {
             fatalError("Failed to create leftMouseDown event")
         }
         return event
+    }
+
+    private func visibleButtons(in view: NSView) -> [NSButton] {
+        allButtons(in: view)
+            .filter(isVisibleInHierarchy)
+            .sorted {
+                view.convert($0.bounds, from: $0).minX < view.convert($1.bounds, from: $1).minX
+            }
+    }
+
+    private func allButtons(in view: NSView) -> [NSButton] {
+        var buttons = view.subviews.flatMap(allButtons(in:))
+        if let button = view as? NSButton {
+            buttons.append(button)
+        }
+        return buttons
+    }
+
+    private func isVisibleInHierarchy(_ view: NSView) -> Bool {
+        var current: NSView? = view
+        while let candidate = current {
+            if candidate.isHidden || candidate.alphaValue <= 0 {
+                return false
+            }
+            current = candidate.superview
+        }
+        return true
     }
 
     func testHostViewPassesThroughUnderlyingTabStripInSecondWindowBelowTitlebarBand() {
@@ -3747,6 +4245,66 @@ final class WindowTerminalHostViewTests: XCTestCase {
             host.performHitTest(at: pointInHost, currentEvent: event),
             hostedView: hostedView,
             message: "The absolute top row of terminal content should own mouse-down hit-testing even if chrome hit regions overlap it"
+        )
+    }
+
+    func testHostViewRoutesOffsetPromptNavigationControlsBeforeTerminalSelection() throws {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 260),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        defer { window.orderOut(nil) }
+        guard let contentView = window.contentView else {
+            XCTFail("Expected content view")
+            return
+        }
+
+        let host = WindowTerminalHostView(frame: contentView.bounds)
+        host.autoresizingMask = [.width, .height]
+        contentView.addSubview(host)
+
+        let hostedView = makeHostedTerminalView(
+            frame: NSRect(x: 92, y: 44, width: 250, height: 150)
+        )
+        host.addSubview(hostedView)
+
+        var deltas: [Int] = []
+        hostedView.setPromptNavigationControls(
+            hasBookmarks: true,
+            canMoveBackward: true,
+            canMoveForward: true,
+            hidesForSearchOverlay: false
+        ) { delta in
+            deltas.append(delta)
+        }
+
+        contentView.layoutSubtreeIfNeeded()
+        host.layoutSubtreeIfNeeded()
+        hostedView.layoutSubtreeIfNeeded()
+
+        let buttons = visibleButtons(in: hostedView)
+        let previousButton = try XCTUnwrap(buttons.first, "Expected previous prompt navigation button")
+        let pointInHostedView = hostedView.convert(
+            NSPoint(x: previousButton.bounds.midX, y: previousButton.bounds.midY),
+            from: previousButton
+        )
+        let pointInWindow = hostedView.convert(pointInHostedView, to: nil)
+        let pointInHost = host.convert(pointInWindow, from: nil)
+        let mouseDown = makeMouseEvent(.leftMouseDown, at: pointInWindow, window: window)
+        let hitView = try XCTUnwrap(
+            host.performHitTest(at: pointInHost, currentEvent: mouseDown),
+            "Prompt navigation controls must win hit-testing before the terminal text surface"
+        )
+
+        hitView.mouseDown(with: mouseDown)
+        hitView.mouseUp(with: makeMouseEvent(.leftMouseUp, at: pointInWindow, window: window))
+
+        XCTAssertEqual(
+            deltas,
+            [-1],
+            "A click routed through the window terminal host should navigate prompts instead of starting terminal text selection"
         )
     }
 

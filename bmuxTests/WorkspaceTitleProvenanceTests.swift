@@ -10,7 +10,7 @@ import Testing
 /// Behavior tests for custom-title provenance: auto-naming writes must never
 /// overwrite user-set titles, clearing must reset provenance, and provenance
 /// must round-trip through session snapshots (with legacy snapshots that
-/// predate provenance decoding as user-owned).
+/// predate provenance decoding).
 @MainActor
 @Suite struct WorkspaceTitleProvenanceTests {
 

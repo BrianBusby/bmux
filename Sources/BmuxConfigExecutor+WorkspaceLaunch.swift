@@ -152,7 +152,7 @@ extension BmuxConfigExecutor {
             workingDirectory: resolvedCwd,
             workspaceEnvironment: wsDef.env ?? [:]
         )
-        newWorkspace.setCustomTitle(workspaceName)
+        newWorkspace.setCustomTitle(workspaceName, source: .auto)
         if let color = wsDef.color {
             newWorkspace.setCustomColor(color)
         }

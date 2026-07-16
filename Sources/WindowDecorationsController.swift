@@ -345,6 +345,10 @@ final class WindowDecorationsController {
                     to: locationInWindow
                 ) ?? anchorView
                 AppDelegate.shared?.toggleNotificationsPopover(animated: true, anchorView: resolvedAnchorView)
+            case .voiceInput:
+                if AppDelegate.shared?.togglePushToTalkVoiceInput(preferredWindow: window) != true {
+                    NSSound.beep()
+                }
             case .newTab:
                 let targetTabManager = AppDelegate.shared?.activeTabManagerForCommands(preferredWindow: window)
                 _ = AppDelegate.shared?.performNewWorkspaceAction(

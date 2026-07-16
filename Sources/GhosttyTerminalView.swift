@@ -3533,7 +3533,7 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
         )
     }
 
-    private func flushPendingScrollbarIfAvailable() -> Bool {
+    fileprivate func flushPendingScrollbarIfAvailable() -> Bool {
         _scrollbarLock.lock()
         let hasPending = _pendingScrollbar != nil
         _scrollbarLock.unlock()
@@ -6479,7 +6479,21 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
         onFocus?()
     }
 
+    private func enclosingHostedTerminalView() -> GhosttySurfaceScrollView? {
+        var current = superview
+        while let candidate = current {
+            if let hostedView = candidate as? GhosttySurfaceScrollView {
+                return hostedView
+            }
+            current = candidate.superview
+        }
+        return terminalSurface?.hostedView
+    }
+
     override func mouseDown(with event: NSEvent) {
+        if enclosingHostedTerminalView()?.handlePromptNavigationMouseDownIfNeeded(event) == true {
+            return
+        }
         #if DEBUG
         let debugPoint = convert(event.locationInWindow, from: nil)
         bmuxDebugLog("terminal.mouseDown surface=\(terminalSurface?.id.uuidString.prefix(5) ?? "nil") mods=[\(debugModifierString(event.modifierFlags))] clickCount=\(event.clickCount) point=(\(String(format: "%.0f", debugPoint.x)),\(String(format: "%.0f", debugPoint.y)))")
@@ -6520,6 +6534,9 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
     }
 
     override func mouseUp(with event: NSEvent) {
+        if enclosingHostedTerminalView()?.handlePromptNavigationMouseUpIfNeeded(event) == true {
+            return
+        }
         #if DEBUG
         bmuxDebugLog("terminal.mouseUp surface=\(terminalSurface?.id.uuidString.prefix(5) ?? "nil") mods=[\(debugModifierString(event.modifierFlags))]")
         #endif
@@ -7362,6 +7379,9 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
         _ = performBindingAction("reset")
     }
     override func mouseMoved(with event: NSEvent) {
+        if enclosingHostedTerminalView()?.applyPromptNavigationCursorIfNeeded(event) == true {
+            return
+        }
         maybeRequestFirstResponderForMouseFocus()
         guard let surface = surface else { return }
         let suppressCommandPathHover = shouldSuppressCommandPathHover(for: event.modifierFlags)
@@ -7436,6 +7456,9 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
     }
 
     override func mouseDragged(with event: NSEvent) {
+        if enclosingHostedTerminalView()?.handlePromptNavigationMouseDraggedIfNeeded(event) == true {
+            return
+        }
         guard let surface = surface else { return }
         let eventPoint = convert(event.locationInWindow, from: nil)
         trackMousePointIfUsable(eventPoint)
@@ -7443,6 +7466,13 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
         // Selection auto-scroll depends on libghostty observing the pointer leave
         // the viewport rather than a cached in-bounds hover point.
         ghostty_surface_mouse_pos(surface, eventPoint.x, bounds.height - eventPoint.y, mouseModsFromEvent(event))
+    }
+
+    override func cursorUpdate(with event: NSEvent) {
+        if enclosingHostedTerminalView()?.applyPromptNavigationCursorIfNeeded(event) == true {
+            return
+        }
+        super.cursorUpdate(with: event)
     }
 
     override func rightMouseDragged(with event: NSEvent) {
@@ -7940,6 +7970,281 @@ private final class GhosttyFlashOverlayView: NSView {
     }
 }
 
+private final class TerminalPromptNavigationControlsContainerView: NSView {
+    private weak var pressedButton: NSButton?
+    private var isMouseSessionActive = false
+    private var trackingArea: NSTrackingArea?
+    override var acceptsFirstResponder: Bool { false }
+
+    deinit {
+        if let trackingArea {
+            removeTrackingArea(trackingArea)
+        }
+    }
+
+    override var isHidden: Bool {
+        didSet {
+            guard oldValue != isHidden else { return }
+            window?.invalidateCursorRects(for: self)
+        }
+    }
+
+    override func resetCursorRects() {
+        super.resetCursorRects()
+        guard !isHidden, alphaValue > 0 else { return }
+        for rect in promptNavigationArrowCursorRects {
+            addCursorRect(rect, cursor: .arrow)
+        }
+        for subview in subviews {
+            guard let button = subview as? NSButton,
+                  button.isEnabled,
+                  !button.isHidden else { continue }
+            addCursorRect(promptNavigationHitRect(for: button), cursor: .pointingHand)
+        }
+    }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        true
+    }
+
+    override func updateTrackingAreas() {
+        if let trackingArea {
+            removeTrackingArea(trackingArea)
+            self.trackingArea = nil
+        }
+
+        super.updateTrackingAreas()
+
+        let next = NSTrackingArea(
+            rect: .zero,
+            options: [
+                .inVisibleRect,
+                .activeInKeyWindow,
+                .cursorUpdate,
+                .mouseEnteredAndExited,
+                .mouseMoved,
+            ],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(next)
+        trackingArea = next
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard allowsPromptNavigationHitTesting(eventType: NSApp.currentEvent?.type),
+              !isHidden,
+              alphaValue > 0,
+              bounds.contains(point) else {
+            return nil
+        }
+        return self
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        isMouseSessionActive = true
+        let point = convert(event.locationInWindow, from: nil)
+        guard let button = enabledPromptNavigationButton(at: point) else {
+            pressedButton = nil
+            return
+        }
+        pressedButton = button
+        button.highlight(true)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        defer {
+            pressedButton?.highlight(false)
+            pressedButton = nil
+            isMouseSessionActive = false
+        }
+        let point = convert(event.locationInWindow, from: nil)
+        guard let pressedButton,
+              enabledPromptNavigationButton(at: point) === pressedButton,
+              let action = pressedButton.action else {
+            return
+        }
+        _ = NSApp.sendAction(action, to: pressedButton.target, from: pressedButton)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard isMouseSessionActive else { return }
+        let point = convert(event.locationInWindow, from: nil)
+        pressedButton?.highlight(enabledPromptNavigationButton(at: point) === pressedButton)
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        pressedButton?.highlight(false)
+        pressedButton = nil
+        isMouseSessionActive = false
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        updateCursor(for: event)
+    }
+
+    override func cursorUpdate(with event: NSEvent) {
+        updateCursor(for: event)
+    }
+
+    private func updateCursor(for event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        if enabledPromptNavigationButton(at: point) != nil {
+            NSCursor.pointingHand.set()
+        } else if bounds.contains(point) {
+            NSCursor.arrow.set()
+        }
+    }
+
+    func invalidatePromptNavigationCursorRects() {
+        window?.invalidateCursorRects(for: self)
+    }
+
+    @discardableResult
+    func handlePromptNavigationMouseDownIfNeeded(_ event: NSEvent) -> Bool {
+        guard event.type == .leftMouseDown,
+              containsPromptNavigationControlArea(for: event) else {
+            return false
+        }
+        mouseDown(with: event)
+        return true
+    }
+
+    @discardableResult
+    func handlePromptNavigationMouseDraggedIfNeeded(_ event: NSEvent) -> Bool {
+        guard isMouseSessionActive else { return false }
+        mouseDragged(with: event)
+        return true
+    }
+
+    @discardableResult
+    func handlePromptNavigationMouseUpIfNeeded(_ event: NSEvent) -> Bool {
+        guard isMouseSessionActive else { return false }
+        mouseUp(with: event)
+        return true
+    }
+
+    @discardableResult
+    func applyPromptNavigationCursorIfNeeded(_ event: NSEvent) -> Bool {
+        guard containsPromptNavigationControlArea(for: event) else { return false }
+        updateCursor(for: event)
+        return true
+    }
+
+    private func containsPromptNavigationControlArea(for event: NSEvent) -> Bool {
+        guard allowsPromptNavigationHitTesting(eventType: event.type),
+              !isHidden,
+              alphaValue > 0 else {
+            return false
+        }
+        return bounds.contains(convert(event.locationInWindow, from: nil))
+    }
+
+    private var promptNavigationArrowCursorRects: [NSRect] {
+        let enabledHitRects = subviews.compactMap { subview -> NSRect? in
+            guard let button = subview as? NSButton,
+                  button.isEnabled,
+                  !button.isHidden else { return nil }
+            return promptNavigationHitRect(for: button)
+        }
+        return enabledHitRects
+            .reduce([bounds]) { remainingRects, hitRect in
+                remainingRects.flatMap { promptNavigationRects(removing: hitRect, from: $0) }
+            }
+            .filter(isPromptNavigationCursorRectVisible)
+    }
+
+    private func promptNavigationRects(removing cutRect: NSRect, from rect: NSRect) -> [NSRect] {
+        let clippedCutRect = cutRect.intersection(rect)
+        guard !clippedCutRect.isNull else { return [rect] }
+
+        let candidates = [
+            NSRect(
+                x: rect.minX,
+                y: rect.minY,
+                width: rect.width,
+                height: clippedCutRect.minY - rect.minY
+            ),
+            NSRect(
+                x: rect.minX,
+                y: clippedCutRect.maxY,
+                width: rect.width,
+                height: rect.maxY - clippedCutRect.maxY
+            ),
+            NSRect(
+                x: rect.minX,
+                y: clippedCutRect.minY,
+                width: clippedCutRect.minX - rect.minX,
+                height: clippedCutRect.height
+            ),
+            NSRect(
+                x: clippedCutRect.maxX,
+                y: clippedCutRect.minY,
+                width: rect.maxX - clippedCutRect.maxX,
+                height: clippedCutRect.height
+            ),
+        ]
+        return candidates.filter(isPromptNavigationCursorRectVisible)
+    }
+
+    private func isPromptNavigationCursorRectVisible(_ rect: NSRect) -> Bool {
+        !rect.isNull && rect.width > 0.5 && rect.height > 0.5
+    }
+
+    private func enabledPromptNavigationButton(at point: NSPoint) -> NSButton? {
+        for subview in subviews.reversed() {
+            guard let button = subview as? NSButton,
+                  button.isEnabled,
+                  !button.isHidden,
+                  promptNavigationHitRect(for: button).contains(point) else { continue }
+            return button
+        }
+        return nil
+    }
+
+    private func promptNavigationButtonBounds(for button: NSButton) -> NSRect {
+        convert(button.bounds, from: button).intersection(bounds)
+    }
+
+    private func promptNavigationHitRect(for button: NSButton) -> NSRect {
+        promptNavigationButtonBounds(for: button)
+            .insetBy(dx: -2, dy: -5)
+            .intersection(bounds)
+    }
+
+    private func allowsPromptNavigationHitTesting(eventType: NSEvent.EventType?) -> Bool {
+        switch WindowInputRoutingContext(eventType: eventType).eventKind {
+        case .noEvent, .pointerDown, .pointerDrag, .pointerUp, .pointerHover, .appKitRouting:
+            return true
+        case .keyboard, .scroll, .other:
+            return false
+        }
+    }
+}
+
+private final class TerminalPromptNavigationButton: NSButton {
+    override var acceptsFirstResponder: Bool { false }
+
+    override var isEnabled: Bool {
+        didSet {
+            guard oldValue != isEnabled else { return }
+            window?.invalidateCursorRects(for: self)
+            (superview as? TerminalPromptNavigationControlsContainerView)?
+                .invalidatePromptNavigationCursorRects()
+        }
+    }
+
+    override func resetCursorRects() {
+        super.resetCursorRects()
+        guard isEnabled else { return }
+        addCursorRect(bounds, cursor: .pointingHand)
+    }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        true
+    }
+}
+
 private final class TerminalViewportBorderOverlayView: NSView {
     var effectiveSize: CGSize? {
         didSet { needsDisplay = true }
@@ -8174,6 +8479,8 @@ final class GhosttySurfaceScrollView: NSView {
     private let notificationRingLayer: CAShapeLayer
     private let flashOverlayView: GhosttyFlashOverlayView
     private let flashLayer: CAShapeLayer
+    private let promptNavigationPulseOverlayView: GhosttyFlashOverlayView
+    private let promptNavigationPulseLayer: CAShapeLayer
     private var cloudTerminalReconnectOverlayView: CloudTerminalReconnectOverlayView?
     var isRightSidebarDockSurface: Bool {
         surfaceView.terminalSurface?.focusPlacement == .rightSidebarDock
@@ -8200,11 +8507,16 @@ final class GhosttySurfaceScrollView: NSView {
     private let imageTransferIndicatorView: NSVisualEffectView
     private let imageTransferIndicatorSpinner: NSProgressIndicator
     private let imageTransferCancelButton: NSButton
+    private let promptNavigationControlsContainerView: TerminalPromptNavigationControlsContainerView
+    private let promptNavigationControlsBackgroundView: GhosttyPassthroughVisualEffectView
+    private let previousPromptButton: TerminalPromptNavigationButton
+    private let nextPromptButton: TerminalPromptNavigationButton
     private var searchOverlayHostingView: NSHostingView<SurfaceSearchOverlay>?
     private var deferredSearchOverlayMutationWorkItem: DispatchWorkItem?
     private var imageTransferIndicatorShowWorkItem: DispatchWorkItem?
     private var activeImageTransferOperation: TerminalImageTransferOperation?
     private var activeImageTransferCancelHandler: (() -> Void)?
+    private var promptNavigationHandler: ((Int) -> Void)?
     private var lastSearchOverlayStateID: ObjectIdentifier?
     private var searchOverlayMutationGeneration: UInt64 = 0
     private var observers: [NSObjectProtocol] = []
@@ -8217,6 +8529,7 @@ final class GhosttySurfaceScrollView: NSView {
     /// where the terminal fights the user's scroll position.
     var userScrolledAwayFromBottom = false
     private var pendingExplicitWheelScroll = false
+    private var pendingPromptNavigationPulseRow: Int?
     var allowExplicitScrollbarSync = false
     /// Threshold in points from bottom to consider "at bottom" (allows for minor float drift)
     private static let scrollToBottomThreshold: CGFloat = 5.0
@@ -8229,6 +8542,223 @@ final class GhosttySurfaceScrollView: NSView {
     private var pendingAutomaticFirstResponderApply = false
     private var pendingSuppressedFirstResponderFocusReapply = false
     // Hidden/tiny focus retry is bounded by layout/visibility signals, not a timer loop.
+    private static let promptNavigationRevealRows = 3
+    private static let promptNavigationRecordBottomInsetRows = 0
+    private static let promptNavigationPulseRows = 3
+    private static let promptNavigationPulseHorizontalInset: CGFloat = 8
+    private static let promptNavigationPromptTextSearchBackRows = 800
+    private static let promptNavigationPromptTextReadMaxBytes: UInt = 8 * 1024
+    private static let promptNavigationPromptSearchNeedleMaxLength = 160
+    private static let promptNavigationFallbackNeedleMinimumLength = 8
+    private static let promptNavigationPreferredPromptSearchRadiusRows = 120
+    private static let promptNavigationNearestPromptMarkerSearchBackRows = 200
+
+    static func promptNavigationRecordedPromptRow(
+        viewportTopRow: Int,
+        visibleRows: Int,
+        bottomInsetRows: Int
+    ) -> Int {
+        let visibleRowCount = max(0, visibleRows)
+        let insetRows = max(0, bottomInsetRows)
+        return max(0, viewportTopRow + max(0, visibleRowCount - insetRows - 1))
+    }
+
+    static func promptNavigationReferenceRow(
+        viewportTopRow: Int,
+        visibleRows: Int,
+        revealRows: Int,
+        delta: Int
+    ) -> Int {
+        if delta < 0 {
+            return max(0, viewportTopRow + max(1, visibleRows))
+        }
+        return max(0, viewportTopRow + max(0, revealRows))
+    }
+
+    static func promptNavigationScrollTargetRow(
+        forPromptRow row: Int,
+        revealRows: Int,
+        bottomScrollRow: Int?
+    ) -> Int {
+        let unclamped = max(0, row - max(0, revealRows))
+        guard let bottomScrollRow else { return unclamped }
+        return min(unclamped, max(0, bottomScrollRow))
+    }
+
+    static func promptNavigationPulseFrame(
+        promptRow: Int,
+        viewportTopRow: Int,
+        bounds: CGRect,
+        cellHeight: CGFloat,
+        pulseRows: Int,
+        horizontalInset: CGFloat
+    ) -> CGRect {
+        let boundedCellHeight = max(1, cellHeight)
+        let boundedWidth = max(0, bounds.width)
+        let boundedHeight = max(0, bounds.height)
+        let pulseHeight = min(boundedHeight, boundedCellHeight * CGFloat(max(1, pulseRows)))
+        let visibleRow = max(0, promptRow - viewportTopRow)
+        let rawY = bounds.maxY - (CGFloat(visibleRow + max(1, pulseRows)) * boundedCellHeight)
+        let minimumY = bounds.minY
+        let maximumY = max(bounds.maxY - pulseHeight, minimumY)
+        let y = min(max(rawY, minimumY), maximumY)
+        let inset = min(max(0, horizontalInset), boundedWidth / 2)
+        return CGRect(
+            x: bounds.minX + inset,
+            y: y,
+            width: max(0, boundedWidth - (inset * 2)),
+            height: pulseHeight
+        )
+    }
+
+    static func promptNavigationResolvedPromptRow(
+        message: String?,
+        newestRow: Int,
+        oldestRow: Int,
+        preferredRow: Int? = nil,
+        rowText: (Int) -> String?
+    ) -> Int? {
+        let needles = promptNavigationSearchNeedles(from: message)
+        guard !needles.isEmpty else { return nil }
+
+        let lowerBound = max(0, min(oldestRow, newestRow))
+        let upperBound = max(0, max(oldestRow, newestRow))
+        func rowMatches(_ row: Int) -> Bool {
+            guard let text = rowText(row) else { return false }
+            return promptNavigationRowText(text, matchesPromptNeedles: needles)
+        }
+        func scanRows(from scanUpperBound: Int, through scanLowerBound: Int) -> Int? {
+            guard scanUpperBound >= scanLowerBound else { return nil }
+            for row in stride(from: scanUpperBound, through: scanLowerBound, by: -1) {
+                guard rowMatches(row) else {
+                    continue
+                }
+                return row
+            }
+            return nil
+        }
+
+        if let preferredRow {
+            let boundedPreferredRow = min(max(preferredRow, lowerBound), upperBound)
+            let preferredLowerBound = max(
+                lowerBound,
+                boundedPreferredRow - promptNavigationPreferredPromptSearchRadiusRows
+            )
+            let preferredUpperBound = min(
+                upperBound,
+                boundedPreferredRow + promptNavigationPreferredPromptSearchRadiusRows
+            )
+            for distance in 0...promptNavigationPreferredPromptSearchRadiusRows {
+                let lowerCandidate = boundedPreferredRow - distance
+                if lowerCandidate >= preferredLowerBound, rowMatches(lowerCandidate) {
+                    return lowerCandidate
+                }
+                let upperCandidate = boundedPreferredRow + distance
+                if upperCandidate <= preferredUpperBound,
+                   upperCandidate != lowerCandidate,
+                   rowMatches(upperCandidate) {
+                    return upperCandidate
+                }
+            }
+        }
+
+        return scanRows(from: upperBound, through: lowerBound)
+    }
+
+    static func promptNavigationNearestPromptMarkerRow(
+        fallbackRow: Int,
+        newestRow: Int,
+        oldestRow: Int,
+        rowText: (Int) -> String?
+    ) -> Int? {
+        let lowerReadableBound = max(0, min(oldestRow, newestRow))
+        let upperReadableBound = max(0, max(oldestRow, newestRow))
+        let upperBound = min(max(0, fallbackRow), upperReadableBound)
+        let lowerBound = max(
+            lowerReadableBound,
+            upperBound - promptNavigationNearestPromptMarkerSearchBackRows
+        )
+        guard upperBound >= lowerBound else { return nil }
+
+        for row in stride(from: upperBound, through: lowerBound, by: -1) {
+            guard let text = rowText(row),
+                  promptNavigationRowLooksLikePromptMarker(text) else {
+                continue
+            }
+            return row
+        }
+        return nil
+    }
+
+    private static func promptNavigationSearchNeedles(from message: String?) -> [String] {
+        guard let message else { return [] }
+        var needles: [String] = []
+        func appendNeedle(_ raw: String?) {
+            guard let normalized = promptNavigationNormalizedSearchText(raw),
+                  !normalized.isEmpty else {
+                return
+            }
+            let prefix = String(normalized.prefix(promptNavigationPromptSearchNeedleMaxLength))
+            guard !needles.contains(prefix) else { return }
+            needles.append(prefix)
+        }
+
+        appendNeedle(message)
+        appendNeedle(message.split(whereSeparator: { $0.isNewline }).first.map { String($0) })
+        return needles
+    }
+
+    private static func promptNavigationRowText(
+        _ rowText: String,
+        matchesPromptNeedles needles: [String]
+    ) -> Bool {
+        guard let normalizedRow = promptNavigationNormalizedSearchText(rowText),
+              !normalizedRow.isEmpty else {
+            return false
+        }
+        let trimmedRow = normalizedRow.trimmingCharacters(in: .whitespacesAndNewlines)
+        for needle in needles {
+            if promptNavigationPromptMarkerPrefixes.contains(where: { marker in
+                trimmedRow == "\(marker) \(needle)" ||
+                    trimmedRow.hasPrefix("\(marker) \(needle) ") ||
+                    trimmedRow.contains(" \(marker) \(needle)")
+            }) {
+                return true
+            }
+            if needle.count >= promptNavigationFallbackNeedleMinimumLength,
+               promptNavigationPromptMarkerPrefixes.contains(where: { marker in
+                   trimmedRow.hasPrefix(marker)
+               }),
+               trimmedRow.contains(needle) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private static func promptNavigationRowLooksLikePromptMarker(_ rowText: String) -> Bool {
+        guard let normalizedRow = promptNavigationNormalizedSearchText(rowText),
+              !normalizedRow.isEmpty else {
+            return false
+        }
+        let trimmedRow = normalizedRow.trimmingCharacters(in: .whitespacesAndNewlines)
+        return promptNavigationPromptMarkerPrefixes.contains { marker in
+            trimmedRow == marker || trimmedRow.hasPrefix("\(marker) ")
+        }
+    }
+
+    private static var promptNavigationPromptMarkerPrefixes: [String] {
+        ["\u{203A}", ">"]
+    }
+
+    private static func promptNavigationNormalizedSearchText(_ text: String?) -> String? {
+        guard let text else { return nil }
+        let normalized = text
+            .split(whereSeparator: { $0.isWhitespace })
+            .joined(separator: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return normalized.isEmpty ? nil : normalized
+    }
 
     /// Tracks whether keyboard focus should go to the search field or the terminal
     /// when the window becomes key while the find bar is open.
@@ -8429,6 +8959,8 @@ final class GhosttySurfaceScrollView: NSView {
         notificationRingLayer = CAShapeLayer()
         flashOverlayView = GhosttyFlashOverlayView(frame: .zero)
         flashLayer = CAShapeLayer()
+        promptNavigationPulseOverlayView = GhosttyFlashOverlayView(frame: .zero)
+        promptNavigationPulseLayer = CAShapeLayer()
         keyboardCopyModeBadgeContainerView = GhosttyFlashOverlayView(frame: .zero)
         keyboardCopyModeBadgeView = GhosttyPassthroughVisualEffectView(frame: .zero)
         keyboardCopyModeBadgeIconView = NSImageView(frame: .zero)
@@ -8438,6 +8970,10 @@ final class GhosttySurfaceScrollView: NSView {
         imageTransferIndicatorView = NSVisualEffectView(frame: .zero)
         imageTransferIndicatorSpinner = NSProgressIndicator(frame: .zero)
         imageTransferCancelButton = NSButton(frame: .zero)
+        promptNavigationControlsContainerView = TerminalPromptNavigationControlsContainerView(frame: .zero)
+        promptNavigationControlsBackgroundView = GhosttyPassthroughVisualEffectView(frame: .zero)
+        previousPromptButton = TerminalPromptNavigationButton(frame: .zero)
+        nextPromptButton = TerminalPromptNavigationButton(frame: .zero)
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = false
@@ -8515,6 +9051,22 @@ final class GhosttySurfaceScrollView: NSView {
         flashLayer.opacity = 0
         flashOverlayView.layer?.addSublayer(flashLayer)
         addSubview(flashOverlayView)
+        promptNavigationPulseOverlayView.wantsLayer = true
+        promptNavigationPulseOverlayView.layer?.backgroundColor = NSColor.clear.cgColor
+        promptNavigationPulseOverlayView.layer?.masksToBounds = false
+        promptNavigationPulseOverlayView.autoresizingMask = [.width, .height]
+        let promptPulseColor = bmuxAccentNSColor()
+        promptNavigationPulseLayer.fillColor = promptPulseColor.withAlphaComponent(0.24).cgColor
+        promptNavigationPulseLayer.strokeColor = promptPulseColor.withAlphaComponent(0.6).cgColor
+        promptNavigationPulseLayer.lineWidth = 1
+        promptNavigationPulseLayer.lineJoin = .round
+        promptNavigationPulseLayer.shadowColor = promptPulseColor.cgColor
+        promptNavigationPulseLayer.shadowOpacity = 0.3
+        promptNavigationPulseLayer.shadowRadius = 10
+        promptNavigationPulseLayer.shadowOffset = .zero
+        promptNavigationPulseLayer.opacity = 0
+        promptNavigationPulseOverlayView.layer?.addSublayer(promptNavigationPulseLayer)
+        addSubview(promptNavigationPulseOverlayView, positioned: .above, relativeTo: scrollView)
         keyboardCopyModeBadgeContainerView.translatesAutoresizingMaskIntoConstraints = false
         keyboardCopyModeBadgeContainerView.wantsLayer = true
         keyboardCopyModeBadgeContainerView.layer?.masksToBounds = false
@@ -8645,6 +9197,88 @@ final class GhosttySurfaceScrollView: NSView {
         linkHoverIndicatorView.frame = bounds
         linkHoverIndicatorView.autoresizingMask = [.width, .height]
         addSubview(linkHoverIndicatorView)
+
+        promptNavigationControlsContainerView.translatesAutoresizingMaskIntoConstraints = false
+        promptNavigationControlsContainerView.wantsLayer = true
+        promptNavigationControlsContainerView.layer?.masksToBounds = false
+        promptNavigationControlsContainerView.layer?.shadowColor = NSColor.black.cgColor
+        promptNavigationControlsContainerView.layer?.shadowOpacity = 0.18
+        promptNavigationControlsContainerView.layer?.shadowRadius = 8
+        promptNavigationControlsContainerView.layer?.shadowOffset = CGSize(width: 0, height: 2)
+        promptNavigationControlsBackgroundView.translatesAutoresizingMaskIntoConstraints = false
+        promptNavigationControlsBackgroundView.wantsLayer = true
+        promptNavigationControlsBackgroundView.material = .hudWindow
+        promptNavigationControlsBackgroundView.blendingMode = .withinWindow
+        promptNavigationControlsBackgroundView.state = .active
+        promptNavigationControlsBackgroundView.layer?.cornerRadius = 8
+        promptNavigationControlsBackgroundView.layer?.masksToBounds = true
+        promptNavigationControlsBackgroundView.layer?.borderWidth = 1
+        promptNavigationControlsBackgroundView.layer?.borderColor = NSColor.white.withAlphaComponent(0.12).cgColor
+        promptNavigationControlsBackgroundView.alphaValue = 0.95
+
+        let previousPromptLabel = String(
+            localized: "terminal.promptNavigation.previous.tooltip",
+            defaultValue: "Previous user prompt"
+        )
+        previousPromptButton.translatesAutoresizingMaskIntoConstraints = false
+        previousPromptButton.isBordered = false
+        previousPromptButton.focusRingType = .none
+        previousPromptButton.imagePosition = .imageOnly
+        previousPromptButton.image = NSImage(
+            systemSymbolName: "chevron.up",
+            accessibilityDescription: previousPromptLabel
+        )
+        previousPromptButton.contentTintColor = NSColor.secondaryLabelColor
+        previousPromptButton.toolTip = previousPromptLabel
+        previousPromptButton.setAccessibilityLabel(previousPromptLabel)
+        previousPromptButton.target = self
+        previousPromptButton.action = #selector(handlePreviousPromptNavigation)
+
+        let nextPromptLabel = String(
+            localized: "terminal.promptNavigation.next.tooltip",
+            defaultValue: "Next user prompt"
+        )
+        nextPromptButton.translatesAutoresizingMaskIntoConstraints = false
+        nextPromptButton.isBordered = false
+        nextPromptButton.focusRingType = .none
+        nextPromptButton.imagePosition = .imageOnly
+        nextPromptButton.image = NSImage(
+            systemSymbolName: "chevron.down",
+            accessibilityDescription: nextPromptLabel
+        )
+        nextPromptButton.contentTintColor = NSColor.secondaryLabelColor
+        nextPromptButton.toolTip = nextPromptLabel
+        nextPromptButton.setAccessibilityLabel(nextPromptLabel)
+        nextPromptButton.target = self
+        nextPromptButton.action = #selector(handleNextPromptNavigation)
+
+        promptNavigationControlsContainerView.addSubview(promptNavigationControlsBackgroundView)
+        promptNavigationControlsContainerView.addSubview(previousPromptButton)
+        promptNavigationControlsContainerView.addSubview(nextPromptButton)
+        NSLayoutConstraint.activate([
+            promptNavigationControlsBackgroundView.topAnchor.constraint(equalTo: promptNavigationControlsContainerView.topAnchor),
+            promptNavigationControlsBackgroundView.bottomAnchor.constraint(equalTo: promptNavigationControlsContainerView.bottomAnchor),
+            promptNavigationControlsBackgroundView.leadingAnchor.constraint(equalTo: promptNavigationControlsContainerView.leadingAnchor),
+            promptNavigationControlsBackgroundView.trailingAnchor.constraint(equalTo: promptNavigationControlsContainerView.trailingAnchor),
+            previousPromptButton.leadingAnchor.constraint(equalTo: promptNavigationControlsContainerView.leadingAnchor, constant: 6),
+            previousPromptButton.topAnchor.constraint(equalTo: promptNavigationControlsContainerView.topAnchor, constant: 5),
+            previousPromptButton.bottomAnchor.constraint(equalTo: promptNavigationControlsContainerView.bottomAnchor, constant: -5),
+            previousPromptButton.widthAnchor.constraint(equalToConstant: 24),
+            previousPromptButton.heightAnchor.constraint(equalToConstant: 24),
+            nextPromptButton.leadingAnchor.constraint(equalTo: previousPromptButton.trailingAnchor, constant: 2),
+            nextPromptButton.trailingAnchor.constraint(equalTo: promptNavigationControlsContainerView.trailingAnchor, constant: -6),
+            nextPromptButton.centerYAnchor.constraint(equalTo: previousPromptButton.centerYAnchor),
+            nextPromptButton.widthAnchor.constraint(equalToConstant: 24),
+            nextPromptButton.heightAnchor.constraint(equalToConstant: 24),
+            promptNavigationControlsContainerView.widthAnchor.constraint(equalToConstant: 62),
+            promptNavigationControlsContainerView.heightAnchor.constraint(equalToConstant: 34),
+        ])
+        promptNavigationControlsContainerView.isHidden = true
+        addSubview(promptNavigationControlsContainerView)
+        NSLayoutConstraint.activate([
+            promptNavigationControlsContainerView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
+            promptNavigationControlsContainerView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8),
+        ])
 
         scrollView.contentView.postsBoundsChangedNotifications = true
         observers.append(NotificationCenter.default.addObserver(
@@ -8806,6 +9440,12 @@ final class GhosttySurfaceScrollView: NSView {
            let hit = overlay.hitTest(convert(point, to: overlay)) {
             return hit
         }
+        if promptNavigationControlsContainerView.superview === self,
+           let hit = promptNavigationControlsContainerView.hitTest(
+               convert(point, to: promptNavigationControlsContainerView)
+           ) {
+            return hit
+        }
         return super.hitTest(point)
     }
 
@@ -8938,6 +9578,7 @@ final class GhosttySurfaceScrollView: NSView {
         }
         _ = setFrameIfNeeded(notificationRingOverlayView, to: bounds)
         _ = setFrameIfNeeded(flashOverlayView, to: bounds)
+        _ = setFrameIfNeeded(promptNavigationPulseOverlayView, to: bounds)
         _ = setFrameIfNeeded(linkHoverIndicatorView, to: bounds)
         if let cloudTerminalReconnectOverlayView {
             _ = setFrameIfNeeded(cloudTerminalReconnectOverlayView, to: bounds)
@@ -9374,6 +10015,280 @@ final class GhosttySurfaceScrollView: NSView {
         guard operation.cancel() else { return }
         endImageTransferIndicator(for: operation)
         onCancel?()
+    }
+
+    @objc private func handlePreviousPromptNavigation() {
+        promptNavigationHandler?(-1)
+    }
+
+    @objc private func handleNextPromptNavigation() {
+        promptNavigationHandler?(1)
+    }
+
+    private static func intRow(_ value: UInt64) -> Int {
+        Int(min(value, UInt64(Int.max)))
+    }
+
+    private func promptNavigationVisibleRows() -> Int {
+        if let scrollbar = surfaceView.scrollbar,
+           scrollbar.len > 0 {
+            return max(1, Self.intRow(scrollbar.len))
+        }
+        if let surface = surfaceView.terminalSurface?.surface {
+            return max(1, Int(ghostty_surface_size(surface).rows))
+        }
+        if surfaceView.cellSize.height > 0 {
+            return max(1, Int((bounds.height / surfaceView.cellSize.height).rounded(.down)))
+        }
+        return 1
+    }
+
+    private func promptNavigationViewportTopRow() -> Int? {
+        if let scrollbar = surfaceView.scrollbar {
+            return Self.intRow(scrollbar.offset)
+        }
+        return lastSentRow ?? 0
+    }
+
+    private func promptNavigationBottomScrollRow() -> Int {
+        guard let scrollbar = surfaceView.scrollbar else {
+            return 0
+        }
+        return max(0, Self.intRow(scrollbar.total) - Self.intRow(scrollbar.len))
+    }
+
+    private func promptNavigationScrollTargetRow(forPromptRow row: Int) -> Int {
+        Self.promptNavigationScrollTargetRow(
+            forPromptRow: row,
+            revealRows: Self.promptNavigationRevealRows,
+            bottomScrollRow: surfaceView.scrollbar == nil ? nil : promptNavigationBottomScrollRow()
+        )
+    }
+
+    private func promptNavigationCellHeight() -> CGFloat {
+        if surfaceView.cellSize.height > 0 {
+            return surfaceView.cellSize.height
+        }
+        if let surface = surfaceView.terminalSurface?.surface {
+            let size = ghostty_surface_size(surface)
+            let rows = max(CGFloat(size.rows), 1)
+            return max(1, bounds.height / rows)
+        }
+        return max(1, bounds.height / CGFloat(promptNavigationVisibleRows()))
+    }
+
+    func currentPromptNavigationViewportRow() -> Int? {
+        guard let topRow = promptNavigationViewportTopRow() else { return nil }
+        guard surfaceView.scrollbar != nil else { return topRow }
+        return Self.promptNavigationRecordedPromptRow(
+            viewportTopRow: topRow,
+            visibleRows: promptNavigationVisibleRows(),
+            bottomInsetRows: Self.promptNavigationRecordBottomInsetRows
+        )
+    }
+
+    func currentPromptNavigationBookmarkRow(message: String?) -> Int? {
+        promptNavigationSubmittedPromptRow(message: message) ?? currentPromptNavigationViewportRow()
+    }
+
+    func resolvedPromptNavigationBookmarkRow(message: String?, fallbackRow: Int) -> Int {
+        promptNavigationResolvedBookmarkRow(message: message, fallbackRow: fallbackRow) ?? max(0, fallbackRow)
+    }
+
+    private func promptNavigationSubmittedPromptRow(message: String?) -> Int? {
+        promptNavigationResolvedBookmarkRow(message: message, fallbackRow: nil)
+    }
+
+    private func promptNavigationResolvedBookmarkRow(message: String?, fallbackRow: Int?) -> Int? {
+        _ = surfaceView.flushPendingScrollbarIfAvailable()
+        guard let surface = surfaceView.terminalSurface?.surface,
+              let newestRow = promptNavigationNewestReadableRow() else {
+            return nil
+        }
+        let oldestRow = max(0, newestRow - Self.promptNavigationPromptTextSearchBackRows)
+        let boundedFallbackRow = fallbackRow.map { min(max(0, $0), newestRow) }
+        let rowText: (Int) -> String? = { row in
+            Self.promptNavigationScreenClipboardText(surface: surface, row: row)
+        }
+
+        if let resolvedRow = Self.promptNavigationResolvedPromptRow(
+            message: message,
+            newestRow: newestRow,
+            oldestRow: oldestRow,
+            preferredRow: boundedFallbackRow,
+            rowText: rowText
+        ) {
+            return resolvedRow
+        }
+
+        guard let boundedFallbackRow else { return nil }
+        return Self.promptNavigationNearestPromptMarkerRow(
+            fallbackRow: boundedFallbackRow,
+            newestRow: newestRow,
+            oldestRow: max(oldestRow, boundedFallbackRow - Self.promptNavigationNearestPromptMarkerSearchBackRows),
+            rowText: rowText
+        )
+    }
+
+    private func promptNavigationNewestReadableRow() -> Int? {
+        if let scrollbar = surfaceView.scrollbar,
+           scrollbar.total > 0 {
+            return Self.intRow(scrollbar.total - 1)
+        }
+        guard let surface = surfaceView.terminalSurface?.surface else {
+            return nil
+        }
+        let rows = Int(ghostty_surface_size(surface).rows)
+        guard rows > 0 else { return nil }
+        return rows - 1
+    }
+
+    private static func promptNavigationScreenClipboardText(surface: ghostty_surface_t, row: Int) -> String? {
+        guard row >= 0 else { return nil }
+        let boundedRow = UInt32(clamping: row)
+        var text = ghostty_text_s()
+        guard ghostty_surface_read_screen_clipboard_text(
+            surface,
+            boundedRow,
+            boundedRow,
+            promptNavigationPromptTextReadMaxBytes,
+            &text
+        ) else {
+            return nil
+        }
+        defer {
+            ghostty_surface_free_text(surface, &text)
+        }
+        guard let ptr = text.text, text.text_len > 0 else {
+            return ""
+        }
+        let rawData = Data(bytes: ptr, count: Int(text.text_len))
+        return String(decoding: rawData, as: UTF8.self)
+    }
+
+    func currentPromptNavigationReferenceRow(delta: Int) -> Int? {
+        guard let topRow = promptNavigationViewportTopRow() else { return nil }
+        return Self.promptNavigationReferenceRow(
+            viewportTopRow: topRow,
+            visibleRows: promptNavigationVisibleRows(),
+            revealRows: Self.promptNavigationRevealRows,
+            delta: delta
+        )
+    }
+
+    func scrollToPromptNavigationViewportRow(_ row: Int) -> Bool {
+        let promptRow = max(0, row)
+        let targetRow = promptNavigationScrollTargetRow(forPromptRow: promptRow)
+        let currentViewportTopRow = surfaceView.scrollbar.map { Self.intRow($0.offset) }
+        if let scrollbar = surfaceView.scrollbar {
+            let bottomRow = max(0, Self.intRow(scrollbar.total) - Self.intRow(scrollbar.len))
+            userScrolledAwayFromBottom = targetRow < bottomRow
+        } else {
+            userScrolledAwayFromBottom = targetRow > 0
+        }
+        pendingExplicitWheelScroll = true
+        pendingPromptNavigationPulseRow = promptRow
+        let action = "scroll_to_row:" + String(targetRow)
+        guard surfaceView.performBindingAction(action) else {
+            pendingPromptNavigationPulseRow = nil
+            return false
+        }
+        if let currentViewportTopRow, currentViewportTopRow == targetRow {
+            triggerPendingPromptNavigationPulseIfNeeded(viewportTopRow: currentViewportTopRow)
+        } else if surfaceView.scrollbar == nil {
+            triggerPendingPromptNavigationPulseIfNeeded(viewportTopRow: targetRow)
+        }
+        return true
+    }
+
+    func scrollToPromptNavigationCurrentInput() -> Bool {
+        userScrolledAwayFromBottom = false
+        pendingExplicitWheelScroll = true
+        pendingPromptNavigationPulseRow = nil
+        return surfaceView.performBindingAction("scroll_to_bottom")
+    }
+
+    private func triggerPendingPromptNavigationPulseIfNeeded(viewportTopRow: Int) {
+        guard let promptRow = pendingPromptNavigationPulseRow else { return }
+        pendingPromptNavigationPulseRow = nil
+        triggerPromptNavigationPulse(promptRow: promptRow, viewportTopRow: viewportTopRow)
+    }
+
+    private func triggerPromptNavigationPulse(promptRow: Int, viewportTopRow: Int) {
+        let cellHeight = promptNavigationCellHeight()
+        let frame = Self.promptNavigationPulseFrame(
+            promptRow: promptRow,
+            viewportTopRow: viewportTopRow,
+            bounds: bounds,
+            cellHeight: cellHeight,
+            pulseRows: Self.promptNavigationPulseRows,
+            horizontalInset: Self.promptNavigationPulseHorizontalInset
+        )
+        let path = CGPath(
+            roundedRect: frame,
+            cornerWidth: min(8, frame.height / 2),
+            cornerHeight: min(8, frame.height / 2),
+            transform: nil
+        )
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        promptNavigationPulseLayer.path = path
+        promptNavigationPulseLayer.opacity = 0
+        CATransaction.commit()
+
+        promptNavigationPulseLayer.removeAllAnimations()
+        let animation = CAKeyframeAnimation(keyPath: "opacity")
+        animation.values = FocusFlashPattern.values.map { NSNumber(value: $0 * 0.55) }
+        animation.keyTimes = FocusFlashPattern.keyTimes.map { NSNumber(value: $0) }
+        animation.duration = FocusFlashPattern.duration
+        animation.timingFunctions = FocusFlashPattern.curves.map { curve in
+            switch curve {
+            case .easeIn:
+                return CAMediaTimingFunction(name: .easeIn)
+            case .easeOut:
+                return CAMediaTimingFunction(name: .easeOut)
+            }
+        }
+        promptNavigationPulseLayer.add(animation, forKey: "bmux.promptNavigationPulse")
+    }
+
+    func setPromptNavigationControls(
+        hasBookmarks: Bool,
+        canMoveBackward: Bool,
+        canMoveForward: Bool,
+        hidesForSearchOverlay: Bool,
+        onNavigate: ((Int) -> Void)?
+    ) {
+        promptNavigationHandler = onNavigate
+        previousPromptButton.isEnabled = canMoveBackward
+        nextPromptButton.isEnabled = canMoveForward
+        previousPromptButton.alphaValue = canMoveBackward ? 1 : 0.35
+        nextPromptButton.alphaValue = canMoveForward ? 1 : 0.35
+        promptNavigationControlsContainerView.isHidden = !hasBookmarks || hidesForSearchOverlay
+        promptNavigationControlsContainerView.invalidatePromptNavigationCursorRects()
+        if !promptNavigationControlsContainerView.isHidden {
+            addSubview(promptNavigationControlsContainerView, positioned: .above, relativeTo: nil)
+        }
+    }
+
+    @discardableResult
+    func handlePromptNavigationMouseDownIfNeeded(_ event: NSEvent) -> Bool {
+        promptNavigationControlsContainerView.handlePromptNavigationMouseDownIfNeeded(event)
+    }
+
+    @discardableResult
+    func handlePromptNavigationMouseDraggedIfNeeded(_ event: NSEvent) -> Bool {
+        promptNavigationControlsContainerView.handlePromptNavigationMouseDraggedIfNeeded(event)
+    }
+
+    @discardableResult
+    func handlePromptNavigationMouseUpIfNeeded(_ event: NSEvent) -> Bool {
+        promptNavigationControlsContainerView.handlePromptNavigationMouseUpIfNeeded(event)
+    }
+
+    @discardableResult
+    func applyPromptNavigationCursorIfNeeded(_ event: NSEvent) -> Bool {
+        promptNavigationControlsContainerView.applyPromptNavigationCursorIfNeeded(event)
     }
 
     func beginImageTransferIndicator(
@@ -11452,12 +12367,15 @@ final class GhosttySurfaceScrollView: NSView {
             pendingExplicitWheelScroll = false
         }
         surfaceView.scrollbar = scrollbar
+        let viewportTopRow = Self.intRow(scrollbar.offset)
         let isVisible = shouldShowTerminalScrollBar()
         if wasVisible != isVisible {
             _ = synchronizeGeometryAndContent()
+            triggerPendingPromptNavigationPulseIfNeeded(viewportTopRow: viewportTopRow)
             return
         }
         synchronizeScrollView()
+        triggerPendingPromptNavigationPulseIfNeeded(viewportTopRow: viewportTopRow)
     }
 
     @discardableResult
@@ -12064,9 +12982,13 @@ struct GhosttyTerminalView: NSViewRepresentable {
     var inactiveOverlayColor: NSColor = .clear
     var inactiveOverlayOpacity: Double = 0
     var searchState: TerminalSurface.SearchState? = nil
+    var promptNavigationHasBookmarks: Bool = false
+    var promptNavigationCanMoveBackward: Bool = false
+    var promptNavigationCanMoveForward: Bool = false
     var reattachToken: UInt64 = 0
     var onFocus: ((UUID) -> Void)? = nil
     var onTriggerFlash: (() -> Void)? = nil
+    var onNavigatePrompt: ((Int) -> Void)? = nil
 
     private final class HostContainerView: NSView {
         private static var nextInstanceSerial: UInt64 = 0
@@ -12279,6 +13201,13 @@ struct GhosttyTerminalView: NSViewRepresentable {
             )
             hostedView.setNotificationRing(visible: showsUnreadNotificationRing)
             hostedView.setSearchOverlay(searchState: searchState)
+            hostedView.setPromptNavigationControls(
+                hasBookmarks: promptNavigationHasBookmarks,
+                canMoveBackward: promptNavigationCanMoveBackward,
+                canMoveForward: promptNavigationCanMoveForward,
+                hidesForSearchOverlay: searchState != nil,
+                onNavigate: onNavigatePrompt
+            )
             hostedView.syncKeyStateIndicator(text: terminalSurface.currentKeyStateIndicatorText)
         }
         let portalExpectedSurfaceId = terminalSurface.id

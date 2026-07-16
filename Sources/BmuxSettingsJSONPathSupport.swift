@@ -14,7 +14,6 @@ enum SidebarWorkspaceDetailDefaults {
     static let showCustomMetadataKey = "sidebarShowStatusPills"
 
     static let showBranchDirectory = true
-    static let showPullRequests = true
     static let watchGitStatus = true
     static let showSSH = true
     static let showPorts = true
@@ -45,7 +44,9 @@ extension SidebarWorkspaceDetailDefaults {
     }
 
     static func showPullRequestsValue(defaults: UserDefaults) -> Bool {
-        boolValue(defaults: defaults, key: showPullRequestsKey, defaultValue: showPullRequests)
+        // Legacy preference kept for old configs/defaults migrations only.
+        // PR badges are now data-driven: visible when PR metadata exists.
+        true
     }
 
     static func watchGitStatusValue(defaults: UserDefaults) -> Bool {
@@ -53,7 +54,7 @@ extension SidebarWorkspaceDetailDefaults {
     }
 
     static func pullRequestPollingEnabled(defaults: UserDefaults) -> Bool {
-        watchGitStatusValue(defaults: defaults) && showPullRequestsValue(defaults: defaults)
+        watchGitStatusValue(defaults: defaults)
     }
 }
 
@@ -224,10 +225,6 @@ enum SidebarSettingsFileMapping {
         .init(
             jsonKey: "showBranchDirectory",
             defaultsKey: SidebarWorkspaceDetailDefaults.showBranchDirectoryKey
-        ),
-        .init(
-            jsonKey: "showPullRequests",
-            defaultsKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey
         ),
         .init(
             jsonKey: "watchGitStatus",
@@ -403,7 +400,6 @@ extension BmuxSettingsFileStore {
         "sidebar.pathLastSegmentOnly",
         "sidebar.showNotificationMessage",
         "sidebar.showBranchDirectory",
-        "sidebar.showPullRequests",
         "sidebar.watchGitStatus",
         "sidebar.makePullRequestsClickable",
         "sidebar.openPullRequestLinksInBmuxBrowser",

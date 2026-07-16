@@ -42856,631 +42856,6 @@
         }
       }
     },
-    "cli.ssh.autoReconnect.status": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] انتهى ssh بالحالة %s؛ جارٍ إعادة الاتصال (المحاولة %s/%s)."
-          }
-        },
-        "bs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh je završio sa statusom %s; ponovno povezivanje (pokušaj %s/%s)."
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh afsluttede med status %s; genopretter forbindelse (forsøg %s/%s)."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh wurde mit Status %s beendet; erneuter Verbindungsaufbau (Versuch %s/%s)."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh exited with status %s; reconnecting (attempt %s/%s)."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh terminó con el estado %s; reconectando (intento %s/%s)."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh s’est arrêté avec l’état %s ; reconnexion (tentative %s/%s)."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh è terminato con stato %s; riconnessione in corso (tentativo %s/%s)."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh はステータス %s で終了しました。再接続しています（試行 %s/%s）。"
-          }
-        },
-        "km": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh បានបញ្ចប់ដោយស្ថានភាព %s; កំពុងភ្ជាប់ឡើងវិញ (ការព្យាយាម %s/%s)។"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh가 상태 %s로 종료되었습니다. 다시 연결 중입니다(시도 %s/%s)."
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh avsluttet med status %s; kobler til på nytt (forsøk %s/%s)."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh zakończył działanie ze statusem %s; ponowne łączenie (próba %s/%s)."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh saiu com status %s; reconectando (tentativa %s/%s)."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh завершился со статусом %s; переподключение (попытка %s/%s)."
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh ออกจากการทำงานด้วยสถานะ %s; กำลังเชื่อมต่อใหม่ (ครั้งที่ %s/%s)"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh %s durumuyla çıktı; yeniden bağlanıyor (deneme %s/%s)."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh завершився зі статусом %s; повторне підключення (спроба %s/%s)."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh 已退出，状态为 %s；正在重新连接（第 %s/%s 次）。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh 已結束，狀態為 %s；正在重新連線（第 %s/%s 次）。"
-          }
-        }
-      }
-    },
-    "cli.ssh.autoReconnect.stopHint": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] أغلق هذا الجزء أو اضغط Ctrl-C لإيقاف إعادة الاتصال."
-          }
-        },
-        "bs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] zatvorite ovo okno ili pritisnite Ctrl-C za zaustavljanje ponovnog povezivanja."
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] luk denne rude, eller tryk Ctrl-C for at stoppe genoprettelsen."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] schließen Sie diesen Bereich oder drücken Sie Ctrl-C, um das erneute Verbinden zu stoppen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] close this pane or press Ctrl-C to stop reconnecting."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] cierra este panel o pulsa Ctrl-C para detener la reconexión."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] fermez ce volet ou appuyez sur Ctrl-C pour arrêter la reconnexion."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] chiudi questo riquadro o premi Ctrl-C per interrompere la riconnessione."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] 再接続を停止するには、このペインを閉じるか Ctrl-C を押してください。"
-          }
-        },
-        "km": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] បិទផ្ទាំងនេះ ឬចុច Ctrl-C ដើម្បីបញ្ឈប់ការភ្ជាប់ឡើងវិញ។"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] 다시 연결을 중지하려면 이 창을 닫거나 Ctrl-C를 누르세요."
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] lukk denne ruten eller trykk Ctrl-C for å stoppe ny tilkobling."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] zamknij ten panel albo naciśnij Ctrl-C, aby zatrzymać ponowne łączenie."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] feche este painel ou pressione Ctrl-C para interromper a reconexão."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] закройте эту панель или нажмите Ctrl-C, чтобы остановить переподключение."
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ปิดบานหน้าต่างนี้หรือกด Ctrl-C เพื่อหยุดการเชื่อมต่อใหม่"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] yeniden bağlanmayı durdurmak için bu bölmeyi kapatın veya Ctrl-C'ye basın."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] закрийте цю панель або натисніть Ctrl-C, щоб зупинити повторне підключення."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] 关闭此窗格或按 Ctrl-C 停止重新连接。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] 關閉此窗格或按 Ctrl-C 停止重新連線。"
-          }
-        }
-      }
-    },
-    "cli.ssh.manualReconnectPrompt.detail": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ربما تم إيقاف الجهاز الافتراضي البعيد مؤقتًا أو حذفه أو فقد الاتصال بالشبكة."
-          }
-        },
-        "bs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] udaljeni VM je možda pauziran, uništen ili je izgubio mrežu."
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] den eksterne VM kan være sat på pause, slettet eller have mistet netværket."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] die Remote-VM wurde möglicherweise angehalten, gelöscht oder hat die Netzwerkverbindung verloren."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] the remote VM may have been paused, destroyed, or lost network."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] la VM remota puede estar pausada, destruida o sin conexión de red."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] la VM distante a peut-être été suspendue, détruite ou a perdu le réseau."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] la VM remota potrebbe essere stata messa in pausa, eliminata o aver perso la rete."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] リモート VM は一時停止、削除、またはネットワーク切断された可能性があります。"
-          }
-        },
-        "km": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] VM ពីចម្ងាយអាចត្រូវបានផ្អាក លុបចោល ឬបាត់បង់បណ្តាញ។"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] 원격 VM이 일시 중지, 삭제되었거나 네트워크 연결이 끊겼을 수 있습니다."
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] den eksterne VM-en kan være satt på pause, slettet eller ha mistet nettverket."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] zdalna VM mogła zostać wstrzymana, usunięta lub utracić sieć."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] a VM remota pode ter sido pausada, destruída ou perdido a rede."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] удаленная VM могла быть приостановлена, удалена или потерять сеть."
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] VM ระยะไกลอาจถูกพัก ถูกลบ หรือสูญเสียการเชื่อมต่อเครือข่าย"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] uzak VM duraklatılmış, silinmiş veya ağ bağlantısını kaybetmiş olabilir."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] віддалену VM могло бути призупинено, видалено або вона втратила мережу."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] 远程 VM 可能已暂停、被销毁或失去网络连接。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] 遠端 VM 可能已暫停、被刪除或失去網路連線。"
-          }
-        }
-      }
-    },
-    "cli.ssh.manualReconnectPrompt.prompt": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] اضغط Enter لإغلاق هذا الجزء. اضغط r ثم Enter لإعادة الاتصال."
-          }
-        },
-        "bs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] pritisnite Enter za zatvaranje ovog okna. Pritisnite r pa Enter za ponovno povezivanje."
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] tryk på Enter for at lukke denne rude. Tryk på r og derefter Enter for at genoprette forbindelsen."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] drücken Sie Enter, um diesen Bereich zu schließen. Drücken Sie r und dann Enter zum erneuten Verbinden."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] press Enter to close this pane. Press r then Enter to reconnect."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] pulsa Enter para cerrar este panel. Pulsa r y luego Enter para reconectar."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] appuyez sur Entrée pour fermer ce volet. Appuyez sur r puis Entrée pour reconnecter."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] premi Invio per chiudere questo riquadro. Premi r e poi Invio per riconnettere."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] 閉じるには Enter を押してください。再接続するには r を押して Enter を押してください。"
-          }
-        },
-        "km": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ចុច Enter ដើម្បីបិទផ្ទាំងនេះ។ ចុច r បន្ទាប់មក Enter ដើម្បីភ្ជាប់ឡើងវិញ។"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] 이 창을 닫으려면 Enter를 누르세요. 다시 연결하려면 r을 누른 뒤 Enter를 누르세요."
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] trykk Enter for å lukke denne ruten. Trykk r og deretter Enter for å koble til på nytt."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] naciśnij Enter, aby zamknąć ten panel. Naciśnij r, a potem Enter, aby połączyć ponownie."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] pressione Enter para fechar este painel. Pressione r e depois Enter para reconectar."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] нажмите Enter, чтобы закрыть эту панель. Нажмите r, затем Enter, чтобы переподключиться."
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] กด Enter เพื่อปิดบานหน้าต่างนี้ กด r แล้วกด Enter เพื่อเชื่อมต่อใหม่"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] bu bölmeyi kapatmak için Enter'a basın. Yeniden bağlanmak için r sonra Enter'a basın."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] натисніть Enter, щоб закрити цю панель. Натисніть r, потім Enter, щоб повторно підключитися."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] 按 Enter 关闭此窗格。按 r 后再按 Enter 重新连接。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] 按 Enter 關閉此窗格。按 r 再按 Enter 重新連線。"
-          }
-        }
-      }
-    },
-    "cli.ssh.manualReconnectPrompt.status": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] انتهى ssh بالحالة %s."
-          }
-        },
-        "bs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh je završio sa statusom %s."
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh afsluttede med status %s."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh wurde mit Status %s beendet."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh exited with status %s."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh terminó con el estado %s."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh s’est arrêté avec l’état %s."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh è terminato con stato %s."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh はステータス %s で終了しました。"
-          }
-        },
-        "km": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh បានបញ្ចប់ដោយមានស្ថានភាព %s។"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh가 상태 %s로 종료되었습니다."
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh avsluttet med status %s."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh zakończył działanie ze statusem %s."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh saiu com status %s."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh завершился со статусом %s."
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh ออกจากการทำงานด้วยสถานะ %s"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh %s durumuyla çıktı."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh завершився зі статусом %s."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh 已退出，状态为 %s。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[bmux] ssh 已結束，狀態為 %s。"
-          }
-        }
-      }
-    },
     "cli.tmuxCompat.respawnPane.requiresForce": {
       "extractionState": "manual",
       "localizations": {
@@ -133038,23 +132413,6 @@
         }
       }
     },
-    "settings.account.pro.externalSubtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your subscription is managed by our previous billing system. Contact support to make changes."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "サブスクリプションは以前の請求システムで管理されています。変更するにはサポートにお問い合わせください。"
-          }
-        }
-      }
-    },
     "settings.account.pro.manageBilling": {
       "extractionState": "manual",
       "localizations": {
@@ -210055,131 +209413,6 @@
         }
       }
     },
-    "terminalContextMenu.reconnectPane": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إعادة توصيل الجزء"
-          }
-        },
-        "bs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ponovo poveži okno"
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Genopret forbindelse til rude"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bereich erneut verbinden"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reconnect Pane"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reconectar panel"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reconnecter le volet"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Riconnetti riquadro"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ペインを再接続"
-          }
-        },
-        "km": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ភ្ជាប់ផ្ទាំងឡើងវិញ"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "창 재연결"
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Koble til rute på nytt"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Połącz panel ponownie"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reconectar painel"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Переподключить панель"
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "เชื่อมต่อบานหน้าต่างใหม่"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bölmeyi yeniden bağla"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Повторно підключити панель"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重新连接窗格"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重新連線窗格"
-          }
-        }
-      }
-    },
     "terminalContextMenu.resetTerminal": {
       "extractionState": "manual",
       "localizations": {
@@ -230129,6 +229362,1524 @@
         }
       }
     },
+    "cli.agentTokenOutput.error.decodeFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raw terminal output record for %@ could not be decoded"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の生のターミナル出力レコードをデコードできませんでした"
+          }
+        }
+      }
+    },
+    "cli.agentTokenOutput.error.notFound": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No raw terminal output found for %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の生のターミナル出力が見つかりません"
+          }
+        }
+      }
+    },
+    "cli.agentTokenOutput.error.requiresReference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux agent-token-output show <raw-output-ref> [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用法: bmux agent-token-output show <raw-output-ref> [--json]"
+          }
+        }
+      }
+    },
+    "cli.agentTokenOutput.error.unexpectedArgument": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent-token-output show: unexpected argument '%@'"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent-token-output show: 予期しない引数 '%@'"
+          }
+        }
+      }
+    },
+    "cli.agentTokenOutput.error.unknownSubcommand": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown agent-token-output subcommand: %@\n\n%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明な agent-token-output サブコマンド: %@\n\n%@"
+          }
+        }
+      }
+    },
+    "cli.agentTokenOutput.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux agent-token-output show <raw-output-ref> [--json]\n\nPrint the complete raw terminal output captured by the token optimizer."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用法: bmux agent-token-output show <raw-output-ref> [--json]\n\nトークン最適化機能が取得した完全な生のターミナル出力を表示します。"
+          }
+        }
+      }
+    },
+    "cli.agentTokenProxy.rawOutputHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raw output: bmux agent-token-output show %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生の出力: bmux agent-token-output show %@"
+          }
+        }
+      }
+    },
+    "cli.codex.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux codex <install-hooks|uninstall-hooks|token-audit>\n\nManage Codex CLI hooks integration.\n\nSubcommands:\n  install-hooks     Install bmux hooks into ~/.codex/hooks.json\n  uninstall-hooks   Remove bmux hooks from ~/.codex/hooks.json\n  token-audit       Audit local Codex session token totals"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用法: bmux codex <install-hooks|uninstall-hooks|token-audit>\n\nCodex CLI フック連携を管理します。\n\nサブコマンド:\n  install-hooks     bmux フックを ~/.codex/hooks.json にインストール\n  uninstall-hooks   bmux フックを ~/.codex/hooks.json から削除\n  token-audit       ローカル Codex セッションのトークン合計を監査"
+          }
+        }
+      }
+    },
+    "cli.codexTokenAudit.error.databaseClosed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Codex session database is closed" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Codex セッションデータベースは閉じています" } }
+      }
+    },
+    "cli.codexTokenAudit.error.databaseOrCodexHome": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Use --database or --codex-home, not both." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "--database と --codex-home のどちらか一方だけを使用してください。" } }
+      }
+    },
+    "cli.codexTokenAudit.error.duplicateDatabase": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Use only one of --database or --db." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "--database と --db のどちらか一方だけを使用してください。" } }
+      }
+    },
+    "cli.codexTokenAudit.error.invalidLimit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "codex-token-audit --limit must be a positive integer or 'all'." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "codex-token-audit --limit には正の整数または 'all' を指定してください。" } }
+      }
+    },
+    "cli.codexTokenAudit.error.noDatabase": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No Codex session database found at %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@ に Codex セッションデータベースが見つかりません" } }
+      }
+    },
+    "cli.codexTokenAudit.error.openDatabaseFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "failed to open Codex session database: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Codex セッションデータベースを開けませんでした: %@" } }
+      }
+    },
+    "cli.codexTokenAudit.error.openFailedFallback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "open failed" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "開けませんでした" } }
+      }
+    },
+    "cli.codexTokenAudit.error.unexpectedArgument": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "codex-token-audit: unexpected argument '%@'" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "codex-token-audit: 予期しない引数 '%@'" } }
+      }
+    },
+    "cli.codexTokenAudit.error.unknownFlag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "codex-token-audit: unknown flag '%@'" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "codex-token-audit: 不明なフラグ '%@'" } }
+      }
+    },
+    "cli.codexTokenAudit.error.unknownSQLiteError": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "unknown sqlite error" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "不明な sqlite エラー" } }
+      }
+    },
+    "cli.codexTokenAudit.note.providerBreakdownUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Local Codex metadata does not expose cached-input, uncached-input, output, or reasoning-token splits." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ローカルの Codex メタデータには、キャッシュ済み入力、未キャッシュ入力、出力、推論トークンの内訳は含まれていません。" } }
+      }
+    },
+    "cli.codexTokenAudit.note.rolloutAnalysis": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Rollout analysis uses local session JSONL files to estimate tool-output pressure, repeated commands, and likely waste drivers." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ロールアウト分析は、ローカルのセッション JSONL ファイルを使って、ツール出力の負荷、繰り返しコマンド、無駄の可能性が高い要因を推定します。" } }
+      }
+    },
+    "cli.codexTokenAudit.note.updatedDayGrouping": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Updated-day totals group each session's lifetime tokens by threads.updated_at; they are not provider billing day totals." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "更新日別の合計は、各セッションの累計トークンを threads.updated_at でまとめたものです。プロバイダー請求日の合計ではありません。" } }
+      }
+    },
+    "cli.codexTokenAudit.output.averageSession": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Average/session: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "セッション平均: %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.database": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Database: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "データベース: %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.cwdCountPlural": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@ cwds" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@ cwd" } }
+      }
+    },
+    "cli.codexTokenAudit.output.cwdCountSingular": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@ cwd" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@ cwd" } }
+      }
+    },
+    "cli.codexTokenAudit.output.cwdRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "  %@  %@ tokens  %@  %@ rollout  %@ tool output" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "  %@  %@ トークン  %@  %@ ロールアウト  %@ ツール出力" } }
+      }
+    },
+    "cli.codexTokenAudit.output.cwdTotalsHeader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "CWD totals:" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "CWD 別の合計:" } }
+      }
+    },
+    "cli.codexTokenAudit.output.dayCountPlural": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@ days" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@ 日" } }
+      }
+    },
+    "cli.codexTokenAudit.output.dayCountSingular": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@ day" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@ 日" } }
+      }
+    },
+    "cli.codexTokenAudit.output.dayRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "  %@  %@ tokens  %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "  %@  %@ トークン  %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.dayTotalsHeader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Updated-day totals:" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "更新日別の合計:" } }
+      }
+    },
+    "cli.codexTokenAudit.output.driver.largeRollout": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "large rollout" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "大きなロールアウト" } }
+      }
+    },
+    "cli.codexTokenAudit.output.driver.largeToolOutput": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "large tool output" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "大きなツール出力" } }
+      }
+    },
+    "cli.codexTokenAudit.output.driver.longRunningSession": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "long session span" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "長いセッション期間" } }
+      }
+    },
+    "cli.codexTokenAudit.output.driver.manyRecoverableOutputs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "many recoverable outputs" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "復元可能な出力が多い" } }
+      }
+    },
+    "cli.codexTokenAudit.output.driver.manyTurns": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "many turns" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ターン数が多い" } }
+      }
+    },
+    "cli.codexTokenAudit.output.driver.repeatedCommands": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "repeated commands" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "繰り返しコマンド" } }
+      }
+    },
+    "cli.codexTokenAudit.output.durationHoursMinutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@h %@m" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@時間 %@分" } }
+      }
+    },
+    "cli.codexTokenAudit.output.durationMinutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@m" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@分" } }
+      }
+    },
+    "cli.codexTokenAudit.output.daysNoun": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "days" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "日" } }
+      }
+    },
+    "cli.codexTokenAudit.output.generatedAt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Generated: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "生成日時: %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.largestSession": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Largest session: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "最大セッション: %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.modelCountPlural": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@ models" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@ モデル" } }
+      }
+    },
+    "cli.codexTokenAudit.output.modelCountSingular": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@ model" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@ モデル" } }
+      }
+    },
+    "cli.codexTokenAudit.output.modelRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "  %@  %@ tokens  %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "  %@  %@ トークン  %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.modelTotalsHeader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Model totals:" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "モデル別の合計:" } }
+      }
+    },
+    "cli.codexTokenAudit.output.modelsNoun": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "models" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "モデル" } }
+      }
+    },
+    "cli.codexTokenAudit.output.noRows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "  No rows." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "  行はありません。" } }
+      }
+    },
+    "cli.codexTokenAudit.output.noTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "(no title)" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "(タイトルなし)" } }
+      }
+    },
+    "cli.codexTokenAudit.output.noteRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "  - %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "  - %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.notesHeader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Notes:" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "注記:" } }
+      }
+    },
+    "cli.codexTokenAudit.output.omittedRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "  ... %@ omitted; use --limit all to show every row." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "  ... %@ を省略しました。すべての行を表示するには --limit all を使用してください。" } }
+      }
+    },
+    "cli.codexTokenAudit.output.sessionCWDRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "      cwd: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "      cwd: %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.sessionDurationRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "      span: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "      期間: %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.sessionDriversRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "      likely drivers: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "      可能性が高い要因: %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.sessionIDRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "      id: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "      id: %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.sessionCountPlural": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@ sessions" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@ セッション" } }
+      }
+    },
+    "cli.codexTokenAudit.output.sessionCountSingular": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@ session" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@ セッション" } }
+      }
+    },
+    "cli.codexTokenAudit.output.sessionRepeatedCommandRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "      repeated: %@ x%@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "      繰り返し: %@ x%@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.sessionRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "  %@ tokens | %@ | %@ | %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "  %@ トークン | %@ | %@ | %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.sessionSignalsRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "      signals: %@ rollout, %@ events, %@ tool calls, %@ tool output, %@ repeats, %@ span" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "      シグナル: %@ ロールアウト、%@ イベント、%@ ツール呼び出し、%@ ツール出力、%@ 繰り返し、期間 %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.sessions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sessions: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "セッション: %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.sessionsHeader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Highest-token sessions:" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "トークン数が多いセッション:" } }
+      }
+    },
+    "cli.codexTokenAudit.output.sessionsNoun": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "sessions" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "セッション" } }
+      }
+    },
+    "cli.codexTokenAudit.output.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Codex token audit" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Codex トークン監査" } }
+      }
+    },
+    "cli.codexTokenAudit.output.totalTokens": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Total tokens: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "合計トークン: %@" } }
+      }
+    },
+    "cli.codexTokenAudit.output.unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "unknown" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "不明" } }
+      }
+    },
+    "cli.codexTokenAudit.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage:\n  bmux codex-token-audit [--database <path> | --codex-home <path>] [--limit <n>|all] [--json]\n  bmux codex token-audit [--database <path> | --codex-home <path>] [--limit <n>|all] [--json]\n\nAudit every local Codex session recorded in the Codex state database."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用法:\n  bmux codex-token-audit [--database <path> | --codex-home <path>] [--limit <n>|all] [--json]\n  bmux codex token-audit [--database <path> | --codex-home <path>] [--limit <n>|all] [--json]\n\nCodex 状態データベースに記録されたローカル Codex セッションをすべて監査します。"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.activeSessionRows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active session rows:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アクティブなセッション行:"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.activeSessions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active sessions: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アクティブなセッション: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.clean": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "clean"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリーン"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.conflictRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ · contributions %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ · 貢献 %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.conflictRows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Potential file overlaps:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "潜在的なファイル重複:"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.conflicts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conflicts: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "競合: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.dirty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dirty"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未保存変更あり"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.dirtyFiles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dirty files: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更済みファイル: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.fileRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ %@ · %@/%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ %@ · %@/%@"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provenance context for %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の provenance コンテキスト"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.notFound": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No provenance context found for %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の provenance コンテキストは見つかりませんでした"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.recentCheckpoints": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent checkpoints: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近のチェックポイント: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.sessionRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.unattributedChanges": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unattributed changes: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未帰属の変更: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.unattributedRows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unattributed files:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未帰属のファイル:"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.validationRuns": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validation runs: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "検証実行: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.output.worktree": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worktree: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "worktree: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.context.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux provenance context current [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法: bmux provenance context current [--json]"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.commandPathOutsideWorktree": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ path is outside the current Git worktree: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ のパスは現在の Git worktree の外にあります: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.commandRequiresGitWorktree": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ requires a Git worktree%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ には Git worktree が必要です%@"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.commandRequiresPath": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ requires <path>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ には <path> が必要です"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.commandUnexpectedArgument": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: unexpected argument '%@'"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: 予期しない引数 '%@'"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.commandUnknownFlag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: unknown flag '%@'"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: 不明なフラグ '%@'"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.databaseClosed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance database is closed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance データベースは閉じられています"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.emptyPath": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance explain requires <path>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance explain には <path> が必要です"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.openDatabaseFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "failed to open provenance database: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance データベースを開けませんでした: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.pathOutsideWorktree": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance explain path is outside the current Git worktree: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance explain のパスは現在の Git worktree の外にあります: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.requiresGitWorktree": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance explain requires a Git worktree%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance explain には Git worktree が必要です%@"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.requiresPath": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux provenance explain <path> [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法: bmux provenance explain <path> [--json]"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.unexpectedArgument": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance explain: unexpected argument '%@'"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance explain: 予期しない引数 '%@'"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.unknownFlag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance explain: unknown flag '%@'"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance explain: 不明なフラグ '%@'"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.unknownSQLiteError": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unknown sqlite error"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明な sqlite エラー"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.unknownSubcommand": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown provenance subcommand: %@\n\n%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明な provenance サブコマンド: %@\n\n%@"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.attribution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attribution: %@ (%@ confidence)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "帰属: %@（信頼度 %@）"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.changeSet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change set: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更セット: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.contribution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contribution: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "貢献: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.diffFingerprint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diff fingerprint: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "diff フィンガープリント: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provenance for %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の provenance"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.intent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intent: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "意図: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.noProvenance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No provenance found for %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の provenance は見つかりませんでした"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.observed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observed: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "観測日時: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.reason": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "理由: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.repository": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repository: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リポジトリ: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.session": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッション: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.status": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "状態: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.unattributedNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note: bmux observed this dirty file, but no session has claimed it yet."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注記: bmux はこの dirty file を観測しましたが、まだどのセッションも自分の変更として申告していません。"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.workItem": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Work item: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作業項目: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.output.worktreeBranch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worktree branch: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "worktree ブランチ: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.reason.noDatabase": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no provenance database exists yet"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance データベースはまだ存在しません"
+          }
+        }
+      }
+    },
+    "cli.provenance.reason.noFile": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no file-level provenance has been recorded for this path"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このパスのファイル単位の provenance は記録されていません"
+          }
+        }
+      }
+    },
+    "cli.provenance.reason.noWorktree": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no provenance has been recorded for this Git worktree"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この Git worktree の provenance は記録されていません"
+          }
+        }
+      }
+    },
+    "cli.provenance.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n\nInspect bmux work provenance without requiring a live app socket."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
+          }
+        }
+      }
+    },
+    "cli.provenance.worktrees.output.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No provenance worktrees recorded."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記録済みの provenance worktree はありません。"
+          }
+        }
+      }
+    },
+    "cli.provenance.worktrees.output.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known provenance worktrees: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "既知の provenance worktree: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.worktrees.output.row": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ · %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ · %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.worktrees.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux provenance worktrees list [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法: bmux provenance worktrees list [--json]"
+          }
+        }
+      }
+    },
     "command.pushToTalkVoiceInput.subtitle": {
       "extractionState": "manual",
       "localizations": {
@@ -230187,6 +230938,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "Push-to-Talk Voice Input"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プッシュトゥトーク音声入力"
+          }
+        }
+      }
+    },
+    "terminal.promptNavigation.next.tooltip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next user prompt"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次のユーザープロンプト"
+          }
+        }
+      }
+    },
+    "terminal.promptNavigation.previous.tooltip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous user prompt"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前のユーザープロンプト"
+          }
+        }
+      }
+    },
+    "titlebar.voiceInput.accessibilityLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Push-to-Talk Voice Input"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プッシュトゥトーク音声入力"
+          }
+        }
+      }
+    },
+    "titlebar.voiceInput.tooltip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Push-to-talk voice input"
           }
         },
         "ja": {

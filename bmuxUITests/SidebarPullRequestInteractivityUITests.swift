@@ -40,7 +40,6 @@ final class SidebarPullRequestInteractivityUITests: XCTestCase {
             "-AppleLanguages", "(en)",
             "-AppleLocale", "en_US",
             "-sidebarHideAllDetails", "false",
-            "-sidebarShowPullRequest", "true",
             "-browserOpenSidebarPullRequestLinksInBmuxBrowser", "true",
         ]
         if let clickabilityOverride {

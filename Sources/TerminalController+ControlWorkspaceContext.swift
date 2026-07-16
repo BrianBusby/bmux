@@ -291,6 +291,7 @@ extension TerminalController: ControlWorkspaceContext {
         guard let outcome = tabManager.handlePromptSubmit(
             workspaceId: workspaceID,
             message: message,
+            surfaceId: routing.surfaceID,
             iMessageModeEnabled: iMessageModeEnabled
         ) else {
             return .notFound

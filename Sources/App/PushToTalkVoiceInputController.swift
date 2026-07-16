@@ -3,6 +3,7 @@ import AppKit
 import Foundation
 @preconcurrency import Speech
 
+// AVAudioEngine is confined to this helper's private serial queue.
 private final class PushToTalkVoiceAudioEngine: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.bmux.push-to-talk-voice.audio")
     private let engine = AVAudioEngine()

@@ -3702,7 +3702,8 @@ class TerminalController {
 
     /// `workspace.set_auto_title`: applies an AI-generated title to a workspace
     /// (and optionally one of its panels/tabs) with auto provenance, so a
-    /// user-set title is never overwritten. Gated on the opt-in
+    /// user-set title is never overwritten. Set `force` to apply the update
+    /// with `.user` provenance and bypass user-owned guards. Gated on the opt-in
     /// `workspaceAutoNamingEnabled` setting; `{"probe": true}` reads the live
     /// setting state without writing, which lets hook processes honor
     /// mid-session toggles. `panel_id` accepts either a panel UUID or a
@@ -3756,10 +3757,12 @@ class TerminalController {
               !titleRaw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return .err(code: "invalid_params", message: "Missing or invalid title", data: nil)
         }
-        guard let source = Workspace.CustomTitleSource.autoTitleSocketSource(v2String(params, "source")) else {
+        guard let requestedSource = Workspace.CustomTitleSource.autoTitleSocketSource(v2String(params, "source")) else {
             return .err(code: "invalid_params", message: "Missing or invalid title", data: nil)
         }
         let panelId = v2UUID(params, "panel_id")
+        let force = v2Bool(params, "force") == true
+        let source: Workspace.CustomTitleSource = force ? .user : requestedSource
 
         let title = titleRaw.trimmingCharacters(in: .whitespacesAndNewlines)
         let panelOnlyIfMultiple = v2Bool(params, "panel_only_if_multiple") ?? false
@@ -5737,24 +5740,30 @@ class TerminalController {
         let iMessageModeEnabled = IMessageModeSettings.isEnabled()
         switch event.hookEventName {
         case .userPromptSubmit:
+            let rawSurfaceId = event.surfaceId
             v2MainSync {
                 guard let workspaceId = v2UUIDAny(rawWorkspaceId) else { return }
+                let surfaceId = rawSurfaceId.flatMap { v2UUIDAny($0) }
                 guard let tabManager = AppDelegate.shared?.tabManagerFor(tabId: workspaceId) else { return }
                 _ = tabManager.handlePromptSubmit(
                     workspaceId: workspaceId,
                     message: event.submittedPromptMessage,
+                    surfaceId: surfaceId,
                     iMessageModeEnabled: iMessageModeEnabled
                 )
             }
         case .stop:
+            let rawSurfaceId = event.surfaceId
             let assistantFinalMessage = event.assistantFinalMessage
-            Task { @MainActor [weak self, rawWorkspaceId, assistantFinalMessage, iMessageModeEnabled] in
+            Task { @MainActor [weak self, rawWorkspaceId, rawSurfaceId, assistantFinalMessage, iMessageModeEnabled] in
                 guard let self,
                       let workspaceId = self.v2UUIDAny(rawWorkspaceId) else { return }
+                let surfaceId = rawSurfaceId.flatMap { self.v2UUIDAny($0) }
                 guard let tabManager = AppDelegate.shared?.tabManagerFor(tabId: workspaceId) else { return }
                 _ = tabManager.handleAssistantFinalMessage(
                     workspaceId: workspaceId,
                     message: assistantFinalMessage,
+                    surfaceId: surfaceId,
                     iMessageModeEnabled: iMessageModeEnabled
                 )
             }
