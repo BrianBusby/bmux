@@ -13,8 +13,12 @@ struct CodexRolloutCommandSummary: Sendable {
         }
         if let arguments = arguments as? [String: Any] {
             let command = commandValue(in: arguments).flatMap(summarizedCommand)
-            let byteCount = (try? JSONSerialization.data(withJSONObject: arguments).count).map(Int64.init) ?? 0
+            let byteCount = byteCount(forJSONObject: arguments)
             return (command, byteCount)
+        }
+        if let arguments = arguments as? [Any] {
+            let command = commandValue(in: arguments).flatMap(summarizedCommand)
+            return (command, byteCount(forJSONObject: arguments))
         }
         return (nil, 0)
     }
@@ -37,8 +41,20 @@ struct CodexRolloutCommandSummary: Sendable {
             if let value = object[key] as? String {
                 return value
             }
+            if let value = object[key] as? [Any],
+               let command = commandValue(in: value) {
+                return command
+            }
         }
         return nil
+    }
+
+    private func commandValue(in array: [Any]) -> String? {
+        let strings = array.compactMap { $0 as? String }
+        guard strings.count == array.count else {
+            return nil
+        }
+        return strings.joined(separator: " ")
     }
 
     private func summarizedCommand(_ command: String) -> String? {
@@ -54,5 +70,9 @@ struct CodexRolloutCommandSummary: Sendable {
         }
         let endIndex = collapsed.index(collapsed.startIndex, offsetBy: maxCommandCharacters - 3)
         return String(collapsed[..<endIndex]) + "..."
+    }
+
+    private func byteCount(forJSONObject object: Any) -> Int64 {
+        (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]).count).map(Int64.init) ?? 0
     }
 }

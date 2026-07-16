@@ -74,6 +74,47 @@ struct CodexRolloutTelemetryParserTests {
     }
 
     @Test
+    func extractsToolFactsFromNonStringPayloadShapes() throws {
+        let parser = CodexRolloutTelemetryParser()
+        let toolCallLine = CodexRolloutImportedLine(
+            text: """
+            {"type":"response_item","payload":{"type":"function_call","call_id":"call-object","name":"shell","arguments":{"cmd":["swift","test","--package-path","Packages/macOS/BmuxContextEfficiency"],"timeout_ms":30000}}}
+            """,
+            sourceReference: ContextEfficiencySourceReference(
+                sourcePath: "/tmp/rollout-thread-a.jsonl",
+                byteOffset: 0,
+                lineNumber: 1,
+                parserVersion: CodexRolloutTelemetryParser.parserVersion
+            )
+        )
+        let toolOutputLine = CodexRolloutImportedLine(
+            text: """
+            {"type":"response_item","payload":{"type":"function_call_output","call_id":"call-object","output":{"chunks":["Original token count: 2300","Raw output: bmux agent-token-output show ref"],"truncated":true}}}
+            """,
+            sourceReference: ContextEfficiencySourceReference(
+                sourcePath: "/tmp/rollout-thread-a.jsonl",
+                byteOffset: 204,
+                lineNumber: 2,
+                parserVersion: CodexRolloutTelemetryParser.parserVersion
+            )
+        )
+
+        let parsedCall = parser.parse(line: toolCallLine, fallbackThreadID: "thread-a")
+        let parsedOutput = parser.parse(line: toolOutputLine, fallbackThreadID: "thread-a")
+
+        #expect(parsedCall.kind == .toolCallObserved)
+        #expect(parsedCall.toolCall?.callID == "call-object")
+        #expect(parsedCall.toolCall?.commandSummary == "swift test --package-path Packages/macOS/BmuxContextEfficiency")
+        #expect(parsedCall.toolCall?.argumentsByteCount ?? 0 > 0)
+
+        #expect(parsedOutput.kind == .toolOutputObserved)
+        #expect(parsedOutput.toolOutput?.callID == "call-object")
+        #expect(parsedOutput.toolOutput?.estimatedOriginalTokens == 2_300)
+        #expect(parsedOutput.toolOutput?.rawOutputReferenceCount == 1)
+        #expect(parsedOutput.toolOutput?.outputByteCount ?? 0 > 0)
+    }
+
+    @Test
     func malformedJSONBecomesParserErrorEvent() {
         let parser = CodexRolloutTelemetryParser()
         let line = CodexRolloutImportedLine(

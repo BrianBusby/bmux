@@ -184,13 +184,26 @@ struct CodexRolloutTelemetryParser: Sendable {
               let payload else {
             return nil
         }
-        let output = payload["output"] as? String ?? ""
+        let output = outputSummary(from: payload["output"])
         return CodexRolloutParsedToolOutput(
             callID: payload["call_id"] as? String,
-            outputByteCount: Int64(output.lengthOfBytes(using: .utf8)),
-            estimatedOriginalTokens: estimatedOriginalTokenCount(in: output),
-            rawOutputReferenceCount: rawOutputReferenceCount(in: output)
+            outputByteCount: output.byteCount,
+            estimatedOriginalTokens: estimatedOriginalTokenCount(in: output.markerText),
+            rawOutputReferenceCount: rawOutputReferenceCount(in: output.markerText)
         )
+    }
+
+    private func outputSummary(from output: Any?) -> (markerText: String, byteCount: Int64) {
+        if let output = output as? String {
+            return (output, Int64(output.lengthOfBytes(using: .utf8)))
+        }
+        if let output,
+           JSONSerialization.isValidJSONObject(output),
+           let data = try? JSONSerialization.data(withJSONObject: output, options: [.sortedKeys]) {
+            let markerText = String(data: data, encoding: .utf8) ?? ""
+            return (markerText, Int64(data.count))
+        }
+        return ("", 0)
     }
 
     private func estimatedOriginalTokenCount(in output: String) -> Int64 {
