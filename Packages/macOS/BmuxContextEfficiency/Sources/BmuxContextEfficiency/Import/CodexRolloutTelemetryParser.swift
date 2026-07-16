@@ -32,6 +32,7 @@ struct CodexRolloutTelemetryParser: Sendable {
         let timestamp = timestamp(from: object) ?? payload.flatMap(timestamp)
         let tokenUsage = tokenUsageExtractor.extract(from: object)
         let kind = eventKind(rolloutType: rolloutType, payloadType: payloadType, tokenUsage: tokenUsage)
+        let parserErrorMessage = parserDiagnosticMessage(rolloutType: rolloutType, timestamp: timestamp, kind: kind)
 
         return CodexRolloutParsedEvent(
             kind: kind,
@@ -43,7 +44,7 @@ struct CodexRolloutTelemetryParser: Sendable {
             tokenUsage: tokenUsage,
             toolCall: toolCall(from: payload, payloadType: payloadType),
             toolOutput: toolOutput(from: payload, payloadType: payloadType),
-            parserErrorMessage: rolloutType == nil ? "missing rollout event type" : nil,
+            parserErrorMessage: parserErrorMessage,
             model: stringValue(for: ["model"], in: [object, payload]),
             reasoningEffort: stringValue(for: ["reasoning_effort", "reasoningEffort", "reasoning"], in: [object, payload]),
             cwd: stringValue(for: ["cwd", "working_directory", "workingDirectory"], in: [object, payload])
@@ -101,6 +102,21 @@ struct CodexRolloutTelemetryParser: Sendable {
             reasoningEffort: nil,
             cwd: nil
         )
+    }
+
+    private func parserDiagnosticMessage(
+        rolloutType: String?,
+        timestamp: Date?,
+        kind: CodexRolloutEventKind
+    ) -> String? {
+        var messages: [String] = []
+        if rolloutType == nil {
+            messages.append("missing rollout event type")
+        }
+        if timestamp == nil, kind != .unknownImported {
+            messages.append("missing rollout event timestamp")
+        }
+        return messages.isEmpty ? nil : messages.joined(separator: "; ")
     }
 
     private func eventKind(
