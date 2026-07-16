@@ -527,7 +527,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
             branch: "feature/old"
         )
 
-        XCTAssertNil(workspace.panelPullRequests[panelId])
+        XCTAssertEqual(workspace.panelPullRequests[panelId]?.number, 1640)
         XCTAssertEqual(workspace.sidebarPullRequestsInDisplayOrder(orderedPanelIds: [panelId]), [])
     }
 

@@ -5117,12 +5117,10 @@ final class Workspace: Identifiable, ObservableObject {
             panelGitBranches[panelId] = state
         }
         if branchChanged {
-            let nextBranch = state.branch.normalizedSidebarBranchName
-            if panelPullRequests[panelId]?.branch?.normalizedSidebarBranchName != nextBranch {
+            if panelPullRequests[panelId]?.branch == nil {
                 panelPullRequests.removeValue(forKey: panelId)
             }
-            if panelId == focusedPanelId,
-               pullRequest?.branch?.normalizedSidebarBranchName != nextBranch {
+            if panelId == focusedPanelId, pullRequest?.branch == nil {
                 pullRequest = nil
             }
         }
@@ -5161,12 +5159,6 @@ final class Workspace: Identifiable, ObservableObject {
         let existing = panelPullRequests[panelId]
         let normalizedBranch = branch?.normalizedSidebarBranchName
         let currentPanelBranch = panelGitBranches[panelId]?.branch.normalizedSidebarBranchName
-        if bindToCurrentBranch,
-           let normalizedBranch,
-           normalizedBranch != currentPanelBranch {
-            clearPanelPullRequest(panelId: panelId)
-            return
-        }
         let resolvedBranch: String? = {
             if let normalizedBranch {
                 return normalizedBranch
