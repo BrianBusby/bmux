@@ -54,12 +54,31 @@ struct CodexRolloutTelemetryParser: Sendable {
         if let dictionary = value as? [String: Any] {
             return dictionary
         }
+        if let array = value as? [Any] {
+            return dictionaryPayload(from: array)
+        }
         guard let string = value as? String,
               let data = string.trimmingCharacters(in: .whitespacesAndNewlines).data(using: .utf8),
-              let dictionary = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+              let object = try? JSONSerialization.jsonObject(with: data) else {
             return nil
         }
-        return dictionary
+        return dictionaryPayload(from: object)
+    }
+
+    private func dictionaryPayload(from array: [Any]) -> [String: Any]? {
+        var firstDictionary: [String: Any]?
+        for value in array {
+            guard let dictionary = dictionaryPayload(from: value) else {
+                continue
+            }
+            if firstDictionary == nil {
+                firstDictionary = dictionary
+            }
+            if dictionary["type"] is String {
+                return dictionary
+            }
+        }
+        return firstDictionary
     }
 
     private func parserError(
