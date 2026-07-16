@@ -166,6 +166,30 @@ struct CodexRolloutTelemetryParserTests {
     }
 
     @Test
+    func extractsToolFactsFromStringEncodedPayloadObjects() throws {
+        let parser = CodexRolloutTelemetryParser()
+        let line = CodexRolloutImportedLine(
+            text: """
+            {"type":"response_item","payload":"{\\"type\\":\\"function_call\\",\\"call_id\\":\\"call-string-payload\\",\\"name\\":\\"shell\\",\\"arguments\\":{\\"cmd\\":[\\"swift\\",\\"test\\",\\"--package-path\\",\\"Packages/macOS/BmuxContextEfficiency\\"],\\"timeout_ms\\":30000}}"}
+            """,
+            sourceReference: ContextEfficiencySourceReference(
+                sourcePath: "/tmp/rollout-thread-a.jsonl",
+                byteOffset: 408,
+                lineNumber: 3,
+                parserVersion: CodexRolloutTelemetryParser.parserVersion
+            )
+        )
+
+        let parsed = parser.parse(line: line, fallbackThreadID: "thread-a")
+
+        #expect(parsed.kind == .toolCallObserved)
+        #expect(parsed.toolCall?.callID == "call-string-payload")
+        #expect(parsed.toolCall?.toolName == "shell")
+        #expect(parsed.toolCall?.commandSummary == "swift test --package-path Packages/macOS/BmuxContextEfficiency")
+        #expect(parsed.toolCall?.argumentsByteCount ?? 0 > 0)
+    }
+
+    @Test
     func malformedJSONBecomesParserErrorEvent() {
         let parser = CodexRolloutTelemetryParser()
         let line = CodexRolloutImportedLine(
