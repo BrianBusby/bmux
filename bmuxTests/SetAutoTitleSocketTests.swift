@@ -9,7 +9,7 @@ import Testing
 #endif
 
 /// Socket-level behavior tests for `workspace.set_auto_title`: the v2 method
-/// auto-naming engines use to apply AI-generated titles with `.auto`
+/// auto-naming engines use to apply AI-generated titles with auto
 /// provenance. Serialized because the suite goes through the shared
 /// `TerminalController` and toggles the opt-in setting in `UserDefaults`.
 @MainActor
@@ -98,7 +98,7 @@ import Testing
                 #expect(result["recorded"] as? Bool == true)
                 // No title path ran.
                 #expect(result["workspace_applied"] == nil)
-                #expect(workspace.effectiveCustomTitleSource != .auto)
+                #expect(workspace.effectiveCustomTitleSource == nil)
                 let status = AutoNamingStatusStore.current()
                 #expect(status?.category == .failed)
                 #expect(status?.agent == "codex")
@@ -173,6 +173,7 @@ import Testing
                 ])
                 var result = try #require(envelope["result"] as? [String: Any])
                 #expect(result["workspace_user_owned"] as? Bool == false)
+                #expect(result["workspace_title_source"] is NSNull)
 
                 workspace.setCustomTitle("My Project")
                 envelope = try call(method: "workspace.set_auto_title", params: [
@@ -181,6 +182,7 @@ import Testing
                 ])
                 result = try #require(envelope["result"] as? [String: Any])
                 #expect(result["workspace_user_owned"] as? Bool == true)
+                #expect(result["workspace_title_source"] as? String == "user")
             }
         }
     }
@@ -197,15 +199,66 @@ import Testing
                 ])
                 let result = try #require(envelope["result"] as? [String: Any])
                 #expect(result["workspace_user_owned"] as? Bool == false)
+                #expect(result["workspace_title_source"] as? String == "agent_seed")
 
                 let applyEnvelope = try call(method: "workspace.set_auto_title", params: [
                     "workspace_id": workspace.id.uuidString,
+                    "source": "auto_prompt",
                     "title": "Fix workspace titles"
                 ])
                 let applyResult = try #require(applyEnvelope["result"] as? [String: Any])
                 #expect(applyResult["workspace_applied"] as? Bool == true)
+                #expect(applyResult["source"] as? String == "auto_prompt")
                 #expect(workspace.title == "Fix workspace titles")
-                #expect(workspace.effectiveCustomTitleSource == .auto)
+                #expect(workspace.effectiveCustomTitleSource == .autoPrompt)
+            }
+        }
+    }
+
+    @Test func summarySourceCanRefinePromptSource() throws {
+        try withAutoNamingSetting(true) {
+            try withManager { _, workspace in
+                var envelope = try call(method: "workspace.set_auto_title", params: [
+                    "workspace_id": workspace.id.uuidString,
+                    "source": "auto_prompt",
+                    "title": "Fix auth bug"
+                ])
+                var result = try #require(envelope["result"] as? [String: Any])
+                #expect(result["workspace_applied"] as? Bool == true)
+                #expect(workspace.effectiveCustomTitleSource == .autoPrompt)
+
+                envelope = try call(method: "workspace.set_auto_title", params: [
+                    "workspace_id": workspace.id.uuidString,
+                    "source": "auto_summary",
+                    "title": "Debug login flow"
+                ])
+                result = try #require(envelope["result"] as? [String: Any])
+                #expect(result["workspace_applied"] as? Bool == true)
+                #expect(result["workspace_rejection_reason"] is NSNull)
+                #expect(workspace.title == "Debug login flow")
+                #expect(workspace.effectiveCustomTitleSource == .autoSummary)
+            }
+        }
+    }
+
+    @Test func promptSourceCanReplacePreviousSummaryForNewTurn() throws {
+        try withAutoNamingSetting(true) {
+            try withManager { _, workspace in
+                _ = try call(method: "workspace.set_auto_title", params: [
+                    "workspace_id": workspace.id.uuidString,
+                    "source": "auto_summary",
+                    "title": "Debug login flow"
+                ])
+
+                let envelope = try call(method: "workspace.set_auto_title", params: [
+                    "workspace_id": workspace.id.uuidString,
+                    "source": "auto_prompt",
+                    "title": "Fix workspace titles"
+                ])
+                let result = try #require(envelope["result"] as? [String: Any])
+                #expect(result["workspace_applied"] as? Bool == true)
+                #expect(workspace.title == "Fix workspace titles")
+                #expect(workspace.effectiveCustomTitleSource == .autoPrompt)
             }
         }
     }
@@ -227,6 +280,7 @@ import Testing
                 var result = try #require(envelope["result"] as? [String: Any])
                 #expect(result["workspace_applied"] as? Bool == true)
                 #expect(result["panel_applied"] is NSNull || result["panel_applied"] == nil)
+                #expect(result["panel_rejection_reason"] is NSNull)
                 #expect(workspace.panelCustomTitles[panelId] == nil)
 
                 // Two panels: the tab write fires.
@@ -240,6 +294,7 @@ import Testing
                 result = try #require(envelope["result"] as? [String: Any])
                 #expect(result["panel_applied"] as? Bool == true)
                 #expect(workspace.panelCustomTitles[panelId] == "Debug login flow")
+                #expect(workspace.panelCustomTitleSources[panelId] == .autoSummary)
             }
         }
     }
@@ -254,8 +309,9 @@ import Testing
                 #expect(envelope["ok"] as? Bool == true)
                 let result = try #require(envelope["result"] as? [String: Any])
                 #expect(result["workspace_applied"] as? Bool == true)
+                #expect(result["source"] as? String == "auto_summary")
                 #expect(workspace.title == "Fix auth bug")
-                #expect(workspace.effectiveCustomTitleSource == .auto)
+                #expect(workspace.effectiveCustomTitleSource == .autoSummary)
             }
         }
     }
@@ -271,6 +327,7 @@ import Testing
                 #expect(envelope["ok"] as? Bool == true)
                 let result = try #require(envelope["result"] as? [String: Any])
                 #expect(result["workspace_applied"] as? Bool == false)
+                #expect(result["workspace_rejection_reason"] as? String == "user_owned")
                 #expect(workspace.title == "My Project")
             }
         }
@@ -308,12 +365,13 @@ import Testing
                 let envelope = try call(method: "workspace.set_auto_title", params: [
                     "workspace_id": workspace.id.uuidString,
                     "panel_id": panelId.uuidString,
+                    "source": "auto_prompt",
                     "title": "Debug login flow"
                 ])
                 let result = try #require(envelope["result"] as? [String: Any])
                 #expect(result["panel_applied"] as? Bool == true)
                 #expect(workspace.panelCustomTitles[panelId] == "Debug login flow")
-                #expect(workspace.panelCustomTitleSources[panelId] == .auto)
+                #expect(workspace.panelCustomTitleSources[panelId] == .autoPrompt)
             }
         }
     }
@@ -331,6 +389,16 @@ import Testing
 
                 // Missing workspace id.
                 envelope = try call(method: "workspace.set_auto_title", params: [
+                    "title": "Fix auth bug"
+                ])
+                #expect(envelope["ok"] as? Bool == false)
+                error = try #require(envelope["error"] as? [String: Any])
+                #expect(error["code"] as? String == "invalid_params")
+
+                // Unknown source.
+                envelope = try call(method: "workspace.set_auto_title", params: [
+                    "workspace_id": workspace.id.uuidString,
+                    "source": "bogus",
                     "title": "Fix auth bug"
                 ])
                 #expect(envelope["ok"] as? Bool == false)

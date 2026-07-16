@@ -4028,33 +4028,49 @@ final class Workspace: Identifiable, ObservableObject {
 
     /// Sets, replaces, or clears (empty/nil `title`) a panel custom title.
     ///
-    /// `.auto` writes are rejected when a user-set title exists, and `.auto`
-    /// never clears. Returns whether the write landed.
+    /// Auto writes are rejected when a user-set title exists, and auto writes
+    /// never clear. Returns whether the write landed.
     @discardableResult
     func setPanelCustomTitle(panelId: UUID, title: String?, source: CustomTitleSource = .user) -> Bool {
-        guard panels[panelId] != nil else { return false }
+        applyPanelCustomTitle(panelId: panelId, title: title, source: source).applied
+    }
+
+    @discardableResult
+    func applyPanelCustomTitle(
+        panelId: UUID,
+        title: String?,
+        source: CustomTitleSource = .user
+    ) -> CustomTitleApplyOutcome {
+        guard panels[panelId] != nil else { return .rejected(.targetMissing) }
         let trimmed = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let previous = panelCustomTitles[panelId]
-        if source == .auto {
-            guard !trimmed.isEmpty else { return false }
-            if previous != nil, (panelCustomTitleSources[panelId] ?? .user) == .user { return false }
+        if source.isAutoOwned {
+            guard !trimmed.isEmpty else { return .rejected(.emptyTitle) }
+            let existingSource: CustomTitleSource? = previous != nil
+                ? (panelCustomTitleSources[panelId] ?? .user)
+                : nil
+            guard source.canReplace(existing: existingSource) else {
+                return .rejected(existingSource == .user ? .userOwned : .lowerPriority)
+            }
         }
         if trimmed.isEmpty {
-            guard previous != nil else { return false }
+            guard previous != nil else { return .rejected(.emptyTitle) }
             panelCustomTitles.removeValue(forKey: panelId)
             panelCustomTitleSources.removeValue(forKey: panelId)
         } else {
             guard previous != trimmed else {
                 // Same text: a user write still claims ownership so a later
                 // auto write cannot replace a title the user re-confirmed.
-                if source == .user { panelCustomTitleSources[panelId] = .user }
-                return true
+                if source == .user || panelCustomTitleSources[panelId] != source {
+                    panelCustomTitleSources[panelId] = source
+                }
+                return .success
             }
             panelCustomTitles[panelId] = trimmed
             panelCustomTitleSources[panelId] = source
         }
 
-        guard let panel = panels[panelId], let tabId = surfaceIdFromPanelId(panelId) else { return true }
+        guard let panel = panels[panelId], let tabId = surfaceIdFromPanelId(panelId) else { return .success }
         let baseTitle = panelTitles[panelId] ?? panel.displayTitle
         bonsplitController.updateTab(
             tabId,
@@ -4067,7 +4083,7 @@ final class Workspace: Identifiable, ObservableObject {
                 workspaceId: id, panelId: panelId, title: trimmed
             )
         }
-        return true
+        return .success
     }
 
     func isPanelPinned(_ panelId: UUID) -> Bool {
@@ -4302,7 +4318,67 @@ final class Workspace: Identifiable, ObservableObject {
     /// persistence.
     enum CustomTitleSource: String, Codable, Sendable {
         case user
+        /// Legacy auto title source used by older session snapshots and clients.
         case auto
+        case autoPrompt = "auto_prompt"
+        case autoSummary = "auto_summary"
+        case agentSeed = "agent_seed"
+
+        var isUserOwned: Bool {
+            self == .user
+        }
+
+        var isAutoOwned: Bool {
+            !isUserOwned
+        }
+
+        static func autoTitleSocketSource(_ rawValue: String?) -> CustomTitleSource? {
+            let normalized = rawValue?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+                .replacingOccurrences(of: "-", with: "_") ?? ""
+            guard !normalized.isEmpty else { return .autoSummary }
+            switch normalized {
+            case "auto":
+                return .auto
+            case "prompt", "prompt_submit", "auto_prompt":
+                return .autoPrompt
+            case "summary", "stop", "stop_summary", "auto_summary":
+                return .autoSummary
+            case "seed", "agent_seed":
+                return .agentSeed
+            default:
+                return nil
+            }
+        }
+
+        func canReplace(existing: CustomTitleSource?) -> Bool {
+            guard self != .user else { return true }
+            guard let existing else { return true }
+            guard existing != .user else { return false }
+            if self == .agentSeed {
+                return existing == .agentSeed
+            }
+            return true
+        }
+    }
+
+    enum CustomTitleRejectionReason: String, Sendable {
+        case emptyTitle = "empty_title"
+        case userOwned = "user_owned"
+        case lowerPriority = "lower_priority"
+        case targetMissing = "target_missing"
+    }
+
+    struct CustomTitleApplyOutcome: Sendable {
+        let applied: Bool
+        let rejectionReason: CustomTitleRejectionReason?
+
+        static let success = CustomTitleApplyOutcome(applied: true, rejectionReason: nil)
+
+        static func rejected(_ reason: CustomTitleRejectionReason) -> CustomTitleApplyOutcome {
+            CustomTitleApplyOutcome(applied: false, rejectionReason: reason)
+        }
     }
 
     var hasCustomTitle: Bool {
@@ -4316,7 +4392,7 @@ final class Workspace: Identifiable, ObservableObject {
     var effectiveCustomTitleSource: CustomTitleSource? {
         guard hasCustomTitle else { return nil }
         if isAutoReplaceableAgentSeedTitle {
-            return .auto
+            return .agentSeed
         }
         return customTitleSource ?? .user
     }
@@ -4390,14 +4466,22 @@ final class Workspace: Identifiable, ObservableObject {
 
     /// Sets, replaces, or clears (empty/nil `title`) the workspace custom title.
     ///
-    /// `.auto` writes are rejected when a user-set title exists, and `.auto`
-    /// never clears. Returns whether the write landed.
+    /// Auto writes are rejected when a user-set title exists, and auto writes
+    /// never clear. Returns whether the write landed.
     @discardableResult
     func setCustomTitle(_ title: String?, source: CustomTitleSource = .user) -> Bool {
+        applyCustomTitle(title, source: source).applied
+    }
+
+    @discardableResult
+    func applyCustomTitle(_ title: String?, source: CustomTitleSource = .user) -> CustomTitleApplyOutcome {
         let trimmed = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if source == .auto {
-            guard !trimmed.isEmpty else { return false }
-            if hasCustomTitle, effectiveCustomTitleSource == .user { return false }
+        if source.isAutoOwned {
+            guard !trimmed.isEmpty else { return .rejected(.emptyTitle) }
+            let existingSource = effectiveCustomTitleSource
+            guard source.canReplace(existing: existingSource) else {
+                return .rejected(existingSource == .user ? .userOwned : .lowerPriority)
+            }
         }
         if trimmed.isEmpty {
             customTitle = nil
@@ -4408,7 +4492,7 @@ final class Workspace: Identifiable, ObservableObject {
             customTitleSource = source
             self.title = trimmed
         }
-        return true
+        return .success
     }
 
     func setCustomDescription(_ description: String?) {

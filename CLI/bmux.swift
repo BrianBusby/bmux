@@ -31243,6 +31243,16 @@ export default BMUXSessionRestore;
             } else {
                 telemetry.breadcrumb("\(def.name)-hook.prompt-submit.nested-suppressed")
             }
+            if !suppressVisibleMutations {
+                applyPromptSubmitAutoTitle(
+                    def: def,
+                    parsedInput: input,
+                    workspaceId: workspaceId,
+                    surfaceId: surfaceId,
+                    client: client,
+                    telemetry: telemetry
+                )
+            }
             if def.name == "codex", !sessionId.isEmpty, !suppressVisibleMutations {
                 if codexPromptTurnWentTerminal() {
                     stopStaleCodexPromptSubmit(restoreVisibleState: true)
