@@ -58,6 +58,31 @@ struct CodexRolloutTelemetryParserTests {
     }
 
     @Test
+    func preservesFractionalSecondTimestamps() throws {
+        let parser = CodexRolloutTelemetryParser()
+        let line = CodexRolloutImportedLine(
+            text: """
+            {"type":"event_msg","timestamp":"2026-07-13T12:01:00.123Z","payload":{"type":"token_usage","threadID":"thread-a","tokenUsage":{"inputTokens":42}}}
+            """,
+            sourceReference: ContextEfficiencySourceReference(
+                sourcePath: "/tmp/rollout-thread-a.jsonl",
+                byteOffset: 620,
+                lineNumber: 3,
+                parserVersion: CodexRolloutTelemetryParser.parserVersion
+            )
+        )
+        let expectedFormatter = ISO8601DateFormatter()
+        expectedFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        let parsed = parser.parse(line: line, fallbackThreadID: "fallback")
+
+        #expect(parsed.kind == .tokenTelemetryObserved)
+        #expect(parsed.threadID == "thread-a")
+        #expect(parsed.tokenUsage?.inputTokens == 42)
+        #expect(parsed.timestamp == expectedFormatter.date(from: "2026-07-13T12:01:00.123Z"))
+    }
+
+    @Test
     func extractsToolCallAndToolOutputWithoutRetainingRawPayload() throws {
         let parser = CodexRolloutTelemetryParser()
         let toolCallLine = CodexRolloutImportedLine(
