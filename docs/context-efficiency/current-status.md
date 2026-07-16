@@ -46,20 +46,20 @@ Expected branch:
 
 Latest completed implementation HEAD:
 
-- `86cfe5f65902f52096505babe25412ee8795654c`
+- `73b98ee9d32c4515647dca1a379a1af2d66fb87c`
 
 The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
 
 Latest completed implementation slice:
 
-- `6f01ca2b7 Add fractional timestamp rollout regression`
-- `86cfe5f65 Parse fractional rollout timestamps`
+- `ff8e024b5 Add string payload rollout regression`
+- `73b98ee9d Import string encoded rollout payload objects`
 
 Behavior in that slice:
 
-- Codex rollout ISO8601 timestamps with fractional seconds now import as event timestamps.
-- Standard ISO8601 timestamps and numeric epoch timestamps still import through their existing paths.
-- Malformed timestamp values remain non-fatal; the importer still records the event with a nil timestamp and preserves raw evidence by source reference only.
+- Codex rollout `payload` fields that arrive as JSON strings containing objects now import through the same compact fact path as object payloads.
+- String-encoded function-call payloads now record tool name, call id, command summary, and serialized argument byte counts.
+- String payloads that are not JSON objects remain non-fatal and do not create raw payload records.
 
 Files changed in the latest slice:
 
@@ -73,7 +73,7 @@ Stay narrow and read-only. Prefer package-level Swift tests unless a CLI regress
 Good next targets:
 
 1. Defensive parser behavior for unstable rollout fields:
-   - unexpected object shapes;
+   - array/scalar payload fallbacks that should remain bounded and non-fatal;
    - missing timestamp fallback/reporting behavior.
 2. Import status and error-reporting edge cases:
    - bounded counts only;
