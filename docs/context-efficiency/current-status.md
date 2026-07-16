@@ -46,26 +46,24 @@ Expected branch:
 
 Latest completed implementation HEAD:
 
-- `be2b4bb760def19f40df1ccbefb642b544dc03ee`
+- `86cfe5f65902f52096505babe25412ee8795654c`
 
 The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
 
 Latest completed implementation slice:
 
-- `7d98a0f4e Add OpenAI usage detail rollout regression`
-- `be2b4bb76 Import OpenAI token usage detail fields`
+- `6f01ca2b7 Add fractional timestamp rollout regression`
+- `86cfe5f65 Parse fractional rollout timestamps`
 
 Behavior in that slice:
 
-- Codex rollout token telemetry now imports OpenAI-style `prompt_tokens` as input tokens.
-- Codex rollout token telemetry now imports OpenAI-style `completion_tokens` as output tokens.
-- Nested `prompt_tokens_details.cached_tokens` and `input_tokens_details.cached_tokens` now import as cached input tokens.
-- Nested `completion_tokens_details.reasoning_tokens` and `output_tokens_details.reasoning_tokens` now import as reasoning output tokens.
-- The importer still persists compact token fact columns only; it does not store raw usage payload objects.
+- Codex rollout ISO8601 timestamps with fractional seconds now import as event timestamps.
+- Standard ISO8601 timestamps and numeric epoch timestamps still import through their existing paths.
+- Malformed timestamp values remain non-fatal; the importer still records the event with a nil timestamp and preserves raw evidence by source reference only.
 
 Files changed in the latest slice:
 
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexTokenUsageExtractor.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutTelemetryParser.swift`
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/CodexRolloutTelemetryParserTests.swift`
 
 ## Good Next Phase 2 Targets
@@ -76,7 +74,7 @@ Good next targets:
 
 1. Defensive parser behavior for unstable rollout fields:
    - unexpected object shapes;
-   - missing or malformed timestamps.
+   - missing timestamp fallback/reporting behavior.
 2. Import status and error-reporting edge cases:
    - bounded counts only;
    - no raw payload leakage;
