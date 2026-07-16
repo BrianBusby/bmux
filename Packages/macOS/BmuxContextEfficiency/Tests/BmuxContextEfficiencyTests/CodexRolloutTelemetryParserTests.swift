@@ -32,6 +32,32 @@ struct CodexRolloutTelemetryParserTests {
     }
 
     @Test
+    func extractsTokenTelemetryFromOpenAIUsageDetails() throws {
+        let parser = CodexRolloutTelemetryParser()
+        let line = CodexRolloutImportedLine(
+            text: """
+            {"type":"event_msg","timestamp":"2026-07-13T12:01:00Z","payload":{"type":"response_completed","thread_id":"thread-a","response":{"usage":{"prompt_tokens":120000,"completion_tokens":800,"total_tokens":120800,"prompt_tokens_details":{"cached_tokens":100000},"completion_tokens_details":{"reasoning_tokens":400}}}}}
+            """,
+            sourceReference: ContextEfficiencySourceReference(
+                sourcePath: "/tmp/rollout-thread-a.jsonl",
+                byteOffset: 319,
+                lineNumber: 2,
+                parserVersion: CodexRolloutTelemetryParser.parserVersion
+            )
+        )
+
+        let parsed = parser.parse(line: line, fallbackThreadID: "fallback")
+
+        #expect(parsed.kind == .tokenTelemetryObserved)
+        #expect(parsed.threadID == "thread-a")
+        #expect(parsed.tokenUsage?.inputTokens == 120_000)
+        #expect(parsed.tokenUsage?.cachedInputTokens == 100_000)
+        #expect(parsed.tokenUsage?.outputTokens == 800)
+        #expect(parsed.tokenUsage?.reasoningOutputTokens == 400)
+        #expect(parsed.tokenUsage?.totalTokens == 120_800)
+    }
+
+    @Test
     func extractsToolCallAndToolOutputWithoutRetainingRawPayload() throws {
         let parser = CodexRolloutTelemetryParser()
         let toolCallLine = CodexRolloutImportedLine(
