@@ -1,6 +1,6 @@
 # Bmux Context Efficiency: Current Status
 
-Last updated: 2026-07-15
+Last updated: 2026-07-16
 
 This file is the live handoff index for the context-efficiency roadmap. Read it before choosing work, and update it at the end of every context-efficiency slice.
 
@@ -46,27 +46,26 @@ Expected branch:
 
 Latest completed implementation HEAD:
 
-- `3286c182d559311ec50a72b149ba08eac68302f2`
+- `8657978002e878a3c3ece54566aa8c5006b643bb`
 
 The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
 
 Latest completed implementation slice:
 
-- `3e7de1343 Add rollout truncation import regression`
-- `3286c182d Reset rollout source imports after truncation`
+- `865797800 Handle non-string rollout tool payloads`
 
 Behavior in that slice:
 
-- Importing a rollout source now checks fresh filesystem attributes instead of relying on cached URL resource values.
-- When a source shrinks below the stored cursor, the importer resets the cursor.
-- On reset, previously imported rows for that `source_path` are deleted before reimport.
-- Stale rollout events, token telemetry, model calls, parser errors, tool calls, tool outputs, and orphaned thread rows no longer pollute inspection reports or day summaries.
-- If an affected thread still has rows from other sources, counters are recalculated from remaining stored rows.
+- Tool-call argument payloads that arrive as JSON objects or arrays now still record serialized argument byte counts.
+- Tool-call argument objects can summarize command arrays stored under `cmd`, `command`, or `script` without retaining raw arguments.
+- Tool-output payloads that arrive as JSON objects or arrays now record serialized output byte counts.
+- Tool-output marker extraction still counts bmux reduction metadata such as original token counts and raw-output references when those markers appear inside nested JSON output strings.
 
 Files changed in the latest slice:
 
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Store/ContextEfficiencyStore.swift`
-- `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutCommandSummary.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutTelemetryParser.swift`
+- `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/CodexRolloutTelemetryParserTests.swift`
 
 ## Good Next Phase 2 Targets
 
@@ -77,7 +76,6 @@ Good next targets:
 1. Defensive parser behavior for unstable rollout fields:
    - additional token usage field variants;
    - unexpected object shapes;
-   - non-string tool-call argument and output shapes;
    - missing or malformed timestamps.
 2. Import status and error-reporting edge cases:
    - bounded counts only;
