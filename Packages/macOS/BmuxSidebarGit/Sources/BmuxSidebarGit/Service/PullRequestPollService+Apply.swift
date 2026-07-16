@@ -238,6 +238,7 @@ extension PullRequestPollService {
     // MARK: Tracking bookkeeping
 
     func pruneWorkspacePullRequestTracking(validKeys: Set<WorkspaceGitProbeKey>) {
+        workspacePullRequestActiveKeys = workspacePullRequestActiveKeys.filter { validKeys.contains($0) }
         workspacePullRequestNextPollAtByKey = workspacePullRequestNextPollAtByKey.filter { validKeys.contains($0.key) }
         workspacePullRequestProbeStateByKey = workspacePullRequestProbeStateByKey.filter { validKeys.contains($0.key) }
         workspacePullRequestLastTerminalStateRefreshAtByKey = workspacePullRequestLastTerminalStateRefreshAtByKey.filter { validKeys.contains($0.key) }
@@ -250,6 +251,7 @@ extension PullRequestPollService {
     }
 
     func clearWorkspacePullRequestTracking(for key: WorkspaceGitProbeKey) {
+        workspacePullRequestActiveKeys.remove(key)
         workspacePullRequestNextPollAtByKey.removeValue(forKey: key)
         workspacePullRequestProbeStateByKey.removeValue(forKey: key)
         workspacePullRequestLastTerminalStateRefreshAtByKey.removeValue(forKey: key)
@@ -264,6 +266,7 @@ extension PullRequestPollService {
     }
 
     public func clearWorkspacePullRequestTracking(workspaceId: UUID) {
+        workspacePullRequestActiveKeys = workspacePullRequestActiveKeys.filter { $0.workspaceId != workspaceId }
         workspacePullRequestNextPollAtByKey = workspacePullRequestNextPollAtByKey.filter { $0.key.workspaceId != workspaceId }
         workspacePullRequestProbeStateByKey = workspacePullRequestProbeStateByKey.filter { $0.key.workspaceId != workspaceId }
         workspacePullRequestLastTerminalStateRefreshAtByKey = workspacePullRequestLastTerminalStateRefreshAtByKey.filter { $0.key.workspaceId != workspaceId }
@@ -288,6 +291,7 @@ extension PullRequestPollService {
     public func resetWorkspacePullRequestRefreshState() {
         workspacePullRequestRefreshTask?.cancel()
         workspacePullRequestRefreshTask = nil
+        workspacePullRequestActiveKeys.removeAll()
         workspacePullRequestProbeStateByKey.removeAll()
         workspacePullRequestNextPollAtByKey.removeAll()
         workspacePullRequestLastTerminalStateRefreshAtByKey.removeAll()

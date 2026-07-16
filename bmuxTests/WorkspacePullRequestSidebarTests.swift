@@ -920,7 +920,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         )
     }
 
-    func testLegacyHiddenPullRequestsSettingStillSchedulesPullRequestPollingFromBranchReports() throws {
+    func testBranchReportsDoNotActivatePullRequestPolling() throws {
         let defaults = UserDefaults.standard
         let previousWatchGitStatus = defaults.object(forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
         let previousShowPullRequests = defaults.object(forKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey)
@@ -946,8 +946,8 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         XCTAssertEqual(workspace.panelGitBranches[panelId]?.branch, "issue-2746-rate-limit")
         XCTAssertEqual(
             manager.workspacePullRequestTrackedPanelIdsForTesting(workspaceId: workspace.id),
-            Set([panelId]),
-            "Branch reports should arm PR polling even when the legacy sidebar.showPullRequests setting is false."
+            [],
+            "Branch reports alone must not arm PR polling; the workspace tab PR badge should wait for explicit PR work."
         )
     }
 

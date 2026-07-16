@@ -27,8 +27,8 @@ public protocol SidebarGitMetadataServing: AnyObject {
     /// Records a trusted remote panel directory and clears stale branch/PR
     /// projection before rescheduling probes for the remote path.
     func updateRemoteSurfaceDirectory(workspaceId: UUID, panelId: UUID, directory: String, displayLabel: String?)
-    /// Applies an externally reported branch (e.g. OSC sequence) and
-    /// reschedules probes and PR refresh.
+    /// Applies an externally reported branch (e.g. OSC sequence), reschedules
+    /// git probes, and continues PR refresh only for PR-active panels.
     func updateSurfaceGitBranch(workspaceId: UUID, panelId: UUID, branch: String, isDirty: Bool?)
     /// Clears a panel's branch/badge state and re-probes the directory.
     func clearSurfaceGitBranch(workspaceId: UUID, panelId: UUID)

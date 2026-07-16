@@ -81,11 +81,13 @@ extension SidebarGitMetadataService {
                 }
                 return
             }
-            pullRequestProbing.scheduleWorkspacePullRequestRefresh(
-                workspaceId: workspaceId,
-                panelId: panelId,
-                reason: "directoryChange"
-            )
+            if shouldContinuePullRequestRefresh(workspaceId: workspaceId, panelId: panelId) {
+                pullRequestProbing.scheduleWorkspacePullRequestRefresh(
+                    workspaceId: workspaceId,
+                    panelId: panelId,
+                    reason: "directoryChange"
+                )
+            }
             scheduleWorkspaceGitMetadataRefreshIfPossible(
                 workspaceId: workspaceId,
                 panelId: panelId,
@@ -131,16 +133,28 @@ extension SidebarGitMetadataService {
             updateWorkspaceGitMetadataWatcher(for: probeKey, directory: directory)
             updateWorkspaceGitMetadataFallbackTimer()
         }
-        pullRequestProbing.scheduleWorkspacePullRequestRefresh(
-            workspaceId: workspaceId,
-            panelId: panelId,
-            reason: "branchChange"
-        )
+        if shouldContinuePullRequestRefresh(workspaceId: workspaceId, panelId: panelId) {
+            pullRequestProbing.scheduleWorkspacePullRequestRefresh(
+                workspaceId: workspaceId,
+                panelId: panelId,
+                reason: "branchChange"
+            )
+        }
         scheduleWorkspaceGitMetadataRefreshIfPossible(
             workspaceId: workspaceId,
             panelId: panelId,
             reason: "branchChange"
         )
+    }
+
+    func shouldContinuePullRequestRefresh(workspaceId: UUID, panelId: UUID) -> Bool {
+        guard let host else { return false }
+        if host.panelPullRequestBadge(workspaceId: workspaceId, panelId: panelId) != nil {
+            return true
+        }
+        return pullRequestProbing
+            .workspacePullRequestTrackedPanelIds(workspaceId: workspaceId)
+            .contains(panelId)
     }
 
     public func clearSurfaceGitBranch(workspaceId: UUID, panelId: UUID) {

@@ -127,7 +127,8 @@ extension PullRequestPollService {
     // MARK: Test seams
 
     public func workspacePullRequestTrackedPanelIds(workspaceId: UUID) -> Set<UUID> {
-        let probeKeys = Set(workspacePullRequestProbeStateByKey.keys.filter { $0.workspaceId == workspaceId })
+        let probeKeys = Set(workspacePullRequestActiveKeys.filter { $0.workspaceId == workspaceId })
+            .union(workspacePullRequestProbeStateByKey.keys.filter { $0.workspaceId == workspaceId })
             .union(workspacePullRequestNextPollAtByKey.keys.filter { $0.workspaceId == workspaceId })
             .union(workspacePullRequestLastTerminalStateRefreshAtByKey.keys.filter { $0.workspaceId == workspaceId })
             .union(workspacePullRequestTransientFailureCountByKey.keys.filter { $0.workspaceId == workspaceId })

@@ -89,6 +89,45 @@ import BmuxGit
         #expect(host.workspaces[0].state.panels[panelId]?.badge?.isStale == false)
     }
 
+    /// Plain branch updates do not activate PR polling; the user has to do PR
+    /// work in this panel first.
+    @Test func branchChangeScheduleDoesNotActivatePollingWithoutPullRequestContext() async throws {
+        let host = RecordingSidebarGitHost()
+        host.pollingEnabled = true
+        let (workspaceId, panelId) = host.addWorkspace(panelDirectory: nil)
+        host.workspaces[0].state.panels[panelId]?.branch = SidebarPanelGitBranch(branch: "feature/x", isDirty: false)
+        let clock = ManualGitPollClock()
+        let service = makeService(host: host, clock: clock)
+
+        service.scheduleWorkspacePullRequestRefresh(
+            workspaceId: workspaceId,
+            panelId: panelId,
+            reason: "branchChange"
+        )
+
+        #expect(service.workspacePullRequestTrackedPanelIds(workspaceId: workspaceId).isEmpty)
+        #expect(await clock.recordedDurations.isEmpty)
+    }
+
+    /// Explicit PR commands activate polling for that panel even before a badge
+    /// is known.
+    @Test func commandHintActivatesPollingWithoutExistingBadge() throws {
+        let host = RecordingSidebarGitHost()
+        host.pollingEnabled = true
+        let (workspaceId, panelId) = host.addWorkspace(panelDirectory: nil)
+        host.workspaces[0].state.panels[panelId]?.branch = SidebarPanelGitBranch(branch: "feature/x", isDirty: false)
+        let service = makeService(host: host, clock: ManualGitPollClock())
+
+        service.handleWorkspacePullRequestCommandHint(
+            workspaceId: workspaceId,
+            panelId: panelId,
+            action: "view",
+            target: nil
+        )
+
+        #expect(service.workspacePullRequestTrackedPanelIds(workspaceId: workspaceId) == [panelId])
+    }
+
     /// A hint whose target names a different PR number does not reconcile.
     @Test func mismatchedCommandHintTargetIsIgnored() async throws {
         let host = RecordingSidebarGitHost()

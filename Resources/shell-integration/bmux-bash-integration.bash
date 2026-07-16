@@ -361,6 +361,8 @@ _BMUX_PR_NO_PR_BRANCH="${_BMUX_PR_NO_PR_BRANCH:-}"
 _BMUX_PR_POLL_INTERVAL="${_BMUX_PR_POLL_INTERVAL:-45}"
 _BMUX_PR_FORCE="${_BMUX_PR_FORCE:-0}"
 _BMUX_PR_DEBUG="${_BMUX_PR_DEBUG:-0}"
+_BMUX_PR_WATCH_ACTIVATED="${_BMUX_PR_WATCH_ACTIVATED:-0}"
+_BMUX_PR_WATCH_SCOPE="${_BMUX_PR_WATCH_SCOPE:-}"
 _BMUX_ASYNC_JOB_TIMEOUT="${_BMUX_ASYNC_JOB_TIMEOUT:-20}"
 _BMUX_LAST_PR_ACTION="${_BMUX_LAST_PR_ACTION:-}"
 _BMUX_LAST_PR_TARGET="${_BMUX_LAST_PR_TARGET:-}"
@@ -483,6 +485,8 @@ _bmux_tmux_refresh_bmux_environment() {
         _BMUX_GIT_HEAD_PATH=""
         _BMUX_GIT_HEAD_SIGNATURE=""
         _BMUX_PR_FORCE=1
+        _BMUX_PR_WATCH_ACTIVATED=0
+        _BMUX_PR_WATCH_SCOPE=""
         _bmux_stop_pr_poll_loop
     fi
 }
@@ -528,6 +532,34 @@ _bmux_git_resolve_git_dir() {
     head_path="$(_bmux_git_resolve_head_path "$repo_path" 2>/dev/null || true)"
     [[ -n "$head_path" ]] || return 1
     dirname "$head_path"
+}
+
+_bmux_pr_watch_scope_for_path() {
+    local repo_path="${1:-$PWD}"
+    local head_path=""
+    head_path="$(_bmux_git_resolve_head_path "$repo_path" 2>/dev/null || true)"
+    if [[ -n "$head_path" ]]; then
+        printf '%s\n' "$head_path"
+    else
+        printf '%s\n' "$repo_path"
+    fi
+}
+
+_bmux_activate_pr_watch_for_path() {
+    local repo_path="${1:-$PWD}"
+    local scope=""
+    scope="$(_bmux_pr_watch_scope_for_path "$repo_path" 2>/dev/null || true)"
+    [[ -n "$scope" ]] || return 0
+    _BMUX_PR_WATCH_ACTIVATED=1
+    _BMUX_PR_WATCH_SCOPE="$scope"
+}
+
+_bmux_pr_watch_is_active_for_path() {
+    [[ "${_BMUX_PR_WATCH_ACTIVATED:-0}" == "1" ]] || return 1
+    local repo_path="${1:-$PWD}"
+    local scope=""
+    scope="$(_bmux_pr_watch_scope_for_path "$repo_path" 2>/dev/null || true)"
+    [[ -n "$scope" && "$scope" == "$_BMUX_PR_WATCH_SCOPE" ]]
 }
 
 _bmux_git_head_signature() {
@@ -791,6 +823,8 @@ _bmux_emit_pr_command_hint() {
         local quoted_target="${_BMUX_LAST_PR_TARGET//\"/\\\"}"
         payload+=" --target=\"$quoted_target\""
     fi
+    _bmux_activate_pr_watch_for_path "$PWD"
+    _bmux_pr_request_probe
     _bmux_send_bg "$payload"
     _BMUX_LAST_PR_ACTION=""
     _BMUX_LAST_PR_TARGET=""
@@ -1131,6 +1165,11 @@ _bmux_report_pr_for_path() {
     [[ -S "$BMUX_SOCKET_PATH" ]] || return 0
     [[ -n "$BMUX_TAB_ID" ]] || return 0
     [[ -n "$BMUX_PANEL_ID" ]] || return 0
+    if ! _bmux_pr_watch_is_active_for_path "$repo_path"; then
+        _bmux_pr_cache_clear
+        _bmux_clear_pr_for_panel
+        return 0
+    fi
 
     local branch repo_slug="" gh_output="" gh_error="" err_file="" gh_status number state url status_opt=""
     local now prefix="" branch_file="" repo_file="" result_file="" timestamp_file="" no_pr_branch_file=""
@@ -1334,6 +1373,11 @@ _bmux_start_pr_poll_loop() {
     local force_restart="${2:-0}"
     local watch_shell_pid="$$"
     local interval="${_BMUX_PR_POLL_INTERVAL:-45}"
+
+    if ! _bmux_pr_watch_is_active_for_path "$watch_pwd"; then
+        _bmux_stop_pr_poll_loop
+        return 0
+    fi
 
     if [[ "$force_restart" != "1" && "$watch_pwd" == "$_BMUX_PR_POLL_PWD" && -n "$_BMUX_PR_POLL_PID" ]] \
         && kill -0 "$_BMUX_PR_POLL_PID" 2>/dev/null; then
@@ -1577,6 +1621,8 @@ _bmux_prompt_command() {
         _BMUX_GIT_HEAD_SIGNATURE=""
         _BMUX_GIT_LAST_PWD=""
         _BMUX_PR_FORCE=0
+        _BMUX_PR_WATCH_ACTIVATED=0
+        _BMUX_PR_WATCH_SCOPE=""
         _BMUX_LAST_PR_ACTION=""
         _BMUX_LAST_PR_TARGET=""
         _bmux_clear_pr_command_hint_file

@@ -209,8 +209,8 @@ import BmuxGit
     }
 
     /// A repository probe projects the branch (with dirty flag) onto the
-    /// panel and, with PR polling enabled, schedules a PR refresh.
-    @Test func repositorySnapshotProjectsBranchAndSchedulesPullRequestRefresh() async throws {
+    /// panel, but a plain branch snapshot does not activate PR polling.
+    @Test func repositorySnapshotProjectsBranchWithoutActivatingPullRequestRefresh() async throws {
         let host = RecordingSidebarGitHost()
         host.pollingEnabled = true
         let (workspaceId, panelId) = host.addWorkspace(panelDirectory: "/tmp/repo")
@@ -241,9 +241,7 @@ import BmuxGit
             }
         })
         #expect(host.workspaces[0].state.panels[panelId]?.branch == SidebarPanelGitBranch(branch: "feature/x", isDirty: true))
-        #expect(pullRequestProbing.scheduledRefreshes.contains {
-            $0.workspaceId == workspaceId && $0.panelId == panelId && $0.reason == "localGitProbe"
-        })
+        #expect(pullRequestProbing.scheduledRefreshes.isEmpty)
     }
 
     /// Reapplying the same branch from a filesystem-triggered git probe keeps
@@ -291,10 +289,10 @@ import BmuxGit
     }
 
     /// Restored sessions can already have a branch projected before the first
-    /// local git probe runs. If the PR poller has no tracking state yet, that
-    /// same-branch snapshot must still seed one refresh.
+    /// local git probe runs. That same-branch snapshot must not seed PR polling
+    /// unless the panel is already PR-active.
     @Test(.timeLimit(.minutes(1)))
-    func restoredKnownBranchSnapshotSeedsPullRequestRefreshWhenUntracked() async throws {
+    func restoredKnownBranchSnapshotDoesNotActivatePullRequestRefreshWhenUntracked() async throws {
         let host = RecordingSidebarGitHost()
         host.pollingEnabled = true
         let (workspaceId, panelId) = host.addWorkspace(panelDirectory: "/tmp/repo")
@@ -320,13 +318,7 @@ import BmuxGit
         await clock.waitForSleeper()
         await clock.resumeNext()
         #expect(await reader.waitForTrackedPathEventGenerationProbe())
-        #expect(await waitUntil { pullRequestProbing.scheduledRefreshes.count == 1 })
-
-        #expect(pullRequestProbing.scheduledRefreshes.count == 1)
-        let scheduledRefresh = try #require(pullRequestProbing.scheduledRefreshes.first)
-        #expect(scheduledRefresh.workspaceId == workspaceId)
-        #expect(scheduledRefresh.panelId == panelId)
-        #expect(scheduledRefresh.reason == "localGitProbe")
+        #expect(pullRequestProbing.scheduledRefreshes.isEmpty)
     }
 
     /// A filesystem event that arrives while a probe is already in flight is a

@@ -52,6 +52,7 @@ public final class PullRequestPollService: PullRequestProbing {
     var workspacePullRequestNextPollAtByKey: [WorkspaceGitProbeKey: Date] = [:]
     var workspacePullRequestLastTerminalStateRefreshAtByKey: [WorkspaceGitProbeKey: Date] = [:]
     var workspacePullRequestTransientFailureCountByKey: [WorkspaceGitProbeKey: Int] = [:]
+    var workspacePullRequestActiveKeys: Set<WorkspaceGitProbeKey> = []
     var workspacePullRequestRepoCacheBySlug: [String: WorkspacePullRequestRepoCacheEntry] = [:]
     var workspacePullRequestPollTask: Task<Void, Never>?
     var workspacePullRequestRefreshTask: Task<Void, Never>?
@@ -177,16 +178,25 @@ public final class PullRequestPollService: PullRequestProbing {
         for workspaceId in host.orderedWorkspaceIds() {
             let branchPanelIds = host.panelGitBranchPanelIds(in: workspaceId)
             let badgePanelIds = host.panelPullRequestPanelIds(in: workspaceId)
-            for panelId in branchPanelIds.union(badgePanelIds) {
+            let activePanelIds = workspacePullRequestActiveKeys
+                .filter { $0.workspaceId == workspaceId }
+                .map(\.panelId)
+            for panelId in branchPanelIds.union(badgePanelIds).union(activePanelIds) {
+                guard host.panelExists(workspaceId: workspaceId, panelId: panelId) else { continue }
                 guard !host.shouldSkipLocalGitMetadata(workspaceId: workspaceId, panelId: panelId) else { continue }
                 let key = WorkspaceGitProbeKey(workspaceId: workspaceId, panelId: panelId)
+                guard isWorkspacePullRequestRefreshActivated(
+                    for: key,
+                    currentPullRequest: host.panelPullRequestBadge(workspaceId: workspaceId, panelId: panelId)
+                ) else {
+                    continue
+                }
                 validKeys.insert(key)
                 let branch = GitMetadataService.normalizedBranchName(
                     host.panelGitBranch(workspaceId: workspaceId, panelId: panelId)?.branch
                         ?? host.panelPullRequestBadge(workspaceId: workspaceId, panelId: panelId)?.branch
                 )
                 guard let branch else {
-                    clearWorkspacePullRequestTracking(for: key)
                     continue
                 }
 
@@ -305,6 +315,21 @@ public final class PullRequestPollService: PullRequestProbing {
             clearWorkspacePullRequestMetadata(for: key)
             return
         }
+        let currentPullRequest = host?.panelPullRequestBadge(workspaceId: workspaceId, panelId: panelId)
+        if reason.hasPrefix("commandHint:") {
+            workspacePullRequestActiveKeys.insert(key)
+        }
+        guard shouldScheduleWorkspacePullRequestRefresh(
+            key: key,
+            reason: reason,
+            currentPullRequest: currentPullRequest
+        ) else {
+            return
+        }
+        guard host?.panelGitBranch(workspaceId: workspaceId, panelId: panelId) != nil || currentPullRequest?.branch != nil else {
+            updateWorkspacePullRequestPollTimer()
+            return
+        }
         let shouldBypassRepoCache = !PullRequestProbeService.refreshAllowsRepoCache(reason: reason)
         if shouldBypassRepoCache, workspacePullRequestRefreshTask != nil {
             workspacePullRequestFollowUpShouldBypassRepoCache = true
@@ -324,5 +349,31 @@ public final class PullRequestPollService: PullRequestProbing {
         )
 #endif
         refreshTrackedWorkspacePullRequestsIfNeeded(reason: reason)
+    }
+
+    func shouldScheduleWorkspacePullRequestRefresh(
+        key: WorkspaceGitProbeKey,
+        reason: String,
+        currentPullRequest: SidebarPullRequestBadge?
+    ) -> Bool {
+        if reason.hasPrefix("commandHint:") {
+            return true
+        }
+        return isWorkspacePullRequestRefreshActivated(for: key, currentPullRequest: currentPullRequest)
+    }
+
+    func isWorkspacePullRequestRefreshActivated(
+        for key: WorkspaceGitProbeKey,
+        currentPullRequest: SidebarPullRequestBadge?
+    ) -> Bool {
+        currentPullRequest != nil || hasWorkspacePullRequestRefreshTracking(for: key)
+    }
+
+    func hasWorkspacePullRequestRefreshTracking(for key: WorkspaceGitProbeKey) -> Bool {
+        workspacePullRequestActiveKeys.contains(key) ||
+        workspacePullRequestProbeStateByKey[key] != nil ||
+        workspacePullRequestNextPollAtByKey[key] != nil ||
+        workspacePullRequestLastTerminalStateRefreshAtByKey[key] != nil ||
+        workspacePullRequestTransientFailureCountByKey[key] != nil
     }
 }
