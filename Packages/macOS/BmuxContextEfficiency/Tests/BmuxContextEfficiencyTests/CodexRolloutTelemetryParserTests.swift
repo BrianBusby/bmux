@@ -83,6 +83,30 @@ struct CodexRolloutTelemetryParserTests {
     }
 
     @Test
+    func missingTimestampRecordsDiagnosticWithoutDroppingTelemetryFacts() throws {
+        let parser = CodexRolloutTelemetryParser()
+        let line = CodexRolloutImportedLine(
+            text: """
+            {"type":"event_msg","payload":{"type":"token_usage","threadID":"thread-a","tokenUsage":{"inputTokens":42,"totalTokens":42}}}
+            """,
+            sourceReference: ContextEfficiencySourceReference(
+                sourcePath: "/tmp/rollout-thread-a.jsonl",
+                byteOffset: 760,
+                lineNumber: 4,
+                parserVersion: CodexRolloutTelemetryParser.parserVersion
+            )
+        )
+
+        let parsed = parser.parse(line: line, fallbackThreadID: "fallback")
+
+        #expect(parsed.kind == .tokenTelemetryObserved)
+        #expect(parsed.threadID == "thread-a")
+        #expect(parsed.timestamp == nil)
+        #expect(parsed.tokenUsage?.inputTokens == 42)
+        #expect(parsed.parserErrorMessage == "missing rollout event timestamp")
+    }
+
+    @Test
     func extractsToolCallAndToolOutputWithoutRetainingRawPayload() throws {
         let parser = CodexRolloutTelemetryParser()
         let toolCallLine = CodexRolloutImportedLine(

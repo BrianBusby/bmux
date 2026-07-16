@@ -153,6 +153,31 @@ struct ContextEfficiencyStoreTests {
     }
 
     @Test
+    func importsMissingTimestampTelemetryWithBoundedParserDiagnostic() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let databaseURL = directory.appendingPathComponent("context-efficiency.sqlite")
+        let rolloutURL = directory.appendingPathComponent("rollout-thread-a.jsonl")
+        try Data(missingTimestampRollout.utf8).write(to: rolloutURL)
+
+        let store = try ContextEfficiencyStore(databaseURL: databaseURL)
+        let result = try await store.importRollout(at: rolloutURL, fallbackThreadID: "thread-a")
+
+        #expect(result.lineCount == 1)
+        #expect(result.modelCallCount == 1)
+        #expect(result.parserErrorCount == 1)
+
+        let inspection = try await store.inspectThread("codex:thread-a")
+        #expect(inspection.tokenTelemetryEvents.count == 1)
+        #expect(inspection.tokenTelemetryEvents.first?.timestamp == nil)
+        #expect(inspection.modelCalls.count == 1)
+        #expect(inspection.modelCalls.first?.timestamp == nil)
+        #expect(inspection.parserErrors.count == 1)
+        #expect(inspection.parserErrors.first?.message == "missing rollout event timestamp")
+        #expect(inspection.parserErrors.first?.sourceReference.lineNumber == 1)
+    }
+
+    @Test
     func encodedReportsExposeCompactFactsAndSourceReferences() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -289,6 +314,12 @@ struct ContextEfficiencyStoreTests {
     private var replacementRollout: String {
         """
         {"type":"event_msg","timestamp":"2026-07-15T12:00:00Z","payload":{"type":"token_usage","threadID":"thread-b","tokenUsage":{"inputTokens":40,"cachedInputTokens":30,"outputTokens":2,"totalTokens":42}}}
+        """ + "\n"
+    }
+
+    private var missingTimestampRollout: String {
+        """
+        {"type":"event_msg","payload":{"type":"token_usage","threadID":"thread-a","tokenUsage":{"inputTokens":42,"totalTokens":42}}}
         """ + "\n"
     }
 
