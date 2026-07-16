@@ -31,7 +31,15 @@ struct CodexTokenUsageExtractor: Sendable {
 
     private func usage(from dictionary: [String: Any]) -> ContextEfficiencyTokenUsage {
         ContextEfficiencyTokenUsage(
-            inputTokens: int64Value(for: ["input_tokens", "inputTokens"], in: dictionary),
+            inputTokens: int64Value(
+                for: [
+                    "input_tokens",
+                    "inputTokens",
+                    "prompt_tokens",
+                    "promptTokens",
+                ],
+                in: dictionary
+            ),
             cachedInputTokens: int64Value(
                 for: [
                     "cached_input_tokens",
@@ -42,6 +50,15 @@ struct CodexTokenUsageExtractor: Sendable {
                     "cacheReadInputTokens",
                 ],
                 in: dictionary
+            ) ?? nestedInt64Value(
+                for: ["cached_tokens", "cachedTokens"],
+                in: [
+                    "input_tokens_details",
+                    "inputTokensDetails",
+                    "prompt_tokens_details",
+                    "promptTokensDetails",
+                ],
+                dictionary: dictionary
             ),
             nonCachedInputTokens: int64Value(
                 for: [
@@ -52,7 +69,15 @@ struct CodexTokenUsageExtractor: Sendable {
                 ],
                 in: dictionary
             ),
-            outputTokens: int64Value(for: ["output_tokens", "outputTokens"], in: dictionary),
+            outputTokens: int64Value(
+                for: [
+                    "output_tokens",
+                    "outputTokens",
+                    "completion_tokens",
+                    "completionTokens",
+                ],
+                in: dictionary
+            ),
             reasoningOutputTokens: int64Value(
                 for: [
                     "reasoning_output_tokens",
@@ -61,6 +86,15 @@ struct CodexTokenUsageExtractor: Sendable {
                     "reasoningTokens",
                 ],
                 in: dictionary
+            ) ?? nestedInt64Value(
+                for: ["reasoning_tokens", "reasoningTokens"],
+                in: [
+                    "output_tokens_details",
+                    "outputTokensDetails",
+                    "completion_tokens_details",
+                    "completionTokensDetails",
+                ],
+                dictionary: dictionary
             ),
             totalTokens: int64Value(
                 for: [
@@ -92,6 +126,20 @@ struct CodexTokenUsageExtractor: Sendable {
                 in: dictionary
             )
         )
+    }
+
+    private func nestedInt64Value(
+        for keys: [String],
+        in containerKeys: [String],
+        dictionary: [String: Any]
+    ) -> Int64? {
+        for containerKey in containerKeys {
+            if let nested = dictionary[containerKey] as? [String: Any],
+               let value = int64Value(for: keys, in: nested) {
+                return value
+            }
+        }
+        return nil
     }
 
     private func int64Value(for keys: [String], in dictionary: [String: Any]) -> Int64? {
