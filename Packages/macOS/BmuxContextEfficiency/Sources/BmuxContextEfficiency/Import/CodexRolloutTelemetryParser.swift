@@ -25,7 +25,7 @@ struct CodexRolloutTelemetryParser: Sendable {
             return parserError(line: line, fallbackThreadID: fallbackThreadID, message: "line is not valid JSON")
         }
 
-        let payload = object["payload"] as? [String: Any]
+        let payload = dictionaryPayload(from: object["payload"])
         let rolloutType = object["type"] as? String
         let payloadType = payload?["type"] as? String
         let threadID = threadID(from: object, payload: payload) ?? fallbackThreadID
@@ -48,6 +48,18 @@ struct CodexRolloutTelemetryParser: Sendable {
             reasoningEffort: stringValue(for: ["reasoning_effort", "reasoningEffort", "reasoning"], in: [object, payload]),
             cwd: stringValue(for: ["cwd", "working_directory", "workingDirectory"], in: [object, payload])
         )
+    }
+
+    private func dictionaryPayload(from value: Any?) -> [String: Any]? {
+        if let dictionary = value as? [String: Any] {
+            return dictionary
+        }
+        guard let string = value as? String,
+              let data = string.trimmingCharacters(in: .whitespacesAndNewlines).data(using: .utf8),
+              let dictionary = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        return dictionary
     }
 
     private func parserError(
