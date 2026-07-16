@@ -190,6 +190,53 @@ struct CodexRolloutTelemetryParserTests {
     }
 
     @Test
+    func extractsToolFactsFromArrayPayloadObjects() throws {
+        let parser = CodexRolloutTelemetryParser()
+        let line = CodexRolloutImportedLine(
+            text: """
+            {"type":"response_item","payload":["unexpected",{"metadata":"ignored"},{"type":"function_call","call_id":"call-array-payload","name":"shell","arguments":{"cmd":["swift","test","--package-path","Packages/macOS/BmuxContextEfficiency"],"timeout_ms":30000}}]}
+            """,
+            sourceReference: ContextEfficiencySourceReference(
+                sourcePath: "/tmp/rollout-thread-a.jsonl",
+                byteOffset: 680,
+                lineNumber: 4,
+                parserVersion: CodexRolloutTelemetryParser.parserVersion
+            )
+        )
+
+        let parsed = parser.parse(line: line, fallbackThreadID: "thread-a")
+
+        #expect(parsed.kind == .toolCallObserved)
+        #expect(parsed.toolCall?.callID == "call-array-payload")
+        #expect(parsed.toolCall?.toolName == "shell")
+        #expect(parsed.toolCall?.commandSummary == "swift test --package-path Packages/macOS/BmuxContextEfficiency")
+        #expect(parsed.toolCall?.argumentsByteCount ?? 0 > 0)
+    }
+
+    @Test
+    func scalarPayloadShapesRemainNonFatal() throws {
+        let parser = CodexRolloutTelemetryParser()
+        let line = CodexRolloutImportedLine(
+            text: """
+            {"type":"response_item","payload":42}
+            """,
+            sourceReference: ContextEfficiencySourceReference(
+                sourcePath: "/tmp/rollout-thread-a.jsonl",
+                byteOffset: 920,
+                lineNumber: 5,
+                parserVersion: CodexRolloutTelemetryParser.parserVersion
+            )
+        )
+
+        let parsed = parser.parse(line: line, fallbackThreadID: "thread-a")
+
+        #expect(parsed.kind == .unknownImported)
+        #expect(parsed.parserErrorMessage == nil)
+        #expect(parsed.toolCall == nil)
+        #expect(parsed.toolOutput == nil)
+    }
+
+    @Test
     func malformedJSONBecomesParserErrorEvent() {
         let parser = CodexRolloutTelemetryParser()
         let line = CodexRolloutImportedLine(
