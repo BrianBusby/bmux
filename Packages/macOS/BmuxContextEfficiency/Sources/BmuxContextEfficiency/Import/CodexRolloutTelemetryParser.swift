@@ -141,9 +141,18 @@ struct CodexRolloutTelemetryParser: Sendable {
             if let number = Double(string) {
                 return date(fromEpoch: number)
             }
-            return ISO8601DateFormatter().date(from: string)
+            return iso8601Date(from: string)
         }
         return nil
+    }
+
+    private func iso8601Date(from string: String) -> Date? {
+        if let date = ISO8601DateFormatter().date(from: string) {
+            return date
+        }
+        let fractionalFormatter = ISO8601DateFormatter()
+        fractionalFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return fractionalFormatter.date(from: string)
     }
 
     private func date(fromEpoch value: Double) -> Date {
