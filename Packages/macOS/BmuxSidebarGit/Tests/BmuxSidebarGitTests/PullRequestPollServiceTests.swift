@@ -223,6 +223,44 @@ import BmuxGit
         #expect(service.workspacePullRequestTrackedPanelIds(workspaceId: workspaceId).isEmpty)
     }
 
+    @Test func applySkipsResolvedResultWhenPanelBranchChangedDuringRefresh() throws {
+        let host = RecordingSidebarGitHost()
+        host.pollingEnabled = true
+        let (workspaceId, panelId) = host.addWorkspace(panelDirectory: nil)
+        host.workspaces[0].state.panels[panelId]?.branch = SidebarPanelGitBranch(branch: "main", isDirty: false)
+        let service = makeService(host: host, clock: ManualGitPollClock())
+        let key = WorkspaceGitProbeKey(workspaceId: workspaceId, panelId: panelId)
+        service.workspacePullRequestProbeStateByKey[key] = .inFlight(rerunPending: false)
+        service.workspacePullRequestNextPollAtByKey[key] = .distantPast
+
+        service.applyWorkspacePullRequestRefreshResults(
+            [
+                WorkspacePullRequestRefreshResult(
+                    workspaceId: workspaceId,
+                    panelId: panelId,
+                    resolution: .resolved(WorkspacePullRequestResolvedItem(
+                        number: 99,
+                        urlString: "https://github.com/o/r/pull/99",
+                        statusRawValue: PullRequestStatus.open.rawValue,
+                        branch: "feature/x"
+                    )),
+                    usedCachedRepoData: false
+                ),
+            ],
+            repoResults: [:],
+            requestedKeys: [key],
+            now: Date(),
+            reason: "test"
+        )
+
+        #expect(host.workspaces[0].state.panels[panelId]?.badge == nil)
+        #expect(!host.events.contains { event in
+            if case .pullRequestBadge(_, _, let badge) = event { return badge.number == 99 }
+            return false
+        })
+        #expect(service.workspacePullRequestTrackedPanelIds(workspaceId: workspaceId).isEmpty)
+    }
+
     /// Disabling polling resets all tracking and clears every badge.
     @Test func disablingPollingSettingClearsBadgesAndTracking() async throws {
         let host = RecordingSidebarGitHost()

@@ -90,6 +90,22 @@ extension PullRequestPollService {
                 panelId: result.panelId
             )
             let countsAsTerminalSweep = priorPullRequest.map { $0.status != .open } ?? false
+            if case .resolved(let resolvedPullRequest) = result.resolution {
+                let currentBranch = GitMetadataService.normalizedBranchName(
+                    host.panelGitBranch(workspaceId: result.workspaceId, panelId: result.panelId)?.branch
+                )
+                let resolvedBranch = GitMetadataService.normalizedBranchName(resolvedPullRequest.branch)
+                guard let currentBranch, resolvedBranch == currentBranch else {
+                    workspacePullRequestTransientFailureCountByKey[key] = 0
+                    workspacePullRequestLastTerminalStateRefreshAtByKey.removeValue(forKey: key)
+                    if priorPullRequest != nil {
+                        host.clearPanelPullRequest(workspaceId: result.workspaceId, panelId: result.panelId)
+                    }
+                    workspacePullRequestNextPollAtByKey[key] = .distantPast
+                    needsFollowUpPass = true
+                    continue
+                }
+            }
 
             switch result.resolution {
             case .resolved(let resolvedPullRequest):

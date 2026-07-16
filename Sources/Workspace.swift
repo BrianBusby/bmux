@@ -5161,6 +5161,12 @@ final class Workspace: Identifiable, ObservableObject {
         let existing = panelPullRequests[panelId]
         let normalizedBranch = branch?.normalizedSidebarBranchName
         let currentPanelBranch = panelGitBranches[panelId]?.branch.normalizedSidebarBranchName
+        if bindToCurrentBranch,
+           let normalizedBranch,
+           normalizedBranch != currentPanelBranch {
+            clearPanelPullRequest(panelId: panelId)
+            return
+        }
         let resolvedBranch: String? = {
             if let normalizedBranch {
                 return normalizedBranch

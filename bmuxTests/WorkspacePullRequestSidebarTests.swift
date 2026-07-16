@@ -501,6 +501,36 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         XCTAssertEqual(workspace.sidebarPullRequestsInDisplayOrder(orderedPanelIds: [panelId]), [])
     }
 
+    func testBranchScopedPullRequestUpdateIsIgnoredAfterPanelSwitchesBranches() throws {
+        let workspace = Workspace(title: "Test")
+        let panelId = UUID()
+        let staleURL = try XCTUnwrap(URL(string: "https://github.com/manaflow-ai/bmux/pull/1640"))
+
+        workspace.updatePanelGitBranch(panelId: panelId, branch: "feature/old", isDirty: false)
+        workspace.updatePanelPullRequest(
+            panelId: panelId,
+            number: 1640,
+            label: "PR",
+            url: staleURL,
+            status: .open,
+            branch: "feature/old"
+        )
+        XCTAssertEqual(workspace.panelPullRequests[panelId]?.number, 1640)
+
+        workspace.updatePanelGitBranch(panelId: panelId, branch: "main", isDirty: false)
+        workspace.updatePanelPullRequest(
+            panelId: panelId,
+            number: 1640,
+            label: "PR",
+            url: staleURL,
+            status: .open,
+            branch: "feature/old"
+        )
+
+        XCTAssertNil(workspace.panelPullRequests[panelId])
+        XCTAssertEqual(workspace.sidebarPullRequestsInDisplayOrder(orderedPanelIds: [panelId]), [])
+    }
+
     @objc(testBranchlessPRClears)
     func branchlessPullRequestProbe() {
         let workspace = Workspace(title: "Test")
