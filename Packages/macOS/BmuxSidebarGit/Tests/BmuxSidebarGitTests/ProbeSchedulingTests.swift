@@ -209,8 +209,9 @@ import BmuxGit
     }
 
     /// A repository probe projects the branch (with dirty flag) onto the
-    /// panel, but a plain branch snapshot does not activate PR polling.
-    @Test func repositorySnapshotProjectsBranchWithoutActivatingPullRequestRefresh() async throws {
+    /// panel, then seeds PR polling so a matching GitHub PR can appear on the
+    /// workspace tab even when no previous badge existed.
+    @Test func repositorySnapshotProjectsBranchAndActivatesPullRequestRefresh() async throws {
         let host = RecordingSidebarGitHost()
         host.pollingEnabled = true
         let (workspaceId, panelId) = host.addWorkspace(panelDirectory: "/tmp/repo")
@@ -241,7 +242,10 @@ import BmuxGit
             }
         })
         #expect(host.workspaces[0].state.panels[panelId]?.branch == SidebarPanelGitBranch(branch: "feature/x", isDirty: true))
-        #expect(pullRequestProbing.scheduledRefreshes.isEmpty)
+        #expect(pullRequestProbing.scheduledRefreshes.count == 1)
+        #expect(pullRequestProbing.scheduledRefreshes.first?.workspaceId == workspaceId)
+        #expect(pullRequestProbing.scheduledRefreshes.first?.panelId == panelId)
+        #expect(pullRequestProbing.scheduledRefreshes.first?.reason == "localGitProbe")
     }
 
     /// Reapplying the same branch from a filesystem-triggered git probe keeps
@@ -289,10 +293,11 @@ import BmuxGit
     }
 
     /// Restored sessions can already have a branch projected before the first
-    /// local git probe runs. That same-branch snapshot must not seed PR polling
-    /// unless the panel is already PR-active.
+    /// local git probe runs. That same-branch snapshot still seeds PR polling
+    /// when the panel is not already tracked, so restored workspaces recover
+    /// PR badges after launching a new build.
     @Test(.timeLimit(.minutes(1)))
-    func restoredKnownBranchSnapshotDoesNotActivatePullRequestRefreshWhenUntracked() async throws {
+    func restoredKnownBranchSnapshotActivatesPullRequestRefreshWhenUntracked() async throws {
         let host = RecordingSidebarGitHost()
         host.pollingEnabled = true
         let (workspaceId, panelId) = host.addWorkspace(panelDirectory: "/tmp/repo")
@@ -318,7 +323,13 @@ import BmuxGit
         await clock.waitForSleeper()
         await clock.resumeNext()
         #expect(await reader.waitForTrackedPathEventGenerationProbe())
-        #expect(pullRequestProbing.scheduledRefreshes.isEmpty)
+        #expect(await waitUntil {
+            pullRequestProbing.scheduledRefreshes.count == 1
+        })
+        #expect(pullRequestProbing.scheduledRefreshes.count == 1)
+        #expect(pullRequestProbing.scheduledRefreshes.first?.workspaceId == workspaceId)
+        #expect(pullRequestProbing.scheduledRefreshes.first?.panelId == panelId)
+        #expect(pullRequestProbing.scheduledRefreshes.first?.reason == "localGitProbe")
     }
 
     /// A filesystem event that arrives while a probe is already in flight is a
