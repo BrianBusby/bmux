@@ -46,25 +46,26 @@ Expected branch:
 
 Latest completed implementation HEAD:
 
-- `8657978002e878a3c3ece54566aa8c5006b643bb`
+- `be2b4bb760def19f40df1ccbefb642b544dc03ee`
 
 The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
 
 Latest completed implementation slice:
 
-- `865797800 Handle non-string rollout tool payloads`
+- `7d98a0f4e Add OpenAI usage detail rollout regression`
+- `be2b4bb76 Import OpenAI token usage detail fields`
 
 Behavior in that slice:
 
-- Tool-call argument payloads that arrive as JSON objects or arrays now still record serialized argument byte counts.
-- Tool-call argument objects can summarize command arrays stored under `cmd`, `command`, or `script` without retaining raw arguments.
-- Tool-output payloads that arrive as JSON objects or arrays now record serialized output byte counts.
-- Tool-output marker extraction still counts bmux reduction metadata such as original token counts and raw-output references when those markers appear inside nested JSON output strings.
+- Codex rollout token telemetry now imports OpenAI-style `prompt_tokens` as input tokens.
+- Codex rollout token telemetry now imports OpenAI-style `completion_tokens` as output tokens.
+- Nested `prompt_tokens_details.cached_tokens` and `input_tokens_details.cached_tokens` now import as cached input tokens.
+- Nested `completion_tokens_details.reasoning_tokens` and `output_tokens_details.reasoning_tokens` now import as reasoning output tokens.
+- The importer still persists compact token fact columns only; it does not store raw usage payload objects.
 
 Files changed in the latest slice:
 
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutCommandSummary.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutTelemetryParser.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexTokenUsageExtractor.swift`
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/CodexRolloutTelemetryParserTests.swift`
 
 ## Good Next Phase 2 Targets
@@ -74,7 +75,6 @@ Stay narrow and read-only. Prefer package-level Swift tests unless a CLI regress
 Good next targets:
 
 1. Defensive parser behavior for unstable rollout fields:
-   - additional token usage field variants;
    - unexpected object shapes;
    - missing or malformed timestamps.
 2. Import status and error-reporting edge cases:
