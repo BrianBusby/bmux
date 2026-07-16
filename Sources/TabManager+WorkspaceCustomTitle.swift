@@ -2,7 +2,7 @@ import Foundation
 
 extension TabManager {
     /// Sets, replaces, or clears a workspace custom title. Returns whether the
-    /// write landed (`.auto` writes are rejected over user-set titles; see
+    /// write landed (auto writes are rejected over user-set titles; see
     /// ``Workspace/setCustomTitle(_:source:)``).
     @discardableResult
     func setCustomTitle(
@@ -11,10 +11,28 @@ extension TabManager {
         source: Workspace.CustomTitleSource = .user,
         propagateToRemoteTmux: Bool = true
     ) -> Bool {
-        guard let index = tabs.firstIndex(where: { $0.id == tabId }) else { return false }
+        applyCustomTitle(
+            tabId: tabId,
+            title: title,
+            source: source,
+            propagateToRemoteTmux: propagateToRemoteTmux
+        ).applied
+    }
+
+    @discardableResult
+    func applyCustomTitle(
+        tabId: UUID,
+        title: String?,
+        source: Workspace.CustomTitleSource = .user,
+        propagateToRemoteTmux: Bool = true
+    ) -> Workspace.CustomTitleApplyOutcome {
+        guard let index = tabs.firstIndex(where: { $0.id == tabId }) else {
+            return .rejected(.targetMissing)
+        }
         let previousDisplayTitle = resolvedWorkspaceDisplayTitle(for: tabs[index])
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        let applied = tabs[index].setCustomTitle(title, source: source)
+        let outcome = tabs[index].applyCustomTitle(title, source: source)
+        let applied = outcome.applied
         if applied, selectedTabId == tabId {
             updateWindowTitle(for: tabs[index])
         }
@@ -28,7 +46,7 @@ extension TabManager {
             )
         }
         // A remote tmux mirror workspace rename propagates to `rename-session`,
-        // but only when the write landed (an `.auto` write rejected over a
+        // but only when the write landed (an auto write rejected over a
         // user-set title must not desync the remote session name).
         if applied, propagateToRemoteTmux, tabs[index].isRemoteTmuxMirror {
             AppDelegate.shared?.remoteTmuxController.handleMirrorWorkspaceRenamed(
@@ -36,7 +54,7 @@ extension TabManager {
                 title: title
             )
         }
-        return applied
+        return outcome
     }
 
     func clearCustomTitle(tabId: UUID) {

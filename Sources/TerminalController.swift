@@ -3701,7 +3701,7 @@ class TerminalController {
     }
 
     /// `workspace.set_auto_title`: applies an AI-generated title to a workspace
-    /// (and optionally one of its panels/tabs) with `.auto` provenance, so a
+    /// (and optionally one of its panels/tabs) with auto provenance, so a
     /// user-set title is never overwritten. Gated on the opt-in
     /// `workspaceAutoNamingEnabled` setting; `{"probe": true}` reads the live
     /// setting state without writing, which lets hook processes honor
@@ -3721,11 +3721,14 @@ class TerminalController {
             if let workspaceId = v2UUID(params, "workspace_id"),
                let tabManager = v2ResolveTabManager(params: params) {
                 var userOwned: Bool?
+                var source: Workspace.CustomTitleSource?
                 v2MainSync {
                     guard let workspace = tabManager.tabs.first(where: { $0.id == workspaceId }) else { return }
-                    userOwned = workspace.effectiveCustomTitleSource == .user
+                    source = workspace.effectiveCustomTitleSource
+                    userOwned = source?.isUserOwned == true
                 }
                 result["workspace_user_owned"] = v2OrNull(userOwned)
+                result["workspace_title_source"] = v2OrNull(source?.rawValue)
             }
             return .ok(result)
         }
@@ -3753,17 +3756,24 @@ class TerminalController {
               !titleRaw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return .err(code: "invalid_params", message: "Missing or invalid title", data: nil)
         }
+        guard let source = Workspace.CustomTitleSource.autoTitleSocketSource(v2String(params, "source")) else {
+            return .err(code: "invalid_params", message: "Missing or invalid title", data: nil)
+        }
         let panelId = v2UUID(params, "panel_id")
 
         let title = titleRaw.trimmingCharacters(in: .whitespacesAndNewlines)
         let panelOnlyIfMultiple = v2Bool(params, "panel_only_if_multiple") ?? false
         var found = false
         var workspaceApplied = false
+        var workspaceRejectionReason: Workspace.CustomTitleRejectionReason?
         var panelApplied: Bool?
+        var panelRejectionReason: Workspace.CustomTitleRejectionReason?
         v2MainSync {
             guard let workspace = tabManager.tabs.first(where: { $0.id == workspaceId }) else { return }
             found = true
-            workspaceApplied = tabManager.setCustomTitle(tabId: workspaceId, title: title, source: .auto)
+            let workspaceOutcome = tabManager.applyCustomTitle(tabId: workspaceId, title: title, source: source)
+            workspaceApplied = workspaceOutcome.applied
+            workspaceRejectionReason = workspaceOutcome.rejectionReason
             if let panelId {
                 // Hook payloads carry surface ids; accept either a panel id
                 // or a surface id for the tab target.
@@ -3772,7 +3782,13 @@ class TerminalController {
                     : workspace.panelIdFromSurfaceId(TabID(uuid: panelId))
                 if let resolvedPanelId,
                    !(panelOnlyIfMultiple && workspace.panels.count < 2) {
-                    panelApplied = workspace.setPanelCustomTitle(panelId: resolvedPanelId, title: title, source: .auto)
+                    let panelOutcome = workspace.applyPanelCustomTitle(
+                        panelId: resolvedPanelId,
+                        title: title,
+                        source: source
+                    )
+                    panelApplied = panelOutcome.applied
+                    panelRejectionReason = panelOutcome.rejectionReason
                 }
             }
         }
@@ -3794,8 +3810,11 @@ class TerminalController {
             "workspace_id": workspaceId.uuidString,
             "workspace_ref": v2Ref(kind: .workspace, uuid: workspaceId),
             "title": title,
+            "source": source.rawValue,
             "workspace_applied": workspaceApplied,
+            "workspace_rejection_reason": v2OrNull(workspaceRejectionReason?.rawValue),
             "panel_applied": v2OrNull(panelApplied),
+            "panel_rejection_reason": v2OrNull(panelRejectionReason?.rawValue),
             "enabled": true
         ])
     }

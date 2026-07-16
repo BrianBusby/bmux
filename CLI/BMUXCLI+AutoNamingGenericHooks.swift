@@ -143,6 +143,51 @@ extension BMUXCLI {
         }
     }
 
+    func applyPromptSubmitAutoTitle(
+        def: AgentHookDef,
+        parsedInput: ClaudeHookParsedInput,
+        workspaceId: String,
+        surfaceId: String,
+        client: SocketClient,
+        telemetry: CLISocketSentryTelemetry
+    ) {
+        guard def.name == "claude" || autoNamingSource(for: def) != nil else { return }
+        let engine = AutoNamingEngine()
+        let promptText = [parsedInput.rawObject, parsedInput.object]
+            .compactMap { $0 }
+            .flatMap { engine.extractHookMessages(fromPayloadObjects: [$0]) }
+            .last { $0.role == "user" }?
+            .text
+        guard let title = engine.sanitizeResponse(promptText, currentTitle: nil) else { return }
+        guard let probe = try? client.sendV2(
+            method: "workspace.set_auto_title",
+            params: ["probe": true, "workspace_id": workspaceId]
+        ), probe["enabled"] as? Bool == true else {
+            telemetry.breadcrumb("\(def.name)-hook.prompt-title.disabled")
+            return
+        }
+        guard probe["workspace_user_owned"] as? Bool != true else {
+            telemetry.breadcrumb("\(def.name)-hook.prompt-title.user-owned")
+            return
+        }
+        guard let payload = try? client.sendV2(method: "workspace.set_auto_title", params: [
+            "workspace_id": workspaceId,
+            "panel_id": surfaceId,
+            "panel_only_if_multiple": true,
+            "source": "auto_prompt",
+            "title": title
+        ]) else {
+            telemetry.breadcrumb("\(def.name)-hook.prompt-title.socket-failed")
+            return
+        }
+        if payload["workspace_applied"] as? Bool == true {
+            telemetry.breadcrumb("\(def.name)-hook.prompt-title.applied")
+        } else {
+            let reason = payload["workspace_rejection_reason"] as? String ?? "unknown"
+            telemetry.breadcrumb("\(def.name)-hook.prompt-title.rejected.\(reason)")
+        }
+    }
+
     func runFileBackedAutoName(
         sessionId: String,
         workspaceId: String,
@@ -276,6 +321,7 @@ extension BMUXCLI {
             "workspace_id": workspaceId,
             "panel_id": surfaceId,
             "panel_only_if_multiple": true,
+            "source": "auto_summary",
             "title": title
         ]) else {
             telemetry.breadcrumb("\(telemetryKey).socket-failed")
@@ -285,7 +331,8 @@ extension BMUXCLI {
             telemetry.breadcrumb("\(telemetryKey).applied")
             return title
         }
-        telemetry.breadcrumb("\(telemetryKey).rejected")
+        let reason = payload["workspace_rejection_reason"] as? String ?? "unknown"
+        telemetry.breadcrumb("\(telemetryKey).rejected.\(reason)")
         return previousTitle
     }
 }
