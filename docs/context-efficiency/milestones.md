@@ -25,9 +25,9 @@ No runtime behavior changes belong in this milestone.
 
 ## Milestone 2: Read-Only Codex Telemetry
 
-Status: first package-backed vertical slice implemented.
+Status: complete as of 2026-07-17.
 
-Implemented in the first slice:
+Implemented:
 
 - `Packages/macOS/BmuxContextEfficiency`
 - Streaming Codex rollout JSONL reader with byte offsets and incomplete-line carryover.
@@ -37,23 +37,22 @@ Implemented in the first slice:
 - Read-only thread inspection and day summary DTOs for future CLI/UI use.
 - Package-local Swift Testing coverage for streaming, parser, duplicate suppression, cursor resume, parser-error recovery, and report reads.
 - Workspace package grouping updated via `scripts/check-workspace-package-groups.py --write`.
-
-Still deferred:
-
 - Codex `state_N.sqlite` metadata reader.
-- App/CLI target integration.
-- `bmux context-efficiency ...` command surface.
-- JSON/Markdown/CSV export formatting.
-- Replacement of the current untracked `CLI/BMUXCLI+CodexTokenAudit.swift` prototype.
+- App/CLI target integration for the `bmux context-efficiency ...` command surface.
+- JSON diagnostics for import, inspect-thread, and summarize-day.
+- Current-build CLI regression coverage in `tests/test_context_efficiency_cli.py`.
 
-Next exact files expected to change:
+Closure decisions:
 
-- `bmux.xcodeproj/project.pbxproj` if the package is linked into the app/CLI target.
-- `CLI/bmux.swift`
-- `CLI/BMUXCLI+ContextEfficiency.swift`
-- `CLI/BMUXCLI+CodexTokenAudit.swift`
-- `Resources/Localizable.xcstrings` for any new CLI help/error strings.
-- `tests/test_context_efficiency_cli.py` or the nearest existing CLI test harness.
+- Markdown/CSV export formatting is deferred; JSON diagnostics satisfy the Phase 2 read-only report contract.
+- `codex-token-audit` remains legacy for now; replacement/removal is deferred to a cleanup slice after Phase 2 closure.
+
+Phase 3 entry point:
+
+- Start with command and output attribution in the context-efficiency package.
+- Preserve Phase 2 invariants: raw evidence stays external and recoverable, reports remain bounded, and facts stay distinct from inference.
+- Do not start lifecycle warnings, handoff recommendations, output filtering, UI, or automatic context mutation until their later milestones.
+
 
 Goal:
 
@@ -66,9 +65,8 @@ Deliverables:
 - SQLite persistence with migrations.
 - Import cursor and parser-error recording.
 - Duplicate cumulative-token suppression.
-- Fixture-based parser tests.
-- CLI diagnostics and JSON/Markdown reports.
-- Replacement/evolution path for the current `codex-token-audit` prototype.
+- CLI JSON diagnostics; Markdown/CSV formatting deferred.
+- Legacy disposition recorded for `codex-token-audit`; replacement/removal deferred to cleanup.
 
 Proposed exact files to add:
 

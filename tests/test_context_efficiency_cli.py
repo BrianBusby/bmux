@@ -12,6 +12,9 @@ from pathlib import Path
 from claude_teams_test_utils import resolve_bmux_cli
 
 
+RAW_MARKER = "SECRET_RAW_PAYLOAD_SHOULD_NOT_LEAK"
+
+
 def create_codex_state_database(path: Path, rollout_path: Path) -> None:
     with sqlite3.connect(path) as conn:
         conn.execute(
@@ -103,6 +106,20 @@ def write_rollout_fixture(path: Path) -> None:
             },
         },
         {
+            "type": "event_msg",
+            "payload": {
+                "type": "token_usage",
+                "threadID": "thread-cli",
+                "tokenUsage": {
+                    "inputTokens": 121000,
+                    "cachedInputTokens": 100000,
+                    "outputTokens": 1000,
+                    "totalTokens": 122000,
+                },
+                "raw_payload_marker": RAW_MARKER,
+            },
+        },
+        {
             "type": "response_item",
             "timestamp": "2026-07-13T12:00:02Z",
             "payload": {
@@ -128,7 +145,8 @@ def write_rollout_fixture(path: Path) -> None:
                 "output": (
                     "Original token count: 1800\n"
                     "Raw output: bmux agent-token-output show terminal-output:fixture\n"
-                    "ok"
+                    + RAW_MARKER +
+                    "\nok"
                 ),
             },
         },
@@ -140,6 +158,62 @@ def write_rollout_fixture(path: Path) -> None:
     ]
     content = "\n".join(json.dumps(row) for row in rows)
     path.write_text(content + "\n{not-json\n", encoding="utf-8")
+
+
+def write_replacement_rollout(path: Path) -> None:
+    row = {
+        "type": "event_msg",
+        "timestamp": "2026-07-14T12:00:00Z",
+        "payload": {
+            "type": "token_usage",
+            "threadID": "thread-cli-replacement",
+            "tokenUsage": {"inputTokens": 42, "totalTokens": 42},
+        },
+    }
+    path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+
+
+def append_rollout_event(path: Path, timestamp: str, total_tokens: int) -> None:
+    row = {
+        "type": "event_msg",
+        "timestamp": timestamp,
+        "payload": {
+            "type": "token_usage",
+            "threadID": "append-thread",
+            "tokenUsage": {
+                "inputTokens": total_tokens,
+                "totalTokens": total_tokens,
+            },
+        },
+    }
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(row) + "\n")
+
+
+def write_invalid_utf8_rollout(path: Path) -> None:
+    before = {
+        "type": "event_msg",
+        "timestamp": "2026-07-16T12:00:00Z",
+        "payload": {
+            "type": "token_usage",
+            "threadID": "utf8-thread",
+            "tokenUsage": {"inputTokens": 10, "totalTokens": 10},
+        },
+    }
+    after = {
+        "type": "event_msg",
+        "timestamp": "2026-07-16T12:01:00Z",
+        "payload": {
+            "type": "token_usage",
+            "threadID": "utf8-thread",
+            "tokenUsage": {"inputTokens": 15, "totalTokens": 15},
+        },
+    }
+    data = bytearray()
+    data.extend((json.dumps(before) + "\n").encode("utf-8"))
+    data.extend(b"\xff\xfe\n")
+    data.extend((json.dumps(after) + "\n").encode("utf-8"))
+    path.write_bytes(bytes(data))
 
 
 def run_cli(cli_path: str, args: list[str]) -> subprocess.CompletedProcess[str]:
@@ -178,15 +252,32 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
             str(codex_home),
         ],
     )
+    if RAW_MARKER in import_result.stdout:
+        raise AssertionError(f"import output leaked raw fixture marker:\n{import_result.stdout}")
     import_payload = json.loads(import_result.stdout)
     if import_payload["thread"]["normalized_thread_id"] != "codex:thread-cli":
         raise AssertionError(f"expected Codex metadata to resolve the thread: {import_payload!r}")
+    metadata = import_payload["thread"]
+    expected_metadata = {
+        "cwd": "/repo/bmux",
+        "title": "context efficiency fixture",
+        "model_provider": "openai",
+        "model": "gpt-5",
+        "reasoning_effort": "high",
+        "approval_mode": "on-request",
+        "sandbox_policy_type": "workspace-write",
+        "git_branch": "context-efficiency",
+        "tokens_used": 120800,
+    }
+    for key, expected in expected_metadata.items():
+        if metadata.get(key) != expected:
+            raise AssertionError(f"expected Codex metadata {key}={expected!r}: {metadata!r}")
     import_summary = import_payload["import"]
     expected_counts = {
-        "line_count": 7,
-        "model_call_count": 1,
+        "line_count": 8,
+        "model_call_count": 2,
         "duplicate_token_telemetry_count": 1,
-        "parser_error_count": 1,
+        "parser_error_count": 2,
         "tool_call_count": 1,
         "tool_output_count": 1,
         "compaction_count": 1,
@@ -194,6 +285,32 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
     for key, expected in expected_counts.items():
         if import_summary[key] != expected:
             raise AssertionError(f"expected {key}={expected}: {import_summary!r}")
+
+    repeat_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "context-efficiency",
+            "import",
+            str(rollout),
+            "--database",
+            str(context_database),
+            "--codex-home",
+            str(codex_home),
+        ],
+    )
+    repeat_import = json.loads(repeat_result.stdout)["import"]
+    repeat_zero_counts = [
+        "line_count",
+        "model_call_count",
+        "parser_error_count",
+        "tool_call_count",
+        "tool_output_count",
+        "compaction_count",
+    ]
+    for key in repeat_zero_counts:
+        if repeat_import[key] != 0:
+            raise AssertionError(f"unchanged rollout re-import should report no new {key}: {repeat_import!r}")
 
     inspect_result = run_cli(
         cli_path,
@@ -206,14 +323,28 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
             str(context_database),
         ],
     )
-    if "Raw output: bmux" in inspect_result.stdout:
-        raise AssertionError(f"inspect output leaked raw tool output:\n{inspect_result.stdout}")
+    for forbidden in [RAW_MARKER, "Raw output: bmux", "Original token count: 1800"]:
+        if forbidden in inspect_result.stdout:
+            raise AssertionError(f"inspect output leaked raw tool output:\n{inspect_result.stdout}")
     inspection = json.loads(inspect_result.stdout)
     thread = inspection["thread"]
     if thread["id"] != "codex:thread-cli":
         raise AssertionError(f"expected normalized thread id: {thread!r}")
     if thread["rollout_path"] != str(rollout):
         raise AssertionError(f"expected rollout path evidence reference: {thread!r}")
+    if thread["cumulative_total_tokens"] != 122000:
+        raise AssertionError(f"expected missing-timestamp telemetry to update thread totals: {thread!r}")
+    if len(inspection["model_calls"]) != 2:
+        raise AssertionError(f"expected duplicate suppression plus missing-timestamp model call: {inspection!r}")
+    missing_timestamp_calls = [
+        row for row in inspection["model_calls"] if row["source_reference"]["line_number"] == 4
+    ]
+    if len(missing_timestamp_calls) != 1 or "timestamp" in missing_timestamp_calls[0]:
+        raise AssertionError(f"missing-timestamp model call should remain timestampless: {inspection!r}")
+    if len(inspection["parser_errors"]) != 2:
+        raise AssertionError(f"expected missing-timestamp and invalid-JSON diagnostics: {inspection!r}")
+    if inspection["parser_errors"][0]["message"] != "missing rollout event timestamp":
+        raise AssertionError(f"expected bounded missing-timestamp diagnostic: {inspection!r}")
     source_reference = inspection["model_calls"][0]["source_reference"]
     for key in ["source_path", "byte_offset", "line_number", "parser_version"]:
         if key not in source_reference:
@@ -235,11 +366,206 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
             str(context_database),
         ],
     )
+    if RAW_MARKER in day_result.stdout:
+        raise AssertionError(f"day summary leaked raw fixture marker:\n{day_result.stdout}")
     summary = json.loads(day_result.stdout)["summary"]
     if summary["thread_count"] != 1 or summary["model_call_count"] != 1:
         raise AssertionError(f"expected one imported thread and model call: {summary!r}")
     if summary["total_tokens"] != 120800 or summary["cached_input_tokens"] != 100000:
         raise AssertionError(f"expected token totals from the rollout telemetry: {summary!r}")
+    if summary["parser_error_count"] != 2:
+        raise AssertionError(f"expected bounded parser diagnostics in day summary: {summary!r}")
+
+    write_replacement_rollout(rollout)
+    reset_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "context-efficiency",
+            "import",
+            str(rollout),
+            "--database",
+            str(context_database),
+            "--codex-home",
+            str(codex_home),
+        ],
+    )
+    reset_payload = json.loads(reset_result.stdout)
+    reset_import = reset_payload["import"]
+    if reset_import["reset_cursor"] is not True:
+        raise AssertionError(f"expected source shrink to reset cursor: {reset_payload!r}")
+    if reset_import["line_count"] != 1 or reset_import["model_call_count"] != 1:
+        raise AssertionError(f"expected replacement rollout to import one model call: {reset_payload!r}")
+    if reset_import["parser_error_count"] != 0:
+        raise AssertionError(f"replacement rollout should clear old parser errors: {reset_payload!r}")
+
+    replacement_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "context-efficiency",
+            "inspect-thread",
+            "thread-cli-replacement",
+            "--database",
+            str(context_database),
+        ],
+    )
+    replacement = json.loads(replacement_result.stdout)
+    if replacement["thread"]["cumulative_total_tokens"] != 42:
+        raise AssertionError(f"expected replacement thread totals after reset: {replacement!r}")
+
+    stale_day_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "context-efficiency",
+            "summarize-day",
+            "2026-07-13",
+            "--database",
+            str(context_database),
+        ],
+    )
+    stale_summary = json.loads(stale_day_result.stdout)["summary"]
+    if stale_summary["thread_count"] != 0 or stale_summary["parser_error_count"] != 0:
+        raise AssertionError(f"reset cursor should remove stale source facts: {stale_summary!r}")
+
+
+def test_context_efficiency_append_import_reports_only_new_lines(cli_path: str, root: Path) -> None:
+    append_root = root / "append"
+    append_root.mkdir()
+    database = append_root / "context-efficiency.sqlite"
+    rollout = append_root / "rollout-append-thread.jsonl"
+    rollout.write_text("", encoding="utf-8")
+    append_rollout_event(rollout, "2026-07-15T12:00:00Z", 10)
+
+    first_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "context-efficiency",
+            "import",
+            str(rollout),
+            "--database",
+            str(database),
+        ],
+    )
+    first_import = json.loads(first_result.stdout)["import"]
+    if first_import["line_count"] != 1 or first_import["model_call_count"] != 1:
+        raise AssertionError(f"expected first append fixture import to read one row: {first_import!r}")
+
+    append_rollout_event(rollout, "2026-07-15T12:01:00Z", 15)
+    second_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "context-efficiency",
+            "import",
+            str(rollout),
+            "--database",
+            str(database),
+        ],
+    )
+    second_import = json.loads(second_result.stdout)["import"]
+    if second_import["line_count"] != 1 or second_import["model_call_count"] != 1:
+        raise AssertionError(f"append import should report only the new row: {second_import!r}")
+    if second_import["reset_cursor"] is not False:
+        raise AssertionError(f"append import should not reset the cursor: {second_import!r}")
+
+    inspection_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "context-efficiency",
+            "inspect-thread",
+            "append-thread",
+            "--database",
+            str(database),
+        ],
+    )
+    inspection = json.loads(inspection_result.stdout)
+    if inspection["thread"]["cumulative_total_tokens"] != 15:
+        raise AssertionError(f"expected appended telemetry to update latest thread total: {inspection!r}")
+    if len(inspection["model_calls"]) != 2:
+        raise AssertionError(f"expected both appended model calls to be retained: {inspection!r}")
+
+    summary_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "context-efficiency",
+            "summarize-day",
+            "2026-07-15",
+            "--database",
+            str(database),
+        ],
+    )
+    summary = json.loads(summary_result.stdout)["summary"]
+    if summary["model_call_count"] != 2 or summary["total_tokens"] != 25:
+        raise AssertionError(f"expected appended rows in day summary: {summary!r}")
+
+
+def test_context_efficiency_invalid_utf8_import_continues(cli_path: str, root: Path) -> None:
+    utf8_root = root / "invalid-utf8"
+    utf8_root.mkdir()
+    database = utf8_root / "context-efficiency.sqlite"
+    rollout = utf8_root / "rollout-utf8-thread.jsonl"
+    write_invalid_utf8_rollout(rollout)
+
+    import_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "context-efficiency",
+            "import",
+            str(rollout),
+            "--database",
+            str(database),
+        ],
+    )
+    imported = json.loads(import_result.stdout)["import"]
+    if imported["line_count"] != 3 or imported["model_call_count"] != 2:
+        raise AssertionError(f"invalid UTF-8 import should continue around bad line: {imported!r}")
+    if imported["parser_error_count"] != 1:
+        raise AssertionError(f"invalid UTF-8 import should report one parser diagnostic: {imported!r}")
+
+    inspection_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "context-efficiency",
+            "inspect-thread",
+            "utf8-thread",
+            "--database",
+            str(database),
+        ],
+    )
+    inspection = json.loads(inspection_result.stdout)
+    if inspection["thread"]["cumulative_total_tokens"] != 15:
+        raise AssertionError(f"valid rows around invalid UTF-8 should update thread totals: {inspection!r}")
+    if len(inspection["parser_errors"]) != 1:
+        raise AssertionError(f"expected one invalid UTF-8 parser diagnostic: {inspection!r}")
+    parser_error = inspection["parser_errors"][0]
+    if parser_error["message"] != "line is not UTF-8":
+        raise AssertionError(f"expected invalid UTF-8 diagnostic: {inspection!r}")
+    if parser_error["source_reference"]["line_number"] != 2:
+        raise AssertionError(f"expected diagnostic to point at invalid byte line: {inspection!r}")
+
+    summary_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "context-efficiency",
+            "summarize-day",
+            "2026-07-16",
+            "--database",
+            str(database),
+        ],
+    )
+    summary = json.loads(summary_result.stdout)["summary"]
+    if summary["model_call_count"] != 2 or summary["total_tokens"] != 25:
+        raise AssertionError(f"expected valid UTF-8 rows in day summary: {summary!r}")
+    if summary["parser_error_count"] != 1:
+        raise AssertionError(f"expected invalid UTF-8 diagnostic in day summary: {summary!r}")
 
 
 def main() -> int:
@@ -253,6 +579,8 @@ def main() -> int:
         root = Path(td)
         try:
             test_context_efficiency_cli_round_trip(cli_path, root)
+            test_context_efficiency_append_import_reports_only_new_lines(cli_path, root)
+            test_context_efficiency_invalid_utf8_import_continues(cli_path, root)
         except Exception as exc:
             print(f"FAIL: {exc}")
             return 1

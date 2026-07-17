@@ -105,6 +105,10 @@ python3 scripts/check-workspace-package-groups.py --write
 
 This added `BmuxContextEfficiency` to `bmux.xcworkspace/contents.xcworkspacedata`.
 
+## 2026-07-17 Status Update
+
+Phase 2 is now closed. Markdown/CSV export formatting is deferred; JSON diagnostics are the Phase 2 read-only report contract. `codex-token-audit` remains legacy for now; replacement/removal is deferred to a cleanup slice. Phase 3 starts from command/output attribution.
+
 ## Verification Already Run
 
 Package tests:

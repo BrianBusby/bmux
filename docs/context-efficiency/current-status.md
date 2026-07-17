@@ -1,6 +1,6 @@
 # Bmux Context Efficiency: Current Status
 
-Last updated: 2026-07-16
+Last updated: 2026-07-17
 
 This file is the live handoff index for the context-efficiency roadmap. Read it before choosing work, and update it at the end of every context-efficiency slice.
 
@@ -18,7 +18,7 @@ This file is the live handoff index for the context-efficiency roadmap. Read it 
 
 ## Active Phase
 
-Phase 2 only: local, read-only telemetry ingestion and diagnostics.
+Phase 2 is closed as of 2026-07-17. The completed scope is local, read-only telemetry ingestion and diagnostics.
 
 Allowed work:
 
@@ -36,7 +36,7 @@ Do not start:
 - UI changes.
 - Automatic compression, omission, or mutation of agent context.
 
-Phase 3+ work starts only after a deliberate status update says Phase 2 is closed.
+Phase 3 is the next phase and starts from command/output attribution. Do not add lifecycle policy, warnings, handoff recommendations, output filtering, UI, or automatic context mutation until the relevant later phase opens.
 
 ## Current Branch State
 
@@ -67,25 +67,39 @@ Files changed in the latest slice:
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/CodexRolloutTelemetryParserTests.swift`
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 
-## Good Next Phase 2 Targets
+Latest completed CLI verification slice:
+
+- `tests/test_context_efficiency_cli.py` extends the context-efficiency CLI round-trip regression for missing rollout timestamps.
+- Validated against the existing tagged `context-efficiency` build on 2026-07-17; no rebuild was run for this dogfood check.
+
+Behavior in that verification slice:
+
+- `bmux context-efficiency import --json` reports bounded missing-timestamp parser diagnostics while still importing compact token facts.
+- `import --json --codex-home` exposes bounded Codex state metadata such as model, cwd, approval, sandbox, branch, and token totals.
+- `inspect-thread --json` keeps the missing-timestamp model call timestampless, updates thread totals from compact facts, and does not leak raw rollout payload markers.
+- `summarize-day --json` keeps dated model-call totals scoped to dated rows while reporting bounded parser diagnostic counts for the source.
+- An unchanged rollout re-import reports zero new rows across import counts.
+- An appended rollout re-import reports only the newly appended row and preserves prior model-call facts.
+- Invalid UTF-8 rollout lines report one bounded parser diagnostic while valid surrounding rows continue importing.
+- A shrunk rollout source reports `reset_cursor: true`, imports the replacement rows, and removes stale source facts from day summaries.
+
+Latest validation: all validation commands passed on 2026-07-17.
+
+## Phase 2 Closure Decisions
 
 Stay narrow and read-only. Prefer package-level Swift tests unless a CLI regression is specifically exercising the built binary.
 
-Good next targets:
+Decisions:
 
-1. Import status and error-reporting edge cases:
-   - bounded counts only;
-   - no raw payload leakage;
-   - JSON report shape coverage where it exercises runtime behavior.
-2. Bounded CLI JSON shape coverage:
-   - only when it exercises real CLI behavior from the rebuilt tagged binary;
-   - avoid tests that merely assert source text or implementation shape.
+1. Markdown/CSV export formatting is deferred. JSON diagnostics are the Phase 2 read-only report contract.
+2. `codex-token-audit` remains a legacy command for now. Replacement/removal is deferred to a cleanup slice after Phase 2 closure.
+3. Phase 3 starts from command/output attribution, not more telemetry ingestion work.
 
 Avoid broad CLI/app integration unless the slice is explicitly scoped to read-only diagnostics and includes localization work for any new command/help/error text.
 
 ## Verification For The Next Slice
 
-After code changes, run:
+After implementation or CLI behavior changes, run:
 
 ```bash
 swift test --package-path /private/tmp/context-efficiency-wip-20260715/Packages/macOS/BmuxContextEfficiency
@@ -96,6 +110,8 @@ git diff --check
 ```
 
 Then run the context-efficiency CLI regression against the rebuilt tagged CLI if the slice touches CLI behavior or report output.
+
+For docs/test-only status maintenance or dogfood of the already-built app, do not rebuild solely to inspect current behavior.
 
 Current tagged app path pattern:
 
@@ -125,7 +141,7 @@ At the end of every context-efficiency slice:
 2. Record the completed commit or commits.
 3. Summarize behavior changes in facts, not intentions.
 4. List changed files.
-5. Update `Good Next Phase 2 Targets` if priorities changed.
+5. Update phase status and next-phase entry points if priorities changed.
 6. Update verification commands or known quirks if they changed.
 7. State whether localization was needed.
 
