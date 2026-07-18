@@ -47,39 +47,43 @@ Expected branch:
 
 Latest completed implementation HEAD:
 
-- `95e1c0d9f8b43fb8ce8efa1955c8bfbf4ce7f9ec`
+- `b6a9effea547f5064c9836dec4e5900c7cc729a4`
 
 The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
 
 Latest completed implementation slice:
 
-- `95e1c0d9 Add context efficiency command attribution`
+- `b6a9effe Add context efficiency work item references`
 
 Behavior in that slice:
 
-- `inspectThread` now derives bounded command execution candidates from imported tool-call/tool-output facts.
-- Command candidates include normalized executable, deterministic category, bounded argument/output byte counts, estimated original output tokens, raw-output reference counts, elapsed time when timestamps permit it, and source references.
-- Tool call to output links are labeled `exact_tool_call_link` when Codex `call_id` matches; fallback links are labeled `temporal_candidate`; missing output links are labeled `unmatched`.
-- Command output to later model-call attribution is labeled `temporal_candidate`.
-- `bmux context-efficiency inspect-thread --json` now includes a `command_executions` array without printing raw tool arguments or raw output.
+- The importer now extracts evidence-backed work-item references from bounded rollout facts and Codex state metadata.
+- Reference facts cover GitHub PR URLs, GitHub issue URLs, tracker ticket keys, non-default branch names, and GitHub repository origins.
+- `ContextEfficiencyStore` persists references in schema v2 and removes stale reference rows when a rollout source shrinks or is re-imported from the beginning.
+- `inspectThread` returns `workItemReferences`, and `bmux context-efficiency inspect-thread --json` emits `work_item_references`.
+- Reference rows preserve source path, byte offset, line number, parser version, source kind, confidence, and observed timestamp without retaining full messages, raw tool arguments, or raw output.
 
 Files changed in the latest slice:
 
 - `CLI/BMUXCLI+ContextEfficiency.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyAttributionConfidence.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyCommandCategory.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyCommandExecutionRecord.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyModelCallAttribution.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Reports/ContextEfficiencyCommandAttributor.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Reports/ContextEfficiencyCommandClassifier.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutParsedEvent.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutParsedWorkItemReference.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutTelemetryParser.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyWorkItemReferenceConfidence.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyWorkItemReferenceKind.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyWorkItemReferenceRecord.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyWorkItemReferenceSource.swift`
 - `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Reports/ContextEfficiencyThreadInspection.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Reports/ContextEfficiencyWorkItemReferenceExtractor.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Store/ContextEfficiencySQLiteMigration.swift`
 - `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Store/ContextEfficiencyStore.swift`
+- `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/CodexRolloutTelemetryParserTests.swift`
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 - `tests/test_context_efficiency_cli.py`
 
 Latest completed CLI verification:
 
-- `tests/test_context_efficiency_cli.py` covers the context-efficiency CLI round trip for missing rollout timestamps, bounded parser diagnostics, incremental imports, cursor resets, invalid UTF-8, and derived command execution JSON.
+- `tests/test_context_efficiency_cli.py` covers the context-efficiency CLI round trip for missing rollout timestamps, bounded parser diagnostics, incremental imports, cursor resets, invalid UTF-8, derived command execution JSON, and work-item reference JSON.
 - Validated against the rebuilt tagged `context-efficiency` build on 2026-07-18.
 
 Behavior in that verification slice:
@@ -92,7 +96,7 @@ Behavior in that verification slice:
 - An appended rollout re-import reports only the newly appended row and preserves prior model-call facts.
 - Invalid UTF-8 rollout lines report one bounded parser diagnostic while valid surrounding rows continue importing.
 - A shrunk rollout source reports `reset_cursor: true`, imports the replacement rows, and removes stale source facts from day summaries.
-- `inspect-thread --json` reports command category, normalized executable, exact output-link confidence, and raw-output reference count without leaking raw output.
+- `inspect-thread --json` reports command category, normalized executable, exact output-link confidence, raw-output reference count, and `work_item_references` without leaking raw output or source messages.
 
 Latest validation: all validation commands passed on 2026-07-18.
 
@@ -111,7 +115,7 @@ Good next targets:
 
 1. Add command-category aggregate counts to thread/day reports without introducing lifecycle heuristics.
 2. Add repeated command/search/file-read detection as facts for later profiler work.
-3. Add PR/ticket reference extraction from branch names, PR URLs, GitHub metadata, and explicit user/agent messages as provenance/work-item facts.
+3. Link `work_item_references` to future `WorkProvenance` work items or delegation inputs through stable IDs instead of copying telemetry rows.
 4. Evaluate OSC 133 parsing for non-Codex terminal attribution in a separate capture slice.
 
 Avoid broad CLI/app integration unless the slice is explicitly scoped to read-only diagnostics and includes localization work for any new command/help/error text.

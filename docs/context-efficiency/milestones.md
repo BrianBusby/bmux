@@ -127,7 +127,7 @@ Validation:
 
 ## Milestone 3: Command and Output Attribution
 
-Status: first derived-attribution report slice implemented.
+Status: active. Command-attribution and work-item reference fact slices are implemented.
 
 Goal:
 
@@ -143,6 +143,14 @@ Implemented in the first slice:
 - `inspect-thread --json` `command_executions` output with bounded counts, categories, confidence labels, and source references.
 - Package and CLI regression coverage proving raw tool arguments/output are not included in the report.
 
+Implemented in the second slice:
+
+- `ContextEfficiencyWorkItemReferenceRecord` and closed enums for reference kind, source, and confidence.
+- Schema v2 `work_item_references` table for bounded PR, issue, ticket, branch, and repository reference facts.
+- Reference extraction from Codex state metadata and bounded rollout payload strings.
+- `inspectThread` and `inspect-thread --json` work-item reference output with source references.
+- Package and CLI regression coverage proving source messages and raw output are not retained in reports.
+
 Expected work:
 
 - Persist command execution candidates if derived reports prove insufficient.
@@ -150,7 +158,7 @@ Expected work:
 - Add repeated command/search/file-read detection as bounded facts.
 - Index proxy `rawOutputRef` artifacts.
 - Evaluate OSC 133 parsing for non-Codex terminal attribution.
-- Add evidence-backed active PR/ticket reference detection as work-item/provenance facts rather than a single scalar current PR number.
+- Link evidence-backed reference facts to future provenance work items or delegation inputs.
 
 Candidate files:
 
