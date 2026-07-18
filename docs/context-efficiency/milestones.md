@@ -127,7 +127,7 @@ Validation:
 
 ## Milestone 3: Command and Output Attribution
 
-Status: active. Command-attribution and work-item reference fact slices are implemented.
+Status: active. Command-attribution, work-item reference fact, and command-category count slices are implemented.
 
 Goal:
 
@@ -151,10 +151,17 @@ Implemented in the second slice:
 - `inspectThread` and `inspect-thread --json` work-item reference output with source references.
 - Package and CLI regression coverage proving source messages and raw output are not retained in reports.
 
+Implemented in the third slice:
+
+- Count-only `ContextEfficiencyCommandCategoryCount` report rows.
+- Thread inspection `commandCategoryCounts` derived from existing command execution candidates.
+- Day summary `commandCategoryCounts` scoped by dated tool-call timestamps in the requested UTC day.
+- `inspect-thread --json` top-level `command_category_counts` and `summarize-day --json` `summary.command_category_counts`.
+- Package and CLI regression coverage proving aggregate rows do not include command summaries, executables, source references, arguments, or raw output.
+
 Expected work:
 
 - Persist command execution candidates if derived reports prove insufficient.
-- Add command-category aggregate counts to thread/day reports.
 - Add repeated command/search/file-read detection as bounded facts.
 - Index proxy `rawOutputRef` artifacts.
 - Evaluate OSC 133 parsing for non-Codex terminal attribution.

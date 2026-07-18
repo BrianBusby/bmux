@@ -47,44 +47,37 @@ Expected branch:
 
 Latest completed implementation HEAD:
 
-- `b6a9effea547f5064c9836dec4e5900c7cc729a4`
+- `e6461738d5b178f5b904bf8567252e135ec9b2df`
 
 The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
 
 Latest completed implementation slice:
 
-- `b6a9effe Add context efficiency work item references`
+- `e6461738d Add context efficiency command category counts`
 
 Behavior in that slice:
 
-- The importer now extracts evidence-backed work-item references from bounded rollout facts and Codex state metadata.
-- Reference facts cover GitHub PR URLs, GitHub issue URLs, tracker ticket keys, non-default branch names, and GitHub repository origins.
-- `ContextEfficiencyStore` persists references in schema v2 and removes stale reference rows when a rollout source shrinks or is re-imported from the beginning.
-- `inspectThread` returns `workItemReferences`, and `bmux context-efficiency inspect-thread --json` emits `work_item_references`.
-- Reference rows preserve source path, byte offset, line number, parser version, source kind, confidence, and observed timestamp without retaining full messages, raw tool arguments, or raw output.
+- Thread inspection reports now include count-only `commandCategoryCounts` derived from existing command execution candidates.
+- Day summary reports now include count-only `commandCategoryCounts` scoped by dated `tool_calls.timestamp` rows in the requested UTC day.
+- `inspect-thread --json` emits top-level `command_category_counts`, and `summarize-day --json` emits `summary.command_category_counts`.
+- Aggregate rows expose only category and command count. They do not include command summaries, normalized executables, source references, raw output references, arguments, lifecycle labels, or efficiency inferences.
+- No schema migration was added; command category counts are derived report facts, not persisted rows.
 
 Files changed in the latest slice:
 
 - `CLI/BMUXCLI+ContextEfficiency.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutParsedEvent.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutParsedWorkItemReference.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutTelemetryParser.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyWorkItemReferenceConfidence.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyWorkItemReferenceKind.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyWorkItemReferenceRecord.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyWorkItemReferenceSource.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Reports/ContextEfficiencyCommandCategoryCount.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Reports/ContextEfficiencyCommandCategoryCounter.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Reports/ContextEfficiencyDaySummary.swift`
 - `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Reports/ContextEfficiencyThreadInspection.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Reports/ContextEfficiencyWorkItemReferenceExtractor.swift`
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Store/ContextEfficiencySQLiteMigration.swift`
 - `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Store/ContextEfficiencyStore.swift`
-- `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/CodexRolloutTelemetryParserTests.swift`
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 - `tests/test_context_efficiency_cli.py`
 
 Latest completed CLI verification:
 
 - `tests/test_context_efficiency_cli.py` covers the context-efficiency CLI round trip for missing rollout timestamps, bounded parser diagnostics, incremental imports, cursor resets, invalid UTF-8, derived command execution JSON, and work-item reference JSON.
-- Validated against the rebuilt tagged `context-efficiency` build on 2026-07-18.
+- Validated on 2026-07-18 against the isolated compiled CLI at `/tmp/bmux-context-efficiency-cli-check/Build/Products/Debug/bmux`; the tagged `context-efficiency` app was not reloaded because the user was actively using a build.
 
 Behavior in that verification slice:
 
@@ -97,8 +90,17 @@ Behavior in that verification slice:
 - Invalid UTF-8 rollout lines report one bounded parser diagnostic while valid surrounding rows continue importing.
 - A shrunk rollout source reports `reset_cursor: true`, imports the replacement rows, and removes stale source facts from day summaries.
 - `inspect-thread --json` reports command category, normalized executable, exact output-link confidence, raw-output reference count, and `work_item_references` without leaking raw output or source messages.
+- `inspect-thread --json` and `summarize-day --json` report count-only `command_category_counts`; reset-cursor cleanup removes stale day counts.
 
-Latest validation: all validation commands passed on 2026-07-18.
+Latest validation on 2026-07-18:
+
+- `swift test --package-path Packages/macOS/BmuxContextEfficiency` passed with 24 Swift Testing tests.
+- `BMUX_CLI_BIN=/tmp/bmux-context-efficiency-cli-check/Build/Products/Debug/bmux python3 tests/test_context_efficiency_cli.py` passed against a freshly compiled CLI executable.
+- `python3 scripts/check-workspace-package-groups.py --check` passed.
+- `scripts/check-pbxproj.sh` passed.
+- `git diff --check` passed.
+- `xcodebuild -project bmux.xcodeproj -scheme bmux -configuration Debug -destination 'platform=macOS' -derivedDataPath /tmp/bmux-context-efficiency-cli-check build` was attempted only to compile an isolated CLI/app artifact and did not launch or replace the user's running build. It failed in the existing Ghostty CLI helper run script with Zig undefined-symbol linker errors after producing `/tmp/bmux-context-efficiency-cli-check/Build/Products/Debug/bmux`, which was used for the CLI regression.
+- `./scripts/reload.sh --tag context-efficiency` was not rerun for this slice because the user explicitly requested no action that could cause the active build to quit.
 
 ## Phase 3 Next Targets
 
@@ -113,10 +115,10 @@ Decisions:
 
 Good next targets:
 
-1. Add command-category aggregate counts to thread/day reports without introducing lifecycle heuristics.
-2. Add repeated command/search/file-read detection as facts for later profiler work.
-3. Link `work_item_references` to future `WorkProvenance` work items or delegation inputs through stable IDs instead of copying telemetry rows.
-4. Evaluate OSC 133 parsing for non-Codex terminal attribution in a separate capture slice.
+1. Add repeated command/search/file-read detection as facts for later profiler work.
+2. Link `work_item_references` to future `WorkProvenance` work items or delegation inputs through stable IDs instead of copying telemetry rows.
+3. Evaluate OSC 133 parsing for non-Codex terminal attribution in a separate capture slice.
+4. Persist command execution candidates only if derived reports prove insufficient.
 
 Avoid broad CLI/app integration unless the slice is explicitly scoped to read-only diagnostics and includes localization work for any new command/help/error text.
 
@@ -155,6 +157,7 @@ Use the bundled CLI from that rebuilt app:
 - `git status --short` may be less useful in that setup. Prefer `git diff --name-status`, `git diff --stat`, `git branch --show-current`, and `git rev-parse HEAD`.
 - `apply_patch` may default to `/Users/brianbusby/repos/bmux`. Use absolute paths when patching a `/private/tmp/...` worktree.
 - `tests/test_context_efficiency_cli.py` has shown local-disk sensitivity. If needed, materialize the indexed test blob into a temporary file and run that copy against the rebuilt bundled CLI.
+- An isolated full app build in `/tmp/bmux-context-efficiency-cli-check` failed on 2026-07-18 in the Ghostty CLI helper run script with Zig undefined-symbol linker errors, but the `bmux-cli` executable had already been produced and could run CLI regressions via `BMUX_CLI_BIN=/tmp/bmux-context-efficiency-cli-check/Build/Products/Debug/bmux`.
 
 ## Handoff Update Rules
 
@@ -172,6 +175,6 @@ Do not let one-off chat handoffs become the only record of current status.
 
 ## Localization
 
-The latest completed slice added package/report models and one CLI JSON field only. No CLI help, human-readable CLI output, UI, menus, settings, alerts, or other user-facing localized strings changed.
+The latest completed slice added package/report models and CLI JSON fields only. No CLI help, human-readable CLI output, UI, menus, settings, alerts, or other user-facing localized strings changed.
 
 This file and the other `docs/context-efficiency/*` planning files are internal development documentation and are not mirrored into localized docs. If a future slice adds or edits CLI/UI/user-facing strings, use `bmux-localization` and update every supported locale.
