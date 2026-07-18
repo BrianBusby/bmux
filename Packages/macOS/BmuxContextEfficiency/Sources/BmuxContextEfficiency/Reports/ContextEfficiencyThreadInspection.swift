@@ -12,6 +12,8 @@ public struct ContextEfficiencyThreadInspection: Codable, Equatable, Sendable {
     public var toolCalls: [ContextEfficiencyToolCallRecord]
     /// Tool-output facts imported for the thread.
     public var toolOutputs: [ContextEfficiencyToolOutputRecord]
+    /// Derived command execution candidates with attribution labels.
+    public var commandExecutions: [ContextEfficiencyCommandExecutionRecord]
     /// Parser errors tied to the thread's source evidence when available.
     public var parserErrors: [ContextEfficiencyParserErrorRecord]
 
@@ -22,6 +24,7 @@ public struct ContextEfficiencyThreadInspection: Codable, Equatable, Sendable {
         tokenTelemetryEvents: [ContextEfficiencyTokenTelemetryRecord],
         toolCalls: [ContextEfficiencyToolCallRecord],
         toolOutputs: [ContextEfficiencyToolOutputRecord],
+        commandExecutions: [ContextEfficiencyCommandExecutionRecord],
         parserErrors: [ContextEfficiencyParserErrorRecord]
     ) {
         self.thread = thread
@@ -29,6 +32,7 @@ public struct ContextEfficiencyThreadInspection: Codable, Equatable, Sendable {
         self.tokenTelemetryEvents = tokenTelemetryEvents
         self.toolCalls = toolCalls
         self.toolOutputs = toolOutputs
+        self.commandExecutions = commandExecutions
         self.parserErrors = parserErrors
     }
 }
