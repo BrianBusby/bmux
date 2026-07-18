@@ -1,22 +1,33 @@
 import Foundation
 
 struct ContextEfficiencySQLiteMigration {
-    let schemaVersion: Int32 = 1
+    let schemaVersion: Int32 = 2
 
     func migrateIfNeeded(database: ContextEfficiencySQLiteDatabase) throws {
-        let version = try database.userVersion
+        var version = try database.userVersion
         guard version <= schemaVersion else {
             throw ContextEfficiencyStoreError.unsupportedSchema(found: version, supported: schemaVersion)
         }
-        guard version == 0 else {
-            return
+        if version == 0 {
+            try apply(statements: schemaV1Statements, version: 1, database: database)
+            version = 1
         }
+        if version == 1 {
+            try apply(statements: schemaV2Statements, version: 2, database: database)
+        }
+    }
+
+    private func apply(
+        statements: [String],
+        version: Int32,
+        database: ContextEfficiencySQLiteDatabase
+    ) throws {
         try database.execute("BEGIN IMMEDIATE TRANSACTION")
         do {
-            for statement in schemaStatements {
+            for statement in statements {
                 try database.execute(statement)
             }
-            try database.execute("PRAGMA user_version = \(schemaVersion)")
+            try database.execute("PRAGMA user_version = \(version)")
             try database.execute("COMMIT")
         } catch {
             try? database.execute("ROLLBACK")
@@ -24,7 +35,7 @@ struct ContextEfficiencySQLiteMigration {
         }
     }
 
-    private var schemaStatements: [String] {
+    private var schemaV1Statements: [String] {
         [
             """
             CREATE TABLE schema_migrations (
@@ -205,6 +216,34 @@ struct ContextEfficiencySQLiteMigration {
             "CREATE INDEX idx_tool_outputs_thread ON tool_outputs(thread_id, timestamp)",
             "CREATE INDEX idx_parser_errors_thread ON parser_errors(thread_id, imported_at)",
             "CREATE INDEX idx_parser_errors_source ON parser_errors(source_path, imported_at)",
+        ]
+    }
+
+    private var schemaV2Statements: [String] {
+        [
+            """
+            CREATE TABLE work_item_references (
+                id TEXT PRIMARY KEY,
+                thread_id TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                reference TEXT NOT NULL,
+                repository_slug TEXT,
+                number INTEGER,
+                url_string TEXT,
+                branch_name TEXT,
+                ticket_key TEXT,
+                source_kind TEXT NOT NULL,
+                confidence TEXT NOT NULL,
+                source_path TEXT NOT NULL,
+                byte_offset INTEGER,
+                line_number INTEGER,
+                parser_version INTEGER,
+                observed_at REAL,
+                imported_at REAL NOT NULL
+            )
+            """,
+            "CREATE INDEX idx_work_item_references_thread ON work_item_references(thread_id, kind, reference)",
+            "CREATE INDEX idx_work_item_references_source ON work_item_references(source_path, imported_at)",
         ]
     }
 }

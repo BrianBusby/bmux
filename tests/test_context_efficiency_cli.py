@@ -151,6 +151,15 @@ def write_rollout_fixture(path: Path) -> None:
             },
         },
         {
+            "type": "event_msg",
+            "timestamp": "2026-07-13T12:00:03Z",
+            "payload": {
+                "type": "user_message",
+                "threadID": "thread-cli",
+                "message": "Continue STE-1964 on https://github.com/manaflow-ai/bmux/pull/4536",
+            },
+        },
+        {
             "type": "compacted",
             "timestamp": "2026-07-13T12:00:04Z",
             "payload": {"threadID": "thread-cli"},
@@ -274,7 +283,7 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
             raise AssertionError(f"expected Codex metadata {key}={expected!r}: {metadata!r}")
     import_summary = import_payload["import"]
     expected_counts = {
-        "line_count": 8,
+        "line_count": 9,
         "model_call_count": 2,
         "duplicate_token_telemetry_count": 1,
         "parser_error_count": 2,
@@ -365,6 +374,24 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
         raise AssertionError(f"expected raw output reference count: {command_execution!r}")
     if "raw_output" in command_execution:
         raise AssertionError(f"command execution should not include raw output: {command_execution!r}")
+
+    work_item_references = inspection["work_item_references"]
+    references_by_value = {row["reference"]: row for row in work_item_references}
+    for expected_reference in [
+        "github:manaflow-ai/bmux#4536",
+        "ticket:STE-1964",
+        "branch:context-efficiency",
+    ]:
+        if expected_reference not in references_by_value:
+            raise AssertionError(f"missing work item reference {expected_reference}: {work_item_references!r}")
+    pull_request = references_by_value["github:manaflow-ai/bmux#4536"]
+    if pull_request["kind"] != "pull_request" or pull_request["number"] != 4536:
+        raise AssertionError(f"expected explicit PR reference fact: {pull_request!r}")
+    if pull_request["source_kind"] != "message" or pull_request["confidence"] != "explicit_reference":
+        raise AssertionError(f"expected PR reference evidence labels: {pull_request!r}")
+    branch_reference = references_by_value["branch:context-efficiency"]
+    if branch_reference["source_kind"] != "codex_state_metadata":
+        raise AssertionError(f"expected branch reference from Codex state metadata: {branch_reference!r}")
 
     day_result = run_cli(
         cli_path,

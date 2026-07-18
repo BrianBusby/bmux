@@ -214,6 +214,55 @@ struct CodexRolloutTelemetryParserTests {
     }
 
     @Test
+    func extractsWorkItemReferencesWithoutRetainingMessageText() throws {
+        let parser = CodexRolloutTelemetryParser()
+        let line = CodexRolloutImportedLine(
+            text: """
+            {"type":"event_msg","timestamp":"2026-07-13T12:02:00Z","payload":{"type":"user_message","threadID":"thread-a","message":"Continue STE-1964 on https://github.com/manaflow-ai/bmux/pull/4536 and issue https://github.com/manaflow-ai/bmux/issues/4529"}}
+            """,
+            sourceReference: ContextEfficiencySourceReference(
+                sourcePath: "/tmp/rollout-thread-a.jsonl",
+                byteOffset: 940,
+                lineNumber: 6,
+                parserVersion: CodexRolloutTelemetryParser.parserVersion
+            )
+        )
+
+        let parsed = parser.parse(line: line, fallbackThreadID: "thread-a")
+
+        #expect(parsed.kind == .userMessageObserved)
+        #expect(parsed.workItemReferences.map(\.reference).contains("github:manaflow-ai/bmux#4536"))
+        #expect(parsed.workItemReferences.map(\.reference).contains("github-issue:manaflow-ai/bmux#4529"))
+        #expect(parsed.workItemReferences.map(\.reference).contains("ticket:STE-1964"))
+        #expect(parsed.workItemReferences.allSatisfy { $0.sourceKind == .message })
+        #expect(parsed.workItemReferences.allSatisfy { $0.sourceReference?.lineNumber == 6 })
+    }
+
+    @Test
+    func extractsBranchAndRepositoryMetadataReferences() throws {
+        let parser = CodexRolloutTelemetryParser()
+        let line = CodexRolloutImportedLine(
+            text: """
+            {"type":"session_meta","timestamp":"2026-07-13T12:03:00Z","payload":{"id":"thread-a","git_branch":"STE-1964-add-starter-checklist","git_origin_url":"git@github.com:manaflow-ai/bmux.git"}}
+            """,
+            sourceReference: ContextEfficiencySourceReference(
+                sourcePath: "/tmp/rollout-thread-a.jsonl",
+                byteOffset: 1200,
+                lineNumber: 7,
+                parserVersion: CodexRolloutTelemetryParser.parserVersion
+            )
+        )
+
+        let parsed = parser.parse(line: line, fallbackThreadID: "thread-a")
+
+        #expect(parsed.workItemReferences.map(\.reference).contains("branch:STE-1964-add-starter-checklist"))
+        #expect(parsed.workItemReferences.map(\.reference).contains("ticket:STE-1964"))
+        #expect(parsed.workItemReferences.map(\.reference).contains("github-repo:manaflow-ai/bmux"))
+        #expect(parsed.workItemReferences.first(where: { $0.kind == .branch })?.confidence == .branchCandidate)
+        #expect(parsed.workItemReferences.first(where: { $0.kind == .repository })?.confidence == .metadata)
+    }
+
+    @Test
     func extractsToolFactsFromArrayPayloadObjects() throws {
         let parser = CodexRolloutTelemetryParser()
         let line = CodexRolloutImportedLine(
