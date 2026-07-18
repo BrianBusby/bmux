@@ -41,6 +41,9 @@ struct ContextEfficiencyStoreTests {
         #expect(inspection.commandExecutions.first?.normalizedExecutable == "swift")
         #expect(inspection.commandExecutions.first?.category == .validationRuns)
         #expect(inspection.commandExecutions.first?.outputAttributionConfidence == .exactToolCallLink)
+        #expect(inspection.commandCategoryCounts == [
+            ContextEfficiencyCommandCategoryCount(category: .validationRuns, commandCount: 1),
+        ])
         #expect(inspection.workItemReferences.map(\.reference).contains("github:manaflow-ai/bmux#4536"))
         #expect(inspection.workItemReferences.map(\.reference).contains("ticket:STE-1964"))
         #expect(inspection.workItemReferences.map(\.reference).contains("branch:context-efficiency-wip-20260715"))
@@ -59,6 +62,9 @@ struct ContextEfficiencyStoreTests {
         #expect(summary.cachedInputTokens == 100_000)
         #expect(summary.outputTokens == 800)
         #expect(summary.parserErrorCount == 1)
+        #expect(summary.commandCategoryCounts == [
+            ContextEfficiencyCommandCategoryCount(category: .validationRuns, commandCount: 1),
+        ])
 
         let secondImport = try await store.importRollout(at: rolloutURL, fallbackThreadID: "thread-a")
         #expect(secondImport.lineCount == 0)
@@ -92,6 +98,40 @@ struct ContextEfficiencyStoreTests {
         #expect(inspection.thread?.cumulativeTotalTokens == 121_500)
         #expect(inspection.commandExecutions.first?.attributedModelCall?.modelCallID == inspection.modelCalls[1].id)
         #expect(inspection.commandExecutions.first?.attributedModelCall?.confidence == .temporalCandidate)
+    }
+
+    @Test
+    func reportsCommandCategoryCountsForThreadAndDay() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let databaseURL = directory.appendingPathComponent("context-efficiency.sqlite")
+        let rolloutURL = directory.appendingPathComponent("rollout-command-counts.jsonl")
+        try Data(commandCategoryCountRollout.utf8).write(to: rolloutURL)
+
+        let store = try ContextEfficiencyStore(databaseURL: databaseURL)
+        _ = try await store.importRollout(at: rolloutURL, fallbackThreadID: "thread-counts")
+
+        let inspection = try await store.inspectThread("codex:thread-counts")
+        #expect(inspection.commandExecutions.count == 4)
+        #expect(inspection.commandCategoryCounts == [
+            ContextEfficiencyCommandCategoryCount(category: .fileReading, commandCount: 1),
+            ContextEfficiencyCommandCategoryCount(category: .sourceSearch, commandCount: 1),
+            ContextEfficiencyCommandCategoryCount(category: .validationRuns, commandCount: 2),
+        ])
+
+        let firstDaySummary = try await store.summarizeDay("2026-07-13")
+        #expect(firstDaySummary.commandCategoryCounts == [
+            ContextEfficiencyCommandCategoryCount(category: .sourceSearch, commandCount: 1),
+            ContextEfficiencyCommandCategoryCount(category: .validationRuns, commandCount: 2),
+        ])
+
+        let secondDaySummary = try await store.summarizeDay("2026-07-14")
+        #expect(secondDaySummary.commandCategoryCounts == [
+            ContextEfficiencyCommandCategoryCount(category: .fileReading, commandCount: 1),
+        ])
+
+        let emptyDaySummary = try await store.summarizeDay("2026-07-15")
+        #expect(emptyDaySummary.commandCategoryCounts.isEmpty)
     }
 
     @Test
@@ -212,6 +252,7 @@ struct ContextEfficiencyStoreTests {
             "toolCalls",
             "toolOutputs",
             "commandExecutions",
+            "commandCategoryCounts",
             "workItemReferences",
             "parserErrors",
         ])
@@ -250,6 +291,19 @@ struct ContextEfficiencyStoreTests {
         try assertSourceReference(commandExecution["toolCallSourceReference"], sourcePath: rolloutURL.path, lineNumber: 4)
         try assertSourceReference(commandExecution["toolOutputSourceReference"], sourcePath: rolloutURL.path, lineNumber: 5)
 
+        let commandCategoryCounts = try #require(inspectionPayload["commandCategoryCounts"] as? [[String: Any]])
+        let commandCategoryCount = try #require(commandCategoryCounts.first)
+        #expect(commandCategoryCounts.count == 1)
+        #expect(commandCategoryCount["category"] as? String == "tests")
+        #expect(commandCategoryCount["commandCount"] as? Int == 1)
+        #expect(commandCategoryCount["commandSummary"] == nil)
+        #expect(commandCategoryCount["normalizedExecutable"] == nil)
+        #expect(commandCategoryCount["toolCallSourceReference"] == nil)
+        #expect(commandCategoryCount["toolOutputSourceReference"] == nil)
+        #expect(commandCategoryCount["rawOutput"] == nil)
+        #expect(commandCategoryCount["output"] == nil)
+        #expect(commandCategoryCount["argumentsByteCount"] == nil)
+
         let workItemReferences = try #require(inspectionPayload["workItemReferences"] as? [[String: Any]])
         let pullRequestReference = try #require(workItemReferences.first { $0["reference"] as? String == "github:manaflow-ai/bmux#4536" })
         #expect(pullRequestReference["kind"] as? String == "pull_request")
@@ -285,9 +339,15 @@ struct ContextEfficiencyStoreTests {
             "cachedInputTokens",
             "outputTokens",
             "parserErrorCount",
+            "commandCategoryCounts",
         ])
         #expect(summaryPayload["day"] as? String == "2026-07-13")
         #expect(summaryPayload["threadCount"] as? Int == 1)
+        let summaryCommandCategoryCounts = try #require(summaryPayload["commandCategoryCounts"] as? [[String: Any]])
+        let summaryCommandCategoryCount = try #require(summaryCommandCategoryCounts.first)
+        #expect(summaryCommandCategoryCounts.count == 1)
+        #expect(summaryCommandCategoryCount["category"] as? String == "tests")
+        #expect(summaryCommandCategoryCount["commandCount"] as? Int == 1)
         #expect(summaryPayload["modelCallCount"] as? Int == 1)
         #expect(summaryPayload["totalTokens"] as? Int == 120_800)
         #expect(summaryPayload["cachedInputTokens"] as? Int == 100_000)
@@ -343,6 +403,20 @@ struct ContextEfficiencyStoreTests {
         {"type":"session_meta","timestamp":"2026-07-14T11:59:58Z","payload":{"id":"thread-b","model":"gpt-5","reasoning_effort":"high","cwd":"/repo/bmux"}}
         {"type":"event_msg","timestamp":"2026-07-14T12:00:00Z","payload":{"type":"token_usage","threadID":"thread-b","tokenUsage":{"inputTokens":220000,"cachedInputTokens":200000,"outputTokens":1800,"totalTokens":221800}}}
         {not-json
+        """ + "\n"
+    }
+
+    private var commandCategoryCountRollout: String {
+        """
+        {"type":"session_meta","timestamp":"2026-07-13T11:59:58Z","payload":{"id":"thread-counts","model":"gpt-5","reasoning_effort":"high","cwd":"/repo/bmux"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:00:02Z","payload":{"type":"function_call","threadID":"thread-counts","call_id":"call-1","name":"shell","arguments":"{\\"cmd\\":\\"swift test --package-path Packages/macOS/BmuxContextEfficiency\\"}"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:00:03Z","payload":{"type":"function_call_output","threadID":"thread-counts","call_id":"call-1","output":"ok"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:01:02Z","payload":{"type":"function_call","threadID":"thread-counts","call_id":"call-2","name":"shell","arguments":"{\\"cmd\\":\\"rg ContextEfficiencyCommandCategory Packages/macOS/BmuxContextEfficiency\\"}"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:01:03Z","payload":{"type":"function_call_output","threadID":"thread-counts","call_id":"call-2","output":"ok"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:02:02Z","payload":{"type":"function_call","threadID":"thread-counts","call_id":"call-3","name":"shell","arguments":"{\\"cmd\\":\\"swift test --package-path Packages/macOS/BmuxContextEfficiency --filter Store\\"}"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:02:03Z","payload":{"type":"function_call_output","threadID":"thread-counts","call_id":"call-3","output":"ok"}}
+        {"type":"response_item","timestamp":"2026-07-14T12:00:02Z","payload":{"type":"function_call","threadID":"thread-counts","call_id":"call-4","name":"shell","arguments":"{\\"cmd\\":\\"cat docs/context-efficiency/current-status.md\\"}"}}
+        {"type":"response_item","timestamp":"2026-07-14T12:00:03Z","payload":{"type":"function_call_output","threadID":"thread-counts","call_id":"call-4","output":"ok"}}
         """ + "\n"
     }
 
