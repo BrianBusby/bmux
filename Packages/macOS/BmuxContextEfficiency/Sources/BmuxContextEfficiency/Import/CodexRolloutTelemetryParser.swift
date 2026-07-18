@@ -5,13 +5,16 @@ struct CodexRolloutTelemetryParser: Sendable {
 
     private let tokenUsageExtractor: CodexTokenUsageExtractor
     private let commandSummary: CodexRolloutCommandSummary
+    private let workItemReferenceExtractor: ContextEfficiencyWorkItemReferenceExtractor
 
     init(
         tokenUsageExtractor: CodexTokenUsageExtractor = CodexTokenUsageExtractor(),
-        commandSummary: CodexRolloutCommandSummary = CodexRolloutCommandSummary()
+        commandSummary: CodexRolloutCommandSummary = CodexRolloutCommandSummary(),
+        workItemReferenceExtractor: ContextEfficiencyWorkItemReferenceExtractor = ContextEfficiencyWorkItemReferenceExtractor()
     ) {
         self.tokenUsageExtractor = tokenUsageExtractor
         self.commandSummary = commandSummary
+        self.workItemReferenceExtractor = workItemReferenceExtractor
     }
 
     func parse(line: CodexRolloutImportedLine, fallbackThreadID: String) -> CodexRolloutParsedEvent {
@@ -33,6 +36,7 @@ struct CodexRolloutTelemetryParser: Sendable {
         let tokenUsage = tokenUsageExtractor.extract(from: object)
         let kind = eventKind(rolloutType: rolloutType, payloadType: payloadType, tokenUsage: tokenUsage)
         let parserErrorMessage = parserDiagnosticMessage(rolloutType: rolloutType, timestamp: timestamp, kind: kind)
+        let sourceReference = line.sourceReference
 
         return CodexRolloutParsedEvent(
             kind: kind,
@@ -40,10 +44,17 @@ struct CodexRolloutTelemetryParser: Sendable {
             payloadType: payloadType,
             threadID: threadID,
             timestamp: timestamp,
-            sourceReference: line.sourceReference,
+            sourceReference: sourceReference,
             tokenUsage: tokenUsage,
             toolCall: toolCall(from: payload, payloadType: payloadType),
             toolOutput: toolOutput(from: payload, payloadType: payloadType),
+            workItemReferences: workItemReferenceExtractor.references(
+                in: object,
+                sourceKind: referenceSourceKind(rolloutType: rolloutType, payloadType: payloadType),
+                sourcePath: sourceReference.sourcePath,
+                sourceReference: sourceReference,
+                observedAt: timestamp
+            ),
             parserErrorMessage: parserErrorMessage,
             model: stringValue(for: ["model"], in: [object, payload]),
             reasoningEffort: stringValue(for: ["reasoning_effort", "reasoningEffort", "reasoning"], in: [object, payload]),
@@ -97,6 +108,7 @@ struct CodexRolloutTelemetryParser: Sendable {
             tokenUsage: nil,
             toolCall: nil,
             toolOutput: nil,
+            workItemReferences: [],
             parserErrorMessage: message,
             model: nil,
             reasoningEffort: nil,
@@ -150,6 +162,25 @@ struct CodexRolloutTelemetryParser: Sendable {
             return .parserErrorObserved
         }
         return .unknownImported
+    }
+
+    private func referenceSourceKind(
+        rolloutType: String?,
+        payloadType: String?
+    ) -> ContextEfficiencyWorkItemReferenceSource {
+        if rolloutType == "session_meta" {
+            return .threadMetadata
+        }
+        if payloadType == "user_message" || payloadType == "agent_message" {
+            return .message
+        }
+        if payloadType == "function_call" {
+            return .toolCall
+        }
+        if payloadType == "function_call_output" || payloadType == "custom_tool_call_output" {
+            return .toolOutput
+        }
+        return .rolloutEvent
     }
 
     private func threadID(from object: [String: Any], payload: [String: Any]?) -> String? {

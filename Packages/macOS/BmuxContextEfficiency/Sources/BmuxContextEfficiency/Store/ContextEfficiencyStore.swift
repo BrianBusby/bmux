@@ -35,7 +35,8 @@ public actor ContextEfficiencyStore {
     /// - Throws: ``ContextEfficiencyStoreError`` or filesystem errors.
     public func importRollout(
         at sourceURL: URL,
-        fallbackThreadID: String? = nil
+        fallbackThreadID: String? = nil,
+        metadata: CodexStateThreadMetadata? = nil
     ) throws -> CodexRolloutImportResult {
         let sourcePath = sourceURL.path
         let parser = CodexRolloutTelemetryParser()
@@ -76,6 +77,18 @@ public actor ContextEfficiencyStore {
                 fileSize: sourceInfo.fileSize,
                 importedAt: importedAt
             )
+            if let metadata {
+                let metadataThreadID = idFactory.normalizedThreadID(metadata.id)
+                let metadataReferences = ContextEfficiencyWorkItemReferenceExtractor()
+                    .references(from: metadata, sourcePath: sourcePath)
+                for reference in metadataReferences {
+                    try insertWorkItemReference(
+                        reference,
+                        threadID: metadataThreadID,
+                        importedAt: importedAt
+                    )
+                }
+            }
 
             let readResult = try reader.readLines(
                 from: sourceURL,
@@ -143,6 +156,14 @@ public actor ContextEfficiencyStore {
                     )
                     toolOutputCount += 1
                 }
+
+                for reference in parsed.workItemReferences {
+                    try insertWorkItemReference(
+                        reference,
+                        threadID: threadID,
+                        importedAt: importedAt
+                    )
+                }
             }
 
             let cursor = CodexRolloutImportCursor(
@@ -201,6 +222,7 @@ public actor ContextEfficiencyStore {
                 toolOutputs: toolOutputs,
                 modelCalls: modelCalls
             ),
+            workItemReferences: try workItemReferenceRecords(threadID: threadID),
             parserErrors: try parserErrorRecords(threadID: threadID)
         )
     }
@@ -278,6 +300,7 @@ public actor ContextEfficiencyStore {
             "DELETE FROM model_calls WHERE source_path = ?",
             "DELETE FROM tool_calls WHERE source_path = ?",
             "DELETE FROM tool_outputs WHERE source_path = ?",
+            "DELETE FROM work_item_references WHERE source_path = ?",
         ] {
             let statement = try database.prepare(statementText)
             defer { statement.finalize() }
@@ -308,11 +331,13 @@ public actor ContextEfficiencyStore {
                 SELECT thread_id FROM tool_calls WHERE source_path = ?
                 UNION
                 SELECT thread_id FROM tool_outputs WHERE source_path = ?
+                UNION
+                SELECT thread_id FROM work_item_references WHERE source_path = ?
             )
             """
         )
         defer { statement.finalize() }
-        for index in 1...6 {
+        for index in 1...7 {
             try statement.bind(sourcePath, at: Int32(index))
         }
         var threadIDs: [String] = []
@@ -708,6 +733,42 @@ public actor ContextEfficiencyStore {
         _ = try statement.step()
     }
 
+    private func insertWorkItemReference(
+        _ reference: CodexRolloutParsedWorkItemReference,
+        threadID: String,
+        importedAt: Date
+    ) throws {
+        let statement = try database.prepare(
+            """
+            INSERT OR IGNORE INTO work_item_references (
+                id, thread_id, kind, reference, repository_slug, number,
+                url_string, branch_name, ticket_key, source_kind, confidence,
+                source_path, byte_offset, line_number, parser_version,
+                observed_at, imported_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(workItemReferenceID(reference, threadID: threadID), at: 1)
+        try statement.bind(threadID, at: 2)
+        try statement.bind(reference.kind.rawValue, at: 3)
+        try statement.bind(reference.reference, at: 4)
+        try statement.bind(reference.repositorySlug, at: 5)
+        try statement.bind(reference.number.map(Int64.init), at: 6)
+        try statement.bind(reference.urlString, at: 7)
+        try statement.bind(reference.branchName, at: 8)
+        try statement.bind(reference.ticketKey, at: 9)
+        try statement.bind(reference.sourceKind.rawValue, at: 10)
+        try statement.bind(reference.confidence.rawValue, at: 11)
+        try statement.bind(reference.sourcePath, at: 12)
+        try statement.bind(reference.sourceReference?.byteOffset, at: 13)
+        try statement.bind((reference.sourceReference?.lineNumber).map(Int64.init), at: 14)
+        try statement.bind((reference.sourceReference?.parserVersion).map(Int64.init), at: 15)
+        try statement.bind(timestamp(reference.observedAt), at: 16)
+        try statement.bind(timestamp(importedAt), at: 17)
+        _ = try statement.step()
+    }
+
     private func refreshThreadCounters(
         threadID: String,
         tokenUsage: ContextEfficiencyTokenUsage?,
@@ -997,6 +1058,67 @@ public actor ContextEfficiencyStore {
         return records
     }
 
+    private func workItemReferenceRecords(threadID: String) throws -> [ContextEfficiencyWorkItemReferenceRecord] {
+        let statement = try database.prepare(
+            """
+            SELECT id, thread_id, kind, reference, repository_slug, number,
+                   url_string, branch_name, ticket_key, source_kind, confidence,
+                   source_path, byte_offset, line_number, parser_version,
+                   observed_at
+            FROM work_item_references
+            WHERE thread_id = ?
+            ORDER BY rowid ASC
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(threadID, at: 1)
+        var records: [ContextEfficiencyWorkItemReferenceRecord] = []
+        while try statement.step() {
+            guard let id = statement.string(at: 0),
+                  let threadID = statement.string(at: 1),
+                  let kindRawValue = statement.string(at: 2),
+                  let kind = ContextEfficiencyWorkItemReferenceKind(rawValue: kindRawValue),
+                  let reference = statement.string(at: 3),
+                  let sourceKindRawValue = statement.string(at: 9),
+                  let sourceKind = ContextEfficiencyWorkItemReferenceSource(rawValue: sourceKindRawValue),
+                  let confidenceRawValue = statement.string(at: 10),
+                  let confidence = ContextEfficiencyWorkItemReferenceConfidence(rawValue: confidenceRawValue),
+                  let sourcePath = statement.string(at: 11) else {
+                throw ContextEfficiencyStoreError.invalidRow("invalid work item reference row")
+            }
+            let sourceReference: ContextEfficiencySourceReference?
+            if let byteOffset = statement.optionalInt64(at: 12),
+               let lineNumber = statement.optionalInt64(at: 13).map(Int.init),
+               let parserVersion = statement.optionalInt64(at: 14).map(Int.init) {
+                sourceReference = ContextEfficiencySourceReference(
+                    sourcePath: sourcePath,
+                    byteOffset: byteOffset,
+                    lineNumber: lineNumber,
+                    parserVersion: parserVersion
+                )
+            } else {
+                sourceReference = nil
+            }
+            records.append(ContextEfficiencyWorkItemReferenceRecord(
+                id: id,
+                threadID: threadID,
+                kind: kind,
+                reference: reference,
+                repositorySlug: statement.string(at: 4),
+                number: statement.optionalInt64(at: 5).map(Int.init),
+                urlString: statement.string(at: 6),
+                branchName: statement.string(at: 7),
+                ticketKey: statement.string(at: 8),
+                sourceKind: sourceKind,
+                confidence: confidence,
+                sourcePath: sourcePath,
+                sourceReference: sourceReference,
+                observedAt: date(from: statement.double(at: 15))
+            ))
+        }
+        return records
+    }
+
     private func bind(
         _ sourceReference: ContextEfficiencySourceReference,
         statement: ContextEfficiencySQLiteStatement,
@@ -1056,6 +1178,26 @@ public actor ContextEfficiencyStore {
 
     private func timestamp(_ date: Date?) -> Double? {
         date?.timeIntervalSince1970
+    }
+
+    private func workItemReferenceID(
+        _ reference: CodexRolloutParsedWorkItemReference,
+        threadID: String
+    ) -> String {
+        let sourceIdentity: String
+        if let sourceReference = reference.sourceReference {
+            sourceIdentity = "\(sourceReference.sourcePath):\(sourceReference.lineNumber):\(sourceReference.byteOffset)"
+        } else {
+            sourceIdentity = reference.sourcePath
+        }
+        let raw = [
+            threadID,
+            reference.kind.rawValue,
+            reference.reference,
+            reference.sourceKind.rawValue,
+            sourceIdentity,
+        ].joined(separator: "|")
+        return "work-item-reference:\(Data(raw.utf8).base64EncodedString())"
     }
 
     private func date(from timestamp: Double?) -> Date? {

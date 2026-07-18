@@ -73,7 +73,7 @@ extension BMUXCLI {
         let databaseURL = contextEfficiencyDatabaseURL(databasePath: databasePath)
         let store = try ContextEfficiencyStore(databaseURL: databaseURL)
         let result = try contextEfficiencyWait {
-            try await store.importRollout(at: rolloutURL, fallbackThreadID: metadata?.id)
+            try await store.importRollout(at: rolloutURL, fallbackThreadID: metadata?.id, metadata: metadata)
         }
         printContextEfficiencyImportResult(
             result,
@@ -283,6 +283,7 @@ extension BMUXCLI {
                 "tool_calls": inspection.toolCalls.map(toolCallPayload),
                 "tool_outputs": inspection.toolOutputs.map(toolOutputPayload),
                 "command_executions": inspection.commandExecutions.map(commandExecutionPayload),
+                "work_item_references": inspection.workItemReferences.map(workItemReferencePayload),
                 "parser_errors": inspection.parserErrors.map(parserErrorPayload),
             ]))
             return
@@ -575,6 +576,25 @@ extension BMUXCLI {
             "tool_output_source_reference": record.toolOutputSourceReference.map(sourceReferencePayload) as Any,
             "output_attribution_confidence": record.outputAttributionConfidence.rawValue,
             "attributed_model_call": record.attributedModelCall.map(modelCallAttributionPayload) as Any,
+        ].compactMapValues(contextEfficiencyUnwrappedValue)
+    }
+
+    private func workItemReferencePayload(_ record: ContextEfficiencyWorkItemReferenceRecord) -> [String: Any] {
+        [
+            "id": record.id,
+            "thread_id": record.threadID,
+            "kind": record.kind.rawValue,
+            "reference": record.reference,
+            "repository_slug": record.repositorySlug as Any,
+            "number": record.number as Any,
+            "url_string": record.urlString as Any,
+            "branch_name": record.branchName as Any,
+            "ticket_key": record.ticketKey as Any,
+            "source_kind": record.sourceKind.rawValue,
+            "confidence": record.confidence.rawValue,
+            "source_path": record.sourcePath,
+            "source_reference": record.sourceReference.map(sourceReferencePayload) as Any,
+            "observed_at": record.observedAt.map(contextEfficiencyDateString) as Any,
         ].compactMapValues(contextEfficiencyUnwrappedValue)
     }
 

@@ -10,6 +10,7 @@ struct CodexRolloutParsedEvent: Equatable, Sendable {
     var tokenUsage: ContextEfficiencyTokenUsage?
     var toolCall: CodexRolloutParsedToolCall?
     var toolOutput: CodexRolloutParsedToolOutput?
+    var workItemReferences: [CodexRolloutParsedWorkItemReference]
     var parserErrorMessage: String?
     var model: String?
     var reasoningEffort: String?

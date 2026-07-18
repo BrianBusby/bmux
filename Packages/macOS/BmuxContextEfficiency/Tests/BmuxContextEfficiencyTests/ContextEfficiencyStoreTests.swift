@@ -16,15 +16,15 @@ struct ContextEfficiencyStoreTests {
         let store = try ContextEfficiencyStore(databaseURL: databaseURL)
         let result = try await store.importRollout(at: rolloutURL, fallbackThreadID: "thread-a")
 
-        #expect(result.lineCount == 7)
-        #expect(result.rolloutEventCount == 7)
+        #expect(result.lineCount == 8)
+        #expect(result.rolloutEventCount == 8)
         #expect(result.modelCallCount == 1)
         #expect(result.duplicateTokenTelemetryCount == 1)
         #expect(result.parserErrorCount == 1)
         #expect(result.toolCallCount == 1)
         #expect(result.toolOutputCount == 1)
         #expect(result.compactionCount == 1)
-        #expect(result.cursor.lineNumber == 7)
+        #expect(result.cursor.lineNumber == 8)
 
         let inspection = try await store.inspectThread("codex:thread-a")
         #expect(inspection.thread?.model == "gpt-5")
@@ -41,11 +41,16 @@ struct ContextEfficiencyStoreTests {
         #expect(inspection.commandExecutions.first?.normalizedExecutable == "swift")
         #expect(inspection.commandExecutions.first?.category == .validationRuns)
         #expect(inspection.commandExecutions.first?.outputAttributionConfidence == .exactToolCallLink)
+        #expect(inspection.workItemReferences.map(\.reference).contains("github:manaflow-ai/bmux#4536"))
+        #expect(inspection.workItemReferences.map(\.reference).contains("ticket:STE-1964"))
+        #expect(inspection.workItemReferences.map(\.reference).contains("branch:context-efficiency-wip-20260715"))
+        #expect(inspection.workItemReferences.map(\.reference).contains("github-repo:manaflow-ai/bmux"))
         #expect(inspection.parserErrors.count == 1)
 
         let encodedInspection = try #require(String(data: try JSONEncoder().encode(inspection), encoding: .utf8))
         #expect(!encodedInspection.contains("Original token count: 1800"))
         #expect(!encodedInspection.contains("Raw output: bmux"))
+        #expect(!encodedInspection.contains("Continue STE-1964 on"))
 
         let summary = try await store.summarizeDay("2026-07-13")
         #expect(summary.threadCount == 1)
@@ -58,7 +63,7 @@ struct ContextEfficiencyStoreTests {
         let secondImport = try await store.importRollout(at: rolloutURL, fallbackThreadID: "thread-a")
         #expect(secondImport.lineCount == 0)
         #expect(secondImport.modelCallCount == 0)
-        #expect(secondImport.cursor.lineNumber == 7)
+        #expect(secondImport.cursor.lineNumber == 8)
     }
 
     @Test
@@ -80,7 +85,7 @@ struct ContextEfficiencyStoreTests {
         let result = try await store.importRollout(at: rolloutURL, fallbackThreadID: "thread-a")
         #expect(result.lineCount == 1)
         #expect(result.modelCallCount == 1)
-        #expect(result.cursor.lineNumber == 8)
+        #expect(result.cursor.lineNumber == 9)
 
         let inspection = try await store.inspectThread("codex:thread-a")
         #expect(inspection.modelCalls.count == 2)
@@ -207,6 +212,7 @@ struct ContextEfficiencyStoreTests {
             "toolCalls",
             "toolOutputs",
             "commandExecutions",
+            "workItemReferences",
             "parserErrors",
         ])
 
@@ -244,9 +250,26 @@ struct ContextEfficiencyStoreTests {
         try assertSourceReference(commandExecution["toolCallSourceReference"], sourcePath: rolloutURL.path, lineNumber: 4)
         try assertSourceReference(commandExecution["toolOutputSourceReference"], sourcePath: rolloutURL.path, lineNumber: 5)
 
+        let workItemReferences = try #require(inspectionPayload["workItemReferences"] as? [[String: Any]])
+        let pullRequestReference = try #require(workItemReferences.first { $0["reference"] as? String == "github:manaflow-ai/bmux#4536" })
+        #expect(pullRequestReference["kind"] as? String == "pull_request")
+        #expect(pullRequestReference["repositorySlug"] as? String == "manaflow-ai/bmux")
+        #expect(pullRequestReference["number"] as? Int == 4536)
+        #expect(pullRequestReference["sourceKind"] as? String == "message")
+        #expect(pullRequestReference["confidence"] as? String == "explicit_reference")
+        try assertSourceReference(pullRequestReference["sourceReference"], sourcePath: rolloutURL.path, lineNumber: 6)
+
+        let branchReference = try #require(workItemReferences.first { $0["reference"] as? String == "branch:context-efficiency-wip-20260715" })
+        #expect(branchReference["kind"] as? String == "branch")
+        #expect(branchReference["branchName"] as? String == "context-efficiency-wip-20260715")
+        #expect(branchReference["sourceKind"] as? String == "thread_metadata")
+        #expect(branchReference["confidence"] as? String == "branch_candidate")
+        #expect(branchReference["message"] == nil)
+        try assertSourceReference(branchReference["sourceReference"], sourcePath: rolloutURL.path, lineNumber: 1)
+
         let parserErrors = try #require(inspectionPayload["parserErrors"] as? [[String: Any]])
         let parserError = try #require(parserErrors.first)
-        try assertSourceReference(parserError["sourceReference"], sourcePath: rolloutURL.path, lineNumber: 7)
+        try assertSourceReference(parserError["sourceReference"], sourcePath: rolloutURL.path, lineNumber: 8)
 
         let summary = try await store.summarizeDay("2026-07-13")
         let encodedSummary = try encodedJSONString(summary)
@@ -304,11 +327,12 @@ struct ContextEfficiencyStoreTests {
 
     private var initialRollout: String {
         """
-        {"type":"session_meta","timestamp":"2026-07-13T11:59:58Z","payload":{"id":"thread-a","model":"gpt-5","reasoning_effort":"high","cwd":"/repo/bmux"}}
+        {"type":"session_meta","timestamp":"2026-07-13T11:59:58Z","payload":{"id":"thread-a","model":"gpt-5","reasoning_effort":"high","cwd":"/repo/bmux","git_branch":"context-efficiency-wip-20260715","git_origin_url":"git@github.com:manaflow-ai/bmux.git"}}
         {"type":"event_msg","timestamp":"2026-07-13T12:00:00Z","payload":{"type":"token_usage","threadID":"thread-a","tokenUsage":{"inputTokens":120000,"cachedInputTokens":100000,"outputTokens":800,"totalTokens":120800}}}
         {"type":"event_msg","timestamp":"2026-07-13T12:00:01Z","payload":{"type":"token_usage","threadID":"thread-a","tokenUsage":{"inputTokens":120000,"cachedInputTokens":100000,"outputTokens":800,"totalTokens":120800}}}
         {"type":"response_item","timestamp":"2026-07-13T12:00:02Z","payload":{"type":"function_call","threadID":"thread-a","call_id":"call-1","name":"shell","arguments":"{\\"cmd\\":\\"swift test --package-path Packages/macOS/BmuxContextEfficiency\\"}"}}
         {"type":"response_item","timestamp":"2026-07-13T12:00:03Z","payload":{"type":"function_call_output","threadID":"thread-a","call_id":"call-1","output":"Original token count: 1800\\nRaw output: bmux agent-token-output show abc\\nok"}}
+        {"type":"event_msg","timestamp":"2026-07-13T12:00:03Z","payload":{"type":"user_message","threadID":"thread-a","message":"Continue STE-1964 on https://github.com/manaflow-ai/bmux/pull/4536"}}
         {"type":"compacted","timestamp":"2026-07-13T12:00:04Z","payload":{"threadID":"thread-a"}}
         {not-json
         """ + "\n"
