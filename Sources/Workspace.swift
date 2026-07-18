@@ -1967,7 +1967,9 @@ final class Workspace: Identifiable, ObservableObject {
     /// fallback: a workspace that never fired a notification still carries a
     /// real timestamp instead of nothing.
     let createdAt = Date()
-    @Published var title: String
+    @Published var title: String {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: title) }
+    }
     @Published var customTitle: String?
     /// Provenance of `customTitle`: `.user` for manual renames (sidebar,
     /// CLI, command palette), `.auto` for AI auto-naming. `nil` when no
@@ -1975,12 +1977,19 @@ final class Workspace: Identifiable, ObservableObject {
     /// treated as `.user` so auto-naming never overwrites a title it
     /// cannot prove it owns.
     @Published var customTitleSource: CustomTitleSource?
-    @Published var customDescription: String?
-    @Published var isPinned: Bool = false
+    @Published var customDescription: String? {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: customDescription) }
+    }
+    @Published var isPinned: Bool = false {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: isPinned) }
+    }
     /// Identifier of the WorkspaceGroup this workspace belongs to, or nil if ungrouped.
     /// The group entity itself lives in `TabManager.workspaceGroups`.
     @Published var groupId: UUID?
-    @Published var customColor: String?  // hex string, e.g. "#C0392B"
+    /// Custom workspace color hex string, e.g. "#C0392B".
+    @Published var customColor: String? {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: customColor) }
+    }
     /// User-defined environment variables applied to every shell spawned in this
     /// workspace: the initial terminal, every later pane/surface/split, and every
     /// surface recreated on session restore. Managed `BMUX_*` and terminal-identity
@@ -2273,9 +2282,15 @@ final class Workspace: Identifiable, ObservableObject {
         get { sidebarMetadata.metadataBlocks }
         set { sidebarMetadata.metadataBlocks = newValue }
     }
-    @Published private(set) var latestConversationMessage: String?
-    @Published private(set) var latestSubmittedMessage: String?
-    @Published private(set) var latestSubmittedAt: Date?
+    @Published private(set) var latestConversationMessage: String? {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: latestConversationMessage) }
+    }
+    @Published private(set) var latestSubmittedMessage: String? {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: latestSubmittedMessage) }
+    }
+    @Published private(set) var latestSubmittedAt: Date? {
+        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: latestSubmittedAt) }
+    }
     var logEntries: [SidebarLogEntry] {
         get { sidebarMetadata.logEntries }
         set { sidebarMetadata.logEntries = newValue }
@@ -2406,10 +2421,19 @@ final class Workspace: Identifiable, ObservableObject {
     typealias SurfaceResumeStartupLaunch = WorkspaceSurfaceResumeStartupLaunch
 
     // Sidebar rows cache snapshots, so observation must begin with the current
-    // workspace state. Build state publishers from @Published current values
-    // instead of dropping the first value and repairing timing with a Void event.
+    // workspace state. Changes are sent from property didSet hooks because
+    // @Published emits in willSet, before row snapshots can read the new value.
+    let sidebarImmediateObservationChangeSubject = PassthroughSubject<Void, Never>()
     lazy var sidebarImmediateObservationPublisher: AnyPublisher<Void, Never> = makeSidebarImmediateObservationPublisher()
     lazy var sidebarObservationPublisher: AnyPublisher<Void, Never> = makeSidebarObservationPublisher()
+
+    private func publishSidebarImmediateObservationChangeIfNeeded<Value: Equatable>(
+        oldValue: Value,
+        newValue: Value
+    ) {
+        guard oldValue != newValue else { return }
+        sidebarImmediateObservationChangeSubject.send(())
+    }
 
     private func scheduleExtensionSidebarProjectRootRefresh(for directory: String) {
         extensionSidebarProjectRootRefreshID &+= 1
@@ -5117,10 +5141,12 @@ final class Workspace: Identifiable, ObservableObject {
             panelGitBranches[panelId] = state
         }
         if branchChanged {
-            if panelPullRequests[panelId]?.branch == nil {
+            let nextBranch = state.branch.normalizedSidebarBranchName
+            if panelPullRequests[panelId]?.branch?.normalizedSidebarBranchName != nextBranch {
                 panelPullRequests.removeValue(forKey: panelId)
             }
-            if panelId == focusedPanelId, pullRequest?.branch == nil {
+            if panelId == focusedPanelId,
+               pullRequest?.branch?.normalizedSidebarBranchName != nextBranch {
                 pullRequest = nil
             }
         }
@@ -5485,9 +5511,9 @@ final class Workspace: Identifiable, ObservableObject {
     @discardableResult
     func recordSubmittedMessage(_ message: String?) -> Bool {
         guard let preview = Self.conversationMessagePreview(from: message) else { return false }
-        _ = recordConversationMessage(preview)
         latestSubmittedMessage = preview
         latestSubmittedAt = Date()
+        _ = recordConversationMessage(preview)
         return true
     }
 

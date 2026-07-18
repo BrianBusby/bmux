@@ -103,6 +103,9 @@
          location = "group:BmuxCommandPalette">
       </FileRef>
       <FileRef
+         location = "group:BmuxContextEfficiency">
+      </FileRef>
+      <FileRef
          location = "group:BmuxControlSocket">
       </FileRef>
       <FileRef

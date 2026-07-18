@@ -179,6 +179,7 @@
 		C0DE71000000000000000001 /* BMUXCLI+CodexTokenAudit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE71000000000000000002 /* BMUXCLI+CodexTokenAudit.swift */; };
 		B90000D2A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B90000D1A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift */; };
 		B9000050A1B2C3D4E5F60719 /* BMUXCLI+Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000051A1B2C3D4E5F60719 /* BMUXCLI+Config.swift */; };
+		C0DE72000000000000000001 /* BMUXCLI+ContextEfficiency.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE72000000000000000002 /* BMUXCLI+ContextEfficiency.swift */; };
 		B9000035A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000031A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift */; };
 		B9000064A1B2C3D4E5F60719 /* BMUXCLI+Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000065A1B2C3D4E5F60719 /* BMUXCLI+Events.swift */; };
 		B9000046A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000047A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift */; };
@@ -236,6 +237,7 @@
 		C1A2B3C4D5E6F70800000001 /* BmuxConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3C4D5E6F70800000002 /* BmuxConfigTests.swift */; };
 		C0DEF0A10000000000000001 /* BmuxConfigUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEF0A10000000000000002 /* BmuxConfigUI.swift */; };
 		A5FB1205 /* BmuxConfigWorkspaceActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB1206 /* BmuxConfigWorkspaceActionTests.swift */; };
+		C0DE72010000000000000003 /* BmuxContextEfficiency in Frameworks */ = {isa = PBXBuildFile; productRef = C0DE72010000000000000002 /* BmuxContextEfficiency */; };
 		C750100000000000000000A3 /* BmuxControlSocket in Frameworks */ = {isa = PBXBuildFile; productRef = C750100000000000000000A2 /* BmuxControlSocket */; };
 		CC0DE00000000000000000A3 /* BmuxCore in Frameworks */ = {isa = PBXBuildFile; productRef = CC0DE00000000000000000A2 /* BmuxCore */; };
 		CC0DE00000000000000000A4 /* BmuxCore in Frameworks */ = {isa = PBXBuildFile; productRef = CC0DE00000000000000000A2 /* BmuxCore */; };
@@ -1780,6 +1782,7 @@
 		C0DE71000000000000000002 /* BMUXCLI+CodexTokenAudit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexTokenAudit.swift"; sourceTree = "<group>"; };
 		B90000D1A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CommandSuggestions.swift"; sourceTree = "<group>"; };
 		B9000051A1B2C3D4E5F60719 /* BMUXCLI+Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Config.swift"; sourceTree = "<group>"; };
+		C0DE72000000000000000002 /* BMUXCLI+ContextEfficiency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ContextEfficiency.swift"; sourceTree = "<group>"; };
 		B9000031A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+DocsSettings.swift"; sourceTree = "<group>"; };
 		B9000065A1B2C3D4E5F60719 /* BMUXCLI+Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Events.swift"; sourceTree = "<group>"; };
 		B9000047A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ExecutableResolution.swift"; sourceTree = "<group>"; };
@@ -3158,6 +3161,7 @@
 			files = (
 				AC4A6E7C4A700001AC4A0101 /* BmuxAgentChat in Frameworks */,
 				A5B00004A1B2C3D4E5F60718 /* BMUXAgentLaunch in Frameworks */,
+				C0DE72010000000000000003 /* BmuxContextEfficiency in Frameworks */,
 				CF00F00000000000000000A4 /* BmuxFoundation in Frameworks */,
 				CD0CFE5700000000CD0CFE57 /* BmuxSettings in Frameworks */,
 				C5A1FED200000000000000E2 /* BmuxSidebarInterpreterClient in Frameworks */,
@@ -4302,6 +4306,7 @@
 				B9000069A1B2C3D4E5F60719 /* BMUXCLI+AmpExtension.swift */,
 				C0D3F1F00000000000000102 /* BMUXCLI+CodexFireAndForgetHooks.swift */,
 				C0DE71000000000000000002 /* BMUXCLI+CodexTokenAudit.swift */,
+				C0DE72000000000000000002 /* BMUXCLI+ContextEfficiency.swift */,
 				B9000073A1B2C3D4E5F60719 /* BMUXCLI+OmpExtension.swift */,
 				C05555010000000000000002 /* BMUXCLI+PiExtension.swift */,
 				C05555010000000000000004 /* BMUXCLI+PiExtensionSource.swift */,
@@ -4876,6 +4881,7 @@
 				C5A1FED100000000000000D3 /* BmuxSwiftRenderUI */,
 				C5A1FED200000000000000E3 /* BmuxSidebarInterpreterClient */,
 				CD0CFE5200000000CD0CFE52 /* BmuxSettings */,
+				C0DE72010000000000000002 /* BmuxContextEfficiency */,
 				CF00F00000000000000000A2 /* BmuxFoundation */,
 			);
 			productName = bmux;
@@ -4999,6 +5005,7 @@
 				C0DE45000000000000000003 /* XCLocalSwiftPackageReference "BmuxExtensionKit" */,
 				C0DE4A000000000000000003 /* XCLocalSwiftPackageReference "BmuxSidebarProviderKit" */,
 				C0DE49000000000000000003 /* XCLocalSwiftPackageReference "BmuxExtensionSidebarExamples" */,
+				C0DE72010000000000000001 /* XCLocalSwiftPackageReference "BmuxContextEfficiency" */,
 				A5C0DE0000000000000000A1 /* XCLocalSwiftPackageReference "BMUXProjectModel" */,
 				A5B00001A1B2C3D4E5F60718 /* XCLocalSwiftPackageReference "BMUXAgentLaunch" */,
 				A500D012A1B2C3D4E5F60718 /* XCLocalSwiftPackageReference "BMUXDebugLog" */,
@@ -6176,6 +6183,7 @@
 				C0DE71000000000000000001 /* BMUXCLI+CodexTokenAudit.swift in Sources */,
 				B90000D2A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift in Sources */,
 				B9000050A1B2C3D4E5F60719 /* BMUXCLI+Config.swift in Sources */,
+				C0DE72000000000000000001 /* BMUXCLI+ContextEfficiency.swift in Sources */,
 				B9000035A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift in Sources */,
 				B9000064A1B2C3D4E5F60719 /* BMUXCLI+Events.swift in Sources */,
 				B9000046A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift in Sources */,
@@ -7133,6 +7141,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Examples/BmuxExtensionSidebarExamples;
 		};
+		C0DE72010000000000000001 /* XCLocalSwiftPackageReference "BmuxContextEfficiency" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/macOS/BmuxContextEfficiency;
+		};
 		C0DE4A000000000000000003 /* XCLocalSwiftPackageReference "BmuxSidebarProviderKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/macOS/BmuxSidebarProviderKit;
@@ -7317,6 +7329,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C0DE4A000000000000000003 /* XCLocalSwiftPackageReference "BmuxSidebarProviderKit" */;
 			productName = BmuxSidebarProviderKit;
+		};
+		C0DE72010000000000000002 /* BmuxContextEfficiency */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C0DE72010000000000000001 /* XCLocalSwiftPackageReference "BmuxContextEfficiency" */;
+			productName = BmuxContextEfficiency;
 		};
 		A5C0DE0000000000000000A2 /* BMUXProjectModel */ = {
 			isa = XCSwiftPackageProductDependency;

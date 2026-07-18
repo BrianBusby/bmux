@@ -40,7 +40,7 @@ final class RemoteTmuxSessionMirror {
             tabId: workspace.id,
             title: safe,
             propagateToRemoteTmux: false
-        ) == true {
+            ) == true {
             return
         }
         _ = workspace.setCustomTitle(safe, source: .auto)

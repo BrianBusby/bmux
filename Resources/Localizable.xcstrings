@@ -229498,6 +229498,321 @@
         }
       }
     },
+    "cli.contextEfficiency.error.asyncResultMissing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "context-efficiency command did not produce a result" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "context-efficiency コマンドが結果を生成しませんでした" } }
+      }
+    },
+    "cli.contextEfficiency.error.importRequiresPath": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Usage: bmux context-efficiency import <rollout-path> [--database <path>] [--codex-home <path>] [--json]" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "使用法: bmux context-efficiency import <rollout-path> [--database <path>] [--codex-home <path>] [--json]" } }
+      }
+    },
+    "cli.contextEfficiency.error.inspectRequiresThread": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Usage: bmux context-efficiency inspect-thread <thread-id> [--database <path>] [--json]" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "使用法: bmux context-efficiency inspect-thread <thread-id> [--database <path>] [--json]" } }
+      }
+    },
+    "cli.contextEfficiency.error.rolloutMissing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No rollout JSONL file found at %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@ に rollout JSONL ファイルが見つかりません" } }
+      }
+    },
+    "cli.contextEfficiency.error.summarizeRequiresDay": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Usage: bmux context-efficiency summarize-day YYYY-MM-DD [--database <path>] [--json]" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "使用法: bmux context-efficiency summarize-day YYYY-MM-DD [--database <path>] [--json]" } }
+      }
+    },
+    "cli.contextEfficiency.error.unexpectedArgument": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@: unexpected argument '%@'" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@: 予期しない引数 '%@'" } }
+      }
+    },
+    "cli.contextEfficiency.error.unknownFlag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@: unknown flag '%@'" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@: 不明なフラグ '%@'" } }
+      }
+    },
+    "cli.contextEfficiency.error.unknownSubcommand": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "context-efficiency: unknown subcommand '%@'\n\n%@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "context-efficiency: 不明なサブコマンド '%@'\n\n%@" } }
+      }
+    },
+    "cli.contextEfficiency.output.cachedInput": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cached input tokens: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "キャッシュ済み入力トークン: %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.compactions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Compactions: %d" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "圧縮: %d" } }
+      }
+    },
+    "cli.contextEfficiency.output.cursor": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cursor: line %d, byte %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "カーソル: 行 %d、バイト %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.cursorReset": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cursor was reset because the source file shrank." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ソースファイルが縮小したためカーソルをリセットしました。" } }
+      }
+    },
+    "cli.contextEfficiency.output.cwd": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "CWD: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "CWD: %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.database": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Database: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "データベース: %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.dayTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "# Context efficiency day %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "# コンテキスト効率の日別概要 %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.duplicates": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Duplicate token telemetry skipped: %d" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "スキップした重複トークンテレメトリ: %d" } }
+      }
+    },
+    "cli.contextEfficiency.output.evidenceNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Raw rollout content was not copied; source path, line, and byte offsets are stored for recovery." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "生の rollout 内容はコピーしていません。復元用にソースパス、行、バイトオフセットを保存しています。" } }
+      }
+    },
+    "cli.contextEfficiency.output.importTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "# Context efficiency import" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "# コンテキスト効率インポート" } }
+      }
+    },
+    "cli.contextEfficiency.output.lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Lines imported: %d" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "インポートした行数: %d" } }
+      }
+    },
+    "cli.contextEfficiency.output.model": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Model: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "モデル: %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.modelCallHeader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Model-call evidence:" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "モデル呼び出しの証拠:" } }
+      }
+    },
+    "cli.contextEfficiency.output.modelCallRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "  line %d byte %@ total %@ cached %@ output %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "  行 %d バイト %@ 合計 %@ キャッシュ %@ 出力 %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.modelCalls": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Model calls: %d" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "モデル呼び出し: %d" } }
+      }
+    },
+    "cli.contextEfficiency.output.outputTokens": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Output tokens: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "出力トークン: %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.parserErrorHeader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Parser errors:" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "パーサーエラー:" } }
+      }
+    },
+    "cli.contextEfficiency.output.parserErrorRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "  line %d byte %@ %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "  行 %d バイト %@ %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.parserErrors": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Parser errors: %d" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "パーサーエラー: %d" } }
+      }
+    },
+    "cli.contextEfficiency.output.reasoning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Reasoning: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "推論: %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.rollout": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Rollout: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Rollout: %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.rolloutEvents": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Rollout events: %d" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Rollout イベント: %d" } }
+      }
+    },
+    "cli.contextEfficiency.output.source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Source: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ソース: %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.sourcesHeader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "## Source evidence" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "## ソース証拠" } }
+      }
+    },
+    "cli.contextEfficiency.output.thread": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Thread: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "スレッド: %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.threadNotFound": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No imported context-efficiency thread found." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "インポート済みの context-efficiency スレッドが見つかりません。" } }
+      }
+    },
+    "cli.contextEfficiency.output.threadTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "# Context efficiency thread" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "# コンテキスト効率スレッド" } }
+      }
+    },
+    "cli.contextEfficiency.output.threads": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Threads: %d" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "スレッド: %d" } }
+      }
+    },
+    "cli.contextEfficiency.output.toolCallHeader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Tool-call evidence:" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ツール呼び出しの証拠:" } }
+      }
+    },
+    "cli.contextEfficiency.output.toolCallRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "  line %d byte %@ %@ args %@ bytes" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "  行 %d バイト %@ %@ 引数 %@ バイト" } }
+      }
+    },
+    "cli.contextEfficiency.output.toolFacts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Tool facts: %d calls, %d outputs" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ツールファクト: 呼び出し %d、出力 %d" } }
+      }
+    },
+    "cli.contextEfficiency.output.toolOutputHeader": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Tool-output evidence:" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ツール出力の証拠:" } }
+      }
+    },
+    "cli.contextEfficiency.output.toolOutputRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "  line %d byte %@ output %@ bytes estimated-original %@ tokens raw refs %d" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "  行 %d バイト %@ 出力 %@ バイト 推定元 %@ トークン 生参照 %d" } }
+      }
+    },
+    "cli.contextEfficiency.output.totalTokens": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Total tokens: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "合計トークン: %@" } }
+      }
+    },
+    "cli.contextEfficiency.output.totals": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Totals: %@ tokens, %d model calls, %d compactions" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "合計: %@ トークン、モデル呼び出し %d、圧縮 %d" } }
+      }
+    },
+    "cli.contextEfficiency.output.unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "unknown" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "不明" } }
+      }
+    },
+    "cli.contextEfficiency.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Usage:\n  bmux context-efficiency import <rollout-path> [--database <path>] [--codex-home <path>] [--json]\n  bmux context-efficiency inspect-thread <thread-id> [--database <path>] [--json]\n  bmux context-efficiency summarize-day YYYY-MM-DD [--database <path>] [--json]\n\nImport and inspect read-only Codex rollout telemetry without copying raw rollout payloads." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "使用法:\n  bmux context-efficiency import <rollout-path> [--database <path>] [--codex-home <path>] [--json]\n  bmux context-efficiency inspect-thread <thread-id> [--database <path>] [--json]\n  bmux context-efficiency summarize-day YYYY-MM-DD [--database <path>] [--json]\n\n生の rollout ペイロードをコピーせずに、読み取り専用の Codex rollout テレメトリをインポートして検査します。" } }
+      }
+    },
     "cli.codexTokenAudit.error.databaseClosed": {
       "extractionState": "manual",
       "localizations": {

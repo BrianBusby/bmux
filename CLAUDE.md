@@ -1,5 +1,15 @@
 # bmux agent notes
 
+## Context efficiency roadmap
+
+Before continuing the context-efficiency, thread-lifecycle, provenance, and handoff system work, read these files in order:
+
+1. `docs/context-efficiency/current-status.md`
+2. `docs/context-efficiency/roadmap.md`
+3. `docs/context-efficiency/milestones.md`
+
+`current-status.md` is the live handoff index: it records the active phase, phase gate, last completed slice, next valid targets, verification commands, and known local quirks. Update it at the end of every context-efficiency slice before handing off. `roadmap.md` preserves the user's requested roadmap verbatim and should be treated as durable project memory for this effort.
+
 ## Initial setup
 
 Run the setup script to initialize submodules, build GhosttyKit, and install the pbxproj normalization pre-commit hook:

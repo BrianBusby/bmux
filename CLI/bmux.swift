@@ -3247,6 +3247,14 @@ struct BMUXCLI {
             )
             return
         }
+        if command == "context-efficiency" {
+            try runContextEfficiencyCommand(
+                commandArgs: commandArgs,
+                jsonOutput: jsonOutput,
+                processEnv: processEnv
+            )
+            return
+        }
         if command == "diff-viewer-server" { try runDiffViewerServerCommand(commandArgs: commandArgs); return }
         if command == "__diff-viewer-refs" { try runDiffViewerRefsCommand(commandArgs: commandArgs); return }
         if command == "__diff-viewer-branch" { try runDiffViewerBranchRegenerateCommand(commandArgs: commandArgs); return }
@@ -15309,6 +15317,8 @@ struct BMUXCLI {
             return configUsage()
         case "agent-token-output":
             return agentTokenOutputUsage()
+        case "context-efficiency":
+            return contextEfficiencyUsage()
         case "welcome":
             return """
             Usage: bmux welcome
@@ -31380,7 +31390,12 @@ export default BMUXSessionRestore;
             }
             let mapped = sessionId.isEmpty ? nil : (try? store.lookup(sessionId: sessionId))
             guard let target = resolveAgentHookTarget(mapped: mapped) else {
-                didSendFeedTelemetry = true
+                switch action {
+                case .approvalResponse:
+                    didSendFeedTelemetry = true
+                default:
+                    break
+                }
                 print("{}")
                 return
             }
@@ -31684,7 +31699,16 @@ export default BMUXSessionRestore;
                 force: shouldForceCustomAutoNaming(for: def)
             )
 
-        case .approvalResponse:
+        case .toolStart, .approvalResponse:
+            let telemetryName: String
+            switch action {
+            case .toolStart:
+                telemetryName = "tool-start"
+            case .approvalResponse:
+                telemetryName = "approval-response"
+            default:
+                telemetryName = "running-reconcile"
+            }
             let mapped = sessionId.isEmpty ? nil : (try? store.lookup(sessionId: sessionId))
             guard let target = resolveAgentHookTarget(mapped: mapped) else {
                 didSendFeedTelemetry = true
@@ -31742,7 +31766,7 @@ export default BMUXSessionRestore;
                     clearNotifications: true
                 )
             } else {
-                telemetry.breadcrumb("\(def.name)-hook.approval-response.nested-suppressed")
+                telemetry.breadcrumb("\(def.name)-hook.\(telemetryName).nested-suppressed")
             }
 
         case .notification:

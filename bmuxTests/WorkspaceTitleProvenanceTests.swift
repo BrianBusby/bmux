@@ -83,7 +83,7 @@ import Testing
         #expect(workspace.effectiveCustomTitleSource == .autoPrompt)
     }
 
-    @Test func carriedTitleWithoutProvenanceIsTreatedAsUserOwned() {
+    @Test func carriedTitleWithoutProvenanceIsNotTreatedAsUserOwned() {
         let workspace = Workspace(title: "Terminal")
         // Simulate a custom title that arrived without provenance (legacy
         // restore, carried panel move): direct assignment bypasses the setter.
@@ -216,9 +216,16 @@ import Testing
         )
         #expect(legacyDecoded.customTitleSource == nil)
 
-        // Restore semantics: absent provenance restores as user-owned.
+        // Restore semantics: absent provenance restores as undecided and is
+        // treated as non-user ownership for future auto titles.
         let workspace = Workspace(title: "Terminal")
-        workspace.setCustomTitle(legacyDecoded.customTitle, source: legacyDecoded.customTitleSource ?? .user)
-        #expect(workspace.effectiveCustomTitleSource == .user)
+        if let source = legacyDecoded.customTitleSource {
+            workspace.setCustomTitle(legacyDecoded.customTitle, source: source)
+        } else if legacyDecoded.customTitle != nil {
+            workspace.setCustomTitle(legacyDecoded.customTitle, source: .auto)
+        } else {
+            workspace.setCustomTitle(nil)
+        }
+        #expect(workspace.effectiveCustomTitleSource == .auto)
     }
 }

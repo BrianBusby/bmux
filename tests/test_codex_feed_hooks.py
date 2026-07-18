@@ -2411,6 +2411,75 @@ def test_codex_pre_tool_use_is_telemetry_not_actionable(cli_path: str, root: Pat
         raise AssertionError(f"wrong PreToolUse event: {frame!r}")
 
 
+def test_codex_wrapper_pre_tool_use_reconciles_agent_visible_state_to_running(cli_path: str, root: Path) -> None:
+    socket_path = root / "bmux-codex-wrapper-pretool-state.sock"
+    state_dir = root / "hook-state-wrapper-pretool"
+    state_dir.mkdir()
+    env = os.environ.copy()
+    env["BMUX_SOCKET_PATH"] = str(socket_path)
+    env["BMUX_SURFACE_ID"] = FAKE_SURFACE_ID
+    env["BMUX_WORKSPACE_ID"] = FAKE_WORKSPACE_ID
+    env["BMUX_AGENT_HOOK_STATE_DIR"] = str(state_dir)
+    payload = {
+        "session_id": "codex-wrapper-session",
+        "turn_id": "turn-running-recovery",
+        "cwd": "/tmp/project",
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "printf hi"},
+    }
+
+    with FakeBmuxSocket(socket_path, None) as fake:
+        result = subprocess.run(
+            [cli_path, "--socket", str(socket_path), "hooks", "codex", "pre-tool-use"],
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            check=False,
+            env=env,
+            timeout=10,
+        )
+        if result.returncode != 0:
+            raise AssertionError(
+                f"hooks codex pre-tool-use failed exit={result.returncode}\n"
+                f"stdout={result.stdout}\nstderr={result.stderr}"
+            )
+        stdout = json.loads(result.stdout.strip() or "{}")
+        if stdout != {}:
+            raise AssertionError(f"Codex wrapper PreToolUse should emit empty hook output: {stdout!r}")
+
+        feed_frame = next((frame for frame in fake.frames if frame.get("method") == "feed.push"), None)
+        if feed_frame is None:
+            raise AssertionError(f"Codex wrapper PreToolUse did not send feed telemetry: {fake.frames!r}")
+        params = feed_frame["params"]
+        if params.get("wait_timeout_seconds") != 0:
+            raise AssertionError(f"Codex wrapper PreToolUse should not wait for Feed reply: {feed_frame!r}")
+        event = params["event"]
+        if event.get("hook_event_name") != "PreToolUse" or event.get("_source") != "codex":
+            raise AssertionError(f"wrong wrapper PreToolUse feed event: {event!r}")
+
+        raw_commands = [frame.get("raw", "") for frame in fake.frames]
+        tab_and_panel = "--tab=" + FAKE_WORKSPACE_ID + " --panel=" + FAKE_SURFACE_ID
+        if not any(
+            command.startswith("set_agent_lifecycle codex running ")
+            and tab_and_panel in command
+            for command in raw_commands
+        ):
+            raise AssertionError(f"Codex wrapper PreToolUse did not mark lifecycle running: {fake.frames!r}")
+        if not any(
+            command.startswith("clear_notifications ")
+            and tab_and_panel in command
+            for command in raw_commands
+        ):
+            raise AssertionError(f"Codex wrapper PreToolUse did not clear stale notifications: {fake.frames!r}")
+        if not any(
+            command.startswith("set_status codex Running --icon=bolt.fill --color=#4C8DFF ")
+            and tab_and_panel in command
+            for command in raw_commands
+        ):
+            raise AssertionError(f"Codex wrapper PreToolUse did not replace visible status with Running: {fake.frames!r}")
+
+
 def test_codex_optimize_pre_tool_use_rewrites_shell_command(cli_path: str, root: Path) -> None:
     tool_workdir = root / "package"
     tool_workdir.mkdir()
@@ -3091,6 +3160,7 @@ def main() -> int:
             test_codex_permission_request_is_nonblocking_telemetry(cli_path, root)
             test_codex_permission_decisions_do_not_block_approval_reviewer(cli_path, root)
             test_codex_pre_tool_use_is_telemetry_not_actionable(cli_path, root)
+            test_codex_wrapper_pre_tool_use_reconciles_agent_visible_state_to_running(cli_path, root)
             test_codex_optimize_pre_tool_use_rewrites_shell_command(cli_path, root)
             test_codex_optimize_pre_tool_use_ignores_ineligible_command(cli_path, root)
             test_codex_optimize_pre_tool_use_rewrites_build_command(cli_path, root)
