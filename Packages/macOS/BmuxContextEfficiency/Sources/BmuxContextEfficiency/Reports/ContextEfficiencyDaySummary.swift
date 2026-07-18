@@ -16,6 +16,8 @@ public struct ContextEfficiencyDaySummary: Codable, Equatable, Sendable {
     public var outputTokens: Int64
     /// Parser errors imported from sources with events in the day.
     public var parserErrorCount: Int
+    /// Count of dated tool calls by normalized command category.
+    public var commandCategoryCounts: [ContextEfficiencyCommandCategoryCount]
 
     /// Creates a day summary report.
     public init(
@@ -25,7 +27,8 @@ public struct ContextEfficiencyDaySummary: Codable, Equatable, Sendable {
         totalTokens: Int64,
         cachedInputTokens: Int64,
         outputTokens: Int64,
-        parserErrorCount: Int
+        parserErrorCount: Int,
+        commandCategoryCounts: [ContextEfficiencyCommandCategoryCount]
     ) {
         self.day = day
         self.threadCount = threadCount
@@ -34,5 +37,6 @@ public struct ContextEfficiencyDaySummary: Codable, Equatable, Sendable {
         self.cachedInputTokens = cachedInputTokens
         self.outputTokens = outputTokens
         self.parserErrorCount = parserErrorCount
+        self.commandCategoryCounts = commandCategoryCounts
     }
 }

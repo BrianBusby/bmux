@@ -283,6 +283,7 @@ extension BMUXCLI {
                 "tool_calls": inspection.toolCalls.map(toolCallPayload),
                 "tool_outputs": inspection.toolOutputs.map(toolOutputPayload),
                 "command_executions": inspection.commandExecutions.map(commandExecutionPayload),
+                "command_category_counts": inspection.commandCategoryCounts.map(commandCategoryCountPayload),
                 "work_item_references": inspection.workItemReferences.map(workItemReferencePayload),
                 "parser_errors": inspection.parserErrors.map(parserErrorPayload),
             ]))
@@ -359,6 +360,7 @@ extension BMUXCLI {
                     "cached_input_tokens": summary.cachedInputTokens,
                     "output_tokens": summary.outputTokens,
                     "parser_error_count": summary.parserErrorCount,
+                    "command_category_counts": summary.commandCategoryCounts.map(commandCategoryCountPayload),
                 ],
             ]))
             return
@@ -577,6 +579,13 @@ extension BMUXCLI {
             "output_attribution_confidence": record.outputAttributionConfidence.rawValue,
             "attributed_model_call": record.attributedModelCall.map(modelCallAttributionPayload) as Any,
         ].compactMapValues(contextEfficiencyUnwrappedValue)
+    }
+
+    private func commandCategoryCountPayload(_ record: ContextEfficiencyCommandCategoryCount) -> [String: Any] {
+        [
+            "category": record.category.rawValue,
+            "command_count": record.commandCount,
+        ]
     }
 
     private func workItemReferencePayload(_ record: ContextEfficiencyWorkItemReferenceRecord) -> [String: Any] {

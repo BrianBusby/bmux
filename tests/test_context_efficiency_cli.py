@@ -375,6 +375,22 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
     if "raw_output" in command_execution:
         raise AssertionError(f"command execution should not include raw output: {command_execution!r}")
 
+    command_category_counts = inspection["command_category_counts"]
+    if command_category_counts != [{"category": "tests", "command_count": 1}]:
+        raise AssertionError(f"expected count-only command category row: {command_category_counts!r}")
+    for row in command_category_counts:
+        for forbidden_key in [
+            "command_summary",
+            "normalized_executable",
+            "tool_call_source_reference",
+            "tool_output_source_reference",
+            "raw_output",
+            "output",
+            "arguments_byte_count",
+        ]:
+            if forbidden_key in row:
+                raise AssertionError(f"command category count should not include {forbidden_key}: {row!r}")
+
     work_item_references = inspection["work_item_references"]
     references_by_value = {row["reference"]: row for row in work_item_references}
     for expected_reference in [
@@ -413,6 +429,10 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
         raise AssertionError(f"expected token totals from the rollout telemetry: {summary!r}")
     if summary["parser_error_count"] != 2:
         raise AssertionError(f"expected bounded parser diagnostics in day summary: {summary!r}")
+    if summary["command_category_counts"] != [{"category": "tests", "command_count": 1}]:
+        raise AssertionError(f"expected day command category counts: {summary!r}")
+    if "swift test --package-path" in day_result.stdout:
+        raise AssertionError(f"day summary should not include command summaries:\n{day_result.stdout}")
 
     write_replacement_rollout(rollout)
     reset_result = run_cli(
@@ -466,6 +486,8 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
     stale_summary = json.loads(stale_day_result.stdout)["summary"]
     if stale_summary["thread_count"] != 0 or stale_summary["parser_error_count"] != 0:
         raise AssertionError(f"reset cursor should remove stale source facts: {stale_summary!r}")
+    if stale_summary["command_category_counts"] != []:
+        raise AssertionError(f"reset cursor should remove stale command category counts: {stale_summary!r}")
 
 
 def test_context_efficiency_append_import_reports_only_new_lines(cli_path: str, root: Path) -> None:

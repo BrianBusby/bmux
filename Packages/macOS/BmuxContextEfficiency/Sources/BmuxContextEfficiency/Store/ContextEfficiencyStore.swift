@@ -211,17 +211,19 @@ public actor ContextEfficiencyStore {
         let modelCalls = try modelCallRecords(threadID: threadID)
         let toolCalls = try toolCallRecords(threadID: threadID)
         let toolOutputs = try toolOutputRecords(threadID: threadID)
+        let commandExecutions = ContextEfficiencyCommandAttributor().commandExecutions(
+            toolCalls: toolCalls,
+            toolOutputs: toolOutputs,
+            modelCalls: modelCalls
+        )
         return ContextEfficiencyThreadInspection(
             thread: try threadRecord(id: threadID),
             modelCalls: modelCalls,
             tokenTelemetryEvents: try tokenTelemetryRecords(threadID: threadID),
             toolCalls: toolCalls,
             toolOutputs: toolOutputs,
-            commandExecutions: ContextEfficiencyCommandAttributor().commandExecutions(
-                toolCalls: toolCalls,
-                toolOutputs: toolOutputs,
-                modelCalls: modelCalls
-            ),
+            commandExecutions: commandExecutions,
+            commandCategoryCounts: ContextEfficiencyCommandCategoryCounter().counts(for: commandExecutions),
             workItemReferences: try workItemReferenceRecords(threadID: threadID),
             parserErrors: try parserErrorRecords(threadID: threadID)
         )
@@ -280,7 +282,10 @@ public actor ContextEfficiencyStore {
             totalTokens: telemetryStatement.int64(at: 2),
             cachedInputTokens: telemetryStatement.int64(at: 3),
             outputTokens: telemetryStatement.int64(at: 4),
-            parserErrorCount: parserErrorCount
+            parserErrorCount: parserErrorCount,
+            commandCategoryCounts: ContextEfficiencyCommandCategoryCounter().counts(
+                for: try toolCallRecords(startTimestamp: range.start, endTimestamp: range.end)
+            )
         )
     }
 
@@ -978,6 +983,41 @@ public actor ContextEfficiencyStore {
                   let threadID = statement.string(at: 1),
                   let sourceReference = sourceReference(statement: statement, startingAt: 7) else {
                 throw ContextEfficiencyStoreError.invalidRow("invalid tool call row")
+            }
+            records.append(ContextEfficiencyToolCallRecord(
+                id: id,
+                threadID: threadID,
+                callID: statement.string(at: 2),
+                toolName: statement.string(at: 3),
+                commandSummary: statement.string(at: 4),
+                argumentsByteCount: statement.int64(at: 5),
+                timestamp: date(from: statement.double(at: 6)),
+                sourceReference: sourceReference
+            ))
+        }
+        return records
+    }
+
+    private func toolCallRecords(startTimestamp: Double, endTimestamp: Double) throws -> [ContextEfficiencyToolCallRecord] {
+        let statement = try database.prepare(
+            """
+            SELECT id, thread_id, call_id, tool_name, command_summary,
+                   arguments_byte_count, timestamp, source_path, byte_offset,
+                   line_number, parser_version
+            FROM tool_calls
+            WHERE timestamp >= ? AND timestamp < ?
+            ORDER BY timestamp ASC, rowid ASC
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(startTimestamp, at: 1)
+        try statement.bind(endTimestamp, at: 2)
+        var records: [ContextEfficiencyToolCallRecord] = []
+        while try statement.step() {
+            guard let id = statement.string(at: 0),
+                  let threadID = statement.string(at: 1),
+                  let sourceReference = sourceReference(statement: statement, startingAt: 7) else {
+                throw ContextEfficiencyStoreError.invalidRow("invalid dated tool call row")
             }
             records.append(ContextEfficiencyToolCallRecord(
                 id: id,
