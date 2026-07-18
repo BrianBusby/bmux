@@ -96,6 +96,7 @@
 		6313C7A00000000000000001 /* AppDelegate+PaneMemoryGuardrail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6313C7A00000000000000002 /* AppDelegate+PaneMemoryGuardrail.swift */; };
 		B71000000000000000000001 /* AppDelegate+PushToTalkVoiceInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71000000000000000000002 /* AppDelegate+PushToTalkVoiceInput.swift */; };
 		2907A0012907A0012907A001 /* AppDelegate+RecoverableMainWindowRoutes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2907A0022907A0022907A002 /* AppDelegate+RecoverableMainWindowRoutes.swift */; };
+		C0DEAA010000000000000101 /* AppDelegate+RepoAgentLauncherCustomParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA010000000000000001 /* AppDelegate+RepoAgentLauncherCustomParameters.swift */; };
 		C0DE74140000000000000001 /* AppDelegate+SavedLayoutMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE74140000000000000002 /* AppDelegate+SavedLayoutMenu.swift */; };
 		6419A0016419A0016419A001 /* AppDelegate+ShortcutRoutingTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6419A0026419A0026419A002 /* AppDelegate+ShortcutRoutingTesting.swift */; };
 		6419A0036419A0036419A003 /* AppDelegate+ShortcutRoutingWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6419A0046419A0046419A004 /* AppDelegate+ShortcutRoutingWindow.swift */; };
@@ -1019,6 +1020,13 @@
 		D36A00060000000000000001 /* RendererRealizationPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36A00060000000000000002 /* RendererRealizationPlanner.swift */; };
 		D36A00050000000000000001 /* RendererRealizationPlannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36A00050000000000000002 /* RendererRealizationPlannerTests.swift */; };
 		D36A00070000000000000001 /* RendererRealizationReclaimTrigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36A00070000000000000002 /* RendererRealizationReclaimTrigger.swift */; };
+		C0DEAA020000000000000101 /* RepoAgentLauncherCommandCustomizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA020000000000000001 /* RepoAgentLauncherCommandCustomizer.swift */; };
+		C0DEAA030000000000000101 /* RepoAgentLauncherParameterCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA030000000000000001 /* RepoAgentLauncherParameterCatalog.swift */; };
+		C0DEAA040000000000000101 /* RepoAgentLauncherParameterDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA040000000000000001 /* RepoAgentLauncherParameterDefinition.swift */; };
+		C0DEAA050000000000000101 /* RepoAgentLauncherParameterOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA050000000000000001 /* RepoAgentLauncherParameterOption.swift */; };
+		C0DEAA060000000000000101 /* RepoAgentLauncherParameterRowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA060000000000000001 /* RepoAgentLauncherParameterRowController.swift */; };
+		C0DEAA070000000000000101 /* RepoAgentLauncherParameterSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA070000000000000001 /* RepoAgentLauncherParameterSelection.swift */; };
+		C0DEAA080000000000000101 /* RepoAgentLauncherParameterValueKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA080000000000000001 /* RepoAgentLauncherParameterValueKind.swift */; };
 		F5410004A1B2C3D4E5F60718 /* RestorableAgentHookProviderHermesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5410005A1B2C3D4E5F60718 /* RestorableAgentHookProviderHermesTests.swift */; };
 		F5410000A1B2C3D4E5F60718 /* RestorableAgentHookProviderResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5410001A1B2C3D4E5F60718 /* RestorableAgentHookProviderResumeTests.swift */; };
 		C6711A040000000000000001 /* RestorableAgentHookSessionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6711B040000000000000001 /* RestorableAgentHookSessionRecord.swift */; };
@@ -1711,6 +1719,7 @@
 		6313C7A00000000000000002 /* AppDelegate+PaneMemoryGuardrail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+PaneMemoryGuardrail.swift"; sourceTree = "<group>"; };
 		B71000000000000000000002 /* AppDelegate+PushToTalkVoiceInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+PushToTalkVoiceInput.swift"; sourceTree = "<group>"; };
 		2907A0022907A0022907A002 /* AppDelegate+RecoverableMainWindowRoutes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+RecoverableMainWindowRoutes.swift"; sourceTree = "<group>"; };
+		C0DEAA010000000000000001 /* AppDelegate+RepoAgentLauncherCustomParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+RepoAgentLauncherCustomParameters.swift"; sourceTree = "<group>"; };
 		C0DE74140000000000000002 /* AppDelegate+SavedLayoutMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+SavedLayoutMenu.swift"; sourceTree = "<group>"; };
 		6419A0026419A0026419A002 /* AppDelegate+ShortcutRoutingTesting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+ShortcutRoutingTesting.swift"; sourceTree = "<group>"; };
 		6419A0046419A0046419A004 /* AppDelegate+ShortcutRoutingWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+ShortcutRoutingWindow.swift"; sourceTree = "<group>"; };
@@ -2572,6 +2581,13 @@
 		D36A00060000000000000002 /* RendererRealizationPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/RendererRealizationPlanner.swift; sourceTree = "<group>"; };
 		D36A00050000000000000002 /* RendererRealizationPlannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RendererRealizationPlannerTests.swift; sourceTree = "<group>"; };
 		D36A00070000000000000002 /* RendererRealizationReclaimTrigger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/RendererRealizationReclaimTrigger.swift; sourceTree = "<group>"; };
+		C0DEAA020000000000000001 /* RepoAgentLauncherCommandCustomizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherCommandCustomizer.swift; sourceTree = "<group>"; };
+		C0DEAA030000000000000001 /* RepoAgentLauncherParameterCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherParameterCatalog.swift; sourceTree = "<group>"; };
+		C0DEAA040000000000000001 /* RepoAgentLauncherParameterDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherParameterDefinition.swift; sourceTree = "<group>"; };
+		C0DEAA050000000000000001 /* RepoAgentLauncherParameterOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherParameterOption.swift; sourceTree = "<group>"; };
+		C0DEAA060000000000000001 /* RepoAgentLauncherParameterRowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherParameterRowController.swift; sourceTree = "<group>"; };
+		C0DEAA070000000000000001 /* RepoAgentLauncherParameterSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherParameterSelection.swift; sourceTree = "<group>"; };
+		C0DEAA080000000000000001 /* RepoAgentLauncherParameterValueKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherParameterValueKind.swift; sourceTree = "<group>"; };
 		F5410005A1B2C3D4E5F60718 /* RestorableAgentHookProviderHermesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorableAgentHookProviderHermesTests.swift; sourceTree = "<group>"; };
 		F5410001A1B2C3D4E5F60718 /* RestorableAgentHookProviderResumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorableAgentHookProviderResumeTests.swift; sourceTree = "<group>"; };
 		C6711B040000000000000001 /* RestorableAgentHookSessionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorableAgentHookSessionRecord.swift; sourceTree = "<group>"; };
@@ -3822,6 +3838,7 @@
 				D1320AA0D1320AA0D1320AA4 /* AppIconDockTilePlugin.swift */,
 				A5001090 /* AppDelegate.swift */,
 				C0DE45AC0000000000000002 /* AppDelegate+AgentChat.swift */,
+				C0DEAA010000000000000001 /* AppDelegate+RepoAgentLauncherCustomParameters.swift */,
 				B71000000000000000000002 /* AppDelegate+PushToTalkVoiceInput.swift */,
 				B71000000000000000000004 /* PushToTalkVoiceInputController.swift */,
 				B1F0C0080000000000000002 /* AppDelegateDetachedInspectorClose.swift */,
@@ -3851,6 +3868,13 @@
 				D7AB00000000000000000002 /* AppDelegate+MoveTabToNewWorkspace.swift */,
 				2907A0022907A0022907A002 /* AppDelegate+RecoverableMainWindowRoutes.swift */,
 				C0DE74140000000000000002 /* AppDelegate+SavedLayoutMenu.swift */,
+				C0DEAA020000000000000001 /* RepoAgentLauncherCommandCustomizer.swift */,
+				C0DEAA030000000000000001 /* RepoAgentLauncherParameterCatalog.swift */,
+				C0DEAA040000000000000001 /* RepoAgentLauncherParameterDefinition.swift */,
+				C0DEAA050000000000000001 /* RepoAgentLauncherParameterOption.swift */,
+				C0DEAA060000000000000001 /* RepoAgentLauncherParameterRowController.swift */,
+				C0DEAA070000000000000001 /* RepoAgentLauncherParameterSelection.swift */,
+				C0DEAA080000000000000001 /* RepoAgentLauncherParameterValueKind.swift */,
 				4EDE10010000000000000002 /* AppDelegate+NotificationDeliverySeams.swift */,
 				2907B0022907B0022907B002 /* AppDelegate+NotificationNavSeams.swift */,
 				A5F100000000000000000012 /* AppDelegate+NotificationOpen.swift */,
@@ -5276,6 +5300,7 @@
 				6313C7A00000000000000001 /* AppDelegate+PaneMemoryGuardrail.swift in Sources */,
 				B71000000000000000000001 /* AppDelegate+PushToTalkVoiceInput.swift in Sources */,
 				2907A0012907A0012907A001 /* AppDelegate+RecoverableMainWindowRoutes.swift in Sources */,
+				C0DEAA010000000000000101 /* AppDelegate+RepoAgentLauncherCustomParameters.swift in Sources */,
 				C0DE74140000000000000001 /* AppDelegate+SavedLayoutMenu.swift in Sources */,
 				6419A0016419A0016419A001 /* AppDelegate+ShortcutRoutingTesting.swift in Sources */,
 				6419A0036419A0036419A003 /* AppDelegate+ShortcutRoutingWindow.swift in Sources */,
@@ -5790,6 +5815,13 @@
 				7490C00E7490C00E7490C00E /* RendererRealizationMemoryPressureResponder.swift in Sources */,
 				D36A00060000000000000001 /* RendererRealizationPlanner.swift in Sources */,
 				D36A00070000000000000001 /* RendererRealizationReclaimTrigger.swift in Sources */,
+				C0DEAA020000000000000101 /* RepoAgentLauncherCommandCustomizer.swift in Sources */,
+				C0DEAA030000000000000101 /* RepoAgentLauncherParameterCatalog.swift in Sources */,
+				C0DEAA040000000000000101 /* RepoAgentLauncherParameterDefinition.swift in Sources */,
+				C0DEAA050000000000000101 /* RepoAgentLauncherParameterOption.swift in Sources */,
+				C0DEAA060000000000000101 /* RepoAgentLauncherParameterRowController.swift in Sources */,
+				C0DEAA070000000000000101 /* RepoAgentLauncherParameterSelection.swift in Sources */,
+				C0DEAA080000000000000101 /* RepoAgentLauncherParameterValueKind.swift in Sources */,
 				C6711A040000000000000001 /* RestorableAgentHookSessionRecord.swift in Sources */,
 				C6711A060000000000000001 /* RestorableAgentHookSessionStoreFile.swift in Sources */,
 				A5001660 /* RestorableAgentSession.swift in Sources */,

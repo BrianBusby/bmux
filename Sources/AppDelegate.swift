@@ -7973,7 +7973,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             NSSound.beep()
             return
         }
-        guard executeConfiguredBmuxAction(box.action, context: context, preferredWindow: window) else {
+        guard let bmuxConfigStore = context.bmuxConfigStore,
+              let commandName = box.action.workspaceCommandName,
+              let command = bmuxConfigStore.loadedCommands.first(where: { $0.name == commandName }),
+              let agent = RepoAgentLauncherCommandCustomizer().agent(for: command) else {
+            NSSound.beep()
+            return
+        }
+        guard let parameters = promptForRepoAgentLauncherParametersIfRequested(
+            actionTitle: box.action.title,
+            agent: agent,
+            presentingWindow: window
+        ) else {
+            return
+        }
+        guard executeRepoAgentLauncherAction(
+            box.action,
+            parameters: parameters,
+            context: context,
+            preferredWindow: window
+        ) else {
             NSSound.beep()
             return
         }
