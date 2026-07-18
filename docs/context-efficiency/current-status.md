@@ -1,6 +1,6 @@
 # Bmux Context Efficiency: Current Status
 
-Last updated: 2026-07-17
+Last updated: 2026-07-18
 
 This file is the live handoff index for the context-efficiency roadmap. Read it before choosing work, and update it at the end of every context-efficiency slice.
 
@@ -18,25 +18,26 @@ This file is the live handoff index for the context-efficiency roadmap. Read it 
 
 ## Active Phase
 
-Phase 2 is closed as of 2026-07-17. The completed scope is local, read-only telemetry ingestion and diagnostics.
+Phase 3 is active. Phase 2 closed on 2026-07-17 with local, read-only telemetry ingestion and diagnostics.
 
 Allowed work:
 
-- Stream-parse Codex rollout JSONL defensively.
-- Persist compact facts and source references in local SQLite.
-- Preserve raw evidence by source path, byte offset, line number, and parser version.
-- Improve import status, parser-error handling, and bounded diagnostic report shapes.
-- Add behavior-level Swift package tests and CLI regression coverage for existing read-only diagnostics.
+- Derive command execution candidates from existing Codex rollout tool-call/tool-output facts.
+- Classify bounded command summaries into deterministic command categories.
+- Attribute tool calls to tool outputs using exact Codex call IDs when present.
+- Attribute command outputs to subsequent model calls as temporal candidates.
+- Preserve raw evidence by source path, byte offset, line number, parser version, and bounded output-reference counts.
+- Keep reports bounded and clearly distinguish exact links from temporal candidates.
 
 Do not start:
 
-- Terminal command attribution beyond facts already present in rollout tool-call/tool-output rows.
+- Live terminal/PTTY command interception unless explicitly scoped and tested as a Phase 3 capture slice.
 - Lifecycle policy, warnings, handoff recommendations, or intervention logic.
 - Output filtering or live Codex execution changes.
 - UI changes.
 - Automatic compression, omission, or mutation of agent context.
 
-Phase 3 is the next phase and starts from command/output attribution. Do not add lifecycle policy, warnings, handoff recommendations, output filtering, UI, or automatic context mutation until the relevant later phase opens.
+Do not add lifecycle policy, warnings, handoff recommendations, output filtering, UI, or automatic context mutation until the relevant later phase opens.
 
 ## Current Branch State
 
@@ -46,31 +47,40 @@ Expected branch:
 
 Latest completed implementation HEAD:
 
-- `f90790b04e96c9ee6b775e484dc860fa4fd34f9c`
+- `95e1c0d9f8b43fb8ce8efa1955c8bfbf4ce7f9ec`
 
 The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
 
 Latest completed implementation slice:
 
-- `b194b8b1 Add missing timestamp rollout regression`
-- `f90790b0 Report missing rollout timestamps`
+- `95e1c0d9 Add context efficiency command attribution`
 
 Behavior in that slice:
 
-- Rollout events that produce compact facts but have no usable timestamp now keep importing those facts with a nil event timestamp.
-- The importer records a bounded parser diagnostic, `missing rollout event timestamp`, for missing-timestamp fact rows.
-- Unknown scalar payload imports remain non-fatal and quiet, so they do not become parser errors solely because they lack timestamps.
+- `inspectThread` now derives bounded command execution candidates from imported tool-call/tool-output facts.
+- Command candidates include normalized executable, deterministic category, bounded argument/output byte counts, estimated original output tokens, raw-output reference counts, elapsed time when timestamps permit it, and source references.
+- Tool call to output links are labeled `exact_tool_call_link` when Codex `call_id` matches; fallback links are labeled `temporal_candidate`; missing output links are labeled `unmatched`.
+- Command output to later model-call attribution is labeled `temporal_candidate`.
+- `bmux context-efficiency inspect-thread --json` now includes a `command_executions` array without printing raw tool arguments or raw output.
 
 Files changed in the latest slice:
 
-- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Import/CodexRolloutTelemetryParser.swift`
-- `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/CodexRolloutTelemetryParserTests.swift`
+- `CLI/BMUXCLI+ContextEfficiency.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyAttributionConfidence.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyCommandCategory.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyCommandExecutionRecord.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Model/ContextEfficiencyModelCallAttribution.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Reports/ContextEfficiencyCommandAttributor.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Reports/ContextEfficiencyCommandClassifier.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Reports/ContextEfficiencyThreadInspection.swift`
+- `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Store/ContextEfficiencyStore.swift`
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
+- `tests/test_context_efficiency_cli.py`
 
-Latest completed CLI verification slice:
+Latest completed CLI verification:
 
-- `tests/test_context_efficiency_cli.py` extends the context-efficiency CLI round-trip regression for missing rollout timestamps.
-- Validated against the existing tagged `context-efficiency` build on 2026-07-17; no rebuild was run for this dogfood check.
+- `tests/test_context_efficiency_cli.py` covers the context-efficiency CLI round trip for missing rollout timestamps, bounded parser diagnostics, incremental imports, cursor resets, invalid UTF-8, and derived command execution JSON.
+- Validated against the rebuilt tagged `context-efficiency` build on 2026-07-18.
 
 Behavior in that verification slice:
 
@@ -82,10 +92,11 @@ Behavior in that verification slice:
 - An appended rollout re-import reports only the newly appended row and preserves prior model-call facts.
 - Invalid UTF-8 rollout lines report one bounded parser diagnostic while valid surrounding rows continue importing.
 - A shrunk rollout source reports `reset_cursor: true`, imports the replacement rows, and removes stale source facts from day summaries.
+- `inspect-thread --json` reports command category, normalized executable, exact output-link confidence, and raw-output reference count without leaking raw output.
 
-Latest validation: all validation commands passed on 2026-07-17.
+Latest validation: all validation commands passed on 2026-07-18.
 
-## Phase 2 Closure Decisions
+## Phase 3 Next Targets
 
 Stay narrow and read-only. Prefer package-level Swift tests unless a CLI regression is specifically exercising the built binary.
 
@@ -93,7 +104,15 @@ Decisions:
 
 1. Markdown/CSV export formatting is deferred. JSON diagnostics are the Phase 2 read-only report contract.
 2. `codex-token-audit` remains a legacy command for now. Replacement/removal is deferred to a cleanup slice after Phase 2 closure.
-3. Phase 3 starts from command/output attribution, not more telemetry ingestion work.
+3. Phase 3 command attribution starts from existing rollout tool facts before adding live PTY/OSC 133 capture.
+4. Active PR or ticket detection should be represented as evidence-backed work item or PR reference facts, not a single scalar, because related PRs and stacked branches can appear in the same thread.
+
+Good next targets:
+
+1. Add command-category aggregate counts to thread/day reports without introducing lifecycle heuristics.
+2. Add repeated command/search/file-read detection as facts for later profiler work.
+3. Add PR/ticket reference extraction from branch names, PR URLs, GitHub metadata, and explicit user/agent messages as provenance/work-item facts.
+4. Evaluate OSC 133 parsing for non-Codex terminal attribution in a separate capture slice.
 
 Avoid broad CLI/app integration unless the slice is explicitly scoped to read-only diagnostics and includes localization work for any new command/help/error text.
 
@@ -149,6 +168,6 @@ Do not let one-off chat handoffs become the only record of current status.
 
 ## Localization
 
-The latest completed slice changed package internals and package tests only. No CLI, UI, help, command, or user-facing app strings changed.
+The latest completed slice added package/report models and one CLI JSON field only. No CLI help, human-readable CLI output, UI, menus, settings, alerts, or other user-facing localized strings changed.
 
 This file and the other `docs/context-efficiency/*` planning files are internal development documentation and are not mirrored into localized docs. If a future slice adds or edits CLI/UI/user-facing strings, use `bmux-localization` and update every supported locale.

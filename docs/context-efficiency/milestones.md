@@ -127,17 +127,30 @@ Validation:
 
 ## Milestone 3: Command and Output Attribution
 
+Status: first derived-attribution report slice implemented.
+
 Goal:
 
 Connect token/model-call telemetry to command activity and evidence artifacts.
 
+Implemented in the first slice:
+
+- `ContextEfficiencyCommandExecutionRecord`, `ContextEfficiencyCommandCategory`, and attribution confidence/model-call attribution value types.
+- Deterministic command classifier for bounded Codex command summaries.
+- Derived command execution candidates in `ContextEfficiencyThreadInspection`.
+- Exact tool-call to tool-output links when Codex `call_id` matches.
+- Temporal candidate attribution from command output to the next later model call.
+- `inspect-thread --json` `command_executions` output with bounded counts, categories, confidence labels, and source references.
+- Package and CLI regression coverage proving raw tool arguments/output are not included in the report.
+
 Expected work:
 
-- Normalize Codex `function_call` and `function_call_output` records into `CommandExecutionRecord` candidates.
-- Add deterministic temporal attribution from tool output to subsequent model calls.
-- Add command normalization/category classification.
+- Persist command execution candidates if derived reports prove insufficient.
+- Add command-category aggregate counts to thread/day reports.
+- Add repeated command/search/file-read detection as bounded facts.
 - Index proxy `rawOutputRef` artifacts.
 - Evaluate OSC 133 parsing for non-Codex terminal attribution.
+- Add evidence-backed active PR/ticket reference detection as work-item/provenance facts rather than a single scalar current PR number.
 
 Candidate files:
 
