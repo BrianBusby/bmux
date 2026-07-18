@@ -282,6 +282,7 @@ extension BMUXCLI {
                 "token_telemetry_events": inspection.tokenTelemetryEvents.map(tokenTelemetryPayload),
                 "tool_calls": inspection.toolCalls.map(toolCallPayload),
                 "tool_outputs": inspection.toolOutputs.map(toolOutputPayload),
+                "command_executions": inspection.commandExecutions.map(commandExecutionPayload),
                 "parser_errors": inspection.parserErrors.map(parserErrorPayload),
             ]))
             return
@@ -552,6 +553,37 @@ extension BMUXCLI {
             "timestamp": record.timestamp.map(contextEfficiencyDateString) as Any,
             "source_reference": sourceReferencePayload(record.sourceReference),
         ].compactMapValues(contextEfficiencyUnwrappedValue)
+    }
+
+    private func commandExecutionPayload(_ record: ContextEfficiencyCommandExecutionRecord) -> [String: Any] {
+        [
+            "id": record.id,
+            "thread_id": record.threadID,
+            "call_id": record.callID as Any,
+            "tool_name": record.toolName as Any,
+            "command_summary": record.commandSummary as Any,
+            "normalized_executable": record.normalizedExecutable as Any,
+            "category": record.category.rawValue,
+            "arguments_byte_count": record.argumentsByteCount,
+            "output_byte_count": record.outputByteCount as Any,
+            "estimated_original_output_tokens": record.estimatedOriginalOutputTokens as Any,
+            "raw_output_reference_count": record.rawOutputReferenceCount,
+            "started_at": record.startedAt.map(contextEfficiencyDateString) as Any,
+            "completed_at": record.completedAt.map(contextEfficiencyDateString) as Any,
+            "elapsed_seconds": record.elapsedSeconds as Any,
+            "tool_call_source_reference": sourceReferencePayload(record.toolCallSourceReference),
+            "tool_output_source_reference": record.toolOutputSourceReference.map(sourceReferencePayload) as Any,
+            "output_attribution_confidence": record.outputAttributionConfidence.rawValue,
+            "attributed_model_call": record.attributedModelCall.map(modelCallAttributionPayload) as Any,
+        ].compactMapValues(contextEfficiencyUnwrappedValue)
+    }
+
+    private func modelCallAttributionPayload(_ record: ContextEfficiencyModelCallAttribution) -> [String: Any] {
+        [
+            "model_call_id": record.modelCallID,
+            "confidence": record.confidence.rawValue,
+            "model_call_source_reference": sourceReferencePayload(record.modelCallSourceReference),
+        ]
     }
 
     private func parserErrorPayload(_ record: ContextEfficiencyParserErrorRecord) -> [String: Any] {

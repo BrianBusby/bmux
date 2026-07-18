@@ -354,6 +354,17 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
         raise AssertionError(f"expected original token estimate, not raw output: {tool_output!r}")
     if "output" in tool_output:
         raise AssertionError(f"tool output payload should not include raw output: {tool_output!r}")
+    command_execution = inspection["command_executions"][0]
+    if command_execution["category"] != "tests":
+        raise AssertionError(f"expected command category in inspection: {command_execution!r}")
+    if command_execution["normalized_executable"] != "swift":
+        raise AssertionError(f"expected normalized executable in inspection: {command_execution!r}")
+    if command_execution["output_attribution_confidence"] != "exact_tool_call_link":
+        raise AssertionError(f"expected exact tool output linkage: {command_execution!r}")
+    if command_execution["raw_output_reference_count"] != 1:
+        raise AssertionError(f"expected raw output reference count: {command_execution!r}")
+    if "raw_output" in command_execution:
+        raise AssertionError(f"command execution should not include raw output: {command_execution!r}")
 
     day_result = run_cli(
         cli_path,

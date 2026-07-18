@@ -187,12 +187,20 @@ public actor ContextEfficiencyStore {
     /// - Parameter threadID: Context-efficiency thread identifier.
     /// - Returns: Thread facts and related telemetry rows.
     public func inspectThread(_ threadID: String) throws -> ContextEfficiencyThreadInspection {
-        ContextEfficiencyThreadInspection(
+        let modelCalls = try modelCallRecords(threadID: threadID)
+        let toolCalls = try toolCallRecords(threadID: threadID)
+        let toolOutputs = try toolOutputRecords(threadID: threadID)
+        return ContextEfficiencyThreadInspection(
             thread: try threadRecord(id: threadID),
-            modelCalls: try modelCallRecords(threadID: threadID),
+            modelCalls: modelCalls,
             tokenTelemetryEvents: try tokenTelemetryRecords(threadID: threadID),
-            toolCalls: try toolCallRecords(threadID: threadID),
-            toolOutputs: try toolOutputRecords(threadID: threadID),
+            toolCalls: toolCalls,
+            toolOutputs: toolOutputs,
+            commandExecutions: ContextEfficiencyCommandAttributor().commandExecutions(
+                toolCalls: toolCalls,
+                toolOutputs: toolOutputs,
+                modelCalls: modelCalls
+            ),
             parserErrors: try parserErrorRecords(threadID: threadID)
         )
     }

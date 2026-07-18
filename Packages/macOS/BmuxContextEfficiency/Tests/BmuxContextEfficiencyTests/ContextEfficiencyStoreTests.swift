@@ -37,6 +37,10 @@ struct ContextEfficiencyStoreTests {
         #expect(inspection.toolCalls.first?.commandSummary == "swift test --package-path Packages/macOS/BmuxContextEfficiency")
         #expect(inspection.toolOutputs.first?.estimatedOriginalTokens == 1_800)
         #expect(inspection.toolOutputs.first?.rawOutputReferenceCount == 1)
+        #expect(inspection.commandExecutions.count == 1)
+        #expect(inspection.commandExecutions.first?.normalizedExecutable == "swift")
+        #expect(inspection.commandExecutions.first?.category == .validationRuns)
+        #expect(inspection.commandExecutions.first?.outputAttributionConfidence == .exactToolCallLink)
         #expect(inspection.parserErrors.count == 1)
 
         let encodedInspection = try #require(String(data: try JSONEncoder().encode(inspection), encoding: .utf8))
@@ -81,6 +85,8 @@ struct ContextEfficiencyStoreTests {
         let inspection = try await store.inspectThread("codex:thread-a")
         #expect(inspection.modelCalls.count == 2)
         #expect(inspection.thread?.cumulativeTotalTokens == 121_500)
+        #expect(inspection.commandExecutions.first?.attributedModelCall?.modelCallID == inspection.modelCalls[1].id)
+        #expect(inspection.commandExecutions.first?.attributedModelCall?.confidence == .temporalCandidate)
     }
 
     @Test
@@ -200,6 +206,7 @@ struct ContextEfficiencyStoreTests {
             "tokenTelemetryEvents",
             "toolCalls",
             "toolOutputs",
+            "commandExecutions",
             "parserErrors",
         ])
 
@@ -226,6 +233,16 @@ struct ContextEfficiencyStoreTests {
         #expect(toolOutput["output"] == nil)
         #expect(toolOutput["rawOutput"] == nil)
         try assertSourceReference(toolOutput["sourceReference"], sourcePath: rolloutURL.path, lineNumber: 5)
+
+        let commandExecutions = try #require(inspectionPayload["commandExecutions"] as? [[String: Any]])
+        let commandExecution = try #require(commandExecutions.first)
+        #expect(commandExecution["normalizedExecutable"] as? String == "swift")
+        #expect(commandExecution["category"] as? String == "tests")
+        #expect(commandExecution["outputAttributionConfidence"] as? String == "exact_tool_call_link")
+        #expect(commandExecution["rawOutputReferenceCount"] as? Int == 1)
+        #expect(commandExecution["rawOutput"] == nil)
+        try assertSourceReference(commandExecution["toolCallSourceReference"], sourcePath: rolloutURL.path, lineNumber: 4)
+        try assertSourceReference(commandExecution["toolOutputSourceReference"], sourcePath: rolloutURL.path, lineNumber: 5)
 
         let parserErrors = try #require(inspectionPayload["parserErrors"] as? [[String: Any]])
         let parserError = try #require(parserErrors.first)
