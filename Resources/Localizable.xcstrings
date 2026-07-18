@@ -229260,6 +229260,40 @@
         }
       }
     },
+    "workspace.agentSubsession.defaultTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subagent"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブエージェント"
+          }
+        }
+      }
+    },
+    "workspace.agentSubsession.namedTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subagent: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブエージェント: %@"
+          }
+        }
+      }
+    },
     "menu.newWorkspace.customizeLayouts": {
       "extractionState": "manual",
       "localizations": {

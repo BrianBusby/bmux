@@ -1986,6 +1986,8 @@ final class Workspace: Identifiable, ObservableObject {
     /// Identifier of the WorkspaceGroup this workspace belongs to, or nil if ungrouped.
     /// The group entity itself lives in `TabManager.workspaceGroups`.
     @Published var groupId: UUID?
+    /// Runtime-only workspace created to show an in-process agent subsession.
+    var isEphemeralAgentSubsessionWorkspace = false
     /// Custom workspace color hex string, e.g. "#C0392B".
     @Published var customColor: String? {
         didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: customColor) }
@@ -5542,6 +5544,7 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     var isRestorableInSessionSnapshot: Bool {
+        if isEphemeralAgentSubsessionWorkspace { return false }
         if isRemoteTmuxMirror { return false }
         if panels.values.contains(where: { $0.panelType == .cloudVMLoading }) {
             return false

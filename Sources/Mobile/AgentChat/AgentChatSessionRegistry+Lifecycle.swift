@@ -38,6 +38,22 @@ nonisolated struct ObservedAgentSession: Sendable {
     }
 }
 
+struct AgentSubsessionLifecycleChange: Sendable, Equatable {
+    enum Phase: Sendable, Equatable {
+        case started
+        case stopped
+    }
+
+    let phase: Phase
+    let parentSessionID: String
+    let agentKind: ChatAgentKind
+    let workspaceID: String?
+    let surfaceID: String?
+    let workingDirectory: String?
+    let subsessionID: String?
+    let displayName: String?
+}
+
 extension AgentChatSessionRegistry {
     func stampLifecycleTransition(
         previous: AgentChatSessionRecord?,
@@ -98,10 +114,89 @@ extension AgentChatSessionRegistry {
         }
     }
 
+    nonisolated static func subsessionLifecycleChange(
+        for event: WorkstreamEvent,
+        record: AgentChatSessionRecord
+    ) -> AgentSubsessionLifecycleChange? {
+        let phase: AgentSubsessionLifecycleChange.Phase
+        switch event.hookEventName {
+        case .subagentStart:
+            phase = .started
+        case .subagentStop:
+            phase = .stopped
+        default:
+            return nil
+        }
+        let metadata = AgentSubsessionEventMetadata(event: event)
+        return AgentSubsessionLifecycleChange(
+            phase: phase,
+            parentSessionID: record.sessionID,
+            agentKind: record.agentKind,
+            workspaceID: record.workspaceID ?? event.workspaceId,
+            surfaceID: record.surfaceID ?? event.surfaceId,
+            workingDirectory: record.workingDirectory ?? event.cwd,
+            subsessionID: metadata.identifier ?? event.requestId,
+            displayName: metadata.displayName
+        )
+    }
+
     nonisolated static func stateIsEnded(_ state: ChatAgentState) -> Bool {
         if case .ended = state {
             return true
         }
         return false
+    }
+}
+
+private struct AgentSubsessionEventMetadata {
+    let identifier: String?
+    let displayName: String?
+
+    init(event: WorkstreamEvent) {
+        let extra = Self.object(from: event.extraFieldsJSON)
+        identifier = Self.firstString(in: extra, keys: [
+            "subagent_id",
+            "subagentId",
+            "subsession_id",
+            "subsessionId",
+            "agent_id",
+            "agentId",
+            "task_id",
+            "taskId",
+            "id",
+        ])
+        displayName = Self.firstString(in: extra, keys: [
+            "subagent_name",
+            "subagentName",
+            "agent_name",
+            "agentName",
+            "name",
+            "title",
+            "role",
+            "description",
+            "task",
+        ])
+    }
+
+    private static func object(from json: String?) -> [String: Any] {
+        guard let json,
+              let data = json.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return [:]
+        }
+        return object
+    }
+
+    private static func firstString(in object: [String: Any], keys: [String]) -> String? {
+        for key in keys {
+            guard let raw = object[key] else { continue }
+            if let value = raw as? String {
+                let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty { return trimmed }
+            } else if let value = raw as? NSNumber {
+                return value.stringValue
+            }
+        }
+        return nil
     }
 }
