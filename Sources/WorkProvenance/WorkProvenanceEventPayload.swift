@@ -35,6 +35,20 @@ struct WorkProvenanceEventPayload: Codable, Equatable, Sendable {
     /// Validation-run projection update.
     var validationRun: WorkProvenanceValidationRunRecord?
 
+    private enum CodingKeys: String, CodingKey {
+        case repository
+        case worktree
+        case session
+        case sessionRelationship
+        case externalIdentities
+        case workItem
+        case contribution
+        case checkpoint
+        case changeSet
+        case fileChanges
+        case validationRun
+    }
+
     /// Creates an event payload.
     init(
         repository: WorkProvenanceRepositoryRecord? = nil,
@@ -60,5 +74,33 @@ struct WorkProvenanceEventPayload: Codable, Equatable, Sendable {
         self.changeSet = changeSet
         self.fileChanges = fileChanges
         self.validationRun = validationRun
+    }
+
+    /// Creates an event payload from stored JSON, preserving compatibility with older payload shapes.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.repository = try container.decodeIfPresent(WorkProvenanceRepositoryRecord.self, forKey: .repository)
+        self.worktree = try container.decodeIfPresent(WorkProvenanceWorktreeRecord.self, forKey: .worktree)
+        self.session = try container.decodeIfPresent(WorkProvenanceSessionRecord.self, forKey: .session)
+        self.sessionRelationship = try container.decodeIfPresent(
+            WorkProvenanceSessionRelationshipRecord.self,
+            forKey: .sessionRelationship
+        )
+        self.externalIdentities = try container.decodeIfPresent(
+            [WorkProvenanceExternalIdentityRecord].self,
+            forKey: .externalIdentities
+        ) ?? []
+        self.workItem = try container.decodeIfPresent(WorkProvenanceWorkItemRecord.self, forKey: .workItem)
+        self.contribution = try container.decodeIfPresent(WorkProvenanceContributionRecord.self, forKey: .contribution)
+        self.checkpoint = try container.decodeIfPresent(WorkProvenanceCheckpointRecord.self, forKey: .checkpoint)
+        self.changeSet = try container.decodeIfPresent(WorkProvenanceChangeSetRecord.self, forKey: .changeSet)
+        self.fileChanges = try container.decodeIfPresent(
+            [WorkProvenanceFileChangeRecord].self,
+            forKey: .fileChanges
+        ) ?? []
+        self.validationRun = try container.decodeIfPresent(
+            WorkProvenanceValidationRunRecord.self,
+            forKey: .validationRun
+        )
     }
 }

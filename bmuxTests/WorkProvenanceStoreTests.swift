@@ -96,6 +96,31 @@ struct WorkProvenanceStoreTests {
     }
 
     @Test
+    func decodesStoredPayloadsWithoutSessionRelationshipKeys() throws {
+        let data = Data(
+            """
+            {
+              "session": {
+                "id": "legacy-session",
+                "agentKind": "codex",
+                "status": "active",
+                "updatedAt": 100
+              }
+            }
+            """.utf8
+        )
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .secondsSince1970
+
+        let payload = try decoder.decode(WorkProvenanceEventPayload.self, from: data)
+
+        #expect(payload.session?.id == "legacy-session")
+        #expect(payload.externalIdentities.isEmpty)
+        #expect(payload.fileChanges.isEmpty)
+        #expect(payload.sessionRelationship == nil)
+    }
+
+    @Test
     func persistsSessionRelationshipsAndExternalIdentitiesAcrossReplay() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
