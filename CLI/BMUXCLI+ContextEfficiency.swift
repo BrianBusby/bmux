@@ -284,6 +284,7 @@ extension BMUXCLI {
                 "tool_outputs": inspection.toolOutputs.map(toolOutputPayload),
                 "command_executions": inspection.commandExecutions.map(commandExecutionPayload),
                 "command_category_counts": inspection.commandCategoryCounts.map(commandCategoryCountPayload),
+                "repeated_command_facts": inspection.repeatedCommandFacts.map(repeatedCommandFactPayload),
                 "work_item_references": inspection.workItemReferences.map(workItemReferencePayload),
                 "parser_errors": inspection.parserErrors.map(parserErrorPayload),
             ]))
@@ -586,6 +587,22 @@ extension BMUXCLI {
             "category": record.category.rawValue,
             "command_count": record.commandCount,
         ]
+    }
+
+    private func repeatedCommandFactPayload(_ record: ContextEfficiencyRepeatedCommandFact) -> [String: Any] {
+        [
+            "id": record.id,
+            "thread_id": record.threadID,
+            "kind": record.kind.rawValue,
+            "category": record.category.rawValue,
+            "normalized_executable": record.normalizedExecutable as Any,
+            "representative_command_summary": record.representativeCommandSummary,
+            "normalized_command_fingerprint": record.normalizedCommandFingerprint,
+            "occurrence_count": record.occurrenceCount,
+            "sample_command_execution_ids": record.sampleCommandExecutionIDs,
+            "first_source_reference": sourceReferencePayload(record.firstSourceReference),
+            "last_source_reference": sourceReferencePayload(record.lastSourceReference),
+        ].compactMapValues(contextEfficiencyUnwrappedValue)
     }
 
     private func workItemReferencePayload(_ record: ContextEfficiencyWorkItemReferenceRecord) -> [String: Any] {

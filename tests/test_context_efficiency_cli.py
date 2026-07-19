@@ -160,8 +160,34 @@ def write_rollout_fixture(path: Path) -> None:
             },
         },
         {
-            "type": "compacted",
+            "type": "response_item",
             "timestamp": "2026-07-13T12:00:04Z",
+            "payload": {
+                "type": "function_call",
+                "threadID": "thread-cli",
+                "call_id": "call-2",
+                "name": "exec_command",
+                "arguments": json.dumps(
+                    {
+                        "cmd": "swift test --package-path Packages/macOS/BmuxContextEfficiency",
+                        "workdir": "/repo/bmux",
+                    }
+                ),
+            },
+        },
+        {
+            "type": "response_item",
+            "timestamp": "2026-07-13T12:00:05Z",
+            "payload": {
+                "type": "function_call_output",
+                "threadID": "thread-cli",
+                "call_id": "call-2",
+                "output": "ok",
+            },
+        },
+        {
+            "type": "compacted",
+            "timestamp": "2026-07-13T12:00:06Z",
             "payload": {"threadID": "thread-cli"},
         },
     ]
@@ -283,12 +309,12 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
             raise AssertionError(f"expected Codex metadata {key}={expected!r}: {metadata!r}")
     import_summary = import_payload["import"]
     expected_counts = {
-        "line_count": 9,
+        "line_count": 11,
         "model_call_count": 2,
         "duplicate_token_telemetry_count": 1,
         "parser_error_count": 2,
-        "tool_call_count": 1,
-        "tool_output_count": 1,
+        "tool_call_count": 2,
+        "tool_output_count": 2,
         "compaction_count": 1,
     }
     for key, expected in expected_counts.items():
@@ -363,6 +389,28 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
         raise AssertionError(f"expected original token estimate, not raw output: {tool_output!r}")
     if "output" in tool_output:
         raise AssertionError(f"tool output payload should not include raw output: {tool_output!r}")
+    repeated_facts = inspection["repeated_command_facts"]
+    if len(repeated_facts) != 1:
+        raise AssertionError(f"expected one repeated command fact: {inspection!r}")
+    repeated_fact = repeated_facts[0]
+    expected_repeated_values = {
+        "kind": "command",
+        "category": "tests",
+        "normalized_executable": "swift",
+        "representative_command_summary": "swift test --package-path Packages/macOS/BmuxContextEfficiency",
+        "occurrence_count": 2,
+    }
+    for key, expected in expected_repeated_values.items():
+        if repeated_fact.get(key) != expected:
+            raise AssertionError(f"expected repeated fact {key}={expected!r}: {repeated_fact!r}")
+    if len(repeated_fact["sample_command_execution_ids"]) != 2:
+        raise AssertionError(f"expected bounded repeated command ID samples: {repeated_fact!r}")
+    for key in ["first_source_reference", "last_source_reference"]:
+        if key not in repeated_fact:
+            raise AssertionError(f"missing repeated command source reference {key}: {repeated_fact!r}")
+    for forbidden_key in ["raw_output", "output", "arguments", "tool_output"]:
+        if forbidden_key in repeated_fact:
+            raise AssertionError(f"repeated command fact should not include {forbidden_key}: {repeated_fact!r}")
     command_execution = inspection["command_executions"][0]
     if command_execution["category"] != "tests":
         raise AssertionError(f"expected command category in inspection: {command_execution!r}")
@@ -376,7 +424,7 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
         raise AssertionError(f"command execution should not include raw output: {command_execution!r}")
 
     command_category_counts = inspection["command_category_counts"]
-    if command_category_counts != [{"category": "tests", "command_count": 1}]:
+    if command_category_counts != [{"category": "tests", "command_count": 2}]:
         raise AssertionError(f"expected count-only command category row: {command_category_counts!r}")
     for row in command_category_counts:
         for forbidden_key in [
@@ -429,7 +477,7 @@ def test_context_efficiency_cli_round_trip(cli_path: str, root: Path) -> None:
         raise AssertionError(f"expected token totals from the rollout telemetry: {summary!r}")
     if summary["parser_error_count"] != 2:
         raise AssertionError(f"expected bounded parser diagnostics in day summary: {summary!r}")
-    if summary["command_category_counts"] != [{"category": "tests", "command_count": 1}]:
+    if summary["command_category_counts"] != [{"category": "tests", "command_count": 2}]:
         raise AssertionError(f"expected day command category counts: {summary!r}")
     if "swift test --package-path" in day_result.stdout:
         raise AssertionError(f"day summary should not include command summaries:\n{day_result.stdout}")

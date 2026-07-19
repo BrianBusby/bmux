@@ -135,6 +135,87 @@ struct ContextEfficiencyStoreTests {
     }
 
     @Test
+    func reportsRepeatedCommandFactsForThread() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let databaseURL = directory.appendingPathComponent("context-efficiency.sqlite")
+        let rolloutURL = directory.appendingPathComponent("rollout-repeated-commands.jsonl")
+        try Data(repeatedCommandRollout.utf8).write(to: rolloutURL)
+
+        let store = try ContextEfficiencyStore(databaseURL: databaseURL)
+        _ = try await store.importRollout(at: rolloutURL, fallbackThreadID: "thread-repeats")
+
+        let inspection = try await store.inspectThread("codex:thread-repeats")
+        #expect(inspection.commandExecutions.count == 6)
+        #expect(inspection.repeatedCommandFacts.count == 3)
+
+        let repeatedSearch = try #require(inspection.repeatedCommandFacts.first { $0.kind == .sourceSearch })
+        #expect(repeatedSearch.category == .sourceSearch)
+        #expect(repeatedSearch.normalizedExecutable == "rg")
+        #expect(repeatedSearch.representativeCommandSummary == "rg ContextEfficiencyRepeatedCommandDetector Packages/macOS/BmuxContextEfficiency")
+        #expect(repeatedSearch.normalizedCommandFingerprint.hasPrefix("fnv1a64:"))
+        #expect(repeatedSearch.occurrenceCount == 2)
+        #expect(repeatedSearch.sampleCommandExecutionIDs.count == 2)
+        #expect(repeatedSearch.firstSourceReference.lineNumber == 2)
+        #expect(repeatedSearch.lastSourceReference.lineNumber == 4)
+
+        let repeatedRead = try #require(inspection.repeatedCommandFacts.first { $0.kind == .fileReading })
+        #expect(repeatedRead.category == .fileReading)
+        #expect(repeatedRead.normalizedExecutable == "cat")
+        #expect(repeatedRead.representativeCommandSummary == "cat docs/context-efficiency/current-status.md")
+        #expect(repeatedRead.occurrenceCount == 2)
+        #expect(repeatedRead.firstSourceReference.lineNumber == 6)
+        #expect(repeatedRead.lastSourceReference.lineNumber == 8)
+
+        let repeatedValidation = try #require(inspection.repeatedCommandFacts.first { $0.kind == .command })
+        #expect(repeatedValidation.category == .validationRuns)
+        #expect(repeatedValidation.normalizedExecutable == "swift")
+        #expect(repeatedValidation.representativeCommandSummary == "swift test --package-path Packages/macOS/BmuxContextEfficiency")
+        #expect(repeatedValidation.occurrenceCount == 2)
+        #expect(repeatedValidation.firstSourceReference.lineNumber == 10)
+        #expect(repeatedValidation.lastSourceReference.lineNumber == 12)
+    }
+
+    @Test
+    func repeatedCommandFactsKeepBoundedExecutionIDSamples() {
+        let commands = (1...25).map { index in
+            ContextEfficiencyCommandExecutionRecord(
+                id: "command-\(index)",
+                threadID: "codex:thread-repeats",
+                callID: "call-\(index)",
+                toolName: "exec_command",
+                commandSummary: "rg repeated Packages/macOS/BmuxContextEfficiency",
+                normalizedExecutable: "rg",
+                category: .sourceSearch,
+                argumentsByteCount: 64,
+                outputByteCount: nil,
+                estimatedOriginalOutputTokens: nil,
+                rawOutputReferenceCount: 0,
+                startedAt: nil,
+                completedAt: nil,
+                elapsedSeconds: nil,
+                toolCallSourceReference: ContextEfficiencySourceReference(
+                    sourcePath: "/tmp/rollout-repeated-commands.jsonl",
+                    byteOffset: Int64(index * 100),
+                    lineNumber: index,
+                    parserVersion: CodexRolloutTelemetryParser.parserVersion
+                ),
+                toolOutputSourceReference: nil,
+                outputAttributionConfidence: .unmatched,
+                attributedModelCall: nil
+            )
+        }
+
+        let fact = ContextEfficiencyRepeatedCommandDetector().facts(for: commands).first
+
+        #expect(fact?.occurrenceCount == 25)
+        #expect(fact?.sampleCommandExecutionIDs.count == 20)
+        #expect(fact?.sampleCommandExecutionIDs.first == "command-1")
+        #expect(fact?.sampleCommandExecutionIDs.last == "command-20")
+        #expect(fact?.lastSourceReference.lineNumber == 25)
+    }
+
+    @Test
     func replacesPreviouslyImportedSourceRowsWhenRolloutFileShrinks() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -253,6 +334,7 @@ struct ContextEfficiencyStoreTests {
             "toolOutputs",
             "commandExecutions",
             "commandCategoryCounts",
+            "repeatedCommandFacts",
             "workItemReferences",
             "parserErrors",
         ])
@@ -303,6 +385,9 @@ struct ContextEfficiencyStoreTests {
         #expect(commandCategoryCount["rawOutput"] == nil)
         #expect(commandCategoryCount["output"] == nil)
         #expect(commandCategoryCount["argumentsByteCount"] == nil)
+
+        let repeatedCommandFacts = try #require(inspectionPayload["repeatedCommandFacts"] as? [[String: Any]])
+        #expect(repeatedCommandFacts.isEmpty)
 
         let workItemReferences = try #require(inspectionPayload["workItemReferences"] as? [[String: Any]])
         let pullRequestReference = try #require(workItemReferences.first { $0["reference"] as? String == "github:manaflow-ai/bmux#4536" })
@@ -417,6 +502,24 @@ struct ContextEfficiencyStoreTests {
         {"type":"response_item","timestamp":"2026-07-13T12:02:03Z","payload":{"type":"function_call_output","threadID":"thread-counts","call_id":"call-3","output":"ok"}}
         {"type":"response_item","timestamp":"2026-07-14T12:00:02Z","payload":{"type":"function_call","threadID":"thread-counts","call_id":"call-4","name":"shell","arguments":"{\\"cmd\\":\\"cat docs/context-efficiency/current-status.md\\"}"}}
         {"type":"response_item","timestamp":"2026-07-14T12:00:03Z","payload":{"type":"function_call_output","threadID":"thread-counts","call_id":"call-4","output":"ok"}}
+        """ + "\n"
+    }
+
+    private var repeatedCommandRollout: String {
+        """
+        {"type":"session_meta","timestamp":"2026-07-13T11:59:58Z","payload":{"id":"thread-repeats","model":"gpt-5","reasoning_effort":"high","cwd":"/repo/bmux"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:00:02Z","payload":{"type":"function_call","threadID":"thread-repeats","call_id":"repeat-1","name":"shell","arguments":"{\\"cmd\\":\\"rg ContextEfficiencyRepeatedCommandDetector Packages/macOS/BmuxContextEfficiency\\"}"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:00:03Z","payload":{"type":"function_call_output","threadID":"thread-repeats","call_id":"repeat-1","output":"ok"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:01:02Z","payload":{"type":"function_call","threadID":"thread-repeats","call_id":"repeat-2","name":"shell","arguments":"{\\"cmd\\":\\"rg ContextEfficiencyRepeatedCommandDetector Packages/macOS/BmuxContextEfficiency\\"}"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:01:03Z","payload":{"type":"function_call_output","threadID":"thread-repeats","call_id":"repeat-2","output":"ok"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:02:02Z","payload":{"type":"function_call","threadID":"thread-repeats","call_id":"repeat-3","name":"shell","arguments":"{\\"cmd\\":\\"cat docs/context-efficiency/current-status.md\\"}"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:02:03Z","payload":{"type":"function_call_output","threadID":"thread-repeats","call_id":"repeat-3","output":"ok"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:03:02Z","payload":{"type":"function_call","threadID":"thread-repeats","call_id":"repeat-4","name":"shell","arguments":"{\\"cmd\\":\\"cat docs/context-efficiency/current-status.md\\"}"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:03:03Z","payload":{"type":"function_call_output","threadID":"thread-repeats","call_id":"repeat-4","output":"ok"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:04:02Z","payload":{"type":"function_call","threadID":"thread-repeats","call_id":"repeat-5","name":"shell","arguments":"{\\"cmd\\":\\"swift test --package-path Packages/macOS/BmuxContextEfficiency\\"}"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:04:03Z","payload":{"type":"function_call_output","threadID":"thread-repeats","call_id":"repeat-5","output":"ok"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:05:02Z","payload":{"type":"function_call","threadID":"thread-repeats","call_id":"repeat-6","name":"shell","arguments":"{\\"cmd\\":\\"swift test --package-path Packages/macOS/BmuxContextEfficiency\\"}"}}
+        {"type":"response_item","timestamp":"2026-07-13T12:05:03Z","payload":{"type":"function_call_output","threadID":"thread-repeats","call_id":"repeat-6","output":"ok"}}
         """ + "\n"
     }
 
