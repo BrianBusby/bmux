@@ -1,6 +1,6 @@
 # Bmux Context Efficiency: Current Status
 
-Last updated: 2026-07-18
+Last updated: 2026-07-19
 
 This file is the live handoff index for the context-efficiency roadmap. Read it before choosing work, and update it at the end of every context-efficiency slice.
 
@@ -40,7 +40,7 @@ Provenance observability has been merged as a cross-cutting roadmap track with i
 
 Observability must not become a parallel provenance system. `WorkProvenance` remains the authoritative semantic history of engineering work, `BmuxContextEfficiency` remains read-only imported telemetry/evidence, and a future `ProvenanceObservability.sqlite` store may hold operational traces, quality telemetry, feedback, evaluation, and shadow-comparison data. Do not start broad observability implementation before the Phase O0 architecture investigation report is complete.
 
-Phase A investigation is complete in `docs/context-efficiency/subsession-delegation-phase-a-report.md`. The next subsession/delegation slice may start Phase B: read-only subsession lifecycle persistence in `WorkProvenance`. Do not treat subsession/delegation as a separate subagent manager; it must extend `WorkProvenance` and link to `BmuxContextEfficiency` telemetry later through stable identities.
+Phase A investigation is complete in `docs/context-efficiency/subsession-delegation-phase-a-report.md`. Phase B read-only subsession lifecycle persistence is now implemented through the WorkProvenance store foundation plus the `AgentSubsessionLifecycleChange` adapter/runtime wiring. Do not treat subsession/delegation as a separate subagent manager; it must extend `WorkProvenance` and link to `BmuxContextEfficiency` telemetry later through stable identities.
 
 Allowed original-plan Phase 3 work:
 
@@ -53,9 +53,9 @@ Allowed original-plan Phase 3 work:
 
 Allowed subsession/delegation work right now:
 
-- Phase B read-only subsession lifecycle persistence in `WorkProvenance`.
+- Phase B read-only subsession lifecycle diagnostics and query polish in `WorkProvenance`.
 - Use `AgentSubsessionLifecycleChange` as the authoritative lifecycle source.
-- Add session relationship and external identity projections before delegation contracts.
+- Use the existing persisted session, session relationship, and external identity projections before delegation contracts.
 - Keep capture/query only; no orchestration, recommendations, or quality scoring.
 
 Allowed observability work right now:
@@ -71,7 +71,7 @@ Do not start:
 - Output filtering or live Codex execution changes.
 - UI changes.
 - Automatic compression, omission, or mutation of agent context.
-- Delegation contracts, reconciliation tables, parent disposition, completion reports, or telemetry-derived quality metrics before Phase B lifecycle persistence is proven.
+- Delegation contracts, reconciliation tables, parent disposition, completion reports, or telemetry-derived quality metrics before Phase B lifecycle persistence has read-only query coverage.
 - Retrieval knowledge projections, FTS, semantic records, provenance edges, context package generation, or semantic-search adapters before the retrieval Phase R0 report is complete and lifecycle/delegation prerequisites are satisfied.
 - Observability dashboards, learned quality models, semantic evaluation, outcome claims, broad sampling infrastructure, automatic correction, automatic algorithm promotion, or every proposed observability table before O0/O1 foundations are complete.
 
@@ -82,8 +82,8 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 Current checkout:
 
 - Branch: `context-efficiency-phase-b-lifecycle`
-- HEAD observed on 2026-07-18: `b875eb837`
-- Contains committed workspace work-context projection, late-subsession-start suppression, context-efficiency planning docs, and Phase B WorkProvenance session relationship projection foundation.
+- HEAD observed before the latest slice on 2026-07-19: `109bb7910`
+- Contains committed workspace work-context projection, late-subsession-start suppression, context-efficiency planning docs, Phase B WorkProvenance session relationship projection foundation, and observability plan integration.
 
 Active context-efficiency worktree:
 
@@ -129,6 +129,30 @@ Latest completed provenance planning slice:
 
 Latest completed provenance implementation slice:
 
+- `Add provenance subsession lifecycle recorder`
+
+Behavior in that slice:
+
+- `WorkProvenanceSubsessionLifecycleRecorder` converts `AgentSubsessionLifecycleChange` into append-only `subsession_started` / `subsession_stopped` events.
+- Child session IDs, external identity IDs, and lifecycle event IDs are deterministic through `WorkProvenanceStableIDFactory`.
+- Runtime wiring records lifecycle changes from the existing `registry.onSubsessionLifecycleChanged` path while preserving ephemeral child workspace behavior.
+- Existing `WorkProvenanceRuntime.live()` now shares one store between workspace Git observation and subsession lifecycle persistence.
+- Swift Testing coverage verifies start/stop projection replay, nested root/depth derivation, missing-identifier fallback confidence, and stop-before-start persistence.
+- No CLI, UI, lifecycle policy, delegation contracts, reconciliation, parent disposition, quality scoring, or observability schema was added.
+
+Files changed in that slice:
+
+- `Sources/WorkProvenance/WorkProvenanceSubsessionLifecycleRecorder.swift`
+- `Sources/WorkProvenance/WorkProvenanceStableIDFactory.swift`
+- `Sources/WorkProvenance/WorkProvenanceRuntime.swift`
+- `Sources/Mobile/AgentChat/AgentChatTranscriptService.swift`
+- `Sources/AppDelegate.swift`
+- `Sources/bmuxApp.swift`
+- `bmuxTests/SubsessionProvenanceTests.swift`
+- `bmux.xcodeproj/project.pbxproj`
+
+Previous provenance implementation slice:
+
 - `b875eb837 Add provenance session relationship projections`
 
 Behavior in that slice:
@@ -169,9 +193,9 @@ Original-plan Phase 3 targets:
 
 Subsession/delegation provenance target:
 
-1. Continue Phase B by adding the adapter from `AgentSubsessionLifecycleChange` to `WorkProvenanceEvent` payloads.
-2. Wire that adapter from the existing `registry.onSubsessionLifecycleChanged` path while preserving ephemeral child workspace behavior.
-3. Do not start delegation contracts, reconciliation, child reports, parent disposition, UI, or lifecycle policy until Phase B is implemented and tested.
+1. Complete Phase B read-only diagnostics by adding bounded `bmux provenance sessions tree <session-id> --json` or equivalent query coverage on top of the persisted relationship projections.
+2. Keep `AgentSubsessionLifecycleChange` as the authoritative lifecycle source; use `BmuxContextEfficiency` only later for telemetry identity links.
+3. Do not start delegation contracts, reconciliation, child reports, parent disposition, UI, or lifecycle policy until read-only lifecycle persistence and query coverage are proven.
 
 Retrieval/knowledge-projection target:
 
@@ -182,7 +206,8 @@ Retrieval/knowledge-projection target:
 Observability target:
 
 1. Start Phase O0 from `provenance-observability-integration-plan.md`.
-2. Keep O0 as investigation/reporting.
+2. Keep O0 as investigation/reporting before adding `ProvenanceObservability.sqlite` or O1 tracing.
+3. After O0, the first O1 implementation slice should trace only `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update` and must not block lifecycle persistence.
 
 Avoid broad CLI/app integration unless the slice is explicitly scoped to read-only diagnostics and includes localization work for any new command/help/error text.
 
@@ -215,6 +240,15 @@ Latest Phase B foundation validation on 2026-07-18:
 - `git diff --check` passed.
 - `./scripts/reload.sh --tag context-eff-phase-b` passed and built `bmux DEV context-eff-phase-b.app`.
 - Focused `xcodebuild test -only-testing:bmuxTests/WorkProvenanceStoreTests/persistsSessionRelationshipsAndExternalIdentitiesAcrossReplay` reached compilation of the new WorkProvenance files, then failed later with the known local Zig/Ghostty undefined-symbol linker issue before running tests.
+
+Latest Phase B lifecycle adapter validation on 2026-07-19:
+
+- `scripts/check-pbxproj.sh` passed.
+- `python3 scripts/check-workspace-package-groups.py --check` passed.
+- `git diff --check` passed.
+- `xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -configuration Debug -destination 'platform=macOS' -derivedDataPath /tmp/bmux-context-provenance-test -only-testing:bmuxTests/SubsessionProvenanceTests` initially failed at the known local Ghostty CLI helper Zig link step before test execution.
+- `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -configuration Debug -destination 'platform=macOS' -derivedDataPath /tmp/bmux-context-provenance-test -only-testing:bmuxTests/SubsessionProvenanceTests` passed 4 Swift Testing tests.
+- `./scripts/reload.sh --tag context-provenance` passed and built `bmux DEV context-provenance.app`.
 
 Current tagged app path pattern:
 

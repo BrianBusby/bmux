@@ -1233,6 +1233,7 @@
 		C0DE70500000000000000002 /* start-bmux-profiling in Copy CLI */ = {isa = PBXBuildFile; fileRef = C0DE70500000000000000001 /* start-bmux-profiling */; };
 		D35B71010000000000000001 /* StartupBreadcrumbLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35B71010000000000000002 /* StartupBreadcrumbLog.swift */; };
 		C0DE70530000000000000002 /* submit-bmux-profile in Copy CLI */ = {isa = PBXBuildFile; fileRef = C0DE70530000000000000001 /* submit-bmux-profile */; };
+		CE0B00050000000000000001 /* SubsessionProvenanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00050000000000000002 /* SubsessionProvenanceTests.swift */; };
 		D7AB00000000000000B041 /* SupersededPhoneDismissBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB00000000000000B040 /* SupersededPhoneDismissBuffer.swift */; };
 		F6572012A1B2C3D4E5F60718 /* SurfaceResumeBindingCodexUpdateCheckTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6572013A1B2C3D4E5F60718 /* SurfaceResumeBindingCodexUpdateCheckTests.swift */; };
 		F0ACC0DE000000000000000F /* SurfaceResumeBindingIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0ACC0DE0000000000000010 /* SurfaceResumeBindingIndex.swift */; };
@@ -1469,6 +1470,7 @@
 		E361FBA90CC7ED4D10E9FF08 /* WorkProvenanceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B101A5E8045CF2BD5561744 /* WorkProvenanceStore.swift */; };
 		B7918D20E231280A40E91D19 /* WorkProvenanceStoreError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320F50E85539F6327F8EB9EC /* WorkProvenanceStoreError.swift */; };
 		B1581966C6355C46BC3ABE62 /* WorkProvenanceStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1211A332D826E19C7A6463C8 /* WorkProvenanceStoreTests.swift */; };
+		CE0B00040000000000000001 /* WorkProvenanceSubsessionLifecycleRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00040000000000000002 /* WorkProvenanceSubsessionLifecycleRecorder.swift */; };
 		325D6087DAE009D97B24D4EF /* WorkProvenanceValidationRunRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59911A9C30F6E3E5FA86A5E9 /* WorkProvenanceValidationRunRecord.swift */; };
 		C2C1613D6327DBD7F58D5FB6 /* WorkProvenanceWorkItemRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4B8B1CDBF4DFC8201D7D95 /* WorkProvenanceWorkItemRecord.swift */; };
 		9537A3EC66F94ED444031D42 /* WorkProvenanceWorkspaceSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28D2640EA59ABFD3DD5CA59B /* WorkProvenanceWorkspaceSnapshot.swift */; };
@@ -2787,6 +2789,7 @@
 		C0DE70500000000000000001 /* start-bmux-profiling */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Resources/bin/start-bmux-profiling"; sourceTree = SOURCE_ROOT; };
 		D35B71010000000000000002 /* StartupBreadcrumbLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/StartupBreadcrumbLog.swift; sourceTree = "<group>"; };
 		C0DE70530000000000000001 /* submit-bmux-profile */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Resources/bin/submit-bmux-profile"; sourceTree = SOURCE_ROOT; };
+		CE0B00050000000000000002 /* SubsessionProvenanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubsessionProvenanceTests.swift; sourceTree = "<group>"; };
 		D7AB00000000000000B040 /* SupersededPhoneDismissBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupersededPhoneDismissBuffer.swift; sourceTree = "<group>"; };
 		F6572013A1B2C3D4E5F60718 /* SurfaceResumeBindingCodexUpdateCheckTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfaceResumeBindingCodexUpdateCheckTests.swift; sourceTree = "<group>"; };
 		F0ACC0DE0000000000000010 /* SurfaceResumeBindingIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfaceResumeBindingIndex.swift; sourceTree = "<group>"; };
@@ -3024,6 +3027,7 @@
 		8B101A5E8045CF2BD5561744 /* WorkProvenanceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceStore.swift; sourceTree = "<group>"; };
 		320F50E85539F6327F8EB9EC /* WorkProvenanceStoreError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceStoreError.swift; sourceTree = "<group>"; };
 		1211A332D826E19C7A6463C8 /* WorkProvenanceStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceStoreTests.swift; sourceTree = "<group>"; };
+		CE0B00040000000000000002 /* WorkProvenanceSubsessionLifecycleRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSubsessionLifecycleRecorder.swift; sourceTree = "<group>"; };
 		59911A9C30F6E3E5FA86A5E9 /* WorkProvenanceValidationRunRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceValidationRunRecord.swift; sourceTree = "<group>"; };
 		1D4B8B1CDBF4DFC8201D7D95 /* WorkProvenanceWorkItemRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceWorkItemRecord.swift; sourceTree = "<group>"; };
 		28D2640EA59ABFD3DD5CA59B /* WorkProvenanceWorkspaceSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceWorkspaceSnapshot.swift; sourceTree = "<group>"; };
@@ -4418,6 +4422,7 @@
 				C7A51E000000000000000001 /* AgentChatSessionRegistryLifecycleTests.swift */,
 				C7A51D100000000000000001 /* AgentChatSessionRegistryObservationReviewRegressionTests.swift */,
 				C7A51D000000000000000001 /* AgentChatSessionRegistryObservationTests.swift */,
+				CE0B00050000000000000002 /* SubsessionProvenanceTests.swift */,
 				D3610B010000000000000002 /* AgentSessionAutoResumeSettingsTests.swift */,
 				D3610B020000000000000002 /* AgentSessionAutoResumeSwiftTests.swift */,
 				A9E010000000000000000005 /* AgentExecutableResolverTests.swift */,
@@ -4802,6 +4807,7 @@
 				9D42FFA90AFE883FD6C8EF8A /* WorkProvenanceRepositoryRecord.swift */,
 				C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */,
 				B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */,
+				CE0B00040000000000000002 /* WorkProvenanceSubsessionLifecycleRecorder.swift */,
 				2F450598D29975B2FD348489 /* WorkProvenanceSQLiteDatabase.swift */,
 				6AD4D726F26DF9FED2713BE6 /* WorkProvenanceSQLiteStatement.swift */,
 				CE0B00020000000000000002 /* WorkProvenanceSessionRelationshipRecord.swift */,
@@ -6138,6 +6144,7 @@
 				2F23C7CCE50C7034B7FC32DA /* WorkProvenanceStorageLocation.swift in Sources */,
 				E361FBA90CC7ED4D10E9FF08 /* WorkProvenanceStore.swift in Sources */,
 				B7918D20E231280A40E91D19 /* WorkProvenanceStoreError.swift in Sources */,
+				CE0B00040000000000000001 /* WorkProvenanceSubsessionLifecycleRecorder.swift in Sources */,
 				325D6087DAE009D97B24D4EF /* WorkProvenanceValidationRunRecord.swift in Sources */,
 				C2C1613D6327DBD7F58D5FB6 /* WorkProvenanceWorkItemRecord.swift in Sources */,
 				9537A3EC66F94ED444031D42 /* WorkProvenanceWorkspaceSnapshot.swift in Sources */,
@@ -6664,6 +6671,7 @@
 						B6285B71BA6F82AF8F945E00 /* SSHPTYAttachReconnectInputFilterTests.swift in Sources */,
 				EF70B7123200D1FB6F03DB26 /* SSHStartupManualReconnectTests.swift in Sources */,
 				F6355600A1B2C3D4E5F60718 /* SSHStartupSignalLifecycleTests.swift in Sources */,
+				CE0B00050000000000000001 /* SubsessionProvenanceTests.swift in Sources */,
 				F6572012A1B2C3D4E5F60718 /* SurfaceResumeBindingCodexUpdateCheckTests.swift in Sources */,
 				FBE660ABA1854983B84368C6 /* SystemWideHotkeyShortcutPolicyTests.swift in Sources */,
 				C0DE64160000000000000001 /* TabManagerNotificationFocusRegressionTests.swift in Sources */,
