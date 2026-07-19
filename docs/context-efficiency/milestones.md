@@ -154,10 +154,10 @@ Expected work:
 
 Implemented slices:
 
-- `95e1c0d9 Add context efficiency command attribution` added derived command execution candidates, deterministic command categories, exact tool-call/output links, temporal attribution, and bounded command JSON.
+- `ff999cab3 Add context efficiency command attribution` salvaged `95e1c0d9` and added derived command execution candidates, deterministic command categories, exact tool-call/output links, temporal attribution, and bounded command JSON.
 - Work-item reference fact slices added bounded reference records.
 - Command-category count slices added count-only thread and day summary aggregates.
-- `6279c8abd Add context efficiency repeated command facts` added repeated command, source-search, and file-reading facts.
+- `5c8b099e7 Add context efficiency repeated command facts` salvaged `6279c8abd` and added repeated command, source-search, and file-reading facts.
 - Phase B subsession lifecycle slices added WorkProvenance session relationship/external identity projections, then wired `AgentSubsessionLifecycleChange` into persisted `subsession_started` / `subsession_stopped` events through the existing registry lifecycle path.
 - A working tree Phase B query-diagnostics slice adds bounded `bmux provenance sessions tree <session-id> --json` output over persisted session relationship and external identity projections; `bmux-cli` builds and the standalone Python CLI regression passes against the built binary.
 

@@ -81,25 +81,27 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 
 Current checkout:
 
-- Branch: `context-efficiency-phase-b-lifecycle`
-- HEAD observed before the latest slice on 2026-07-19: `109bb7910`
-- Contains committed workspace work-context projection, late-subsession-start suppression, context-efficiency planning docs, Phase B WorkProvenance session relationship projection foundation, and observability plan integration.
+- Branch: `context-efficiency-phase3-salvage`
+- Base branch: `context-efficiency-phase-b-lifecycle`
+- HEAD observed during the salvage slice on 2026-07-19: `5c8b099e7`
+- Contains committed workspace work-context projection, late-subsession-start suppression, context-efficiency planning docs, Phase B WorkProvenance session relationship projection foundation, observability plan integration, Phase B read-only session-tree diagnostics, O0 observability report, and salvaged original-plan Phase 3 context-efficiency facts.
 
-Active context-efficiency worktree:
+Superseded context-efficiency worktree:
 
 - Branch: `context-efficiency-wip-20260715`
 - Path: `/private/tmp/context-efficiency-wip-20260715`
 - HEAD observed on 2026-07-18: `ca1266ebb`
+- Status: useful implementation commits have been cherry-picked onto `context-efficiency-phase3-salvage`; do not merge this worktree wholesale.
 
-Latest completed implementation HEAD for original-plan Phase 3:
+Latest completed implementation HEAD for original-plan Phase 3 on this salvage branch:
 
-- `6279c8abdaf2a1d461e86f10a41e1c145229b3d1`
+- `5c8b099e7dcf614d499c91198a46b6052103d054`
 
 The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
 
 Latest completed implementation slice:
 
-- `6279c8abd Add context efficiency repeated command facts`
+- `5c8b099e7 Add context efficiency repeated command facts` cherry-picked from `6279c8abd` on `context-efficiency-wip-20260715`.
 
 Behavior in that slice:
 
