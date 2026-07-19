@@ -54,6 +54,50 @@ struct AgentChatSessionRegistryLifecycleTests {
     }
 
     @MainActor
+    @Test func endedParentSessionSuppressesLateSubagentStartsButAllowsStops() throws {
+        let registry = AgentChatSessionRegistry()
+        let sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b"
+        let workspaceID = UUID().uuidString
+        var changes: [AgentSubsessionLifecycleChange] = []
+        registry.onSubsessionLifecycleChanged = { changes.append($0) }
+
+        registry.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .subagentStart,
+            source: "codex",
+            workspaceId: workspaceID,
+            requestId: "subagent-request-1",
+            extraFieldsJSON: #"{"subagent_id":"subagent-1"}"#
+        ))
+        registry.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .sessionEnd,
+            source: "codex",
+            workspaceId: workspaceID
+        ))
+        let lateStartRecord = registry.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .subagentStart,
+            source: "codex",
+            workspaceId: workspaceID,
+            requestId: "subagent-request-2",
+            extraFieldsJSON: #"{"subagent_id":"subagent-2"}"#
+        ))
+        registry.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .subagentStop,
+            source: "codex",
+            workspaceId: workspaceID,
+            requestId: "subagent-request-1",
+            extraFieldsJSON: #"{"subagent_id":"subagent-1"}"#
+        ))
+
+        #expect(lateStartRecord.state == .ended)
+        #expect(changes.map(\.phase) == [.started, .stopped])
+        #expect(changes.map(\.subsessionID) == ["subagent-1", "subagent-1"])
+    }
+
+    @MainActor
     @Test func hookStoreSeedDoesNotRestoreStalePIDOntoExistingLiveRecord() async throws {
         let home = try temporaryHomeDirectory()
         let workspaceID = UUID().uuidString

@@ -127,6 +127,9 @@ extension AgentChatSessionRegistry {
         default:
             return nil
         }
+        if phase == .started, stateIsEnded(record.state) {
+            return nil
+        }
         let metadata = AgentSubsessionEventMetadata(event: event)
         return AgentSubsessionLifecycleChange(
             phase: phase,
