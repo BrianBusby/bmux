@@ -127,7 +127,7 @@ Validation:
 
 ## Milestone 3: Command and Output Attribution
 
-Status: active. Command-attribution, work-item reference fact, and command-category count slices are implemented.
+Status: active. Command-attribution, work-item reference fact, command-category count, and repeated-command fact slices are implemented.
 
 Goal:
 
@@ -159,10 +159,17 @@ Implemented in the third slice:
 - `inspect-thread --json` top-level `command_category_counts` and `summarize-day --json` `summary.command_category_counts`.
 - Package and CLI regression coverage proving aggregate rows do not include command summaries, executables, source references, arguments, or raw output.
 
+Implemented in the fourth slice:
+
+- `ContextEfficiencyRepeatedCommandFact` and `ContextEfficiencyCommandRepetitionKind` report value types.
+- `ContextEfficiencyRepeatedCommandDetector` derives exact repeated command, source-search, and file-reading facts from existing command execution candidates.
+- Thread inspection `repeatedCommandFacts` and `inspect-thread --json` top-level `repeated_command_facts` output.
+- Package and CLI regression coverage proving the new report surface remains bounded and raw-output-free.
+- No schema migration; repeated-command facts are derived report facts, not persisted rows.
+
 Expected work:
 
 - Persist command execution candidates if derived reports prove insufficient.
-- Add repeated command/search/file-read detection as bounded facts.
 - Index proxy `rawOutputRef` artifacts.
 - Evaluate OSC 133 parsing for non-Codex terminal attribution.
 - Link evidence-backed reference facts to future provenance work items or delegation inputs.
@@ -189,7 +196,7 @@ Expected work:
 - Cached/new/output totals where available.
 - Context utilization and call deltas.
 - Compaction effectiveness signals.
-- Repeated command/search/file-read detection.
+- Use repeated command/search/file-read facts in configurable profiler signals.
 - Low-information/high-context heuristic signals.
 - Possible-loop signal windows.
 
