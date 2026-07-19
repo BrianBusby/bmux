@@ -1,6 +1,6 @@
 # Bmux Provenance: Agent Retrieval and Knowledge Projection Integration
 
-Status: planning integrated on 2026-07-18. This plan extends the subsession/delegation provenance roadmap. It does not replace `WorkProvenance`, `BmuxContextEfficiency`, raw evidence storage, or the append-only event ledger.
+Status: planning integrated on 2026-07-18 and updated on 2026-07-19 with provenance observability requirements. This plan extends the subsession/delegation provenance roadmap. It does not replace `WorkProvenance`, `BmuxContextEfficiency`, raw evidence storage, the append-only event ledger, or the future observability trace store.
 
 ## Purpose
 
@@ -17,6 +17,8 @@ Raw evidence
 ```
 
 The retrieval layer must be derived, rebuildable, evidence-linked, freshness-aware, repository-scoped, raw-payload-safe, and optimized for bounded agent consumption.
+
+Retrieval must also be observable. A future retrieval result should explain why records were selected or omitted, which versions produced ranking and token budgeting, which evidence supports each selected record, and whether supplied context was later used, corrected, or contradicted. Detailed requirements live in `docs/context-efficiency/provenance-observability-integration-plan.md`.
 
 ## Layer Boundaries
 
@@ -61,6 +63,8 @@ Reliable lifecycle capture
 `WorkProvenance` owns sessions, delegations, work items, contributions, files, validations, commits, decisions, findings, relationships, knowledge projections, context-package manifests, source, and confidence.
 
 `BmuxContextEfficiency` continues to own imported read-only facts: Codex threads, model calls, token telemetry, tool calls, tool outputs, rollout source references, parser errors, command execution candidates, and work-item reference candidates.
+
+`ProvenanceObservability` will own operational and quality telemetry about provenance processing and retrieval: projection runs, derivations, invalidations, retrieval runs, retrieval candidates, ranking explanations, feedback, evaluation results, and shadow comparisons. It is not the source of truth for engineering work.
 
 Do not duplicate all context-efficiency rows inside `WorkProvenance`. Link through stable external identities and evidence references.
 
@@ -157,6 +161,8 @@ Create deterministic retrieval fixtures before semantic ranking or automated con
 
 Metrics include required-record recall, misleading-record rate, stale-record rate, superseded-record leakage, token-budget compliance, source-reference coverage, determinism, and latency. Do not optimize primarily for subjective summary quality.
 
+Retrieval observability must preserve coverage and correctness as separate measurements. A broad candidate set, high selected-record count, or high attribution rate is not by itself a quality improvement.
+
 ## Migration Sequence
 
 Do not add every concept in one migration. Recommended order: R1 decisions/findings/edges, R2 knowledge records plus FTS, and R3 optional context package manifests/projection state. Follow current `WorkProvenance` migration and replay conventions.
@@ -172,6 +178,8 @@ Do not add every concept in one migration. Recommended order: R1 decisions/findi
 - R6 subsession integration: wire child context, invalidation, projection, and parent disposition.
 - R7 optional semantic search: add only after lexical and structured retrieval are evaluated.
 - R8 UI and assisted handoff: expose previews and editable packages; no automatic injection yet.
+
+Observability should overlap these phases: projection lineage with R3, retrieval traces and candidate omission reasons with R4/R5, feedback and correction with R6, evaluation harness before ranking changes, shadow comparison before algorithm promotion, and consumption/outcome traces with assisted handoffs.
 
 ## Acceptance Criteria
 

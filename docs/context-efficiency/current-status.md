@@ -11,9 +11,10 @@ This file is the live handoff index for the context-efficiency roadmap. Read it 
 3. `docs/context-efficiency/roadmap.md`
 4. `docs/context-efficiency/subsession-delegation-integration-plan.md`
 5. `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
-6. `docs/context-efficiency/subsession-delegation-phase-a-report.md`
-7. `docs/context-efficiency/milestones.md`
-8. Relevant bmux skills:
+6. `docs/context-efficiency/provenance-observability-integration-plan.md`
+7. `docs/context-efficiency/subsession-delegation-phase-a-report.md`
+8. `docs/context-efficiency/milestones.md`
+9. Relevant bmux skills:
    - `bmux-architecture` before Swift package/API changes.
    - `bmux-dev-workflow` before tagged builds or project wiring.
    - `bmux-testing` before test changes or verification decisions.
@@ -33,6 +34,12 @@ Agent retrieval and knowledge projection has been merged as a Milestone 5.5 trac
 
 Retrieval must build on reliable lifecycle capture, session/delegation identity, and semantic provenance. Do not start retrieval implementation before Phase R0 investigation and do not let retrieval create parallel stores, task models, child-session records, or raw-evidence copies.
 
+Provenance observability has been merged as a cross-cutting roadmap track with its own authoritative plan:
+
+- `docs/context-efficiency/provenance-observability-integration-plan.md`
+
+Observability must not become a parallel provenance system. `WorkProvenance` remains the authoritative semantic history of engineering work, `BmuxContextEfficiency` remains read-only imported telemetry/evidence, and a future `ProvenanceObservability.sqlite` store may hold operational traces, quality telemetry, feedback, evaluation, and shadow-comparison data. Do not start broad observability implementation before the Phase O0 architecture investigation report is complete.
+
 Phase A investigation is complete in `docs/context-efficiency/subsession-delegation-phase-a-report.md`. The next subsession/delegation slice may start Phase B: read-only subsession lifecycle persistence in `WorkProvenance`. Do not treat subsession/delegation as a separate subagent manager; it must extend `WorkProvenance` and link to `BmuxContextEfficiency` telemetry later through stable identities.
 
 Allowed original-plan Phase 3 work:
@@ -51,6 +58,13 @@ Allowed subsession/delegation work right now:
 - Add session relationship and external identity projections before delegation contracts.
 - Keep capture/query only; no orchestration, recommendations, or quality scoring.
 
+Allowed observability work right now:
+
+- Phase O0 architecture investigation only, unless the user explicitly continues into implementation after the report.
+- Inspect WorkProvenance ingestion/replay/migrations, ContextEfficiency import, `AgentSubsessionLifecycleChange`, external identity mapping, delegation/retrieval plans, CLI structure, logging, and diagnostics.
+- Return the required O0 report before adding observability schema or code.
+- If implementation is later approved, start with the narrow O1 pipeline-tracing slice.
+
 Do not start:
 
 - Lifecycle policy, warnings, handoff recommendations, or intervention logic.
@@ -59,8 +73,9 @@ Do not start:
 - Automatic compression, omission, or mutation of agent context.
 - Delegation contracts, reconciliation tables, parent disposition, completion reports, or telemetry-derived quality metrics before Phase B lifecycle persistence is proven.
 - Retrieval knowledge projections, FTS, semantic records, provenance edges, context package generation, or semantic-search adapters before the retrieval Phase R0 report is complete and lifecycle/delegation prerequisites are satisfied.
+- Observability dashboards, learned quality models, semantic evaluation, outcome claims, broad sampling infrastructure, automatic correction, automatic algorithm promotion, or every proposed observability table before O0/O1 foundations are complete.
 
-Keep both tracks observation-first. Provenance work may capture and query facts, but must not add automatic delegation decisions, task decomposition, prompt mutation, child launch, merge behavior, or quality scoring.
+Keep all tracks observation-first. Provenance work may capture and query facts, but must not add automatic delegation decisions, task decomposition, prompt mutation, child launch, merge behavior, automatic correction, algorithm promotion, or quality scoring.
 
 ## Current Branch State
 
@@ -109,7 +124,8 @@ Files changed in the latest implementation slice:
 Latest completed provenance planning slice:
 
 - `docs/context-efficiency/subsession-delegation-phase-a-report.md` records the Phase A architecture report required before subsession/delegation schema or implementation changes.
-- `docs/context-efficiency/current-status.md` and `docs/context-efficiency/milestones.md` record that Phase B lifecycle persistence is now the next provenance implementation target.
+- `docs/context-efficiency/provenance-observability-integration-plan.md` records the cross-cutting observability plan and O0 investigation gate.
+- `docs/context-efficiency/current-status.md` and `docs/context-efficiency/milestones.md` record that Phase B lifecycle persistence remains the next provenance implementation target, with O0 observability investigation as the next observability planning target.
 
 Latest completed provenance implementation slice:
 
@@ -163,9 +179,20 @@ Retrieval/knowledge-projection target:
 2. When explicitly starting retrieval work, begin with Phase R0 from `agent-retrieval-knowledge-projection-plan.md`: current stores, projection/migration patterns, retrieval capabilities, FTS support, schemas, invalidation design, roadmap insertion points, first migration, and first fixture.
 3. Do not start embeddings, context-package generation, UI, automatic prompt injection, or orchestration in the first retrieval slice.
 
+Observability target:
+
+1. Start Phase O0 from `provenance-observability-integration-plan.md`.
+2. Keep O0 as investigation/reporting.
+
 Avoid broad CLI/app integration unless the slice is explicitly scoped to read-only diagnostics and includes localization work for any new command/help/error text.
 
 ## Verification For The Next Slice
+
+For docs-only context-efficiency roadmap updates, run:
+
+```bash
+git diff --check
+```
 
 After context-efficiency package or CLI report changes, run:
 
@@ -225,6 +252,6 @@ Do not let one-off chat handoffs become the only record of current status.
 
 ## Localization
 
-The Phase B foundation slice changed internal store models, schema, tests, and project wiring only. No CLI, UI, help, command, or user-facing app strings changed.
+This observability planning slice changed internal development documentation only. No CLI, UI, help, command, or user-facing app strings changed.
 
 This file and the other `docs/context-efficiency/*` planning files are internal development documentation and are not mirrored into localized docs. If a future slice adds or edits CLI/UI/user-facing strings, use `bmux-localization` and update every supported locale.

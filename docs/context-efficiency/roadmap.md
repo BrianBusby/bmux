@@ -18,6 +18,18 @@ How should thresholds and handoff policies improve as Bmux collects more data?
 
 This is not merely a token counter. It is a causal profiler and lifecycle manager for agent work.
 
+Provenance observability update
+
+The provenance roadmap now includes a cross-cutting observability plan in:
+
+docs/context-efficiency/provenance-observability-integration-plan.md
+
+Observability must instrument provenance processing without becoming a parallel provenance system. WorkProvenance remains authoritative engineering history, BmuxContextEfficiency remains read-only imported telemetry and evidence, and ProvenanceObservability is reserved for operational and quality telemetry.
+
+Begin observability with Phase O0 architecture investigation.
+
+Do not implement broad observability schema or code before returning the required O0 report.
+
 Important empirical findings
 
 Use these findings as the initial motivation and calibration data, not as unquestionable universal rules.

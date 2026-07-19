@@ -1,6 +1,14 @@
 # Bmux Context Efficiency: Milestones
 
-Status: implementation sequence reconciled on 2026-07-18 after merging the subsession/delegation integration plan and the agent retrieval/knowledge-projection plan into the original context-efficiency roadmap.
+Status: implementation sequence reconciled on 2026-07-19 after merging the subsession/delegation integration plan, the agent retrieval/knowledge-projection plan, and the provenance observability integration plan into the original context-efficiency roadmap.
+
+Cross-cutting plans:
+
+- `docs/context-efficiency/subsession-delegation-integration-plan.md`
+- `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
+- `docs/context-efficiency/provenance-observability-integration-plan.md`
+
+Observability is not a standalone late milestone. Each provenance milestone should add the relevant traceability, quality, feedback, evaluation, or shadow-comparison requirement while preserving store ownership: `WorkProvenance` is authoritative engineering history, `BmuxContextEfficiency` is read-only imported telemetry/evidence, and `ProvenanceObservability` is future operational and quality telemetry.
 
 ## Milestone 1: Discovery and Schemas
 
@@ -164,6 +172,13 @@ Subsession/delegation integration:
 - Use `AgentSubsessionLifecycleChange` as the first authoritative lifecycle source.
 - `BmuxContextEfficiency` remains read-only telemetry; delegation semantics belong in `WorkProvenance`.
 
+Observability integration:
+
+- Phase O0 architecture investigation must be complete before observability schema or broad trace implementation.
+- The first O1 implementation slice should trace only `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update`.
+- Initial observability covers ingestion traces, identity-resolution traces, stage duration, bounded failures, unresolved/conflicting lifecycle identity, and correlation IDs.
+- Observability writes must not block lifecycle event append or projection updates.
+
 ## Milestone 4: Efficiency Profiler
 
 Goal:
@@ -185,6 +200,12 @@ Rules:
 - High token usage alone must not label a thread stuck.
 - Reports show measurements and conditions, not opaque scores.
 
+Observability integration:
+
+- Add telemetry quality and import observability for parser errors, import lag, skipped/dropped events, duplicate suppression, cursor progress, degraded imports, and database lock duration.
+- Keep coverage measurements separate from correctness measurements.
+- Version profiler signals and report which conditions fired.
+
 ## Milestone 5: Project Progress, Delegation, and Semantic Provenance
 
 Goal:
@@ -203,6 +224,12 @@ Expected work:
 Risk:
 
 - Model-derived summaries can be useful but must remain marked inferred.
+
+Observability integration:
+
+- Add identity and attribution explainability for external thread/session links, child-parent links, command/session links, file/contribution links, validation/contribution links, and commit/contribution links.
+- Add derivation records for semantic records, including evidence references, rules applied, generator versions, confidence components, and input/output hashes.
+- Support explicit feedback and corrections without silently rewriting authoritative provenance.
 
 ## Milestone 5.5: Agent Retrieval and Knowledge Projection
 
@@ -232,6 +259,12 @@ Rules:
 - Do not start context-package generation before semantic records, edges, and lexical retrieval are proven.
 - Do not add UI, automatic prompt injection, autonomous orchestration, or assisted handoff behavior in this milestone.
 
+Observability integration:
+
+- Add projection-run, derivation, invalidation, retrieval-run, and retrieval-candidate traces.
+- Retrieval traces must explain selected and omitted records with ranking components, freshness/supersession/confidence filtering, token-budget omissions, and source references.
+- Evaluation fixtures must measure required-record recall, irrelevant/misleading/stale/superseded leakage, token-budget compliance, source-reference coverage, determinism, and latency.
+
 ## Milestone 6: Coordination UI
 
 Goal:
@@ -249,6 +282,12 @@ Rules:
 
 - UI warnings must show underlying measurements.
 - No automatic interruption.
+
+Observability integration:
+
+- Add UI only after CLI/evaluation quality exists.
+- Initial views should show pipeline health, trace exploration, and quality metrics separately for coverage, accuracy, calibration, freshness, retrieval quality, feedback, shadow comparisons, and evaluation regressions.
+- Do not present a single opaque provenance quality score as the primary result.
 
 ## Milestone 7: Shadow Lifecycle Engine
 
@@ -269,6 +308,12 @@ Rules:
 - No automatic thread kill.
 - No recommendation without an explanation.
 
+Observability integration:
+
+- Add active-versus-candidate shadow comparisons for meaningful algorithm changes.
+- Begin with one subsystem, preferably file attribution or retrieval ranking.
+- Promotion criteria must be explicit and based on precision, recall, unresolved rate, calibration, fixture regressions, and reviewed disagreements where applicable.
+
 ## Milestone 8: Assisted Handoffs and Context Packages
 
 Goal:
@@ -288,6 +333,12 @@ Rules:
 
 - User approves transition.
 - Raw artifacts remain referenced and recoverable.
+
+Observability integration:
+
+- Add context-package consumption records, supplied-record references, explicit and inferred usage signals, repeated-search detection, missing-context requests, parent feedback, and associated downstream outcome correlations.
+- Do not report weak inference as confirmed usage.
+- Do not claim causal productivity improvements without controlled comparison.
 
 ## Milestone 9: Output Reduction Experiment
 
