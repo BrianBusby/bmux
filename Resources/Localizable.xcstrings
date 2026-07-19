@@ -231535,6 +231535,23 @@
         }
       }
     },
+    "cli.provenance.reason.noSession": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no provenance has been recorded for this session"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このセッションの provenance は記録されていません"
+          }
+        }
+      }
+    },
     "cli.provenance.reason.noDatabase": {
       "extractionState": "manual",
       "localizations": {
@@ -231592,13 +231609,98 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n\nInspect bmux work provenance without requiring a live app socket."
+            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n\nInspect bmux work provenance without requiring a live app socket."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
+            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
+          }
+        }
+      }
+    },
+    "cli.provenance.sessions.output.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session tree for %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ のセッションツリー"
+          }
+        }
+      }
+    },
+    "cli.provenance.sessions.output.notFound": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No provenance session tree found for %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の provenance セッションツリーは見つかりませんでした"
+          }
+        }
+      }
+    },
+    "cli.provenance.sessions.output.sessionRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@%@"
+          }
+        }
+      }
+    },
+    "cli.provenance.sessions.output.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions: %d · relationships: %d · external identities: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッション: %d · 関係: %d · 外部 ID: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.sessions.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux provenance sessions tree <session-id> [--database <path>] [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法: bmux provenance sessions tree <session-id> [--database <path>] [--json]"
           }
         }
       }

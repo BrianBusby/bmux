@@ -159,6 +159,7 @@ Implemented slices:
 - Command-category count slices added count-only thread and day summary aggregates.
 - `6279c8abd Add context efficiency repeated command facts` added repeated command, source-search, and file-reading facts.
 - Phase B subsession lifecycle slices added WorkProvenance session relationship/external identity projections, then wired `AgentSubsessionLifecycleChange` into persisted `subsession_started` / `subsession_stopped` events through the existing registry lifecycle path.
+- A working tree Phase B query-diagnostics slice adds bounded `bmux provenance sessions tree <session-id> --json` output over persisted session relationship and external identity projections; `bmux-cli` builds and the standalone Python CLI regression passes against the built binary.
 
 Stop condition:
 
@@ -169,13 +170,13 @@ Subsession/delegation integration:
 - `docs/context-efficiency/subsession-delegation-integration-plan.md` is authoritative for this subtrack.
 - Phase A is complete in `docs/context-efficiency/subsession-delegation-phase-a-report.md`.
 - Phase B store foundation is implemented at `b875eb837 Add provenance session relationship projections`.
-- Phase B lifecycle adapter/runtime wiring is implemented; the next narrow Phase B slice is bounded read-only session-tree diagnostics/query coverage.
+- Phase B lifecycle adapter/runtime wiring is implemented; bounded read-only session-tree diagnostics/query coverage is implemented and validated against a rebuilt `bmux-cli`.
 - Use `AgentSubsessionLifecycleChange` as the first authoritative lifecycle source.
 - `BmuxContextEfficiency` remains read-only telemetry; delegation semantics belong in `WorkProvenance`.
 
 Observability integration:
 
-- Phase O0 architecture investigation must be complete before observability schema or broad trace implementation.
+- Phase O0 architecture investigation is complete in `docs/context-efficiency/provenance-observability-phase-o0-report.md`.
 - The first O1 implementation slice should trace only `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update`.
 - Initial observability covers ingestion traces, identity-resolution traces, stage duration, bounded failures, unresolved/conflicting lifecycle identity, and correlation IDs.
 - Observability writes must not block lifecycle event append or projection updates.

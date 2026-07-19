@@ -19,6 +19,11 @@ extension BMUXCLI {
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
+        case "sessions":
+            try runProvenanceSessions(
+                commandArgs: Array(commandArgs.dropFirst()),
+                jsonOutput: jsonOutput
+            )
         case "help", "--help", "-h", nil:
             print(provenanceUsage())
         default:
@@ -142,6 +147,42 @@ extension BMUXCLI {
         printProvenanceWorktreeList(list, jsonOutput: jsonOutput)
     }
 
+    private func runProvenanceSessions(commandArgs: [String], jsonOutput: Bool) throws {
+        let commandName = "provenance sessions tree"
+        let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
+        var remaining = remainingAfterDatabase
+        try rejectProvenanceUnknownFlags(remaining, commandName: commandName)
+        guard remaining.first?.lowercased() == "tree" else {
+            throw CLIError(message: String(localized: "cli.provenance.sessions.usage", defaultValue: "Usage: bmux provenance sessions tree <session-id> [--database <path>] [--json]"))
+        }
+        remaining.removeFirst()
+        guard let sessionID = remaining.first else {
+            throw CLIError(message: String(localized: "cli.provenance.sessions.usage", defaultValue: "Usage: bmux provenance sessions tree <session-id> [--database <path>] [--json]"))
+        }
+        remaining.removeFirst()
+        guard remaining.isEmpty else {
+            throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
+        }
+
+        let databaseURL = provenanceDatabaseURL(databasePath: databasePath)
+        guard FileManager.default.fileExists(atPath: databaseURL.path) else {
+            let tree = CLIProvenanceSessionTree(
+                rootSessionID: sessionID,
+                found: false,
+                reason: String(localized: "cli.provenance.reason.noDatabase", defaultValue: "no provenance database exists yet"),
+                sessions: [],
+                relationships: [],
+                externalIdentities: []
+            )
+            printProvenanceSessionTree(tree, jsonOutput: jsonOutput)
+            return
+        }
+
+        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
+        let tree = try reader.sessionTree(rootSessionID: sessionID)
+        printProvenanceSessionTree(tree, jsonOutput: jsonOutput)
+    }
+
     private func rejectProvenanceUnknownFlags(_ args: [String], commandName: String) throws {
         if let unknown = args.first(where: { $0.hasPrefix("--") }) {
             throw CLIError(message: String.localizedStringWithFormat(
@@ -201,6 +242,14 @@ extension BMUXCLI {
             return
         }
         print(renderProvenanceWorktreeList(list))
+    }
+
+    private func printProvenanceSessionTree(_ tree: CLIProvenanceSessionTree, jsonOutput: Bool) {
+        if jsonOutput {
+            print(jsonString(tree.payload))
+            return
+        }
+        print(renderProvenanceSessionTree(tree))
     }
 
     private func renderProvenanceExplanation(_ explanation: CLIProvenanceExplanation) -> String {
@@ -422,6 +471,40 @@ extension BMUXCLI {
         return lines.joined(separator: "\n")
     }
 
+    private func renderProvenanceSessionTree(_ tree: CLIProvenanceSessionTree) -> String {
+        guard tree.found else {
+            return [
+                String.localizedStringWithFormat(
+                    String(localized: "cli.provenance.sessions.output.notFound", defaultValue: "No provenance session tree found for %@"),
+                    tree.rootSessionID
+                ),
+                tree.reason.map {
+                    String.localizedStringWithFormat(
+                        String(localized: "cli.provenance.output.reason", defaultValue: "Reason: %@"),
+                        $0
+                    )
+                }
+            ].compactMap(\.self).joined(separator: "\n")
+        }
+
+        var lines = [
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.sessions.output.header", defaultValue: "Session tree for %@"),
+                tree.rootSessionID
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.sessions.output.summary", defaultValue: "Sessions: %d · relationships: %d · external identities: %d"),
+                tree.sessions.count,
+                tree.relationships.count,
+                tree.externalIdentities.count
+            )
+        ]
+        for row in tree.sessions.prefix(25) {
+            lines.append(renderProvenanceSessionTreeRow(row))
+        }
+        return lines.joined(separator: "\n")
+    }
+
     private func appendProvenanceRows(
         _ rows: [[String: AnyHashable]],
         title: String,
@@ -446,6 +529,24 @@ extension BMUXCLI {
         }.joined(separator: " · ")
         return String.localizedStringWithFormat(
             String(localized: "cli.provenance.context.output.sessionRow", defaultValue: "  %@"),
+            identity
+        )
+    }
+
+    private func renderProvenanceSessionTreeRow(_ row: [String: AnyHashable]) -> String {
+        let depth = row["tree_depth"] as? Int ?? 0
+        let indent = String(repeating: "  ", count: min(max(depth, 0), 8))
+        let identity = [
+            row["id"] as? String,
+            row["agent_kind"] as? String,
+            row["status"] as? String
+        ].compactMap { value in
+            guard let value, !value.isEmpty else { return nil }
+            return value
+        }.joined(separator: " · ")
+        return String.localizedStringWithFormat(
+            String(localized: "cli.provenance.sessions.output.sessionRow", defaultValue: "%@%@"),
+            indent,
             identity
         )
     }
@@ -488,6 +589,7 @@ extension BMUXCLI {
               bmux provenance explain <path> [--json]
               bmux provenance context current [--json]
               bmux provenance worktrees list [--json]
+              bmux provenance sessions tree <session-id> [--json]
 
             Inspect bmux work provenance without requiring a live app socket.
             """

@@ -504,6 +504,7 @@
 		C0DE70220000000000000001 /* CLIProvenanceExplanationRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70220000000000000002 /* CLIProvenanceExplanationRow.swift */; };
 		C0DE70230000000000000001 /* CLIProvenanceGitResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */; };
 		C0DE70240000000000000001 /* CLIProvenanceResolvedTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70240000000000000002 /* CLIProvenanceResolvedTarget.swift */; };
+		C0DE70290000000000000001 /* CLIProvenanceSessionTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70290000000000000002 /* CLIProvenanceSessionTree.swift */; };
 		C0DE70250000000000000001 /* CLIProvenanceSQLiteReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70250000000000000002 /* CLIProvenanceSQLiteReader.swift */; };
 		C0DE70280000000000000001 /* CLIProvenanceWorktreeList.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70280000000000000002 /* CLIProvenanceWorktreeList.swift */; };
 		C0DE70260000000000000001 /* CLIProvenanceWorktreeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70260000000000000002 /* CLIProvenanceWorktreeRow.swift */; };
@@ -2078,6 +2079,7 @@
 		C0DE70220000000000000002 /* CLIProvenanceExplanationRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceExplanationRow.swift; sourceTree = "<group>"; };
 		C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceGitResolver.swift; sourceTree = "<group>"; };
 		C0DE70240000000000000002 /* CLIProvenanceResolvedTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceResolvedTarget.swift; sourceTree = "<group>"; };
+		C0DE70290000000000000002 /* CLIProvenanceSessionTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceSessionTree.swift; sourceTree = "<group>"; };
 		C0DE70250000000000000002 /* CLIProvenanceSQLiteReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceSQLiteReader.swift; sourceTree = "<group>"; };
 		C0DE70280000000000000002 /* CLIProvenanceWorktreeList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceWorktreeList.swift; sourceTree = "<group>"; };
 		C0DE70260000000000000002 /* CLIProvenanceWorktreeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceWorktreeRow.swift; sourceTree = "<group>"; };
@@ -4368,6 +4370,7 @@
 				C0DE70220000000000000002 /* CLIProvenanceExplanationRow.swift */,
 				C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */,
 				C0DE70240000000000000002 /* CLIProvenanceResolvedTarget.swift */,
+				C0DE70290000000000000002 /* CLIProvenanceSessionTree.swift */,
 				C0DE70250000000000000002 /* CLIProvenanceSQLiteReader.swift */,
 				C0DE70280000000000000002 /* CLIProvenanceWorktreeList.swift */,
 				C0DE70260000000000000002 /* CLIProvenanceWorktreeRow.swift */,
@@ -6272,6 +6275,7 @@
 				C0DE70220000000000000001 /* CLIProvenanceExplanationRow.swift in Sources */,
 				C0DE70230000000000000001 /* CLIProvenanceGitResolver.swift in Sources */,
 				C0DE70240000000000000001 /* CLIProvenanceResolvedTarget.swift in Sources */,
+				C0DE70290000000000000001 /* CLIProvenanceSessionTree.swift in Sources */,
 				C0DE70250000000000000001 /* CLIProvenanceSQLiteReader.swift in Sources */,
 				C0DE70280000000000000001 /* CLIProvenanceWorktreeList.swift in Sources */,
 				C0DE70260000000000000001 /* CLIProvenanceWorktreeRow.swift in Sources */,
