@@ -2,7 +2,7 @@ import Foundation
 
 /// Actor-owned durable store for work provenance events and projections.
 actor WorkProvenanceStore {
-    private static let schemaVersion = 2
+    private static let schemaVersion = 3
     private let database: WorkProvenanceSQLiteDatabase
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
@@ -131,6 +131,52 @@ actor WorkProvenanceStore {
         try worktreeRecord(id: id)
     }
 
+    /// Returns the direct parent relationship for `sessionID`.
+    ///
+    /// - Parameter sessionID: Child session identifier.
+    /// - Returns: Relationship record or `nil`.
+    func parentSession(for sessionID: String) throws -> WorkProvenanceSessionRelationshipRecord? {
+        try sessionRelationshipRecord(sessionID: sessionID)
+    }
+
+    /// Returns direct child relationships for `sessionID`.
+    ///
+    /// - Parameter sessionID: Parent session identifier.
+    /// - Returns: Child relationships sorted by depth, update time, then session id.
+    func childSessions(for sessionID: String) throws -> [WorkProvenanceSessionRelationshipRecord] {
+        try childSessionRelationshipRecords(parentSessionID: sessionID)
+    }
+
+    /// Returns external identities linked to `sessionID`.
+    ///
+    /// - Parameter sessionID: Provenance session identifier.
+    /// - Returns: Identity links sorted by system, kind, then external id.
+    func externalIdentities(sessionID: String) throws -> [WorkProvenanceExternalIdentityRecord] {
+        try externalIdentityRecords(sessionID: sessionID)
+    }
+
+    /// Returns the current session tree rooted at `rootSessionID`.
+    ///
+    /// - Parameter rootSessionID: Root session identifier.
+    /// - Returns: Session tree containing the root when it exists.
+    func sessionTree(rootSessionID: String) throws -> WorkProvenanceSessionTree {
+        var sessions: [WorkProvenanceSessionRecord] = []
+        if let rootSession = try sessionRecord(id: rootSessionID) {
+            sessions.append(rootSession)
+        }
+        let relationships = try sessionRelationshipTreeRecords(rootSessionID: rootSessionID)
+        for relationship in relationships {
+            if let session = try sessionRecord(id: relationship.sessionID) {
+                sessions.append(session)
+            }
+        }
+        return WorkProvenanceSessionTree(
+            rootSessionID: rootSessionID,
+            sessions: sessions,
+            relationships: relationships
+        )
+    }
+
     /// Returns focused provenance context for one repository-relative file path.
     ///
     /// - Parameters:
@@ -195,12 +241,16 @@ actor WorkProvenanceStore {
         }
         if version == 0 {
             try database.execute(schemaSQL)
-            try database.execute("PRAGMA user_version = 2")
+            try database.execute("PRAGMA user_version = 3")
             return
         }
         if version < 2 {
             try database.execute(schemaV2SQL)
             try database.execute("PRAGMA user_version = 2")
+        }
+        if version < 3 {
+            try database.execute(schemaV3SQL)
+            try database.execute("PRAGMA user_version = 3")
         }
     }
 
@@ -268,6 +318,8 @@ actor WorkProvenanceStore {
             DELETE FROM checkpoints;
             DELETE FROM work_contributions;
             DELETE FROM work_items;
+            DELETE FROM session_external_identities;
+            DELETE FROM session_relationships;
             DELETE FROM sessions;
             DELETE FROM worktrees;
             DELETE FROM repositories;
@@ -480,6 +532,135 @@ actor WorkProvenanceStore {
         )
     }
 
+    private func sessionRelationshipRecord(
+        sessionID: String
+    ) throws -> WorkProvenanceSessionRelationshipRecord? {
+        let statement = try database.prepare(
+            """
+            SELECT session_id, parent_session_id, root_session_id,
+                   inbound_delegation_id, depth, source, confidence,
+                   created_at, updated_at
+            FROM session_relationships
+            WHERE session_id = ?
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(sessionID, at: 1)
+        guard try statement.step() else { return nil }
+        return sessionRelationshipRecord(from: statement)
+    }
+
+    private func childSessionRelationshipRecords(
+        parentSessionID: String
+    ) throws -> [WorkProvenanceSessionRelationshipRecord] {
+        let statement = try database.prepare(
+            """
+            SELECT session_id, parent_session_id, root_session_id,
+                   inbound_delegation_id, depth, source, confidence,
+                   created_at, updated_at
+            FROM session_relationships
+            WHERE parent_session_id = ?
+            ORDER BY depth ASC, updated_at ASC, session_id ASC
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(parentSessionID, at: 1)
+        var records: [WorkProvenanceSessionRelationshipRecord] = []
+        while try statement.step() {
+            if let record = sessionRelationshipRecord(from: statement) {
+                records.append(record)
+            }
+        }
+        return records
+    }
+
+    private func sessionRelationshipTreeRecords(
+        rootSessionID: String
+    ) throws -> [WorkProvenanceSessionRelationshipRecord] {
+        let statement = try database.prepare(
+            """
+            SELECT session_id, parent_session_id, root_session_id,
+                   inbound_delegation_id, depth, source, confidence,
+                   created_at, updated_at
+            FROM session_relationships
+            WHERE root_session_id = ?
+            ORDER BY depth ASC, updated_at ASC, session_id ASC
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(rootSessionID, at: 1)
+        var records: [WorkProvenanceSessionRelationshipRecord] = []
+        while try statement.step() {
+            if let record = sessionRelationshipRecord(from: statement) {
+                records.append(record)
+            }
+        }
+        return records
+    }
+
+    private func sessionRelationshipRecord(
+        from statement: WorkProvenanceSQLiteStatement
+    ) -> WorkProvenanceSessionRelationshipRecord? {
+        guard let sessionID = statement.string(at: 0),
+              let parentSessionID = statement.string(at: 1),
+              let rootSessionID = statement.string(at: 2),
+              let source = statement.string(at: 5).flatMap(WorkProvenanceSource.init(rawValue:)),
+              let confidence = statement.string(at: 6).flatMap(WorkProvenanceConfidence.init(rawValue:)) else {
+            return nil
+        }
+        return WorkProvenanceSessionRelationshipRecord(
+            sessionID: sessionID,
+            parentSessionID: parentSessionID,
+            rootSessionID: rootSessionID,
+            inboundDelegationID: statement.string(at: 3),
+            depth: statement.int(at: 4),
+            source: source,
+            confidence: confidence,
+            createdAt: Date(timeIntervalSince1970: statement.double(at: 7) ?? 0),
+            updatedAt: Date(timeIntervalSince1970: statement.double(at: 8) ?? 0)
+        )
+    }
+
+    private func externalIdentityRecords(
+        sessionID: String
+    ) throws -> [WorkProvenanceExternalIdentityRecord] {
+        let statement = try database.prepare(
+            """
+            SELECT id, session_id, system, kind, external_id, source,
+                   confidence, created_at, updated_at
+            FROM session_external_identities
+            WHERE session_id = ?
+            ORDER BY system ASC, kind ASC, external_id ASC
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(sessionID, at: 1)
+        var records: [WorkProvenanceExternalIdentityRecord] = []
+        while try statement.step() {
+            guard let id = statement.string(at: 0),
+                  let sessionID = statement.string(at: 1),
+                  let system = statement.string(at: 2),
+                  let kind = statement.string(at: 3),
+                  let externalID = statement.string(at: 4),
+                  let source = statement.string(at: 5).flatMap(WorkProvenanceSource.init(rawValue:)),
+                  let confidence = statement.string(at: 6).flatMap(WorkProvenanceConfidence.init(rawValue:)) else {
+                continue
+            }
+            records.append(WorkProvenanceExternalIdentityRecord(
+                id: id,
+                sessionID: sessionID,
+                system: system,
+                kind: kind,
+                externalID: externalID,
+                source: source,
+                confidence: confidence,
+                createdAt: Date(timeIntervalSince1970: statement.double(at: 7) ?? 0),
+                updatedAt: Date(timeIntervalSince1970: statement.double(at: 8) ?? 0)
+            ))
+        }
+        return records
+    }
+
     private func workItemRecord(id: String) throws -> WorkProvenanceWorkItemRecord? {
         let statement = try database.prepare(
             "SELECT id, title, status, created_at, updated_at FROM work_items WHERE id = ?"
@@ -662,6 +843,12 @@ actor WorkProvenanceStore {
         if let session = payload.session {
             try upsert(session)
         }
+        if let sessionRelationship = payload.sessionRelationship {
+            try upsert(sessionRelationship)
+        }
+        for externalIdentity in payload.externalIdentities {
+            try upsert(externalIdentity)
+        }
         if let workItem = payload.workItem {
             try upsert(workItem)
         }
@@ -763,6 +950,64 @@ actor WorkProvenanceStore {
         try statement.bind(record.cwd, at: 6)
         try statement.bind(record.status, at: 7)
         try statement.bind(record.startedAt?.timeIntervalSince1970, at: 8)
+        try statement.bind(record.updatedAt.timeIntervalSince1970, at: 9)
+        _ = try statement.step()
+    }
+
+    private func upsert(_ record: WorkProvenanceSessionRelationshipRecord) throws {
+        let statement = try database.prepare(
+            """
+            INSERT INTO session_relationships (
+                session_id, parent_session_id, root_session_id,
+                inbound_delegation_id, depth, source, confidence,
+                created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(session_id) DO UPDATE SET
+                parent_session_id = excluded.parent_session_id,
+                root_session_id = excluded.root_session_id,
+                inbound_delegation_id = excluded.inbound_delegation_id,
+                depth = excluded.depth,
+                source = excluded.source,
+                confidence = excluded.confidence,
+                updated_at = excluded.updated_at
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(record.sessionID, at: 1)
+        try statement.bind(record.parentSessionID, at: 2)
+        try statement.bind(record.rootSessionID, at: 3)
+        try statement.bind(record.inboundDelegationID, at: 4)
+        try statement.bind(record.depth, at: 5)
+        try statement.bind(record.source.rawValue, at: 6)
+        try statement.bind(record.confidence.rawValue, at: 7)
+        try statement.bind(record.createdAt.timeIntervalSince1970, at: 8)
+        try statement.bind(record.updatedAt.timeIntervalSince1970, at: 9)
+        _ = try statement.step()
+    }
+
+    private func upsert(_ record: WorkProvenanceExternalIdentityRecord) throws {
+        let statement = try database.prepare(
+            """
+            INSERT INTO session_external_identities (
+                id, session_id, system, kind, external_id, source,
+                confidence, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(system, kind, external_id) DO UPDATE SET
+                session_id = excluded.session_id,
+                source = excluded.source,
+                confidence = excluded.confidence,
+                updated_at = excluded.updated_at
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(record.id, at: 1)
+        try statement.bind(record.sessionID, at: 2)
+        try statement.bind(record.system, at: 3)
+        try statement.bind(record.kind, at: 4)
+        try statement.bind(record.externalID, at: 5)
+        try statement.bind(record.source.rawValue, at: 6)
+        try statement.bind(record.confidence.rawValue, at: 7)
+        try statement.bind(record.createdAt.timeIntervalSince1970, at: 8)
         try statement.bind(record.updatedAt.timeIntervalSince1970, at: 9)
         _ = try statement.step()
     }
@@ -1007,6 +1252,38 @@ actor WorkProvenanceStore {
             updated_at REAL NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS session_relationships (
+            session_id TEXT PRIMARY KEY NOT NULL,
+            parent_session_id TEXT NOT NULL,
+            root_session_id TEXT NOT NULL,
+            inbound_delegation_id TEXT,
+            depth INTEGER NOT NULL,
+            source TEXT NOT NULL,
+            confidence TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            updated_at REAL NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS session_relationships_parent_idx
+            ON session_relationships(parent_session_id, depth, updated_at);
+        CREATE INDEX IF NOT EXISTS session_relationships_root_idx
+            ON session_relationships(root_session_id, depth, updated_at);
+
+        CREATE TABLE IF NOT EXISTS session_external_identities (
+            id TEXT PRIMARY KEY NOT NULL,
+            session_id TEXT NOT NULL,
+            system TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            external_id TEXT NOT NULL,
+            source TEXT NOT NULL,
+            confidence TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            updated_at REAL NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS session_external_identities_unique_idx
+            ON session_external_identities(system, kind, external_id);
+        CREATE INDEX IF NOT EXISTS session_external_identities_session_idx
+            ON session_external_identities(session_id, system, kind);
+
         CREATE TABLE IF NOT EXISTS work_items (
             id TEXT PRIMARY KEY NOT NULL,
             title TEXT NOT NULL,
@@ -1097,6 +1374,42 @@ actor WorkProvenanceStore {
             ON change_sets(worktree_id, created_at);
         CREATE INDEX IF NOT EXISTS file_changes_source_updated_idx
             ON file_changes(attribution_source, updated_at);
+        """
+    }
+
+    private static var schemaV3SQL: String {
+        """
+        CREATE TABLE IF NOT EXISTS session_relationships (
+            session_id TEXT PRIMARY KEY NOT NULL,
+            parent_session_id TEXT NOT NULL,
+            root_session_id TEXT NOT NULL,
+            inbound_delegation_id TEXT,
+            depth INTEGER NOT NULL,
+            source TEXT NOT NULL,
+            confidence TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            updated_at REAL NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS session_relationships_parent_idx
+            ON session_relationships(parent_session_id, depth, updated_at);
+        CREATE INDEX IF NOT EXISTS session_relationships_root_idx
+            ON session_relationships(root_session_id, depth, updated_at);
+
+        CREATE TABLE IF NOT EXISTS session_external_identities (
+            id TEXT PRIMARY KEY NOT NULL,
+            session_id TEXT NOT NULL,
+            system TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            external_id TEXT NOT NULL,
+            source TEXT NOT NULL,
+            confidence TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            updated_at REAL NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS session_external_identities_unique_idx
+            ON session_external_identities(system, kind, external_id);
+        CREATE INDEX IF NOT EXISTS session_external_identities_session_idx
+            ON session_external_identities(session_id, system, kind);
         """
     }
 }

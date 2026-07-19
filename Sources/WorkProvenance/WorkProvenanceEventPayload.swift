@@ -11,6 +11,12 @@ struct WorkProvenanceEventPayload: Codable, Equatable, Sendable {
     /// Session projection update.
     var session: WorkProvenanceSessionRecord?
 
+    /// Session relationship projection update.
+    var sessionRelationship: WorkProvenanceSessionRelationshipRecord?
+
+    /// External identity projection updates.
+    var externalIdentities: [WorkProvenanceExternalIdentityRecord]
+
     /// Work item projection update.
     var workItem: WorkProvenanceWorkItemRecord?
 
@@ -34,6 +40,8 @@ struct WorkProvenanceEventPayload: Codable, Equatable, Sendable {
         repository: WorkProvenanceRepositoryRecord? = nil,
         worktree: WorkProvenanceWorktreeRecord? = nil,
         session: WorkProvenanceSessionRecord? = nil,
+        sessionRelationship: WorkProvenanceSessionRelationshipRecord? = nil,
+        externalIdentities: [WorkProvenanceExternalIdentityRecord] = [],
         workItem: WorkProvenanceWorkItemRecord? = nil,
         contribution: WorkProvenanceContributionRecord? = nil,
         checkpoint: WorkProvenanceCheckpointRecord? = nil,
@@ -44,6 +52,8 @@ struct WorkProvenanceEventPayload: Codable, Equatable, Sendable {
         self.repository = repository
         self.worktree = worktree
         self.session = session
+        self.sessionRelationship = sessionRelationship
+        self.externalIdentities = externalIdentities
         self.workItem = workItem
         self.contribution = contribution
         self.checkpoint = checkpoint
