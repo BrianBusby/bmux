@@ -224,6 +224,7 @@ public actor ContextEfficiencyStore {
             toolOutputs: toolOutputs,
             commandExecutions: commandExecutions,
             commandCategoryCounts: ContextEfficiencyCommandCategoryCounter().counts(for: commandExecutions),
+            repeatedCommandFacts: ContextEfficiencyRepeatedCommandDetector().facts(for: commandExecutions),
             workItemReferences: try workItemReferenceRecords(threadID: threadID),
             parserErrors: try parserErrorRecords(threadID: threadID)
         )
