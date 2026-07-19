@@ -66,9 +66,9 @@ Keep both tracks observation-first. Provenance work may capture and query facts,
 
 Current checkout:
 
-- Branch: `repo-launcher-custom-params`
-- HEAD observed on 2026-07-18: `baff09910b`
-- Contains committed workspace work-context projection and late-subsession-start suppression work, plus documentation-only context-efficiency planning edits pending commit.
+- Branch: `context-efficiency-phase-b-lifecycle`
+- HEAD observed on 2026-07-18: `b875eb837`
+- Contains committed workspace work-context projection, late-subsession-start suppression, context-efficiency planning docs, and Phase B WorkProvenance session relationship projection foundation.
 
 Active context-efficiency worktree:
 
@@ -111,6 +111,29 @@ Latest completed provenance planning slice:
 - `docs/context-efficiency/subsession-delegation-phase-a-report.md` records the Phase A architecture report required before subsession/delegation schema or implementation changes.
 - `docs/context-efficiency/current-status.md` and `docs/context-efficiency/milestones.md` record that Phase B lifecycle persistence is now the next provenance implementation target.
 
+Latest completed provenance implementation slice:
+
+- `b875eb837 Add provenance session relationship projections`
+
+Behavior in that slice:
+
+- `WorkProvenanceStore` schema version is now 3.
+- New projection tables record session parent/root relationships and session external identities.
+- Event payload replay/upsert/query support now covers parent lookup, direct children, external identities, and bounded session trees.
+- Store tests cover relationship and identity replay/idempotency.
+- No adapter, runtime wiring, CLI, UI, lifecycle policy, warnings, delegation contracts, or parent disposition was added.
+
+Files changed in that slice:
+
+- `Sources/WorkProvenance/WorkProvenanceExternalIdentityRecord.swift`
+- `Sources/WorkProvenance/WorkProvenanceSessionRelationshipRecord.swift`
+- `Sources/WorkProvenance/WorkProvenanceSessionTree.swift`
+- `Sources/WorkProvenance/WorkProvenanceEventPayload.swift`
+- `Sources/WorkProvenance/WorkProvenanceEventType.swift`
+- `Sources/WorkProvenance/WorkProvenanceStore.swift`
+- `bmuxTests/WorkProvenanceStoreTests.swift`
+- `bmux.xcodeproj/project.pbxproj`
+
 ## Phase 2 Closure Note
 
 - `b194b8b1 Add missing timestamp rollout regression`
@@ -130,8 +153,8 @@ Original-plan Phase 3 targets:
 
 Subsession/delegation provenance target:
 
-1. Start Phase B: read-only subsession lifecycle persistence in `WorkProvenance`.
-2. Follow `docs/context-efficiency/subsession-delegation-phase-a-report.md` for the authoritative lifecycle source, schema map, migration strategy, and first test fixture.
+1. Continue Phase B by adding the adapter from `AgentSubsessionLifecycleChange` to `WorkProvenanceEvent` payloads.
+2. Wire that adapter from the existing `registry.onSubsessionLifecycleChanged` path while preserving ephemeral child workspace behavior.
 3. Do not start delegation contracts, reconciliation, child reports, parent disposition, UI, or lifecycle policy until Phase B is implemented and tested.
 
 Retrieval/knowledge-projection target:
@@ -157,6 +180,14 @@ git diff --check
 Then run the context-efficiency CLI regression against the rebuilt tagged CLI if the slice touches CLI behavior or report output.
 
 After WorkProvenance/subsession Phase B code changes, run the relevant Swift Testing/Xcode unit coverage for `WorkProvenanceStore`, `AgentChatSessionRegistryLifecycleTests`, and any new lifecycle adapter tests, then run `scripts/check-pbxproj.sh`, `python3 scripts/check-workspace-package-groups.py --check`, `git diff --check`, and a tagged reload if app runtime wiring changed.
+
+Latest Phase B foundation validation on 2026-07-18:
+
+- `scripts/check-pbxproj.sh` passed.
+- `python3 scripts/check-workspace-package-groups.py --check` passed.
+- `git diff --check` passed.
+- `./scripts/reload.sh --tag context-eff-phase-b` passed and built `bmux DEV context-eff-phase-b.app`.
+- Focused `xcodebuild test -only-testing:bmuxTests/WorkProvenanceStoreTests/persistsSessionRelationshipsAndExternalIdentitiesAcrossReplay` reached compilation of the new WorkProvenance files, then failed later with the known local Zig/Ghostty undefined-symbol linker issue before running tests.
 
 Current tagged app path pattern:
 
@@ -194,6 +225,6 @@ Do not let one-off chat handoffs become the only record of current status.
 
 ## Localization
 
-The latest completed provenance planning slice changed internal development docs only. No CLI, UI, help, command, or user-facing app strings changed.
+The Phase B foundation slice changed internal store models, schema, tests, and project wiring only. No CLI, UI, help, command, or user-facing app strings changed.
 
 This file and the other `docs/context-efficiency/*` planning files are internal development documentation and are not mirrored into localized docs. If a future slice adds or edits CLI/UI/user-facing strings, use `bmux-localization` and update every supported locale.

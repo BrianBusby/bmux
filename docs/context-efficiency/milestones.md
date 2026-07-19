@@ -159,7 +159,8 @@ Subsession/delegation integration:
 
 - `docs/context-efficiency/subsession-delegation-integration-plan.md` is authoritative for this subtrack.
 - Phase A is complete in `docs/context-efficiency/subsession-delegation-phase-a-report.md`.
-- Phase B is the next implementation slice: read-only subsession lifecycle persistence in `WorkProvenance`.
+- Phase B store foundation is implemented at `b875eb837 Add provenance session relationship projections`.
+- The next Phase B slice is the adapter from `AgentSubsessionLifecycleChange` to `WorkProvenanceEvent` plus runtime wiring.
 - Use `AgentSubsessionLifecycleChange` as the first authoritative lifecycle source.
 - `BmuxContextEfficiency` remains read-only telemetry; delegation semantics belong in `WorkProvenance`.
 
