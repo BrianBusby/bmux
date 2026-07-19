@@ -1,10 +1,10 @@
 # Bmux Context Efficiency: Milestones
 
-Status: proposed implementation sequence grounded in repository discovery.
+Status: implementation sequence reconciled on 2026-07-18 after merging the subsession/delegation integration plan and the agent retrieval/knowledge-projection plan into the original context-efficiency roadmap.
 
 ## Milestone 1: Discovery and Schemas
 
-Status: in progress with this documentation set.
+Status: completed.
 
 Deliverables:
 
@@ -25,9 +25,9 @@ No runtime behavior changes belong in this milestone.
 
 ## Milestone 2: Read-Only Codex Telemetry
 
-Status: first package-backed vertical slice implemented.
+Status: closed on 2026-07-17.
 
-Implemented in the first slice:
+Implemented:
 
 - `Packages/macOS/BmuxContextEfficiency`
 - Streaming Codex rollout JSONL reader with byte offsets and incomplete-line carryover.
@@ -38,22 +38,24 @@ Implemented in the first slice:
 - Package-local Swift Testing coverage for streaming, parser, duplicate suppression, cursor resume, parser-error recovery, and report reads.
 - Workspace package grouping updated via `scripts/check-workspace-package-groups.py --write`.
 
-Still deferred:
+Implemented by Phase 2 closure:
 
 - Codex `state_N.sqlite` metadata reader.
 - App/CLI target integration.
 - `bmux context-efficiency ...` command surface.
-- JSON/Markdown/CSV export formatting.
-- Replacement of the current untracked `CLI/BMUXCLI+CodexTokenAudit.swift` prototype.
+- Default local storage path.
+- Bounded JSON diagnostics and CLI regression coverage.
 
-Next exact files expected to change:
+Still deferred:
 
-- `bmux.xcodeproj/project.pbxproj` if the package is linked into the app/CLI target.
-- `CLI/bmux.swift`
-- `CLI/BMUXCLI+ContextEfficiency.swift`
-- `CLI/BMUXCLI+CodexTokenAudit.swift`
-- `Resources/Localizable.xcstrings` for any new CLI help/error strings.
-- `tests/test_context_efficiency_cli.py` or the nearest existing CLI test harness.
+- Markdown/CSV export formatting.
+- Replacement or removal of the legacy `codex-token-audit` command.
+
+Phase 3 entry point:
+
+- Start with command and output attribution in the context-efficiency package.
+- Preserve Phase 2 invariants: raw evidence stays external and recoverable, reports remain bounded, and facts stay distinct from inference.
+- Do not start lifecycle warnings, handoff recommendations, output filtering, UI, or automatic context mutation until their later milestones.
 
 Goal:
 
@@ -67,8 +69,8 @@ Deliverables:
 - Import cursor and parser-error recording.
 - Duplicate cumulative-token suppression.
 - Fixture-based parser tests.
-- CLI diagnostics and JSON/Markdown reports.
-- Replacement/evolution path for the current `codex-token-audit` prototype.
+- CLI JSON diagnostics; Markdown/CSV formatting deferred.
+- Legacy disposition recorded for `codex-token-audit`; replacement/removal deferred to cleanup.
 
 Proposed exact files to add:
 
@@ -127,7 +129,9 @@ Validation:
 - Confirm malformed lines record parser errors and do not abort import.
 - Confirm no live Codex process is required.
 
-## Milestone 3: Command and Output Attribution
+## Milestone 3: Command, Reference, and Subsession Lifecycle Attribution
+
+Status: active. Command-attribution, work-item reference fact, command-category count, and repeated-command fact slices are implemented.
 
 Goal:
 
@@ -135,22 +139,29 @@ Connect token/model-call telemetry to command activity and evidence artifacts.
 
 Expected work:
 
-- Normalize Codex `function_call` and `function_call_output` records into `CommandExecutionRecord` candidates.
-- Add deterministic temporal attribution from tool output to subsequent model calls.
-- Add command normalization/category classification.
 - Index proxy `rawOutputRef` artifacts.
 - Evaluate OSC 133 parsing for non-Codex terminal attribution.
+- Link evidence-backed reference facts to future provenance work items or delegation inputs.
+- Persist command execution candidates if derived reports prove insufficient.
 
-Candidate files:
+Implemented slices:
 
-- Add `CommandExecutionRecord`, `CommandCategory`, and attribution types to the context-efficiency package.
-- Add command parser/classifier tests.
-- Add importer support for tool call/output rows.
-- Optionally add a bridge to `OSC133CommandParser`.
+- `95e1c0d9 Add context efficiency command attribution` added derived command execution candidates, deterministic command categories, exact tool-call/output links, temporal attribution, and bounded command JSON.
+- Work-item reference fact slices added bounded reference records.
+- Command-category count slices added count-only thread and day summary aggregates.
+- `6279c8abd Add context efficiency repeated command facts` added repeated command, source-search, and file-reading facts.
 
 Stop condition:
 
 - Reports must label attribution confidence and distinguish exact tool-call links from temporal candidates.
+
+Subsession/delegation integration:
+
+- `docs/context-efficiency/subsession-delegation-integration-plan.md` is authoritative for this subtrack.
+- Phase A is complete in `docs/context-efficiency/subsession-delegation-phase-a-report.md`.
+- Phase B is the next implementation slice: read-only subsession lifecycle persistence in `WorkProvenance`.
+- Use `AgentSubsessionLifecycleChange` as the first authoritative lifecycle source.
+- `BmuxContextEfficiency` remains read-only telemetry; delegation semantics belong in `WorkProvenance`.
 
 ## Milestone 4: Efficiency Profiler
 
@@ -163,7 +174,7 @@ Expected work:
 - Cached/new/output totals where available.
 - Context utilization and call deltas.
 - Compaction effectiveness signals.
-- Repeated command/search/file-read detection.
+- Use repeated command/search/file-read facts in configurable profiler signals.
 - Low-information/high-context heuristic signals.
 - Possible-loop signal windows.
 
@@ -173,7 +184,7 @@ Rules:
 - High token usage alone must not label a thread stuck.
 - Reports show measurements and conditions, not opaque scores.
 
-## Milestone 5: Project Progress and Provenance
+## Milestone 5: Project Progress, Delegation, and Semantic Provenance
 
 Goal:
 
@@ -183,12 +194,42 @@ Expected work:
 
 - Decide package/store ownership for `WorkProvenance`.
 - Link threads/model calls/commands to worktrees and contributions.
+- Add first-class delegation contracts, reconciliation, child completion reports, parent disposition, and contribution links after lifecycle persistence is proven.
+- Add first-class semantic records needed by retrieval, including decisions, findings, artifacts, and commits, without treating model-generated summaries as authoritative truth.
 - Track decisions, discoveries, failed approaches, invariants, open questions, validations, and milestones.
 - Update state incrementally from bounded event batches.
 
 Risk:
 
 - Model-derived summaries can be useful but must remain marked inferred.
+
+## Milestone 5.5: Agent Retrieval and Knowledge Projection
+
+Authoritative plan:
+
+- `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
+
+Goal:
+
+Build a derived, rebuildable, evidence-linked retrieval layer that can assemble the smallest reliable context package needed for a future agent objective.
+
+Expected work:
+
+- Phase R0 investigation report before code changes.
+- Decision and finding semantic records with evidence references, source, confidence, freshness, and supersession.
+- Typed provenance edges where retrieval requires richer traversal than existing foreign keys.
+- Knowledge records for repository, subsystem, work item, contribution, session, delegation, file, decision, finding, validation, commit, and handoff summaries.
+- SQLite FTS5 lexical retrieval with repository/worktree/work-item/kind/freshness/confidence filters.
+- Deterministic retrieval ranking and token-budgeted context package assembly.
+- Retrieval evaluation fixtures for required-record recall, stale/superseded leakage, omitted counts, source-reference coverage, determinism, and latency.
+
+Rules:
+
+- Retrieval records are derived and rebuildable; they never replace provenance facts.
+- Retrieval must work without semantic embeddings.
+- Do not index raw rollout or terminal output into the primary retrieval surface.
+- Do not start context-package generation before semantic records, edges, and lexical retrieval are proven.
+- Do not add UI, automatic prompt injection, autonomous orchestration, or assisted handoff behavior in this milestone.
 
 ## Milestone 6: Coordination UI
 
@@ -227,7 +268,7 @@ Rules:
 - No automatic thread kill.
 - No recommendation without an explanation.
 
-## Milestone 8: Assisted Handoffs
+## Milestone 8: Assisted Handoffs and Context Packages
 
 Goal:
 
@@ -237,6 +278,7 @@ Expected work:
 
 - Handoff schema and priority rules.
 - Handoff preview/edit UI.
+- Retrieval-backed bounded context packages.
 - Worktree/path/commit validation.
 - New thread launch preparation.
 - Post-handoff rediscovery metrics.
@@ -292,9 +334,9 @@ Rule:
 
 ## Open User Decisions
 
-- Package strategy for `WorkProvenance` versus new `BmuxContextEfficiency`.
-- CLI command naming.
-- Whether context-efficiency and provenance share one SQLite DB.
+- Whether and when to move `WorkProvenance` out of the app target into a package.
+- CLI naming for future provenance/delegation query commands.
+- Whether context-efficiency and provenance should ever merge stores after the initial separate-database phase.
 - Retention defaults for raw artifacts.
 - First UI surface for lifecycle warnings and fleet view.
 

@@ -155,6 +155,18 @@ Create a separate branch for each logical feature or bug fix before making scope
 
 A task's first pass ends when the change is implemented, the tagged build succeeded on the pushed HEAD, focused tests ran, and the PR is open (for `web/` PRs, also the live Vercel preview URL given to the user). Then hand off to the user for dogfood. Do not fix CI failures, merge conflicts, or review findings inline in the main conversation after that point.
 
+When the user says they are dogfooding bmux updates or that a build should have
+specific features, inspect and verify the functionality in the current
+running/current build first. Do not start a new tagged build or run `reload.sh`
+unless the user explicitly asks for a fresh build, or the current build is
+proven missing/unusable and the user agrees to rebuild.
+
+When making updates while the user is actively using a bmux build, do not
+rebuild, reload, quit, kill, or replace that currently in-use build. Build under
+a new isolated tag/worktree instead, or wait until the user explicitly approves
+replacing the active build. Rebuilding the active tag causes bmux to quit out
+from under the user.
+
 At handoff, launch one background `$autoreview` subagent with a bounded prompt (PR URL, worktree, base ref, allowed write scope, required verification), never a vague "make it green". That loop owns CI: it runs structured review plus PR feedback, and only when a check actually fails does it spawn a bounded repair subagent with that check's name and log context. Do not launch a separate parallel CI repair agent; two agents mutating one worktree race each other. One writer per worktree: if dogfood feedback needs main-agent edits while the loop runs, stop the loop first or give it its own sibling worktree. In Claude Code spawn the loop with the agent/task tool; in Codex use a background sub-task or bounded background `codex exec`.
 
 The loop may commit and push scoped fixes but never merges and never rebuilds the user's tagged build. The main agent inspects every pushed commit, rejects out-of-scope edits, and owns dogfood, approval, and merge. Merging app/runtime/UI changes still requires the user's explicit approval after dogfood; if a pushed fix changes runtime behavior mid-dogfood, rebuild the tag and re-notify, since the earlier verdict covers only the build the user tested.

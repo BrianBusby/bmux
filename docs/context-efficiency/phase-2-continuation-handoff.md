@@ -1,10 +1,10 @@
 # Bmux Context Efficiency Phase 2 Continuation Handoff
 
-Use this file to continue the context-efficiency work in a fresh Codex thread.
+Archival note, 2026-07-18: Phase 2 is closed. Do not use this file as the live handoff index. Continue from `docs/context-efficiency/current-status.md`, then read `docs/context-efficiency/subsession-delegation-integration-plan.md` before any subsession/delegation provenance work.
 
-## Current Goal
+## Archived Goal
 
-Continue Phase 2 of the Bmux Context Efficiency and Thread Lifecycle System.
+This file records the earlier Phase 2 continuation state for the Bmux Context Efficiency and Thread Lifecycle System.
 
 Phase 2 is read-only telemetry ingestion:
 
@@ -104,6 +104,16 @@ python3 scripts/check-workspace-package-groups.py --write
 ```
 
 This added `BmuxContextEfficiency` to `bmux.xcworkspace/contents.xcworkspacedata`.
+
+## 2026-07-17 Status Update
+
+The package, CLI command group, Codex state metadata reader, default local storage path, JSON diagnostics, and current-build CLI regression are now implemented and covered by tests. Latest validation used the existing tagged `context-efficiency` build and did not rebuild the app. See `docs/context-efficiency/current-status.md` for the current validation bundle and Phase 2 closure targets.
+
+## 2026-07-17 Status Update
+
+The package, CLI command group, Codex state metadata reader, default local storage path, JSON diagnostics, and current-build CLI regression are now implemented and covered by tests.
+
+Latest validation used the existing tagged `context-efficiency` build and did not rebuild the app. See `docs/context-efficiency/current-status.md` for the current validation bundle and Phase 2 closure targets.
 
 ## Verification Already Run
 
@@ -215,7 +225,7 @@ Recommended next steps:
 
 ## Guardrails For The Next Agent
 
-- Do not start Phase 3 terminal command attribution yet.
+- Phase 3 command/output attribution is active; see `current-status.md` for current allowed work.
 - Do not add lifecycle policy, warnings, handoff recommendations, or output filtering yet.
 - Do not move `Sources/WorkProvenance/` into a package without confirming the package strategy.
 - Do not use the existing full-file rollout analyzer as the importer.
