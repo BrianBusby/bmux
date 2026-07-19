@@ -55,6 +55,87 @@ struct SubsessionProvenanceTests {
     }
 
     @Test
+    func recordsO1LifecycleIngestionTraceRows() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let observabilityStore = try ProvenanceObservabilityStore(
+            databaseURL: fixture.observabilityDatabaseURL
+        )
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store,
+            observabilityStore: observabilityStore,
+            awaitObservabilityWrites: true
+        )
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(
+            Self.lifecycleChange(phase: .started),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+
+        let traces = try await observabilityStore.lifecycleIngestionRuns()
+        let trace = try #require(traces.first)
+        let tree = try await store.sessionTree(rootSessionID: "codex-parent")
+        let child = try #require(tree.sessions.first { $0.id != "codex-parent" })
+
+        #expect(trace.run.pipelineKind == "lifecycle_ingestion")
+        #expect(trace.run.triggerSource == "AgentSubsessionLifecycleChange")
+        #expect(trace.run.status == "succeeded")
+        #expect(trace.run.parentSessionID == "codex-parent")
+        #expect(trace.run.childSessionID == child.id)
+        #expect(trace.run.lifecycleEventID != nil)
+        #expect(trace.run.relationshipSessionID == child.id)
+        #expect(trace.run.externalIdentityID != nil)
+        #expect(trace.run.errorCount == 0)
+        #expect(trace.stages.map(\.stageName) == [
+            "lifecycle_change_received",
+            "work_provenance_event_append",
+            "work_provenance_projection_update",
+        ])
+        #expect(trace.stages.allSatisfy { $0.status == "succeeded" })
+        #expect(trace.stages.map(\.stageVersion) == ["o1", "o1", "o1"])
+        #expect(trace.stages.map(\.errorCount) == [0, 0, 0])
+    }
+
+    @Test
+    func recordsFailedLifecycleIngestionTraceWithoutDuplicatingProvenance() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let observabilityStore = try ProvenanceObservabilityStore(
+            databaseURL: fixture.observabilityDatabaseURL
+        )
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store,
+            observabilityStore: observabilityStore,
+            awaitObservabilityWrites: true
+        )
+        let change = Self.lifecycleChange(phase: .started)
+        let timestamp = Date(timeIntervalSince1970: 120)
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(change, timestamp: timestamp)
+        await recorder.record(change, timestamp: timestamp)
+
+        let traces = try await observabilityStore.lifecycleIngestionRuns()
+        let failedTrace = try #require(traces.first { $0.run.status == "failed" })
+        let events = try await store.events()
+
+        #expect(events.map(\.eventType) == [.sessionObserved, .subsessionStarted])
+        #expect(failedTrace.run.errorCount == 1)
+        #expect(failedTrace.run.errorSummary != nil)
+        #expect(failedTrace.stages.map(\.stageName) == [
+            "lifecycle_change_received",
+            "work_provenance_event_append",
+            "work_provenance_projection_update",
+        ])
+        #expect(failedTrace.stages[0].status == "succeeded")
+        #expect(failedTrace.stages[1].status == "failed")
+        #expect(failedTrace.stages[2].status == "failed")
+    }
+
+    @Test
     func derivesNestedRootAndDepthFromExistingParentRelationship() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
@@ -176,6 +257,7 @@ struct SubsessionProvenanceTests {
     private struct StoreFixture {
         let directoryURL: URL
         let databaseURL: URL
+        let observabilityDatabaseURL: URL
 
         init() throws {
             directoryURL = FileManager.default.temporaryDirectory
@@ -185,6 +267,7 @@ struct SubsessionProvenanceTests {
                 withIntermediateDirectories: true
             )
             databaseURL = directoryURL.appendingPathComponent("provenance.sqlite")
+            observabilityDatabaseURL = directoryURL.appendingPathComponent("ProvenanceObservability.sqlite")
         }
 
         func remove() {

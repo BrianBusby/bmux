@@ -39,7 +39,7 @@ Provenance observability has been merged as a cross-cutting roadmap track with i
 - `docs/context-efficiency/provenance-observability-integration-plan.md`
 - `docs/context-efficiency/provenance-observability-phase-o0-report.md`
 
-Observability must not become a parallel provenance system. `WorkProvenance` remains the authoritative semantic history of engineering work, `BmuxContextEfficiency` remains read-only imported telemetry/evidence, and a future `ProvenanceObservability.sqlite` store may hold operational traces, quality telemetry, feedback, evaluation, and shadow-comparison data. Phase O0 architecture investigation is complete in `docs/context-efficiency/provenance-observability-phase-o0-report.md`. Do not start broad observability implementation; the next allowed observability implementation is only the narrow O1 lifecycle-ingestion trace slice described in that report.
+Observability must not become a parallel provenance system. `WorkProvenance` remains the authoritative semantic history of engineering work, `BmuxContextEfficiency` remains read-only imported telemetry/evidence, and `ProvenanceObservability.sqlite` may hold operational traces, quality telemetry, feedback, evaluation, and shadow-comparison data only as roadmap phases explicitly allow. Phase O0 architecture investigation is complete in `docs/context-efficiency/provenance-observability-phase-o0-report.md`. A working tree O1 lifecycle-ingestion trace slice now adds only the narrow `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update` observability path. Do not start broad observability implementation or O2+ work from this slice.
 
 Phase A investigation is complete in `docs/context-efficiency/subsession-delegation-phase-a-report.md`. Phase B read-only subsession lifecycle persistence is now implemented through the WorkProvenance store foundation plus the `AgentSubsessionLifecycleChange` adapter/runtime wiring. Do not treat subsession/delegation as a separate subagent manager; it must extend `WorkProvenance` and link to `BmuxContextEfficiency` telemetry later through stable identities.
 
@@ -62,8 +62,9 @@ Allowed subsession/delegation work right now:
 Allowed observability work right now:
 
 - Phase O0 architecture investigation is complete; keep the report as the O1 gate.
-- If implementation is later approved, start only with the narrow O1 lifecycle-ingestion pipeline trace from `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update`.
+- The current working tree O1 implementation is limited to the lifecycle-ingestion pipeline trace from `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update`.
 - Keep O1 best-effort, bounded, and separate from authoritative WorkProvenance facts.
+- Do not add O2+ identity-resolution observability, retrieval traces, feedback, dashboards, quality scoring, shadow evaluation, or automatic correction in this slice.
 
 Do not start:
 
@@ -135,13 +136,29 @@ Latest completed observability planning slice:
 
 - `docs/context-efficiency/provenance-observability-phase-o0-report.md` completes Phase O0 investigation and documents the narrow O1 lifecycle-ingestion trace design. No observability schema or runtime code was added.
 
+Latest completed observability implementation slice:
+
+- Working tree slice on 2026-07-19 adds a separate `ProvenanceObservability.sqlite` store with `pipeline_runs` and `pipeline_stage_executions` records for only the O1 lifecycle-ingestion path.
+- It records only `lifecycle_change_received`, `work_provenance_event_append`, and `work_provenance_projection_update` stage executions.
+- Observability writes are best-effort/non-blocking after provenance persistence, and bounded CLI output is available through `bmux provenance traces lifecycle-ingestion`.
+- It does not add O2+ identity-resolution observability, retrieval, delegation contracts, feedback, dashboards, quality scoring, shadow evaluation, automatic correction, or a parallel semantic provenance source.
+- Validation: bmux-cli built successfully and the provenance CLI regression passed against that built binary.
+
 Files changed in the working tree slice:
 
 - `CLI/BMUXCLI+Provenance.swift`
-- `CLI/CLIProvenanceSQLiteReader.swift`
-- `CLI/CLIProvenanceSessionTree.swift`
+- `CLI/CLIProvenanceLifecycleTraceList.swift`
+- `CLI/CLIProvenanceObservabilitySQLiteReader.swift`
 - `Resources/Localizable.xcstrings`
+- `Sources/WorkProvenance/ProvenanceObservabilityStore.swift`
+- `Sources/WorkProvenance/ProvenancePipelineRunRecord.swift`
+- `Sources/WorkProvenance/ProvenancePipelineStageExecutionRecord.swift`
+- `Sources/WorkProvenance/WorkProvenanceRuntime.swift`
+- `Sources/WorkProvenance/WorkProvenanceStorageLocation.swift`
+- `Sources/WorkProvenance/WorkProvenanceStore.swift`
+- `Sources/WorkProvenance/WorkProvenanceSubsessionLifecycleRecorder.swift`
 - `bmux.xcodeproj/project.pbxproj`
+- `bmuxTests/SubsessionProvenanceTests.swift`
 - `tests/test_provenance_cli.py`
 
 Previous completed provenance implementation slice:
@@ -223,8 +240,9 @@ Retrieval/knowledge-projection target:
 Observability target:
 
 1. Use `provenance-observability-phase-o0-report.md` as the completed O0 gate.
-2. If implementation is explicitly approved, add only the O1 lifecycle-ingestion trace slice; do not add broad observability tables.
-3. O1 should trace only `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update` and must not block lifecycle persistence.
+2. Treat the working tree O1 lifecycle-ingestion trace slice as the only active observability implementation target.
+3. Do not add broad observability tables, O2+ identity resolution traces, retrieval traces, dashboards, feedback, quality scoring, shadow evaluation, or automatic correction.
+4. O1 should trace only `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update` and must not block lifecycle persistence.
 
 Avoid broad CLI/app integration unless the slice is explicitly scoped to read-only diagnostics and includes localization work for any new command/help/error text.
 
@@ -258,6 +276,13 @@ Latest Phase B query-diagnostics validation on 2026-07-19:
 - `BMUX_BUNDLED_CLI_PATH=/tmp/bmux-context-eff-phase-b-cli/Build/Products/Debug/bmux python3 tests/test_provenance_cli.py` passed.
 - `scripts/check-pbxproj.sh`, `python3 scripts/check-workspace-package-groups.py --check`, and `git diff --check` passed.
 - Focused `bmux-unit` testing was attempted with `SubsessionProvenanceTests`, `AgentChatSessionRegistryLifecycleTests`, and `WorkProvenanceStoreTests`, but the app-target build failed before tests in the Ghostty CLI helper Zig build script with undefined symbols such as `__availability_version_check`; this was outside the Phase B Swift/CLI changes.
+
+Latest Phase 3 salvage validation on 2026-07-19:
+
+- `swift test --package-path /private/tmp/context-efficiency-phase3-salvage/Packages/macOS/BmuxContextEfficiency` passed 26 Swift Testing tests.
+- `xcodebuild -project bmux.xcodeproj -scheme bmux-cli -configuration Debug -destination platform=macOS -derivedDataPath /tmp/bmux-context-eff-phase3-salvage-cli build` passed.
+- `BMUX_BUNDLED_CLI_PATH=/tmp/bmux-context-eff-phase3-salvage-cli/Build/Products/Debug/bmux python3 tests/test_context_efficiency_cli.py` passed.
+- `scripts/check-pbxproj.sh`, `python3 scripts/check-workspace-package-groups.py --check`, and `git diff --check` passed.
 
 Latest Phase B foundation validation on 2026-07-18:
 

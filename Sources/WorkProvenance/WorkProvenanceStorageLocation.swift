@@ -1,5 +1,6 @@
 import Foundation
 
+
 /// Resolves conventional on-disk locations for work provenance storage.
 ///
 /// The standard location mirrors bmux runtime state under `~/.local/state/bmux`
@@ -12,12 +13,19 @@ struct WorkProvenanceStorageLocation: Equatable, Hashable, Sendable {
     /// The SQLite database file URL.
     let databaseURL: URL
 
+    /// The operational observability SQLite database file URL.
+    let observabilityDatabaseURL: URL
+
     /// Creates a storage location rooted in the given directory.
     ///
     /// - Parameter directoryURL: Directory that will contain the SQLite file.
     init(directoryURL: URL) {
         self.directoryURL = directoryURL
         self.databaseURL = directoryURL.appendingPathComponent("bmux-work-provenance.sqlite", isDirectory: false)
+        self.observabilityDatabaseURL = directoryURL.appendingPathComponent(
+            "ProvenanceObservability.sqlite",
+            isDirectory: false
+        )
     }
 
     /// Creates the standard per-user storage location.

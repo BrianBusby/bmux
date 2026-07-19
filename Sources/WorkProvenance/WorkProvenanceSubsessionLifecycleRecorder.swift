@@ -4,6 +4,9 @@ import Foundation
 actor WorkProvenanceSubsessionLifecycleRecorder {
     private let store: WorkProvenanceStore
     private let stableIDFactory: WorkProvenanceStableIDFactory
+    private let observabilityStore: ProvenanceObservabilityStore?
+    private let awaitObservabilityWrites: Bool
+    private let traceNow: @Sendable () -> Date
 
     /// Last persistence error, retained for diagnostics.
     private(set) var lastErrorDescription: String?
@@ -11,20 +14,97 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
     /// Creates a lifecycle recorder.
     init(
         store: WorkProvenanceStore,
-        stableIDFactory: WorkProvenanceStableIDFactory = WorkProvenanceStableIDFactory()
+        stableIDFactory: WorkProvenanceStableIDFactory = WorkProvenanceStableIDFactory(),
+        observabilityStore: ProvenanceObservabilityStore? = nil,
+        awaitObservabilityWrites: Bool = false,
+        traceNow: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.store = store
         self.stableIDFactory = stableIDFactory
+        self.observabilityStore = observabilityStore
+        self.awaitObservabilityWrites = awaitObservabilityWrites
+        self.traceNow = traceNow
     }
 
     /// Records a lifecycle change, keeping provenance persistence best-effort.
     func record(_ change: AgentSubsessionLifecycleChange, timestamp: Date) async {
+        let pipelineRunID = UUID().uuidString
+        let runStartedAt = traceNow()
+        var stages: [ProvenancePipelineStageExecutionRecord] = []
+        var builtWorkProvenanceEvent: WorkProvenanceEvent?
         do {
-            let event = try await event(for: change, timestamp: timestamp)
-            try await store.append(event)
-            lastErrorDescription = nil
+            let receivedStartedAt = traceNow()
+            let builtEvent = try await event(for: change, timestamp: timestamp)
+            let receivedEndedAt = traceNow()
+            builtWorkProvenanceEvent = builtEvent
+            stages.append(stageRecord(
+                pipelineRunID: pipelineRunID,
+                stageName: "lifecycle_change_received",
+                status: "succeeded",
+                startedAt: receivedStartedAt,
+                endedAt: receivedEndedAt,
+                inputCount: 1,
+                outputCount: 1,
+                errorSummary: nil
+            ))
+            let appendTrace = await store.appendWithStageTrace(
+                builtEvent,
+                pipelineRunID: pipelineRunID,
+                now: traceNow
+            )
+            stages.append(contentsOf: appendTrace.stages)
+            let runStatus = appendTrace.errorDescription == nil ? "succeeded" : "failed"
+            lastErrorDescription = appendTrace.errorDescription
+            await writeObservability(
+                run: runRecord(
+                    pipelineRunID: pipelineRunID,
+                    change: change,
+                    event: builtEvent,
+                    status: runStatus,
+                    startedAt: runStartedAt,
+                    endedAt: traceNow(),
+                    errorSummary: appendTrace.errorDescription
+                ),
+                stages: stages
+            )
         } catch {
-            lastErrorDescription = String(describing: error)
+            let errorSummary = WorkProvenanceStore.boundedErrorSummary(error)
+            lastErrorDescription = errorSummary
+            if stages.isEmpty {
+                let failedAt = traceNow()
+                stages.append(stageRecord(
+                    pipelineRunID: pipelineRunID,
+                    stageName: "lifecycle_change_received",
+                    status: "failed",
+                    startedAt: failedAt,
+                    endedAt: failedAt,
+                    inputCount: 1,
+                    outputCount: 0,
+                    errorSummary: errorSummary
+                ))
+            }
+            stages.append(skippedStageRecord(
+                pipelineRunID: pipelineRunID,
+                stageName: "work_provenance_event_append",
+                reason: "skipped after lifecycle event construction failed"
+            ))
+            stages.append(skippedStageRecord(
+                pipelineRunID: pipelineRunID,
+                stageName: "work_provenance_projection_update",
+                reason: "skipped after lifecycle event construction failed"
+            ))
+            await writeObservability(
+                run: runRecord(
+                    pipelineRunID: pipelineRunID,
+                    change: change,
+                    event: builtWorkProvenanceEvent,
+                    status: "failed",
+                    startedAt: runStartedAt,
+                    endedAt: traceNow(),
+                    errorSummary: errorSummary
+                ),
+                stages: stages
+            )
         }
     }
 
@@ -122,6 +202,91 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
             "unresolved_subsession",
             "\(change.agentKind.sourceName):\(change.parentSessionID):default",
             false
+        )
+    }
+
+    private func writeObservability(
+        run: ProvenancePipelineRunRecord,
+        stages: [ProvenancePipelineStageExecutionRecord]
+    ) async {
+        guard let observabilityStore else { return }
+        if awaitObservabilityWrites {
+            try? await observabilityStore.record(run: run, stages: stages)
+        } else {
+            Task {
+                try? await observabilityStore.record(run: run, stages: stages)
+            }
+        }
+    }
+
+    private func runRecord(
+        pipelineRunID: String,
+        change: AgentSubsessionLifecycleChange,
+        event: WorkProvenanceEvent?,
+        status: String,
+        startedAt: Date,
+        endedAt: Date,
+        errorSummary: String?
+    ) -> ProvenancePipelineRunRecord {
+        ProvenancePipelineRunRecord(
+            pipelineRunID: pipelineRunID,
+            pipelineKind: "lifecycle_ingestion",
+            triggerSource: "AgentSubsessionLifecycleChange",
+            parentSessionID: change.parentSessionID,
+            childSessionID: event?.payload.session?.id,
+            lifecycleEventID: event?.id,
+            relationshipSessionID: event?.payload.sessionRelationship?.sessionID,
+            externalIdentityID: event?.payload.externalIdentities.first?.id,
+            status: status,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            inputCount: 1,
+            outputCount: status == "succeeded" ? 1 : 0,
+            errorCount: errorSummary == nil ? 0 : 1,
+            errorSummary: errorSummary,
+            implementationVersion: "o1"
+        )
+    }
+
+    private func stageRecord(
+        pipelineRunID: String,
+        stageName: String,
+        status: String,
+        startedAt: Date,
+        endedAt: Date,
+        inputCount: Int,
+        outputCount: Int,
+        errorSummary: String?
+    ) -> ProvenancePipelineStageExecutionRecord {
+        ProvenancePipelineStageExecutionRecord(
+            pipelineRunID: pipelineRunID,
+            stageName: stageName,
+            stageVersion: "o1",
+            status: status,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            inputCount: inputCount,
+            outputCount: outputCount,
+            errorCount: errorSummary == nil ? 0 : 1,
+            errorSummary: errorSummary
+        )
+    }
+
+    private func skippedStageRecord(
+        pipelineRunID: String,
+        stageName: String,
+        reason: String
+    ) -> ProvenancePipelineStageExecutionRecord {
+        let timestamp = traceNow()
+        return stageRecord(
+            pipelineRunID: pipelineRunID,
+            stageName: stageName,
+            status: "failed",
+            startedAt: timestamp,
+            endedAt: timestamp,
+            inputCount: 0,
+            outputCount: 0,
+            errorSummary: reason
         )
     }
 }

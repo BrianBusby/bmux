@@ -189,6 +189,216 @@ def create_provenance_database(path: Path) -> None:
         )
 
 
+def create_observability_database(path: Path) -> None:
+    if path.exists():
+        path.unlink()
+    with sqlite3.connect(path) as conn:
+        conn.executescript(
+            """
+            CREATE TABLE pipeline_runs (
+                pipeline_run_id TEXT PRIMARY KEY NOT NULL,
+                pipeline_kind TEXT NOT NULL,
+                trigger_source TEXT NOT NULL,
+                parent_session_id TEXT,
+                child_session_id TEXT,
+                lifecycle_event_id TEXT,
+                relationship_session_id TEXT,
+                external_identity_id TEXT,
+                status TEXT NOT NULL,
+                started_at REAL NOT NULL,
+                ended_at REAL NOT NULL,
+                duration_ms REAL NOT NULL,
+                input_count INTEGER NOT NULL,
+                output_count INTEGER NOT NULL,
+                error_count INTEGER NOT NULL,
+                error_summary TEXT,
+                implementation_version TEXT NOT NULL
+            );
+            CREATE TABLE pipeline_stage_executions (
+                stage_execution_id TEXT PRIMARY KEY NOT NULL,
+                pipeline_run_id TEXT NOT NULL,
+                stage_name TEXT NOT NULL,
+                stage_version TEXT NOT NULL,
+                status TEXT NOT NULL,
+                started_at REAL NOT NULL,
+                ended_at REAL NOT NULL,
+                duration_ms REAL NOT NULL,
+                input_count INTEGER NOT NULL,
+                output_count INTEGER NOT NULL,
+                error_count INTEGER NOT NULL,
+                error_summary TEXT
+            );
+            """
+        )
+        conn.executemany(
+            """
+            INSERT INTO pipeline_runs (
+                pipeline_run_id, pipeline_kind, trigger_source,
+                parent_session_id, child_session_id, lifecycle_event_id,
+                relationship_session_id, external_identity_id, status,
+                started_at, ended_at, duration_ms, input_count, output_count,
+                error_count, error_summary, implementation_version
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    "run-success",
+                    "lifecycle_ingestion",
+                    "AgentSubsessionLifecycleChange",
+                    "codex-parent",
+                    "codex-child",
+                    "event-child-start",
+                    "codex-child",
+                    "identity-child",
+                    "succeeded",
+                    120.0,
+                    121.0,
+                    1000.0,
+                    1,
+                    1,
+                    0,
+                    None,
+                    "o1",
+                ),
+                (
+                    "run-failed",
+                    "lifecycle_ingestion",
+                    "AgentSubsessionLifecycleChange",
+                    "codex-parent",
+                    "codex-child",
+                    "event-child-start",
+                    "codex-child",
+                    "identity-child",
+                    "failed",
+                    130.0,
+                    131.0,
+                    1000.0,
+                    1,
+                    0,
+                    1,
+                    "UNIQUE constraint failed: events.id",
+                    "o1",
+                ),
+                (
+                    "run-other",
+                    "retrieval",
+                    "not-o1",
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    "succeeded",
+                    140.0,
+                    141.0,
+                    1000.0,
+                    1,
+                    1,
+                    0,
+                    None,
+                    "future",
+                ),
+            ],
+        )
+        conn.executemany(
+            """
+            INSERT INTO pipeline_stage_executions (
+                stage_execution_id, pipeline_run_id, stage_name,
+                stage_version, status, started_at, ended_at, duration_ms,
+                input_count, output_count, error_count, error_summary
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    "run-success:lifecycle_change_received",
+                    "run-success",
+                    "lifecycle_change_received",
+                    "o1",
+                    "succeeded",
+                    120.0,
+                    120.1,
+                    100.0,
+                    1,
+                    1,
+                    0,
+                    None,
+                ),
+                (
+                    "run-success:work_provenance_event_append",
+                    "run-success",
+                    "work_provenance_event_append",
+                    "o1",
+                    "succeeded",
+                    121.0,
+                    121.1,
+                    100.0,
+                    1,
+                    1,
+                    0,
+                    None,
+                ),
+                (
+                    "run-success:work_provenance_projection_update",
+                    "run-success",
+                    "work_provenance_projection_update",
+                    "o1",
+                    "succeeded",
+                    122.0,
+                    122.1,
+                    100.0,
+                    1,
+                    3,
+                    0,
+                    None,
+                ),
+                (
+                    "run-failed:lifecycle_change_received",
+                    "run-failed",
+                    "lifecycle_change_received",
+                    "o1",
+                    "succeeded",
+                    130.0,
+                    130.1,
+                    100.0,
+                    1,
+                    1,
+                    0,
+                    None,
+                ),
+                (
+                    "run-failed:work_provenance_event_append",
+                    "run-failed",
+                    "work_provenance_event_append",
+                    "o1",
+                    "failed",
+                    131.0,
+                    131.1,
+                    100.0,
+                    1,
+                    0,
+                    1,
+                    "failed",
+                ),
+                (
+                    "run-failed:work_provenance_projection_update",
+                    "run-failed",
+                    "work_provenance_projection_update",
+                    "o1",
+                    "failed",
+                    132.0,
+                    132.1,
+                    100.0,
+                    0,
+                    0,
+                    1,
+                    "skipped",
+                ),
+            ],
+        )
+
+
 def run_cli(cli_path: str, args: list[str]) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
         [cli_path, *args],
@@ -286,6 +496,69 @@ def check_provenance_session_tree_text(cli_path: str, root: Path) -> None:
             raise AssertionError(f"expected text output to include {expected!r}:\n{output}")
 
 
+def check_provenance_lifecycle_trace_json(cli_path: str, root: Path) -> None:
+    database = root / "ProvenanceObservability.sqlite"
+    create_observability_database(database)
+
+    result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "traces",
+            "lifecycle-ingestion",
+            "--observability-database",
+            str(database),
+            "--limit",
+            "10",
+        ],
+    )
+    payload = json.loads(result.stdout)
+    if payload["summary"] != {
+        "failed_run_count": 1,
+        "run_count": 2,
+        "stage_count": 6,
+    }:
+        raise AssertionError(f"unexpected trace summary: {payload!r}")
+    run_ids = [row["pipeline_run_id"] for row in payload["runs"]]
+    if run_ids != ["run-failed", "run-success"]:
+        raise AssertionError(f"expected bounded lifecycle trace order: {payload!r}")
+    if any(row["pipeline_run_id"] == "run-other" for row in payload["runs"]):
+        raise AssertionError(f"non-lifecycle trace leaked into output: {payload!r}")
+    stage_names = [row["stage_name"] for row in payload["stages"][:3]]
+    if stage_names != [
+        "lifecycle_change_received",
+        "work_provenance_event_append",
+        "work_provenance_projection_update",
+    ]:
+        raise AssertionError(f"expected O1 stage sequence: {payload!r}")
+
+
+def check_provenance_lifecycle_trace_text(cli_path: str, root: Path) -> None:
+    database = root / "ProvenanceObservability.sqlite"
+    create_observability_database(database)
+
+    result = run_cli(
+        cli_path,
+        [
+            "provenance",
+            "traces",
+            "lifecycle-ingestion",
+            "--observability-database",
+            str(database),
+        ],
+    )
+    output = result.stdout
+    for expected in [
+        "Lifecycle ingestion traces: 2",
+        "run-failed",
+        "run-success",
+        "stages: 3",
+    ]:
+        if expected not in output:
+            raise AssertionError(f"expected text output to include {expected!r}:\n{output}")
+
+
 def main() -> int:
     try:
         bundled_cli = os.environ.get("BMUX_BUNDLED_CLI_PATH")
@@ -302,6 +575,8 @@ def main() -> int:
         try:
             check_provenance_session_tree_json(cli_path, root)
             check_provenance_session_tree_text(cli_path, root)
+            check_provenance_lifecycle_trace_json(cli_path, root)
+            check_provenance_lifecycle_trace_text(cli_path, root)
         except Exception as exc:
             print(f"FAIL: {exc}")
             return 1

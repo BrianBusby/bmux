@@ -24,6 +24,11 @@ extension BMUXCLI {
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
+        case "traces":
+            try runProvenanceTraces(
+                commandArgs: Array(commandArgs.dropFirst()),
+                jsonOutput: jsonOutput
+            )
         case "help", "--help", "-h", nil:
             print(provenanceUsage())
         default:
@@ -183,6 +188,41 @@ extension BMUXCLI {
         printProvenanceSessionTree(tree, jsonOutput: jsonOutput)
     }
 
+    private func runProvenanceTraces(commandArgs: [String], jsonOutput: Bool) throws {
+        let commandName = "provenance traces lifecycle-ingestion"
+        let (databasePath, remainingAfterDatabase) = parseOption(
+            commandArgs,
+            name: "--observability-database"
+        )
+        let (limitText, remainingAfterLimit) = parseOption(remainingAfterDatabase, name: "--limit")
+        var remaining = remainingAfterLimit
+        try rejectProvenanceUnknownFlags(remaining, commandName: commandName)
+        guard remaining.first?.lowercased() == "lifecycle-ingestion" else {
+            throw CLIError(message: String(localized: "cli.provenance.traces.usage", defaultValue: "Usage: bmux provenance traces lifecycle-ingestion [--observability-database <path>] [--limit <count>] [--json]"))
+        }
+        remaining.removeFirst()
+        guard remaining.isEmpty else {
+            throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
+        }
+
+        let limit = try provenanceTraceLimit(limitText, commandName: commandName)
+        let databaseURL = provenanceObservabilityDatabaseURL(databasePath: databasePath)
+        guard FileManager.default.fileExists(atPath: databaseURL.path) else {
+            let list = CLIProvenanceLifecycleTraceList(
+                found: false,
+                reason: String(localized: "cli.provenance.reason.noObservabilityDatabase", defaultValue: "no provenance observability database exists yet"),
+                runs: [],
+                stages: []
+            )
+            printProvenanceLifecycleTraceList(list, jsonOutput: jsonOutput)
+            return
+        }
+
+        let reader = try CLIProvenanceObservabilitySQLiteReader(databaseURL: databaseURL)
+        let list = try reader.lifecycleIngestionTraces(limit: limit)
+        printProvenanceLifecycleTraceList(list, jsonOutput: jsonOutput)
+    }
+
     private func rejectProvenanceUnknownFlags(_ args: [String], commandName: String) throws {
         if let unknown = args.first(where: { $0.hasPrefix("--") }) {
             throw CLIError(message: String.localizedStringWithFormat(
@@ -220,6 +260,33 @@ extension BMUXCLI {
             .appendingPathComponent("bmux-work-provenance.sqlite", isDirectory: false)
     }
 
+    private func provenanceObservabilityDatabaseURL(databasePath: String?) -> URL {
+        if let databasePath = databasePath?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !databasePath.isEmpty {
+            return URL(fileURLWithPath: NSString(string: databasePath).expandingTildeInPath)
+        }
+        return FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".local", isDirectory: true)
+            .appendingPathComponent("state", isDirectory: true)
+            .appendingPathComponent("bmux", isDirectory: true)
+            .appendingPathComponent("work-provenance", isDirectory: true)
+            .appendingPathComponent("ProvenanceObservability.sqlite", isDirectory: false)
+    }
+
+    private func provenanceTraceLimit(_ value: String?, commandName: String) throws -> Int {
+        guard let value else { return 20 }
+        guard let parsed = Int(value), parsed > 0 else {
+            throw CLIError(message: String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.traces.error.invalidLimit",
+                    defaultValue: "%@: --limit must be a positive integer"
+                ),
+                commandName
+            ))
+        }
+        return min(parsed, 100)
+    }
+
     private func printProvenanceExplanation(_ explanation: CLIProvenanceExplanation, jsonOutput: Bool) {
         if jsonOutput {
             print(jsonString(explanation.payload))
@@ -250,6 +317,17 @@ extension BMUXCLI {
             return
         }
         print(renderProvenanceSessionTree(tree))
+    }
+
+    private func printProvenanceLifecycleTraceList(
+        _ list: CLIProvenanceLifecycleTraceList,
+        jsonOutput: Bool
+    ) {
+        if jsonOutput {
+            print(jsonString(list.payload))
+            return
+        }
+        print(renderProvenanceLifecycleTraceList(list))
     }
 
     private func renderProvenanceExplanation(_ explanation: CLIProvenanceExplanation) -> String {
@@ -505,6 +583,42 @@ extension BMUXCLI {
         return lines.joined(separator: "\n")
     }
 
+    private func renderProvenanceLifecycleTraceList(_ list: CLIProvenanceLifecycleTraceList) -> String {
+        guard list.found else {
+            return [
+                String(localized: "cli.provenance.traces.output.empty", defaultValue: "No lifecycle ingestion traces recorded."),
+                list.reason.map {
+                    String.localizedStringWithFormat(
+                        String(localized: "cli.provenance.output.reason", defaultValue: "Reason: %@"),
+                        $0
+                    )
+                }
+            ].compactMap(\.self).joined(separator: "\n")
+        }
+
+        var lines = [
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.traces.output.header", defaultValue: "Lifecycle ingestion traces: %d"),
+                list.runs.count
+            )
+        ]
+        let stagesByRun = Dictionary(grouping: list.stages) { row in
+            row["pipeline_run_id"] as? String ?? ""
+        }
+        for row in list.runs.prefix(20) {
+            let pipelineRunID = row["pipeline_run_id"] as? String ?? "?"
+            let status = row["status"] as? String ?? "?"
+            let stageCount = stagesByRun[pipelineRunID]?.count ?? 0
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.traces.output.row", defaultValue: "  %@ · %@ · stages: %d"),
+                pipelineRunID,
+                status,
+                stageCount
+            ))
+        }
+        return lines.joined(separator: "\n")
+    }
+
     private func appendProvenanceRows(
         _ rows: [[String: AnyHashable]],
         title: String,
@@ -590,6 +704,7 @@ extension BMUXCLI {
               bmux provenance context current [--json]
               bmux provenance worktrees list [--json]
               bmux provenance sessions tree <session-id> [--json]
+              bmux provenance traces lifecycle-ingestion [--json]
 
             Inspect bmux work provenance without requiring a live app socket.
             """

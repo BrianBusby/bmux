@@ -177,8 +177,9 @@ Subsession/delegation integration:
 Observability integration:
 
 - Phase O0 architecture investigation is complete in `docs/context-efficiency/provenance-observability-phase-o0-report.md`.
-- The first O1 implementation slice should trace only `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update`.
-- Initial observability covers ingestion traces, identity-resolution traces, stage duration, bounded failures, unresolved/conflicting lifecycle identity, and correlation IDs.
+- The first O1 implementation slice traces only `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update`.
+- The working tree O1 slice adds a separate `ProvenanceObservability.sqlite` store with pipeline run and stage execution records for that lifecycle-ingestion path only.
+- O1 observability covers lifecycle ingestion traces, stage duration, bounded failures, and correlation IDs only; identity-resolution traces remain later O2+ work.
 - Observability writes must not block lifecycle event append or projection updates.
 
 ## Milestone 4: Efficiency Profiler

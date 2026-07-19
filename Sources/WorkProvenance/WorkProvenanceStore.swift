@@ -57,6 +57,111 @@ actor WorkProvenanceStore {
         }
     }
 
+    /// Appends an event while returning bounded stage traces for lifecycle observability.
+    func appendWithStageTrace(
+        _ event: WorkProvenanceEvent,
+        pipelineRunID: String,
+        now: @Sendable () -> Date = { Date() }
+    ) -> (stages: [ProvenancePipelineStageExecutionRecord], errorDescription: String?) {
+        var stages: [ProvenancePipelineStageExecutionRecord] = []
+        do {
+            try database.execute("BEGIN IMMEDIATE TRANSACTION")
+        } catch {
+            let errorDescription = Self.boundedErrorSummary(error)
+            let startedAt = now()
+            stages.append(Self.stageRecord(
+                pipelineRunID: pipelineRunID,
+                stageName: "work_provenance_event_append",
+                status: "failed",
+                startedAt: startedAt,
+                endedAt: startedAt,
+                inputCount: 1,
+                outputCount: 0,
+                errorSummary: errorDescription
+            ))
+            stages.append(Self.skippedStageRecord(
+                pipelineRunID: pipelineRunID,
+                stageName: "work_provenance_projection_update",
+                now: now,
+                reason: "skipped after WorkProvenance transaction open failed"
+            ))
+            return (stages, errorDescription)
+        }
+
+        do {
+            let appendStartedAt = now()
+            try insertEvent(event)
+            let appendEndedAt = now()
+            stages.append(Self.stageRecord(
+                pipelineRunID: pipelineRunID,
+                stageName: "work_provenance_event_append",
+                status: "succeeded",
+                startedAt: appendStartedAt,
+                endedAt: appendEndedAt,
+                inputCount: 1,
+                outputCount: 1,
+                errorSummary: nil
+            ))
+
+            let projectionStartedAt = now()
+            try apply(payload: event.payload)
+            let projectionEndedAt = now()
+            stages.append(Self.stageRecord(
+                pipelineRunID: pipelineRunID,
+                stageName: "work_provenance_projection_update",
+                status: "succeeded",
+                startedAt: projectionStartedAt,
+                endedAt: projectionEndedAt,
+                inputCount: 1,
+                outputCount: Self.projectionOutputCount(for: event.payload),
+                errorSummary: nil
+            ))
+
+            appendCountSincePrune += 1
+            if appendCountSincePrune >= retentionPolicy.pruneAfterAppendedEvents {
+                _ = try pruneExpiredObservedHistoryLocked(now: event.timestamp)
+                appendCountSincePrune = 0
+            }
+            try database.execute("COMMIT")
+            return (stages, nil)
+        } catch {
+            try? database.execute("ROLLBACK")
+            let errorDescription = Self.boundedErrorSummary(error)
+            if stages.isEmpty {
+                let startedAt = now()
+                stages.append(Self.stageRecord(
+                    pipelineRunID: pipelineRunID,
+                    stageName: "work_provenance_event_append",
+                    status: "failed",
+                    startedAt: startedAt,
+                    endedAt: startedAt,
+                    inputCount: 1,
+                    outputCount: 0,
+                    errorSummary: errorDescription
+                ))
+                stages.append(Self.skippedStageRecord(
+                    pipelineRunID: pipelineRunID,
+                    stageName: "work_provenance_projection_update",
+                    now: now,
+                    reason: "skipped after WorkProvenance event append failed"
+                ))
+            } else if !stages.contains(where: { $0.stageName == "work_provenance_projection_update" }) {
+                let startedAt = now()
+                stages.append(Self.stageRecord(
+                    pipelineRunID: pipelineRunID,
+                    stageName: "work_provenance_projection_update",
+                    status: "failed",
+                    startedAt: startedAt,
+                    endedAt: startedAt,
+                    inputCount: 1,
+                    outputCount: 0,
+                    errorSummary: errorDescription
+                ))
+            }
+            return (stages, errorDescription)
+        }
+    }
+
     /// Returns events in append order.
     ///
     /// - Throws: ``WorkProvenanceStoreError`` when persistence fails.
@@ -867,6 +972,75 @@ actor WorkProvenanceStore {
         if let validationRun = payload.validationRun {
             try upsert(validationRun)
         }
+    }
+
+    private static func stageRecord(
+        pipelineRunID: String,
+        stageName: String,
+        status: String,
+        startedAt: Date,
+        endedAt: Date,
+        inputCount: Int,
+        outputCount: Int,
+        errorSummary: String?
+    ) -> ProvenancePipelineStageExecutionRecord {
+        ProvenancePipelineStageExecutionRecord(
+            pipelineRunID: pipelineRunID,
+            stageName: stageName,
+            stageVersion: "o1",
+            status: status,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            inputCount: inputCount,
+            outputCount: outputCount,
+            errorCount: errorSummary == nil ? 0 : 1,
+            errorSummary: errorSummary.map(Self.boundedErrorSummary)
+        )
+    }
+
+    private static func skippedStageRecord(
+        pipelineRunID: String,
+        stageName: String,
+        now: @Sendable () -> Date,
+        reason: String
+    ) -> ProvenancePipelineStageExecutionRecord {
+        let timestamp = now()
+        return stageRecord(
+            pipelineRunID: pipelineRunID,
+            stageName: stageName,
+            status: "failed",
+            startedAt: timestamp,
+            endedAt: timestamp,
+            inputCount: 0,
+            outputCount: 0,
+            errorSummary: reason
+        )
+    }
+
+    private static func projectionOutputCount(for payload: WorkProvenanceEventPayload) -> Int {
+        [
+            payload.repository == nil ? 0 : 1,
+            payload.worktree == nil ? 0 : 1,
+            payload.session == nil ? 0 : 1,
+            payload.sessionRelationship == nil ? 0 : 1,
+            payload.externalIdentities.count,
+            payload.workItem == nil ? 0 : 1,
+            payload.contribution == nil ? 0 : 1,
+            payload.checkpoint == nil ? 0 : 1,
+            payload.changeSet == nil ? 0 : 1,
+            payload.fileChanges.count,
+            payload.validationRun == nil ? 0 : 1,
+        ].reduce(0, +)
+    }
+
+    static func boundedErrorSummary(_ error: Error) -> String {
+        boundedErrorSummary(String(describing: error))
+    }
+
+    static func boundedErrorSummary(_ message: String) -> String {
+        let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count > 512 else { return trimmed }
+        return String(trimmed.prefix(512))
     }
 
     private func upsert(_ record: WorkProvenanceRepositoryRecord) throws {

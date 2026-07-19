@@ -231161,6 +231161,40 @@
         }
       }
     },
+    "cli.provenance.error.openObservabilityDatabaseFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "failed to open provenance observability database: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance observability データベースを開けませんでした: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.sqliteOpenFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "open failed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開けませんでした"
+          }
+        }
+      }
+    },
     "cli.provenance.error.pathOutsideWorktree": {
       "extractionState": "manual",
       "localizations": {
@@ -231569,6 +231603,40 @@
         }
       }
     },
+    "cli.provenance.reason.noLifecycleTraces": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no lifecycle ingestion traces have been recorded"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライフサイクル取り込みトレースは記録されていません"
+          }
+        }
+      }
+    },
+    "cli.provenance.reason.noObservabilityDatabase": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no provenance observability database exists yet"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance observability データベースはまだ存在しません"
+          }
+        }
+      }
+    },
     "cli.provenance.reason.noFile": {
       "extractionState": "manual",
       "localizations": {
@@ -231609,13 +231677,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n\nInspect bmux work provenance without requiring a live app socket."
+            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance traces lifecycle-ingestion [--json]\n\nInspect bmux work provenance without requiring a live app socket."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
+            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance traces lifecycle-ingestion [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
           }
         }
       }
@@ -231701,6 +231769,91 @@
           "stringUnit": {
             "state": "translated",
             "value": "使用方法: bmux provenance sessions tree <session-id> [--database <path>] [--json]"
+          }
+        }
+      }
+    },
+    "cli.provenance.traces.error.invalidLimit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: --limit must be a positive integer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: --limit には正の整数が必要です"
+          }
+        }
+      }
+    },
+    "cli.provenance.traces.output.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No lifecycle ingestion traces recorded."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライフサイクル取り込みトレースは記録されていません。"
+          }
+        }
+      }
+    },
+    "cli.provenance.traces.output.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lifecycle ingestion traces: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライフサイクル取り込みトレース: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.traces.output.row": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ · %@ · stages: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ · %@ · ステージ: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.traces.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux provenance traces lifecycle-ingestion [--observability-database <path>] [--limit <count>] [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法: bmux provenance traces lifecycle-ingestion [--observability-database <path>] [--limit <count>] [--json]"
           }
         }
       }

@@ -30,12 +30,19 @@ final class WorkProvenanceRuntime {
         let location = WorkProvenanceStorageLocation(homeDirectory: fileManager.homeDirectoryForCurrentUser)
         do {
             let store = try WorkProvenanceStore(databaseURL: location.databaseURL, fileManager: fileManager)
+            let observabilityStore = try? ProvenanceObservabilityStore(
+                databaseURL: location.observabilityDatabaseURL,
+                fileManager: fileManager
+            )
             return WorkProvenanceRuntime(
                 observationService: WorkProvenanceObservationService(
                     store: store,
                     gitInspector: WorkProvenanceGitInspector()
                 ),
-                subsessionLifecycleRecorder: WorkProvenanceSubsessionLifecycleRecorder(store: store)
+                subsessionLifecycleRecorder: WorkProvenanceSubsessionLifecycleRecorder(
+                    store: store,
+                    observabilityStore: observabilityStore
+                )
             )
         } catch {
             return WorkProvenanceRuntime(observationService: nil)

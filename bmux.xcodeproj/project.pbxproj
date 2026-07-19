@@ -503,6 +503,8 @@
 		C0DE70210000000000000001 /* CLIProvenanceExplanation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70210000000000000002 /* CLIProvenanceExplanation.swift */; };
 		C0DE70220000000000000001 /* CLIProvenanceExplanationRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70220000000000000002 /* CLIProvenanceExplanationRow.swift */; };
 		C0DE70230000000000000001 /* CLIProvenanceGitResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */; };
+		C0DE702A0000000000000001 /* CLIProvenanceLifecycleTraceList.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE702A0000000000000002 /* CLIProvenanceLifecycleTraceList.swift */; };
+		C0DE702B0000000000000001 /* CLIProvenanceObservabilitySQLiteReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE702B0000000000000002 /* CLIProvenanceObservabilitySQLiteReader.swift */; };
 		C0DE70240000000000000001 /* CLIProvenanceResolvedTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70240000000000000002 /* CLIProvenanceResolvedTarget.swift */; };
 		C0DE70290000000000000001 /* CLIProvenanceSessionTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70290000000000000002 /* CLIProvenanceSessionTree.swift */; };
 		C0DE70250000000000000001 /* CLIProvenanceSQLiteReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70250000000000000002 /* CLIProvenanceSQLiteReader.swift */; };
@@ -935,6 +937,9 @@
 		A5C0DE0000000000000000B4 /* ProjectPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000B3 /* ProjectPanelView.swift */; };
 		A5C0DE0000000000000000BC /* ProjectSchemesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000BB /* ProjectSchemesTabView.swift */; };
 		A5C0DE0000000000000000B8 /* ProjectTargetsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000B7 /* ProjectTargetsTabView.swift */; };
+		CE0B00060000000000000001 /* ProvenanceObservabilityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00060000000000000002 /* ProvenanceObservabilityStore.swift */; };
+		CE0B00070000000000000001 /* ProvenancePipelineRunRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */; };
+		CE0B00080000000000000001 /* ProvenancePipelineStageExecutionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */; };
 		B71000000000000000000003 /* PushToTalkVoiceInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71000000000000000000004 /* PushToTalkVoiceInputController.swift */; };
 		A64610010000000000000001 /* QuitConfirmationAlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64610010000000000000002 /* QuitConfirmationAlertPresenter.swift */; };
 		A64610020000000000000001 /* QuitConfirmationAlertPresenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64610020000000000000002 /* QuitConfirmationAlertPresenterTests.swift */; };
@@ -2078,6 +2083,8 @@
 		C0DE70210000000000000002 /* CLIProvenanceExplanation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceExplanation.swift; sourceTree = "<group>"; };
 		C0DE70220000000000000002 /* CLIProvenanceExplanationRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceExplanationRow.swift; sourceTree = "<group>"; };
 		C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceGitResolver.swift; sourceTree = "<group>"; };
+		C0DE702A0000000000000002 /* CLIProvenanceLifecycleTraceList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceLifecycleTraceList.swift; sourceTree = "<group>"; };
+		C0DE702B0000000000000002 /* CLIProvenanceObservabilitySQLiteReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceObservabilitySQLiteReader.swift; sourceTree = "<group>"; };
 		C0DE70240000000000000002 /* CLIProvenanceResolvedTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceResolvedTarget.swift; sourceTree = "<group>"; };
 		C0DE70290000000000000002 /* CLIProvenanceSessionTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceSessionTree.swift; sourceTree = "<group>"; };
 		C0DE70250000000000000002 /* CLIProvenanceSQLiteReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceSQLiteReader.swift; sourceTree = "<group>"; };
@@ -2504,6 +2511,9 @@
 		A5C0DE0000000000000000B3 /* ProjectPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectPanelView.swift; sourceTree = "<group>"; };
 		A5C0DE0000000000000000BB /* ProjectSchemesTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectSchemesTabView.swift; sourceTree = "<group>"; };
 		A5C0DE0000000000000000B7 /* ProjectTargetsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectTargetsTabView.swift; sourceTree = "<group>"; };
+		CE0B00060000000000000002 /* ProvenanceObservabilityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceObservabilityStore.swift; sourceTree = "<group>"; };
+		CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenancePipelineRunRecord.swift; sourceTree = "<group>"; };
+		CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenancePipelineStageExecutionRecord.swift; sourceTree = "<group>"; };
 		B71000000000000000000004 /* PushToTalkVoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/PushToTalkVoiceInputController.swift; sourceTree = "<group>"; };
 		A64610010000000000000002 /* QuitConfirmationAlertPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitConfirmationAlertPresenter.swift; sourceTree = "<group>"; };
 		A64610020000000000000002 /* QuitConfirmationAlertPresenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitConfirmationAlertPresenterTests.swift; sourceTree = "<group>"; };
@@ -4370,6 +4380,8 @@
 				C0DE70220000000000000002 /* CLIProvenanceExplanationRow.swift */,
 				C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */,
 				C0DE70240000000000000002 /* CLIProvenanceResolvedTarget.swift */,
+				C0DE702A0000000000000002 /* CLIProvenanceLifecycleTraceList.swift */,
+				C0DE702B0000000000000002 /* CLIProvenanceObservabilitySQLiteReader.swift */,
 				C0DE70290000000000000002 /* CLIProvenanceSessionTree.swift */,
 				C0DE70250000000000000002 /* CLIProvenanceSQLiteReader.swift */,
 				C0DE70280000000000000002 /* CLIProvenanceWorktreeList.swift */,
@@ -4788,6 +4800,9 @@
 		B8C2E8CB1ADEEC44521D006B /* WorkProvenance */ = {
 			isa = PBXGroup;
 			children = (
+				CE0B00060000000000000002 /* ProvenanceObservabilityStore.swift */,
+				CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */,
+				CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */,
 				11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */,
 				0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */,
 				20C26C989BEBFA4B46E0200B /* WorkProvenanceConfidence.swift */,
@@ -5773,6 +5788,9 @@
 					A5C0DE0000000000000000B4 /* ProjectPanelView.swift in Sources */,
 					A5C0DE0000000000000000BC /* ProjectSchemesTabView.swift in Sources */,
 					A5C0DE0000000000000000B8 /* ProjectTargetsTabView.swift in Sources */,
+				CE0B00060000000000000001 /* ProvenanceObservabilityStore.swift in Sources */,
+				CE0B00070000000000000001 /* ProvenancePipelineRunRecord.swift in Sources */,
+				CE0B00080000000000000001 /* ProvenancePipelineStageExecutionRecord.swift in Sources */,
 				B71000000000000000000003 /* PushToTalkVoiceInputController.swift in Sources */,
 					A64610010000000000000001 /* QuitConfirmationAlertPresenter.swift in Sources */,
 				A500RG01 /* ReactGrab.swift in Sources */,
@@ -6251,8 +6269,8 @@
 				C05555010000000000000003 /* BMUXCLI+PiExtensionSource.swift in Sources */,
 						C05555010000000000000005 /* BMUXCLI+PiExtensionSourcePart1.swift in Sources */,
 						C05555010000000000000007 /* BMUXCLI+PiExtensionSourcePart2.swift in Sources */,
-						B9000054A1B2C3D4E5F60719 /* BMUXCLI+Process.swift in Sources */,
-						C0DE70200000000000000001 /* BMUXCLI+Provenance.swift in Sources */,
+				B9000054A1B2C3D4E5F60719 /* BMUXCLI+Process.swift in Sources */,
+				C0DE70200000000000000001 /* BMUXCLI+Provenance.swift in Sources */,
 				C73660010000000000000001 /* BMUXCLI+RemotePTYErrors.swift in Sources */,
 					REE0CA0000000000000000C2 /* BMUXCLI+Remotes.swift in Sources */,
 				888222D96880953F33F554F1 /* BMUXCLI+RovoDevHooks.swift in Sources */,
@@ -6274,6 +6292,8 @@
 				C0DE70210000000000000001 /* CLIProvenanceExplanation.swift in Sources */,
 				C0DE70220000000000000001 /* CLIProvenanceExplanationRow.swift in Sources */,
 				C0DE70230000000000000001 /* CLIProvenanceGitResolver.swift in Sources */,
+				C0DE702A0000000000000001 /* CLIProvenanceLifecycleTraceList.swift in Sources */,
+				C0DE702B0000000000000001 /* CLIProvenanceObservabilitySQLiteReader.swift in Sources */,
 				C0DE70240000000000000001 /* CLIProvenanceResolvedTarget.swift in Sources */,
 				C0DE70290000000000000001 /* CLIProvenanceSessionTree.swift in Sources */,
 				C0DE70250000000000000001 /* CLIProvenanceSQLiteReader.swift in Sources */,
