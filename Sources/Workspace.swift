@@ -5182,7 +5182,8 @@ final class Workspace: Identifiable, ObservableObject {
         status: SidebarPullRequestStatus,
         branch: String? = nil,
         isStale: Bool = false,
-        bindToCurrentBranch: Bool = true
+        bindToCurrentBranch: Bool = true,
+        source: WorkspaceWorkContextSource = .sidebarMetadata
     ) {
         let existing = panelPullRequests[panelId]
         let normalizedBranch = branch?.normalizedSidebarBranchName
@@ -5212,10 +5213,14 @@ final class Workspace: Identifiable, ObservableObject {
             isStale: isStale
         )
         if existing != state {
-            panelPullRequests[panelId] = state
+            sidebarMetadata.updatePanelPullRequest(state, panelId: panelId, source: source)
+        } else {
+            sidebarMetadata.updatePanelPullRequestSource(panelId: panelId, source: source)
         }
         if panelId == focusedPanelId, pullRequest != state {
-            pullRequest = state
+            sidebarMetadata.updatePullRequest(state, source: source)
+        } else if panelId == focusedPanelId {
+            sidebarMetadata.updatePullRequestSource(source)
         }
     }
 

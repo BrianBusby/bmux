@@ -196,8 +196,8 @@ extension TabManager {
         switch kind {
         case .promptSubmission:
             _ = workspace.recordPromptNavigationBookmark(surfaceId: surfaceId, message: message)
-            messageRecorded = workspace.recordSubmittedMessage(message)
             _ = workspace.recordSubmittedPullRequestMention(message, surfaceId: surfaceId)
+            messageRecorded = workspace.recordSubmittedMessage(message)
             if messageRecorded {
                 BmuxEventBus.shared.publishWorkspacePromptSubmitted(
                     workspaceId: workspaceId,
@@ -248,7 +248,8 @@ extension Workspace {
             label: "PR",
             url: mention.url,
             status: .open,
-            bindToCurrentBranch: false
+            bindToCurrentBranch: false,
+            source: .promptMention
         )
         return true
     }

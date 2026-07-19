@@ -6,6 +6,7 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
         let customColorHex: String?
         let finderDirectoryPath: String?
         let repoBadgeAppearance: WorkspaceRepoBadgeAppearance?
+        let pullRequestRows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay]
         let mediaActivity: BrowserMediaActivity
         let hasActiveAIWork: Bool
     }
@@ -18,6 +19,7 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
             customColorHex: customColorHex,
             finderDirectoryPath: finderDirectoryPath,
             repoBadgeAppearance: repoBadgeAppearance,
+            pullRequestRows: pullRequestRows,
             mediaActivity: mediaActivity,
             hasActiveAIWork: hasActiveAIWork
         )
@@ -47,7 +49,7 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
             compactBranchDirectoryCandidates: compactBranchDirectoryCandidates,
             branchDirectoryLines: branchDirectoryLines,
             branchLinesContainBranch: branchLinesContainBranch,
-            pullRequestRows: pullRequestRows,
+            pullRequestRows: snapshot.pullRequestRows,
             listeningPorts: listeningPorts,
             finderDirectoryPath: snapshot.finderDirectoryPath,
             repoBadgeAppearance: snapshot.repoBadgeAppearance,

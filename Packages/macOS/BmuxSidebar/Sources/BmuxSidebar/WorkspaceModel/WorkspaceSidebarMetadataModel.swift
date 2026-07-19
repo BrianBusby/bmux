@@ -64,13 +64,19 @@ public final class WorkspaceSidebarMetadataModel {
     /// The workspace-level pull-request state shown in the sidebar (legacy
     /// `Workspace.pullRequest`).
     public var pullRequest: SidebarPullRequestState? {
-        didSet { pullRequestSubject.send(pullRequest) }
+        didSet {
+            reconcilePullRequestSource()
+            pullRequestSubject.send(pullRequest)
+        }
     }
 
     /// Per-panel pull-request state keyed by panel id (legacy
     /// `Workspace.panelPullRequests`).
     public var panelPullRequests: [UUID: SidebarPullRequestState] = [:] {
-        didSet { panelPullRequestsSubject.send(panelPullRequests) }
+        didSet {
+            reconcilePanelPullRequestSources(oldValue: oldValue)
+            panelPullRequestsSubject.send(panelPullRequests)
+        }
     }
 
     /// Per-panel directory display labels keyed by panel id, reported via
@@ -102,6 +108,14 @@ public final class WorkspaceSidebarMetadataModel {
     private lazy var panelPullRequestsSubject = CurrentValueSubject<[UUID: SidebarPullRequestState], Never>(panelPullRequests)
     @ObservationIgnored
     private lazy var panelDirectoryDisplayLabelsSubject = CurrentValueSubject<[UUID: String], Never>(panelDirectoryDisplayLabels)
+    @ObservationIgnored
+    private var pullRequestWorkContextSource: WorkspaceWorkContextSource?
+    @ObservationIgnored
+    private var panelPullRequestWorkContextSources: [UUID: WorkspaceWorkContextSource] = [:]
+    @ObservationIgnored
+    private var pendingPullRequestWorkContextSource: WorkspaceWorkContextSource?
+    @ObservationIgnored
+    private var pendingPanelPullRequestWorkContextSources: [UUID: WorkspaceWorkContextSource] = [:]
 
     /// Creates an empty sidebar-metadata model.
     /// - Parameter limitProvider: Supplies the configured maximum number of log
@@ -167,6 +181,26 @@ public final class WorkspaceSidebarMetadataModel {
         panelDirectoryDisplayLabelsSubject.eraseToAnyPublisher()
     }
 
+    /// The workspace-level work context projected from existing sidebar metadata.
+    public var workContext: WorkspaceWorkContext {
+        WorkspaceWorkContext(
+            sidebarBranch: gitBranch,
+            sidebarPullRequest: pullRequest,
+            pullRequestSource: pullRequestWorkContextSource ?? .sidebarMetadata
+        )
+    }
+
+    /// The panel-level work context projected from existing sidebar metadata.
+    /// - Parameter panelId: The panel whose context should be projected.
+    /// - Returns: The work context for the panel.
+    public func workContext(panelId: UUID) -> WorkspaceWorkContext {
+        WorkspaceWorkContext(
+            sidebarBranch: panelGitBranches[panelId],
+            sidebarPullRequest: panelPullRequests[panelId],
+            pullRequestSource: panelPullRequestWorkContextSources[panelId] ?? .sidebarMetadata
+        )
+    }
+
     /// Emits a sidebar observation pulse without mutating metadata.
     ///
     /// The app target uses this when the rendered workspace-row snapshot changes
@@ -219,11 +253,56 @@ public final class WorkspaceSidebarMetadataModel {
         self.gitBranch = gitBranch
     }
 
-    /// Sets or clears the workspace-level pull-request state (legacy
-    /// `Workspace.pullRequest = …`).
-    /// - Parameter pullRequest: The new pull-request state, or `nil` to clear.
-    public func updatePullRequest(_ pullRequest: SidebarPullRequestState?) {
+    /// Sets or clears the workspace-level pull-request state and work-context
+    /// source (legacy `Workspace.pullRequest = …` plus provenance).
+    /// - Parameters:
+    ///   - pullRequest: The new pull-request state, or `nil` to clear.
+    ///   - source: Where the pull-request value came from.
+    public func updatePullRequest(
+        _ pullRequest: SidebarPullRequestState?,
+        source: WorkspaceWorkContextSource = .sidebarMetadata
+    ) {
+        pendingPullRequestWorkContextSource = source
         self.pullRequest = pullRequest
+    }
+
+    /// Sets or clears a panel-level pull-request state and work-context source.
+    /// - Parameters:
+    ///   - pullRequest: The new pull-request state, or `nil` to clear.
+    ///   - panelId: The panel whose pull-request state should change.
+    ///   - source: Where the pull-request value came from.
+    public func updatePanelPullRequest(
+        _ pullRequest: SidebarPullRequestState?,
+        panelId: UUID,
+        source: WorkspaceWorkContextSource = .sidebarMetadata
+    ) {
+        if let pullRequest {
+            pendingPanelPullRequestWorkContextSources[panelId] = source
+            panelPullRequests[panelId] = pullRequest
+        } else {
+            panelPullRequests.removeValue(forKey: panelId)
+        }
+    }
+
+    /// Updates the workspace-level work-context source for the existing pull
+    /// request without changing the legacy pull-request state.
+    /// - Parameter source: Where the existing pull-request value came from.
+    public func updatePullRequestSource(_ source: WorkspaceWorkContextSource) {
+        guard pullRequest != nil else { return }
+        pullRequestWorkContextSource = source
+    }
+
+    /// Updates the panel-level work-context source for an existing pull request
+    /// without changing the legacy pull-request state.
+    /// - Parameters:
+    ///   - panelId: The panel whose pull-request source should change.
+    ///   - source: Where the existing pull-request value came from.
+    public func updatePanelPullRequestSource(
+        panelId: UUID,
+        source: WorkspaceWorkContextSource
+    ) {
+        guard panelPullRequests[panelId] != nil else { return }
+        panelPullRequestWorkContextSources[panelId] = source
     }
 
     /// Returns the metadata blocks sorted for sidebar display: descending
@@ -235,6 +314,33 @@ public final class WorkspaceSidebarMetadataModel {
             if lhs.priority != rhs.priority { return lhs.priority > rhs.priority }
             if lhs.timestamp != rhs.timestamp { return lhs.timestamp > rhs.timestamp }
             return lhs.key < rhs.key
+        }
+    }
+
+    private func reconcilePullRequestSource() {
+        defer { pendingPullRequestWorkContextSource = nil }
+        guard pullRequest != nil else {
+            pullRequestWorkContextSource = nil
+            return
+        }
+        if let pendingPullRequestWorkContextSource {
+            pullRequestWorkContextSource = pendingPullRequestWorkContextSource
+            return
+        }
+        pullRequestWorkContextSource = .sidebarMetadata
+    }
+
+    private func reconcilePanelPullRequestSources(oldValue: [UUID: SidebarPullRequestState]) {
+        defer { pendingPanelPullRequestWorkContextSources.removeAll() }
+        panelPullRequestWorkContextSources = panelPullRequestWorkContextSources.filter {
+            panelPullRequests.keys.contains($0.key)
+        }
+        for (panelId, pullRequest) in panelPullRequests {
+            if let pendingSource = pendingPanelPullRequestWorkContextSources[panelId] {
+                panelPullRequestWorkContextSources[panelId] = pendingSource
+            } else if oldValue[panelId] != pullRequest || panelPullRequestWorkContextSources[panelId] == nil {
+                panelPullRequestWorkContextSources[panelId] = .sidebarMetadata
+            }
         }
     }
 }
