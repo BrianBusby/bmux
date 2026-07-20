@@ -1,7 +1,7 @@
 import Foundation
 
 /// One bounded observability record for a stage within a provenance pipeline run.
-struct ProvenancePipelineStageExecutionRecord: Equatable, Sendable {
+struct ProvenancePipelineStageExecutionRecord: Codable, Equatable, Sendable {
     let pipelineRunID: String
     let stageName: String
     let stageVersion: String

@@ -98,7 +98,12 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 Current checkout:
 
 - Branch: `provenance-extraction-phase2-contracts`
-- HEAD observed before the Phase 2 lifecycle-contract commit on 2026-07-20: `671e1e5ef`
+- This 2026-07-20 slice added a separate internal lifecycle-trace query contract in `Sources/WorkProvenance`.
+- `ProvenanceObservabilityStore` now conforms to `ProvenanceLifecycleTraceQuerying`.
+- The response returns bounded lifecycle-ingestion run, stage, identity-resolution, and projection-lineage telemetry.
+- The seam intentionally stays separate from `ProvenanceEngineClient`.
+- Observability remains operational telemetry, not authoritative provenance history.
+- HEAD observed before the Phase 2 lifecycle-trace contract slice on 2026-07-20: `286ab75e3`
 - Contains the accepted ADR-001 provenance extraction product-boundary documentation, the Phase 0 migration audit report, the Phase 1 contract plan, behavior-characterization tests, and the first Phase 2 internal contract seams.
 
 Active context-efficiency worktree:
@@ -143,7 +148,33 @@ Latest completed provenance planning slice:
 - The report concludes that extraction should center on the existing `WorkProvenance` append-only event/projection model, while bmux keeps capture adapters, UI, workspace/session orchestration, and visualization.
 - `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md` completes ADR-001 Phase 1 contract planning by naming current behavior invariants, the first narrow public contract surface, the bmux adapter boundary, and direct SQLite debt to remove later.
 - The first Phase 2 interface slice introduces internal protocol/request/response names for event append, session-tree query, and file-explanation query around `WorkProvenanceStore`, without moving implementation or creating the independent engine repository yet.
-- The next safe extraction slice is to add a lifecycle-trace query seam, or convert `bmux provenance sessions tree` only after its CLI JSON behavior is fully mapped from the store-backed contract response.
+- The Phase 2 lifecycle-trace interface slice introduces `ProvenanceLifecycleTraceQuerying` plus lifecycle-trace request/response DTOs over `ProvenanceObservabilityStore`, keeping operational telemetry separate from `ProvenanceEngineClient`.
+- The next safe extraction slice is to convert one CLI path, likely `bmux provenance sessions tree`, only after its CLI JSON/no-database/limit behavior is fully mapped from the store-backed contract response.
+
+Latest completed provenance Phase 2 lifecycle-trace contract slice:
+
+- Branch: `provenance-extraction-phase2-contracts`
+- This 2026-07-20 slice added `ProvenanceLifecycleTraceQuerying`.
+- `ProvenanceObservabilityStore` conforms to the trace-query protocol.
+- The response is bounded operational telemetry, separate from `ProvenanceEngineClient`.
+- No CLI command, daemon, repository split, or schema move was added.
+- Validation passed: focused `bmux-unit` trace/store suites and project hygiene checks.
+- Localization audit: no user-facing strings changed.
+
+Files changed in the Phase 2 lifecycle-trace contract slice:
+
+- `Sources/WorkProvenance/ProvenanceLifecycleTraceListRequest.swift`
+- `Sources/WorkProvenance/ProvenanceLifecycleTraceListResponse.swift`
+- `Sources/WorkProvenance/ProvenanceLifecycleTraceQuerying.swift`
+- `Sources/WorkProvenance/ProvenanceObservabilityStore+ProvenanceLifecycleTraceQuerying.swift`
+- `Sources/WorkProvenance/ProvenanceIdentityResolutionRecord.swift`
+- `Sources/WorkProvenance/ProvenancePipelineRunRecord.swift`
+- `Sources/WorkProvenance/ProvenancePipelineStageExecutionRecord.swift`
+- `Sources/WorkProvenance/ProvenanceProjectionLineageRecord.swift`
+- `bmux.xcodeproj/project.pbxproj`
+- `bmuxTests/SubsessionProvenanceTests.swift`
+- `docs/context-efficiency/current-status.md`
+- `docs/context-efficiency/milestones.md`
 
 Latest completed provenance Phase 2 lifecycle-contract slice:
 

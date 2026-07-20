@@ -384,6 +384,76 @@ struct SubsessionProvenanceTests {
     }
 
     @Test
+    func contractTraceQueryReturnsFilteredBoundedLifecycleTelemetry() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let observabilityStore = try ProvenanceObservabilityStore(
+            databaseURL: fixture.observabilityDatabaseURL
+        )
+        let traceQuery: any ProvenanceLifecycleTraceQuerying = observabilityStore
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store,
+            observabilityStore: observabilityStore,
+            awaitObservabilityWrites: true
+        )
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(
+            Self.lifecycleChange(phase: .started, parentSessionID: "codex-parent"),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+        await recorder.record(
+            Self.lifecycleChange(
+                phase: .started,
+                parentSessionID: "other-parent",
+                subsessionID: "subagent-2"
+            ),
+            timestamp: Date(timeIntervalSince1970: 130)
+        )
+        await recorder.record(
+            Self.lifecycleChange(phase: .started, parentSessionID: "codex-parent"),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+
+        let parentResponse = try await traceQuery.lifecycleTraces(ProvenanceLifecycleTraceListRequest(
+            parentSessionID: "codex-parent"
+        ))
+        let returnedRunIDs = Set(parentResponse.runs.map(\.pipelineRunID))
+
+        #expect(parentResponse.schemaVersion == 1)
+        #expect(parentResponse.found)
+        #expect(parentResponse.reason == nil)
+        #expect(parentResponse.runs.count == 2)
+        #expect(parentResponse.runs.allSatisfy { $0.parentSessionID == "codex-parent" })
+        #expect(parentResponse.stages.allSatisfy { returnedRunIDs.contains($0.pipelineRunID) })
+        #expect(parentResponse.identityResolutions.allSatisfy { returnedRunIDs.contains($0.pipelineRunID) })
+        #expect(parentResponse.projectionLineage.allSatisfy { returnedRunIDs.contains($0.pipelineRunID) })
+
+        let failedResponse = try await traceQuery.lifecycleTraces(ProvenanceLifecycleTraceListRequest(
+            status: "failed"
+        ))
+        #expect(failedResponse.runs.count == 1)
+        #expect(failedResponse.runs.first?.errorCount == 1)
+
+        let limitedResponse = try await traceQuery.lifecycleTraces(ProvenanceLifecycleTraceListRequest(
+            limit: 1
+        ))
+        #expect(limitedResponse.runs.count == 1)
+
+        let missingResponse = try await traceQuery.lifecycleTraces(ProvenanceLifecycleTraceListRequest(
+            pipelineRunID: "missing-run"
+        ))
+        #expect(missingResponse.schemaVersion == 1)
+        #expect(!missingResponse.found)
+        #expect(missingResponse.reason == "no_lifecycle_traces")
+        #expect(missingResponse.runs.isEmpty)
+        #expect(missingResponse.stages.isEmpty)
+        #expect(missingResponse.identityResolutions.isEmpty)
+        #expect(missingResponse.projectionLineage.isEmpty)
+    }
+
+    @Test
     func recordsFailedLifecycleIngestionTraceWithoutDuplicatingProvenance() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }

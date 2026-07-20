@@ -943,6 +943,10 @@
 		CE0C00040000000000000001 /* ProvenanceFileExplanationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00040000000000000002 /* ProvenanceFileExplanationRequest.swift */; };
 		CE0C00050000000000000001 /* ProvenanceFileExplanationResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00050000000000000002 /* ProvenanceFileExplanationResponse.swift */; };
 		CE0B00090000000000000001 /* ProvenanceIdentityResolutionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00090000000000000002 /* ProvenanceIdentityResolutionRecord.swift */; };
+		CE0C00130000000000000001 /* ProvenanceLifecycleTraceListRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00130000000000000002 /* ProvenanceLifecycleTraceListRequest.swift */; };
+		CE0C00140000000000000001 /* ProvenanceLifecycleTraceListResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00140000000000000002 /* ProvenanceLifecycleTraceListResponse.swift */; };
+		CE0C00150000000000000001 /* ProvenanceLifecycleTraceQuerying.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00150000000000000002 /* ProvenanceLifecycleTraceQuerying.swift */; };
+		CE0C00160000000000000001 /* ProvenanceObservabilityStore+ProvenanceLifecycleTraceQuerying.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00160000000000000002 /* ProvenanceObservabilityStore+ProvenanceLifecycleTraceQuerying.swift */; };
 		CE0B00060000000000000001 /* ProvenanceObservabilityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00060000000000000002 /* ProvenanceObservabilityStore.swift */; };
 		CE0B00070000000000000001 /* ProvenancePipelineRunRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */; };
 		CE0B00080000000000000001 /* ProvenancePipelineStageExecutionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */; };
@@ -2531,6 +2535,10 @@
 		CE0C00040000000000000002 /* ProvenanceFileExplanationRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceFileExplanationRequest.swift; sourceTree = "<group>"; };
 		CE0C00050000000000000002 /* ProvenanceFileExplanationResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceFileExplanationResponse.swift; sourceTree = "<group>"; };
 		CE0B00090000000000000002 /* ProvenanceIdentityResolutionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceIdentityResolutionRecord.swift; sourceTree = "<group>"; };
+		CE0C00130000000000000002 /* ProvenanceLifecycleTraceListRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceLifecycleTraceListRequest.swift; sourceTree = "<group>"; };
+		CE0C00140000000000000002 /* ProvenanceLifecycleTraceListResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceLifecycleTraceListResponse.swift; sourceTree = "<group>"; };
+		CE0C00150000000000000002 /* ProvenanceLifecycleTraceQuerying.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceLifecycleTraceQuerying.swift; sourceTree = "<group>"; };
+		CE0C00160000000000000002 /* ProvenanceObservabilityStore+ProvenanceLifecycleTraceQuerying.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProvenanceObservabilityStore+ProvenanceLifecycleTraceQuerying.swift"; sourceTree = "<group>"; };
 		CE0B00060000000000000002 /* ProvenanceObservabilityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceObservabilityStore.swift; sourceTree = "<group>"; };
 		CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenancePipelineRunRecord.swift; sourceTree = "<group>"; };
 		CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenancePipelineStageExecutionRecord.swift; sourceTree = "<group>"; };
@@ -4829,7 +4837,11 @@
 			isa = PBXGroup;
 			children = (
 				CE0B00090000000000000002 /* ProvenanceIdentityResolutionRecord.swift */,
+				CE0C00130000000000000002 /* ProvenanceLifecycleTraceListRequest.swift */,
+				CE0C00140000000000000002 /* ProvenanceLifecycleTraceListResponse.swift */,
+				CE0C00150000000000000002 /* ProvenanceLifecycleTraceQuerying.swift */,
 				CE0B00060000000000000002 /* ProvenanceObservabilityStore.swift */,
+				CE0C00160000000000000002 /* ProvenanceObservabilityStore+ProvenanceLifecycleTraceQuerying.swift */,
 				CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */,
 				CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */,
 				CE0B00100000000000000002 /* ProvenanceProjectionLineageRecord.swift */,
@@ -5836,6 +5848,10 @@
 				CE0C00040000000000000001 /* ProvenanceFileExplanationRequest.swift in Sources */,
 				CE0C00050000000000000001 /* ProvenanceFileExplanationResponse.swift in Sources */,
 				CE0B00090000000000000001 /* ProvenanceIdentityResolutionRecord.swift in Sources */,
+				CE0C00130000000000000001 /* ProvenanceLifecycleTraceListRequest.swift in Sources */,
+				CE0C00140000000000000001 /* ProvenanceLifecycleTraceListResponse.swift in Sources */,
+				CE0C00150000000000000001 /* ProvenanceLifecycleTraceQuerying.swift in Sources */,
+				CE0C00160000000000000001 /* ProvenanceObservabilityStore+ProvenanceLifecycleTraceQuerying.swift in Sources */,
 				CE0B00060000000000000001 /* ProvenanceObservabilityStore.swift in Sources */,
 				CE0B00070000000000000001 /* ProvenancePipelineRunRecord.swift in Sources */,
 				CE0B00080000000000000001 /* ProvenancePipelineStageExecutionRecord.swift in Sources */,
