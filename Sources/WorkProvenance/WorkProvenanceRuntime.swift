@@ -5,14 +5,19 @@ import Foundation
 final class WorkProvenanceRuntime {
     private weak var tabManager: TabManager?
     private let observationService: WorkProvenanceObservationService?
+    private let subsessionLifecycleRecorder: WorkProvenanceSubsessionLifecycleRecorder?
     private var directoryObservationTask: Task<Void, Never>?
 
     /// Whether the runtime has a usable provenance store.
     let isEnabled: Bool
 
     /// Creates a provenance runtime.
-    init(observationService: WorkProvenanceObservationService?) {
+    init(
+        observationService: WorkProvenanceObservationService?,
+        subsessionLifecycleRecorder: WorkProvenanceSubsessionLifecycleRecorder? = nil
+    ) {
         self.observationService = observationService
+        self.subsessionLifecycleRecorder = subsessionLifecycleRecorder
         self.isEnabled = observationService != nil
     }
 
@@ -25,10 +30,18 @@ final class WorkProvenanceRuntime {
         let location = WorkProvenanceStorageLocation(homeDirectory: fileManager.homeDirectoryForCurrentUser)
         do {
             let store = try WorkProvenanceStore(databaseURL: location.databaseURL, fileManager: fileManager)
+            let observabilityStore = try? ProvenanceObservabilityStore(
+                databaseURL: location.observabilityDatabaseURL,
+                fileManager: fileManager
+            )
             return WorkProvenanceRuntime(
                 observationService: WorkProvenanceObservationService(
                     store: store,
                     gitInspector: WorkProvenanceGitInspector()
+                ),
+                subsessionLifecycleRecorder: WorkProvenanceSubsessionLifecycleRecorder(
+                    store: store,
+                    observabilityStore: observabilityStore
                 )
             )
         } catch {
@@ -53,6 +66,14 @@ final class WorkProvenanceRuntime {
         let snapshots = workspaces.map(WorkProvenanceWorkspaceSnapshot.init(workspace:))
         Task {
             await observationService.observeWorkspaceSnapshots(snapshots)
+        }
+    }
+
+    /// Persists an observed agent subsession lifecycle change.
+    func recordSubsessionLifecycleChange(_ change: AgentSubsessionLifecycleChange, timestamp: Date) {
+        guard let subsessionLifecycleRecorder else { return }
+        Task {
+            await subsessionLifecycleRecorder.record(change, timestamp: timestamp)
         }
     }
 

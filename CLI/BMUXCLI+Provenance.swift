@@ -19,6 +19,16 @@ extension BMUXCLI {
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
+        case "sessions":
+            try runProvenanceSessions(
+                commandArgs: Array(commandArgs.dropFirst()),
+                jsonOutput: jsonOutput
+            )
+        case "traces":
+            try runProvenanceTraces(
+                commandArgs: Array(commandArgs.dropFirst()),
+                jsonOutput: jsonOutput
+            )
         case "help", "--help", "-h", nil:
             print(provenanceUsage())
         default:
@@ -142,6 +152,98 @@ extension BMUXCLI {
         printProvenanceWorktreeList(list, jsonOutput: jsonOutput)
     }
 
+    private func runProvenanceSessions(commandArgs: [String], jsonOutput: Bool) throws {
+        let commandName = "provenance sessions tree"
+        let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
+        var remaining = remainingAfterDatabase
+        try rejectProvenanceUnknownFlags(remaining, commandName: commandName)
+        guard remaining.first?.lowercased() == "tree" else {
+            throw CLIError(message: String(localized: "cli.provenance.sessions.usage", defaultValue: "Usage: bmux provenance sessions tree <session-id> [--database <path>] [--json]"))
+        }
+        remaining.removeFirst()
+        guard let sessionID = remaining.first else {
+            throw CLIError(message: String(localized: "cli.provenance.sessions.usage", defaultValue: "Usage: bmux provenance sessions tree <session-id> [--database <path>] [--json]"))
+        }
+        remaining.removeFirst()
+        guard remaining.isEmpty else {
+            throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
+        }
+
+        let databaseURL = provenanceDatabaseURL(databasePath: databasePath)
+        guard FileManager.default.fileExists(atPath: databaseURL.path) else {
+            let tree = CLIProvenanceSessionTree(
+                rootSessionID: sessionID,
+                found: false,
+                reason: String(localized: "cli.provenance.reason.noDatabase", defaultValue: "no provenance database exists yet"),
+                sessions: [],
+                relationships: [],
+                externalIdentities: []
+            )
+            printProvenanceSessionTree(tree, jsonOutput: jsonOutput)
+            return
+        }
+
+        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
+        let tree = try reader.sessionTree(rootSessionID: sessionID)
+        printProvenanceSessionTree(tree, jsonOutput: jsonOutput)
+    }
+
+    private func runProvenanceTraces(commandArgs: [String], jsonOutput: Bool) throws {
+        let commandName = "provenance traces lifecycle-ingestion"
+        let (databasePath, remainingAfterDatabase) = parseOption(
+            commandArgs,
+            name: "--observability-database"
+        )
+        let (limitText, remainingAfterLimit) = parseOption(remainingAfterDatabase, name: "--limit")
+        let (pipelineRunID, remainingAfterRun) = parseOption(remainingAfterLimit, name: "--run")
+        let (parentSessionID, remainingAfterParentSession) = parseOption(
+            remainingAfterRun,
+            name: "--parent-session"
+        )
+        let (childSessionID, remainingAfterChildSession) = parseOption(
+            remainingAfterParentSession,
+            name: "--child-session"
+        )
+        let (statusText, remainingAfterStatus) = parseOption(
+            remainingAfterChildSession,
+            name: "--status"
+        )
+        var remaining = remainingAfterStatus
+        try rejectProvenanceUnknownFlags(remaining, commandName: commandName)
+        guard remaining.first?.lowercased() == "lifecycle-ingestion" else {
+            throw CLIError(message: String(localized: "cli.provenance.traces.usage", defaultValue: "Usage: bmux provenance traces lifecycle-ingestion [--observability-database <path>] [--limit <count>] [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]"))
+        }
+        remaining.removeFirst()
+        guard remaining.isEmpty else {
+            throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
+        }
+
+        let limit = try provenanceTraceLimit(limitText, commandName: commandName)
+        let status = try provenanceTraceStatus(statusText, commandName: commandName)
+        let databaseURL = provenanceObservabilityDatabaseURL(databasePath: databasePath)
+        guard FileManager.default.fileExists(atPath: databaseURL.path) else {
+            let list = CLIProvenanceLifecycleTraceList(
+                found: false,
+                reason: String(localized: "cli.provenance.reason.noObservabilityDatabase", defaultValue: "no provenance observability database exists yet"),
+                runs: [],
+                stages: [],
+                identityResolutions: []
+            )
+            printProvenanceLifecycleTraceList(list, jsonOutput: jsonOutput)
+            return
+        }
+
+        let reader = try CLIProvenanceObservabilitySQLiteReader(databaseURL: databaseURL)
+        let list = try reader.lifecycleIngestionTraces(
+            limit: limit,
+            pipelineRunID: provenanceTraceFilterValue(pipelineRunID),
+            parentSessionID: provenanceTraceFilterValue(parentSessionID),
+            childSessionID: provenanceTraceFilterValue(childSessionID),
+            status: status
+        )
+        printProvenanceLifecycleTraceList(list, jsonOutput: jsonOutput)
+    }
+
     private func rejectProvenanceUnknownFlags(_ args: [String], commandName: String) throws {
         if let unknown = args.first(where: { $0.hasPrefix("--") }) {
             throw CLIError(message: String.localizedStringWithFormat(
@@ -179,6 +281,64 @@ extension BMUXCLI {
             .appendingPathComponent("bmux-work-provenance.sqlite", isDirectory: false)
     }
 
+    private func provenanceObservabilityDatabaseURL(databasePath: String?) -> URL {
+        if let databasePath = databasePath?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !databasePath.isEmpty {
+            return URL(fileURLWithPath: NSString(string: databasePath).expandingTildeInPath)
+        }
+        return FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".local", isDirectory: true)
+            .appendingPathComponent("state", isDirectory: true)
+            .appendingPathComponent("bmux", isDirectory: true)
+            .appendingPathComponent("work-provenance", isDirectory: true)
+            .appendingPathComponent("ProvenanceObservability.sqlite", isDirectory: false)
+    }
+
+    private func provenanceTraceLimit(_ value: String?, commandName: String) throws -> Int {
+        guard let value else { return 20 }
+        guard let parsed = Int(value), parsed > 0 else {
+            throw CLIError(message: String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.traces.error.invalidLimit",
+                    defaultValue: "%@: --limit must be a positive integer"
+                ),
+                commandName
+            ))
+        }
+        return min(parsed, 100)
+    }
+
+    private func provenanceTraceStatus(_ value: String?, commandName: String) throws -> String? {
+        guard let value = provenanceTraceFilterValue(value) else { return nil }
+        let normalized = value.lowercased()
+        let allowedStatuses = [
+            "running",
+            "succeeded",
+            "partially_succeeded",
+            "failed",
+            "cancelled",
+            "degraded",
+        ]
+        guard allowedStatuses.contains(normalized) else {
+            throw CLIError(message: String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.traces.error.invalidStatus",
+                    defaultValue: "%@: --status must be one of running, succeeded, partially_succeeded, failed, cancelled, or degraded"
+                ),
+                commandName
+            ))
+        }
+        return normalized
+    }
+
+    private func provenanceTraceFilterValue(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
+    }
+
     private func printProvenanceExplanation(_ explanation: CLIProvenanceExplanation, jsonOutput: Bool) {
         if jsonOutput {
             print(jsonString(explanation.payload))
@@ -201,6 +361,25 @@ extension BMUXCLI {
             return
         }
         print(renderProvenanceWorktreeList(list))
+    }
+
+    private func printProvenanceSessionTree(_ tree: CLIProvenanceSessionTree, jsonOutput: Bool) {
+        if jsonOutput {
+            print(jsonString(tree.payload))
+            return
+        }
+        print(renderProvenanceSessionTree(tree))
+    }
+
+    private func printProvenanceLifecycleTraceList(
+        _ list: CLIProvenanceLifecycleTraceList,
+        jsonOutput: Bool
+    ) {
+        if jsonOutput {
+            print(jsonString(list.payload))
+            return
+        }
+        print(renderProvenanceLifecycleTraceList(list))
     }
 
     private func renderProvenanceExplanation(_ explanation: CLIProvenanceExplanation) -> String {
@@ -422,6 +601,76 @@ extension BMUXCLI {
         return lines.joined(separator: "\n")
     }
 
+    private func renderProvenanceSessionTree(_ tree: CLIProvenanceSessionTree) -> String {
+        guard tree.found else {
+            return [
+                String.localizedStringWithFormat(
+                    String(localized: "cli.provenance.sessions.output.notFound", defaultValue: "No provenance session tree found for %@"),
+                    tree.rootSessionID
+                ),
+                tree.reason.map {
+                    String.localizedStringWithFormat(
+                        String(localized: "cli.provenance.output.reason", defaultValue: "Reason: %@"),
+                        $0
+                    )
+                }
+            ].compactMap(\.self).joined(separator: "\n")
+        }
+
+        var lines = [
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.sessions.output.header", defaultValue: "Session tree for %@"),
+                tree.rootSessionID
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.sessions.output.summary", defaultValue: "Sessions: %d · relationships: %d · external identities: %d"),
+                tree.sessions.count,
+                tree.relationships.count,
+                tree.externalIdentities.count
+            )
+        ]
+        for row in tree.sessions.prefix(25) {
+            lines.append(renderProvenanceSessionTreeRow(row))
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private func renderProvenanceLifecycleTraceList(_ list: CLIProvenanceLifecycleTraceList) -> String {
+        guard list.found else {
+            return [
+                String(localized: "cli.provenance.traces.output.empty", defaultValue: "No lifecycle ingestion traces recorded."),
+                list.reason.map {
+                    String.localizedStringWithFormat(
+                        String(localized: "cli.provenance.output.reason", defaultValue: "Reason: %@"),
+                        $0
+                    )
+                }
+            ].compactMap(\.self).joined(separator: "\n")
+        }
+
+        var lines = [
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.traces.output.header", defaultValue: "Lifecycle ingestion traces: %d"),
+                list.runs.count
+            )
+        ]
+        let stagesByRun = Dictionary(grouping: list.stages) { row in
+            row["pipeline_run_id"] as? String ?? ""
+        }
+        for row in list.runs.prefix(20) {
+            let pipelineRunID = row["pipeline_run_id"] as? String ?? "?"
+            let status = row["status"] as? String ?? "?"
+            let stageCount = stagesByRun[pipelineRunID]?.count ?? 0
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.traces.output.row", defaultValue: "  %@ · %@ · stages: %d"),
+                pipelineRunID,
+                status,
+                stageCount
+            ))
+        }
+        return lines.joined(separator: "\n")
+    }
+
     private func appendProvenanceRows(
         _ rows: [[String: AnyHashable]],
         title: String,
@@ -446,6 +695,24 @@ extension BMUXCLI {
         }.joined(separator: " · ")
         return String.localizedStringWithFormat(
             String(localized: "cli.provenance.context.output.sessionRow", defaultValue: "  %@"),
+            identity
+        )
+    }
+
+    private func renderProvenanceSessionTreeRow(_ row: [String: AnyHashable]) -> String {
+        let depth = row["tree_depth"] as? Int ?? 0
+        let indent = String(repeating: "  ", count: min(max(depth, 0), 8))
+        let identity = [
+            row["id"] as? String,
+            row["agent_kind"] as? String,
+            row["status"] as? String
+        ].compactMap { value in
+            guard let value, !value.isEmpty else { return nil }
+            return value
+        }.joined(separator: " · ")
+        return String.localizedStringWithFormat(
+            String(localized: "cli.provenance.sessions.output.sessionRow", defaultValue: "%@%@"),
+            indent,
             identity
         )
     }
@@ -488,6 +755,8 @@ extension BMUXCLI {
               bmux provenance explain <path> [--json]
               bmux provenance context current [--json]
               bmux provenance worktrees list [--json]
+              bmux provenance sessions tree <session-id> [--json]
+              bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]
 
             Inspect bmux work provenance without requiring a live app socket.
             """

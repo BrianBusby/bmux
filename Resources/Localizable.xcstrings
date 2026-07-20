@@ -231161,6 +231161,40 @@
         }
       }
     },
+    "cli.provenance.error.openObservabilityDatabaseFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "failed to open provenance observability database: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance observability データベースを開けませんでした: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.error.sqliteOpenFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "open failed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開けませんでした"
+          }
+        }
+      }
+    },
     "cli.provenance.error.pathOutsideWorktree": {
       "extractionState": "manual",
       "localizations": {
@@ -231535,6 +231569,23 @@
         }
       }
     },
+    "cli.provenance.reason.noSession": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no provenance has been recorded for this session"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このセッションの provenance は記録されていません"
+          }
+        }
+      }
+    },
     "cli.provenance.reason.noDatabase": {
       "extractionState": "manual",
       "localizations": {
@@ -231548,6 +231599,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "provenance データベースはまだ存在しません"
+          }
+        }
+      }
+    },
+    "cli.provenance.reason.noLifecycleTraces": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no lifecycle ingestion traces have been recorded"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライフサイクル取り込みトレースは記録されていません"
+          }
+        }
+      }
+    },
+    "cli.provenance.reason.noObservabilityDatabase": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no provenance observability database exists yet"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance observability データベースはまだ存在しません"
           }
         }
       }
@@ -231592,13 +231677,200 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n\nInspect bmux work provenance without requiring a live app socket."
+            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n\nInspect bmux work provenance without requiring a live app socket."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
+            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
+          }
+        }
+      }
+    },
+    "cli.provenance.sessions.output.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session tree for %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ のセッションツリー"
+          }
+        }
+      }
+    },
+    "cli.provenance.sessions.output.notFound": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No provenance session tree found for %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の provenance セッションツリーは見つかりませんでした"
+          }
+        }
+      }
+    },
+    "cli.provenance.sessions.output.sessionRow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@%@"
+          }
+        }
+      }
+    },
+    "cli.provenance.sessions.output.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions: %d · relationships: %d · external identities: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッション: %d · 関係: %d · 外部 ID: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.sessions.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux provenance sessions tree <session-id> [--database <path>] [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法: bmux provenance sessions tree <session-id> [--database <path>] [--json]"
+          }
+        }
+      }
+    },
+    "cli.provenance.traces.error.invalidLimit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: --limit must be a positive integer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: --limit には正の整数が必要です"
+          }
+        }
+      }
+    },
+    "cli.provenance.traces.error.invalidStatus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: --status must be one of running, succeeded, partially_succeeded, failed, cancelled, or degraded"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: --status は running、succeeded、partially_succeeded、failed、cancelled、degraded のいずれかである必要があります"
+          }
+        }
+      }
+    },
+    "cli.provenance.traces.output.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No lifecycle ingestion traces recorded."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライフサイクル取り込みトレースは記録されていません。"
+          }
+        }
+      }
+    },
+    "cli.provenance.traces.output.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lifecycle ingestion traces: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライフサイクル取り込みトレース: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.traces.output.row": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ · %@ · stages: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ · %@ · ステージ: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.traces.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux provenance traces lifecycle-ingestion [--observability-database <path>] [--limit <count>] [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法: bmux provenance traces lifecycle-ingestion [--observability-database <path>] [--limit <count>] [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]"
           }
         }
       }

@@ -145,6 +145,22 @@ final class CLIProvenanceSQLiteReader {
         return CLIProvenanceWorktreeList(worktrees: rows)
     }
 
+    func sessionTree(rootSessionID: String) throws -> CLIProvenanceSessionTree {
+        let sessions = try sessionTreeSessionRows(rootSessionID: rootSessionID, limit: 100)
+        let relationships = try sessionTreeRelationshipRows(rootSessionID: rootSessionID, limit: 100)
+        let identities = try sessionTreeExternalIdentityRows(rootSessionID: rootSessionID, limit: 200)
+        return CLIProvenanceSessionTree(
+            rootSessionID: rootSessionID,
+            found: !sessions.isEmpty || !relationships.isEmpty,
+            reason: sessions.isEmpty && relationships.isEmpty
+                ? String(localized: "cli.provenance.reason.noSession", defaultValue: "no provenance has been recorded for this session")
+                : nil,
+            sessions: sessions,
+            relationships: relationships,
+            externalIdentities: identities
+        )
+    }
+
     private func worktree(path: String) throws -> CLIProvenanceWorktreeRow? {
         let statement = try prepare(
             """
@@ -186,6 +202,145 @@ final class CLIProvenanceSQLiteReader {
             repositoryPath: string(statement, 10),
             remoteSlug: string(statement, 11)
         )
+    }
+
+    private func sessionTreeSessionRows(rootSessionID: String, limit: Int) throws -> [[String: AnyHashable]] {
+        let statement = try prepare(
+            """
+            WITH RECURSIVE tree(session_id, tree_depth, sort_path, visited) AS (
+                SELECT ?, 0, printf('%08d:%s', 0, ?), '/' || ? || '/'
+                UNION ALL
+                SELECT sr.session_id,
+                       sr.depth,
+                       tree.sort_path || '/' || printf('%08d:%s', sr.depth, sr.session_id),
+                       tree.visited || sr.session_id || '/'
+                FROM session_relationships sr
+                JOIN tree ON sr.parent_session_id = tree.session_id
+                WHERE tree.tree_depth < 50
+                  AND instr(tree.visited, '/' || sr.session_id || '/') = 0
+            )
+            SELECT s.id, s.agent_kind, s.workspace_id, s.surface_id,
+                   s.worktree_id, s.cwd, s.status, s.started_at, s.updated_at,
+                   tree.tree_depth
+            FROM tree
+            JOIN sessions s ON s.id = tree.session_id
+            ORDER BY tree.sort_path
+            LIMIT ?
+            """
+        )
+        defer { sqlite3_finalize(statement) }
+        try bind(rootSessionID, to: statement, at: 1)
+        try bind(rootSessionID, to: statement, at: 2)
+        try bind(rootSessionID, to: statement, at: 3)
+        try bind(limit, to: statement, at: 4)
+        var rows: [[String: AnyHashable]] = []
+        while sqlite3_step(statement) == SQLITE_ROW {
+            rows.append(compactPayload([
+                "id": string(statement, 0),
+                "agent_kind": string(statement, 1),
+                "workspace_id": string(statement, 2),
+                "surface_id": string(statement, 3),
+                "worktree_id": string(statement, 4),
+                "cwd": string(statement, 5),
+                "status": string(statement, 6),
+                "started_at": double(statement, 7),
+                "updated_at": double(statement, 8),
+                "tree_depth": int(statement, 9)
+            ]))
+        }
+        return rows
+    }
+
+    private func sessionTreeRelationshipRows(rootSessionID: String, limit: Int) throws -> [[String: AnyHashable]] {
+        let statement = try prepare(
+            """
+            WITH RECURSIVE tree(session_id, tree_depth, sort_path, visited) AS (
+                SELECT ?, 0, printf('%08d:%s', 0, ?), '/' || ? || '/'
+                UNION ALL
+                SELECT sr.session_id,
+                       sr.depth,
+                       tree.sort_path || '/' || printf('%08d:%s', sr.depth, sr.session_id),
+                       tree.visited || sr.session_id || '/'
+                FROM session_relationships sr
+                JOIN tree ON sr.parent_session_id = tree.session_id
+                WHERE tree.tree_depth < 50
+                  AND instr(tree.visited, '/' || sr.session_id || '/') = 0
+            )
+            SELECT sr.session_id, sr.parent_session_id, sr.root_session_id,
+                   sr.inbound_delegation_id, sr.depth, sr.source, sr.confidence,
+                   sr.created_at, sr.updated_at
+            FROM tree
+            JOIN session_relationships sr ON sr.session_id = tree.session_id
+            WHERE tree.tree_depth > 0
+            ORDER BY tree.sort_path
+            LIMIT ?
+            """
+        )
+        defer { sqlite3_finalize(statement) }
+        try bind(rootSessionID, to: statement, at: 1)
+        try bind(rootSessionID, to: statement, at: 2)
+        try bind(rootSessionID, to: statement, at: 3)
+        try bind(limit, to: statement, at: 4)
+        var rows: [[String: AnyHashable]] = []
+        while sqlite3_step(statement) == SQLITE_ROW {
+            rows.append(compactPayload([
+                "session_id": string(statement, 0),
+                "parent_session_id": string(statement, 1),
+                "root_session_id": string(statement, 2),
+                "inbound_delegation_id": string(statement, 3),
+                "depth": int(statement, 4),
+                "source": string(statement, 5),
+                "confidence": string(statement, 6),
+                "created_at": double(statement, 7),
+                "updated_at": double(statement, 8)
+            ]))
+        }
+        return rows
+    }
+
+    private func sessionTreeExternalIdentityRows(rootSessionID: String, limit: Int) throws -> [[String: AnyHashable]] {
+        let statement = try prepare(
+            """
+            WITH RECURSIVE tree(session_id, tree_depth, sort_path, visited) AS (
+                SELECT ?, 0, printf('%08d:%s', 0, ?), '/' || ? || '/'
+                UNION ALL
+                SELECT sr.session_id,
+                       sr.depth,
+                       tree.sort_path || '/' || printf('%08d:%s', sr.depth, sr.session_id),
+                       tree.visited || sr.session_id || '/'
+                FROM session_relationships sr
+                JOIN tree ON sr.parent_session_id = tree.session_id
+                WHERE tree.tree_depth < 50
+                  AND instr(tree.visited, '/' || sr.session_id || '/') = 0
+            )
+            SELECT ei.id, ei.session_id, ei.system, ei.kind, ei.external_id,
+                   ei.source, ei.confidence, ei.created_at, ei.updated_at
+            FROM tree
+            JOIN session_external_identities ei ON ei.session_id = tree.session_id
+            ORDER BY tree.sort_path, ei.system, ei.kind, ei.external_id
+            LIMIT ?
+            """
+        )
+        defer { sqlite3_finalize(statement) }
+        try bind(rootSessionID, to: statement, at: 1)
+        try bind(rootSessionID, to: statement, at: 2)
+        try bind(rootSessionID, to: statement, at: 3)
+        try bind(limit, to: statement, at: 4)
+        var rows: [[String: AnyHashable]] = []
+        while sqlite3_step(statement) == SQLITE_ROW {
+            rows.append(compactPayload([
+                "id": string(statement, 0),
+                "session_id": string(statement, 1),
+                "system": string(statement, 2),
+                "kind": string(statement, 3),
+                "external_id": string(statement, 4),
+                "source": string(statement, 5),
+                "confidence": string(statement, 6),
+                "created_at": double(statement, 7),
+                "updated_at": double(statement, 8)
+            ]))
+        }
+        return rows
     }
 
     private func fileChangeRows(

@@ -1,6 +1,14 @@
 # Bmux Context Efficiency: Milestones
 
-Status: implementation sequence reconciled on 2026-07-18 after merging the subsession/delegation integration plan and the agent retrieval/knowledge-projection plan into the original context-efficiency roadmap.
+Status: implementation sequence reconciled on 2026-07-19 after merging the subsession/delegation integration plan, the agent retrieval/knowledge-projection plan, and the provenance observability integration plan into the original context-efficiency roadmap.
+
+Cross-cutting plans:
+
+- `docs/context-efficiency/subsession-delegation-integration-plan.md`
+- `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
+- `docs/context-efficiency/provenance-observability-integration-plan.md`
+
+Observability is not a standalone late milestone. Each provenance milestone should add the relevant traceability, quality, feedback, evaluation, or shadow-comparison requirement while preserving store ownership: `WorkProvenance` is authoritative engineering history, `BmuxContextEfficiency` is read-only imported telemetry/evidence, and `ProvenanceObservability` is future operational and quality telemetry.
 
 ## Milestone 1: Discovery and Schemas
 
@@ -150,6 +158,9 @@ Implemented slices:
 - Work-item reference fact slices added bounded reference records.
 - Command-category count slices added count-only thread and day summary aggregates.
 - `6279c8abd Add context efficiency repeated command facts` added repeated command, source-search, and file-reading facts.
+- Phase B subsession lifecycle slices added WorkProvenance session relationship/external identity projections, then wired `AgentSubsessionLifecycleChange` into persisted `subsession_started` / `subsession_stopped` events through the existing registry lifecycle path.
+- A working tree Phase B query-diagnostics slice adds bounded `bmux provenance sessions tree <session-id> --json` output over persisted session relationship and external identity projections; `bmux-cli` builds and the standalone Python CLI regression passes against the built binary.
+- A working tree observability query-polish slice adds bounded filters to `bmux provenance traces lifecycle-ingestion`: `--run`, `--parent-session`, `--child-session`, and `--status`, plus JSON counts for resolved, unresolved, and conflicted identity-resolution attempts. This reads existing O1/O2 trace rows only and adds no new capture, schema, policy, or O3+ observability behavior.
 
 Stop condition:
 
@@ -159,9 +170,22 @@ Subsession/delegation integration:
 
 - `docs/context-efficiency/subsession-delegation-integration-plan.md` is authoritative for this subtrack.
 - Phase A is complete in `docs/context-efficiency/subsession-delegation-phase-a-report.md`.
-- Phase B is the next implementation slice: read-only subsession lifecycle persistence in `WorkProvenance`.
+- Phase B store foundation is implemented at `b875eb837 Add provenance session relationship projections`.
+- Phase B lifecycle adapter/runtime wiring is implemented; bounded read-only session-tree diagnostics/query coverage is implemented and validated against a rebuilt `bmux-cli`.
 - Use `AgentSubsessionLifecycleChange` as the first authoritative lifecycle source.
 - `BmuxContextEfficiency` remains read-only telemetry; delegation semantics belong in `WorkProvenance`.
+
+Observability integration:
+
+- Phase O0 architecture investigation is complete in `docs/context-efficiency/provenance-observability-phase-o0-report.md`.
+- The first O1 implementation slice traces only `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update`.
+- The working tree O1 slice adds a separate `ProvenanceObservability.sqlite` store with pipeline run and stage execution records for that lifecycle-ingestion path only.
+- O1 observability covers lifecycle ingestion traces, stage duration, bounded failures, and correlation IDs only.
+- `6ceb48ccafc698f1ee16984455f26e18c81efe7a` implements the first O2 identity-resolution observability slice for the lifecycle-ingestion path only.
+- O2 lifecycle identity records explain bounded native/fallback resolution inputs, selected identity kind/value category, hashed input identity value, confidence, unresolved/fallback state, conflict reason, and correlation to the O1 pipeline run.
+- Lifecycle-ingestion trace CLI/query filters are implemented for run ID, parent session, child session, and status; this is read-only query polish over existing trace rows, not a new observability phase.
+- Later O2 attribution explainability and O3+ projection/retrieval/feedback/evaluation/UI work remain deferred.
+- Observability writes must not block lifecycle event append or projection updates.
 
 ## Milestone 4: Efficiency Profiler
 
@@ -184,6 +208,12 @@ Rules:
 - High token usage alone must not label a thread stuck.
 - Reports show measurements and conditions, not opaque scores.
 
+Observability integration:
+
+- Add telemetry quality and import observability for parser errors, import lag, skipped/dropped events, duplicate suppression, cursor progress, degraded imports, and database lock duration.
+- Keep coverage measurements separate from correctness measurements.
+- Version profiler signals and report which conditions fired.
+
 ## Milestone 5: Project Progress, Delegation, and Semantic Provenance
 
 Goal:
@@ -202,6 +232,12 @@ Expected work:
 Risk:
 
 - Model-derived summaries can be useful but must remain marked inferred.
+
+Observability integration:
+
+- Add identity and attribution explainability for external thread/session links, child-parent links, command/session links, file/contribution links, validation/contribution links, and commit/contribution links.
+- Add derivation records for semantic records, including evidence references, rules applied, generator versions, confidence components, and input/output hashes.
+- Support explicit feedback and corrections without silently rewriting authoritative provenance.
 
 ## Milestone 5.5: Agent Retrieval and Knowledge Projection
 
@@ -231,6 +267,12 @@ Rules:
 - Do not start context-package generation before semantic records, edges, and lexical retrieval are proven.
 - Do not add UI, automatic prompt injection, autonomous orchestration, or assisted handoff behavior in this milestone.
 
+Observability integration:
+
+- Add projection-run, derivation, invalidation, retrieval-run, and retrieval-candidate traces.
+- Retrieval traces must explain selected and omitted records with ranking components, freshness/supersession/confidence filtering, token-budget omissions, and source references.
+- Evaluation fixtures must measure required-record recall, irrelevant/misleading/stale/superseded leakage, token-budget compliance, source-reference coverage, determinism, and latency.
+
 ## Milestone 6: Coordination UI
 
 Goal:
@@ -248,6 +290,12 @@ Rules:
 
 - UI warnings must show underlying measurements.
 - No automatic interruption.
+
+Observability integration:
+
+- Add UI only after CLI/evaluation quality exists.
+- Initial views should show pipeline health, trace exploration, and quality metrics separately for coverage, accuracy, calibration, freshness, retrieval quality, feedback, shadow comparisons, and evaluation regressions.
+- Do not present a single opaque provenance quality score as the primary result.
 
 ## Milestone 7: Shadow Lifecycle Engine
 
@@ -268,6 +316,12 @@ Rules:
 - No automatic thread kill.
 - No recommendation without an explanation.
 
+Observability integration:
+
+- Add active-versus-candidate shadow comparisons for meaningful algorithm changes.
+- Begin with one subsystem, preferably file attribution or retrieval ranking.
+- Promotion criteria must be explicit and based on precision, recall, unresolved rate, calibration, fixture regressions, and reviewed disagreements where applicable.
+
 ## Milestone 8: Assisted Handoffs and Context Packages
 
 Goal:
@@ -287,6 +341,12 @@ Rules:
 
 - User approves transition.
 - Raw artifacts remain referenced and recoverable.
+
+Observability integration:
+
+- Add context-package consumption records, supplied-record references, explicit and inferred usage signals, repeated-search detection, missing-context requests, parent feedback, and associated downstream outcome correlations.
+- Do not report weak inference as confirmed usage.
+- Do not claim causal productivity improvements without controlled comparison.
 
 ## Milestone 9: Output Reduction Experiment
 

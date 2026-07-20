@@ -26,6 +26,7 @@ final class AgentChatTranscriptService {
     private var activeSubsessionWorkspaces: [String: ActiveSubsessionWorkspace] = [:]
     private let hasEventSubscribers: @MainActor () -> Bool
     private let emitEventPayload: @MainActor ([String: Any]) -> Void
+    private var recordSubsessionLifecycle: @MainActor (AgentSubsessionLifecycleChange, Date) -> Void
     private let now: () -> Date
     /// Drives the live agent-prose streaming preview.
     private var proseStreamer: AgentChatProseStreamer!
@@ -65,6 +66,7 @@ final class AgentChatTranscriptService {
         emitEventPayload: @escaping @MainActor ([String: Any]) -> Void = { payload in
             MobileHostService.emitEvent(topic: AgentChatTranscriptService.eventTopic, payload: payload)
         },
+        recordSubsessionLifecycle: @escaping @MainActor (AgentSubsessionLifecycleChange, Date) -> Void = { _, _ in },
         now: @escaping () -> Date = { Date() }
     ) {
         self.registry = registry
@@ -73,6 +75,7 @@ final class AgentChatTranscriptService {
         self.tokenOptimizationModeProvider = tokenOptimizationModeProvider
         self.hasEventSubscribers = hasEventSubscribers
         self.emitEventPayload = emitEventPayload
+        self.recordSubsessionLifecycle = recordSubsessionLifecycle
         self.now = now
         registry.onRecordChanged = { [weak self] record, previous in
             self?.handleRecordChange(record, previous: previous)
@@ -172,6 +175,13 @@ final class AgentChatTranscriptService {
         // off and return. Live hook events also populate the registry, and the
         // seed converges within milliseconds.
         Task { [weak self] in await self?.registry.seedFromHookStores() }
+    }
+
+    /// Routes subsession lifecycle changes into the provenance runtime.
+    func recordSubsessionLifecycleChanges(with runtime: WorkProvenanceRuntime) {
+        recordSubsessionLifecycle = { change, timestamp in
+            runtime.recordSubsessionLifecycleChange(change, timestamp: timestamp)
+        }
     }
 
     /// Ingests one hook event (called from the socket dispatch path).
@@ -524,6 +534,7 @@ final class AgentChatTranscriptService {
     }
 
     private func handleSubsessionLifecycleChange(_ change: AgentSubsessionLifecycleChange) {
+        recordSubsessionLifecycle(change, now())
         switch change.phase {
         case .started:
             showSubsessionWorkspace(change)

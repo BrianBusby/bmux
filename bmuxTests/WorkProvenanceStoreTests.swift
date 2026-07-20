@@ -95,6 +95,71 @@ struct WorkProvenanceStoreTests {
         #expect(events.map(\.id) == ["observed-2"])
     }
 
+    @Test
+    func decodesStoredPayloadsWithoutSessionRelationshipKeys() throws {
+        let data = Data(
+            """
+            {
+              "session": {
+                "id": "legacy-session",
+                "agentKind": "codex",
+                "status": "active",
+                "updatedAt": 100
+              }
+            }
+            """.utf8
+        )
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .secondsSince1970
+
+        let payload = try decoder.decode(WorkProvenanceEventPayload.self, from: data)
+
+        #expect(payload.session?.id == "legacy-session")
+        #expect(payload.externalIdentities.isEmpty)
+        #expect(payload.fileChanges.isEmpty)
+        #expect(payload.sessionRelationship == nil)
+    }
+
+    @Test
+    func persistsSessionRelationshipsAndExternalIdentitiesAcrossReplay() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+
+        try await store.append(Self.parentSessionEvent())
+        try await store.append(Self.childSubsessionEvent(id: "child-start-1", status: "active", timestamp: 120))
+        try await store.append(Self.childSubsessionEvent(id: "child-start-replay", status: "active", timestamp: 121))
+        try await store.append(Self.childSubsessionEvent(id: "child-stop-1", status: "completed", timestamp: 140))
+
+        let parent = try await store.parentSession(for: "codex-child")
+        let children = try await store.childSessions(for: "codex-parent")
+        let identities = try await store.externalIdentities(sessionID: "codex-child")
+        let tree = try await store.sessionTree(rootSessionID: "codex-parent")
+
+        #expect(parent?.parentSessionID == "codex-parent")
+        #expect(parent?.rootSessionID == "codex-parent")
+        #expect(parent?.depth == 1)
+        #expect(parent?.confidence == .high)
+        #expect(children.map(\.sessionID) == ["codex-child"])
+        #expect(identities.map(\.externalID) == ["subagent-1"])
+        #expect(identities.first?.system == "codex")
+        #expect(identities.first?.kind == "subsession")
+        #expect(tree.sessions.map(\.id) == ["codex-parent", "codex-child"])
+        #expect(tree.sessions.last?.status == "completed")
+        #expect(tree.relationships.map(\.sessionID) == ["codex-child"])
+
+        try await store.rebuildProjections()
+
+        let replayedChildren = try await store.childSessions(for: "codex-parent")
+        let replayedIdentities = try await store.externalIdentities(sessionID: "codex-child")
+        let replayedTree = try await store.sessionTree(rootSessionID: "codex-parent")
+
+        #expect(replayedChildren.map(\.sessionID) == ["codex-child"])
+        #expect(replayedIdentities.map(\.externalID) == ["subagent-1"])
+        #expect(replayedTree.sessions.map(\.id) == ["codex-parent", "codex-child"])
+        #expect(replayedTree.sessions.last?.status == "completed")
+    }
+
     private static func attributedEvent() -> WorkProvenanceEvent {
         let now = Date(timeIntervalSince1970: 100)
         let repository = WorkProvenanceRepositoryRecord(
@@ -128,6 +193,81 @@ struct WorkProvenanceStoreTests {
             session: session,
             workItem: workItem,
             contribution: contribution
+        )
+    }
+
+    private static func parentSessionEvent() -> WorkProvenanceEvent {
+        let now = Date(timeIntervalSince1970: 100)
+        let session = WorkProvenanceSessionRecord(
+            id: "codex-parent",
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-1",
+            cwd: "/repo",
+            status: "active",
+            startedAt: now,
+            updatedAt: now
+        )
+        return WorkProvenanceEvent(
+            id: "parent-session",
+            eventType: .sessionObserved,
+            timestamp: now,
+            sessionID: session.id,
+            source: .observed,
+            confidence: .high,
+            payload: WorkProvenanceEventPayload(session: session)
+        )
+    }
+
+    private static func childSubsessionEvent(
+        id: String,
+        status: String,
+        timestamp: TimeInterval
+    ) -> WorkProvenanceEvent {
+        let now = Date(timeIntervalSince1970: timestamp)
+        let session = WorkProvenanceSessionRecord(
+            id: "codex-child",
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-2",
+            cwd: "/repo",
+            status: status,
+            startedAt: Date(timeIntervalSince1970: 120),
+            updatedAt: now
+        )
+        let relationship = WorkProvenanceSessionRelationshipRecord(
+            sessionID: "codex-child",
+            parentSessionID: "codex-parent",
+            rootSessionID: "codex-parent",
+            depth: 1,
+            source: .observed,
+            confidence: .high,
+            createdAt: Date(timeIntervalSince1970: 120),
+            updatedAt: now
+        )
+        let identity = WorkProvenanceExternalIdentityRecord(
+            id: "identity-codex-subagent-1",
+            sessionID: "codex-child",
+            system: "codex",
+            kind: "subsession",
+            externalID: "subagent-1",
+            source: .observed,
+            confidence: .high,
+            createdAt: Date(timeIntervalSince1970: 120),
+            updatedAt: now
+        )
+        return WorkProvenanceEvent(
+            id: id,
+            eventType: status == "completed" ? .subsessionStopped : .subsessionStarted,
+            timestamp: now,
+            sessionID: session.id,
+            source: .observed,
+            confidence: .high,
+            payload: WorkProvenanceEventPayload(
+                session: session,
+                sessionRelationship: relationship,
+                externalIdentities: [identity]
+            )
         )
     }
 

@@ -237,7 +237,8 @@ struct bmuxApp: App {
             notificationStore: notificationStore,
             sidebarState: sidebarState,
             settingsRuntime: settingsRuntime,
-            auth: authComposition
+            auth: authComposition,
+            workProvenanceRuntime: workProvenanceRuntime
         )
         StartupBreadcrumbLog.append("app.init.delegate.configured")
     }
