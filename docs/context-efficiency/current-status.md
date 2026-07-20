@@ -139,7 +139,8 @@ Latest completed observability planning slice:
 
 Latest completed observability implementation slice:
 
-- Working tree slice on 2026-07-20 adds bounded read-only filters to `bmux provenance traces lifecycle-ingestion` and to `ProvenanceObservabilityStore.lifecycleIngestionRuns(...)`.
+- `4ff2e661a Add lifecycle trace filters`
+- This 2026-07-20 slice adds bounded read-only filters to `bmux provenance traces lifecycle-ingestion` and to `ProvenanceObservabilityStore.lifecycleIngestionRuns(...)`.
 - New CLI filters: `--run <pipeline-run-id>`, `--parent-session <session-id>`, `--child-session <session-id>`, and `--status <status>`, all still capped by `--limit`.
 - The trace JSON summary now includes `resolved_identity_resolution_count`, `unresolved_identity_resolution_count`, and `conflicted_identity_resolution_count` in addition to run/stage/identity counts.
 - The Python CLI fixture now includes two lifecycle parents so filter regressions prove unrelated lifecycle traces are excluded, not only non-lifecycle rows.
