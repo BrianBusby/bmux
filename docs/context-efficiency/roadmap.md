@@ -86,6 +86,14 @@ Thresholds, scoring functions, classifiers, schemas, and handoff formats must ha
 Do not make the architecture Codex-specific when avoidable
 Codex is the first supported agent.
 Keep the event and lifecycle model extensible enough to support other terminal-based agents later.
+Context Assembly
+Project knowledge should grow continuously.
+Agent context should not.
+Bmux should organize knowledge hierarchically and retrieve only the minimum evidence and design context necessary for the current task.
+Context is assembled dynamically rather than being statically defined.
+Each piece of context included in an agent session should have a justifiable reason for being present.
+Bmux should prefer facts over summaries, evidence over assumptions, references over duplication, and retrieval over preloading.
+Increasing project knowledge should improve agent effectiveness without requiring larger working contexts.
 Desired system architecture
 
 Build toward these cooperating subsystems:

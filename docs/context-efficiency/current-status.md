@@ -34,6 +34,8 @@ Agent retrieval and knowledge projection has been merged as a Milestone 5.5 trac
 
 Retrieval must build on reliable lifecycle capture, session/delegation identity, and semantic provenance. Do not start retrieval implementation before Phase R0 investigation and do not let retrieval create parallel stores, task models, child-session records, or raw-evidence copies.
 
+The roadmap now includes Context Assembly as an architectural principle: project knowledge should grow continuously while agent context stays bounded. Future provenance, knowledge projection, retrieval, context-package generation, and project organization work should prefer facts over summaries, evidence over assumptions, references over duplication, and retrieval over preloading. Do not implement anything solely because of this principle; use it to evaluate natural design choices and explain why each context item is included.
+
 Provenance observability has been merged as a cross-cutting roadmap track with its own authoritative plan:
 
 - `docs/context-efficiency/provenance-observability-integration-plan.md`

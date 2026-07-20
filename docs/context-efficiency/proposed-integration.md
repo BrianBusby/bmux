@@ -10,6 +10,7 @@ Status: proposed integration map after Phase 0 discovery. This is not an impleme
 - Reuse existing identity and storage seams. Do not create a parallel session/workspace model when bmux already has one.
 - Do not put large parsing or disk writes on UI, typing, PTY, or Ghostty hot paths.
 - Version every parser, schema, policy, and report format from the beginning.
+- Let project knowledge grow without growing default agent context. Future context should be assembled dynamically from hierarchical knowledge and evidence references, with a task-specific reason for each included item.
 
 ## Proposed Layering
 
@@ -31,6 +32,9 @@ App integration
 
 CLI integration
   bmux context-efficiency or evolved bmux codex-token-audit commands.
+
+Future context assembly
+  Retrieval and context-package APIs that select bounded evidence, facts, and design context by repository, worktree, subsystem, file, work item, session, decision, and source reference.
 ```
 
 Packaging decision:

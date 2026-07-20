@@ -20,6 +20,19 @@ The retrieval layer must be derived, rebuildable, evidence-linked, freshness-awa
 
 Retrieval must also be observable. A future retrieval result should explain why records were selected or omitted, which versions produced ranking and token budgeting, which evidence supports each selected record, and whether supplied context was later used, corrected, or contradicted. Detailed requirements live in `docs/context-efficiency/provenance-observability-integration-plan.md`.
 
+## Context Assembly Principle
+
+Project knowledge should grow continuously, but agent context should not. Bmux should organize knowledge hierarchically and retrieve only the minimum evidence and design context necessary for the current task. Context is assembled dynamically rather than being statically defined, and each item included in an agent session needs a justifiable reason for being present.
+
+This principle should shape the retrieval architecture in four ways:
+
+- Provenance should store durable facts, decisions, findings, relationships, and source references without trying to preload the whole project history into every future session.
+- Knowledge projections should be indexes and navigational aids over evidence, not replacements for evidence or duplicated copies of raw artifacts.
+- Retrieval and context-package generation should prefer facts over summaries, evidence over assumptions, references over duplication, and retrieval over preloading.
+- Future project organization should make durable knowledge easy to address hierarchically by repository, worktree, subsystem, file, work item, session, decision, and evidence reference.
+
+Increasing project knowledge should improve agent effectiveness through better targeting and evidence selection, not through larger default working contexts.
+
 ## Layer Boundaries
 
 Bmux should distinguish four layers:
@@ -27,7 +40,7 @@ Bmux should distinguish four layers:
 1. Evidence layer: source events and raw/recoverable artifacts such as Codex rollouts, terminal output, tool calls, command output, Git observations, diffs, validation output, commits, prompts, child reports, and token telemetry. Raw evidence remains recoverable but outside frequently queried SQLite rows.
 2. Provenance layer: authoritative semantic facts and relationships owned by `WorkProvenance`, including repositories, worktrees, sessions, work items, contributions, delegations, checkpoints, change sets, file changes, validations, commits, integration decisions, source, confidence, and lifecycle status.
 3. Knowledge projection layer: compact query-oriented summaries derived from evidence and provenance, such as session summaries, delegation summaries, work-item summaries, file histories, subsystem summaries, decisions, findings, failed approaches, invariants, open questions, validation summaries, and handoff summaries.
-4. Context assembly layer: bounded packages for a specific agent objective, assembled from exact entity resolution, structured facts, lexical search, optional semantic search, provenance edges, ranking, token budgeting, omitted counts, and source references.
+4. Context assembly layer: bounded packages for a specific agent objective, assembled dynamically from exact entity resolution, structured facts, lexical search, optional semantic search, provenance edges, ranking, token budgeting, omitted counts, inclusion reasons, and source references.
 
 Knowledge projections are not source of truth. They must carry generator/schema versions, content hashes, evidence references, freshness, and supersession metadata.
 
@@ -132,9 +145,9 @@ Create a knowledge projection service separate from event ingestion. It should r
 
 Use SQLite FTS5 for the first retrieval index over selected knowledge fields such as title, body, keywords, repository identifier, branch, and entity type. Retrieval must work without embeddings.
 
-The retrieval pipeline should resolve exact entities, read authoritative records, search knowledge records, optionally retrieve semantic matches, expand selected edges, add active decisions/invariants/risks/open questions, remove duplicates, filter stale or superseded records unless requested, rank deterministically, allocate an explicit token budget, assemble a context package, and include omitted counts plus source references.
+The retrieval pipeline should resolve exact entities, read authoritative records, search knowledge records, optionally retrieve semantic matches, expand selected edges, add active decisions/invariants/risks/open questions, remove duplicates, filter stale or superseded records unless requested, rank deterministically, allocate an explicit token budget, assemble a context package, and include omitted counts plus source references. It should also record why each included item was selected, because context without a task-specific reason is preloading by another name.
 
-Context packages are bounded agent-facing results. Each item includes a title, compact body, kind, entity reference, confidence, freshness, relationship to the query, source references, and estimated token count.
+Context packages are bounded agent-facing results. Each item includes a title, compact body, kind, entity reference, confidence, freshness, relationship to the query, inclusion reason, source references, and estimated token count.
 
 ## CLI
 
