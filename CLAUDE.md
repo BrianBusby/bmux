@@ -147,6 +147,10 @@ This makes it visible in the GitHub PR UI (Commits tab, check statuses) that the
 
 When finishing work on a bmux feature, commit and push the scoped changes before handing off so the worktree returns to a clean state for the next task. Do not include unrelated dirty files in that commit; if unrelated local changes prevent a clean handoff, call them out explicitly.
 
+## Slice sizing
+
+By default, choose the largest coherent slice of work that can be completed, verified, and handed off without taking on too broad a scope or wasting tokens. Avoid tiny incremental slices when a larger adjacent slice is still clear, bounded, and efficient. Stop before crossing into new roadmap phases, unclear product decisions, risky architectural expansion, or work that would dilute verification quality.
+
 ## Branch hygiene
 
 Create a separate branch for each logical feature or bug fix before making scoped code changes. Avoid letting unrelated work accumulate in one dirty worktree. Periodically audit local branches for work that has not merged to `main` yet, and remind the user which branches or features still need a merge decision. After the user requests a build and can inspect the result, ask whether the build looks good and whether the completed branch should be merged to `main`.
