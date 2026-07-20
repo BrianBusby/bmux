@@ -1,0 +1,22 @@
+import Foundation
+
+/// Internal contract-shaped client for provenance engine queries used by bmux.
+protocol ProvenanceEngineClient: Sendable {
+    /// Appends one immutable provenance event.
+    ///
+    /// - Parameter request: Event append request.
+    /// - Returns: Response describing the accepted event.
+    func appendEvent(_ request: ProvenanceAppendEventRequest) async throws -> ProvenanceAppendEventResponse
+
+    /// Returns a bounded session tree rooted at the requested session.
+    ///
+    /// - Parameter request: Query parameters for the requested session tree.
+    /// - Returns: A domain response containing sessions, relationships, and identities.
+    func sessionTree(_ request: ProvenanceSessionTreeRequest) async throws -> ProvenanceSessionTreeResponse
+
+    /// Returns focused provenance context for a repository-relative file path.
+    ///
+    /// - Parameter request: File explanation query parameters.
+    /// - Returns: A bounded file-explanation response.
+    func fileExplanation(_ request: ProvenanceFileExplanationRequest) async throws -> ProvenanceFileExplanationResponse
+}

@@ -309,6 +309,113 @@ struct WorkProvenanceStoreTests {
         #expect(replayedTree.sessions.last?.status == "completed")
     }
 
+    @Test
+    func contractClientAppendsAndExplainsFileChanges() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let client: any ProvenanceEngineClient = store
+
+        let append = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.attributedEvent()))
+        let explanation = try await client.fileExplanation(ProvenanceFileExplanationRequest(
+            worktreeID: "worktree-1",
+            path: "Sources/WorkspaceManager.swift"
+        ))
+        let missing = try await client.fileExplanation(ProvenanceFileExplanationRequest(
+            worktreeID: "worktree-1",
+            path: "Sources/Missing.swift"
+        ))
+
+        #expect(append.schemaVersion == 1)
+        #expect(append.eventID == "event-1")
+        #expect(append.eventType == "progress_checkpoint")
+        #expect(explanation.schemaVersion == 1)
+        #expect(explanation.found)
+        #expect(explanation.reason == nil)
+        #expect(explanation.explanation?.workItem?.title == "Explain dirty files")
+        #expect(explanation.explanation?.contribution?.declaredIntent == "Capture work provenance")
+        #expect(explanation.explanation?.fileChange.attributionSource == .observed)
+        #expect(!missing.found)
+        #expect(missing.reason == "no_file")
+        #expect(missing.explanation == nil)
+    }
+
+    @Test
+    func contractClientPreservesDuplicateEventRollback() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let client: any ProvenanceEngineClient = store
+
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.parentSessionEvent()))
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.childSubsessionEvent(
+            id: "duplicate-child-event",
+            status: "active",
+            timestamp: 120
+        )))
+
+        do {
+            _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.childSubsessionEvent(
+                id: "duplicate-child-event",
+                status: "completed",
+                timestamp: 140
+            )))
+            Issue.record("duplicate append unexpectedly succeeded through contract client")
+        } catch {
+            // Expected: duplicate event IDs are rejected before projection mutation.
+        }
+
+        let response = try await client.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: "codex-parent"))
+        let child = try #require(response.sessions.first { $0.id == "codex-child" })
+
+        #expect(response.found)
+        #expect(child.status == "active")
+        #expect(child.updatedAt == Date(timeIntervalSince1970: 120))
+
+        try await store.rebuildProjections()
+        let replayed = try await client.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: "codex-parent"))
+        let replayedChild = try #require(replayed.sessions.first { $0.id == "codex-child" })
+        #expect(replayedChild.status == "active")
+        #expect(replayedChild.updatedAt == Date(timeIntervalSince1970: 120))
+    }
+
+    @Test
+    func contractClientReturnsSessionTreeWithExternalIdentities() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let client: any ProvenanceEngineClient = store
+
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.parentSessionEvent()))
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.childSubsessionEvent(
+            id: "child-start-1",
+            status: "active",
+            timestamp: 120
+        )))
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.childSubsessionEvent(
+            id: "child-stop-1",
+            status: "completed",
+            timestamp: 140
+        )))
+
+        let response = try await client.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: "codex-parent"))
+
+        #expect(response.schemaVersion == 1)
+        #expect(response.rootSessionID == "codex-parent")
+        #expect(response.found)
+        #expect(response.reason == nil)
+        #expect(response.sessions.map(\.id) == ["codex-parent", "codex-child"])
+        #expect(response.sessions.last?.status == "completed")
+        #expect(response.relationships.map(\.sessionID) == ["codex-child"])
+        #expect(response.externalIdentities.map(\.externalID) == ["subagent-1"])
+
+        try await store.rebuildProjections()
+        let replayed = try await client.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: "codex-parent"))
+        #expect(replayed.sessions.map(\.id) == response.sessions.map(\.id))
+        #expect(replayed.relationships.map(\.sessionID) == response.relationships.map(\.sessionID))
+        #expect(replayed.externalIdentities.map(\.externalID) == response.externalIdentities.map(\.externalID))
+    }
+
     private static func attributedEvent() -> WorkProvenanceEvent {
         let now = Date(timeIntervalSince1970: 100)
         let repository = WorkProvenanceRepositoryRecord(

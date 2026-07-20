@@ -275,17 +275,35 @@ actor WorkProvenanceStore {
     ///
     /// - Parameter rootSessionID: Root session identifier.
     /// - Returns: Session tree containing the root when it exists.
-    func sessionTree(rootSessionID: String) throws -> WorkProvenanceSessionTree {
+    func sessionTree(rootSessionID: String, limit: Int? = nil) throws -> WorkProvenanceSessionTree {
+        let rowLimit = limit.map { max(0, $0) }
         var sessions: [WorkProvenanceSessionRecord] = []
-        if let rootSession = try sessionRecord(id: rootSessionID) {
-            sessions.append(rootSession)
+        var relationships: [WorkProvenanceSessionRelationshipRecord] = []
+        var visitedSessionIDs = Set<String>()
+
+        func hasSessionCapacity() -> Bool { rowLimit.map { sessions.count < $0 } ?? true }
+        func hasRelationshipCapacity() -> Bool { rowLimit.map { relationships.count < $0 } ?? true }
+
+        func appendSessionIfPresent(_ sessionID: String) throws {
+            guard hasSessionCapacity(), let session = try sessionRecord(id: sessionID) else { return }
+            sessions.append(session)
         }
-        let relationships = try sessionRelationshipTreeRecords(rootSessionID: rootSessionID)
-        for relationship in relationships {
-            if let session = try sessionRecord(id: relationship.sessionID) {
-                sessions.append(session)
+
+        func visit(_ sessionID: String, treeDepth: Int) throws {
+            guard treeDepth <= 50, !visitedSessionIDs.contains(sessionID) else { return }
+            visitedSessionIDs.insert(sessionID)
+            try appendSessionIfPresent(sessionID)
+            guard treeDepth < 50 else { return }
+            for relationship in try childSessionRelationshipRecords(parentSessionID: sessionID) {
+                guard !visitedSessionIDs.contains(relationship.sessionID) else { continue }
+                if hasRelationshipCapacity() {
+                    relationships.append(relationship)
+                }
+                try visit(relationship.sessionID, treeDepth: treeDepth + 1)
             }
         }
+
+        try visit(rootSessionID, treeDepth: 0)
         return WorkProvenanceSessionTree(
             rootSessionID: rootSessionID,
             sessions: sessions,

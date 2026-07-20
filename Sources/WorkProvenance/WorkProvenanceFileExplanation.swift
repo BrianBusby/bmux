@@ -1,7 +1,7 @@
 import Foundation
 
 /// Focused provenance context for one changed file.
-struct WorkProvenanceFileExplanation: Equatable, Sendable {
+struct WorkProvenanceFileExplanation: Codable, Equatable, Sendable {
     /// File-change record that matched the query.
     let fileChange: WorkProvenanceFileChangeRecord
 

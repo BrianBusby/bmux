@@ -97,9 +97,9 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 
 Current checkout:
 
-- Branch: `provenance-extraction-phase1-contracts`
-- HEAD observed before the Phase 1 contract-characterization commit on 2026-07-20: `9e0e4114b`
-- Contains the accepted ADR-001 provenance extraction product-boundary documentation, the Phase 0 migration audit report, and the Phase 1 contract plan plus behavior-characterization tests.
+- Branch: `provenance-extraction-phase2-contracts`
+- HEAD observed before the Phase 2 contract-interface commit on 2026-07-20: `3dac6f1cd`
+- Contains the accepted ADR-001 provenance extraction product-boundary documentation, the Phase 0 migration audit report, the Phase 1 contract plan, behavior-characterization tests, and the first Phase 2 internal contract seam.
 
 Active context-efficiency worktree:
 
@@ -142,7 +142,41 @@ Latest completed provenance planning slice:
 - `docs/context-efficiency/provenance-engine-extraction-phase0-report.md` completes ADR-001 Phase 0 by auditing current provenance modules, schemas, storage paths, capture paths, CLI/UI consumers, shared types, bmux assumptions, tests, reusable pieces, replacement targets, coupling risks, unknowns, and the proposed change map.
 - The report concludes that extraction should center on the existing `WorkProvenance` append-only event/projection model, while bmux keeps capture adapters, UI, workspace/session orchestration, and visualization.
 - `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md` completes ADR-001 Phase 1 contract planning by naming current behavior invariants, the first narrow public contract surface, the bmux adapter boundary, and direct SQLite debt to remove later.
-- The next safe extraction slice is Phase 2 interface introduction inside bmux: add internal protocol names matching the Phase 1 contract surface and wrap `WorkProvenanceStore` without moving implementation or creating the independent engine repository yet.
+- The first Phase 2 interface slice introduces internal protocol/request/response names for event append, session-tree query, and file-explanation query around `WorkProvenanceStore`, without moving implementation or creating the independent engine repository yet.
+- The next safe extraction slice is to add normalized subsession-lifecycle and lifecycle-trace contract seams, or convert `bmux provenance sessions tree` only after its CLI JSON behavior is fully mapped from the store-backed contract response.
+
+Latest completed provenance Phase 2 contract-interface slice:
+
+- Branch: `provenance-extraction-phase2-contracts`
+- This 2026-07-20 slice added an internal `ProvenanceEngineClient` seam in `Sources/WorkProvenance` with request/response DTOs for `appendEvent`, `sessionTree`, and `fileExplanation`.
+- `WorkProvenanceStore` now conforms to that seam through `WorkProvenanceStore+ProvenanceEngineClient.swift`; implementation still lives in bmux and still uses the existing SQLite store.
+- `WorkProvenanceStore.sessionTree(rootSessionID:limit:)` now walks child relationships recursively from the requested root with a depth bound and cycle guard, which better matches the future CLI replacement target than the older root-ID projection scan.
+- Contract-level tests exercise the store through `any ProvenanceEngineClient` for append/file explanation, duplicate event rollback, session-tree external identities, and replay consistency.
+- The slice intentionally did not convert `bmux provenance sessions tree` yet. A read-only subsession flagged that the CLI path has exact JSON/no-database/limit semantics that should be mapped in a separate CLI regression slice.
+- Validation passed:
+  - `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -configuration Debug -destination 'platform=macOS' -derivedDataPath /tmp/bmux-provenance-phase2-test -only-testing:bmuxTests/WorkProvenanceStoreTests -only-testing:bmuxTests/SubsessionProvenanceTests`
+  - The focused run reported `26 tests in 2 suites passed` and `** TEST SUCCEEDED **`.
+  - `./scripts/check-pbxproj.sh`
+  - `python3 scripts/check-workspace-package-groups.py --check`
+  - `git diff --check`
+- Localization audit: changed only internal Swift contracts, internal tests, project wiring, and context-efficiency documentation; no UI, CLI help/output, settings, shortcut, or localized user-facing strings changed.
+
+Files changed in the Phase 2 contract-interface slice:
+
+- `Sources/WorkProvenance/ProvenanceAppendEventRequest.swift`
+- `Sources/WorkProvenance/ProvenanceAppendEventResponse.swift`
+- `Sources/WorkProvenance/ProvenanceEngineClient.swift`
+- `Sources/WorkProvenance/ProvenanceFileExplanationRequest.swift`
+- `Sources/WorkProvenance/ProvenanceFileExplanationResponse.swift`
+- `Sources/WorkProvenance/ProvenanceSessionTreeRequest.swift`
+- `Sources/WorkProvenance/ProvenanceSessionTreeResponse.swift`
+- `Sources/WorkProvenance/WorkProvenanceStore+ProvenanceEngineClient.swift`
+- `Sources/WorkProvenance/WorkProvenanceFileExplanation.swift`
+- `Sources/WorkProvenance/WorkProvenanceStore.swift`
+- `bmux.xcodeproj/project.pbxproj`
+- `bmuxTests/WorkProvenanceStoreTests.swift`
+- `docs/context-efficiency/current-status.md`
+- `docs/context-efficiency/milestones.md`
 
 Latest completed provenance Phase 1 characterization slice:
 
