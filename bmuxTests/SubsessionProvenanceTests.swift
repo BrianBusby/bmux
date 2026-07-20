@@ -38,6 +38,8 @@ struct SubsessionProvenanceTests {
         #expect(child.surfaceID == "surface-1")
         #expect(child.cwd == "/repo")
         #expect(child.status == "completed")
+        #expect(child.startedAt == Date(timeIntervalSince1970: 120))
+        #expect(child.updatedAt == Date(timeIntervalSince1970: 140))
         #expect(relationship.parentSessionID == "codex-parent")
         #expect(relationship.rootSessionID == "codex-parent")
         #expect(relationship.depth == 1)
@@ -51,7 +53,30 @@ struct SubsessionProvenanceTests {
         let replayedChild = try #require(replayedTree.sessions.first { $0.id != "codex-parent" })
         #expect(replayedChild.id == child.id)
         #expect(replayedChild.status == "completed")
+        #expect(replayedChild.startedAt == Date(timeIntervalSince1970: 120))
+        #expect(replayedChild.updatedAt == Date(timeIntervalSince1970: 140))
         #expect(replayedTree.relationships.map(\.sessionID) == [child.id])
+    }
+
+    @Test
+    func buildsDeterministicLifecycleEventsForSameInput() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(store: store)
+        let change = Self.lifecycleChange(phase: .started)
+        let timestamp = Date(timeIntervalSince1970: 120)
+
+        try await store.append(Self.parentSessionEvent())
+        let first = try await recorder.event(for: change, timestamp: timestamp)
+        let second = try await recorder.event(for: change, timestamp: timestamp)
+
+        #expect(first.id == second.id)
+        #expect(first.eventType == .subsessionStarted)
+        #expect(first.payload.session?.id == second.payload.session?.id)
+        #expect(first.payload.sessionRelationship?.sessionID == second.payload.sessionRelationship?.sessionID)
+        #expect(first.payload.externalIdentities.map(\.id) == second.payload.externalIdentities.map(\.id))
+        #expect(first.payload.externalIdentities.map(\.externalID) == ["subagent-1"])
     }
 
     @Test
@@ -392,6 +417,50 @@ struct SubsessionProvenanceTests {
         #expect(identity.kind == "unresolved_subsession")
         #expect(identity.confidence == .low)
         #expect(identity.externalID == "codex:codex-parent:default")
+    }
+
+    @Test(arguments: [nil, "", "   "])
+    func missingOrBlankSubsessionIdentifierUsesSameStableFallback(subsessionID: String?) async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(store: store)
+
+        try await store.append(Self.parentSessionEvent())
+        let event = try await recorder.event(
+            for: Self.lifecycleChange(phase: .started, subsessionID: subsessionID),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+
+        #expect(event.confidence == .low)
+        #expect(event.payload.sessionRelationship?.confidence == .low)
+        #expect(event.payload.externalIdentities.map(\.kind) == ["unresolved_subsession"])
+        #expect(event.payload.externalIdentities.map(\.externalID) == ["codex:codex-parent:default"])
+    }
+
+    @Test
+    func missingParentRelationshipUsesParentAsRootWithDepthOne() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(store: store)
+
+        let event = try await recorder.event(
+            for: Self.lifecycleChange(
+                phase: .started,
+                parentSessionID: "missing-parent",
+                subsessionID: "subagent-1"
+            ),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+        try await store.append(event)
+
+        let childID = try #require(event.payload.session?.id)
+        let relationship = try #require(try await store.parentSession(for: childID))
+
+        #expect(relationship.parentSessionID == "missing-parent")
+        #expect(relationship.rootSessionID == "missing-parent")
+        #expect(relationship.depth == 1)
     }
 
     @Test

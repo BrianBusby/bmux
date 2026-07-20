@@ -11,12 +11,13 @@ This file is the live handoff index for the context-efficiency roadmap. Read it 
 3. `docs/context-efficiency/roadmap.md`
 4. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
 5. `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`
-6. `docs/context-efficiency/subsession-delegation-integration-plan.md`
-7. `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
-8. `docs/context-efficiency/provenance-observability-integration-plan.md`
-9. `docs/context-efficiency/subsession-delegation-phase-a-report.md`
-10. `docs/context-efficiency/milestones.md`
-11. Relevant bmux skills:
+6. `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`
+7. `docs/context-efficiency/subsession-delegation-integration-plan.md`
+8. `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
+9. `docs/context-efficiency/provenance-observability-integration-plan.md`
+10. `docs/context-efficiency/subsession-delegation-phase-a-report.md`
+11. `docs/context-efficiency/milestones.md`
+12. Relevant bmux skills:
    - `bmux-architecture` before Swift package/API changes.
    - `bmux-dev-workflow` before tagged builds or project wiring.
    - `bmux-testing` before test changes or verification decisions.
@@ -30,6 +31,7 @@ ADR-001 is accepted and now controls the product boundary for provenance extract
 
 - `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
 - `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`
+- `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`
 
 Treat the Provenance Engine as an independent local-first product with bmux as its first client. Future provenance implementation should move toward SDK/API boundaries, a local daemon, independent versioning, and no engine dependency on bmux internals. Existing `WorkProvenance`, `BmuxContextEfficiency`, and `ProvenanceObservability` work remains useful migration source material, but new extraction work must not deepen bmux-specific storage or domain coupling.
 
@@ -95,9 +97,9 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 
 Current checkout:
 
-- Branch: `provenance-extraction-phase0-audit`
-- HEAD observed before the Phase 0 report commit on 2026-07-20: `8ac99c846`
-- Contains the accepted ADR-001 provenance extraction product-boundary documentation plus the Phase 0 migration audit report.
+- Branch: `provenance-extraction-phase1-contracts`
+- HEAD observed before the Phase 1 contract-characterization commit on 2026-07-20: `9e0e4114b`
+- Contains the accepted ADR-001 provenance extraction product-boundary documentation, the Phase 0 migration audit report, and the Phase 1 contract plan plus behavior-characterization tests.
 
 Active context-efficiency worktree:
 
@@ -139,7 +141,29 @@ Latest completed provenance planning slice:
 
 - `docs/context-efficiency/provenance-engine-extraction-phase0-report.md` completes ADR-001 Phase 0 by auditing current provenance modules, schemas, storage paths, capture paths, CLI/UI consumers, shared types, bmux assumptions, tests, reusable pieces, replacement targets, coupling risks, unknowns, and the proposed change map.
 - The report concludes that extraction should center on the existing `WorkProvenance` append-only event/projection model, while bmux keeps capture adapters, UI, workspace/session orchestration, and visualization.
-- The next safe code slice is Phase 1 behavior characterization and a narrow contract draft before moving implementation into an independent engine repository.
+- `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md` completes ADR-001 Phase 1 contract planning by naming current behavior invariants, the first narrow public contract surface, the bmux adapter boundary, and direct SQLite debt to remove later.
+- The next safe extraction slice is Phase 2 interface introduction inside bmux: add internal protocol names matching the Phase 1 contract surface and wrap `WorkProvenanceStore` without moving implementation or creating the independent engine repository yet.
+
+Latest completed provenance Phase 1 characterization slice:
+
+- Branch: `provenance-extraction-phase1-contracts`
+- This 2026-07-20 slice added contract-style tests for the existing `WorkProvenance` behavior before extraction.
+- Store invariants now covered: events remain readable in append order after reopening; projections still answer file-explanation queries after reopening and rebuilding; duplicate event IDs roll back projection changes; projection failures after event insert roll back the whole append transaction; replay uses append order rather than event timestamp order; unknown future event type names remain readable.
+- Subsession lifecycle invariants now covered: identical normalized lifecycle input produces deterministic event/session/relationship/external-identity IDs; missing or blank subsession identifiers use the same stable low-confidence fallback identity; missing parent relationships root the child under the named parent at depth one; start followed by stop preserves the start timestamp and updates completion.
+- The slice intentionally changed no runtime paths, no schema, no CLI output, no UI, and no daemon/repository layout.
+- Validation passed:
+  - `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -configuration Debug -destination 'platform=macOS' -derivedDataPath /tmp/bmux-provenance-phase1-test -only-testing:bmuxTests/WorkProvenanceStoreTests -only-testing:bmuxTests/SubsessionProvenanceTests`
+  - The focused run reported `23 tests in 2 suites passed` and `** TEST SUCCEEDED **`.
+  - `git diff --check`
+- Localization audit: changed only internal tests and context-efficiency documentation; no UI, CLI help/output, settings, shortcut, or localized user-facing strings changed.
+
+Files changed in the Phase 1 characterization slice:
+
+- `bmuxTests/WorkProvenanceStoreTests.swift`
+- `bmuxTests/SubsessionProvenanceTests.swift`
+- `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`
+- `docs/context-efficiency/current-status.md`
+- `docs/context-efficiency/milestones.md`
 
 Latest completed provenance implementation slice:
 

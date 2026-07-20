@@ -41,6 +41,155 @@ struct WorkProvenanceStoreTests {
     }
 
     @Test
+    func reopensExistingStoreWithEventsAndProjectionsReadable() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+
+        try await store.append(Self.attributedEvent())
+        try await store.append(Self.unattributedEvent())
+
+        let reopened = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let events = try await reopened.events()
+        let explanation = try await reopened.fileExplanation(
+            worktreeID: "worktree-1",
+            path: "Sources/WorkspaceManager.swift"
+        )
+
+        #expect(events.map(\.id) == ["event-1", "event-unattributed"])
+        #expect(explanation?.repository?.path == "/repo")
+        #expect(explanation?.worktree?.path == "/repo")
+        #expect(explanation?.workItem?.id == "WI-1")
+
+        try await reopened.rebuildProjections()
+        let replayed = try await reopened.fileExplanation(
+            worktreeID: "worktree-1",
+            path: "Sources/WorkspaceManager.swift"
+        )
+
+        #expect(replayed?.repository?.path == explanation?.repository?.path)
+        #expect(replayed?.worktree?.path == explanation?.worktree?.path)
+        #expect(replayed?.workItem?.id == explanation?.workItem?.id)
+    }
+
+    @Test
+    func duplicateEventIDRollsBackProjectionChanges() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+
+        try await store.append(Self.parentSessionEvent())
+        try await store.append(Self.childSubsessionEvent(
+            id: "duplicate-child-event",
+            status: "active",
+            timestamp: 120
+        ))
+
+        do {
+            try await store.append(Self.childSubsessionEvent(
+                id: "duplicate-child-event",
+                status: "completed",
+                timestamp: 140
+            ))
+            Issue.record("duplicate append unexpectedly succeeded")
+        } catch {
+            // Expected: duplicate event IDs are rejected before projection mutation.
+        }
+
+        let events = try await store.events()
+        let tree = try await store.sessionTree(rootSessionID: "codex-parent")
+        let child = try #require(tree.sessions.first { $0.id == "codex-child" })
+
+        #expect(events.map(\.id) == ["parent-session", "duplicate-child-event"])
+        #expect(child.status == "active")
+        #expect(child.updatedAt == Date(timeIntervalSince1970: 120))
+
+        try await store.rebuildProjections()
+        let replayedTree = try await store.sessionTree(rootSessionID: "codex-parent")
+        let replayedChild = try #require(replayedTree.sessions.first { $0.id == "codex-child" })
+        #expect(replayedChild.status == "active")
+        #expect(replayedChild.updatedAt == Date(timeIntervalSince1970: 120))
+    }
+
+    @Test
+    func projectionFailureAfterEventInsertRollsBackEntireAppend() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+
+        try await store.append(Self.parentSessionEvent())
+        try await store.append(Self.childSubsessionEvent(
+            id: "child-start",
+            status: "active",
+            timestamp: 120
+        ))
+
+        do {
+            try await store.append(Self.conflictingExternalIdentityEvent())
+            Issue.record("conflicting identity append unexpectedly succeeded")
+        } catch {
+            // Expected: the projection conflict must roll back the event insert.
+        }
+
+        let events = try await store.events()
+        let tree = try await store.sessionTree(rootSessionID: "codex-parent")
+
+        #expect(events.map(\.id) == ["parent-session", "child-start"])
+        #expect(tree.sessions.map(\.id) == ["codex-parent", "codex-child"])
+        #expect(tree.relationships.map(\.sessionID) == ["codex-child"])
+
+        try await store.rebuildProjections()
+        let replayedTree = try await store.sessionTree(rootSessionID: "codex-parent")
+        #expect(replayedTree.sessions.map(\.id) == ["codex-parent", "codex-child"])
+        #expect(replayedTree.relationships.map(\.sessionID) == ["codex-child"])
+    }
+
+    @Test
+    func replayUsesAppendOrderWhenEventTimestampsAreOutOfOrder() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+
+        try await store.append(Self.observedEvent(id: "appended-first", timestamp: 200, fingerprint: "late"))
+        try await store.append(Self.observedEvent(id: "appended-second", timestamp: 100, fingerprint: "early"))
+
+        let events = try await store.events()
+        let liveExplanation = try await store.fileExplanation(
+            worktreeID: "worktree-1",
+            path: "Sources/WorkspaceManager.swift"
+        )
+
+        #expect(events.map(\.id) == ["appended-first", "appended-second"])
+        #expect(liveExplanation?.changeSet?.diffFingerprint == "early")
+
+        try await store.rebuildProjections()
+        let replayedExplanation = try await store.fileExplanation(
+            worktreeID: "worktree-1",
+            path: "Sources/WorkspaceManager.swift"
+        )
+        #expect(replayedExplanation?.changeSet?.diffFingerprint == "early")
+    }
+
+    @Test
+    func preservesUnknownEventTypeNames() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let event = WorkProvenanceEvent(
+            id: "future-event",
+            eventType: "future_engine_event",
+            timestamp: Date(timeIntervalSince1970: 100),
+            source: .observed,
+            confidence: .low
+        )
+
+        try await store.append(event)
+
+        let events = try await store.events()
+        #expect(events.map(\.eventType.rawValue) == ["future_engine_event"])
+    }
+
+    @Test
     func pruningExpiresObservedEventsButPreservesSemanticEventsAndLatestExplanation() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
@@ -259,6 +408,54 @@ struct WorkProvenanceStoreTests {
         return WorkProvenanceEvent(
             id: id,
             eventType: status == "completed" ? .subsessionStopped : .subsessionStarted,
+            timestamp: now,
+            sessionID: session.id,
+            source: .observed,
+            confidence: .high,
+            payload: WorkProvenanceEventPayload(
+                session: session,
+                sessionRelationship: relationship,
+                externalIdentities: [identity]
+            )
+        )
+    }
+
+    private static func conflictingExternalIdentityEvent() -> WorkProvenanceEvent {
+        let now = Date(timeIntervalSince1970: 130)
+        let session = WorkProvenanceSessionRecord(
+            id: "codex-conflicting-child",
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-conflict",
+            cwd: "/repo",
+            status: "active",
+            startedAt: now,
+            updatedAt: now
+        )
+        let relationship = WorkProvenanceSessionRelationshipRecord(
+            sessionID: "codex-conflicting-child",
+            parentSessionID: "codex-parent",
+            rootSessionID: "codex-parent",
+            depth: 1,
+            source: .observed,
+            confidence: .high,
+            createdAt: now,
+            updatedAt: now
+        )
+        let identity = WorkProvenanceExternalIdentityRecord(
+            id: "identity-codex-subagent-1",
+            sessionID: "codex-conflicting-child",
+            system: "codex",
+            kind: "subsession",
+            externalID: "different-subagent",
+            source: .observed,
+            confidence: .high,
+            createdAt: now,
+            updatedAt: now
+        )
+        return WorkProvenanceEvent(
+            id: "conflicting-identity-event",
+            eventType: .subsessionStarted,
             timestamp: now,
             sessionID: session.id,
             source: .observed,

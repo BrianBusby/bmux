@@ -6,13 +6,14 @@ Cross-cutting plans:
 
 - `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
 - `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`
+- `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`
 - `docs/context-efficiency/subsession-delegation-integration-plan.md`
 - `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
 - `docs/context-efficiency/provenance-observability-integration-plan.md`
 
 ADR-001 is accepted and establishes the Provenance Engine as an independent product. Future provenance milestones should treat bmux as the first client, not as the owner of the engine. Migration work should introduce public SDK/API contracts before moving implementation, keep the engine local-first for V1, and avoid new bmux assumptions in reusable provenance logic.
 
-The ADR-001 Phase 0 migration audit is complete in `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`. The next extraction slice should characterize current behavior and draft the minimum public contracts before moving implementation or creating the independent engine repository.
+The ADR-001 Phase 0 migration audit is complete in `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`. The ADR-001 Phase 1 behavior characterization and minimum contract plan is complete in `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`. The next extraction slice should introduce internal protocol names matching that contract surface and wrap the current store before moving implementation or creating the independent engine repository.
 
 Observability is not a standalone late milestone. Each provenance milestone should add the relevant traceability, quality, feedback, evaluation, or shadow-comparison requirement while preserving store ownership: `WorkProvenance` is authoritative engineering history, `BmuxContextEfficiency` is read-only imported telemetry/evidence, and `ProvenanceObservability` is future operational and quality telemetry.
 
@@ -167,6 +168,7 @@ Implemented slices:
 - Phase B subsession lifecycle slices added WorkProvenance session relationship/external identity projections, then wired `AgentSubsessionLifecycleChange` into persisted `subsession_started` / `subsession_stopped` events through the existing registry lifecycle path.
 - A working tree Phase B query-diagnostics slice adds bounded `bmux provenance sessions tree <session-id> --json` output over persisted session relationship and external identity projections; `bmux-cli` builds and the standalone Python CLI regression passes against the built binary.
 - A working tree observability query-polish slice adds bounded filters to `bmux provenance traces lifecycle-ingestion`: `--run`, `--parent-session`, `--child-session`, and `--status`, plus JSON counts for resolved, unresolved, and conflicted identity-resolution attempts. This reads existing O1/O2 trace rows only and adds no new capture, schema, policy, or O3+ observability behavior.
+- ADR-001 Phase 1 contract characterization added focused tests for event/projection transactionality, reopen/rebuild behavior, append-order replay, unknown event compatibility, and deterministic lifecycle identity/root/depth/timestamp behavior, plus the minimum contract plan for the future engine boundary.
 
 Stop condition:
 
