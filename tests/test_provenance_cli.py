@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import sqlite3
 import subprocess
@@ -11,6 +12,18 @@ import tempfile
 from pathlib import Path
 
 from claude_teams_test_utils import resolve_bmux_cli
+
+
+def stable_id(prefix: str, value: str) -> str:
+    return f"{prefix}-{hashlib.sha256(value.encode()).hexdigest()[:24]}"
+
+
+def stable_repository_id(repository_root: str) -> str:
+    return stable_id("repository", repository_root)
+
+
+def stable_worktree_id(repository_root: str) -> str:
+    return stable_id("worktree", repository_root)
 
 
 def create_provenance_database(path: Path) -> None:
@@ -187,6 +200,290 @@ def create_provenance_database(path: Path) -> None:
                     200.0,
                 ),
             ],
+        )
+
+
+def create_provenance_explain_database(
+    path: Path,
+    repository_root: str,
+    include_worktree: bool = True,
+    include_file: bool = True,
+) -> None:
+    if path.exists():
+        path.unlink()
+    repository_id = stable_repository_id(repository_root)
+    worktree_id = stable_worktree_id(repository_root)
+    with sqlite3.connect(path) as conn:
+        conn.executescript(
+            """
+            CREATE TABLE repositories (
+                id TEXT PRIMARY KEY NOT NULL,
+                path TEXT NOT NULL,
+                common_directory TEXT,
+                remote_slug TEXT,
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL
+            );
+            CREATE TABLE worktrees (
+                id TEXT PRIMARY KEY NOT NULL,
+                repository_id TEXT NOT NULL,
+                path TEXT NOT NULL,
+                branch TEXT,
+                base_commit TEXT,
+                current_head TEXT,
+                is_dirty INTEGER NOT NULL,
+                status TEXT NOT NULL,
+                last_reconciled_at REAL,
+                updated_at REAL NOT NULL
+            );
+            CREATE TABLE sessions (
+                id TEXT PRIMARY KEY NOT NULL,
+                agent_kind TEXT NOT NULL,
+                workspace_id TEXT,
+                surface_id TEXT,
+                worktree_id TEXT,
+                cwd TEXT,
+                status TEXT NOT NULL,
+                started_at REAL,
+                updated_at REAL NOT NULL
+            );
+            CREATE TABLE session_relationships (
+                session_id TEXT PRIMARY KEY NOT NULL,
+                parent_session_id TEXT NOT NULL,
+                root_session_id TEXT NOT NULL,
+                inbound_delegation_id TEXT,
+                depth INTEGER NOT NULL,
+                source TEXT NOT NULL,
+                confidence TEXT NOT NULL,
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL
+            );
+            CREATE TABLE session_external_identities (
+                id TEXT PRIMARY KEY NOT NULL,
+                session_id TEXT NOT NULL,
+                system TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                external_id TEXT NOT NULL,
+                source TEXT NOT NULL,
+                confidence TEXT NOT NULL,
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL
+            );
+            CREATE TABLE work_items (
+                id TEXT PRIMARY KEY NOT NULL,
+                title TEXT NOT NULL,
+                status TEXT NOT NULL,
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL
+            );
+            CREATE TABLE work_contributions (
+                id TEXT PRIMARY KEY NOT NULL,
+                session_id TEXT NOT NULL,
+                worktree_id TEXT NOT NULL,
+                work_item_id TEXT NOT NULL,
+                declared_intent TEXT,
+                expected_scope_json TEXT NOT NULL,
+                status TEXT NOT NULL,
+                started_at REAL NOT NULL,
+                ended_at REAL,
+                assignment_confidence TEXT NOT NULL,
+                updated_at REAL NOT NULL
+            );
+            CREATE TABLE checkpoints (
+                id TEXT PRIMARY KEY NOT NULL,
+                contribution_id TEXT NOT NULL,
+                sequence INTEGER NOT NULL,
+                git_head TEXT,
+                diff_fingerprint TEXT,
+                summary TEXT,
+                status TEXT NOT NULL,
+                validation_state TEXT,
+                semantic_confidence TEXT NOT NULL,
+                freshness TEXT NOT NULL,
+                created_at REAL NOT NULL
+            );
+            CREATE TABLE change_sets (
+                id TEXT PRIMARY KEY NOT NULL,
+                checkpoint_id TEXT,
+                contribution_id TEXT,
+                worktree_id TEXT NOT NULL,
+                summary TEXT,
+                diff_fingerprint TEXT,
+                created_at REAL NOT NULL
+            );
+            CREATE TABLE file_changes (
+                id TEXT PRIMARY KEY NOT NULL,
+                change_set_id TEXT NOT NULL,
+                repository_id TEXT NOT NULL,
+                worktree_id TEXT NOT NULL,
+                path TEXT NOT NULL,
+                status TEXT NOT NULL,
+                before_hash TEXT,
+                after_hash TEXT,
+                attribution_source TEXT NOT NULL,
+                attribution_confidence TEXT NOT NULL,
+                updated_at REAL NOT NULL
+            );
+            CREATE TABLE validation_runs (
+                id TEXT PRIMARY KEY NOT NULL,
+                checkpoint_id TEXT,
+                contribution_id TEXT,
+                command TEXT NOT NULL,
+                status TEXT NOT NULL,
+                summary TEXT,
+                started_at REAL,
+                ended_at REAL
+            );
+            PRAGMA user_version = 3;
+            """
+        )
+        if not include_worktree:
+            return
+        conn.execute(
+            """
+            INSERT INTO repositories (
+                id, path, common_directory, remote_slug, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (repository_id, repository_root, None, "manaflow-ai/bmux", 100.0, 160.0),
+        )
+        conn.execute(
+            """
+            INSERT INTO worktrees (
+                id, repository_id, path, branch, base_commit, current_head,
+                is_dirty, status, last_reconciled_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                worktree_id,
+                repository_id,
+                repository_root,
+                "provenance-extraction-phase2-contracts",
+                None,
+                "abc123",
+                1,
+                "active",
+                150.0,
+                160.0,
+            ),
+        )
+        if not include_file:
+            return
+        conn.execute(
+            """
+            INSERT INTO sessions (
+                id, agent_kind, workspace_id, surface_id, worktree_id,
+                cwd, status, started_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "session-1",
+                "codex",
+                "workspace-1",
+                "surface-1",
+                worktree_id,
+                repository_root,
+                "active",
+                110.0,
+                155.0,
+            ),
+        )
+        conn.execute(
+            """
+            INSERT INTO work_items (id, title, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            ("WI-1", "Explain dirty files", "active", 105.0, 155.0),
+        )
+        conn.execute(
+            """
+            INSERT INTO work_contributions (
+                id, session_id, worktree_id, work_item_id, declared_intent,
+                expected_scope_json, status, started_at, ended_at,
+                assignment_confidence, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "contribution-1",
+                "session-1",
+                worktree_id,
+                "WI-1",
+                "Capture work provenance",
+                json.dumps(["Sources/WorkspaceManager.swift"]),
+                "active",
+                110.0,
+                None,
+                "medium",
+                155.0,
+            ),
+        )
+        conn.execute(
+            """
+            INSERT INTO checkpoints (
+                id, contribution_id, sequence, git_head, diff_fingerprint,
+                summary, status, validation_state, semantic_confidence,
+                freshness, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "checkpoint-1",
+                "contribution-1",
+                1,
+                "head",
+                "diff-1",
+                "Recorded first batch",
+                "in_progress",
+                "not_run",
+                "medium",
+                "fresh",
+                140.0,
+            ),
+        )
+        conn.execute(
+            """
+            INSERT INTO change_sets (
+                id, checkpoint_id, contribution_id, worktree_id,
+                summary, diff_fingerprint, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "changeset-1",
+                "checkpoint-1",
+                "contribution-1",
+                worktree_id,
+                "Workspace provenance",
+                "diff-1",
+                145.0,
+            ),
+        )
+        conn.execute(
+            """
+            INSERT INTO file_changes (
+                id, change_set_id, repository_id, worktree_id, path, status,
+                before_hash, after_hash, attribution_source,
+                attribution_confidence, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "file-1",
+                "changeset-1",
+                repository_id,
+                worktree_id,
+                "Sources/WorkspaceManager.swift",
+                "modified",
+                "before",
+                "after",
+                "observed",
+                "high",
+                150.0,
+            ),
         )
 
 
@@ -758,19 +1055,176 @@ def create_observability_database(path: Path) -> None:
         )
 
 
-def run_cli(cli_path: str, args: list[str]) -> subprocess.CompletedProcess[str]:
+def run_cli(
+    cli_path: str,
+    args: list[str],
+    cwd: Path | None = None,
+) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
         [cli_path, *args],
         capture_output=True,
         text=True,
         check=False,
         timeout=10,
+        cwd=cwd,
     )
     if result.returncode != 0:
         raise AssertionError(
             f"bmux {' '.join(args)} failed with {result.returncode}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
     )
     return result
+
+
+def create_git_repo(root: Path) -> str:
+    root.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        ["git", "init"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=10,
+    )
+    target = root / "Sources" / "WorkspaceManager.swift"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("struct WorkspaceManager {}\n", encoding="utf-8")
+    return str(root)
+
+
+def check_provenance_explain_json(cli_path: str, root: Path) -> None:
+    repo = root / "repo"
+    repository_root = create_git_repo(repo)
+    database = root / "explain-work-provenance.sqlite"
+    create_provenance_explain_database(database, repository_root)
+
+    result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "explain",
+            "Sources/WorkspaceManager.swift",
+            "--database",
+            str(database),
+        ],
+        cwd=repo,
+    )
+    payload = json.loads(result.stdout)
+    if not payload["found"]:
+        raise AssertionError(f"expected a found file explanation: {payload!r}")
+    if payload["relative_path"] != "Sources/WorkspaceManager.swift":
+        raise AssertionError(f"expected repository-relative path: {payload!r}")
+    if payload["repository_path"] != repository_root:
+        raise AssertionError(f"expected resolved repository path: {payload!r}")
+    if payload["file_status"] != "modified":
+        raise AssertionError(f"expected file status from contract response: {payload!r}")
+    if payload["attribution_source"] != "observed" or payload["attribution_confidence"] != "high":
+        raise AssertionError(f"expected attribution fields from contract response: {payload!r}")
+    if payload["change_set"]["summary"] != "Workspace provenance":
+        raise AssertionError(f"expected change set payload: {payload!r}")
+    if payload["change_set"]["diff_fingerprint"] != "diff-1":
+        raise AssertionError(f"expected change set diff fingerprint: {payload!r}")
+    if payload["checkpoint"]["summary"] != "Recorded first batch":
+        raise AssertionError(f"expected checkpoint payload: {payload!r}")
+    if payload["contribution"]["declared_intent"] != "Capture work provenance":
+        raise AssertionError(f"expected contribution payload: {payload!r}")
+    if payload["session"]["id"] != "session-1" or payload["session"]["agent_kind"] != "codex":
+        raise AssertionError(f"expected session payload: {payload!r}")
+    if payload["work_item"]["title"] != "Explain dirty files":
+        raise AssertionError(f"expected work item payload: {payload!r}")
+    if payload["worktree"]["id"] != stable_worktree_id(repository_root):
+        raise AssertionError(f"expected stable worktree id: {payload!r}")
+    if payload["repository"]["remote_slug"] != "manaflow-ai/bmux":
+        raise AssertionError(f"expected repository payload: {payload!r}")
+
+    no_file_database = root / "explain-no-file.sqlite"
+    create_provenance_explain_database(no_file_database, repository_root, include_file=False)
+    no_file_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "explain",
+            "Sources/WorkspaceManager.swift",
+            "--database",
+            str(no_file_database),
+        ],
+        cwd=repo,
+    )
+    no_file = json.loads(no_file_result.stdout)
+    if no_file["found"] or no_file["reason"] != "no file-level provenance has been recorded for this path":
+        raise AssertionError(f"missing file should preserve bounded no-file JSON: {no_file!r}")
+    if no_file["worktree"]["path"] != repository_root:
+        raise AssertionError(f"missing file should still include recorded worktree: {no_file!r}")
+
+    no_worktree_database = root / "explain-no-worktree.sqlite"
+    create_provenance_explain_database(no_worktree_database, repository_root, include_worktree=False)
+    no_worktree_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "explain",
+            "Sources/WorkspaceManager.swift",
+            "--database",
+            str(no_worktree_database),
+        ],
+        cwd=repo,
+    )
+    no_worktree = json.loads(no_worktree_result.stdout)
+    if no_worktree["found"] or no_worktree["reason"] != "no provenance has been recorded for this Git worktree":
+        raise AssertionError(f"missing worktree should preserve bounded no-worktree JSON: {no_worktree!r}")
+    if no_worktree["worktree"] != {"path": repository_root}:
+        raise AssertionError(f"missing worktree should fall back to repository path: {no_worktree!r}")
+
+    no_database_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "explain",
+            "Sources/WorkspaceManager.swift",
+            "--database",
+            str(root / "missing-explain-work-provenance.sqlite"),
+        ],
+        cwd=repo,
+    )
+    no_database = json.loads(no_database_result.stdout)
+    if no_database["found"] or no_database["reason"] != "no provenance database exists yet":
+        raise AssertionError(f"missing database should preserve bounded no-database JSON: {no_database!r}")
+
+
+def check_provenance_explain_text(cli_path: str, root: Path) -> None:
+    repo = root / "repo-text"
+    repository_root = create_git_repo(repo)
+    database = root / "explain-text-work-provenance.sqlite"
+    create_provenance_explain_database(database, repository_root)
+
+    result = run_cli(
+        cli_path,
+        [
+            "provenance",
+            "explain",
+            "Sources/WorkspaceManager.swift",
+            "--database",
+            str(database),
+        ],
+        cwd=repo,
+    )
+    output = result.stdout
+    for expected in [
+        "Provenance for Sources/WorkspaceManager.swift",
+        "Status: modified",
+        "Attribution: observed (high confidence)",
+        "Change set: Workspace provenance",
+        "Contribution: contribution-1 · active",
+        "Intent: Capture work provenance",
+        "Session: session-1 · codex",
+        "Work item: WI-1 · Explain dirty files",
+        f"Repository: {repository_root}",
+    ]:
+        if expected not in output:
+            raise AssertionError(f"expected text output to include {expected!r}:\n{output}")
 
 
 def check_provenance_session_tree_json(cli_path: str, root: Path) -> None:
@@ -1064,6 +1518,8 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="bmux-provenance-cli-", dir="/tmp") as td:
         root = Path(td)
         try:
+            check_provenance_explain_json(cli_path, root)
+            check_provenance_explain_text(cli_path, root)
             check_provenance_session_tree_json(cli_path, root)
             check_provenance_session_tree_text(cli_path, root)
             check_provenance_lifecycle_trace_json(cli_path, root)

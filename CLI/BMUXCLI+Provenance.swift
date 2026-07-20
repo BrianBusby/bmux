@@ -5,7 +5,7 @@ extension BMUXCLI {
         let subcommand = commandArgs.first?.lowercased()
         switch subcommand {
         case "explain":
-            try runProvenanceExplain(
+            try await runProvenanceExplain(
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
@@ -43,7 +43,7 @@ extension BMUXCLI {
         }
     }
 
-    private func runProvenanceExplain(commandArgs: [String], jsonOutput: Bool) throws {
+    private func runProvenanceExplain(commandArgs: [String], jsonOutput: Bool) async throws {
         let commandName = "provenance explain"
         let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
         var remaining = remainingAfterDatabase
@@ -81,8 +81,43 @@ extension BMUXCLI {
             return
         }
 
-        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
-        let explanation = try reader.explain(target: target)
+        let store = try WorkProvenanceStore(databaseURL: databaseURL)
+        guard let worktree = try await store.worktree(path: target.repositoryRoot) else {
+            let explanation = CLIProvenanceExplanation(
+                requestedPath: target.requestedPath,
+                repositoryPath: target.repositoryRoot,
+                relativePath: target.relativePath,
+                found: false,
+                reason: String(localized: "cli.provenance.reason.noWorktree", defaultValue: "no provenance has been recorded for this Git worktree"),
+                fileStatus: nil,
+                attributionSource: nil,
+                attributionConfidence: nil,
+                updatedAt: nil,
+                worktree: ["path": target.repositoryRoot],
+                repository: ["path": target.repositoryRoot],
+                changeSet: nil,
+                checkpoint: nil,
+                contribution: nil,
+                session: nil,
+                workItem: nil
+            )
+            printProvenanceExplanation(explanation, jsonOutput: jsonOutput)
+            return
+        }
+
+        let repository = try await store.repository(id: worktree.repositoryID)
+        let client: any ProvenanceEngineClient = store
+        let response = try await client.fileExplanation(ProvenanceFileExplanationRequest(
+            worktreeID: worktree.id,
+            path: target.relativePath
+        ))
+        let explanation = CLIProvenanceExplanation(
+            target: target,
+            response: response,
+            worktree: worktree,
+            repository: repository,
+            noFileReason: String(localized: "cli.provenance.reason.noFile", defaultValue: "no file-level provenance has been recorded for this path")
+        )
         printProvenanceExplanation(explanation, jsonOutput: jsonOutput)
     }
 

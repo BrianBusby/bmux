@@ -247,6 +247,14 @@ actor WorkProvenanceStore {
         try worktreeRecord(id: id)
     }
 
+    /// Returns the newest worktree projection for `path`.
+    ///
+    /// - Parameter path: Absolute worktree root path.
+    /// - Returns: Worktree record or `nil`.
+    func worktree(path: String) throws -> WorkProvenanceWorktreeRecord? {
+        try worktreeRecord(path: path)
+    }
+
     /// Returns the direct parent relationship for `sessionID`.
     ///
     /// - Parameter sessionID: Child session identifier.
@@ -616,6 +624,40 @@ actor WorkProvenanceStore {
         )
         defer { statement.finalize() }
         try statement.bind(id, at: 1)
+        guard try statement.step(),
+              let id = statement.string(at: 0),
+              let repositoryID = statement.string(at: 1),
+              let path = statement.string(at: 2),
+              let status = statement.string(at: 7) else {
+            return nil
+        }
+        return WorkProvenanceWorktreeRecord(
+            id: id,
+            repositoryID: repositoryID,
+            path: path,
+            branch: statement.string(at: 3),
+            baseCommit: statement.string(at: 4),
+            currentHEAD: statement.string(at: 5),
+            isDirty: statement.int(at: 6) != 0,
+            status: status,
+            lastReconciledAt: statement.double(at: 8).map(Date.init(timeIntervalSince1970:)),
+            updatedAt: Date(timeIntervalSince1970: statement.double(at: 9) ?? 0)
+        )
+    }
+
+    private func worktreeRecord(path: String) throws -> WorkProvenanceWorktreeRecord? {
+        let statement = try database.prepare(
+            """
+            SELECT id, repository_id, path, branch, base_commit, current_head,
+                   is_dirty, status, last_reconciled_at, updated_at
+            FROM worktrees
+            WHERE path = ?
+            ORDER BY updated_at DESC, rowid DESC
+            LIMIT 1
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(path, at: 1)
         guard try statement.step(),
               let id = statement.string(at: 0),
               let repositoryID = statement.string(at: 1),

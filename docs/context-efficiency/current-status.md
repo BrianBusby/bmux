@@ -98,9 +98,11 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 Current checkout:
 
 - Branch: `provenance-extraction-phase2-contracts`
-- This 2026-07-20 slice converted `bmux provenance sessions tree <session-id>` to query the in-process `ProvenanceEngineClient.sessionTree(...)` contract through `WorkProvenanceStore`.
-- The CLI still owns argument parsing, localized messages, and output formatting.
-- The JSON/text shape, no-database behavior, missing-session behavior, depth-first ordering, implicit 100 session/relationship bound, and 200 external-identity output cap were preserved by CLI regression coverage.
+- This 2026-07-20 slice converted `bmux provenance explain <path>` to query the in-process `ProvenanceEngineClient.fileExplanation(...)` contract through `WorkProvenanceStore`.
+- The previous Phase 2 CLI slice converted `bmux provenance sessions tree <session-id>` to query `ProvenanceEngineClient.sessionTree(...)`.
+- The CLI still owns argument parsing, localized messages, no-database/no-worktree/no-file fallback construction, and output formatting.
+- The `explain` JSON/text shape, no-database behavior, no-worktree behavior, no-file behavior, and found-file graph payload were preserved by CLI regression coverage.
+- The session-tree JSON/text shape, no-database behavior, missing-session behavior, depth-first ordering, implicit 100 session/relationship bound, and 200 external-identity output cap remain covered by CLI regression coverage.
 - The `bmux-cli` target now compiles the portable WorkProvenance store/DTO subset needed for this read-only contract path; bmux-specific runtime, workspace, Git-inspection, and subsession adapter files remain out of the CLI target.
 - No daemon, independent repository, storage move, schema move, or data migration has happened.
 - HEAD observed before the Phase 2 CLI contract-conversion slice on 2026-07-20: `7ed3cc7cc`
@@ -115,6 +117,10 @@ Active context-efficiency worktree:
 Latest completed implementation HEAD for original-plan Phase 3:
 
 - `6279c8abdaf2a1d461e86f10a41e1c145229b3d1`
+
+Latest completed implementation HEAD for ADR-001 Phase 2 provenance extraction:
+
+- `cd3c38c2aa75a5c7c0652a3e860d950704a34e24`
 
 The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
 
@@ -150,7 +156,30 @@ Latest completed provenance planning slice:
 - The first Phase 2 interface slice introduces internal protocol/request/response names for event append, session-tree query, and file-explanation query around `WorkProvenanceStore`, without moving implementation or creating the independent engine repository yet.
 - The Phase 2 lifecycle-trace interface slice introduces `ProvenanceLifecycleTraceQuerying` plus lifecycle-trace request/response DTOs over `ProvenanceObservabilityStore`, keeping operational telemetry separate from `ProvenanceEngineClient`.
 - The first CLI consumer conversion moved `bmux provenance sessions tree` onto `ProvenanceEngineClient.sessionTree(...)` while preserving existing JSON/text/no-database behavior.
-- The next safe extraction slice is to convert another narrow read-only CLI path, likely `bmux provenance explain`, only after mapping its exact JSON/no-database/no-worktree/no-file behavior from the store-backed contract response.
+- The second CLI consumer conversion moved `bmux provenance explain` onto `ProvenanceEngineClient.fileExplanation(...)` while preserving existing JSON/text/no-database/no-worktree/no-file behavior.
+- The next safe extraction slice is to convert another narrow read-only CLI path, likely `bmux provenance worktrees list` or `bmux provenance context current`, only after mapping its exact JSON and fallback behavior from a store-backed contract response.
+
+Latest completed provenance Phase 2 file-explanation CLI contract-conversion slice:
+
+- Branch: `provenance-extraction-phase2-contracts`
+- This 2026-07-20 slice converted `bmux provenance explain <path>` from the direct `CLIProvenanceSQLiteReader.explain(...)` path to `ProvenanceEngineClient.fileExplanation(...)` backed by `WorkProvenanceStore`.
+- `runProvenanceExplain` still resolves the Git target before opening provenance storage and still returns the existing bounded no-database response without creating a database.
+- The CLI now resolves the recorded worktree by Git root path through `WorkProvenanceStore`, preserving the old path-based worktree selection semantics before it calls `fileExplanation(worktreeID:path:)`.
+- `CLIProvenanceExplanation` owns the mapper from `ProvenanceFileExplanationResponse` back into the existing snake_case CLI payload keys.
+- Public command syntax, help text, localized output strings, JSON keys, and text rendering did not change.
+- No daemon, independent repository, storage move, schema move, data migration, or observability change happened.
+- Validation passed: focused `bmux-cli` build, provenance Python CLI regression, focused `bmux-unit` WorkProvenance/Subsession suites, pbxproj check, workspace package grouping check, and `git diff --check`.
+- Tagged app reload/build was not run; current build policy says not to run full tagged builds as routine validation for this provenance/context-efficiency project.
+- Localization audit: changed no CLI help text, command syntax, UI, settings, shortcut, or localized output strings. The command still uses the existing localized no-database, no-worktree, and no-file messages.
+
+Files changed in the Phase 2 file-explanation CLI contract-conversion slice:
+
+- `CLI/BMUXCLI+Provenance.swift`
+- `CLI/CLIProvenanceExplanation.swift`
+- `Sources/WorkProvenance/WorkProvenanceStore.swift`
+- `tests/test_provenance_cli.py`
+- `docs/context-efficiency/current-status.md`
+- `docs/context-efficiency/milestones.md`
 
 Latest completed provenance Phase 2 CLI contract-conversion slice:
 
