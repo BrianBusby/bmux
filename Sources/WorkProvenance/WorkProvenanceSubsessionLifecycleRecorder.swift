@@ -31,6 +31,7 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
         let pipelineRunID = UUID().uuidString
         let runStartedAt = traceNow()
         var stages: [ProvenancePipelineStageExecutionRecord] = []
+        var projectionLineage: [ProvenanceProjectionLineageRecord] = []
         var builtWorkProvenanceEvent: WorkProvenanceEvent?
         var identityResolution: LifecycleIdentityResolution?
         do {
@@ -62,6 +63,7 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
                 now: traceNow
             )
             stages.append(contentsOf: appendTrace.stages)
+            projectionLineage = appendTrace.projectionLineage
             let runStatus = appendTrace.errorDescription == nil ? "succeeded" : "failed"
             lastErrorDescription = appendTrace.errorDescription
             let identityResolutionRecords: [ProvenanceIdentityResolutionRecord]
@@ -89,7 +91,8 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
                     errorSummary: appendTrace.errorDescription
                 ),
                 stages: stages,
-                identityResolutions: identityResolutionRecords
+                identityResolutions: identityResolutionRecords,
+                projectionLineage: projectionLineage
             )
         } catch {
             let errorSummary = WorkProvenanceStore.boundedErrorSummary(error)
@@ -128,7 +131,8 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
                     errorSummary: errorSummary
                 ),
                 stages: stages,
-                identityResolutions: []
+                identityResolutions: [],
+                projectionLineage: []
             )
         }
     }
@@ -255,21 +259,24 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
     private func writeObservability(
         run: ProvenancePipelineRunRecord,
         stages: [ProvenancePipelineStageExecutionRecord],
-        identityResolutions: [ProvenanceIdentityResolutionRecord]
+        identityResolutions: [ProvenanceIdentityResolutionRecord],
+        projectionLineage: [ProvenanceProjectionLineageRecord]
     ) async {
         guard let observabilityStore else { return }
         if awaitObservabilityWrites {
             try? await observabilityStore.record(
                 run: run,
                 stages: stages,
-                identityResolutions: identityResolutions
+                identityResolutions: identityResolutions,
+                projectionLineage: projectionLineage
             )
         } else {
             Task {
                 try? await observabilityStore.record(
                     run: run,
                     stages: stages,
-                    identityResolutions: identityResolutions
+                    identityResolutions: identityResolutions,
+                    projectionLineage: projectionLineage
                 )
             }
         }
@@ -300,7 +307,7 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
             outputCount: status == "succeeded" ? 1 : 0,
             errorCount: errorSummary == nil ? 0 : 1,
             errorSummary: errorSummary,
-            implementationVersion: "o2"
+            implementationVersion: "o3"
         )
     }
 

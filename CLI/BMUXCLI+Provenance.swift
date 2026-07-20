@@ -227,7 +227,8 @@ extension BMUXCLI {
                 reason: String(localized: "cli.provenance.reason.noObservabilityDatabase", defaultValue: "no provenance observability database exists yet"),
                 runs: [],
                 stages: [],
-                identityResolutions: []
+                identityResolutions: [],
+                projectionLineage: []
             )
             printProvenanceLifecycleTraceList(list, jsonOutput: jsonOutput)
             return

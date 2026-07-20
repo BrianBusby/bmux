@@ -260,6 +260,25 @@ def create_observability_database(path: Path) -> None:
                 ended_at REAL NOT NULL,
                 duration_ms REAL NOT NULL
             );
+            CREATE TABLE projection_lineage (
+                projection_lineage_id TEXT PRIMARY KEY NOT NULL,
+                pipeline_run_id TEXT NOT NULL,
+                stage_name TEXT NOT NULL,
+                projection_kind TEXT NOT NULL,
+                source_event_id TEXT NOT NULL,
+                source_event_type TEXT NOT NULL,
+                source_event_schema_version INTEGER NOT NULL,
+                source_payload_hash TEXT NOT NULL,
+                target_table TEXT NOT NULL,
+                target_entity_kind TEXT NOT NULL,
+                target_entity_id TEXT NOT NULL,
+                operation TEXT NOT NULL,
+                generator_version TEXT NOT NULL,
+                confidence TEXT NOT NULL,
+                started_at REAL NOT NULL,
+                ended_at REAL NOT NULL,
+                duration_ms REAL NOT NULL
+            );
             """
         )
         conn.executemany(
@@ -608,6 +627,135 @@ def create_observability_database(path: Path) -> None:
             ],
         )
 
+        conn.executemany(
+            """
+            INSERT INTO projection_lineage (
+                projection_lineage_id, pipeline_run_id, stage_name,
+                projection_kind, source_event_id, source_event_type,
+                source_event_schema_version, source_payload_hash, target_table,
+                target_entity_kind, target_entity_id, operation, generator_version,
+                confidence, started_at, ended_at, duration_ms
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    "run-success:projection:session",
+                    "run-success",
+                    "work_provenance_projection_update",
+                    "lifecycle_ingestion_projection",
+                    "event-child-start",
+                    "subsession_started",
+                    1,
+                    "payload-success",
+                    "sessions",
+                    "session",
+                    "codex-child",
+                    "upsert",
+                    "o3",
+                    "high",
+                    122.0,
+                    122.1,
+                    100.0,
+                ),
+                (
+                    "run-success:projection:relationship",
+                    "run-success",
+                    "work_provenance_projection_update",
+                    "lifecycle_ingestion_projection",
+                    "event-child-start",
+                    "subsession_started",
+                    1,
+                    "payload-success",
+                    "session_relationships",
+                    "session_relationship",
+                    "codex-child",
+                    "upsert",
+                    "o3",
+                    "high",
+                    122.0,
+                    122.1,
+                    100.0,
+                ),
+                (
+                    "run-success:projection:identity",
+                    "run-success",
+                    "work_provenance_projection_update",
+                    "lifecycle_ingestion_projection",
+                    "event-child-start",
+                    "subsession_started",
+                    1,
+                    "payload-success",
+                    "session_external_identities",
+                    "session_external_identity",
+                    "identity-child",
+                    "upsert",
+                    "o3",
+                    "high",
+                    122.0,
+                    122.1,
+                    100.0,
+                ),
+                (
+                    "run-second-parent:projection:session",
+                    "run-second-parent",
+                    "work_provenance_projection_update",
+                    "lifecycle_ingestion_projection",
+                    "event-other-start",
+                    "subsession_started",
+                    1,
+                    "payload-second-parent",
+                    "sessions",
+                    "session",
+                    "other-child",
+                    "upsert",
+                    "o3",
+                    "low",
+                    137.0,
+                    137.1,
+                    100.0,
+                ),
+                (
+                    "run-second-parent:projection:relationship",
+                    "run-second-parent",
+                    "work_provenance_projection_update",
+                    "lifecycle_ingestion_projection",
+                    "event-other-start",
+                    "subsession_started",
+                    1,
+                    "payload-second-parent",
+                    "session_relationships",
+                    "session_relationship",
+                    "other-child",
+                    "upsert",
+                    "o3",
+                    "low",
+                    137.0,
+                    137.1,
+                    100.0,
+                ),
+                (
+                    "run-second-parent:projection:identity",
+                    "run-second-parent",
+                    "work_provenance_projection_update",
+                    "lifecycle_ingestion_projection",
+                    "event-other-start",
+                    "subsession_started",
+                    1,
+                    "payload-second-parent",
+                    "session_external_identities",
+                    "session_external_identity",
+                    "identity-other",
+                    "upsert",
+                    "o3",
+                    "low",
+                    137.0,
+                    137.1,
+                    100.0,
+                ),
+            ],
+        )
+
 
 def run_cli(cli_path: str, args: list[str]) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
@@ -728,6 +876,7 @@ def check_provenance_lifecycle_trace_json(cli_path: str, root: Path) -> None:
         "conflicted_identity_resolution_count": 1,
         "failed_run_count": 1,
         "identity_resolution_count": 3,
+        "projection_lineage_count": 6,
         "resolved_identity_resolution_count": 2,
         "run_count": 3,
         "stage_count": 9,
@@ -760,6 +909,23 @@ def check_provenance_lifecycle_trace_json(cli_path: str, root: Path) -> None:
         raise AssertionError(f"identity row should not expose raw subsession id: {payload!r}")
     if failed_identity.get("conflict_reason") is None:
         raise AssertionError(f"expected failed trace identity conflict reason: {payload!r}")
+
+    lineage_rows = payload["projection_lineage"]
+    if len(lineage_rows) != 6:
+        raise AssertionError(f"expected O3 projection lineage rows: {payload!r}")
+    if {row["pipeline_run_id"] for row in lineage_rows} != {"run-success", "run-second-parent"}:
+        raise AssertionError(f"expected lineage only for successful projections: {payload!r}")
+    if any(row["pipeline_run_id"] == "run-failed" for row in lineage_rows):
+        raise AssertionError(f"failed projection should not have lineage rows: {payload!r}")
+    success_lineage = [row for row in lineage_rows if row["pipeline_run_id"] == "run-success"]
+    if [row["target_entity_kind"] for row in success_lineage] != [
+        "session",
+        "session_relationship",
+        "session_external_identity",
+    ]:
+        raise AssertionError(f"expected bounded O3 target lineage order: {payload!r}")
+    if any(row["source_payload_hash"] == "subagent-1" for row in lineage_rows):
+        raise AssertionError(f"lineage rows should not expose raw subsession ids: {payload!r}")
 
     failed_result = run_cli(
         cli_path,
@@ -802,6 +968,9 @@ def check_provenance_lifecycle_trace_json(cli_path: str, root: Path) -> None:
         "run-success",
     ]:
         raise AssertionError(f"expected run filter to scope stages: {run_payload!r}")
+
+    if {row["pipeline_run_id"] for row in run_payload["projection_lineage"]} != {"run-success"}:
+        raise AssertionError(f"expected run filter to scope projection lineage: {run_payload!r}")
 
     parent_result = run_cli(
         cli_path,

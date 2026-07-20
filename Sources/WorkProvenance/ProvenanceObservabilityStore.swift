@@ -2,7 +2,7 @@ import Foundation
 
 /// Separate operational telemetry store for provenance pipeline traces.
 actor ProvenanceObservabilityStore {
-    private static let schemaVersion = 2
+    private static let schemaVersion = 3
     private let database: WorkProvenanceSQLiteDatabase
 
     init(databaseURL: URL, fileManager: FileManager = .default) throws {
@@ -17,7 +17,8 @@ actor ProvenanceObservabilityStore {
     func record(
         run: ProvenancePipelineRunRecord,
         stages: [ProvenancePipelineStageExecutionRecord],
-        identityResolutions: [ProvenanceIdentityResolutionRecord] = []
+        identityResolutions: [ProvenanceIdentityResolutionRecord] = [],
+        projectionLineage: [ProvenanceProjectionLineageRecord] = []
     ) throws {
         try database.execute("BEGIN IMMEDIATE TRANSACTION")
         do {
@@ -27,6 +28,9 @@ actor ProvenanceObservabilityStore {
             }
             for identityResolution in identityResolutions {
                 try insert(identityResolution)
+            }
+            for projectionLineageRecord in projectionLineage {
+                try insert(projectionLineageRecord)
             }
             try database.execute("COMMIT")
         } catch {
@@ -44,7 +48,8 @@ actor ProvenanceObservabilityStore {
     ) throws -> [(
         run: ProvenancePipelineRunRecord,
         stages: [ProvenancePipelineStageExecutionRecord],
-        identityResolutions: [ProvenanceIdentityResolutionRecord]
+        identityResolutions: [ProvenanceIdentityResolutionRecord],
+        projectionLineage: [ProvenanceProjectionLineageRecord]
     )] {
         let boundedLimit = max(1, min(limit, 100))
         var predicates = ["pipeline_kind = 'lifecycle_ingestion'"]
@@ -86,14 +91,16 @@ actor ProvenanceObservabilityStore {
         var rows: [(
             run: ProvenancePipelineRunRecord,
             stages: [ProvenancePipelineStageExecutionRecord],
-            identityResolutions: [ProvenanceIdentityResolutionRecord]
+            identityResolutions: [ProvenanceIdentityResolutionRecord],
+            projectionLineage: [ProvenanceProjectionLineageRecord]
         )] = []
         while try statement.step() {
             guard let run = pipelineRun(from: statement) else { continue }
             rows.append((
                 run: run,
                 stages: try stages(pipelineRunID: run.pipelineRunID),
-                identityResolutions: try identityResolutions(pipelineRunID: run.pipelineRunID)
+                identityResolutions: try identityResolutions(pipelineRunID: run.pipelineRunID),
+                projectionLineage: try projectionLineage(pipelineRunID: run.pipelineRunID)
             ))
         }
         return rows
@@ -109,10 +116,15 @@ actor ProvenanceObservabilityStore {
         }
         if version == 0 {
             try database.execute(schemaSQL)
-            try database.execute("PRAGMA user_version = 2")
-        } else if version == 1 {
+            try database.execute("PRAGMA user_version = 3")
+            return
+        }
+        if version < 2 {
             try database.execute(identityResolutionSchemaSQL)
-            try database.execute("PRAGMA user_version = 2")
+        }
+        if version < 3 {
+            try database.execute(projectionLineageSchemaSQL)
+            try database.execute("PRAGMA user_version = 3")
         }
     }
 
@@ -254,6 +266,45 @@ actor ProvenanceObservabilityStore {
         try statement.bind(identityResolution.startedAt.timeIntervalSince1970, at: 28)
         try statement.bind(identityResolution.endedAt.timeIntervalSince1970, at: 29)
         try statement.bind(identityResolution.durationMilliseconds, at: 30)
+        _ = try statement.step()
+    }
+
+    private func insert(_ projectionLineage: ProvenanceProjectionLineageRecord) throws {
+        let statement = try database.prepare(
+            """
+            INSERT INTO projection_lineage (
+                projection_lineage_id, pipeline_run_id, stage_name,
+                projection_kind, source_event_id, source_event_type,
+                source_event_schema_version, source_payload_hash, target_table,
+                target_entity_kind, target_entity_id, operation,
+                generator_version, confidence, started_at, ended_at, duration_ms
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(projection_lineage_id) DO UPDATE SET
+                operation = excluded.operation,
+                generator_version = excluded.generator_version,
+                confidence = excluded.confidence,
+                ended_at = excluded.ended_at,
+                duration_ms = excluded.duration_ms
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(projectionLineage.projectionLineageID, at: 1)
+        try statement.bind(projectionLineage.pipelineRunID, at: 2)
+        try statement.bind(projectionLineage.stageName, at: 3)
+        try statement.bind(projectionLineage.projectionKind, at: 4)
+        try statement.bind(projectionLineage.sourceEventID, at: 5)
+        try statement.bind(projectionLineage.sourceEventType, at: 6)
+        try statement.bind(projectionLineage.sourceSchemaVersion, at: 7)
+        try statement.bind(projectionLineage.sourcePayloadHash, at: 8)
+        try statement.bind(projectionLineage.targetTable, at: 9)
+        try statement.bind(projectionLineage.targetEntityKind, at: 10)
+        try statement.bind(projectionLineage.targetEntityID, at: 11)
+        try statement.bind(projectionLineage.operation, at: 12)
+        try statement.bind(projectionLineage.generatorVersion, at: 13)
+        try statement.bind(projectionLineage.confidence, at: 14)
+        try statement.bind(projectionLineage.startedAt.timeIntervalSince1970, at: 15)
+        try statement.bind(projectionLineage.endedAt.timeIntervalSince1970, at: 16)
+        try statement.bind(projectionLineage.durationMilliseconds, at: 17)
         _ = try statement.step()
     }
 
@@ -411,6 +462,70 @@ actor ProvenanceObservabilityStore {
         )
     }
 
+    private func projectionLineage(pipelineRunID: String) throws -> [ProvenanceProjectionLineageRecord] {
+        let statement = try database.prepare(
+            """
+            SELECT projection_lineage_id, pipeline_run_id, stage_name,
+                   projection_kind, source_event_id, source_event_type,
+                   source_event_schema_version, source_payload_hash,
+                   target_table, target_entity_kind, target_entity_id,
+                   operation, generator_version, confidence, started_at,
+                   ended_at
+            FROM projection_lineage
+            WHERE pipeline_run_id = ?
+            ORDER BY started_at ASC, rowid ASC
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(pipelineRunID, at: 1)
+        var rows: [ProvenanceProjectionLineageRecord] = []
+        while try statement.step() {
+            guard let row = projectionLineage(from: statement) else { continue }
+            rows.append(row)
+        }
+        return rows
+    }
+
+    private func projectionLineage(
+        from statement: WorkProvenanceSQLiteStatement
+    ) -> ProvenanceProjectionLineageRecord? {
+        guard let projectionLineageID = statement.string(at: 0),
+              let pipelineRunID = statement.string(at: 1),
+              let stageName = statement.string(at: 2),
+              let projectionKind = statement.string(at: 3),
+              let sourceEventID = statement.string(at: 4),
+              let sourceEventType = statement.string(at: 5) else {
+            return nil
+        }
+        guard let sourcePayloadHash = statement.string(at: 7),
+              let targetTable = statement.string(at: 8),
+              let targetEntityKind = statement.string(at: 9),
+              let targetEntityID = statement.string(at: 10),
+              let operation = statement.string(at: 11),
+              let generatorVersion = statement.string(at: 12),
+              let confidence = statement.string(at: 13) else {
+            return nil
+        }
+        return ProvenanceProjectionLineageRecord(
+            projectionLineageID: projectionLineageID,
+            pipelineRunID: pipelineRunID,
+            stageName: stageName,
+            projectionKind: projectionKind,
+            sourceEventID: sourceEventID,
+            sourceEventType: sourceEventType,
+            sourceSchemaVersion: statement.int(at: 6),
+            sourcePayloadHash: sourcePayloadHash,
+            targetTable: targetTable,
+            targetEntityKind: targetEntityKind,
+            targetEntityID: targetEntityID,
+            operation: operation,
+            generatorVersion: generatorVersion,
+            confidence: confidence,
+            startedAt: Date(timeIntervalSince1970: statement.double(at: 14) ?? 0),
+            endedAt: Date(timeIntervalSince1970: statement.double(at: 15) ?? 0)
+        )
+    }
+
     private static var schemaSQL: String {
         """
         CREATE TABLE IF NOT EXISTS pipeline_runs (
@@ -457,6 +572,7 @@ actor ProvenanceObservabilityStore {
             ON pipeline_stage_executions(stage_name, status);
 
         \(identityResolutionSchemaSQL)
+        \(projectionLineageSchemaSQL)
         """
     }
 
@@ -498,6 +614,34 @@ actor ProvenanceObservabilityStore {
             ON identity_resolution_attempts(pipeline_run_id, started_at);
         CREATE INDEX IF NOT EXISTS identity_resolution_attempts_outcome_idx
             ON identity_resolution_attempts(outcome, confidence);
+        """
+    }
+
+    private static var projectionLineageSchemaSQL: String {
+        """
+        CREATE TABLE IF NOT EXISTS projection_lineage (
+            projection_lineage_id TEXT PRIMARY KEY NOT NULL,
+            pipeline_run_id TEXT NOT NULL,
+            stage_name TEXT NOT NULL,
+            projection_kind TEXT NOT NULL,
+            source_event_id TEXT NOT NULL,
+            source_event_type TEXT NOT NULL,
+            source_event_schema_version INTEGER NOT NULL,
+            source_payload_hash TEXT NOT NULL,
+            target_table TEXT NOT NULL,
+            target_entity_kind TEXT NOT NULL,
+            target_entity_id TEXT NOT NULL,
+            operation TEXT NOT NULL,
+            generator_version TEXT NOT NULL,
+            confidence TEXT NOT NULL,
+            started_at REAL NOT NULL,
+            ended_at REAL NOT NULL,
+            duration_ms REAL NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS projection_lineage_run_idx
+            ON projection_lineage(pipeline_run_id, started_at);
+        CREATE INDEX IF NOT EXISTS projection_lineage_target_idx
+            ON projection_lineage(target_entity_kind, target_entity_id);
         """
     }
 }

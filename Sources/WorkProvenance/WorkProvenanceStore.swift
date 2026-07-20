@@ -62,7 +62,11 @@ actor WorkProvenanceStore {
         _ event: WorkProvenanceEvent,
         pipelineRunID: String,
         now: @Sendable () -> Date = { Date() }
-    ) -> (stages: [ProvenancePipelineStageExecutionRecord], errorDescription: String?) {
+    ) -> (
+        stages: [ProvenancePipelineStageExecutionRecord],
+        projectionLineage: [ProvenanceProjectionLineageRecord],
+        errorDescription: String?
+    ) {
         var stages: [ProvenancePipelineStageExecutionRecord] = []
         do {
             try database.execute("BEGIN IMMEDIATE TRANSACTION")
@@ -85,7 +89,7 @@ actor WorkProvenanceStore {
                 now: now,
                 reason: "skipped after WorkProvenance transaction open failed"
             ))
-            return (stages, errorDescription)
+            return (stages, [], errorDescription)
         }
 
         do {
@@ -106,9 +110,16 @@ actor WorkProvenanceStore {
             let projectionStartedAt = now()
             try apply(payload: event.payload)
             let projectionEndedAt = now()
+            let projectionLineage = try projectionLineageRecords(
+                for: event,
+                pipelineRunID: pipelineRunID,
+                startedAt: projectionStartedAt,
+                endedAt: projectionEndedAt
+            )
             stages.append(Self.stageRecord(
                 pipelineRunID: pipelineRunID,
                 stageName: "work_provenance_projection_update",
+                stageVersion: "o3",
                 status: "succeeded",
                 startedAt: projectionStartedAt,
                 endedAt: projectionEndedAt,
@@ -123,7 +134,7 @@ actor WorkProvenanceStore {
                 appendCountSincePrune = 0
             }
             try database.execute("COMMIT")
-            return (stages, nil)
+            return (stages, projectionLineage, nil)
         } catch {
             try? database.execute("ROLLBACK")
             let errorDescription = Self.boundedErrorSummary(error)
@@ -158,7 +169,7 @@ actor WorkProvenanceStore {
                     errorSummary: errorDescription
                 ))
             }
-            return (stages, errorDescription)
+            return (stages, [], errorDescription)
         }
     }
 
@@ -977,6 +988,7 @@ actor WorkProvenanceStore {
     private static func stageRecord(
         pipelineRunID: String,
         stageName: String,
+        stageVersion: String = "o1",
         status: String,
         startedAt: Date,
         endedAt: Date,
@@ -987,7 +999,7 @@ actor WorkProvenanceStore {
         ProvenancePipelineStageExecutionRecord(
             pipelineRunID: pipelineRunID,
             stageName: stageName,
-            stageVersion: "o1",
+            stageVersion: stageVersion,
             status: status,
             startedAt: startedAt,
             endedAt: endedAt,
@@ -1031,6 +1043,91 @@ actor WorkProvenanceStore {
             payload.fileChanges.count,
             payload.validationRun == nil ? 0 : 1,
         ].reduce(0, +)
+    }
+
+    private func projectionLineageRecords(
+        for event: WorkProvenanceEvent,
+        pipelineRunID: String,
+        startedAt: Date,
+        endedAt: Date
+    ) throws -> [ProvenanceProjectionLineageRecord] {
+        let payloadHash = WorkProvenanceStableIDFactory().id(
+            prefix: "payload",
+            value: try encoded(event.payload)
+        )
+        return Self.projectionTargets(for: event.payload).map { target in
+            ProvenanceProjectionLineageRecord(
+                projectionLineageID: [
+                    pipelineRunID,
+                    "work_provenance_projection_update",
+                    target.entityKind,
+                    target.entityID,
+                ].joined(separator: ":"),
+                pipelineRunID: pipelineRunID,
+                stageName: "work_provenance_projection_update",
+                projectionKind: "lifecycle_ingestion_projection",
+                sourceEventID: event.id,
+                sourceEventType: event.eventType.rawValue,
+                sourceSchemaVersion: event.schemaVersion,
+                sourcePayloadHash: payloadHash,
+                targetTable: target.table,
+                targetEntityKind: target.entityKind,
+                targetEntityID: target.entityID,
+                operation: "upsert",
+                generatorVersion: "o3",
+                confidence: event.confidence.rawValue,
+                startedAt: startedAt,
+                endedAt: endedAt
+            )
+        }
+    }
+
+    private static func projectionTargets(
+        for payload: WorkProvenanceEventPayload
+    ) -> [(table: String, entityKind: String, entityID: String)] {
+        var targets: [(table: String, entityKind: String, entityID: String)] = []
+        if let repository = payload.repository {
+            targets.append(("repositories", "repository", repository.id))
+        }
+        if let worktree = payload.worktree {
+            targets.append(("worktrees", "worktree", worktree.id))
+        }
+        if let session = payload.session {
+            targets.append(("sessions", "session", session.id))
+        }
+        if let sessionRelationship = payload.sessionRelationship {
+            targets.append((
+                "session_relationships",
+                "session_relationship",
+                sessionRelationship.sessionID
+            ))
+        }
+        for externalIdentity in payload.externalIdentities {
+            targets.append((
+                "session_external_identities",
+                "session_external_identity",
+                externalIdentity.id
+            ))
+        }
+        if let workItem = payload.workItem {
+            targets.append(("work_items", "work_item", workItem.id))
+        }
+        if let contribution = payload.contribution {
+            targets.append(("work_contributions", "work_contribution", contribution.id))
+        }
+        if let checkpoint = payload.checkpoint {
+            targets.append(("checkpoints", "checkpoint", checkpoint.id))
+        }
+        if let changeSet = payload.changeSet {
+            targets.append(("change_sets", "change_set", changeSet.id))
+        }
+        for fileChange in payload.fileChanges {
+            targets.append(("file_changes", "file_change", fileChange.id))
+        }
+        if let validationRun = payload.validationRun {
+            targets.append(("validation_runs", "validation_run", validationRun.id))
+        }
+        return targets
     }
 
     static func boundedErrorSummary(_ error: Error) -> String {

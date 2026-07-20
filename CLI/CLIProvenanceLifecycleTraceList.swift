@@ -6,6 +6,7 @@ struct CLIProvenanceLifecycleTraceList: Equatable {
     let runs: [[String: AnyHashable]]
     let stages: [[String: AnyHashable]]
     let identityResolutions: [[String: AnyHashable]]
+    let projectionLineage: [[String: AnyHashable]]
 
     var payload: [String: Any] {
         let failedRunCount = runs.filter { $0["status"] as? String == "failed" }.count
@@ -22,6 +23,7 @@ struct CLIProvenanceLifecycleTraceList: Equatable {
             "run_count": runs.count,
             "stage_count": stages.count,
             "identity_resolution_count": identityResolutions.count,
+            "projection_lineage_count": projectionLineage.count,
             "failed_run_count": failedRunCount,
             "resolved_identity_resolution_count": resolvedIdentityResolutionCount,
             "unresolved_identity_resolution_count": unresolvedIdentityResolutionCount,
@@ -33,7 +35,8 @@ struct CLIProvenanceLifecycleTraceList: Equatable {
             "summary": summary,
             "runs": arrayPayload(runs),
             "stages": arrayPayload(stages),
-            "identity_resolutions": arrayPayload(identityResolutions)
+            "identity_resolutions": arrayPayload(identityResolutions),
+            "projection_lineage": arrayPayload(projectionLineage)
         ]
     }
 

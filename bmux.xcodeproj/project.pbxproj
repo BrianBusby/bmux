@@ -941,6 +941,7 @@
 		CE0B00060000000000000001 /* ProvenanceObservabilityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00060000000000000002 /* ProvenanceObservabilityStore.swift */; };
 		CE0B00070000000000000001 /* ProvenancePipelineRunRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */; };
 		CE0B00080000000000000001 /* ProvenancePipelineStageExecutionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */; };
+		CE0B00100000000000000001 /* ProvenanceProjectionLineageRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00100000000000000002 /* ProvenanceProjectionLineageRecord.swift */; };
 		B71000000000000000000003 /* PushToTalkVoiceInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71000000000000000000004 /* PushToTalkVoiceInputController.swift */; };
 		A64610010000000000000001 /* QuitConfirmationAlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64610010000000000000002 /* QuitConfirmationAlertPresenter.swift */; };
 		A64610020000000000000001 /* QuitConfirmationAlertPresenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64610020000000000000002 /* QuitConfirmationAlertPresenterTests.swift */; };
@@ -2516,6 +2517,7 @@
 		CE0B00060000000000000002 /* ProvenanceObservabilityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceObservabilityStore.swift; sourceTree = "<group>"; };
 		CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenancePipelineRunRecord.swift; sourceTree = "<group>"; };
 		CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenancePipelineStageExecutionRecord.swift; sourceTree = "<group>"; };
+		CE0B00100000000000000002 /* ProvenanceProjectionLineageRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceProjectionLineageRecord.swift; sourceTree = "<group>"; };
 		B71000000000000000000004 /* PushToTalkVoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/PushToTalkVoiceInputController.swift; sourceTree = "<group>"; };
 		A64610010000000000000002 /* QuitConfirmationAlertPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitConfirmationAlertPresenter.swift; sourceTree = "<group>"; };
 		A64610020000000000000002 /* QuitConfirmationAlertPresenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitConfirmationAlertPresenterTests.swift; sourceTree = "<group>"; };
@@ -4806,6 +4808,7 @@
 				CE0B00060000000000000002 /* ProvenanceObservabilityStore.swift */,
 				CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */,
 				CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */,
+				CE0B00100000000000000002 /* ProvenanceProjectionLineageRecord.swift */,
 				11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */,
 				0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */,
 				20C26C989BEBFA4B46E0200B /* WorkProvenanceConfidence.swift */,
@@ -5795,6 +5798,7 @@
 				CE0B00060000000000000001 /* ProvenanceObservabilityStore.swift in Sources */,
 				CE0B00070000000000000001 /* ProvenancePipelineRunRecord.swift in Sources */,
 				CE0B00080000000000000001 /* ProvenancePipelineStageExecutionRecord.swift in Sources */,
+				CE0B00100000000000000001 /* ProvenanceProjectionLineageRecord.swift in Sources */,
 				B71000000000000000000003 /* PushToTalkVoiceInputController.swift in Sources */,
 					A64610010000000000000001 /* QuitConfirmationAlertPresenter.swift in Sources */,
 				A500RG01 /* ReactGrab.swift in Sources */,

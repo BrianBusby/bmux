@@ -94,8 +94,52 @@ struct SubsessionProvenanceTests {
             "work_provenance_projection_update",
         ])
         #expect(trace.stages.allSatisfy { $0.status == "succeeded" })
-        #expect(trace.stages.map(\.stageVersion) == ["o1", "o1", "o1"])
+        #expect(trace.stages.map(\.stageVersion) == ["o1", "o1", "o3"])
         #expect(trace.stages.map(\.errorCount) == [0, 0, 0])
+    }
+
+    @Test
+    func recordsO3LifecycleProjectionLineageTrace() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let observabilityStore = try ProvenanceObservabilityStore(
+            databaseURL: fixture.observabilityDatabaseURL
+        )
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store,
+            observabilityStore: observabilityStore,
+            awaitObservabilityWrites: true
+        )
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(
+            Self.lifecycleChange(phase: .started),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+
+        let trace = try #require(try await observabilityStore.lifecycleIngestionRuns().first)
+        let childSessionID = try #require(trace.run.childSessionID)
+        let lifecycleEventID = try #require(trace.run.lifecycleEventID)
+        let lineage = trace.projectionLineage
+
+        #expect(lineage.map(\.pipelineRunID).allSatisfy { $0 == trace.run.pipelineRunID })
+        #expect(lineage.map(\.stageName).allSatisfy { $0 == "work_provenance_projection_update" })
+        #expect(lineage.map(\.projectionKind).allSatisfy { $0 == "lifecycle_ingestion_projection" })
+        #expect(lineage.map(\.sourceEventID).allSatisfy { $0 == lifecycleEventID })
+        #expect(lineage.map(\.sourceEventType).allSatisfy { $0 == "subsession_started" })
+        #expect(lineage.map(\.sourceSchemaVersion).allSatisfy { $0 == 1 })
+        #expect(lineage.map(\.sourcePayloadHash).allSatisfy { $0.hasPrefix("payload-") })
+        #expect(lineage.map(\.sourcePayloadHash).allSatisfy { !$0.contains("subagent-1") })
+        #expect(lineage.map(\.targetEntityKind) == [
+            "session",
+            "session_relationship",
+            "session_external_identity",
+        ])
+        #expect(lineage.map(\.targetEntityID).contains(childSessionID))
+        #expect(lineage.map(\.operation).allSatisfy { $0 == "upsert" })
+        #expect(lineage.map(\.generatorVersion).allSatisfy { $0 == "o3" })
+        #expect(lineage.map(\.confidence).allSatisfy { $0 == "high" })
     }
 
     @Test
@@ -274,6 +318,7 @@ struct SubsessionProvenanceTests {
         let events = try await store.events()
 
         #expect(events.map(\.eventType) == [.sessionObserved, .subsessionStarted])
+        #expect(failedTrace.projectionLineage.isEmpty)
         #expect(failedTrace.run.errorCount == 1)
         #expect(failedTrace.run.errorSummary != nil)
         #expect(failedTrace.stages.map(\.stageName) == [

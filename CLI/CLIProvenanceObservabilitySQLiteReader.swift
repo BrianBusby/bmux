@@ -47,10 +47,12 @@ final class CLIProvenanceObservabilitySQLiteReader {
         )
         var stages: [[String: AnyHashable]] = []
         var identityResolutions: [[String: AnyHashable]] = []
+        var projectionLineage: [[String: AnyHashable]] = []
         for run in runs {
             guard let pipelineRunID = run["pipeline_run_id"] as? String else { continue }
             stages.append(contentsOf: try stageRows(pipelineRunID: pipelineRunID))
             identityResolutions.append(contentsOf: try identityResolutionRows(pipelineRunID: pipelineRunID))
+            projectionLineage.append(contentsOf: try projectionLineageRows(pipelineRunID: pipelineRunID))
         }
         return CLIProvenanceLifecycleTraceList(
             found: !runs.isEmpty,
@@ -59,7 +61,8 @@ final class CLIProvenanceObservabilitySQLiteReader {
                 : nil,
             runs: runs,
             stages: stages,
-            identityResolutions: identityResolutions
+            identityResolutions: identityResolutions,
+            projectionLineage: projectionLineage
         )
     }
 
@@ -219,6 +222,48 @@ final class CLIProvenanceObservabilitySQLiteReader {
                 "started_at": double(statement, 27),
                 "ended_at": double(statement, 28),
                 "duration_ms": double(statement, 29)
+            ]))
+        }
+        return rows
+    }
+
+    private func projectionLineageRows(pipelineRunID: String) throws -> [[String: AnyHashable]] {
+        guard try tableExists("projection_lineage") else { return [] }
+        let statement = try prepare(
+            """
+            SELECT projection_lineage_id, pipeline_run_id, stage_name,
+                   projection_kind, source_event_id, source_event_type,
+                   source_event_schema_version, source_payload_hash,
+                   target_table, target_entity_kind, target_entity_id,
+                   operation, generator_version, confidence, started_at,
+                   ended_at, duration_ms
+            FROM projection_lineage
+            WHERE pipeline_run_id = ?
+            ORDER BY started_at ASC, rowid ASC
+            """
+        )
+        defer { sqlite3_finalize(statement) }
+        try bind(pipelineRunID, to: statement, at: 1)
+        var rows: [[String: AnyHashable]] = []
+        while sqlite3_step(statement) == SQLITE_ROW {
+            rows.append(compactPayload([
+                "projection_lineage_id": string(statement, 0),
+                "pipeline_run_id": string(statement, 1),
+                "stage_name": string(statement, 2),
+                "projection_kind": string(statement, 3),
+                "source_event_id": string(statement, 4),
+                "source_event_type": string(statement, 5),
+                "source_event_schema_version": int(statement, 6),
+                "source_payload_hash": string(statement, 7),
+                "target_table": string(statement, 8),
+                "target_entity_kind": string(statement, 9),
+                "target_entity_id": string(statement, 10),
+                "operation": string(statement, 11),
+                "generator_version": string(statement, 12),
+                "confidence": string(statement, 13),
+                "started_at": double(statement, 14),
+                "ended_at": double(statement, 15),
+                "duration_ms": double(statement, 16)
             ]))
         }
         return rows
