@@ -10,12 +10,13 @@ This file is the live handoff index for the context-efficiency roadmap. Read it 
 2. `docs/context-efficiency/current-status.md`
 3. `docs/context-efficiency/roadmap.md`
 4. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
-5. `docs/context-efficiency/subsession-delegation-integration-plan.md`
-6. `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
-7. `docs/context-efficiency/provenance-observability-integration-plan.md`
-8. `docs/context-efficiency/subsession-delegation-phase-a-report.md`
-9. `docs/context-efficiency/milestones.md`
-10. Relevant bmux skills:
+5. `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`
+6. `docs/context-efficiency/subsession-delegation-integration-plan.md`
+7. `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
+8. `docs/context-efficiency/provenance-observability-integration-plan.md`
+9. `docs/context-efficiency/subsession-delegation-phase-a-report.md`
+10. `docs/context-efficiency/milestones.md`
+11. Relevant bmux skills:
    - `bmux-architecture` before Swift package/API changes.
    - `bmux-dev-workflow` before tagged builds or project wiring.
    - `bmux-testing` before test changes or verification decisions.
@@ -28,6 +29,7 @@ Original roadmap Phase 3 is active: read-only command and output attribution fro
 ADR-001 is accepted and now controls the product boundary for provenance extraction:
 
 - `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
+- `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`
 
 Treat the Provenance Engine as an independent local-first product with bmux as its first client. Future provenance implementation should move toward SDK/API boundaries, a local daemon, independent versioning, and no engine dependency on bmux internals. Existing `WorkProvenance`, `BmuxContextEfficiency`, and `ProvenanceObservability` work remains useful migration source material, but new extraction work must not deepen bmux-specific storage or domain coupling.
 
@@ -93,9 +95,9 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 
 Current checkout:
 
-- Branch: `provenance-engine-adr`
-- HEAD observed before the ADR docs commit on 2026-07-20: `596666ca3ee44a4ca74a26b867c9648078bf933c`
-- Contains the accepted ADR-001 provenance extraction product-boundary documentation as a docs-only planning slice.
+- Branch: `provenance-extraction-phase0-audit`
+- HEAD observed before the Phase 0 report commit on 2026-07-20: `8ac99c846`
+- Contains the accepted ADR-001 provenance extraction product-boundary documentation plus the Phase 0 migration audit report.
 
 Active context-efficiency worktree:
 
@@ -135,9 +137,9 @@ Files changed in the latest implementation slice:
 
 Latest completed provenance planning slice:
 
-- `docs/context-efficiency/adr-001-provenance-engine-extraction.md` records the accepted product-boundary decision for extracting provenance into an independent local-first engine with bmux as its first client.
-- `docs/context-efficiency/current-status.md` adds ADR-001 to the required read order and marks it as controlling product-boundary context for future provenance extraction work.
-- `docs/context-efficiency/milestones.md` lists ADR-001 as a cross-cutting plan and records that future migration work should introduce SDK/API contracts before moving implementation, avoid new bmux assumptions, and preserve independent engine versioning and release boundaries.
+- `docs/context-efficiency/provenance-engine-extraction-phase0-report.md` completes ADR-001 Phase 0 by auditing current provenance modules, schemas, storage paths, capture paths, CLI/UI consumers, shared types, bmux assumptions, tests, reusable pieces, replacement targets, coupling risks, unknowns, and the proposed change map.
+- The report concludes that extraction should center on the existing `WorkProvenance` append-only event/projection model, while bmux keeps capture adapters, UI, workspace/session orchestration, and visualization.
+- The next safe code slice is Phase 1 behavior characterization and a narrow contract draft before moving implementation into an independent engine repository.
 
 Latest completed provenance implementation slice:
 
