@@ -1,6 +1,6 @@
 # Bmux Context Efficiency: Current Status
 
-Last updated: 2026-07-19
+Last updated: 2026-07-20
 
 This file is the live handoff index for the context-efficiency roadmap. Read it before choosing work, and update it at the end of every context-efficiency slice.
 
@@ -39,7 +39,7 @@ Provenance observability has been merged as a cross-cutting roadmap track with i
 - `docs/context-efficiency/provenance-observability-integration-plan.md`
 - `docs/context-efficiency/provenance-observability-phase-o0-report.md`
 
-Observability must not become a parallel provenance system. `WorkProvenance` remains the authoritative semantic history of engineering work, `BmuxContextEfficiency` remains read-only imported telemetry/evidence, and `ProvenanceObservability.sqlite` may hold operational traces, quality telemetry, feedback, evaluation, and shadow-comparison data only as roadmap phases explicitly allow. Phase O0 architecture investigation is complete in `docs/context-efficiency/provenance-observability-phase-o0-report.md`. A working tree O1 lifecycle-ingestion trace slice now adds only the narrow `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update` observability path. Do not start broad observability implementation or O2+ work from this slice.
+Observability must not become a parallel provenance system. `WorkProvenance` remains the authoritative semantic history of engineering work, `BmuxContextEfficiency` remains read-only imported telemetry/evidence, and `ProvenanceObservability.sqlite` may hold operational traces, quality telemetry, feedback, evaluation, and shadow-comparison data only as roadmap phases explicitly allow. Phase O0 architecture investigation is complete in `docs/context-efficiency/provenance-observability-phase-o0-report.md`. O1 lifecycle-ingestion tracing is complete, and O2 identity-resolution observability is complete only for the existing lifecycle-ingestion path. Do not start broad observability implementation or O3+ work from this slice.
 
 Phase A investigation is complete in `docs/context-efficiency/subsession-delegation-phase-a-report.md`. Phase B read-only subsession lifecycle persistence is now implemented through the WorkProvenance store foundation plus the `AgentSubsessionLifecycleChange` adapter/runtime wiring. Do not treat subsession/delegation as a separate subagent manager; it must extend `WorkProvenance` and link to `BmuxContextEfficiency` telemetry later through stable identities.
 
@@ -62,9 +62,10 @@ Allowed subsession/delegation work right now:
 Allowed observability work right now:
 
 - Phase O0 architecture investigation is complete; keep the report as the O1 gate.
-- The current working tree O1 implementation is limited to the lifecycle-ingestion pipeline trace from `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update`.
-- Keep O1 best-effort, bounded, and separate from authoritative WorkProvenance facts.
-- Do not add O2+ identity-resolution observability, retrieval traces, feedback, dashboards, quality scoring, shadow evaluation, or automatic correction in this slice.
+- O1 lifecycle-ingestion pipeline tracing is complete for `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update`.
+- O2 identity-resolution observability is complete only for the lifecycle-ingestion path.
+- Keep observability best-effort, bounded, and separate from authoritative WorkProvenance facts.
+- Do not add O3+ projection lineage, retrieval traces, feedback, dashboards, quality scoring, shadow evaluation, automatic correction, lifecycle policy, or orchestration in the next slice.
 
 Do not start:
 
@@ -138,24 +139,24 @@ Latest completed observability planning slice:
 
 Latest completed observability implementation slice:
 
-- Working tree slice on 2026-07-19 adds a separate `ProvenanceObservability.sqlite` store with `pipeline_runs` and `pipeline_stage_executions` records for only the O1 lifecycle-ingestion path.
-- It records only `lifecycle_change_received`, `work_provenance_event_append`, and `work_provenance_projection_update` stage executions.
-- Observability writes are best-effort/non-blocking after provenance persistence, and bounded CLI output is available through `bmux provenance traces lifecycle-ingestion`.
-- It does not add O2+ identity-resolution observability, retrieval, delegation contracts, feedback, dashboards, quality scoring, shadow evaluation, automatic correction, or a parallel semantic provenance source.
-- Validation: bmux-cli built successfully and the provenance CLI regression passed against that built binary.
+- `6ceb48ccafc698f1ee16984455f26e18c81efe7a Add lifecycle identity observability traces`
+- This O2 slice adds `identity_resolution_attempts` to the separate `ProvenanceObservability.sqlite` store, migrating the observability schema to version 2 while keeping `WorkProvenance` authoritative.
+- It records identity-resolution attempts only for the lifecycle-ingestion path and correlates each attempt to the O1 `pipeline_run_id`.
+- It explains how `AgentSubsessionLifecycleChange` was resolved into child session ID, lifecycle event ID, relationship session ID, and external identity ID.
+- It stores bounded inputs and outcomes only: phase, agent kind, parent session ID, presence flags for optional lifecycle fields, selected identity kind/value category, hashed input identity value, candidate count, confidence, fallback/unresolved state, unresolved reason, conflict reason, selected authoritative IDs, timestamps, and resolver version.
+- Native subsession IDs record high-confidence resolved identity; missing native identifiers record low-confidence fallback-unresolved identity; duplicate append conflicts record a bounded conflict reason without blocking provenance persistence.
+- The existing `bmux provenance traces lifecycle-ingestion --json` output now includes bounded `identity_resolutions` rows and `identity_resolution_count`. Text output is unchanged.
+- Observability writes remain best-effort/non-blocking and separate from authoritative WorkProvenance writes.
+- It does not add O3+ projection lineage, retrieval, delegation contracts, feedback, dashboards, quality scoring, shadow evaluation, automatic correction, lifecycle policy, orchestration, or a parallel semantic provenance source.
+- Validation: focused `SubsessionProvenanceTests` passed with `BMUX_SKIP_ZIG_BUILD=1`; `bmux-cli` built successfully; `tests/test_provenance_cli.py`, `scripts/check-pbxproj.sh`, `python3 scripts/check-workspace-package-groups.py --check`, and `git diff --check` passed.
 
 Files changed in the working tree slice:
 
 - `CLI/BMUXCLI+Provenance.swift`
 - `CLI/CLIProvenanceLifecycleTraceList.swift`
 - `CLI/CLIProvenanceObservabilitySQLiteReader.swift`
-- `Resources/Localizable.xcstrings`
+- `Sources/WorkProvenance/ProvenanceIdentityResolutionRecord.swift`
 - `Sources/WorkProvenance/ProvenanceObservabilityStore.swift`
-- `Sources/WorkProvenance/ProvenancePipelineRunRecord.swift`
-- `Sources/WorkProvenance/ProvenancePipelineStageExecutionRecord.swift`
-- `Sources/WorkProvenance/WorkProvenanceRuntime.swift`
-- `Sources/WorkProvenance/WorkProvenanceStorageLocation.swift`
-- `Sources/WorkProvenance/WorkProvenanceStore.swift`
 - `Sources/WorkProvenance/WorkProvenanceSubsessionLifecycleRecorder.swift`
 - `bmux.xcodeproj/project.pbxproj`
 - `bmuxTests/SubsessionProvenanceTests.swift`
@@ -240,9 +241,9 @@ Retrieval/knowledge-projection target:
 Observability target:
 
 1. Use `provenance-observability-phase-o0-report.md` as the completed O0 gate.
-2. Treat the working tree O1 lifecycle-ingestion trace slice as the only active observability implementation target.
-3. Do not add broad observability tables, O2+ identity resolution traces, retrieval traces, dashboards, feedback, quality scoring, shadow evaluation, or automatic correction.
-4. O1 should trace only `AgentSubsessionLifecycleChange -> WorkProvenance event append -> projection update` and must not block lifecycle persistence.
+2. Treat O1 lifecycle-ingestion traces and O2 lifecycle identity-resolution traces as complete for the current narrow path.
+3. The next observability implementation, if explicitly requested, should start from O3 projection lineage and remain scoped to existing lifecycle-ingestion projections unless the user changes the roadmap.
+4. Do not add broad observability tables, retrieval traces, dashboards, feedback, quality scoring, shadow evaluation, automatic correction, lifecycle policy, warnings, intervention logic, prompt mutation, or orchestration.
 
 Avoid broad CLI/app integration unless the slice is explicitly scoped to read-only diagnostics and includes localization work for any new command/help/error text.
 
@@ -337,6 +338,6 @@ Do not let one-off chat handoffs become the only record of current status.
 
 ## Localization
 
-This observability planning slice changed internal development documentation only. No CLI, UI, help, command, or user-facing app strings changed.
+The O2 implementation changed provenance trace JSON fields only (`identity_resolution_count` and `identity_resolutions`) and did not add or edit CLI help, CLI text output, UI strings, command text, error text, or localized user-facing prose. No `Resources/Localizable.xcstrings` update was needed.
 
 This file and the other `docs/context-efficiency/*` planning files are internal development documentation and are not mirrored into localized docs. If a future slice adds or edits CLI/UI/user-facing strings, use `bmux-localization` and update every supported locale.
