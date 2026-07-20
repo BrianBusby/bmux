@@ -1986,6 +1986,8 @@ final class Workspace: Identifiable, ObservableObject {
     /// Identifier of the WorkspaceGroup this workspace belongs to, or nil if ungrouped.
     /// The group entity itself lives in `TabManager.workspaceGroups`.
     @Published var groupId: UUID?
+    /// Runtime-only workspace created to show an in-process agent subsession.
+    var isEphemeralAgentSubsessionWorkspace = false
     /// Custom workspace color hex string, e.g. "#C0392B".
     @Published var customColor: String? {
         didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: customColor) }
@@ -5180,7 +5182,8 @@ final class Workspace: Identifiable, ObservableObject {
         status: SidebarPullRequestStatus,
         branch: String? = nil,
         isStale: Bool = false,
-        bindToCurrentBranch: Bool = true
+        bindToCurrentBranch: Bool = true,
+        source: WorkspaceWorkContextSource = .sidebarMetadata
     ) {
         let existing = panelPullRequests[panelId]
         let normalizedBranch = branch?.normalizedSidebarBranchName
@@ -5210,10 +5213,14 @@ final class Workspace: Identifiable, ObservableObject {
             isStale: isStale
         )
         if existing != state {
-            panelPullRequests[panelId] = state
+            sidebarMetadata.updatePanelPullRequest(state, panelId: panelId, source: source)
+        } else {
+            sidebarMetadata.updatePanelPullRequestSource(panelId: panelId, source: source)
         }
         if panelId == focusedPanelId, pullRequest != state {
-            pullRequest = state
+            sidebarMetadata.updatePullRequest(state, source: source)
+        } else if panelId == focusedPanelId {
+            sidebarMetadata.updatePullRequestSource(source)
         }
     }
 
@@ -5542,6 +5549,7 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     var isRestorableInSessionSnapshot: Bool {
+        if isEphemeralAgentSubsessionWorkspace { return false }
         if isRemoteTmuxMirror { return false }
         if panels.values.contains(where: { $0.panelType == .cloudVMLoading }) {
             return false

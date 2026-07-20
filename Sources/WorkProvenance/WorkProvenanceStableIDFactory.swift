@@ -40,7 +40,7 @@ struct WorkProvenanceStableIDFactory: Sendable {
         return "git-status-\(digest(payload))"
     }
 
-    private func id(prefix: String, value: String) -> String {
+    func id(prefix: String, value: String) -> String {
         "\(prefix)-\(digest(value).prefix(24))"
     }
 

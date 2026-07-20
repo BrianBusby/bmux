@@ -107,6 +107,29 @@ import Testing
         #expect(decision.hasDeferredWorkspaceObservationInvalidation)
     }
 
+    @Test func contextMenuTitleChangeCarriesMatchingPullRequestRows() {
+        let current = Self.snapshot(
+            title: "Assessing stale route parameter comment",
+            pullRequestRows: [Self.pullRequest(number: 25194)]
+        )
+        let next = Self.snapshot(
+            title: "Assessing route parameter comment",
+            pullRequestRows: [Self.pullRequest(number: 25095)]
+        )
+
+        let decision = SidebarWorkspaceSnapshotRefreshPolicy().decision(
+            current: current,
+            next: next,
+            force: false,
+            contextMenuVisible: true
+        )
+
+        #expect(decision.workspaceSnapshotStorage?.title == "Assessing route parameter comment")
+        #expect(decision.workspaceSnapshotStorage?.pullRequestRows.map(\.number) == [25095])
+        #expect(decision.pendingWorkspaceSnapshot == nil)
+        #expect(!decision.hasDeferredWorkspaceObservationInvalidation)
+    }
+
     @Test func closedContextMenuStoresNextAndClearsPending() {
         let current = Self.snapshot(title: "old", isPinned: false)
         let next = Self.snapshot(title: "new", isPinned: true)
@@ -132,6 +155,7 @@ import Testing
         remoteConnectionStatusText: String = "Disconnected",
         latestConversationMessage: String? = nil,
         latestSubmittedMessage: String? = nil,
+        pullRequestRows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay] = [],
         listeningPorts: [Int] = [],
         finderDirectoryPath: String? = nil,
         repoBadgeAppearance: WorkspaceRepoBadgeAppearance? = nil,
@@ -160,7 +184,7 @@ import Testing
             compactBranchDirectoryCandidates: [],
             branchDirectoryLines: [],
             branchLinesContainBranch: false,
-            pullRequestRows: [],
+            pullRequestRows: pullRequestRows,
             listeningPorts: listeningPorts,
             finderDirectoryPath: finderDirectoryPath,
             repoBadgeAppearance: repoBadgeAppearance,
@@ -189,6 +213,20 @@ import Testing
             showsGitBranch: showsGitBranch,
             usesViewportAwarePath: usesViewportAwarePath,
             visibleAuxiliaryDetails: visibleAuxiliaryDetails
+        )
+    }
+
+    private static func pullRequest(
+        number: Int,
+        isStale: Bool = false
+    ) -> SidebarWorkspaceSnapshotBuilder.PullRequestDisplay {
+        SidebarWorkspaceSnapshotBuilder.PullRequestDisplay(
+            id: "pr#\(number)|https://github.com/manaflow-ai/bmux/pull/\(number)",
+            number: number,
+            label: "PR",
+            url: URL(string: "https://github.com/manaflow-ai/bmux/pull/\(number)")!,
+            status: .open,
+            isStale: isStale
         )
     }
 }

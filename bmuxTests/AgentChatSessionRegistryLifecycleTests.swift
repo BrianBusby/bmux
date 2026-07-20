@@ -10,6 +10,94 @@ import Testing
 
 struct AgentChatSessionRegistryLifecycleTests {
     @MainActor
+    @Test func subagentHooksEmitLifecycleChangesWithoutChangingParentState() throws {
+        let registry = AgentChatSessionRegistry()
+        let sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b"
+        let workspaceID = UUID().uuidString
+        let surfaceID = UUID().uuidString
+        var changes: [AgentSubsessionLifecycleChange] = []
+        registry.onSubsessionLifecycleChanged = { changes.append($0) }
+
+        let startRecord = registry.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .subagentStart,
+            source: "codex",
+            workspaceId: workspaceID,
+            surfaceId: surfaceID,
+            cwd: "/Users/example/project",
+            requestId: "subagent-request-1",
+            extraFieldsJSON: #"{"subagent_id":"subagent-1","name":"Reviewer"}"#
+        ))
+        let stopRecord = registry.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .subagentStop,
+            source: "codex",
+            workspaceId: workspaceID,
+            surfaceId: surfaceID,
+            cwd: "/Users/example/project",
+            requestId: "subagent-request-1",
+            extraFieldsJSON: #"{"subagent_id":"subagent-1","name":"Reviewer"}"#
+        ))
+
+        #expect(startRecord.state == .idle)
+        #expect(stopRecord.state == .idle)
+        #expect(changes.count == 2)
+        #expect(changes.first?.phase == .started)
+        #expect(changes.first?.parentSessionID == sessionID)
+        #expect(changes.first?.workspaceID == workspaceID)
+        #expect(changes.first?.surfaceID == surfaceID)
+        #expect(changes.first?.workingDirectory == "/Users/example/project")
+        #expect(changes.first?.subsessionID == "subagent-1")
+        #expect(changes.first?.displayName == "Reviewer")
+        #expect(changes.last?.phase == .stopped)
+        #expect(changes.last?.subsessionID == "subagent-1")
+    }
+
+    @MainActor
+    @Test func endedParentSessionSuppressesLateSubagentStartsButAllowsStops() throws {
+        let registry = AgentChatSessionRegistry()
+        let sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b"
+        let workspaceID = UUID().uuidString
+        var changes: [AgentSubsessionLifecycleChange] = []
+        registry.onSubsessionLifecycleChanged = { changes.append($0) }
+
+        registry.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .subagentStart,
+            source: "codex",
+            workspaceId: workspaceID,
+            requestId: "subagent-request-1",
+            extraFieldsJSON: #"{"subagent_id":"subagent-1"}"#
+        ))
+        registry.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .sessionEnd,
+            source: "codex",
+            workspaceId: workspaceID
+        ))
+        let lateStartRecord = registry.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .subagentStart,
+            source: "codex",
+            workspaceId: workspaceID,
+            requestId: "subagent-request-2",
+            extraFieldsJSON: #"{"subagent_id":"subagent-2"}"#
+        ))
+        registry.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .subagentStop,
+            source: "codex",
+            workspaceId: workspaceID,
+            requestId: "subagent-request-1",
+            extraFieldsJSON: #"{"subagent_id":"subagent-1"}"#
+        ))
+
+        #expect(lateStartRecord.state == .ended)
+        #expect(changes.map(\.phase) == [.started, .stopped])
+        #expect(changes.map(\.subsessionID) == ["subagent-1", "subagent-1"])
+    }
+
+    @MainActor
     @Test func hookStoreSeedDoesNotRestoreStalePIDOntoExistingLiveRecord() async throws {
         let home = try temporaryHomeDirectory()
         let workspaceID = UUID().uuidString

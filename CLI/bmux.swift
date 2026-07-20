@@ -34305,6 +34305,12 @@ export default BMUXSessionRestore;
         ) {
             eventDict["context"] = context
         }
+        Self.enrichSubagentFeedEvent(
+            &eventDict,
+            source: source,
+            hookEventName: hookEventName,
+            rawObject: stdinObj
+        )
         enrichUserPromptSubmitFeedEvent(
             &eventDict,
             hookEventName: hookEventName,
@@ -34431,6 +34437,55 @@ export default BMUXSessionRestore;
     }
 
     private static let feedHookMaxStdinBytes = 1 * 1024 * 1024
+
+    private static func enrichSubagentFeedEvent(
+        _ eventDict: inout [String: Any],
+        source _: String,
+        hookEventName: String,
+        rawObject: [String: Any]
+    ) {
+        guard hookEventName == "SubagentStart" || hookEventName == "SubagentStop" else {
+            return
+        }
+        let scalarKeys = [
+            "subagent_id",
+            "subagentId",
+            "subsession_id",
+            "subsessionId",
+            "agent_id",
+            "agentId",
+            "task_id",
+            "taskId",
+            "id",
+            "subagent_name",
+            "subagentName",
+            "agent_name",
+            "agentName",
+            "name",
+            "title",
+            "role",
+            "description",
+            "task",
+        ]
+        for key in scalarKeys {
+            guard eventDict[key] == nil,
+                  let value = subagentFeedScalarValue(rawObject[key]) else {
+                continue
+            }
+            eventDict[key] = value
+        }
+    }
+
+    private static func subagentFeedScalarValue(_ raw: Any?) -> Any? {
+        if let value = raw as? String {
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+        if let value = raw as? NSNumber {
+            return value
+        }
+        return nil
+    }
 
     private static func readBoundedFeedHookStdin(
         handle: FileHandle = .standardInput

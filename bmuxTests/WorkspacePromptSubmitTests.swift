@@ -1,6 +1,8 @@
 import Foundation
 import Testing
+import Combine
 import BMUXAgentLaunch
+import BmuxSidebar
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -236,6 +238,64 @@ struct WorkspacePromptSubmitTests {
         #expect(pullRequest.url.absoluteString == "https://github.com/manaflow-ai/bmux/pull/5314")
         #expect(pullRequest.branch == nil)
         #expect(workspace.sidebarPullRequestsInDisplayOrder().map(\.number) == [5314])
+    }
+
+    @Test func testPromptSubmitPullRequestMentionProjectsPromptWorkContextSource() throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        let panelId = try #require(workspace.focusedPanelId)
+
+        let outcome = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: "look at https://github.com/manaflow-ai/bmux/pull/5314",
+                surfaceId: panelId,
+                iMessageModeEnabled: false
+            )
+        )
+
+        #expect(outcome.messageRecorded)
+        #expect(workspace.sidebarMetadata.workContext(panelId: panelId).pullRequest?.number == 5314)
+        #expect(workspace.sidebarMetadata.workContext(panelId: panelId).pullRequest?.source == .promptMention)
+        #expect(workspace.sidebarMetadata.workContext.pullRequest?.number == 5314)
+        #expect(workspace.sidebarMetadata.workContext.pullRequest?.source == .promptMention)
+    }
+
+    @Test func testPromptSubmitPublishesLatestPromptWithMatchingPullRequestMention() throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        let panelId = try #require(workspace.focusedPanelId)
+        workspace.updatePanelPullRequest(
+            panelId: panelId,
+            number: 25194,
+            label: "PR",
+            url: try #require(URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/25194")),
+            status: .open
+        )
+
+        var observedContexts: [(prompt: String?, pullRequestNumber: Int?)] = []
+        let cancellable = workspace.sidebarImmediateObservationPublisher.sink {
+            observedContexts.append((
+                prompt: workspace.latestSubmittedMessage,
+                pullRequestNumber: workspace.sidebarPullRequestsInDisplayOrder().first?.number
+            ))
+        }
+        defer { cancellable.cancel() }
+        observedContexts.removeAll()
+
+        let outcome = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: "Assessing route parameter comment in https://github.com/CompanyCam/Company-Cam-API/pull/25095",
+                surfaceId: panelId,
+                iMessageModeEnabled: false
+            )
+        )
+
+        #expect(outcome.messageRecorded)
+        let firstPromptContext = try #require(observedContexts.first { $0.prompt != nil })
+        #expect(firstPromptContext.prompt?.contains("25095") == true)
+        #expect(firstPromptContext.pullRequestNumber == 25095)
     }
 
     @Test func testPromptSubmitPullRequestMentionSurvivesBranchRefresh() throws {

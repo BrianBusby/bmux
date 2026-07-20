@@ -1,0 +1,432 @@
+import BMUXAgentLaunch
+import Foundation
+import Testing
+
+#if canImport(bmux_DEV)
+@testable import bmux_DEV
+#elseif canImport(bmux)
+@testable import bmux
+#endif
+
+@Suite
+struct SubsessionProvenanceTests {
+    @Test
+    func recordsSubsessionStartAndStopIntoSessionTree() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(store: store)
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(
+            Self.lifecycleChange(phase: .started),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+        await recorder.record(
+            Self.lifecycleChange(phase: .stopped),
+            timestamp: Date(timeIntervalSince1970: 140)
+        )
+
+        let tree = try await store.sessionTree(rootSessionID: "codex-parent")
+        let child = try #require(tree.sessions.first { $0.id != "codex-parent" })
+        let relationship = try #require(tree.relationships.first)
+        let identities = try await store.externalIdentities(sessionID: child.id)
+        let events = try await store.events()
+
+        #expect(child.agentKind == "codex")
+        #expect(child.workspaceID == "workspace-1")
+        #expect(child.surfaceID == "surface-1")
+        #expect(child.cwd == "/repo")
+        #expect(child.status == "completed")
+        #expect(relationship.parentSessionID == "codex-parent")
+        #expect(relationship.rootSessionID == "codex-parent")
+        #expect(relationship.depth == 1)
+        #expect(relationship.confidence == .high)
+        #expect(identities.map(\.externalID) == ["subagent-1"])
+        #expect(events.map(\.eventType) == [.sessionObserved, .subsessionStarted, .subsessionStopped])
+
+        try await store.rebuildProjections()
+
+        let replayedTree = try await store.sessionTree(rootSessionID: "codex-parent")
+        let replayedChild = try #require(replayedTree.sessions.first { $0.id != "codex-parent" })
+        #expect(replayedChild.id == child.id)
+        #expect(replayedChild.status == "completed")
+        #expect(replayedTree.relationships.map(\.sessionID) == [child.id])
+    }
+
+    @Test
+    func recordsO1LifecycleIngestionTraceRows() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let observabilityStore = try ProvenanceObservabilityStore(
+            databaseURL: fixture.observabilityDatabaseURL
+        )
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store,
+            observabilityStore: observabilityStore,
+            awaitObservabilityWrites: true
+        )
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(
+            Self.lifecycleChange(phase: .started),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+
+        let traces = try await observabilityStore.lifecycleIngestionRuns()
+        let trace = try #require(traces.first)
+        let tree = try await store.sessionTree(rootSessionID: "codex-parent")
+        let child = try #require(tree.sessions.first { $0.id != "codex-parent" })
+
+        #expect(trace.run.pipelineKind == "lifecycle_ingestion")
+        #expect(trace.run.triggerSource == "AgentSubsessionLifecycleChange")
+        #expect(trace.run.status == "succeeded")
+        #expect(trace.run.parentSessionID == "codex-parent")
+        #expect(trace.run.childSessionID == child.id)
+        #expect(trace.run.lifecycleEventID != nil)
+        #expect(trace.run.relationshipSessionID == child.id)
+        #expect(trace.run.externalIdentityID != nil)
+        #expect(trace.run.errorCount == 0)
+        #expect(trace.stages.map(\.stageName) == [
+            "lifecycle_change_received",
+            "work_provenance_event_append",
+            "work_provenance_projection_update",
+        ])
+        #expect(trace.stages.allSatisfy { $0.status == "succeeded" })
+        #expect(trace.stages.map(\.stageVersion) == ["o1", "o1", "o1"])
+        #expect(trace.stages.map(\.errorCount) == [0, 0, 0])
+    }
+
+    @Test
+    func recordsO2NativeLifecycleIdentityResolutionTrace() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let observabilityStore = try ProvenanceObservabilityStore(
+            databaseURL: fixture.observabilityDatabaseURL
+        )
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store,
+            observabilityStore: observabilityStore,
+            awaitObservabilityWrites: true
+        )
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(
+            Self.lifecycleChange(phase: .started),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+
+        let trace = try #require(try await observabilityStore.lifecycleIngestionRuns().first)
+        let identity = try #require(trace.identityResolutions.first)
+
+        #expect(identity.pipelineRunID == trace.run.pipelineRunID)
+        #expect(identity.resolverName == "subsession_lifecycle_identity")
+        #expect(identity.resolverVersion == "o2")
+        #expect(identity.inputPhase == "started")
+        #expect(identity.inputAgentKind == "codex")
+        #expect(identity.inputParentSessionID == "codex-parent")
+        #expect(identity.inputSubsessionIDState == "present")
+        #expect(identity.inputWorkspacePresent)
+        #expect(identity.inputSurfacePresent)
+        #expect(identity.inputWorkingDirectoryPresent)
+        #expect(identity.inputDisplayNamePresent)
+        #expect(identity.inputIdentityKind == "subsession")
+        #expect(identity.inputIdentityValueHash.hasPrefix("identity-input-"))
+        #expect(!identity.inputIdentityValueHash.contains("subagent-1"))
+        #expect(identity.selectedIdentityKind == "subsession")
+        #expect(identity.selectedIdentityValueCategory == "native_subsession_id")
+        #expect(identity.candidateCount == 1)
+        #expect(identity.selectedChildSessionID == trace.run.childSessionID)
+        #expect(identity.selectedLifecycleEventID == trace.run.lifecycleEventID)
+        #expect(identity.selectedRelationshipSessionID == trace.run.relationshipSessionID)
+        #expect(identity.selectedExternalIdentityID == trace.run.externalIdentityID)
+        #expect(identity.confidence == "high")
+        #expect(identity.outcome == "resolved")
+        #expect(identity.fallbackState == "native")
+        #expect(identity.unresolvedReason == nil)
+        #expect(identity.conflictReason == nil)
+    }
+
+    @Test
+    func recordsO2FallbackUnresolvedLifecycleIdentityResolutionTrace() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let observabilityStore = try ProvenanceObservabilityStore(
+            databaseURL: fixture.observabilityDatabaseURL
+        )
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store,
+            observabilityStore: observabilityStore,
+            awaitObservabilityWrites: true
+        )
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(
+            Self.lifecycleChange(phase: .started, subsessionID: nil),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+
+        let trace = try #require(try await observabilityStore.lifecycleIngestionRuns().first)
+        let identity = try #require(trace.identityResolutions.first)
+
+        #expect(identity.pipelineRunID == trace.run.pipelineRunID)
+        #expect(identity.inputSubsessionIDState == "missing")
+        #expect(identity.inputIdentityKind == "unresolved_subsession")
+        #expect(identity.inputIdentityValueHash.hasPrefix("identity-input-"))
+        #expect(!identity.inputIdentityValueHash.contains("codex-parent"))
+        #expect(identity.selectedIdentityKind == "unresolved_subsession")
+        #expect(identity.selectedIdentityValueCategory == "stable_parent_fallback")
+        #expect(identity.candidateCount == 0)
+        #expect(identity.selectedChildSessionID == trace.run.childSessionID)
+        #expect(identity.selectedLifecycleEventID == trace.run.lifecycleEventID)
+        #expect(identity.selectedRelationshipSessionID == trace.run.relationshipSessionID)
+        #expect(identity.selectedExternalIdentityID == trace.run.externalIdentityID)
+        #expect(identity.confidence == "low")
+        #expect(identity.outcome == "unresolved")
+        #expect(identity.fallbackState == "fallback_unresolved")
+        #expect(identity.unresolvedReason == "missing_native_subsession_identifier")
+        #expect(identity.conflictReason == nil)
+    }
+
+    @Test
+    func filtersLifecycleIngestionTraceRowsByRunSessionAndStatus() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let observabilityStore = try ProvenanceObservabilityStore(
+            databaseURL: fixture.observabilityDatabaseURL
+        )
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store,
+            observabilityStore: observabilityStore,
+            awaitObservabilityWrites: true
+        )
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(
+            Self.lifecycleChange(phase: .started, parentSessionID: "codex-parent"),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+        await recorder.record(
+            Self.lifecycleChange(
+                phase: .started,
+                parentSessionID: "other-parent",
+                subsessionID: "subagent-2"
+            ),
+            timestamp: Date(timeIntervalSince1970: 130)
+        )
+        await recorder.record(
+            Self.lifecycleChange(phase: .started, parentSessionID: "codex-parent"),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+
+        let parentRuns = try await observabilityStore.lifecycleIngestionRuns(
+            parentSessionID: "codex-parent"
+        )
+        #expect(parentRuns.count == 2)
+        #expect(parentRuns.allSatisfy { $0.run.parentSessionID == "codex-parent" })
+
+        let otherChildID = try #require(
+            try await observabilityStore.lifecycleIngestionRuns(parentSessionID: "other-parent")
+                .first?.run.childSessionID
+        )
+        let childRuns = try await observabilityStore.lifecycleIngestionRuns(
+            childSessionID: otherChildID
+        )
+        #expect(childRuns.map(\.run.parentSessionID) == ["other-parent"])
+
+        let failedRuns = try await observabilityStore.lifecycleIngestionRuns(status: "failed")
+        #expect(failedRuns.count == 1)
+        #expect(failedRuns.first?.run.errorCount == 1)
+
+        let exactRunID = try #require(parentRuns.first?.run.pipelineRunID)
+        let exactRuns = try await observabilityStore.lifecycleIngestionRuns(
+            pipelineRunID: exactRunID
+        )
+        #expect(exactRuns.map(\.run.pipelineRunID) == [exactRunID])
+    }
+
+    @Test
+    func recordsFailedLifecycleIngestionTraceWithoutDuplicatingProvenance() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let observabilityStore = try ProvenanceObservabilityStore(
+            databaseURL: fixture.observabilityDatabaseURL
+        )
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store,
+            observabilityStore: observabilityStore,
+            awaitObservabilityWrites: true
+        )
+        let change = Self.lifecycleChange(phase: .started)
+        let timestamp = Date(timeIntervalSince1970: 120)
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(change, timestamp: timestamp)
+        await recorder.record(change, timestamp: timestamp)
+
+        let traces = try await observabilityStore.lifecycleIngestionRuns()
+        let failedTrace = try #require(traces.first { $0.run.status == "failed" })
+        let events = try await store.events()
+
+        #expect(events.map(\.eventType) == [.sessionObserved, .subsessionStarted])
+        #expect(failedTrace.run.errorCount == 1)
+        #expect(failedTrace.run.errorSummary != nil)
+        #expect(failedTrace.stages.map(\.stageName) == [
+            "lifecycle_change_received",
+            "work_provenance_event_append",
+            "work_provenance_projection_update",
+        ])
+        #expect(failedTrace.stages[0].status == "succeeded")
+        #expect(failedTrace.stages[1].status == "failed")
+        #expect(failedTrace.stages[2].status == "failed")
+        let identity = try #require(failedTrace.identityResolutions.first)
+        #expect(identity.pipelineRunID == failedTrace.run.pipelineRunID)
+        #expect(identity.outcome == "resolved")
+        #expect(identity.conflictReason != nil)
+    }
+
+    @Test
+    func derivesNestedRootAndDepthFromExistingParentRelationship() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(store: store)
+
+        try await store.append(Self.parentSessionEvent())
+        let firstLevel = Self.lifecycleChange(
+            phase: .started,
+            parentSessionID: "codex-parent",
+            subsessionID: "subagent-1"
+        )
+        let firstLevelEvent = try await recorder.event(
+            for: firstLevel,
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+        try await store.append(firstLevelEvent)
+        let firstLevelChildID = try #require(firstLevelEvent.payload.session?.id)
+        let nested = Self.lifecycleChange(
+            phase: .started,
+            parentSessionID: firstLevelChildID,
+            subsessionID: "subagent-2"
+        )
+
+        await recorder.record(nested, timestamp: Date(timeIntervalSince1970: 130))
+
+        let tree = try await store.sessionTree(rootSessionID: "codex-parent")
+        let nestedRelationship = try #require(
+            tree.relationships.first { $0.parentSessionID == firstLevelChildID }
+        )
+        #expect(nestedRelationship.rootSessionID == "codex-parent")
+        #expect(nestedRelationship.depth == 2)
+    }
+
+    @Test
+    func missingSubsessionIdentifierUsesLowConfidenceStableFallback() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(store: store)
+
+        try await store.append(Self.parentSessionEvent())
+        let event = try await recorder.event(
+            for: Self.lifecycleChange(phase: .started, subsessionID: nil),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+        try await store.append(event)
+
+        let childID = try #require(event.payload.session?.id)
+        let relationship = try #require(try await store.parentSession(for: childID))
+        let identity = try #require(try await store.externalIdentities(sessionID: childID).first)
+
+        #expect(relationship.confidence == .low)
+        #expect(identity.kind == "unresolved_subsession")
+        #expect(identity.confidence == .low)
+        #expect(identity.externalID == "codex:codex-parent:default")
+    }
+
+    @Test
+    func stopBeforeStartStillCreatesCompletedChildRelationship() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(store: store)
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(
+            Self.lifecycleChange(phase: .stopped),
+            timestamp: Date(timeIntervalSince1970: 140)
+        )
+
+        let tree = try await store.sessionTree(rootSessionID: "codex-parent")
+        let child = try #require(tree.sessions.first { $0.id != "codex-parent" })
+        #expect(child.status == "completed")
+        #expect(child.startedAt == nil)
+        #expect(tree.relationships.map(\.sessionID) == [child.id])
+    }
+
+    private static func lifecycleChange(
+        phase: AgentSubsessionLifecycleChange.Phase,
+        parentSessionID: String = "codex-parent",
+        subsessionID: String? = "subagent-1"
+    ) -> AgentSubsessionLifecycleChange {
+        AgentSubsessionLifecycleChange(
+            phase: phase,
+            parentSessionID: parentSessionID,
+            agentKind: .codex,
+            workspaceID: "workspace-1",
+            surfaceID: "surface-1",
+            workingDirectory: "/repo",
+            subsessionID: subsessionID,
+            displayName: "Reviewer"
+        )
+    }
+
+    private static func parentSessionEvent() -> WorkProvenanceEvent {
+        let now = Date(timeIntervalSince1970: 100)
+        let session = WorkProvenanceSessionRecord(
+            id: "codex-parent",
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-1",
+            cwd: "/repo",
+            status: "active",
+            startedAt: now,
+            updatedAt: now
+        )
+        return WorkProvenanceEvent(
+            id: "parent-session",
+            eventType: .sessionObserved,
+            timestamp: now,
+            sessionID: session.id,
+            source: .observed,
+            confidence: .high,
+            payload: WorkProvenanceEventPayload(session: session)
+        )
+    }
+
+    private struct StoreFixture {
+        let directoryURL: URL
+        let databaseURL: URL
+        let observabilityDatabaseURL: URL
+
+        init() throws {
+            directoryURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("bmux-work-provenance-\(UUID().uuidString)", isDirectory: true)
+            try FileManager.default.createDirectory(
+                at: directoryURL,
+                withIntermediateDirectories: true
+            )
+            databaseURL = directoryURL.appendingPathComponent("provenance.sqlite")
+            observabilityDatabaseURL = directoryURL.appendingPathComponent("ProvenanceObservability.sqlite")
+        }
+
+        func remove() {
+            try? FileManager.default.removeItem(at: directoryURL)
+        }
+    }
+}
