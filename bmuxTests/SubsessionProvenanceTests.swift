@@ -80,6 +80,71 @@ struct SubsessionProvenanceTests {
     }
 
     @Test
+    func contractRecorderRecordsNormalizedLifecycleRequest() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let recorder: any ProvenanceSubsessionLifecycleRecording = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store
+        )
+
+        try await store.append(Self.parentSessionEvent())
+        let response = await recorder.recordSubsessionLifecycle(Self.lifecycleRequest(
+            phase: .started,
+            timestamp: Date(timeIntervalSince1970: 120)
+        ))
+
+        let tree = try await store.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: "codex-parent"))
+        let child = try #require(tree.sessions.first { $0.id != "codex-parent" })
+
+        #expect(response.schemaVersion == 1)
+        #expect(response.accepted)
+        #expect(response.errorDescription == nil)
+        #expect(response.eventID != nil)
+        #expect(response.childSessionID == child.id)
+        #expect(response.relationshipSessionID == child.id)
+        #expect(response.externalIdentityID != nil)
+        #expect(child.agentKind == "codex")
+        #expect(child.status == "active")
+        #expect(child.startedAt == Date(timeIntervalSince1970: 120))
+        #expect(tree.relationships.map(\.parentSessionID) == ["codex-parent"])
+        #expect(tree.externalIdentities.map(\.externalID) == ["subagent-1"])
+    }
+
+    @Test
+    func contractRecorderUsesStableFallbackForMissingExternalIdentity() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let recorder: any ProvenanceSubsessionLifecycleRecording = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store
+        )
+
+        try await store.append(Self.parentSessionEvent())
+        let request = Self.lifecycleRequest(
+            phase: .started,
+            externalIdentityValue: "   ",
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+        let first = try await recorder.subsessionLifecycleEvent(for: request)
+        let second = try await recorder.subsessionLifecycleEvent(for: request)
+        let response = await recorder.recordSubsessionLifecycle(request)
+
+        let childID = try #require(response.childSessionID)
+        let relationship = try #require(try await store.parentSession(for: childID))
+        let identity = try #require(try await store.externalIdentities(sessionID: childID).first)
+
+        #expect(first.id == second.id)
+        #expect(first.confidence == .low)
+        #expect(first.payload.externalIdentities.map(\.kind) == ["unresolved_subsession"])
+        #expect(first.payload.externalIdentities.map(\.externalID) == ["codex:codex-parent:default"])
+        #expect(response.accepted)
+        #expect(relationship.confidence == .low)
+        #expect(identity.kind == "unresolved_subsession")
+        #expect(identity.externalID == "codex:codex-parent:default")
+    }
+
+    @Test
     func recordsO1LifecycleIngestionTraceRows() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
@@ -497,6 +562,26 @@ struct SubsessionProvenanceTests {
             workingDirectory: "/repo",
             subsessionID: subsessionID,
             displayName: "Reviewer"
+        )
+    }
+
+    private static func lifecycleRequest(
+        phase: ProvenanceSubsessionLifecyclePhase,
+        parentSessionID: String = "codex-parent",
+        externalIdentityValue: String? = "subagent-1",
+        timestamp: Date
+    ) -> ProvenanceSubsessionLifecycleRequest {
+        ProvenanceSubsessionLifecycleRequest(
+            phase: phase,
+            parentSessionID: parentSessionID,
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-1",
+            workingDirectory: "/repo",
+            externalIdentityKind: "subsession",
+            externalIdentityValue: externalIdentityValue,
+            displayName: "Reviewer",
+            timestamp: timestamp
         )
     }
 

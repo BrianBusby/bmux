@@ -949,6 +949,10 @@
 		CE0B00100000000000000001 /* ProvenanceProjectionLineageRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00100000000000000002 /* ProvenanceProjectionLineageRecord.swift */; };
 		CE0C00060000000000000001 /* ProvenanceSessionTreeRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00060000000000000002 /* ProvenanceSessionTreeRequest.swift */; };
 		CE0C00070000000000000001 /* ProvenanceSessionTreeResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00070000000000000002 /* ProvenanceSessionTreeResponse.swift */; };
+		CE0C00090000000000000001 /* ProvenanceSubsessionLifecyclePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00090000000000000002 /* ProvenanceSubsessionLifecyclePhase.swift */; };
+		CE0C00100000000000000001 /* ProvenanceSubsessionLifecycleRecording.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00100000000000000002 /* ProvenanceSubsessionLifecycleRecording.swift */; };
+		CE0C00110000000000000001 /* ProvenanceSubsessionLifecycleRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00110000000000000002 /* ProvenanceSubsessionLifecycleRequest.swift */; };
+		CE0C00120000000000000001 /* ProvenanceSubsessionLifecycleResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00120000000000000002 /* ProvenanceSubsessionLifecycleResponse.swift */; };
 		B71000000000000000000003 /* PushToTalkVoiceInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71000000000000000000004 /* PushToTalkVoiceInputController.swift */; };
 		A64610010000000000000001 /* QuitConfirmationAlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64610010000000000000002 /* QuitConfirmationAlertPresenter.swift */; };
 		A64610020000000000000001 /* QuitConfirmationAlertPresenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64610020000000000000002 /* QuitConfirmationAlertPresenterTests.swift */; };
@@ -2533,6 +2537,10 @@
 		CE0B00100000000000000002 /* ProvenanceProjectionLineageRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceProjectionLineageRecord.swift; sourceTree = "<group>"; };
 		CE0C00060000000000000002 /* ProvenanceSessionTreeRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceSessionTreeRequest.swift; sourceTree = "<group>"; };
 		CE0C00070000000000000002 /* ProvenanceSessionTreeResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceSessionTreeResponse.swift; sourceTree = "<group>"; };
+		CE0C00090000000000000002 /* ProvenanceSubsessionLifecyclePhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceSubsessionLifecyclePhase.swift; sourceTree = "<group>"; };
+		CE0C00100000000000000002 /* ProvenanceSubsessionLifecycleRecording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceSubsessionLifecycleRecording.swift; sourceTree = "<group>"; };
+		CE0C00110000000000000002 /* ProvenanceSubsessionLifecycleRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceSubsessionLifecycleRequest.swift; sourceTree = "<group>"; };
+		CE0C00120000000000000002 /* ProvenanceSubsessionLifecycleResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceSubsessionLifecycleResponse.swift; sourceTree = "<group>"; };
 		B71000000000000000000004 /* PushToTalkVoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/PushToTalkVoiceInputController.swift; sourceTree = "<group>"; };
 		A64610010000000000000002 /* QuitConfirmationAlertPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitConfirmationAlertPresenter.swift; sourceTree = "<group>"; };
 		A64610020000000000000002 /* QuitConfirmationAlertPresenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitConfirmationAlertPresenterTests.swift; sourceTree = "<group>"; };
@@ -4832,6 +4840,10 @@
 				CE0C00050000000000000002 /* ProvenanceFileExplanationResponse.swift */,
 				CE0C00060000000000000002 /* ProvenanceSessionTreeRequest.swift */,
 				CE0C00070000000000000002 /* ProvenanceSessionTreeResponse.swift */,
+				CE0C00090000000000000002 /* ProvenanceSubsessionLifecyclePhase.swift */,
+				CE0C00100000000000000002 /* ProvenanceSubsessionLifecycleRecording.swift */,
+				CE0C00110000000000000002 /* ProvenanceSubsessionLifecycleRequest.swift */,
+				CE0C00120000000000000002 /* ProvenanceSubsessionLifecycleResponse.swift */,
 				11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */,
 				0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */,
 				20C26C989BEBFA4B46E0200B /* WorkProvenanceConfidence.swift */,
@@ -5830,6 +5842,10 @@
 				CE0B00100000000000000001 /* ProvenanceProjectionLineageRecord.swift in Sources */,
 				CE0C00060000000000000001 /* ProvenanceSessionTreeRequest.swift in Sources */,
 				CE0C00070000000000000001 /* ProvenanceSessionTreeResponse.swift in Sources */,
+				CE0C00090000000000000001 /* ProvenanceSubsessionLifecyclePhase.swift in Sources */,
+				CE0C00100000000000000001 /* ProvenanceSubsessionLifecycleRecording.swift in Sources */,
+				CE0C00110000000000000001 /* ProvenanceSubsessionLifecycleRequest.swift in Sources */,
+				CE0C00120000000000000001 /* ProvenanceSubsessionLifecycleResponse.swift in Sources */,
 				B71000000000000000000003 /* PushToTalkVoiceInputController.swift in Sources */,
 					A64610010000000000000001 /* QuitConfirmationAlertPresenter.swift in Sources */,
 				A500RG01 /* ReactGrab.swift in Sources */,
