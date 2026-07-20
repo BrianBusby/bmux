@@ -184,7 +184,9 @@ Observability integration:
 - `6ceb48ccafc698f1ee16984455f26e18c81efe7a` implements the first O2 identity-resolution observability slice for the lifecycle-ingestion path only.
 - O2 lifecycle identity records explain bounded native/fallback resolution inputs, selected identity kind/value category, hashed input identity value, confidence, unresolved/fallback state, conflict reason, and correlation to the O1 pipeline run.
 - Lifecycle-ingestion trace CLI/query filters are implemented for run ID, parent session, child session, and status; this is read-only query polish over existing trace rows, not a new observability phase.
-- Later O2 attribution explainability and O3+ projection/retrieval/feedback/evaluation/UI work remain deferred.
+- `114df3b18 Add lifecycle projection lineage traces` implements the first narrow O3 projection-lineage slice for lifecycle-ingestion projections only.
+- O3 lifecycle projection-lineage records explain which authoritative projection rows were derived from a lifecycle event payload, with hashed source payloads and bounded target entity metadata.
+- Later O2 attribution explainability and broader O3+ projection/retrieval/feedback/evaluation/UI work remain deferred.
 - Observability writes must not block lifecycle event append or projection updates.
 
 ## Milestone 4: Efficiency Profiler
