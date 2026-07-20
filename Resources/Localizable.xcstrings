@@ -231677,13 +231677,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance traces lifecycle-ingestion [--json]\n\nInspect bmux work provenance without requiring a live app socket."
+            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n\nInspect bmux work provenance without requiring a live app socket."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance traces lifecycle-ingestion [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
+            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
           }
         }
       }
@@ -231790,6 +231790,23 @@
         }
       }
     },
+    "cli.provenance.traces.error.invalidStatus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: --status must be one of running, succeeded, partially_succeeded, failed, cancelled, or degraded"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: --status は running、succeeded、partially_succeeded、failed、cancelled、degraded のいずれかである必要があります"
+          }
+        }
+      }
+    },
     "cli.provenance.traces.output.empty": {
       "extractionState": "manual",
       "localizations": {
@@ -231847,13 +231864,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage: bmux provenance traces lifecycle-ingestion [--observability-database <path>] [--limit <count>] [--json]"
+            "value": "Usage: bmux provenance traces lifecycle-ingestion [--observability-database <path>] [--limit <count>] [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法: bmux provenance traces lifecycle-ingestion [--observability-database <path>] [--limit <count>] [--json]"
+            "value": "使用方法: bmux provenance traces lifecycle-ingestion [--observability-database <path>] [--limit <count>] [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]"
           }
         }
       }

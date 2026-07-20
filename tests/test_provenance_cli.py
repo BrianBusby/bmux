@@ -313,6 +313,25 @@ def create_observability_database(path: Path) -> None:
                     "o1",
                 ),
                 (
+                    "run-second-parent",
+                    "lifecycle_ingestion",
+                    "AgentSubsessionLifecycleChange",
+                    "other-parent",
+                    "other-child",
+                    "event-other-start",
+                    "other-child",
+                    "identity-other",
+                    "succeeded",
+                    135.0,
+                    136.0,
+                    1000.0,
+                    1,
+                    1,
+                    0,
+                    None,
+                    "o2",
+                ),
+                (
                     "run-other",
                     "retrieval",
                     "not-o1",
@@ -379,6 +398,48 @@ def create_observability_database(path: Path) -> None:
                     "succeeded",
                     122.0,
                     122.1,
+                    100.0,
+                    1,
+                    3,
+                    0,
+                    None,
+                ),
+                (
+                    "run-second-parent:lifecycle_change_received",
+                    "run-second-parent",
+                    "lifecycle_change_received",
+                    "o1",
+                    "succeeded",
+                    135.0,
+                    135.1,
+                    100.0,
+                    1,
+                    1,
+                    0,
+                    None,
+                ),
+                (
+                    "run-second-parent:work_provenance_event_append",
+                    "run-second-parent",
+                    "work_provenance_event_append",
+                    "o1",
+                    "succeeded",
+                    136.0,
+                    136.1,
+                    100.0,
+                    1,
+                    1,
+                    0,
+                    None,
+                ),
+                (
+                    "run-second-parent:work_provenance_projection_update",
+                    "run-second-parent",
+                    "work_provenance_projection_update",
+                    "o1",
+                    "succeeded",
+                    137.0,
+                    137.1,
                     100.0,
                     1,
                     3,
@@ -478,6 +539,38 @@ def create_observability_database(path: Path) -> None:
                     None,
                     120.0,
                     120.1,
+                    100.0,
+                ),
+                (
+                    "run-second-parent:subsession_identity",
+                    "run-second-parent",
+                    "subsession_lifecycle_identity",
+                    "o2",
+                    "AgentSubsessionLifecycleChange",
+                    "started",
+                    "codex",
+                    "other-parent",
+                    "missing",
+                    0,
+                    0,
+                    1,
+                    0,
+                    "unresolved_subsession",
+                    "identity-input-fallback",
+                    "unresolved_subsession",
+                    "stable_parent_fallback",
+                    0,
+                    "other-child",
+                    "event-other-start",
+                    "other-child",
+                    "identity-other",
+                    "low",
+                    "unresolved",
+                    "fallback_unresolved",
+                    "missing_native_subsession_identifier",
+                    None,
+                    135.0,
+                    135.1,
                     100.0,
                 ),
                 (
@@ -632,14 +725,17 @@ def check_provenance_lifecycle_trace_json(cli_path: str, root: Path) -> None:
     )
     payload = json.loads(result.stdout)
     if payload["summary"] != {
+        "conflicted_identity_resolution_count": 1,
         "failed_run_count": 1,
-        "identity_resolution_count": 2,
-        "run_count": 2,
-        "stage_count": 6,
+        "identity_resolution_count": 3,
+        "resolved_identity_resolution_count": 2,
+        "run_count": 3,
+        "stage_count": 9,
+        "unresolved_identity_resolution_count": 1,
     }:
         raise AssertionError(f"unexpected trace summary: {payload!r}")
     run_ids = [row["pipeline_run_id"] for row in payload["runs"]]
-    if run_ids != ["run-failed", "run-success"]:
+    if run_ids != ["run-second-parent", "run-failed", "run-success"]:
         raise AssertionError(f"expected bounded lifecycle trace order: {payload!r}")
     if any(row["pipeline_run_id"] == "run-other" for row in payload["runs"]):
         raise AssertionError(f"non-lifecycle trace leaked into output: {payload!r}")
@@ -651,15 +747,95 @@ def check_provenance_lifecycle_trace_json(cli_path: str, root: Path) -> None:
     ]:
         raise AssertionError(f"expected O1 stage sequence: {payload!r}")
     identity_rows = payload["identity_resolutions"]
-    if [row["pipeline_run_id"] for row in identity_rows] != ["run-failed", "run-success"]:
+    if [row["pipeline_run_id"] for row in identity_rows] != [
+        "run-second-parent",
+        "run-failed",
+        "run-success",
+    ]:
         raise AssertionError(f"expected O2 identity rows to follow trace order: {payload!r}")
-    failed_identity = identity_rows[0]
+    failed_identity = identity_rows[1]
     if failed_identity["selected_child_session_id"] != "codex-child":
         raise AssertionError(f"expected selected child session id in identity row: {payload!r}")
     if failed_identity["input_identity_value_hash"] == "subagent-1":
         raise AssertionError(f"identity row should not expose raw subsession id: {payload!r}")
     if failed_identity.get("conflict_reason") is None:
         raise AssertionError(f"expected failed trace identity conflict reason: {payload!r}")
+
+    failed_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "traces",
+            "lifecycle-ingestion",
+            "--observability-database",
+            str(database),
+            "--status",
+            "failed",
+        ],
+    )
+    failed_payload = json.loads(failed_result.stdout)
+    if [row["pipeline_run_id"] for row in failed_payload["runs"]] != ["run-failed"]:
+        raise AssertionError(f"expected status filter to return only failed trace: {failed_payload!r}")
+    if failed_payload["summary"]["failed_run_count"] != 1:
+        raise AssertionError(f"expected filtered failed summary: {failed_payload!r}")
+
+    run_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "traces",
+            "lifecycle-ingestion",
+            "--observability-database",
+            str(database),
+            "--run",
+            "run-success",
+        ],
+    )
+    run_payload = json.loads(run_result.stdout)
+    if [row["pipeline_run_id"] for row in run_payload["runs"]] != ["run-success"]:
+        raise AssertionError(f"expected run filter to return exact trace: {run_payload!r}")
+    if [row["pipeline_run_id"] for row in run_payload["stages"]] != [
+        "run-success",
+        "run-success",
+        "run-success",
+    ]:
+        raise AssertionError(f"expected run filter to scope stages: {run_payload!r}")
+
+    parent_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "traces",
+            "lifecycle-ingestion",
+            "--observability-database",
+            str(database),
+            "--parent-session",
+            "codex-parent",
+        ],
+    )
+    parent_payload = json.loads(parent_result.stdout)
+    if [row["pipeline_run_id"] for row in parent_payload["runs"]] != ["run-failed", "run-success"]:
+        raise AssertionError(f"expected parent filter to exclude other parent: {parent_payload!r}")
+
+    child_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "traces",
+            "lifecycle-ingestion",
+            "--observability-database",
+            str(database),
+            "--child-session",
+            "other-child",
+        ],
+    )
+    child_payload = json.loads(child_result.stdout)
+    if [row["pipeline_run_id"] for row in child_payload["runs"]] != ["run-second-parent"]:
+        raise AssertionError(f"expected child filter to return matching child trace: {child_payload!r}")
 
 
 def check_provenance_lifecycle_trace_text(cli_path: str, root: Path) -> None:
@@ -678,7 +854,8 @@ def check_provenance_lifecycle_trace_text(cli_path: str, root: Path) -> None:
     )
     output = result.stdout
     for expected in [
-        "Lifecycle ingestion traces: 2",
+        "Lifecycle ingestion traces: 3",
+        "run-second-parent",
         "run-failed",
         "run-success",
         "stages: 3",

@@ -160,6 +160,7 @@ Implemented slices:
 - `6279c8abd Add context efficiency repeated command facts` added repeated command, source-search, and file-reading facts.
 - Phase B subsession lifecycle slices added WorkProvenance session relationship/external identity projections, then wired `AgentSubsessionLifecycleChange` into persisted `subsession_started` / `subsession_stopped` events through the existing registry lifecycle path.
 - A working tree Phase B query-diagnostics slice adds bounded `bmux provenance sessions tree <session-id> --json` output over persisted session relationship and external identity projections; `bmux-cli` builds and the standalone Python CLI regression passes against the built binary.
+- A working tree observability query-polish slice adds bounded filters to `bmux provenance traces lifecycle-ingestion`: `--run`, `--parent-session`, `--child-session`, and `--status`, plus JSON counts for resolved, unresolved, and conflicted identity-resolution attempts. This reads existing O1/O2 trace rows only and adds no new capture, schema, policy, or O3+ observability behavior.
 
 Stop condition:
 
@@ -182,6 +183,7 @@ Observability integration:
 - O1 observability covers lifecycle ingestion traces, stage duration, bounded failures, and correlation IDs only.
 - `6ceb48ccafc698f1ee16984455f26e18c81efe7a` implements the first O2 identity-resolution observability slice for the lifecycle-ingestion path only.
 - O2 lifecycle identity records explain bounded native/fallback resolution inputs, selected identity kind/value category, hashed input identity value, confidence, unresolved/fallback state, conflict reason, and correlation to the O1 pipeline run.
+- Lifecycle-ingestion trace CLI/query filters are implemented for run ID, parent session, child session, and status; this is read-only query polish over existing trace rows, not a new observability phase.
 - Later O2 attribution explainability and O3+ projection/retrieval/feedback/evaluation/UI work remain deferred.
 - Observability writes must not block lifecycle event append or projection updates.
 

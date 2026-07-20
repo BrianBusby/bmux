@@ -35,12 +35,36 @@ actor ProvenanceObservabilityStore {
         }
     }
 
-    func lifecycleIngestionRuns(limit: Int = 20) throws -> [(
+    func lifecycleIngestionRuns(
+        limit: Int = 20,
+        pipelineRunID: String? = nil,
+        parentSessionID: String? = nil,
+        childSessionID: String? = nil,
+        status: String? = nil
+    ) throws -> [(
         run: ProvenancePipelineRunRecord,
         stages: [ProvenancePipelineStageExecutionRecord],
         identityResolutions: [ProvenanceIdentityResolutionRecord]
     )] {
         let boundedLimit = max(1, min(limit, 100))
+        var predicates = ["pipeline_kind = 'lifecycle_ingestion'"]
+        var bindings: [String] = []
+        if let pipelineRunID, !pipelineRunID.isEmpty {
+            predicates.append("pipeline_run_id = ?")
+            bindings.append(pipelineRunID)
+        }
+        if let parentSessionID, !parentSessionID.isEmpty {
+            predicates.append("parent_session_id = ?")
+            bindings.append(parentSessionID)
+        }
+        if let childSessionID, !childSessionID.isEmpty {
+            predicates.append("child_session_id = ?")
+            bindings.append(childSessionID)
+        }
+        if let status, !status.isEmpty {
+            predicates.append("status = ?")
+            bindings.append(status)
+        }
         let statement = try database.prepare(
             """
             SELECT pipeline_run_id, pipeline_kind, trigger_source,
@@ -49,13 +73,16 @@ actor ProvenanceObservabilityStore {
                    started_at, ended_at, input_count, output_count,
                    error_count, error_summary, implementation_version
             FROM pipeline_runs
-            WHERE pipeline_kind = 'lifecycle_ingestion'
+            WHERE \(predicates.joined(separator: " AND "))
             ORDER BY started_at DESC, rowid DESC
             LIMIT ?
             """
         )
         defer { statement.finalize() }
-        try statement.bind(boundedLimit, at: 1)
+        for (index, binding) in bindings.enumerated() {
+            try statement.bind(binding, at: Int32(index + 1))
+        }
+        try statement.bind(boundedLimit, at: Int32(bindings.count + 1))
         var rows: [(
             run: ProvenancePipelineRunRecord,
             stages: [ProvenancePipelineStageExecutionRecord],

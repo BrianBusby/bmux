@@ -195,10 +195,23 @@ extension BMUXCLI {
             name: "--observability-database"
         )
         let (limitText, remainingAfterLimit) = parseOption(remainingAfterDatabase, name: "--limit")
-        var remaining = remainingAfterLimit
+        let (pipelineRunID, remainingAfterRun) = parseOption(remainingAfterLimit, name: "--run")
+        let (parentSessionID, remainingAfterParentSession) = parseOption(
+            remainingAfterRun,
+            name: "--parent-session"
+        )
+        let (childSessionID, remainingAfterChildSession) = parseOption(
+            remainingAfterParentSession,
+            name: "--child-session"
+        )
+        let (statusText, remainingAfterStatus) = parseOption(
+            remainingAfterChildSession,
+            name: "--status"
+        )
+        var remaining = remainingAfterStatus
         try rejectProvenanceUnknownFlags(remaining, commandName: commandName)
         guard remaining.first?.lowercased() == "lifecycle-ingestion" else {
-            throw CLIError(message: String(localized: "cli.provenance.traces.usage", defaultValue: "Usage: bmux provenance traces lifecycle-ingestion [--observability-database <path>] [--limit <count>] [--json]"))
+            throw CLIError(message: String(localized: "cli.provenance.traces.usage", defaultValue: "Usage: bmux provenance traces lifecycle-ingestion [--observability-database <path>] [--limit <count>] [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]"))
         }
         remaining.removeFirst()
         guard remaining.isEmpty else {
@@ -206,6 +219,7 @@ extension BMUXCLI {
         }
 
         let limit = try provenanceTraceLimit(limitText, commandName: commandName)
+        let status = try provenanceTraceStatus(statusText, commandName: commandName)
         let databaseURL = provenanceObservabilityDatabaseURL(databasePath: databasePath)
         guard FileManager.default.fileExists(atPath: databaseURL.path) else {
             let list = CLIProvenanceLifecycleTraceList(
@@ -220,7 +234,13 @@ extension BMUXCLI {
         }
 
         let reader = try CLIProvenanceObservabilitySQLiteReader(databaseURL: databaseURL)
-        let list = try reader.lifecycleIngestionTraces(limit: limit)
+        let list = try reader.lifecycleIngestionTraces(
+            limit: limit,
+            pipelineRunID: provenanceTraceFilterValue(pipelineRunID),
+            parentSessionID: provenanceTraceFilterValue(parentSessionID),
+            childSessionID: provenanceTraceFilterValue(childSessionID),
+            status: status
+        )
         printProvenanceLifecycleTraceList(list, jsonOutput: jsonOutput)
     }
 
@@ -286,6 +306,37 @@ extension BMUXCLI {
             ))
         }
         return min(parsed, 100)
+    }
+
+    private func provenanceTraceStatus(_ value: String?, commandName: String) throws -> String? {
+        guard let value = provenanceTraceFilterValue(value) else { return nil }
+        let normalized = value.lowercased()
+        let allowedStatuses = [
+            "running",
+            "succeeded",
+            "partially_succeeded",
+            "failed",
+            "cancelled",
+            "degraded",
+        ]
+        guard allowedStatuses.contains(normalized) else {
+            throw CLIError(message: String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.traces.error.invalidStatus",
+                    defaultValue: "%@: --status must be one of running, succeeded, partially_succeeded, failed, cancelled, or degraded"
+                ),
+                commandName
+            ))
+        }
+        return normalized
+    }
+
+    private func provenanceTraceFilterValue(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
     }
 
     private func printProvenanceExplanation(_ explanation: CLIProvenanceExplanation, jsonOutput: Bool) {
@@ -705,7 +756,7 @@ extension BMUXCLI {
               bmux provenance context current [--json]
               bmux provenance worktrees list [--json]
               bmux provenance sessions tree <session-id> [--json]
-              bmux provenance traces lifecycle-ingestion [--json]
+              bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]
 
             Inspect bmux work provenance without requiring a live app socket.
             """

@@ -30,9 +30,21 @@ final class CLIProvenanceObservabilitySQLiteReader {
         }
     }
 
-    func lifecycleIngestionTraces(limit: Int) throws -> CLIProvenanceLifecycleTraceList {
+    func lifecycleIngestionTraces(
+        limit: Int,
+        pipelineRunID: String? = nil,
+        parentSessionID: String? = nil,
+        childSessionID: String? = nil,
+        status: String? = nil
+    ) throws -> CLIProvenanceLifecycleTraceList {
         let boundedLimit = max(1, min(limit, 100))
-        let runs = try lifecycleIngestionRunRows(limit: boundedLimit)
+        let runs = try lifecycleIngestionRunRows(
+            limit: boundedLimit,
+            pipelineRunID: pipelineRunID,
+            parentSessionID: parentSessionID,
+            childSessionID: childSessionID,
+            status: status
+        )
         var stages: [[String: AnyHashable]] = []
         var identityResolutions: [[String: AnyHashable]] = []
         for run in runs {
@@ -51,7 +63,31 @@ final class CLIProvenanceObservabilitySQLiteReader {
         )
     }
 
-    private func lifecycleIngestionRunRows(limit: Int) throws -> [[String: AnyHashable]] {
+    private func lifecycleIngestionRunRows(
+        limit: Int,
+        pipelineRunID: String?,
+        parentSessionID: String?,
+        childSessionID: String?,
+        status: String?
+    ) throws -> [[String: AnyHashable]] {
+        var predicates = ["pipeline_kind = 'lifecycle_ingestion'"]
+        var bindings: [String] = []
+        if let pipelineRunID, !pipelineRunID.isEmpty {
+            predicates.append("pipeline_run_id = ?")
+            bindings.append(pipelineRunID)
+        }
+        if let parentSessionID, !parentSessionID.isEmpty {
+            predicates.append("parent_session_id = ?")
+            bindings.append(parentSessionID)
+        }
+        if let childSessionID, !childSessionID.isEmpty {
+            predicates.append("child_session_id = ?")
+            bindings.append(childSessionID)
+        }
+        if let status, !status.isEmpty {
+            predicates.append("status = ?")
+            bindings.append(status)
+        }
         let statement = try prepare(
             """
             SELECT pipeline_run_id, pipeline_kind, trigger_source,
@@ -60,13 +96,16 @@ final class CLIProvenanceObservabilitySQLiteReader {
                    started_at, ended_at, duration_ms, input_count, output_count,
                    error_count, error_summary, implementation_version
             FROM pipeline_runs
-            WHERE pipeline_kind = 'lifecycle_ingestion'
+            WHERE \(predicates.joined(separator: " AND "))
             ORDER BY started_at DESC, rowid DESC
             LIMIT ?
             """
         )
         defer { sqlite3_finalize(statement) }
-        try bind(limit, to: statement, at: 1)
+        for (index, binding) in bindings.enumerated() {
+            try bind(binding, to: statement, at: Int32(index + 1))
+        }
+        try bind(limit, to: statement, at: Int32(bindings.count + 1))
         var rows: [[String: AnyHashable]] = []
         while sqlite3_step(statement) == SQLITE_ROW {
             rows.append(compactPayload([

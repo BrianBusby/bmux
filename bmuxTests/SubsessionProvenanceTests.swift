@@ -192,6 +192,64 @@ struct SubsessionProvenanceTests {
     }
 
     @Test
+    func filtersLifecycleIngestionTraceRowsByRunSessionAndStatus() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let observabilityStore = try ProvenanceObservabilityStore(
+            databaseURL: fixture.observabilityDatabaseURL
+        )
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store,
+            observabilityStore: observabilityStore,
+            awaitObservabilityWrites: true
+        )
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(
+            Self.lifecycleChange(phase: .started, parentSessionID: "codex-parent"),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+        await recorder.record(
+            Self.lifecycleChange(
+                phase: .started,
+                parentSessionID: "other-parent",
+                subsessionID: "subagent-2"
+            ),
+            timestamp: Date(timeIntervalSince1970: 130)
+        )
+        await recorder.record(
+            Self.lifecycleChange(phase: .started, parentSessionID: "codex-parent"),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+
+        let parentRuns = try await observabilityStore.lifecycleIngestionRuns(
+            parentSessionID: "codex-parent"
+        )
+        #expect(parentRuns.count == 2)
+        #expect(parentRuns.allSatisfy { $0.run.parentSessionID == "codex-parent" })
+
+        let otherChildID = try #require(
+            try await observabilityStore.lifecycleIngestionRuns(parentSessionID: "other-parent")
+                .first?.run.childSessionID
+        )
+        let childRuns = try await observabilityStore.lifecycleIngestionRuns(
+            childSessionID: otherChildID
+        )
+        #expect(childRuns.map(\.run.parentSessionID) == ["other-parent"])
+
+        let failedRuns = try await observabilityStore.lifecycleIngestionRuns(status: "failed")
+        #expect(failedRuns.count == 1)
+        #expect(failedRuns.first?.run.errorCount == 1)
+
+        let exactRunID = try #require(parentRuns.first?.run.pipelineRunID)
+        let exactRuns = try await observabilityStore.lifecycleIngestionRuns(
+            pipelineRunID: exactRunID
+        )
+        #expect(exactRuns.map(\.run.pipelineRunID) == [exactRunID])
+    }
+
+    @Test
     func recordsFailedLifecycleIngestionTraceWithoutDuplicatingProvenance() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }

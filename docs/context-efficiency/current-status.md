@@ -84,7 +84,7 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 Current checkout:
 
 - Branch: `context-efficiency-phase-b-lifecycle`
-- HEAD observed before the latest slice on 2026-07-19: `109bb7910`
+- HEAD observed before the latest slice on 2026-07-20: `94885a955`
 - Contains committed workspace work-context projection, late-subsession-start suppression, context-efficiency planning docs, Phase B WorkProvenance session relationship projection foundation, and observability plan integration.
 
 Active context-efficiency worktree:
@@ -138,6 +138,25 @@ Latest completed observability planning slice:
 - `docs/context-efficiency/provenance-observability-phase-o0-report.md` completes Phase O0 investigation and documents the narrow O1 lifecycle-ingestion trace design. No observability schema or runtime code was added.
 
 Latest completed observability implementation slice:
+
+- Working tree slice on 2026-07-20 adds bounded read-only filters to `bmux provenance traces lifecycle-ingestion` and to `ProvenanceObservabilityStore.lifecycleIngestionRuns(...)`.
+- New CLI filters: `--run <pipeline-run-id>`, `--parent-session <session-id>`, `--child-session <session-id>`, and `--status <status>`, all still capped by `--limit`.
+- The trace JSON summary now includes `resolved_identity_resolution_count`, `unresolved_identity_resolution_count`, and `conflicted_identity_resolution_count` in addition to run/stage/identity counts.
+- The Python CLI fixture now includes two lifecycle parents so filter regressions prove unrelated lifecycle traces are excluded, not only non-lifecycle rows.
+- This is query polish over existing O1/O2 rows only. It adds no schema migration, capture source, projection lineage, retrieval, feedback, dashboard, quality scoring, shadow evaluation, automatic correction, lifecycle policy, orchestration, or parallel provenance source.
+- Validation: focused `SubsessionProvenanceTests` passed with `BMUX_SKIP_ZIG_BUILD=1`; `./scripts/reload.sh --tag provenance-trace-filters` succeeded; `tests/test_provenance_cli.py` passed against the tagged app's bundled CLI; `git diff --check` passed; `Resources/Localizable.xcstrings` parsed as JSON and the changed `en`/`ja` keys were verified.
+
+Files changed in the latest observability query-polish slice:
+
+- `CLI/BMUXCLI+Provenance.swift`
+- `CLI/CLIProvenanceLifecycleTraceList.swift`
+- `CLI/CLIProvenanceObservabilitySQLiteReader.swift`
+- `Resources/Localizable.xcstrings`
+- `Sources/WorkProvenance/ProvenanceObservabilityStore.swift`
+- `bmuxTests/SubsessionProvenanceTests.swift`
+- `tests/test_provenance_cli.py`
+
+Previous completed observability implementation slice:
 
 - `6ceb48ccafc698f1ee16984455f26e18c81efe7a Add lifecycle identity observability traces`
 - This O2 slice adds `identity_resolution_attempts` to the separate `ProvenanceObservability.sqlite` store, migrating the observability schema to version 2 while keeping `WorkProvenance` authoritative.
