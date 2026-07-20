@@ -120,7 +120,7 @@ Latest completed implementation HEAD for original-plan Phase 3:
 
 Latest completed implementation HEAD for ADR-001 Phase 2 provenance extraction:
 
-- `cd3c38c2aa75a5c7c0652a3e860d950704a34e24`
+- `9d4ccbe0e6149c16fdd8bd0b7da4913434d5487e`
 
 The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
 
