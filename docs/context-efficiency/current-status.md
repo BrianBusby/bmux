@@ -98,13 +98,13 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 Current checkout:
 
 - Branch: `provenance-extraction-phase2-contracts`
-- This 2026-07-20 slice added a separate internal lifecycle-trace query contract in `Sources/WorkProvenance`.
-- `ProvenanceObservabilityStore` now conforms to `ProvenanceLifecycleTraceQuerying`.
-- The response returns bounded lifecycle-ingestion run, stage, identity-resolution, and projection-lineage telemetry.
-- The seam intentionally stays separate from `ProvenanceEngineClient`.
-- Observability remains operational telemetry, not authoritative provenance history.
-- HEAD observed before the Phase 2 lifecycle-trace contract slice on 2026-07-20: `286ab75e3`
-- Contains the accepted ADR-001 provenance extraction product-boundary documentation, the Phase 0 migration audit report, the Phase 1 contract plan, behavior-characterization tests, and the first Phase 2 internal contract seams.
+- This 2026-07-20 slice converted `bmux provenance sessions tree <session-id>` to query the in-process `ProvenanceEngineClient.sessionTree(...)` contract through `WorkProvenanceStore`.
+- The CLI still owns argument parsing, localized messages, and output formatting.
+- The JSON/text shape, no-database behavior, missing-session behavior, depth-first ordering, implicit 100 session/relationship bound, and 200 external-identity output cap were preserved by CLI regression coverage.
+- The `bmux-cli` target now compiles the portable WorkProvenance store/DTO subset needed for this read-only contract path; bmux-specific runtime, workspace, Git-inspection, and subsession adapter files remain out of the CLI target.
+- No daemon, independent repository, storage move, schema move, or data migration has happened.
+- HEAD observed before the Phase 2 CLI contract-conversion slice on 2026-07-20: `7ed3cc7cc`
+- Contains the accepted ADR-001 provenance extraction product-boundary documentation, the Phase 0 migration audit report, the Phase 1 contract plan, behavior-characterization tests, the first Phase 2 internal contract seams, and the first CLI consumer conversion.
 
 Active context-efficiency worktree:
 
@@ -149,7 +149,40 @@ Latest completed provenance planning slice:
 - `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md` completes ADR-001 Phase 1 contract planning by naming current behavior invariants, the first narrow public contract surface, the bmux adapter boundary, and direct SQLite debt to remove later.
 - The first Phase 2 interface slice introduces internal protocol/request/response names for event append, session-tree query, and file-explanation query around `WorkProvenanceStore`, without moving implementation or creating the independent engine repository yet.
 - The Phase 2 lifecycle-trace interface slice introduces `ProvenanceLifecycleTraceQuerying` plus lifecycle-trace request/response DTOs over `ProvenanceObservabilityStore`, keeping operational telemetry separate from `ProvenanceEngineClient`.
-- The next safe extraction slice is to convert one CLI path, likely `bmux provenance sessions tree`, only after its CLI JSON/no-database/limit behavior is fully mapped from the store-backed contract response.
+- The first CLI consumer conversion moved `bmux provenance sessions tree` onto `ProvenanceEngineClient.sessionTree(...)` while preserving existing JSON/text/no-database behavior.
+- The next safe extraction slice is to convert another narrow read-only CLI path, likely `bmux provenance explain`, only after mapping its exact JSON/no-database/no-worktree/no-file behavior from the store-backed contract response.
+
+Latest completed provenance Phase 2 CLI contract-conversion slice:
+
+- Branch: `provenance-extraction-phase2-contracts`
+- This 2026-07-20 slice converted `bmux provenance sessions tree <session-id>` from the direct `CLIProvenanceSQLiteReader.sessionTree(...)` path to `ProvenanceEngineClient.sessionTree(...)` backed by `WorkProvenanceStore`.
+- The command keeps the existing CLI-owned output model in `CLIProvenanceSessionTree`, with a mapper from `ProvenanceSessionTreeResponse` into the previous snake_case payload keys.
+- The public command syntax did not change; no `--limit` flag was added.
+- The existing implicit bounds are preserved: `limit: 100` for contract session/relationship traversal and `externalIdentityLimit: 200` in the CLI payload mapper.
+- The no-database guard still runs before store construction, preserving the existing bounded empty JSON response instead of creating a database.
+- The CLI regression fixture now marks its projection database as schema version 3 so the store opens it as existing provenance state rather than a fresh database.
+- The `bmux-cli` target now includes the portable WorkProvenance store, contract DTOs, projection records, SQLite helpers, and pure Git snapshot value types required by the store. It does not include `WorkProvenanceRuntime`, `WorkProvenanceWorkspaceSnapshot`, `WorkProvenanceObservationService`, Git command runners/inspectors, or the subsession lifecycle adapter.
+- Validation passed:
+  - `BMUX_SKIP_ZIG_BUILD=1 xcodebuild build -project bmux.xcodeproj -scheme bmux-cli -configuration Debug -destination 'platform=macOS' -derivedDataPath /tmp/bmux-provenance-cli-contract-build`
+  - `BMUX_BUNDLED_CLI_PATH=/tmp/bmux-provenance-cli-contract-build/Build/Products/Debug/bmux python3 tests/test_provenance_cli.py`
+  - `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -configuration Debug -destination 'platform=macOS' -derivedDataPath /tmp/bmux-provenance-cli-contract-test -only-testing:bmuxTests/WorkProvenanceStoreTests -only-testing:bmuxTests/SubsessionProvenanceTests`
+  - The focused unit run reported `29 tests in 2 suites passed` and `** TEST SUCCEEDED **`.
+  - `python3 scripts/normalize-pbxproj.py`
+  - `./scripts/check-pbxproj.sh`
+  - `python3 scripts/check-workspace-package-groups.py --check`
+  - `git diff --check`
+- Additional attempted verification: `BMUX_SKIP_ZIG_BUILD=1 ./scripts/reload.sh --tag provenance-cli-contract` was stopped after about 308 seconds because it looped waiting on a stale GhosttyKit cache lock and never reached the app build.
+- Localization audit: changed no CLI help text, command syntax, UI, settings, shortcut, or localized output strings. The command still uses the existing localized no-database and no-session messages.
+
+Files changed in the Phase 2 CLI contract-conversion slice:
+
+- `CLI/BMUXCLI+Provenance.swift`
+- `CLI/CLIProvenanceSessionTree.swift`
+- `CLI/bmux.swift`
+- `bmux.xcodeproj/project.pbxproj`
+- `tests/test_provenance_cli.py`
+- `docs/context-efficiency/current-status.md`
+- `docs/context-efficiency/milestones.md`
 
 Latest completed provenance Phase 2 lifecycle-trace contract slice:
 

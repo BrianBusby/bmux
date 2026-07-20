@@ -1,7 +1,7 @@
 import Foundation
 
 extension BMUXCLI {
-    func runProvenanceCommand(commandArgs: [String], jsonOutput: Bool) throws {
+    func runProvenanceCommand(commandArgs: [String], jsonOutput: Bool) async throws {
         let subcommand = commandArgs.first?.lowercased()
         switch subcommand {
         case "explain":
@@ -20,7 +20,7 @@ extension BMUXCLI {
                 jsonOutput: jsonOutput
             )
         case "sessions":
-            try runProvenanceSessions(
+            try await runProvenanceSessions(
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
@@ -152,7 +152,7 @@ extension BMUXCLI {
         printProvenanceWorktreeList(list, jsonOutput: jsonOutput)
     }
 
-    private func runProvenanceSessions(commandArgs: [String], jsonOutput: Bool) throws {
+    private func runProvenanceSessions(commandArgs: [String], jsonOutput: Bool) async throws {
         let commandName = "provenance sessions tree"
         let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
         var remaining = remainingAfterDatabase
@@ -183,8 +183,16 @@ extension BMUXCLI {
             return
         }
 
-        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
-        let tree = try reader.sessionTree(rootSessionID: sessionID)
+        let client: any ProvenanceEngineClient = try WorkProvenanceStore(databaseURL: databaseURL)
+        let response = try await client.sessionTree(ProvenanceSessionTreeRequest(
+            rootSessionID: sessionID,
+            limit: 100
+        ))
+        let tree = CLIProvenanceSessionTree(
+            response: response,
+            noSessionReason: String(localized: "cli.provenance.reason.noSession", defaultValue: "no provenance has been recorded for this session"),
+            externalIdentityLimit: 200
+        )
         printProvenanceSessionTree(tree, jsonOutput: jsonOutput)
     }
 

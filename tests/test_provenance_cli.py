@@ -52,6 +52,7 @@ def create_provenance_database(path: Path) -> None:
                 created_at REAL NOT NULL,
                 updated_at REAL NOT NULL
             );
+            PRAGMA user_version = 3;
             """
         )
         conn.executemany(
@@ -825,6 +826,22 @@ def check_provenance_session_tree_json(cli_path: str, root: Path) -> None:
     missing = json.loads(missing_result.stdout)
     if missing["found"] or missing["summary"]["session_count"] != 0:
         raise AssertionError(f"missing session should return bounded empty JSON: {missing!r}")
+
+    no_database_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "sessions",
+            "tree",
+            "codex-parent",
+            "--database",
+            str(root / "missing-work-provenance.sqlite"),
+        ],
+    )
+    no_database = json.loads(no_database_result.stdout)
+    if no_database["found"] or no_database["reason"] != "no provenance database exists yet":
+        raise AssertionError(f"missing database should preserve bounded empty JSON: {no_database!r}")
 
 
 def check_provenance_session_tree_text(cli_path: str, root: Path) -> None:

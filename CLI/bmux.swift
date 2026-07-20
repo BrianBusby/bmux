@@ -3128,7 +3128,7 @@ struct BMUXCLI {
         return true
     }
 
-    func run() throws {
+    func run() async throws {
         let processEnv = ProcessInfo.processInfo.environment
         let cliBundleIdentifier = CLISocketPathResolver.currentAppBundleIdentifier()
         var explicitSocketPath: String? = nil
@@ -3297,7 +3297,7 @@ struct BMUXCLI {
         }
 
         if command == "provenance" {
-            try runProvenanceCommand(commandArgs: commandArgs, jsonOutput: jsonOutput)
+            try await runProvenanceCommand(commandArgs: commandArgs, jsonOutput: jsonOutput)
             return
         }
 
@@ -35892,7 +35892,7 @@ private enum BMUXCLIOutput {
 
 @main
 struct BMUXTermMain {
-    static func main() {
+    static func main() async {
         let initialSIGPIPEInspectionPayload = BMUXCLI.currentSIGPIPEInspectionPayload()
         _ = signal(SIGPIPE, SIG_DFL)
         configureCLIStdioNoSIGPIPE()
@@ -35901,7 +35901,7 @@ struct BMUXTermMain {
             initialSIGPIPEInspectionPayload: initialSIGPIPEInspectionPayload
         )
         do {
-            try cli.run()
+            try await cli.run()
         } catch {
             BMUXCLIOutput.writeStandardError("Error: \(error)\n")
             let exitCode = (error as? CLIError)?.exitCode ?? 1
