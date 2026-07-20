@@ -2,7 +2,7 @@ import Foundation
 
 /// Separate operational telemetry store for provenance pipeline traces.
 actor ProvenanceObservabilityStore {
-    private static let schemaVersion = 1
+    private static let schemaVersion = 2
     private let database: WorkProvenanceSQLiteDatabase
 
     init(databaseURL: URL, fileManager: FileManager = .default) throws {
@@ -16,13 +16,17 @@ actor ProvenanceObservabilityStore {
 
     func record(
         run: ProvenancePipelineRunRecord,
-        stages: [ProvenancePipelineStageExecutionRecord]
+        stages: [ProvenancePipelineStageExecutionRecord],
+        identityResolutions: [ProvenanceIdentityResolutionRecord] = []
     ) throws {
         try database.execute("BEGIN IMMEDIATE TRANSACTION")
         do {
             try insert(run)
             for stage in stages {
                 try insert(stage)
+            }
+            for identityResolution in identityResolutions {
+                try insert(identityResolution)
             }
             try database.execute("COMMIT")
         } catch {
@@ -33,7 +37,8 @@ actor ProvenanceObservabilityStore {
 
     func lifecycleIngestionRuns(limit: Int = 20) throws -> [(
         run: ProvenancePipelineRunRecord,
-        stages: [ProvenancePipelineStageExecutionRecord]
+        stages: [ProvenancePipelineStageExecutionRecord],
+        identityResolutions: [ProvenanceIdentityResolutionRecord]
     )] {
         let boundedLimit = max(1, min(limit, 100))
         let statement = try database.prepare(
@@ -51,10 +56,18 @@ actor ProvenanceObservabilityStore {
         )
         defer { statement.finalize() }
         try statement.bind(boundedLimit, at: 1)
-        var rows: [(run: ProvenancePipelineRunRecord, stages: [ProvenancePipelineStageExecutionRecord])] = []
+        var rows: [(
+            run: ProvenancePipelineRunRecord,
+            stages: [ProvenancePipelineStageExecutionRecord],
+            identityResolutions: [ProvenanceIdentityResolutionRecord]
+        )] = []
         while try statement.step() {
             guard let run = pipelineRun(from: statement) else { continue }
-            rows.append((run: run, stages: try stages(pipelineRunID: run.pipelineRunID)))
+            rows.append((
+                run: run,
+                stages: try stages(pipelineRunID: run.pipelineRunID),
+                identityResolutions: try identityResolutions(pipelineRunID: run.pipelineRunID)
+            ))
         }
         return rows
     }
@@ -69,7 +82,10 @@ actor ProvenanceObservabilityStore {
         }
         if version == 0 {
             try database.execute(schemaSQL)
-            try database.execute("PRAGMA user_version = 1")
+            try database.execute("PRAGMA user_version = 2")
+        } else if version == 1 {
+            try database.execute(identityResolutionSchemaSQL)
+            try database.execute("PRAGMA user_version = 2")
         }
     }
 
@@ -148,6 +164,72 @@ actor ProvenanceObservabilityStore {
         _ = try statement.step()
     }
 
+    private func insert(_ identityResolution: ProvenanceIdentityResolutionRecord) throws {
+        let statement = try database.prepare(
+            """
+            INSERT INTO identity_resolution_attempts (
+                identity_resolution_id, pipeline_run_id, resolver_name,
+                resolver_version, trigger_source, input_phase, input_agent_kind,
+                input_parent_session_id, input_subsession_id_state,
+                input_workspace_present, input_surface_present,
+                input_working_directory_present, input_display_name_present,
+                input_identity_kind, input_identity_value_hash,
+                selected_identity_kind, selected_identity_value_category,
+                candidate_count, selected_child_session_id,
+                selected_lifecycle_event_id, selected_relationship_session_id,
+                selected_external_identity_id, confidence, outcome,
+                fallback_state, unresolved_reason, conflict_reason,
+                started_at, ended_at, duration_ms
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(identity_resolution_id) DO UPDATE SET
+                resolver_version = excluded.resolver_version,
+                selected_child_session_id = excluded.selected_child_session_id,
+                selected_lifecycle_event_id = excluded.selected_lifecycle_event_id,
+                selected_relationship_session_id = excluded.selected_relationship_session_id,
+                selected_external_identity_id = excluded.selected_external_identity_id,
+                confidence = excluded.confidence,
+                outcome = excluded.outcome,
+                fallback_state = excluded.fallback_state,
+                unresolved_reason = excluded.unresolved_reason,
+                conflict_reason = excluded.conflict_reason,
+                ended_at = excluded.ended_at,
+                duration_ms = excluded.duration_ms
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(identityResolution.identityResolutionID, at: 1)
+        try statement.bind(identityResolution.pipelineRunID, at: 2)
+        try statement.bind(identityResolution.resolverName, at: 3)
+        try statement.bind(identityResolution.resolverVersion, at: 4)
+        try statement.bind(identityResolution.triggerSource, at: 5)
+        try statement.bind(identityResolution.inputPhase, at: 6)
+        try statement.bind(identityResolution.inputAgentKind, at: 7)
+        try statement.bind(identityResolution.inputParentSessionID, at: 8)
+        try statement.bind(identityResolution.inputSubsessionIDState, at: 9)
+        try statement.bind(identityResolution.inputWorkspacePresent ? 1 : 0, at: 10)
+        try statement.bind(identityResolution.inputSurfacePresent ? 1 : 0, at: 11)
+        try statement.bind(identityResolution.inputWorkingDirectoryPresent ? 1 : 0, at: 12)
+        try statement.bind(identityResolution.inputDisplayNamePresent ? 1 : 0, at: 13)
+        try statement.bind(identityResolution.inputIdentityKind, at: 14)
+        try statement.bind(identityResolution.inputIdentityValueHash, at: 15)
+        try statement.bind(identityResolution.selectedIdentityKind, at: 16)
+        try statement.bind(identityResolution.selectedIdentityValueCategory, at: 17)
+        try statement.bind(identityResolution.candidateCount, at: 18)
+        try statement.bind(identityResolution.selectedChildSessionID, at: 19)
+        try statement.bind(identityResolution.selectedLifecycleEventID, at: 20)
+        try statement.bind(identityResolution.selectedRelationshipSessionID, at: 21)
+        try statement.bind(identityResolution.selectedExternalIdentityID, at: 22)
+        try statement.bind(identityResolution.confidence, at: 23)
+        try statement.bind(identityResolution.outcome, at: 24)
+        try statement.bind(identityResolution.fallbackState, at: 25)
+        try statement.bind(identityResolution.unresolvedReason, at: 26)
+        try statement.bind(identityResolution.conflictReason, at: 27)
+        try statement.bind(identityResolution.startedAt.timeIntervalSince1970, at: 28)
+        try statement.bind(identityResolution.endedAt.timeIntervalSince1970, at: 29)
+        try statement.bind(identityResolution.durationMilliseconds, at: 30)
+        _ = try statement.step()
+    }
+
     private func pipelineRun(from statement: WorkProvenanceSQLiteStatement) -> ProvenancePipelineRunRecord? {
         guard let pipelineRunID = statement.string(at: 0),
               let pipelineKind = statement.string(at: 1),
@@ -218,6 +300,90 @@ actor ProvenanceObservabilityStore {
         )
     }
 
+    private func identityResolutions(pipelineRunID: String) throws -> [ProvenanceIdentityResolutionRecord] {
+        let statement = try database.prepare(
+            """
+            SELECT identity_resolution_id, pipeline_run_id, resolver_name,
+                   resolver_version, trigger_source, input_phase,
+                   input_agent_kind, input_parent_session_id,
+                   input_subsession_id_state, input_workspace_present,
+                   input_surface_present, input_working_directory_present,
+                   input_display_name_present, input_identity_kind,
+                   input_identity_value_hash, selected_identity_kind,
+                   selected_identity_value_category, candidate_count,
+                   selected_child_session_id, selected_lifecycle_event_id,
+                   selected_relationship_session_id, selected_external_identity_id,
+                   confidence, outcome, fallback_state, unresolved_reason,
+                   conflict_reason, started_at, ended_at
+            FROM identity_resolution_attempts
+            WHERE pipeline_run_id = ?
+            ORDER BY started_at ASC, rowid ASC
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(pipelineRunID, at: 1)
+        var rows: [ProvenanceIdentityResolutionRecord] = []
+        while try statement.step() {
+            guard let row = identityResolution(from: statement) else { continue }
+            rows.append(row)
+        }
+        return rows
+    }
+
+    private func identityResolution(
+        from statement: WorkProvenanceSQLiteStatement
+    ) -> ProvenanceIdentityResolutionRecord? {
+        guard let identityResolutionID = statement.string(at: 0),
+              let pipelineRunID = statement.string(at: 1),
+              let resolverName = statement.string(at: 2),
+              let resolverVersion = statement.string(at: 3),
+              let triggerSource = statement.string(at: 4),
+              let inputPhase = statement.string(at: 5),
+              let inputAgentKind = statement.string(at: 6),
+              let inputParentSessionID = statement.string(at: 7),
+              let inputSubsessionIDState = statement.string(at: 8),
+              let inputIdentityKind = statement.string(at: 13),
+              let inputIdentityValueHash = statement.string(at: 14),
+              let selectedIdentityKind = statement.string(at: 15),
+              let selectedIdentityValueCategory = statement.string(at: 16),
+              let confidence = statement.string(at: 22),
+              let outcome = statement.string(at: 23),
+              let fallbackState = statement.string(at: 24) else {
+            return nil
+        }
+        return ProvenanceIdentityResolutionRecord(
+            identityResolutionID: identityResolutionID,
+            pipelineRunID: pipelineRunID,
+            resolverName: resolverName,
+            resolverVersion: resolverVersion,
+            triggerSource: triggerSource,
+            inputPhase: inputPhase,
+            inputAgentKind: inputAgentKind,
+            inputParentSessionID: inputParentSessionID,
+            inputSubsessionIDState: inputSubsessionIDState,
+            inputWorkspacePresent: statement.int(at: 9) != 0,
+            inputSurfacePresent: statement.int(at: 10) != 0,
+            inputWorkingDirectoryPresent: statement.int(at: 11) != 0,
+            inputDisplayNamePresent: statement.int(at: 12) != 0,
+            inputIdentityKind: inputIdentityKind,
+            inputIdentityValueHash: inputIdentityValueHash,
+            selectedIdentityKind: selectedIdentityKind,
+            selectedIdentityValueCategory: selectedIdentityValueCategory,
+            candidateCount: statement.int(at: 17),
+            selectedChildSessionID: statement.string(at: 18),
+            selectedLifecycleEventID: statement.string(at: 19),
+            selectedRelationshipSessionID: statement.string(at: 20),
+            selectedExternalIdentityID: statement.string(at: 21),
+            confidence: confidence,
+            outcome: outcome,
+            fallbackState: fallbackState,
+            unresolvedReason: statement.string(at: 25),
+            conflictReason: statement.string(at: 26),
+            startedAt: Date(timeIntervalSince1970: statement.double(at: 27) ?? 0),
+            endedAt: Date(timeIntervalSince1970: statement.double(at: 28) ?? 0)
+        )
+    }
+
     private static var schemaSQL: String {
         """
         CREATE TABLE IF NOT EXISTS pipeline_runs (
@@ -262,6 +428,49 @@ actor ProvenanceObservabilityStore {
             ON pipeline_stage_executions(pipeline_run_id, started_at);
         CREATE INDEX IF NOT EXISTS pipeline_stage_executions_name_status_idx
             ON pipeline_stage_executions(stage_name, status);
+
+        \(identityResolutionSchemaSQL)
+        """
+    }
+
+    private static var identityResolutionSchemaSQL: String {
+        """
+        CREATE TABLE IF NOT EXISTS identity_resolution_attempts (
+            identity_resolution_id TEXT PRIMARY KEY NOT NULL,
+            pipeline_run_id TEXT NOT NULL,
+            resolver_name TEXT NOT NULL,
+            resolver_version TEXT NOT NULL,
+            trigger_source TEXT NOT NULL,
+            input_phase TEXT NOT NULL,
+            input_agent_kind TEXT NOT NULL,
+            input_parent_session_id TEXT NOT NULL,
+            input_subsession_id_state TEXT NOT NULL,
+            input_workspace_present INTEGER NOT NULL,
+            input_surface_present INTEGER NOT NULL,
+            input_working_directory_present INTEGER NOT NULL,
+            input_display_name_present INTEGER NOT NULL,
+            input_identity_kind TEXT NOT NULL,
+            input_identity_value_hash TEXT NOT NULL,
+            selected_identity_kind TEXT NOT NULL,
+            selected_identity_value_category TEXT NOT NULL,
+            candidate_count INTEGER NOT NULL,
+            selected_child_session_id TEXT,
+            selected_lifecycle_event_id TEXT,
+            selected_relationship_session_id TEXT,
+            selected_external_identity_id TEXT,
+            confidence TEXT NOT NULL,
+            outcome TEXT NOT NULL,
+            fallback_state TEXT NOT NULL,
+            unresolved_reason TEXT,
+            conflict_reason TEXT,
+            started_at REAL NOT NULL,
+            ended_at REAL NOT NULL,
+            duration_ms REAL NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS identity_resolution_attempts_run_idx
+            ON identity_resolution_attempts(pipeline_run_id, started_at);
+        CREATE INDEX IF NOT EXISTS identity_resolution_attempts_outcome_idx
+            ON identity_resolution_attempts(outcome, confidence);
         """
     }
 }

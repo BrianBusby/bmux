@@ -5,6 +5,7 @@ struct CLIProvenanceLifecycleTraceList: Equatable {
     let reason: String?
     let runs: [[String: AnyHashable]]
     let stages: [[String: AnyHashable]]
+    let identityResolutions: [[String: AnyHashable]]
 
     var payload: [String: Any] {
         [
@@ -13,10 +14,12 @@ struct CLIProvenanceLifecycleTraceList: Equatable {
             "summary": [
                 "run_count": runs.count,
                 "stage_count": stages.count,
+                "identity_resolution_count": identityResolutions.count,
                 "failed_run_count": runs.filter { $0["status"] as? String == "failed" }.count
             ],
             "runs": arrayPayload(runs),
-            "stages": arrayPayload(stages)
+            "stages": arrayPayload(stages),
+            "identity_resolutions": arrayPayload(identityResolutions)
         ]
     }
 

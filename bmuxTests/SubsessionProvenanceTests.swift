@@ -99,6 +99,99 @@ struct SubsessionProvenanceTests {
     }
 
     @Test
+    func recordsO2NativeLifecycleIdentityResolutionTrace() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let observabilityStore = try ProvenanceObservabilityStore(
+            databaseURL: fixture.observabilityDatabaseURL
+        )
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store,
+            observabilityStore: observabilityStore,
+            awaitObservabilityWrites: true
+        )
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(
+            Self.lifecycleChange(phase: .started),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+
+        let trace = try #require(try await observabilityStore.lifecycleIngestionRuns().first)
+        let identity = try #require(trace.identityResolutions.first)
+
+        #expect(identity.pipelineRunID == trace.run.pipelineRunID)
+        #expect(identity.resolverName == "subsession_lifecycle_identity")
+        #expect(identity.resolverVersion == "o2")
+        #expect(identity.inputPhase == "started")
+        #expect(identity.inputAgentKind == "codex")
+        #expect(identity.inputParentSessionID == "codex-parent")
+        #expect(identity.inputSubsessionIDState == "present")
+        #expect(identity.inputWorkspacePresent)
+        #expect(identity.inputSurfacePresent)
+        #expect(identity.inputWorkingDirectoryPresent)
+        #expect(identity.inputDisplayNamePresent)
+        #expect(identity.inputIdentityKind == "subsession")
+        #expect(identity.inputIdentityValueHash.hasPrefix("identity-input-"))
+        #expect(!identity.inputIdentityValueHash.contains("subagent-1"))
+        #expect(identity.selectedIdentityKind == "subsession")
+        #expect(identity.selectedIdentityValueCategory == "native_subsession_id")
+        #expect(identity.candidateCount == 1)
+        #expect(identity.selectedChildSessionID == trace.run.childSessionID)
+        #expect(identity.selectedLifecycleEventID == trace.run.lifecycleEventID)
+        #expect(identity.selectedRelationshipSessionID == trace.run.relationshipSessionID)
+        #expect(identity.selectedExternalIdentityID == trace.run.externalIdentityID)
+        #expect(identity.confidence == "high")
+        #expect(identity.outcome == "resolved")
+        #expect(identity.fallbackState == "native")
+        #expect(identity.unresolvedReason == nil)
+        #expect(identity.conflictReason == nil)
+    }
+
+    @Test
+    func recordsO2FallbackUnresolvedLifecycleIdentityResolutionTrace() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let observabilityStore = try ProvenanceObservabilityStore(
+            databaseURL: fixture.observabilityDatabaseURL
+        )
+        let recorder = WorkProvenanceSubsessionLifecycleRecorder(
+            store: store,
+            observabilityStore: observabilityStore,
+            awaitObservabilityWrites: true
+        )
+
+        try await store.append(Self.parentSessionEvent())
+        await recorder.record(
+            Self.lifecycleChange(phase: .started, subsessionID: nil),
+            timestamp: Date(timeIntervalSince1970: 120)
+        )
+
+        let trace = try #require(try await observabilityStore.lifecycleIngestionRuns().first)
+        let identity = try #require(trace.identityResolutions.first)
+
+        #expect(identity.pipelineRunID == trace.run.pipelineRunID)
+        #expect(identity.inputSubsessionIDState == "missing")
+        #expect(identity.inputIdentityKind == "unresolved_subsession")
+        #expect(identity.inputIdentityValueHash.hasPrefix("identity-input-"))
+        #expect(!identity.inputIdentityValueHash.contains("codex-parent"))
+        #expect(identity.selectedIdentityKind == "unresolved_subsession")
+        #expect(identity.selectedIdentityValueCategory == "stable_parent_fallback")
+        #expect(identity.candidateCount == 0)
+        #expect(identity.selectedChildSessionID == trace.run.childSessionID)
+        #expect(identity.selectedLifecycleEventID == trace.run.lifecycleEventID)
+        #expect(identity.selectedRelationshipSessionID == trace.run.relationshipSessionID)
+        #expect(identity.selectedExternalIdentityID == trace.run.externalIdentityID)
+        #expect(identity.confidence == "low")
+        #expect(identity.outcome == "unresolved")
+        #expect(identity.fallbackState == "fallback_unresolved")
+        #expect(identity.unresolvedReason == "missing_native_subsession_identifier")
+        #expect(identity.conflictReason == nil)
+    }
+
+    @Test
     func recordsFailedLifecycleIngestionTraceWithoutDuplicatingProvenance() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
@@ -133,6 +226,10 @@ struct SubsessionProvenanceTests {
         #expect(failedTrace.stages[0].status == "succeeded")
         #expect(failedTrace.stages[1].status == "failed")
         #expect(failedTrace.stages[2].status == "failed")
+        let identity = try #require(failedTrace.identityResolutions.first)
+        #expect(identity.pipelineRunID == failedTrace.run.pipelineRunID)
+        #expect(identity.outcome == "resolved")
+        #expect(identity.conflictReason != nil)
     }
 
     @Test

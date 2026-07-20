@@ -32,9 +32,18 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
         let runStartedAt = traceNow()
         var stages: [ProvenancePipelineStageExecutionRecord] = []
         var builtWorkProvenanceEvent: WorkProvenanceEvent?
+        var identityResolution: LifecycleIdentityResolution?
         do {
             let receivedStartedAt = traceNow()
-            let builtEvent = try await event(for: change, timestamp: timestamp)
+            let resolutionStartedAt = traceNow()
+            let identity = lifecycleIdentity(for: change)
+            let builtEvent = try await event(for: change, timestamp: timestamp, identity: identity)
+            let resolutionEndedAt = traceNow()
+            identityResolution = (
+                identity: identity,
+                startedAt: resolutionStartedAt,
+                endedAt: resolutionEndedAt
+            )
             let receivedEndedAt = traceNow()
             builtWorkProvenanceEvent = builtEvent
             stages.append(stageRecord(
@@ -55,6 +64,20 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
             stages.append(contentsOf: appendTrace.stages)
             let runStatus = appendTrace.errorDescription == nil ? "succeeded" : "failed"
             lastErrorDescription = appendTrace.errorDescription
+            let identityResolutionRecords: [ProvenanceIdentityResolutionRecord]
+            if let identityResolution {
+                identityResolutionRecords = [
+                    identityResolutionRecord(
+                        pipelineRunID: pipelineRunID,
+                        change: change,
+                        identityResolution: identityResolution,
+                        event: builtEvent,
+                        conflictReason: appendTrace.errorDescription
+                    )
+                ]
+            } else {
+                identityResolutionRecords = []
+            }
             await writeObservability(
                 run: runRecord(
                     pipelineRunID: pipelineRunID,
@@ -65,7 +88,8 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
                     endedAt: traceNow(),
                     errorSummary: appendTrace.errorDescription
                 ),
-                stages: stages
+                stages: stages,
+                identityResolutions: identityResolutionRecords
             )
         } catch {
             let errorSummary = WorkProvenanceStore.boundedErrorSummary(error)
@@ -103,7 +127,8 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
                     endedAt: traceNow(),
                     errorSummary: errorSummary
                 ),
-                stages: stages
+                stages: stages,
+                identityResolutions: []
             )
         }
     }
@@ -113,7 +138,15 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
         for change: AgentSubsessionLifecycleChange,
         timestamp: Date
     ) async throws -> WorkProvenanceEvent {
-        let identity = nativeIdentity(for: change)
+        let identity = lifecycleIdentity(for: change)
+        return try await event(for: change, timestamp: timestamp, identity: identity)
+    }
+
+    private func event(
+        for change: AgentSubsessionLifecycleChange,
+        timestamp: Date,
+        identity: LifecycleIdentity
+    ) async throws -> WorkProvenanceEvent {
         let childSessionID = stableIDFactory.subsessionSessionID(
             agentKind: change.agentKind.sourceName,
             parentSessionID: change.parentSessionID,
@@ -123,7 +156,7 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
         let parentRelationship = try await store.parentSession(for: change.parentSessionID)
         let rootSessionID = parentRelationship?.rootSessionID ?? change.parentSessionID
         let depth = (parentRelationship?.depth ?? 0) + 1
-        let confidence = identity.isNative ? WorkProvenanceConfidence.high : .low
+        let confidence = identity.confidence
         let status: String
         let eventType: WorkProvenanceEventType
         let startedAt: Date?
@@ -191,30 +224,53 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
         )
     }
 
-    private func nativeIdentity(
+    private func lifecycleIdentity(
         for change: AgentSubsessionLifecycleChange
-    ) -> (kind: String, value: String, isNative: Bool) {
+    ) -> LifecycleIdentity {
         let trimmed = change.subsessionID?.trimmingCharacters(in: .whitespacesAndNewlines)
         if let trimmed, !trimmed.isEmpty {
-            return ("subsession", trimmed, true)
+            return (
+                kind: "subsession",
+                value: trimmed,
+                valueCategory: "native_subsession_id",
+                candidateCount: 1,
+                confidence: .high,
+                outcome: "resolved",
+                fallbackState: "native",
+                unresolvedReason: nil
+            )
         }
         return (
-            "unresolved_subsession",
-            "\(change.agentKind.sourceName):\(change.parentSessionID):default",
-            false
+            kind: "unresolved_subsession",
+            value: "\(change.agentKind.sourceName):\(change.parentSessionID):default",
+            valueCategory: "stable_parent_fallback",
+            candidateCount: 0,
+            confidence: .low,
+            outcome: "unresolved",
+            fallbackState: "fallback_unresolved",
+            unresolvedReason: "missing_native_subsession_identifier"
         )
     }
 
     private func writeObservability(
         run: ProvenancePipelineRunRecord,
-        stages: [ProvenancePipelineStageExecutionRecord]
+        stages: [ProvenancePipelineStageExecutionRecord],
+        identityResolutions: [ProvenanceIdentityResolutionRecord]
     ) async {
         guard let observabilityStore else { return }
         if awaitObservabilityWrites {
-            try? await observabilityStore.record(run: run, stages: stages)
+            try? await observabilityStore.record(
+                run: run,
+                stages: stages,
+                identityResolutions: identityResolutions
+            )
         } else {
             Task {
-                try? await observabilityStore.record(run: run, stages: stages)
+                try? await observabilityStore.record(
+                    run: run,
+                    stages: stages,
+                    identityResolutions: identityResolutions
+                )
             }
         }
     }
@@ -244,7 +300,48 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
             outputCount: status == "succeeded" ? 1 : 0,
             errorCount: errorSummary == nil ? 0 : 1,
             errorSummary: errorSummary,
-            implementationVersion: "o1"
+            implementationVersion: "o2"
+        )
+    }
+
+    private func identityResolutionRecord(
+        pipelineRunID: String,
+        change: AgentSubsessionLifecycleChange,
+        identityResolution: LifecycleIdentityResolution,
+        event: WorkProvenanceEvent,
+        conflictReason: String?
+    ) -> ProvenanceIdentityResolutionRecord {
+        let identity = identityResolution.identity
+        return ProvenanceIdentityResolutionRecord(
+            identityResolutionID: "\(pipelineRunID):subsession_identity",
+            pipelineRunID: pipelineRunID,
+            resolverName: "subsession_lifecycle_identity",
+            resolverVersion: "o2",
+            triggerSource: "AgentSubsessionLifecycleChange",
+            inputPhase: change.phase.provenanceEventIDComponent,
+            inputAgentKind: change.agentKind.sourceName,
+            inputParentSessionID: change.parentSessionID,
+            inputSubsessionIDState: identity.candidateCount == 0 ? "missing" : "present",
+            inputWorkspacePresent: change.workspaceID != nil,
+            inputSurfacePresent: change.surfaceID != nil,
+            inputWorkingDirectoryPresent: change.workingDirectory != nil,
+            inputDisplayNamePresent: change.displayName != nil,
+            inputIdentityKind: identity.kind,
+            inputIdentityValueHash: stableIDFactory.id(prefix: "identity-input", value: identity.value),
+            selectedIdentityKind: identity.kind,
+            selectedIdentityValueCategory: identity.valueCategory,
+            candidateCount: identity.candidateCount,
+            selectedChildSessionID: event.payload.session?.id,
+            selectedLifecycleEventID: event.id,
+            selectedRelationshipSessionID: event.payload.sessionRelationship?.sessionID,
+            selectedExternalIdentityID: event.payload.externalIdentities.first?.id,
+            confidence: identity.confidence.rawValue,
+            outcome: identity.outcome,
+            fallbackState: identity.fallbackState,
+            unresolvedReason: identity.unresolvedReason,
+            conflictReason: conflictReason,
+            startedAt: identityResolution.startedAt,
+            endedAt: identityResolution.endedAt
         )
     }
 
@@ -290,6 +387,23 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
         )
     }
 }
+
+private typealias LifecycleIdentity = (
+    kind: String,
+    value: String,
+    valueCategory: String,
+    candidateCount: Int,
+    confidence: WorkProvenanceConfidence,
+    outcome: String,
+    fallbackState: String,
+    unresolvedReason: String?
+)
+
+private typealias LifecycleIdentityResolution = (
+    identity: LifecycleIdentity,
+    startedAt: Date,
+    endedAt: Date
+)
 
 private extension AgentSubsessionLifecycleChange.Phase {
     var provenanceEventIDComponent: String {

@@ -34,9 +34,11 @@ final class CLIProvenanceObservabilitySQLiteReader {
         let boundedLimit = max(1, min(limit, 100))
         let runs = try lifecycleIngestionRunRows(limit: boundedLimit)
         var stages: [[String: AnyHashable]] = []
+        var identityResolutions: [[String: AnyHashable]] = []
         for run in runs {
             guard let pipelineRunID = run["pipeline_run_id"] as? String else { continue }
             stages.append(contentsOf: try stageRows(pipelineRunID: pipelineRunID))
+            identityResolutions.append(contentsOf: try identityResolutionRows(pipelineRunID: pipelineRunID))
         }
         return CLIProvenanceLifecycleTraceList(
             found: !runs.isEmpty,
@@ -44,7 +46,8 @@ final class CLIProvenanceObservabilitySQLiteReader {
                 ? String(localized: "cli.provenance.reason.noLifecycleTraces", defaultValue: "no lifecycle ingestion traces have been recorded")
                 : nil,
             runs: runs,
-            stages: stages
+            stages: stages,
+            identityResolutions: identityResolutions
         )
     }
 
@@ -121,6 +124,81 @@ final class CLIProvenanceObservabilitySQLiteReader {
         return rows
     }
 
+    private func identityResolutionRows(pipelineRunID: String) throws -> [[String: AnyHashable]] {
+        guard try tableExists("identity_resolution_attempts") else { return [] }
+        let statement = try prepare(
+            """
+            SELECT identity_resolution_id, pipeline_run_id, resolver_name,
+                   resolver_version, trigger_source, input_phase,
+                   input_agent_kind, input_parent_session_id,
+                   input_subsession_id_state, input_workspace_present,
+                   input_surface_present, input_working_directory_present,
+                   input_display_name_present, input_identity_kind,
+                   input_identity_value_hash, selected_identity_kind,
+                   selected_identity_value_category, candidate_count,
+                   selected_child_session_id, selected_lifecycle_event_id,
+                   selected_relationship_session_id, selected_external_identity_id,
+                   confidence, outcome, fallback_state, unresolved_reason,
+                   conflict_reason, started_at, ended_at, duration_ms
+            FROM identity_resolution_attempts
+            WHERE pipeline_run_id = ?
+            ORDER BY started_at ASC, rowid ASC
+            """
+        )
+        defer { sqlite3_finalize(statement) }
+        try bind(pipelineRunID, to: statement, at: 1)
+        var rows: [[String: AnyHashable]] = []
+        while sqlite3_step(statement) == SQLITE_ROW {
+            rows.append(compactPayload([
+                "identity_resolution_id": string(statement, 0),
+                "pipeline_run_id": string(statement, 1),
+                "resolver_name": string(statement, 2),
+                "resolver_version": string(statement, 3),
+                "trigger_source": string(statement, 4),
+                "input_phase": string(statement, 5),
+                "input_agent_kind": string(statement, 6),
+                "input_parent_session_id": string(statement, 7),
+                "input_subsession_id_state": string(statement, 8),
+                "input_workspace_present": bool(statement, 9),
+                "input_surface_present": bool(statement, 10),
+                "input_working_directory_present": bool(statement, 11),
+                "input_display_name_present": bool(statement, 12),
+                "input_identity_kind": string(statement, 13),
+                "input_identity_value_hash": string(statement, 14),
+                "selected_identity_kind": string(statement, 15),
+                "selected_identity_value_category": string(statement, 16),
+                "candidate_count": int(statement, 17),
+                "selected_child_session_id": string(statement, 18),
+                "selected_lifecycle_event_id": string(statement, 19),
+                "selected_relationship_session_id": string(statement, 20),
+                "selected_external_identity_id": string(statement, 21),
+                "confidence": string(statement, 22),
+                "outcome": string(statement, 23),
+                "fallback_state": string(statement, 24),
+                "unresolved_reason": string(statement, 25),
+                "conflict_reason": string(statement, 26),
+                "started_at": double(statement, 27),
+                "ended_at": double(statement, 28),
+                "duration_ms": double(statement, 29)
+            ]))
+        }
+        return rows
+    }
+
+    private func tableExists(_ name: String) throws -> Bool {
+        let statement = try prepare(
+            """
+            SELECT 1
+            FROM sqlite_master
+            WHERE type = 'table' AND name = ?
+            LIMIT 1
+            """
+        )
+        defer { sqlite3_finalize(statement) }
+        try bind(name, to: statement, at: 1)
+        return sqlite3_step(statement) == SQLITE_ROW
+    }
+
     private func prepare(_ sql: String) throws -> OpaquePointer {
         guard let handle else {
             throw CLIError(message: String(localized: "cli.provenance.error.databaseClosed", defaultValue: "provenance database is closed"))
@@ -157,6 +235,10 @@ final class CLIProvenanceObservabilitySQLiteReader {
 
     private func int(_ statement: OpaquePointer, _ index: Int32) -> Int {
         Int(sqlite3_column_int64(statement, index))
+    }
+
+    private func bool(_ statement: OpaquePointer, _ index: Int32) -> Bool {
+        sqlite3_column_int64(statement, index) != 0
     }
 
     private func compactPayload(_ values: [String: AnyHashable?]) -> [String: AnyHashable] {

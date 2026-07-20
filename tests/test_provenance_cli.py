@@ -228,6 +228,38 @@ def create_observability_database(path: Path) -> None:
                 error_count INTEGER NOT NULL,
                 error_summary TEXT
             );
+            CREATE TABLE identity_resolution_attempts (
+                identity_resolution_id TEXT PRIMARY KEY NOT NULL,
+                pipeline_run_id TEXT NOT NULL,
+                resolver_name TEXT NOT NULL,
+                resolver_version TEXT NOT NULL,
+                trigger_source TEXT NOT NULL,
+                input_phase TEXT NOT NULL,
+                input_agent_kind TEXT NOT NULL,
+                input_parent_session_id TEXT NOT NULL,
+                input_subsession_id_state TEXT NOT NULL,
+                input_workspace_present INTEGER NOT NULL,
+                input_surface_present INTEGER NOT NULL,
+                input_working_directory_present INTEGER NOT NULL,
+                input_display_name_present INTEGER NOT NULL,
+                input_identity_kind TEXT NOT NULL,
+                input_identity_value_hash TEXT NOT NULL,
+                selected_identity_kind TEXT NOT NULL,
+                selected_identity_value_category TEXT NOT NULL,
+                candidate_count INTEGER NOT NULL,
+                selected_child_session_id TEXT,
+                selected_lifecycle_event_id TEXT,
+                selected_relationship_session_id TEXT,
+                selected_external_identity_id TEXT,
+                confidence TEXT NOT NULL,
+                outcome TEXT NOT NULL,
+                fallback_state TEXT NOT NULL,
+                unresolved_reason TEXT,
+                conflict_reason TEXT,
+                started_at REAL NOT NULL,
+                ended_at REAL NOT NULL,
+                duration_ms REAL NOT NULL
+            );
             """
         )
         conn.executemany(
@@ -397,6 +429,91 @@ def create_observability_database(path: Path) -> None:
                 ),
             ],
         )
+        conn.executemany(
+            """
+            INSERT INTO identity_resolution_attempts (
+                identity_resolution_id, pipeline_run_id, resolver_name,
+                resolver_version, trigger_source, input_phase, input_agent_kind,
+                input_parent_session_id, input_subsession_id_state,
+                input_workspace_present, input_surface_present,
+                input_working_directory_present, input_display_name_present,
+                input_identity_kind, input_identity_value_hash,
+                selected_identity_kind, selected_identity_value_category,
+                candidate_count, selected_child_session_id,
+                selected_lifecycle_event_id, selected_relationship_session_id,
+                selected_external_identity_id, confidence, outcome,
+                fallback_state, unresolved_reason, conflict_reason,
+                started_at, ended_at, duration_ms
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    "run-success:subsession_identity",
+                    "run-success",
+                    "subsession_lifecycle_identity",
+                    "o2",
+                    "AgentSubsessionLifecycleChange",
+                    "started",
+                    "codex",
+                    "codex-parent",
+                    "present",
+                    1,
+                    1,
+                    1,
+                    1,
+                    "subsession",
+                    "identity-input-native",
+                    "subsession",
+                    "native_subsession_id",
+                    1,
+                    "codex-child",
+                    "event-child-start",
+                    "codex-child",
+                    "identity-child",
+                    "high",
+                    "resolved",
+                    "native",
+                    None,
+                    None,
+                    120.0,
+                    120.1,
+                    100.0,
+                ),
+                (
+                    "run-failed:subsession_identity",
+                    "run-failed",
+                    "subsession_lifecycle_identity",
+                    "o2",
+                    "AgentSubsessionLifecycleChange",
+                    "started",
+                    "codex",
+                    "codex-parent",
+                    "present",
+                    1,
+                    1,
+                    1,
+                    1,
+                    "subsession",
+                    "identity-input-native",
+                    "subsession",
+                    "native_subsession_id",
+                    1,
+                    "codex-child",
+                    "event-child-start",
+                    "codex-child",
+                    "identity-child",
+                    "high",
+                    "resolved",
+                    "native",
+                    None,
+                    "UNIQUE constraint failed: events.id",
+                    130.0,
+                    130.1,
+                    100.0,
+                ),
+            ],
+        )
 
 
 def run_cli(cli_path: str, args: list[str]) -> subprocess.CompletedProcess[str]:
@@ -516,6 +633,7 @@ def check_provenance_lifecycle_trace_json(cli_path: str, root: Path) -> None:
     payload = json.loads(result.stdout)
     if payload["summary"] != {
         "failed_run_count": 1,
+        "identity_resolution_count": 2,
         "run_count": 2,
         "stage_count": 6,
     }:
@@ -532,6 +650,16 @@ def check_provenance_lifecycle_trace_json(cli_path: str, root: Path) -> None:
         "work_provenance_projection_update",
     ]:
         raise AssertionError(f"expected O1 stage sequence: {payload!r}")
+    identity_rows = payload["identity_resolutions"]
+    if [row["pipeline_run_id"] for row in identity_rows] != ["run-failed", "run-success"]:
+        raise AssertionError(f"expected O2 identity rows to follow trace order: {payload!r}")
+    failed_identity = identity_rows[0]
+    if failed_identity["selected_child_session_id"] != "codex-child":
+        raise AssertionError(f"expected selected child session id in identity row: {payload!r}")
+    if failed_identity["input_identity_value_hash"] == "subagent-1":
+        raise AssertionError(f"identity row should not expose raw subsession id: {payload!r}")
+    if failed_identity.get("conflict_reason") is None:
+        raise AssertionError(f"expected failed trace identity conflict reason: {payload!r}")
 
 
 def check_provenance_lifecycle_trace_text(cli_path: str, root: Path) -> None:

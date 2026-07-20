@@ -937,6 +937,7 @@
 		A5C0DE0000000000000000B4 /* ProjectPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000B3 /* ProjectPanelView.swift */; };
 		A5C0DE0000000000000000BC /* ProjectSchemesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000BB /* ProjectSchemesTabView.swift */; };
 		A5C0DE0000000000000000B8 /* ProjectTargetsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000B7 /* ProjectTargetsTabView.swift */; };
+		CE0B00090000000000000001 /* ProvenanceIdentityResolutionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00090000000000000002 /* ProvenanceIdentityResolutionRecord.swift */; };
 		CE0B00060000000000000001 /* ProvenanceObservabilityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00060000000000000002 /* ProvenanceObservabilityStore.swift */; };
 		CE0B00070000000000000001 /* ProvenancePipelineRunRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */; };
 		CE0B00080000000000000001 /* ProvenancePipelineStageExecutionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */; };
@@ -2511,6 +2512,7 @@
 		A5C0DE0000000000000000B3 /* ProjectPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectPanelView.swift; sourceTree = "<group>"; };
 		A5C0DE0000000000000000BB /* ProjectSchemesTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectSchemesTabView.swift; sourceTree = "<group>"; };
 		A5C0DE0000000000000000B7 /* ProjectTargetsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectTargetsTabView.swift; sourceTree = "<group>"; };
+		CE0B00090000000000000002 /* ProvenanceIdentityResolutionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceIdentityResolutionRecord.swift; sourceTree = "<group>"; };
 		CE0B00060000000000000002 /* ProvenanceObservabilityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceObservabilityStore.swift; sourceTree = "<group>"; };
 		CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenancePipelineRunRecord.swift; sourceTree = "<group>"; };
 		CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenancePipelineStageExecutionRecord.swift; sourceTree = "<group>"; };
@@ -4800,6 +4802,7 @@
 		B8C2E8CB1ADEEC44521D006B /* WorkProvenance */ = {
 			isa = PBXGroup;
 			children = (
+				CE0B00090000000000000002 /* ProvenanceIdentityResolutionRecord.swift */,
 				CE0B00060000000000000002 /* ProvenanceObservabilityStore.swift */,
 				CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */,
 				CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */,
@@ -5788,6 +5791,7 @@
 					A5C0DE0000000000000000B4 /* ProjectPanelView.swift in Sources */,
 					A5C0DE0000000000000000BC /* ProjectSchemesTabView.swift in Sources */,
 					A5C0DE0000000000000000B8 /* ProjectTargetsTabView.swift in Sources */,
+				CE0B00090000000000000001 /* ProvenanceIdentityResolutionRecord.swift in Sources */,
 				CE0B00060000000000000001 /* ProvenanceObservabilityStore.swift in Sources */,
 				CE0B00070000000000000001 /* ProvenancePipelineRunRecord.swift in Sources */,
 				CE0B00080000000000000001 /* ProvenancePipelineStageExecutionRecord.swift in Sources */,
