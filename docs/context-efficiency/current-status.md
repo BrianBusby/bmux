@@ -9,12 +9,13 @@ This file is the live handoff index for the context-efficiency roadmap. Read it 
 1. `AGENTS.md`
 2. `docs/context-efficiency/current-status.md`
 3. `docs/context-efficiency/roadmap.md`
-4. `docs/context-efficiency/subsession-delegation-integration-plan.md`
-5. `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
-6. `docs/context-efficiency/provenance-observability-integration-plan.md`
-7. `docs/context-efficiency/subsession-delegation-phase-a-report.md`
-8. `docs/context-efficiency/milestones.md`
-9. Relevant bmux skills:
+4. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
+5. `docs/context-efficiency/subsession-delegation-integration-plan.md`
+6. `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
+7. `docs/context-efficiency/provenance-observability-integration-plan.md`
+8. `docs/context-efficiency/subsession-delegation-phase-a-report.md`
+9. `docs/context-efficiency/milestones.md`
+10. Relevant bmux skills:
    - `bmux-architecture` before Swift package/API changes.
    - `bmux-dev-workflow` before tagged builds or project wiring.
    - `bmux-testing` before test changes or verification decisions.
@@ -23,6 +24,12 @@ This file is the live handoff index for the context-efficiency roadmap. Read it 
 ## Active Phase
 
 Original roadmap Phase 3 is active: read-only command and output attribution from already-imported telemetry facts. Phase 2 closed on 2026-07-17 with local telemetry ingestion, Codex state metadata, SQLite persistence, bounded JSON diagnostics, and CLI regression coverage.
+
+ADR-001 is accepted and now controls the product boundary for provenance extraction:
+
+- `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
+
+Treat the Provenance Engine as an independent local-first product with bmux as its first client. Future provenance implementation should move toward SDK/API boundaries, a local daemon, independent versioning, and no engine dependency on bmux internals. Existing `WorkProvenance`, `BmuxContextEfficiency`, and `ProvenanceObservability` work remains useful migration source material, but new extraction work must not deepen bmux-specific storage or domain coupling.
 
 Subsession/delegation provenance has been merged into the roadmap as a Phase 3-adjacent provenance integration track with its own authoritative plan:
 
@@ -86,9 +93,9 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 
 Current checkout:
 
-- Branch: `context-efficiency-o3-projection-lineage`
-- HEAD observed before the handoff docs commit on 2026-07-20: `114df3b18`
-- Contains the merged Phase B lifecycle/provenance work plus the first narrow O3 lifecycle-ingestion projection-lineage implementation.
+- Branch: `provenance-engine-adr`
+- HEAD observed before the ADR docs commit on 2026-07-20: `596666ca3ee44a4ca74a26b867c9648078bf933c`
+- Contains the accepted ADR-001 provenance extraction product-boundary documentation as a docs-only planning slice.
 
 Active context-efficiency worktree:
 
@@ -128,9 +135,9 @@ Files changed in the latest implementation slice:
 
 Latest completed provenance planning slice:
 
-- `docs/context-efficiency/subsession-delegation-phase-a-report.md` records the Phase A architecture report required before subsession/delegation schema or implementation changes.
-- `docs/context-efficiency/provenance-observability-integration-plan.md` records the cross-cutting observability plan and O0 investigation gate.
-- `docs/context-efficiency/current-status.md` and `docs/context-efficiency/milestones.md` record that Phase B lifecycle persistence remains the next provenance implementation target, with O0 observability investigation as the next observability planning target.
+- `docs/context-efficiency/adr-001-provenance-engine-extraction.md` records the accepted product-boundary decision for extracting provenance into an independent local-first engine with bmux as its first client.
+- `docs/context-efficiency/current-status.md` adds ADR-001 to the required read order and marks it as controlling product-boundary context for future provenance extraction work.
+- `docs/context-efficiency/milestones.md` lists ADR-001 as a cross-cutting plan and records that future migration work should introduce SDK/API contracts before moving implementation, avoid new bmux assumptions, and preserve independent engine versioning and release boundaries.
 
 Latest completed provenance implementation slice:
 
