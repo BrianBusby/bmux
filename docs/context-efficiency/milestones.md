@@ -32,14 +32,16 @@ initially owned and maintained under the `BrianBusby` GitHub account. It may be
 transferred to a future organization, for example `manaflow-ai`, once the
 project matures. Repository ownership is an implementation detail and must not
 affect package names, APIs, module boundaries, documentation, storage defaults,
-or bmux integration. The external skeleton commit remains local only until
-`9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to
-`BrianBusby/provenance-engine` on `origin/main`. No Phase 3C contract lift, SDK
-implementation, daemon, storage move, schema move, data migration, bmux
-reconnect, retrieval layer, lifecycle policy, UI, or broad observability
-expansion has been created. Full ADR-001 Phase 3 is still not complete.
+or bmux integration. Private GitHub repository
+`BrianBusby/provenance-engine` now exists, the local engine repo's `origin`
+points at `git@github.com:BrianBusby/provenance-engine.git`, and external
+skeleton commit `9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to
+`origin/main`. No Phase 3C contract lift, SDK implementation, daemon, storage
+move, schema move, data migration, bmux reconnect, retrieval layer, lifecycle
+policy, UI, or broad observability expansion has been created. Full ADR-001
+Phase 3 is still not complete.
 
-The ADR-001 Phase 0 migration audit is complete in `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`. The ADR-001 Phase 1 behavior characterization and minimum contract plan is complete in `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`. The first Phase 2 slice introduced internal protocol/request/response names for append, session-tree, and file-explanation behavior around the current store. The second Phase 2 slice introduced normalized subsession-lifecycle request/response/protocol names around the current lifecycle recorder. The third Phase 2 slice introduced a separate lifecycle-trace query contract around `ProvenanceObservabilityStore`. The fourth Phase 2 slice converted `bmux provenance sessions tree <session-id>` onto `ProvenanceEngineClient.sessionTree(...)` while preserving existing CLI JSON/text/no-database behavior. The fifth Phase 2 slice converted `bmux provenance explain <path>` onto `ProvenanceEngineClient.fileExplanation(...)` while preserving existing CLI JSON/text/no-database/no-worktree/no-file behavior. The sixth Phase 2 slice converted `bmux provenance worktrees list` onto `ProvenanceEngineClient.worktrees(...)` while preserving existing CLI JSON/text/no-database/empty-database behavior and newest-first ordering. The seventh Phase 2 slice converted `bmux provenance context current` onto `ProvenanceEngineClient.currentContext(...)` while preserving existing CLI JSON/text/no-database/no-worktree/empty-section behavior, section bounds, and ordering. No further ADR-001 Phase 2 authoritative provenance CLI conversion is currently identified; pause before starting daemon, SDK, independent repository, storage/schema migration, retrieval, lifecycle-policy, UI, or observability expansion.
+The ADR-001 Phase 0 migration audit is complete in `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`. The ADR-001 Phase 1 behavior characterization and minimum contract plan is complete in `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`. The first Phase 2 slice introduced internal protocol/request/response names for append, session-tree, and file-explanation behavior around the current store. The second Phase 2 slice introduced normalized subsession-lifecycle request/response/protocol names around the current lifecycle recorder. The third Phase 2 slice introduced a separate lifecycle-trace query contract around `ProvenanceObservabilityStore`. The fourth Phase 2 slice converted `bmux provenance sessions tree <session-id>` onto `ProvenanceEngineClient.sessionTree(...)` while preserving existing CLI JSON/text/no-database behavior. The fifth Phase 2 slice converted `bmux provenance explain <path>` onto `ProvenanceEngineClient.fileExplanation(...)` while preserving existing CLI JSON/text/no-database/no-worktree/no-file behavior. The sixth Phase 2 slice converted `bmux provenance worktrees list` onto `ProvenanceEngineClient.worktrees(...)` while preserving existing CLI JSON/text/no-database/empty-database behavior and newest-first ordering. The seventh Phase 2 slice converted `bmux provenance context current` onto `ProvenanceEngineClient.currentContext(...)` while preserving existing CLI JSON/text/no-database/no-worktree/empty-section behavior, section bounds, and ordering. No further ADR-001 Phase 2 authoritative provenance CLI conversion is currently identified; pause before starting daemon, SDK implementation, storage/schema migration, retrieval, lifecycle-policy, UI, or observability expansion.
 
 Observability is not a standalone late milestone. Each provenance milestone should add the relevant traceability, quality, feedback, evaluation, or shadow-comparison requirement while preserving store ownership: `WorkProvenance` is authoritative engineering history, `BmuxContextEfficiency` is read-only imported telemetry/evidence, and `ProvenanceObservability` is future operational and quality telemetry.
 
@@ -211,13 +213,11 @@ Implemented slices:
 - ADR-001 Phase 3B created the local independent skeleton at
   `/Users/brianbusby/repos/provenance-engine` with package `ProvenanceEngine`
   and module/product `ProvenanceEngineContracts`.
-- The Phase 3B remote unblock is now defined as creating or gaining access to
-  `BrianBusby/provenance-engine`, setting the local engine repo's `origin` to
-  `git@github.com:BrianBusby/provenance-engine.git`, and pushing local commit
+- ADR-001 Phase 3B remote unblock created private GitHub repository
+  `BrianBusby/provenance-engine`, set the local engine repo's `origin` to
+  `git@github.com:BrianBusby/provenance-engine.git`, and pushed local commit
   `9e8fa620ccd04040968e0afab591feb48c8c11d0` to `origin/main`.
-- Phase 3C remains blocked until local commit
-  `9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to
-  `BrianBusby/provenance-engine` on `origin/main`.
+- Phase 3C is now the next safe ADR-001 Phase 3 target.
 - Phase 2, Phase 3A, and Phase 3B have not created a daemon, moved
   storage/schema, added data migration, or added daemon/SDK packaging. Four
   read-only authoritative provenance CLI paths
