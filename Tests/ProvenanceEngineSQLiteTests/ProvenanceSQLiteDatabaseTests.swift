@@ -250,6 +250,125 @@ struct ProvenanceSQLiteDatabaseTests {
         }
     }
 
+    @Test
+    func repositoryOpensDatabaseAndAppliesMigrationsBeforeReturning() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+
+        let repository = try ProvenanceSQLiteRepository(
+            url: url,
+            migrations: [
+                ProvenanceSQLiteMigration(
+                    version: 1,
+                    statements: [
+                        """
+                        CREATE TABLE repository_events (
+                            id TEXT PRIMARY KEY NOT NULL
+                        )
+                        """,
+                    ]
+                ),
+                ProvenanceSQLiteMigration(
+                    version: 2,
+                    statements: [
+                        "ALTER TABLE repository_events ADD COLUMN kind TEXT",
+                        "INSERT INTO repository_events (id, kind) VALUES ('event-1', 'opened')",
+                    ]
+                ),
+            ]
+        )
+
+        #expect(try await repository.schemaVersion() == 2)
+
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        #expect(
+            try Self.firstString(
+                "SELECT kind FROM repository_events WHERE id = 'event-1'",
+                in: database
+            ) == "opened"
+        )
+    }
+
+    @Test
+    func repositorySkipsAlreadyAppliedMigrations() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute(
+            """
+            CREATE TABLE existing_repository_table (
+                id TEXT PRIMARY KEY NOT NULL
+            )
+            """
+        )
+        try database.setUserVersion(1)
+
+        let repository = try ProvenanceSQLiteRepository(
+            url: url,
+            migrations: [
+                ProvenanceSQLiteMigration(
+                    version: 1,
+                    statements: [
+                        """
+                        CREATE TABLE existing_repository_table (
+                            id TEXT PRIMARY KEY NOT NULL
+                        )
+                        """,
+                    ]
+                ),
+            ]
+        )
+
+        #expect(try await repository.schemaVersion() == 1)
+    }
+
+    @Test
+    func repositoryRejectsNewerDatabaseSchema() throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.setUserVersion(5)
+
+        do {
+            _ = try ProvenanceSQLiteRepository(
+                url: url,
+                migrations: [
+                    ProvenanceSQLiteMigration(version: 1, statements: []),
+                ]
+            )
+            Issue.record("Expected unsupported schema failure")
+        } catch let error as ProvenanceSQLiteError {
+            #expect(error == .unsupportedSchema(found: 5, supported: 1))
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+
+    @Test
+    func repositoryRejectsInvalidMigrationPlanBeforeOpeningDatabase() throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+
+        do {
+            _ = try ProvenanceSQLiteRepository(
+                url: url,
+                migrations: [
+                    ProvenanceSQLiteMigration(version: 1, statements: []),
+                    ProvenanceSQLiteMigration(version: 1, statements: []),
+                ]
+            )
+            Issue.record("Expected migration plan failure")
+        } catch let error as ProvenanceSQLiteError {
+            if case let .invalidMigrationPlan(message) = error {
+                #expect(message.contains("strictly increasing"))
+            }
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+
+        #expect(FileManager.default.fileExists(atPath: url.path) == false)
+    }
+
     private static func temporaryDatabaseURL() -> URL {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("provenance-engine-sqlite-tests", isDirectory: true)
@@ -262,6 +381,13 @@ struct ProvenanceSQLiteDatabaseTests {
         defer { query.finalize() }
         try query.bind(tableName, at: 1)
         return try query.step()
+    }
+
+    private static func firstString(_ sql: String, in database: ProvenanceSQLiteDatabase) throws -> String? {
+        let query = try database.prepare(sql)
+        defer { query.finalize() }
+        guard try query.step() else { return nil }
+        return query.string(at: 0)
     }
 
     private static func removeTemporaryDatabaseDirectory(for url: URL) {
