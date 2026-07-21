@@ -12,9 +12,19 @@ let package = Package(
     ],
     targets: [
         .target(name: "ProvenanceEngineContracts"),
+        .target(
+            name: "ProvenanceEngineSQLite",
+            linkerSettings: [
+                .linkedLibrary("sqlite3"),
+            ]
+        ),
         .testTarget(
             name: "ProvenanceEngineContractsTests",
             dependencies: ["ProvenanceEngineContracts"]
+        ),
+        .testTarget(
+            name: "ProvenanceEngineSQLiteTests",
+            dependencies: ["ProvenanceEngineSQLite"]
         ),
     ],
     swiftLanguageModes: [.v6]
