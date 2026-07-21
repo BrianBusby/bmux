@@ -48,8 +48,10 @@ canonical remote owner/name remains `manaflow-ai/provenance-engine`, but
 found`. A 2026-07-21 retry confirmed `gh api
 repos/manaflow-ai/provenance-engine` returns HTTP 404, and creating the org repo
 with the authenticated `BrianBusby` account returns HTTP 403 because the account
-lacks organization admin access. A later 2026-07-21 handoff retry reconfirmed
-the same 404/403 gate. Create or grant access to that remote before relying on
+lacks organization admin access. The latest 2026-07-21 remote-unblock retry
+reconfirmed the same 404/403 gate, and `git -C
+/Users/brianbusby/repos/provenance-engine ls-remote origin` still fails with
+`Repository not found`. Create or grant access to that remote before relying on
 remote history.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
@@ -209,14 +211,27 @@ Latest completed provenance Phase 3B skeleton slice:
 
 Latest attempted provenance Phase 3B remote unblock slice:
 
-- A 2026-07-21 handoff retry confirmed `gh api
+- A 2026-07-21 remote-unblock retry confirmed `gh api
   repos/manaflow-ai/provenance-engine` still returns HTTP 404.
 - `gh api --method POST orgs/manaflow-ai/repos ...` still returns HTTP 403: the
   authenticated `BrianBusby` account needs organization admin access before it
   can create `manaflow-ai/provenance-engine`.
+- `git -C /Users/brianbusby/repos/provenance-engine ls-remote origin` still
+  fails with `Repository not found`, so commit
+  `9e8fa620ccd04040968e0afab591feb48c8c11d0` has not been pushed to
+  `origin/main`.
 - `/Users/brianbusby/repos/provenance-engine` remains clean on branch `main` at
   `9e8fa620ccd04040968e0afab591feb48c8c11d0`.
 - Phase 3C was not started because the Phase 3B remote gate is still blocked.
+- Validation run:
+  - `git status --short --branch`
+  - `git -C /Users/brianbusby/repos/provenance-engine status --short --branch`
+  - `git -C /Users/brianbusby/repos/provenance-engine rev-parse HEAD`
+  - `git -C /Users/brianbusby/repos/provenance-engine remote -v`
+  - `gh api user --jq .login`
+  - `gh api repos/manaflow-ai/provenance-engine`
+  - `gh api --method POST orgs/manaflow-ai/repos -f name=provenance-engine -f private=true -f description='Local-first engineering provenance engine'`
+  - `git -C /Users/brianbusby/repos/provenance-engine ls-remote origin`
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
 - Full ADR-001 Phase 3 remains incomplete.
 
