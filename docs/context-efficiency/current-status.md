@@ -246,6 +246,10 @@ Latest provenance Phase 3B remote unblock slice:
   - `git -C /Users/brianbusby/repos/provenance-engine ls-remote origin`
   - `git -C /Users/brianbusby/repos/provenance-engine push -u origin main`
   - `git -C /Users/brianbusby/repos/provenance-engine ls-remote origin refs/heads/main`
+  - `rg -n "[R]epository not found|[h]as not yet been pushed|[u]npushed|[l]ocal only until|[r]emote gate is still pending|[P]hase 3C remains blocked|[E]xternal push is blocked|[R]emote push is still pending|[C]reate or grant access|[C]reate or gain access" docs/context-efficiency/current-status.md docs/context-efficiency/milestones.md`
+  - `git diff --check`
+  - `git push`
+  - Final clean-state checks for bmux and the engine repo.
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
 - Full ADR-001 Phase 3 remains incomplete.
 
