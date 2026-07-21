@@ -39,4 +39,17 @@ extension WorkProvenanceStore: ProvenanceEngineClient {
         let entries = try worktreeList(repositoryID: request.repositoryID, limit: request.limit)
         return ProvenanceWorktreeListResponse(worktrees: entries)
     }
+
+    func currentContext(_ request: ProvenanceCurrentContextRequest) async throws
+        -> ProvenanceCurrentContextResponse {
+        try currentContext(
+            repositoryPath: request.repositoryPath,
+            activeSessionLimit: request.activeSessionLimit,
+            dirtyFileLimit: request.dirtyFileLimit,
+            unattributedChangeLimit: request.unattributedChangeLimit,
+            recentCheckpointLimit: request.recentCheckpointLimit,
+            validationRunLimit: request.validationRunLimit,
+            conflictLimit: request.conflictLimit
+        )
+    }
 }

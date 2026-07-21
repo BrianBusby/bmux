@@ -25,4 +25,11 @@ protocol ProvenanceEngineClient: Sendable {
     /// - Parameter request: Query parameters for the worktree list.
     /// - Returns: A domain response containing worktrees and linked repositories.
     func worktrees(_ request: ProvenanceWorktreeListRequest) async throws -> ProvenanceWorktreeListResponse
+
+    /// Returns the bounded current provenance context for one Git worktree.
+    ///
+    /// - Parameter request: Query parameters for the current context.
+    /// - Returns: A domain response containing current worktree, session, file, and validation context.
+    func currentContext(_ request: ProvenanceCurrentContextRequest) async throws
+        -> ProvenanceCurrentContextResponse
 }

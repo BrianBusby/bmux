@@ -435,6 +435,41 @@ struct WorkProvenanceStoreTests {
         #expect(response.worktrees.first?.repository?.remoteSlug == "manaflow-ai/bmux")
     }
 
+    @Test
+    func contractClientReturnsCurrentContext() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let client: any ProvenanceEngineClient = store
+
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.attributedEvent()))
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.unattributedEvent()))
+
+        let response = try await client.currentContext(ProvenanceCurrentContextRequest(
+            repositoryPath: "/repo"
+        ))
+        let missing = try await client.currentContext(ProvenanceCurrentContextRequest(
+            repositoryPath: "/missing"
+        ))
+
+        #expect(response.schemaVersion == 1)
+        #expect(response.found)
+        #expect(response.reason == nil)
+        #expect(response.worktree?.id == "worktree-1")
+        #expect(response.repository?.path == "/repo")
+        #expect(response.activeSessions.map(\.session.id) == ["session-1"])
+        #expect(response.dirtyFiles.map(\.fileChange.path) == [
+            "Sources/Unknown.swift",
+            "Sources/WorkspaceManager.swift",
+        ])
+        #expect(response.unattributedChanges.map(\.fileChange.path) == ["Sources/Unknown.swift"])
+        #expect(response.recentCheckpoints.map(\.checkpoint.id) == ["checkpoint-1"])
+        #expect(response.validationRuns.isEmpty)
+        #expect(response.conflicts.isEmpty)
+        #expect(!missing.found)
+        #expect(missing.reason == "no_worktree")
+    }
+
     private static func attributedEvent() -> WorkProvenanceEvent {
         let now = Date(timeIntervalSince1970: 100)
         let repository = WorkProvenanceRepositoryRecord(

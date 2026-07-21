@@ -941,6 +941,20 @@
 		CE0D10010000000000000001 /* ProvenanceAppendEventRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00010000000000000002 /* ProvenanceAppendEventRequest.swift */; };
 		CE0C00020000000000000001 /* ProvenanceAppendEventResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00020000000000000002 /* ProvenanceAppendEventResponse.swift */; };
 		CE0D10020000000000000001 /* ProvenanceAppendEventResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00020000000000000002 /* ProvenanceAppendEventResponse.swift */; };
+		CE0C001A0000000000000001 /* ProvenanceCurrentContextCheckpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C001A0000000000000002 /* ProvenanceCurrentContextCheckpoint.swift */; };
+		CE0D10290000000000000001 /* ProvenanceCurrentContextCheckpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C001A0000000000000002 /* ProvenanceCurrentContextCheckpoint.swift */; };
+		CE0C001B0000000000000001 /* ProvenanceCurrentContextConflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C001B0000000000000002 /* ProvenanceCurrentContextConflict.swift */; };
+		CE0D102A0000000000000001 /* ProvenanceCurrentContextConflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C001B0000000000000002 /* ProvenanceCurrentContextConflict.swift */; };
+		CE0C001C0000000000000001 /* ProvenanceCurrentContextFileChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C001C0000000000000002 /* ProvenanceCurrentContextFileChange.swift */; };
+		CE0D102B0000000000000001 /* ProvenanceCurrentContextFileChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C001C0000000000000002 /* ProvenanceCurrentContextFileChange.swift */; };
+		CE0C001D0000000000000001 /* ProvenanceCurrentContextRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C001D0000000000000002 /* ProvenanceCurrentContextRequest.swift */; };
+		CE0D102C0000000000000001 /* ProvenanceCurrentContextRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C001D0000000000000002 /* ProvenanceCurrentContextRequest.swift */; };
+		CE0C001E0000000000000001 /* ProvenanceCurrentContextResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C001E0000000000000002 /* ProvenanceCurrentContextResponse.swift */; };
+		CE0D102D0000000000000001 /* ProvenanceCurrentContextResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C001E0000000000000002 /* ProvenanceCurrentContextResponse.swift */; };
+		CE0C001F0000000000000001 /* ProvenanceCurrentContextSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C001F0000000000000002 /* ProvenanceCurrentContextSession.swift */; };
+		CE0D102E0000000000000001 /* ProvenanceCurrentContextSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C001F0000000000000002 /* ProvenanceCurrentContextSession.swift */; };
+		CE0C00200000000000000001 /* ProvenanceCurrentContextValidationRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00200000000000000002 /* ProvenanceCurrentContextValidationRun.swift */; };
+		CE0D102F0000000000000001 /* ProvenanceCurrentContextValidationRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00200000000000000002 /* ProvenanceCurrentContextValidationRun.swift */; };
 		CE0C00030000000000000001 /* ProvenanceEngineClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00030000000000000002 /* ProvenanceEngineClient.swift */; };
 		CE0D10030000000000000001 /* ProvenanceEngineClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00030000000000000002 /* ProvenanceEngineClient.swift */; };
 		CE0C00040000000000000001 /* ProvenanceFileExplanationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00040000000000000002 /* ProvenanceFileExplanationRequest.swift */; };
@@ -2574,6 +2588,13 @@
 		A5C0DE0000000000000000B7 /* ProjectTargetsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectTargetsTabView.swift; sourceTree = "<group>"; };
 		CE0C00010000000000000002 /* ProvenanceAppendEventRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceAppendEventRequest.swift; sourceTree = "<group>"; };
 		CE0C00020000000000000002 /* ProvenanceAppendEventResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceAppendEventResponse.swift; sourceTree = "<group>"; };
+		CE0C001A0000000000000002 /* ProvenanceCurrentContextCheckpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceCurrentContextCheckpoint.swift; sourceTree = "<group>"; };
+		CE0C001B0000000000000002 /* ProvenanceCurrentContextConflict.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceCurrentContextConflict.swift; sourceTree = "<group>"; };
+		CE0C001C0000000000000002 /* ProvenanceCurrentContextFileChange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceCurrentContextFileChange.swift; sourceTree = "<group>"; };
+		CE0C001D0000000000000002 /* ProvenanceCurrentContextRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceCurrentContextRequest.swift; sourceTree = "<group>"; };
+		CE0C001E0000000000000002 /* ProvenanceCurrentContextResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceCurrentContextResponse.swift; sourceTree = "<group>"; };
+		CE0C001F0000000000000002 /* ProvenanceCurrentContextSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceCurrentContextSession.swift; sourceTree = "<group>"; };
+		CE0C00200000000000000002 /* ProvenanceCurrentContextValidationRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceCurrentContextValidationRun.swift; sourceTree = "<group>"; };
 		CE0C00030000000000000002 /* ProvenanceEngineClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceEngineClient.swift; sourceTree = "<group>"; };
 		CE0C00040000000000000002 /* ProvenanceFileExplanationRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceFileExplanationRequest.swift; sourceTree = "<group>"; };
 		CE0C00050000000000000002 /* ProvenanceFileExplanationResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceFileExplanationResponse.swift; sourceTree = "<group>"; };
@@ -4894,6 +4915,13 @@
 				CE0C00010000000000000002 /* ProvenanceAppendEventRequest.swift */,
 				CE0C00020000000000000002 /* ProvenanceAppendEventResponse.swift */,
 				CE0C00030000000000000002 /* ProvenanceEngineClient.swift */,
+				CE0C001A0000000000000002 /* ProvenanceCurrentContextCheckpoint.swift */,
+				CE0C001B0000000000000002 /* ProvenanceCurrentContextConflict.swift */,
+				CE0C001C0000000000000002 /* ProvenanceCurrentContextFileChange.swift */,
+				CE0C001D0000000000000002 /* ProvenanceCurrentContextRequest.swift */,
+				CE0C001E0000000000000002 /* ProvenanceCurrentContextResponse.swift */,
+				CE0C001F0000000000000002 /* ProvenanceCurrentContextSession.swift */,
+				CE0C00200000000000000002 /* ProvenanceCurrentContextValidationRun.swift */,
 				CE0C00040000000000000002 /* ProvenanceFileExplanationRequest.swift */,
 				CE0C00050000000000000002 /* ProvenanceFileExplanationResponse.swift */,
 				CE0C00060000000000000002 /* ProvenanceSessionTreeRequest.swift */,
@@ -5893,6 +5921,13 @@
 					A5C0DE0000000000000000B8 /* ProjectTargetsTabView.swift in Sources */,
 				CE0C00010000000000000001 /* ProvenanceAppendEventRequest.swift in Sources */,
 				CE0C00020000000000000001 /* ProvenanceAppendEventResponse.swift in Sources */,
+				CE0C001A0000000000000001 /* ProvenanceCurrentContextCheckpoint.swift in Sources */,
+				CE0C001B0000000000000001 /* ProvenanceCurrentContextConflict.swift in Sources */,
+				CE0C001C0000000000000001 /* ProvenanceCurrentContextFileChange.swift in Sources */,
+				CE0C001D0000000000000001 /* ProvenanceCurrentContextRequest.swift in Sources */,
+				CE0C001E0000000000000001 /* ProvenanceCurrentContextResponse.swift in Sources */,
+				CE0C001F0000000000000001 /* ProvenanceCurrentContextSession.swift in Sources */,
+				CE0C00200000000000000001 /* ProvenanceCurrentContextValidationRun.swift in Sources */,
 				CE0C00030000000000000001 /* ProvenanceEngineClient.swift in Sources */,
 				CE0C00040000000000000001 /* ProvenanceFileExplanationRequest.swift in Sources */,
 				CE0C00050000000000000001 /* ProvenanceFileExplanationResponse.swift in Sources */,
@@ -6432,6 +6467,13 @@
 				C0DEF0B10000000000000003 /* JSONCParser.swift in Sources */,
 				CE0D10010000000000000001 /* ProvenanceAppendEventRequest.swift in Sources */,
 				CE0D10020000000000000001 /* ProvenanceAppendEventResponse.swift in Sources */,
+				CE0D10290000000000000001 /* ProvenanceCurrentContextCheckpoint.swift in Sources */,
+				CE0D102A0000000000000001 /* ProvenanceCurrentContextConflict.swift in Sources */,
+				CE0D102B0000000000000001 /* ProvenanceCurrentContextFileChange.swift in Sources */,
+				CE0D102C0000000000000001 /* ProvenanceCurrentContextRequest.swift in Sources */,
+				CE0D102D0000000000000001 /* ProvenanceCurrentContextResponse.swift in Sources */,
+				CE0D102E0000000000000001 /* ProvenanceCurrentContextSession.swift in Sources */,
+				CE0D102F0000000000000001 /* ProvenanceCurrentContextValidationRun.swift in Sources */,
 				CE0D10030000000000000001 /* ProvenanceEngineClient.swift in Sources */,
 				CE0D10040000000000000001 /* ProvenanceFileExplanationRequest.swift in Sources */,
 				CE0D10050000000000000001 /* ProvenanceFileExplanationResponse.swift in Sources */,

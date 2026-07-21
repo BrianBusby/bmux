@@ -10,7 +10,7 @@ extension BMUXCLI {
                 jsonOutput: jsonOutput
             )
         case "context":
-            try runProvenanceContext(
+            try await runProvenanceContext(
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
@@ -121,7 +121,7 @@ extension BMUXCLI {
         printProvenanceExplanation(explanation, jsonOutput: jsonOutput)
     }
 
-    private func runProvenanceContext(commandArgs: [String], jsonOutput: Bool) throws {
+    private func runProvenanceContext(commandArgs: [String], jsonOutput: Bool) async throws {
         let commandName = "provenance context current"
         let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
         var remaining = remainingAfterDatabase
@@ -154,8 +154,18 @@ extension BMUXCLI {
             return
         }
 
-        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
-        let context = try reader.context(target: target)
+        let client: any ProvenanceEngineClient = try WorkProvenanceStore(databaseURL: databaseURL)
+        let response = try await client.currentContext(ProvenanceCurrentContextRequest(
+            repositoryPath: target.repositoryRoot
+        ))
+        let context = CLIProvenanceContext(
+            response: response,
+            fallbackRepositoryPath: target.repositoryRoot,
+            noWorktreeReason: String(
+                localized: "cli.provenance.reason.noWorktree",
+                defaultValue: "no provenance has been recorded for this Git worktree"
+            )
+        )
         printProvenanceContext(context, jsonOutput: jsonOutput)
     }
 

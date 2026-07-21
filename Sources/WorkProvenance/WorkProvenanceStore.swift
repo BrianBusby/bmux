@@ -268,6 +268,76 @@ actor WorkProvenanceStore {
         try worktreeListEntries(repositoryID: repositoryID, limit: limit)
     }
 
+    /// Returns current bounded context for the worktree at `repositoryPath`.
+    ///
+    /// - Parameters:
+    ///   - repositoryPath: Absolute worktree root path.
+    ///   - activeSessionLimit: Maximum active sessions to return.
+    ///   - dirtyFileLimit: Maximum dirty file rows to return.
+    ///   - unattributedChangeLimit: Maximum unattributed file rows to return.
+    ///   - recentCheckpointLimit: Maximum checkpoint rows to return.
+    ///   - validationRunLimit: Maximum validation-run rows to return.
+    ///   - conflictLimit: Maximum conflict rows to return.
+    /// - Returns: Domain current-context response.
+    func currentContext(
+        repositoryPath: String,
+        activeSessionLimit: Int = 10,
+        dirtyFileLimit: Int = 25,
+        unattributedChangeLimit: Int = 15,
+        recentCheckpointLimit: Int = 5,
+        validationRunLimit: Int = 5,
+        conflictLimit: Int = 10
+    ) throws -> ProvenanceCurrentContextResponse {
+        guard let worktree = try worktreeRecord(path: repositoryPath) else {
+            return ProvenanceCurrentContextResponse(
+                found: false,
+                reason: "no_worktree",
+                repositoryPath: repositoryPath,
+                worktree: nil,
+                repository: nil,
+                activeSessions: [],
+                dirtyFiles: [],
+                unattributedChanges: [],
+                recentCheckpoints: [],
+                validationRuns: [],
+                conflicts: []
+            )
+        }
+
+        return ProvenanceCurrentContextResponse(
+            found: true,
+            repositoryPath: repositoryPath,
+            worktree: worktree,
+            repository: try repositoryRecord(id: worktree.repositoryID),
+            activeSessions: try currentContextActiveSessions(
+                worktreeID: worktree.id,
+                limit: activeSessionLimit
+            ),
+            dirtyFiles: try currentContextFileChanges(
+                worktreeID: worktree.id,
+                unattributedOnly: false,
+                limit: dirtyFileLimit
+            ),
+            unattributedChanges: try currentContextFileChanges(
+                worktreeID: worktree.id,
+                unattributedOnly: true,
+                limit: unattributedChangeLimit
+            ),
+            recentCheckpoints: try currentContextCheckpoints(
+                worktreeID: worktree.id,
+                limit: recentCheckpointLimit
+            ),
+            validationRuns: try currentContextValidationRuns(
+                worktreeID: worktree.id,
+                limit: validationRunLimit
+            ),
+            conflicts: try currentContextConflicts(
+                worktreeID: worktree.id,
+                limit: conflictLimit
+            )
+        )
+    }
+
     /// Returns the direct parent relationship for `sessionID`.
     ///
     /// - Parameter sessionID: Child session identifier.
@@ -753,6 +823,361 @@ actor WorkProvenanceStore {
             status: status,
             lastReconciledAt: statement.double(at: 8).map(Date.init(timeIntervalSince1970:)),
             updatedAt: Date(timeIntervalSince1970: statement.double(at: 9) ?? 0)
+        )
+    }
+
+    private func currentContextFileChanges(
+        worktreeID: String,
+        unattributedOnly: Bool,
+        limit: Int
+    ) throws -> [ProvenanceCurrentContextFileChange] {
+        let sourceFilter = unattributedOnly ? "AND fc.attribution_source = 'unattributed'" : ""
+        let statement = try database.prepare(
+            """
+            SELECT fc.id, fc.change_set_id, fc.repository_id, fc.worktree_id, fc.path,
+                   fc.status, fc.before_hash, fc.after_hash, fc.attribution_source,
+                   fc.attribution_confidence, fc.updated_at,
+                   cs.id, cs.checkpoint_id, cs.contribution_id, cs.worktree_id,
+                   cs.summary, cs.diff_fingerprint, cs.created_at,
+                   wc.id, wc.session_id, wc.worktree_id, wc.work_item_id,
+                   wc.declared_intent, wc.expected_scope_json, wc.status,
+                   wc.started_at, wc.ended_at, wc.assignment_confidence, wc.updated_at,
+                   s.id, s.agent_kind, s.workspace_id, s.surface_id, s.worktree_id,
+                   s.cwd, s.status, s.started_at, s.updated_at
+            FROM file_changes fc
+            LEFT JOIN change_sets cs ON cs.id = fc.change_set_id
+            LEFT JOIN checkpoints cp ON cp.id = cs.checkpoint_id
+            LEFT JOIN work_contributions wc ON wc.id = COALESCE(cs.contribution_id, cp.contribution_id)
+            LEFT JOIN sessions s ON s.id = wc.session_id
+            WHERE fc.worktree_id = ?
+              \(sourceFilter)
+              AND fc.rowid = (
+                  SELECT newest.rowid
+                  FROM file_changes newest
+                  WHERE newest.worktree_id = fc.worktree_id
+                    AND newest.path = fc.path
+                  ORDER BY newest.updated_at DESC, newest.rowid DESC
+                  LIMIT 1
+              )
+            ORDER BY fc.updated_at DESC, fc.rowid DESC
+            LIMIT ?
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(worktreeID, at: 1)
+        try statement.bind(max(0, limit), at: 2)
+
+        var rows: [ProvenanceCurrentContextFileChange] = []
+        while try statement.step() {
+            guard let fileChange = fileChangeRecord(from: statement) else { continue }
+            rows.append(ProvenanceCurrentContextFileChange(
+                fileChange: fileChange,
+                changeSet: changeSetRecord(from: statement, offset: 11),
+                contribution: contributionRecord(from: statement, offset: 18),
+                session: sessionRecord(from: statement, offset: 29)
+            ))
+        }
+        return rows
+    }
+
+    private func currentContextActiveSessions(
+        worktreeID: String,
+        limit: Int
+    ) throws -> [ProvenanceCurrentContextSession] {
+        let statement = try database.prepare(
+            """
+            SELECT s.id, s.agent_kind, s.workspace_id, s.surface_id, s.worktree_id,
+                   s.cwd, s.status, s.started_at, s.updated_at,
+                   wc.id, wc.session_id, wc.worktree_id, wc.work_item_id,
+                   wc.declared_intent, wc.expected_scope_json, wc.status,
+                   wc.started_at, wc.ended_at, wc.assignment_confidence, wc.updated_at,
+                   wi.id, wi.title, wi.status, wi.created_at, wi.updated_at
+            FROM sessions s
+            LEFT JOIN work_contributions wc
+              ON wc.session_id = s.id
+             AND wc.worktree_id = s.worktree_id
+             AND LOWER(COALESCE(wc.status, '')) NOT IN ('complete', 'completed', 'finished', 'interrupted', 'cancelled', 'canceled', 'closed', 'stopped')
+            LEFT JOIN work_items wi ON wi.id = wc.work_item_id
+            WHERE s.worktree_id = ?
+              AND LOWER(COALESCE(s.status, '')) NOT IN ('complete', 'completed', 'finished', 'interrupted', 'cancelled', 'canceled', 'closed', 'stopped')
+            ORDER BY s.updated_at DESC, s.rowid DESC
+            LIMIT ?
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(worktreeID, at: 1)
+        try statement.bind(max(0, limit), at: 2)
+
+        var rows: [ProvenanceCurrentContextSession] = []
+        while try statement.step() {
+            guard let session = sessionRecord(from: statement, offset: 0) else { continue }
+            rows.append(ProvenanceCurrentContextSession(
+                session: session,
+                contribution: contributionRecord(from: statement, offset: 9),
+                workItem: workItemRecord(from: statement, offset: 20)
+            ))
+        }
+        return rows
+    }
+
+    private func currentContextCheckpoints(
+        worktreeID: String,
+        limit: Int
+    ) throws -> [ProvenanceCurrentContextCheckpoint] {
+        let statement = try database.prepare(
+            """
+            SELECT cp.id, cp.contribution_id, cp.sequence, cp.git_head,
+                   cp.diff_fingerprint, cp.summary, cp.status,
+                   cp.validation_state, cp.semantic_confidence, cp.freshness,
+                   cp.created_at,
+                   wc.id, wc.session_id, wc.worktree_id, wc.work_item_id,
+                   wc.declared_intent, wc.expected_scope_json, wc.status,
+                   wc.started_at, wc.ended_at, wc.assignment_confidence, wc.updated_at,
+                   s.id, s.agent_kind, s.workspace_id, s.surface_id, s.worktree_id,
+                   s.cwd, s.status, s.started_at, s.updated_at,
+                   wi.id, wi.title, wi.status, wi.created_at, wi.updated_at
+            FROM checkpoints cp
+            JOIN work_contributions wc ON wc.id = cp.contribution_id
+            LEFT JOIN sessions s ON s.id = wc.session_id
+            LEFT JOIN work_items wi ON wi.id = wc.work_item_id
+            WHERE wc.worktree_id = ?
+            ORDER BY cp.created_at DESC, cp.rowid DESC
+            LIMIT ?
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(worktreeID, at: 1)
+        try statement.bind(max(0, limit), at: 2)
+
+        var rows: [ProvenanceCurrentContextCheckpoint] = []
+        while try statement.step() {
+            guard let checkpoint = checkpointRecord(from: statement, offset: 0),
+                  let contribution = contributionRecord(from: statement, offset: 11) else {
+                continue
+            }
+            rows.append(ProvenanceCurrentContextCheckpoint(
+                checkpoint: checkpoint,
+                contribution: contribution,
+                session: sessionRecord(from: statement, offset: 22),
+                workItem: workItemRecord(from: statement, offset: 31)
+            ))
+        }
+        return rows
+    }
+
+    private func currentContextValidationRuns(
+        worktreeID: String,
+        limit: Int
+    ) throws -> [ProvenanceCurrentContextValidationRun] {
+        let statement = try database.prepare(
+            """
+            SELECT vr.id, vr.checkpoint_id, vr.contribution_id, vr.command,
+                   vr.status, vr.summary, vr.started_at, vr.ended_at,
+                   cp.id, cp.contribution_id, cp.sequence, cp.git_head,
+                   cp.diff_fingerprint, cp.summary, cp.status,
+                   cp.validation_state, cp.semantic_confidence, cp.freshness,
+                   cp.created_at,
+                   wc.id, wc.session_id, wc.worktree_id, wc.work_item_id,
+                   wc.declared_intent, wc.expected_scope_json, wc.status,
+                   wc.started_at, wc.ended_at, wc.assignment_confidence, wc.updated_at
+            FROM validation_runs vr
+            LEFT JOIN checkpoints cp ON cp.id = vr.checkpoint_id
+            LEFT JOIN work_contributions wc ON wc.id = COALESCE(vr.contribution_id, cp.contribution_id)
+            WHERE wc.worktree_id = ?
+            ORDER BY COALESCE(vr.ended_at, vr.started_at, 0) DESC, vr.rowid DESC
+            LIMIT ?
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(worktreeID, at: 1)
+        try statement.bind(max(0, limit), at: 2)
+
+        var rows: [ProvenanceCurrentContextValidationRun] = []
+        while try statement.step() {
+            guard let validationRun = validationRunRecord(from: statement, offset: 0) else {
+                continue
+            }
+            rows.append(ProvenanceCurrentContextValidationRun(
+                validationRun: validationRun,
+                checkpoint: checkpointRecord(from: statement, offset: 8),
+                contribution: contributionRecord(from: statement, offset: 19)
+            ))
+        }
+        return rows
+    }
+
+    private func currentContextConflicts(
+        worktreeID: String,
+        limit: Int
+    ) throws -> [ProvenanceCurrentContextConflict] {
+        let statement = try database.prepare(
+            """
+            SELECT fc.path, COUNT(DISTINCT wc.id), GROUP_CONCAT(DISTINCT wc.id),
+                   MAX(fc.updated_at)
+            FROM file_changes fc
+            LEFT JOIN change_sets cs ON cs.id = fc.change_set_id
+            LEFT JOIN checkpoints cp ON cp.id = cs.checkpoint_id
+            JOIN work_contributions wc ON wc.id = COALESCE(cs.contribution_id, cp.contribution_id)
+            WHERE fc.worktree_id = ?
+              AND LOWER(COALESCE(wc.status, '')) NOT IN ('complete', 'completed', 'finished', 'interrupted', 'cancelled', 'canceled', 'closed', 'stopped')
+            GROUP BY fc.path
+            HAVING COUNT(DISTINCT wc.id) > 1
+            ORDER BY MAX(fc.updated_at) DESC
+            LIMIT ?
+            """
+        )
+        defer { statement.finalize() }
+        try statement.bind(worktreeID, at: 1)
+        try statement.bind(max(0, limit), at: 2)
+
+        var rows: [ProvenanceCurrentContextConflict] = []
+        while try statement.step() {
+            guard let path = statement.string(at: 0) else { continue }
+            rows.append(ProvenanceCurrentContextConflict(
+                path: path,
+                activeContributionCount: statement.int(at: 1),
+                contributionIDs: statement.string(at: 2),
+                updatedAt: Date(timeIntervalSince1970: statement.double(at: 3) ?? 0)
+            ))
+        }
+        return rows
+    }
+
+    private func sessionRecord(
+        from statement: WorkProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> WorkProvenanceSessionRecord? {
+        guard let id = statement.string(at: offset),
+              let agentKind = statement.string(at: offset + 1),
+              let status = statement.string(at: offset + 6) else {
+            return nil
+        }
+        return WorkProvenanceSessionRecord(
+            id: id,
+            agentKind: agentKind,
+            workspaceID: statement.string(at: offset + 2),
+            surfaceID: statement.string(at: offset + 3),
+            worktreeID: statement.string(at: offset + 4),
+            cwd: statement.string(at: offset + 5),
+            status: status,
+            startedAt: statement.double(at: offset + 7).map(Date.init(timeIntervalSince1970:)),
+            updatedAt: Date(timeIntervalSince1970: statement.double(at: offset + 8) ?? 0)
+        )
+    }
+
+    private func contributionRecord(
+        from statement: WorkProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> WorkProvenanceContributionRecord? {
+        guard let id = statement.string(at: offset),
+              let sessionID = statement.string(at: offset + 1),
+              let worktreeID = statement.string(at: offset + 2),
+              let workItemID = statement.string(at: offset + 3),
+              let expectedScopeJSON = statement.string(at: offset + 5),
+              let expectedScopeData = expectedScopeJSON.data(using: .utf8),
+              let status = statement.string(at: offset + 6),
+              let confidence = statement.string(at: offset + 9)
+                .flatMap(WorkProvenanceConfidence.init(rawValue:)) else {
+            return nil
+        }
+        let expectedScope = (try? decoder.decode([String].self, from: expectedScopeData)) ?? []
+        return WorkProvenanceContributionRecord(
+            id: id,
+            sessionID: sessionID,
+            worktreeID: worktreeID,
+            workItemID: workItemID,
+            declaredIntent: statement.string(at: offset + 4),
+            expectedScope: expectedScope,
+            status: status,
+            startedAt: Date(timeIntervalSince1970: statement.double(at: offset + 7) ?? 0),
+            endedAt: statement.double(at: offset + 8).map(Date.init(timeIntervalSince1970:)),
+            assignmentConfidence: confidence,
+            updatedAt: Date(timeIntervalSince1970: statement.double(at: offset + 10) ?? 0)
+        )
+    }
+
+    private func workItemRecord(
+        from statement: WorkProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> WorkProvenanceWorkItemRecord? {
+        guard let id = statement.string(at: offset),
+              let title = statement.string(at: offset + 1),
+              let status = statement.string(at: offset + 2) else {
+            return nil
+        }
+        return WorkProvenanceWorkItemRecord(
+            id: id,
+            title: title,
+            status: status,
+            createdAt: Date(timeIntervalSince1970: statement.double(at: offset + 3) ?? 0),
+            updatedAt: Date(timeIntervalSince1970: statement.double(at: offset + 4) ?? 0)
+        )
+    }
+
+    private func changeSetRecord(
+        from statement: WorkProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> WorkProvenanceChangeSetRecord? {
+        guard let id = statement.string(at: offset),
+              let worktreeID = statement.string(at: offset + 3) else {
+            return nil
+        }
+        return WorkProvenanceChangeSetRecord(
+            id: id,
+            checkpointID: statement.string(at: offset + 1),
+            contributionID: statement.string(at: offset + 2),
+            worktreeID: worktreeID,
+            summary: statement.string(at: offset + 4),
+            diffFingerprint: statement.string(at: offset + 5),
+            createdAt: Date(timeIntervalSince1970: statement.double(at: offset + 6) ?? 0)
+        )
+    }
+
+    private func checkpointRecord(
+        from statement: WorkProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> WorkProvenanceCheckpointRecord? {
+        guard let id = statement.string(at: offset),
+              let contributionID = statement.string(at: offset + 1),
+              let status = statement.string(at: offset + 6),
+              let confidence = statement.string(at: offset + 8)
+                .flatMap(WorkProvenanceConfidence.init(rawValue:)),
+              let freshness = statement.string(at: offset + 9) else {
+            return nil
+        }
+        return WorkProvenanceCheckpointRecord(
+            id: id,
+            contributionID: contributionID,
+            sequence: statement.int(at: offset + 2),
+            gitHEAD: statement.string(at: offset + 3),
+            diffFingerprint: statement.string(at: offset + 4),
+            summary: statement.string(at: offset + 5),
+            status: status,
+            validationState: statement.string(at: offset + 7),
+            semanticConfidence: confidence,
+            freshness: freshness,
+            createdAt: Date(timeIntervalSince1970: statement.double(at: offset + 10) ?? 0)
+        )
+    }
+
+    private func validationRunRecord(
+        from statement: WorkProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> WorkProvenanceValidationRunRecord? {
+        guard let id = statement.string(at: offset),
+              let command = statement.string(at: offset + 3),
+              let status = statement.string(at: offset + 4) else {
+            return nil
+        }
+        return WorkProvenanceValidationRunRecord(
+            id: id,
+            checkpointID: statement.string(at: offset + 1),
+            contributionID: statement.string(at: offset + 2),
+            command: command,
+            status: status,
+            summary: statement.string(at: offset + 5),
+            startedAt: statement.double(at: offset + 6).map(Date.init(timeIntervalSince1970:)),
+            endedAt: statement.double(at: offset + 7).map(Date.init(timeIntervalSince1970:))
         )
     }
 

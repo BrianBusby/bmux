@@ -487,6 +487,302 @@ def create_provenance_explain_database(
         )
 
 
+def create_provenance_context_database(path: Path, repository_root: str) -> None:
+    create_provenance_explain_database(path, repository_root)
+    repository_id = stable_repository_id(repository_root)
+    worktree_id = stable_worktree_id(repository_root)
+    with sqlite3.connect(path) as conn:
+        conn.execute(
+            """
+            INSERT INTO work_items (id, title, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            ("WI-context", "Current context", "active", 200.0, 200.0),
+        )
+        conn.executemany(
+            """
+            INSERT INTO sessions (
+                id, agent_kind, workspace_id, surface_id, worktree_id,
+                cwd, status, started_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    f"session-extra-{index:02d}",
+                    "codex",
+                    f"workspace-{index}",
+                    f"surface-{index}",
+                    worktree_id,
+                    repository_root,
+                    "active",
+                    200.0 + index,
+                    300.0 + index,
+                )
+                for index in range(11)
+            ]
+            + [
+                (
+                    "session-completed",
+                    "codex",
+                    "workspace-completed",
+                    "surface-completed",
+                    worktree_id,
+                    repository_root,
+                    "completed",
+                    999.0,
+                    999.0,
+                )
+            ],
+        )
+        conn.executemany(
+            """
+            INSERT INTO work_contributions (
+                id, session_id, worktree_id, work_item_id, declared_intent,
+                expected_scope_json, status, started_at, ended_at,
+                assignment_confidence, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    f"contribution-extra-{index:02d}",
+                    f"session-extra-{index:02d}",
+                    worktree_id,
+                    "WI-context",
+                    f"Intent {index:02d}",
+                    json.dumps([]),
+                    "active",
+                    200.0 + index,
+                    None,
+                    "medium",
+                    300.0 + index,
+                )
+                for index in range(11)
+            ]
+            + [
+                (
+                    "contribution-completed",
+                    "session-completed",
+                    worktree_id,
+                    "WI-context",
+                    "Completed work",
+                    json.dumps([]),
+                    "completed",
+                    999.0,
+                    1000.0,
+                    "medium",
+                    1000.0,
+                ),
+                (
+                    "conflict-a",
+                    "session-extra-10",
+                    worktree_id,
+                    "WI-context",
+                    "Conflict A",
+                    json.dumps([]),
+                    "active",
+                    700.0,
+                    None,
+                    "medium",
+                    700.0,
+                ),
+                (
+                    "conflict-b",
+                    "session-extra-09",
+                    worktree_id,
+                    "WI-context",
+                    "Conflict B",
+                    json.dumps([]),
+                    "active",
+                    701.0,
+                    None,
+                    "medium",
+                    701.0,
+                ),
+            ],
+        )
+        conn.executemany(
+            """
+            INSERT INTO checkpoints (
+                id, contribution_id, sequence, git_head, diff_fingerprint,
+                summary, status, validation_state, semantic_confidence,
+                freshness, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    f"checkpoint-context-{index:02d}",
+                    f"contribution-extra-{index:02d}",
+                    index,
+                    f"head-{index:02d}",
+                    f"diff-context-{index:02d}",
+                    f"Checkpoint {index:02d}",
+                    "in_progress",
+                    "not_run",
+                    "medium",
+                    "fresh",
+                    600.0 + index,
+                )
+                for index in range(7)
+            ],
+        )
+        conn.executemany(
+            """
+            INSERT INTO validation_runs (
+                id, checkpoint_id, contribution_id, command, status,
+                summary, started_at, ended_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    f"validation-context-{index:02d}",
+                    f"checkpoint-context-{index:02d}",
+                    None,
+                    f"test-command-{index:02d}",
+                    "passed",
+                    f"Validation {index:02d}",
+                    690.0 + index,
+                    700.0 + index,
+                )
+                for index in range(7)
+            ],
+        )
+        conn.executemany(
+            """
+            INSERT INTO change_sets (
+                id, checkpoint_id, contribution_id, worktree_id,
+                summary, diff_fingerprint, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    f"changeset-dirty-{index:02d}",
+                    None,
+                    f"contribution-extra-{index % 11:02d}",
+                    worktree_id,
+                    f"Dirty {index:02d}",
+                    f"dirty-{index:02d}",
+                    390.0 + index,
+                )
+                for index in range(30)
+            ]
+            + [
+                (
+                    f"changeset-unattributed-{index:02d}",
+                    None,
+                    None,
+                    worktree_id,
+                    f"Unattributed {index:02d}",
+                    f"unattributed-{index:02d}",
+                    490.0 + index,
+                )
+                for index in range(18)
+            ]
+            + [
+                (
+                    f"changeset-conflict-{index:02d}-a",
+                    None,
+                    "conflict-a",
+                    worktree_id,
+                    f"Conflict {index:02d} A",
+                    f"conflict-{index:02d}-a",
+                    790.0 + index,
+                )
+                for index in range(12)
+            ]
+            + [
+                (
+                    f"changeset-conflict-{index:02d}-b",
+                    None,
+                    "conflict-b",
+                    worktree_id,
+                    f"Conflict {index:02d} B",
+                    f"conflict-{index:02d}-b",
+                    790.1 + index,
+                )
+                for index in range(12)
+            ],
+        )
+        conn.executemany(
+            """
+            INSERT INTO file_changes (
+                id, change_set_id, repository_id, worktree_id, path, status,
+                before_hash, after_hash, attribution_source,
+                attribution_confidence, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    f"file-dirty-{index:02d}",
+                    f"changeset-dirty-{index:02d}",
+                    repository_id,
+                    worktree_id,
+                    f"Sources/Dirty{index:02d}.swift",
+                    "modified",
+                    None,
+                    None,
+                    "observed",
+                    "medium",
+                    400.0 + index,
+                )
+                for index in range(30)
+            ]
+            + [
+                (
+                    f"file-unattributed-{index:02d}",
+                    f"changeset-unattributed-{index:02d}",
+                    repository_id,
+                    worktree_id,
+                    f"Sources/Unattributed{index:02d}.swift",
+                    "modified",
+                    None,
+                    None,
+                    "unattributed",
+                    "low",
+                    500.0 + index,
+                )
+                for index in range(18)
+            ]
+            + [
+                (
+                    f"file-conflict-{index:02d}-a",
+                    f"changeset-conflict-{index:02d}-a",
+                    repository_id,
+                    worktree_id,
+                    f"Sources/Conflict{index:02d}.swift",
+                    "modified",
+                    None,
+                    None,
+                    "observed",
+                    "medium",
+                    800.0 + index,
+                )
+                for index in range(12)
+            ]
+            + [
+                (
+                    f"file-conflict-{index:02d}-b",
+                    f"changeset-conflict-{index:02d}-b",
+                    repository_id,
+                    worktree_id,
+                    f"Sources/Conflict{index:02d}.swift",
+                    "modified",
+                    None,
+                    None,
+                    "observed",
+                    "medium",
+                    800.1 + index,
+                )
+                for index in range(12)
+            ],
+        )
+
+
 def create_worktree_list_database(path: Path, include_rows: bool = True) -> None:
     if path.exists():
         path.unlink()
@@ -1307,6 +1603,195 @@ def check_provenance_explain_text(cli_path: str, root: Path) -> None:
             raise AssertionError(f"expected text output to include {expected!r}:\n{output}")
 
 
+def check_provenance_context_json(cli_path: str, root: Path) -> None:
+    repo = root / "context-repo"
+    repository_root = create_git_repo(repo)
+    database = root / "context-work-provenance.sqlite"
+    create_provenance_context_database(database, repository_root)
+
+    result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "context",
+            "current",
+            "--database",
+            str(database),
+        ],
+        cwd=repo,
+    )
+    payload = json.loads(result.stdout)
+    if not payload["found"] or payload["reason"] is not None:
+        raise AssertionError(f"expected found current context: {payload!r}")
+    if payload["repository_path"] != repository_root:
+        raise AssertionError(f"expected resolved repository path: {payload!r}")
+    if payload["worktree"]["id"] != stable_worktree_id(repository_root):
+        raise AssertionError(f"expected worktree payload from contract: {payload!r}")
+    if payload["repository"]["remote_slug"] != "manaflow-ai/bmux":
+        raise AssertionError(f"expected repository payload from contract: {payload!r}")
+    expected_summary = {
+        "active_session_count": 10,
+        "dirty_file_count": 25,
+        "unattributed_change_count": 15,
+        "recent_checkpoint_count": 5,
+        "validation_run_count": 5,
+        "conflict_count": 10,
+    }
+    if payload["summary"] != expected_summary:
+        raise AssertionError(f"expected bounded context summary: {payload!r}")
+    if [row["id"] for row in payload["active_sessions"][:4]] != [
+        "session-extra-10",
+        "session-extra-10",
+        "session-extra-09",
+        "session-extra-09",
+    ]:
+        raise AssertionError(f"expected active sessions newest-first and bounded: {payload!r}")
+    if any(row["id"] == "session-completed" for row in payload["active_sessions"]):
+        raise AssertionError(f"completed session leaked into active sessions: {payload!r}")
+    if [row["path"] for row in payload["dirty_files"][:2]] != [
+        "Sources/Conflict11.swift",
+        "Sources/Conflict10.swift",
+    ]:
+        raise AssertionError(f"expected dirty files newest-first and bounded: {payload!r}")
+    if [row["path"] for row in payload["unattributed_changes"][:2]] != [
+        "Sources/Unattributed17.swift",
+        "Sources/Unattributed16.swift",
+    ]:
+        raise AssertionError(f"expected unattributed changes newest-first and bounded: {payload!r}")
+    if [row["id"] for row in payload["recent_checkpoints"]] != [
+        "checkpoint-context-06",
+        "checkpoint-context-05",
+        "checkpoint-context-04",
+        "checkpoint-context-03",
+        "checkpoint-context-02",
+    ]:
+        raise AssertionError(f"expected recent checkpoints newest-first and bounded: {payload!r}")
+    if [row["id"] for row in payload["validation_runs"]] != [
+        "validation-context-06",
+        "validation-context-05",
+        "validation-context-04",
+        "validation-context-03",
+        "validation-context-02",
+    ]:
+        raise AssertionError(f"expected validation runs newest-first and bounded: {payload!r}")
+    if [row["path"] for row in payload["conflicts"][:2]] != [
+        "Sources/Conflict11.swift",
+        "Sources/Conflict10.swift",
+    ]:
+        raise AssertionError(f"expected conflict rows newest-first and bounded: {payload!r}")
+    if any(row["active_contribution_count"] != 2 for row in payload["conflicts"]):
+        raise AssertionError(f"expected conflict contribution counts: {payload!r}")
+
+    empty_database = root / "context-empty-work-provenance.sqlite"
+    create_provenance_explain_database(empty_database, repository_root, include_file=False)
+    empty_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "context",
+            "current",
+            "--database",
+            str(empty_database),
+        ],
+        cwd=repo,
+    )
+    empty = json.loads(empty_result.stdout)
+    if not empty["found"] or any(empty["summary"].values()):
+        raise AssertionError(f"empty sections should preserve found empty context: {empty!r}")
+
+    no_worktree_database = root / "context-no-worktree.sqlite"
+    create_provenance_explain_database(no_worktree_database, repository_root, include_worktree=False)
+    no_worktree_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "context",
+            "current",
+            "--database",
+            str(no_worktree_database),
+        ],
+        cwd=repo,
+    )
+    no_worktree = json.loads(no_worktree_result.stdout)
+    if no_worktree["found"] or no_worktree["reason"] != "no provenance has been recorded for this Git worktree":
+        raise AssertionError(f"missing worktree should preserve bounded no-worktree JSON: {no_worktree!r}")
+    if no_worktree["worktree"] != {"path": repository_root}:
+        raise AssertionError(f"missing worktree should fall back to repository path: {no_worktree!r}")
+
+    no_database_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "context",
+            "current",
+            "--database",
+            str(root / "missing-context-work-provenance.sqlite"),
+        ],
+        cwd=repo,
+    )
+    no_database = json.loads(no_database_result.stdout)
+    if no_database["found"] or no_database["reason"] != "no provenance database exists yet":
+        raise AssertionError(f"missing database should preserve bounded no-database JSON: {no_database!r}")
+
+
+def check_provenance_context_text(cli_path: str, root: Path) -> None:
+    repo = root / "context-text-repo"
+    repository_root = create_git_repo(repo)
+    database = root / "context-text-work-provenance.sqlite"
+    create_provenance_context_database(database, repository_root)
+
+    result = run_cli(
+        cli_path,
+        [
+            "provenance",
+            "context",
+            "current",
+            "--database",
+            str(database),
+        ],
+        cwd=repo,
+    )
+    output = result.stdout
+    for expected in [
+        f"Provenance context for {repository_root}",
+        "Worktree: provenance-extraction-phase2-contracts · active · dirty",
+        "Active sessions: 10",
+        "Dirty files: 25",
+        "Unattributed changes: 15",
+        "Recent checkpoints: 5",
+        "Validation runs: 5",
+        "Conflicts: 10",
+        "Active session rows:",
+        "  session-extra-10 · codex · active",
+        "Unattributed files:",
+        "  modified Sources/Unattributed17.swift · unattributed/low",
+        "Potential file overlaps:",
+        "  Sources/Conflict11.swift · contributions conflict-a,conflict-b",
+    ]:
+        if expected not in output:
+            raise AssertionError(f"expected text output to include {expected!r}:\n{output}")
+
+    no_database_result = run_cli(
+        cli_path,
+        [
+            "provenance",
+            "context",
+            "current",
+            "--database",
+            str(root / "missing-context-text-work-provenance.sqlite"),
+        ],
+        cwd=repo,
+    )
+    if "No provenance context found" not in no_database_result.stdout:
+        raise AssertionError(f"no-database text output changed:\n{no_database_result.stdout}")
+    if "Reason: no provenance database exists yet" not in no_database_result.stdout:
+        raise AssertionError(f"no-database text reason changed:\n{no_database_result.stdout}")
+
+
 def check_provenance_session_tree_json(cli_path: str, root: Path) -> None:
     database = root / "work-provenance.sqlite"
     create_provenance_database(database)
@@ -1730,6 +2215,8 @@ def main() -> int:
         try:
             check_provenance_explain_json(cli_path, root)
             check_provenance_explain_text(cli_path, root)
+            check_provenance_context_json(cli_path, root)
+            check_provenance_context_text(cli_path, root)
             check_provenance_session_tree_json(cli_path, root)
             check_provenance_session_tree_text(cli_path, root)
             check_provenance_worktrees_json(cli_path, root)

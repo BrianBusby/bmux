@@ -98,10 +98,12 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 Current checkout:
 
 - Branch: `provenance-extraction-phase2-contracts`
+- This 2026-07-21 slice converted `bmux provenance context current` to query the in-process `ProvenanceEngineClient.currentContext(...)` contract through `WorkProvenanceStore`.
 - This 2026-07-21 slice converted `bmux provenance worktrees list` to query the in-process `ProvenanceEngineClient.worktrees(...)` contract through `WorkProvenanceStore`.
 - This 2026-07-20 slice converted `bmux provenance explain <path>` to query the in-process `ProvenanceEngineClient.fileExplanation(...)` contract through `WorkProvenanceStore`.
 - The previous Phase 2 CLI slice converted `bmux provenance sessions tree <session-id>` to query `ProvenanceEngineClient.sessionTree(...)`.
-- The CLI still owns argument parsing, localized messages, no-database/no-worktree/no-file fallback construction, and output formatting.
+- The CLI still owns argument parsing, localized messages, Git target resolution, no-database/no-worktree/no-file fallback construction, snake_case output mapping, and output formatting.
+- The context-current JSON/text shape, no-database behavior, no-worktree behavior, empty-section behavior, active-session/dirty-file/unattributed-change/checkpoint/validation/conflict bounds, and section ordering are covered by CLI regression coverage.
 - The worktree-list JSON/text shape, no-database behavior, empty-database/no-worktree behavior, newest-first ordering, and existing text-rendering cap of 25 rows were preserved by CLI regression coverage.
 - The `explain` JSON/text shape, no-database behavior, no-worktree behavior, no-file behavior, and found-file graph payload were preserved by CLI regression coverage.
 - The session-tree JSON/text shape, no-database behavior, missing-session behavior, depth-first ordering, implicit 100 session/relationship bound, and 200 external-identity output cap remain covered by CLI regression coverage.
@@ -122,7 +124,7 @@ Latest completed implementation HEAD for original-plan Phase 3:
 
 Latest completed implementation HEAD for ADR-001 Phase 2 provenance extraction:
 
-- Current branch tip after the worktree-list contract-conversion slice. Run `git rev-parse HEAD` when an exact hash is needed.
+- Current branch tip after the current-context contract-conversion slice. Run `git rev-parse HEAD` when an exact hash is needed.
 
 The current branch tip may include docs-only handoff maintenance commits. Run `git rev-parse HEAD` when an exact checkout hash is needed.
 
@@ -160,7 +162,20 @@ Latest completed provenance planning slice:
 - The first CLI consumer conversion moved `bmux provenance sessions tree` onto `ProvenanceEngineClient.sessionTree(...)` while preserving existing JSON/text/no-database behavior.
 - The second CLI consumer conversion moved `bmux provenance explain` onto `ProvenanceEngineClient.fileExplanation(...)` while preserving existing JSON/text/no-database/no-worktree/no-file behavior.
 - The third CLI consumer conversion moved `bmux provenance worktrees list` onto `ProvenanceEngineClient.worktrees(...)` while preserving existing JSON/text/no-database/empty-database behavior and newest-first ordering.
-- The next safe extraction slice is to either convert the broader `bmux provenance context current` path after mapping its combined query surface, or pause CLI conversion and continue extraction planning. Do not start daemon, SDK, storage, schema, migration, retrieval, lifecycle-policy, UI, or observability expansion from this state.
+- The fourth CLI consumer conversion moved `bmux provenance context current` onto `ProvenanceEngineClient.currentContext(...)` while preserving existing JSON/text/no-database/no-worktree/empty-section behavior, section bounds, and ordering.
+- No further ADR-001 Phase 2 authoritative provenance CLI conversion is currently identified. Pause before starting Phase 3: do not create the daemon, SDK, independent repo, storage/schema migration, retrieval layer, lifecycle policy, UI, or observability expansion from this state.
+
+Latest completed provenance Phase 2 current-context CLI contract-conversion slice:
+
+- Branch: `provenance-extraction-phase2-contracts`
+- This 2026-07-21 slice added internal current-context request/response DTOs and bounded row DTOs for sessions, file changes, checkpoints, validation runs, and conflict rows.
+- `ProvenanceEngineClient` now includes `currentContext(_:)`; `WorkProvenanceStore` backs it with current-state worktree, repository, active session, dirty file, unattributed change, checkpoint, validation-run, and potential conflict projections.
+- `bmux provenance context current` now uses the contract client instead of `CLIProvenanceSQLiteReader.context(...)`.
+- The CLI still owns Git target resolution, no-database/no-worktree fallback construction, localized messages, snake_case payload keys, summary keys, text output, command syntax, and help text.
+- Preserved current bounds and ordering: active sessions 10; dirty files 25; unattributed changes 15; checkpoints 5; validation runs 5; conflicts 10. Existing text output still prints up to five active-session, unattributed-file, and conflict rows.
+- No daemon, independent repository, storage move, schema move, data migration, observability change, retrieval work, lifecycle policy, UI, or SDK packaging happened.
+- Validation passed: focused `bmux-cli` build, `tests/test_provenance_cli.py` against that CLI, focused `bmux-unit` WorkProvenance/Subsession suites, `./scripts/check-pbxproj.sh`, workspace package grouping check, and `git diff --check`.
+- Localization audit: changed no CLI help text, command syntax, UI, settings, shortcut, or localized output strings.
 
 Latest completed provenance Phase 2 worktree-list CLI contract-conversion slice:
 
