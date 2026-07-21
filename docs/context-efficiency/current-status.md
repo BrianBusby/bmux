@@ -39,15 +39,18 @@ ADR-001 is accepted and now controls the product boundary for provenance extract
 
 Treat the Provenance Engine as an independent local-first product with bmux as its first client. Future provenance implementation should move toward SDK/API boundaries, a local daemon, independent versioning, and no engine dependency on bmux internals. Existing `WorkProvenance`, `BmuxContextEfficiency`, and `ProvenanceObservability` work remains useful migration source material, but new extraction work must not deepen bmux-specific storage or domain coupling.
 
-ADR-001 Phase 3A is complete as a local decision gate only. The canonical
-independent repository target is `/Users/brianbusby/repos/provenance-engine`
-with remote owner/name `manaflow-ai/provenance-engine`; V1 is Swift 6 with
-Swift Package Manager; the first artifact is a standalone SwiftPM package named
-`ProvenanceEngine` with an initial `ProvenanceEngineContracts` module; the
-first SDK is in-process-only while keeping daemon-compatible contracts; new
-engine data defaults to `~/.local/state/provenance-engine/provenance.sqlite`;
-and observability is excluded from the initial authoritative skeleton. Full
-ADR-001 Phase 3 is still not complete.
+ADR-001 Phase 3A is complete as a local decision gate only. ADR-001 Phase 3B
+has created the minimal independent skeleton locally at
+`/Users/brianbusby/repos/provenance-engine`: a Swift 6 SwiftPM package named
+`ProvenanceEngine` with initial module `ProvenanceEngineContracts`. The
+canonical remote owner/name remains `manaflow-ai/provenance-engine`, but
+`git push -u origin main` is blocked because GitHub reports `Repository not
+found`; create or grant access to that remote before relying on remote history.
+The first SDK is still in-process-only while keeping daemon-compatible
+contracts; new engine data defaults to
+`~/.local/state/provenance-engine/provenance.sqlite`; and observability is
+excluded from the initial authoritative skeleton. Full ADR-001 Phase 3 is still
+not complete.
 
 Subsession/delegation provenance has been merged into the roadmap as a Phase 3-adjacent provenance integration track with its own authoritative plan:
 
@@ -112,12 +115,20 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 Current checkout:
 
 - Branch: `provenance-extraction-phase2-contracts`
+- This 2026-07-21 slice created the Phase 3B minimal independent skeleton at
+  `/Users/brianbusby/repos/provenance-engine` and committed it locally as
+  `9e8fa620ccd04040968e0afab591feb48c8c11d0` (`Add Phase 3B contracts
+  skeleton`).
+- The skeleton package is `ProvenanceEngine`; the initial module and product
+  are `ProvenanceEngineContracts`.
+- Phase 3B remains intentionally narrow: no bmux imports, AppKit, SwiftUI,
+  SQLite implementation, daemon, IPC, launch agent, CLI, storage migration,
+  retrieval, lifecycle policy, UI, observability package, or automatic
+  orchestration.
+- External push is blocked because the canonical GitHub remote reports
+  `Repository not found`.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
   `docs/context-efficiency/provenance-engine-phase3a-decisions.md`.
-- No independent repository/package scaffold was created in this slice; Phase
-  3B may create `/Users/brianbusby/repos/provenance-engine` only as a
-  standalone SwiftPM package named `ProvenanceEngine` with the initial
-  `ProvenanceEngineContracts` module.
 - This 2026-07-21 slice started ADR-001 Phase 3 with a docs-only
   implementation plan and boundary inventory in
   `docs/context-efficiency/provenance-engine-phase3-plan.md`.
@@ -174,6 +185,20 @@ Files changed in the latest implementation slice:
 - `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Store/ContextEfficiencyStore.swift`
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 - `tests/test_context_efficiency_cli.py`
+
+Latest completed provenance Phase 3B skeleton slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Local commit: `9e8fa620ccd04040968e0afab591feb48c8c11d0` (`Add Phase 3B
+  contracts skeleton`)
+- Package: `ProvenanceEngine`
+- Initial product/module: `ProvenanceEngineContracts`
+- Public surface: Foundation-only health/capability contracts and a
+  health-checking protocol.
+- Validated with SwiftPM describe.
+- Remote push is blocked.
+- Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
+- Full ADR-001 Phase 3 remains incomplete.
 
 Latest completed provenance planning slice:
 
@@ -551,11 +576,12 @@ Stay narrow and read-only. Prefer package-level Swift tests unless a CLI regress
 
 ADR-001 Phase 3 target:
 
-1. Start Phase 3B by creating the independent repository skeleton at
-   `/Users/brianbusby/repos/provenance-engine` only if the slice can validate it
-   independently.
-2. The Phase 3B skeleton must use Swift 6, Swift Package Manager, package name
-   `ProvenanceEngine`, and initial module name `ProvenanceEngineContracts`.
+1. Create or grant access to the canonical remote
+   `manaflow-ai/provenance-engine`, then push the existing local Phase 3B
+   skeleton commit from `/Users/brianbusby/repos/provenance-engine`.
+2. After the skeleton exists remotely, the next implementation target is Phase
+   3C contract lift into `ProvenanceEngineContracts`, still without bmux
+   consumer imports or behavior changes unless explicitly scoped.
 3. Do not start Phase 4 reconnect, Phase 5 migration, retrieval, lifecycle
    policy, UI, broad observability, or automatic orchestration.
 
