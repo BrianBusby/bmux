@@ -14,6 +14,7 @@ let package = Package(
         .target(name: "ProvenanceEngineContracts"),
         .target(
             name: "ProvenanceEngineSQLite",
+            dependencies: ["ProvenanceEngineContracts"],
             linkerSettings: [
                 .linkedLibrary("sqlite3"),
             ]

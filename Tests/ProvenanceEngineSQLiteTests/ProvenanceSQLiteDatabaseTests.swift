@@ -1,4 +1,5 @@
 import Foundation
+import ProvenanceEngineContracts
 @testable import ProvenanceEngineSQLite
 import Testing
 
@@ -367,6 +368,104 @@ struct ProvenanceSQLiteDatabaseTests {
         }
 
         #expect(FileManager.default.fileExists(atPath: url.path) == false)
+    }
+
+    @Test
+    func repositoryDefaultMigrationsBootstrapEventLedgerSchema() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        #expect(try await repository.schemaVersion() == 1)
+
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        #expect(try Self.tableExists("provenance_events", in: database))
+    }
+
+    @Test
+    func repositoryAppendsAndReadsEventAfterReopen() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let event = ProvenanceEvent(
+            id: "event-1",
+            schemaVersion: 1,
+            eventType: .progressCheckpoint,
+            timestamp: Date(timeIntervalSince1970: 1_800_000_000),
+            repositoryID: "repository-1",
+            worktreeID: "worktree-1",
+            sessionID: "session-1",
+            contributionID: "contribution-1",
+            source: .observed,
+            confidence: .high,
+            payload: ProvenanceEventPayload(
+                checkpoint: ProvenanceCheckpointRecord(
+                    id: "checkpoint-1",
+                    contributionID: "contribution-1",
+                    sequence: 1,
+                    summary: "Recorded narrow storage path.",
+                    status: "in_progress",
+                    semanticConfidence: .high,
+                    freshness: "fresh",
+                    createdAt: Date(timeIntervalSince1970: 1_800_000_001)
+                )
+            )
+        )
+
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        try await writer.appendEvent(event)
+
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let stored = try await reader.event(id: event.id)
+
+        #expect(stored == event)
+    }
+
+    @Test
+    func repositoryReturnsNilForMissingEvent() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        #expect(try await repository.event(id: "missing-event") == nil)
+    }
+
+    @Test
+    func repositoryRejectsDuplicateEventIDWithoutReplacingOriginal() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let original = ProvenanceEvent(
+            id: "event-1",
+            eventType: .sessionObserved,
+            timestamp: Date(timeIntervalSince1970: 1_800_000_000),
+            sessionID: "session-1",
+            source: .declared,
+            confidence: .medium
+        )
+        let duplicate = ProvenanceEvent(
+            id: original.id,
+            eventType: .worktreeObserved,
+            timestamp: Date(timeIntervalSince1970: 1_800_000_010),
+            worktreeID: "worktree-1",
+            source: .observed,
+            confidence: .high
+        )
+
+        try await repository.appendEvent(original)
+
+        do {
+            try await repository.appendEvent(duplicate)
+            Issue.record("Expected duplicate event ID failure")
+        } catch let error as ProvenanceSQLiteError {
+            if case let .sqlite(message) = error {
+                #expect(message.contains("UNIQUE") || message.contains("unique"))
+            }
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+
+        #expect(try await repository.event(id: original.id) == original)
     }
 
     private static func temporaryDatabaseURL() -> URL {
