@@ -107,11 +107,161 @@ struct ProvenanceSQLiteDatabaseTests {
         }
     }
 
+    @Test
+    func appliesMigrationsInOrderAndRecordsUserVersion() throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        let migrator = try ProvenanceSQLiteMigrator(migrations: [
+            ProvenanceSQLiteMigration(
+                version: 1,
+                statements: [
+                    """
+                    CREATE TABLE events (
+                        id TEXT PRIMARY KEY NOT NULL
+                    )
+                    """,
+                ]
+            ),
+            ProvenanceSQLiteMigration(
+                version: 2,
+                statements: [
+                    "ALTER TABLE events ADD COLUMN kind TEXT",
+                    "INSERT INTO events (id, kind) VALUES ('event-1', 'checkpoint')",
+                ]
+            ),
+        ])
+
+        try migrator.migrate(database)
+
+        #expect(try database.userVersion == 2)
+        let query = try database.prepare("SELECT id, kind FROM events")
+        defer { query.finalize() }
+        #expect(try query.step())
+        #expect(query.string(at: 0) == "event-1")
+        #expect(query.string(at: 1) == "checkpoint")
+        #expect(try query.step() == false)
+    }
+
+    @Test
+    func skipsMigrationsAtCurrentVersion() throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute(
+            """
+            CREATE TABLE existing_table (
+                id TEXT PRIMARY KEY NOT NULL
+            )
+            """
+        )
+        try database.setUserVersion(1)
+        let migrator = try ProvenanceSQLiteMigrator(migrations: [
+            ProvenanceSQLiteMigration(
+                version: 1,
+                statements: [
+                    """
+                    CREATE TABLE existing_table (
+                        id TEXT PRIMARY KEY NOT NULL
+                    )
+                    """,
+                ]
+            ),
+        ])
+
+        try migrator.migrate(database)
+
+        #expect(try database.userVersion == 1)
+    }
+
+    @Test
+    func rollsBackFailedMigrationBatch() throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        let migrator = try ProvenanceSQLiteMigrator(migrations: [
+            ProvenanceSQLiteMigration(
+                version: 1,
+                statements: [
+                    """
+                    CREATE TABLE rolled_back_events (
+                        id TEXT PRIMARY KEY NOT NULL
+                    )
+                    """,
+                ]
+            ),
+            ProvenanceSQLiteMigration(
+                version: 2,
+                statements: [
+                    "INSERT INTO missing_table (id) VALUES ('event-1')",
+                ]
+            ),
+        ])
+
+        do {
+            try migrator.migrate(database)
+            Issue.record("Expected migration failure")
+        } catch let error as ProvenanceSQLiteError {
+            if case let .sqlite(message) = error {
+                #expect(message.contains("missing_table"))
+            }
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+
+        #expect(try database.userVersion == 0)
+        #expect(try Self.tableExists("rolled_back_events", in: database) == false)
+    }
+
+    @Test
+    func rejectsNewerDatabaseSchema() throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.setUserVersion(99)
+        let migrator = try ProvenanceSQLiteMigrator(migrations: [
+            ProvenanceSQLiteMigration(version: 1, statements: []),
+        ])
+
+        do {
+            try migrator.migrate(database)
+            Issue.record("Expected unsupported schema failure")
+        } catch let error as ProvenanceSQLiteError {
+            #expect(error == .unsupportedSchema(found: 99, supported: 1))
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+
+    @Test
+    func rejectsNonIncreasingMigrationPlan() throws {
+        do {
+            _ = try ProvenanceSQLiteMigrator(migrations: [
+                ProvenanceSQLiteMigration(version: 1, statements: []),
+                ProvenanceSQLiteMigration(version: 1, statements: []),
+            ])
+            Issue.record("Expected migration plan failure")
+        } catch let error as ProvenanceSQLiteError {
+            if case let .invalidMigrationPlan(message) = error {
+                #expect(message.contains("strictly increasing"))
+            }
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+
     private static func temporaryDatabaseURL() -> URL {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("provenance-engine-sqlite-tests", isDirectory: true)
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         return directory.appendingPathComponent("provenance.sqlite")
+    }
+
+    private static func tableExists(_ tableName: String, in database: ProvenanceSQLiteDatabase) throws -> Bool {
+        let query = try database.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?")
+        defer { query.finalize() }
+        try query.bind(tableName, at: 1)
+        return try query.step()
     }
 
     private static func removeTemporaryDatabaseDirectory(for url: URL) {

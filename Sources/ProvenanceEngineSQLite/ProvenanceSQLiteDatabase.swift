@@ -79,6 +79,14 @@ final class ProvenanceSQLiteDatabase {
         }
     }
 
+    /// Updates SQLite `PRAGMA user_version` for the open database.
+    ///
+    /// - Parameter version: Schema version to record.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the update.
+    func setUserVersion(_ version: Int32) throws {
+        try execute("PRAGMA user_version = \(version)")
+    }
+
     /// Number of rows changed by the most recent SQLite write.
     var changes: Int {
         guard let handle else { return 0 }
