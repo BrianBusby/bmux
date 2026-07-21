@@ -54,6 +54,9 @@ boundaries, documentation, storage defaults, or bmux integration. The
 canonical repository now exists as a private GitHub repo, the local engine
 repo's `origin` points at the canonical URL, and Phase 3B commit
 `9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to `origin/main`.
+ADR-001 Phase 3C has lifted the initial in-process public contract surface into
+`ProvenanceEngineContracts` in the independent engine repo at commit
+`0b2529170ef4b0d67f8050f89786d439bbab6d27`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -250,6 +253,22 @@ Latest provenance Phase 3B remote unblock slice:
   - `git diff --check`
   - `git push`
   - Final clean-state checks for bmux and the engine repo.
+- Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
+- Full ADR-001 Phase 3 remains incomplete.
+
+Latest provenance Phase 3C contract-lift slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `0b2529170ef4b0d67f8050f89786d439bbab6d27` (`Lift initial
+  provenance contracts`)
+- Pushed to canonical `origin/main`.
+- Lifted Foundation-only public contract values and protocols into
+  `ProvenanceEngineContracts` without bmux imports, storage, daemon, CLI,
+  migration, reconnect, retrieval, lifecycle policy, UI, or observability.
+- Validation run:
+  - `swift test --package-path /Users/brianbusby/repos/provenance-engine`
+  - `git -C /Users/brianbusby/repos/provenance-engine diff --cached --check`
+  - `git -C /Users/brianbusby/repos/provenance-engine ls-remote origin refs/heads/main`
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
 - Full ADR-001 Phase 3 remains incomplete.
 
@@ -629,13 +648,12 @@ Stay narrow and read-only. Prefer package-level Swift tests unless a CLI regress
 
 ADR-001 Phase 3 target:
 
-1. Phase 3B remote unblock is complete: private GitHub repository
-   `BrianBusby/provenance-engine` exists, local `origin` points at
-   `git@github.com:BrianBusby/provenance-engine.git`, and commit
-   `9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to `origin/main`.
-2. The next implementation target is Phase 3C contract lift into
-   `ProvenanceEngineContracts`, still without bmux consumer imports or
-   behavior changes unless explicitly scoped.
+1. Phase 3C contract lift is complete: commit
+   `0b2529170ef4b0d67f8050f89786d439bbab6d27` is pushed to
+   `BrianBusby/provenance-engine` on `origin/main`.
+2. The next implementation target is Phase 3D storage lift, starting with
+   reusable store logic only after deciding the smallest storage boundary.
+   Keep bmux consumer imports and behavior changes out unless explicitly scoped.
 3. Do not start Phase 4 reconnect, Phase 5 migration, retrieval, lifecycle
    policy, UI, broad observability, or automatic orchestration.
 
