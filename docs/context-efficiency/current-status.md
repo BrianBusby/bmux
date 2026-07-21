@@ -51,8 +51,11 @@ with the authenticated `BrianBusby` account returns HTTP 403 because the account
 lacks organization admin access. The latest 2026-07-21 remote-unblock retry
 reconfirmed the same 404/403 gate, and `git -C
 /Users/brianbusby/repos/provenance-engine ls-remote origin` still fails with
-`Repository not found`. Create or grant access to that remote before relying on
-remote history.
+`Repository not found`. A subsequent 2026-07-21 retry in the current slice
+reconfirmed the same state: the authenticated account is still `BrianBusby`,
+the repo read still returns HTTP 404, org repo creation still returns HTTP 403,
+and SSH `ls-remote` still cannot see the repository. Create or grant access to
+that remote before relying on remote history.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -223,6 +226,8 @@ Latest attempted provenance Phase 3B remote unblock slice:
 - `/Users/brianbusby/repos/provenance-engine` remains clean on branch `main` at
   `9e8fa620ccd04040968e0afab591feb48c8c11d0`.
 - Phase 3C was not started because the Phase 3B remote gate is still blocked.
+- A subsequent retry in this slice produced the same result, so Phase 3B remains
+  locally committed but unpushed.
 - Validation run:
   - `git status --short --branch`
   - `git -C /Users/brianbusby/repos/provenance-engine status --short --branch`
