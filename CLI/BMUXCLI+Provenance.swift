@@ -15,7 +15,7 @@ extension BMUXCLI {
                 jsonOutput: jsonOutput
             )
         case "worktrees":
-            try runProvenanceWorktrees(
+            try await runProvenanceWorktrees(
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
@@ -159,7 +159,7 @@ extension BMUXCLI {
         printProvenanceContext(context, jsonOutput: jsonOutput)
     }
 
-    private func runProvenanceWorktrees(commandArgs: [String], jsonOutput: Bool) throws {
+    private func runProvenanceWorktrees(commandArgs: [String], jsonOutput: Bool) async throws {
         let commandName = "provenance worktrees list"
         let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
         var remaining = remainingAfterDatabase
@@ -182,8 +182,9 @@ extension BMUXCLI {
             return
         }
 
-        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
-        let list = try reader.worktreeList()
+        let client: any ProvenanceEngineClient = try WorkProvenanceStore(databaseURL: databaseURL)
+        let response = try await client.worktrees(ProvenanceWorktreeListRequest())
+        let list = CLIProvenanceWorktreeList(response: response)
         printProvenanceWorktreeList(list, jsonOutput: jsonOutput)
     }
 

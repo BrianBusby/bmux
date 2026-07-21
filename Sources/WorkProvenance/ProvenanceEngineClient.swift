@@ -19,4 +19,10 @@ protocol ProvenanceEngineClient: Sendable {
     /// - Parameter request: File explanation query parameters.
     /// - Returns: A bounded file-explanation response.
     func fileExplanation(_ request: ProvenanceFileExplanationRequest) async throws -> ProvenanceFileExplanationResponse
+
+    /// Returns provenance worktrees in current-state query order.
+    ///
+    /// - Parameter request: Query parameters for the worktree list.
+    /// - Returns: A domain response containing worktrees and linked repositories.
+    func worktrees(_ request: ProvenanceWorktreeListRequest) async throws -> ProvenanceWorktreeListResponse
 }

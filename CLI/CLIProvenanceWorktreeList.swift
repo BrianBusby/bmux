@@ -9,6 +9,13 @@ struct CLIProvenanceWorktreeList: Equatable {
         self.reason = reason
     }
 
+    init(response: ProvenanceWorktreeListResponse) {
+        self.init(
+            worktrees: response.worktrees.map(CLIProvenanceWorktreeRow.init(entry:)),
+            reason: nil
+        )
+    }
+
     var payload: [String: Any] {
         [
             "count": worktrees.count,

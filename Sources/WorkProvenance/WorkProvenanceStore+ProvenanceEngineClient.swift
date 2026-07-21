@@ -34,4 +34,9 @@ extension WorkProvenanceStore: ProvenanceEngineClient {
             explanation: explanation
         )
     }
+
+    func worktrees(_ request: ProvenanceWorktreeListRequest) async throws -> ProvenanceWorktreeListResponse {
+        let entries = try worktreeList(repositoryID: request.repositoryID, limit: request.limit)
+        return ProvenanceWorktreeListResponse(worktrees: entries)
+    }
 }

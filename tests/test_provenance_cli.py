@@ -487,6 +487,86 @@ def create_provenance_explain_database(
         )
 
 
+def create_worktree_list_database(path: Path, include_rows: bool = True) -> None:
+    if path.exists():
+        path.unlink()
+    with sqlite3.connect(path) as conn:
+        conn.executescript(
+            """
+            CREATE TABLE repositories (
+                id TEXT PRIMARY KEY NOT NULL,
+                path TEXT NOT NULL,
+                common_directory TEXT,
+                remote_slug TEXT,
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL
+            );
+            CREATE TABLE worktrees (
+                id TEXT PRIMARY KEY NOT NULL,
+                repository_id TEXT NOT NULL,
+                path TEXT NOT NULL,
+                branch TEXT,
+                base_commit TEXT,
+                current_head TEXT,
+                is_dirty INTEGER NOT NULL,
+                status TEXT NOT NULL,
+                last_reconciled_at REAL,
+                updated_at REAL NOT NULL
+            );
+            PRAGMA user_version = 3;
+            """
+        )
+        if not include_rows:
+            return
+        conn.executemany(
+            """
+            INSERT INTO repositories (
+                id, path, common_directory, remote_slug, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            [
+                ("repo-1", "/repo/old", None, "manaflow-ai/bmux", 100.0, 150.0),
+                ("repo-2", "/repo/new", None, "manaflow-ai/provenance", 100.0, 200.0),
+            ],
+        )
+        conn.executemany(
+            """
+            INSERT INTO worktrees (
+                id, repository_id, path, branch, base_commit, current_head,
+                is_dirty, status, last_reconciled_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    "worktree-old",
+                    "repo-1",
+                    "/repo/old",
+                    "main",
+                    None,
+                    "oldhead",
+                    0,
+                    "active",
+                    140.0,
+                    150.0,
+                ),
+                (
+                    "worktree-new",
+                    "repo-2",
+                    "/repo/new",
+                    "feature/provenance",
+                    None,
+                    "newhead",
+                    1,
+                    "active",
+                    190.0,
+                    200.0,
+                ),
+            ],
+        )
+
+
 def create_observability_database(path: Path) -> None:
     if path.exists():
         path.unlink()
@@ -1325,6 +1405,136 @@ def check_provenance_session_tree_text(cli_path: str, root: Path) -> None:
             raise AssertionError(f"expected text output to include {expected!r}:\n{output}")
 
 
+def check_provenance_worktrees_json(cli_path: str, root: Path) -> None:
+    database = root / "worktrees-work-provenance.sqlite"
+    create_worktree_list_database(database)
+
+    result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "worktrees",
+            "list",
+            "--database",
+            str(database),
+        ],
+    )
+    payload = json.loads(result.stdout)
+    if payload["count"] != 2 or payload["reason"] is not None:
+        raise AssertionError(f"expected worktree count with no reason: {payload!r}")
+    rows = payload["worktrees"]
+    if [row["worktree"]["id"] for row in rows] != ["worktree-new", "worktree-old"]:
+        raise AssertionError(f"expected newest worktree ordering: {payload!r}")
+    newest = rows[0]
+    if newest["worktree"] != {
+        "branch": "feature/provenance",
+        "current_head": "newhead",
+        "id": "worktree-new",
+        "is_dirty": True,
+        "last_reconciled_at": 190.0,
+        "path": "/repo/new",
+        "repository_id": "repo-2",
+        "status": "active",
+        "updated_at": 200.0,
+    }:
+        raise AssertionError(f"expected worktree JSON shape to be preserved: {payload!r}")
+    if newest["repository"] != {
+        "id": "repo-2",
+        "path": "/repo/new",
+        "remote_slug": "manaflow-ai/provenance",
+    }:
+        raise AssertionError(f"expected repository JSON shape to be preserved: {payload!r}")
+
+    empty_database = root / "worktrees-empty.sqlite"
+    create_worktree_list_database(empty_database, include_rows=False)
+    empty_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "worktrees",
+            "list",
+            "--database",
+            str(empty_database),
+        ],
+    )
+    empty = json.loads(empty_result.stdout)
+    if empty != {"count": 0, "reason": None, "worktrees": []}:
+        raise AssertionError(f"empty database should preserve empty list JSON: {empty!r}")
+
+    no_database_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "worktrees",
+            "list",
+            "--database",
+            str(root / "missing-worktrees.sqlite"),
+        ],
+    )
+    no_database = json.loads(no_database_result.stdout)
+    if no_database != {
+        "count": 0,
+        "reason": "no provenance database exists yet",
+        "worktrees": [],
+    }:
+        raise AssertionError(f"missing database should preserve no-database JSON: {no_database!r}")
+
+
+def check_provenance_worktrees_text(cli_path: str, root: Path) -> None:
+    database = root / "worktrees-text.sqlite"
+    create_worktree_list_database(database)
+
+    result = run_cli(
+        cli_path,
+        [
+            "provenance",
+            "worktrees",
+            "list",
+            "--database",
+            str(database),
+        ],
+    )
+    output = result.stdout
+    for expected in [
+        "Known provenance worktrees: 2",
+        "  /repo/new · feature/provenance · active · dirty",
+        "  /repo/old · main · active · clean",
+    ]:
+        if expected not in output:
+            raise AssertionError(f"expected text output to include {expected!r}:\n{output}")
+
+    empty_database = root / "worktrees-text-empty.sqlite"
+    create_worktree_list_database(empty_database, include_rows=False)
+    empty_result = run_cli(
+        cli_path,
+        [
+            "provenance",
+            "worktrees",
+            "list",
+            "--database",
+            str(empty_database),
+        ],
+    )
+    if empty_result.stdout.strip() != "No provenance worktrees recorded.":
+        raise AssertionError(f"empty text output changed:\n{empty_result.stdout}")
+
+    no_database_result = run_cli(
+        cli_path,
+        [
+            "provenance",
+            "worktrees",
+            "list",
+            "--database",
+            str(root / "missing-worktrees-text.sqlite"),
+        ],
+    )
+    if no_database_result.stdout.strip() != "no provenance database exists yet":
+        raise AssertionError(f"no-database text output changed:\n{no_database_result.stdout}")
+
+
 def check_provenance_lifecycle_trace_json(cli_path: str, root: Path) -> None:
     database = root / "ProvenanceObservability.sqlite"
     create_observability_database(database)
@@ -1522,6 +1732,8 @@ def main() -> int:
             check_provenance_explain_text(cli_path, root)
             check_provenance_session_tree_json(cli_path, root)
             check_provenance_session_tree_text(cli_path, root)
+            check_provenance_worktrees_json(cli_path, root)
+            check_provenance_worktrees_text(cli_path, root)
             check_provenance_lifecycle_trace_json(cli_path, root)
             check_provenance_lifecycle_trace_text(cli_path, root)
         except Exception as exc:

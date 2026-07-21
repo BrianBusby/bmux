@@ -416,6 +416,25 @@ struct WorkProvenanceStoreTests {
         #expect(replayed.externalIdentities.map(\.externalID) == response.externalIdentities.map(\.externalID))
     }
 
+    @Test
+    func contractClientListsWorktreesWithRepositories() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let client: any ProvenanceEngineClient = store
+
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.attributedEvent()))
+
+        let response = try await client.worktrees(ProvenanceWorktreeListRequest())
+
+        #expect(response.schemaVersion == 1)
+        #expect(response.status == "ok")
+        #expect(response.reason == nil)
+        #expect(response.worktrees.map(\.worktree.id) == ["worktree-1"])
+        #expect(response.worktrees.first?.worktree.path == "/repo")
+        #expect(response.worktrees.first?.repository?.remoteSlug == "manaflow-ai/bmux")
+    }
+
     private static func attributedEvent() -> WorkProvenanceEvent {
         let now = Date(timeIntervalSince1970: 100)
         let repository = WorkProvenanceRepositoryRecord(

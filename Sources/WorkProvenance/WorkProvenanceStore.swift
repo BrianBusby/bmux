@@ -255,6 +255,19 @@ actor WorkProvenanceStore {
         try worktreeRecord(path: path)
     }
 
+    /// Returns worktree projections with their linked repositories in list order.
+    ///
+    /// - Parameters:
+    ///   - repositoryID: Optional repository identifier used to filter results.
+    ///   - limit: Optional maximum number of rows to return.
+    /// - Returns: Worktree entries sorted by newest update first.
+    func worktreeList(
+        repositoryID: String? = nil,
+        limit: Int? = nil
+    ) throws -> [ProvenanceWorktreeListEntry] {
+        try worktreeListEntries(repositoryID: repositoryID, limit: limit)
+    }
+
     /// Returns the direct parent relationship for `sessionID`.
     ///
     /// - Parameter sessionID: Child session identifier.
@@ -660,6 +673,70 @@ actor WorkProvenanceStore {
         try statement.bind(path, at: 1)
         guard try statement.step(),
               let id = statement.string(at: 0),
+              let repositoryID = statement.string(at: 1),
+              let path = statement.string(at: 2),
+              let status = statement.string(at: 7) else {
+            return nil
+        }
+        return WorkProvenanceWorktreeRecord(
+            id: id,
+            repositoryID: repositoryID,
+            path: path,
+            branch: statement.string(at: 3),
+            baseCommit: statement.string(at: 4),
+            currentHEAD: statement.string(at: 5),
+            isDirty: statement.int(at: 6) != 0,
+            status: status,
+            lastReconciledAt: statement.double(at: 8).map(Date.init(timeIntervalSince1970:)),
+            updatedAt: Date(timeIntervalSince1970: statement.double(at: 9) ?? 0)
+        )
+    }
+
+    private func worktreeListEntries(
+        repositoryID: String?,
+        limit: Int?
+    ) throws -> [ProvenanceWorktreeListEntry] {
+        let rowLimit = limit.map { max(0, $0) }
+        var sql = """
+            SELECT id, repository_id, path, branch, base_commit, current_head,
+                   is_dirty, status, last_reconciled_at, updated_at
+            FROM worktrees
+            """
+        if repositoryID != nil {
+            sql += "\nWHERE repository_id = ?"
+        }
+        sql += "\nORDER BY updated_at DESC, rowid DESC"
+        if rowLimit != nil {
+            sql += "\nLIMIT ?"
+        }
+
+        let statement = try database.prepare(sql)
+        defer { statement.finalize() }
+        var bindIndex: Int32 = 1
+        if let repositoryID {
+            try statement.bind(repositoryID, at: bindIndex)
+            bindIndex += 1
+        }
+        if let rowLimit {
+            try statement.bind(rowLimit, at: bindIndex)
+        }
+
+        var entries: [ProvenanceWorktreeListEntry] = []
+        while try statement.step() {
+            guard let worktree = worktreeRecord(from: statement) else { continue }
+            let repository = try repositoryRecord(id: worktree.repositoryID)
+            entries.append(ProvenanceWorktreeListEntry(
+                worktree: worktree,
+                repository: repository
+            ))
+        }
+        return entries
+    }
+
+    private func worktreeRecord(
+        from statement: WorkProvenanceSQLiteStatement
+    ) -> WorkProvenanceWorktreeRecord? {
+        guard let id = statement.string(at: 0),
               let repositoryID = statement.string(at: 1),
               let path = statement.string(at: 2),
               let status = statement.string(at: 7) else {
