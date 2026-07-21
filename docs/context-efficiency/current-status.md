@@ -48,8 +48,9 @@ canonical remote owner/name remains `manaflow-ai/provenance-engine`, but
 found`. A 2026-07-21 retry confirmed `gh api
 repos/manaflow-ai/provenance-engine` returns HTTP 404, and creating the org repo
 with the authenticated `BrianBusby` account returns HTTP 403 because the account
-lacks organization admin access. Create or grant access to that remote before
-relying on remote history.
+lacks organization admin access. A later 2026-07-21 handoff retry reconfirmed
+the same 404/403 gate. Create or grant access to that remote before relying on
+remote history.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -208,8 +209,9 @@ Latest completed provenance Phase 3B skeleton slice:
 
 Latest attempted provenance Phase 3B remote unblock slice:
 
-- `gh api repos/manaflow-ai/provenance-engine` returned HTTP 404.
-- `gh api --method POST orgs/manaflow-ai/repos ...` returned HTTP 403: the
+- A 2026-07-21 handoff retry confirmed `gh api
+  repos/manaflow-ai/provenance-engine` still returns HTTP 404.
+- `gh api --method POST orgs/manaflow-ai/repos ...` still returns HTTP 403: the
   authenticated `BrianBusby` account needs organization admin access before it
   can create `manaflow-ai/provenance-engine`.
 - `/Users/brianbusby/repos/provenance-engine` remains clean on branch `main` at
