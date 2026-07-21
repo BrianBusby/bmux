@@ -30,9 +30,9 @@ health/capability contracts. The external skeleton commit is local only until
 unblock retry confirmed the repo returns HTTP 404 and the authenticated
 `BrianBusby` account cannot create org repos under `manaflow-ai` because GitHub
 returns HTTP 403 requiring organization admin access. The latest 2026-07-21
-remote-unblock retry in this handoff attempt reconfirmed the same 404/403
-remote gate: GitHub API reads of `manaflow-ai/provenance-engine` return HTTP
-404, org repo creation as `BrianBusby` returns HTTP 403, and `git -C
+follow-up remote-unblock retry reconfirmed the same 404/403 remote gate: GitHub
+API reads of `manaflow-ai/provenance-engine` return HTTP 404, org repo creation
+as `BrianBusby` returns HTTP 403, and `git -C
 /Users/brianbusby/repos/provenance-engine ls-remote origin` still fails with
 `Repository not found`. No Phase 3C contract lift, SDK implementation, daemon,
 storage move, schema move, data migration, bmux reconnect, retrieval layer,
@@ -212,8 +212,8 @@ Implemented slices:
   and module/product `ProvenanceEngineContracts`.
 - The Phase 3B remote unblock remains blocked: `manaflow-ai/provenance-engine`
   is not visible to the authenticated account, and the latest 2026-07-21
-  remote-unblock retry in this handoff attempt confirmed org repo creation
-  still requires additional `manaflow-ai` admin access. `git -C
+  follow-up remote-unblock retry confirmed org repo creation still requires
+  additional `manaflow-ai` admin access. `git -C
   /Users/brianbusby/repos/provenance-engine ls-remote origin` still fails with
   `Repository not found`, so local commit
   `9e8fa620ccd04040968e0afab591feb48c8c11d0` remains unpushed.

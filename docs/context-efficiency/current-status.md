@@ -48,8 +48,8 @@ canonical remote owner/name remains `manaflow-ai/provenance-engine`, but
 found`. A 2026-07-21 retry confirmed `gh api
 repos/manaflow-ai/provenance-engine` returns HTTP 404, and creating the org repo
 with the authenticated `BrianBusby` account returns HTTP 403 because the account
-lacks organization admin access. The latest 2026-07-21 remote-unblock retry in
-this handoff attempt reconfirmed the same state: the authenticated account is
+lacks organization admin access. The latest 2026-07-21 follow-up
+remote-unblock retry reconfirmed the same state: the authenticated account is
 still `BrianBusby`, `gh api repos/manaflow-ai/provenance-engine` still returns
 HTTP 404, org repo creation still returns HTTP 403, and `git -C
 /Users/brianbusby/repos/provenance-engine ls-remote origin` still fails with
@@ -213,7 +213,7 @@ Latest completed provenance Phase 3B skeleton slice:
 
 Latest attempted provenance Phase 3B remote unblock slice:
 
-- This 2026-07-21 handoff attempt confirmed `gh api
+- This 2026-07-21 follow-up handoff attempt confirmed `gh api
   repos/manaflow-ai/provenance-engine` still returns HTTP 404.
 - `gh api --method POST orgs/manaflow-ai/repos ...` still returns HTTP 403:
   the authenticated `BrianBusby` account still lacks the organization admin
