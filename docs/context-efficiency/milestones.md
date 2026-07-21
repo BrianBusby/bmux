@@ -8,6 +8,7 @@ Cross-cutting plans:
 - `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`
 - `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`
 - `docs/context-efficiency/provenance-engine-phase3-plan.md`
+- `docs/context-efficiency/provenance-engine-phase3a-decisions.md`
 - `docs/context-efficiency/subsession-delegation-integration-plan.md`
 - `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
 - `docs/context-efficiency/provenance-observability-integration-plan.md`
@@ -16,7 +17,11 @@ ADR-001 is accepted and establishes the Provenance Engine as an independent prod
 
 The ADR-001 Phase 3 entry plan is now drafted in
 `docs/context-efficiency/provenance-engine-phase3-plan.md`.
-It starts Phase 3 but does not complete it.
+It starts Phase 3 but does not complete it. ADR-001 Phase 3A is complete in
+`docs/context-efficiency/provenance-engine-phase3a-decisions.md` and resolves
+the next skeleton's repo path, remote owner/name, Swift/SwiftPM V1 choice,
+standalone SwiftPM artifact shape, first package/module names, in-process-first
+SDK relationship, new-data storage default, and initial observability exclusion.
 No independent repo/package, SDK, daemon, storage move, schema move, data
 migration, bmux reconnect, retrieval layer, lifecycle policy, UI, or broad
 observability expansion has been created.
@@ -182,7 +187,21 @@ Implemented slices:
 - ADR-001 Phase 2 lifecycle-trace contract slice added `ProvenanceLifecycleTraceQuerying`.
 - ADR-001 Phase 2 worktree-list contract conversion added `ProvenanceWorktreeListRequest`, `ProvenanceWorktreeListEntry`, and `ProvenanceWorktreeListResponse`, then moved `bmux provenance worktrees list` onto `ProvenanceEngineClient.worktrees(...)` while preserving existing CLI output and fallback behavior.
 - ADR-001 Phase 2 current-context contract conversion added current-context request/response and bounded row DTOs, then moved `bmux provenance context current` onto `ProvenanceEngineClient.currentContext(...)` while preserving existing CLI output, fallback behavior, section caps, and ordering.
-- Phase 2 has not moved code into an independent engine repository, created a daemon, moved storage/schema, added data migration, or added daemon/SDK packaging. Four read-only authoritative provenance CLI paths now consume in-process `ProvenanceEngineClient` contracts instead of their direct SQLite reader paths: `bmux provenance sessions tree` uses `sessionTree(...)`, `bmux provenance explain` uses `fileExplanation(...)`, `bmux provenance worktrees list` uses `worktrees(...)`, and `bmux provenance context current` uses `currentContext(...)`.
+- ADR-001 Phase 3A decision work resolved the independent engine scaffold gate:
+  local path `/Users/brianbusby/repos/provenance-engine`, remote owner/name
+  `manaflow-ai/provenance-engine`, Swift 6 with Swift Package Manager, package
+  `ProvenanceEngine`, initial module `ProvenanceEngineContracts`, in-process
+  SDK first, new-data storage default
+  `~/.local/state/provenance-engine/provenance.sqlite`, and no initial
+  observability in the authoritative skeleton.
+- Phase 2 and Phase 3A have not moved code into an independent engine
+  repository, created a daemon, moved storage/schema, added data migration, or
+  added daemon/SDK packaging. Four read-only authoritative provenance CLI paths
+  now consume in-process `ProvenanceEngineClient` contracts instead of their
+  direct SQLite reader paths: `bmux provenance sessions tree` uses
+  `sessionTree(...)`, `bmux provenance explain` uses `fileExplanation(...)`,
+  `bmux provenance worktrees list` uses `worktrees(...)`, and `bmux provenance
+  context current` uses `currentContext(...)`.
 
 Stop condition:
 

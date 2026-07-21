@@ -128,6 +128,9 @@ Done when the repo path, implementation language, first artifact type,
 SDK/daemon relationship, engine storage default, and public module names are
 explicit.
 
+Status: completed in
+`docs/context-efficiency/provenance-engine-phase3a-decisions.md`.
+
 ### Phase 3B: Minimal Independent Skeleton
 
 Create the independent repo/package skeleton only after Phase 3A is complete.
@@ -162,6 +165,12 @@ lifecycle policy, UI, or observability expansion is included here.
 
 ## Next Safe Phase 3 Slice
 
-Resolve Phase 3A in local docs. If those decisions are already explicit by the
-next slice, create the minimal independent skeleton with health/capability
-contracts only.
+Create the Phase 3B minimal independent skeleton only if the slice follows
+`docs/context-efficiency/provenance-engine-phase3a-decisions.md` exactly. The
+skeleton should live at `/Users/brianbusby/repos/provenance-engine`, use Swift
+6 and Swift Package Manager, create package `ProvenanceEngine`, and start with
+module `ProvenanceEngineContracts`.
+
+Keep the first skeleton in-process-only and daemon-compatible. Do not add the
+daemon, bmux reconnect, storage migration, retrieval, lifecycle policy, UI,
+broad observability, or automatic orchestration in Phase 3B.
