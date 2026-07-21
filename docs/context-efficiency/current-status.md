@@ -60,6 +60,9 @@ ADR-001 Phase 3C has lifted the initial in-process public contract surface into
 ADR-001 Phase 3D has started with the smallest storage boundary: internal
 engine-owned SQLite connection and statement support in `ProvenanceEngineSQLite`
 at commit `ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac`.
+A second Phase 3D storage slice added internal SQLite schema-versioning and
+migration scaffolding at commit
+`9f7333799ef4f036b06b580fcbac3cde9398b306`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -143,6 +146,10 @@ Current checkout:
   `BrianBusby/provenance-engine`. The local engine repo's `origin` is
   `git@github.com:BrianBusby/provenance-engine.git`, and commit
   `9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to `origin/main`.
+- ADR-001 Phase 3D internal SQLite storage support now includes connection,
+  statement, error, and schema migration scaffolding in
+  `ProvenanceEngineSQLite`. Latest pushed engine commit:
+  `9f7333799ef4f036b06b580fcbac3cde9398b306`.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
   `docs/context-efficiency/provenance-engine-phase3a-decisions.md`.
 - This 2026-07-21 slice started ADR-001 Phase 3 with a docs-only
@@ -259,7 +266,20 @@ Latest provenance Phase 3B remote unblock slice:
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
 - Full ADR-001 Phase 3 remains incomplete.
 
-Latest provenance Phase 3D storage-support slice:
+Latest provenance Phase 3D schema migration slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `9f7333799ef4f036b06b580fcbac3cde9398b306` (`Add SQLite
+  migration scaffolding`)
+- Pushed to canonical `origin/main`.
+- Added internal SQLite migration types for ordered schema upgrades.
+- Added storage errors for unsupported schemas and invalid migration plans.
+- Added SwiftPM migration behavior coverage.
+- Kept `ProvenanceEngineContracts` as the only public library product.
+- No bmux consumer imports or runtime behavior changed.
+- Full ADR-001 Phase 3 remains incomplete.
+
+Previous provenance Phase 3D storage-support slice:
 
 - External repo path: `/Users/brianbusby/repos/provenance-engine`
 - Commit: `ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac` (`Add initial
