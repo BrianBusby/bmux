@@ -62,7 +62,9 @@ engine-owned SQLite connection and statement support in `ProvenanceEngineSQLite`
 at commit `ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac`.
 A second Phase 3D storage slice added internal SQLite schema-versioning and
 migration scaffolding at commit
-`9f7333799ef4f036b06b580fcbac3cde9398b306`.
+`9f7333799ef4f036b06b580fcbac3cde9398b306`. A third Phase 3D storage
+slice added a minimal internal SQLite repository actor at commit
+`dfd57a6441d5090130476893502c3091d2769440`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -147,9 +149,9 @@ Current checkout:
   `git@github.com:BrianBusby/provenance-engine.git`, and commit
   `9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to `origin/main`.
 - ADR-001 Phase 3D internal SQLite storage support now includes connection,
-  statement, error, and schema migration scaffolding in
-  `ProvenanceEngineSQLite`. Latest pushed engine commit:
-  `9f7333799ef4f036b06b580fcbac3cde9398b306`.
+  statement, error, schema migration scaffolding, and a minimal repository
+  actor in `ProvenanceEngineSQLite`. Latest pushed engine commit:
+  `dfd57a6441d5090130476893502c3091d2769440`.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
   `docs/context-efficiency/provenance-engine-phase3a-decisions.md`.
 - This 2026-07-21 slice started ADR-001 Phase 3 with a docs-only
@@ -264,6 +266,23 @@ Latest provenance Phase 3B remote unblock slice:
   - `git push`
   - Final clean-state checks for bmux and the engine repo.
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
+- Full ADR-001 Phase 3 remains incomplete.
+
+Latest provenance Phase 3D repository skeleton slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `dfd57a6441d5090130476893502c3091d2769440` (`Add SQLite
+  repository skeleton`)
+- Pushed to canonical `origin/main`.
+- Added internal `ProvenanceSQLiteRepository` actor that opens an engine-owned
+  SQLite database and applies the provided migration plan before returning.
+- Exposed only a narrow internal schema-version read for the repository actor;
+  no public storage SDK/product was added.
+- Added SwiftPM coverage for repository open-and-migrate behavior, already-current
+  migration skip behavior, newer-schema rejection, and invalid migration-plan
+  rejection before database creation.
+- Updated the engine README storage-support scope.
+- No bmux consumer imports or runtime behavior changed.
 - Full ADR-001 Phase 3 remains incomplete.
 
 Latest provenance Phase 3D schema migration slice:
@@ -699,13 +718,16 @@ ADR-001 Phase 3 target:
 1. Phase 3C contract lift is complete: commit
    `0b2529170ef4b0d67f8050f89786d439bbab6d27` is pushed to
    `BrianBusby/provenance-engine` on `origin/main`.
-2. Phase 3D initial storage support is complete: commit
-   `ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac` is pushed to
-   `BrianBusby/provenance-engine` on `origin/main`.
+2. Phase 3D storage support has progressed through initial SQLite support
+   (`ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac`), schema migration
+   scaffolding (`9f7333799ef4f036b06b580fcbac3cde9398b306`), and a minimal
+   repository actor (`dfd57a6441d5090130476893502c3091d2769440`), all pushed
+   to `BrianBusby/provenance-engine` on `origin/main`.
 3. The next implementation target can continue Phase 3D only after deciding the
-   next smallest storage boundary. Likely candidates are engine-owned schema
-   versioning/migration scaffolding or a minimal repository actor over the new
-   SQLite support, still without bmux consumer imports or behavior changes.
+   next smallest storage boundary. Likely candidates are the first internal
+   repository-owned schema/table bootstrap or a narrow domain-write/read path,
+   still without lifting `WorkProvenanceStore` wholesale and without bmux
+   consumer imports or behavior changes.
 4. Do not start Phase 4 reconnect, Phase 5 migration, retrieval, lifecycle
    policy, UI, broad observability, or automatic orchestration.
 

@@ -43,7 +43,9 @@ with the smallest storage boundary: internal engine-owned SQLite connection and
 statement support in `ProvenanceEngineSQLite` at commit
 `ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac`. A second Phase 3D slice added
 internal SQLite schema-versioning and migration scaffolding at commit
-`9f7333799ef4f036b06b580fcbac3cde9398b306`. No public storage SDK, daemon,
+`9f7333799ef4f036b06b580fcbac3cde9398b306`. A third Phase 3D slice added a
+minimal internal SQLite repository actor at commit
+`dfd57a6441d5090130476893502c3091d2769440`. No public storage SDK, daemon,
 storage path move, schema move, data migration, bmux reconnect, retrieval
 layer, lifecycle policy, UI, or broad observability expansion has been created.
 Full ADR-001 Phase 3 is still not complete.
@@ -235,9 +237,14 @@ Implemented slices:
   `PRAGMA user_version` migration support at commit
   `9f7333799ef4f036b06b580fcbac3cde9398b306`, still without exporting a public
   storage product and without changing bmux behavior.
+- ADR-001 Phase 3D repository skeleton added internal
+  `ProvenanceSQLiteRepository` open-and-migrate support at commit
+  `dfd57a6441d5090130476893502c3091d2769440`, still without exporting a public
+  storage product and without changing bmux behavior.
 - Continue Phase 3D only after deciding the next smallest storage boundary,
-  such as a minimal repository actor over the new SQLite and migration support.
-- Phase 2, Phase 3A, Phase 3B, Phase 3C, and the first Phase 3D slice have not
+  such as the first internal repository-owned schema/table bootstrap or a narrow
+  domain-write/read path over the new SQLite and migration support.
+- Phase 2, Phase 3A, Phase 3B, Phase 3C, and the Phase 3D storage slices have not
   created a daemon, moved storage/schema, added data migration, or added
   daemon/SDK packaging. Four
   read-only authoritative provenance CLI paths
