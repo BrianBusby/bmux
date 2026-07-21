@@ -64,7 +64,10 @@ A second Phase 3D storage slice added internal SQLite schema-versioning and
 migration scaffolding at commit
 `9f7333799ef4f036b06b580fcbac3cde9398b306`. A third Phase 3D storage
 slice added a minimal internal SQLite repository actor at commit
-`dfd57a6441d5090130476893502c3091d2769440`.
+`dfd57a6441d5090130476893502c3091d2769440`. A fourth Phase 3D
+storage slice added the first internal repository-owned event-ledger table and
+narrow append/read path at commit
+`f96858fb8f1a207426ad78c2524ab5b5c9b74121`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -149,9 +152,10 @@ Current checkout:
   `git@github.com:BrianBusby/provenance-engine.git`, and commit
   `9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to `origin/main`.
 - ADR-001 Phase 3D internal SQLite storage support now includes connection,
-  statement, error, schema migration scaffolding, and a minimal repository
-  actor in `ProvenanceEngineSQLite`. Latest pushed engine commit:
-  `dfd57a6441d5090130476893502c3091d2769440`.
+  statement, error, schema migration scaffolding, a minimal repository actor,
+  and an internal event-ledger table with narrow append/read support in
+  `ProvenanceEngineSQLite`. Latest pushed engine commit:
+  `f96858fb8f1a207426ad78c2524ab5b5c9b74121`.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
   `docs/context-efficiency/provenance-engine-phase3a-decisions.md`.
 - This 2026-07-21 slice started ADR-001 Phase 3 with a docs-only
@@ -267,6 +271,41 @@ Latest provenance Phase 3B remote unblock slice:
   - Final clean-state checks for bmux and the engine repo.
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
 - Full ADR-001 Phase 3 remains incomplete.
+
+Latest provenance Phase 3D event-ledger storage slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `f96858fb8f1a207426ad78c2524ab5b5c9b74121` (`Add internal
+  event ledger storage`)
+- Pushed to canonical `origin/main`.
+- `ProvenanceEngineContracts` remains the only public library product.
+- Added the repository-owned default V1 migration that creates the internal
+  `provenance_events` table and supporting indexes.
+- Added narrow internal repository actor methods to append one
+  `ProvenanceEvent` and read one event by stable ID.
+- Added Swift Testing coverage for default schema bootstrap, append/read after
+  reopen, missing-event reads, and duplicate-ID rejection without replacing the
+  original event.
+- Updated the engine README storage-support scope.
+- No bmux consumer imports or runtime behavior changed.
+- No daemon, IPC, launch agent, CLI, retrieval, lifecycle policy, UI,
+  observability expansion, bmux storage move, bmux schema move, or data
+  migration was added.
+- Full ADR-001 Phase 3 remains incomplete.
+- Validation run:
+  - `swift test --package-path /Users/brianbusby/repos/provenance-engine`
+  - `git -C /Users/brianbusby/repos/provenance-engine diff --check`
+  - `git -C /Users/brianbusby/repos/provenance-engine diff --cached --check`
+  - `git -C /Users/brianbusby/repos/provenance-engine rev-parse HEAD`
+  - `git -C /Users/brianbusby/repos/provenance-engine ls-remote origin refs/heads/main`
+  - `git -C /Users/brianbusby/repos/provenance-engine status --short --branch`
+- Localization audit: changed only engine internal Swift package files, package
+  README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
+  settings/localized strings changed.
+- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
+  storage boundary, such as a narrow repository-owned projection table
+  bootstrap or a bounded read model derived from the new event ledger. Keep it
+  engine-owned and internal.
 
 Latest provenance Phase 3D repository skeleton slice:
 
