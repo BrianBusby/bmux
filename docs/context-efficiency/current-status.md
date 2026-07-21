@@ -45,7 +45,11 @@ has created the minimal independent skeleton locally at
 `ProvenanceEngine` with initial module `ProvenanceEngineContracts`. The
 canonical remote owner/name remains `manaflow-ai/provenance-engine`, but
 `git push -u origin main` is blocked because GitHub reports `Repository not
-found`; create or grant access to that remote before relying on remote history.
+found`. A 2026-07-21 retry confirmed `gh api
+repos/manaflow-ai/provenance-engine` returns HTTP 404, and creating the org repo
+with the authenticated `BrianBusby` account returns HTTP 403 because the account
+lacks organization admin access. Create or grant access to that remote before
+relying on remote history.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -126,7 +130,8 @@ Current checkout:
   retrieval, lifecycle policy, UI, observability package, or automatic
   orchestration.
 - External push is blocked because the canonical GitHub remote reports
-  `Repository not found`.
+  `Repository not found`; a 2026-07-21 GitHub API repo-create attempt also
+  failed with HTTP 403 due to missing organization admin access.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
   `docs/context-efficiency/provenance-engine-phase3a-decisions.md`.
 - This 2026-07-21 slice started ADR-001 Phase 3 with a docs-only
@@ -196,7 +201,20 @@ Latest completed provenance Phase 3B skeleton slice:
 - Public surface: Foundation-only health/capability contracts and a
   health-checking protocol.
 - Validated with SwiftPM describe.
-- Remote push is blocked.
+- Remote push is blocked: the canonical repo is not visible to the authenticated
+  account, and creating it under `manaflow-ai` requires org admin access.
+- Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
+- Full ADR-001 Phase 3 remains incomplete.
+
+Latest attempted provenance Phase 3B remote unblock slice:
+
+- `gh api repos/manaflow-ai/provenance-engine` returned HTTP 404.
+- `gh api --method POST orgs/manaflow-ai/repos ...` returned HTTP 403: the
+  authenticated `BrianBusby` account needs organization admin access before it
+  can create `manaflow-ai/provenance-engine`.
+- `/Users/brianbusby/repos/provenance-engine` remains clean on branch `main` at
+  `9e8fa620ccd04040968e0afab591feb48c8c11d0`.
+- Phase 3C was not started because the Phase 3B remote gate is still blocked.
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
 - Full ADR-001 Phase 3 remains incomplete.
 
@@ -577,8 +595,10 @@ Stay narrow and read-only. Prefer package-level Swift tests unless a CLI regress
 ADR-001 Phase 3 target:
 
 1. Create or grant access to the canonical remote
-   `manaflow-ai/provenance-engine`, then push the existing local Phase 3B
-   skeleton commit from `/Users/brianbusby/repos/provenance-engine`.
+   `manaflow-ai/provenance-engine`. The authenticated `BrianBusby` account can
+   read neither the repo nor create org repos today; after access/admin rights
+   are fixed, push the existing local Phase 3B skeleton commit from
+   `/Users/brianbusby/repos/provenance-engine`.
 2. After the skeleton exists remotely, the next implementation target is Phase
    3C contract lift into `ProvenanceEngineContracts`, still without bmux
    consumer imports or behavior changes unless explicitly scoped.
