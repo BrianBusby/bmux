@@ -23,8 +23,8 @@ UI, or observability expansion.
 | Topic | Decision |
 | --- | --- |
 | Canonical local repository path | `/Users/brianbusby/repos/provenance-engine` |
-| Canonical remote owner/name | `manaflow-ai/provenance-engine` |
-| Canonical remote URL | `git@github.com:manaflow-ai/provenance-engine.git` |
+| Canonical GitHub repository | `BrianBusby/provenance-engine` |
+| Canonical remote URL | `git@github.com:BrianBusby/provenance-engine.git` |
 | V1 implementation language | Swift 6 |
 | V1 package manager | Swift Package Manager |
 | First artifact type | Standalone SwiftPM library package |
@@ -33,6 +33,16 @@ UI, or observability expansion.
 | First SDK relationship | In-process-only SDK contracts first; daemon-backed transport comes later |
 | Engine-owned default storage path for new data | `~/.local/state/provenance-engine/provenance.sqlite` |
 | Initial observability scope | Excluded from the initial authoritative engine skeleton |
+
+## Ownership Strategy
+
+The provenance engine is initially owned and maintained under the `BrianBusby`
+GitHub account. The repository may be transferred to a future organization, for
+example `manaflow-ai`, once the project matures.
+
+Repository ownership is an implementation detail. It must not affect package
+names, APIs, module boundaries, documentation structure, storage defaults, or
+integration with bmux.
 
 ## Initial Package And Module Names
 
@@ -135,7 +145,7 @@ Phase 3B may scaffold the independent repository only if it follows these
 decisions exactly:
 
 1. Use `/Users/brianbusby/repos/provenance-engine` as the local repository path.
-2. Use `manaflow-ai/provenance-engine` as the remote owner/name.
+2. Use `BrianBusby/provenance-engine` as the initial GitHub repository.
 3. Use Swift 6 and Swift Package Manager.
 4. Create a standalone SwiftPM package named `ProvenanceEngine`.
 5. Create only the initial `ProvenanceEngineContracts` module unless explicitly

@@ -43,18 +43,16 @@ ADR-001 Phase 3A is complete as a local decision gate only. ADR-001 Phase 3B
 has created the minimal independent skeleton locally at
 `/Users/brianbusby/repos/provenance-engine`: a Swift 6 SwiftPM package named
 `ProvenanceEngine` with initial module `ProvenanceEngineContracts`. The
-canonical remote owner/name remains `manaflow-ai/provenance-engine`, but
-`git push -u origin main` is blocked because GitHub reports `Repository not
-found`. A 2026-07-21 retry confirmed `gh api
-repos/manaflow-ai/provenance-engine` returns HTTP 404, and creating the org repo
-with the authenticated `BrianBusby` account returns HTTP 403 because the account
-lacks organization admin access. The latest 2026-07-21 follow-up
-remote-unblock retry reconfirmed the same state: the authenticated account is
-still `BrianBusby`, `gh api repos/manaflow-ai/provenance-engine` still returns
-HTTP 404, org repo creation still returns HTTP 403, and `git -C
-/Users/brianbusby/repos/provenance-engine ls-remote origin` still fails with
-`Repository not found`. Create or grant access to that remote before relying on
-remote history.
+canonical GitHub repository is now `BrianBusby/provenance-engine` with remote
+URL `git@github.com:BrianBusby/provenance-engine.git`. The previous
+organization-owned target was an early ownership assumption and is superseded.
+The provenance engine is initially owned and maintained under the
+`BrianBusby` GitHub account; it may be transferred to a future organization,
+for example `manaflow-ai`, once the project matures. Repository ownership is an
+implementation detail and must not affect package names, APIs, module
+boundaries, documentation, storage defaults, or bmux integration. Create or
+gain access to `BrianBusby/provenance-engine` and push the Phase 3B local commit
+before relying on remote history.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -206,36 +204,37 @@ Latest completed provenance Phase 3B skeleton slice:
 - Public surface: Foundation-only health/capability contracts and a
   health-checking protocol.
 - Validated with SwiftPM describe.
-- Remote push is blocked: the canonical repo is not visible to the authenticated
-  account, and creating it under `manaflow-ai` requires org admin access.
+- Remote push is still pending after the canonical repository decision changed
+  to `BrianBusby/provenance-engine`.
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
 - Full ADR-001 Phase 3 remains incomplete.
 
-Latest attempted provenance Phase 3B remote unblock slice:
+Latest provenance Phase 3B remote ownership update slice:
 
-- This 2026-07-21 follow-up handoff attempt confirmed `gh api
-  repos/manaflow-ai/provenance-engine` still returns HTTP 404.
-- `gh api --method POST orgs/manaflow-ai/repos ...` still returns HTTP 403:
-  the authenticated `BrianBusby` account still lacks the organization admin
-  access needed to create `manaflow-ai/provenance-engine`.
-- `git -C /Users/brianbusby/repos/provenance-engine ls-remote origin` still
-  fails with `Repository not found`, so commit
-  `9e8fa620ccd04040968e0afab591feb48c8c11d0` has not been pushed to
-  `origin/main`.
+- This 2026-07-21 docs slice updates the canonical GitHub repository from
+  the previous organization-owned target to `BrianBusby/provenance-engine`.
+- The canonical remote URL is now
+  `git@github.com:BrianBusby/provenance-engine.git`.
+- A future organization transfer remains allowed, but it is not the current
+  remote gate.
+- Commit `9e8fa620ccd04040968e0afab591feb48c8c11d0` has not yet been pushed to
+  the new canonical `origin/main`.
+- This docs-only slice did not modify the local
+  `/Users/brianbusby/repos/provenance-engine` git remote; setting `origin` to
+  `git@github.com:BrianBusby/provenance-engine.git` remains part of the next
+  remote-unblock step.
 - `/Users/brianbusby/repos/provenance-engine` remains clean on branch `main` at
   `9e8fa620ccd04040968e0afab591feb48c8c11d0`.
-- Phase 3C was not started because the Phase 3B remote gate is still blocked.
+- Phase 3C was not started because the Phase 3B remote gate is still pending.
 - Phase 3B remains locally committed but unpushed.
 - Validation run:
   - `git status --short --branch`
   - `git rev-parse HEAD`
   - `git -C /Users/brianbusby/repos/provenance-engine status --short --branch`
   - `git -C /Users/brianbusby/repos/provenance-engine rev-parse HEAD`
-  - `git -C /Users/brianbusby/repos/provenance-engine remote -v`
-  - `gh api user --jq .login`
-  - `gh api repos/manaflow-ai/provenance-engine`
-  - `gh api --method POST orgs/manaflow-ai/repos -f name=provenance-engine -f private=true -f description='Local-first engineering provenance engine'`
-  - `git -C /Users/brianbusby/repos/provenance-engine ls-remote origin`
+  - Inspect the external engine repo's local `origin` URL.
+  - Repo-wide reference searches for the old organization target and remote URL
+    patterns requested by this slice.
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
 - Full ADR-001 Phase 3 remains incomplete.
 
@@ -243,7 +242,7 @@ Latest completed provenance planning slice:
 
 - `docs/context-efficiency/provenance-engine-phase3a-decisions.md` completes
   ADR-001 Phase 3A as a local decision gate. It resolves the canonical local
-  repo path, remote owner/name, V1 Swift/SwiftPM implementation choice, first
+  repo path, GitHub repository owner/name, V1 Swift/SwiftPM implementation choice, first
   artifact type, first package/module names, in-process-first SDK relationship,
   new-data storage default, and initial observability exclusion.
 - No scaffold was created in Phase 3A. No daemon, independent repository,
@@ -615,10 +614,10 @@ Stay narrow and read-only. Prefer package-level Swift tests unless a CLI regress
 
 ADR-001 Phase 3 target:
 
-1. Create or grant access to the canonical remote
-   `manaflow-ai/provenance-engine`. The authenticated `BrianBusby` account can
-   read neither the repo nor create org repos today; after access/admin rights
-   are fixed, push the existing local Phase 3B skeleton commit from
+1. Create or grant access to the canonical GitHub repository
+   `BrianBusby/provenance-engine`, set the local engine repo's `origin` to
+   `git@github.com:BrianBusby/provenance-engine.git`, and push the existing
+   local Phase 3B skeleton commit from
    `/Users/brianbusby/repos/provenance-engine`.
 2. After the skeleton exists remotely, the next implementation target is Phase
    3C contract lift into `ProvenanceEngineContracts`, still without bmux

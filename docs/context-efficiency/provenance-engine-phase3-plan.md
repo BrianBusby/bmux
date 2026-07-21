@@ -38,7 +38,7 @@ Reasons:
   the independent product boundary is explicit.
 
 Scaffolding is allowed only after local docs name the canonical repo path and
-remote owner/name, V1 implementation language and package manager, first
+GitHub repository owner/name, V1 implementation language and package manager, first
 artifact shape, SDK/daemon relationship, engine-owned new-data storage path, and
 initial package/module names.
 
