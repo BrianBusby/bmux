@@ -57,6 +57,9 @@ repo's `origin` points at the canonical URL, and Phase 3B commit
 ADR-001 Phase 3C has lifted the initial in-process public contract surface into
 `ProvenanceEngineContracts` in the independent engine repo at commit
 `0b2529170ef4b0d67f8050f89786d439bbab6d27`.
+ADR-001 Phase 3D has started with the smallest storage boundary: internal
+engine-owned SQLite connection and statement support in `ProvenanceEngineSQLite`
+at commit `ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -254,6 +257,31 @@ Latest provenance Phase 3B remote unblock slice:
   - `git push`
   - Final clean-state checks for bmux and the engine repo.
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
+- Full ADR-001 Phase 3 remains incomplete.
+
+Latest provenance Phase 3D storage-support slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac` (`Add initial
+  SQLite storage support`)
+- Pushed to canonical `origin/main`.
+- Added internal `ProvenanceEngineSQLite` target with engine-owned SQLite
+  connection, statement, and error support plus SwiftPM behavior tests.
+- Kept this Phase 3D storage boundary intentionally below the public SDK:
+  `ProvenanceEngineContracts` remains the only library product, and no bmux
+  consumer imports or behavior changed.
+- Did not move `WorkProvenanceStore`, schemas, migrations, storage paths,
+  bmux Git/workspace adapters, CLI formatting/fallback behavior, observability
+  storage, daemon, IPC, launch agent, retrieval, lifecycle policy, UI, or
+  automatic orchestration.
+- Validation run:
+  - `swift test --package-path /Users/brianbusby/repos/provenance-engine`
+  - `git -C /Users/brianbusby/repos/provenance-engine diff --check`
+  - `git -C /Users/brianbusby/repos/provenance-engine diff --cached --check`
+  - `git -C /Users/brianbusby/repos/provenance-engine ls-remote origin refs/heads/main`
+- Localization audit: changed only engine internal Swift package files,
+  package README, and bmux internal context-efficiency docs; no bmux
+  CLI/UI/help/settings/localized strings changed.
 - Full ADR-001 Phase 3 remains incomplete.
 
 Latest provenance Phase 3C contract-lift slice:
@@ -651,10 +679,14 @@ ADR-001 Phase 3 target:
 1. Phase 3C contract lift is complete: commit
    `0b2529170ef4b0d67f8050f89786d439bbab6d27` is pushed to
    `BrianBusby/provenance-engine` on `origin/main`.
-2. The next implementation target is Phase 3D storage lift, starting with
-   reusable store logic only after deciding the smallest storage boundary.
-   Keep bmux consumer imports and behavior changes out unless explicitly scoped.
-3. Do not start Phase 4 reconnect, Phase 5 migration, retrieval, lifecycle
+2. Phase 3D initial storage support is complete: commit
+   `ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac` is pushed to
+   `BrianBusby/provenance-engine` on `origin/main`.
+3. The next implementation target can continue Phase 3D only after deciding the
+   next smallest storage boundary. Likely candidates are engine-owned schema
+   versioning/migration scaffolding or a minimal repository actor over the new
+   SQLite support, still without bmux consumer imports or behavior changes.
+4. Do not start Phase 4 reconnect, Phase 5 migration, retrieval, lifecycle
    policy, UI, broad observability, or automatic orchestration.
 
 Original-plan Phase 3 targets:
