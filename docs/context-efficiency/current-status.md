@@ -12,12 +12,13 @@ This file is the live handoff index for the context-efficiency roadmap. Read it 
 4. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
 5. `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`
 6. `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`
-7. `docs/context-efficiency/subsession-delegation-integration-plan.md`
-8. `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
-9. `docs/context-efficiency/provenance-observability-integration-plan.md`
-10. `docs/context-efficiency/subsession-delegation-phase-a-report.md`
-11. `docs/context-efficiency/milestones.md`
-12. Relevant bmux skills:
+7. `docs/context-efficiency/provenance-engine-phase3-plan.md`
+8. `docs/context-efficiency/subsession-delegation-integration-plan.md`
+9. `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
+10. `docs/context-efficiency/provenance-observability-integration-plan.md`
+11. `docs/context-efficiency/subsession-delegation-phase-a-report.md`
+12. `docs/context-efficiency/milestones.md`
+13. Relevant bmux skills:
    - `bmux-architecture` before Swift package/API changes.
    - `bmux-dev-workflow` before tagged builds or project wiring.
    - `bmux-testing` before test changes or verification decisions.
@@ -32,6 +33,7 @@ ADR-001 is accepted and now controls the product boundary for provenance extract
 - `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
 - `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`
 - `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`
+- `docs/context-efficiency/provenance-engine-phase3-plan.md`
 
 Treat the Provenance Engine as an independent local-first product with bmux as its first client. Future provenance implementation should move toward SDK/API boundaries, a local daemon, independent versioning, and no engine dependency on bmux internals. Existing `WorkProvenance`, `BmuxContextEfficiency`, and `ProvenanceObservability` work remains useful migration source material, but new extraction work must not deepen bmux-specific storage or domain coupling.
 
@@ -98,6 +100,12 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 Current checkout:
 
 - Branch: `provenance-extraction-phase2-contracts`
+- This 2026-07-21 slice started ADR-001 Phase 3 with a docs-only
+  implementation plan and boundary inventory in
+  `docs/context-efficiency/provenance-engine-phase3-plan.md`.
+- No independent repository/package scaffold was created because local docs still
+  leave the V1 implementation language, repo path, SDK/daemon relationship,
+  engine storage path, and initial package/module names unresolved.
 - This 2026-07-21 slice converted `bmux provenance context current` to query the in-process `ProvenanceEngineClient.currentContext(...)` contract through `WorkProvenanceStore`.
 - This 2026-07-21 slice converted `bmux provenance worktrees list` to query the in-process `ProvenanceEngineClient.worktrees(...)` contract through `WorkProvenanceStore`.
 - This 2026-07-20 slice converted `bmux provenance explain <path>` to query the in-process `ProvenanceEngineClient.fileExplanation(...)` contract through `WorkProvenanceStore`.
@@ -154,6 +162,13 @@ Files changed in the latest implementation slice:
 
 Latest completed provenance planning slice:
 
+- `docs/context-efficiency/provenance-engine-phase3-plan.md` starts ADR-001
+  Phase 3 with an implementation sequence, boundary inventory, no-scaffold
+  decision, validation strategy, and next safe Phase 3 gate.
+- The Phase 3 plan explicitly does not complete Phase 3.
+- It creates no repository/package scaffold, SDK, daemon, storage move, schema
+  move, data migration, bmux reconnect, retrieval layer, lifecycle policy, UI,
+  or observability expansion.
 - `docs/context-efficiency/provenance-engine-extraction-phase0-report.md` completes ADR-001 Phase 0 by auditing current provenance modules, schemas, storage paths, capture paths, CLI/UI consumers, shared types, bmux assumptions, tests, reusable pieces, replacement targets, coupling risks, unknowns, and the proposed change map.
 - The report concludes that extraction should center on the existing `WorkProvenance` append-only event/projection model, while bmux keeps capture adapters, UI, workspace/session orchestration, and visualization.
 - `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md` completes ADR-001 Phase 1 contract planning by naming current behavior invariants, the first narrow public contract surface, the bmux adapter boundary, and direct SQLite debt to remove later.
@@ -509,6 +524,14 @@ That closure slice kept missing-timestamp facts importable, reported bounded `mi
 ## Good Next Targets
 
 Stay narrow and read-only. Prefer package-level Swift tests unless a CLI regression is specifically exercising the built binary.
+
+ADR-001 Phase 3 target:
+
+1. Resolve Phase 3A in local docs before scaffolding.
+2. Scaffold only after the repo, language, SDK/daemon, storage, and package
+   choices are explicit.
+3. Do not start Phase 4 reconnect, Phase 5 migration, retrieval, lifecycle
+   policy, UI, broad observability, or automatic orchestration.
 
 Original-plan Phase 3 targets:
 
