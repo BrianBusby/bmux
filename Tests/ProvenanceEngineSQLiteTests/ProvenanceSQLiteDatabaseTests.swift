@@ -533,6 +533,99 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryRebuildsProjectionTablesFromAppendOrderEventLedger() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let activeSession = ProvenanceSessionRecord(
+            id: "session-1",
+            agentKind: "codex",
+            status: "active",
+            startedAt: Date(timeIntervalSince1970: 1_800_000_000),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_001)
+        )
+        let completedSession = ProvenanceSessionRecord(
+            id: activeSession.id,
+            agentKind: activeSession.agentKind,
+            status: "completed",
+            startedAt: activeSession.startedAt,
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_010)
+        )
+        let firstEvent = ProvenanceEvent(
+            id: "event-active-session",
+            eventType: .sessionObserved,
+            timestamp: activeSession.updatedAt,
+            sessionID: activeSession.id,
+            source: .observed,
+            confidence: .medium,
+            payload: ProvenanceEventPayload(session: activeSession)
+        )
+        let secondEvent = ProvenanceEvent(
+            id: "event-completed-session",
+            eventType: .sessionObserved,
+            timestamp: completedSession.updatedAt,
+            sessionID: completedSession.id,
+            source: .declared,
+            confidence: .high,
+            payload: ProvenanceEventPayload(session: completedSession)
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(firstEvent)
+        try await repository.appendEvent(secondEvent)
+
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute(
+            """
+            UPDATE provenance_sessions
+            SET status = 'corrupted',
+                updated_at_seconds = 1
+            WHERE id = 'session-1'
+            """
+        )
+
+        #expect(try await repository.session(id: activeSession.id)?.status == "corrupted")
+
+        let replayedCount = try await repository.rebuildProjectionsFromEventLedger(batchSize: 0)
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let ledgerEntries = try await reader.eventLedgerEntries(limit: 10)
+
+        #expect(replayedCount == 2)
+        #expect(try await reader.session(id: activeSession.id) == completedSession)
+        #expect(ledgerEntries.map(\.event) == [firstEvent, secondEvent])
+    }
+
+    @Test
+    func repositoryRebuildClearsProjectionTablesWithoutLedgerEvents() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute(
+            """
+            INSERT INTO provenance_sessions (
+                id,
+                agent_kind,
+                status,
+                updated_at_seconds
+            ) VALUES (
+                'session-stale',
+                'codex',
+                'active',
+                1800000000
+            )
+            """
+        )
+
+        #expect(try await repository.session(id: "session-stale") != nil)
+
+        let replayedCount = try await repository.rebuildProjectionsFromEventLedger()
+
+        #expect(replayedCount == 0)
+        #expect(try await repository.session(id: "session-stale") == nil)
+        #expect(try await repository.eventLedgerEntries(limit: 10).isEmpty)
+    }
+
+    @Test
     func sqliteRepositorySatisfiesEngineClientContract() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }

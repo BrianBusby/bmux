@@ -62,39 +62,7 @@ actor ProvenanceSQLiteRepository {
         try database.execute("BEGIN IMMEDIATE TRANSACTION")
         do {
             try insertEvent(event)
-            if let repository = event.payload.repository {
-                try upsertRepository(repository)
-            }
-            if let worktree = event.payload.worktree {
-                try upsertWorktree(worktree)
-            }
-            if let session = event.payload.session {
-                try upsertSession(session)
-            }
-            if let sessionRelationship = event.payload.sessionRelationship {
-                try upsertSessionRelationship(sessionRelationship)
-            }
-            for externalIdentity in event.payload.externalIdentities {
-                try upsertExternalIdentity(externalIdentity)
-            }
-            if let workItem = event.payload.workItem {
-                try upsertWorkItem(workItem)
-            }
-            if let contribution = event.payload.contribution {
-                try upsertContribution(contribution)
-            }
-            if let checkpoint = event.payload.checkpoint {
-                try upsertCheckpoint(checkpoint)
-            }
-            if let changeSet = event.payload.changeSet {
-                try upsertChangeSet(changeSet)
-            }
-            for fileChange in event.payload.fileChanges {
-                try upsertFileChange(fileChange)
-            }
-            if let validationRun = event.payload.validationRun {
-                try upsertValidationRun(validationRun)
-            }
+            try applyProjectionUpdates(from: event.payload)
             try database.execute("COMMIT")
         } catch {
             try? database.execute("ROLLBACK")
@@ -186,6 +154,40 @@ actor ProvenanceSQLiteRepository {
             )
         }
         return entries
+    }
+
+    /// Rebuilds current-state projections by replaying the immutable event ledger in append order.
+    ///
+    /// - Parameter batchSize: Maximum number of ledger entries decoded per cursor read.
+    /// - Returns: Number of ledger events replayed into projection tables.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the rebuild or stored enum data is invalid.
+    func rebuildProjectionsFromEventLedger(batchSize: Int = 1_000) throws -> Int {
+        let rowLimit = max(1, batchSize)
+        var afterSequence: Int?
+        var replayedCount = 0
+
+        try database.execute("BEGIN IMMEDIATE TRANSACTION")
+        do {
+            try clearProjectionTables()
+            while true {
+                let entries = try eventLedgerEntries(afterSequence: afterSequence, limit: rowLimit)
+                guard !entries.isEmpty else { break }
+
+                for entry in entries {
+                    try applyProjectionUpdates(from: entry.event.payload)
+                    afterSequence = entry.sequence
+                    replayedCount += 1
+                }
+
+                guard entries.count == rowLimit else { break }
+            }
+            try database.execute("COMMIT")
+        } catch {
+            try? database.execute("ROLLBACK")
+            throw error
+        }
+
+        return replayedCount
     }
 
     /// Reads one current-state repository projection by stable ID.
@@ -1543,6 +1545,60 @@ actor ProvenanceSQLiteRepository {
         try insert.bind(payloadJSON, at: 11)
 
         _ = try insert.step()
+    }
+
+    private func applyProjectionUpdates(from payload: ProvenanceEventPayload) throws {
+        if let repository = payload.repository {
+            try upsertRepository(repository)
+        }
+        if let worktree = payload.worktree {
+            try upsertWorktree(worktree)
+        }
+        if let session = payload.session {
+            try upsertSession(session)
+        }
+        if let sessionRelationship = payload.sessionRelationship {
+            try upsertSessionRelationship(sessionRelationship)
+        }
+        for externalIdentity in payload.externalIdentities {
+            try upsertExternalIdentity(externalIdentity)
+        }
+        if let workItem = payload.workItem {
+            try upsertWorkItem(workItem)
+        }
+        if let contribution = payload.contribution {
+            try upsertContribution(contribution)
+        }
+        if let checkpoint = payload.checkpoint {
+            try upsertCheckpoint(checkpoint)
+        }
+        if let changeSet = payload.changeSet {
+            try upsertChangeSet(changeSet)
+        }
+        for fileChange in payload.fileChanges {
+            try upsertFileChange(fileChange)
+        }
+        if let validationRun = payload.validationRun {
+            try upsertValidationRun(validationRun)
+        }
+    }
+
+    private func clearProjectionTables() throws {
+        for tableName in [
+            "provenance_validation_runs",
+            "provenance_file_changes",
+            "provenance_change_sets",
+            "provenance_checkpoints",
+            "provenance_work_contributions",
+            "provenance_work_items",
+            "provenance_session_external_identities",
+            "provenance_session_relationships",
+            "provenance_sessions",
+            "provenance_worktrees",
+            "provenance_repositories",
+        ] {
+            try database.execute("DELETE FROM \(tableName)")
+        }
     }
 
     private func upsertRepository(_ repository: ProvenanceRepositoryRecord) throws {
