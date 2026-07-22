@@ -41,6 +41,12 @@ actor ProvenanceSQLiteRepository {
         try database.execute("BEGIN IMMEDIATE TRANSACTION")
         do {
             try insertEvent(event)
+            if let repository = event.payload.repository {
+                try upsertRepository(repository)
+            }
+            if let worktree = event.payload.worktree {
+                try upsertWorktree(worktree)
+            }
             if let session = event.payload.session {
                 try upsertSession(session)
             }
@@ -109,6 +115,135 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
+    /// Reads one current-state repository projection by stable ID.
+    ///
+    /// - Parameter id: Stable repository identifier.
+    /// - Returns: The persisted repository projection, or `nil` when the ID is unknown.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func repository(id: String) throws -> ProvenanceRepositoryRecord? {
+        let query = try database.prepare(
+            """
+            SELECT
+                path,
+                common_directory,
+                remote_slug,
+                created_at_seconds,
+                updated_at_seconds
+            FROM provenance_repositories
+            WHERE id = ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(id, at: 1)
+        guard try query.step() else { return nil }
+
+        return ProvenanceRepositoryRecord(
+            id: id,
+            path: query.string(at: 0) ?? "",
+            commonDirectory: query.string(at: 1),
+            remoteSlug: query.string(at: 2),
+            createdAt: Date(timeIntervalSince1970: query.double(at: 3) ?? 0),
+            updatedAt: Date(timeIntervalSince1970: query.double(at: 4) ?? 0)
+        )
+    }
+
+    /// Reads one current-state worktree projection by stable ID.
+    ///
+    /// - Parameter id: Stable worktree identifier.
+    /// - Returns: The persisted worktree projection, or `nil` when the ID is unknown.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func worktree(id: String) throws -> ProvenanceWorktreeRecord? {
+        let query = try database.prepare(
+            """
+            SELECT
+                repository_id,
+                path,
+                branch,
+                base_commit,
+                current_head,
+                is_dirty,
+                status,
+                last_reconciled_at_seconds,
+                updated_at_seconds
+            FROM provenance_worktrees
+            WHERE id = ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(id, at: 1)
+        guard try query.step() else { return nil }
+
+        return ProvenanceWorktreeRecord(
+            id: id,
+            repositoryID: query.string(at: 0) ?? "",
+            path: query.string(at: 1) ?? "",
+            branch: query.string(at: 2),
+            baseCommit: query.string(at: 3),
+            currentHEAD: query.string(at: 4),
+            isDirty: query.int(at: 5) != 0,
+            status: query.string(at: 6) ?? "",
+            lastReconciledAt: query.double(at: 7).map { Date(timeIntervalSince1970: $0) },
+            updatedAt: Date(timeIntervalSince1970: query.double(at: 8) ?? 0)
+        )
+    }
+
+    /// Lists current-state worktree projections with linked repository projections when available.
+    ///
+    /// - Parameter request: Worktree-list query parameters.
+    /// - Returns: Worktrees sorted by newest update first.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func worktrees(_ request: ProvenanceWorktreeListRequest) throws -> ProvenanceWorktreeListResponse {
+        let rowLimit = request.limit.map { max(0, $0) }
+        var sql = """
+            SELECT
+                id,
+                repository_id,
+                path,
+                branch,
+                base_commit,
+                current_head,
+                is_dirty,
+                status,
+                last_reconciled_at_seconds,
+                updated_at_seconds
+            FROM provenance_worktrees
+            """
+        if request.repositoryID != nil {
+            sql += "\nWHERE repository_id = ?"
+        }
+        sql += "\nORDER BY updated_at_seconds DESC, rowid DESC"
+        if rowLimit != nil {
+            sql += "\nLIMIT ?"
+        }
+
+        let query = try database.prepare(sql)
+        defer { query.finalize() }
+
+        var bindIndex: Int32 = 1
+        if let repositoryID = request.repositoryID {
+            try query.bind(repositoryID, at: bindIndex)
+            bindIndex += 1
+        }
+        if let rowLimit {
+            try query.bind(rowLimit, at: bindIndex)
+        }
+
+        var entries: [ProvenanceWorktreeListEntry] = []
+        while try query.step() {
+            guard let worktree = worktree(from: query) else { continue }
+            entries.append(
+                ProvenanceWorktreeListEntry(
+                    worktree: worktree,
+                    repository: try repository(id: worktree.repositoryID)
+                )
+            )
+        }
+
+        return ProvenanceWorktreeListResponse(worktrees: entries)
+    }
+
     /// Reads one current-state session projection by stable ID.
     ///
     /// - Parameter id: Stable session identifier.
@@ -145,6 +280,28 @@ actor ProvenanceSQLiteRepository {
             status: query.string(at: 5) ?? "",
             startedAt: query.double(at: 6).map { Date(timeIntervalSince1970: $0) },
             updatedAt: Date(timeIntervalSince1970: query.double(at: 7) ?? 0)
+        )
+    }
+
+    private func worktree(from query: ProvenanceSQLiteStatement) -> ProvenanceWorktreeRecord? {
+        guard let id = query.string(at: 0),
+              let repositoryID = query.string(at: 1),
+              let path = query.string(at: 2),
+              let status = query.string(at: 7) else {
+            return nil
+        }
+
+        return ProvenanceWorktreeRecord(
+            id: id,
+            repositoryID: repositoryID,
+            path: path,
+            branch: query.string(at: 3),
+            baseCommit: query.string(at: 4),
+            currentHEAD: query.string(at: 5),
+            isDirty: query.int(at: 6) != 0,
+            status: status,
+            lastReconciledAt: query.double(at: 8).map { Date(timeIntervalSince1970: $0) },
+            updatedAt: Date(timeIntervalSince1970: query.double(at: 9) ?? 0)
         )
     }
 
@@ -186,6 +343,79 @@ actor ProvenanceSQLiteRepository {
         try insert.bind(payloadJSON, at: 11)
 
         _ = try insert.step()
+    }
+
+    private func upsertRepository(_ repository: ProvenanceRepositoryRecord) throws {
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_repositories (
+                id,
+                path,
+                common_directory,
+                remote_slug,
+                created_at_seconds,
+                updated_at_seconds
+            ) VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                path = excluded.path,
+                common_directory = excluded.common_directory,
+                remote_slug = excluded.remote_slug,
+                updated_at_seconds = excluded.updated_at_seconds
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(repository.id, at: 1)
+        try upsert.bind(repository.path, at: 2)
+        try upsert.bind(repository.commonDirectory, at: 3)
+        try upsert.bind(repository.remoteSlug, at: 4)
+        try upsert.bind(repository.createdAt.timeIntervalSince1970, at: 5)
+        try upsert.bind(repository.updatedAt.timeIntervalSince1970, at: 6)
+
+        _ = try upsert.step()
+    }
+
+    private func upsertWorktree(_ worktree: ProvenanceWorktreeRecord) throws {
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_worktrees (
+                id,
+                repository_id,
+                path,
+                branch,
+                base_commit,
+                current_head,
+                is_dirty,
+                status,
+                last_reconciled_at_seconds,
+                updated_at_seconds
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                repository_id = excluded.repository_id,
+                path = excluded.path,
+                branch = excluded.branch,
+                base_commit = excluded.base_commit,
+                current_head = excluded.current_head,
+                is_dirty = excluded.is_dirty,
+                status = excluded.status,
+                last_reconciled_at_seconds = excluded.last_reconciled_at_seconds,
+                updated_at_seconds = excluded.updated_at_seconds
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(worktree.id, at: 1)
+        try upsert.bind(worktree.repositoryID, at: 2)
+        try upsert.bind(worktree.path, at: 3)
+        try upsert.bind(worktree.branch, at: 4)
+        try upsert.bind(worktree.baseCommit, at: 5)
+        try upsert.bind(worktree.currentHEAD, at: 6)
+        try upsert.bind(worktree.isDirty ? 1 : 0, at: 7)
+        try upsert.bind(worktree.status, at: 8)
+        try upsert.bind(worktree.lastReconciledAt?.timeIntervalSince1970, at: 9)
+        try upsert.bind(worktree.updatedAt.timeIntervalSince1970, at: 10)
+
+        _ = try upsert.step()
     }
 
     private func upsertSession(_ session: ProvenanceSessionRecord) throws {
@@ -285,6 +515,51 @@ actor ProvenanceSQLiteRepository {
                 """
                 CREATE INDEX provenance_sessions_status_index
                 ON provenance_sessions (status, updated_at_seconds)
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 3,
+            statements: [
+                """
+                CREATE TABLE provenance_repositories (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    path TEXT NOT NULL,
+                    common_directory TEXT,
+                    remote_slug TEXT,
+                    created_at_seconds REAL NOT NULL,
+                    updated_at_seconds REAL NOT NULL
+                )
+                """,
+                """
+                CREATE INDEX provenance_repositories_path_index
+                ON provenance_repositories (path)
+                """,
+                """
+                CREATE INDEX provenance_repositories_remote_slug_index
+                ON provenance_repositories (remote_slug)
+                """,
+                """
+                CREATE TABLE provenance_worktrees (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    repository_id TEXT NOT NULL,
+                    path TEXT NOT NULL,
+                    branch TEXT,
+                    base_commit TEXT,
+                    current_head TEXT,
+                    is_dirty INTEGER NOT NULL,
+                    status TEXT NOT NULL,
+                    last_reconciled_at_seconds REAL,
+                    updated_at_seconds REAL NOT NULL
+                )
+                """,
+                """
+                CREATE INDEX provenance_worktrees_repository_index
+                ON provenance_worktrees (repository_id, updated_at_seconds)
+                """,
+                """
+                CREATE INDEX provenance_worktrees_path_index
+                ON provenance_worktrees (path, updated_at_seconds)
                 """,
             ]
         ),

@@ -377,11 +377,13 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 2)
+        #expect(try await repository.schemaVersion() == 3)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
         #expect(try Self.tableExists("provenance_sessions", in: database))
+        #expect(try Self.tableExists("provenance_repositories", in: database))
+        #expect(try Self.tableExists("provenance_worktrees", in: database))
     }
 
     @Test
@@ -494,6 +496,175 @@ struct ProvenanceSQLiteDatabaseTests {
         let repository = try ProvenanceSQLiteRepository(url: url)
 
         #expect(try await repository.session(id: "missing-session") == nil)
+    }
+
+    @Test
+    func repositoryListsWorktreesNewestFirstWithRepositoryFilterAndLimit() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let firstRepository = ProvenanceRepositoryRecord(
+            id: "repository-1",
+            path: "/repos/one",
+            commonDirectory: "/repos/one/.git",
+            remoteSlug: "owner/one",
+            createdAt: Date(timeIntervalSince1970: 1_800_000_000),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_001)
+        )
+        let secondRepository = ProvenanceRepositoryRecord(
+            id: "repository-2",
+            path: "/repos/two",
+            commonDirectory: "/repos/two/.git",
+            remoteSlug: "owner/two",
+            createdAt: Date(timeIntervalSince1970: 1_800_000_010),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_011)
+        )
+        let oldestWorktree = ProvenanceWorktreeRecord(
+            id: "worktree-oldest",
+            repositoryID: firstRepository.id,
+            path: "/repos/one/oldest",
+            branch: "feature/oldest",
+            baseCommit: "base-1",
+            currentHEAD: "head-1",
+            isDirty: false,
+            status: "active",
+            lastReconciledAt: Date(timeIntervalSince1970: 1_800_000_002),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_003)
+        )
+        let newestWorktree = ProvenanceWorktreeRecord(
+            id: "worktree-newest",
+            repositoryID: firstRepository.id,
+            path: "/repos/one/newest",
+            branch: "feature/newest",
+            baseCommit: "base-2",
+            currentHEAD: "head-2",
+            isDirty: true,
+            status: "active",
+            lastReconciledAt: Date(timeIntervalSince1970: 1_800_000_012),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_013)
+        )
+        let otherRepositoryWorktree = ProvenanceWorktreeRecord(
+            id: "worktree-other",
+            repositoryID: secondRepository.id,
+            path: "/repos/two/other",
+            branch: "feature/other",
+            baseCommit: "base-3",
+            currentHEAD: "head-3",
+            isDirty: false,
+            status: "paused",
+            lastReconciledAt: Date(timeIntervalSince1970: 1_800_000_022),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_023)
+        )
+
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-repository-1",
+                eventType: .repositoryObserved,
+                timestamp: firstRepository.updatedAt,
+                repositoryID: firstRepository.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(repository: firstRepository)
+            )
+        )
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-repository-2",
+                eventType: .repositoryObserved,
+                timestamp: secondRepository.updatedAt,
+                repositoryID: secondRepository.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(repository: secondRepository)
+            )
+        )
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-worktree-oldest",
+                eventType: .worktreeObserved,
+                timestamp: oldestWorktree.updatedAt,
+                repositoryID: oldestWorktree.repositoryID,
+                worktreeID: oldestWorktree.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(worktree: oldestWorktree)
+            )
+        )
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-worktree-newest",
+                eventType: .worktreeObserved,
+                timestamp: newestWorktree.updatedAt,
+                repositoryID: newestWorktree.repositoryID,
+                worktreeID: newestWorktree.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(worktree: newestWorktree)
+            )
+        )
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-worktree-other",
+                eventType: .worktreeObserved,
+                timestamp: otherRepositoryWorktree.updatedAt,
+                repositoryID: otherRepositoryWorktree.repositoryID,
+                worktreeID: otherRepositoryWorktree.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(worktree: otherRepositoryWorktree)
+            )
+        )
+
+        let allWorktrees = try await repository.worktrees(ProvenanceWorktreeListRequest())
+        #expect(allWorktrees.worktrees.map(\.worktree.id) == [
+            otherRepositoryWorktree.id,
+            newestWorktree.id,
+            oldestWorktree.id,
+        ])
+
+        let firstRepositoryWorktrees = try await repository.worktrees(
+            ProvenanceWorktreeListRequest(repositoryID: firstRepository.id, limit: 1)
+        )
+        #expect(firstRepositoryWorktrees.worktrees == [
+            ProvenanceWorktreeListEntry(worktree: newestWorktree, repository: firstRepository),
+        ])
+
+        let zeroLimit = try await repository.worktrees(ProvenanceWorktreeListRequest(limit: -1))
+        #expect(zeroLimit.worktrees.isEmpty)
+    }
+
+    @Test
+    func repositoryListsWorktreesWithoutRepositoryProjectionWhenMissing() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let orphanedWorktree = ProvenanceWorktreeRecord(
+            id: "worktree-orphaned",
+            repositoryID: "missing-repository",
+            path: "/repos/orphaned",
+            isDirty: false,
+            status: "active",
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_000)
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-worktree-orphaned",
+                eventType: .worktreeObserved,
+                timestamp: orphanedWorktree.updatedAt,
+                repositoryID: orphanedWorktree.repositoryID,
+                worktreeID: orphanedWorktree.id,
+                source: .observed,
+                confidence: .medium,
+                payload: ProvenanceEventPayload(worktree: orphanedWorktree)
+            )
+        )
+
+        let response = try await repository.worktrees(ProvenanceWorktreeListRequest())
+
+        #expect(response.worktrees == [
+            ProvenanceWorktreeListEntry(worktree: orphanedWorktree, repository: nil),
+        ])
     }
 
     @Test
