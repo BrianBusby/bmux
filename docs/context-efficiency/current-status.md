@@ -153,6 +153,10 @@ A twenty-second Phase 3D storage slice added internal bounded SQLite
 storage-repair attempt metadata and bounded newest-first repair-attempt reads,
 on branch `provenance-session-tree-storage`, at commit
 `fb1eda21b5303a9cffdbbbe9696eca25daf9010f`.
+A twenty-third Phase 3D storage slice added internal bounded SQLite
+schema-migration metadata and bounded newest-first schema-migration reads, on
+branch `provenance-session-tree-storage`, at commit
+`b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -253,10 +257,10 @@ Current checkout:
   internal bounded projection-count validation, internal bounded
   projection-key validation, internal bounded projection-drift repair, an
   internal bounded storage integrity report, internal bounded
-  storage-integrity repair gating, and internal bounded storage-repair attempt
-  metadata in
+  storage-integrity repair gating, internal bounded storage-repair attempt
+  metadata, and internal bounded schema-migration metadata in
   `ProvenanceEngineSQLite`. Latest engine commit:
-  `fb1eda21b5303a9cffdbbbe9696eca25daf9010f` on
+  `b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
@@ -320,7 +324,41 @@ Files changed in the latest implementation slice:
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 - `tests/test_context_efficiency_cli.py`
 
-Latest provenance Phase 3D storage-repair attempt metadata slice:
+Latest provenance Phase 3D schema-migration metadata slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5` (`Record schema
+  migrations`)
+- Branch: `provenance-session-tree-storage`; draft PR:
+  https://github.com/BrianBusby/provenance-engine/pull/1.
+- `ProvenanceEngineContracts` remains the only public library product.
+- Added internal `ProvenanceSQLiteSchemaMigrationRecord`, a version-8
+  `provenance_schema_migrations` metadata table, automatic migration recording
+  from `ProvenanceSQLiteMigrator` once that table exists, and bounded
+  `ProvenanceSQLiteRepository.schemaMigrationRecords(limit:)`.
+- Schema-migration metadata records the metadata row sequence, target schema
+  version, and applied timestamp. Existing version-1 through version-7
+  migrations remain intentionally unbackfilled; version 8 is the first recorded
+  default migration and future migrations will record through the same internal
+  path.
+- Kept schema-migration metadata below the public SDK/product surface; no bmux
+  consumer imports or runtime behavior changed.
+- Added behavior coverage for generic migration recording when the metadata
+  table exists, default repository bootstrap of the version-8 table, and bounded
+  newest-first schema-migration reads.
+- No public storage SDK/product, daemon, IPC, launch agent, CLI, retrieval,
+  lifecycle policy, UI, observability expansion, bmux storage move, bmux schema
+  move, or data migration was added.
+- Validation passed with the standalone engine SwiftPM suite and diff checks.
+- Localization audit: changed only engine internal Swift package files, package
+  README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
+  settings/localized strings changed.
+- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
+  engine-owned storage boundary over existing contracts. Keep it internal and
+  do not start public SDK export, daemon, bmux reconnect, storage migration,
+  retrieval, lifecycle policy, UI, or broad observability expansion.
+
+Previous provenance Phase 3D storage-repair attempt metadata slice:
 
 - External repo path: `/Users/brianbusby/repos/provenance-engine`
 - Commit: `fb1eda21b5303a9cffdbbbe9696eca25daf9010f` (`Record storage
@@ -348,10 +386,6 @@ Latest provenance Phase 3D storage-repair attempt metadata slice:
 - Localization audit: changed only engine internal Swift package files, package
   README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
   settings/localized strings changed.
-- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
-  engine-owned storage boundary over existing contracts. Keep it internal and
-  do not start public SDK export, daemon, bmux reconnect, storage migration,
-  retrieval, lifecycle policy, UI, or broad observability expansion.
 
 Latest provenance Phase 3D projection-key validation slice:
 

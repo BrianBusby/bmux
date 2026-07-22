@@ -121,10 +121,13 @@ gates projection repair through the existing integrity report on branch
 `1d3bd06aac0fd7e9f63ed18d6b2192a6a75492d9`. A twenty-second Phase 3D storage
 slice added internal bounded SQLite storage-repair attempt metadata and bounded
 newest-first repair-attempt reads on branch `provenance-session-tree-storage`,
-at commit `fb1eda21b5303a9cffdbbbe9696eca25daf9010f`. No public storage SDK,
-daemon, storage path move, schema move, data migration, bmux reconnect,
-retrieval layer, lifecycle policy, UI, or broad observability expansion has
-been created.
+at commit `fb1eda21b5303a9cffdbbbe9696eca25daf9010f`. A twenty-third Phase 3D
+storage slice added internal bounded SQLite schema-migration metadata and
+bounded newest-first schema-migration reads on branch
+`provenance-session-tree-storage`, at commit
+`b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5`. No public storage SDK, daemon,
+storage path move, schema move, data migration, bmux reconnect, retrieval layer,
+lifecycle policy, UI, or broad observability expansion has been created.
 Full ADR-001 Phase 3 is still not complete.
 
 The ADR-001 Phase 0 migration audit is complete in `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`. The ADR-001 Phase 1 behavior characterization and minimum contract plan is complete in `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`. The first Phase 2 slice introduced internal protocol/request/response names for append, session-tree, and file-explanation behavior around the current store. The second Phase 2 slice introduced normalized subsession-lifecycle request/response/protocol names around the current lifecycle recorder. The third Phase 2 slice introduced a separate lifecycle-trace query contract around `ProvenanceObservabilityStore`. The fourth Phase 2 slice converted `bmux provenance sessions tree <session-id>` onto `ProvenanceEngineClient.sessionTree(...)` while preserving existing CLI JSON/text/no-database behavior. The fifth Phase 2 slice converted `bmux provenance explain <path>` onto `ProvenanceEngineClient.fileExplanation(...)` while preserving existing CLI JSON/text/no-database/no-worktree/no-file behavior. The sixth Phase 2 slice converted `bmux provenance worktrees list` onto `ProvenanceEngineClient.worktrees(...)` while preserving existing CLI JSON/text/no-database/empty-database behavior and newest-first ordering. The seventh Phase 2 slice converted `bmux provenance context current` onto `ProvenanceEngineClient.currentContext(...)` while preserving existing CLI JSON/text/no-database/no-worktree/empty-section behavior, section bounds, and ordering. No further ADR-001 Phase 2 authoritative provenance CLI conversion is currently identified; pause before starting daemon, SDK implementation, storage/schema migration, retrieval, lifecycle-policy, UI, or observability expansion.
