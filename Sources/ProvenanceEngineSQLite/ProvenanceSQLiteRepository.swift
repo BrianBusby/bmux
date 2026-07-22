@@ -130,34 +130,62 @@ actor ProvenanceSQLiteRepository {
         try query.bind(id, at: 1)
         guard try query.step() else { return nil }
 
-        let eventType = ProvenanceEventType(rawValue: query.string(at: 1) ?? "")
-        guard let sourceRawValue = query.string(at: 7),
-              let source = ProvenanceSource(rawValue: sourceRawValue) else {
-            throw ProvenanceSQLiteError.sqlite(message: "stored event has invalid source")
-        }
-        guard let confidenceRawValue = query.string(at: 8),
-              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
-            throw ProvenanceSQLiteError.sqlite(message: "stored event has invalid confidence")
-        }
-        guard let payloadJSON = query.string(at: 9),
-              let payloadData = payloadJSON.data(using: .utf8) else {
-            throw ProvenanceSQLiteError.sqlite(message: "stored event has invalid payload")
-        }
+        return try event(from: query, id: id)
+    }
 
-        let payload = try payloadDecoder.decode(ProvenanceEventPayload.self, from: payloadData)
-        return ProvenanceEvent(
-            id: id,
-            schemaVersion: query.int(at: 0),
-            eventType: eventType,
-            timestamp: Date(timeIntervalSince1970: query.double(at: 2) ?? 0),
-            repositoryID: query.string(at: 3),
-            worktreeID: query.string(at: 4),
-            sessionID: query.string(at: 5),
-            contributionID: query.string(at: 6),
-            source: source,
-            confidence: confidence,
-            payload: payload
-        )
+    /// Reads bounded event-ledger entries after an optional append sequence cursor.
+    ///
+    /// - Parameters:
+    ///   - afterSequence: Exclusive SQLite append sequence cursor, or `nil` to read from the beginning.
+    ///   - limit: Maximum number of ledger entries to return.
+    /// - Returns: Ledger entries in append order.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read or stored enum data is invalid.
+    func eventLedgerEntries(afterSequence: Int? = nil, limit: Int) throws -> [ProvenanceEventLedgerEntry] {
+        let rowLimit = max(0, limit)
+        var sql = """
+            SELECT
+                sequence,
+                id,
+                schema_version,
+                event_type,
+                timestamp_seconds,
+                repository_id,
+                worktree_id,
+                session_id,
+                contribution_id,
+                source,
+                confidence,
+                payload_json
+            FROM provenance_events
+            """
+        if afterSequence != nil {
+            sql += "\nWHERE sequence > ?"
+        }
+        sql += "\nORDER BY sequence ASC\nLIMIT ?"
+
+        let query = try database.prepare(sql)
+        defer { query.finalize() }
+
+        var bindIndex: Int32 = 1
+        if let afterSequence {
+            try query.bind(afterSequence, at: bindIndex)
+            bindIndex += 1
+        }
+        try query.bind(rowLimit, at: bindIndex)
+
+        var entries: [ProvenanceEventLedgerEntry] = []
+        while try query.step() {
+            guard let id = query.string(at: 1) else {
+                throw ProvenanceSQLiteError.sqlite(message: "stored event has invalid id")
+            }
+            entries.append(
+                ProvenanceEventLedgerEntry(
+                    sequence: query.int(at: 0),
+                    event: try event(from: query, id: id, offset: 2)
+                )
+            )
+        }
+        return entries
     }
 
     /// Reads one current-state repository projection by stable ID.
@@ -545,6 +573,41 @@ actor ProvenanceSQLiteRepository {
             status: status,
             lastReconciledAt: query.double(at: 8).map { Date(timeIntervalSince1970: $0) },
             updatedAt: Date(timeIntervalSince1970: query.double(at: 9) ?? 0)
+        )
+    }
+
+    private func event(
+        from query: ProvenanceSQLiteStatement,
+        id: String,
+        offset: Int32 = 0
+    ) throws -> ProvenanceEvent {
+        let eventType = ProvenanceEventType(rawValue: query.string(at: offset + 1) ?? "")
+        guard let sourceRawValue = query.string(at: offset + 7),
+              let source = ProvenanceSource(rawValue: sourceRawValue) else {
+            throw ProvenanceSQLiteError.sqlite(message: "stored event has invalid source")
+        }
+        guard let confidenceRawValue = query.string(at: offset + 8),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
+            throw ProvenanceSQLiteError.sqlite(message: "stored event has invalid confidence")
+        }
+        guard let payloadJSON = query.string(at: offset + 9),
+              let payloadData = payloadJSON.data(using: .utf8) else {
+            throw ProvenanceSQLiteError.sqlite(message: "stored event has invalid payload")
+        }
+
+        let payload = try payloadDecoder.decode(ProvenanceEventPayload.self, from: payloadData)
+        return ProvenanceEvent(
+            id: id,
+            schemaVersion: query.int(at: offset),
+            eventType: eventType,
+            timestamp: Date(timeIntervalSince1970: query.double(at: offset + 2) ?? 0),
+            repositoryID: query.string(at: offset + 3),
+            worktreeID: query.string(at: offset + 4),
+            sessionID: query.string(at: offset + 5),
+            contributionID: query.string(at: offset + 6),
+            source: source,
+            confidence: confidence,
+            payload: payload
         )
     }
 

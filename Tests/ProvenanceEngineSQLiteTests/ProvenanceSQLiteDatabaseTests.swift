@@ -453,6 +453,86 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryReadsEventLedgerEntriesBySequenceAfterReopen() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let first = ProvenanceEvent(
+            id: "event-first",
+            eventType: .progressCheckpoint,
+            timestamp: Date(timeIntervalSince1970: 1_800_000_030),
+            sessionID: "session-1",
+            source: .declared,
+            confidence: .high,
+            payload: ProvenanceEventPayload(
+                checkpoint: ProvenanceCheckpointRecord(
+                    id: "checkpoint-first",
+                    contributionID: "contribution-1",
+                    sequence: 1,
+                    status: "in_progress",
+                    semanticConfidence: .high,
+                    freshness: "fresh",
+                    createdAt: Date(timeIntervalSince1970: 1_800_000_030)
+                )
+            )
+        )
+        let second = ProvenanceEvent(
+            id: "event-second",
+            eventType: .sessionObserved,
+            timestamp: Date(timeIntervalSince1970: 1_800_000_010),
+            sessionID: "session-1",
+            source: .observed,
+            confidence: .medium,
+            payload: ProvenanceEventPayload(
+                session: ProvenanceSessionRecord(
+                    id: "session-1",
+                    agentKind: "codex",
+                    status: "active",
+                    updatedAt: Date(timeIntervalSince1970: 1_800_000_010)
+                )
+            )
+        )
+        let third = ProvenanceEvent(
+            id: "event-third",
+            eventType: .progressCheckpoint,
+            timestamp: Date(timeIntervalSince1970: 1_800_000_020),
+            sessionID: "session-1",
+            source: .declared,
+            confidence: .high,
+            payload: ProvenanceEventPayload(
+                checkpoint: ProvenanceCheckpointRecord(
+                    id: "checkpoint-third",
+                    contributionID: "contribution-1",
+                    sequence: 2,
+                    status: "complete",
+                    semanticConfidence: .high,
+                    freshness: "fresh",
+                    createdAt: Date(timeIntervalSince1970: 1_800_000_020)
+                )
+            )
+        )
+        let writer = try ProvenanceSQLiteRepository(url: url)
+
+        for event in [first, second, third] {
+            try await writer.appendEvent(event)
+        }
+
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let allEntries = try await reader.eventLedgerEntries(limit: 10)
+        let entriesAfterFirst = try await reader.eventLedgerEntries(
+            afterSequence: try #require(allEntries.first?.sequence),
+            limit: 10
+        )
+        let limitedEntries = try await reader.eventLedgerEntries(limit: 2)
+        let zeroLimitEntries = try await reader.eventLedgerEntries(limit: -1)
+
+        #expect(allEntries.map(\.sequence) == [1, 2, 3])
+        #expect(allEntries.map(\.event) == [first, second, third])
+        #expect(entriesAfterFirst.map(\.event.id) == [second.id, third.id])
+        #expect(limitedEntries.map(\.event.id) == [first.id, second.id])
+        #expect(zeroLimitEntries.isEmpty)
+    }
+
+    @Test
     func sqliteRepositorySatisfiesEngineClientContract() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
