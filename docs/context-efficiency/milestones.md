@@ -114,7 +114,11 @@ projection-key validation on branch `provenance-session-tree-storage`, at commit
 `ad94a60bdb8792b4266705579997e9a1f77a25e2`. A twentieth Phase 3D storage
 slice added an internal bounded SQLite storage integrity report on branch
 `provenance-session-tree-storage`, at commit
-`c970310d3852f22dd6b205510967f609a158b3e0`. No public storage SDK, daemon,
+`c970310d3852f22dd6b205510967f609a158b3e0`. A twenty-first Phase 3D storage
+slice added an internal bounded SQLite storage-integrity repair wrapper that
+gates projection repair through the existing integrity report on branch
+`provenance-session-tree-storage`, at commit
+`1d3bd06aac0fd7e9f63ed18d6b2192a6a75492d9`. No public storage SDK, daemon,
 storage path move, schema move, data migration, bmux reconnect, retrieval
 layer, lifecycle policy, UI, or broad observability expansion has been created.
 Full ADR-001 Phase 3 is still not complete.

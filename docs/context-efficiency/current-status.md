@@ -145,6 +145,10 @@ integrity report that composes storage summary, ledger validation,
 projection-count validation, projection-key validation, and repair guidance, on
 branch `provenance-session-tree-storage`, at commit
 `c970310d3852f22dd6b205510967f609a158b3e0`.
+A twenty-first Phase 3D storage slice added internal bounded SQLite
+storage-integrity repair gating over the existing integrity report and
+projection-drift repair path, on branch `provenance-session-tree-storage`, at
+commit `1d3bd06aac0fd7e9f63ed18d6b2192a6a75492d9`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -310,27 +314,27 @@ Files changed in the latest implementation slice:
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 - `tests/test_context_efficiency_cli.py`
 
-Latest provenance Phase 3D storage-integrity slice:
+Latest provenance Phase 3D storage-integrity repair slice:
 
 - External repo path: `/Users/brianbusby/repos/provenance-engine`
-- Commit: `c970310d3852f22dd6b205510967f609a158b3e0` (`Add SQLite
-  storage integrity report`)
+- Commit: `1d3bd06aac0fd7e9f63ed18d6b2192a6a75492d9` (`Add SQLite
+  storage integrity repair`)
 - Branch: `provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - `ProvenanceEngineContracts` remains the only public library product.
-- Added internal `ProvenanceSQLiteStorageIntegrityReport` and
-  `ProvenanceSQLiteRepository.storageIntegrityReport(validationLimit:mismatchLimit:)`.
-- The report composes existing bounded storage summary, event-ledger
-  validation, projection-count validation, and projection-key validation into
-  one read-only internal diagnostic result.
-- The report classifies storage as `healthy`, `ledger_invalid`,
-  `projection_drift`, or `validation_truncated`, recommends projection repair
-  only when a complete key comparison makes repair safe, and skips projection
-  comparisons when ledger validation already found invalid rows.
-- Kept the report below the public SDK/product surface; no bmux consumer
+- Added internal `ProvenanceSQLiteStorageRepairReport` and
+  `ProvenanceSQLiteRepository.repairStorageIntegrity(validationLimit:mismatchLimit:rebuildBatchSize:)`.
+- The repair wrapper first reads the existing bounded storage-integrity report,
+  skips repair when the report does not recommend it, and only invokes the
+  existing projection-drift repair path when complete projection-key validation
+  makes repair safe.
+- Repair attempts return the initial integrity report, whether repair was
+  attempted, the projection repair report when repair ran, and the post-repair
+  integrity report when available.
+- Kept the repair wrapper below the public SDK/product surface; no bmux consumer
   imports or runtime behavior changed.
-- Added behavior coverage for healthy storage, same-count projection-key drift,
-  truncated validation scans, and invalid ledger rows.
+- Added behavior coverage for healthy-storage no-op, recommended same-count
+  projection-drift repair, and invalid-ledger repair refusal.
 - No public storage SDK/product, daemon, IPC, launch agent, CLI, retrieval,
   lifecycle policy, UI, observability expansion, bmux storage move, bmux schema
   move, or data migration was added.
