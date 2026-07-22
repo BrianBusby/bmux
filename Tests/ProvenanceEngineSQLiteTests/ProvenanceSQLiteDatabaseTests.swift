@@ -749,6 +749,189 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryValidatesProjectionCountsFromCompleteLedgerReplay() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let repositoryRecord = ProvenanceRepositoryRecord(
+            id: "repository-1",
+            path: "/repos/project",
+            createdAt: timestamp,
+            updatedAt: timestamp
+        )
+        let worktree = ProvenanceWorktreeRecord(
+            id: "worktree-1",
+            repositoryID: repositoryRecord.id,
+            path: repositoryRecord.path,
+            isDirty: false,
+            status: "active",
+            updatedAt: timestamp
+        )
+        let activeSession = ProvenanceSessionRecord(
+            id: "session-1",
+            agentKind: "codex",
+            worktreeID: worktree.id,
+            status: "active",
+            startedAt: timestamp,
+            updatedAt: timestamp
+        )
+        let completedSession = ProvenanceSessionRecord(
+            id: activeSession.id,
+            agentKind: activeSession.agentKind,
+            worktreeID: activeSession.worktreeID,
+            status: "completed",
+            startedAt: activeSession.startedAt,
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_010)
+        )
+        let externalIdentity = ProvenanceExternalIdentityRecord(
+            id: "identity-1",
+            sessionID: activeSession.id,
+            system: "codex",
+            kind: "thread",
+            externalID: "external-session-1",
+            source: .observed,
+            confidence: .high,
+            createdAt: timestamp,
+            updatedAt: timestamp
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-bootstrap",
+                eventType: .worktreeObserved,
+                timestamp: timestamp,
+                repositoryID: repositoryRecord.id,
+                worktreeID: worktree.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(
+                    repository: repositoryRecord,
+                    worktree: worktree,
+                    session: activeSession,
+                    externalIdentities: [externalIdentity]
+                )
+            )
+        )
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-session-completed",
+                eventType: .sessionObserved,
+                timestamp: completedSession.updatedAt,
+                sessionID: completedSession.id,
+                source: .declared,
+                confidence: .high,
+                payload: ProvenanceEventPayload(session: completedSession)
+            )
+        )
+
+        let report = try await repository.validateProjectionCounts(limit: 10)
+
+        #expect(report == ProvenanceSQLiteProjectionValidationReport(
+            checkedEventCount: 2,
+            latestCheckedSequence: 2,
+            truncated: false,
+            comparedProjectionCounts: true,
+            mismatches: []
+        ))
+    }
+
+    @Test
+    func repositoryProjectionCountValidationReportsStaleProjectionRows() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let session = ProvenanceSessionRecord(
+            id: "session-authoritative",
+            agentKind: "codex",
+            status: "active",
+            updatedAt: timestamp
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-session",
+                eventType: .sessionObserved,
+                timestamp: timestamp,
+                sessionID: session.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(session: session)
+            )
+        )
+
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute(
+            """
+            INSERT INTO provenance_sessions (
+                id,
+                agent_kind,
+                status,
+                updated_at_seconds
+            ) VALUES (
+                'session-stale',
+                'codex',
+                'active',
+                1800000010
+            )
+            """
+        )
+
+        let report = try await repository.validateProjectionCounts(limit: 10)
+
+        #expect(report == ProvenanceSQLiteProjectionValidationReport(
+            checkedEventCount: 1,
+            latestCheckedSequence: 1,
+            truncated: false,
+            comparedProjectionCounts: true,
+            mismatches: [
+                ProvenanceSQLiteProjectionValidationMismatch(
+                    tableName: "provenance_sessions",
+                    expectedCount: 1,
+                    actualCount: 2
+                ),
+            ]
+        ))
+    }
+
+    @Test
+    func repositoryProjectionCountValidationSkipsComparisonWhenBoundedScanTruncates() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(Self.checkpointEvent(
+            id: "event-first",
+            checkpointID: "checkpoint-first",
+            timestamp: 1_800_000_000
+        ))
+        try await repository.appendEvent(Self.checkpointEvent(
+            id: "event-second",
+            checkpointID: "checkpoint-second",
+            timestamp: 1_800_000_010
+        ))
+
+        let truncatedReport = try await repository.validateProjectionCounts(limit: 1)
+        let zeroLimitReport = try await repository.validateProjectionCounts(limit: 0)
+
+        #expect(truncatedReport == ProvenanceSQLiteProjectionValidationReport(
+            checkedEventCount: 1,
+            latestCheckedSequence: 1,
+            truncated: true,
+            comparedProjectionCounts: false,
+            mismatches: []
+        ))
+        #expect(zeroLimitReport == ProvenanceSQLiteProjectionValidationReport(
+            checkedEventCount: 0,
+            latestCheckedSequence: nil,
+            truncated: true,
+            comparedProjectionCounts: false,
+            mismatches: []
+        ))
+    }
+
+    @Test
     func sqliteRepositorySatisfiesEngineClientContract() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }

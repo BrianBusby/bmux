@@ -257,6 +257,37 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
+    /// Validates current-state projection counts against bounded append-order ledger replay.
+    ///
+    /// - Parameter limit: Maximum number of append-order ledger rows to decode.
+    /// - Returns: Checked ledger row metadata and projection count mismatches when the scan is complete.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects a read or stored enum data is invalid.
+    func validateProjectionCounts(limit: Int = 1_000) throws -> ProvenanceSQLiteProjectionValidationReport {
+        let rowLimit = max(0, limit)
+        let ledgerSummary = try eventLedgerSummary()
+        let entries = try eventLedgerEntries(limit: rowLimit)
+        let truncated = ledgerSummary.count > rowLimit
+
+        guard !truncated else {
+            return ProvenanceSQLiteProjectionValidationReport(
+                checkedEventCount: entries.count,
+                latestCheckedSequence: entries.last?.sequence,
+                truncated: true,
+                comparedProjectionCounts: false,
+                mismatches: []
+            )
+        }
+
+        let expectedCounts = projectionCounts(from: entries.map(\.event.payload))
+        return ProvenanceSQLiteProjectionValidationReport(
+            checkedEventCount: entries.count,
+            latestCheckedSequence: entries.last?.sequence,
+            truncated: false,
+            comparedProjectionCounts: true,
+            mismatches: try projectionCountMismatches(expected: expectedCounts)
+        )
+    }
+
     /// Rebuilds current-state projections by replaying the immutable event ledger in append order.
     ///
     /// - Parameter batchSize: Maximum number of ledger entries decoded per cursor read.
@@ -685,6 +716,102 @@ actor ProvenanceSQLiteRepository {
         guard try query.step() else { return (0, nil) }
         let latestSequence = query.double(at: 1).map(Int.init)
         return (query.int(at: 0), latestSequence)
+    }
+
+    private func projectionCounts(from payloads: [ProvenanceEventPayload]) -> [String: Int] {
+        var repositories = Set<String>()
+        var worktrees = Set<String>()
+        var sessions = Set<String>()
+        var sessionRelationships = Set<String>()
+        var externalIdentities = Set<String>()
+        var workItems = Set<String>()
+        var contributions = Set<String>()
+        var checkpoints = Set<String>()
+        var changeSets = Set<String>()
+        var fileChanges = Set<String>()
+        var validationRuns = Set<String>()
+
+        for payload in payloads {
+            if let repository = payload.repository {
+                repositories.insert(repository.id)
+            }
+            if let worktree = payload.worktree {
+                worktrees.insert(worktree.id)
+            }
+            if let session = payload.session {
+                sessions.insert(session.id)
+            }
+            if let relationship = payload.sessionRelationship {
+                sessionRelationships.insert(relationship.sessionID)
+            }
+            for identity in payload.externalIdentities {
+                externalIdentities.insert("\(identity.system)\u{0}\(identity.kind)\u{0}\(identity.externalID)")
+            }
+            if let workItem = payload.workItem {
+                workItems.insert(workItem.id)
+            }
+            if let contribution = payload.contribution {
+                contributions.insert(contribution.id)
+            }
+            if let checkpoint = payload.checkpoint {
+                checkpoints.insert(checkpoint.id)
+            }
+            if let changeSet = payload.changeSet {
+                changeSets.insert(changeSet.id)
+            }
+            for fileChange in payload.fileChanges {
+                fileChanges.insert(fileChange.id)
+            }
+            if let validationRun = payload.validationRun {
+                validationRuns.insert(validationRun.id)
+            }
+        }
+
+        return [
+            "provenance_repositories": repositories.count,
+            "provenance_worktrees": worktrees.count,
+            "provenance_sessions": sessions.count,
+            "provenance_session_relationships": sessionRelationships.count,
+            "provenance_session_external_identities": externalIdentities.count,
+            "provenance_work_items": workItems.count,
+            "provenance_work_contributions": contributions.count,
+            "provenance_checkpoints": checkpoints.count,
+            "provenance_change_sets": changeSets.count,
+            "provenance_file_changes": fileChanges.count,
+            "provenance_validation_runs": validationRuns.count,
+        ]
+    }
+
+    private func projectionCountMismatches(
+        expected: [String: Int]
+    ) throws -> [ProvenanceSQLiteProjectionValidationMismatch] {
+        var mismatches: [ProvenanceSQLiteProjectionValidationMismatch] = []
+        for tableName in [
+            "provenance_repositories",
+            "provenance_worktrees",
+            "provenance_sessions",
+            "provenance_session_relationships",
+            "provenance_session_external_identities",
+            "provenance_work_items",
+            "provenance_work_contributions",
+            "provenance_checkpoints",
+            "provenance_change_sets",
+            "provenance_file_changes",
+            "provenance_validation_runs",
+        ] {
+            let expectedCount = expected[tableName] ?? 0
+            let actualCount = try countRows(in: tableName)
+            if expectedCount != actualCount {
+                mismatches.append(
+                    ProvenanceSQLiteProjectionValidationMismatch(
+                        tableName: tableName,
+                        expectedCount: expectedCount,
+                        actualCount: actualCount
+                    )
+                )
+            }
+        }
+        return mismatches
     }
 
     private func countRows(in tableName: String) throws -> Int {
