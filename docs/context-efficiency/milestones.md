@@ -47,7 +47,9 @@ internal SQLite schema-versioning and migration scaffolding at commit
 minimal internal SQLite repository actor at commit
 `dfd57a6441d5090130476893502c3091d2769440`. A fourth Phase 3D slice added the
 first internal repository-owned event-ledger table and narrow append/read path
-at commit `f96858fb8f1a207426ad78c2524ab5b5c9b74121`. No public storage SDK,
+at commit `f96858fb8f1a207426ad78c2524ab5b5c9b74121`. A fifth Phase 3D slice
+added the first internal repository-owned session projection table and narrow
+read path at commit `ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2`. No public storage SDK,
 daemon, storage path move, schema move, data migration, bmux reconnect,
 retrieval layer, lifecycle policy, UI, or broad observability expansion has
 been created. Full ADR-001 Phase 3 is still not complete.
@@ -248,9 +250,14 @@ Implemented slices:
   append/read support at commit
   `f96858fb8f1a207426ad78c2524ab5b5c9b74121`, still without exporting a public
   storage product and without changing bmux behavior.
+- ADR-001 Phase 3D session-projection storage added the first internal
+  repository-owned `provenance_sessions` current-state projection table plus
+  narrow `ProvenanceSessionRecord` read support at commit
+  `ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2`, still without exporting a public
+  storage product and without changing bmux behavior.
 - Continue Phase 3D only after deciding the next smallest storage boundary,
-  such as a narrow repository-owned projection table bootstrap or a bounded read
-  model derived from the new event ledger.
+  such as repository/worktree projection bootstrap or a bounded session read
+  model over the new session projection.
 - Phase 2, Phase 3A, Phase 3B, Phase 3C, and the Phase 3D storage slices have not
   created a daemon, moved storage/schema, added data migration, or added
   daemon/SDK packaging. Four

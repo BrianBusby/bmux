@@ -1,6 +1,6 @@
 # Bmux Context Efficiency: Current Status
 
-Last updated: 2026-07-21
+Last updated: 2026-07-22
 
 This file is the live handoff index for the context-efficiency roadmap. Read it before choosing work, and update it at the end of every context-efficiency slice.
 
@@ -67,7 +67,10 @@ slice added a minimal internal SQLite repository actor at commit
 `dfd57a6441d5090130476893502c3091d2769440`. A fourth Phase 3D
 storage slice added the first internal repository-owned event-ledger table and
 narrow append/read path at commit
-`f96858fb8f1a207426ad78c2524ab5b5c9b74121`.
+`f96858fb8f1a207426ad78c2524ab5b5c9b74121`. A fifth Phase 3D storage
+slice added the first internal repository-owned session projection table and
+narrow read path at commit
+`ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -153,9 +156,10 @@ Current checkout:
   `9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to `origin/main`.
 - ADR-001 Phase 3D internal SQLite storage support now includes connection,
   statement, error, schema migration scaffolding, a minimal repository actor,
-  and an internal event-ledger table with narrow append/read support in
+  an internal event-ledger table with narrow append/read support, and an
+  initial session projection table with narrow read support in
   `ProvenanceEngineSQLite`. Latest pushed engine commit:
-  `f96858fb8f1a207426ad78c2524ab5b5c9b74121`.
+  `ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2`.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
   `docs/context-efficiency/provenance-engine-phase3a-decisions.md`.
 - This 2026-07-21 slice started ADR-001 Phase 3 with a docs-only
@@ -272,7 +276,46 @@ Latest provenance Phase 3B remote unblock slice:
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
 - Full ADR-001 Phase 3 remains incomplete.
 
-Latest provenance Phase 3D event-ledger storage slice:
+Latest provenance Phase 3D session-projection storage slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2` (`Add session
+  projection storage`)
+- Pushed to canonical `origin/main`.
+- `ProvenanceEngineContracts` remains the only public library product.
+- Added the repository-owned V2 migration that creates the internal
+  `provenance_sessions` current-state projection table and supporting indexes.
+- Updated `appendEvent(_:)` so event-ledger insert and session projection
+  upsert happen in one repository-owned SQLite transaction when a
+  `ProvenanceEventPayload.session` record is present.
+- Added a narrow internal repository actor method:
+  - `session(id:)`
+- Added Swift Testing coverage for default schema bootstrap at version 2,
+  session projection upsert/read after repository reopen, missing-session
+  reads, and duplicate event ID rejection without replacing the original event
+  or original session projection.
+- Updated the engine README storage-support scope.
+- No bmux consumer imports or runtime behavior changed.
+- No daemon, IPC, launch agent, CLI, retrieval, lifecycle policy, UI,
+  observability expansion, bmux storage move, bmux schema move, or data
+  migration was added.
+- Full ADR-001 Phase 3 remains incomplete.
+- Validation run:
+  - `swift test --package-path /Users/brianbusby/repos/provenance-engine`
+  - `git -C /Users/brianbusby/repos/provenance-engine diff --check`
+  - `git -C /Users/brianbusby/repos/provenance-engine diff --cached --check`
+  - `git -C /Users/brianbusby/repos/provenance-engine rev-parse HEAD`
+  - `git -C /Users/brianbusby/repos/provenance-engine ls-remote origin refs/heads/main`
+  - `git -C /Users/brianbusby/repos/provenance-engine status --short --branch`
+- Localization audit: changed only engine internal Swift package files, package
+  README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
+  settings/localized strings changed.
+- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
+  storage boundary, such as repository/worktree projection bootstrap or a
+  bounded session read model over the new session projection. Keep it
+  engine-owned and internal.
+
+Previous provenance Phase 3D event-ledger storage slice:
 
 - External repo path: `/Users/brianbusby/repos/provenance-engine`
 - Commit: `f96858fb8f1a207426ad78c2524ab5b5c9b74121` (`Add internal
