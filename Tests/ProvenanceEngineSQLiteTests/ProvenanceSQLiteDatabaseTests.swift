@@ -377,10 +377,11 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 1)
+        #expect(try await repository.schemaVersion() == 2)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
+        #expect(try Self.tableExists("provenance_sessions", in: database))
     }
 
     @Test
@@ -431,17 +432,97 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryUpsertsAndReadsSessionProjectionAfterReopen() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let firstSession = ProvenanceSessionRecord(
+            id: "session-1",
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-1",
+            worktreeID: "worktree-1",
+            cwd: "/worktree",
+            status: "active",
+            startedAt: Date(timeIntervalSince1970: 1_800_000_000),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_001)
+        )
+        let updatedSession = ProvenanceSessionRecord(
+            id: firstSession.id,
+            agentKind: firstSession.agentKind,
+            workspaceID: firstSession.workspaceID,
+            surfaceID: firstSession.surfaceID,
+            worktreeID: firstSession.worktreeID,
+            cwd: firstSession.cwd,
+            status: "completed",
+            startedAt: firstSession.startedAt,
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_010)
+        )
+
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        try await writer.appendEvent(
+            ProvenanceEvent(
+                id: "event-1",
+                eventType: .sessionObserved,
+                timestamp: Date(timeIntervalSince1970: 1_800_000_001),
+                sessionID: firstSession.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(session: firstSession)
+            )
+        )
+        try await writer.appendEvent(
+            ProvenanceEvent(
+                id: "event-2",
+                eventType: .sessionObserved,
+                timestamp: Date(timeIntervalSince1970: 1_800_000_010),
+                sessionID: updatedSession.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(session: updatedSession)
+            )
+        )
+
+        let reader = try ProvenanceSQLiteRepository(url: url)
+
+        #expect(try await reader.session(id: firstSession.id) == updatedSession)
+    }
+
+    @Test
+    func repositoryReturnsNilForMissingSessionProjection() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        #expect(try await repository.session(id: "missing-session") == nil)
+    }
+
+    @Test
     func repositoryRejectsDuplicateEventIDWithoutReplacingOriginal() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
         let repository = try ProvenanceSQLiteRepository(url: url)
+        let originalSession = ProvenanceSessionRecord(
+            id: "session-1",
+            agentKind: "codex",
+            status: "active",
+            startedAt: Date(timeIntervalSince1970: 1_800_000_000),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_000)
+        )
+        let duplicateSession = ProvenanceSessionRecord(
+            id: originalSession.id,
+            agentKind: originalSession.agentKind,
+            status: "completed",
+            startedAt: originalSession.startedAt,
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_010)
+        )
         let original = ProvenanceEvent(
             id: "event-1",
             eventType: .sessionObserved,
             timestamp: Date(timeIntervalSince1970: 1_800_000_000),
             sessionID: "session-1",
             source: .declared,
-            confidence: .medium
+            confidence: .medium,
+            payload: ProvenanceEventPayload(session: originalSession)
         )
         let duplicate = ProvenanceEvent(
             id: original.id,
@@ -449,7 +530,8 @@ struct ProvenanceSQLiteDatabaseTests {
             timestamp: Date(timeIntervalSince1970: 1_800_000_010),
             worktreeID: "worktree-1",
             source: .observed,
-            confidence: .high
+            confidence: .high,
+            payload: ProvenanceEventPayload(session: duplicateSession)
         )
 
         try await repository.appendEvent(original)
@@ -466,6 +548,7 @@ struct ProvenanceSQLiteDatabaseTests {
         }
 
         #expect(try await repository.event(id: original.id) == original)
+        #expect(try await repository.session(id: originalSession.id) == originalSession)
     }
 
     private static func temporaryDatabaseURL() -> URL {
