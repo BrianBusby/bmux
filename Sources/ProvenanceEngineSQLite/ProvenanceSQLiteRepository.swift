@@ -430,6 +430,48 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
+    /// Repairs storage integrity only when bounded validation proves projection repair is safe.
+    ///
+    /// - Parameters:
+    ///   - validationLimit: Maximum number of append-order ledger rows to decode before deciding repair safety.
+    ///   - mismatchLimit: Maximum number of missing/unexpected projection keys to include in validation reports.
+    ///   - rebuildBatchSize: Maximum number of ledger entries decoded per repair cursor read.
+    /// - Returns: Initial integrity, optional projection repair, and optional post-repair integrity metadata.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects a read/rebuild or stored enum data is invalid.
+    func repairStorageIntegrity(
+        validationLimit: Int = 1_000,
+        mismatchLimit: Int = 100,
+        rebuildBatchSize: Int = 1_000
+    ) throws -> ProvenanceSQLiteStorageRepairReport {
+        let initialIntegrityReport = try storageIntegrityReport(
+            validationLimit: validationLimit,
+            mismatchLimit: mismatchLimit
+        )
+        guard initialIntegrityReport.repairRecommended else {
+            return ProvenanceSQLiteStorageRepairReport(
+                initialIntegrityReport: initialIntegrityReport,
+                repairAttempted: false,
+                projectionRepairReport: nil,
+                postRepairIntegrityReport: nil
+            )
+        }
+
+        let projectionRepairReport = try repairProjectionDrift(
+            validationLimit: validationLimit,
+            mismatchLimit: mismatchLimit,
+            rebuildBatchSize: rebuildBatchSize
+        )
+        return ProvenanceSQLiteStorageRepairReport(
+            initialIntegrityReport: initialIntegrityReport,
+            repairAttempted: true,
+            projectionRepairReport: projectionRepairReport,
+            postRepairIntegrityReport: try storageIntegrityReport(
+                validationLimit: validationLimit,
+                mismatchLimit: mismatchLimit
+            )
+        )
+    }
+
     /// Rebuilds current-state projections by replaying the immutable event ledger in append order.
     ///
     /// - Parameter batchSize: Maximum number of ledger entries decoded per cursor read.

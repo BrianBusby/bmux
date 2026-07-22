@@ -1532,6 +1532,123 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryStorageIntegrityRepairSkipsHealthyStorage() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(Self.checkpointEvent(
+            id: "event-checkpoint",
+            checkpointID: "checkpoint-1",
+            timestamp: 1_800_000_000
+        ))
+
+        let report = try await repository.repairStorageIntegrity(validationLimit: 10)
+
+        #expect(report.initialIntegrityReport.status == "healthy")
+        #expect(report.initialIntegrityReport.repairRecommended == false)
+        #expect(report.repairAttempted == false)
+        #expect(report.projectionRepairReport == nil)
+        #expect(report.postRepairIntegrityReport == nil)
+        #expect(try await repository.validateProjectionKeys(limit: 10).mismatches.isEmpty)
+    }
+
+    @Test
+    func repositoryStorageIntegrityRepairRebuildsRecommendedProjectionDrift() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let session = ProvenanceSessionRecord(
+            id: "session-authoritative",
+            agentKind: "codex",
+            status: "active",
+            updatedAt: timestamp
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-session",
+                eventType: .sessionObserved,
+                timestamp: timestamp,
+                sessionID: session.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(session: session)
+            )
+        )
+
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute(
+            """
+            DELETE FROM provenance_sessions;
+            INSERT INTO provenance_sessions (
+                id,
+                agent_kind,
+                status,
+                updated_at_seconds
+            ) VALUES (
+                'session-stale',
+                'codex',
+                'active',
+                1800000010
+            )
+            """
+        )
+
+        let report = try await repository.repairStorageIntegrity(
+            validationLimit: 10,
+            mismatchLimit: 1,
+            rebuildBatchSize: 1
+        )
+        let projectionRepairReport = try #require(report.projectionRepairReport)
+        let postRepairIntegrityReport = try #require(report.postRepairIntegrityReport)
+
+        #expect(report.initialIntegrityReport.status == "projection_drift")
+        #expect(report.initialIntegrityReport.repairRecommended)
+        #expect(report.repairAttempted)
+        #expect(projectionRepairReport.repaired)
+        #expect(projectionRepairReport.replayedEventCount == 1)
+        #expect(projectionRepairReport.validation.truncatedMismatches)
+        #expect(projectionRepairReport.postRepairValidation?.mismatches.isEmpty == true)
+        #expect(postRepairIntegrityReport.status == "healthy")
+        #expect(postRepairIntegrityReport.repairRecommended == false)
+        #expect(try await repository.session(id: session.id) == session)
+        #expect(try await repository.session(id: "session-stale") == nil)
+    }
+
+    @Test
+    func repositoryStorageIntegrityRepairSkipsUnsafeInvalidLedger() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(Self.checkpointEvent(
+            id: "event-checkpoint",
+            checkpointID: "checkpoint-1",
+            timestamp: 1_800_000_000
+        ))
+
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute(
+            """
+            UPDATE provenance_events
+            SET payload_json = '{'
+            WHERE id = 'event-checkpoint'
+            """
+        )
+
+        let report = try await repository.repairStorageIntegrity(validationLimit: 10)
+
+        #expect(report.initialIntegrityReport.status == "ledger_invalid")
+        #expect(report.initialIntegrityReport.repairRecommended == false)
+        #expect(report.repairAttempted == false)
+        #expect(report.projectionRepairReport == nil)
+        #expect(report.postRepairIntegrityReport == nil)
+        #expect(try await repository.storageSummary().checkpointCount == 1)
+    }
+
+    @Test
     func sqliteRepositorySatisfiesEngineClientContract() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
