@@ -333,6 +333,45 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
+    /// Repairs current-state projection key drift by replaying the immutable event ledger.
+    ///
+    /// - Parameters:
+    ///   - validationLimit: Maximum number of append-order ledger rows to decode before deciding repair safety.
+    ///   - mismatchLimit: Maximum number of missing/unexpected projection keys to include in validation reports.
+    ///   - rebuildBatchSize: Maximum number of ledger entries decoded per repair cursor read.
+    /// - Returns: Validation and optional rebuild metadata for the repair attempt.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects a read/rebuild or stored enum data is invalid.
+    func repairProjectionDrift(
+        validationLimit: Int = 1_000,
+        mismatchLimit: Int = 100,
+        rebuildBatchSize: Int = 1_000
+    ) throws -> ProvenanceSQLiteProjectionRepairReport {
+        let validation = try validateProjectionKeys(
+            limit: validationLimit,
+            mismatchLimit: mismatchLimit
+        )
+        let hasRepairableDrift = !validation.mismatches.isEmpty || validation.truncatedMismatches
+        guard validation.comparedProjectionKeys, hasRepairableDrift else {
+            return ProvenanceSQLiteProjectionRepairReport(
+                validation: validation,
+                repaired: false,
+                replayedEventCount: 0,
+                postRepairValidation: nil
+            )
+        }
+
+        let replayedEventCount = try rebuildProjectionsFromEventLedger(batchSize: rebuildBatchSize)
+        return ProvenanceSQLiteProjectionRepairReport(
+            validation: validation,
+            repaired: true,
+            replayedEventCount: replayedEventCount,
+            postRepairValidation: try validateProjectionKeys(
+                limit: validationLimit,
+                mismatchLimit: mismatchLimit
+            )
+        )
+    }
+
     /// Rebuilds current-state projections by replaying the immutable event ledger in append order.
     ///
     /// - Parameter batchSize: Maximum number of ledger entries decoded per cursor read.
