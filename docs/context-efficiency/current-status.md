@@ -106,6 +106,12 @@ https://github.com/BrianBusby/provenance-engine/pull/1.
 An autoreview follow-up enforced `ProvenanceSessionTreeRequest.limit` as a
 combined session-plus-relationship row bound while preserving coherent
 parent-child edges at commit `ebf2d437bc48b875c84f5794387e2437dc8b82b4`.
+The twelfth Phase 3D storage slice added an internal engine-owned default
+SQLite storage-location resolver for
+`~/.local/state/provenance-engine/provenance.sqlite` plus repository opening
+coverage, without exporting storage or moving bmux data, on branch
+`provenance-session-tree-storage`, at commit
+`f3767534fbd89a473bd003eb1421ed56acc82827`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -191,7 +197,8 @@ Current checkout:
   `9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to `origin/main`.
 - ADR-001 Phase 3D internal SQLite storage support now includes connection,
   statement, error, schema migration scaffolding, a minimal repository actor,
-  an internal event-ledger table with narrow append/read support, initial
+  an internal engine-owned default storage location, an internal event-ledger
+  table with narrow append/read support, initial
   session, repository, and worktree projection tables, narrow projection reads,
   a bounded worktree-list read model, internal session relationship/external
   identity projection tables, bounded session-tree/parent/child/identity reads,
@@ -200,7 +207,7 @@ Current checkout:
   session-tree traversal fixes, and internal normalized subsession-lifecycle
   recording support plus internal SQLite-backed `ProvenanceEngineClient`
   conformance in `ProvenanceEngineSQLite`. Latest pushed engine commit:
-  `ebf2d437bc48b875c84f5794387e2437dc8b82b4` on
+  `f3767534fbd89a473bd003eb1421ed56acc82827` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
