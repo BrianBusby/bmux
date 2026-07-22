@@ -65,7 +65,12 @@ validation-run projection storage plus bounded current-context projection reads
 at commit `09628cf4e1ffc0a055dd683cdad5f8da1341a0e2` on branch
 `provenance-session-tree-storage`. A scoped autoreview follow-up bounded
 session-tree traversal at commit `bc86510426aba51afd4ed3f1e0fe509ae77f5ec7`
-on branch `provenance-session-tree-storage`; draft PR:
+on branch `provenance-session-tree-storage`. A tenth Phase 3D storage slice
+added an internal SQLite implementation of the existing normalized
+subsession-lifecycle recording contract, deterministic engine-owned stable IDs,
+lifecycle event construction, append response handling, and behavior coverage at
+commit `94d67f4ee3fe59a7458fc2d1c03793cd67c04466` on branch
+`provenance-session-tree-storage`; draft PR:
 https://github.com/BrianBusby/provenance-engine/pull/1. No public storage SDK, daemon,
 storage path move, schema move, data migration, bmux reconnect,
 retrieval layer, lifecycle policy, UI, or broad observability expansion has

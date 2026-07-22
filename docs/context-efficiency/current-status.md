@@ -86,6 +86,14 @@ internal validation-run projection storage plus a bounded current-context read
 model at commit `09628cf4e1ffc0a055dd683cdad5f8da1341a0e2` on branch
 `provenance-session-tree-storage`; draft PR:
 https://github.com/BrianBusby/provenance-engine/pull/1.
+An autoreview follow-up bounded session-tree traversal at commit
+`bc86510426aba51afd4ed3f1e0fe509ae77f5ec7`. A tenth Phase 3D storage
+slice added an internal SQLite implementation of the existing normalized
+subsession-lifecycle recording contract, deterministic engine-owned stable IDs,
+lifecycle event construction, append response handling, and behavior coverage at
+commit `94d67f4ee3fe59a7458fc2d1c03793cd67c04466` on branch
+`provenance-session-tree-storage`; draft PR:
+https://github.com/BrianBusby/provenance-engine/pull/1.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -176,10 +184,10 @@ Current checkout:
   a bounded worktree-list read model, internal session relationship/external
   identity projection tables, bounded session-tree/parent/child/identity reads,
   internal file-explanation projection/read support, internal validation-run
-  projection storage, bounded current-context projection reads, and bounded
-  session-tree traversal fixes in
-  `ProvenanceEngineSQLite`. Latest pushed engine commit:
-  `bc86510426aba51afd4ed3f1e0fe509ae77f5ec7` on
+  projection storage, bounded current-context projection reads, bounded
+  session-tree traversal fixes, and internal normalized subsession-lifecycle
+  recording support in `ProvenanceEngineSQLite`. Latest pushed engine commit:
+  `94d67f4ee3fe59a7458fc2d1c03793cd67c04466` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
