@@ -96,7 +96,10 @@ event-ledger cursor reads over the existing `provenance_events` table on branch
 `4ff1837e40a9dd2c0ad6a9552260cf3afaa9c7d9`. A fourteenth Phase 3D storage
 slice added internal current-state projection rebuild from immutable
 event-ledger replay on branch `provenance-session-tree-storage`, at commit
-`d18d5596c3e0bd4e8e9ffd7680dd6bc6139fc2bb`. No public storage SDK, daemon,
+`d18d5596c3e0bd4e8e9ffd7680dd6bc6139fc2bb`. A fifteenth Phase 3D storage
+slice added an internal repository-owned SQLite storage summary read model for
+ledger/projection counts on branch `provenance-session-tree-storage`, at commit
+`68bafa628e4d10e212b089fc73b2e64a12d76dba`. No public storage SDK, daemon,
 storage path move, schema move, data migration, bmux reconnect, retrieval layer,
 lifecycle policy, UI, or broad observability expansion has been created. Full
 ADR-001 Phase 3 is still not complete.

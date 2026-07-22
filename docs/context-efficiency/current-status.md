@@ -120,6 +120,10 @@ A fourteenth Phase 3D storage slice added internal current-state projection
 rebuild from immutable event-ledger replay, on branch
 `provenance-session-tree-storage`, at commit
 `d18d5596c3e0bd4e8e9ffd7680dd6bc6139fc2bb`.
+A fifteenth Phase 3D storage slice added an internal repository-owned SQLite
+storage summary read model for ledger/projection counts, on branch
+`provenance-session-tree-storage`, at commit
+`68bafa628e4d10e212b089fc73b2e64a12d76dba`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -214,10 +218,11 @@ Current checkout:
   projection storage, bounded current-context projection reads, bounded
   session-tree traversal fixes, internal normalized subsession-lifecycle
   recording support, internal SQLite-backed `ProvenanceEngineClient`
-  conformance, bounded append-order event-ledger cursor reads, and internal
-  projection rebuild from ledger replay in
+  conformance, bounded append-order event-ledger cursor reads, internal
+  projection rebuild from ledger replay, and an internal repository-owned
+  SQLite storage summary read model in
   `ProvenanceEngineSQLite`. Latest engine commit:
-  `d18d5596c3e0bd4e8e9ffd7680dd6bc6139fc2bb` on
+  `68bafa628e4d10e212b089fc73b2e64a12d76dba` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
@@ -280,6 +285,34 @@ Files changed in the latest implementation slice:
 - `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Store/ContextEfficiencyStore.swift`
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 - `tests/test_context_efficiency_cli.py`
+
+Latest provenance Phase 3D storage-summary slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `68bafa628e4d10e212b089fc73b2e64a12d76dba` (`Add internal
+  SQLite storage summary`)
+- Branch: `provenance-session-tree-storage`; draft PR:
+  https://github.com/BrianBusby/provenance-engine/pull/1.
+- `ProvenanceEngineContracts` remains the only public library product.
+- Added internal `ProvenanceSQLiteStorageSummary` and
+  `ProvenanceSQLiteRepository.storageSummary()` for repository-owned
+  ledger/projection row counts and latest append sequence.
+- Kept the summary below the public SDK/product surface; no bmux consumer imports
+  or runtime behavior changed.
+- Added behavior coverage for empty storage, summary counts after append through
+  existing contract paths, and projection drift/repair visibility after ledger
+  replay.
+- No public storage SDK/product, daemon, IPC, launch agent, CLI, retrieval,
+  lifecycle policy, UI, observability expansion, bmux storage move, bmux schema
+  move, or data migration was added.
+- Validation passed with the standalone engine SwiftPM suite and diff checks.
+- Localization audit: changed only engine internal Swift package files, package
+  README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
+  settings/localized strings changed.
+- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
+  engine-owned storage boundary over existing contracts. Keep it internal and
+  do not start public SDK export, daemon, bmux reconnect, storage migration,
+  retrieval, lifecycle policy, UI, or broad observability expansion.
 
 Latest provenance Phase 3D projection rebuild slice:
 
