@@ -128,6 +128,10 @@ A sixteenth Phase 3D storage slice added an internal bounded SQLite
 event-ledger validation read model, on branch
 `provenance-session-tree-storage`, at commit
 `c9078e6eb904d27a1da48db7a5b518aad6c8ab1e`.
+A seventeenth Phase 3D storage slice added an internal bounded SQLite
+projection-count validation read model, on branch
+`provenance-session-tree-storage`, at commit
+`303225390707775863e63821ec50eaf036e3d615`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -227,7 +231,7 @@ Current checkout:
   storage summary read model, and an internal bounded event-ledger validation
   read model in
   `ProvenanceEngineSQLite`. Latest engine commit:
-  `c9078e6eb904d27a1da48db7a5b518aad6c8ab1e` on
+  `303225390707775863e63821ec50eaf036e3d615` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
@@ -290,6 +294,38 @@ Files changed in the latest implementation slice:
 - `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Store/ContextEfficiencyStore.swift`
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 - `tests/test_context_efficiency_cli.py`
+
+Latest provenance Phase 3D projection-count validation slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `303225390707775863e63821ec50eaf036e3d615` (`Add SQLite
+  projection count validation`)
+- Branch: `provenance-session-tree-storage`; draft PR:
+  https://github.com/BrianBusby/provenance-engine/pull/1.
+- `ProvenanceEngineContracts` remains the only public library product.
+- Added internal `ProvenanceSQLiteProjectionValidationReport`,
+  `ProvenanceSQLiteProjectionValidationMismatch`, and
+  `ProvenanceSQLiteRepository.validateProjectionCounts(limit:)`.
+- The validation path decodes bounded append-order ledger entries through the
+  existing ledger read path, derives expected current-state projection counts
+  from complete ledger replay, compares them to repository-owned SQLite table
+  counts, and skips comparison when the requested bound truncates the ledger
+  scan.
+- Kept the validation read model below the public SDK/product surface; no bmux
+  consumer imports or runtime behavior changed.
+- Added behavior coverage for clean complete-ledger validation, stale
+  projection-row mismatch reporting, and bounded/truncated scans.
+- No public storage SDK/product, daemon, IPC, launch agent, CLI, retrieval,
+  lifecycle policy, UI, observability expansion, bmux storage move, bmux schema
+  move, or data migration was added.
+- Validation passed with the standalone engine SwiftPM suite and diff checks.
+- Localization audit: changed only engine internal Swift package files, package
+  README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
+  settings/localized strings changed.
+- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
+  engine-owned storage boundary over existing contracts. Keep it internal and
+  do not start public SDK export, daemon, bmux reconnect, storage migration,
+  retrieval, lifecycle policy, UI, or broad observability expansion.
 
 Latest provenance Phase 3D ledger-validation slice:
 
