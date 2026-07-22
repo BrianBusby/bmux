@@ -372,6 +372,64 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
+    /// Reads a bounded integrity report over internal SQLite ledger and projection state.
+    ///
+    /// - Parameters:
+    ///   - validationLimit: Maximum number of append-order ledger rows to decode.
+    ///   - mismatchLimit: Maximum number of missing/unexpected projection keys to include.
+    /// - Returns: Storage counts, ledger validation, optional projection comparisons, and repair guidance.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects a read.
+    func storageIntegrityReport(
+        validationLimit: Int = 1_000,
+        mismatchLimit: Int = 100
+    ) throws -> ProvenanceSQLiteStorageIntegrityReport {
+        let storageSummary = try storageSummary()
+        let ledgerValidation = try validateEventLedger(limit: validationLimit)
+
+        guard ledgerValidation.invalidEventCount == 0 else {
+            return ProvenanceSQLiteStorageIntegrityReport(
+                status: "ledger_invalid",
+                repairRecommended: false,
+                storageSummary: storageSummary,
+                ledgerValidation: ledgerValidation,
+                projectionCountValidation: nil,
+                projectionKeyValidation: nil
+            )
+        }
+
+        let projectionCountValidation = try validateProjectionCounts(limit: validationLimit)
+        let projectionKeyValidation = try validateProjectionKeys(
+            limit: validationLimit,
+            mismatchLimit: mismatchLimit
+        )
+        let projectionDriftDetected = !projectionCountValidation.mismatches.isEmpty
+            || !projectionKeyValidation.mismatches.isEmpty
+            || projectionKeyValidation.truncatedMismatches
+        let validationTruncated = ledgerValidation.truncated
+            || projectionCountValidation.truncated
+            || projectionKeyValidation.truncated
+            || !projectionCountValidation.comparedProjectionCounts
+            || !projectionKeyValidation.comparedProjectionKeys
+        let status: String
+        if projectionDriftDetected {
+            status = "projection_drift"
+        } else if validationTruncated {
+            status = "validation_truncated"
+        } else {
+            status = "healthy"
+        }
+
+        return ProvenanceSQLiteStorageIntegrityReport(
+            status: status,
+            repairRecommended: projectionKeyValidation.comparedProjectionKeys
+                && (!projectionKeyValidation.mismatches.isEmpty || projectionKeyValidation.truncatedMismatches),
+            storageSummary: storageSummary,
+            ledgerValidation: ledgerValidation,
+            projectionCountValidation: projectionCountValidation,
+            projectionKeyValidation: projectionKeyValidation
+        )
+    }
+
     /// Rebuilds current-state projections by replaying the immutable event ledger in append order.
     ///
     /// - Parameter batchSize: Maximum number of ledger entries decoded per cursor read.

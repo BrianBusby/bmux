@@ -1374,6 +1374,164 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryStorageIntegrityReportClassifiesHealthyStorage() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(Self.checkpointEvent(
+            id: "event-checkpoint",
+            checkpointID: "checkpoint-1",
+            timestamp: 1_800_000_000
+        ))
+
+        let report = try await repository.storageIntegrityReport(validationLimit: 10)
+        let projectionCountValidation = try #require(report.projectionCountValidation)
+        let projectionKeyValidation = try #require(report.projectionKeyValidation)
+
+        #expect(report.status == "healthy")
+        #expect(report.repairRecommended == false)
+        #expect(report.storageSummary.eventCount == 1)
+        #expect(report.storageSummary.latestEventSequence == 1)
+        #expect(report.storageSummary.checkpointCount == 1)
+        #expect(report.ledgerValidation.checkedEventCount == 1)
+        #expect(report.ledgerValidation.invalidEventCount == 0)
+        #expect(report.ledgerValidation.truncated == false)
+        #expect(projectionCountValidation.comparedProjectionCounts)
+        #expect(projectionCountValidation.mismatches.isEmpty)
+        #expect(projectionKeyValidation.comparedProjectionKeys)
+        #expect(projectionKeyValidation.mismatches.isEmpty)
+    }
+
+    @Test
+    func repositoryStorageIntegrityReportClassifiesProjectionDrift() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let session = ProvenanceSessionRecord(
+            id: "session-authoritative",
+            agentKind: "codex",
+            status: "active",
+            updatedAt: timestamp
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-session",
+                eventType: .sessionObserved,
+                timestamp: timestamp,
+                sessionID: session.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(session: session)
+            )
+        )
+
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute(
+            """
+            DELETE FROM provenance_sessions;
+            INSERT INTO provenance_sessions (
+                id,
+                agent_kind,
+                status,
+                updated_at_seconds
+            ) VALUES (
+                'session-stale',
+                'codex',
+                'active',
+                1800000010
+            )
+            """
+        )
+
+        let report = try await repository.storageIntegrityReport(validationLimit: 10)
+        let projectionCountValidation = try #require(report.projectionCountValidation)
+        let projectionKeyValidation = try #require(report.projectionKeyValidation)
+
+        #expect(report.status == "projection_drift")
+        #expect(report.repairRecommended)
+        #expect(projectionCountValidation.mismatches.isEmpty)
+        #expect(projectionKeyValidation.mismatches == [
+            ProvenanceSQLiteProjectionKeyMismatch(
+                tableName: "provenance_sessions",
+                key: "session-authoritative",
+                kind: "missing"
+            ),
+            ProvenanceSQLiteProjectionKeyMismatch(
+                tableName: "provenance_sessions",
+                key: "session-stale",
+                kind: "unexpected"
+            ),
+        ])
+    }
+
+    @Test
+    func repositoryStorageIntegrityReportClassifiesTruncatedValidation() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(Self.checkpointEvent(
+            id: "event-first",
+            checkpointID: "checkpoint-first",
+            timestamp: 1_800_000_000
+        ))
+        try await repository.appendEvent(Self.checkpointEvent(
+            id: "event-second",
+            checkpointID: "checkpoint-second",
+            timestamp: 1_800_000_010
+        ))
+
+        let report = try await repository.storageIntegrityReport(validationLimit: 1)
+        let projectionCountValidation = try #require(report.projectionCountValidation)
+        let projectionKeyValidation = try #require(report.projectionKeyValidation)
+
+        #expect(report.status == "validation_truncated")
+        #expect(report.repairRecommended == false)
+        #expect(report.ledgerValidation.truncated)
+        #expect(projectionCountValidation.truncated)
+        #expect(projectionCountValidation.comparedProjectionCounts == false)
+        #expect(projectionKeyValidation.truncated)
+        #expect(projectionKeyValidation.comparedProjectionKeys == false)
+    }
+
+    @Test
+    func repositoryStorageIntegrityReportSkipsProjectionChecksForInvalidLedger() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(Self.checkpointEvent(
+            id: "event-checkpoint",
+            checkpointID: "checkpoint-1",
+            timestamp: 1_800_000_000
+        ))
+
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute(
+            """
+            UPDATE provenance_events
+            SET payload_json = '{'
+            WHERE id = 'event-checkpoint'
+            """
+        )
+
+        let report = try await repository.storageIntegrityReport(validationLimit: 10)
+
+        #expect(report.status == "ledger_invalid")
+        #expect(report.repairRecommended == false)
+        #expect(report.storageSummary.eventCount == 1)
+        #expect(report.storageSummary.checkpointCount == 1)
+        #expect(report.ledgerValidation.checkedEventCount == 1)
+        #expect(report.ledgerValidation.invalidEventCount == 1)
+        #expect(report.ledgerValidation.firstInvalidIssue?.eventID == "event-checkpoint")
+        #expect(report.projectionCountValidation == nil)
+        #expect(report.projectionKeyValidation == nil)
+    }
+
+    @Test
     func sqliteRepositorySatisfiesEngineClientContract() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
