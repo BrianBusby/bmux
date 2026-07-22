@@ -145,6 +145,53 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func recordsAppliedMigrationsWhenMetadataTableExists() throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        let migrator = try ProvenanceSQLiteMigrator(migrations: [
+            ProvenanceSQLiteMigration(
+                version: 1,
+                statements: [
+                    """
+                    CREATE TABLE provenance_schema_migrations (
+                        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+                        version INTEGER NOT NULL UNIQUE,
+                        applied_at_seconds REAL NOT NULL
+                    )
+                    """,
+                ]
+            ),
+            ProvenanceSQLiteMigration(
+                version: 2,
+                statements: [
+                    """
+                    CREATE TABLE migration_target (
+                        id TEXT PRIMARY KEY NOT NULL
+                    )
+                    """,
+                ]
+            ),
+        ])
+
+        try migrator.migrate(database)
+
+        #expect(try database.userVersion == 2)
+        let query = try database.prepare(
+            "SELECT version, applied_at_seconds FROM provenance_schema_migrations ORDER BY sequence ASC"
+        )
+        defer { query.finalize() }
+
+        #expect(try query.step())
+        #expect(query.int32(at: 0) == 1)
+        #expect((query.double(at: 1) ?? 0) > 0)
+        #expect(try query.step())
+        #expect(query.int32(at: 0) == 2)
+        #expect((query.double(at: 1) ?? 0) > 0)
+        #expect(try query.step() == false)
+    }
+
+    @Test
     func skipsMigrationsAtCurrentVersion() throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
@@ -377,7 +424,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 7)
+        #expect(try await repository.schemaVersion() == 8)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
@@ -393,6 +440,49 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_file_changes", in: database))
         #expect(try Self.tableExists("provenance_validation_runs", in: database))
         #expect(try Self.tableExists("provenance_storage_repair_attempts", in: database))
+        #expect(try Self.tableExists("provenance_schema_migrations", in: database))
+        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [8])
+    }
+
+    @Test
+    func repositoryReadsSchemaMigrationRecordsNewestFirstWithLimit() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute(
+            """
+            CREATE TABLE provenance_schema_migrations (
+                sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+                version INTEGER NOT NULL UNIQUE,
+                applied_at_seconds REAL NOT NULL
+            );
+            INSERT INTO provenance_schema_migrations (version, applied_at_seconds)
+            VALUES (3, 1800000003), (4, 1800000004);
+            """
+        )
+        try database.setUserVersion(4)
+
+        let repository = try ProvenanceSQLiteRepository(
+            url: url,
+            migrations: [
+                ProvenanceSQLiteMigration(version: 1, statements: []),
+                ProvenanceSQLiteMigration(version: 2, statements: []),
+                ProvenanceSQLiteMigration(version: 3, statements: []),
+                ProvenanceSQLiteMigration(version: 4, statements: []),
+            ]
+        )
+
+        let limitedRecords = try await repository.schemaMigrationRecords(limit: 1)
+        let zeroLimitRecords = try await repository.schemaMigrationRecords(limit: -1)
+
+        #expect(limitedRecords == [
+            ProvenanceSQLiteSchemaMigrationRecord(
+                sequence: 2,
+                version: 4,
+                appliedAt: Date(timeIntervalSince1970: 1_800_000_004)
+            ),
+        ])
+        #expect(zeroLimitRecords.isEmpty)
     }
 
     @Test
@@ -411,7 +501,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
 
-        #expect(try await repository.schemaVersion() == 7)
+        #expect(try await repository.schemaVersion() == 8)
         #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
     }
 
@@ -675,7 +765,7 @@ struct ProvenanceSQLiteDatabaseTests {
         let summary = try await repository.storageSummary()
 
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 7,
+            schemaVersion: 8,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,

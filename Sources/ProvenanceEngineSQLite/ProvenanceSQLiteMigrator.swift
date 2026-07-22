@@ -46,6 +46,7 @@ struct ProvenanceSQLiteMigrator: Sendable {
                     }
                     try database.execute(statement)
                 }
+                try recordAppliedMigration(migration, in: database)
                 try database.setUserVersion(migration.version)
             }
             try database.execute("COMMIT")
@@ -57,5 +58,34 @@ struct ProvenanceSQLiteMigrator: Sendable {
 
     private var targetVersion: Int32 {
         migrations.last?.version ?? 0
+    }
+
+    private func recordAppliedMigration(
+        _ migration: ProvenanceSQLiteMigration,
+        in database: ProvenanceSQLiteDatabase
+    ) throws {
+        guard try migrationRecordTableExists(in: database) else { return }
+
+        let insert = try database.prepare(
+            """
+            INSERT INTO provenance_schema_migrations (
+                version,
+                applied_at_seconds
+            ) VALUES (?, ?)
+            """
+        )
+        defer { insert.finalize() }
+
+        try insert.bind(Int(migration.version), at: 1)
+        try insert.bind(Date().timeIntervalSince1970, at: 2)
+        _ = try insert.step()
+    }
+
+    private func migrationRecordTableExists(in database: ProvenanceSQLiteDatabase) throws -> Bool {
+        let query = try database.prepare(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'provenance_schema_migrations'"
+        )
+        defer { query.finalize() }
+        return try query.step()
     }
 }

@@ -520,6 +520,39 @@ actor ProvenanceSQLiteRepository {
         return attempts
     }
 
+    /// Reads recent applied SQLite schema migrations from internal metadata.
+    ///
+    /// - Parameter limit: Maximum number of migration metadata rows to return.
+    /// - Returns: Applied migrations sorted newest first by SQLite sequence.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func schemaMigrationRecords(limit: Int = 100) throws -> [ProvenanceSQLiteSchemaMigrationRecord] {
+        let query = try database.prepare(
+            """
+            SELECT
+                sequence,
+                version,
+                applied_at_seconds
+            FROM provenance_schema_migrations
+            ORDER BY sequence DESC
+            LIMIT ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(max(0, limit), at: 1)
+        var records: [ProvenanceSQLiteSchemaMigrationRecord] = []
+        while try query.step() {
+            records.append(
+                ProvenanceSQLiteSchemaMigrationRecord(
+                    sequence: query.int(at: 0),
+                    version: query.int32(at: 1),
+                    appliedAt: Date(timeIntervalSince1970: query.double(at: 2) ?? 0)
+                )
+            )
+        }
+        return records
+    }
+
     /// Rebuilds current-state projections by replaying the immutable event ledger in append order.
     ///
     /// - Parameter batchSize: Maximum number of ledger entries decoded per cursor read.
@@ -3022,6 +3055,22 @@ actor ProvenanceSQLiteRepository {
                 """
                 CREATE INDEX provenance_storage_repair_attempts_status_index
                 ON provenance_storage_repair_attempts (initial_status, repair_attempted, repaired)
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 8,
+            statements: [
+                """
+                CREATE TABLE provenance_schema_migrations (
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+                    version INTEGER NOT NULL UNIQUE,
+                    applied_at_seconds REAL NOT NULL
+                )
+                """,
+                """
+                CREATE INDEX provenance_schema_migrations_time_index
+                ON provenance_schema_migrations (applied_at_seconds, sequence)
                 """,
             ]
         ),
