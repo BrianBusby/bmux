@@ -116,6 +116,10 @@ A thirteenth Phase 3D storage slice added bounded internal append-order
 event-ledger cursor reads over the existing `provenance_events` table, on
 branch `provenance-session-tree-storage`, at commit
 `4ff1837e40a9dd2c0ad6a9552260cf3afaa9c7d9`.
+A fourteenth Phase 3D storage slice added internal current-state projection
+rebuild from immutable event-ledger replay, on branch
+`provenance-session-tree-storage`, at commit
+`d18d5596c3e0bd4e8e9ffd7680dd6bc6139fc2bb`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -210,9 +214,10 @@ Current checkout:
   projection storage, bounded current-context projection reads, bounded
   session-tree traversal fixes, internal normalized subsession-lifecycle
   recording support, internal SQLite-backed `ProvenanceEngineClient`
-  conformance, and bounded append-order event-ledger cursor reads in
+  conformance, bounded append-order event-ledger cursor reads, and internal
+  projection rebuild from ledger replay in
   `ProvenanceEngineSQLite`. Latest engine commit:
-  `4ff1837e40a9dd2c0ad6a9552260cf3afaa9c7d9` on
+  `d18d5596c3e0bd4e8e9ffd7680dd6bc6139fc2bb` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
@@ -276,23 +281,24 @@ Files changed in the latest implementation slice:
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 - `tests/test_context_efficiency_cli.py`
 
-Latest provenance Phase 3D event-ledger cursor slice:
+Latest provenance Phase 3D projection rebuild slice:
 
 - External repo path: `/Users/brianbusby/repos/provenance-engine`
-- Commit: `4ff1837e40a9dd2c0ad6a9552260cf3afaa9c7d9` (`Add event ledger
-  cursor reads`)
+- Commit: `d18d5596c3e0bd4e8e9ffd7680dd6bc6139fc2bb` (`Add internal
+  projection ledger rebuild`)
 - Branch: `provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - `ProvenanceEngineContracts` remains the only public library product.
-- Added internal `ProvenanceEventLedgerEntry` rows carrying SQLite append
-  sequence plus decoded `ProvenanceEvent`.
-- Added `ProvenanceSQLiteRepository.eventLedgerEntries(afterSequence:limit:)`,
-  a bounded internal read over the existing `provenance_events` table ordered by
-  append sequence rather than event timestamp.
-- Refactored event decoding so stable-ID lookup and cursor reads share the same
-  stored source/confidence/payload validation behavior.
-- Added behavior coverage for reopen, append-order replay, exclusive sequence
-  cursor continuation, positive limits, and negative-limit empty results.
+- Added `ProvenanceSQLiteRepository.rebuildProjectionsFromEventLedger(batchSize:)`,
+  an internal bounded-batch replay path that clears current-state projection
+  tables and reapplies immutable ledger payloads in SQLite append order.
+- Refactored append projection updates through a shared private payload
+  projection path so direct append and ledger replay use the same upsert logic.
+- Preserved the immutable `provenance_events` ledger and kept this out of the
+  public SDK/product surface.
+- Added behavior coverage for stale projection repair, append-order overwrite
+  semantics, non-positive batch coercion, empty-ledger projection clearing, and
+  ledger preservation.
 - No public storage SDK/product, daemon, IPC, launch agent, CLI, retrieval,
   lifecycle policy, UI, observability expansion, bmux storage move, bmux schema
   move, or data migration was added.
@@ -959,8 +965,9 @@ ADR-001 Phase 3 target:
    session-tree projection storage, file-explanation projections,
    current-context projections, normalized lifecycle recording,
    SQLite-backed `ProvenanceEngineClient` conformance, default storage-location
-   resolution, and bounded internal event-ledger cursor reads. Latest storage
-   slice is `4ff1837e40a9dd2c0ad6a9552260cf3afaa9c7d9` on
+   resolution, bounded internal event-ledger cursor reads, and internal
+   projection rebuild from ledger replay. Latest storage slice is
+   `d18d5596c3e0bd4e8e9ffd7680dd6bc6139fc2bb` on
    `origin/provenance-session-tree-storage` with draft PR
    https://github.com/BrianBusby/provenance-engine/pull/1.
 3. The next implementation target can continue Phase 3D only after deciding the
