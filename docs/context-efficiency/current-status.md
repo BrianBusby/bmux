@@ -140,6 +140,11 @@ A nineteenth Phase 3D storage slice added internal bounded SQLite
 projection-drift repair over complete projection-key validation, on branch
 `provenance-session-tree-storage`, at commit
 `ad94a60bdb8792b4266705579997e9a1f77a25e2`.
+A twentieth Phase 3D storage slice added an internal bounded SQLite storage
+integrity report that composes storage summary, ledger validation,
+projection-count validation, projection-key validation, and repair guidance, on
+branch `provenance-session-tree-storage`, at commit
+`c970310d3852f22dd6b205510967f609a158b3e0`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -238,9 +243,10 @@ Current checkout:
   projection rebuild from ledger replay, an internal repository-owned SQLite
   storage summary read model, internal bounded event-ledger validation,
   internal bounded projection-count validation, internal bounded
-  projection-key validation, and internal bounded projection-drift repair in
+  projection-key validation, internal bounded projection-drift repair, and an
+  internal bounded storage integrity report in
   `ProvenanceEngineSQLite`. Latest engine commit:
-  `ad94a60bdb8792b4266705579997e9a1f77a25e2` on
+  `c970310d3852f22dd6b205510967f609a158b3e0` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
@@ -303,6 +309,39 @@ Files changed in the latest implementation slice:
 - `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Store/ContextEfficiencyStore.swift`
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 - `tests/test_context_efficiency_cli.py`
+
+Latest provenance Phase 3D storage-integrity slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `c970310d3852f22dd6b205510967f609a158b3e0` (`Add SQLite
+  storage integrity report`)
+- Branch: `provenance-session-tree-storage`; draft PR:
+  https://github.com/BrianBusby/provenance-engine/pull/1.
+- `ProvenanceEngineContracts` remains the only public library product.
+- Added internal `ProvenanceSQLiteStorageIntegrityReport` and
+  `ProvenanceSQLiteRepository.storageIntegrityReport(validationLimit:mismatchLimit:)`.
+- The report composes existing bounded storage summary, event-ledger
+  validation, projection-count validation, and projection-key validation into
+  one read-only internal diagnostic result.
+- The report classifies storage as `healthy`, `ledger_invalid`,
+  `projection_drift`, or `validation_truncated`, recommends projection repair
+  only when a complete key comparison makes repair safe, and skips projection
+  comparisons when ledger validation already found invalid rows.
+- Kept the report below the public SDK/product surface; no bmux consumer
+  imports or runtime behavior changed.
+- Added behavior coverage for healthy storage, same-count projection-key drift,
+  truncated validation scans, and invalid ledger rows.
+- No public storage SDK/product, daemon, IPC, launch agent, CLI, retrieval,
+  lifecycle policy, UI, observability expansion, bmux storage move, bmux schema
+  move, or data migration was added.
+- Validation passed with the standalone engine SwiftPM suite and diff checks.
+- Localization audit: changed only engine internal Swift package files, package
+  README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
+  settings/localized strings changed.
+- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
+  engine-owned storage boundary over existing contracts. Keep it internal and
+  do not start public SDK export, daemon, bmux reconnect, storage migration,
+  retrieval, lifecycle policy, UI, or broad observability expansion.
 
 Latest provenance Phase 3D projection-key validation slice:
 
