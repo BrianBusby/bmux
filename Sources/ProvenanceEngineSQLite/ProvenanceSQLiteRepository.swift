@@ -2253,6 +2253,7 @@ extension ProvenanceSQLiteRepository: ProvenanceSubsessionLifecycleRecording {
         let parentRelationship = try parentSession(for: request.parentSessionID)
         let rootSessionID = parentRelationship?.rootSessionID ?? request.parentSessionID
         let depth = (parentRelationship?.depth ?? 0) + 1
+        let existingChildSession = try session(id: childSessionID)
         let status: String
         let eventType: ProvenanceEventType
         let startedAt: Date?
@@ -2264,7 +2265,7 @@ extension ProvenanceSQLiteRepository: ProvenanceSubsessionLifecycleRecording {
         case .stopped:
             status = "completed"
             eventType = .subsessionStopped
-            startedAt = nil
+            startedAt = existingChildSession?.startedAt
         }
         let session = ProvenanceSessionRecord(
             id: childSessionID,

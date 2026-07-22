@@ -40,13 +40,14 @@ struct ProvenanceStableIDFactory: Sendable {
         childSessionID: String,
         timestamp: Date
     ) -> String {
-        id(
+        let timestampMicroseconds = Int64((timestamp.timeIntervalSince1970 * 1_000_000).rounded())
+        return id(
             prefix: "event",
             value: [
                 "subsession-lifecycle",
                 phase,
                 childSessionID,
-                String(format: "%.6f", timestamp.timeIntervalSince1970),
+                String(timestampMicroseconds),
             ].joined(separator: "\n")
         )
     }

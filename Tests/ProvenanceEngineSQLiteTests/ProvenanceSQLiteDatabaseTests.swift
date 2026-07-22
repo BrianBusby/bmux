@@ -974,6 +974,87 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryRecordsSubsessionStopWithoutClearingStartTime() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let parentTimestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let childStartTimestamp = Date(timeIntervalSince1970: 1_800_000_010)
+        let childStopTimestamp = Date(timeIntervalSince1970: 1_800_000_020)
+        let parentSession = ProvenanceSessionRecord(
+            id: "session-parent",
+            agentKind: "codex",
+            status: "active",
+            startedAt: parentTimestamp,
+            updatedAt: parentTimestamp
+        )
+        let startRequest = ProvenanceSubsessionLifecycleRequest(
+            phase: .started,
+            parentSessionID: parentSession.id,
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-1",
+            workingDirectory: "/repos/project",
+            externalIdentityKind: "subsession",
+            externalIdentityValue: "native-child-1",
+            timestamp: childStartTimestamp
+        )
+        let stopRequest = ProvenanceSubsessionLifecycleRequest(
+            phase: .stopped,
+            parentSessionID: parentSession.id,
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-1",
+            workingDirectory: "/repos/project",
+            externalIdentityKind: "subsession",
+            externalIdentityValue: "native-child-1",
+            timestamp: childStopTimestamp
+        )
+        let stableIDFactory = ProvenanceStableIDFactory()
+        let expectedChildSessionID = stableIDFactory.subsessionSessionID(
+            agentKind: startRequest.agentKind,
+            parentSessionID: startRequest.parentSessionID,
+            identityKind: "subsession",
+            identityValue: "native-child-1"
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-parent",
+                eventType: .sessionObserved,
+                timestamp: parentTimestamp,
+                sessionID: parentSession.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(session: parentSession)
+            )
+        )
+
+        let startResponse = await repository.recordSubsessionLifecycle(startRequest)
+        let stopEvent = try await repository.subsessionLifecycleEvent(for: stopRequest)
+        let stopResponse = await repository.recordSubsessionLifecycle(stopRequest)
+        let storedSession = try await repository.session(id: expectedChildSessionID)
+        let storedStopEvent = try await repository.event(id: stopEvent.id)
+
+        #expect(startResponse.accepted)
+        #expect(stopResponse.accepted)
+        #expect(stopResponse.childSessionID == expectedChildSessionID)
+        #expect(stopEvent.eventType == .subsessionStopped)
+        #expect(stopEvent.payload.session?.status == "completed")
+        #expect(stopEvent.payload.session?.startedAt == childStartTimestamp)
+        #expect(storedStopEvent == stopEvent)
+        #expect(storedSession == ProvenanceSessionRecord(
+            id: expectedChildSessionID,
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-1",
+            cwd: "/repos/project",
+            status: "completed",
+            startedAt: childStartTimestamp,
+            updatedAt: childStopTimestamp
+        ))
+    }
+
+    @Test
     func repositoryListsWorktreesNewestFirstWithRepositoryFilterAndLimit() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
