@@ -54,6 +54,30 @@ actor ProvenanceSQLiteRepository {
         try database.userVersion
     }
 
+    /// Reads internal storage counts for the event ledger and current-state projection tables.
+    ///
+    /// - Returns: A bounded summary of repository-owned SQLite storage state.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects one of the reads.
+    func storageSummary() throws -> ProvenanceSQLiteStorageSummary {
+        let ledgerSummary = try eventLedgerSummary()
+        return ProvenanceSQLiteStorageSummary(
+            schemaVersion: try schemaVersion(),
+            eventCount: ledgerSummary.count,
+            latestEventSequence: ledgerSummary.latestSequence,
+            repositoryCount: try countRows(in: "provenance_repositories"),
+            worktreeCount: try countRows(in: "provenance_worktrees"),
+            sessionCount: try countRows(in: "provenance_sessions"),
+            sessionRelationshipCount: try countRows(in: "provenance_session_relationships"),
+            externalIdentityCount: try countRows(in: "provenance_session_external_identities"),
+            workItemCount: try countRows(in: "provenance_work_items"),
+            contributionCount: try countRows(in: "provenance_work_contributions"),
+            checkpointCount: try countRows(in: "provenance_checkpoints"),
+            changeSetCount: try countRows(in: "provenance_change_sets"),
+            fileChangeCount: try countRows(in: "provenance_file_changes"),
+            validationRunCount: try countRows(in: "provenance_validation_runs")
+        )
+    }
+
     /// Appends one immutable provenance event to the internal ledger.
     ///
     /// - Parameter event: Contract event to persist.
@@ -576,6 +600,21 @@ actor ProvenanceSQLiteRepository {
             lastReconciledAt: query.double(at: 8).map { Date(timeIntervalSince1970: $0) },
             updatedAt: Date(timeIntervalSince1970: query.double(at: 9) ?? 0)
         )
+    }
+
+    private func eventLedgerSummary() throws -> (count: Int, latestSequence: Int?) {
+        let query = try database.prepare("SELECT COUNT(*), MAX(sequence) FROM provenance_events")
+        defer { query.finalize() }
+        guard try query.step() else { return (0, nil) }
+        let latestSequence = query.double(at: 1).map(Int.init)
+        return (query.int(at: 0), latestSequence)
+    }
+
+    private func countRows(in tableName: String) throws -> Int {
+        let query = try database.prepare("SELECT COUNT(*) FROM \(tableName)")
+        defer { query.finalize() }
+        guard try query.step() else { return 0 }
+        return query.int(at: 0)
     }
 
     private func event(

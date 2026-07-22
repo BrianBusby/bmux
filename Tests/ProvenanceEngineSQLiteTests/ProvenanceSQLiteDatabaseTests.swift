@@ -626,6 +626,89 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryStorageSummaryReportsEmptyLedgerAndProjections() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        let summary = try await repository.storageSummary()
+
+        #expect(summary == ProvenanceSQLiteStorageSummary(
+            schemaVersion: 6,
+            eventCount: 0,
+            latestEventSequence: nil,
+            repositoryCount: 0,
+            worktreeCount: 0,
+            sessionCount: 0,
+            sessionRelationshipCount: 0,
+            externalIdentityCount: 0,
+            workItemCount: 0,
+            contributionCount: 0,
+            checkpointCount: 0,
+            changeSetCount: 0,
+            fileChangeCount: 0,
+            validationRunCount: 0
+        ))
+    }
+
+    @Test
+    func repositoryStorageSummaryReflectsProjectionRepairAfterLedgerReplay() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let session = ProvenanceSessionRecord(
+            id: "session-authoritative",
+            agentKind: "codex",
+            status: "active",
+            updatedAt: timestamp
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-session",
+                eventType: .sessionObserved,
+                timestamp: timestamp,
+                sessionID: session.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(session: session)
+            )
+        )
+
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute(
+            """
+            INSERT INTO provenance_sessions (
+                id,
+                agent_kind,
+                status,
+                updated_at_seconds
+            ) VALUES (
+                'session-stale',
+                'codex',
+                'active',
+                1800000010
+            )
+            """
+        )
+
+        let driftedSummary = try await repository.storageSummary()
+        let replayedCount = try await repository.rebuildProjectionsFromEventLedger(batchSize: 1)
+        let repairedSummary = try await repository.storageSummary()
+
+        #expect(driftedSummary.eventCount == 1)
+        #expect(driftedSummary.latestEventSequence == 1)
+        #expect(driftedSummary.sessionCount == 2)
+        #expect(replayedCount == 1)
+        #expect(repairedSummary.eventCount == 1)
+        #expect(repairedSummary.latestEventSequence == 1)
+        #expect(repairedSummary.sessionCount == 1)
+        #expect(try await repository.session(id: session.id) == session)
+        #expect(try await repository.session(id: "session-stale") == nil)
+    }
+
+    @Test
     func sqliteRepositorySatisfiesEngineClientContract() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
@@ -652,7 +735,8 @@ struct ProvenanceSQLiteDatabaseTests {
             startedAt: timestamp,
             updatedAt: timestamp
         )
-        let client: any ProvenanceEngineClient = try ProvenanceSQLiteRepository(url: url)
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let client: any ProvenanceEngineClient = repository
 
         let health = try await client.health()
         let append = try await client.appendEvent(
@@ -694,6 +778,7 @@ struct ProvenanceSQLiteDatabaseTests {
         let context = try await client.currentContext(
             ProvenanceCurrentContextRequest(repositoryPath: repositoryRecord.path)
         )
+        let summary = try await repository.storageSummary()
 
         #expect(health == ProvenanceEngineHealth(
             status: .available,
@@ -716,6 +801,13 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(context.found)
         #expect(context.worktree == worktree)
         #expect(context.activeSessions.map(\.session.id).contains(parentSession.id))
+        #expect(summary.eventCount == 2)
+        #expect(summary.latestEventSequence == 2)
+        #expect(summary.repositoryCount == 1)
+        #expect(summary.worktreeCount == 1)
+        #expect(summary.sessionCount == 2)
+        #expect(summary.sessionRelationshipCount == 1)
+        #expect(summary.externalIdentityCount == 1)
     }
 
     @Test
