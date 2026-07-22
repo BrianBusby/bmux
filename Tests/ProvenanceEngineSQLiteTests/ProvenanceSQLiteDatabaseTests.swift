@@ -816,6 +816,164 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryRecordsSubsessionLifecycleThroughContractAfterReopen() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let rootTimestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let parentTimestamp = Date(timeIntervalSince1970: 1_800_000_001)
+        let childTimestamp = Date(timeIntervalSince1970: 1_800_000_002.123456)
+        let rootSession = ProvenanceSessionRecord(
+            id: "session-root",
+            agentKind: "codex",
+            status: "active",
+            startedAt: rootTimestamp,
+            updatedAt: rootTimestamp
+        )
+        let parentSession = ProvenanceSessionRecord(
+            id: "session-parent",
+            agentKind: "codex",
+            status: "active",
+            startedAt: parentTimestamp,
+            updatedAt: parentTimestamp
+        )
+        let parentRelationship = ProvenanceSessionRelationshipRecord(
+            sessionID: parentSession.id,
+            parentSessionID: rootSession.id,
+            rootSessionID: rootSession.id,
+            depth: 1,
+            source: .observed,
+            confidence: .high,
+            createdAt: parentTimestamp,
+            updatedAt: parentTimestamp
+        )
+        let request = ProvenanceSubsessionLifecycleRequest(
+            phase: .started,
+            parentSessionID: parentSession.id,
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-1",
+            workingDirectory: "/repos/project",
+            externalIdentityKind: "subsession",
+            externalIdentityValue: "native-child-1",
+            displayName: "Child worker",
+            timestamp: childTimestamp
+        )
+        let stableIDFactory = ProvenanceStableIDFactory()
+        let expectedChildSessionID = stableIDFactory.subsessionSessionID(
+            agentKind: request.agentKind,
+            parentSessionID: request.parentSessionID,
+            identityKind: "subsession",
+            identityValue: "native-child-1"
+        )
+        let expectedExternalIdentityID = stableIDFactory.externalIdentityID(
+            system: request.agentKind,
+            kind: "subsession",
+            externalID: "native-child-1"
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-root",
+                eventType: .sessionObserved,
+                timestamp: rootTimestamp,
+                sessionID: rootSession.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(session: rootSession)
+            )
+        )
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-parent",
+                eventType: .subsessionStarted,
+                timestamp: parentTimestamp,
+                sessionID: parentSession.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(
+                    session: parentSession,
+                    sessionRelationship: parentRelationship
+                )
+            )
+        )
+
+        let builtEvent = try await repository.subsessionLifecycleEvent(for: request)
+        let response = await repository.recordSubsessionLifecycle(request)
+        let duplicateResponse = await repository.recordSubsessionLifecycle(request)
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let storedEvent = try await reader.event(id: builtEvent.id)
+        let tree = try await reader.sessionTree(
+            ProvenanceSessionTreeRequest(rootSessionID: rootSession.id)
+        )
+
+        #expect(builtEvent.id == stableIDFactory.subsessionLifecycleEventID(
+            phase: request.phase.rawValue,
+            childSessionID: expectedChildSessionID,
+            timestamp: childTimestamp
+        ))
+        #expect(builtEvent.eventType == .subsessionStarted)
+        #expect(builtEvent.sessionID == expectedChildSessionID)
+        #expect(builtEvent.payload.session == ProvenanceSessionRecord(
+            id: expectedChildSessionID,
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-1",
+            cwd: "/repos/project",
+            status: "active",
+            startedAt: childTimestamp,
+            updatedAt: childTimestamp
+        ))
+        #expect(builtEvent.payload.sessionRelationship == ProvenanceSessionRelationshipRecord(
+            sessionID: expectedChildSessionID,
+            parentSessionID: parentSession.id,
+            rootSessionID: rootSession.id,
+            depth: 2,
+            source: .observed,
+            confidence: .high,
+            createdAt: childTimestamp,
+            updatedAt: childTimestamp
+        ))
+        #expect(builtEvent.payload.externalIdentities == [
+            ProvenanceExternalIdentityRecord(
+                id: expectedExternalIdentityID,
+                sessionID: expectedChildSessionID,
+                system: "codex",
+                kind: "subsession",
+                externalID: "native-child-1",
+                source: .observed,
+                confidence: .high,
+                createdAt: childTimestamp,
+                updatedAt: childTimestamp
+            ),
+        ])
+        #expect(response == ProvenanceSubsessionLifecycleResponse(
+            accepted: true,
+            eventID: builtEvent.id,
+            childSessionID: expectedChildSessionID,
+            relationshipSessionID: expectedChildSessionID,
+            externalIdentityID: expectedExternalIdentityID
+        ))
+        #expect(duplicateResponse.accepted == false)
+        #expect(duplicateResponse.eventID == builtEvent.id)
+        #expect(duplicateResponse.childSessionID == expectedChildSessionID)
+        #expect(duplicateResponse.relationshipSessionID == expectedChildSessionID)
+        #expect(duplicateResponse.externalIdentityID == expectedExternalIdentityID)
+        #expect(duplicateResponse.errorDescription?.contains("UNIQUE") == true
+            || duplicateResponse.errorDescription?.contains("unique") == true)
+        #expect(storedEvent == builtEvent)
+        #expect(tree.sessions.map(\.id) == [
+            rootSession.id,
+            parentSession.id,
+            expectedChildSessionID,
+        ])
+        #expect(tree.relationships == [
+            parentRelationship,
+            builtEvent.payload.sessionRelationship,
+        ])
+        #expect(tree.externalIdentities == builtEvent.payload.externalIdentities)
+    }
+
+    @Test
     func repositoryListsWorktreesNewestFirstWithRepositoryFilterAndLimit() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }

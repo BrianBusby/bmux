@@ -6,6 +6,7 @@ actor ProvenanceSQLiteRepository {
     private let database: ProvenanceSQLiteDatabase
     private let payloadEncoder: JSONEncoder
     private let payloadDecoder: JSONDecoder
+    private let stableIDFactory: ProvenanceStableIDFactory
 
     /// Opens the database and applies the supplied migrations before returning.
     ///
@@ -26,6 +27,7 @@ actor ProvenanceSQLiteRepository {
         self.database = database
         self.payloadEncoder = JSONEncoder()
         self.payloadDecoder = JSONDecoder()
+        self.stableIDFactory = ProvenanceStableIDFactory()
     }
 
     /// Current migrated schema version recorded in SQLite `PRAGMA user_version`.
@@ -1890,6 +1892,40 @@ actor ProvenanceSQLiteRepository {
         _ = try upsert.step()
     }
 
+    private func lifecycleIdentity(
+        for request: ProvenanceSubsessionLifecycleRequest
+    ) -> (
+        kind: String,
+        value: String,
+        confidence: ProvenanceConfidence
+    ) {
+        let trimmed = request.externalIdentityValue?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let trimmed, !trimmed.isEmpty {
+            let identityKind = request.externalIdentityKind?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            return (
+                kind: identityKind.flatMap { $0.isEmpty ? nil : $0 } ?? "subsession",
+                value: trimmed,
+                confidence: .high
+            )
+        }
+        return (
+            kind: "unresolved_subsession",
+            value: "\(request.agentKind):\(request.parentSessionID):default",
+            confidence: .low
+        )
+    }
+
+    private func boundedErrorSummary(_ error: Error) -> String {
+        boundedErrorSummary(String(describing: error))
+    }
+
+    private func boundedErrorSummary(_ message: String) -> String {
+        let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count > 512 else { return trimmed }
+        return String(trimmed.prefix(512))
+    }
+
     private static let migrations = [
         ProvenanceSQLiteMigration(
             version: 1,
@@ -2174,4 +2210,113 @@ actor ProvenanceSQLiteRepository {
             ]
         ),
     ]
+}
+
+extension ProvenanceSQLiteRepository: ProvenanceSubsessionLifecycleRecording {
+    func recordSubsessionLifecycle(
+        _ request: ProvenanceSubsessionLifecycleRequest
+    ) async -> ProvenanceSubsessionLifecycleResponse {
+        var builtEvent: ProvenanceEvent?
+        do {
+            let event = try await subsessionLifecycleEvent(for: request)
+            builtEvent = event
+            try appendEvent(event)
+            return ProvenanceSubsessionLifecycleResponse(
+                accepted: true,
+                eventID: event.id,
+                childSessionID: event.payload.session?.id,
+                relationshipSessionID: event.payload.sessionRelationship?.sessionID,
+                externalIdentityID: event.payload.externalIdentities.first?.id
+            )
+        } catch {
+            return ProvenanceSubsessionLifecycleResponse(
+                accepted: false,
+                eventID: builtEvent?.id,
+                childSessionID: builtEvent?.payload.session?.id,
+                relationshipSessionID: builtEvent?.payload.sessionRelationship?.sessionID,
+                externalIdentityID: builtEvent?.payload.externalIdentities.first?.id,
+                errorDescription: boundedErrorSummary(error)
+            )
+        }
+    }
+
+    func subsessionLifecycleEvent(
+        for request: ProvenanceSubsessionLifecycleRequest
+    ) async throws -> ProvenanceEvent {
+        let identity = lifecycleIdentity(for: request)
+        let childSessionID = stableIDFactory.subsessionSessionID(
+            agentKind: request.agentKind,
+            parentSessionID: request.parentSessionID,
+            identityKind: identity.kind,
+            identityValue: identity.value
+        )
+        let parentRelationship = try parentSession(for: request.parentSessionID)
+        let rootSessionID = parentRelationship?.rootSessionID ?? request.parentSessionID
+        let depth = (parentRelationship?.depth ?? 0) + 1
+        let status: String
+        let eventType: ProvenanceEventType
+        let startedAt: Date?
+        switch request.phase {
+        case .started:
+            status = "active"
+            eventType = .subsessionStarted
+            startedAt = request.timestamp
+        case .stopped:
+            status = "completed"
+            eventType = .subsessionStopped
+            startedAt = nil
+        }
+        let session = ProvenanceSessionRecord(
+            id: childSessionID,
+            agentKind: request.agentKind,
+            workspaceID: request.workspaceID,
+            surfaceID: request.surfaceID,
+            cwd: request.workingDirectory,
+            status: status,
+            startedAt: startedAt,
+            updatedAt: request.timestamp
+        )
+        let relationship = ProvenanceSessionRelationshipRecord(
+            sessionID: childSessionID,
+            parentSessionID: request.parentSessionID,
+            rootSessionID: rootSessionID,
+            depth: depth,
+            source: .observed,
+            confidence: identity.confidence,
+            createdAt: request.timestamp,
+            updatedAt: request.timestamp
+        )
+        let externalIdentity = ProvenanceExternalIdentityRecord(
+            id: stableIDFactory.externalIdentityID(
+                system: request.agentKind,
+                kind: identity.kind,
+                externalID: identity.value
+            ),
+            sessionID: childSessionID,
+            system: request.agentKind,
+            kind: identity.kind,
+            externalID: identity.value,
+            source: .observed,
+            confidence: identity.confidence,
+            createdAt: request.timestamp,
+            updatedAt: request.timestamp
+        )
+        return ProvenanceEvent(
+            id: stableIDFactory.subsessionLifecycleEventID(
+                phase: request.phase.rawValue,
+                childSessionID: childSessionID,
+                timestamp: request.timestamp
+            ),
+            eventType: eventType,
+            timestamp: request.timestamp,
+            sessionID: childSessionID,
+            source: .observed,
+            confidence: identity.confidence,
+            payload: ProvenanceEventPayload(
+                session: session,
+                sessionRelationship: relationship,
+                externalIdentities: [externalIdentity]
+            )
+        )
+    }
 }
