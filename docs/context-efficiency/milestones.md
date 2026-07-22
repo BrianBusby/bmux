@@ -79,7 +79,10 @@ conformance, including health and append request wrappers over the existing
 internal storage/query paths, at commit
 `29c483078c4637631add212f9c2840b1caf4d328` on branch
 `provenance-session-tree-storage`; draft PR:
-https://github.com/BrianBusby/provenance-engine/pull/1. No public storage SDK,
+https://github.com/BrianBusby/provenance-engine/pull/1. An autoreview follow-up
+enforced `ProvenanceSessionTreeRequest.limit` as a combined
+session-plus-relationship row bound while preserving coherent parent-child edges
+at commit `ebf2d437bc48b875c84f5794387e2437dc8b82b4`. No public storage SDK,
 daemon, storage path move, schema move, data migration, bmux reconnect,
 retrieval layer, lifecycle policy, UI, or broad observability expansion has
 been created. Full ADR-001 Phase 3 is still not complete.

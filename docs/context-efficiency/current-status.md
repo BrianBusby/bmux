@@ -103,6 +103,9 @@ storage/query paths, at commit
 `29c483078c4637631add212f9c2840b1caf4d328` on branch
 `provenance-session-tree-storage`; draft PR:
 https://github.com/BrianBusby/provenance-engine/pull/1.
+An autoreview follow-up enforced `ProvenanceSessionTreeRequest.limit` as a
+combined session-plus-relationship row bound while preserving coherent
+parent-child edges at commit `ebf2d437bc48b875c84f5794387e2437dc8b82b4`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -197,7 +200,7 @@ Current checkout:
   session-tree traversal fixes, and internal normalized subsession-lifecycle
   recording support plus internal SQLite-backed `ProvenanceEngineClient`
   conformance in `ProvenanceEngineSQLite`. Latest pushed engine commit:
-  `29c483078c4637631add212f9c2840b1caf4d328` on
+  `ebf2d437bc48b875c84f5794387e2437dc8b82b4` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
