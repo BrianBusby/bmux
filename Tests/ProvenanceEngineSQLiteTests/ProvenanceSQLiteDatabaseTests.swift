@@ -377,7 +377,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 4)
+        #expect(try await repository.schemaVersion() == 5)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
@@ -386,6 +386,11 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_worktrees", in: database))
         #expect(try Self.tableExists("provenance_session_relationships", in: database))
         #expect(try Self.tableExists("provenance_session_external_identities", in: database))
+        #expect(try Self.tableExists("provenance_work_items", in: database))
+        #expect(try Self.tableExists("provenance_work_contributions", in: database))
+        #expect(try Self.tableExists("provenance_checkpoints", in: database))
+        #expect(try Self.tableExists("provenance_change_sets", in: database))
+        #expect(try Self.tableExists("provenance_file_changes", in: database))
     }
 
     @Test
@@ -928,6 +933,204 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryExplainsLatestFileChangeWithLinkedProjectionsAfterReopen() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repositoryRecord = ProvenanceRepositoryRecord(
+            id: "repository-1",
+            path: "/repos/project",
+            commonDirectory: "/repos/project/.git",
+            remoteSlug: "owner/project",
+            createdAt: Date(timeIntervalSince1970: 1_800_000_000),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_001)
+        )
+        let worktree = ProvenanceWorktreeRecord(
+            id: "worktree-1",
+            repositoryID: repositoryRecord.id,
+            path: "/repos/project",
+            branch: "main",
+            currentHEAD: "head-1",
+            isDirty: true,
+            status: "active",
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_002)
+        )
+        let session = ProvenanceSessionRecord(
+            id: "session-1",
+            agentKind: "codex",
+            worktreeID: worktree.id,
+            status: "active",
+            startedAt: Date(timeIntervalSince1970: 1_800_000_003),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_004)
+        )
+        let workItem = ProvenanceWorkItemRecord(
+            id: "work-item-1",
+            title: "Split provenance engine",
+            status: "active",
+            createdAt: Date(timeIntervalSince1970: 1_800_000_005),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_006)
+        )
+        let contribution = ProvenanceContributionRecord(
+            id: "contribution-1",
+            sessionID: session.id,
+            worktreeID: worktree.id,
+            workItemID: workItem.id,
+            declaredIntent: "Move file explanation storage into the engine.",
+            expectedScope: ["Sources/ProvenanceEngineSQLite"],
+            status: "active",
+            startedAt: Date(timeIntervalSince1970: 1_800_000_007),
+            assignmentConfidence: .high,
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_008)
+        )
+        let checkpoint = ProvenanceCheckpointRecord(
+            id: "checkpoint-1",
+            contributionID: contribution.id,
+            sequence: 1,
+            gitHEAD: "head-1",
+            summary: "Added internal file explanation projections.",
+            status: "in_progress",
+            semanticConfidence: .medium,
+            freshness: "fresh",
+            createdAt: Date(timeIntervalSince1970: 1_800_000_009)
+        )
+        let oldChangeSet = ProvenanceChangeSetRecord(
+            id: "change-set-old",
+            checkpointID: checkpoint.id,
+            worktreeID: worktree.id,
+            summary: "Old change set.",
+            diffFingerprint: "diff-old",
+            createdAt: Date(timeIntervalSince1970: 1_800_000_010)
+        )
+        let newChangeSet = ProvenanceChangeSetRecord(
+            id: "change-set-new",
+            checkpointID: checkpoint.id,
+            worktreeID: worktree.id,
+            summary: "New change set.",
+            diffFingerprint: "diff-new",
+            createdAt: Date(timeIntervalSince1970: 1_800_000_020)
+        )
+        let oldFileChange = ProvenanceFileChangeRecord(
+            id: "file-change-old",
+            changeSetID: oldChangeSet.id,
+            repositoryID: repositoryRecord.id,
+            worktreeID: worktree.id,
+            path: "Sources/ProvenanceSQLiteRepository.swift",
+            status: "modified",
+            beforeHash: "before-old",
+            afterHash: "after-old",
+            attributionSource: .observed,
+            attributionConfidence: .medium,
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_011)
+        )
+        let newFileChange = ProvenanceFileChangeRecord(
+            id: "file-change-new",
+            changeSetID: newChangeSet.id,
+            repositoryID: repositoryRecord.id,
+            worktreeID: worktree.id,
+            path: oldFileChange.path,
+            status: "modified",
+            beforeHash: "before-new",
+            afterHash: "after-new",
+            attributionSource: .declared,
+            attributionConfidence: .high,
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_021)
+        )
+
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        try await writer.appendEvent(
+            ProvenanceEvent(
+                id: "event-bootstrap",
+                eventType: .worktreeObserved,
+                timestamp: worktree.updatedAt,
+                repositoryID: repositoryRecord.id,
+                worktreeID: worktree.id,
+                sessionID: session.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(
+                    repository: repositoryRecord,
+                    worktree: worktree,
+                    session: session,
+                    workItem: workItem,
+                    contribution: contribution,
+                    checkpoint: checkpoint
+                )
+            )
+        )
+        try await writer.appendEvent(
+            ProvenanceEvent(
+                id: "event-old-file",
+                eventType: "file_change_observed",
+                timestamp: oldFileChange.updatedAt,
+                repositoryID: repositoryRecord.id,
+                worktreeID: worktree.id,
+                source: .observed,
+                confidence: .medium,
+                payload: ProvenanceEventPayload(
+                    changeSet: oldChangeSet,
+                    fileChanges: [oldFileChange]
+                )
+            )
+        )
+        try await writer.appendEvent(
+            ProvenanceEvent(
+                id: "event-new-file",
+                eventType: "file_change_observed",
+                timestamp: newFileChange.updatedAt,
+                repositoryID: repositoryRecord.id,
+                worktreeID: worktree.id,
+                source: .declared,
+                confidence: .high,
+                payload: ProvenanceEventPayload(
+                    changeSet: newChangeSet,
+                    fileChanges: [newFileChange]
+                )
+            )
+        )
+
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let response = try await reader.fileExplanation(
+            ProvenanceFileExplanationRequest(
+                worktreeID: worktree.id,
+                path: newFileChange.path
+            )
+        )
+
+        #expect(response == ProvenanceFileExplanationResponse(
+            found: true,
+            explanation: ProvenanceFileExplanation(
+                fileChange: newFileChange,
+                changeSet: newChangeSet,
+                checkpoint: checkpoint,
+                contribution: contribution,
+                session: session,
+                workItem: workItem,
+                worktree: worktree,
+                repository: repositoryRecord
+            )
+        ))
+    }
+
+    @Test
+    func repositoryFileExplanationReturnsNoFileReasonForUnknownPath() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        let response = try await repository.fileExplanation(
+            ProvenanceFileExplanationRequest(
+                worktreeID: "worktree-1",
+                path: "missing.swift"
+            )
+        )
+
+        #expect(response == ProvenanceFileExplanationResponse(
+            found: false,
+            reason: "no_file",
+            explanation: nil
+        ))
+    }
+
+    @Test
     func repositoryRejectsDuplicateEventIDWithoutReplacingOriginal() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
@@ -946,6 +1149,17 @@ struct ProvenanceSQLiteDatabaseTests {
             startedAt: originalSession.startedAt,
             updatedAt: Date(timeIntervalSince1970: 1_800_000_010)
         )
+        let duplicateFileChange = ProvenanceFileChangeRecord(
+            id: "file-change-duplicate",
+            changeSetID: "change-set-duplicate",
+            repositoryID: "repository-1",
+            worktreeID: "worktree-1",
+            path: "duplicate.swift",
+            status: "modified",
+            attributionSource: .declared,
+            attributionConfidence: .high,
+            updatedAt: duplicateSession.updatedAt
+        )
         let original = ProvenanceEvent(
             id: "event-1",
             eventType: .sessionObserved,
@@ -962,7 +1176,10 @@ struct ProvenanceSQLiteDatabaseTests {
             worktreeID: "worktree-1",
             source: .observed,
             confidence: .high,
-            payload: ProvenanceEventPayload(session: duplicateSession)
+            payload: ProvenanceEventPayload(
+                session: duplicateSession,
+                fileChanges: [duplicateFileChange]
+            )
         )
 
         try await repository.appendEvent(original)
@@ -980,6 +1197,16 @@ struct ProvenanceSQLiteDatabaseTests {
 
         #expect(try await repository.event(id: original.id) == original)
         #expect(try await repository.session(id: originalSession.id) == originalSession)
+        #expect(try await repository.fileExplanation(
+            ProvenanceFileExplanationRequest(
+                worktreeID: duplicateFileChange.worktreeID,
+                path: duplicateFileChange.path
+            )
+        ) == ProvenanceFileExplanationResponse(
+            found: false,
+            reason: "no_file",
+            explanation: nil
+        ))
     }
 
     private static func temporaryDatabaseURL() -> URL {

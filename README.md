@@ -8,10 +8,10 @@ ProvenanceEngine is the independent local-first provenance product. This reposit
 - Public contract module: `ProvenanceEngineContracts`
 - Internal storage module: `ProvenanceEngineSQLite`
 - Language mode: Swift 6
-- Scope: Foundation-only contracts plus engine-owned SQLite connection, statement, migration, repository-opening, internal event-ledger support, and an initial session projection
+- Scope: Foundation-only contracts plus engine-owned SQLite connection, statement, migration, repository-opening, internal event-ledger support, session/worktree tree projections, and initial file-explanation projection storage
 
 The first public module is intentionally narrow. It does not include bmux imports, AppKit, SwiftUI, daemon or IPC transport, launch agents, CLI surfaces, storage migration from bmux, retrieval, lifecycle policy, UI, or observability.
 
 New engine-owned data will later default to `~/.local/state/provenance-engine/provenance.sqlite`, but this package does not move or migrate existing bmux storage.
 
-`ProvenanceEngineSQLite` remains an internal package target, not a public library product. Its repository actor currently bootstraps the first engine-owned `provenance_events` table plus an initial `provenance_sessions` current-state projection, supports a narrow append/read path for contract events, and reads session projections by stable ID.
+`ProvenanceEngineSQLite` remains an internal package target, not a public library product. Its repository actor currently bootstraps the first engine-owned `provenance_events` table plus current-state projections for sessions, repositories, worktrees, session relationships, external identities, work items, contributions, checkpoints, change sets, and file changes. It supports narrow internal append/read paths for contract events, worktree lists, session trees, and focused file explanations.
