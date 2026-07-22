@@ -377,7 +377,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 5)
+        #expect(try await repository.schemaVersion() == 6)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
@@ -391,6 +391,7 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_checkpoints", in: database))
         #expect(try Self.tableExists("provenance_change_sets", in: database))
         #expect(try Self.tableExists("provenance_file_changes", in: database))
+        #expect(try Self.tableExists("provenance_validation_runs", in: database))
     }
 
     @Test
@@ -1128,6 +1129,136 @@ struct ProvenanceSQLiteDatabaseTests {
             reason: "no_file",
             explanation: nil
         ))
+    }
+
+    @Test
+    func repositoryCurrentContextReturnsNoWorktreeReasonForUnknownPath() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        let response = try await repository.currentContext(
+            ProvenanceCurrentContextRequest(repositoryPath: "/repos/missing")
+        )
+
+        #expect(response == ProvenanceCurrentContextResponse(
+            found: false,
+            reason: "no_worktree",
+            repositoryPath: "/repos/missing",
+            worktree: nil,
+            repository: nil,
+            activeSessions: [],
+            dirtyFiles: [],
+            unattributedChanges: [],
+            recentCheckpoints: [],
+            validationRuns: [],
+            conflicts: []
+        ))
+    }
+
+    @Test
+    func repositoryReadsCurrentContextValidationRunsAfterReopen() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let repositoryRecord = ProvenanceRepositoryRecord(
+            id: "repository-1",
+            path: "/repos/project",
+            createdAt: timestamp,
+            updatedAt: timestamp
+        )
+        let worktree = ProvenanceWorktreeRecord(
+            id: "worktree-1",
+            repositoryID: repositoryRecord.id,
+            path: repositoryRecord.path,
+            isDirty: true,
+            status: "active",
+            updatedAt: timestamp
+        )
+        let session = ProvenanceSessionRecord(
+            id: "session-1",
+            agentKind: "codex",
+            worktreeID: worktree.id,
+            status: "active",
+            updatedAt: timestamp
+        )
+        let workItem = ProvenanceWorkItemRecord(
+            id: "work-item-1",
+            title: "Split provenance engine",
+            status: "active",
+            createdAt: timestamp,
+            updatedAt: timestamp
+        )
+        let contribution = ProvenanceContributionRecord(
+            id: "contribution-1",
+            sessionID: session.id,
+            worktreeID: worktree.id,
+            workItemID: workItem.id,
+            status: "active",
+            startedAt: timestamp,
+            assignmentConfidence: .high,
+            updatedAt: timestamp
+        )
+        let checkpoint = ProvenanceCheckpointRecord(
+            id: "checkpoint-1",
+            contributionID: contribution.id,
+            sequence: 1,
+            status: "in_progress",
+            semanticConfidence: .high,
+            freshness: "fresh",
+            createdAt: timestamp
+        )
+        let command = "test"
+        let validationRunID = "validation-run-1"
+        let validationRun = ProvenanceValidationRunRecord(
+            id: validationRunID,
+            checkpointID: checkpoint.id,
+            command: command,
+            status: "passed"
+        )
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        try await writer.appendEvent(
+            ProvenanceEvent(
+                id: "event-bootstrap",
+                eventType: .worktreeObserved,
+                timestamp: timestamp,
+                repositoryID: repositoryRecord.id,
+                worktreeID: worktree.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(repository: repositoryRecord, worktree: worktree)
+            )
+        )
+        try await writer.appendEvent(
+            ProvenanceEvent(
+                id: "event-validation-run",
+                eventType: "validation_run_observed",
+                timestamp: timestamp,
+                worktreeID: worktree.id,
+                contributionID: contribution.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(
+                    session: session,
+                    workItem: workItem,
+                    contribution: contribution,
+                    checkpoint: checkpoint,
+                    validationRun: validationRun
+                )
+            )
+        )
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let response = try await reader.currentContext(
+            ProvenanceCurrentContextRequest(repositoryPath: worktree.path)
+        )
+
+        #expect(response.validationRuns == [
+            ProvenanceCurrentContextValidationRun(
+                validationRun: validationRun,
+                checkpoint: checkpoint,
+                contribution: contribution
+            ),
+        ])
     }
 
     @Test

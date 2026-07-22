@@ -71,6 +71,9 @@ actor ProvenanceSQLiteRepository {
             for fileChange in event.payload.fileChanges {
                 try upsertFileChange(fileChange)
             }
+            if let validationRun = event.payload.validationRun {
+                try upsertValidationRun(validationRun)
+            }
             try database.execute("COMMIT")
         } catch {
             try? database.execute("ROLLBACK")
@@ -448,6 +451,62 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
+    /// Reads bounded current provenance context for one worktree path.
+    ///
+    /// - Parameter request: Current-context query parameters.
+    /// - Returns: Found response with bounded linked projections, or `no_worktree` when no worktree matches.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func currentContext(_ request: ProvenanceCurrentContextRequest) throws -> ProvenanceCurrentContextResponse {
+        guard let worktree = try worktree(path: request.repositoryPath) else {
+            return ProvenanceCurrentContextResponse(
+                found: false,
+                reason: "no_worktree",
+                repositoryPath: request.repositoryPath,
+                worktree: nil,
+                repository: nil,
+                activeSessions: [],
+                dirtyFiles: [],
+                unattributedChanges: [],
+                recentCheckpoints: [],
+                validationRuns: [],
+                conflicts: []
+            )
+        }
+
+        return ProvenanceCurrentContextResponse(
+            found: true,
+            repositoryPath: request.repositoryPath,
+            worktree: worktree,
+            repository: try repository(id: worktree.repositoryID),
+            activeSessions: try currentContextActiveSessions(
+                worktreeID: worktree.id,
+                limit: request.activeSessionLimit
+            ),
+            dirtyFiles: try currentContextFileChanges(
+                worktreeID: worktree.id,
+                unattributedOnly: false,
+                limit: request.dirtyFileLimit
+            ),
+            unattributedChanges: try currentContextFileChanges(
+                worktreeID: worktree.id,
+                unattributedOnly: true,
+                limit: request.unattributedChangeLimit
+            ),
+            recentCheckpoints: try currentContextCheckpoints(
+                worktreeID: worktree.id,
+                limit: request.recentCheckpointLimit
+            ),
+            validationRuns: try currentContextValidationRuns(
+                worktreeID: worktree.id,
+                limit: request.validationRunLimit
+            ),
+            conflicts: try currentContextConflicts(
+                worktreeID: worktree.id,
+                limit: request.conflictLimit
+            )
+        )
+    }
+
     private func worktree(from query: ProvenanceSQLiteStatement) -> ProvenanceWorktreeRecord? {
         guard let id = query.string(at: 0),
               let repositoryID = query.string(at: 1),
@@ -468,6 +527,370 @@ actor ProvenanceSQLiteRepository {
             lastReconciledAt: query.double(at: 8).map { Date(timeIntervalSince1970: $0) },
             updatedAt: Date(timeIntervalSince1970: query.double(at: 9) ?? 0)
         )
+    }
+
+    private func worktree(path: String) throws -> ProvenanceWorktreeRecord? {
+        let query = try database.prepare(
+            """
+            SELECT
+                id,
+                repository_id,
+                path,
+                branch,
+                base_commit,
+                current_head,
+                is_dirty,
+                status,
+                last_reconciled_at_seconds,
+                updated_at_seconds
+            FROM provenance_worktrees
+            WHERE path = ?
+            ORDER BY updated_at_seconds DESC, rowid DESC
+            LIMIT 1
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(path, at: 1)
+        guard try query.step() else { return nil }
+        return worktree(from: query)
+    }
+
+    private func currentContextFileChanges(
+        worktreeID: String,
+        unattributedOnly: Bool,
+        limit: Int
+    ) throws -> [ProvenanceCurrentContextFileChange] {
+        let sourceFilter = unattributedOnly ? "AND fc.attribution_source = 'unattributed'" : ""
+        let query = try database.prepare(
+            """
+            SELECT
+                fc.id,
+                fc.change_set_id,
+                fc.repository_id,
+                fc.worktree_id,
+                fc.path,
+                fc.status,
+                fc.before_hash,
+                fc.after_hash,
+                fc.attribution_source,
+                fc.attribution_confidence,
+                fc.updated_at_seconds,
+                cs.id,
+                cs.checkpoint_id,
+                cs.contribution_id,
+                cs.worktree_id,
+                cs.summary,
+                cs.diff_fingerprint,
+                cs.created_at_seconds,
+                wc.id,
+                wc.session_id,
+                wc.worktree_id,
+                wc.work_item_id,
+                wc.declared_intent,
+                wc.expected_scope_json,
+                wc.status,
+                wc.started_at_seconds,
+                wc.ended_at_seconds,
+                wc.assignment_confidence,
+                wc.updated_at_seconds,
+                s.id,
+                s.agent_kind,
+                s.workspace_id,
+                s.surface_id,
+                s.worktree_id,
+                s.cwd,
+                s.status,
+                s.started_at_seconds,
+                s.updated_at_seconds
+            FROM provenance_file_changes fc
+            LEFT JOIN provenance_change_sets cs ON cs.id = fc.change_set_id
+            LEFT JOIN provenance_checkpoints cp ON cp.id = cs.checkpoint_id
+            LEFT JOIN provenance_work_contributions wc ON wc.id = COALESCE(cs.contribution_id, cp.contribution_id)
+            LEFT JOIN provenance_sessions s ON s.id = wc.session_id
+            WHERE fc.worktree_id = ?
+              \(sourceFilter)
+              AND fc.rowid = (
+                  SELECT newest.rowid
+                  FROM provenance_file_changes newest
+                  WHERE newest.worktree_id = fc.worktree_id
+                    AND newest.path = fc.path
+                  ORDER BY newest.updated_at_seconds DESC, newest.rowid DESC
+                  LIMIT 1
+              )
+            ORDER BY fc.updated_at_seconds DESC, fc.rowid DESC
+            LIMIT ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(worktreeID, at: 1)
+        try query.bind(max(0, limit), at: 2)
+
+        var rows: [ProvenanceCurrentContextFileChange] = []
+        while try query.step() {
+            guard let fileChange = fileChange(from: query, offset: 0) else { continue }
+            rows.append(
+                ProvenanceCurrentContextFileChange(
+                    fileChange: fileChange,
+                    changeSet: changeSet(from: query, offset: 11),
+                    contribution: contribution(from: query, offset: 18),
+                    session: session(from: query, offset: 29)
+                )
+            )
+        }
+        return rows
+    }
+
+    private func currentContextActiveSessions(
+        worktreeID: String,
+        limit: Int
+    ) throws -> [ProvenanceCurrentContextSession] {
+        let query = try database.prepare(
+            """
+            SELECT
+                s.id,
+                s.agent_kind,
+                s.workspace_id,
+                s.surface_id,
+                s.worktree_id,
+                s.cwd,
+                s.status,
+                s.started_at_seconds,
+                s.updated_at_seconds,
+                wc.id,
+                wc.session_id,
+                wc.worktree_id,
+                wc.work_item_id,
+                wc.declared_intent,
+                wc.expected_scope_json,
+                wc.status,
+                wc.started_at_seconds,
+                wc.ended_at_seconds,
+                wc.assignment_confidence,
+                wc.updated_at_seconds,
+                wi.id,
+                wi.title,
+                wi.status,
+                wi.created_at_seconds,
+                wi.updated_at_seconds
+            FROM provenance_sessions s
+            LEFT JOIN provenance_work_contributions wc
+              ON wc.session_id = s.id
+             AND wc.worktree_id = s.worktree_id
+             AND LOWER(COALESCE(wc.status, '')) NOT IN (
+                'complete', 'completed', 'finished', 'interrupted', 'cancelled', 'canceled', 'closed', 'stopped'
+             )
+            LEFT JOIN provenance_work_items wi ON wi.id = wc.work_item_id
+            WHERE s.worktree_id = ?
+              AND LOWER(COALESCE(s.status, '')) NOT IN (
+                'complete', 'completed', 'finished', 'interrupted', 'cancelled', 'canceled', 'closed', 'stopped'
+              )
+            ORDER BY s.updated_at_seconds DESC, s.rowid DESC
+            LIMIT ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(worktreeID, at: 1)
+        try query.bind(max(0, limit), at: 2)
+
+        var rows: [ProvenanceCurrentContextSession] = []
+        while try query.step() {
+            guard let session = session(from: query, offset: 0) else { continue }
+            rows.append(
+                ProvenanceCurrentContextSession(
+                    session: session,
+                    contribution: contribution(from: query, offset: 9),
+                    workItem: workItem(from: query, offset: 20)
+                )
+            )
+        }
+        return rows
+    }
+
+    private func currentContextCheckpoints(
+        worktreeID: String,
+        limit: Int
+    ) throws -> [ProvenanceCurrentContextCheckpoint] {
+        let query = try database.prepare(
+            """
+            SELECT
+                cp.id,
+                cp.contribution_id,
+                cp.sequence,
+                cp.git_head,
+                cp.diff_fingerprint,
+                cp.summary,
+                cp.status,
+                cp.validation_state,
+                cp.semantic_confidence,
+                cp.freshness,
+                cp.created_at_seconds,
+                wc.id,
+                wc.session_id,
+                wc.worktree_id,
+                wc.work_item_id,
+                wc.declared_intent,
+                wc.expected_scope_json,
+                wc.status,
+                wc.started_at_seconds,
+                wc.ended_at_seconds,
+                wc.assignment_confidence,
+                wc.updated_at_seconds,
+                s.id,
+                s.agent_kind,
+                s.workspace_id,
+                s.surface_id,
+                s.worktree_id,
+                s.cwd,
+                s.status,
+                s.started_at_seconds,
+                s.updated_at_seconds,
+                wi.id,
+                wi.title,
+                wi.status,
+                wi.created_at_seconds,
+                wi.updated_at_seconds
+            FROM provenance_checkpoints cp
+            JOIN provenance_work_contributions wc ON wc.id = cp.contribution_id
+            LEFT JOIN provenance_sessions s ON s.id = wc.session_id
+            LEFT JOIN provenance_work_items wi ON wi.id = wc.work_item_id
+            WHERE wc.worktree_id = ?
+            ORDER BY cp.created_at_seconds DESC, cp.rowid DESC
+            LIMIT ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(worktreeID, at: 1)
+        try query.bind(max(0, limit), at: 2)
+
+        var rows: [ProvenanceCurrentContextCheckpoint] = []
+        while try query.step() {
+            guard let checkpoint = checkpoint(from: query, offset: 0),
+                  let contribution = contribution(from: query, offset: 11) else {
+                continue
+            }
+            rows.append(
+                ProvenanceCurrentContextCheckpoint(
+                    checkpoint: checkpoint,
+                    contribution: contribution,
+                    session: session(from: query, offset: 22),
+                    workItem: workItem(from: query, offset: 31)
+                )
+            )
+        }
+        return rows
+    }
+
+    private func currentContextValidationRuns(
+        worktreeID: String,
+        limit: Int
+    ) throws -> [ProvenanceCurrentContextValidationRun] {
+        let query = try database.prepare(
+            """
+            SELECT
+                vr.id,
+                vr.checkpoint_id,
+                vr.contribution_id,
+                vr.command,
+                vr.status,
+                vr.summary,
+                vr.started_at_seconds,
+                vr.ended_at_seconds,
+                cp.id,
+                cp.contribution_id,
+                cp.sequence,
+                cp.git_head,
+                cp.diff_fingerprint,
+                cp.summary,
+                cp.status,
+                cp.validation_state,
+                cp.semantic_confidence,
+                cp.freshness,
+                cp.created_at_seconds,
+                wc.id,
+                wc.session_id,
+                wc.worktree_id,
+                wc.work_item_id,
+                wc.declared_intent,
+                wc.expected_scope_json,
+                wc.status,
+                wc.started_at_seconds,
+                wc.ended_at_seconds,
+                wc.assignment_confidence,
+                wc.updated_at_seconds
+            FROM provenance_validation_runs vr
+            LEFT JOIN provenance_checkpoints cp ON cp.id = vr.checkpoint_id
+            LEFT JOIN provenance_work_contributions wc ON wc.id = COALESCE(vr.contribution_id, cp.contribution_id)
+            WHERE wc.worktree_id = ?
+            ORDER BY COALESCE(vr.ended_at_seconds, vr.started_at_seconds, 0) DESC, vr.rowid DESC
+            LIMIT ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(worktreeID, at: 1)
+        try query.bind(max(0, limit), at: 2)
+
+        var rows: [ProvenanceCurrentContextValidationRun] = []
+        while try query.step() {
+            guard let validationRun = validationRun(from: query, offset: 0) else { continue }
+            rows.append(
+                ProvenanceCurrentContextValidationRun(
+                    validationRun: validationRun,
+                    checkpoint: checkpoint(from: query, offset: 8),
+                    contribution: contribution(from: query, offset: 19)
+                )
+            )
+        }
+        return rows
+    }
+
+    private func currentContextConflicts(
+        worktreeID: String,
+        limit: Int
+    ) throws -> [ProvenanceCurrentContextConflict] {
+        let query = try database.prepare(
+            """
+            SELECT
+                fc.path,
+                COUNT(DISTINCT wc.id),
+                GROUP_CONCAT(DISTINCT wc.id),
+                MAX(fc.updated_at_seconds)
+            FROM provenance_file_changes fc
+            LEFT JOIN provenance_change_sets cs ON cs.id = fc.change_set_id
+            LEFT JOIN provenance_checkpoints cp ON cp.id = cs.checkpoint_id
+            JOIN provenance_work_contributions wc ON wc.id = COALESCE(cs.contribution_id, cp.contribution_id)
+            WHERE fc.worktree_id = ?
+              AND LOWER(COALESCE(wc.status, '')) NOT IN (
+                'complete', 'completed', 'finished', 'interrupted', 'cancelled', 'canceled', 'closed', 'stopped'
+              )
+            GROUP BY fc.path
+            HAVING COUNT(DISTINCT wc.id) > 1
+            ORDER BY MAX(fc.updated_at_seconds) DESC
+            LIMIT ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(worktreeID, at: 1)
+        try query.bind(max(0, limit), at: 2)
+
+        var rows: [ProvenanceCurrentContextConflict] = []
+        while try query.step() {
+            guard let path = query.string(at: 0) else { continue }
+            rows.append(
+                ProvenanceCurrentContextConflict(
+                    path: path,
+                    activeContributionCount: query.int(at: 1),
+                    contributionIDs: query.string(at: 2),
+                    updatedAt: Date(timeIntervalSince1970: query.double(at: 3) ?? 0)
+                )
+            )
+        }
+        return rows
     }
 
     private func sessionRelationship(
@@ -814,6 +1237,182 @@ actor ProvenanceSQLiteRepository {
             attributionSource: source,
             attributionConfidence: confidence,
             updatedAt: Date(timeIntervalSince1970: query.double(at: 10) ?? 0)
+        )
+    }
+
+    private func session(
+        from query: ProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> ProvenanceSessionRecord? {
+        guard let id = query.string(at: offset),
+              let agentKind = query.string(at: offset + 1),
+              let status = query.string(at: offset + 6) else {
+            return nil
+        }
+
+        return ProvenanceSessionRecord(
+            id: id,
+            agentKind: agentKind,
+            workspaceID: query.string(at: offset + 2),
+            surfaceID: query.string(at: offset + 3),
+            worktreeID: query.string(at: offset + 4),
+            cwd: query.string(at: offset + 5),
+            status: status,
+            startedAt: query.double(at: offset + 7).map { Date(timeIntervalSince1970: $0) },
+            updatedAt: Date(timeIntervalSince1970: query.double(at: offset + 8) ?? 0)
+        )
+    }
+
+    private func contribution(
+        from query: ProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> ProvenanceContributionRecord? {
+        guard let id = query.string(at: offset),
+              let sessionID = query.string(at: offset + 1),
+              let worktreeID = query.string(at: offset + 2),
+              let workItemID = query.string(at: offset + 3),
+              let expectedScopeJSON = query.string(at: offset + 5),
+              let expectedScopeData = expectedScopeJSON.data(using: .utf8),
+              let status = query.string(at: offset + 6),
+              let confidenceRawValue = query.string(at: offset + 9),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
+            return nil
+        }
+
+        let expectedScope = (try? payloadDecoder.decode([String].self, from: expectedScopeData)) ?? []
+        return ProvenanceContributionRecord(
+            id: id,
+            sessionID: sessionID,
+            worktreeID: worktreeID,
+            workItemID: workItemID,
+            declaredIntent: query.string(at: offset + 4),
+            expectedScope: expectedScope,
+            status: status,
+            startedAt: Date(timeIntervalSince1970: query.double(at: offset + 7) ?? 0),
+            endedAt: query.double(at: offset + 8).map { Date(timeIntervalSince1970: $0) },
+            assignmentConfidence: confidence,
+            updatedAt: Date(timeIntervalSince1970: query.double(at: offset + 10) ?? 0)
+        )
+    }
+
+    private func workItem(
+        from query: ProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> ProvenanceWorkItemRecord? {
+        guard let id = query.string(at: offset),
+              let title = query.string(at: offset + 1),
+              let status = query.string(at: offset + 2) else {
+            return nil
+        }
+
+        return ProvenanceWorkItemRecord(
+            id: id,
+            title: title,
+            status: status,
+            createdAt: Date(timeIntervalSince1970: query.double(at: offset + 3) ?? 0),
+            updatedAt: Date(timeIntervalSince1970: query.double(at: offset + 4) ?? 0)
+        )
+    }
+
+    private func changeSet(
+        from query: ProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> ProvenanceChangeSetRecord? {
+        guard let id = query.string(at: offset),
+              let worktreeID = query.string(at: offset + 3) else {
+            return nil
+        }
+
+        return ProvenanceChangeSetRecord(
+            id: id,
+            checkpointID: query.string(at: offset + 1),
+            contributionID: query.string(at: offset + 2),
+            worktreeID: worktreeID,
+            summary: query.string(at: offset + 4),
+            diffFingerprint: query.string(at: offset + 5),
+            createdAt: Date(timeIntervalSince1970: query.double(at: offset + 6) ?? 0)
+        )
+    }
+
+    private func checkpoint(
+        from query: ProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> ProvenanceCheckpointRecord? {
+        guard let id = query.string(at: offset),
+              let contributionID = query.string(at: offset + 1),
+              let status = query.string(at: offset + 6),
+              let confidenceRawValue = query.string(at: offset + 8),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue),
+              let freshness = query.string(at: offset + 9) else {
+            return nil
+        }
+
+        return ProvenanceCheckpointRecord(
+            id: id,
+            contributionID: contributionID,
+            sequence: query.int(at: offset + 2),
+            gitHEAD: query.string(at: offset + 3),
+            diffFingerprint: query.string(at: offset + 4),
+            summary: query.string(at: offset + 5),
+            status: status,
+            validationState: query.string(at: offset + 7),
+            semanticConfidence: confidence,
+            freshness: freshness,
+            createdAt: Date(timeIntervalSince1970: query.double(at: offset + 10) ?? 0)
+        )
+    }
+
+    private func validationRun(
+        from query: ProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> ProvenanceValidationRunRecord? {
+        guard let id = query.string(at: offset),
+              let command = query.string(at: offset + 3),
+              let status = query.string(at: offset + 4) else {
+            return nil
+        }
+
+        return ProvenanceValidationRunRecord(
+            id: id,
+            checkpointID: query.string(at: offset + 1),
+            contributionID: query.string(at: offset + 2),
+            command: command,
+            status: status,
+            summary: query.string(at: offset + 5),
+            startedAt: query.double(at: offset + 6).map { Date(timeIntervalSince1970: $0) },
+            endedAt: query.double(at: offset + 7).map { Date(timeIntervalSince1970: $0) }
+        )
+    }
+
+    private func fileChange(
+        from query: ProvenanceSQLiteStatement,
+        offset: Int32
+    ) -> ProvenanceFileChangeRecord? {
+        guard let id = query.string(at: offset),
+              let changeSetID = query.string(at: offset + 1),
+              let repositoryID = query.string(at: offset + 2),
+              let worktreeID = query.string(at: offset + 3),
+              let path = query.string(at: offset + 4),
+              let status = query.string(at: offset + 5),
+              let sourceRawValue = query.string(at: offset + 8),
+              let source = ProvenanceSource(rawValue: sourceRawValue),
+              let confidenceRawValue = query.string(at: offset + 9),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
+            return nil
+        }
+
+        return ProvenanceFileChangeRecord(
+            id: id,
+            changeSetID: changeSetID,
+            repositoryID: repositoryID,
+            worktreeID: worktreeID,
+            path: path,
+            status: status,
+            beforeHash: query.string(at: offset + 6),
+            afterHash: query.string(at: offset + 7),
+            attributionSource: source,
+            attributionConfidence: confidence,
+            updatedAt: Date(timeIntervalSince1970: query.double(at: offset + 10) ?? 0)
         )
     }
 
@@ -1246,6 +1845,43 @@ actor ProvenanceSQLiteRepository {
         _ = try upsert.step()
     }
 
+    private func upsertValidationRun(_ validationRun: ProvenanceValidationRunRecord) throws {
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_validation_runs (
+                id,
+                checkpoint_id,
+                contribution_id,
+                command,
+                status,
+                summary,
+                started_at_seconds,
+                ended_at_seconds
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                checkpoint_id = excluded.checkpoint_id,
+                contribution_id = excluded.contribution_id,
+                command = excluded.command,
+                status = excluded.status,
+                summary = excluded.summary,
+                started_at_seconds = excluded.started_at_seconds,
+                ended_at_seconds = excluded.ended_at_seconds
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(validationRun.id, at: 1)
+        try upsert.bind(validationRun.checkpointID, at: 2)
+        try upsert.bind(validationRun.contributionID, at: 3)
+        try upsert.bind(validationRun.command, at: 4)
+        try upsert.bind(validationRun.status, at: 5)
+        try upsert.bind(validationRun.summary, at: 6)
+        try upsert.bind(validationRun.startedAt?.timeIntervalSince1970, at: 7)
+        try upsert.bind(validationRun.endedAt?.timeIntervalSince1970, at: 8)
+
+        _ = try upsert.step()
+    }
+
     private static let migrations = [
         ProvenanceSQLiteMigration(
             version: 1,
@@ -1497,6 +2133,35 @@ actor ProvenanceSQLiteRepository {
                 """
                 CREATE INDEX provenance_file_changes_change_set_index
                 ON provenance_file_changes (change_set_id)
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 6,
+            statements: [
+                """
+                CREATE TABLE provenance_validation_runs (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    checkpoint_id TEXT,
+                    contribution_id TEXT,
+                    command TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    summary TEXT,
+                    started_at_seconds REAL,
+                    ended_at_seconds REAL
+                )
+                """,
+                """
+                CREATE INDEX provenance_validation_runs_checkpoint_index
+                ON provenance_validation_runs (checkpoint_id)
+                """,
+                """
+                CREATE INDEX provenance_validation_runs_contribution_index
+                ON provenance_validation_runs (contribution_id)
+                """,
+                """
+                CREATE INDEX provenance_validation_runs_time_index
+                ON provenance_validation_runs (ended_at_seconds, started_at_seconds)
                 """,
             ]
         ),
