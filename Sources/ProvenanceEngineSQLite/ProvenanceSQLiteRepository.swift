@@ -180,6 +180,83 @@ actor ProvenanceSQLiteRepository {
         return entries
     }
 
+    /// Validates bounded event-ledger rows through the same decoder used by ledger reads.
+    ///
+    /// - Parameter limit: Maximum number of append-order ledger rows to validate.
+    /// - Returns: Validation counts and the first invalid row, if any.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the bounded ledger scan.
+    func validateEventLedger(limit: Int = 1_000) throws -> ProvenanceSQLiteLedgerValidationReport {
+        let rowLimit = max(0, limit)
+        let ledgerSummary = try eventLedgerSummary()
+        let query = try database.prepare(
+            """
+            SELECT
+                sequence,
+                id,
+                schema_version,
+                event_type,
+                timestamp_seconds,
+                repository_id,
+                worktree_id,
+                session_id,
+                contribution_id,
+                source,
+                confidence,
+                payload_json
+            FROM provenance_events
+            ORDER BY sequence ASC
+            LIMIT ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(rowLimit, at: 1)
+        var checkedEventCount = 0
+        var invalidEventCount = 0
+        var latestCheckedSequence: Int?
+        var firstInvalidIssue: ProvenanceSQLiteLedgerValidationIssue?
+
+        while try query.step() {
+            let sequence = query.int(at: 0)
+            let id = query.string(at: 1)
+            checkedEventCount += 1
+            latestCheckedSequence = sequence
+
+            guard let id else {
+                invalidEventCount += 1
+                if firstInvalidIssue == nil {
+                    firstInvalidIssue = ProvenanceSQLiteLedgerValidationIssue(
+                        sequence: sequence,
+                        eventID: nil,
+                        errorDescription: "stored event has invalid id"
+                    )
+                }
+                continue
+            }
+
+            do {
+                _ = try event(from: query, id: id, offset: 2)
+            } catch {
+                invalidEventCount += 1
+                if firstInvalidIssue == nil {
+                    firstInvalidIssue = ProvenanceSQLiteLedgerValidationIssue(
+                        sequence: sequence,
+                        eventID: id,
+                        errorDescription: boundedErrorSummary(error)
+                    )
+                }
+            }
+        }
+
+        return ProvenanceSQLiteLedgerValidationReport(
+            checkedEventCount: checkedEventCount,
+            invalidEventCount: invalidEventCount,
+            latestCheckedSequence: latestCheckedSequence,
+            firstInvalidIssue: firstInvalidIssue,
+            truncated: ledgerSummary.count > rowLimit
+        )
+    }
+
     /// Rebuilds current-state projections by replaying the immutable event ledger in append order.
     ///
     /// - Parameter batchSize: Maximum number of ledger entries decoded per cursor read.

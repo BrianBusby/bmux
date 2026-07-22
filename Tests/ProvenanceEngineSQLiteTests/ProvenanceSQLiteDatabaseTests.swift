@@ -533,6 +533,46 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryValidatesEventLedgerRowsWithBoundedScan() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let first = Self.checkpointEvent(
+            id: "event-first",
+            checkpointID: "checkpoint-first",
+            timestamp: 1_800_000_000
+        )
+        let second = Self.checkpointEvent(
+            id: "event-second",
+            checkpointID: "checkpoint-second",
+            timestamp: 1_800_000_010
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(first)
+        try await repository.appendEvent(second)
+
+        let limitedReport = try await repository.validateEventLedger(limit: 1)
+        let fullReport = try await repository.validateEventLedger(limit: 10)
+        let zeroLimitReport = try await repository.validateEventLedger(limit: -1)
+
+        #expect(limitedReport.checkedEventCount == 1)
+        #expect(limitedReport.invalidEventCount == 0)
+        #expect(limitedReport.latestCheckedSequence == 1)
+        #expect(limitedReport.firstInvalidIssue == nil)
+        #expect(limitedReport.truncated)
+        #expect(fullReport.checkedEventCount == 2)
+        #expect(fullReport.invalidEventCount == 0)
+        #expect(fullReport.latestCheckedSequence == 2)
+        #expect(fullReport.firstInvalidIssue == nil)
+        #expect(fullReport.truncated == false)
+        #expect(zeroLimitReport.checkedEventCount == 0)
+        #expect(zeroLimitReport.invalidEventCount == 0)
+        #expect(zeroLimitReport.latestCheckedSequence == nil)
+        #expect(zeroLimitReport.firstInvalidIssue == nil)
+        #expect(zeroLimitReport.truncated)
+    }
+
+    @Test
     func repositoryRebuildsProjectionTablesFromAppendOrderEventLedger() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
@@ -2063,6 +2103,32 @@ struct ProvenanceSQLiteDatabaseTests {
         defer { query.finalize() }
         guard try query.step() else { return nil }
         return query.string(at: 0)
+    }
+
+    private static func checkpointEvent(
+        id: String,
+        checkpointID: String,
+        timestamp: TimeInterval
+    ) -> ProvenanceEvent {
+        ProvenanceEvent(
+            id: id,
+            eventType: .progressCheckpoint,
+            timestamp: Date(timeIntervalSince1970: timestamp),
+            sessionID: "session-1",
+            source: .declared,
+            confidence: .high,
+            payload: ProvenanceEventPayload(
+                checkpoint: ProvenanceCheckpointRecord(
+                    id: checkpointID,
+                    contributionID: "contribution-1",
+                    sequence: 1,
+                    status: "in_progress",
+                    semanticConfidence: .high,
+                    freshness: "fresh",
+                    createdAt: Date(timeIntervalSince1970: timestamp)
+                )
+            )
+        )
     }
 
     private static func removeTemporaryDatabaseDirectory(for url: URL) {
