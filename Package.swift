@@ -12,9 +12,20 @@ let package = Package(
             name: "ProvenanceEngineContracts",
             targets: ["ProvenanceEngineContracts"]
         ),
+        .library(
+            name: "ProvenanceEngineSDK",
+            targets: ["ProvenanceEngineSDK"]
+        ),
     ],
     targets: [
         .target(name: "ProvenanceEngineContracts"),
+        .target(
+            name: "ProvenanceEngineSDK",
+            dependencies: [
+                "ProvenanceEngineContracts",
+                "ProvenanceEngineSQLite",
+            ]
+        ),
         .target(
             name: "ProvenanceEngineSQLite",
             dependencies: ["ProvenanceEngineContracts"],
@@ -29,6 +40,13 @@ let package = Package(
         .testTarget(
             name: "ProvenanceEngineSQLiteTests",
             dependencies: ["ProvenanceEngineSQLite"]
+        ),
+        .testTarget(
+            name: "ProvenanceEngineSDKTests",
+            dependencies: [
+                "ProvenanceEngineContracts",
+                "ProvenanceEngineSDK",
+            ]
         ),
     ],
     swiftLanguageModes: [.v6]
