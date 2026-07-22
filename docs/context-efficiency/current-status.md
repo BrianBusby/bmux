@@ -14,12 +14,13 @@ This file is the live handoff index for the context-efficiency roadmap. Read it 
 6. `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`
 7. `docs/context-efficiency/provenance-engine-phase3-plan.md`
 8. `docs/context-efficiency/provenance-engine-phase3a-decisions.md`
-9. `docs/context-efficiency/subsession-delegation-integration-plan.md`
-10. `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
-11. `docs/context-efficiency/provenance-observability-integration-plan.md`
-12. `docs/context-efficiency/subsession-delegation-phase-a-report.md`
-13. `docs/context-efficiency/milestones.md`
-14. Relevant bmux skills:
+9. `docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md`
+10. `docs/context-efficiency/subsession-delegation-integration-plan.md`
+11. `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
+12. `docs/context-efficiency/provenance-observability-integration-plan.md`
+13. `docs/context-efficiency/subsession-delegation-phase-a-report.md`
+14. `docs/context-efficiency/milestones.md`
+15. Relevant bmux skills:
    - `bmux-architecture` before Swift package/API changes.
    - `bmux-dev-workflow` before tagged builds or project wiring.
    - `bmux-testing` before test changes or verification decisions.
@@ -36,6 +37,7 @@ ADR-001 is accepted and now controls the product boundary for provenance extract
 - `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`
 - `docs/context-efficiency/provenance-engine-phase3-plan.md`
 - `docs/context-efficiency/provenance-engine-phase3a-decisions.md`
+- `docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md`
 
 Treat the Provenance Engine as an independent local-first product with bmux as its first client. Future provenance implementation should move toward SDK/API boundaries, a local daemon, independent versioning, and no engine dependency on bmux internals. Existing `WorkProvenance`, `BmuxContextEfficiency`, and `ProvenanceObservability` work remains useful migration source material, but new extraction work must not deepen bmux-specific storage or domain coupling.
 
@@ -171,6 +173,16 @@ contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
 excluded from the initial authoritative skeleton. Full ADR-001 Phase 3 is still
 not complete.
+ADR-001 Phase 4 reconnect planning now has a scoped first-adapter plan in
+`docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md`. The first
+replacement target is `bmux provenance worktrees list`, pinned to engine commit
+`b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5`, using the public
+`ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest(...))` contract.
+Implementation remains blocked until the engine exposes a deliberately small
+public in-process SDK product or factory for a SQLite-backed client; the current
+engine commit publicly exports `ProvenanceEngineContracts` only. Phase 4 must
+preserve existing worktree-list JSON, text, and fallback behavior through
+public-contract parity verification, and data migration remains Phase 5.
 
 Subsession/delegation provenance has been merged into the roadmap as a Phase 3-adjacent provenance integration track with its own authoritative plan:
 
@@ -395,6 +407,38 @@ ADR-001 Phase 3D docs-only closeout slice:
   It must define rollback or graceful degradation when the engine dependency is
   unavailable. Data migration is not part of Phase 4; migration belongs to
   ADR-001 Phase 5.
+
+ADR-001 Phase 4 reconnect planning slice:
+
+- Current bmux branch: `provenance-extraction-phase2-contracts`.
+- Current bmux base before the planning docs change:
+  `b1e7f7edbc00f84c6f3ff96c2afd6f432f5ad4ce`.
+- External engine branch: `provenance-session-tree-storage`.
+- External engine commit pinned for the first reconnect:
+  `b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5` (`Record schema migrations`).
+- Added `docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md`.
+- The first planned adapter path is `bmux provenance worktrees list`.
+- The planned public contract call is
+  `ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest(repositoryID: nil, limit: nil))`.
+- The current engine commit publicly exports `ProvenanceEngineContracts` only;
+  `ProvenanceEngineSQLite` is still an internal target. Before bmux reconnect
+  implementation, the engine needs a deliberately small public in-process SDK
+  product or factory that returns an `any ProvenanceEngineClient` backed by
+  engine SQLite.
+- Parity verification must preserve existing worktree-list JSON shape, text
+  shape, missing-database behavior, empty-database behavior, newest-first order,
+  and the 25-row text-rendering cap. New engine-backed setup must use public
+  SDK/contract paths rather than direct engine SQLite table fixtures.
+- Rollback is a scoped git revert of the adapter change, not a permanent
+  production dual-read path. Runtime degradation should preserve bounded
+  missing/unavailable-storage output without mutating storage.
+- No Phase 4 implementation, public SDK export implementation, daemon, IPC,
+  launch agent, storage default change, schema move, data migration, lifecycle
+  reconnect, observability reconnect, retrieval, lifecycle policy, UI, or broad
+  telemetry change was started.
+- Next safe target: implement the first prerequisite only after approval of the
+  Phase 4 plan. Do not change bmux adapter behavior until the engine public SDK
+  product/factory and public-contract parity fixture strategy are in place.
 
 Previous provenance Phase 3D storage-repair attempt metadata slice:
 
