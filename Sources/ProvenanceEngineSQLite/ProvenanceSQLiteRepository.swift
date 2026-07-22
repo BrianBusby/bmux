@@ -441,19 +441,22 @@ actor ProvenanceSQLiteRepository {
     func repairStorageIntegrity(
         validationLimit: Int = 1_000,
         mismatchLimit: Int = 100,
-        rebuildBatchSize: Int = 1_000
+        rebuildBatchSize: Int = 1_000,
+        attemptedAt: Date = Date()
     ) throws -> ProvenanceSQLiteStorageRepairReport {
         let initialIntegrityReport = try storageIntegrityReport(
             validationLimit: validationLimit,
             mismatchLimit: mismatchLimit
         )
         guard initialIntegrityReport.repairRecommended else {
-            return ProvenanceSQLiteStorageRepairReport(
+            let report = ProvenanceSQLiteStorageRepairReport(
                 initialIntegrityReport: initialIntegrityReport,
                 repairAttempted: false,
                 projectionRepairReport: nil,
                 postRepairIntegrityReport: nil
             )
+            try insertStorageRepairAttempt(report, attemptedAt: attemptedAt)
+            return report
         }
 
         let projectionRepairReport = try repairProjectionDrift(
@@ -461,7 +464,7 @@ actor ProvenanceSQLiteRepository {
             mismatchLimit: mismatchLimit,
             rebuildBatchSize: rebuildBatchSize
         )
-        return ProvenanceSQLiteStorageRepairReport(
+        let report = ProvenanceSQLiteStorageRepairReport(
             initialIntegrityReport: initialIntegrityReport,
             repairAttempted: true,
             projectionRepairReport: projectionRepairReport,
@@ -470,6 +473,51 @@ actor ProvenanceSQLiteRepository {
                 mismatchLimit: mismatchLimit
             )
         )
+        try insertStorageRepairAttempt(report, attemptedAt: attemptedAt)
+        return report
+    }
+
+    /// Reads recent storage-integrity repair wrapper calls from internal metadata.
+    ///
+    /// - Parameter limit: Maximum number of repair-attempt rows to return.
+    /// - Returns: Repair attempts sorted newest first by SQLite sequence.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func storageRepairAttempts(limit: Int = 100) throws -> [ProvenanceSQLiteStorageRepairAttempt] {
+        let query = try database.prepare(
+            """
+            SELECT
+                sequence,
+                attempted_at_seconds,
+                initial_status,
+                repair_recommended,
+                repair_attempted,
+                repaired,
+                replayed_event_count,
+                post_repair_status
+            FROM provenance_storage_repair_attempts
+            ORDER BY sequence DESC
+            LIMIT ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(max(0, limit), at: 1)
+        var attempts: [ProvenanceSQLiteStorageRepairAttempt] = []
+        while try query.step() {
+            attempts.append(
+                ProvenanceSQLiteStorageRepairAttempt(
+                    sequence: query.int(at: 0),
+                    attemptedAt: Date(timeIntervalSince1970: query.double(at: 1) ?? 0),
+                    initialStatus: query.string(at: 2) ?? "",
+                    repairRecommended: query.int(at: 3) != 0,
+                    repairAttempted: query.int(at: 4) != 0,
+                    repaired: query.int(at: 5) != 0,
+                    replayedEventCount: query.int(at: 6),
+                    postRepairStatus: query.string(at: 7)
+                )
+            )
+        }
+        return attempts
     }
 
     /// Rebuilds current-state projections by replaying the immutable event ledger in append order.
@@ -2604,6 +2652,37 @@ actor ProvenanceSQLiteRepository {
         _ = try upsert.step()
     }
 
+    private func insertStorageRepairAttempt(
+        _ report: ProvenanceSQLiteStorageRepairReport,
+        attemptedAt: Date
+    ) throws {
+        let insert = try database.prepare(
+            """
+            INSERT INTO provenance_storage_repair_attempts (
+                attempted_at_seconds,
+                initial_status,
+                repair_recommended,
+                repair_attempted,
+                repaired,
+                replayed_event_count,
+                post_repair_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """
+        )
+        defer { insert.finalize() }
+
+        let projectionRepairReport = report.projectionRepairReport
+        try insert.bind(attemptedAt.timeIntervalSince1970, at: 1)
+        try insert.bind(report.initialIntegrityReport.status, at: 2)
+        try insert.bind(report.initialIntegrityReport.repairRecommended ? 1 : 0, at: 3)
+        try insert.bind(report.repairAttempted ? 1 : 0, at: 4)
+        try insert.bind((projectionRepairReport?.repaired ?? false) ? 1 : 0, at: 5)
+        try insert.bind(projectionRepairReport?.replayedEventCount ?? 0, at: 6)
+        try insert.bind(report.postRepairIntegrityReport?.status, at: 7)
+
+        _ = try insert.step()
+    }
+
     private func lifecycleIdentity(
         for request: ProvenanceSubsessionLifecycleRequest
     ) -> (
@@ -2918,6 +2997,31 @@ actor ProvenanceSQLiteRepository {
                 """
                 CREATE INDEX provenance_validation_runs_time_index
                 ON provenance_validation_runs (ended_at_seconds, started_at_seconds)
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 7,
+            statements: [
+                """
+                CREATE TABLE provenance_storage_repair_attempts (
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+                    attempted_at_seconds REAL NOT NULL,
+                    initial_status TEXT NOT NULL,
+                    repair_recommended INTEGER NOT NULL,
+                    repair_attempted INTEGER NOT NULL,
+                    repaired INTEGER NOT NULL,
+                    replayed_event_count INTEGER NOT NULL,
+                    post_repair_status TEXT
+                )
+                """,
+                """
+                CREATE INDEX provenance_storage_repair_attempts_time_index
+                ON provenance_storage_repair_attempts (attempted_at_seconds, sequence)
+                """,
+                """
+                CREATE INDEX provenance_storage_repair_attempts_status_index
+                ON provenance_storage_repair_attempts (initial_status, repair_attempted, repaired)
                 """,
             ]
         ),

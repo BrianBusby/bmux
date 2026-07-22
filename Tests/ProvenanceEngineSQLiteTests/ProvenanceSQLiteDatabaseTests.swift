@@ -377,7 +377,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 6)
+        #expect(try await repository.schemaVersion() == 7)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
@@ -392,6 +392,7 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_change_sets", in: database))
         #expect(try Self.tableExists("provenance_file_changes", in: database))
         #expect(try Self.tableExists("provenance_validation_runs", in: database))
+        #expect(try Self.tableExists("provenance_storage_repair_attempts", in: database))
     }
 
     @Test
@@ -410,7 +411,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
 
-        #expect(try await repository.schemaVersion() == 6)
+        #expect(try await repository.schemaVersion() == 7)
         #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
     }
 
@@ -674,7 +675,7 @@ struct ProvenanceSQLiteDatabaseTests {
         let summary = try await repository.storageSummary()
 
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 6,
+            schemaVersion: 7,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,
@@ -1543,13 +1544,31 @@ struct ProvenanceSQLiteDatabaseTests {
             timestamp: 1_800_000_000
         ))
 
-        let report = try await repository.repairStorageIntegrity(validationLimit: 10)
+        let attemptedAt = Date(timeIntervalSince1970: 1_800_000_030)
+
+        let report = try await repository.repairStorageIntegrity(
+            validationLimit: 10,
+            attemptedAt: attemptedAt
+        )
+        let attempts = try await repository.storageRepairAttempts(limit: 10)
 
         #expect(report.initialIntegrityReport.status == "healthy")
         #expect(report.initialIntegrityReport.repairRecommended == false)
         #expect(report.repairAttempted == false)
         #expect(report.projectionRepairReport == nil)
         #expect(report.postRepairIntegrityReport == nil)
+        #expect(attempts == [
+            ProvenanceSQLiteStorageRepairAttempt(
+                sequence: 1,
+                attemptedAt: attemptedAt,
+                initialStatus: "healthy",
+                repairRecommended: false,
+                repairAttempted: false,
+                repaired: false,
+                replayedEventCount: 0,
+                postRepairStatus: nil
+            ),
+        ])
         #expect(try await repository.validateProjectionKeys(limit: 10).mismatches.isEmpty)
     }
 
@@ -1596,13 +1615,17 @@ struct ProvenanceSQLiteDatabaseTests {
             """
         )
 
+        let attemptedAt = Date(timeIntervalSince1970: 1_800_000_030)
+
         let report = try await repository.repairStorageIntegrity(
             validationLimit: 10,
             mismatchLimit: 1,
-            rebuildBatchSize: 1
+            rebuildBatchSize: 1,
+            attemptedAt: attemptedAt
         )
         let projectionRepairReport = try #require(report.projectionRepairReport)
         let postRepairIntegrityReport = try #require(report.postRepairIntegrityReport)
+        let attempts = try await repository.storageRepairAttempts(limit: 10)
 
         #expect(report.initialIntegrityReport.status == "projection_drift")
         #expect(report.initialIntegrityReport.repairRecommended)
@@ -1613,6 +1636,18 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(projectionRepairReport.postRepairValidation?.mismatches.isEmpty == true)
         #expect(postRepairIntegrityReport.status == "healthy")
         #expect(postRepairIntegrityReport.repairRecommended == false)
+        #expect(attempts == [
+            ProvenanceSQLiteStorageRepairAttempt(
+                sequence: 1,
+                attemptedAt: attemptedAt,
+                initialStatus: "projection_drift",
+                repairRecommended: true,
+                repairAttempted: true,
+                repaired: true,
+                replayedEventCount: 1,
+                postRepairStatus: "healthy"
+            ),
+        ])
         #expect(try await repository.session(id: session.id) == session)
         #expect(try await repository.session(id: "session-stale") == nil)
     }
@@ -1638,14 +1673,67 @@ struct ProvenanceSQLiteDatabaseTests {
             """
         )
 
-        let report = try await repository.repairStorageIntegrity(validationLimit: 10)
+        let attemptedAt = Date(timeIntervalSince1970: 1_800_000_030)
+
+        let report = try await repository.repairStorageIntegrity(
+            validationLimit: 10,
+            attemptedAt: attemptedAt
+        )
+        let attempts = try await repository.storageRepairAttempts(limit: 10)
 
         #expect(report.initialIntegrityReport.status == "ledger_invalid")
         #expect(report.initialIntegrityReport.repairRecommended == false)
         #expect(report.repairAttempted == false)
         #expect(report.projectionRepairReport == nil)
         #expect(report.postRepairIntegrityReport == nil)
+        #expect(attempts == [
+            ProvenanceSQLiteStorageRepairAttempt(
+                sequence: 1,
+                attemptedAt: attemptedAt,
+                initialStatus: "ledger_invalid",
+                repairRecommended: false,
+                repairAttempted: false,
+                repaired: false,
+                replayedEventCount: 0,
+                postRepairStatus: nil
+            ),
+        ])
         #expect(try await repository.storageSummary().checkpointCount == 1)
+    }
+
+    @Test
+    func repositoryReadsStorageRepairAttemptsNewestFirstWithLimit() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let firstAttemptAt = Date(timeIntervalSince1970: 1_800_000_030)
+        let secondAttemptAt = Date(timeIntervalSince1970: 1_800_000_040)
+
+        _ = try await repository.repairStorageIntegrity(
+            validationLimit: 10,
+            attemptedAt: firstAttemptAt
+        )
+        _ = try await repository.repairStorageIntegrity(
+            validationLimit: 10,
+            attemptedAt: secondAttemptAt
+        )
+
+        let limitedAttempts = try await repository.storageRepairAttempts(limit: 1)
+        let zeroLimitAttempts = try await repository.storageRepairAttempts(limit: -1)
+
+        #expect(limitedAttempts == [
+            ProvenanceSQLiteStorageRepairAttempt(
+                sequence: 2,
+                attemptedAt: secondAttemptAt,
+                initialStatus: "healthy",
+                repairRecommended: false,
+                repairAttempted: false,
+                repaired: false,
+                replayedEventCount: 0,
+                postRepairStatus: nil
+            ),
+        ])
+        #expect(zeroLimitAttempts.isEmpty)
     }
 
     @Test
