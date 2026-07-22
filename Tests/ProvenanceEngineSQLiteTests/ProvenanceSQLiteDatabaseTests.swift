@@ -395,6 +395,26 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryOpensEngineOwnedDefaultStorageLocation() async throws {
+        let homeDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("provenance-engine-home-tests", isDirectory: true)
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: homeDirectory) }
+        let storageLocation = ProvenanceSQLiteStorageLocation(homeDirectory: homeDirectory)
+
+        #expect(storageLocation.databaseURL == homeDirectory
+            .appendingPathComponent(".local", isDirectory: true)
+            .appendingPathComponent("state", isDirectory: true)
+            .appendingPathComponent("provenance-engine", isDirectory: true)
+            .appendingPathComponent("provenance.sqlite"))
+
+        let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
+
+        #expect(try await repository.schemaVersion() == 6)
+        #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
+    }
+
+    @Test
     func repositoryAppendsAndReadsEventAfterReopen() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }

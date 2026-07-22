@@ -30,6 +30,25 @@ actor ProvenanceSQLiteRepository {
         self.stableIDFactory = ProvenanceStableIDFactory()
     }
 
+    /// Opens the database at an engine-owned storage location and applies migrations.
+    ///
+    /// - Parameters:
+    ///   - storageLocation: Engine-owned SQLite storage location.
+    ///   - migrations: Ordered migration steps supported by this repository.
+    ///   - fileManager: Filesystem dependency used by the SQLite connection.
+    /// - Throws: ``ProvenanceSQLiteError`` or filesystem errors when opening or migrating fails.
+    init(
+        storageLocation: ProvenanceSQLiteStorageLocation = ProvenanceSQLiteStorageLocation(),
+        migrations: [ProvenanceSQLiteMigration] = ProvenanceSQLiteRepository.migrations,
+        fileManager: FileManager = .default
+    ) throws {
+        try self.init(
+            url: storageLocation.databaseURL,
+            migrations: migrations,
+            fileManager: fileManager
+        )
+    }
+
     /// Current migrated schema version recorded in SQLite `PRAGMA user_version`.
     func schemaVersion() throws -> Int32 {
         try database.userVersion
