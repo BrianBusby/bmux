@@ -696,6 +696,57 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositorySessionTreeDoesNotResolveDanglingRelationshipsForMissingRoot() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let childSession = ProvenanceSessionRecord(
+            id: "session-child",
+            agentKind: "codex",
+            status: "active",
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_001)
+        )
+        let danglingRelationship = ProvenanceSessionRelationshipRecord(
+            sessionID: childSession.id,
+            parentSessionID: "missing-root",
+            rootSessionID: "missing-root",
+            depth: 1,
+            source: .observed,
+            confidence: .medium,
+            createdAt: childSession.updatedAt,
+            updatedAt: childSession.updatedAt
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-dangling-child",
+                eventType: .subsessionStarted,
+                timestamp: childSession.updatedAt,
+                sessionID: childSession.id,
+                source: .observed,
+                confidence: .medium,
+                payload: ProvenanceEventPayload(
+                    session: childSession,
+                    sessionRelationship: danglingRelationship
+                )
+            )
+        )
+
+        let tree = try await repository.sessionTree(
+            ProvenanceSessionTreeRequest(rootSessionID: "missing-root")
+        )
+
+        #expect(tree == ProvenanceSessionTreeResponse(
+            rootSessionID: "missing-root",
+            found: false,
+            reason: "no_session",
+            sessions: [],
+            relationships: [],
+            externalIdentities: []
+        ))
+    }
+
+    @Test
     func repositorySessionTreeHonorsNonNegativeLimit() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }

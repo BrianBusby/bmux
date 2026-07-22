@@ -353,17 +353,18 @@ actor ProvenanceSQLiteRepository {
             rowLimit.map { relationships.count < $0 } ?? true
         }
 
-        func appendSessionIfPresent(_ sessionID: String) throws {
-            guard hasSessionCapacity(), let session = try session(id: sessionID) else { return }
+        func appendSessionIfPresent(_ sessionID: String) throws -> Bool {
+            guard hasSessionCapacity(), let session = try session(id: sessionID) else { return false }
             sessions.append(session)
+            return true
         }
 
         func visit(_ sessionID: String, treeDepth: Int) throws {
             guard treeDepth <= 50, !visitedSessionIDs.contains(sessionID) else { return }
             visitedSessionIDs.insert(sessionID)
-            try appendSessionIfPresent(sessionID)
-            guard treeDepth < 50 else { return }
-            for relationship in try childSessionRelationships(parentSessionID: sessionID) {
+            guard try appendSessionIfPresent(sessionID), hasSessionCapacity(), treeDepth < 50 else { return }
+            let childLimit = rowLimit.map { max(0, min($0 - sessions.count, $0 - relationships.count)) }
+            for relationship in try childSessionRelationships(parentSessionID: sessionID, limit: childLimit) {
                 guard !visitedSessionIDs.contains(relationship.sessionID) else { continue }
                 if hasRelationshipCapacity() {
                     relationships.append(relationship)
@@ -920,10 +921,10 @@ actor ProvenanceSQLiteRepository {
     }
 
     private func childSessionRelationships(
-        parentSessionID: String
+        parentSessionID: String,
+        limit: Int? = nil
     ) throws -> [ProvenanceSessionRelationshipRecord] {
-        let query = try database.prepare(
-            """
+        var sql = """
             SELECT
                 session_id,
                 parent_session_id,
@@ -938,10 +939,17 @@ actor ProvenanceSQLiteRepository {
             WHERE parent_session_id = ?
             ORDER BY depth ASC, updated_at_seconds ASC, session_id ASC
             """
-        )
+        if limit != nil {
+            sql += "\nLIMIT ?"
+        }
+
+        let query = try database.prepare(sql)
         defer { query.finalize() }
 
         try query.bind(parentSessionID, at: 1)
+        if let limit {
+            try query.bind(max(0, limit), at: 2)
+        }
         var records: [ProvenanceSessionRelationshipRecord] = []
         while try query.step() {
             if let record = sessionRelationship(from: query) {
