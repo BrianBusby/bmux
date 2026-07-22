@@ -81,6 +81,9 @@ projection tables plus bounded session-tree reads at commit
 internal work-item, contribution, checkpoint, change-set, and file-change
 projection tables plus focused file-explanation reads at commit
 `1032a752db589e670917b56b5bbbefe6442843bd` on branch
+`provenance-session-tree-storage`. A ninth Phase 3D storage slice added
+internal validation-run projection storage plus a bounded current-context read
+model at commit `09628cf4e1ffc0a055dd683cdad5f8da1341a0e2` on branch
 `provenance-session-tree-storage`; draft PR:
 https://github.com/BrianBusby/provenance-engine/pull/1.
 The first SDK is still in-process-only while keeping daemon-compatible
@@ -172,9 +175,10 @@ Current checkout:
   session, repository, and worktree projection tables, narrow projection reads,
   a bounded worktree-list read model, internal session relationship/external
   identity projection tables, bounded session-tree/parent/child/identity reads,
-  and internal file-explanation projection/read support in
+  internal file-explanation projection/read support, internal validation-run
+  projection storage, and bounded current-context projection reads in
   `ProvenanceEngineSQLite`. Latest pushed engine commit:
-  `1032a752db589e670917b56b5bbbefe6442843bd` on
+  `09628cf4e1ffc0a055dd683cdad5f8da1341a0e2` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
@@ -293,6 +297,30 @@ Latest provenance Phase 3B remote unblock slice:
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
 - Full ADR-001 Phase 3 remains incomplete.
 
+Latest provenance Phase 3D current-context projection storage slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `09628cf4e1ffc0a055dd683cdad5f8da1341a0e2` (`Add current context storage projections`)
+- Pushed to canonical `origin/provenance-session-tree-storage`; draft PR:
+  https://github.com/BrianBusby/provenance-engine/pull/1.
+- `ProvenanceEngineContracts` remains the only public library product.
+- Added the repository-owned V6 migration for internal validation-run
+  projection storage plus supporting indexes.
+- Updated `appendEvent(_:)` so validation-run payloads project into the
+  internal SQLite read model in the same transaction as the event ledger.
+- Added an internal `currentContext(_:)` repository actor read backed by
+  existing worktree, session, contribution, checkpoint, file-change, and
+  validation-run projections.
+- No bmux consumer imports or runtime behavior changed.
+- No public storage SDK/product, daemon, IPC, launch agent, CLI, retrieval,
+  lifecycle policy, UI, observability expansion, bmux storage move, bmux schema
+  move, or data migration was added.
+
+- Validation passed.
+- Localization audit: no localized user-facing strings changed.
+- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
+  storage boundary over existing contracts. Keep it engine-owned and internal.
+
 Latest provenance Phase 3D file-explanation projection storage slice:
 
 - External repo path: `/Users/brianbusby/repos/provenance-engine`
@@ -315,9 +343,8 @@ Latest provenance Phase 3D file-explanation projection storage slice:
 - Localization audit: changed only engine internal Swift package files, package
   README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
   settings/localized strings changed.
-- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
-  storage boundary, such as validation-run/current-context projection storage
-  over existing contracts. Keep it engine-owned and internal.
+- Next safe target from this slice was completed by the later current-context
+  projection storage slice.
 
 Latest provenance Phase 3D worktree projection query storage slice:
 

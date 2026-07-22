@@ -60,6 +60,9 @@ bounded session-tree reads at commit
 work-item, contribution, checkpoint, change-set, and file-change projection
 tables plus focused file-explanation reads at commit
 `1032a752db589e670917b56b5bbbefe6442843bd` on branch
+`provenance-session-tree-storage`. A ninth Phase 3D slice added internal
+validation-run projection storage plus bounded current-context projection reads
+at commit `09628cf4e1ffc0a055dd683cdad5f8da1341a0e2` on branch
 `provenance-session-tree-storage`; draft PR:
 https://github.com/BrianBusby/provenance-engine/pull/1. No public storage SDK, daemon,
 storage path move, schema move, data migration, bmux reconnect,
@@ -285,9 +288,14 @@ Implemented slices:
   at commit `1032a752db589e670917b56b5bbbefe6442843bd` on branch
   `provenance-session-tree-storage`, still without exporting a public storage
   product and without changing bmux behavior.
-- Continue Phase 3D only after deciding the next smallest storage boundary,
-  such as validation-run/current-context projection storage over existing
-  contracts.
+- ADR-001 Phase 3D current-context projection storage added internal
+  validation-run projection storage, event-payload projection upserts, and a
+  bounded current-context read model over existing storage contracts at commit
+  `09628cf4e1ffc0a055dd683cdad5f8da1341a0e2` on branch
+  `provenance-session-tree-storage`, still without exporting a public storage
+  product and without changing bmux behavior.
+- Continue Phase 3D only after deciding the next smallest storage boundary over
+  existing contracts.
 - Phase 2, Phase 3A, Phase 3B, Phase 3C, and the Phase 3D storage slices have not
   created a daemon, moved storage/schema, added data migration, or added
   daemon/SDK packaging. Four
