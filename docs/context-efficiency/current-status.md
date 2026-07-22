@@ -136,6 +136,10 @@ An eighteenth Phase 3D storage slice added an internal bounded SQLite
 projection-key validation read model, on branch
 `provenance-session-tree-storage`, at commit
 `bab8f18abbc79300f52640fea1235fcff2da1f57`.
+A nineteenth Phase 3D storage slice added internal bounded SQLite
+projection-drift repair over complete projection-key validation, on branch
+`provenance-session-tree-storage`, at commit
+`ad94a60bdb8792b4266705579997e9a1f77a25e2`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -233,10 +237,10 @@ Current checkout:
   conformance, bounded append-order event-ledger cursor reads, internal
   projection rebuild from ledger replay, an internal repository-owned SQLite
   storage summary read model, internal bounded event-ledger validation,
-  internal bounded projection-count validation, and internal bounded
-  projection-key validation in
+  internal bounded projection-count validation, internal bounded
+  projection-key validation, and internal bounded projection-drift repair in
   `ProvenanceEngineSQLite`. Latest engine commit:
-  `bab8f18abbc79300f52640fea1235fcff2da1f57` on
+  `ad94a60bdb8792b4266705579997e9a1f77a25e2` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
