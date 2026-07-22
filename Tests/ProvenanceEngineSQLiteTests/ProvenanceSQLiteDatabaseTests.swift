@@ -377,13 +377,15 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 3)
+        #expect(try await repository.schemaVersion() == 4)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
         #expect(try Self.tableExists("provenance_sessions", in: database))
         #expect(try Self.tableExists("provenance_repositories", in: database))
         #expect(try Self.tableExists("provenance_worktrees", in: database))
+        #expect(try Self.tableExists("provenance_session_relationships", in: database))
+        #expect(try Self.tableExists("provenance_session_external_identities", in: database))
     }
 
     @Test
@@ -496,6 +498,264 @@ struct ProvenanceSQLiteDatabaseTests {
         let repository = try ProvenanceSQLiteRepository(url: url)
 
         #expect(try await repository.session(id: "missing-session") == nil)
+    }
+
+    @Test
+    func repositoryProjectsSessionTreeRelationshipsAndExternalIdentitiesAfterReopen() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let rootSession = ProvenanceSessionRecord(
+            id: "session-root",
+            agentKind: "codex",
+            status: "active",
+            startedAt: timestamp,
+            updatedAt: timestamp
+        )
+        let olderChild = ProvenanceSessionRecord(
+            id: "session-older-child",
+            agentKind: "codex",
+            status: "completed",
+            startedAt: Date(timeIntervalSince1970: 1_800_000_001),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_003)
+        )
+        let newerChild = ProvenanceSessionRecord(
+            id: "session-newer-child",
+            agentKind: "codex",
+            status: "active",
+            startedAt: Date(timeIntervalSince1970: 1_800_000_002),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_004)
+        )
+        let grandchild = ProvenanceSessionRecord(
+            id: "session-grandchild",
+            agentKind: "codex",
+            status: "active",
+            startedAt: Date(timeIntervalSince1970: 1_800_000_005),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_006)
+        )
+        let olderRelationship = ProvenanceSessionRelationshipRecord(
+            sessionID: olderChild.id,
+            parentSessionID: rootSession.id,
+            rootSessionID: rootSession.id,
+            depth: 1,
+            source: .observed,
+            confidence: .high,
+            createdAt: olderChild.startedAt ?? olderChild.updatedAt,
+            updatedAt: olderChild.updatedAt
+        )
+        let newerRelationship = ProvenanceSessionRelationshipRecord(
+            sessionID: newerChild.id,
+            parentSessionID: rootSession.id,
+            rootSessionID: rootSession.id,
+            depth: 1,
+            source: .observed,
+            confidence: .medium,
+            createdAt: newerChild.startedAt ?? newerChild.updatedAt,
+            updatedAt: newerChild.updatedAt
+        )
+        let grandchildRelationship = ProvenanceSessionRelationshipRecord(
+            sessionID: grandchild.id,
+            parentSessionID: newerChild.id,
+            rootSessionID: rootSession.id,
+            inboundDelegationID: "delegation-1",
+            depth: 2,
+            source: .declared,
+            confidence: .medium,
+            createdAt: grandchild.startedAt ?? grandchild.updatedAt,
+            updatedAt: grandchild.updatedAt
+        )
+        let childIdentity = ProvenanceExternalIdentityRecord(
+            id: "identity-child",
+            sessionID: newerChild.id,
+            system: "codex",
+            kind: "subsession",
+            externalID: "external-child",
+            source: .observed,
+            confidence: .high,
+            createdAt: newerChild.startedAt ?? newerChild.updatedAt,
+            updatedAt: newerChild.updatedAt
+        )
+        let grandchildIdentity = ProvenanceExternalIdentityRecord(
+            id: "identity-grandchild",
+            sessionID: grandchild.id,
+            system: "codex",
+            kind: "thread",
+            externalID: "external-grandchild",
+            source: .declared,
+            confidence: .medium,
+            createdAt: grandchild.startedAt ?? grandchild.updatedAt,
+            updatedAt: grandchild.updatedAt
+        )
+
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        for session in [rootSession, olderChild, newerChild, grandchild] {
+            try await writer.appendEvent(
+                ProvenanceEvent(
+                    id: "event-\(session.id)",
+                    eventType: .sessionObserved,
+                    timestamp: session.updatedAt,
+                    sessionID: session.id,
+                    source: .observed,
+                    confidence: .high,
+                    payload: ProvenanceEventPayload(session: session)
+                )
+            )
+        }
+        try await writer.appendEvent(
+            ProvenanceEvent(
+                id: "event-older-relationship",
+                eventType: .subsessionStarted,
+                timestamp: olderRelationship.updatedAt,
+                sessionID: olderChild.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(sessionRelationship: olderRelationship)
+            )
+        )
+        try await writer.appendEvent(
+            ProvenanceEvent(
+                id: "event-newer-relationship",
+                eventType: .subsessionStarted,
+                timestamp: newerRelationship.updatedAt,
+                sessionID: newerChild.id,
+                source: .observed,
+                confidence: .medium,
+                payload: ProvenanceEventPayload(
+                    sessionRelationship: newerRelationship,
+                    externalIdentities: [childIdentity]
+                )
+            )
+        )
+        try await writer.appendEvent(
+            ProvenanceEvent(
+                id: "event-grandchild-relationship",
+                eventType: .subsessionStarted,
+                timestamp: grandchildRelationship.updatedAt,
+                sessionID: grandchild.id,
+                source: .declared,
+                confidence: .medium,
+                payload: ProvenanceEventPayload(
+                    sessionRelationship: grandchildRelationship,
+                    externalIdentities: [grandchildIdentity]
+                )
+            )
+        )
+
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let tree = try await reader.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: rootSession.id))
+
+        #expect(tree.found)
+        #expect(tree.reason == nil)
+        #expect(tree.sessions.map(\.id) == [
+            rootSession.id,
+            olderChild.id,
+            newerChild.id,
+            grandchild.id,
+        ])
+        #expect(tree.relationships == [
+            olderRelationship,
+            newerRelationship,
+            grandchildRelationship,
+        ])
+        #expect(tree.externalIdentities == [
+            childIdentity,
+            grandchildIdentity,
+        ])
+        #expect(try await reader.parentSession(for: newerChild.id) == newerRelationship)
+        #expect(try await reader.childSessions(for: rootSession.id) == [
+            olderRelationship,
+            newerRelationship,
+        ])
+        #expect(try await reader.externalIdentities(sessionID: newerChild.id) == [childIdentity])
+    }
+
+    @Test
+    func repositorySessionTreeReturnsMissingReasonForUnknownRoot() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        let tree = try await repository.sessionTree(
+            ProvenanceSessionTreeRequest(rootSessionID: "missing-session")
+        )
+
+        #expect(tree == ProvenanceSessionTreeResponse(
+            rootSessionID: "missing-session",
+            found: false,
+            reason: "no_session",
+            sessions: [],
+            relationships: [],
+            externalIdentities: []
+        ))
+    }
+
+    @Test
+    func repositorySessionTreeHonorsNonNegativeLimit() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let rootSession = ProvenanceSessionRecord(
+            id: "session-root",
+            agentKind: "codex",
+            status: "active",
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_000)
+        )
+        let childSession = ProvenanceSessionRecord(
+            id: "session-child",
+            agentKind: "codex",
+            status: "active",
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_001)
+        )
+        let relationship = ProvenanceSessionRelationshipRecord(
+            sessionID: childSession.id,
+            parentSessionID: rootSession.id,
+            rootSessionID: rootSession.id,
+            depth: 1,
+            source: .observed,
+            confidence: .high,
+            createdAt: childSession.updatedAt,
+            updatedAt: childSession.updatedAt
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-root",
+                eventType: .sessionObserved,
+                timestamp: rootSession.updatedAt,
+                sessionID: rootSession.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(session: rootSession)
+            )
+        )
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-child",
+                eventType: .subsessionStarted,
+                timestamp: childSession.updatedAt,
+                sessionID: childSession.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(
+                    session: childSession,
+                    sessionRelationship: relationship
+                )
+            )
+        )
+
+        let oneRowTree = try await repository.sessionTree(
+            ProvenanceSessionTreeRequest(rootSessionID: rootSession.id, limit: 1)
+        )
+        let zeroRowTree = try await repository.sessionTree(
+            ProvenanceSessionTreeRequest(rootSessionID: rootSession.id, limit: -1)
+        )
+
+        #expect(oneRowTree.sessions == [rootSession])
+        #expect(oneRowTree.relationships.isEmpty)
+        #expect(zeroRowTree.found == false)
+        #expect(zeroRowTree.reason == "no_session")
+        #expect(zeroRowTree.sessions.isEmpty)
+        #expect(zeroRowTree.relationships.isEmpty)
     }
 
     @Test

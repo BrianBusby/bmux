@@ -50,6 +50,12 @@ actor ProvenanceSQLiteRepository {
             if let session = event.payload.session {
                 try upsertSession(session)
             }
+            if let sessionRelationship = event.payload.sessionRelationship {
+                try upsertSessionRelationship(sessionRelationship)
+            }
+            for externalIdentity in event.payload.externalIdentities {
+                try upsertExternalIdentity(externalIdentity)
+            }
             try database.execute("COMMIT")
         } catch {
             try? database.execute("ROLLBACK")
@@ -283,6 +289,87 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
+    /// Reads the direct parent relationship for one session projection.
+    ///
+    /// - Parameter sessionID: Stable child session identifier.
+    /// - Returns: The parent relationship projection, or `nil` when the session has no known parent.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func parentSession(for sessionID: String) throws -> ProvenanceSessionRelationshipRecord? {
+        try sessionRelationship(sessionID: sessionID)
+    }
+
+    /// Reads direct child relationship projections for one parent session.
+    ///
+    /// - Parameter sessionID: Stable parent session identifier.
+    /// - Returns: Child relationships sorted by depth, update time, then child session ID.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func childSessions(for sessionID: String) throws -> [ProvenanceSessionRelationshipRecord] {
+        try childSessionRelationships(parentSessionID: sessionID)
+    }
+
+    /// Reads external identities linked to one session projection.
+    ///
+    /// - Parameter sessionID: Stable session identifier.
+    /// - Returns: Identity links sorted by system, kind, then external identifier.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func externalIdentities(sessionID: String) throws -> [ProvenanceExternalIdentityRecord] {
+        try externalIdentityRecords(sessionID: sessionID)
+    }
+
+    /// Reads the bounded current session tree rooted at the requested session.
+    ///
+    /// - Parameter request: Session-tree query parameters.
+    /// - Returns: Depth-first tree response with linked external identities.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func sessionTree(_ request: ProvenanceSessionTreeRequest) throws -> ProvenanceSessionTreeResponse {
+        let rowLimit = request.limit.map { max(0, $0) }
+        var sessions: [ProvenanceSessionRecord] = []
+        var relationships: [ProvenanceSessionRelationshipRecord] = []
+        var visitedSessionIDs = Set<String>()
+
+        func hasSessionCapacity() -> Bool {
+            rowLimit.map { sessions.count < $0 } ?? true
+        }
+
+        func hasRelationshipCapacity() -> Bool {
+            rowLimit.map { relationships.count < $0 } ?? true
+        }
+
+        func appendSessionIfPresent(_ sessionID: String) throws {
+            guard hasSessionCapacity(), let session = try session(id: sessionID) else { return }
+            sessions.append(session)
+        }
+
+        func visit(_ sessionID: String, treeDepth: Int) throws {
+            guard treeDepth <= 50, !visitedSessionIDs.contains(sessionID) else { return }
+            visitedSessionIDs.insert(sessionID)
+            try appendSessionIfPresent(sessionID)
+            guard treeDepth < 50 else { return }
+            for relationship in try childSessionRelationships(parentSessionID: sessionID) {
+                guard !visitedSessionIDs.contains(relationship.sessionID) else { continue }
+                if hasRelationshipCapacity() {
+                    relationships.append(relationship)
+                }
+                try visit(relationship.sessionID, treeDepth: treeDepth + 1)
+            }
+        }
+
+        try visit(request.rootSessionID, treeDepth: 0)
+        let includedSessionIDs = Set(sessions.map(\.id))
+        let includedRelationships = relationships.filter { includedSessionIDs.contains($0.sessionID) }
+        let identities = try sessions.flatMap { try externalIdentityRecords(sessionID: $0.id) }
+        let found = !sessions.isEmpty || !includedRelationships.isEmpty
+
+        return ProvenanceSessionTreeResponse(
+            rootSessionID: request.rootSessionID,
+            found: found,
+            reason: found ? nil : "no_session",
+            sessions: sessions,
+            relationships: includedRelationships,
+            externalIdentities: identities
+        )
+    }
+
     private func worktree(from query: ProvenanceSQLiteStatement) -> ProvenanceWorktreeRecord? {
         guard let id = query.string(at: 0),
               let repositoryID = query.string(at: 1),
@@ -303,6 +390,143 @@ actor ProvenanceSQLiteRepository {
             lastReconciledAt: query.double(at: 8).map { Date(timeIntervalSince1970: $0) },
             updatedAt: Date(timeIntervalSince1970: query.double(at: 9) ?? 0)
         )
+    }
+
+    private func sessionRelationship(
+        sessionID: String
+    ) throws -> ProvenanceSessionRelationshipRecord? {
+        let query = try database.prepare(
+            """
+            SELECT
+                session_id,
+                parent_session_id,
+                root_session_id,
+                inbound_delegation_id,
+                depth,
+                source,
+                confidence,
+                created_at_seconds,
+                updated_at_seconds
+            FROM provenance_session_relationships
+            WHERE session_id = ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(sessionID, at: 1)
+        guard try query.step() else { return nil }
+        return sessionRelationship(from: query)
+    }
+
+    private func childSessionRelationships(
+        parentSessionID: String
+    ) throws -> [ProvenanceSessionRelationshipRecord] {
+        let query = try database.prepare(
+            """
+            SELECT
+                session_id,
+                parent_session_id,
+                root_session_id,
+                inbound_delegation_id,
+                depth,
+                source,
+                confidence,
+                created_at_seconds,
+                updated_at_seconds
+            FROM provenance_session_relationships
+            WHERE parent_session_id = ?
+            ORDER BY depth ASC, updated_at_seconds ASC, session_id ASC
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(parentSessionID, at: 1)
+        var records: [ProvenanceSessionRelationshipRecord] = []
+        while try query.step() {
+            if let record = sessionRelationship(from: query) {
+                records.append(record)
+            }
+        }
+        return records
+    }
+
+    private func sessionRelationship(
+        from query: ProvenanceSQLiteStatement
+    ) -> ProvenanceSessionRelationshipRecord? {
+        guard let sessionID = query.string(at: 0),
+              let parentSessionID = query.string(at: 1),
+              let rootSessionID = query.string(at: 2),
+              let sourceRawValue = query.string(at: 5),
+              let source = ProvenanceSource(rawValue: sourceRawValue),
+              let confidenceRawValue = query.string(at: 6),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
+            return nil
+        }
+
+        return ProvenanceSessionRelationshipRecord(
+            sessionID: sessionID,
+            parentSessionID: parentSessionID,
+            rootSessionID: rootSessionID,
+            inboundDelegationID: query.string(at: 3),
+            depth: query.int(at: 4),
+            source: source,
+            confidence: confidence,
+            createdAt: Date(timeIntervalSince1970: query.double(at: 7) ?? 0),
+            updatedAt: Date(timeIntervalSince1970: query.double(at: 8) ?? 0)
+        )
+    }
+
+    private func externalIdentityRecords(
+        sessionID: String
+    ) throws -> [ProvenanceExternalIdentityRecord] {
+        let query = try database.prepare(
+            """
+            SELECT
+                id,
+                session_id,
+                system,
+                kind,
+                external_id,
+                source,
+                confidence,
+                created_at_seconds,
+                updated_at_seconds
+            FROM provenance_session_external_identities
+            WHERE session_id = ?
+            ORDER BY system ASC, kind ASC, external_id ASC
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(sessionID, at: 1)
+        var records: [ProvenanceExternalIdentityRecord] = []
+        while try query.step() {
+            guard let id = query.string(at: 0),
+                  let sessionID = query.string(at: 1),
+                  let system = query.string(at: 2),
+                  let kind = query.string(at: 3),
+                  let externalID = query.string(at: 4),
+                  let sourceRawValue = query.string(at: 5),
+                  let source = ProvenanceSource(rawValue: sourceRawValue),
+                  let confidenceRawValue = query.string(at: 6),
+                  let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
+                continue
+            }
+            records.append(
+                ProvenanceExternalIdentityRecord(
+                    id: id,
+                    sessionID: sessionID,
+                    system: system,
+                    kind: kind,
+                    externalID: externalID,
+                    source: source,
+                    confidence: confidence,
+                    createdAt: Date(timeIntervalSince1970: query.double(at: 7) ?? 0),
+                    updatedAt: Date(timeIntervalSince1970: query.double(at: 8) ?? 0)
+                )
+            )
+        }
+        return records
     }
 
     private func insertEvent(_ event: ProvenanceEvent) throws {
@@ -458,6 +682,81 @@ actor ProvenanceSQLiteRepository {
         _ = try upsert.step()
     }
 
+    private func upsertSessionRelationship(_ relationship: ProvenanceSessionRelationshipRecord) throws {
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_session_relationships (
+                session_id,
+                parent_session_id,
+                root_session_id,
+                inbound_delegation_id,
+                depth,
+                source,
+                confidence,
+                created_at_seconds,
+                updated_at_seconds
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(session_id) DO UPDATE SET
+                parent_session_id = excluded.parent_session_id,
+                root_session_id = excluded.root_session_id,
+                inbound_delegation_id = excluded.inbound_delegation_id,
+                depth = excluded.depth,
+                source = excluded.source,
+                confidence = excluded.confidence,
+                updated_at_seconds = excluded.updated_at_seconds
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(relationship.sessionID, at: 1)
+        try upsert.bind(relationship.parentSessionID, at: 2)
+        try upsert.bind(relationship.rootSessionID, at: 3)
+        try upsert.bind(relationship.inboundDelegationID, at: 4)
+        try upsert.bind(relationship.depth, at: 5)
+        try upsert.bind(relationship.source.rawValue, at: 6)
+        try upsert.bind(relationship.confidence.rawValue, at: 7)
+        try upsert.bind(relationship.createdAt.timeIntervalSince1970, at: 8)
+        try upsert.bind(relationship.updatedAt.timeIntervalSince1970, at: 9)
+
+        _ = try upsert.step()
+    }
+
+    private func upsertExternalIdentity(_ identity: ProvenanceExternalIdentityRecord) throws {
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_session_external_identities (
+                id,
+                session_id,
+                system,
+                kind,
+                external_id,
+                source,
+                confidence,
+                created_at_seconds,
+                updated_at_seconds
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(system, kind, external_id) DO UPDATE SET
+                session_id = excluded.session_id,
+                source = excluded.source,
+                confidence = excluded.confidence,
+                updated_at_seconds = excluded.updated_at_seconds
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(identity.id, at: 1)
+        try upsert.bind(identity.sessionID, at: 2)
+        try upsert.bind(identity.system, at: 3)
+        try upsert.bind(identity.kind, at: 4)
+        try upsert.bind(identity.externalID, at: 5)
+        try upsert.bind(identity.source.rawValue, at: 6)
+        try upsert.bind(identity.confidence.rawValue, at: 7)
+        try upsert.bind(identity.createdAt.timeIntervalSince1970, at: 8)
+        try upsert.bind(identity.updatedAt.timeIntervalSince1970, at: 9)
+
+        _ = try upsert.step()
+    }
+
     private static let migrations = [
         ProvenanceSQLiteMigration(
             version: 1,
@@ -560,6 +859,53 @@ actor ProvenanceSQLiteRepository {
                 """
                 CREATE INDEX provenance_worktrees_path_index
                 ON provenance_worktrees (path, updated_at_seconds)
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 4,
+            statements: [
+                """
+                CREATE TABLE provenance_session_relationships (
+                    session_id TEXT PRIMARY KEY NOT NULL,
+                    parent_session_id TEXT NOT NULL,
+                    root_session_id TEXT NOT NULL,
+                    inbound_delegation_id TEXT,
+                    depth INTEGER NOT NULL,
+                    source TEXT NOT NULL,
+                    confidence TEXT NOT NULL,
+                    created_at_seconds REAL NOT NULL,
+                    updated_at_seconds REAL NOT NULL
+                )
+                """,
+                """
+                CREATE INDEX provenance_session_relationships_parent_index
+                ON provenance_session_relationships (parent_session_id, depth, updated_at_seconds)
+                """,
+                """
+                CREATE INDEX provenance_session_relationships_root_index
+                ON provenance_session_relationships (root_session_id, depth, updated_at_seconds)
+                """,
+                """
+                CREATE TABLE provenance_session_external_identities (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    session_id TEXT NOT NULL,
+                    system TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    external_id TEXT NOT NULL,
+                    source TEXT NOT NULL,
+                    confidence TEXT NOT NULL,
+                    created_at_seconds REAL NOT NULL,
+                    updated_at_seconds REAL NOT NULL
+                )
+                """,
+                """
+                CREATE UNIQUE INDEX provenance_session_external_identities_unique_index
+                ON provenance_session_external_identities (system, kind, external_id)
+                """,
+                """
+                CREATE INDEX provenance_session_external_identities_session_index
+                ON provenance_session_external_identities (session_id, system, kind)
                 """,
             ]
         ),
