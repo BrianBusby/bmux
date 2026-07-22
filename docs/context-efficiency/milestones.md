@@ -49,8 +49,11 @@ minimal internal SQLite repository actor at commit
 first internal repository-owned event-ledger table and narrow append/read path
 at commit `f96858fb8f1a207426ad78c2524ab5b5c9b74121`. A fifth Phase 3D slice
 added the first internal repository-owned session projection table and narrow
-read path at commit `ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2`. No public storage SDK,
-daemon, storage path move, schema move, data migration, bmux reconnect,
+read path at commit `ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2`. A sixth Phase 3D
+slice added internal repository/worktree projection bootstrap and a bounded
+worktree-list read model at commit
+`fe1a4c5712eefc7ab2e2e3b271d0dc1e91a442e1`. No public storage SDK, daemon,
+storage path move, schema move, data migration, bmux reconnect,
 retrieval layer, lifecycle policy, UI, or broad observability expansion has
 been created. Full ADR-001 Phase 3 is still not complete.
 
@@ -255,9 +258,14 @@ Implemented slices:
   narrow `ProvenanceSessionRecord` read support at commit
   `ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2`, still without exporting a public
   storage product and without changing bmux behavior.
+- ADR-001 Phase 3D worktree projection query storage added internal repository
+  and worktree projection tables, projection upserts during event append, and a
+  bounded `ProvenanceWorktreeListResponse` read model at commit
+  `fe1a4c5712eefc7ab2e2e3b271d0dc1e91a442e1`, still without exporting a public
+  storage product and without changing bmux behavior.
 - Continue Phase 3D only after deciding the next smallest storage boundary,
-  such as repository/worktree projection bootstrap or a bounded session read
-  model over the new session projection.
+  such as bounded session-tree repository reads over the new session projection
+  or normalized lifecycle-recording storage.
 - Phase 2, Phase 3A, Phase 3B, Phase 3C, and the Phase 3D storage slices have not
   created a daemon, moved storage/schema, added data migration, or added
   daemon/SDK packaging. Four

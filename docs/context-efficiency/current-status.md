@@ -70,7 +70,10 @@ narrow append/read path at commit
 `f96858fb8f1a207426ad78c2524ab5b5c9b74121`. A fifth Phase 3D storage
 slice added the first internal repository-owned session projection table and
 narrow read path at commit
-`ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2`.
+`ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2`. A sixth Phase 3D storage
+slice added internal repository/worktree projection bootstrap plus a bounded
+worktree-list read model at commit
+`fe1a4c5712eefc7ab2e2e3b271d0dc1e91a442e1`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -156,10 +159,11 @@ Current checkout:
   `9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to `origin/main`.
 - ADR-001 Phase 3D internal SQLite storage support now includes connection,
   statement, error, schema migration scaffolding, a minimal repository actor,
-  an internal event-ledger table with narrow append/read support, and an
-  initial session projection table with narrow read support in
+  an internal event-ledger table with narrow append/read support, initial
+  session, repository, and worktree projection tables, narrow projection reads,
+  and a bounded worktree-list read model in
   `ProvenanceEngineSQLite`. Latest pushed engine commit:
-  `ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2`.
+  `fe1a4c5712eefc7ab2e2e3b271d0dc1e91a442e1`.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
   `docs/context-efficiency/provenance-engine-phase3a-decisions.md`.
 - This 2026-07-21 slice started ADR-001 Phase 3 with a docs-only
@@ -276,7 +280,21 @@ Latest provenance Phase 3B remote unblock slice:
 - Localization audit: no bmux CLI/UI/help/settings/localized strings changed.
 - Full ADR-001 Phase 3 remains incomplete.
 
-Latest provenance Phase 3D session-projection storage slice:
+Latest provenance Phase 3D worktree projection query storage slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `fe1a4c5712eefc7ab2e2e3b271d0dc1e91a442e1` (`Add worktree projection query storage`)
+- Pushed to canonical `origin/main`.
+- `ProvenanceEngineContracts` remains the only public library product.
+- Added the repository-owned V3 migration for internal repository and worktree
+  current-state projection tables plus supporting indexes.
+- Updated `appendEvent(_:)` so event-ledger insert plus repository, worktree,
+  and session projection upserts happen in one repository-owned SQLite
+  transaction when those payload records are present.
+- Added narrow internal repository actor methods: `repository(id:)`,
+  `worktree(id:)`, and `worktrees(_:)`.
+
+Previous provenance Phase 3D session-projection storage slice:
 
 - External repo path: `/Users/brianbusby/repos/provenance-engine`
 - Commit: `ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2` (`Add session
