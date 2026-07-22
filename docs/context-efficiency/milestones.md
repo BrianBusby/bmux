@@ -99,7 +99,10 @@ event-ledger replay on branch `provenance-session-tree-storage`, at commit
 `d18d5596c3e0bd4e8e9ffd7680dd6bc6139fc2bb`. A fifteenth Phase 3D storage
 slice added an internal repository-owned SQLite storage summary read model for
 ledger/projection counts on branch `provenance-session-tree-storage`, at commit
-`68bafa628e4d10e212b089fc73b2e64a12d76dba`. No public storage SDK, daemon,
+`68bafa628e4d10e212b089fc73b2e64a12d76dba`. A sixteenth Phase 3D storage
+slice added an internal bounded SQLite event-ledger validation read model on
+branch `provenance-session-tree-storage`, at commit
+`c9078e6eb904d27a1da48db7a5b518aad6c8ab1e`. No public storage SDK, daemon,
 storage path move, schema move, data migration, bmux reconnect, retrieval layer,
 lifecycle policy, UI, or broad observability expansion has been created. Full
 ADR-001 Phase 3 is still not complete.
@@ -342,6 +345,11 @@ Implemented slices:
 - ADR-001 Phase 3D projection-rebuild storage added internal current-state
   projection rebuild by bounded-batch replay of the immutable event ledger at
   commit `d18d5596c3e0bd4e8e9ffd7680dd6bc6139fc2bb` on branch
+  `provenance-session-tree-storage`, still without exporting a public storage
+  product and without changing bmux behavior.
+- ADR-001 Phase 3D ledger-validation storage added an internal bounded
+  event-ledger validation read model at commit
+  `c9078e6eb904d27a1da48db7a5b518aad6c8ab1e` on branch
   `provenance-session-tree-storage`, still without exporting a public storage
   product and without changing bmux behavior.
 - Continue Phase 3D only after deciding the next smallest internal engine-owned

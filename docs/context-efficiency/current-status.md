@@ -124,6 +124,10 @@ A fifteenth Phase 3D storage slice added an internal repository-owned SQLite
 storage summary read model for ledger/projection counts, on branch
 `provenance-session-tree-storage`, at commit
 `68bafa628e4d10e212b089fc73b2e64a12d76dba`.
+A sixteenth Phase 3D storage slice added an internal bounded SQLite
+event-ledger validation read model, on branch
+`provenance-session-tree-storage`, at commit
+`c9078e6eb904d27a1da48db7a5b518aad6c8ab1e`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -219,10 +223,11 @@ Current checkout:
   session-tree traversal fixes, internal normalized subsession-lifecycle
   recording support, internal SQLite-backed `ProvenanceEngineClient`
   conformance, bounded append-order event-ledger cursor reads, internal
-  projection rebuild from ledger replay, and an internal repository-owned
-  SQLite storage summary read model in
+  projection rebuild from ledger replay, an internal repository-owned SQLite
+  storage summary read model, and an internal bounded event-ledger validation
+  read model in
   `ProvenanceEngineSQLite`. Latest engine commit:
-  `68bafa628e4d10e212b089fc73b2e64a12d76dba` on
+  `c9078e6eb904d27a1da48db7a5b518aad6c8ab1e` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
@@ -286,7 +291,30 @@ Files changed in the latest implementation slice:
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 - `tests/test_context_efficiency_cli.py`
 
-Latest provenance Phase 3D storage-summary slice:
+Latest provenance Phase 3D ledger-validation slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `c9078e6eb904d27a1da48db7a5b518aad6c8ab1e` (`Add SQLite
+  ledger validation summary`)
+- Branch: `provenance-session-tree-storage`; draft PR:
+  https://github.com/BrianBusby/provenance-engine/pull/1.
+- `ProvenanceEngineContracts` remains the only public library product.
+- Added internal `ProvenanceSQLiteLedgerValidationReport`,
+  `ProvenanceSQLiteLedgerValidationIssue`, and
+  `ProvenanceSQLiteRepository.validateEventLedger(limit:)`.
+- The validation path scans bounded append-order ledger rows through the same
+  decoder used by repository ledger reads, reports checked/invalid counts, the
+  latest checked append sequence, first invalid row details, and whether the
+  scan was truncated by the requested limit.
+- Kept the validation read model below the public SDK/product surface; no bmux
+  consumer imports or runtime behavior changed.
+- Added behavior coverage for clean bounded ledger validation, truncation, and
+  zero-limit reporting.
+- No public storage SDK/product, daemon, IPC, launch agent, CLI, retrieval,
+  lifecycle policy, UI, observability expansion, bmux storage move, bmux schema
+  move, or data migration was added.
+
+Previous provenance Phase 3D storage-summary slice:
 
 - External repo path: `/Users/brianbusby/repos/provenance-engine`
 - Commit: `68bafa628e4d10e212b089fc73b2e64a12d76dba` (`Add internal
@@ -998,9 +1026,10 @@ ADR-001 Phase 3 target:
    session-tree projection storage, file-explanation projections,
    current-context projections, normalized lifecycle recording,
    SQLite-backed `ProvenanceEngineClient` conformance, default storage-location
-   resolution, bounded internal event-ledger cursor reads, and internal
-   projection rebuild from ledger replay. Latest storage slice is
-   `d18d5596c3e0bd4e8e9ffd7680dd6bc6139fc2bb` on
+   resolution, bounded internal event-ledger cursor reads, internal projection
+   rebuild from ledger replay, internal storage summary reads, and internal
+   event-ledger validation. Latest storage slice is
+   `c9078e6eb904d27a1da48db7a5b518aad6c8ab1e` on
    `origin/provenance-session-tree-storage` with draft PR
    https://github.com/BrianBusby/provenance-engine/pull/1.
 3. The next implementation target can continue Phase 3D only after deciding the
