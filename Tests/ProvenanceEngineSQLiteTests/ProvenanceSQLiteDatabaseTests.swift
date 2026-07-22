@@ -433,6 +433,99 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func sqliteRepositorySatisfiesEngineClientContract() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let repositoryRecord = ProvenanceRepositoryRecord(
+            id: "repository-1",
+            path: "/repos/project",
+            createdAt: timestamp,
+            updatedAt: timestamp
+        )
+        let worktree = ProvenanceWorktreeRecord(
+            id: "worktree-1",
+            repositoryID: repositoryRecord.id,
+            path: repositoryRecord.path,
+            isDirty: false,
+            status: "active",
+            updatedAt: timestamp
+        )
+        let parentSession = ProvenanceSessionRecord(
+            id: "session-parent",
+            agentKind: "codex",
+            worktreeID: worktree.id,
+            status: "active",
+            startedAt: timestamp,
+            updatedAt: timestamp
+        )
+        let client: any ProvenanceEngineClient = try ProvenanceSQLiteRepository(url: url)
+
+        let health = try await client.health()
+        let append = try await client.appendEvent(
+            ProvenanceAppendEventRequest(
+                event: ProvenanceEvent(
+                    id: "event-bootstrap",
+                    eventType: .sessionObserved,
+                    timestamp: timestamp,
+                    repositoryID: repositoryRecord.id,
+                    worktreeID: worktree.id,
+                    sessionID: parentSession.id,
+                    source: .observed,
+                    confidence: .high,
+                    payload: ProvenanceEventPayload(
+                        repository: repositoryRecord,
+                        worktree: worktree,
+                        session: parentSession
+                    )
+                )
+            )
+        )
+        let lifecycle = await client.recordSubsessionLifecycle(
+            ProvenanceSubsessionLifecycleRequest(
+                phase: .started,
+                parentSessionID: parentSession.id,
+                agentKind: "codex",
+                workspaceID: "workspace-1",
+                surfaceID: "surface-1",
+                workingDirectory: repositoryRecord.path,
+                externalIdentityKind: "subsession",
+                externalIdentityValue: "child-1",
+                timestamp: Date(timeIntervalSince1970: 1_800_000_010)
+            )
+        )
+        let tree = try await client.sessionTree(
+            ProvenanceSessionTreeRequest(rootSessionID: parentSession.id)
+        )
+        let worktrees = try await client.worktrees(ProvenanceWorktreeListRequest())
+        let context = try await client.currentContext(
+            ProvenanceCurrentContextRequest(repositoryPath: repositoryRecord.path)
+        )
+
+        #expect(health == ProvenanceEngineHealth(
+            status: .available,
+            version: "0.1.0",
+            capabilities: ProvenanceEngineCapability.allCases
+        ))
+        #expect(append == ProvenanceAppendEventResponse(
+            eventID: "event-bootstrap",
+            eventType: ProvenanceEventType.sessionObserved.rawValue
+        ))
+        #expect(lifecycle.accepted)
+        let childSessionID = try #require(lifecycle.childSessionID)
+        #expect(tree.sessions.map(\.id) == [
+            parentSession.id,
+            childSessionID,
+        ])
+        #expect(worktrees.worktrees == [
+            ProvenanceWorktreeListEntry(worktree: worktree, repository: repositoryRecord),
+        ])
+        #expect(context.found)
+        #expect(context.worktree == worktree)
+        #expect(context.activeSessions.map(\.session.id).contains(parentSession.id))
+    }
+
+    @Test
     func repositoryReturnsNilForMissingEvent() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
