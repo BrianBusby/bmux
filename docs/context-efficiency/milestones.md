@@ -63,7 +63,9 @@ tables plus focused file-explanation reads at commit
 `provenance-session-tree-storage`. A ninth Phase 3D slice added internal
 validation-run projection storage plus bounded current-context projection reads
 at commit `09628cf4e1ffc0a055dd683cdad5f8da1341a0e2` on branch
-`provenance-session-tree-storage`; draft PR:
+`provenance-session-tree-storage`. A scoped autoreview follow-up bounded
+session-tree traversal at commit `bc86510426aba51afd4ed3f1e0fe509ae77f5ec7`
+on branch `provenance-session-tree-storage`; draft PR:
 https://github.com/BrianBusby/provenance-engine/pull/1. No public storage SDK, daemon,
 storage path move, schema move, data migration, bmux reconnect,
 retrieval layer, lifecycle policy, UI, or broad observability expansion has
@@ -292,6 +294,11 @@ Implemented slices:
   validation-run projection storage, event-payload projection upserts, and a
   bounded current-context read model over existing storage contracts at commit
   `09628cf4e1ffc0a055dd683cdad5f8da1341a0e2` on branch
+  `provenance-session-tree-storage`, still without exporting a public storage
+  product and without changing bmux behavior.
+- ADR-001 Phase 3D autoreview follow-up bounded session-tree traversal for
+  missing-root and exhausted-limit cases at commit
+  `bc86510426aba51afd4ed3f1e0fe509ae77f5ec7` on branch
   `provenance-session-tree-storage`, still without exporting a public storage
   product and without changing bmux behavior.
 - Continue Phase 3D only after deciding the next smallest storage boundary over

@@ -176,9 +176,10 @@ Current checkout:
   a bounded worktree-list read model, internal session relationship/external
   identity projection tables, bounded session-tree/parent/child/identity reads,
   internal file-explanation projection/read support, internal validation-run
-  projection storage, and bounded current-context projection reads in
+  projection storage, bounded current-context projection reads, and bounded
+  session-tree traversal fixes in
   `ProvenanceEngineSQLite`. Latest pushed engine commit:
-  `09628cf4e1ffc0a055dd683cdad5f8da1341a0e2` on
+  `bc86510426aba51afd4ed3f1e0fe509ae77f5ec7` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
@@ -320,6 +321,12 @@ Latest provenance Phase 3D current-context projection storage slice:
 - Localization audit: no localized user-facing strings changed.
 - Next safe target: continue ADR-001 Phase 3D with the next smallest internal
   storage boundary over existing contracts. Keep it engine-owned and internal.
+- Background autoreview pushed scoped follow-up commit
+  `bc86510426aba51afd4ed3f1e0fe509ae77f5ec7` (`Bound session tree traversal`).
+  It prevents `sessionTree` from traversing dangling child relationships for a
+  missing root, stops descendant reads once the bounded session limit is
+  exhausted, and applies a per-parent child relationship SQL limit during
+  bounded tree reads.
 
 Latest provenance Phase 3D file-explanation projection storage slice:
 
