@@ -347,31 +347,28 @@ actor ProvenanceSQLiteRepository {
         var relationships: [ProvenanceSessionRelationshipRecord] = []
         var visitedSessionIDs = Set<String>()
 
-        func hasSessionCapacity() -> Bool {
-            rowLimit.map { sessions.count < $0 } ?? true
-        }
-
-        func hasRelationshipCapacity() -> Bool {
-            rowLimit.map { relationships.count < $0 } ?? true
-        }
-
-        func appendSessionIfPresent(_ sessionID: String) throws -> Bool {
-            guard hasSessionCapacity(), let session = try session(id: sessionID) else { return false }
-            sessions.append(session)
-            return true
+        func hasCapacity(for additionalRows: Int = 1) -> Bool {
+            rowLimit.map { sessions.count + relationships.count + additionalRows <= $0 } ?? true
         }
 
         func visit(_ sessionID: String, treeDepth: Int) throws {
             guard treeDepth <= 50, !visitedSessionIDs.contains(sessionID) else { return }
+            guard hasCapacity(), let session = try session(id: sessionID) else { return }
             visitedSessionIDs.insert(sessionID)
-            guard try appendSessionIfPresent(sessionID), hasSessionCapacity(), treeDepth < 50 else { return }
-            let childLimit = rowLimit.map { max(0, min($0 - sessions.count, $0 - relationships.count)) }
-            for relationship in try childSessionRelationships(parentSessionID: sessionID, limit: childLimit) {
+            sessions.append(session)
+            guard treeDepth < 50 else { return }
+
+            for relationship in try childSessionRelationships(parentSessionID: sessionID) {
                 guard !visitedSessionIDs.contains(relationship.sessionID) else { continue }
-                if hasRelationshipCapacity() {
-                    relationships.append(relationship)
-                }
+                guard hasCapacity(for: 2) else { break }
+
+                let relationshipIndex = relationships.count
+                let sessionCountBeforeVisit = sessions.count
+                relationships.append(relationship)
                 try visit(relationship.sessionID, treeDepth: treeDepth + 1)
+                if sessions.count == sessionCountBeforeVisit {
+                    relationships.remove(at: relationshipIndex)
+                }
             }
         }
 

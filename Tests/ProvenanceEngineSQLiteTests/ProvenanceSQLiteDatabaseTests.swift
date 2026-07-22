@@ -855,6 +855,12 @@ struct ProvenanceSQLiteDatabaseTests {
             status: "active",
             updatedAt: Date(timeIntervalSince1970: 1_800_000_001)
         )
+        let grandchildSession = ProvenanceSessionRecord(
+            id: "session-grandchild",
+            agentKind: "codex",
+            status: "active",
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_002)
+        )
         let relationship = ProvenanceSessionRelationshipRecord(
             sessionID: childSession.id,
             parentSessionID: rootSession.id,
@@ -864,6 +870,16 @@ struct ProvenanceSQLiteDatabaseTests {
             confidence: .high,
             createdAt: childSession.updatedAt,
             updatedAt: childSession.updatedAt
+        )
+        let grandchildRelationship = ProvenanceSessionRelationshipRecord(
+            sessionID: grandchildSession.id,
+            parentSessionID: childSession.id,
+            rootSessionID: rootSession.id,
+            depth: 2,
+            source: .observed,
+            confidence: .high,
+            createdAt: grandchildSession.updatedAt,
+            updatedAt: grandchildSession.updatedAt
         )
         let repository = try ProvenanceSQLiteRepository(url: url)
 
@@ -892,9 +908,26 @@ struct ProvenanceSQLiteDatabaseTests {
                 )
             )
         )
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-grandchild",
+                eventType: .subsessionStarted,
+                timestamp: grandchildSession.updatedAt,
+                sessionID: grandchildSession.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(
+                    session: grandchildSession,
+                    sessionRelationship: grandchildRelationship
+                )
+            )
+        )
 
         let oneRowTree = try await repository.sessionTree(
             ProvenanceSessionTreeRequest(rootSessionID: rootSession.id, limit: 1)
+        )
+        let threeRowTree = try await repository.sessionTree(
+            ProvenanceSessionTreeRequest(rootSessionID: rootSession.id, limit: 3)
         )
         let zeroRowTree = try await repository.sessionTree(
             ProvenanceSessionTreeRequest(rootSessionID: rootSession.id, limit: -1)
@@ -902,6 +935,9 @@ struct ProvenanceSQLiteDatabaseTests {
 
         #expect(oneRowTree.sessions == [rootSession])
         #expect(oneRowTree.relationships.isEmpty)
+        #expect(threeRowTree.sessions == [rootSession, childSession])
+        #expect(threeRowTree.relationships == [relationship])
+        #expect(threeRowTree.sessions.count + threeRowTree.relationships.count == 3)
         #expect(zeroRowTree.found == false)
         #expect(zeroRowTree.reason == "no_session")
         #expect(zeroRowTree.sessions.isEmpty)
