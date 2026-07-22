@@ -89,6 +89,12 @@ repository opening coverage, without exporting storage or moving bmux data, on
 branch `provenance-session-tree-storage`, at commit
 `f3767534fbd89a473bd003eb1421ed56acc82827`. No public storage SDK, daemon,
 storage path move, schema move, data migration, bmux reconnect, retrieval layer,
+lifecycle policy, UI, or broad observability expansion was created. A
+thirteenth Phase 3D storage slice added bounded internal append-order
+event-ledger cursor reads over the existing `provenance_events` table on branch
+`provenance-session-tree-storage`, at commit
+`4ff1837e40a9dd2c0ad6a9552260cf3afaa9c7d9`. No public storage SDK, daemon,
+storage path move, schema move, data migration, bmux reconnect, retrieval layer,
 lifecycle policy, UI, or broad observability expansion has been created. Full
 ADR-001 Phase 3 is still not complete.
 
@@ -322,8 +328,13 @@ Implemented slices:
   `bc86510426aba51afd4ed3f1e0fe509ae77f5ec7` on branch
   `provenance-session-tree-storage`, still without exporting a public storage
   product and without changing bmux behavior.
-- Continue Phase 3D only after deciding the next smallest storage boundary over
-  existing contracts.
+- ADR-001 Phase 3D event-ledger cursor storage added internal append-order
+  `ProvenanceEventLedgerEntry` reads over the existing `provenance_events`
+  table at commit `4ff1837e40a9dd2c0ad6a9552260cf3afaa9c7d9` on branch
+  `provenance-session-tree-storage`, still without exporting a public storage
+  product and without changing bmux behavior.
+- Continue Phase 3D only after deciding the next smallest internal engine-owned
+  storage boundary over existing contracts.
 - Phase 2, Phase 3A, Phase 3B, Phase 3C, and the Phase 3D storage slices have not
   created a daemon, moved storage/schema, added data migration, or added
   daemon/SDK packaging. Four

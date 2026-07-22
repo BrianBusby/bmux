@@ -112,6 +112,10 @@ SQLite storage-location resolver for
 coverage, without exporting storage or moving bmux data, on branch
 `provenance-session-tree-storage`, at commit
 `f3767534fbd89a473bd003eb1421ed56acc82827`.
+A thirteenth Phase 3D storage slice added bounded internal append-order
+event-ledger cursor reads over the existing `provenance_events` table, on
+branch `provenance-session-tree-storage`, at commit
+`4ff1837e40a9dd2c0ad6a9552260cf3afaa9c7d9`.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -204,10 +208,11 @@ Current checkout:
   identity projection tables, bounded session-tree/parent/child/identity reads,
   internal file-explanation projection/read support, internal validation-run
   projection storage, bounded current-context projection reads, bounded
-  session-tree traversal fixes, and internal normalized subsession-lifecycle
-  recording support plus internal SQLite-backed `ProvenanceEngineClient`
-  conformance in `ProvenanceEngineSQLite`. Latest pushed engine commit:
-  `f3767534fbd89a473bd003eb1421ed56acc82827` on
+  session-tree traversal fixes, internal normalized subsession-lifecycle
+  recording support, internal SQLite-backed `ProvenanceEngineClient`
+  conformance, and bounded append-order event-ledger cursor reads in
+  `ProvenanceEngineSQLite`. Latest engine commit:
+  `4ff1837e40a9dd2c0ad6a9552260cf3afaa9c7d9` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
@@ -270,6 +275,35 @@ Files changed in the latest implementation slice:
 - `Packages/macOS/BmuxContextEfficiency/Sources/BmuxContextEfficiency/Store/ContextEfficiencyStore.swift`
 - `Packages/macOS/BmuxContextEfficiency/Tests/BmuxContextEfficiencyTests/ContextEfficiencyStoreTests.swift`
 - `tests/test_context_efficiency_cli.py`
+
+Latest provenance Phase 3D event-ledger cursor slice:
+
+- External repo path: `/Users/brianbusby/repos/provenance-engine`
+- Commit: `4ff1837e40a9dd2c0ad6a9552260cf3afaa9c7d9` (`Add event ledger
+  cursor reads`)
+- Branch: `provenance-session-tree-storage`; draft PR:
+  https://github.com/BrianBusby/provenance-engine/pull/1.
+- `ProvenanceEngineContracts` remains the only public library product.
+- Added internal `ProvenanceEventLedgerEntry` rows carrying SQLite append
+  sequence plus decoded `ProvenanceEvent`.
+- Added `ProvenanceSQLiteRepository.eventLedgerEntries(afterSequence:limit:)`,
+  a bounded internal read over the existing `provenance_events` table ordered by
+  append sequence rather than event timestamp.
+- Refactored event decoding so stable-ID lookup and cursor reads share the same
+  stored source/confidence/payload validation behavior.
+- Added behavior coverage for reopen, append-order replay, exclusive sequence
+  cursor continuation, positive limits, and negative-limit empty results.
+- No public storage SDK/product, daemon, IPC, launch agent, CLI, retrieval,
+  lifecycle policy, UI, observability expansion, bmux storage move, bmux schema
+  move, or data migration was added.
+- Validation passed with the standalone engine SwiftPM suite and diff checks.
+- Localization audit: changed only engine internal Swift package files, package
+  README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
+  settings/localized strings changed.
+- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
+  engine-owned storage boundary over existing contracts. Keep it internal and
+  do not start public SDK export, daemon, bmux reconnect, storage migration,
+  retrieval, lifecycle policy, UI, or broad observability expansion.
 
 Latest completed provenance Phase 3B skeleton slice:
 
@@ -919,20 +953,20 @@ ADR-001 Phase 3 target:
 1. Phase 3C contract lift is complete: commit
    `0b2529170ef4b0d67f8050f89786d439bbab6d27` is pushed to
    `BrianBusby/provenance-engine` on `origin/main`.
-2. Phase 3D storage support has progressed through initial SQLite support
-   (`ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac`), schema migration
-   scaffolding (`9f7333799ef4f036b06b580fcbac3cde9398b306`), a minimal
-   repository actor (`dfd57a6441d5090130476893502c3091d2769440`), event-ledger
+2. Phase 3D storage support has progressed through initial SQLite support,
+   schema migration scaffolding, a minimal repository actor, event-ledger
    storage, session projection storage, repository/worktree projection storage,
-   and session-tree projection storage. Latest storage slice is
-   `aff90f9c28b9a66bbb7014918c9e23338d706c6b` on
+   session-tree projection storage, file-explanation projections,
+   current-context projections, normalized lifecycle recording,
+   SQLite-backed `ProvenanceEngineClient` conformance, default storage-location
+   resolution, and bounded internal event-ledger cursor reads. Latest storage
+   slice is `4ff1837e40a9dd2c0ad6a9552260cf3afaa9c7d9` on
    `origin/provenance-session-tree-storage` with draft PR
    https://github.com/BrianBusby/provenance-engine/pull/1.
 3. The next implementation target can continue Phase 3D only after deciding the
-   next smallest storage boundary. Likely candidates are normalized lifecycle
-   recording storage over the new session-tree projections or the next narrow
-   current-context projection path, still without lifting `WorkProvenanceStore`
-   wholesale and without bmux consumer imports or behavior changes.
+   next smallest internal engine-owned storage boundary over existing contracts,
+   still without lifting `WorkProvenanceStore` wholesale and without bmux
+   consumer imports or behavior changes.
 4. Do not start Phase 4 reconnect, Phase 5 migration, retrieval, lifecycle
    policy, UI, broad observability, or automatic orchestration.
 
