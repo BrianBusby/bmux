@@ -131,25 +131,29 @@ for planned internal storage lift work. It covers SQLite connection, statement,
 and error support; schema migrations and migration metadata; default storage
 location resolution; event ledger append/read paths; projection-backed
 contract reads and writes; normalized lifecycle recording; integrity validation
-and repair; repair-attempt metadata; and schema-migration metadata. No public
-storage SDK, daemon, storage path move, schema move, data migration, bmux
-reconnect, retrieval layer, lifecycle policy, UI, or broad observability
-expansion has been created. Full ADR-001 Phase 3 is still not complete.
+and repair; repair-attempt metadata; and schema-migration metadata. A Phase 4
+prerequisite slice added public library product `ProvenanceEngineSDK` and
+`ProvenanceEngineClientFactory` for SQLite-backed in-process
+`any ProvenanceEngineClient` construction on branch
+`provenance-session-tree-storage`, at commit
+`b43146d634f7c11f8e14bf95da5418bef502b0de`. No daemon, storage path move,
+schema move, data migration, bmux reconnect, retrieval layer, lifecycle policy,
+UI, or broad observability expansion has been created. Full ADR-001 Phase 3 is
+still not complete.
 
 ADR-001 Phase 4 reconnect planning is drafted in
 `docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md`. It chooses
 `bmux provenance worktrees list` as the first adapter path to replace, pins the
 initial engine dependency to commit
-`b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5`, names
+`b43146d634f7c11f8e14bf95da5418bef502b0de`, names
+`ProvenanceEngineClientFactory` plus
 `ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest(...))` as the
-public contract call, and requires parity verification for existing
-worktree-list JSON, text, and fallback behavior. The plan also records that the
-current engine commit publicly exports `ProvenanceEngineContracts` only; a
-public in-process SDK product or factory for a SQLite-backed
-`any ProvenanceEngineClient` is a required implementation prerequisite, not
-completed Phase 4 work. Data migration remains ADR-001 Phase 5.
+public SDK/contract path, and requires parity verification for existing
+worktree-list JSON, text, and fallback behavior. The public in-process SDK
+prerequisite is complete, but bmux adapter behavior has not changed yet. Data
+migration remains ADR-001 Phase 5.
 
-The ADR-001 Phase 0 migration audit is complete in `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`. The ADR-001 Phase 1 behavior characterization and minimum contract plan is complete in `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`. The first Phase 2 slice introduced internal protocol/request/response names for append, session-tree, and file-explanation behavior around the current store. The second Phase 2 slice introduced normalized subsession-lifecycle request/response/protocol names around the current lifecycle recorder. The third Phase 2 slice introduced a separate lifecycle-trace query contract around `ProvenanceObservabilityStore`. The fourth Phase 2 slice converted `bmux provenance sessions tree <session-id>` onto `ProvenanceEngineClient.sessionTree(...)` while preserving existing CLI JSON/text/no-database behavior. The fifth Phase 2 slice converted `bmux provenance explain <path>` onto `ProvenanceEngineClient.fileExplanation(...)` while preserving existing CLI JSON/text/no-database/no-worktree/no-file behavior. The sixth Phase 2 slice converted `bmux provenance worktrees list` onto `ProvenanceEngineClient.worktrees(...)` while preserving existing CLI JSON/text/no-database/empty-database behavior and newest-first ordering. The seventh Phase 2 slice converted `bmux provenance context current` onto `ProvenanceEngineClient.currentContext(...)` while preserving existing CLI JSON/text/no-database/no-worktree/empty-section behavior, section bounds, and ordering. No further ADR-001 Phase 2 authoritative provenance CLI conversion is currently identified; pause before starting daemon, SDK implementation, storage/schema migration, retrieval, lifecycle-policy, UI, or observability expansion.
+The ADR-001 Phase 0 migration audit is complete in `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`. The ADR-001 Phase 1 behavior characterization and minimum contract plan is complete in `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`. The first Phase 2 slice introduced internal protocol/request/response names for append, session-tree, and file-explanation behavior around the current store. The second Phase 2 slice introduced normalized subsession-lifecycle request/response/protocol names around the current lifecycle recorder. The third Phase 2 slice introduced a separate lifecycle-trace query contract around `ProvenanceObservabilityStore`. The fourth Phase 2 slice converted `bmux provenance sessions tree <session-id>` onto `ProvenanceEngineClient.sessionTree(...)` while preserving existing CLI JSON/text/no-database behavior. The fifth Phase 2 slice converted `bmux provenance explain <path>` onto `ProvenanceEngineClient.fileExplanation(...)` while preserving existing CLI JSON/text/no-database/no-worktree/no-file behavior. The sixth Phase 2 slice converted `bmux provenance worktrees list` onto `ProvenanceEngineClient.worktrees(...)` while preserving existing CLI JSON/text/no-database/empty-database behavior and newest-first ordering. The seventh Phase 2 slice converted `bmux provenance context current` onto `ProvenanceEngineClient.currentContext(...)` while preserving existing CLI JSON/text/no-database/no-worktree/empty-section behavior, section bounds, and ordering. No further ADR-001 Phase 2 authoritative provenance CLI conversion is currently identified; pause before starting daemon, further SDK expansion, storage/schema migration, retrieval, lifecycle-policy, UI, or observability expansion.
 
 Observability is not a standalone late milestone. Each provenance milestone should add the relevant traceability, quality, feedback, evaluation, or shadow-comparison requirement while preserving store ownership: `WorkProvenance` is authoritative engineering history, `BmuxContextEfficiency` is read-only imported telemetry/evidence, and `ProvenanceObservability` is future operational and quality telemetry.
 

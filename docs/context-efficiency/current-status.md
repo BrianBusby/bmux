@@ -159,6 +159,11 @@ A twenty-third Phase 3D storage slice added internal bounded SQLite
 schema-migration metadata and bounded newest-first schema-migration reads, on
 branch `provenance-session-tree-storage`, at commit
 `b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5`.
+A Phase 4 prerequisite slice added the deliberately small public in-process
+`ProvenanceEngineSDK` product plus `ProvenanceEngineClientFactory`, backed by
+the internal SQLite repository and returning `any ProvenanceEngineClient`, on
+branch `provenance-session-tree-storage`, at commit
+`b43146d634f7c11f8e14bf95da5418bef502b0de`.
 ADR-001 Phase 3D is now closed for planned internal storage lift work. It covers
 engine-owned SQLite connection, statement, and error support; ordered migrations;
 default storage location resolution; event ledger append/read paths; current-state
@@ -176,13 +181,13 @@ not complete.
 ADR-001 Phase 4 reconnect planning now has a scoped first-adapter plan in
 `docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md`. The first
 replacement target is `bmux provenance worktrees list`, pinned to engine commit
-`b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5`, using the public
+`b43146d634f7c11f8e14bf95da5418bef502b0de`, using the public SDK factory and
 `ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest(...))` contract.
-Implementation remains blocked until the engine exposes a deliberately small
-public in-process SDK product or factory for a SQLite-backed client; the current
-engine commit publicly exports `ProvenanceEngineContracts` only. Phase 4 must
-preserve existing worktree-list JSON, text, and fallback behavior through
-public-contract parity verification, and data migration remains Phase 5.
+The SDK prerequisite is complete; bmux adapter behavior remains unchanged until
+the next Phase 4 slice adds public-contract parity fixtures and replaces only
+the worktree-list adapter path. Phase 4 must preserve existing worktree-list
+JSON, text, and fallback behavior through public-contract parity verification,
+and data migration remains Phase 5.
 
 Subsession/delegation provenance has been merged into the roadmap as a Phase 3-adjacent provenance integration track with its own authoritative plan:
 
@@ -436,9 +441,42 @@ ADR-001 Phase 4 reconnect planning slice:
   launch agent, storage default change, schema move, data migration, lifecycle
   reconnect, observability reconnect, retrieval, lifecycle policy, UI, or broad
   telemetry change was started.
-- Next safe target: implement the first prerequisite only after approval of the
-  Phase 4 plan. Do not change bmux adapter behavior until the engine public SDK
-  product/factory and public-contract parity fixture strategy are in place.
+- Superseded next target: the public SDK prerequisite is now complete at engine
+  commit `b43146d634f7c11f8e14bf95da5418bef502b0de`.
+
+ADR-001 Phase 4 SDK prerequisite slice:
+
+- Current bmux branch: `provenance-extraction-phase2-contracts`.
+- Current bmux base before the SDK-prerequisite docs change:
+  `9b1f22a4a03bf09e160a60478733906e06859b42`.
+- External engine branch: `provenance-session-tree-storage`.
+- External engine SDK prerequisite commit:
+  `b43146d634f7c11f8e14bf95da5418bef502b0de` (`Add public in-process SDK
+  factory`).
+- Added public engine library product `ProvenanceEngineSDK`.
+- Added public `ProvenanceEngineClientFactory` with
+  `sqliteClient(databaseURL:)` for explicit fixture/database paths and
+  `defaultSQLiteClient(homeDirectory:)` for the engine-owned default state path.
+- Added a small SQLite-side factory wrapper so the repository actor stays
+  internal and `ProvenanceEngineSQLite` remains a non-product storage target.
+- Added SDK behavior coverage that appends a contract event through the public
+  SDK factory, reads worktrees through
+  `ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest(...))`, and
+  verifies default storage path creation under an injected home directory.
+- No bmux adapter behavior, CLI output, daemon, IPC, launch agent, storage
+  default change, schema move, data migration, retrieval, lifecycle policy, UI,
+  observability expansion, or broad telemetry change was added.
+- Validation passed with the standalone engine SwiftPM suite and diff checks.
+- Localization audit: changed engine Swift package files, engine README, and
+  bmux internal context-efficiency docs only; no bmux CLI/UI/help/settings/
+  localized strings changed.
+- Next safe target: start the first Phase 4 bmux adapter slice for
+  `bmux provenance worktrees list` only. Consume engine commit
+  `b43146d634f7c11f8e14bf95da5418bef502b0de` (or a later approved engine
+  commit), use `ProvenanceEngineClientFactory` plus the public worktree-list
+  contract, and add public-contract parity fixtures before changing adapter
+  behavior. Preserve existing JSON/text shape, missing-database behavior,
+  empty-database behavior, newest-first ordering, and the 25-row text cap.
 
 Previous provenance Phase 3D storage-repair attempt metadata slice:
 

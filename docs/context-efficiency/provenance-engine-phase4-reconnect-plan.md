@@ -1,13 +1,14 @@
 # Provenance Engine Extraction: Phase 4 Reconnect Plan
 
-Status: drafted on 2026-07-22 for ADR-001 Phase 4 planning only.
+Status: drafted on 2026-07-22 for ADR-001 Phase 4 planning only; updated after
+the public SDK prerequisite completed.
 
 Inputs:
 
 - ADR-001 provenance extraction record.
 - Phase 1 contract plan.
 - Phase 3 plan.
-- Engine commit b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5.
+- Engine commit b43146d634f7c11f8e14bf95da5418bef502b0de.
 - bmux commit b1e7f7edbc00f84c6f3ff96c2afd6f432f5ad4ce.
 
 ## Purpose
@@ -15,11 +16,12 @@ Inputs:
 Phase 4 reconnects bmux to the independent Provenance Engine after the
 contracts and internal engine-owned SQLite implementation exist outside bmux.
 
-This document is a planning gate only.
+This document is a planning gate for the first bmux adapter reconnect.
 
 It chooses the first bmux adapter path to replace.
 
-Implementation must not start until the gates below are satisfied.
+Implementation must stay scoped to the first adapter path until the gates below
+are satisfied.
 
 ## First Adapter Path
 
@@ -43,7 +45,7 @@ traces, capture adapters, storage defaults, or migration paths.
 ## Engine Version To Consume
 
 Pin the first reconnect implementation to engine commit
-b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5.
+b43146d634f7c11f8e14bf95da5418bef502b0de.
 
 That commit is on branch provenance-session-tree-storage and draft PR
 https://github.com/BrianBusby/provenance-engine/pull/1.
@@ -56,6 +58,7 @@ package version before changing bmux.
 
 The adapter path must call:
 
+- ProvenanceEngineClientFactory from ProvenanceEngineSDK
 - ProvenanceEngineClient.worktrees
 - ProvenanceWorktreeListRequest with repositoryID nil and limit nil
 - ProvenanceWorktreeListResponse
@@ -65,8 +68,8 @@ missing database behavior, empty database behavior, newest-first ordering, and
 25-row text cap.
 
 The current Python fixtures create old bmux table names directly. The reconnect
-verification must seed engine data through public contracts or a small SDK-backed
-helper, not by depending on engine internal SQLite tables.
+verification must seed engine data through ProvenanceEngineSDK and public
+contracts, not by depending on engine internal SQLite tables.
 
 If engine storage is missing or unavailable, the CLI must keep the existing
 bounded command shape and reason output without mutating storage.
@@ -83,21 +86,18 @@ storage, reading worktree and linked repository projections, preserving query
 order in the domain response, and returning contract DTOs instead of
 table-shaped rows.
 
-Current engine commit b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5 publicly
-exports ProvenanceEngineContracts only. ProvenanceEngineSQLite exists as an
-internal target and is not a public library product.
-
-Before bmux reconnect code changes, the engine needs a deliberately small
-public in-process SDK product or factory that returns an any
-ProvenanceEngineClient backed by engine SQLite. That export is not part of this
-planning slice.
+Current engine commit b43146d634f7c11f8e14bf95da5418bef502b0de publicly
+exports ProvenanceEngineContracts and ProvenanceEngineSDK. ProvenanceEngineSDK
+creates SQLite-backed any ProvenanceEngineClient values through
+ProvenanceEngineClientFactory. ProvenanceEngineSQLite exists as an internal
+target and is not a public library product.
 
 ## Not Included
 
-This plan does not start Phase 4 implementation, public SDK export
-implementation, daemon work, IPC, launch agents, storage default changes,
-schema movement, data migration, deletion of duplicated bmux readers, lifecycle
-recording reconnect, observability reconnect, retrieval, lifecycle policy, UI,
-warnings, handoff recommendations, or broad telemetry changes.
+This plan does not start Phase 4 implementation, further SDK expansion, daemon
+work, IPC, launch agents, storage default changes, schema movement, data
+migration, deletion of duplicated bmux readers, lifecycle recording reconnect,
+observability reconnect, retrieval, lifecycle policy, UI, warnings, handoff
+recommendations, or broad telemetry changes.
 
 Data migration belongs to ADR-001 Phase 5.
