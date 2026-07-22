@@ -71,8 +71,16 @@ subsession-lifecycle recording contract, deterministic engine-owned stable IDs,
 lifecycle event construction, append response handling, and behavior coverage at
 commit `94d67f4ee3fe59a7458fc2d1c03793cd67c04466` on branch
 `provenance-session-tree-storage`; draft PR:
-https://github.com/BrianBusby/provenance-engine/pull/1. No public storage SDK, daemon,
-storage path move, schema move, data migration, bmux reconnect,
+https://github.com/BrianBusby/provenance-engine/pull/1. An autoreview follow-up
+preserved existing child-session start times when recording stop lifecycle
+events at commit `def6a66d6fd9be0bba281cf9edb26319319cd6cb`. An eleventh
+Phase 3D storage slice added internal SQLite-backed `ProvenanceEngineClient`
+conformance, including health and append request wrappers over the existing
+internal storage/query paths, at commit
+`29c483078c4637631add212f9c2840b1caf4d328` on branch
+`provenance-session-tree-storage`; draft PR:
+https://github.com/BrianBusby/provenance-engine/pull/1. No public storage SDK,
+daemon, storage path move, schema move, data migration, bmux reconnect,
 retrieval layer, lifecycle policy, UI, or broad observability expansion has
 been created. Full ADR-001 Phase 3 is still not complete.
 

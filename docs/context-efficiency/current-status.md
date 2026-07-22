@@ -94,6 +94,15 @@ lifecycle event construction, append response handling, and behavior coverage at
 commit `94d67f4ee3fe59a7458fc2d1c03793cd67c04466` on branch
 `provenance-session-tree-storage`; draft PR:
 https://github.com/BrianBusby/provenance-engine/pull/1.
+An autoreview follow-up preserved existing child-session start times when
+recording stop lifecycle events at commit
+`def6a66d6fd9be0bba281cf9edb26319319cd6cb`. An eleventh Phase 3D storage
+slice added internal SQLite-backed `ProvenanceEngineClient` conformance,
+including health and append request wrappers over the existing internal
+storage/query paths, at commit
+`29c483078c4637631add212f9c2840b1caf4d328` on branch
+`provenance-session-tree-storage`; draft PR:
+https://github.com/BrianBusby/provenance-engine/pull/1.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -186,8 +195,9 @@ Current checkout:
   internal file-explanation projection/read support, internal validation-run
   projection storage, bounded current-context projection reads, bounded
   session-tree traversal fixes, and internal normalized subsession-lifecycle
-  recording support in `ProvenanceEngineSQLite`. Latest pushed engine commit:
-  `94d67f4ee3fe59a7458fc2d1c03793cd67c04466` on
+  recording support plus internal SQLite-backed `ProvenanceEngineClient`
+  conformance in `ProvenanceEngineSQLite`. Latest pushed engine commit:
+  `29c483078c4637631add212f9c2840b1caf4d328` on
   `origin/provenance-session-tree-storage`; draft PR:
   https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
