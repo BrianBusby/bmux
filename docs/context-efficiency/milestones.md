@@ -38,7 +38,7 @@ points at `git@github.com:BrianBusby/provenance-engine.git`, and external
 skeleton commit `9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to
 `origin/main`. ADR-001 Phase 3C lifted the initial in-process public contract
 surface into `ProvenanceEngineContracts` at commit
-`0b2529170ef4b0d67f8050f89786d439bbab6d27`. ADR-001 Phase 3D has started
+`0b2529170ef4b0d67f8050f89786d439bbab6d27`. ADR-001 Phase 3D started
 with the smallest storage boundary: internal engine-owned SQLite connection and
 statement support in `ProvenanceEngineSQLite` at commit
 `ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac`. A second Phase 3D slice added
@@ -125,10 +125,15 @@ at commit `fb1eda21b5303a9cffdbbbe9696eca25daf9010f`. A twenty-third Phase 3D
 storage slice added internal bounded SQLite schema-migration metadata and
 bounded newest-first schema-migration reads on branch
 `provenance-session-tree-storage`, at commit
-`b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5`. No public storage SDK, daemon,
-storage path move, schema move, data migration, bmux reconnect, retrieval layer,
-lifecycle policy, UI, or broad observability expansion has been created.
-Full ADR-001 Phase 3 is still not complete.
+`b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5`. ADR-001 Phase 3D is now closed
+for planned internal storage lift work. It covers SQLite connection, statement,
+and error support; schema migrations and migration metadata; default storage
+location resolution; event ledger append/read paths; projection-backed
+contract reads and writes; normalized lifecycle recording; integrity validation
+and repair; repair-attempt metadata; and schema-migration metadata. No public
+storage SDK, daemon, storage path move, schema move, data migration, bmux
+reconnect, retrieval layer, lifecycle policy, UI, or broad observability
+expansion has been created. Full ADR-001 Phase 3 is still not complete.
 
 The ADR-001 Phase 0 migration audit is complete in `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`. The ADR-001 Phase 1 behavior characterization and minimum contract plan is complete in `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`. The first Phase 2 slice introduced internal protocol/request/response names for append, session-tree, and file-explanation behavior around the current store. The second Phase 2 slice introduced normalized subsession-lifecycle request/response/protocol names around the current lifecycle recorder. The third Phase 2 slice introduced a separate lifecycle-trace query contract around `ProvenanceObservabilityStore`. The fourth Phase 2 slice converted `bmux provenance sessions tree <session-id>` onto `ProvenanceEngineClient.sessionTree(...)` while preserving existing CLI JSON/text/no-database behavior. The fifth Phase 2 slice converted `bmux provenance explain <path>` onto `ProvenanceEngineClient.fileExplanation(...)` while preserving existing CLI JSON/text/no-database/no-worktree/no-file behavior. The sixth Phase 2 slice converted `bmux provenance worktrees list` onto `ProvenanceEngineClient.worktrees(...)` while preserving existing CLI JSON/text/no-database/empty-database behavior and newest-first ordering. The seventh Phase 2 slice converted `bmux provenance context current` onto `ProvenanceEngineClient.currentContext(...)` while preserving existing CLI JSON/text/no-database/no-worktree/empty-section behavior, section bounds, and ordering. No further ADR-001 Phase 2 authoritative provenance CLI conversion is currently identified; pause before starting daemon, SDK implementation, storage/schema migration, retrieval, lifecycle-policy, UI, or observability expansion.
 
@@ -396,8 +401,9 @@ Implemented slices:
   at commit `c970310d3852f22dd6b205510967f609a158b3e0` on branch
   `provenance-session-tree-storage`, still without exporting a public storage
   product and without changing bmux behavior.
-- Continue Phase 3D only after deciding the next smallest internal engine-owned
-  storage boundary over existing contracts.
+- ADR-001 Phase 3D is closed for planned internal engine-owned SQLite storage
+  lift work. Continue Phase 3D only for concrete review or CI fixes, not
+  speculative storage expansion.
 - Phase 2, Phase 3A, Phase 3B, Phase 3C, and the Phase 3D storage slices have not
   created a daemon, moved storage/schema, added data migration, or added
   daemon/SDK packaging. Four
@@ -407,6 +413,12 @@ Implemented slices:
   `sessionTree(...)`, `bmux provenance explain` uses `fileExplanation(...)`,
   `bmux provenance worktrees list` uses `worktrees(...)`, and `bmux provenance
   context current` uses `currentContext(...)`.
+- ADR-001 Phase 4 reconnect may start only after a scoped reconnect plan names
+  the first bmux adapter path to replace, the engine commit or package version
+  to consume, the public SDK or API surface for that path, parity coverage for
+  existing bmux JSON/text/fallback behavior, and rollback or graceful
+  degradation behavior if the engine dependency is unavailable. Data migration
+  remains Phase 5 work.
 
 Stop condition:
 

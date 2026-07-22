@@ -57,7 +57,7 @@ repo's `origin` points at the canonical URL, and Phase 3B commit
 ADR-001 Phase 3C has lifted the initial in-process public contract surface into
 `ProvenanceEngineContracts` in the independent engine repo at commit
 `0b2529170ef4b0d67f8050f89786d439bbab6d27`.
-ADR-001 Phase 3D has started with the smallest storage boundary: internal
+ADR-001 Phase 3D started with the smallest storage boundary: internal
 engine-owned SQLite connection and statement support in `ProvenanceEngineSQLite`
 at commit `ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac`.
 A second Phase 3D storage slice added internal SQLite schema-versioning and
@@ -157,6 +157,15 @@ A twenty-third Phase 3D storage slice added internal bounded SQLite
 schema-migration metadata and bounded newest-first schema-migration reads, on
 branch `provenance-session-tree-storage`, at commit
 `b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5`.
+ADR-001 Phase 3D is now closed for planned internal storage lift work. It covers
+engine-owned SQLite connection, statement, and error support; ordered migrations;
+default storage location resolution; event ledger append/read paths; current-state
+projections for sessions, repositories, worktrees, relationships, identities,
+file explanations, validation runs, and current-context reads; contract-backed
+append/query/client wrappers; lifecycle recording; ledger/projection integrity
+validation; projection repair; repair-attempt metadata; and schema-migration
+metadata. Do not continue speculative internal storage expansion unless a
+concrete review or CI issue identifies a bounded defect.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -353,10 +362,39 @@ Latest provenance Phase 3D schema-migration metadata slice:
 - Localization audit: changed only engine internal Swift package files, package
   README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
   settings/localized strings changed.
-- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
-  engine-owned storage boundary over existing contracts. Keep it internal and
-  do not start public SDK export, daemon, bmux reconnect, storage migration,
-  retrieval, lifecycle policy, UI, or broad observability expansion.
+- Next safe target: ADR-001 Phase 4 reconnect planning only. Draft a scoped
+  plan that chooses the first bmux adapter path to replace.
+  Pin the engine commit or package version.
+  Name the public SDK or API surface.
+  Define parity tests and rollback behavior.
+
+ADR-001 Phase 3D docs-only closeout slice:
+
+- Current bmux branch: `provenance-extraction-phase2-contracts`.
+- Current bmux base before the closeout docs change:
+  `39484f0fd5cb348ff93563bd67a93b1ddaaab497`.
+- External engine branch: `provenance-session-tree-storage`.
+- External engine closeout commit:
+  `b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5` (`Record schema migrations`).
+- Phase 3D is closed for planned internal engine-owned SQLite storage lift work.
+  It now covers SQLite connection, statement, and error support; schema
+  migrations and migration metadata; default storage location resolution; event
+  ledger append/read paths; session, repository, worktree, relationship,
+  external-identity, file-explanation, validation-run, and current-context
+  projections; contract-backed reads and writes; normalized lifecycle recording;
+  storage summary; ledger/projection validation; projection-drift repair;
+  storage-integrity reporting and repair gating; and repair-attempt metadata.
+- Phase 3D did not create public storage SDK/product exports, daemon, IPC,
+  launch agent, bmux reconnect, bmux storage move, bmux schema move, data
+  migration, retrieval, lifecycle policy, UI, or broad observability expansion.
+- Phase 4 may begin only after an explicit reconnect plan names the first bmux
+  adapter path to replace.
+  That plan must identify the engine commit or package version to consume.
+  It must also identify the public SDK or API surface used by that path.
+  It must preserve parity for existing bmux JSON, text, and fallback behavior.
+  It must define rollback or graceful degradation when the engine dependency is
+  unavailable. Data migration is not part of Phase 4; migration belongs to
+  ADR-001 Phase 5.
 
 Previous provenance Phase 3D storage-repair attempt metadata slice:
 
@@ -415,10 +453,9 @@ Latest provenance Phase 3D projection-key validation slice:
 - Localization audit: changed only engine internal Swift package files, package
   README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
   settings/localized strings changed.
-- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
-  engine-owned storage boundary over existing contracts. Keep it internal and
-  do not start public SDK export, daemon, bmux reconnect, storage migration,
-  retrieval, lifecycle policy, UI, or broad observability expansion.
+- Superseded next target: ADR-001 Phase 3D is now closed for planned internal
+  storage lift work. Continue Phase 3D only for concrete review or CI fixes;
+  use the Phase 4 entry criteria before any bmux reconnect work.
 
 Latest provenance Phase 3D projection-count validation slice:
 
@@ -447,10 +484,9 @@ Latest provenance Phase 3D projection-count validation slice:
 - Localization audit: changed only engine internal Swift package files, package
   README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
   settings/localized strings changed.
-- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
-  engine-owned storage boundary over existing contracts. Keep it internal and
-  do not start public SDK export, daemon, bmux reconnect, storage migration,
-  retrieval, lifecycle policy, UI, or broad observability expansion.
+- Superseded next target: ADR-001 Phase 3D is now closed for planned internal
+  storage lift work. Continue Phase 3D only for concrete review or CI fixes;
+  use the Phase 4 entry criteria before any bmux reconnect work.
 
 Latest provenance Phase 3D ledger-validation slice:
 
@@ -498,10 +534,9 @@ Previous provenance Phase 3D storage-summary slice:
 - Localization audit: changed only engine internal Swift package files, package
   README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
   settings/localized strings changed.
-- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
-  engine-owned storage boundary over existing contracts. Keep it internal and
-  do not start public SDK export, daemon, bmux reconnect, storage migration,
-  retrieval, lifecycle policy, UI, or broad observability expansion.
+- Superseded next target: ADR-001 Phase 3D is now closed for planned internal
+  storage lift work. Continue Phase 3D only for concrete review or CI fixes;
+  use the Phase 4 entry criteria before any bmux reconnect work.
 
 Latest provenance Phase 3D projection rebuild slice:
 
@@ -528,10 +563,9 @@ Latest provenance Phase 3D projection rebuild slice:
 - Localization audit: changed only engine internal Swift package files, package
   README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
   settings/localized strings changed.
-- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
-  engine-owned storage boundary over existing contracts. Keep it internal and
-  do not start public SDK export, daemon, bmux reconnect, storage migration,
-  retrieval, lifecycle policy, UI, or broad observability expansion.
+- Superseded next target: ADR-001 Phase 3D is now closed for planned internal
+  storage lift work. Continue Phase 3D only for concrete review or CI fixes;
+  use the Phase 4 entry criteria before any bmux reconnect work.
 
 Latest completed provenance Phase 3B skeleton slice:
 
@@ -609,8 +643,8 @@ Latest provenance Phase 3D current-context projection storage slice:
 
 - Validation passed.
 - Localization audit: no localized user-facing strings changed.
-- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
-  storage boundary over existing contracts. Keep it engine-owned and internal.
+- Superseded next target: ADR-001 Phase 3D is now closed for planned internal
+  storage lift work. Continue Phase 3D only for concrete review or CI fixes.
 - Background autoreview pushed scoped follow-up commit
   `bc86510426aba51afd4ed3f1e0fe509ae77f5ec7` (`Bound session tree traversal`).
   It prevents `sessionTree` from traversing dangling child relationships for a
@@ -691,10 +725,8 @@ Previous provenance Phase 3D session-projection storage slice:
 - Localization audit: changed only engine internal Swift package files, package
   README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
   settings/localized strings changed.
-- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
-  storage boundary, such as repository/worktree projection bootstrap or a
-  bounded session read model over the new session projection. Keep it
-  engine-owned and internal.
+- Superseded next target: ADR-001 Phase 3D is now closed for planned internal
+  storage lift work. Continue Phase 3D only for concrete review or CI fixes.
 
 Previous provenance Phase 3D event-ledger storage slice:
 
@@ -726,10 +758,8 @@ Previous provenance Phase 3D event-ledger storage slice:
 - Localization audit: changed only engine internal Swift package files, package
   README, and bmux internal context-efficiency docs; no bmux CLI/UI/help/
   settings/localized strings changed.
-- Next safe target: continue ADR-001 Phase 3D with the next smallest internal
-  storage boundary, such as a narrow repository-owned projection table
-  bootstrap or a bounded read model derived from the new event ledger. Keep it
-  engine-owned and internal.
+- Superseded next target: ADR-001 Phase 3D is now closed for planned internal
+  storage lift work. Continue Phase 3D only for concrete review or CI fixes.
 
 Latest provenance Phase 3D repository skeleton slice:
 

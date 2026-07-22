@@ -1,6 +1,7 @@
 # Provenance Engine Extraction: Phase 3 Plan
 
-Status: drafted on 2026-07-21 for ADR-001 Phase 3 entry.
+Status: drafted on 2026-07-21 for ADR-001 Phase 3 entry; updated on
+2026-07-22 after ADR-001 Phase 3D closeout.
 
 Inputs:
 
@@ -13,19 +14,20 @@ Inputs:
 ## Purpose
 
 Phase 3 starts the independent Provenance Engine product boundary without
-changing bmux runtime behavior. The largest safe slice right now is to lock the
-extraction plan, boundary inventory, and first scaffold gate. It is not safe to
-create a speculative local package or repository skeleton in this slice because
-local docs still leave the V1 implementation choice unresolved.
+changing bmux runtime behavior. This document records the original Phase 3
+entry plan and the current Phase 3D closeout state.
 
-This plan does not complete Phase 3. ADR-001 Phase 3 still requires creating
-the independent engine, moving reusable logic, removing bmux assumptions, and
-building SDK, daemon, and CLI surfaces after the open product/repo/scope
-decisions are explicit.
+This plan does not complete all of ADR-001 Phase 3. The independent engine
+exists, the initial contracts are lifted, and the planned internal SQLite
+storage lift is closed. Public SDK export, daemon, CLI, and bmux reconnect work
+remain gated by explicit follow-up plans.
 
 ## Scaffold Decision
 
-No scaffold is created in this slice.
+Historical decision for the original 2026-07-21 docs-only entry slice: no
+scaffold was created until Phase 3A made the missing product decisions explicit.
+That gate is now complete, and the independent scaffold exists at
+`/Users/brianbusby/repos/provenance-engine`.
 
 Reasons:
 
@@ -37,10 +39,10 @@ Reasons:
 - An in-repo package would bias the decision toward bmux package mechanics before
   the independent product boundary is explicit.
 
-Scaffolding is allowed only after local docs name the canonical repo path and
-GitHub repository owner/name, V1 implementation language and package manager, first
-artifact shape, SDK/daemon relationship, engine-owned new-data storage path, and
-initial package/module names.
+Scaffolding was allowed only after local docs named the canonical repo path and
+GitHub repository owner/name, V1 implementation language and package manager,
+first artifact shape, SDK/daemon relationship, engine-owned new-data storage
+path, and initial package/module names.
 
 ## Boundary Inventory
 
@@ -138,14 +140,33 @@ Create the independent repo/package skeleton only after Phase 3A is complete.
 Allowed content is minimal.
 Keep bmux unmodified.
 
+Status: completed in `/Users/brianbusby/repos/provenance-engine` with Swift 6
+SwiftPM package `ProvenanceEngine`, initial module/product
+`ProvenanceEngineContracts`, and canonical GitHub repository
+`BrianBusby/provenance-engine`.
+
 ### Phase 3C: Contract Lift
 
 Lift the Phase 2 DTO/protocol names behind the independent contract boundary.
 Do not change bmux CLI behavior or storage paths.
 
+Status: completed in `ProvenanceEngineContracts` at commit
+`0b2529170ef4b0d67f8050f89786d439bbab6d27`.
+
 ### Phase 3D: Storage Lift
 
 Move reusable store logic after contracts build independently.
+
+Status: closed for planned internal storage lift work at engine commit
+`b0cc65f42065b5d8e0ac3be3c45a22ce0d4013d5` on branch
+`provenance-session-tree-storage`. Phase 3D now covers SQLite connection,
+statement, and error support; schema migrations and migration metadata; default
+storage location resolution; event ledger append/read paths; projections for
+the existing contract reads; normalized lifecycle recording; storage integrity
+validation and repair; repair-attempt metadata; and schema-migration metadata.
+It remains internal to `ProvenanceEngineSQLite`; no public storage product,
+daemon, bmux reconnect, storage migration, retrieval, lifecycle policy, UI, or
+broad observability expansion was created.
 
 ## Validation Strategy
 
@@ -159,18 +180,24 @@ For a later skeleton, validate that skeleton independently before bmux imports i
 
 ## Phase 3 Non-Completion Statement
 
-This plan starts Phase 3 but does not complete it. No bmux behavior, storage
-path, migration, daemon, SDK transport, CLI reconnect, retrieval layer,
-lifecycle policy, UI, or observability expansion is included here.
+This plan starts Phase 3 but does not complete every ADR-001 extraction
+requirement. Phase 3A through Phase 3D have established the independent repo,
+initial contracts, and internal storage lift, but no bmux behavior, bmux storage
+path, bmux data migration, daemon, SDK transport, CLI reconnect, retrieval
+layer, lifecycle policy, UI, or observability expansion is included here.
 
-## Next Safe Phase 3 Slice
+## Phase 4 Entry Criteria
 
-Create the Phase 3B minimal independent skeleton only if the slice follows
-`docs/context-efficiency/provenance-engine-phase3a-decisions.md` exactly. The
-skeleton should live at `/Users/brianbusby/repos/provenance-engine`, use Swift
-6 and Swift Package Manager, create package `ProvenanceEngine`, and start with
-module `ProvenanceEngineContracts`.
+Do not start Phase 4 reconnect implementation until a scoped reconnect plan
+names the first bmux adapter path to replace.
 
-Keep the first skeleton in-process-only and daemon-compatible. Do not add the
-daemon, bmux reconnect, storage migration, retrieval, lifecycle policy, UI,
-broad observability, or automatic orchestration in Phase 3B.
+The reconnect plan must also name the exact engine commit or package version to
+consume.
+It must identify the public SDK or API surface the adapter path will call.
+It must preserve parity for existing bmux JSON, text, and fallback behavior.
+It must define rollback or graceful degradation when the engine dependency is
+unavailable.
+
+Phase 4 must not include bmux data migration. Migration belongs to ADR-001
+Phase 5. Do not use Phase 4 as a reason to add retrieval, lifecycle policy, UI,
+broad observability, or speculative storage expansion.
