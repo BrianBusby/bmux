@@ -52,7 +52,12 @@ added the first internal repository-owned session projection table and narrow
 read path at commit `ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2`. A sixth Phase 3D
 slice added internal repository/worktree projection bootstrap and a bounded
 worktree-list read model at commit
-`fe1a4c5712eefc7ab2e2e3b271d0dc1e91a442e1`. No public storage SDK, daemon,
+`fe1a4c5712eefc7ab2e2e3b271d0dc1e91a442e1`. A seventh Phase 3D slice added
+internal session-relationship and external-identity projection tables plus
+bounded session-tree reads at commit
+`aff90f9c28b9a66bbb7014918c9e23338d706c6b` on branch
+`provenance-session-tree-storage`; draft PR:
+https://github.com/BrianBusby/provenance-engine/pull/1. No public storage SDK, daemon,
 storage path move, schema move, data migration, bmux reconnect,
 retrieval layer, lifecycle policy, UI, or broad observability expansion has
 been created. Full ADR-001 Phase 3 is still not complete.
@@ -263,9 +268,16 @@ Implemented slices:
   bounded `ProvenanceWorktreeListResponse` read model at commit
   `fe1a4c5712eefc7ab2e2e3b271d0dc1e91a442e1`, still without exporting a public
   storage product and without changing bmux behavior.
+- ADR-001 Phase 3D session-tree projection storage added internal
+  `provenance_session_relationships` and
+  `provenance_session_external_identities` tables, event-payload projection
+  upserts, and bounded session-tree/parent/child/external-identity reads at
+  commit `aff90f9c28b9a66bbb7014918c9e23338d706c6b` on branch
+  `provenance-session-tree-storage`, still without exporting a public storage
+  product and without changing bmux behavior.
 - Continue Phase 3D only after deciding the next smallest storage boundary,
-  such as bounded session-tree repository reads over the new session projection
-  or normalized lifecycle-recording storage.
+  such as normalized lifecycle-recording storage over the new session-tree
+  projections or the next narrow current-context projection path.
 - Phase 2, Phase 3A, Phase 3B, Phase 3C, and the Phase 3D storage slices have not
   created a daemon, moved storage/schema, added data migration, or added
   daemon/SDK packaging. Four

@@ -73,7 +73,12 @@ narrow read path at commit
 `ad1eec1dd7a0cabd3e78943ff798f21ee7665fa2`. A sixth Phase 3D storage
 slice added internal repository/worktree projection bootstrap plus a bounded
 worktree-list read model at commit
-`fe1a4c5712eefc7ab2e2e3b271d0dc1e91a442e1`.
+`fe1a4c5712eefc7ab2e2e3b271d0dc1e91a442e1`. A seventh Phase 3D
+storage slice added internal session-relationship and external-identity
+projection tables plus bounded session-tree reads at commit
+`aff90f9c28b9a66bbb7014918c9e23338d706c6b` on branch
+`provenance-session-tree-storage`; draft PR:
+https://github.com/BrianBusby/provenance-engine/pull/1.
 The first SDK is still in-process-only while keeping daemon-compatible
 contracts; new engine data defaults to
 `~/.local/state/provenance-engine/provenance.sqlite`; and observability is
@@ -161,9 +166,12 @@ Current checkout:
   statement, error, schema migration scaffolding, a minimal repository actor,
   an internal event-ledger table with narrow append/read support, initial
   session, repository, and worktree projection tables, narrow projection reads,
-  and a bounded worktree-list read model in
-  `ProvenanceEngineSQLite`. Latest pushed engine commit:
-  `fe1a4c5712eefc7ab2e2e3b271d0dc1e91a442e1`.
+  a bounded worktree-list read model, internal session relationship/external
+  identity projection tables, and bounded session-tree/parent/child/identity
+  reads in `ProvenanceEngineSQLite`. Latest pushed engine commit:
+  `aff90f9c28b9a66bbb7014918c9e23338d706c6b` on
+  `origin/provenance-session-tree-storage`; draft PR:
+  https://github.com/BrianBusby/provenance-engine/pull/1.
 - This 2026-07-21 slice completed ADR-001 Phase 3A decisions in
   `docs/context-efficiency/provenance-engine-phase3a-decisions.md`.
 - This 2026-07-21 slice started ADR-001 Phase 3 with a docs-only
@@ -820,14 +828,18 @@ ADR-001 Phase 3 target:
    `BrianBusby/provenance-engine` on `origin/main`.
 2. Phase 3D storage support has progressed through initial SQLite support
    (`ec8b84bc2f8ac7e98c0e22cac67bf6895e7882ac`), schema migration
-   scaffolding (`9f7333799ef4f036b06b580fcbac3cde9398b306`), and a minimal
-   repository actor (`dfd57a6441d5090130476893502c3091d2769440`), all pushed
-   to `BrianBusby/provenance-engine` on `origin/main`.
+   scaffolding (`9f7333799ef4f036b06b580fcbac3cde9398b306`), a minimal
+   repository actor (`dfd57a6441d5090130476893502c3091d2769440`), event-ledger
+   storage, session projection storage, repository/worktree projection storage,
+   and session-tree projection storage. Latest storage slice is
+   `aff90f9c28b9a66bbb7014918c9e23338d706c6b` on
+   `origin/provenance-session-tree-storage` with draft PR
+   https://github.com/BrianBusby/provenance-engine/pull/1.
 3. The next implementation target can continue Phase 3D only after deciding the
-   next smallest storage boundary. Likely candidates are the first internal
-   repository-owned schema/table bootstrap or a narrow domain-write/read path,
-   still without lifting `WorkProvenanceStore` wholesale and without bmux
-   consumer imports or behavior changes.
+   next smallest storage boundary. Likely candidates are normalized lifecycle
+   recording storage over the new session-tree projections or the next narrow
+   current-context projection path, still without lifting `WorkProvenanceStore`
+   wholesale and without bmux consumer imports or behavior changes.
 4. Do not start Phase 4 reconnect, Phase 5 migration, retrieval, lifecycle
    policy, UI, broad observability, or automatic orchestration.
 
