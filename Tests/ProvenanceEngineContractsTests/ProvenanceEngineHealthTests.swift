@@ -71,6 +71,8 @@ struct ProvenanceEngineHealthTests {
             worktreeID: "worktree-1",
             sessionID: "session-1",
             source: .observed,
+            evidenceOrigin: .githubReviewComment,
+            evidenceScope: ProvenanceEvidenceScope(level: .organization, id: "companycam"),
             confidence: .high,
             payload: ProvenanceEventPayload(
                 repository: Self.repository,
@@ -86,8 +88,31 @@ struct ProvenanceEngineHealthTests {
 
         #expect(decoded == event)
         #expect(decoded.eventType.rawValue == "future_event_type")
+        #expect(decoded.evidenceOrigin == .githubReviewComment)
+        #expect(decoded.evidenceScope == ProvenanceEvidenceScope(level: .organization, id: "companycam"))
         #expect(decoded.payload.externalIdentities == [Self.externalIdentity])
         #expect(decoded.payload.fileChanges == [Self.fileChange])
+    }
+
+    @Test
+    func olderEventWithoutEvidenceMetadataDecodesWithNilOriginAndScope() throws {
+        let json = """
+        {
+          "id": "event-1",
+          "schemaVersion": 1,
+          "eventType": "progress_checkpoint",
+          "timestamp": 1,
+          "source": "observed",
+          "confidence": "high",
+          "payload": {}
+        }
+        """
+        let data = try #require(json.data(using: .utf8))
+
+        let event = try JSONDecoder().decode(ProvenanceEvent.self, from: data)
+
+        #expect(event.evidenceOrigin == nil)
+        #expect(event.evidenceScope == nil)
     }
 
     @Test

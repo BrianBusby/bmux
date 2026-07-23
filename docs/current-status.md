@@ -14,6 +14,8 @@ The supported client entrypoint is `ProvenanceEngineClientFactory`, which create
 
 Completion gate for the next slice: do not add storage, daemon, migration, retrieval, semantic, or observability features until one real bmux path consumes this package through `ProvenanceEngineClientFactory`.
 
+Long-term architecture note: shared repository evidence and Knowledge Compiler work are accepted as post-V1 planning targets only. The current package now preserves optional event evidence-origin and evidence-scope metadata, but GitHub ingestion, shared evidence-store deployment, retrieval, and compiler implementation remain frozen until after the current bmux adoption gate.
+
 Required verification for this baseline:
 
 ```bash

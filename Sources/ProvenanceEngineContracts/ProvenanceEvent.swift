@@ -29,6 +29,12 @@ public struct ProvenanceEvent: Codable, Equatable, Sendable, Identifiable {
     /// Evidence class behind the event.
     public let source: ProvenanceSource
 
+    /// System that produced the evidence event, when known.
+    public let evidenceOrigin: ProvenanceEvidenceOrigin?
+
+    /// Ownership boundary for the evidence event, when known.
+    public let evidenceScope: ProvenanceEvidenceScope?
+
     /// Confidence in the event's semantic interpretation.
     public let confidence: ProvenanceConfidence
 
@@ -46,6 +52,8 @@ public struct ProvenanceEvent: Codable, Equatable, Sendable, Identifiable {
         sessionID: String? = nil,
         contributionID: String? = nil,
         source: ProvenanceSource,
+        evidenceOrigin: ProvenanceEvidenceOrigin? = nil,
+        evidenceScope: ProvenanceEvidenceScope? = nil,
         confidence: ProvenanceConfidence,
         payload: ProvenanceEventPayload = ProvenanceEventPayload()
     ) {
@@ -58,6 +66,8 @@ public struct ProvenanceEvent: Codable, Equatable, Sendable, Identifiable {
         self.sessionID = sessionID
         self.contributionID = contributionID
         self.source = source
+        self.evidenceOrigin = evidenceOrigin
+        self.evidenceScope = evidenceScope
         self.confidence = confidence
         self.payload = payload
     }

@@ -112,7 +112,9 @@ actor ProvenanceSQLiteRepository {
                 contribution_id,
                 source,
                 confidence,
-                payload_json
+                payload_json,
+                evidence_origin,
+                evidence_scope_json
             FROM provenance_events
             WHERE id = ?
             """
@@ -147,7 +149,9 @@ actor ProvenanceSQLiteRepository {
                 contribution_id,
                 source,
                 confidence,
-                payload_json
+                payload_json,
+                evidence_origin,
+                evidence_scope_json
             FROM provenance_events
             """
         if afterSequence != nil {
@@ -202,7 +206,9 @@ actor ProvenanceSQLiteRepository {
                 contribution_id,
                 source,
                 confidence,
-                payload_json
+                payload_json,
+                evidence_origin,
+                evidence_scope_json
             FROM provenance_events
             ORDER BY sequence ASC
             LIMIT ?
@@ -1256,6 +1262,15 @@ actor ProvenanceSQLiteRepository {
         }
 
         let payload = try payloadDecoder.decode(ProvenanceEventPayload.self, from: payloadData)
+        let evidenceScope: ProvenanceEvidenceScope?
+        if let evidenceScopeJSON = query.string(at: offset + 11) {
+            guard let evidenceScopeData = evidenceScopeJSON.data(using: .utf8) else {
+                throw ProvenanceSQLiteError.sqlite(message: "stored event has invalid evidence scope")
+            }
+            evidenceScope = try payloadDecoder.decode(ProvenanceEvidenceScope.self, from: evidenceScopeData)
+        } else {
+            evidenceScope = nil
+        }
         return ProvenanceEvent(
             id: id,
             schemaVersion: query.int(at: offset),
@@ -1266,6 +1281,8 @@ actor ProvenanceSQLiteRepository {
             sessionID: query.string(at: offset + 5),
             contributionID: query.string(at: offset + 6),
             source: source,
+            evidenceOrigin: query.string(at: offset + 10).map(ProvenanceEvidenceOrigin.init(rawValue:)),
+            evidenceScope: evidenceScope,
             confidence: confidence,
             payload: payload
         )
@@ -2170,6 +2187,16 @@ actor ProvenanceSQLiteRepository {
         guard let payloadJSON = String(data: payloadData, encoding: .utf8) else {
             throw ProvenanceSQLiteError.sqlite(message: "failed to encode event payload")
         }
+        let evidenceScopeJSON: String?
+        if let evidenceScope = event.evidenceScope {
+            let evidenceScopeData = try payloadEncoder.encode(evidenceScope)
+            guard let encodedEvidenceScope = String(data: evidenceScopeData, encoding: .utf8) else {
+                throw ProvenanceSQLiteError.sqlite(message: "failed to encode event evidence scope")
+            }
+            evidenceScopeJSON = encodedEvidenceScope
+        } else {
+            evidenceScopeJSON = nil
+        }
 
         let insert = try database.prepare(
             """
@@ -2184,8 +2211,10 @@ actor ProvenanceSQLiteRepository {
                 contribution_id,
                 source,
                 confidence,
-                payload_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                payload_json,
+                evidence_origin,
+                evidence_scope_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
         )
         defer { insert.finalize() }
@@ -2201,6 +2230,8 @@ actor ProvenanceSQLiteRepository {
         try insert.bind(event.source.rawValue, at: 9)
         try insert.bind(event.confidence.rawValue, at: 10)
         try insert.bind(payloadJSON, at: 11)
+        try insert.bind(event.evidenceOrigin?.rawValue, at: 12)
+        try insert.bind(evidenceScopeJSON, at: 13)
 
         _ = try insert.step()
     }
@@ -3071,6 +3102,17 @@ actor ProvenanceSQLiteRepository {
                 """
                 CREATE INDEX provenance_schema_migrations_time_index
                 ON provenance_schema_migrations (applied_at_seconds, sequence)
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 9,
+            statements: [
+                "ALTER TABLE provenance_events ADD COLUMN evidence_origin TEXT",
+                "ALTER TABLE provenance_events ADD COLUMN evidence_scope_json TEXT",
+                """
+                CREATE INDEX provenance_events_evidence_origin_index
+                ON provenance_events (evidence_origin, sequence)
                 """,
             ]
         ),

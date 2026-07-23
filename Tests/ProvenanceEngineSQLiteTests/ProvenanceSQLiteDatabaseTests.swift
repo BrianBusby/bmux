@@ -424,7 +424,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 8)
+        #expect(try await repository.schemaVersion() == 9)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
@@ -441,7 +441,7 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_validation_runs", in: database))
         #expect(try Self.tableExists("provenance_storage_repair_attempts", in: database))
         #expect(try Self.tableExists("provenance_schema_migrations", in: database))
-        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [8])
+        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [9, 8])
     }
 
     @Test
@@ -501,7 +501,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
 
-        #expect(try await repository.schemaVersion() == 8)
+        #expect(try await repository.schemaVersion() == 9)
         #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
     }
 
@@ -519,6 +519,8 @@ struct ProvenanceSQLiteDatabaseTests {
             sessionID: "session-1",
             contributionID: "contribution-1",
             source: .observed,
+            evidenceOrigin: .codexSession,
+            evidenceScope: ProvenanceEvidenceScope(level: .personal, id: "brian"),
             confidence: .high,
             payload: ProvenanceEventPayload(
                 checkpoint: ProvenanceCheckpointRecord(
@@ -765,7 +767,7 @@ struct ProvenanceSQLiteDatabaseTests {
         let summary = try await repository.storageSummary()
 
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 8,
+            schemaVersion: 9,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,

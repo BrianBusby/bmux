@@ -21,7 +21,7 @@ For default engine-owned storage, use:
 let client = try ProvenanceEngineClientFactory().defaultSQLiteClient()
 ```
 
-Do not construct `ProvenanceSQLiteRepository` from adopter code. Do not read engine SQLite tables directly. Seed integration tests by appending public `ProvenanceEventRecord` values through `ProvenanceEngineClient.appendEvent`.
+Do not construct `ProvenanceSQLiteRepository` from adopter code. Do not read engine SQLite tables directly. Seed integration tests by appending public `ProvenanceEvent` values through `ProvenanceEngineClient.appendEvent`.
 
 The accepted worktree read contract is:
 
@@ -32,3 +32,5 @@ The accepted worktree read contract is:
 - Repository DTO: `ProvenanceRepositoryRecord`
 
 Rollback should be a scoped Git revert in the adopter repository that removes the package dependency and restores the previous local read path.
+
+Appender note: set `ProvenanceEvent.evidenceOrigin` and `ProvenanceEvent.evidenceScope` when the producing system or ownership boundary is known. Existing V1 adopters may leave both fields unset. `ProvenanceSource` remains the claim classification, not the origin system.
