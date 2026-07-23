@@ -33,6 +33,19 @@ The accepted worktree read contract is:
 - Worktree DTO: `ProvenanceWorktreeRecord`
 - Repository DTO: `ProvenanceRepositoryRecord`
 
+The accepted session-tree read contract is:
+
+- Request: `ProvenanceSessionTreeRequest(rootSessionID:limit:)`
+- Response: `ProvenanceSessionTreeResponse`
+- Root ID: `ProvenanceSessionTreeResponse.rootSessionID`
+- Found flag: `ProvenanceSessionTreeResponse.found`
+- Missing reason: `ProvenanceSessionTreeResponse.reason`, currently `no_session` when no root session projection is found
+- Session DTO: `ProvenanceSessionRecord`
+- Relationship DTO: `ProvenanceSessionRelationshipRecord`
+- External identity DTO: `ProvenanceExternalIdentityRecord`
+
+Session-tree responses return domain records in engine query order. Consumers own CLI, UI, JSON, and fallback presentation. Consumers must not read `provenance_sessions`, `provenance_session_relationships`, or `provenance_session_external_identities` directly.
+
 Rollback should be a scoped Git revert in the adopter repository that removes the package dependency and restores the previous local read path.
 
 Appender note: set `ProvenanceEvent.evidenceOrigin` and `ProvenanceEvent.evidenceScope` when the producing system or ownership boundary is known. Existing V1 adopters may leave both fields unset. `ProvenanceSource` remains the claim classification, not the origin system.

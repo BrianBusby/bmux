@@ -53,6 +53,97 @@ struct ProvenanceEngineClientFactoryTests {
     }
 
     @Test
+    func sqliteClientReadsSessionTreeThroughPublicContract() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let rootSession = ProvenanceSessionRecord(
+            id: "session-root",
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-1",
+            status: "active",
+            startedAt: timestamp,
+            updatedAt: timestamp
+        )
+        let childSession = ProvenanceSessionRecord(
+            id: "session-child",
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-2",
+            status: "completed",
+            startedAt: Date(timeIntervalSince1970: 1_800_000_010),
+            updatedAt: Date(timeIntervalSince1970: 1_800_000_020)
+        )
+        let relationship = ProvenanceSessionRelationshipRecord(
+            sessionID: childSession.id,
+            parentSessionID: rootSession.id,
+            rootSessionID: rootSession.id,
+            inboundDelegationID: "delegation-1",
+            depth: 1,
+            source: .observed,
+            confidence: .high,
+            createdAt: childSession.startedAt ?? childSession.updatedAt,
+            updatedAt: childSession.updatedAt
+        )
+        let externalIdentity = ProvenanceExternalIdentityRecord(
+            id: "identity-child",
+            sessionID: childSession.id,
+            system: "codex",
+            kind: "subsession",
+            externalID: "child-1",
+            source: .observed,
+            confidence: .high,
+            createdAt: childSession.startedAt ?? childSession.updatedAt,
+            updatedAt: childSession.updatedAt
+        )
+
+        for session in [rootSession, childSession] {
+            _ = try await client.appendEvent(
+                ProvenanceAppendEventRequest(
+                    event: ProvenanceEvent(
+                        id: "event-\(session.id)",
+                        eventType: .sessionObserved,
+                        timestamp: session.updatedAt,
+                        sessionID: session.id,
+                        source: .observed,
+                        confidence: .high,
+                        payload: ProvenanceEventPayload(session: session)
+                    )
+                )
+            )
+        }
+        _ = try await client.appendEvent(
+            ProvenanceAppendEventRequest(
+                event: ProvenanceEvent(
+                    id: "event-relationship",
+                    eventType: .subsessionStarted,
+                    timestamp: relationship.updatedAt,
+                    sessionID: childSession.id,
+                    source: .observed,
+                    confidence: .high,
+                    payload: ProvenanceEventPayload(
+                        sessionRelationship: relationship,
+                        externalIdentities: [externalIdentity]
+                    )
+                )
+            )
+        )
+
+        let tree = try await client.sessionTree(
+            ProvenanceSessionTreeRequest(rootSessionID: rootSession.id)
+        )
+
+        #expect(tree.found)
+        #expect(tree.reason == nil)
+        #expect(tree.rootSessionID == rootSession.id)
+        #expect(tree.sessions == [rootSession, childSession])
+        #expect(tree.relationships == [relationship])
+        #expect(tree.externalIdentities == [externalIdentity])
+    }
+
+    @Test
     func defaultSQLiteClientUsesEngineOwnedStatePathUnderHomeDirectory() async throws {
         let homeDirectory = Self.temporaryHomeDirectory()
         defer { try? FileManager.default.removeItem(at: homeDirectory) }

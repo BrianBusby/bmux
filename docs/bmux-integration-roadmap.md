@@ -54,6 +54,8 @@ bmux work: migrate only the provenance session-tree CLI command to the external 
 
 Dependencies: worktree-read adoption complete. bmux legacy boundary clarified as `BmuxLegacyProvenanceClient`.
 
+Provenance-engine readiness: SDK-level coverage confirms that an adopter can seed session projections through `appendEvent` and read them through `ProvenanceEngineClientFactory` plus `ProvenanceEngineClient.sessionTree(...)`, without importing or querying SQLite internals.
+
 Acceptance criteria: existing session-tree CLI behavior is preserved. bmux does not use bmux-local session-tree query SQL for this path. No file-explanation, current-context, lifecycle-write, capture, observability, data-migration, daemon, UI, or retrieval work is started.
 
 Compatibility expectations: existing bmux CLI output remains stable. Engine contract changes, if needed, remain source-compatible unless explicitly versioned.

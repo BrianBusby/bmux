@@ -18,6 +18,8 @@ The first bmux adoption path, `bmux provenance worktrees list`, now consumes thi
 
 Current integration gate: keep V1 adoption narrow. The next coordinated bmux milestone is the session-tree read migration described in `docs/bmux-integration-roadmap.md`. Provenance Engine should not add storage, daemon, migration, retrieval, semantic, observability, GitHub ingestion, or Knowledge Compiler implementation unless that migration proves a concrete public-contract defect.
 
+Engine-side session-tree readiness: the accepted public `ProvenanceEngineClient.sessionTree(ProvenanceSessionTreeRequest(rootSessionID:limit:))` contract remains the intended bmux adoption surface. SDK-level tests cover a client created by `ProvenanceEngineClientFactory`, seeded through public `appendEvent` calls, and queried through `sessionTree` without direct SQLite access.
+
 Long-term architecture note: shared repository evidence and Knowledge Compiler work are accepted as post-V1 planning targets only. The current package preserves optional event evidence-origin and evidence-scope metadata, but GitHub ingestion, shared evidence-store deployment, retrieval, and compiler implementation remain frozen until after the current V1 bmux adoption sequence.
 
 Required verification for this baseline:
@@ -26,4 +28,4 @@ Required verification for this baseline:
 swift test --package-path /Users/brianbusby/repos/provenance-engine
 ```
 
-Last local verification before acceptance: 69 tests passed on macOS.
+Last local verification before acceptance: 71 tests passed on macOS.
