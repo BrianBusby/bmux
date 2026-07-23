@@ -1,5 +1,7 @@
 # Provenance Engine Integration Contract
 
+This document is the technical contract authority for adopters. The coordinated bmux adoption sequence and cross-repository acceptance gates live in `docs/bmux-integration-roadmap.md`.
+
 External adopters should import:
 
 ```swift
