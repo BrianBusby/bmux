@@ -108,7 +108,7 @@ extension BMUXCLI {
         }
 
         let repository = try await store.repository(id: worktree.repositoryID)
-        let client: any ProvenanceEngineClient = store
+        let client: any BmuxLegacyProvenanceClient = store
         let response = try await client.fileExplanation(ProvenanceFileExplanationRequest(
             worktreeID: worktree.id,
             path: target.relativePath
@@ -156,7 +156,7 @@ extension BMUXCLI {
             return
         }
 
-        let client: any ProvenanceEngineClient = try WorkProvenanceStore(databaseURL: databaseURL)
+        let client: any BmuxLegacyProvenanceClient = try WorkProvenanceStore(databaseURL: databaseURL)
         let response = try await client.currentContext(ProvenanceCurrentContextRequest(
             repositoryPath: target.repositoryRoot
         ))
@@ -232,7 +232,7 @@ extension BMUXCLI {
             return
         }
 
-        let client: any ProvenanceEngineClient = try WorkProvenanceStore(databaseURL: databaseURL)
+        let client: any BmuxLegacyProvenanceClient = try WorkProvenanceStore(databaseURL: databaseURL)
         let response = try await client.sessionTree(ProvenanceSessionTreeRequest(
             rootSessionID: sessionID,
             limit: 100

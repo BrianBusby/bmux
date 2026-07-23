@@ -46,17 +46,19 @@ state, not a target architecture.
 
 Externalized work includes the worktree-list read path, engine package pin, public SDK client construction for that path, and worktree-list test seeding through public engine APIs.
 
+Slice B clarified the legacy boundary: the bmux-local contract-shaped seam is now `BmuxLegacyProvenanceClient`, while the external `ProvenanceEngineContracts.ProvenanceEngineClient` remains untouched. The complete remaining consumer inventory lives in `docs/context-efficiency/integration/provenance-engine-adoption.md`.
+
 Still bmux-local: legacy SQLite schema ownership, event/projection storage used by unmigrated paths, session-tree reads, file-explanation reads, current-context reads, lifecycle/capture recording, observability tracing, presentation, command parsing, fallback messages, and output formatting.
 
 Do not add engine features speculatively. Engine expansion is frozen until a real bmux migration slice proves a concrete missing contract or correctness defect.
 
 ## Next Target
 
-Next valid slice: Slice B, legacy boundary clarification.
+Next valid slice: Slice C, session-tree read migration.
 
-Slice B should rename the bmux-local provenance client seam so it cannot be confused with the external `ProvenanceEngineClient`, then inventory remaining local provenance consumers by read, write, capture, presentation, and policy.
+Slice C should migrate only `bmux provenance sessions tree <session-id>` to the external SQLite-backed engine client and `ProvenanceEngineClient.sessionTree(...)`; preserve existing CLI compatibility; seed tests through public engine APIs; and remove only session-tree legacy code that becomes unused.
 
-Do not begin the legacy protocol rename, session-tree migration, file explanation migration, current-context migration, lifecycle writes, data migration, semantic retrieval, daemon transport, UI work, or observability expansion until the appropriate slice is explicitly requested.
+Do not begin file-explanation migration, current-context migration, lifecycle writes, capture migration, data migration, semantic retrieval, daemon transport, UI work, observability expansion, or unrelated refactoring.
 
 ## Canonical Details
 
@@ -72,6 +74,4 @@ Phase 4 migration plan: `docs/context-efficiency/provenance-engine-phase4-reconn
 
 ## Validation Notes
 
-For Slice A documentation reconciliation, validation is documentation and source inspection only. No Swift or CLI behavior changes belong in this slice.
-
-Before handing off Slice A, verify the package pin, external worktree-list runtime path, public-API test seeding, and absence of stale root-level Git exports.
+For Slice B, validation must prove the legacy-seam rename did not change behavior: run focused source scans, project normalization checks after pbxproj edits, the targeted WorkProvenance store tests, a test-target compile check, and a tagged Debug reload build.

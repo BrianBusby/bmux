@@ -50,13 +50,13 @@ path, and initial package/module names.
 Portable source material:
 
 - Contract DTOs and protocols in `Sources/WorkProvenance/Provenance*Request.swift`,
-  `Provenance*Response.swift`, `ProvenanceEngineClient.swift`, and normalized
+  `Provenance*Response.swift`, `BmuxLegacyProvenanceClient.swift`, and normalized
   lifecycle contract files.
 - Event/domain values in `WorkProvenanceEvent*.swift`,
   `WorkProvenanceSource.swift`, `WorkProvenanceConfidence.swift`, and the
   `WorkProvenance*Record.swift` projection DTOs.
 - Store implementation source in `WorkProvenanceStore.swift`,
-  `WorkProvenanceStore+ProvenanceEngineClient.swift`,
+  `WorkProvenanceStore+BmuxLegacyProvenanceClient.swift`,
   `WorkProvenanceSQLiteDatabase.swift`, `WorkProvenanceSQLiteStatement.swift`,
   `WorkProvenanceStoreError.swift`, `WorkProvenanceStableIDFactory.swift`,
   `WorkProvenanceRetentionPolicy.swift`, and `WorkProvenancePruneResult.swift`.

@@ -4,9 +4,9 @@ import ProvenanceEngineSDK
 import Testing
 
 #if canImport(bmux_DEV)
-private typealias LocalProvenanceEngineClient = bmux_DEV.ProvenanceEngineClient
+private typealias TestBmuxLegacyProvenanceClient = bmux_DEV.BmuxLegacyProvenanceClient
 #elseif canImport(bmux)
-private typealias LocalProvenanceEngineClient = bmux.ProvenanceEngineClient
+private typealias TestBmuxLegacyProvenanceClient = bmux.BmuxLegacyProvenanceClient
 #endif
 
 #if canImport(bmux_DEV)
@@ -322,7 +322,7 @@ struct WorkProvenanceStoreTests {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
-        let client: any LocalProvenanceEngineClient = store
+        let client: any TestBmuxLegacyProvenanceClient = store
 
         let append = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.attributedEvent()))
         let explanation = try await client.fileExplanation(ProvenanceFileExplanationRequest(
@@ -353,7 +353,7 @@ struct WorkProvenanceStoreTests {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
-        let client: any LocalProvenanceEngineClient = store
+        let client: any TestBmuxLegacyProvenanceClient = store
 
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.parentSessionEvent()))
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.childSubsessionEvent(
@@ -392,7 +392,7 @@ struct WorkProvenanceStoreTests {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
-        let client: any LocalProvenanceEngineClient = store
+        let client: any TestBmuxLegacyProvenanceClient = store
 
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.parentSessionEvent()))
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.childSubsessionEvent(
@@ -450,7 +450,7 @@ struct WorkProvenanceStoreTests {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
-        let client: any LocalProvenanceEngineClient = store
+        let client: any TestBmuxLegacyProvenanceClient = store
 
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.attributedEvent()))
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.unattributedEvent()))

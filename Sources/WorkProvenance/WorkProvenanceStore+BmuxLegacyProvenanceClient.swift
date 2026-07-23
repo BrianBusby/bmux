@@ -1,6 +1,6 @@
 import Foundation
 
-extension WorkProvenanceStore: ProvenanceEngineClient {
+extension WorkProvenanceStore: BmuxLegacyProvenanceClient {
     func appendEvent(_ request: ProvenanceAppendEventRequest) async throws -> ProvenanceAppendEventResponse {
         try append(request.event)
         return ProvenanceAppendEventResponse(

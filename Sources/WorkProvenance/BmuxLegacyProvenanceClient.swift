@@ -1,7 +1,7 @@
 import Foundation
 
-/// Internal contract-shaped client for provenance engine queries used by bmux.
-protocol ProvenanceEngineClient: Sendable {
+/// Legacy bmux-local client for provenance storage paths not yet migrated to the external engine.
+protocol BmuxLegacyProvenanceClient: Sendable {
     /// Appends one immutable provenance event.
     ///
     /// - Parameter request: Event append request.
