@@ -2,6 +2,19 @@
 
 Status: planning integrated on 2026-07-18 and updated on 2026-07-19 with provenance observability requirements. This plan extends the subsession/delegation provenance roadmap. It does not replace `WorkProvenance`, `BmuxContextEfficiency`, raw evidence storage, the append-only event ledger, or the future observability trace store.
 
+2026-07-22 update: the standalone engine semantic roadmap in
+`docs/context-efficiency/provenance-engine-semantic-roadmap.md` is canonical for
+long-term ownership of normalized provenance, structured decisions, project
+facts, semantic processing, and task-context packs. This document remains useful
+for bmux-era retrieval tactics, evaluation criteria, and sequencing details.
+
+2026-07-22 coordination update:
+`docs/context-efficiency/cross-session-coordination-active-work-awareness.md`
+extends the later retrieval roadmap with active session/task registries,
+cross-session queries, and passive conflict detection. Those capabilities depend
+on validated retrieval and context-package quality; they should not create a
+parallel bmux-owned coordination store.
+
 ## Purpose
 
 Add an agent-oriented retrieval and knowledge-projection layer so a current or future agent can retrieve the smallest reliable body of context needed to continue work safely.
@@ -17,6 +30,10 @@ Raw evidence
 ```
 
 The retrieval layer must be derived, rebuildable, evidence-linked, freshness-aware, repository-scoped, raw-payload-safe, and optimized for bounded agent consumption.
+
+The same retrieval discipline applies to active work awareness: agents receive
+structured evidence about related active or historical sessions, not chat
+transcripts, unless a user explicitly asks for audit/debug-level detail.
 
 Retrieval must also be observable. A future retrieval result should explain why records were selected or omitted, which versions produced ranking and token budgeting, which evidence supports each selected record, and whether supplied context was later used, corrected, or contradicted. Detailed requirements live in `docs/context-efficiency/provenance-observability-integration-plan.md`.
 

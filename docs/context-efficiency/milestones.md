@@ -10,11 +10,26 @@ Cross-cutting plans:
 - `docs/context-efficiency/provenance-engine-phase3-plan.md`
 - `docs/context-efficiency/provenance-engine-phase3a-decisions.md`
 - `docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md`
+- `docs/context-efficiency/provenance-engine-semantic-roadmap.md`
+- `docs/context-efficiency/cross-session-coordination-active-work-awareness.md`
 - `docs/context-efficiency/subsession-delegation-integration-plan.md`
 - `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
 - `docs/context-efficiency/provenance-observability-integration-plan.md`
 
 ADR-001 is accepted and establishes the Provenance Engine as an independent product. Future provenance milestones should treat bmux as the first client, not as the owner of the engine. Migration work should introduce public SDK/API contracts before moving implementation, keep the engine local-first for V1, and avoid new bmux assumptions in reusable provenance logic.
+
+The semantic-processing and agent-context roadmap is canonical in
+`docs/context-efficiency/provenance-engine-semantic-roadmap.md`. It makes
+structured engineering decisions, stable project facts, selective semantic
+processing, semantic cost telemetry, privacy policy, and task-specific context
+packs first-class Provenance Engine capabilities. It does not expand the current
+Phase 3 storage foundation or Phase 4 bmux adoption scope.
+
+The cross-session coordination roadmap is recorded in
+`docs/context-efficiency/cross-session-coordination-active-work-awareness.md`.
+It makes active session/task registries, active-work indexing, cross-session
+queries, and passive conflict detection later Provenance Engine capabilities,
+with bmux responsible for display, prompt assembly, and user workflow.
 
 The ADR-001 Phase 3 entry plan is now drafted in
 `docs/context-efficiency/provenance-engine-phase3-plan.md`.
@@ -141,17 +156,17 @@ schema move, data migration, bmux reconnect, retrieval layer, lifecycle policy,
 UI, or broad observability expansion has been created. Full ADR-001 Phase 3 is
 still not complete.
 
-ADR-001 Phase 4 reconnect planning is drafted in
-`docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md`. It chooses
-`bmux provenance worktrees list` as the first adapter path to replace, pins the
-initial engine dependency to commit
-`b43146d634f7c11f8e14bf95da5418bef502b0de`, names
+ADR-001 Phase 4 reconnect is now an active controlled migration tracked in
+`docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md` and
+`docs/context-efficiency/integration/provenance-engine-adoption.md`. The first
+external adapter path, `bmux provenance worktrees list`, is complete against
+provenance-engine `0.1.0` at commit
+`b73fd1639c1c81230e96215259fc796b517706f6`. The adopted path uses
 `ProvenanceEngineClientFactory` plus
-`ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest(...))` as the
-public SDK/contract path, and requires parity verification for existing
-worktree-list JSON, text, and fallback behavior. The public in-process SDK
-prerequisite is complete, but bmux adapter behavior has not changed yet. Data
-migration remains ADR-001 Phase 5.
+`ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest(...))` while
+preserving existing worktree-list JSON, text, and fallback behavior. Data
+migration remains ADR-001 Phase 5. The next target is legacy boundary
+clarification before migrating a second read path.
 
 The ADR-001 Phase 0 migration audit is complete in `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`. The ADR-001 Phase 1 behavior characterization and minimum contract plan is complete in `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`. The first Phase 2 slice introduced internal protocol/request/response names for append, session-tree, and file-explanation behavior around the current store. The second Phase 2 slice introduced normalized subsession-lifecycle request/response/protocol names around the current lifecycle recorder. The third Phase 2 slice introduced a separate lifecycle-trace query contract around `ProvenanceObservabilityStore`. The fourth Phase 2 slice converted `bmux provenance sessions tree <session-id>` onto `ProvenanceEngineClient.sessionTree(...)` while preserving existing CLI JSON/text/no-database behavior. The fifth Phase 2 slice converted `bmux provenance explain <path>` onto `ProvenanceEngineClient.fileExplanation(...)` while preserving existing CLI JSON/text/no-database/no-worktree/no-file behavior. The sixth Phase 2 slice converted `bmux provenance worktrees list` onto `ProvenanceEngineClient.worktrees(...)` while preserving existing CLI JSON/text/no-database/empty-database behavior and newest-first ordering. The seventh Phase 2 slice converted `bmux provenance context current` onto `ProvenanceEngineClient.currentContext(...)` while preserving existing CLI JSON/text/no-database/no-worktree/empty-section behavior, section bounds, and ordering. No further ADR-001 Phase 2 authoritative provenance CLI conversion is currently identified; pause before starting daemon, further SDK expansion, storage/schema migration, retrieval, lifecycle-policy, UI, or observability expansion.
 
@@ -494,9 +509,17 @@ Observability integration:
 
 ## Milestone 5: Project Progress, Delegation, and Semantic Provenance
 
+Superseding engine roadmap:
+
+- `docs/context-efficiency/provenance-engine-semantic-roadmap.md`
+
 Goal:
 
 Integrate useful-work evidence with cost evidence.
+
+For standalone engine work, treat this milestone as split into Phase 5
+normalized provenance and Phase 6 structured decisions/project knowledge. Do
+not start semantic model calls or context-pack generation from this milestone.
 
 Expected work:
 
@@ -521,11 +544,18 @@ Observability integration:
 
 Authoritative plan:
 
+- `docs/context-efficiency/provenance-engine-semantic-roadmap.md`
 - `docs/context-efficiency/agent-retrieval-knowledge-projection-plan.md`
 
 Goal:
 
 Build a derived, rebuildable, evidence-linked retrieval layer that can assemble the smallest reliable context package needed for a future agent objective.
+
+For standalone engine work, this maps to Phase 8 agent context retrieval and
+depends on Phase 5 normalized provenance, Phase 6 structured decisions/project
+knowledge, and Phase 7 semantic processing. The older bmux retrieval plan
+remains useful for implementation tactics and evaluation criteria, but the
+engine owns the durable semantic model and context-pack API.
 
 Expected work:
 
@@ -536,6 +566,9 @@ Expected work:
 - SQLite FTS5 lexical retrieval with repository/worktree/work-item/kind/freshness/confidence filters.
 - Deterministic retrieval ranking and token-budgeted context package assembly.
 - Retrieval evaluation fixtures for required-record recall, stale/superseded leakage, omitted counts, source-reference coverage, determinism, and latency.
+- After retrieval quality is validated, active session/task registry reads,
+  cross-session query APIs, and passive conflict detection backed by structured
+  evidence instead of transcripts.
 
 Rules:
 
@@ -544,6 +577,8 @@ Rules:
 - Do not index raw rollout or terminal output into the primary retrieval surface.
 - Do not start context-package generation before semantic records, edges, and lexical retrieval are proven.
 - Do not add UI, automatic prompt injection, autonomous orchestration, or assisted handoff behavior in this milestone.
+- Do not build a bmux-owned parallel active-work store; bmux should query the
+  Provenance Engine and present bounded evidence.
 
 Observability integration:
 
@@ -555,11 +590,14 @@ Observability integration:
 
 Goal:
 
-Expose fleet, thread detail, work-item, and handoff-preview views without crowding the terminal workspace.
+Expose fleet, active-work, conflict, thread-detail, work-item, and
+handoff-preview views without crowding the terminal workspace.
 
 Expected work:
 
 - Decide whether the first UI surface is Feed, Session Index detail, custom sidebar, or a new coordination window.
+- Display active sessions, active tasks, heartbeat freshness, related work, and
+  passive conflict warnings from engine query results.
 - Add token timelines and command/evidence drilldown.
 - Add explanation UI for passive lifecycle signals.
 - Link to raw evidence recovery.
@@ -568,6 +606,8 @@ Rules:
 
 - UI warnings must show underlying measurements.
 - No automatic interruption.
+- bmux owns presentation and workflow only; conflict detection and active-work
+  knowledge remain engine-owned.
 
 Observability integration:
 

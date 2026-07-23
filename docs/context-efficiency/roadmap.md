@@ -30,6 +30,38 @@ Begin observability with Phase O0 architecture investigation.
 
 Do not implement broad observability schema or code before returning the required O0 report.
 
+Provenance semantic roadmap update
+
+The standalone Provenance Engine roadmap now includes semantic processing and
+task-context retrieval as first-class product capabilities in:
+
+docs/context-efficiency/provenance-engine-semantic-roadmap.md
+
+Raw provenance is necessary but not enough. The engine should preserve the
+complete append-only ledger while deriving small, evidence-linked knowledge
+records, structured engineering decisions, stable project facts, and bounded
+context packs for specific tasks.
+
+Do not implement the later semantic phases before the standalone foundation and
+first bmux adoption slice are complete.
+
+Cross-session coordination update
+
+The Provenance Engine roadmap now includes active work awareness and
+cross-session coordination as later post-retrieval capabilities in:
+
+docs/context-efficiency/cross-session-coordination-active-work-awareness.md
+
+The engine should own active session/task registries, active-work indexing,
+cross-session queries, and passive conflict detection. bmux should remain the
+orchestration and display client: launching sessions, sending lifecycle events
+and heartbeats, requesting bounded context, assembling prompts, and showing
+active-work or conflict warnings.
+
+Do not implement active-work coordination before normalized provenance,
+structured knowledge, semantic processing, retrieval, and context-package
+quality are proven.
+
 Important empirical findings
 
 Use these findings as the initial motivation and calibration data, not as unquestionable universal rules.

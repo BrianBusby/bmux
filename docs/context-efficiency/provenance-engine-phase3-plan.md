@@ -8,6 +8,7 @@ Inputs:
 - `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
 - `docs/context-efficiency/provenance-engine-extraction-phase0-report.md`
 - `docs/context-efficiency/provenance-engine-contracts-phase1-plan.md`
+- `docs/context-efficiency/provenance-engine-semantic-roadmap.md`
 - ADR-001 Phase 2 in-bmux contracts and CLI consumer conversions on branch
   `provenance-extraction-phase2-contracts`
 
@@ -167,6 +168,22 @@ validation and repair; repair-attempt metadata; and schema-migration metadata.
 It remains internal to `ProvenanceEngineSQLite`; no public storage product,
 daemon, bmux reconnect, storage migration, retrieval, lifecycle policy, UI, or
 broad observability expansion was created.
+
+## Semantic Compatibility Notes
+
+Phase 3 should preserve forward compatibility for the semantic roadmap without
+implementing it. Keep the ledger append-only, keep projection rebuilds
+deterministic, and avoid public contracts that treat all durable knowledge as
+observed fact.
+
+The current open string event types and JSON payload storage are compatible with
+later evidence-origin and processor metadata. The known gap is semantic
+authority: `ProvenanceSource.declared` is too broad for the future split between
+orchestrator-declared and agent-declared meaning.
+
+Before adding new event producers or semantic APIs, design explicit
+source-event links, parent-event links where needed, numeric confidence for
+inference, and semantic model cost/token telemetry.
 
 ## Validation Strategy
 

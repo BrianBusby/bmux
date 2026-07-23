@@ -163,6 +163,9 @@ Agent context should not.
 
 Retrieval should return only the minimum evidence required for the current task.
 
+Detailed semantic processing and task-context requirements live in
+`docs/context-efficiency/provenance-engine-semantic-roadmap.md`.
+
 ---
 
 ## Explainability
@@ -170,6 +173,12 @@ Retrieval should return only the minimum evidence required for the current task.
 Every context bundle should explain why each piece of evidence was selected.
 
 The engine should never become a black box.
+
+## Evidence Authority
+
+Observed facts, orchestrator declarations, agent-declared meaning, and
+machine-inferred meaning must remain distinct. Inferred knowledge must never
+appear indistinguishable from observed fact.
 
 ---
 
@@ -179,9 +188,11 @@ The engine should never become a black box.
 
 - domain model
 - event schema
+- normalized event model
 - evidence schema
 - work items
 - decisions
+- stable project facts
 - relationship graph
 - repositories
 - storage
@@ -189,6 +200,7 @@ The engine should never become a black box.
 - search
 - retrieval
 - context generation
+- semantic processing state and cost telemetry
 - migrations
 - public API
 - SDK
@@ -265,12 +277,14 @@ Public capabilities include:
 - append evidence
 - create work item
 - record decision
+- record stable project fact
 - record unresolved question
 - retrieve sessions
 - retrieve work items
 - retrieve evidence
 - search
 - build context bundle
+- build task-specific context pack
 
 ---
 
@@ -429,6 +443,16 @@ Migration should be:
 
 Remove duplicated implementation from bmux.
 
+## Semantic Capability Phases
+
+After the standalone foundation and first bmux adoption slice are stable, follow
+`docs/context-efficiency/provenance-engine-semantic-roadmap.md` for engine
+capability phases covering normalized provenance, structured decisions and
+project knowledge, semantic processing, and agent context retrieval.
+
+Do not use those later semantic phases to expand the current Phase 3 foundation
+or Phase 4 reconnect scope.
+
 ---
 
 # Reliability Requirements
@@ -543,12 +567,15 @@ That document is expected to define, among other topics:
 - Canonical domain model
 - Entity lifecycle
 - Event taxonomy
+- Evidence-origin and authority model
 - Relationship graph
+- Structured engineering decisions and stable facts
 - Storage abstractions
 - Query architecture
 - Retrieval algorithms
 - Context bundle generation
 - Citation and attribution model
+- Semantic processing budget, cost telemetry, and privacy policy
 - Plugin architecture
 - Extension points
 - Performance targets
