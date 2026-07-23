@@ -3,6 +3,8 @@
 Status: active controlled migration; updated on 2026-07-23 after the first
 external bmux adoption slice completed.
 
+Planning authority: this document is detailed bmux-side Phase 4 history and implementation guidance. The canonical cross-repository bmux to provenance-engine roadmap is `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
+
 Inputs:
 
 - ADR-001 provenance extraction record.
@@ -103,11 +105,12 @@ Legacy code intentionally retained: bmux-local storage, projections, lifecycle
 capture, and all unmigrated read paths remain until their own scoped migration
 slices.
 
-Known finding: the first adoption slice was successful enough to continue, but
-the local legacy client seam still needs a name that makes the transition
-obvious before another path is migrated.
+Known finding: the first adoption slice was successful enough to continue. Slice
+B later clarified the local legacy client seam as `BmuxLegacyProvenanceClient`
+so the remaining bmux-local paths are searchable and intentionally
+transitional.
 
-Next target: Slice B, legacy boundary clarification.
+Next target: Slice C, session-tree read migration.
 
 ## Not Included
 

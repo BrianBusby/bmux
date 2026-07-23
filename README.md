@@ -1,8 +1,8 @@
 # bmux
 
-bmux is a private fork of [cmux](https://github.com/manaflow-ai/cmux), a Ghostty-based macOS terminal built for running many AI coding-agent sessions side by side.
+bmux is a public fork of [cmux](https://github.com/manaflow-ai/cmux), a Ghostty-based macOS terminal built for running many AI coding-agent sessions side by side.
 
-This fork keeps the core cmux model: native Swift/AppKit UI, libghostty terminal rendering, vertical workspace tabs, split panes, an embedded browser, notifications, CLI automation, and agent-aware workspace metadata. It is rebranded around bmux and carries the latest local agent-workflow changes from this snapshot.
+This fork keeps the core cmux model: native Swift/AppKit UI, libghostty terminal rendering, vertical workspace tabs, split panes, an embedded browser, notifications, CLI automation, and agent-aware workspace metadata. It is rebranded around bmux and carries current local agent-workflow changes.
 
 ## Improvements In This Fork
 
@@ -26,9 +26,13 @@ This fork keeps the core cmux model: native Swift/AppKit UI, libghostty terminal
 - SSH workspace support with remote-aware browser routing.
 - Custom command and shortcut configuration through `bmux.json`.
 
+## Roadmap
+
+The canonical bmux roadmap is `docs/roadmap.md`. Cross-repository bmux to provenance-engine adoption milestones are canonical in the provenance-engine shared integration roadmap linked from `docs/provenance-integration.md`.
+
 ## Install
 
-This repository is currently a private fork snapshot. There is no public bmux release artifact yet.
+There is no public bmux release artifact yet.
 
 For local development, use the normal tagged debug workflow:
 

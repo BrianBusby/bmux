@@ -2,6 +2,8 @@
 
 Status: implementation sequence reconciled on 2026-07-19 after merging the subsession/delegation integration plan, the agent retrieval/knowledge-projection plan, and the provenance observability integration plan into the original context-efficiency roadmap.
 
+Planning authority: this file is detailed context-efficiency and provenance extraction history. The canonical bmux product roadmap is `docs/roadmap.md`. The canonical cross-repository bmux to provenance-engine roadmap is `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
+
 Cross-cutting plans:
 
 - `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
@@ -48,8 +50,8 @@ initially owned and maintained under the `BrianBusby` GitHub account. It may be
 transferred to a future organization, for example `manaflow-ai`, once the
 project matures. Repository ownership is an implementation detail and must not
 affect package names, APIs, module boundaries, documentation, storage defaults,
-or bmux integration. Private GitHub repository
-`BrianBusby/provenance-engine` now exists, the local engine repo's `origin`
+or bmux integration. GitHub repository
+`BrianBusby/provenance-engine` now exists publicly, the local engine repo's `origin`
 points at `git@github.com:BrianBusby/provenance-engine.git`, and external
 skeleton commit `9e8fa620ccd04040968e0afab591feb48c8c11d0` is pushed to
 `origin/main`. ADR-001 Phase 3C lifted the initial in-process public contract
@@ -340,7 +342,7 @@ Implemented slices:
 - ADR-001 Phase 3B created the local independent skeleton at
   `/Users/brianbusby/repos/provenance-engine` with package `ProvenanceEngine`
   and module/product `ProvenanceEngineContracts`.
-- ADR-001 Phase 3B remote unblock created private GitHub repository
+- ADR-001 Phase 3B remote unblock created GitHub repository
   `BrianBusby/provenance-engine`, set the local engine repo's `origin` to
   `git@github.com:BrianBusby/provenance-engine.git`, and pushed local commit
   `9e8fa620ccd04040968e0afab591feb48c8c11d0` to `origin/main`.

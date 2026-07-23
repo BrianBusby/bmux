@@ -9,14 +9,16 @@ topic documents.
 ## Read Order
 
 1. `AGENTS.md`
-2. `docs/context-efficiency/current-status.md`
-3. `docs/context-efficiency/roadmap.md`
-4. `docs/context-efficiency/milestones.md`
-5. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
-6. `docs/context-efficiency/provenance-engine-phase3-plan.md`
-7. `docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md`
-8. `docs/context-efficiency/integration/provenance-engine-adoption.md`
-9. Relevant bmux skills for Swift/package/build/test/localization work.
+2. `docs/roadmap.md`
+3. `docs/provenance-integration.md`
+4. `docs/context-efficiency/current-status.md`
+5. `docs/context-efficiency/roadmap.md`
+6. `docs/context-efficiency/milestones.md`
+7. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
+8. `docs/context-efficiency/provenance-engine-phase3-plan.md`
+9. `docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md`
+10. `docs/context-efficiency/integration/provenance-engine-adoption.md`
+11. Relevant bmux skills for Swift/package/build/test/localization work.
 
 ## Active State
 
@@ -61,6 +63,12 @@ Slice C should migrate only `bmux provenance sessions tree <session-id>` to the 
 Do not begin file-explanation migration, current-context migration, lifecycle writes, capture migration, data migration, semantic retrieval, daemon transport, UI work, observability expansion, or unrelated refactoring.
 
 ## Canonical Details
+
+bmux product roadmap: `docs/roadmap.md`.
+
+bmux-local provenance integration notes: `docs/provenance-integration.md`.
+
+Canonical shared integration roadmap: `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
 
 Migration state and plan: `docs/context-efficiency/integration/provenance-engine-adoption.md`.
 

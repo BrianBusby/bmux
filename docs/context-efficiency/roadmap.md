@@ -1,4 +1,7 @@
-Bmux Context Efficiency and Thread Lifecycle System
+# Bmux Context Efficiency and Thread Lifecycle System
+
+Planning authority: this document preserves the original context-efficiency, thread-lifecycle, provenance, and handoff roadmap. The canonical bmux product roadmap is `../roadmap.md`. Cross-repository bmux to provenance-engine milestones are canonical in `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
+
 Mission
 
 Extend Bmux into a context-efficiency, thread-lifecycle, provenance, and handoff system for long-running Codex work.

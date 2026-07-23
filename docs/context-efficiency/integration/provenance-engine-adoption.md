@@ -2,6 +2,8 @@
 
 Status: Slice B legacy boundary clarification complete on 2026-07-23.
 
+Planning authority: this is the bmux-local adoption inventory and implementation state. The canonical cross-repository roadmap is `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
+
 ## Current State
 
 bmux consumes provenance-engine as an external Swift package pinned to version `0.1.0` at revision `b73fd1639c1c81230e96215259fc796b517706f6`.
