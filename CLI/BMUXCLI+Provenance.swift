@@ -1,4 +1,6 @@
 import Foundation
+import ProvenanceEngineContracts
+import ProvenanceEngineSDK
 
 extension BMUXCLI {
     func runProvenanceCommand(commandArgs: [String], jsonOutput: Bool) async throws {
@@ -192,7 +194,8 @@ extension BMUXCLI {
             return
         }
 
-        let client: any ProvenanceEngineClient = try WorkProvenanceStore(databaseURL: databaseURL)
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
         let response = try await client.worktrees(ProvenanceWorktreeListRequest())
         let list = CLIProvenanceWorktreeList(response: response)
         printProvenanceWorktreeList(list, jsonOutput: jsonOutput)

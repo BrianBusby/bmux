@@ -1,4 +1,5 @@
 import Foundation
+import ProvenanceEngineContracts
 
 struct CLIProvenanceExplanation: Equatable {
     let requestedPath: String
@@ -57,8 +58,8 @@ struct CLIProvenanceExplanation: Equatable {
     init(
         target: CLIProvenanceResolvedTarget,
         response: ProvenanceFileExplanationResponse,
-        worktree: WorkProvenanceWorktreeRecord,
-        repository: WorkProvenanceRepositoryRecord?,
+        worktree: ProvenanceWorktreeRecord,
+        repository: ProvenanceRepositoryRecord?,
         noFileReason: String
     ) {
         let explanation = response.explanation
@@ -119,7 +120,7 @@ struct CLIProvenanceExplanation: Equatable {
         }
     }
 
-    private static func worktreePayload(_ worktree: WorkProvenanceWorktreeRecord) -> [String: AnyHashable] {
+    private static func worktreePayload(_ worktree: ProvenanceWorktreeRecord) -> [String: AnyHashable] {
         compactPayload([
             "id": worktree.id,
             "repository_id": worktree.repositoryID,
@@ -134,7 +135,7 @@ struct CLIProvenanceExplanation: Equatable {
     }
 
     private static func repositoryPayload(
-        _ repository: WorkProvenanceRepositoryRecord?,
+        _ repository: ProvenanceRepositoryRecord?,
         fallbackRepositoryID: String,
         fallbackPath: String
     ) -> [String: AnyHashable] {

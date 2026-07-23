@@ -1,5 +1,13 @@
 import Foundation
+import ProvenanceEngineContracts
+import ProvenanceEngineSDK
 import Testing
+
+#if canImport(bmux_DEV)
+private typealias LocalProvenanceEngineClient = bmux_DEV.ProvenanceEngineClient
+#elseif canImport(bmux)
+private typealias LocalProvenanceEngineClient = bmux.ProvenanceEngineClient
+#endif
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -314,7 +322,7 @@ struct WorkProvenanceStoreTests {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
-        let client: any ProvenanceEngineClient = store
+        let client: any LocalProvenanceEngineClient = store
 
         let append = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.attributedEvent()))
         let explanation = try await client.fileExplanation(ProvenanceFileExplanationRequest(
@@ -345,7 +353,7 @@ struct WorkProvenanceStoreTests {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
-        let client: any ProvenanceEngineClient = store
+        let client: any LocalProvenanceEngineClient = store
 
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.parentSessionEvent()))
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.childSubsessionEvent(
@@ -384,7 +392,7 @@ struct WorkProvenanceStoreTests {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
-        let client: any ProvenanceEngineClient = store
+        let client: any LocalProvenanceEngineClient = store
 
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.parentSessionEvent()))
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.childSubsessionEvent(
@@ -420,10 +428,12 @@ struct WorkProvenanceStoreTests {
     func contractClientListsWorktreesWithRepositories() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
-        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
-        let client: any ProvenanceEngineClient = store
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
 
-        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.attributedEvent()))
+        _ = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(
+            event: Self.externalAttributedEvent()
+        ))
 
         let response = try await client.worktrees(ProvenanceWorktreeListRequest())
 
@@ -440,7 +450,7 @@ struct WorkProvenanceStoreTests {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
-        let client: any ProvenanceEngineClient = store
+        let client: any LocalProvenanceEngineClient = store
 
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.attributedEvent()))
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.unattributedEvent()))
@@ -472,11 +482,11 @@ struct WorkProvenanceStoreTests {
 
     private static func attributedEvent() -> WorkProvenanceEvent {
         let now = Date(timeIntervalSince1970: 100)
-        let repository = WorkProvenanceRepositoryRecord(
+        let repository = ProvenanceRepositoryRecord(
             id: "repo-1", path: "/repo", commonDirectory: "/repo/.git",
             remoteSlug: "manaflow-ai/bmux", createdAt: now, updatedAt: now
         )
-        let worktree = WorkProvenanceWorktreeRecord(
+        let worktree = ProvenanceWorktreeRecord(
             id: "worktree-1", repositoryID: "repo-1", path: "/repo",
             branch: "feature/provenance", baseCommit: "base", currentHEAD: "head",
             isDirty: true, status: "active", lastReconciledAt: now, updatedAt: now
@@ -503,6 +513,43 @@ struct WorkProvenanceStoreTests {
             session: session,
             workItem: workItem,
             contribution: contribution
+        )
+    }
+
+    private static func externalAttributedEvent() -> ProvenanceEngineContracts.ProvenanceEvent {
+        let now = Date(timeIntervalSince1970: 100)
+        let repository = ProvenanceRepositoryRecord(
+            id: "repo-1",
+            path: "/repo",
+            commonDirectory: "/repo/.git",
+            remoteSlug: "manaflow-ai/bmux",
+            createdAt: now,
+            updatedAt: now
+        )
+        let worktree = ProvenanceWorktreeRecord(
+            id: "worktree-1",
+            repositoryID: "repo-1",
+            path: "/repo",
+            branch: "feature/provenance",
+            baseCommit: "base",
+            currentHEAD: "head",
+            isDirty: true,
+            status: "active",
+            lastReconciledAt: now,
+            updatedAt: now
+        )
+        return ProvenanceEngineContracts.ProvenanceEvent(
+            id: "external-event-1",
+            eventType: .worktreeObserved,
+            timestamp: now,
+            repositoryID: repository.id,
+            worktreeID: worktree.id,
+            source: .observed,
+            confidence: .high,
+            payload: ProvenanceEngineContracts.ProvenanceEventPayload(
+                repository: repository,
+                worktree: worktree
+            )
         )
     }
 
@@ -631,8 +678,8 @@ struct WorkProvenanceStoreTests {
 
     private static func attributedEvent(
         now: Date,
-        repository: WorkProvenanceRepositoryRecord,
-        worktree: WorkProvenanceWorktreeRecord,
+        repository: ProvenanceRepositoryRecord,
+        worktree: ProvenanceWorktreeRecord,
         session: WorkProvenanceSessionRecord,
         workItem: WorkProvenanceWorkItemRecord,
         contribution: WorkProvenanceContributionRecord
@@ -668,10 +715,10 @@ struct WorkProvenanceStoreTests {
 
     private static func unattributedEvent() -> WorkProvenanceEvent {
         let now = Date(timeIntervalSince1970: 200)
-        let repository = WorkProvenanceRepositoryRecord(
+        let repository = ProvenanceRepositoryRecord(
             id: "repo-1", path: "/repo", createdAt: now, updatedAt: now
         )
-        let worktree = WorkProvenanceWorktreeRecord(
+        let worktree = ProvenanceWorktreeRecord(
             id: "worktree-1", repositoryID: "repo-1", path: "/repo",
             isDirty: true, status: "active", updatedAt: now
         )
@@ -716,10 +763,10 @@ struct WorkProvenanceStoreTests {
         fingerprint: String
     ) -> WorkProvenanceEvent {
         let now = Date(timeIntervalSince1970: timestamp)
-        let repository = WorkProvenanceRepositoryRecord(
+        let repository = ProvenanceRepositoryRecord(
             id: "repo-1", path: "/repo", createdAt: now, updatedAt: now
         )
-        let worktree = WorkProvenanceWorktreeRecord(
+        let worktree = ProvenanceWorktreeRecord(
             id: "worktree-1", repositoryID: "repo-1", path: "/repo",
             isDirty: true, status: "active", updatedAt: now
         )

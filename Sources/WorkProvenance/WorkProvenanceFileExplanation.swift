@@ -1,4 +1,5 @@
 import Foundation
+import ProvenanceEngineContracts
 
 /// Focused provenance context for one changed file.
 struct WorkProvenanceFileExplanation: Codable, Equatable, Sendable {
@@ -21,10 +22,10 @@ struct WorkProvenanceFileExplanation: Codable, Equatable, Sendable {
     let workItem: WorkProvenanceWorkItemRecord?
 
     /// Worktree containing the file change.
-    let worktree: WorkProvenanceWorktreeRecord?
+    let worktree: ProvenanceWorktreeRecord?
 
     /// Repository containing the worktree.
-    let repository: WorkProvenanceRepositoryRecord?
+    let repository: ProvenanceRepositoryRecord?
 
     /// Creates a file explanation result.
     init(
@@ -34,8 +35,8 @@ struct WorkProvenanceFileExplanation: Codable, Equatable, Sendable {
         contribution: WorkProvenanceContributionRecord?,
         session: WorkProvenanceSessionRecord?,
         workItem: WorkProvenanceWorkItemRecord?,
-        worktree: WorkProvenanceWorktreeRecord?,
-        repository: WorkProvenanceRepositoryRecord?
+        worktree: ProvenanceWorktreeRecord?,
+        repository: ProvenanceRepositoryRecord?
     ) {
         self.fileChange = fileChange
         self.changeSet = changeSet

@@ -1,4 +1,5 @@
 import Foundation
+import ProvenanceEngineContracts
 
 struct CLIProvenanceWorktreeRow: Equatable {
     let id: String

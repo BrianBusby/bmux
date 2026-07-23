@@ -189,6 +189,8 @@ the worktree-list adapter path. Phase 4 must preserve existing worktree-list
 JSON, text, and fallback behavior through public-contract parity verification,
 and data migration remains Phase 5.
 
+A 2026-07-22 Phase 4 adoption slice accepted provenance-engine `0.1.0` at commit `b73fd1639c1c81230e96215259fc796b517706f6` after reviewing and fast-forwarding `provenance-session-tree-storage` into engine `main`. The engine `main` branch now owns concise baseline docs in `docs/current-status.md`, `docs/architecture.md`, `docs/roadmap.md`, and `docs/integration-contract.md`; tag `0.1.0` points at the same accepted commit and is pushed to `origin`. bmux branch `provenance-engine-worktrees-adoption` pins the external package at exact version `0.1.0`, imports `ProvenanceEngineContracts` and `ProvenanceEngineSDK`, and reconnects only the `bmux provenance worktrees` read path through `ProvenanceEngineClientFactory().sqliteClient(databaseURL:)` and `ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest())`. Local duplicate worktree-list DTO files and the old CLI direct SQLite `worktreeList()` reader were removed for this completed adapter path. CLI and Swift fixtures now seed the adopted worktree path through the public engine API. No daemon, migration, retrieval, semantic, observability, capture-runtime replacement, or additional read-path reconnect work was started in this slice. Freeze additional engine features until this integration findings report is accepted.
+
 Subsession/delegation provenance has been merged into the roadmap as a Phase 3-adjacent provenance integration track with its own authoritative plan:
 
 - `docs/context-efficiency/subsession-delegation-integration-plan.md`
@@ -251,13 +253,15 @@ Keep all tracks observation-first. Provenance work may capture and query facts, 
 
 Current checkout:
 
-- Branch: `provenance-extraction-phase2-contracts`
+- Branch: `provenance-engine-worktrees-adoption`
 - This 2026-07-21 slice created the Phase 3B minimal independent skeleton at
   `/Users/brianbusby/repos/provenance-engine` and committed it locally as
   `9e8fa620ccd04040968e0afab591feb48c8c11d0` (`Add Phase 3B contracts
   skeleton`).
 - The skeleton package is `ProvenanceEngine`; the initial module and product
   are `ProvenanceEngineContracts`.
+- Phase 4 first external adoption is implemented on this branch: bmux pins external `provenance-engine` exact version `0.1.0` at commit `b73fd1639c1c81230e96215259fc796b517706f6`, imports `ProvenanceEngineContracts` and `ProvenanceEngineSDK`, and routes only `bmux provenance worktrees` through the public SDK client. The unreconnected WorkProvenance capture/runtime and other read paths stay on their existing bmux-local path until their own reconnect phases.
+- Completion gates for the Phase 4 adoption slice: bmux CLI compiles against the external package; worktree-list CLI and Swift fixtures seed through the public SDK; bmux-local duplicate worktree-list DTO files are removed; the old direct SQLite `CLIProvenanceSQLiteReader.worktreeList()` command path is removed; no permanent dual-read fallback was added; rollback is scoped to reverting this bmux branch commit plus the engine `0.1.0` docs/tag commit if needed.
 - Phase 3B remains intentionally narrow: no bmux imports, AppKit, SwiftUI,
   SQLite implementation, daemon, IPC, launch agent, CLI, storage migration,
   retrieval, lifecycle policy, UI, observability package, or automatic

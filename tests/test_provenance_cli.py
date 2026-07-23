@@ -9,6 +9,7 @@ import os
 import sqlite3
 import subprocess
 import tempfile
+import textwrap
 from pathlib import Path
 
 from claude_teams_test_utils import resolve_bmux_cli
@@ -786,80 +787,180 @@ def create_provenance_context_database(path: Path, repository_root: str) -> None
 def create_worktree_list_database(path: Path, include_rows: bool = True) -> None:
     if path.exists():
         path.unlink()
-    with sqlite3.connect(path) as conn:
-        conn.executescript(
-            """
-            CREATE TABLE repositories (
-                id TEXT PRIMARY KEY NOT NULL,
-                path TEXT NOT NULL,
-                common_directory TEXT,
-                remote_slug TEXT,
-                created_at REAL NOT NULL,
-                updated_at REAL NOT NULL
-            );
-            CREATE TABLE worktrees (
-                id TEXT PRIMARY KEY NOT NULL,
-                repository_id TEXT NOT NULL,
-                path TEXT NOT NULL,
-                branch TEXT,
-                base_commit TEXT,
-                current_head TEXT,
-                is_dirty INTEGER NOT NULL,
-                status TEXT NOT NULL,
-                last_reconciled_at REAL,
-                updated_at REAL NOT NULL
-            );
-            PRAGMA user_version = 3;
-            """
-        )
-        if not include_rows:
-            return
-        conn.executemany(
-            """
-            INSERT INTO repositories (
-                id, path, common_directory, remote_slug, created_at, updated_at
+    seed_engine_worktree_database(path, include_rows=include_rows)
+
+
+def provenance_engine_package_dependency() -> str:
+    override = os.environ.get("PROVENANCE_ENGINE_PACKAGE_PATH")
+    if override:
+        return f'.package(path: "{Path(override).expanduser()}")'
+
+    sibling = Path(__file__).resolve().parents[1].parent / "provenance-engine"
+    if sibling.exists():
+        return f'.package(path: "{sibling}")'
+
+    return '.package(url: "git@github.com:BrianBusby/provenance-engine.git", exact: "0.1.0")'
+
+
+def ensure_worktree_seed_package(root: Path) -> Path:
+    package = root / "provenance-engine-seed"
+    source_dir = package / "Sources" / "SeedWorktrees"
+    source_dir.mkdir(parents=True, exist_ok=True)
+    (package / "Package.swift").write_text(
+        textwrap.dedent(
+            f"""
+            // swift-tools-version: 6.0
+
+            import PackageDescription
+
+            let package = Package(
+                name: "SeedWorktrees",
+                platforms: [.macOS(.v14)],
+                dependencies: [
+                    {provenance_engine_package_dependency()},
+                ],
+                targets: [
+                    .executableTarget(
+                        name: "SeedWorktrees",
+                        dependencies: [
+                            .product(name: "ProvenanceEngineContracts", package: "provenance-engine"),
+                            .product(name: "ProvenanceEngineSDK", package: "provenance-engine"),
+                        ]
+                    ),
+                ],
+                swiftLanguageModes: [.v6]
             )
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            [
-                ("repo-1", "/repo/old", None, "manaflow-ai/bmux", 100.0, 150.0),
-                ("repo-2", "/repo/new", None, "manaflow-ai/provenance", 100.0, 200.0),
-            ],
-        )
-        conn.executemany(
             """
-            INSERT INTO worktrees (
-                id, repository_id, path, branch, base_commit, current_head,
-                is_dirty, status, last_reconciled_at, updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            [
-                (
-                    "worktree-old",
-                    "repo-1",
-                    "/repo/old",
-                    "main",
-                    None,
-                    "oldhead",
-                    0,
-                    "active",
-                    140.0,
-                    150.0,
-                ),
-                (
-                    "worktree-new",
-                    "repo-2",
-                    "/repo/new",
-                    "feature/provenance",
-                    None,
-                    "newhead",
-                    1,
-                    "active",
-                    190.0,
-                    200.0,
-                ),
-            ],
+        ).strip()
+        + "\n"
+    )
+    (source_dir / "main.swift").write_text(
+        textwrap.dedent(
+            """
+            import Foundation
+            import ProvenanceEngineContracts
+            import ProvenanceEngineSDK
+
+            @main
+            struct SeedWorktrees {
+                static func main() async throws {
+                    let arguments = CommandLine.arguments.dropFirst()
+                    guard let databasePath = arguments.first else {
+                        throw SeedError.missingDatabasePath
+                    }
+                    let includeRows = !arguments.contains("--empty")
+                    let databaseURL = URL(fileURLWithPath: databasePath)
+                    let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+                    guard includeRows else { return }
+
+                    try await appendWorktree(
+                        client: client,
+                        eventID: "seed-worktree-old",
+                        repositoryID: "repo-1",
+                        repositoryPath: "/repo/old",
+                        remoteSlug: "manaflow-ai/bmux",
+                        worktreeID: "worktree-old",
+                        branch: "main",
+                        currentHEAD: "oldhead",
+                        isDirty: false,
+                        reconciledAt: 140,
+                        updatedAt: 150
+                    )
+                    try await appendWorktree(
+                        client: client,
+                        eventID: "seed-worktree-new",
+                        repositoryID: "repo-2",
+                        repositoryPath: "/repo/new",
+                        remoteSlug: "manaflow-ai/provenance",
+                        worktreeID: "worktree-new",
+                        branch: "feature/provenance",
+                        currentHEAD: "newhead",
+                        isDirty: true,
+                        reconciledAt: 190,
+                        updatedAt: 200
+                    )
+                }
+
+                private static func appendWorktree(
+                    client: any ProvenanceEngineClient,
+                    eventID: String,
+                    repositoryID: String,
+                    repositoryPath: String,
+                    remoteSlug: String,
+                    worktreeID: String,
+                    branch: String,
+                    currentHEAD: String,
+                    isDirty: Bool,
+                    reconciledAt: TimeInterval,
+                    updatedAt: TimeInterval
+                ) async throws {
+                    let createdAt = Date(timeIntervalSince1970: 100)
+                    let updatedDate = Date(timeIntervalSince1970: updatedAt)
+                    let repository = ProvenanceRepositoryRecord(
+                        id: repositoryID,
+                        path: repositoryPath,
+                        remoteSlug: remoteSlug,
+                        createdAt: createdAt,
+                        updatedAt: updatedDate
+                    )
+                    let worktree = ProvenanceWorktreeRecord(
+                        id: worktreeID,
+                        repositoryID: repositoryID,
+                        path: repositoryPath,
+                        branch: branch,
+                        currentHEAD: currentHEAD,
+                        isDirty: isDirty,
+                        status: "active",
+                        lastReconciledAt: Date(timeIntervalSince1970: reconciledAt),
+                        updatedAt: updatedDate
+                    )
+                    let event = ProvenanceEvent(
+                        id: eventID,
+                        eventType: .worktreeObserved,
+                        timestamp: updatedDate,
+                        repositoryID: repositoryID,
+                        worktreeID: worktreeID,
+                        source: .observed,
+                        confidence: .high,
+                        payload: ProvenanceEventPayload(
+                            repository: repository,
+                            worktree: worktree
+                        )
+                    )
+                    _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: event))
+                }
+            }
+
+            enum SeedError: Error {
+                case missingDatabasePath
+            }
+            """
+        ).strip()
+        + "\n"
+    )
+    return package
+
+
+def seed_engine_worktree_database(path: Path, include_rows: bool) -> None:
+    package = ensure_worktree_seed_package(path.parent)
+    command = [
+        "swift",
+        "run",
+        "--package-path",
+        str(package),
+        "SeedWorktrees",
+        str(path),
+    ]
+    if not include_rows:
+        command.append("--empty")
+    env = os.environ.copy()
+    env.setdefault("CLANG_MODULE_CACHE_PATH", "/tmp/bmux-provenance-engine-clang-cache")
+    env.setdefault("SWIFTPM_CACHE_PATH", "/tmp/bmux-provenance-engine-swiftpm-cache")
+    result = subprocess.run(command, text=True, capture_output=True, env=env)
+    if result.returncode != 0:
+        raise AssertionError(
+            "failed to seed provenance-engine fixture via public SDK:\n"
+            f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
         )
 
 

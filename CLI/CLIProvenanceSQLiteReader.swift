@@ -124,27 +124,6 @@ final class CLIProvenanceSQLiteReader {
         )
     }
 
-    func worktreeList() throws -> CLIProvenanceWorktreeList {
-        let statement = try prepare(
-            """
-            SELECT wt.id, wt.repository_id, wt.path, wt.branch, wt.current_head,
-                   wt.is_dirty, wt.status, wt.last_reconciled_at, wt.updated_at,
-                   r.id, r.path, r.remote_slug
-            FROM worktrees wt
-            LEFT JOIN repositories r ON r.id = wt.repository_id
-            ORDER BY wt.updated_at DESC, wt.rowid DESC
-            """
-        )
-        defer { sqlite3_finalize(statement) }
-        var rows: [CLIProvenanceWorktreeRow] = []
-        while sqlite3_step(statement) == SQLITE_ROW {
-            if let row = worktreeRow(from: statement) {
-                rows.append(row)
-            }
-        }
-        return CLIProvenanceWorktreeList(worktrees: rows)
-    }
-
     func sessionTree(rootSessionID: String) throws -> CLIProvenanceSessionTree {
         let sessions = try sessionTreeSessionRows(rootSessionID: rootSessionID, limit: 100)
         let relationships = try sessionTreeRelationshipRows(rootSessionID: rootSessionID, limit: 100)

@@ -1,4 +1,5 @@
 import Foundation
+import ProvenanceEngineContracts
 
 /// Bounded domain response for a current provenance context query.
 struct ProvenanceCurrentContextResponse: Codable, Equatable, Sendable {
@@ -15,10 +16,10 @@ struct ProvenanceCurrentContextResponse: Codable, Equatable, Sendable {
     let repositoryPath: String
 
     /// Current-state worktree projection, when found.
-    let worktree: WorkProvenanceWorktreeRecord?
+    let worktree: ProvenanceWorktreeRecord?
 
     /// Linked repository projection, when available.
-    let repository: WorkProvenanceRepositoryRecord?
+    let repository: ProvenanceRepositoryRecord?
 
     /// Bounded active sessions in query order.
     let activeSessions: [ProvenanceCurrentContextSession]
@@ -44,8 +45,8 @@ struct ProvenanceCurrentContextResponse: Codable, Equatable, Sendable {
         found: Bool,
         reason: String? = nil,
         repositoryPath: String,
-        worktree: WorkProvenanceWorktreeRecord?,
-        repository: WorkProvenanceRepositoryRecord?,
+        worktree: ProvenanceWorktreeRecord?,
+        repository: ProvenanceRepositoryRecord?,
         activeSessions: [ProvenanceCurrentContextSession],
         dirtyFiles: [ProvenanceCurrentContextFileChange],
         unattributedChanges: [ProvenanceCurrentContextFileChange],

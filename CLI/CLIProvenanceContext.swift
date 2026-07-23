@@ -1,4 +1,5 @@
 import Foundation
+import ProvenanceEngineContracts
 
 struct CLIProvenanceContext: Equatable {
     let found: Bool
@@ -192,7 +193,7 @@ struct CLIProvenanceContext: Equatable {
         ])
     }
 
-    private static func worktreePayload(_ worktree: WorkProvenanceWorktreeRecord) -> [String: AnyHashable] {
+    private static func worktreePayload(_ worktree: ProvenanceWorktreeRecord) -> [String: AnyHashable] {
         compactPayload([
             "id": worktree.id,
             "repository_id": worktree.repositoryID,
@@ -207,7 +208,7 @@ struct CLIProvenanceContext: Equatable {
     }
 
     private static func repositoryPayload(
-        _ repository: WorkProvenanceRepositoryRecord?,
+        _ repository: ProvenanceRepositoryRecord?,
         fallbackRepositoryID: String?,
         fallbackPath: String
     ) -> [String: AnyHashable] {

@@ -1,4 +1,5 @@
 import Foundation
+import ProvenanceEngineContracts
 
 /// Actor-owned durable store for work provenance events and projections.
 actor WorkProvenanceStore {
@@ -235,7 +236,7 @@ actor WorkProvenanceStore {
     ///
     /// - Parameter id: Repository identifier.
     /// - Returns: Repository record or `nil`.
-    func repository(id: String) throws -> WorkProvenanceRepositoryRecord? {
+    func repository(id: String) throws -> ProvenanceRepositoryRecord? {
         try repositoryRecord(id: id)
     }
 
@@ -243,7 +244,7 @@ actor WorkProvenanceStore {
     ///
     /// - Parameter id: Worktree identifier.
     /// - Returns: Worktree record or `nil`.
-    func worktree(id: String) throws -> WorkProvenanceWorktreeRecord? {
+    func worktree(id: String) throws -> ProvenanceWorktreeRecord? {
         try worktreeRecord(id: id)
     }
 
@@ -251,21 +252,8 @@ actor WorkProvenanceStore {
     ///
     /// - Parameter path: Absolute worktree root path.
     /// - Returns: Worktree record or `nil`.
-    func worktree(path: String) throws -> WorkProvenanceWorktreeRecord? {
+    func worktree(path: String) throws -> ProvenanceWorktreeRecord? {
         try worktreeRecord(path: path)
-    }
-
-    /// Returns worktree projections with their linked repositories in list order.
-    ///
-    /// - Parameters:
-    ///   - repositoryID: Optional repository identifier used to filter results.
-    ///   - limit: Optional maximum number of rows to return.
-    /// - Returns: Worktree entries sorted by newest update first.
-    func worktreeList(
-        repositoryID: String? = nil,
-        limit: Int? = nil
-    ) throws -> [ProvenanceWorktreeListEntry] {
-        try worktreeListEntries(repositoryID: repositoryID, limit: limit)
     }
 
     /// Returns current bounded context for the worktree at `repositoryPath`.
@@ -676,7 +664,7 @@ actor WorkProvenanceStore {
         return database.changes
     }
 
-    private func repositoryRecord(id: String) throws -> WorkProvenanceRepositoryRecord? {
+    private func repositoryRecord(id: String) throws -> ProvenanceRepositoryRecord? {
         let statement = try database.prepare(
             "SELECT id, path, common_directory, remote_slug, created_at, updated_at FROM repositories WHERE id = ?"
         )
@@ -687,7 +675,7 @@ actor WorkProvenanceStore {
               let path = statement.string(at: 1) else {
             return nil
         }
-        return WorkProvenanceRepositoryRecord(
+        return ProvenanceRepositoryRecord(
             id: id,
             path: path,
             commonDirectory: statement.string(at: 2),
@@ -697,7 +685,7 @@ actor WorkProvenanceStore {
         )
     }
 
-    private func worktreeRecord(id: String) throws -> WorkProvenanceWorktreeRecord? {
+    private func worktreeRecord(id: String) throws -> ProvenanceWorktreeRecord? {
         let statement = try database.prepare(
             """
             SELECT id, repository_id, path, branch, base_commit, current_head,
@@ -714,7 +702,7 @@ actor WorkProvenanceStore {
               let status = statement.string(at: 7) else {
             return nil
         }
-        return WorkProvenanceWorktreeRecord(
+        return ProvenanceWorktreeRecord(
             id: id,
             repositoryID: repositoryID,
             path: path,
@@ -728,7 +716,7 @@ actor WorkProvenanceStore {
         )
     }
 
-    private func worktreeRecord(path: String) throws -> WorkProvenanceWorktreeRecord? {
+    private func worktreeRecord(path: String) throws -> ProvenanceWorktreeRecord? {
         let statement = try database.prepare(
             """
             SELECT id, repository_id, path, branch, base_commit, current_head,
@@ -748,7 +736,7 @@ actor WorkProvenanceStore {
               let status = statement.string(at: 7) else {
             return nil
         }
-        return WorkProvenanceWorktreeRecord(
+        return ProvenanceWorktreeRecord(
             id: id,
             repositoryID: repositoryID,
             path: path,
@@ -762,57 +750,16 @@ actor WorkProvenanceStore {
         )
     }
 
-    private func worktreeListEntries(
-        repositoryID: String?,
-        limit: Int?
-    ) throws -> [ProvenanceWorktreeListEntry] {
-        let rowLimit = limit.map { max(0, $0) }
-        var sql = """
-            SELECT id, repository_id, path, branch, base_commit, current_head,
-                   is_dirty, status, last_reconciled_at, updated_at
-            FROM worktrees
-            """
-        if repositoryID != nil {
-            sql += "\nWHERE repository_id = ?"
-        }
-        sql += "\nORDER BY updated_at DESC, rowid DESC"
-        if rowLimit != nil {
-            sql += "\nLIMIT ?"
-        }
-
-        let statement = try database.prepare(sql)
-        defer { statement.finalize() }
-        var bindIndex: Int32 = 1
-        if let repositoryID {
-            try statement.bind(repositoryID, at: bindIndex)
-            bindIndex += 1
-        }
-        if let rowLimit {
-            try statement.bind(rowLimit, at: bindIndex)
-        }
-
-        var entries: [ProvenanceWorktreeListEntry] = []
-        while try statement.step() {
-            guard let worktree = worktreeRecord(from: statement) else { continue }
-            let repository = try repositoryRecord(id: worktree.repositoryID)
-            entries.append(ProvenanceWorktreeListEntry(
-                worktree: worktree,
-                repository: repository
-            ))
-        }
-        return entries
-    }
-
     private func worktreeRecord(
         from statement: WorkProvenanceSQLiteStatement
-    ) -> WorkProvenanceWorktreeRecord? {
+    ) -> ProvenanceWorktreeRecord? {
         guard let id = statement.string(at: 0),
               let repositoryID = statement.string(at: 1),
               let path = statement.string(at: 2),
               let status = statement.string(at: 7) else {
             return nil
         }
-        return WorkProvenanceWorktreeRecord(
+        return ProvenanceWorktreeRecord(
             id: id,
             repositoryID: repositoryID,
             path: path,
@@ -1702,7 +1649,7 @@ actor WorkProvenanceStore {
         return String(trimmed.prefix(512))
     }
 
-    private func upsert(_ record: WorkProvenanceRepositoryRecord) throws {
+    private func upsert(_ record: ProvenanceRepositoryRecord) throws {
         let statement = try database.prepare(
             """
             INSERT INTO repositories (id, path, common_directory, remote_slug, created_at, updated_at)
@@ -1724,7 +1671,7 @@ actor WorkProvenanceStore {
         _ = try statement.step()
     }
 
-    private func upsert(_ record: WorkProvenanceWorktreeRecord) throws {
+    private func upsert(_ record: ProvenanceWorktreeRecord) throws {
         let statement = try database.prepare(
             """
             INSERT INTO worktrees (
