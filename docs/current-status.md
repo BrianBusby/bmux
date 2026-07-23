@@ -1,5 +1,7 @@
 # Provenance Engine Current Status
 
+This document records the accepted baseline and active integration gate. The complete platform north star is `docs/reference-architecture.md`; the currently implemented architecture and active design boundaries are in `docs/architecture.md`.
+
 Accepted baseline: `0.1.0`.
 
 Source baseline: `provenance-session-tree-storage` through commit `b43146d634f7c11f8e14bf95da5418bef502b0de`.

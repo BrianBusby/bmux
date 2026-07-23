@@ -2,6 +2,8 @@
 
 Provenance Engine is a Swift package that separates public provenance contracts from storage implementation.
 
+This document describes the architecture currently implemented in this repository and the active design boundaries for V1 adoption. The platform north star is `docs/reference-architecture.md`. Implementation sequence and priorities live in `docs/roadmap.md`, and public adopter contracts live in `docs/integration-contract.md`.
+
 ## Modules
 
 `ProvenanceEngineContracts` owns DTOs, request/response types, health checks, and the `ProvenanceEngineClient` protocol. External adopters should import this module for stable contract types.
@@ -30,60 +32,11 @@ The ledger stores evidence, not final knowledge. Evidence is immutable factual i
 
 The V1 storage and query behavior remains personal-session oriented, but accepted event records no longer assume every event is personal. Future ingestion adapters should populate origin and scope explicitly.
 
-## Knowledge Layers
+## North-Star Boundaries
 
-The long-term system has three layers:
+The long-term platform includes shared repository evidence, a Knowledge Compiler, a Knowledge Store, evidence-aware retrieval, and local or shared service deployment. Those concepts are defined in `docs/reference-architecture.md`.
 
-- Personal evidence: private engineer-local evidence that remains local until intentionally shared.
-- Shared repository evidence: organization-owned repository facts such as commits, pull requests, reviews, changed files, changed symbols, merge history, release tags, and branch relationships.
-- Derived knowledge: versioned interpretation artifacts compiled from evidence, such as architecture summaries, migration summaries, decision summaries, ownership summaries, constraints, and PR decision summaries.
-
-Evidence is immutable. Derived knowledge is reproducible interpretation and must reference the evidence that supports it. Compiler improvements create newer artifact versions instead of rewriting evidence.
-
-## Shared Repository Evidence
-
-Repository history is shared organizational evidence and should not be independently ingested and summarized by every engineer. The long-term architecture is:
-
-```text
-GitHub
-    -> Organization Ingestion
-    -> Shared Evidence Store
-    -> Knowledge Compiler
-    -> Knowledge Artifacts
-    -> Retrieval
-```
-
-The purpose is to avoid duplicated storage, duplicated AI summarization, duplicated indexing, and inconsistent interpretations. V1 must not implement GitHub ingestion before the current bmux adoption gate completes.
-
-## Knowledge Compiler
-
-The Knowledge Compiler is a planned post-V1 subsystem. It consumes immutable evidence and produces versioned knowledge artifacts for retrieval. Initial artifact candidates include:
-
-- Pull Request Decision Summary
-- Architecture Summary
-- Migration Summary
-- Decision Summary
-- Ownership Summary
-- Constraint Summary
-
-The first compiler target should be `Pull Request Decision Summary`, with intent, accepted constraints, rejected alternatives, important review findings, deferred work, final outcome, and supporting evidence references. It should be evaluated for retrieval usefulness before broader compiler work begins.
-
-## Retrieval Philosophy
-
-Retrieval should prefer compiled knowledge plus minimal supporting evidence. Agents should almost never receive thousands of commits, full PR discussions, or complete review threads by default.
-
-Example retrieval shape:
-
-```text
-Authentication middleware intentionally avoids request-specific assumptions.
-
-Evidence:
-- PR #417
-- Review Thread #8821
-- Commit abc123
-```
-
-This preserves the core principle that project knowledge can grow continuously while agent context stays bounded.
+They are not implemented in V1. This repository currently preserves the event metadata needed to avoid hard-coding all evidence as personal-only, but GitHub ingestion, shared evidence-store deployment, Knowledge Compiler implementation, and retrieval remain frozen until the current bmux adoption gate is complete.
 
 ## Dependency Direction
 

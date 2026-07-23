@@ -1,6 +1,6 @@
 # Provenance Engine Roadmap
 
-This is the authoritative roadmap for the provenance-engine repository. It owns reusable provenance contracts, storage, SDK boundaries, retrieval, shared evidence, and derived knowledge. bmux product behavior and user experience belong in the bmux roadmap. Coordinated adoption milestones live in `docs/bmux-integration-roadmap.md`.
+This is the authoritative roadmap for the provenance-engine repository. It defines implementation sequence and priorities for reusable provenance contracts, storage, SDK boundaries, retrieval, shared evidence, and derived knowledge. The full platform shape is defined in `docs/reference-architecture.md`; this file describes when slices of that architecture should be pursued. bmux product behavior and user experience belong in the bmux roadmap. Coordinated adoption milestones live in `docs/bmux-integration-roadmap.md`.
 
 ## Accepted Baseline
 

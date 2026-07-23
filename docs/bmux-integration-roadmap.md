@@ -1,6 +1,6 @@
 # bmux Integration Roadmap
 
-This is the canonical shared roadmap for work that crosses the bmux and provenance-engine repository boundary. It is not a combined product roadmap. provenance-engine owns reusable provenance capabilities and public contracts. bmux owns product behavior, UI, CLI presentation, orchestration, capture adapters, and rollout decisions.
+This is the canonical shared roadmap for work that crosses the bmux and provenance-engine repository boundary. It is not a combined product roadmap and it does not replace the platform reference architecture in `docs/reference-architecture.md`. provenance-engine owns reusable provenance capabilities and public contracts. bmux owns product behavior, UI, CLI presentation, orchestration, capture adapters, and rollout decisions.
 
 Detailed technical contract rules remain in `docs/integration-contract.md`. The provenance-engine product roadmap is `docs/roadmap.md`. The bmux product roadmap should link here instead of duplicating these milestones.
 
