@@ -2,7 +2,7 @@
 
 Branch: `slice-c-session-tree-read-contract`
 
-Acceptance: engine side accepted on 2026-07-24; cross-repository Slice C acceptance remains pending on bmux PR checks and merge.
+Acceptance: accepted on 2026-07-24 after bmux PR 7 merged at `08763dd0d3256989180dcc04f426da1f24369175` with an explicit GitHub Actions waiver for unavailable Blacksmith runner evidence.
 
 This document preserves the Slice Completion Architecture Review for the engine-owned portion of the bmux session-tree read migration.
 
