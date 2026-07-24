@@ -17,8 +17,10 @@ The supported client entrypoint is `ProvenanceEngineClientFactory`, which create
 
 The first bmux adoption path, `bmux provenance worktrees list`, now consumes this package through `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.worktrees(...)`.
 
-Current integration gate: support Slice D file-explanation read migration. Slice C
-consumer adoption merged in bmux PR 7 at
+Current integration gate: support Slice D file-explanation read migration. Slice D
+engine readiness is tracked in `docs/file-explanation-readiness-slice-completion.md`;
+the current contract assessment is A, existing contract sufficient, with bmux
+command adoption still pending. Slice C consumer adoption merged in bmux PR 7 at
 `08763dd0d3256989180dcc04f426da1f24369175` on 2026-07-24T17:20:04Z,
 with an explicit GitHub Actions waiver for unavailable Blacksmith runner evidence.
 Provenance Engine should not add storage, daemon, migration, retrieval, semantic,

@@ -86,6 +86,12 @@ Capability owner: provenance-engine. Adopter: bmux.
 Required contract: `ProvenanceEngineClient.fileExplanation(ProvenanceFileExplanationRequest())`.
 
 Provenance-engine work: preserve file-explanation DTOs and projection semantics.
+Readiness assessment: existing contract is sufficient. Engine-side SDK coverage
+now proves adopters can seed file-change evidence through public `appendEvent`
+calls and read file explanations through `ProvenanceEngineClientFactory` plus
+`ProvenanceEngineClient.fileExplanation(...)` without importing SQLite internals.
+V1 path identity is exact worktree-scoped repository-relative path identity;
+consumers own Git path resolution and normalization.
 
 bmux work: migrate only the file-explanation CLI path. Keep Git target resolution, fallback text, command parsing, and output rendering in bmux.
 
@@ -98,6 +104,8 @@ Compatibility expectations: engine returns domain records. bmux maps them to exi
 Rollback strategy: scoped bmux revert to the previous local adapter.
 
 Migration or cleanup: remove file-explanation-only local query helpers once unused.
+The precise bmux adoption handoff is recorded in
+`docs/file-explanation-readiness-slice-completion.md`.
 
 Status: Active.
 
