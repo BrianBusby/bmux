@@ -18,12 +18,12 @@ The current roadmap priority is not new engine expansion. It is proving that the
 Completed:
 
 - `bmux provenance worktrees list` adopted `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.worktrees(...)` through provenance-engine `0.1.0`.
-- Slice C: `bmux provenance sessions tree <session-id>` adopted `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.sessionTree(...)` through the accepted session-tree read contract.
+- Engine-side Slice C readiness for `bmux provenance sessions tree <session-id>` is accepted. bmux adoption is locally validated against `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.sessionTree(...)`, but PR checks and merge remain pending.
 
 Current gate:
 
-- Support Slice D, the next bmux migration slice, `bmux provenance explain <path>`, using the existing `ProvenanceEngineClient.fileExplanation(...)` contract.
-- Do not add new storage, daemon, retrieval, semantic, observability, GitHub ingestion, Knowledge Compiler, or migration scope unless the file-explanation adoption slice proves a concrete contract defect.
+- Close cross-repository Slice C acceptance by completing bmux PR checks and merge.
+- Do not add new storage, daemon, retrieval, semantic, observability, GitHub ingestion, Knowledge Compiler, migration scope, or Slice D contract work until the Slice C gate closes.
 
 Canonical cross-repository details: `docs/bmux-integration-roadmap.md`.
 
