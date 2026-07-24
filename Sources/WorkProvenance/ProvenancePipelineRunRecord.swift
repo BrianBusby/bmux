@@ -1,7 +1,7 @@
 import Foundation
 
 /// One operational observability record for a provenance pipeline attempt.
-struct ProvenancePipelineRunRecord: Equatable, Sendable {
+struct ProvenancePipelineRunRecord: Codable, Equatable, Sendable {
     let pipelineRunID: String
     let pipelineKind: String
     let triggerSource: String

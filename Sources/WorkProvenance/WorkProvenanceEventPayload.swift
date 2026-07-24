@@ -1,12 +1,13 @@
 import Foundation
+import ProvenanceEngineContracts
 
 /// Projection payload attached to a ``WorkProvenanceEvent``.
 struct WorkProvenanceEventPayload: Codable, Equatable, Sendable {
     /// Repository projection update.
-    var repository: WorkProvenanceRepositoryRecord?
+    var repository: ProvenanceRepositoryRecord?
 
     /// Worktree projection update.
-    var worktree: WorkProvenanceWorktreeRecord?
+    var worktree: ProvenanceWorktreeRecord?
 
     /// Session projection update.
     var session: WorkProvenanceSessionRecord?
@@ -51,8 +52,8 @@ struct WorkProvenanceEventPayload: Codable, Equatable, Sendable {
 
     /// Creates an event payload.
     init(
-        repository: WorkProvenanceRepositoryRecord? = nil,
-        worktree: WorkProvenanceWorktreeRecord? = nil,
+        repository: ProvenanceRepositoryRecord? = nil,
+        worktree: ProvenanceWorktreeRecord? = nil,
         session: WorkProvenanceSessionRecord? = nil,
         sessionRelationship: WorkProvenanceSessionRelationshipRecord? = nil,
         externalIdentities: [WorkProvenanceExternalIdentityRecord] = [],
@@ -79,8 +80,8 @@ struct WorkProvenanceEventPayload: Codable, Equatable, Sendable {
     /// Creates an event payload from stored JSON, preserving compatibility with older payload shapes.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.repository = try container.decodeIfPresent(WorkProvenanceRepositoryRecord.self, forKey: .repository)
-        self.worktree = try container.decodeIfPresent(WorkProvenanceWorktreeRecord.self, forKey: .worktree)
+        self.repository = try container.decodeIfPresent(ProvenanceRepositoryRecord.self, forKey: .repository)
+        self.worktree = try container.decodeIfPresent(ProvenanceWorktreeRecord.self, forKey: .worktree)
         self.session = try container.decodeIfPresent(WorkProvenanceSessionRecord.self, forKey: .session)
         self.sessionRelationship = try container.decodeIfPresent(
             WorkProvenanceSessionRelationshipRecord.self,

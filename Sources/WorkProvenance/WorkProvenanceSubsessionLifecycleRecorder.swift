@@ -28,6 +28,16 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
 
     /// Records a lifecycle change, keeping provenance persistence best-effort.
     func record(_ change: AgentSubsessionLifecycleChange, timestamp: Date) async {
+        _ = await recordSubsessionLifecycle(
+            ProvenanceSubsessionLifecycleRequest(change: change, timestamp: timestamp),
+            triggerSource: "AgentSubsessionLifecycleChange"
+        )
+    }
+
+    private func recordSubsessionLifecycle(
+        _ request: ProvenanceSubsessionLifecycleRequest,
+        triggerSource: String
+    ) async -> ProvenanceSubsessionLifecycleResponse {
         let pipelineRunID = UUID().uuidString
         let runStartedAt = traceNow()
         var stages: [ProvenancePipelineStageExecutionRecord] = []
@@ -37,8 +47,8 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
         do {
             let receivedStartedAt = traceNow()
             let resolutionStartedAt = traceNow()
-            let identity = lifecycleIdentity(for: change)
-            let builtEvent = try await event(for: change, timestamp: timestamp, identity: identity)
+            let identity = lifecycleIdentity(for: request)
+            let builtEvent = try await event(for: request, identity: identity)
             let resolutionEndedAt = traceNow()
             identityResolution = (
                 identity: identity,
@@ -71,7 +81,8 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
                 identityResolutionRecords = [
                     identityResolutionRecord(
                         pipelineRunID: pipelineRunID,
-                        change: change,
+                        request: request,
+                        triggerSource: triggerSource,
                         identityResolution: identityResolution,
                         event: builtEvent,
                         conflictReason: appendTrace.errorDescription
@@ -83,7 +94,8 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
             await writeObservability(
                 run: runRecord(
                     pipelineRunID: pipelineRunID,
-                    change: change,
+                    request: request,
+                    triggerSource: triggerSource,
                     event: builtEvent,
                     status: runStatus,
                     startedAt: runStartedAt,
@@ -93,6 +105,14 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
                 stages: stages,
                 identityResolutions: identityResolutionRecords,
                 projectionLineage: projectionLineage
+            )
+            return ProvenanceSubsessionLifecycleResponse(
+                accepted: appendTrace.errorDescription == nil,
+                eventID: builtEvent.id,
+                childSessionID: builtEvent.payload.session?.id,
+                relationshipSessionID: builtEvent.payload.sessionRelationship?.sessionID,
+                externalIdentityID: builtEvent.payload.externalIdentities.first?.id,
+                errorDescription: appendTrace.errorDescription
             )
         } catch {
             let errorSummary = WorkProvenanceStore.boundedErrorSummary(error)
@@ -123,7 +143,8 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
             await writeObservability(
                 run: runRecord(
                     pipelineRunID: pipelineRunID,
-                    change: change,
+                    request: request,
+                    triggerSource: triggerSource,
                     event: builtWorkProvenanceEvent,
                     status: "failed",
                     startedAt: runStartedAt,
@@ -134,6 +155,14 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
                 identityResolutions: [],
                 projectionLineage: []
             )
+            return ProvenanceSubsessionLifecycleResponse(
+                accepted: false,
+                eventID: builtWorkProvenanceEvent?.id,
+                childSessionID: builtWorkProvenanceEvent?.payload.session?.id,
+                relationshipSessionID: builtWorkProvenanceEvent?.payload.sessionRelationship?.sessionID,
+                externalIdentityID: builtWorkProvenanceEvent?.payload.externalIdentities.first?.id,
+                errorDescription: errorSummary
+            )
         }
     }
 
@@ -142,33 +171,34 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
         for change: AgentSubsessionLifecycleChange,
         timestamp: Date
     ) async throws -> WorkProvenanceEvent {
-        let identity = lifecycleIdentity(for: change)
-        return try await event(for: change, timestamp: timestamp, identity: identity)
+        try await subsessionLifecycleEvent(for: ProvenanceSubsessionLifecycleRequest(
+            change: change,
+            timestamp: timestamp
+        ))
     }
 
     private func event(
-        for change: AgentSubsessionLifecycleChange,
-        timestamp: Date,
+        for request: ProvenanceSubsessionLifecycleRequest,
         identity: LifecycleIdentity
     ) async throws -> WorkProvenanceEvent {
         let childSessionID = stableIDFactory.subsessionSessionID(
-            agentKind: change.agentKind.sourceName,
-            parentSessionID: change.parentSessionID,
+            agentKind: request.agentKind,
+            parentSessionID: request.parentSessionID,
             identityKind: identity.kind,
             identityValue: identity.value
         )
-        let parentRelationship = try await store.parentSession(for: change.parentSessionID)
-        let rootSessionID = parentRelationship?.rootSessionID ?? change.parentSessionID
+        let parentRelationship = try await store.parentSession(for: request.parentSessionID)
+        let rootSessionID = parentRelationship?.rootSessionID ?? request.parentSessionID
         let depth = (parentRelationship?.depth ?? 0) + 1
         let confidence = identity.confidence
         let status: String
         let eventType: WorkProvenanceEventType
         let startedAt: Date?
-        switch change.phase {
+        switch request.phase {
         case .started:
             status = "active"
             eventType = .subsessionStarted
-            startedAt = timestamp
+            startedAt = request.timestamp
         case .stopped:
             status = "completed"
             eventType = .subsessionStopped
@@ -176,47 +206,47 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
         }
         let session = WorkProvenanceSessionRecord(
             id: childSessionID,
-            agentKind: change.agentKind.sourceName,
-            workspaceID: change.workspaceID,
-            surfaceID: change.surfaceID,
-            cwd: change.workingDirectory,
+            agentKind: request.agentKind,
+            workspaceID: request.workspaceID,
+            surfaceID: request.surfaceID,
+            cwd: request.workingDirectory,
             status: status,
             startedAt: startedAt,
-            updatedAt: timestamp
+            updatedAt: request.timestamp
         )
         let relationship = WorkProvenanceSessionRelationshipRecord(
             sessionID: childSessionID,
-            parentSessionID: change.parentSessionID,
+            parentSessionID: request.parentSessionID,
             rootSessionID: rootSessionID,
             depth: depth,
             source: .observed,
             confidence: confidence,
-            createdAt: timestamp,
-            updatedAt: timestamp
+            createdAt: request.timestamp,
+            updatedAt: request.timestamp
         )
         let externalIdentity = WorkProvenanceExternalIdentityRecord(
             id: stableIDFactory.externalIdentityID(
-                system: change.agentKind.sourceName,
+                system: request.agentKind,
                 kind: identity.kind,
                 externalID: identity.value
             ),
             sessionID: childSessionID,
-            system: change.agentKind.sourceName,
+            system: request.agentKind,
             kind: identity.kind,
             externalID: identity.value,
             source: .observed,
             confidence: confidence,
-            createdAt: timestamp,
-            updatedAt: timestamp
+            createdAt: request.timestamp,
+            updatedAt: request.timestamp
         )
         return WorkProvenanceEvent(
             id: stableIDFactory.subsessionLifecycleEventID(
-                phase: change.phase.provenanceEventIDComponent,
+                phase: request.phase.rawValue,
                 childSessionID: childSessionID,
-                timestamp: timestamp
+                timestamp: request.timestamp
             ),
             eventType: eventType,
-            timestamp: timestamp,
+            timestamp: request.timestamp,
             sessionID: childSessionID,
             source: .observed,
             confidence: confidence,
@@ -229,14 +259,17 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
     }
 
     private func lifecycleIdentity(
-        for change: AgentSubsessionLifecycleChange
+        for request: ProvenanceSubsessionLifecycleRequest
     ) -> LifecycleIdentity {
-        let trimmed = change.subsessionID?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = request.externalIdentityValue?.trimmingCharacters(in: .whitespacesAndNewlines)
         if let trimmed, !trimmed.isEmpty {
+            let identityKind = request.externalIdentityKind?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let kind = identityKind.flatMap { $0.isEmpty ? nil : $0 } ?? "subsession"
             return (
-                kind: "subsession",
+                kind: kind,
                 value: trimmed,
-                valueCategory: "native_subsession_id",
+                valueCategory: kind == "subsession" ? "native_subsession_id" : "external_lifecycle_identity",
                 candidateCount: 1,
                 confidence: .high,
                 outcome: "resolved",
@@ -246,7 +279,7 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
         }
         return (
             kind: "unresolved_subsession",
-            value: "\(change.agentKind.sourceName):\(change.parentSessionID):default",
+            value: "\(request.agentKind):\(request.parentSessionID):default",
             valueCategory: "stable_parent_fallback",
             candidateCount: 0,
             confidence: .low,
@@ -284,7 +317,8 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
 
     private func runRecord(
         pipelineRunID: String,
-        change: AgentSubsessionLifecycleChange,
+        request: ProvenanceSubsessionLifecycleRequest,
+        triggerSource: String,
         event: WorkProvenanceEvent?,
         status: String,
         startedAt: Date,
@@ -294,8 +328,8 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
         ProvenancePipelineRunRecord(
             pipelineRunID: pipelineRunID,
             pipelineKind: "lifecycle_ingestion",
-            triggerSource: "AgentSubsessionLifecycleChange",
-            parentSessionID: change.parentSessionID,
+            triggerSource: triggerSource,
+            parentSessionID: request.parentSessionID,
             childSessionID: event?.payload.session?.id,
             lifecycleEventID: event?.id,
             relationshipSessionID: event?.payload.sessionRelationship?.sessionID,
@@ -313,7 +347,8 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
 
     private func identityResolutionRecord(
         pipelineRunID: String,
-        change: AgentSubsessionLifecycleChange,
+        request: ProvenanceSubsessionLifecycleRequest,
+        triggerSource: String,
         identityResolution: LifecycleIdentityResolution,
         event: WorkProvenanceEvent,
         conflictReason: String?
@@ -324,15 +359,15 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
             pipelineRunID: pipelineRunID,
             resolverName: "subsession_lifecycle_identity",
             resolverVersion: "o2",
-            triggerSource: "AgentSubsessionLifecycleChange",
-            inputPhase: change.phase.provenanceEventIDComponent,
-            inputAgentKind: change.agentKind.sourceName,
-            inputParentSessionID: change.parentSessionID,
+            triggerSource: triggerSource,
+            inputPhase: request.phase.rawValue,
+            inputAgentKind: request.agentKind,
+            inputParentSessionID: request.parentSessionID,
             inputSubsessionIDState: identity.candidateCount == 0 ? "missing" : "present",
-            inputWorkspacePresent: change.workspaceID != nil,
-            inputSurfacePresent: change.surfaceID != nil,
-            inputWorkingDirectoryPresent: change.workingDirectory != nil,
-            inputDisplayNamePresent: change.displayName != nil,
+            inputWorkspacePresent: request.workspaceID != nil,
+            inputSurfacePresent: request.surfaceID != nil,
+            inputWorkingDirectoryPresent: request.workingDirectory != nil,
+            inputDisplayNamePresent: request.displayName != nil,
             inputIdentityKind: identity.kind,
             inputIdentityValueHash: stableIDFactory.id(prefix: "identity-input", value: identity.value),
             selectedIdentityKind: identity.kind,
@@ -395,6 +430,24 @@ actor WorkProvenanceSubsessionLifecycleRecorder {
     }
 }
 
+extension WorkProvenanceSubsessionLifecycleRecorder: ProvenanceSubsessionLifecycleRecording {
+    func recordSubsessionLifecycle(
+        _ request: ProvenanceSubsessionLifecycleRequest
+    ) async -> ProvenanceSubsessionLifecycleResponse {
+        await recordSubsessionLifecycle(
+            request,
+            triggerSource: "ProvenanceSubsessionLifecycleRequest"
+        )
+    }
+
+    func subsessionLifecycleEvent(
+        for request: ProvenanceSubsessionLifecycleRequest
+    ) async throws -> WorkProvenanceEvent {
+        let identity = lifecycleIdentity(for: request)
+        return try await event(for: request, identity: identity)
+    }
+}
+
 private typealias LifecycleIdentity = (
     kind: String,
     value: String,
@@ -412,13 +465,30 @@ private typealias LifecycleIdentityResolution = (
     endedAt: Date
 )
 
-private extension AgentSubsessionLifecycleChange.Phase {
-    var provenanceEventIDComponent: String {
-        switch self {
+private extension ProvenanceSubsessionLifecycleRequest {
+    init(change: AgentSubsessionLifecycleChange, timestamp: Date) {
+        self.init(
+            phase: ProvenanceSubsessionLifecyclePhase(change.phase),
+            parentSessionID: change.parentSessionID,
+            agentKind: change.agentKind.sourceName,
+            workspaceID: change.workspaceID,
+            surfaceID: change.surfaceID,
+            workingDirectory: change.workingDirectory,
+            externalIdentityKind: "subsession",
+            externalIdentityValue: change.subsessionID,
+            displayName: change.displayName,
+            timestamp: timestamp
+        )
+    }
+}
+
+private extension ProvenanceSubsessionLifecyclePhase {
+    init(_ phase: AgentSubsessionLifecycleChange.Phase) {
+        switch phase {
         case .started:
-            return "started"
+            self = .started
         case .stopped:
-            return "stopped"
+            self = .stopped
         }
     }
 }

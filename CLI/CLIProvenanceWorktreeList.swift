@@ -1,4 +1,5 @@
 import Foundation
+import ProvenanceEngineContracts
 
 struct CLIProvenanceWorktreeList: Equatable {
     let worktrees: [CLIProvenanceWorktreeRow]
@@ -7,6 +8,13 @@ struct CLIProvenanceWorktreeList: Equatable {
     init(worktrees: [CLIProvenanceWorktreeRow], reason: String? = nil) {
         self.worktrees = worktrees
         self.reason = reason
+    }
+
+    init(response: ProvenanceWorktreeListResponse) {
+        self.init(
+            worktrees: response.worktrees.map(CLIProvenanceWorktreeRow.init(entry:)),
+            reason: nil
+        )
     }
 
     var payload: [String: Any] {

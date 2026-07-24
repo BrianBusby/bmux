@@ -1,7 +1,7 @@
 import Foundation
 
 /// Bounded lineage record for one authoritative projection row derived from a provenance event.
-struct ProvenanceProjectionLineageRecord: Equatable, Sendable {
+struct ProvenanceProjectionLineageRecord: Codable, Equatable, Sendable {
     let projectionLineageID: String
     let pipelineRunID: String
     let stageName: String

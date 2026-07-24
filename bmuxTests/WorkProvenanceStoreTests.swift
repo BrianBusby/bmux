@@ -1,5 +1,13 @@
 import Foundation
+import ProvenanceEngineContracts
+import ProvenanceEngineSDK
 import Testing
+
+#if canImport(bmux_DEV)
+private typealias TestBmuxLegacyProvenanceClient = bmux_DEV.BmuxLegacyProvenanceClient
+#elseif canImport(bmux)
+private typealias TestBmuxLegacyProvenanceClient = bmux.BmuxLegacyProvenanceClient
+#endif
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -38,6 +46,155 @@ struct WorkProvenanceStoreTests {
         #expect(unattributed?.fileChange.attributionSource == .unattributed)
         #expect(unattributed?.fileChange.attributionConfidence == .low)
         #expect(unattributed?.contribution == nil)
+    }
+
+    @Test
+    func reopensExistingStoreWithEventsAndProjectionsReadable() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+
+        try await store.append(Self.attributedEvent())
+        try await store.append(Self.unattributedEvent())
+
+        let reopened = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let events = try await reopened.events()
+        let explanation = try await reopened.fileExplanation(
+            worktreeID: "worktree-1",
+            path: "Sources/WorkspaceManager.swift"
+        )
+
+        #expect(events.map(\.id) == ["event-1", "event-unattributed"])
+        #expect(explanation?.repository?.path == "/repo")
+        #expect(explanation?.worktree?.path == "/repo")
+        #expect(explanation?.workItem?.id == "WI-1")
+
+        try await reopened.rebuildProjections()
+        let replayed = try await reopened.fileExplanation(
+            worktreeID: "worktree-1",
+            path: "Sources/WorkspaceManager.swift"
+        )
+
+        #expect(replayed?.repository?.path == explanation?.repository?.path)
+        #expect(replayed?.worktree?.path == explanation?.worktree?.path)
+        #expect(replayed?.workItem?.id == explanation?.workItem?.id)
+    }
+
+    @Test
+    func duplicateEventIDRollsBackProjectionChanges() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+
+        try await store.append(Self.parentSessionEvent())
+        try await store.append(Self.childSubsessionEvent(
+            id: "duplicate-child-event",
+            status: "active",
+            timestamp: 120
+        ))
+
+        do {
+            try await store.append(Self.childSubsessionEvent(
+                id: "duplicate-child-event",
+                status: "completed",
+                timestamp: 140
+            ))
+            Issue.record("duplicate append unexpectedly succeeded")
+        } catch {
+            // Expected: duplicate event IDs are rejected before projection mutation.
+        }
+
+        let events = try await store.events()
+        let tree = try await store.sessionTree(rootSessionID: "codex-parent")
+        let child = try #require(tree.sessions.first { $0.id == "codex-child" })
+
+        #expect(events.map(\.id) == ["parent-session", "duplicate-child-event"])
+        #expect(child.status == "active")
+        #expect(child.updatedAt == Date(timeIntervalSince1970: 120))
+
+        try await store.rebuildProjections()
+        let replayedTree = try await store.sessionTree(rootSessionID: "codex-parent")
+        let replayedChild = try #require(replayedTree.sessions.first { $0.id == "codex-child" })
+        #expect(replayedChild.status == "active")
+        #expect(replayedChild.updatedAt == Date(timeIntervalSince1970: 120))
+    }
+
+    @Test
+    func projectionFailureAfterEventInsertRollsBackEntireAppend() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+
+        try await store.append(Self.parentSessionEvent())
+        try await store.append(Self.childSubsessionEvent(
+            id: "child-start",
+            status: "active",
+            timestamp: 120
+        ))
+
+        do {
+            try await store.append(Self.conflictingExternalIdentityEvent())
+            Issue.record("conflicting identity append unexpectedly succeeded")
+        } catch {
+            // Expected: the projection conflict must roll back the event insert.
+        }
+
+        let events = try await store.events()
+        let tree = try await store.sessionTree(rootSessionID: "codex-parent")
+
+        #expect(events.map(\.id) == ["parent-session", "child-start"])
+        #expect(tree.sessions.map(\.id) == ["codex-parent", "codex-child"])
+        #expect(tree.relationships.map(\.sessionID) == ["codex-child"])
+
+        try await store.rebuildProjections()
+        let replayedTree = try await store.sessionTree(rootSessionID: "codex-parent")
+        #expect(replayedTree.sessions.map(\.id) == ["codex-parent", "codex-child"])
+        #expect(replayedTree.relationships.map(\.sessionID) == ["codex-child"])
+    }
+
+    @Test
+    func replayUsesAppendOrderWhenEventTimestampsAreOutOfOrder() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+
+        try await store.append(Self.observedEvent(id: "appended-first", timestamp: 200, fingerprint: "late"))
+        try await store.append(Self.observedEvent(id: "appended-second", timestamp: 100, fingerprint: "early"))
+
+        let events = try await store.events()
+        let liveExplanation = try await store.fileExplanation(
+            worktreeID: "worktree-1",
+            path: "Sources/WorkspaceManager.swift"
+        )
+
+        #expect(events.map(\.id) == ["appended-first", "appended-second"])
+        #expect(liveExplanation?.changeSet?.diffFingerprint == "early")
+
+        try await store.rebuildProjections()
+        let replayedExplanation = try await store.fileExplanation(
+            worktreeID: "worktree-1",
+            path: "Sources/WorkspaceManager.swift"
+        )
+        #expect(replayedExplanation?.changeSet?.diffFingerprint == "early")
+    }
+
+    @Test
+    func preservesUnknownEventTypeNames() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let event = WorkProvenanceEvent(
+            id: "future-event",
+            eventType: "future_engine_event",
+            timestamp: Date(timeIntervalSince1970: 100),
+            source: .observed,
+            confidence: .low
+        )
+
+        try await store.append(event)
+
+        let events = try await store.events()
+        #expect(events.map(\.eventType.rawValue) == ["future_engine_event"])
     }
 
     @Test
@@ -160,13 +317,180 @@ struct WorkProvenanceStoreTests {
         #expect(replayedTree.sessions.last?.status == "completed")
     }
 
+    @Test
+    func contractClientAppendsAndExplainsFileChanges() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let client: any TestBmuxLegacyProvenanceClient = store
+
+        let append = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.attributedEvent()))
+        let explanation = try await client.fileExplanation(ProvenanceFileExplanationRequest(
+            worktreeID: "worktree-1",
+            path: "Sources/WorkspaceManager.swift"
+        ))
+        let missing = try await client.fileExplanation(ProvenanceFileExplanationRequest(
+            worktreeID: "worktree-1",
+            path: "Sources/Missing.swift"
+        ))
+
+        #expect(append.schemaVersion == 1)
+        #expect(append.eventID == "event-1")
+        #expect(append.eventType == "progress_checkpoint")
+        #expect(explanation.schemaVersion == 1)
+        #expect(explanation.found)
+        #expect(explanation.reason == nil)
+        #expect(explanation.explanation?.workItem?.title == "Explain dirty files")
+        #expect(explanation.explanation?.contribution?.declaredIntent == "Capture work provenance")
+        #expect(explanation.explanation?.fileChange.attributionSource == .observed)
+        #expect(!missing.found)
+        #expect(missing.reason == "no_file")
+        #expect(missing.explanation == nil)
+    }
+
+    @Test
+    func contractClientPreservesDuplicateEventRollback() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let client: any TestBmuxLegacyProvenanceClient = store
+
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.parentSessionEvent()))
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.childSubsessionEvent(
+            id: "duplicate-child-event",
+            status: "active",
+            timestamp: 120
+        )))
+
+        do {
+            _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.childSubsessionEvent(
+                id: "duplicate-child-event",
+                status: "completed",
+                timestamp: 140
+            )))
+            Issue.record("duplicate append unexpectedly succeeded through contract client")
+        } catch {
+            // Expected: duplicate event IDs are rejected before projection mutation.
+        }
+
+        let response = try await store.sessionTree(rootSessionID: "codex-parent")
+        let child = try #require(response.sessions.first { $0.id == "codex-child" })
+
+        #expect(child.status == "active")
+        #expect(child.updatedAt == Date(timeIntervalSince1970: 120))
+
+        try await store.rebuildProjections()
+        let replayed = try await store.sessionTree(rootSessionID: "codex-parent")
+        let replayedChild = try #require(replayed.sessions.first { $0.id == "codex-child" })
+        #expect(replayedChild.status == "active")
+        #expect(replayedChild.updatedAt == Date(timeIntervalSince1970: 120))
+    }
+
+    @Test
+    func contractClientReturnsSessionTreeWithExternalIdentities() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let client: any TestBmuxLegacyProvenanceClient = store
+
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.parentSessionEvent()))
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.childSubsessionEvent(
+            id: "child-start-1",
+            status: "active",
+            timestamp: 120
+        )))
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.childSubsessionEvent(
+            id: "child-stop-1",
+            status: "completed",
+            timestamp: 140
+        )))
+
+        let response = try await store.sessionTree(rootSessionID: "codex-parent")
+        var identities: [WorkProvenanceExternalIdentityRecord] = []
+        for session in response.sessions {
+            identities.append(contentsOf: try await store.externalIdentities(sessionID: session.id))
+        }
+
+        #expect(response.rootSessionID == "codex-parent")
+        #expect(response.sessions.map(\.id) == ["codex-parent", "codex-child"])
+        #expect(response.sessions.last?.status == "completed")
+        #expect(response.relationships.map(\.sessionID) == ["codex-child"])
+        #expect(identities.map(\.externalID) == ["subagent-1"])
+
+        try await store.rebuildProjections()
+        let replayed = try await store.sessionTree(rootSessionID: "codex-parent")
+        var replayedIdentities: [WorkProvenanceExternalIdentityRecord] = []
+        for session in replayed.sessions {
+            replayedIdentities.append(contentsOf: try await store.externalIdentities(sessionID: session.id))
+        }
+        #expect(replayed.sessions.map(\.id) == response.sessions.map(\.id))
+        #expect(replayed.relationships.map(\.sessionID) == response.relationships.map(\.sessionID))
+        #expect(replayedIdentities.map(\.externalID) == identities.map(\.externalID))
+    }
+
+    @Test
+    func contractClientListsWorktreesWithRepositories() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+
+        _ = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(
+            event: Self.externalAttributedEvent()
+        ))
+
+        let response = try await client.worktrees(ProvenanceWorktreeListRequest())
+
+        #expect(response.schemaVersion == 1)
+        #expect(response.status == "ok")
+        #expect(response.reason == nil)
+        #expect(response.worktrees.map(\.worktree.id) == ["worktree-1"])
+        #expect(response.worktrees.first?.worktree.path == "/repo")
+        #expect(response.worktrees.first?.repository?.remoteSlug == "manaflow-ai/bmux")
+    }
+
+    @Test
+    func contractClientReturnsCurrentContext() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
+        let client: any TestBmuxLegacyProvenanceClient = store
+
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.attributedEvent()))
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.unattributedEvent()))
+
+        let response = try await client.currentContext(ProvenanceCurrentContextRequest(
+            repositoryPath: "/repo"
+        ))
+        let missing = try await client.currentContext(ProvenanceCurrentContextRequest(
+            repositoryPath: "/missing"
+        ))
+
+        #expect(response.schemaVersion == 1)
+        #expect(response.found)
+        #expect(response.reason == nil)
+        #expect(response.worktree?.id == "worktree-1")
+        #expect(response.repository?.path == "/repo")
+        #expect(response.activeSessions.map(\.session.id) == ["session-1"])
+        #expect(response.dirtyFiles.map(\.fileChange.path) == [
+            "Sources/Unknown.swift",
+            "Sources/WorkspaceManager.swift",
+        ])
+        #expect(response.unattributedChanges.map(\.fileChange.path) == ["Sources/Unknown.swift"])
+        #expect(response.recentCheckpoints.map(\.checkpoint.id) == ["checkpoint-1"])
+        #expect(response.validationRuns.isEmpty)
+        #expect(response.conflicts.isEmpty)
+        #expect(!missing.found)
+        #expect(missing.reason == "no_worktree")
+    }
+
     private static func attributedEvent() -> WorkProvenanceEvent {
         let now = Date(timeIntervalSince1970: 100)
-        let repository = WorkProvenanceRepositoryRecord(
+        let repository = ProvenanceRepositoryRecord(
             id: "repo-1", path: "/repo", commonDirectory: "/repo/.git",
             remoteSlug: "manaflow-ai/bmux", createdAt: now, updatedAt: now
         )
-        let worktree = WorkProvenanceWorktreeRecord(
+        let worktree = ProvenanceWorktreeRecord(
             id: "worktree-1", repositoryID: "repo-1", path: "/repo",
             branch: "feature/provenance", baseCommit: "base", currentHEAD: "head",
             isDirty: true, status: "active", lastReconciledAt: now, updatedAt: now
@@ -193,6 +517,43 @@ struct WorkProvenanceStoreTests {
             session: session,
             workItem: workItem,
             contribution: contribution
+        )
+    }
+
+    private static func externalAttributedEvent() -> ProvenanceEngineContracts.ProvenanceEvent {
+        let now = Date(timeIntervalSince1970: 100)
+        let repository = ProvenanceRepositoryRecord(
+            id: "repo-1",
+            path: "/repo",
+            commonDirectory: "/repo/.git",
+            remoteSlug: "manaflow-ai/bmux",
+            createdAt: now,
+            updatedAt: now
+        )
+        let worktree = ProvenanceWorktreeRecord(
+            id: "worktree-1",
+            repositoryID: "repo-1",
+            path: "/repo",
+            branch: "feature/provenance",
+            baseCommit: "base",
+            currentHEAD: "head",
+            isDirty: true,
+            status: "active",
+            lastReconciledAt: now,
+            updatedAt: now
+        )
+        return ProvenanceEngineContracts.ProvenanceEvent(
+            id: "external-event-1",
+            eventType: .worktreeObserved,
+            timestamp: now,
+            repositoryID: repository.id,
+            worktreeID: worktree.id,
+            source: .observed,
+            confidence: .high,
+            payload: ProvenanceEngineContracts.ProvenanceEventPayload(
+                repository: repository,
+                worktree: worktree
+            )
         )
     }
 
@@ -271,10 +632,58 @@ struct WorkProvenanceStoreTests {
         )
     }
 
+    private static func conflictingExternalIdentityEvent() -> WorkProvenanceEvent {
+        let now = Date(timeIntervalSince1970: 130)
+        let session = WorkProvenanceSessionRecord(
+            id: "codex-conflicting-child",
+            agentKind: "codex",
+            workspaceID: "workspace-1",
+            surfaceID: "surface-conflict",
+            cwd: "/repo",
+            status: "active",
+            startedAt: now,
+            updatedAt: now
+        )
+        let relationship = WorkProvenanceSessionRelationshipRecord(
+            sessionID: "codex-conflicting-child",
+            parentSessionID: "codex-parent",
+            rootSessionID: "codex-parent",
+            depth: 1,
+            source: .observed,
+            confidence: .high,
+            createdAt: now,
+            updatedAt: now
+        )
+        let identity = WorkProvenanceExternalIdentityRecord(
+            id: "identity-codex-subagent-1",
+            sessionID: "codex-conflicting-child",
+            system: "codex",
+            kind: "subsession",
+            externalID: "different-subagent",
+            source: .observed,
+            confidence: .high,
+            createdAt: now,
+            updatedAt: now
+        )
+        return WorkProvenanceEvent(
+            id: "conflicting-identity-event",
+            eventType: .subsessionStarted,
+            timestamp: now,
+            sessionID: session.id,
+            source: .observed,
+            confidence: .high,
+            payload: WorkProvenanceEventPayload(
+                session: session,
+                sessionRelationship: relationship,
+                externalIdentities: [identity]
+            )
+        )
+    }
+
     private static func attributedEvent(
         now: Date,
-        repository: WorkProvenanceRepositoryRecord,
-        worktree: WorkProvenanceWorktreeRecord,
+        repository: ProvenanceRepositoryRecord,
+        worktree: ProvenanceWorktreeRecord,
         session: WorkProvenanceSessionRecord,
         workItem: WorkProvenanceWorkItemRecord,
         contribution: WorkProvenanceContributionRecord
@@ -310,10 +719,10 @@ struct WorkProvenanceStoreTests {
 
     private static func unattributedEvent() -> WorkProvenanceEvent {
         let now = Date(timeIntervalSince1970: 200)
-        let repository = WorkProvenanceRepositoryRecord(
+        let repository = ProvenanceRepositoryRecord(
             id: "repo-1", path: "/repo", createdAt: now, updatedAt: now
         )
-        let worktree = WorkProvenanceWorktreeRecord(
+        let worktree = ProvenanceWorktreeRecord(
             id: "worktree-1", repositoryID: "repo-1", path: "/repo",
             isDirty: true, status: "active", updatedAt: now
         )
@@ -358,10 +767,10 @@ struct WorkProvenanceStoreTests {
         fingerprint: String
     ) -> WorkProvenanceEvent {
         let now = Date(timeIntervalSince1970: timestamp)
-        let repository = WorkProvenanceRepositoryRecord(
+        let repository = ProvenanceRepositoryRecord(
             id: "repo-1", path: "/repo", createdAt: now, updatedAt: now
         )
-        let worktree = WorkProvenanceWorktreeRecord(
+        let worktree = ProvenanceWorktreeRecord(
             id: "worktree-1", repositoryID: "repo-1", path: "/repo",
             isDirty: true, status: "active", updatedAt: now
         )

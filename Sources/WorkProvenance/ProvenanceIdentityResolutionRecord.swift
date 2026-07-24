@@ -1,7 +1,7 @@
 import Foundation
 
 /// Bounded observability record for one lifecycle identity-resolution attempt.
-struct ProvenanceIdentityResolutionRecord: Equatable, Sendable {
+struct ProvenanceIdentityResolutionRecord: Codable, Equatable, Sendable {
     let identityResolutionID: String
     let pipelineRunID: String
     let resolverName: String

@@ -1,4 +1,5 @@
 import Foundation
+import ProvenanceEngineContracts
 
 /// Observe-only service that records Git worktree state into the provenance store.
 actor WorkProvenanceObservationService {
@@ -69,7 +70,7 @@ actor WorkProvenanceObservationService {
         let worktreeID = stableIDFactory.worktreeID(repositoryRoot: gitSnapshot.repositoryRoot)
         let changeSetID = stableIDFactory.changeSetID(worktreeID: worktreeID, fingerprint: fingerprint)
 
-        let repository = WorkProvenanceRepositoryRecord(
+        let repository = ProvenanceRepositoryRecord(
             id: repositoryID,
             path: gitSnapshot.repositoryRoot,
             commonDirectory: gitSnapshot.commonDirectory,
@@ -77,7 +78,7 @@ actor WorkProvenanceObservationService {
             createdAt: now,
             updatedAt: now
         )
-        let worktree = WorkProvenanceWorktreeRecord(
+        let worktree = ProvenanceWorktreeRecord(
             id: worktreeID,
             repositoryID: repositoryID,
             path: gitSnapshot.repositoryRoot,

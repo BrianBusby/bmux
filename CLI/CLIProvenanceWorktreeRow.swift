@@ -1,4 +1,5 @@
 import Foundation
+import ProvenanceEngineContracts
 
 struct CLIProvenanceWorktreeRow: Equatable {
     let id: String
@@ -13,6 +14,51 @@ struct CLIProvenanceWorktreeRow: Equatable {
     let repositoryRecordID: String?
     let repositoryPath: String?
     let remoteSlug: String?
+
+    init(
+        id: String,
+        repositoryID: String,
+        path: String,
+        branch: String?,
+        currentHEAD: String?,
+        isDirty: Bool,
+        status: String?,
+        lastReconciledAt: Double?,
+        updatedAt: Double?,
+        repositoryRecordID: String?,
+        repositoryPath: String?,
+        remoteSlug: String?
+    ) {
+        self.id = id
+        self.repositoryID = repositoryID
+        self.path = path
+        self.branch = branch
+        self.currentHEAD = currentHEAD
+        self.isDirty = isDirty
+        self.status = status
+        self.lastReconciledAt = lastReconciledAt
+        self.updatedAt = updatedAt
+        self.repositoryRecordID = repositoryRecordID
+        self.repositoryPath = repositoryPath
+        self.remoteSlug = remoteSlug
+    }
+
+    init(entry: ProvenanceWorktreeListEntry) {
+        self.init(
+            id: entry.worktree.id,
+            repositoryID: entry.worktree.repositoryID,
+            path: entry.worktree.path,
+            branch: entry.worktree.branch,
+            currentHEAD: entry.worktree.currentHEAD,
+            isDirty: entry.worktree.isDirty,
+            status: entry.worktree.status,
+            lastReconciledAt: entry.worktree.lastReconciledAt?.timeIntervalSince1970,
+            updatedAt: entry.worktree.updatedAt.timeIntervalSince1970,
+            repositoryRecordID: entry.repository?.id,
+            repositoryPath: entry.repository?.path,
+            remoteSlug: entry.repository?.remoteSlug
+        )
+    }
 
     var payload: [String: AnyHashable] {
         let values: [String: AnyHashable?] = [

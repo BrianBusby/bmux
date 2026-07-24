@@ -1,26 +1,28 @@
 import Foundation
+import ProvenanceEngineContracts
+import ProvenanceEngineSDK
 
 extension BMUXCLI {
-    func runProvenanceCommand(commandArgs: [String], jsonOutput: Bool) throws {
+    func runProvenanceCommand(commandArgs: [String], jsonOutput: Bool) async throws {
         let subcommand = commandArgs.first?.lowercased()
         switch subcommand {
         case "explain":
-            try runProvenanceExplain(
+            try await runProvenanceExplain(
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
         case "context":
-            try runProvenanceContext(
+            try await runProvenanceContext(
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
         case "worktrees":
-            try runProvenanceWorktrees(
+            try await runProvenanceWorktrees(
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
         case "sessions":
-            try runProvenanceSessions(
+            try await runProvenanceSessions(
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
@@ -43,7 +45,7 @@ extension BMUXCLI {
         }
     }
 
-    private func runProvenanceExplain(commandArgs: [String], jsonOutput: Bool) throws {
+    private func runProvenanceExplain(commandArgs: [String], jsonOutput: Bool) async throws {
         let commandName = "provenance explain"
         let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
         var remaining = remainingAfterDatabase
@@ -81,12 +83,47 @@ extension BMUXCLI {
             return
         }
 
-        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
-        let explanation = try reader.explain(target: target)
+        let store = try WorkProvenanceStore(databaseURL: databaseURL)
+        guard let worktree = try await store.worktree(path: target.repositoryRoot) else {
+            let explanation = CLIProvenanceExplanation(
+                requestedPath: target.requestedPath,
+                repositoryPath: target.repositoryRoot,
+                relativePath: target.relativePath,
+                found: false,
+                reason: String(localized: "cli.provenance.reason.noWorktree", defaultValue: "no provenance has been recorded for this Git worktree"),
+                fileStatus: nil,
+                attributionSource: nil,
+                attributionConfidence: nil,
+                updatedAt: nil,
+                worktree: ["path": target.repositoryRoot],
+                repository: ["path": target.repositoryRoot],
+                changeSet: nil,
+                checkpoint: nil,
+                contribution: nil,
+                session: nil,
+                workItem: nil
+            )
+            printProvenanceExplanation(explanation, jsonOutput: jsonOutput)
+            return
+        }
+
+        let repository = try await store.repository(id: worktree.repositoryID)
+        let client: any BmuxLegacyProvenanceClient = store
+        let response = try await client.fileExplanation(ProvenanceFileExplanationRequest(
+            worktreeID: worktree.id,
+            path: target.relativePath
+        ))
+        let explanation = CLIProvenanceExplanation(
+            target: target,
+            response: response,
+            worktree: worktree,
+            repository: repository,
+            noFileReason: String(localized: "cli.provenance.reason.noFile", defaultValue: "no file-level provenance has been recorded for this path")
+        )
         printProvenanceExplanation(explanation, jsonOutput: jsonOutput)
     }
 
-    private func runProvenanceContext(commandArgs: [String], jsonOutput: Bool) throws {
+    private func runProvenanceContext(commandArgs: [String], jsonOutput: Bool) async throws {
         let commandName = "provenance context current"
         let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
         var remaining = remainingAfterDatabase
@@ -119,12 +156,22 @@ extension BMUXCLI {
             return
         }
 
-        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
-        let context = try reader.context(target: target)
+        let client: any BmuxLegacyProvenanceClient = try WorkProvenanceStore(databaseURL: databaseURL)
+        let response = try await client.currentContext(ProvenanceCurrentContextRequest(
+            repositoryPath: target.repositoryRoot
+        ))
+        let context = CLIProvenanceContext(
+            response: response,
+            fallbackRepositoryPath: target.repositoryRoot,
+            noWorktreeReason: String(
+                localized: "cli.provenance.reason.noWorktree",
+                defaultValue: "no provenance has been recorded for this Git worktree"
+            )
+        )
         printProvenanceContext(context, jsonOutput: jsonOutput)
     }
 
-    private func runProvenanceWorktrees(commandArgs: [String], jsonOutput: Bool) throws {
+    private func runProvenanceWorktrees(commandArgs: [String], jsonOutput: Bool) async throws {
         let commandName = "provenance worktrees list"
         let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
         var remaining = remainingAfterDatabase
@@ -147,12 +194,14 @@ extension BMUXCLI {
             return
         }
 
-        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
-        let list = try reader.worktreeList()
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+        let response = try await client.worktrees(ProvenanceWorktreeListRequest())
+        let list = CLIProvenanceWorktreeList(response: response)
         printProvenanceWorktreeList(list, jsonOutput: jsonOutput)
     }
 
-    private func runProvenanceSessions(commandArgs: [String], jsonOutput: Bool) throws {
+    private func runProvenanceSessions(commandArgs: [String], jsonOutput: Bool) async throws {
         let commandName = "provenance sessions tree"
         let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
         var remaining = remainingAfterDatabase
@@ -183,8 +232,19 @@ extension BMUXCLI {
             return
         }
 
-        let reader = try CLIProvenanceSQLiteReader(databaseURL: databaseURL)
-        let tree = try reader.sessionTree(rootSessionID: sessionID)
+        let legacySessionLimit = 100
+        let engineRowLimit = (legacySessionLimit * 2) - 1
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+        let response = try await client.sessionTree(ProvenanceEngineContracts.ProvenanceSessionTreeRequest(
+            rootSessionID: sessionID,
+            limit: engineRowLimit
+        ))
+        let tree = CLIProvenanceSessionTree(
+            response: response,
+            noSessionReason: String(localized: "cli.provenance.reason.noSession", defaultValue: "no provenance has been recorded for this session"),
+            externalIdentityLimit: 200
+        )
         printProvenanceSessionTree(tree, jsonOutput: jsonOutput)
     }
 
