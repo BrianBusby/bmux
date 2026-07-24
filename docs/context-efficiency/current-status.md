@@ -23,9 +23,8 @@ topic documents.
 ## Active State
 
 The standalone Provenance Engine is the accepted provenance storage/query
-boundary. Slice C session-tree read migration is locally validated and ready for
-bmux PR acceptance, but the cross-repository acceptance gate has not fully
-closed because bmux GitHub Actions are still queued on external runner capacity.
+boundary. Slice C session-tree read migration is accepted with an explicit
+GitHub Actions waiver for bmux PR 7.
 
 bmux adoption currently pins provenance-engine revision
 `2026914454a00ccc6c45d686ea741111b0a01229`, from
@@ -66,14 +65,14 @@ Do not add engine features speculatively. Engine expansion is frozen until a rea
 
 ## Next Target
 
-Active milestone: Slice C acceptance gate.
+Active milestone: Slice D, file-explanation read migration.
 
 Slice C migrated only `bmux provenance sessions tree <session-id>` to the external SQLite-backed engine client and `ProvenanceEngineClient.sessionTree(...)`; preserved existing CLI compatibility; seeded tests through public engine APIs; and removed only session-tree legacy code that became unused.
 
-Do not begin Slice D, current-context migration, lifecycle writes, capture
-migration, data migration, semantic retrieval, daemon transport, UI work,
-observability expansion, or unrelated refactoring until bmux PR checks/merge
-complete.
+Do not begin current-context migration, lifecycle writes, capture migration,
+data migration, semantic retrieval, daemon transport, UI work, observability
+expansion, or unrelated refactoring. Slice D should begin only in a new focused
+branch or session.
 
 ## Canonical Details
 
@@ -95,7 +94,7 @@ Phase 4 migration plan: `docs/context-efficiency/provenance-engine-phase4-reconn
 
 ## Validation Notes
 
-Slice C local acceptance validation completed on 2026-07-24:
+Slice C acceptance validation completed on 2026-07-24:
 
 - `./scripts/reload.sh --tag slice-c-main`: passed and built the tagged Debug app plus bundled CLI.
 - `BMUX_BUNDLED_CLI_PATH=... python3 tests/test_provenance_cli.py`: passed against the tagged bundled CLI.
@@ -105,7 +104,11 @@ Slice C local acceptance validation completed on 2026-07-24:
 - `python3 scripts/check-workspace-package-groups.py --check`: passed.
 - `git diff --check`: passed.
 - Scans confirmed no `ProvenanceEngineSQLite` import and no direct session-tree table reads in the migrated CLI path.
-- GitHub Actions for bmux PR 7 remain unresolved: PR-event runs for CI and
-  Activation performance are pending with zero jobs, and manual workflow runs
-  are queued on `blacksmith-4vcpu-ubuntu-2404` runner capacity. No failing job
-  logs exist to inspect yet.
+- GitHub Actions waiver: bmux PR 7 Actions did not complete because PR-event
+  runs for CI and Activation performance remained pending with zero jobs/check
+  runs, while manually dispatched runs queued without runner assignment on
+  `blacksmith-4vcpu-ubuntu-2404`. No failing CI result was observed, `main`
+  had no required status-check branch protection, and acceptance relied on the
+  local validation suite above. This waiver applies only to Slice C and does
+  not permanently remove CI expectations; runner or workflow scheduling should
+  be tracked separately as repository infrastructure work.

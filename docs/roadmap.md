@@ -38,7 +38,7 @@ Local bmux integration notes live in `docs/provenance-integration.md`.
 
 ## Active Work
 
-Active gate: Slice C acceptance.
+Active gate: Slice D file-explanation read migration.
 
 Accepted Slice C scope: migrated only the provenance session-tree CLI command to the external SQLite-backed provenance-engine client.
 
@@ -48,10 +48,13 @@ Session-tree CLI fixture setup now uses public provenance-engine APIs.
 
 Removed only session-tree legacy code that became unused.
 
-Slice D file-explanation read migration is the next eligible milestone only
-after bmux PR checks and merge complete.
+GitHub Actions waiver for Slice C: bmux PR 7 Actions remained unavailable
+because PR-event runs produced zero jobs/check runs and manual workflow runs
+queued without assignment to `blacksmith-4vcpu-ubuntu-2404`. No failing CI result
+was observed, and branch protection did not require those checks. The waiver is
+limited to Slice C and does not remove CI expectations for later work.
 
-Out of scope before Slice D: current context, lifecycle writes, worktree
+Out of scope for Slice D: current context, lifecycle writes, worktree
 observation capture, storage migration, daemon transport, UI work, observability
 expansion, GitHub ingestion, and Knowledge Compiler implementation.
 
