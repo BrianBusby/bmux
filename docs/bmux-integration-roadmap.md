@@ -8,9 +8,9 @@ Detailed technical contract rules remain in `docs/integration-contract.md`. The 
 
 V1 adoption is a controlled migration. The first external bmux path, `bmux provenance worktrees list`, is complete. Slice C session-tree read migration is accepted after bmux PR 7 merged at `08763dd0d3256989180dcc04f426da1f24369175` with an explicit GitHub Actions waiver for unavailable Blacksmith runner evidence.
 
-The active milestone is Slice D: file-explanation read migration. Engine-side readiness is accepted after real bmux adoption validated the existing public contract, but bmux adoption remains pending final dependency stabilization and acceptance. Do not begin current context, lifecycle writes, storage migration, daemon transport, retrieval, GitHub ingestion, or Knowledge Compiler implementation before the file-explanation path is fully accepted in bmux.
+Slice D file-explanation read migration is accepted after bmux PR 9 merged at `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374` on 2026-07-24T21:54:46Z. The existing public contract was sufficient, bmux repinned to merged engine revision `126afde36671f53a137953200e7883e6b4093ac3`, and the temporary feature-branch dependency pin was removed everywhere. No next migration slice is active.
 
-Planned order after the active file-explanation milestone: current context, lifecycle recording, worktree observation capture, storage ownership migration, daemon or service transport, then shared evidence and Knowledge Compiler adoption.
+Planned order after Slice D acceptance: current context, lifecycle recording, worktree observation capture, storage ownership migration, daemon or service transport, then shared evidence and Knowledge Compiler adoption.
 
 ## Milestone: bmux Worktree Reads
 
@@ -108,8 +108,7 @@ Migration or cleanup: remove file-explanation-only local query helpers once unus
 The precise bmux adoption handoff is recorded in
 `docs/file-explanation-readiness-slice-completion.md`.
 
-Status: Engine readiness accepted; bmux adoption pending final dependency
-stabilization and PR acceptance.
+Status: Accepted. Engine readiness merged in PR 5 at `126afde36671f53a137953200e7883e6b4093ac3`; bmux adoption merged in PR 9 at `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374`.
 
 ## Milestone: bmux Current Session and Task Context
 

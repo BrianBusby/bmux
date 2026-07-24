@@ -6,7 +6,7 @@ Milestone: Slice D file-explanation read migration readiness.
 
 Contract assessment: A. Existing contract is sufficient.
 
-This document preserves the engine-side readiness evidence for migrating `bmux provenance explain <path>` to the public Provenance Engine SDK. The actual bmux command migration in PR 9 validated the engine contract without requiring a new public API or storage-boundary exception. bmux adoption remains pending final dependency stabilization and acceptance, so Slice D as a whole is not accepted until the bmux adoption PR merges.
+This document preserves the engine-side readiness evidence for migrating `bmux provenance explain <path>` to the public Provenance Engine SDK. The actual bmux command migration in PR 9 validated the engine contract without requiring a new public API or storage-boundary exception. bmux PR 9 has merged, the temporary dependency pin was removed, and Slice D is fully accepted.
 
 ## Baseline Confirmation
 
@@ -53,8 +53,9 @@ No new API was added. The current `ProvenanceFileExplanationRequest`, `Provenanc
 
 ## Real bmux Adoption Evidence
 
-Reviewed bmux PR 9 on 2026-07-24 at
-`46b9b94c8ac40d4b7358db189d44b4399c4f0ade`.
+Reviewed bmux PR 9 on 2026-07-24. Final accepted bmux PR head:
+`ea72bfd7dc28cd60b093b5a4d0bebc5853c32f59`; merge commit:
+`c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374` at 2026-07-24T21:54:46Z.
 
 The migrated command uses only the public engine SDK surface:
 
@@ -121,7 +122,7 @@ Coverage includes successful explanation, missing file, normalized path handling
 
 ## bmux Adoption Handoff
 
-Required engine revision: use the merged Provenance Engine default-branch revision containing this document and `ProvenanceEngineFileExplanationSDKTests`, or any later revision. Do not keep bmux pinned indefinitely to the temporary feature-branch commit `384026e36087dda576e25343907c3e06d8a4d594`.
+Required engine revision consumed by bmux: merged Provenance Engine default-branch revision `126afde36671f53a137953200e7883e6b4093ac3`, or any later revision. bmux removed the temporary feature-branch commit `384026e36087dda576e25343907c3e06d8a4d594` from all dependency declarations and lockfiles.
 
 Modules to import:
 
@@ -196,15 +197,17 @@ Exact migration steps:
 9. Remove file-explanation-only local query helpers after the migrated command is accepted.
 10. Confirm no bmux file-explanation path imports `ProvenanceEngineSQLite` or reads storage tables directly.
 
-After engine acceptance, bmux must repin:
+After engine acceptance, bmux repinned all required locations:
 
-- the root package dependency and lockfile, if present for the Xcode or package workspace;
+- `bmux.xcodeproj/project.pbxproj`;
+- `bmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`;
+- `tests/test_provenance_cli.py` dynamic seeder fallback;
 - `tests/fixtures/provenance-engine-file-explanation-seeder/Package.swift`;
 - `tests/fixtures/provenance-engine-file-explanation-seeder/Package.resolved`;
 - `tests/fixtures/provenance-engine-session-tree-seeder/Package.swift`;
 - `tests/fixtures/provenance-engine-session-tree-seeder/Package.resolved`.
 
-No bmux API migration changes are otherwise required by the engine review.
+No bmux API migration changes were required by the engine review.
 
 ## Architecture Review
 
@@ -216,9 +219,18 @@ No bmux API migration changes are otherwise required by the engine review.
 6. Does the Reference Architecture require an update? No. The adoption validates the existing architecture; it does not add a new architectural requirement.
 7. What consumer capability is now enabled? Consumers can explain a repository-relative file through public engine SDK contracts and render attributed or unattributed evidence without storage access.
 8. What future architecture concerns remain intentionally deferred? Rename-aware identity, deleted-file history, historical path identity, case-insensitive matching, symlink identity, semantic explanations, compiled explanations, daemon/service transport, and shared evidence ingestion remain outside Slice D.
-9. What technical debt remains? bmux still needs final dependency stabilization and acceptance for PR 9, and later slices still need to migrate current-context, lifecycle/capture, projection storage, and observability paths.
+9. What technical debt remains? Later slices still need to migrate current-context, lifecycle/capture, projection storage, and observability paths; GitHub Actions/Blacksmith runner scheduling remains bmux infrastructure debt.
 10. Overall confidence: Architecture validated.
 
 ## Scope Exclusions
 
 This slice did not implement Knowledge Compiler behavior, semantic retrieval, embeddings, AI-generated explanations, organization-wide evidence search, generalized natural-language queries, historical rename tracking, daemon/service migration, authorization redesign, or bmux command migration.
+
+
+## Final Slice D Acceptance
+
+Slice D is fully accepted. Engine readiness merged in Provenance Engine PR 5 at
+`126afde36671f53a137953200e7883e6b4093ac3`, bmux adoption merged in bmux PR 9
+at `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374`, and bmux removed the temporary
+feature-branch engine dependency pin everywhere. The next migration slice may
+now be selected, but this document does not activate a specific next slice.

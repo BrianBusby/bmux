@@ -19,13 +19,12 @@ Completed:
 
 - `bmux provenance worktrees list` adopted `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.worktrees(...)` through provenance-engine `0.1.0`.
 - Slice C: `bmux provenance sessions tree <session-id>` adopted `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.sessionTree(...)` through the accepted session-tree read contract. bmux PR 7 merged at `08763dd0d3256989180dcc04f426da1f24369175` with an explicit GitHub Actions waiver for unavailable Blacksmith runner evidence.
+- Slice D: `bmux provenance explain <path>` adopted `ProvenanceEngineClientFactory`, `ProvenanceEngineClient.worktrees(...)`, and `ProvenanceEngineClient.fileExplanation(...)` through the accepted file-explanation contract. bmux PR 9 merged at `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374` with a Slice D-specific GitHub Actions waiver for unavailable Blacksmith runner evidence.
 
 Current gate:
 
-- Finish Slice D, the bmux migration slice for `bmux provenance explain <path>`.
-- Engine-side Slice D readiness is accepted: bmux PR 9 validated that the existing `ProvenanceEngineClient.fileExplanation(...)` contract supports the command without a new public API or storage exposure.
-- bmux adoption remains pending final dependency stabilization and acceptance. Slice D as a whole is not accepted until the bmux adoption PR merges.
-- Do not add new storage, daemon, retrieval, semantic, observability, GitHub ingestion, Knowledge Compiler, migration scope, or begin the next migration slice before Slice D is fully accepted.
+- None selected after Slice D acceptance.
+- The next bmux migration slice may now be selected, but do not add new storage, daemon, retrieval, semantic, observability, GitHub ingestion, Knowledge Compiler, migration scope, or begin the next migration slice until it is explicitly chosen.
 
 Canonical cross-repository details: `docs/bmux-integration-roadmap.md`.
 
@@ -35,11 +34,10 @@ After each path is accepted, produce an integration findings report and choose t
 
 Planned sequence:
 
-1. File or artifact explanations.
-2. Current session and task context.
-3. Session lifecycle recording.
-4. Worktree observation and other capture append paths.
-5. Storage ownership and cleanup after bmux runtime paths stop depending on bmux-local provenance storage.
+1. Current session and task context.
+2. Session lifecycle recording.
+3. Worktree observation and other capture append paths.
+4. Storage ownership and cleanup after bmux runtime paths stop depending on bmux-local provenance storage.
 
 ## External Evidence Model Validation
 
