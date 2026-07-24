@@ -17,13 +17,15 @@ The supported client entrypoint is `ProvenanceEngineClientFactory`, which create
 
 The first bmux adoption path, `bmux provenance worktrees list`, now consumes this package through `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.worktrees(...)`.
 
-Current integration gate: close cross-repository Slice C acceptance. bmux
-consumer adoption is locally validated, but bmux PR checks and merge remain
-pending. Provenance Engine should not add storage, daemon, migration, retrieval,
-semantic, observability, GitHub ingestion, Knowledge Compiler implementation,
-or Slice D contract work until that gate closes.
+Current integration gate: support Slice D file-explanation read migration. Slice C
+consumer adoption merged in bmux PR 7 at
+`08763dd0d3256989180dcc04f426da1f24369175` on 2026-07-24T17:20:04Z,
+with an explicit GitHub Actions waiver for unavailable Blacksmith runner evidence.
+Provenance Engine should not add storage, daemon, migration, retrieval, semantic,
+observability, GitHub ingestion, or Knowledge Compiler implementation unless
+Slice D proves a concrete public-contract defect.
 
-The engine side of Slice C accepted the second bmux adoption path, `bmux provenance sessions tree <session-id>`, through `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.sessionTree(ProvenanceSessionTreeRequest(rootSessionID:limit:))`. SDK-level tests cover a client created by `ProvenanceEngineClientFactory`, seeded through public `appendEvent` calls, and queried through `sessionTree` without direct SQLite access.
+Slice C accepted the second bmux adoption path, `bmux provenance sessions tree <session-id>`, through `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.sessionTree(ProvenanceSessionTreeRequest(rootSessionID:limit:))`. SDK-level tests cover a client created by `ProvenanceEngineClientFactory`, seeded through public `appendEvent` calls, and queried through `sessionTree` without direct SQLite access.
 
 Long-term architecture note: shared repository evidence and Knowledge Compiler work are accepted as post-V1 planning targets only. The current package preserves optional event evidence-origin and evidence-scope metadata, but GitHub ingestion, shared evidence-store deployment, retrieval, and compiler implementation remain frozen until after the current V1 bmux adoption sequence.
 

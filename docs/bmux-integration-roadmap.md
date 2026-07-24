@@ -6,11 +6,11 @@ Detailed technical contract rules remain in `docs/integration-contract.md`. The 
 
 ## Current Priority
 
-V1 adoption is a controlled migration. The first external bmux path, `bmux provenance worktrees list`, is complete. Slice C session-tree read migration is locally validated in bmux, but cross-repository acceptance remains pending on bmux PR checks and merge.
+V1 adoption is a controlled migration. The first external bmux path, `bmux provenance worktrees list`, is complete. Slice C session-tree read migration is accepted after bmux PR 7 merged at `08763dd0d3256989180dcc04f426da1f24369175` with an explicit GitHub Actions waiver for unavailable Blacksmith runner evidence.
 
-The active milestone remains the Slice C acceptance gate. Do not begin Slice D, current context, lifecycle writes, storage migration, daemon transport, retrieval, GitHub ingestion, or Knowledge Compiler implementation until bmux PR checks and merge complete.
+The next active milestone is Slice D: file-explanation read migration. Do not begin current context, lifecycle writes, storage migration, daemon transport, retrieval, GitHub ingestion, or Knowledge Compiler implementation before the file-explanation path is validated.
 
-Planned order after the Slice C acceptance gate: current context, lifecycle recording, worktree observation capture, storage ownership migration, daemon or service transport, then shared evidence and Knowledge Compiler adoption.
+Planned order after the active file-explanation milestone: current context, lifecycle recording, worktree observation capture, storage ownership migration, daemon or service transport, then shared evidence and Knowledge Compiler adoption.
 
 ## Milestone: bmux Worktree Reads
 
@@ -77,7 +77,7 @@ merged default-branch revision `2026914454a00ccc6c45d686ea741111b0a01229`. Downs
 merged default-branch revision or later release/tag containing that commit
 rather than relying indefinitely on the temporary feature-branch commit.
 
-Status: Conditional: bmux local validation passed; bmux PR checks and merge remain pending.
+Status: Accepted.
 
 ## Milestone: bmux File or Artifact Explanations
 
@@ -99,7 +99,7 @@ Rollback strategy: scoped bmux revert to the previous local adapter.
 
 Migration or cleanup: remove file-explanation-only local query helpers once unused.
 
-Status: Planned after Slice C acceptance.
+Status: Active.
 
 ## Milestone: bmux Current Session and Task Context
 
