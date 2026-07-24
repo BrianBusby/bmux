@@ -34,36 +34,30 @@ Local bmux integration notes live in `docs/provenance-integration.md`.
 - Local WorkProvenance capture, projections, lifecycle relationship recording, and provenance CLI presentation.
 - First external provenance-engine adoption path: `bmux provenance worktrees list` now reads through provenance-engine `0.1.0`.
 - Second external provenance-engine adoption path: `bmux provenance sessions tree <session-id>` now reads through `ProvenanceEngineClient.sessionTree(...)` at engine revision `2026914454a00ccc6c45d686ea741111b0a01229`.
-- Slice D adoption branch: `bmux provenance explain <path>` now reads through `ProvenanceEngineClient.fileExplanation(...)` at engine readiness revision `384026e36087dda576e25343907c3e06d8a4d594`, pending Provenance Engine PR 5 and bmux PR acceptance.
+- Slice D accepted: `bmux provenance explain <path>` now reads through `ProvenanceEngineClient.fileExplanation(...)` at merged engine revision `126afde36671f53a137953200e7883e6b4093ac3`; bmux PR 9 merged at `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374` on 2026-07-24T21:54:46Z.
 - Transitional legacy boundary clarified as `BmuxLegacyProvenanceClient` for remaining bmux-local provenance paths.
 
 ## Active Work
 
-Active gate: Slice D file-explanation read migration adoption review.
+Active gate: none selected after Slice D acceptance.
 
-Slice D adoption scope: migrated only `bmux provenance explain <path>` to the external SQLite-backed provenance-engine client while retaining bmux ownership of Git path resolution, fallback behavior, and JSON/text rendering.
+Slice D is complete: `bmux provenance explain <path>` reads through the external SQLite-backed provenance-engine client while retaining bmux ownership of Git path resolution, fallback behavior, and JSON/text rendering.
 
 Preserved existing JSON, text, missing-database, no-worktree, no-file, relative-path, absolute-path, unknown-flag, extra-argument, and outside-worktree behavior.
 
-File-explanation CLI fixture setup now uses public provenance-engine APIs via `appendEvent` and does not import `ProvenanceEngineSQLite`.
+File-explanation CLI fixture setup uses public provenance-engine APIs via `appendEvent` and does not import `ProvenanceEngineSQLite`.
 
 Removed only file-explanation legacy code that became unused.
 
-GitHub Actions waiver for Slice C: bmux PR 7 Actions remained unavailable
-because PR-event runs produced zero jobs/check runs and manual workflow runs
-queued without assignment to `blacksmith-4vcpu-ubuntu-2404`. No failing CI result
-was observed, and branch protection did not require those checks. The waiver is
-limited to Slice C and does not remove CI expectations for later work.
+GitHub Actions waivers for Slice C and Slice D: bmux PR 7 and PR 9 Actions remained unavailable as acceptance evidence. No failing CI result was observed, branch protection did not require checks, and the runner scheduling issue remains tracked in bmux issue 8.
 
-Still out of scope for Slice D: current context, lifecycle writes, worktree
-observation capture, storage migration, daemon transport, UI work, observability
-expansion, GitHub ingestion, and Knowledge Compiler implementation.
+Still out of scope until a new slice is explicitly selected: current context, lifecycle writes, worktree observation capture, storage migration, daemon transport, UI work, observability expansion, GitHub ingestion, and Knowledge Compiler implementation.
 
 ## Near-Term Planned Work
 
 - Produce the integration findings report after each accepted migration slice.
 - Choose the next single bmux provenance path from the completed findings rather than opening parallel paths.
-- After Slice D acceptance, continue the provenance read migration with current context as the next eligible target.
+- The next eligible provenance read migration target is current context, but it is not active until explicitly selected.
 - Reconnect lifecycle writes only after durable read paths prove contract compatibility.
 - Reconnect capture append paths while keeping Git observation policy and runtime degradation in bmux.
 - Remove migrated bmux-local provenance query code slice by slice.
