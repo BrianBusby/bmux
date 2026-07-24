@@ -17,15 +17,18 @@ The supported client entrypoint is `ProvenanceEngineClientFactory`, which create
 
 The first bmux adoption path, `bmux provenance worktrees list`, now consumes this package through `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.worktrees(...)`.
 
-Current integration gate: support Slice D file-explanation read migration. Slice D
-engine readiness is tracked in `docs/file-explanation-readiness-slice-completion.md`;
-the current contract assessment is A, existing contract sufficient, with bmux
-command adoption still pending. Slice C consumer adoption merged in bmux PR 7 at
-`08763dd0d3256989180dcc04f426da1f24369175` on 2026-07-24T17:20:04Z,
-with an explicit GitHub Actions waiver for unavailable Blacksmith runner evidence.
-Provenance Engine should not add storage, daemon, migration, retrieval, semantic,
-observability, GitHub ingestion, or Knowledge Compiler implementation unless
-Slice D proves a concrete public-contract defect.
+Current integration gate: complete Slice D file-explanation read migration.
+Engine-side Slice D readiness is accepted in
+`docs/file-explanation-readiness-slice-completion.md`: real bmux adoption
+validated the existing `fileExplanation` public contract, required no new public
+API, and did not cross the storage boundary. bmux adoption remains pending final
+dependency stabilization and acceptance, so Slice D as a whole is not accepted
+until the bmux adoption PR merges. Slice C consumer adoption merged in bmux PR 7
+at `08763dd0d3256989180dcc04f426da1f24369175` on 2026-07-24T17:20:04Z,
+with an explicit GitHub Actions waiver for unavailable Blacksmith runner
+evidence. Provenance Engine should not add storage, daemon, migration,
+retrieval, semantic, observability, GitHub ingestion, or Knowledge Compiler
+implementation before Slice D is fully accepted.
 
 Slice C accepted the second bmux adoption path, `bmux provenance sessions tree <session-id>`, through `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.sessionTree(ProvenanceSessionTreeRequest(rootSessionID:limit:))`. SDK-level tests cover a client created by `ProvenanceEngineClientFactory`, seeded through public `appendEvent` calls, and queried through `sessionTree` without direct SQLite access.
 

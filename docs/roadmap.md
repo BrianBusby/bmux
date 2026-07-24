@@ -22,8 +22,10 @@ Completed:
 
 Current gate:
 
-- Support Slice D, the next bmux migration slice, `bmux provenance explain <path>`, using the existing `ProvenanceEngineClient.fileExplanation(...)` contract.
-- Do not add new storage, daemon, retrieval, semantic, observability, GitHub ingestion, Knowledge Compiler, or migration scope unless the file-explanation adoption slice proves a concrete contract defect.
+- Finish Slice D, the bmux migration slice for `bmux provenance explain <path>`.
+- Engine-side Slice D readiness is accepted: bmux PR 9 validated that the existing `ProvenanceEngineClient.fileExplanation(...)` contract supports the command without a new public API or storage exposure.
+- bmux adoption remains pending final dependency stabilization and acceptance. Slice D as a whole is not accepted until the bmux adoption PR merges.
+- Do not add new storage, daemon, retrieval, semantic, observability, GitHub ingestion, Knowledge Compiler, migration scope, or begin the next migration slice before Slice D is fully accepted.
 
 Canonical cross-repository details: `docs/bmux-integration-roadmap.md`.
 

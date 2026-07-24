@@ -6,7 +6,7 @@ Milestone: Slice D file-explanation read migration readiness.
 
 Contract assessment: A. Existing contract is sufficient.
 
-This document preserves the engine-side readiness evidence for migrating `bmux provenance explain <path>` to the public Provenance Engine SDK. The actual bmux command migration remains a follow-up consumer adoption slice.
+This document preserves the engine-side readiness evidence for migrating `bmux provenance explain <path>` to the public Provenance Engine SDK. The actual bmux command migration in PR 9 validated the engine contract without requiring a new public API or storage-boundary exception. bmux adoption remains pending final dependency stabilization and acceptance, so Slice D as a whole is not accepted until the bmux adoption PR merges.
 
 ## Baseline Confirmation
 
@@ -51,6 +51,46 @@ let response = try await client.fileExplanation(
 
 No new API was added. The current `ProvenanceFileExplanationRequest`, `ProvenanceFileExplanationResponse`, `ProvenanceFileExplanation`, and linked record DTOs can represent the existing bmux behavior without exposing storage internals or bmux-specific naming.
 
+## Real bmux Adoption Evidence
+
+Reviewed bmux PR 9 on 2026-07-24 at
+`46b9b94c8ac40d4b7358db189d44b4399c4f0ade`.
+
+The migrated command uses only the public engine SDK surface:
+
+```swift
+let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+    try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+let worktrees = try await client.worktrees(ProvenanceWorktreeListRequest())
+let response = try await client.fileExplanation(
+    ProvenanceFileExplanationRequest(worktreeID: worktreeEntry.worktree.id, path: target.relativePath)
+)
+```
+
+The adoption removed the file-explanation-only local SQL reader path, local
+request/response DTOs, local domain explanation DTO, legacy client method,
+store method, and direct-storage file-explanation fixture seeding. The migrated
+path imports `ProvenanceEngineContracts` and `ProvenanceEngineSDK`; no engine
+storage module, SQLite table knowledge, or local recreation of the engine query
+was required.
+
+The public worktree-list response contains enough stable information for bmux's
+current lookup. bmux resolves the Git repository root, lists public worktree
+entries, and selects the entry whose public worktree `path` equals the resolved
+repository root. This is a small public-contract selection step, not an engine
+contract defect.
+
+Adoption finding classification:
+
+- Bmux concern: argument parsing, Git probing, path normalization from user
+  input, outside-worktree rejection, fallback messages, exit behavior, JSON/text
+  rendering, and fixture setup.
+- Provenance Engine contract concern: none found for V1.
+- Future architecture concern: rename-aware identity, deleted-file history
+  beyond recorded deletion-like file changes, historical path identity,
+  case-insensitive matching, symlink identity, semantic explanations, and
+  compiled explanations.
+
 ## V1 Path Identity
 
 Supported V1 semantics:
@@ -81,7 +121,7 @@ Coverage includes successful explanation, missing file, normalized path handling
 
 ## bmux Adoption Handoff
 
-Required engine revision: use the merged Provenance Engine revision containing this document and `ProvenanceEngineFileExplanationSDKTests`, or any later revision. During review, use branch `slice-d-file-explanation-readiness`.
+Required engine revision: use the merged Provenance Engine default-branch revision containing this document and `ProvenanceEngineFileExplanationSDKTests`, or any later revision. Do not keep bmux pinned indefinitely to the temporary feature-branch commit `384026e36087dda576e25343907c3e06d8a4d594`.
 
 Modules to import:
 
@@ -156,17 +196,28 @@ Exact migration steps:
 9. Remove file-explanation-only local query helpers after the migrated command is accepted.
 10. Confirm no bmux file-explanation path imports `ProvenanceEngineSQLite` or reads storage tables directly.
 
+After engine acceptance, bmux must repin:
+
+- the root package dependency and lockfile, if present for the Xcode or package workspace;
+- `tests/fixtures/provenance-engine-file-explanation-seeder/Package.swift`;
+- `tests/fixtures/provenance-engine-file-explanation-seeder/Package.resolved`;
+- `tests/fixtures/provenance-engine-session-tree-seeder/Package.swift`;
+- `tests/fixtures/provenance-engine-session-tree-seeder/Package.resolved`.
+
+No bmux API migration changes are otherwise required by the engine review.
+
 ## Architecture Review
 
-1. Did this reinforce the Reference Architecture? Yes. The slice kept Provenance Engine responsible for reusable contracts and private storage-backed projections while leaving bmux responsible for CLI behavior, Git resolution, fallback text, and rendering.
-2. Did the public API feel sufficient? Yes. `fileExplanation(worktreeID:path:)` represented the current consumer read path without extension.
-3. Did implementation require storage knowledge? No for the SDK tests and adopter contract. Storage inspection was used only to compare current bmux behavior and confirm existing engine behavior, not as a consumer dependency.
-4. Is path identity represented at the correct architectural layer? Yes for V1. bmux owns user path and Git worktree resolution; the engine owns exact worktree-scoped repository-relative file identity.
-5. Should the Reference Architecture change? No. This is validation evidence, not a new architectural requirement.
-6. What can consumers now do? Consumers can seed file-change evidence through public events and read focused file explanations through the public SDK without importing SQLite internals.
-7. What technical debt was introduced? No intentional code debt. Documentation now records V1 exact-path limitations; future rename-aware identity remains explicit debt outside this slice.
-8. What future opportunities emerged? Current-context migration can reuse the same path-identity boundary. A future versioned path-identity contract may be warranted after real rename or historical lookup requirements appear.
-9. Overall confidence: Architecture validated.
+1. Did real consumer adoption validate the documented contract? Yes. bmux PR 9 migrated `provenance explain <path>` through the documented factory, worktree-list, and file-explanation contracts.
+2. Was a new public API avoided appropriately? Yes. The small public worktree-list selection step was sufficient and did not justify a specialized lookup API.
+3. Did any engine implementation detail leak to bmux? No. The migrated path did not import ProvenanceEngineSQLite, query SQLite directly, read table names, or recreate the engine query.
+4. Is worktree/path identity represented at the correct layer? Yes. bmux owns Git-root discovery, user-path handling, repository-relative normalization, outside-worktree rejection, and user-facing fallback behavior. Provenance Engine owns exact path lookup within the selected worktree, newest-current-state evidence selection, and domain response construction.
+5. Did the worktree-list contract create meaningful friction? No. The public `ProvenanceWorktreeListEntry` exposes worktree path and repository data needed for bmux's current exact-root selection.
+6. Does the Reference Architecture require an update? No. The adoption validates the existing architecture; it does not add a new architectural requirement.
+7. What consumer capability is now enabled? Consumers can explain a repository-relative file through public engine SDK contracts and render attributed or unattributed evidence without storage access.
+8. What future architecture concerns remain intentionally deferred? Rename-aware identity, deleted-file history, historical path identity, case-insensitive matching, symlink identity, semantic explanations, compiled explanations, daemon/service transport, and shared evidence ingestion remain outside Slice D.
+9. What technical debt remains? bmux still needs final dependency stabilization and acceptance for PR 9, and later slices still need to migrate current-context, lifecycle/capture, projection storage, and observability paths.
+10. Overall confidence: Architecture validated.
 
 ## Scope Exclusions
 

@@ -8,7 +8,7 @@ Detailed technical contract rules remain in `docs/integration-contract.md`. The 
 
 V1 adoption is a controlled migration. The first external bmux path, `bmux provenance worktrees list`, is complete. Slice C session-tree read migration is accepted after bmux PR 7 merged at `08763dd0d3256989180dcc04f426da1f24369175` with an explicit GitHub Actions waiver for unavailable Blacksmith runner evidence.
 
-The next active milestone is Slice D: file-explanation read migration. Do not begin current context, lifecycle writes, storage migration, daemon transport, retrieval, GitHub ingestion, or Knowledge Compiler implementation before the file-explanation path is validated.
+The active milestone is Slice D: file-explanation read migration. Engine-side readiness is accepted after real bmux adoption validated the existing public contract, but bmux adoption remains pending final dependency stabilization and acceptance. Do not begin current context, lifecycle writes, storage migration, daemon transport, retrieval, GitHub ingestion, or Knowledge Compiler implementation before the file-explanation path is fully accepted in bmux.
 
 Planned order after the active file-explanation milestone: current context, lifecycle recording, worktree observation capture, storage ownership migration, daemon or service transport, then shared evidence and Knowledge Compiler adoption.
 
@@ -86,12 +86,13 @@ Capability owner: provenance-engine. Adopter: bmux.
 Required contract: `ProvenanceEngineClient.fileExplanation(ProvenanceFileExplanationRequest())`.
 
 Provenance-engine work: preserve file-explanation DTOs and projection semantics.
-Readiness assessment: existing contract is sufficient. Engine-side SDK coverage
-now proves adopters can seed file-change evidence through public `appendEvent`
-calls and read file explanations through `ProvenanceEngineClientFactory` plus
-`ProvenanceEngineClient.fileExplanation(...)` without importing SQLite internals.
-V1 path identity is exact worktree-scoped repository-relative path identity;
-consumers own Git path resolution and normalization.
+Readiness assessment: accepted. Engine-side SDK coverage and bmux PR 9 adoption
+prove adopters can seed file-change evidence through public `appendEvent` calls,
+construct a client through `ProvenanceEngineClientFactory`, resolve worktrees
+through `ProvenanceEngineClient.worktrees(...)`, and read file explanations
+through `ProvenanceEngineClient.fileExplanation(...)` without importing SQLite
+internals. V1 path identity is exact worktree-scoped repository-relative path
+identity; consumers own Git path resolution and normalization.
 
 bmux work: migrate only the file-explanation CLI path. Keep Git target resolution, fallback text, command parsing, and output rendering in bmux.
 
@@ -107,7 +108,8 @@ Migration or cleanup: remove file-explanation-only local query helpers once unus
 The precise bmux adoption handoff is recorded in
 `docs/file-explanation-readiness-slice-completion.md`.
 
-Status: Active.
+Status: Engine readiness accepted; bmux adoption pending final dependency
+stabilization and PR acceptance.
 
 ## Milestone: bmux Current Session and Task Context
 
