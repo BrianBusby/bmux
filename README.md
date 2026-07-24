@@ -10,6 +10,7 @@ ProvenanceEngine is the independent local-first provenance product. This reposit
 - Technical integration contract: `docs/integration-contract.md`
 - Canonical bmux integration roadmap: `docs/bmux-integration-roadmap.md`
 - Current status and active gate: `docs/current-status.md`
+- Slice D file-explanation readiness evidence: `docs/file-explanation-readiness-slice-completion.md`
 
 ## Package
 
