@@ -36,6 +36,11 @@ Accepted provenance-engine default-branch revision
 `2026914454a00ccc6c45d686ea741111b0a01229`, the merge commit for
 `slice-c-session-tree-read-contract`.
 
+Merged bmux PR 7 (`https://github.com/BrianBusby/bmux/pull/7`) with the normal
+GitHub merge method at `08763dd0d3256989180dcc04f426da1f24369175` on
+2026-07-24T17:20:04Z. Final PR head:
+`322629bf0fa0bd19367f090bdfcf1bc21c6a1e95`.
+
 The bmux branch `slice-c-session-tree-read-migration` pins the external package
 to that exact revision, links the already-public `ProvenanceEngineContracts` and
 `ProvenanceEngineSDK` products, and reconnects only
@@ -99,7 +104,8 @@ while manually dispatched runs queued without runner assignment on
 no required status-check branch protection, and acceptance relied on the local
 validation suite above. This waiver applies only to Slice C and does not
 permanently remove CI expectations; runner or workflow scheduling should be
-tracked separately as repository infrastructure work.
+tracked separately as repository infrastructure work in
+`https://github.com/BrianBusby/bmux/issues/8`.
 
 Dependency decision: use merged default-branch revision `2026914454a00ccc6c45d686ea741111b0a01229` until a later release or tag includes Slice C.
 

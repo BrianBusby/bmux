@@ -26,6 +26,12 @@ The standalone Provenance Engine is the accepted provenance storage/query
 boundary. Slice C session-tree read migration is accepted with an explicit
 GitHub Actions waiver for bmux PR 7.
 
+bmux consumer adoption merged through PR 7
+(`https://github.com/BrianBusby/bmux/pull/7`) using the normal GitHub merge
+method at merge commit `08763dd0d3256989180dcc04f426da1f24369175` on
+2026-07-24T17:20:04Z. The final PR head was
+`322629bf0fa0bd19367f090bdfcf1bc21c6a1e95`.
+
 bmux adoption currently pins provenance-engine revision
 `2026914454a00ccc6c45d686ea741111b0a01229`, from
 `git@github.com:BrianBusby/provenance-engine.git`, because Slice C is merged on
@@ -111,4 +117,5 @@ Slice C acceptance validation completed on 2026-07-24:
   had no required status-check branch protection, and acceptance relied on the
   local validation suite above. This waiver applies only to Slice C and does
   not permanently remove CI expectations; runner or workflow scheduling should
-  be tracked separately as repository infrastructure work.
+  be tracked separately as repository infrastructure work in
+  `https://github.com/BrianBusby/bmux/issues/8`.

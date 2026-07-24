@@ -3,6 +3,11 @@
 Status: Slice C session-tree read migration accepted on 2026-07-24 with an
 explicit GitHub Actions waiver for bmux PR 7.
 
+Merged adoption: `https://github.com/BrianBusby/bmux/pull/7` merged with the
+normal GitHub merge method at
+`08763dd0d3256989180dcc04f426da1f24369175` on 2026-07-24T17:20:04Z. Final PR
+head: `322629bf0fa0bd19367f090bdfcf1bc21c6a1e95`.
+
 Planning authority: this is the bmux-local adoption inventory and implementation state. The canonical cross-repository roadmap is `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
 
 ## Current State
@@ -69,7 +74,8 @@ The external engine owns durable facts: immutable provenance events, repository/
   jobs/check runs, manually dispatched runs queued without assignment to
   `blacksmith-4vcpu-ubuntu-2404`, no failing CI result was observed, and branch
   protection did not require those checks. CI reliability must be tracked as
-  infrastructure work outside Slice D.
+  infrastructure work outside Slice D in
+  `https://github.com/BrianBusby/bmux/issues/8`.
 - bmux-specific capture and policy should stay outside the engine: Git snapshot scheduling, duplicate-fingerprint suppression, command parsing, fallback text, output formatting, UI routing, and runtime degradation.
 - The local store still mixes engine-owned durable facts with bmux-owned capture policy and observability trace writes. Migration should remove direct store reads/writes slice by slice instead of creating permanent dual paths.
 
