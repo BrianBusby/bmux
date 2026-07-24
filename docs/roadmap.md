@@ -33,14 +33,14 @@ Local bmux integration notes live in `docs/provenance-integration.md`.
 - Context-efficiency telemetry package and CLI surfaces for read-only Codex rollout inspection.
 - Local WorkProvenance capture, projections, lifecycle relationship recording, and provenance CLI presentation.
 - First external provenance-engine adoption path: `bmux provenance worktrees list` now reads through provenance-engine `0.1.0`.
-- Second external provenance-engine adoption path: `bmux provenance sessions tree <session-id>` now reads through `ProvenanceEngineClient.sessionTree(...)` at engine revision `dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e`.
+- Second external provenance-engine adoption path: `bmux provenance sessions tree <session-id>` now reads through `ProvenanceEngineClient.sessionTree(...)` at engine revision `2026914454a00ccc6c45d686ea741111b0a01229`.
 - Transitional legacy boundary clarified as `BmuxLegacyProvenanceClient` for remaining bmux-local provenance paths.
 
 ## Active Work
 
-Active gate: Slice C complete in bmux; next gate is file-explanation read migration after review/acceptance.
+Active gate: Slice D file-explanation read migration.
 
-Completed Slice C scope: migrated only the provenance session-tree CLI command to the external SQLite-backed provenance-engine client.
+Accepted Slice C scope: migrated only the provenance session-tree CLI command to the external SQLite-backed provenance-engine client.
 
 Preserved existing JSON, text, missing-database, no-session, and bounds behavior.
 
@@ -48,7 +48,7 @@ Session-tree CLI fixture setup now uses public provenance-engine APIs.
 
 Removed only session-tree legacy code that became unused.
 
-Out of scope: file explanations, current context, lifecycle writes, worktree observation capture, storage migration, daemon transport, UI work, observability expansion, GitHub ingestion, and Knowledge Compiler implementation.
+Out of scope for Slice D: current context, lifecycle writes, worktree observation capture, storage migration, daemon transport, UI work, observability expansion, GitHub ingestion, and Knowledge Compiler implementation.
 
 ## Near-Term Planned Work
 

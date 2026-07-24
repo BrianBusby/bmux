@@ -34,13 +34,13 @@ provenance-engine owns reusable provenance infrastructure:
 
 ## Current bmux-Owned Integration Work
 
-Current active milestone: Slice C session-tree read migration is complete in bmux and awaiting external roadmap acceptance. The next bmux candidate is file-explanation read migration after review.
+Current active milestone: Slice D file-explanation read migration. Slice C session-tree read migration is accepted.
 
 Slice C migrated only the provenance session-tree CLI command to the external SQLite-backed provenance-engine client, preserved existing presentation and fallback behavior, used public engine APIs for fixture setup, and removed only session-tree-specific legacy code that became unused.
 
 The completed first adoption path is `bmux provenance worktrees list`. It reads through provenance-engine `0.1.0` while bmux continues to own CLI output compatibility.
 
-The completed second adoption path is `bmux provenance sessions tree <session-id>`. It reads through provenance-engine revision `dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e` while bmux continues to own CLI output compatibility.
+The completed second adoption path is `bmux provenance sessions tree <session-id>`. It reads through provenance-engine revision `2026914454a00ccc6c45d686ea741111b0a01229` while bmux continues to own CLI output compatibility. The engine limit is a combined session-plus-relationship row budget; bmux adapts it at the CLI boundary to preserve the legacy 100-session presentation cap.
 
 ## Local Operational Notes
 
@@ -50,6 +50,6 @@ The completed second adoption path is `bmux provenance sessions tree <session-id
 
 Do not begin current context, lifecycle writes, capture append migration, storage migration, daemon transport, retrieval, UI work, GitHub ingestion, or Knowledge Compiler implementation.
 
-Wait until the current shared milestone is accepted before starting file explanations.
+File explanations may begin only in a new focused Slice D branch or session.
 
 Avoid permanent dual reads.

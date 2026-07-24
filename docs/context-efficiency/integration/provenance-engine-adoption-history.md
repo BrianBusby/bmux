@@ -30,10 +30,10 @@ No daemon, IPC, storage move, schema migration, data migration, semantic
 retrieval, observability expansion, UI work, or additional read-path migration
 was started.
 
-## 2026-07-23 Session-Tree Read Adoption
+## 2026-07-24 Session-Tree Read Adoption
 
-Accepted provenance-engine readiness revision
-`dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e` from branch
+Accepted provenance-engine default-branch revision
+`2026914454a00ccc6c45d686ea741111b0a01229`, the merge commit for
 `slice-c-session-tree-read-contract`.
 
 The bmux branch `slice-c-session-tree-read-migration` pins the external package
@@ -82,19 +82,23 @@ Knowledge Compiler work was started.
   required for that policy, but adopters should document this pattern.
 - Limit behavior: the engine limit is combined session-plus-relationship rows,
   while bmux's legacy CLI behavior was a 100-session cap with relationships for
-  included sessions. bmux translated the cap to a combined row limit. This is a
-  bmux compatibility concern and a future documentation question for the engine
-  contract, not a current contract defect.
+  included sessions. bmux translated the cap to a combined row limit. The engine
+  returns relationships only for child sessions included within the limit, then
+  returns external identities for included sessions. This is now documented in
+  the engine integration contract and is not a current contract defect.
 - Missing abstraction: none for this read path.
 - Implementation detail leakage: none on the migrated path. Tests seed through
   public `appendEvent`; no session-tree CLI test reads engine tables directly.
 
-Classification: Adoption successful - continue.
+Final validation: final `slice-c-main` tagged Debug reload passed; provenance CLI integration tests passed against the tagged bundled CLI; targeted `WorkProvenanceStoreTests` and `SubsessionProvenanceTests` passed; pbxproj, Package.resolved policy, workspace package grouping, whitespace, and active-path prohibited-import/table scans passed.
 
-Next recommendation: after the shared Slice C milestone is accepted, migrate the
-file-explanation read path. No engine contract changes are required before that
-slice. The only follow-up is to release/tag the engine readiness revision before
-depending consumers need a stable version pin.
+Dependency decision: use merged default-branch revision `2026914454a00ccc6c45d686ea741111b0a01229` until a later release or tag includes Slice C.
+
+Classification: Adoption accepted - continue.
+
+Next recommendation: migrate the file-explanation read path in a new focused
+Slice D branch or session. No engine contract changes are required before that
+slice. The only follow-up is to replace the merged revision pin with a later release/tag if one is created.
 
 ### Slice Completion Architecture Review
 

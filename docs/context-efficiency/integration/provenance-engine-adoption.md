@@ -1,12 +1,12 @@
 # Provenance Engine Adoption
 
-Status: Slice C session-tree read migration complete in bmux on 2026-07-23.
+Status: Slice C session-tree read migration accepted on 2026-07-24.
 
 Planning authority: this is the bmux-local adoption inventory and implementation state. The canonical cross-repository roadmap is `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
 
 ## Current State
 
-bmux consumes provenance-engine as an external Swift package pinned to revision `dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e`. The pin is a revision rather than version `0.1.0` because Slice C readiness is not yet released as a tag.
+bmux consumes provenance-engine as an external Swift package pinned to revision `2026914454a00ccc6c45d686ea741111b0a01229`. The pin is a merged default-branch revision rather than version `0.1.0` because Slice C readiness is not yet released as a tag.
 
 The Xcode project links `ProvenanceEngineContracts` and `ProvenanceEngineSDK`. The adopted runtime paths are `bmux provenance worktrees list` and `bmux provenance sessions tree <session-id>`.
 
@@ -16,11 +16,11 @@ bmux still owns CLI parsing, fallback messages, JSON/text presentation, and outp
 
 ## Session-Tree Adoption Completion
 
-The session-tree adoption slice is complete in bmux.
+The session-tree adoption slice is accepted.
 
-Verified from code: `Package.resolved` pins provenance-engine revision `dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e`; `BMUXCLI+Provenance.swift` constructs the external client for `runProvenanceSessions`; the adopted path calls `client.sessionTree(ProvenanceEngineContracts.ProvenanceSessionTreeRequest(...))`; the CLI maps external DTOs into bmux-owned presentation payloads; the old direct `CLIProvenanceSQLiteReader.sessionTree()` implementation is absent; the local legacy `BmuxLegacyProvenanceClient.sessionTree` method and duplicate bmux-local session-tree request/response DTOs are absent; the CLI session-tree fixture seeds through public engine APIs.
+Verified from code: `Package.resolved` pins provenance-engine revision `2026914454a00ccc6c45d686ea741111b0a01229`; `BMUXCLI+Provenance.swift` constructs the external client for `runProvenanceSessions`; the adopted path calls `client.sessionTree(ProvenanceEngineContracts.ProvenanceSessionTreeRequest(...))`; the CLI maps external DTOs into bmux-owned presentation payloads; the old direct `CLIProvenanceSQLiteReader.sessionTree()` implementation is absent; the local legacy `BmuxLegacyProvenanceClient.sessionTree` method and duplicate bmux-local session-tree request/response DTOs are absent; the CLI session-tree fixture seeds through public engine APIs.
 
-Compatibility preserved: JSON shape, text shape, missing-database behavior, no-session behavior, depth-first ordering, relationship and external identity rendering, and the legacy 100-session cap. The adapter translates bmux's legacy 100-session cap to the engine's combined session-plus-relationship row limit.
+Compatibility preserved: JSON shape, text shape, missing-database behavior, no-session behavior, depth-first ordering, relationship and external identity rendering, and the legacy 100-session cap. The adapter translates bmux's legacy 100-session cap to the engine's combined session-plus-relationship row limit. The engine returns relationships only for returned child sessions and external identities for included sessions; consumers should not treat the engine limit as a presentation cap.
 
 ## Worktree Adoption Completion
 
@@ -68,7 +68,7 @@ The external engine owns durable facts: immutable provenance events, repository/
 
 ## Next Target
 
-Next target after shared milestone acceptance: file-explanation read migration.
+Active target: Slice D file-explanation read migration.
 
 Exact next scope: migrate only `bmux provenance explain <path>` to construct the external SQLite-backed engine client and call `ProvenanceEngineClient.fileExplanation(ProvenanceFileExplanationRequest(...))`; preserve existing JSON/text/no-database/no-worktree/no-file behavior and bounds; seed tests through public engine APIs where applicable; remove file-explanation-only local query helpers that become unused.
 

@@ -1,6 +1,6 @@
 # Bmux Context Efficiency: Current Status
 
-Last updated: 2026-07-23
+Last updated: 2026-07-24
 
 This file is the live handoff index for context-efficiency, provenance, and
 handoff work. Keep it concise; move slice history and detailed findings into
@@ -23,10 +23,11 @@ topic documents.
 ## Active State
 
 The standalone Provenance Engine is the accepted provenance storage/query
-boundary. bmux adoption currently pins provenance-engine revision
-`dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e`, from
-`git@github.com:BrianBusby/provenance-engine.git`, because Slice C readiness is
-not yet released as a versioned tag.
+boundary. Slice C session-tree read migration is accepted.
+
+bmux adoption currently pins provenance-engine revision
+`2026914454a00ccc6c45d686ea741111b0a01229`, from
+`git@github.com:BrianBusby/provenance-engine.git`, because Slice C is accepted on the engine default branch but is not yet released as a versioned tag.
 
 bmux now consumes provenance-engine as an external Swift package. The Xcode
 project links the public products `ProvenanceEngineContracts` and
@@ -62,7 +63,7 @@ Do not add engine features speculatively. Engine expansion is frozen until a rea
 
 ## Next Target
 
-Next valid slice after Slice C acceptance: file-explanation read migration.
+Active milestone: Slice D, file-explanation read migration.
 
 Slice C migrated only `bmux provenance sessions tree <session-id>` to the external SQLite-backed engine client and `ProvenanceEngineClient.sessionTree(...)`; preserved existing CLI compatibility; seeded tests through public engine APIs; and removed only session-tree legacy code that became unused.
 
@@ -88,4 +89,13 @@ Phase 4 migration plan: `docs/context-efficiency/provenance-engine-phase4-reconn
 
 ## Validation Notes
 
-For Slice C, validation must prove the session-tree command reads through the public engine SDK while preserving bmux presentation: run focused CLI JSON/text/missing-database/no-session/limit coverage, affected WorkProvenance and subsession tests, dependency/package checks, prohibited import/table scans, `git diff --check`, and a tagged Debug reload build.
+Slice C acceptance validation completed on 2026-07-24:
+
+- `./scripts/reload.sh --tag slice-c-main`: passed and built the tagged Debug app plus bundled CLI.
+- `BMUX_BUNDLED_CLI_PATH=... python3 tests/test_provenance_cli.py`: passed against the tagged bundled CLI.
+- `xcodebuild -project bmux.xcodeproj -scheme bmux-unit -configuration Debug -destination 'platform=macOS' -derivedDataPath /Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-slice-c-main BMUX_SKIP_ZIG_BUILD=1 -only-testing:bmuxTests/WorkProvenanceStoreTests -only-testing:bmuxTests/SubsessionProvenanceTests test`: passed 31 tests.
+- `scripts/check-pbxproj.sh`: passed.
+- `python3 scripts/check-package-resolved-policy.py`: passed.
+- `python3 scripts/check-workspace-package-groups.py --check`: passed.
+- `git diff --check`: passed.
+- Scans confirmed no `ProvenanceEngineSQLite` import and no direct session-tree table reads in the migrated CLI path.
