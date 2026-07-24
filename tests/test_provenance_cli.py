@@ -687,7 +687,7 @@ def provenance_engine_package_dependency() -> str:
     if sibling.exists():
         return f'.package(path: "{sibling}")'
 
-    return '.package(url: "git@github.com:BrianBusby/provenance-engine.git", revision: "384026e36087dda576e25343907c3e06d8a4d594")'
+    return '.package(url: "git@github.com:BrianBusby/provenance-engine.git", revision: "126afde36671f53a137953200e7883e6b4093ac3")'
 
 
 def ensure_worktree_seed_package(root: Path) -> Path:

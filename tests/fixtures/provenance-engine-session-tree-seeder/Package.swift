@@ -10,7 +10,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "git@github.com:BrianBusby/provenance-engine.git",
-            revision: "384026e36087dda576e25343907c3e06d8a4d594"
+            revision: "126afde36671f53a137953200e7883e6b4093ac3"
         ),
     ],
     targets: [
