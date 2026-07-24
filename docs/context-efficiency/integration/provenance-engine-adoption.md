@@ -1,7 +1,6 @@
 # Provenance Engine Adoption
 
-Status: Slice C session-tree read migration accepted on 2026-07-24 with an
-explicit GitHub Actions waiver for bmux PR 7.
+Status: Slice D file-explanation read adoption implemented on branch `slice-d-file-explanation-sdk-migration`, pending bmux PR review and Provenance Engine PR 5 acceptance. Slice C session-tree read migration remains accepted with an explicit GitHub Actions waiver for bmux PR 7.
 
 Merged adoption: `https://github.com/BrianBusby/bmux/pull/7` merged with the
 normal GitHub merge method at
@@ -12,13 +11,72 @@ Planning authority: this is the bmux-local adoption inventory and implementation
 
 ## Current State
 
-bmux consumes provenance-engine as an external Swift package pinned to revision `2026914454a00ccc6c45d686ea741111b0a01229`. The pin is a merged default-branch revision rather than version `0.1.0` because Slice C readiness is not yet released as a tag.
+bmux consumes provenance-engine as an external Swift package pinned to revision `384026e36087dda576e25343907c3e06d8a4d594`. The pin is a temporary exact readiness commit from Provenance Engine PR 5, which is still open/draft and not yet released as a tag.
 
-The Xcode project links `ProvenanceEngineContracts` and `ProvenanceEngineSDK`. The adopted runtime paths are `bmux provenance worktrees list` and `bmux provenance sessions tree <session-id>`.
+The Xcode project links `ProvenanceEngineContracts` and `ProvenanceEngineSDK`. The adopted runtime paths are `bmux provenance worktrees list`, `bmux provenance sessions tree <session-id>`, and the Slice D adoption-branch path `bmux provenance explain <path>`.
 
-The worktree path constructs an external SQLite-backed client with `ProvenanceEngineClientFactory().sqliteClient(databaseURL:)` and calls `ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest())`. The session-tree path uses the same factory and calls `ProvenanceEngineClient.sessionTree(ProvenanceSessionTreeRequest(...))`.
+The worktree path constructs an external SQLite-backed client with `ProvenanceEngineClientFactory().sqliteClient(databaseURL:)` and calls `ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest())`. The session-tree path uses the same factory and calls `ProvenanceEngineClient.sessionTree(ProvenanceSessionTreeRequest(...))`. The file-explanation path uses the same factory, resolves the matching engine worktree through `worktrees(...)`, and calls `ProvenanceEngineClient.fileExplanation(ProvenanceFileExplanationRequest(...))` with the repository-relative path.
 
 bmux still owns CLI parsing, fallback messages, JSON/text presentation, and output compatibility.
+
+## File-Explanation Adoption Candidate
+
+Slice D is implemented on branch `slice-d-file-explanation-sdk-migration` and
+is not yet accepted.
+
+Verified from code: `Package.resolved` pins provenance-engine revision
+`384026e36087dda576e25343907c3e06d8a4d594`; `BMUXCLI+Provenance.swift`
+constructs the external client for `runProvenanceExplain`; bmux resolves the
+Git worktree root and repository-relative path; the adopted path resolves the
+engine worktree through `client.worktrees(ProvenanceWorktreeListRequest())`;
+and the command calls
+`client.fileExplanation(ProvenanceFileExplanationRequest(worktreeID:path:))`.
+
+Compatibility preserved: attributed file, unattributed file, unknown file,
+missing database, path outside Git worktree, no Git worktree, no matching engine
+worktree, relative input path, absolute input path, JSON output, text output,
+unknown flags, extra arguments, and exit status.
+
+Legacy code removed for this path: direct file-explanation SQL on
+`CLIProvenanceSQLiteReader`, `WorkProvenanceStore.fileExplanation(...)`,
+`BmuxLegacyProvenanceClient.fileExplanation`, duplicate bmux-local
+file-explanation request/response DTOs, `CLIProvenanceExplanationRow`, and
+direct SQLite-seeded file-explanation CLI fixtures.
+
+Legacy code intentionally retained: `WorkProvenanceStore`, current-context SQL,
+event/projection storage, lifecycle/capture paths, observability traces, and
+presentation adapters remain because they are used by unmigrated paths or
+bmux-owned rendering.
+
+Integration findings: no engine contract concern was found. The existing
+public `fileExplanation` request/response represented the current bmux CLI
+behavior cleanly. The only integration friction is release management: bmux
+temporarily consumes an exact readiness commit from an open/draft engine PR.
+Future architecture concerns remain rename-aware identity, historical
+explanations, and deleted-file reconstruction; none should change Slice D V1.
+
+Architecture Review:
+
+1. The migration reinforced the platform/consumer boundary: the engine owns the
+   domain query and storage access, while bmux owns parsing, Git path
+   normalization, fallback policy, and rendering.
+2. The existing public contract was sufficient in real use.
+3. bmux did not need knowledge of engine storage.
+4. Path normalization is owned by the correct layer: bmux converts user input to
+   `(worktreeID, repository-relative path)`, and the engine performs exact
+   matching.
+5. The response did not require awkward presentation adaptation; bmux uses a
+   narrow adapter to keep legacy JSON/text shapes stable.
+6. Consumer capability unlocked: bmux can explain files entirely through public
+   engine contracts while preserving product-specific CLI behavior.
+7. Removed debt: file-explanation-only local SQL, local DTO duplication, legacy
+   client method, and direct-storage CLI fixture seeding.
+8. Remaining debt: current-context reads, lifecycle/capture writes, local
+   projection storage, and observability traces remain bmux-local until later
+   slices.
+9. Future architecture concerns: rename-aware and historical file identity
+   remain out of scope for V1.
+10. Overall confidence: Architecture validated.
 
 ## Session-Tree Adoption Completion
 
@@ -56,19 +114,20 @@ The external engine owns durable facts: immutable provenance events, repository/
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Worktree list CLI | read, presentation | `bmux provenance worktrees list` | Already migrated in `CLI/BMUXCLI+Provenance.swift` through `ProvenanceEngineClientFactory().sqliteClient(databaseURL:)`. | None. | External engine worktree/repository projections. bmux still owns CLI fallback and rendering. | Yes: `worktrees`. | Done. | Local `CLIProvenanceSQLiteReader.worktreeList()` and local worktree-list DTO duplication already removed. |
 | Session tree CLI | read, presentation | `bmux provenance sessions tree <session-id>` | Already migrated in `CLI/BMUXCLI+Provenance.swift` through `ProvenanceEngineClientFactory().sqliteClient(databaseURL:)`. | None. | External engine session, relationship, and external identity projections. bmux still owns CLI fallback and rendering. | Yes: `sessionTree`. | Done, Slice C. | Local direct CLI SQLite session-tree reader, duplicate bmux-local session-tree request/response DTOs, `BmuxLegacyProvenanceClient.sessionTree`, and raw SQLite CLI fixture seeding for this path were removed. `WorkProvenanceStore.sessionTree(rootSessionID:limit:)` intentionally remains for lifecycle/capture projection tests until a later lifecycle/storage slice. |
-| File explanation CLI | read, presentation | `bmux provenance explain <path>` | CLI resolves the Git target, uses `WorkProvenanceStore.worktree(path:)` and `repository(id:)` for fallback/presentation context, then calls `BmuxLegacyProvenanceClient.fileExplanation(...)`. | `fileExplanation`. | Local `worktrees`, `repositories`, `file_changes`, `change_sets`, `checkpoints`, `work_contributions`, `sessions`, and `work_items` projections. | Yes: `fileExplanation`. | 2, after session-tree read migration. | `WorkProvenanceStore.fileExplanation(worktreeID:path:)`, direct `worktree(path:)`/`repository(id:)` fallback reads if replaced by engine response/fallback DTOs, the `fileExplanation` method on `BmuxLegacyProvenanceClient`, and local file-explanation response tests/seeding. |
+| File explanation CLI | read, presentation | `bmux provenance explain <path>` | Slice D adoption branch resolves the Git target in bmux, resolves the matching engine worktree through `ProvenanceEngineClient.worktrees(...)`, then calls `ProvenanceEngineClient.fileExplanation(...)`. | None. | External engine worktree, repository, file-change, change-set, checkpoint, contribution, session, and work-item projections. bmux still owns CLI fallback and rendering. | Yes: `fileExplanation`. | Done in Slice D branch; pending acceptance. | Direct file-explanation SQL on `CLIProvenanceSQLiteReader`, `WorkProvenanceStore.fileExplanation(...)`, `BmuxLegacyProvenanceClient.fileExplanation`, duplicate bmux-local file-explanation DTOs, and direct-storage file-explanation fixtures were removed. |
 | Current context CLI | read, presentation, policy | `bmux provenance context current` | CLI resolves the current Git target, constructs `WorkProvenanceStore`, and calls `BmuxLegacyProvenanceClient.currentContext(...)` with bmux-owned default section limits. | `currentContext`. | Local `worktrees`, `repositories`, active `sessions`, `work_contributions`, `work_items`, latest `file_changes`, `change_sets`, `checkpoints`, `validation_runs`, and conflict projection SQL. | Yes: `currentContext`. | 3, after file explanation. | `WorkProvenanceStore.currentContext(...)`, `currentContext*` SQL helpers, the `currentContext` method on `BmuxLegacyProvenanceClient`, and local current-context response tests/seeding. |
 | Subsession lifecycle capture | capture, write, policy, observability | App runtime: `AppDelegate` wires `AgentChatTranscriptService.recordSubsessionLifecycleChanges(with:)`; hook events call `WorkProvenanceRuntime.recordSubsessionLifecycleChange(...)`; recorder builds lifecycle events. | `WorkProvenanceSubsessionLifecycleRecorder` resolves child identity, reads parent relationship from `WorkProvenanceStore`, appends through `appendWithStageTrace(...)`, and optionally writes observability trace rows. | None on `BmuxLegacyProvenanceClient`; legacy direct store methods are `parentSession(for:)` and `appendWithStageTrace(...)`. | Local `events`, `sessions`, `session_relationships`, `session_external_identities`, and lifecycle observability tables. | Yes for durable write: `recordSubsessionLifecycle` and `appendEvent`. No external observability API. | 4, after read paths prove contract compatibility. | Local lifecycle append path in `WorkProvenanceSubsessionLifecycleRecorder`, `ProvenanceSubsessionLifecycleRecording` local seam if no longer needed for bmux tests, `appendWithStageTrace(...)` coupling to `WorkProvenanceStore`, and parent-relationship direct read once identity/root computation moves to engine or a bmux adapter contract. |
 | Worktree observation capture | capture, write, policy | App runtime: `bmuxApp` creates `WorkProvenanceRuntime.live()`; `TabManager.workspaceTabsWillChange` and current-directory notifications call `observeWorkspaces`. | `WorkProvenanceObservationService` snapshots Git state, applies duplicate-fingerprint policy, builds `worktree_observed` events, appends to `WorkProvenanceStore`, and prunes observed history. | None on `BmuxLegacyProvenanceClient`; direct store methods are `append(_:)` and `pruneExpiredObservedHistory(now:)`. | Local event ledger plus repository/worktree/change-set/file-change projections and local retention pruning. | Yes for durable event append: `appendEvent`. No engine API should own bmux Git snapshot capture or duplicate-fingerprint policy. | 5, after lifecycle write or alongside a focused append adapter slice. | Direct `WorkProvenanceStore.append(_:)`/retention use from `WorkProvenanceObservationService`, local projection update code for observed worktree events, and eventually local retention SQL if engine owns event-retention policy. Capture adapters and Git inspection remain bmux-owned. |
 | Runtime composition | capture, policy | App startup in `bmuxApp.init()` and `WorkProvenanceRuntime.live()`. | Constructs local `WorkProvenanceStore`, `ProvenanceObservabilityStore`, observation service, and lifecycle recorder from bmux state paths. | None directly. | Local bmux work-provenance SQLite and observability SQLite paths under `~/.local/state/bmux/work-provenance`. | Yes for engine client construction: `ProvenanceEngineClientFactory().sqliteClient(databaseURL:)`; storage relocation/data migration is not part of Slice B. | 6, after all runtime reads/writes stop depending on local store internals. | `WorkProvenanceRuntime.live()` local store construction and local database URL ownership for authoritative provenance facts. Keep bmux-owned runtime degradation and capture wiring. |
 | Lifecycle trace CLI | observability, presentation | `bmux provenance traces lifecycle-ingestion` | CLI opens bmux observability SQLite through `CLIProvenanceObservabilitySQLiteReader` and renders lifecycle ingestion traces. | None. | Local `ProvenanceObservabilityStore` tables: `pipeline_runs`, `pipeline_stage_executions`, `identity_resolution_attempts`, and `projection_lineage`. | No accepted external observability API; roadmap says observability must not expand ahead of migration needs. | 7, after durable lifecycle writes are migrated and an explicit observability contract is accepted. | `CLIProvenanceObservabilitySQLiteReader`, `ProvenanceLifecycleTraceQuerying`, `ProvenanceObservabilityStore+ProvenanceLifecycleTraceQuerying`, and lifecycle trace DTO/presentation code only if replaced by an engine-owned observability/read API. |
-| Legacy store tests | read, write, capture, policy, observability | `bmuxTests/WorkProvenanceStoreTests.swift`, `SubsessionProvenanceTests.swift`, `WorkProvenanceObserverTests.swift`, and CLI fixture tests. | Tests instantiate local stores/recorders/services directly. `WorkProvenanceStoreTests` aliases the local seam as `TestBmuxLegacyProvenanceClient` to avoid colliding with external contracts. | `appendEvent`, `fileExplanation`, `currentContext` where testing the legacy seam. Local `WorkProvenanceStore.sessionTree` remains for direct projection assertions, not the legacy client seam. | Temporary local SQLite fixtures and local projections. | Engine APIs exist for durable query/write paths except lifecycle observability. | Per migrated slice. | Legacy seam tests for a method become deletable when the corresponding runtime path uses external engine APIs and equivalent behavior is covered through public engine seeding plus bmux presentation tests. |
+| Legacy store tests | read, write, capture, policy, observability | `bmuxTests/WorkProvenanceStoreTests.swift`, `SubsessionProvenanceTests.swift`, `WorkProvenanceObserverTests.swift`, and CLI fixture tests. | Tests instantiate local stores/recorders/services directly. `WorkProvenanceStoreTests` aliases the local seam as `TestBmuxLegacyProvenanceClient` to avoid colliding with external contracts. | `appendEvent` and `currentContext` where testing the remaining legacy seam. Local projection assertions remain for unmigrated capture/lifecycle behavior. | Temporary local SQLite fixtures and local projections. | Engine APIs exist for durable query/write paths except lifecycle observability. | Per migrated slice. | Legacy seam tests for a method become deletable when the corresponding runtime path uses external engine APIs and equivalent behavior is covered through public engine seeding plus bmux presentation tests. |
 
 ## Architectural Findings
 
 - The name collision was real: bmux-local `ProvenanceEngineClient` and external `ProvenanceEngineContracts.ProvenanceEngineClient` existed in the same CLI and test contexts. `BmuxLegacyProvenanceClient` makes remaining local usage searchable and intentionally transitional.
 - The accepted external `0.1.0` baseline exposed the session-tree API symbols, but bmux needed the later Slice C readiness commit for SDK-tested adoption evidence. A release/tag should follow before downstream consumers avoid revision pins.
 - The session-tree contract was sufficient for the CLI read path. The only adaptation was limit semantics: bmux's legacy cap was session-count oriented, while the engine request limit is combined session-plus-relationship rows.
+- The file-explanation contract was sufficient for the CLI read path. bmux preserved path parsing, Git worktree discovery, missing-database preflight, fallback rendering, and JSON/text compatibility while consuming only public engine contracts.
 - Slice C waived unavailable GitHub Actions evidence for bmux PR 7 only:
   PR-event CI and Activation performance runs remained pending with zero
   jobs/check runs, manually dispatched runs queued without assignment to
@@ -81,15 +140,10 @@ The external engine owns durable facts: immutable provenance events, repository/
 
 ## Next Target
 
-Active target: Slice D file-explanation read migration.
+Active target: Slice D file-explanation read migration acceptance.
 
-Exact next scope: migrate only `bmux provenance explain <path>` to construct
-the external SQLite-backed engine client and call
-`ProvenanceEngineClient.fileExplanation(ProvenanceFileExplanationRequest(...))`;
-preserve existing JSON/text/no-database/no-worktree/no-file behavior and bounds;
-seed tests through public engine APIs where applicable; remove
-file-explanation-only local query helpers that become unused.
+Exact next gate: complete review and acceptance for Provenance Engine PR 5 and the bmux Slice D adoption PR. After Slice D is accepted, the next eligible migration target is `bmux provenance context current`.
 
-Do not begin current-context, lifecycle-write, capture, observability,
+Do not begin current-context implementation, lifecycle-write, capture, observability,
 data-migration, daemon, UI, or engine-expansion work in the file-explanation
 slice.

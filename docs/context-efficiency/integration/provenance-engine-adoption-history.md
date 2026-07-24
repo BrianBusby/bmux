@@ -144,3 +144,72 @@ release/tag if one is created.
    lifecycle-write migration readiness, but lifecycle writes remain out of scope.
 8. Overall confidence:
    Architecture validated.
+
+## 2026-07-24 File-Explanation Read Adoption Candidate
+
+Status: implemented on bmux branch `slice-d-file-explanation-sdk-migration`,
+pending acceptance. Provenance Engine PR 5 is still open/draft at readiness
+commit `384026e36087dda576e25343907c3e06d8a4d594`.
+
+The bmux branch temporarily pins provenance-engine to that exact revision,
+links only `ProvenanceEngineContracts` and `ProvenanceEngineSDK`, and reconnects
+only `bmux provenance explain <path>` through the public SDK factory.
+
+The adopted path uses
+`ProvenanceEngineClientFactory().sqliteClient(databaseURL:)`, resolves the
+engine worktree through
+`ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest())`, and calls
+`ProvenanceEngineClient.fileExplanation(ProvenanceFileExplanationRequest(...))`
+with the repository-relative path that bmux derives from the user input.
+
+CLI presentation stayed in bmux. JSON/text output compatibility, missing
+database behavior, no Git worktree behavior, outside-worktree handling, no
+matching engine worktree behavior, unknown-file behavior, attributed and
+unattributed explanations, newest evidence selection, relative input paths,
+absolute input paths, unknown-flag errors, extra-argument errors, and exit
+status were preserved in local validation.
+
+Legacy code removed for this path: direct file-explanation SQL on
+`CLIProvenanceSQLiteReader`, `WorkProvenanceStore.fileExplanation(...)`,
+`BmuxLegacyProvenanceClient.fileExplanation`, duplicate local file-explanation
+request/response DTOs, `CLIProvenanceExplanationRow`, and direct-storage
+file-explanation CLI fixture seeding.
+
+Legacy code intentionally retained: current-context reads, event/projection
+storage, lifecycle/capture writes, observability trace storage, and presentation
+adapters remain because they are used by unmigrated paths or bmux-owned
+rendering.
+
+Integration findings:
+
+- Bmux concern: none beyond preserving existing Git path resolution and
+  fallback policy in the consumer.
+- Provenance Engine contract concern: none. The existing public
+  file-explanation contract represented the current CLI behavior.
+- Future architecture concern: rename-aware identity, deleted-file historical
+  lookup, and semantic explanations remain out of scope for Slice D V1.
+
+Architecture Review:
+
+1. Did the migration reinforce the platform/consumer boundary? Yes.
+2. Was the existing public contract sufficient in real use? Yes.
+3. Did bmux need knowledge of engine storage? No.
+4. Is path normalization owned by the correct layer? Yes; bmux normalizes user
+   input to repository-relative path plus engine worktree ID.
+5. Did the response require awkward presentation adaptation? No.
+6. What consumer capability is now unlocked? File explanations can be consumed
+   through public engine SDK contracts.
+7. What legacy code was removed? File-explanation-only SQL, DTOs, legacy client
+   method, store method, and direct-storage fixtures.
+8. What technical debt remains? Current-context, lifecycle/capture, projection
+   storage, and observability paths remain bmux-local.
+9. Did any future architecture concerns emerge? Only previously known V2
+   identity and semantic concerns.
+10. Overall confidence: Architecture validated.
+
+Dependency decision: use readiness revision
+`384026e36087dda576e25343907c3e06d8a4d594` only until Provenance Engine PR 5
+merges and a stable follow-up revision or tag is available.
+
+Classification: Adoption candidate - do not mark accepted until review
+completes.

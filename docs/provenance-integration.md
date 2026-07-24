@@ -34,15 +34,15 @@ provenance-engine owns reusable provenance infrastructure:
 
 ## Current bmux-Owned Integration Work
 
-Current active milestone: Slice D file-explanation read migration. Slice C
-session-tree read migration is accepted with an explicit GitHub Actions waiver
-for bmux PR 7.
+Current active milestone: Slice D file-explanation read migration adoption review. Slice C session-tree read migration is accepted with an explicit GitHub Actions waiver for bmux PR 7.
 
-Slice C migrated only the provenance session-tree CLI command to the external SQLite-backed provenance-engine client, preserved existing presentation and fallback behavior, used public engine APIs for fixture setup, and removed only session-tree-specific legacy code that became unused.
+Slice D migrates only `bmux provenance explain <path>` to the external SQLite-backed provenance-engine client, preserves existing presentation and fallback behavior, uses public engine APIs for file-explanation fixture setup, and removes only file-explanation-specific legacy code that became unused. The engine readiness dependency is PR 5 at exact revision `384026e36087dda576e25343907c3e06d8a4d594`; that PR is still open/draft and Slice D is not accepted until both repositories complete review.
 
 The completed first adoption path is `bmux provenance worktrees list`. It reads through provenance-engine `0.1.0` while bmux continues to own CLI output compatibility.
 
 The completed second adoption path is `bmux provenance sessions tree <session-id>`. It reads through provenance-engine revision `2026914454a00ccc6c45d686ea741111b0a01229` while bmux continues to own CLI output compatibility. The engine limit is a combined session-plus-relationship row budget; bmux adapts it at the CLI boundary to preserve the legacy 100-session presentation cap.
+
+The Slice D adoption branch adds the third adoption path, `bmux provenance explain <path>`. bmux still resolves the Git worktree and repository-relative path, then resolves the engine worktree through `ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest())` and calls `ProvenanceEngineClient.fileExplanation(ProvenanceFileExplanationRequest(...))`.
 
 ## Local Operational Notes
 
@@ -52,6 +52,6 @@ The completed second adoption path is `bmux provenance sessions tree <session-id
 
 Do not begin current context, lifecycle writes, capture append migration, storage migration, daemon transport, retrieval, UI work, GitHub ingestion, or Knowledge Compiler implementation.
 
-File explanations may begin only in a new focused Slice D branch or session.
+Do not mark Slice D accepted until Provenance Engine PR 5 and the bmux adoption PR are accepted.
 
 Avoid permanent dual reads.

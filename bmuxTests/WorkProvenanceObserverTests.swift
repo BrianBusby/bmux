@@ -48,24 +48,23 @@ struct WorkProvenanceObserverTests {
         let repositoryID = idFactory.repositoryID(repositoryRoot: repositoryRoot)
         let repository = try await store.repository(id: repositoryID)
         let worktree = try await store.worktree(id: worktreeID)
-        let modified = try await store.fileExplanation(
-            worktreeID: worktreeID,
-            path: "Sources/App.swift"
-        )
-        let untracked = try await store.fileExplanation(
-            worktreeID: worktreeID,
-            path: "Sources/NewFile.swift"
-        )
+        let context = try await store.currentContext(repositoryPath: repositoryRoot)
+        let modified = try #require(context.dirtyFiles.first {
+            $0.fileChange.path == "Sources/App.swift"
+        })
+        let untracked = try #require(context.dirtyFiles.first {
+            $0.fileChange.path == "Sources/NewFile.swift"
+        })
 
         #expect(events.count == 1)
         #expect(events.first?.eventType == .worktreeObserved)
         #expect(repository?.remoteSlug == "manaflow-ai/bmux")
         #expect(worktree?.branch == "feature/provenance")
         #expect(worktree?.isDirty == true)
-        #expect(modified?.fileChange.status == "modified")
-        #expect(modified?.fileChange.attributionSource == .unattributed)
-        #expect(modified?.fileChange.attributionConfidence == .low)
-        #expect(untracked?.fileChange.status == "untracked")
+        #expect(modified.fileChange.status == "modified")
+        #expect(modified.fileChange.attributionSource == .unattributed)
+        #expect(modified.fileChange.attributionConfidence == .low)
+        #expect(untracked.fileChange.status == "untracked")
     }
 
     @Test

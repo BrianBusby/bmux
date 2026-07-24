@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "ProvenanceEngineSessionTreeSeeder",
+    name: "ProvenanceEngineFileExplanationSeeder",
     platforms: [
         .macOS(.v10_15),
     ],
@@ -15,7 +15,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "ProvenanceEngineSessionTreeSeeder",
+            name: "ProvenanceEngineFileExplanationSeeder",
             dependencies: [
                 .product(name: "ProvenanceEngineContracts", package: "provenance-engine"),
                 .product(name: "ProvenanceEngineSDK", package: "provenance-engine"),

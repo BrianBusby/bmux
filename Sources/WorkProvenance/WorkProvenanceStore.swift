@@ -390,60 +390,6 @@ actor WorkProvenanceStore {
         )
     }
 
-    /// Returns focused provenance context for one repository-relative file path.
-    ///
-    /// - Parameters:
-    ///   - worktreeID: Worktree identifier.
-    ///   - path: Repository-relative file path.
-    /// - Returns: File explanation or `nil` when no file-change projection exists.
-    func fileExplanation(
-        worktreeID: String,
-        path: String
-    ) throws -> WorkProvenanceFileExplanation? {
-        guard let fileChange = try fileChangeRecord(worktreeID: worktreeID, path: path) else {
-            return nil
-        }
-        let changeSet = try changeSetRecord(id: fileChange.changeSetID)
-        let checkpoint: WorkProvenanceCheckpointRecord?
-        if let checkpointID = changeSet?.checkpointID {
-            checkpoint = try checkpointRecord(id: checkpointID)
-        } else {
-            checkpoint = nil
-        }
-        let contributionID = changeSet?.contributionID ?? checkpoint?.contributionID
-        let contribution: WorkProvenanceContributionRecord?
-        if let contributionID {
-            contribution = try contributionRecord(id: contributionID)
-        } else {
-            contribution = nil
-        }
-        let session: WorkProvenanceSessionRecord?
-        if let contribution {
-            session = try sessionRecord(id: contribution.sessionID)
-        } else {
-            session = nil
-        }
-        let workItem: WorkProvenanceWorkItemRecord?
-        if let contribution {
-            workItem = try workItemRecord(id: contribution.workItemID)
-        } else {
-            workItem = nil
-        }
-        let worktree = try worktreeRecord(id: fileChange.worktreeID)
-        let repositoryID = worktree?.repositoryID ?? fileChange.repositoryID
-        let repository = try repositoryRecord(id: repositoryID)
-        return WorkProvenanceFileExplanation(
-            fileChange: fileChange,
-            changeSet: changeSet,
-            checkpoint: checkpoint,
-            contribution: contribution,
-            session: session,
-            workItem: workItem,
-            worktree: worktree,
-            repository: repository
-        )
-    }
-
     private static func migrateIfNeeded(database: WorkProvenanceSQLiteDatabase) throws {
         let version = Int(try database.userVersion)
         guard version <= schemaVersion else {
