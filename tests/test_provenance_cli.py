@@ -14,6 +14,10 @@ from pathlib import Path
 
 from claude_teams_test_utils import resolve_bmux_cli
 
+SESSION_TREE_SEEDER_PACKAGE = (
+    Path(__file__).parent / "fixtures" / "provenance-engine-session-tree-seeder"
+)
+
 
 def stable_id(prefix: str, value: str) -> str:
     return f"{prefix}-{hashlib.sha256(value.encode()).hexdigest()[:24]}"
@@ -27,180 +31,25 @@ def stable_worktree_id(repository_root: str) -> str:
     return stable_id("worktree", repository_root)
 
 
-def create_provenance_database(path: Path) -> None:
-    if path.exists():
-        path.unlink()
-    with sqlite3.connect(path) as conn:
-        conn.executescript(
-            """
-            CREATE TABLE sessions (
-                id TEXT PRIMARY KEY,
-                agent_kind TEXT NOT NULL,
-                workspace_id TEXT,
-                surface_id TEXT,
-                worktree_id TEXT,
-                cwd TEXT,
-                status TEXT NOT NULL,
-                started_at REAL,
-                updated_at REAL NOT NULL
-            );
-            CREATE TABLE session_relationships (
-                session_id TEXT PRIMARY KEY,
-                parent_session_id TEXT NOT NULL,
-                root_session_id TEXT NOT NULL,
-                inbound_delegation_id TEXT,
-                depth INTEGER NOT NULL,
-                source TEXT NOT NULL,
-                confidence TEXT NOT NULL,
-                created_at REAL NOT NULL,
-                updated_at REAL NOT NULL
-            );
-            CREATE TABLE session_external_identities (
-                id TEXT PRIMARY KEY,
-                session_id TEXT NOT NULL,
-                system TEXT NOT NULL,
-                kind TEXT NOT NULL,
-                external_id TEXT NOT NULL,
-                source TEXT NOT NULL,
-                confidence TEXT NOT NULL,
-                created_at REAL NOT NULL,
-                updated_at REAL NOT NULL
-            );
-            PRAGMA user_version = 3;
-            """
-        )
-        conn.executemany(
-            """
-            INSERT INTO sessions (
-                id, agent_kind, workspace_id, surface_id, worktree_id,
-                cwd, status, started_at, updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            [
-                (
-                    "codex-parent",
-                    "codex",
-                    "workspace-1",
-                    "surface-1",
-                    "worktree-1",
-                    "/repo",
-                    "active",
-                    100.0,
-                    100.0,
-                ),
-                (
-                    "codex-child",
-                    "codex",
-                    "workspace-1",
-                    "surface-2",
-                    "worktree-1",
-                    "/repo",
-                    "completed",
-                    120.0,
-                    140.0,
-                ),
-                (
-                    "codex-grandchild",
-                    "codex",
-                    "workspace-1",
-                    "surface-3",
-                    "worktree-1",
-                    "/repo",
-                    "active",
-                    130.0,
-                    130.0,
-                ),
-                (
-                    "unrelated",
-                    "claude",
-                    "workspace-9",
-                    "surface-9",
-                    "worktree-9",
-                    "/other",
-                    "active",
-                    200.0,
-                    200.0,
-                ),
-            ],
-        )
-        conn.executemany(
-            """
-            INSERT INTO session_relationships (
-                session_id, parent_session_id, root_session_id,
-                inbound_delegation_id, depth, source, confidence,
-                created_at, updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            [
-                (
-                    "codex-child",
-                    "codex-parent",
-                    "codex-parent",
-                    None,
-                    1,
-                    "observed",
-                    "high",
-                    120.0,
-                    140.0,
-                ),
-                (
-                    "codex-grandchild",
-                    "codex-child",
-                    "codex-parent",
-                    None,
-                    2,
-                    "observed",
-                    "high",
-                    130.0,
-                    130.0,
-                ),
-            ],
-        )
-        conn.executemany(
-            """
-            INSERT INTO session_external_identities (
-                id, session_id, system, kind, external_id, source,
-                confidence, created_at, updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            [
-                (
-                    "identity-child",
-                    "codex-child",
-                    "codex",
-                    "subsession",
-                    "subagent-1",
-                    "observed",
-                    "high",
-                    120.0,
-                    140.0,
-                ),
-                (
-                    "identity-grandchild",
-                    "codex-grandchild",
-                    "codex",
-                    "subsession",
-                    "subagent-2",
-                    "observed",
-                    "high",
-                    130.0,
-                    130.0,
-                ),
-                (
-                    "identity-unrelated",
-                    "unrelated",
-                    "claude",
-                    "thread",
-                    "claude-thread",
-                    "observed",
-                    "high",
-                    200.0,
-                    200.0,
-                ),
-            ],
+def create_provenance_database(path: Path, scenario: str = "basic") -> None:
+    result = subprocess.run(
+        [
+            "swift",
+            "run",
+            "--package-path",
+            str(SESSION_TREE_SEEDER_PACKAGE),
+            "ProvenanceEngineSessionTreeSeeder",
+            str(path),
+            scenario,
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            "failed to seed session tree through Provenance Engine SDK\n"
+            f"stdout={result.stdout}\nstderr={result.stderr}"
         )
 
 
@@ -1962,6 +1811,26 @@ def check_provenance_session_tree_json(cli_path: str, root: Path) -> None:
     no_database = json.loads(no_database_result.stdout)
     if no_database["found"] or no_database["reason"] != "no provenance database exists yet":
         raise AssertionError(f"missing database should preserve bounded empty JSON: {no_database!r}")
+
+    limit_database = root / "limited-session-tree-work-provenance.sqlite"
+    create_provenance_database(limit_database, scenario="limit")
+    limit_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "sessions",
+            "tree",
+            "limit-root",
+            "--database",
+            str(limit_database),
+        ],
+    )
+    limited = json.loads(limit_result.stdout)
+    if limited["summary"]["session_count"] != 100:
+        raise AssertionError(f"session tree should preserve the legacy 100-session cap: {limited!r}")
+    if limited["summary"]["relationship_count"] != 99:
+        raise AssertionError(f"session tree should include relationships for returned sessions: {limited!r}")
 
 
 def check_provenance_session_tree_text(cli_path: str, root: Path) -> None:

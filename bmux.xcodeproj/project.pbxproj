@@ -978,10 +978,6 @@
 		CE0D10220000000000000001 /* ProvenancePipelineStageExecutionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */; };
 		CE0B00100000000000000001 /* ProvenanceProjectionLineageRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00100000000000000002 /* ProvenanceProjectionLineageRecord.swift */; };
 		CE0D10230000000000000001 /* ProvenanceProjectionLineageRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00100000000000000002 /* ProvenanceProjectionLineageRecord.swift */; };
-		CE0C00060000000000000001 /* ProvenanceSessionTreeRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00060000000000000002 /* ProvenanceSessionTreeRequest.swift */; };
-		CE0D10060000000000000001 /* ProvenanceSessionTreeRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00060000000000000002 /* ProvenanceSessionTreeRequest.swift */; };
-		CE0C00070000000000000001 /* ProvenanceSessionTreeResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00070000000000000002 /* ProvenanceSessionTreeResponse.swift */; };
-		CE0D10070000000000000001 /* ProvenanceSessionTreeResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00070000000000000002 /* ProvenanceSessionTreeResponse.swift */; };
 		CE0C00090000000000000001 /* ProvenanceSubsessionLifecyclePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00090000000000000002 /* ProvenanceSubsessionLifecyclePhase.swift */; };
 		CE0C00100000000000000001 /* ProvenanceSubsessionLifecycleRecording.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00100000000000000002 /* ProvenanceSubsessionLifecycleRecording.swift */; };
 		CE0C00110000000000000001 /* ProvenanceSubsessionLifecycleRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00110000000000000002 /* ProvenanceSubsessionLifecycleRequest.swift */; };
@@ -2603,8 +2599,6 @@
 		CE0B00070000000000000002 /* ProvenancePipelineRunRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenancePipelineRunRecord.swift; sourceTree = "<group>"; };
 		CE0B00080000000000000002 /* ProvenancePipelineStageExecutionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenancePipelineStageExecutionRecord.swift; sourceTree = "<group>"; };
 		CE0B00100000000000000002 /* ProvenanceProjectionLineageRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceProjectionLineageRecord.swift; sourceTree = "<group>"; };
-		CE0C00060000000000000002 /* ProvenanceSessionTreeRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceSessionTreeRequest.swift; sourceTree = "<group>"; };
-		CE0C00070000000000000002 /* ProvenanceSessionTreeResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceSessionTreeResponse.swift; sourceTree = "<group>"; };
 		CE0C00090000000000000002 /* ProvenanceSubsessionLifecyclePhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceSubsessionLifecyclePhase.swift; sourceTree = "<group>"; };
 		CE0C00100000000000000002 /* ProvenanceSubsessionLifecycleRecording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceSubsessionLifecycleRecording.swift; sourceTree = "<group>"; };
 		CE0C00110000000000000002 /* ProvenanceSubsessionLifecycleRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceSubsessionLifecycleRequest.swift; sourceTree = "<group>"; };
@@ -4921,8 +4915,6 @@
 				CE0C00200000000000000002 /* ProvenanceCurrentContextValidationRun.swift */,
 				CE0C00040000000000000002 /* ProvenanceFileExplanationRequest.swift */,
 				CE0C00050000000000000002 /* ProvenanceFileExplanationResponse.swift */,
-				CE0C00060000000000000002 /* ProvenanceSessionTreeRequest.swift */,
-				CE0C00070000000000000002 /* ProvenanceSessionTreeResponse.swift */,
 				CE0C00090000000000000002 /* ProvenanceSubsessionLifecyclePhase.swift */,
 				CE0C00100000000000000002 /* ProvenanceSubsessionLifecycleRecording.swift */,
 				CE0C00110000000000000002 /* ProvenanceSubsessionLifecycleRequest.swift */,
@@ -5939,8 +5931,6 @@
 				CE0B00070000000000000001 /* ProvenancePipelineRunRecord.swift in Sources */,
 				CE0B00080000000000000001 /* ProvenancePipelineStageExecutionRecord.swift in Sources */,
 				CE0B00100000000000000001 /* ProvenanceProjectionLineageRecord.swift in Sources */,
-				CE0C00060000000000000001 /* ProvenanceSessionTreeRequest.swift in Sources */,
-				CE0C00070000000000000001 /* ProvenanceSessionTreeResponse.swift in Sources */,
 				CE0C00090000000000000001 /* ProvenanceSubsessionLifecyclePhase.swift in Sources */,
 				CE0C00100000000000000001 /* ProvenanceSubsessionLifecycleRecording.swift in Sources */,
 				CE0C00110000000000000001 /* ProvenanceSubsessionLifecycleRequest.swift in Sources */,
@@ -6473,8 +6463,6 @@
 				CE0D10050000000000000001 /* ProvenanceFileExplanationResponse.swift in Sources */,
 				CE0D10220000000000000001 /* ProvenancePipelineStageExecutionRecord.swift in Sources */,
 				CE0D10230000000000000001 /* ProvenanceProjectionLineageRecord.swift in Sources */,
-				CE0D10060000000000000001 /* ProvenanceSessionTreeRequest.swift in Sources */,
-				CE0D10070000000000000001 /* ProvenanceSessionTreeResponse.swift in Sources */,
 				B9000028A1B2C3D4E5F60719 /* RemoteInteractiveShellBootstrapBuilder.swift in Sources */,
 				B9000027A1B2C3D4E5F60719 /* RemoteRelayZshBootstrap.swift in Sources */,
 				5E2701020000000000000003 /* SentryEventScrubber.swift in Sources */,
@@ -7567,8 +7555,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "git@github.com:BrianBusby/provenance-engine.git";
 			requirement = {
-				kind = exactVersion;
-				version = 0.1.0;
+				kind = revision;
+				revision = dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

@@ -373,15 +373,14 @@ struct WorkProvenanceStoreTests {
             // Expected: duplicate event IDs are rejected before projection mutation.
         }
 
-        let response = try await client.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: "codex-parent"))
+        let response = try await store.sessionTree(rootSessionID: "codex-parent")
         let child = try #require(response.sessions.first { $0.id == "codex-child" })
 
-        #expect(response.found)
         #expect(child.status == "active")
         #expect(child.updatedAt == Date(timeIntervalSince1970: 120))
 
         try await store.rebuildProjections()
-        let replayed = try await client.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: "codex-parent"))
+        let replayed = try await store.sessionTree(rootSessionID: "codex-parent")
         let replayedChild = try #require(replayed.sessions.first { $0.id == "codex-child" })
         #expect(replayedChild.status == "active")
         #expect(replayedChild.updatedAt == Date(timeIntervalSince1970: 120))
@@ -406,22 +405,27 @@ struct WorkProvenanceStoreTests {
             timestamp: 140
         )))
 
-        let response = try await client.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: "codex-parent"))
+        let response = try await store.sessionTree(rootSessionID: "codex-parent")
+        var identities: [WorkProvenanceExternalIdentityRecord] = []
+        for session in response.sessions {
+            identities.append(contentsOf: try await store.externalIdentities(sessionID: session.id))
+        }
 
-        #expect(response.schemaVersion == 1)
         #expect(response.rootSessionID == "codex-parent")
-        #expect(response.found)
-        #expect(response.reason == nil)
         #expect(response.sessions.map(\.id) == ["codex-parent", "codex-child"])
         #expect(response.sessions.last?.status == "completed")
         #expect(response.relationships.map(\.sessionID) == ["codex-child"])
-        #expect(response.externalIdentities.map(\.externalID) == ["subagent-1"])
+        #expect(identities.map(\.externalID) == ["subagent-1"])
 
         try await store.rebuildProjections()
-        let replayed = try await client.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: "codex-parent"))
+        let replayed = try await store.sessionTree(rootSessionID: "codex-parent")
+        var replayedIdentities: [WorkProvenanceExternalIdentityRecord] = []
+        for session in replayed.sessions {
+            replayedIdentities.append(contentsOf: try await store.externalIdentities(sessionID: session.id))
+        }
         #expect(replayed.sessions.map(\.id) == response.sessions.map(\.id))
         #expect(replayed.relationships.map(\.sessionID) == response.relationships.map(\.sessionID))
-        #expect(replayed.externalIdentities.map(\.externalID) == response.externalIdentities.map(\.externalID))
+        #expect(replayedIdentities.map(\.externalID) == identities.map(\.externalID))
     }
 
     @Test

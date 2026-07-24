@@ -23,9 +23,10 @@ topic documents.
 ## Active State
 
 The standalone Provenance Engine is the accepted provenance storage/query
-boundary. The accepted dependency for bmux adoption is provenance-engine
-`0.1.0`, tag/revision `b73fd1639c1c81230e96215259fc796b517706f6`, from
-`git@github.com:BrianBusby/provenance-engine.git`.
+boundary. bmux adoption currently pins provenance-engine revision
+`dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e`, from
+`git@github.com:BrianBusby/provenance-engine.git`, because Slice C readiness is
+not yet released as a versioned tag.
 
 bmux now consumes provenance-engine as an external Swift package. The Xcode
 project links the public products `ProvenanceEngineContracts` and
@@ -35,6 +36,11 @@ The first external query path is complete: `bmux provenance worktrees list`
 constructs an in-process SQLite-backed engine client through
 `ProvenanceEngineClientFactory().sqliteClient(databaseURL:)` and calls
 `ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest())`.
+
+The second external query path is complete in bmux: `bmux provenance sessions
+tree <session-id>` constructs an in-process SQLite-backed engine client through
+`ProvenanceEngineClientFactory().sqliteClient(databaseURL:)` and calls
+`ProvenanceEngineClient.sessionTree(ProvenanceSessionTreeRequest(...))`.
 
 CLI presentation and compatibility remain owned by bmux. The worktree-list JSON
 shape, text shape, missing-database behavior, empty-database behavior,
@@ -46,21 +52,21 @@ state, not a target architecture.
 
 ## Current Boundary
 
-Externalized work includes the worktree-list read path, engine package pin, public SDK client construction for that path, and worktree-list test seeding through public engine APIs.
+Externalized work includes the worktree-list read path, the session-tree read path, engine package pin, public SDK client construction for those paths, and session-tree test seeding through public engine APIs.
 
 Slice B clarified the legacy boundary: the bmux-local contract-shaped seam is now `BmuxLegacyProvenanceClient`, while the external `ProvenanceEngineContracts.ProvenanceEngineClient` remains untouched. The complete remaining consumer inventory lives in `docs/context-efficiency/integration/provenance-engine-adoption.md`.
 
-Still bmux-local: legacy SQLite schema ownership, event/projection storage used by unmigrated paths, session-tree reads, file-explanation reads, current-context reads, lifecycle/capture recording, observability tracing, presentation, command parsing, fallback messages, and output formatting.
+Still bmux-local: legacy SQLite schema ownership, event/projection storage used by unmigrated paths, file-explanation reads, current-context reads, lifecycle/capture recording, observability tracing, presentation, command parsing, fallback messages, and output formatting.
 
 Do not add engine features speculatively. Engine expansion is frozen until a real bmux migration slice proves a concrete missing contract or correctness defect.
 
 ## Next Target
 
-Next valid slice: Slice C, session-tree read migration.
+Next valid slice after Slice C acceptance: file-explanation read migration.
 
-Slice C should migrate only `bmux provenance sessions tree <session-id>` to the external SQLite-backed engine client and `ProvenanceEngineClient.sessionTree(...)`; preserve existing CLI compatibility; seed tests through public engine APIs; and remove only session-tree legacy code that becomes unused.
+Slice C migrated only `bmux provenance sessions tree <session-id>` to the external SQLite-backed engine client and `ProvenanceEngineClient.sessionTree(...)`; preserved existing CLI compatibility; seeded tests through public engine APIs; and removed only session-tree legacy code that became unused.
 
-Do not begin file-explanation migration, current-context migration, lifecycle writes, capture migration, data migration, semantic retrieval, daemon transport, UI work, observability expansion, or unrelated refactoring.
+Do not begin current-context migration, lifecycle writes, capture migration, data migration, semantic retrieval, daemon transport, UI work, observability expansion, or unrelated refactoring.
 
 ## Canonical Details
 
@@ -82,4 +88,4 @@ Phase 4 migration plan: `docs/context-efficiency/provenance-engine-phase4-reconn
 
 ## Validation Notes
 
-For Slice B, validation must prove the legacy-seam rename did not change behavior: run focused source scans, project normalization checks after pbxproj edits, the targeted WorkProvenance store tests, a test-target compile check, and a tagged Debug reload build.
+For Slice C, validation must prove the session-tree command reads through the public engine SDK while preserving bmux presentation: run focused CLI JSON/text/missing-database/no-session/limit coverage, affected WorkProvenance and subsession tests, dependency/package checks, prohibited import/table scans, `git diff --check`, and a tagged Debug reload build.

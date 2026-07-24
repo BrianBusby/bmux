@@ -94,7 +94,7 @@ struct SubsessionProvenanceTests {
             timestamp: Date(timeIntervalSince1970: 120)
         ))
 
-        let tree = try await store.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: "codex-parent"))
+        let tree = try await store.sessionTree(rootSessionID: "codex-parent")
         let child = try #require(tree.sessions.first { $0.id != "codex-parent" })
 
         #expect(response.schemaVersion == 1)
@@ -108,7 +108,8 @@ struct SubsessionProvenanceTests {
         #expect(child.status == "active")
         #expect(child.startedAt == Date(timeIntervalSince1970: 120))
         #expect(tree.relationships.map(\.parentSessionID) == ["codex-parent"])
-        #expect(tree.externalIdentities.map(\.externalID) == ["subagent-1"])
+        let identities = try await store.externalIdentities(sessionID: child.id)
+        #expect(identities.map(\.externalID) == ["subagent-1"])
     }
 
     @Test

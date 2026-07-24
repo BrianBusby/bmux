@@ -34,11 +34,13 @@ provenance-engine owns reusable provenance infrastructure:
 
 ## Current bmux-Owned Integration Work
 
-Current active milestone: Slice C, session-tree read migration.
+Current active milestone: Slice C session-tree read migration is complete in bmux and awaiting external roadmap acceptance. The next bmux candidate is file-explanation read migration after review.
 
-bmux should migrate only the provenance session-tree CLI command to the external SQLite-backed provenance-engine client, preserve existing presentation and fallback behavior, use public engine APIs for fixture setup, and remove only session-tree-specific legacy code that becomes unused.
+Slice C migrated only the provenance session-tree CLI command to the external SQLite-backed provenance-engine client, preserved existing presentation and fallback behavior, used public engine APIs for fixture setup, and removed only session-tree-specific legacy code that became unused.
 
 The completed first adoption path is `bmux provenance worktrees list`. It reads through provenance-engine `0.1.0` while bmux continues to own CLI output compatibility.
+
+The completed second adoption path is `bmux provenance sessions tree <session-id>`. It reads through provenance-engine revision `dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e` while bmux continues to own CLI output compatibility.
 
 ## Local Operational Notes
 
@@ -46,8 +48,8 @@ The completed first adoption path is `bmux provenance worktrees list`. It reads 
 - The local adoption inventory remains `docs/context-efficiency/integration/provenance-engine-adoption.md`.
 - The detailed Phase 4 reconnect plan remains `docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md`.
 
-Do not begin file explanations, current context, lifecycle writes, capture append migration, storage migration, daemon transport, retrieval, UI work, GitHub ingestion, or Knowledge Compiler implementation.
+Do not begin current context, lifecycle writes, capture append migration, storage migration, daemon transport, retrieval, UI work, GitHub ingestion, or Knowledge Compiler implementation.
 
-Wait until the current shared milestone is accepted.
+Wait until the current shared milestone is accepted before starting file explanations.
 
 Avoid permanent dual reads.

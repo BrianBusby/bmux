@@ -232,10 +232,13 @@ extension BMUXCLI {
             return
         }
 
-        let client: any BmuxLegacyProvenanceClient = try WorkProvenanceStore(databaseURL: databaseURL)
-        let response = try await client.sessionTree(ProvenanceSessionTreeRequest(
+        let legacySessionLimit = 100
+        let engineRowLimit = (legacySessionLimit * 2) - 1
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+        let response = try await client.sessionTree(ProvenanceEngineContracts.ProvenanceSessionTreeRequest(
             rootSessionID: sessionID,
-            limit: 100
+            limit: engineRowLimit
         ))
         let tree = CLIProvenanceSessionTree(
             response: response,

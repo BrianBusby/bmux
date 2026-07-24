@@ -1,4 +1,5 @@
 import Foundation
+import ProvenanceEngineContracts
 
 struct CLIProvenanceSessionTree: Equatable {
     let rootSessionID: String
@@ -25,7 +26,7 @@ struct CLIProvenanceSessionTree: Equatable {
     }
 
     init(
-        response: ProvenanceSessionTreeResponse,
+        response: ProvenanceEngineContracts.ProvenanceSessionTreeResponse,
         noSessionReason: String,
         externalIdentityLimit: Int
     ) {

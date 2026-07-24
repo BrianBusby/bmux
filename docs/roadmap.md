@@ -33,19 +33,20 @@ Local bmux integration notes live in `docs/provenance-integration.md`.
 - Context-efficiency telemetry package and CLI surfaces for read-only Codex rollout inspection.
 - Local WorkProvenance capture, projections, lifecycle relationship recording, and provenance CLI presentation.
 - First external provenance-engine adoption path: `bmux provenance worktrees list` now reads through provenance-engine `0.1.0`.
+- Second external provenance-engine adoption path: `bmux provenance sessions tree <session-id>` now reads through `ProvenanceEngineClient.sessionTree(...)` at engine revision `dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e`.
 - Transitional legacy boundary clarified as `BmuxLegacyProvenanceClient` for remaining bmux-local provenance paths.
 
 ## Active Work
 
-Active gate: Slice C, session-tree read migration.
+Active gate: Slice C complete in bmux; next gate is file-explanation read migration after review/acceptance.
 
-Scope: migrate only the provenance session-tree CLI command to the external SQLite-backed provenance-engine client.
+Completed Slice C scope: migrated only the provenance session-tree CLI command to the external SQLite-backed provenance-engine client.
 
-Preserve existing JSON, text, missing-database, no-session, and bounds behavior.
+Preserved existing JSON, text, missing-database, no-session, and bounds behavior.
 
-Use public provenance-engine APIs for fixture setup.
+Session-tree CLI fixture setup now uses public provenance-engine APIs.
 
-Remove only session-tree legacy code that becomes unused.
+Removed only session-tree legacy code that became unused.
 
 Out of scope: file explanations, current context, lifecycle writes, worktree observation capture, storage migration, daemon transport, UI work, observability expansion, GitHub ingestion, and Knowledge Compiler implementation.
 
@@ -53,7 +54,7 @@ Out of scope: file explanations, current context, lifecycle writes, worktree obs
 
 - Produce the integration findings report after each accepted migration slice.
 - Choose the next single bmux provenance path from the completed findings rather than opening parallel paths.
-- Continue the provenance read migration in the current order: session-tree reads, file explanations, then current context.
+- Continue the provenance read migration in the current order: file explanations, then current context.
 - Reconnect lifecycle writes only after durable read paths prove contract compatibility.
 - Reconnect capture append paths while keeping Git observation policy and runtime degradation in bmux.
 - Remove migrated bmux-local provenance query code slice by slice.

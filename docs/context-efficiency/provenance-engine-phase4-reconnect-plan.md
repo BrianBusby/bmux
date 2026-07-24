@@ -1,7 +1,7 @@
 # Provenance Engine Extraction: Phase 4 Reconnect Plan
 
-Status: active controlled migration; updated on 2026-07-23 after the first
-external bmux adoption slice completed.
+Status: active controlled migration; updated on 2026-07-23 after the second
+external bmux adoption slice completed in bmux.
 
 Planning authority: this document is detailed bmux-side Phase 4 history and implementation guidance. The canonical cross-repository bmux to provenance-engine roadmap is `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
 
@@ -23,8 +23,9 @@ contracts and internal engine-owned SQLite implementation exist outside bmux.
 This document now tracks the controlled incremental migration from bmux-local
 provenance reads to the standalone Provenance Engine.
 
-The first adapter path is complete. Future implementation must stay scoped to
-one migration path at a time until each slice is verified and documented.
+The first two adapter paths are complete in bmux. Future implementation must
+stay scoped to one migration path at a time until each slice is verified and
+documented.
 
 ## First Adapter Path Complete
 
@@ -51,7 +52,11 @@ traces, capture adapters, storage defaults, or migration paths.
 The first reconnect implementation consumes provenance-engine `0.1.0` at
 commit b73fd1639c1c81230e96215259fc796b517706f6.
 
-The dependency is pinned by released package version, not by a floating branch.
+The session-tree reconnect implementation consumes provenance-engine commit
+dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e because Slice C SDK readiness is not
+yet released as a versioned tag.
+
+The first adapter dependency was pinned by released package version. The session-tree adapter is pinned by exact revision, not by a floating branch, until the engine readiness commit is tagged.
 
 ## API Surface And Verification
 
@@ -110,7 +115,9 @@ B later clarified the local legacy client seam as `BmuxLegacyProvenanceClient`
 so the remaining bmux-local paths are searchable and intentionally
 transitional.
 
-Next target: Slice C, session-tree read migration.
+Second target complete in bmux: Slice C, session-tree read migration.
+
+Next target after shared milestone acceptance: file-explanation read migration.
 
 ## Not Included
 

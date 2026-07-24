@@ -8,12 +8,6 @@ protocol BmuxLegacyProvenanceClient: Sendable {
     /// - Returns: Response describing the accepted event.
     func appendEvent(_ request: ProvenanceAppendEventRequest) async throws -> ProvenanceAppendEventResponse
 
-    /// Returns a bounded session tree rooted at the requested session.
-    ///
-    /// - Parameter request: Query parameters for the requested session tree.
-    /// - Returns: A domain response containing sessions, relationships, and identities.
-    func sessionTree(_ request: ProvenanceSessionTreeRequest) async throws -> ProvenanceSessionTreeResponse
-
     /// Returns focused provenance context for a repository-relative file path.
     ///
     /// - Parameter request: File explanation query parameters.
