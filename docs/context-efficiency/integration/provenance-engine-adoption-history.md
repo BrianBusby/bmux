@@ -1,6 +1,6 @@
 # Provenance Engine Adoption History
 
-Status: archival history for completed adoption slices.
+Status: archival history for completed and candidate adoption slices.
 
 ## 2026-07-22 Worktree List Adoption
 
@@ -30,9 +30,9 @@ No daemon, IPC, storage move, schema migration, data migration, semantic
 retrieval, observability expansion, UI work, or additional read-path migration
 was started.
 
-## 2026-07-24 Session-Tree Read Adoption
+## 2026-07-24 Session-Tree Read Adoption Candidate
 
-Accepted provenance-engine default-branch revision
+Selected provenance-engine default-branch revision
 `2026914454a00ccc6c45d686ea741111b0a01229`, the merge commit for
 `slice-c-session-tree-read-contract`.
 
@@ -90,15 +90,22 @@ Knowledge Compiler work was started.
 - Implementation detail leakage: none on the migrated path. Tests seed through
   public `appendEvent`; no session-tree CLI test reads engine tables directly.
 
-Final validation: final `slice-c-main` tagged Debug reload passed; provenance CLI integration tests passed against the tagged bundled CLI; targeted `WorkProvenanceStoreTests` and `SubsessionProvenanceTests` passed; pbxproj, Package.resolved policy, workspace package grouping, whitespace, and active-path prohibited-import/table scans passed.
+Final local validation: final `slice-c-main` tagged Debug reload passed; provenance CLI integration tests passed against the tagged bundled CLI; targeted `WorkProvenanceStoreTests` and `SubsessionProvenanceTests` passed; pbxproj, Package.resolved policy, workspace package grouping, whitespace, and active-path prohibited-import/table scans passed.
+
+GitHub Actions status: bmux PR-event runs for CI and Activation performance
+remain pending with zero jobs, while manually dispatched runs are queued on
+`blacksmith-4vcpu-ubuntu-2404` runner capacity. No failing job logs exist yet.
 
 Dependency decision: use merged default-branch revision `2026914454a00ccc6c45d686ea741111b0a01229` until a later release or tag includes Slice C.
 
-Classification: Adoption accepted - continue.
+Classification: Adoption conditionally accepted - wait for bmux GitHub Actions
+and merge before continuing.
 
-Next recommendation: migrate the file-explanation read path in a new focused
-Slice D branch or session. No engine contract changes are required before that
-slice. The only follow-up is to replace the merged revision pin with a later release/tag if one is created.
+Next recommendation: finish bmux PR acceptance. After checks and merge complete,
+migrate the file-explanation read path in a new focused Slice D branch or
+session. No engine contract changes are required before that slice. The only
+follow-up is to replace the merged revision pin with a later release/tag if one
+is created.
 
 ### Slice Completion Architecture Review
 

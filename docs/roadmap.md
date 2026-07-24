@@ -38,7 +38,7 @@ Local bmux integration notes live in `docs/provenance-integration.md`.
 
 ## Active Work
 
-Active gate: Slice D file-explanation read migration.
+Active gate: Slice C acceptance.
 
 Accepted Slice C scope: migrated only the provenance session-tree CLI command to the external SQLite-backed provenance-engine client.
 
@@ -48,7 +48,12 @@ Session-tree CLI fixture setup now uses public provenance-engine APIs.
 
 Removed only session-tree legacy code that became unused.
 
-Out of scope for Slice D: current context, lifecycle writes, worktree observation capture, storage migration, daemon transport, UI work, observability expansion, GitHub ingestion, and Knowledge Compiler implementation.
+Slice D file-explanation read migration is the next eligible milestone only
+after bmux PR checks and merge complete.
+
+Out of scope before Slice D: current context, lifecycle writes, worktree
+observation capture, storage migration, daemon transport, UI work, observability
+expansion, GitHub ingestion, and Knowledge Compiler implementation.
 
 ## Near-Term Planned Work
 

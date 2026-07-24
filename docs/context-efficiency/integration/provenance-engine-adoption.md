@@ -1,6 +1,7 @@
 # Provenance Engine Adoption
 
-Status: Slice C session-tree read migration accepted on 2026-07-24.
+Status: Slice C session-tree read migration locally validated on 2026-07-24;
+cross-repository acceptance remains pending on bmux GitHub Actions/merge.
 
 Planning authority: this is the bmux-local adoption inventory and implementation state. The canonical cross-repository roadmap is `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
 
@@ -16,7 +17,8 @@ bmux still owns CLI parsing, fallback messages, JSON/text presentation, and outp
 
 ## Session-Tree Adoption Completion
 
-The session-tree adoption slice is accepted.
+The session-tree adoption slice is locally validated and ready for bmux PR
+acceptance. The remaining gate is bmux GitHub Actions/merge.
 
 Verified from code: `Package.resolved` pins provenance-engine revision `2026914454a00ccc6c45d686ea741111b0a01229`; `BMUXCLI+Provenance.swift` constructs the external client for `runProvenanceSessions`; the adopted path calls `client.sessionTree(ProvenanceEngineContracts.ProvenanceSessionTreeRequest(...))`; the CLI maps external DTOs into bmux-owned presentation payloads; the old direct `CLIProvenanceSQLiteReader.sessionTree()` implementation is absent; the local legacy `BmuxLegacyProvenanceClient.sessionTree` method and duplicate bmux-local session-tree request/response DTOs are absent; the CLI session-tree fixture seeds through public engine APIs.
 
@@ -68,8 +70,16 @@ The external engine owns durable facts: immutable provenance events, repository/
 
 ## Next Target
 
-Active target: Slice D file-explanation read migration.
+Active target: close the Slice C acceptance gate.
 
-Exact next scope: migrate only `bmux provenance explain <path>` to construct the external SQLite-backed engine client and call `ProvenanceEngineClient.fileExplanation(ProvenanceFileExplanationRequest(...))`; preserve existing JSON/text/no-database/no-worktree/no-file behavior and bounds; seed tests through public engine APIs where applicable; remove file-explanation-only local query helpers that become unused.
+After bmux PR checks and merge complete, the next scope is Slice D: migrate only
+`bmux provenance explain <path>` to construct the external SQLite-backed engine
+client and call
+`ProvenanceEngineClient.fileExplanation(ProvenanceFileExplanationRequest(...))`;
+preserve existing JSON/text/no-database/no-worktree/no-file behavior and bounds;
+seed tests through public engine APIs where applicable; remove
+file-explanation-only local query helpers that become unused.
 
-Do not begin current-context, lifecycle-write, capture, observability, data-migration, daemon, UI, or engine-expansion work in the file-explanation slice.
+Do not begin Slice D, current-context, lifecycle-write, capture, observability,
+data-migration, daemon, UI, or engine-expansion work until the Slice C
+acceptance gate closes.

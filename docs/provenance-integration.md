@@ -34,7 +34,9 @@ provenance-engine owns reusable provenance infrastructure:
 
 ## Current bmux-Owned Integration Work
 
-Current active milestone: Slice D file-explanation read migration. Slice C session-tree read migration is accepted.
+Current active milestone: Slice C acceptance gate. Slice C session-tree read
+migration is locally validated and ready for bmux PR acceptance, but not fully
+accepted until bmux PR checks and merge complete.
 
 Slice C migrated only the provenance session-tree CLI command to the external SQLite-backed provenance-engine client, preserved existing presentation and fallback behavior, used public engine APIs for fixture setup, and removed only session-tree-specific legacy code that became unused.
 
@@ -50,6 +52,7 @@ The completed second adoption path is `bmux provenance sessions tree <session-id
 
 Do not begin current context, lifecycle writes, capture append migration, storage migration, daemon transport, retrieval, UI work, GitHub ingestion, or Knowledge Compiler implementation.
 
-File explanations may begin only in a new focused Slice D branch or session.
+File explanations may begin only after the Slice C acceptance gate closes, in a
+new focused Slice D branch or session.
 
 Avoid permanent dual reads.
