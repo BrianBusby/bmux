@@ -2,13 +2,22 @@
 
 Branch: `slice-c-session-tree-read-contract`
 
+Acceptance: accepted on 2026-07-24 after bmux consumer adoption and final validation.
+
 This document preserves the Slice Completion Architecture Review for the engine-owned portion of the bmux session-tree read migration.
 
 ## Implementation Summary
 
-Confirmed that Slice C remains the active coordinated milestone from `docs/roadmap.md`, `docs/current-status.md`, and `docs/bmux-integration-roadmap.md`. The engine-side work preserved the existing public `ProvenanceEngineClient.sessionTree(...)` contract, documented it in `docs/integration-contract.md`, and added SDK-level compatibility coverage proving an adopter can create a client through `ProvenanceEngineClientFactory`, seed through public `appendEvent` calls, and read a session tree without importing or querying SQLite internals.
+Confirmed during implementation that Slice C was the active coordinated milestone from `docs/roadmap.md`, `docs/current-status.md`, and `docs/bmux-integration-roadmap.md`. The engine-side work preserved the existing public `ProvenanceEngineClient.sessionTree(...)` contract, documented it in `docs/integration-contract.md`, and added SDK-level compatibility coverage proving an adopter can create a client through `ProvenanceEngineClientFactory`, seed through public `appendEvent` calls, and read a session tree without importing or querying SQLite internals.
 
 No new storage, daemon, retrieval, semantic, GitHub ingestion, Knowledge Compiler, UI, capture, or bmux-specific behavior was introduced.
+
+bmux adoption confirmed the contract was sufficient. The only integration
+finding was limit semantics: `ProvenanceSessionTreeRequest.limit` is a combined
+engine row budget across sessions and relationships, while bmux's legacy CLI
+behavior is a session-oriented presentation cap. bmux adapts that at its CLI
+boundary. The engine keeps returned relationships coherent with returned
+sessions and returns external identities for included sessions.
 
 ## Architecture Review
 

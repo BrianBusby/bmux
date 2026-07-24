@@ -6,11 +6,11 @@ Detailed technical contract rules remain in `docs/integration-contract.md`. The 
 
 ## Current Priority
 
-V1 adoption is a controlled migration. The first external bmux path, `bmux provenance worktrees list`, is complete. The next active milestone is session-tree read migration.
+V1 adoption is a controlled migration. The first external bmux path, `bmux provenance worktrees list`, is complete. Slice C session-tree read migration is accepted.
 
-Do not begin file explanations, current context, lifecycle writes, storage migration, daemon transport, retrieval, GitHub ingestion, or Knowledge Compiler implementation before the current path is validated.
+The next active milestone is Slice D: file-explanation read migration. Do not begin current context, lifecycle writes, storage migration, daemon transport, retrieval, GitHub ingestion, or Knowledge Compiler implementation before the file-explanation path is validated.
 
-Planned order after the active session-tree milestone: file explanations, current context, lifecycle recording, worktree observation capture, storage ownership migration, daemon or service transport, then shared evidence and Knowledge Compiler adoption.
+Planned order after the active file-explanation milestone: current context, lifecycle recording, worktree observation capture, storage ownership migration, daemon or service transport, then shared evidence and Knowledge Compiler adoption.
 
 ## Milestone: bmux Worktree Reads
 
@@ -62,9 +62,21 @@ Compatibility expectations: existing bmux CLI output remains stable. Engine cont
 
 Rollback strategy: scoped bmux revert restoring the legacy adapter. Do not alter provenance-engine schema as rollback.
 
-Migration or cleanup: remove the local session-tree legacy seam and session-tree-only query helpers only when unused.
+Migration or cleanup: bmux removed the direct CLI session-tree SQLite reader, legacy local client method, duplicate local CLI DTOs, and raw SQLite CLI fixture seeding for this path. bmux intentionally retained local store relationship/session-tree helpers for lifecycle and capture projection tests until later migration slices.
 
-Status: Active next milestone.
+Integration finding: the session-tree request limit is an engine row budget,
+not a presentation cap. The current engine applies it across the combined
+session and relationship rows needed for traversal. bmux preserves its legacy
+100-session presentation cap by adapting the request limit at its CLI boundary.
+The engine returns relationships only for child sessions that fit within the
+limit, then returns external identities for included sessions.
+
+Dependency result: Slice C was accepted against provenance-engine commit
+`dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e`. Downstream consumers should use a
+merged default-branch revision or later release/tag containing that commit
+rather than relying indefinitely on the temporary feature-branch commit.
+
+Status: Accepted.
 
 ## Milestone: bmux File or Artifact Explanations
 
@@ -86,7 +98,7 @@ Rollback strategy: scoped bmux revert to the previous local adapter.
 
 Migration or cleanup: remove file-explanation-only local query helpers once unused.
 
-Status: Planned after session-tree reads.
+Status: Active.
 
 ## Milestone: bmux Current Session and Task Context
 

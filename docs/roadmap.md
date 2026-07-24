@@ -18,11 +18,12 @@ The current roadmap priority is not new engine expansion. It is proving that the
 Completed:
 
 - `bmux provenance worktrees list` adopted `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.worktrees(...)` through provenance-engine `0.1.0`.
+- Slice C: `bmux provenance sessions tree <session-id>` adopted `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.sessionTree(...)` through the accepted session-tree read contract.
 
 Current gate:
 
-- Support the next bmux migration slice, `bmux provenance sessions tree <session-id>`, using the existing `ProvenanceEngineClient.sessionTree(...)` contract.
-- Do not add new storage, daemon, retrieval, semantic, observability, GitHub ingestion, Knowledge Compiler, or migration scope unless the current adoption slice proves a concrete contract defect.
+- Support Slice D, the next bmux migration slice, `bmux provenance explain <path>`, using the existing `ProvenanceEngineClient.fileExplanation(...)` contract.
+- Do not add new storage, daemon, retrieval, semantic, observability, GitHub ingestion, Knowledge Compiler, or migration scope unless the file-explanation adoption slice proves a concrete contract defect.
 
 Canonical cross-repository details: `docs/bmux-integration-roadmap.md`.
 
@@ -32,12 +33,11 @@ After each path is accepted, produce an integration findings report and choose t
 
 Planned sequence:
 
-1. Session-tree reads.
-2. File or artifact explanations.
-3. Current session and task context.
-4. Session lifecycle recording.
-5. Worktree observation and other capture append paths.
-6. Storage ownership and cleanup after bmux runtime paths stop depending on bmux-local provenance storage.
+1. File or artifact explanations.
+2. Current session and task context.
+3. Session lifecycle recording.
+4. Worktree observation and other capture append paths.
+5. Storage ownership and cleanup after bmux runtime paths stop depending on bmux-local provenance storage.
 
 ## External Evidence Model Validation
 
