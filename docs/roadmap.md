@@ -34,19 +34,20 @@ Local bmux integration notes live in `docs/provenance-integration.md`.
 - Local WorkProvenance capture, projections, lifecycle relationship recording, and provenance CLI presentation.
 - First external provenance-engine adoption path: `bmux provenance worktrees list` now reads through provenance-engine `0.1.0`.
 - Second external provenance-engine adoption path: `bmux provenance sessions tree <session-id>` now reads through `ProvenanceEngineClient.sessionTree(...)` at engine revision `2026914454a00ccc6c45d686ea741111b0a01229`.
+- Slice D adoption branch: `bmux provenance explain <path>` now reads through `ProvenanceEngineClient.fileExplanation(...)` at engine readiness revision `384026e36087dda576e25343907c3e06d8a4d594`, pending Provenance Engine PR 5 and bmux PR acceptance.
 - Transitional legacy boundary clarified as `BmuxLegacyProvenanceClient` for remaining bmux-local provenance paths.
 
 ## Active Work
 
-Active gate: Slice D file-explanation read migration.
+Active gate: Slice D file-explanation read migration adoption review.
 
-Accepted Slice C scope: migrated only the provenance session-tree CLI command to the external SQLite-backed provenance-engine client.
+Slice D adoption scope: migrated only `bmux provenance explain <path>` to the external SQLite-backed provenance-engine client while retaining bmux ownership of Git path resolution, fallback behavior, and JSON/text rendering.
 
-Preserved existing JSON, text, missing-database, no-session, and bounds behavior.
+Preserved existing JSON, text, missing-database, no-worktree, no-file, relative-path, absolute-path, unknown-flag, extra-argument, and outside-worktree behavior.
 
-Session-tree CLI fixture setup now uses public provenance-engine APIs.
+File-explanation CLI fixture setup now uses public provenance-engine APIs via `appendEvent` and does not import `ProvenanceEngineSQLite`.
 
-Removed only session-tree legacy code that became unused.
+Removed only file-explanation legacy code that became unused.
 
 GitHub Actions waiver for Slice C: bmux PR 7 Actions remained unavailable
 because PR-event runs produced zero jobs/check runs and manual workflow runs
@@ -54,7 +55,7 @@ queued without assignment to `blacksmith-4vcpu-ubuntu-2404`. No failing CI resul
 was observed, and branch protection did not require those checks. The waiver is
 limited to Slice C and does not remove CI expectations for later work.
 
-Out of scope for Slice D: current context, lifecycle writes, worktree
+Still out of scope for Slice D: current context, lifecycle writes, worktree
 observation capture, storage migration, daemon transport, UI work, observability
 expansion, GitHub ingestion, and Knowledge Compiler implementation.
 
@@ -62,7 +63,7 @@ expansion, GitHub ingestion, and Knowledge Compiler implementation.
 
 - Produce the integration findings report after each accepted migration slice.
 - Choose the next single bmux provenance path from the completed findings rather than opening parallel paths.
-- Continue the provenance read migration in the current order: file explanations, then current context.
+- After Slice D acceptance, continue the provenance read migration with current context as the next eligible target.
 - Reconnect lifecycle writes only after durable read paths prove contract compatibility.
 - Reconnect capture append paths while keeping Git observation policy and runtime degradation in bmux.
 - Remove migrated bmux-local provenance query code slice by slice.

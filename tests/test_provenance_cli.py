@@ -17,6 +17,9 @@ from claude_teams_test_utils import resolve_bmux_cli
 SESSION_TREE_SEEDER_PACKAGE = (
     Path(__file__).parent / "fixtures" / "provenance-engine-session-tree-seeder"
 )
+FILE_EXPLANATION_SEEDER_PACKAGE = (
+    Path(__file__).parent / "fixtures" / "provenance-engine-file-explanation-seeder"
+)
 
 
 def stable_id(prefix: str, value: str) -> str:
@@ -38,6 +41,8 @@ def create_provenance_database(path: Path, scenario: str = "basic") -> None:
             "run",
             "--package-path",
             str(SESSION_TREE_SEEDER_PACKAGE),
+            "--scratch-path",
+            str(path.parent / "session-tree-seeder-build"),
             "ProvenanceEngineSessionTreeSeeder",
             str(path),
             scenario,
@@ -53,7 +58,7 @@ def create_provenance_database(path: Path, scenario: str = "basic") -> None:
         )
 
 
-def create_provenance_explain_database(
+def create_legacy_provenance_context_seed_database(
     path: Path,
     repository_root: str,
     include_worktree: bool = True,
@@ -337,8 +342,42 @@ def create_provenance_explain_database(
         )
 
 
+def create_provenance_explain_database(
+    path: Path,
+    repository_root: str,
+    include_worktree: bool = True,
+    include_file: bool = True,
+) -> None:
+    command = [
+        "swift",
+        "run",
+        "--package-path",
+        str(FILE_EXPLANATION_SEEDER_PACKAGE),
+        "--scratch-path",
+        str(path.parent / "file-explanation-seeder-build"),
+        "ProvenanceEngineFileExplanationSeeder",
+        str(path),
+        repository_root,
+        stable_repository_id(repository_root),
+        stable_worktree_id(repository_root),
+    ]
+    if not include_worktree:
+        command.append("--no-worktree")
+    if not include_file:
+        command.append("--no-file")
+    env = os.environ.copy()
+    env.setdefault("CLANG_MODULE_CACHE_PATH", "/tmp/bmux-provenance-engine-clang-cache")
+    env.setdefault("SWIFTPM_CACHE_PATH", "/tmp/bmux-provenance-engine-swiftpm-cache")
+    result = subprocess.run(command, text=True, capture_output=True, env=env)
+    if result.returncode != 0:
+        raise AssertionError(
+            "failed to seed file explanation through Provenance Engine SDK:\n"
+            f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        )
+
+
 def create_provenance_context_database(path: Path, repository_root: str) -> None:
-    create_provenance_explain_database(path, repository_root)
+    create_legacy_provenance_context_seed_database(path, repository_root)
     repository_id = stable_repository_id(repository_root)
     worktree_id = stable_worktree_id(repository_root)
     with sqlite3.connect(path) as conn:
@@ -648,7 +687,7 @@ def provenance_engine_package_dependency() -> str:
     if sibling.exists():
         return f'.package(path: "{sibling}")'
 
-    return '.package(url: "git@github.com:BrianBusby/provenance-engine.git", exact: "0.1.0")'
+    return '.package(url: "git@github.com:BrianBusby/provenance-engine.git", revision: "384026e36087dda576e25343907c3e06d8a4d594")'
 
 
 def ensure_worktree_seed_package(root: Path) -> Path:
@@ -797,6 +836,8 @@ def seed_engine_worktree_database(path: Path, include_rows: bool) -> None:
         "run",
         "--package-path",
         str(package),
+        "--scratch-path",
+        str(path.parent / "provenance-engine-seed-build"),
         "SeedWorktrees",
         str(path),
     ]
@@ -1414,6 +1455,7 @@ def create_git_repo(root: Path) -> str:
     target = root / "Sources" / "WorkspaceManager.swift"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("struct WorkspaceManager {}\n", encoding="utf-8")
+    (target.parent / "Unattributed.swift").write_text("struct Unattributed {}\n", encoding="utf-8")
     return str(root)
 
 
@@ -1462,6 +1504,42 @@ def check_provenance_explain_json(cli_path: str, root: Path) -> None:
         raise AssertionError(f"expected stable worktree id: {payload!r}")
     if payload["repository"]["remote_slug"] != "manaflow-ai/bmux":
         raise AssertionError(f"expected repository payload: {payload!r}")
+    if payload["updated_at"] != 150.0:
+        raise AssertionError(f"expected newest file evidence to win: {payload!r}")
+
+    absolute_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "explain",
+            str(repo / "Sources" / "WorkspaceManager.swift"),
+            "--database",
+            str(database),
+        ],
+        cwd=repo,
+    )
+    absolute = json.loads(absolute_result.stdout)
+    if not absolute["found"] or absolute["relative_path"] != "Sources/WorkspaceManager.swift":
+        raise AssertionError(f"absolute path should normalize to repository-relative path: {absolute!r}")
+
+    unattributed_result = run_cli(
+        cli_path,
+        [
+            "--json",
+            "provenance",
+            "explain",
+            "Sources/Unattributed.swift",
+            "--database",
+            str(database),
+        ],
+        cwd=repo,
+    )
+    unattributed = json.loads(unattributed_result.stdout)
+    if not unattributed["found"] or unattributed["attribution_source"] != "unattributed":
+        raise AssertionError(f"expected unattributed file explanation: {unattributed!r}")
+    if unattributed["contribution"] is not None or unattributed["session"] is not None:
+        raise AssertionError(f"unattributed explanation should not expose attribution records: {unattributed!r}")
 
     no_file_database = root / "explain-no-file.sqlite"
     create_provenance_explain_database(no_file_database, repository_root, include_file=False)
@@ -1520,6 +1598,81 @@ def check_provenance_explain_json(cli_path: str, root: Path) -> None:
         raise AssertionError(f"missing database should preserve bounded no-database JSON: {no_database!r}")
 
 
+    unknown_flag = subprocess.run(
+        [
+            cli_path,
+            "provenance",
+            "explain",
+            "Sources/WorkspaceManager.swift",
+            "--bogus",
+            "--database",
+            str(database),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=10,
+        cwd=repo,
+    )
+    if unknown_flag.returncode == 0 or "unknown flag" not in unknown_flag.stderr:
+        raise AssertionError(f"unknown flag behavior changed: {unknown_flag!r}")
+
+    extra_argument = subprocess.run(
+        [
+            cli_path,
+            "provenance",
+            "explain",
+            "Sources/WorkspaceManager.swift",
+            "extra",
+            "--database",
+            str(database),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=10,
+        cwd=repo,
+    )
+    if extra_argument.returncode == 0 or "unexpected argument" not in extra_argument.stderr:
+        raise AssertionError(f"extra argument behavior changed: {extra_argument!r}")
+
+    no_git = subprocess.run(
+        [
+            cli_path,
+            "provenance",
+            "explain",
+            "Sources/WorkspaceManager.swift",
+            "--database",
+            str(database),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=10,
+        cwd=root,
+    )
+    if no_git.returncode == 0 or "requires a Git worktree" not in no_git.stderr:
+        raise AssertionError(f"missing Git worktree behavior changed: {no_git!r}")
+
+    outside_worktree = subprocess.run(
+        [
+            cli_path,
+            "provenance",
+            "explain",
+            "../outside/Missing.swift",
+            "--database",
+            str(database),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=10,
+        cwd=repo,
+    )
+    if outside_worktree.returncode == 0 or "outside the current Git worktree" not in outside_worktree.stderr:
+        raise AssertionError(f"outside worktree behavior changed: {outside_worktree!r}")
+
+
 def check_provenance_explain_text(cli_path: str, root: Path) -> None:
     repo = root / "repo-text"
     repository_root = create_git_repo(repo)
@@ -1551,6 +1704,20 @@ def check_provenance_explain_text(cli_path: str, root: Path) -> None:
     ]:
         if expected not in output:
             raise AssertionError(f"expected text output to include {expected!r}:\n{output}")
+
+    unattributed_result = run_cli(
+        cli_path,
+        [
+            "provenance",
+            "explain",
+            "Sources/Unattributed.swift",
+            "--database",
+            str(database),
+        ],
+        cwd=repo,
+    )
+    if "Note: bmux observed this dirty file, but no session has claimed it yet." not in unattributed_result.stdout:
+        raise AssertionError(f"expected unattributed note in text output:\n{unattributed_result.stdout}")
 
 
 def check_provenance_context_json(cli_path: str, root: Path) -> None:
@@ -1634,7 +1801,7 @@ def check_provenance_context_json(cli_path: str, root: Path) -> None:
         raise AssertionError(f"expected conflict contribution counts: {payload!r}")
 
     empty_database = root / "context-empty-work-provenance.sqlite"
-    create_provenance_explain_database(empty_database, repository_root, include_file=False)
+    create_legacy_provenance_context_seed_database(empty_database, repository_root, include_file=False)
     empty_result = run_cli(
         cli_path,
         [
@@ -1652,7 +1819,7 @@ def check_provenance_context_json(cli_path: str, root: Path) -> None:
         raise AssertionError(f"empty sections should preserve found empty context: {empty!r}")
 
     no_worktree_database = root / "context-no-worktree.sqlite"
-    create_provenance_explain_database(no_worktree_database, repository_root, include_worktree=False)
+    create_legacy_provenance_context_seed_database(no_worktree_database, repository_root, include_worktree=False)
     no_worktree_result = run_cli(
         cli_path,
         [

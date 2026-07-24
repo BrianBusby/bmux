@@ -146,7 +146,7 @@ struct CLIProvenanceExplanation: Equatable {
         ])
     }
 
-    private static func changeSetPayload(_ changeSet: WorkProvenanceChangeSetRecord?) -> [String: AnyHashable]? {
+    private static func changeSetPayload(_ changeSet: ProvenanceChangeSetRecord?) -> [String: AnyHashable]? {
         optionalPayload([
             "id": changeSet?.id,
             "summary": changeSet?.summary,
@@ -155,7 +155,7 @@ struct CLIProvenanceExplanation: Equatable {
         ])
     }
 
-    private static func checkpointPayload(_ checkpoint: WorkProvenanceCheckpointRecord?) -> [String: AnyHashable]? {
+    private static func checkpointPayload(_ checkpoint: ProvenanceCheckpointRecord?) -> [String: AnyHashable]? {
         optionalPayload([
             "id": checkpoint?.id,
             "summary": checkpoint?.summary,
@@ -167,7 +167,7 @@ struct CLIProvenanceExplanation: Equatable {
         ])
     }
 
-    private static func contributionPayload(_ contribution: WorkProvenanceContributionRecord?) -> [String: AnyHashable]? {
+    private static func contributionPayload(_ contribution: ProvenanceContributionRecord?) -> [String: AnyHashable]? {
         optionalPayload([
             "id": contribution?.id,
             "declared_intent": contribution?.declaredIntent,
@@ -177,7 +177,7 @@ struct CLIProvenanceExplanation: Equatable {
         ])
     }
 
-    private static func sessionPayload(_ session: WorkProvenanceSessionRecord?) -> [String: AnyHashable]? {
+    private static func sessionPayload(_ session: ProvenanceSessionRecord?) -> [String: AnyHashable]? {
         optionalPayload([
             "id": session?.id,
             "agent_kind": session?.agentKind,
@@ -189,7 +189,7 @@ struct CLIProvenanceExplanation: Equatable {
         ])
     }
 
-    private static func workItemPayload(_ workItem: WorkProvenanceWorkItemRecord?) -> [String: AnyHashable]? {
+    private static func workItemPayload(_ workItem: ProvenanceWorkItemRecord?) -> [String: AnyHashable]? {
         optionalPayload([
             "id": workItem?.id,
             "title": workItem?.title,

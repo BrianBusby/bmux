@@ -18,7 +18,7 @@ private typealias TestBmuxLegacyProvenanceClient = bmux.BmuxLegacyProvenanceClie
 @Suite
 struct WorkProvenanceStoreTests {
     @Test
-    func appendReplayAndExplainFileChanges() async throws {
+    func appendReplayAndProjectsFileChanges() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
@@ -28,24 +28,23 @@ struct WorkProvenanceStoreTests {
         try await store.rebuildProjections()
 
         let events = try await store.events()
-        let attributed = try await store.fileExplanation(
-            worktreeID: "worktree-1",
-            path: "Sources/WorkspaceManager.swift"
-        )
-        let unattributed = try await store.fileExplanation(
-            worktreeID: "worktree-1",
-            path: "Sources/Unknown.swift"
-        )
+        let context = try await store.currentContext(repositoryPath: "/repo")
+        let attributed = try #require(context.dirtyFiles.first {
+            $0.fileChange.path == "Sources/WorkspaceManager.swift"
+        })
+        let unattributed = try #require(context.dirtyFiles.first {
+            $0.fileChange.path == "Sources/Unknown.swift"
+        })
 
         #expect(events.map(\.id) == ["event-1", "event-unattributed"])
-        #expect(attributed?.workItem?.title == "Explain dirty files")
-        #expect(attributed?.contribution?.declaredIntent == "Capture work provenance")
-        #expect(attributed?.session?.agentKind == "codex")
-        #expect(attributed?.checkpoint?.diffFingerprint == "diff-1")
-        #expect(attributed?.fileChange.attributionSource == .observed)
-        #expect(unattributed?.fileChange.attributionSource == .unattributed)
-        #expect(unattributed?.fileChange.attributionConfidence == .low)
-        #expect(unattributed?.contribution == nil)
+        #expect(context.recentCheckpoints.first?.workItem?.title == "Explain dirty files")
+        #expect(attributed.contribution?.declaredIntent == "Capture work provenance")
+        #expect(attributed.session?.agentKind == "codex")
+        #expect(context.recentCheckpoints.first?.checkpoint.diffFingerprint == "diff-1")
+        #expect(attributed.fileChange.attributionSource == .observed)
+        #expect(unattributed.fileChange.attributionSource == .unattributed)
+        #expect(unattributed.fileChange.attributionConfidence == .low)
+        #expect(unattributed.contribution == nil)
     }
 
     @Test
@@ -59,25 +58,19 @@ struct WorkProvenanceStoreTests {
 
         let reopened = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
         let events = try await reopened.events()
-        let explanation = try await reopened.fileExplanation(
-            worktreeID: "worktree-1",
-            path: "Sources/WorkspaceManager.swift"
-        )
+        let context = try await reopened.currentContext(repositoryPath: "/repo")
 
         #expect(events.map(\.id) == ["event-1", "event-unattributed"])
-        #expect(explanation?.repository?.path == "/repo")
-        #expect(explanation?.worktree?.path == "/repo")
-        #expect(explanation?.workItem?.id == "WI-1")
+        #expect(context.repository?.path == "/repo")
+        #expect(context.worktree?.path == "/repo")
+        #expect(context.recentCheckpoints.first?.workItem?.id == "WI-1")
 
         try await reopened.rebuildProjections()
-        let replayed = try await reopened.fileExplanation(
-            worktreeID: "worktree-1",
-            path: "Sources/WorkspaceManager.swift"
-        )
+        let replayed = try await reopened.currentContext(repositoryPath: "/repo")
 
-        #expect(replayed?.repository?.path == explanation?.repository?.path)
-        #expect(replayed?.worktree?.path == explanation?.worktree?.path)
-        #expect(replayed?.workItem?.id == explanation?.workItem?.id)
+        #expect(replayed.repository?.path == context.repository?.path)
+        #expect(replayed.worktree?.path == context.worktree?.path)
+        #expect(replayed.recentCheckpoints.first?.workItem?.id == context.recentCheckpoints.first?.workItem?.id)
     }
 
     @Test
@@ -162,20 +155,20 @@ struct WorkProvenanceStoreTests {
         try await store.append(Self.observedEvent(id: "appended-second", timestamp: 100, fingerprint: "early"))
 
         let events = try await store.events()
-        let liveExplanation = try await store.fileExplanation(
-            worktreeID: "worktree-1",
-            path: "Sources/WorkspaceManager.swift"
-        )
+        let liveContext = try await store.currentContext(repositoryPath: "/repo")
+        let liveFile = try #require(liveContext.dirtyFiles.first {
+            $0.fileChange.path == "Sources/WorkspaceManager.swift"
+        })
 
         #expect(events.map(\.id) == ["appended-first", "appended-second"])
-        #expect(liveExplanation?.changeSet?.diffFingerprint == "early")
+        #expect(liveFile.changeSet?.diffFingerprint == "early")
 
         try await store.rebuildProjections()
-        let replayedExplanation = try await store.fileExplanation(
-            worktreeID: "worktree-1",
-            path: "Sources/WorkspaceManager.swift"
-        )
-        #expect(replayedExplanation?.changeSet?.diffFingerprint == "early")
+        let replayedContext = try await store.currentContext(repositoryPath: "/repo")
+        let replayedFile = try #require(replayedContext.dirtyFiles.first {
+            $0.fileChange.path == "Sources/WorkspaceManager.swift"
+        })
+        #expect(replayedFile.changeSet?.diffFingerprint == "early")
     }
 
     @Test
@@ -219,18 +212,18 @@ struct WorkProvenanceStoreTests {
         try await store.rebuildProjections()
 
         let events = try await store.events()
-        let explanation = try await store.fileExplanation(
-            worktreeID: "worktree-1",
-            path: "Sources/WorkspaceManager.swift"
-        )
+        let context = try await store.currentContext(repositoryPath: "/repo")
+        let file = try #require(context.dirtyFiles.first {
+            $0.fileChange.path == "Sources/WorkspaceManager.swift"
+        })
 
         #expect(result.eventsDeleted == 3)
         #expect(result.fileChangesDeleted == 0)
         #expect(result.changeSetsDeleted == 4)
         #expect(events.map(\.id) == ["semantic-old", "observed-4", "observed-5"])
-        #expect(explanation?.changeSet?.diffFingerprint == "diff-5")
-        #expect(explanation?.fileChange.attributionSource == .unattributed)
-        #expect(explanation?.fileChange.attributionConfidence == .low)
+        #expect(file.changeSet?.diffFingerprint == "diff-5")
+        #expect(file.fileChange.attributionSource == .unattributed)
+        #expect(file.fileChange.attributionConfidence == .low)
     }
 
     @Test
@@ -318,34 +311,27 @@ struct WorkProvenanceStoreTests {
     }
 
     @Test
-    func contractClientAppendsAndExplainsFileChanges() async throws {
+    func contractClientAppendsAndReturnsCurrentContext() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let store = try WorkProvenanceStore(databaseURL: fixture.databaseURL)
         let client: any TestBmuxLegacyProvenanceClient = store
 
         let append = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.attributedEvent()))
-        let explanation = try await client.fileExplanation(ProvenanceFileExplanationRequest(
-            worktreeID: "worktree-1",
-            path: "Sources/WorkspaceManager.swift"
-        ))
-        let missing = try await client.fileExplanation(ProvenanceFileExplanationRequest(
-            worktreeID: "worktree-1",
-            path: "Sources/Missing.swift"
-        ))
+        let context = try await client.currentContext(ProvenanceCurrentContextRequest(repositoryPath: "/repo"))
+        let file = try #require(context.dirtyFiles.first {
+            $0.fileChange.path == "Sources/WorkspaceManager.swift"
+        })
 
         #expect(append.schemaVersion == 1)
         #expect(append.eventID == "event-1")
         #expect(append.eventType == "progress_checkpoint")
-        #expect(explanation.schemaVersion == 1)
-        #expect(explanation.found)
-        #expect(explanation.reason == nil)
-        #expect(explanation.explanation?.workItem?.title == "Explain dirty files")
-        #expect(explanation.explanation?.contribution?.declaredIntent == "Capture work provenance")
-        #expect(explanation.explanation?.fileChange.attributionSource == .observed)
-        #expect(!missing.found)
-        #expect(missing.reason == "no_file")
-        #expect(missing.explanation == nil)
+        #expect(context.schemaVersion == 1)
+        #expect(context.found)
+        #expect(context.reason == nil)
+        #expect(context.recentCheckpoints.first?.workItem?.title == "Explain dirty files")
+        #expect(file.contribution?.declaredIntent == "Capture work provenance")
+        #expect(file.fileChange.attributionSource == .observed)
     }
 
     @Test

@@ -83,8 +83,10 @@ extension BMUXCLI {
             return
         }
 
-        let store = try WorkProvenanceStore(databaseURL: databaseURL)
-        guard let worktree = try await store.worktree(path: target.repositoryRoot) else {
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+        let worktrees = try await client.worktrees(ProvenanceWorktreeListRequest())
+        guard let worktreeEntry = worktrees.worktrees.first(where: { $0.worktree.path == target.repositoryRoot }) else {
             let explanation = CLIProvenanceExplanation(
                 requestedPath: target.requestedPath,
                 repositoryPath: target.repositoryRoot,
@@ -107,17 +109,15 @@ extension BMUXCLI {
             return
         }
 
-        let repository = try await store.repository(id: worktree.repositoryID)
-        let client: any BmuxLegacyProvenanceClient = store
         let response = try await client.fileExplanation(ProvenanceFileExplanationRequest(
-            worktreeID: worktree.id,
+            worktreeID: worktreeEntry.worktree.id,
             path: target.relativePath
         ))
         let explanation = CLIProvenanceExplanation(
             target: target,
             response: response,
-            worktree: worktree,
-            repository: repository,
+            worktree: worktreeEntry.worktree,
+            repository: worktreeEntry.repository,
             noFileReason: String(localized: "cli.provenance.reason.noFile", defaultValue: "no file-level provenance has been recorded for this path")
         )
         printProvenanceExplanation(explanation, jsonOutput: jsonOutput)

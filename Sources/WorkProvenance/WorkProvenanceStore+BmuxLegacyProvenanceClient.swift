@@ -9,15 +9,6 @@ extension WorkProvenanceStore: BmuxLegacyProvenanceClient {
         )
     }
 
-    func fileExplanation(_ request: ProvenanceFileExplanationRequest) async throws -> ProvenanceFileExplanationResponse {
-        let explanation = try fileExplanation(worktreeID: request.worktreeID, path: request.path)
-        return ProvenanceFileExplanationResponse(
-            found: explanation != nil,
-            reason: explanation == nil ? "no_file" : nil,
-            explanation: explanation
-        )
-    }
-
     func currentContext(_ request: ProvenanceCurrentContextRequest) async throws
         -> ProvenanceCurrentContextResponse {
         try currentContext(

@@ -24,7 +24,9 @@ topic documents.
 
 The standalone Provenance Engine is the accepted provenance storage/query
 boundary. Slice C session-tree read migration is accepted with an explicit
-GitHub Actions waiver for bmux PR 7.
+GitHub Actions waiver for bmux PR 7. Slice D file-explanation read adoption is
+implemented locally on branch `slice-d-file-explanation-sdk-migration`, pending
+bmux PR review and Provenance Engine PR 5 acceptance.
 
 bmux consumer adoption merged through PR 7
 (`https://github.com/BrianBusby/bmux/pull/7`) using the normal GitHub merge
@@ -33,9 +35,11 @@ method at merge commit `08763dd0d3256989180dcc04f426da1f24369175` on
 `322629bf0fa0bd19367f090bdfcf1bc21c6a1e95`.
 
 bmux adoption currently pins provenance-engine revision
-`2026914454a00ccc6c45d686ea741111b0a01229`, from
-`git@github.com:BrianBusby/provenance-engine.git`, because Slice C is merged on
-the engine default branch but is not yet released as a versioned tag.
+`384026e36087dda576e25343907c3e06d8a4d594`, from
+`git@github.com:BrianBusby/provenance-engine.git`, because Slice D readiness is
+available only on Provenance Engine PR 5
+(`https://github.com/BrianBusby/provenance-engine/pull/5`) and is not merged or
+released as a versioned tag.
 
 bmux now consumes provenance-engine as an external Swift package. The Xcode
 project links the public products `ProvenanceEngineContracts` and
@@ -51,6 +55,12 @@ tree <session-id>` constructs an in-process SQLite-backed engine client through
 `ProvenanceEngineClientFactory().sqliteClient(databaseURL:)` and calls
 `ProvenanceEngineClient.sessionTree(ProvenanceSessionTreeRequest(...))`.
 
+The third external query path is implemented in the Slice D adoption branch:
+`bmux provenance explain <path>` still resolves Git paths and renders output in
+bmux, then resolves the engine worktree through
+`ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest())` and calls
+`ProvenanceEngineClient.fileExplanation(ProvenanceFileExplanationRequest(...))`.
+
 CLI presentation and compatibility remain owned by bmux. The worktree-list JSON
 shape, text shape, missing-database behavior, empty-database behavior,
 newest-first ordering, and the 25-row text cap were preserved.
@@ -61,24 +71,21 @@ state, not a target architecture.
 
 ## Current Boundary
 
-Externalized work includes the worktree-list read path, the session-tree read path, engine package pin, public SDK client construction for those paths, and session-tree test seeding through public engine APIs.
+Externalized work includes the worktree-list read path, the session-tree read path, the Slice D file-explanation read path on the adoption branch, engine package pin, public SDK client construction for those paths, and migrated test seeding through public engine APIs.
 
 Slice B clarified the legacy boundary: the bmux-local contract-shaped seam is now `BmuxLegacyProvenanceClient`, while the external `ProvenanceEngineContracts.ProvenanceEngineClient` remains untouched. The complete remaining consumer inventory lives in `docs/context-efficiency/integration/provenance-engine-adoption.md`.
 
-Still bmux-local: legacy SQLite schema ownership, event/projection storage used by unmigrated paths, file-explanation reads, current-context reads, lifecycle/capture recording, observability tracing, presentation, command parsing, fallback messages, and output formatting.
+Still bmux-local: legacy SQLite schema ownership, event/projection storage used by unmigrated paths, current-context reads, lifecycle/capture recording, observability tracing, presentation, command parsing, fallback messages, and output formatting.
 
 Do not add engine features speculatively. Engine expansion is frozen until a real bmux migration slice proves a concrete missing contract or correctness defect.
 
 ## Next Target
 
-Active milestone: Slice D, file-explanation read migration.
+Active milestone: Slice D, file-explanation read migration adoption review.
 
-Slice C migrated only `bmux provenance sessions tree <session-id>` to the external SQLite-backed engine client and `ProvenanceEngineClient.sessionTree(...)`; preserved existing CLI compatibility; seeded tests through public engine APIs; and removed only session-tree legacy code that became unused.
+Slice D migrated only `bmux provenance explain <path>` to the external SQLite-backed engine client and `ProvenanceEngineClient.fileExplanation(...)`; preserved existing CLI compatibility; seeded the file-explanation fixture through public engine APIs; and removed only file-explanation legacy code that became unused.
 
-Do not begin current-context migration, lifecycle writes, capture migration,
-data migration, semantic retrieval, daemon transport, UI work, observability
-expansion, or unrelated refactoring. Slice D should begin only in a new focused
-branch or session.
+Do not mark Slice D accepted until Provenance Engine PR 5 and the bmux adoption PR complete their acceptance process. Do not begin current-context migration, lifecycle writes, capture migration, data migration, semantic retrieval, daemon transport, UI work, observability expansion, or unrelated refactoring in this branch.
 
 ## Canonical Details
 
@@ -119,3 +126,11 @@ Slice C acceptance validation completed on 2026-07-24:
   not permanently remove CI expectations; runner or workflow scheduling should
   be tracked separately as repository infrastructure work in
   `https://github.com/BrianBusby/bmux/issues/8`.
+
+Slice D adoption-branch validation completed locally on 2026-07-24:
+
+- `./scripts/reload.sh --tag slice-d-explain`: passed and built the tagged Debug app plus bundled CLI.
+- `BMUX_BUNDLED_CLI_PATH=... python3 tests/test_provenance_cli.py`: passed against the tagged bundled CLI.
+- Targeted `xcodebuild ... -only-testing:bmuxTests/WorkProvenanceStoreTests -only-testing:bmuxTests/WorkProvenanceObserverTests test`: passed 17 tests.
+- File-explanation and session-tree fixture package resolution passed against provenance-engine revision `384026e36087dda576e25343907c3e06d8a4d594`.
+- Final hygiene checks are recorded on the Slice D PR.

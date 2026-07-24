@@ -8,12 +8,6 @@ protocol BmuxLegacyProvenanceClient: Sendable {
     /// - Returns: Response describing the accepted event.
     func appendEvent(_ request: ProvenanceAppendEventRequest) async throws -> ProvenanceAppendEventResponse
 
-    /// Returns focused provenance context for a repository-relative file path.
-    ///
-    /// - Parameter request: File explanation query parameters.
-    /// - Returns: A bounded file-explanation response.
-    func fileExplanation(_ request: ProvenanceFileExplanationRequest) async throws -> ProvenanceFileExplanationResponse
-
     /// Returns the bounded current provenance context for one Git worktree.
     ///
     /// - Parameter request: Query parameters for the current context.
