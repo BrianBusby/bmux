@@ -6,11 +6,11 @@ Detailed technical contract rules remain in `docs/integration-contract.md`. The 
 
 ## Current Priority
 
-V1 adoption is a controlled migration. The first external bmux path, `bmux provenance worktrees list`, is complete. Slice C session-tree read migration is accepted.
+V1 adoption is a controlled migration. The first external bmux path, `bmux provenance worktrees list`, is complete. Slice C session-tree read migration is locally validated in bmux, but cross-repository acceptance remains pending on bmux PR checks and merge.
 
-The next active milestone is Slice D: file-explanation read migration. Do not begin current context, lifecycle writes, storage migration, daemon transport, retrieval, GitHub ingestion, or Knowledge Compiler implementation before the file-explanation path is validated.
+The active milestone remains the Slice C acceptance gate. Do not begin Slice D, current context, lifecycle writes, storage migration, daemon transport, retrieval, GitHub ingestion, or Knowledge Compiler implementation until bmux PR checks and merge complete.
 
-Planned order after the active file-explanation milestone: current context, lifecycle recording, worktree observation capture, storage ownership migration, daemon or service transport, then shared evidence and Knowledge Compiler adoption.
+Planned order after the Slice C acceptance gate: current context, lifecycle recording, worktree observation capture, storage ownership migration, daemon or service transport, then shared evidence and Knowledge Compiler adoption.
 
 ## Milestone: bmux Worktree Reads
 
@@ -71,12 +71,13 @@ session and relationship rows needed for traversal. bmux preserves its legacy
 The engine returns relationships only for child sessions that fit within the
 limit, then returns external identities for included sessions.
 
-Dependency result: Slice C was accepted against provenance-engine commit
-`dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e`. Downstream consumers should use a
+Dependency result: engine-side Slice C was accepted against provenance-engine commit
+`dbdc4b7e8b33bc0dc9c160d0f23501d2062e213e`; bmux now pins the
+merged default-branch revision `2026914454a00ccc6c45d686ea741111b0a01229`. Downstream consumers should use a
 merged default-branch revision or later release/tag containing that commit
 rather than relying indefinitely on the temporary feature-branch commit.
 
-Status: Accepted.
+Status: Conditional: bmux local validation passed; bmux PR checks and merge remain pending.
 
 ## Milestone: bmux File or Artifact Explanations
 
@@ -98,7 +99,7 @@ Rollback strategy: scoped bmux revert to the previous local adapter.
 
 Migration or cleanup: remove file-explanation-only local query helpers once unused.
 
-Status: Active.
+Status: Planned after Slice C acceptance.
 
 ## Milestone: bmux Current Session and Task Context
 
