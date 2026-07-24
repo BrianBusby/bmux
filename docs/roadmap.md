@@ -1,57 +1,61 @@
 # Provenance Engine Roadmap
 
-## Accepted
+This is the authoritative roadmap for the provenance-engine repository. It defines implementation sequence and priorities for reusable provenance contracts, storage, SDK boundaries, retrieval, shared evidence, and derived knowledge. The full platform shape is defined in `docs/reference-architecture.md`; this file describes when slices of that architecture should be pursued. bmux product behavior and user experience belong in the bmux roadmap. Coordinated adoption milestones live in `docs/bmux-integration-roadmap.md`.
 
-- Independent Swift package with contract, SDK, and SQLite modules.
-- Public in-process client factory.
-- SQLite event ledger, projections, validation, and repair reports.
-- Worktree list query exposed through `ProvenanceEngineClient.worktrees`.
+## Accepted Baseline
+
+- Independent Swift package with `ProvenanceEngineContracts`, `ProvenanceEngineSDK`, and internal `ProvenanceEngineSQLite` modules.
+- Public in-process client factory through `ProvenanceEngineClientFactory`.
+- SQLite event ledger, current-state projections, schema migration metadata, validation, integrity reports, and repair reports.
+- Public read/write contracts for worktrees, session trees, file explanations, current context, event append, lifecycle recording, health, and storage summaries.
 - Optional event evidence-origin and evidence-scope metadata so records are not hard-coded as personal-only evidence.
+- V1 local-first storage default at `~/.local/state/provenance-engine/provenance.sqlite`.
 
-## Current Slice
+## Current V1 Adoption
 
-Adopt the independent package from bmux for exactly one read path:
+The current roadmap priority is not new engine expansion. It is proving that the accepted public contracts can replace bmux-local provenance paths one path at a time.
 
-```text
-bmux provenance worktrees list
-```
+Completed:
 
-The bmux slice must preserve existing CLI JSON/text output, ordering, and limits while seeding tests through the public engine API.
+- `bmux provenance worktrees list` adopted `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.worktrees(...)` through provenance-engine `0.1.0`.
+- Slice C: `bmux provenance sessions tree <session-id>` adopted `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.sessionTree(...)` through the accepted session-tree read contract.
 
-## Frozen Until Adoption Completes
+Current gate:
 
-- Additional storage features.
-- Daemon process design.
-- Migration tooling beyond accepted SQLite schema migration support.
-- Retrieval and semantic indexing.
-- Observability pipeline expansion.
-- Additional bmux provenance reconnect paths.
-- GitHub repository evidence ingestion.
-- Knowledge Compiler implementation.
+- Support Slice D, the next bmux migration slice, `bmux provenance explain <path>`, using the existing `ProvenanceEngineClient.fileExplanation(...)` contract.
+- Do not add new storage, daemon, retrieval, semantic, observability, GitHub ingestion, Knowledge Compiler, or migration scope unless the file-explanation adoption slice proves a concrete contract defect.
 
-## Next Eligible Work
+Canonical cross-repository details: `docs/bmux-integration-roadmap.md`.
 
-After the worktree read path is accepted, produce an integration findings report. Use that report to choose the next single bmux provenance path to reconnect.
+## Additional Bmux Adoption Paths
 
-## Post-V1 Architecture Track
-
-After the V1 adoption milestone is accepted, add a shared repository evidence track. This work should remain separate from personal AI-session evidence and should not make every engineer independently ingest and summarize the same repository history.
+After each path is accepted, produce an integration findings report and choose the next single path. Do not open multiple adoption paths in parallel.
 
 Planned sequence:
 
-1. Integration findings report from the bmux worktree read-path adoption.
-2. Choose the next single bmux provenance path to reconnect.
-3. Design shared evidence-store boundaries for personal, project, and organization scopes.
-4. Run a narrow GitHub ingestion spike with no AI summarization.
-5. Evaluate storage shape, incremental sync, authentication, API limits, ingestion performance, commit-to-PR relationships, changed-file/symbol preservation, and review-thread-to-diff relationships.
-6. Decide the first shared evidence schema extension from the spike results.
-7. Implement the first Knowledge Compiler artifact: Pull Request Decision Summary.
-8. Validate retrieval quality using compiled PR decision summaries plus minimal supporting evidence.
-9. Expand compiler artifacts only after the PR summary proves useful.
+1. File or artifact explanations.
+2. Current session and task context.
+3. Session lifecycle recording.
+4. Worktree observation and other capture append paths.
+5. Storage ownership and cleanup after bmux runtime paths stop depending on bmux-local provenance storage.
 
-## GitHub Evidence Spike
+## External Evidence Model Validation
 
-The post-V1 spike should ingest raw objective evidence only:
+Status: planned and gated after V1 bmux adoption proves the package boundary.
+
+This phase validates repository and external evidence without conflating it with personal AI-session evidence. It should refine origin/scope usage, authorization expectations, compatibility rules, and evidence-store boundaries before adding broad ingestion.
+
+## Shared Evidence-Store Design
+
+Status: planned and gated.
+
+Design personal, project, and organization evidence scopes so shared repository evidence is ingested once for a repository or organization instead of being independently collected and summarized by every engineer.
+
+## GitHub Ingestion Spike
+
+Status: post-V1 spike only.
+
+The spike should ingest raw objective evidence only:
 
 - Commits and commit metadata.
 - Changed files and changed symbols.
@@ -63,11 +67,13 @@ The post-V1 spike should ingest raw objective evidence only:
 - Commit-to-PR relationships.
 - Review thread resolution.
 
-No AI summarization should run during this spike. The spike exists to validate evidence ingestion and storage compatibility before introducing interpretation.
+No AI summarization should run during this spike. The spike exists to validate storage shape, incremental sync, authentication, API limits, ingestion performance, commit-to-PR relationships, changed-file/symbol preservation, and review-thread-to-diff relationships before introducing interpretation.
 
-## Knowledge Compiler Milestone
+## Pull Request Decision Summary Compiler
 
-The compiler consumes evidence and produces versioned knowledge artifacts. Evidence remains immutable; knowledge can be regenerated by newer compiler versions.
+Status: planned after the GitHub ingestion spike.
+
+The Knowledge Compiler consumes immutable evidence and produces versioned knowledge artifacts. Evidence remains immutable; knowledge can be regenerated by newer compiler versions.
 
 Initial artifact:
 
@@ -85,4 +91,14 @@ Suggested fields:
 - Final outcome.
 - Supporting evidence references.
 
-The compiler should write evidence-backed artifacts and retrieval should prefer those artifacts over raw commit or review-thread bulk.
+## Evidence-Aware Retrieval Validation
+
+Status: exploratory until compiled PR decision summaries exist.
+
+Retrieval should prefer compiled knowledge plus minimal supporting evidence. Agents should not receive thousands of commits, full PR discussions, or complete review threads by default.
+
+## Organization-Scale Deployment
+
+Status: deferred.
+
+Daemon or service transport, shared deployment, authorization enforcement, compatibility policy across released versions, and organization-scale storage operations belong after local V1 adoption and evidence-aware retrieval have both been validated.

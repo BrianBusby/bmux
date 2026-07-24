@@ -2,6 +2,15 @@
 
 ProvenanceEngine is the independent local-first provenance product. This repository currently contains the initial contract module, a small public in-process SDK, and the first internal storage support module.
 
+## Planning
+
+- Platform reference architecture: `docs/reference-architecture.md`
+- Current implemented architecture: `docs/architecture.md`
+- Product roadmap and implementation sequence: `docs/roadmap.md`
+- Technical integration contract: `docs/integration-contract.md`
+- Canonical bmux integration roadmap: `docs/bmux-integration-roadmap.md`
+- Current status and active gate: `docs/current-status.md`
+
 ## Package
 
 - Package: `ProvenanceEngine`
