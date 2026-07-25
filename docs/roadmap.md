@@ -23,8 +23,8 @@ Completed:
 
 Current gate:
 
-- None selected after Slice D acceptance.
-- The next bmux migration slice may now be selected, but do not add new storage, daemon, retrieval, semantic, observability, GitHub ingestion, Knowledge Compiler, migration scope, or begin the next migration slice until it is explicitly chosen.
+- Slice E engine readiness for current session and task context is complete in this repository and recorded in `docs/current-context-readiness-slice-completion.md`.
+- Do not mark Slice E accepted until bmux migrates `bmux provenance context current` through the public SDK and that adoption is reviewed.
 
 Canonical cross-repository details: `docs/bmux-integration-roadmap.md`.
 
@@ -34,7 +34,7 @@ After each path is accepted, produce an integration findings report and choose t
 
 Planned sequence:
 
-1. Current session and task context.
+1. Current session and task context: engine readiness complete; bmux adoption pending.
 2. Session lifecycle recording.
 3. Worktree observation and other capture append paths.
 4. Storage ownership and cleanup after bmux runtime paths stop depending on bmux-local provenance storage.
@@ -102,3 +102,42 @@ Retrieval should prefer compiled knowledge plus minimal supporting evidence. Age
 Status: deferred.
 
 Daemon or service transport, shared deployment, authorization enforcement, compatibility policy across released versions, and organization-scale storage operations belong after local V1 adoption and evidence-aware retrieval have both been validated.
+
+## V1 Write-Side Validation Result
+
+Status: complete in provenance-engine as of 2026-07-25.
+
+The write-side architecture has been validated by a generic non-bmux producer
+using only `ProvenanceEngineContracts` and `ProvenanceEngineSDK`. The result is
+recorded in `docs/write-side-validation-milestone.md`.
+
+Accepted conclusion: `appendEvent(...)` remains the V1 write primitive. The
+validated friction is payload verbosity and stable-ID guidance, not storage or
+bmux leakage. Future write-side improvements should be producer convenience and
+documentation work unless new consumer evidence justifies a public contract
+change.
+
+## Canonical V1 Boundary
+
+The canonical V1 boundary is `docs/v1-boundary-review.md`.
+
+V1 is complete when independent producers and consumers can record and retrieve
+local engineering provenance through the public SDK, with immutable evidence as
+the system of record and deterministic Current State rebuilt from that evidence,
+without depending on bmux, storage internals, or future knowledge-platform
+components.
+
+Capabilities outside that definition should be treated as post-V1 unless a
+future boundary review explicitly reclassifies them.
+
+## V1 Freeze Refinement
+
+The V1 freeze boundary includes producer-neutral lifecycle recording through
+`recordSessionLifecycle(...)`, durable accepted local SDK writes, and Current
+State as the first-class deterministic engine layer between immutable evidence
+and public read APIs. The deprecated `recordSubsessionLifecycle(...)` wrapper is
+compatibility-only and should not be used by new producers.
+
+Producer delivery reliability before engine acceptance, distributed queues,
+remote services, Knowledge Compiler, semantic retrieval, and organization-scale
+evidence stores remain post-V1.

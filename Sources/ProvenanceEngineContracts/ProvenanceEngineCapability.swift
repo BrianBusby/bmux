@@ -8,7 +8,11 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
     /// Appends an authoritative provenance event.
     case appendEvent = "append_event"
 
+    /// Records a normalized session lifecycle transition.
+    case recordSessionLifecycle = "record_session_lifecycle"
+
     /// Records a normalized subsession lifecycle transition.
+    @available(*, deprecated, renamed: "recordSessionLifecycle")
     case recordSubsessionLifecycle = "record_subsession_lifecycle"
 
     /// Queries a bounded session relationship tree.
@@ -22,4 +26,14 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
 
     /// Queries the current bounded provenance context for a worktree.
     case queryCurrentContext = "query_current_context"
+
+    /// All currently advertised engine capabilities.
+    public static let allCases: [ProvenanceEngineCapability] = [
+        .appendEvent,
+        .recordSessionLifecycle,
+        .querySessionTree,
+        .queryFileExplanation,
+        .queryWorktrees,
+        .queryCurrentContext,
+    ]
 }

@@ -1878,15 +1878,15 @@ struct ProvenanceSQLiteDatabaseTests {
                 )
             )
         )
-        let lifecycle = await client.recordSubsessionLifecycle(
-            ProvenanceSubsessionLifecycleRequest(
+        let lifecycle = await client.recordSessionLifecycle(
+            ProvenanceSessionLifecycleRequest(
                 phase: .started,
                 parentSessionID: parentSession.id,
                 agentKind: "codex",
                 workspaceID: "workspace-1",
                 surfaceID: "surface-1",
                 workingDirectory: repositoryRecord.path,
-                externalIdentityKind: "subsession",
+                externalIdentityKind: "worker",
                 externalIdentityValue: "child-1",
                 timestamp: Date(timeIntervalSince1970: 1_800_000_010)
             )
@@ -1910,7 +1910,7 @@ struct ProvenanceSQLiteDatabaseTests {
             eventType: ProvenanceEventType.sessionObserved.rawValue
         ))
         #expect(lifecycle.accepted)
-        let childSessionID = try #require(lifecycle.childSessionID)
+        let childSessionID = try #require(lifecycle.sessionID)
         #expect(tree.sessions.map(\.id) == [
             parentSession.id,
             childSessionID,
@@ -2072,7 +2072,7 @@ struct ProvenanceSQLiteDatabaseTests {
             id: "identity-child",
             sessionID: newerChild.id,
             system: "codex",
-            kind: "subsession",
+            kind: "worker",
             externalID: "external-child",
             source: .observed,
             confidence: .high,
@@ -2108,7 +2108,7 @@ struct ProvenanceSQLiteDatabaseTests {
         try await writer.appendEvent(
             ProvenanceEvent(
                 id: "event-older-relationship",
-                eventType: .subsessionStarted,
+                eventType: .sessionStarted,
                 timestamp: olderRelationship.updatedAt,
                 sessionID: olderChild.id,
                 source: .observed,
@@ -2119,7 +2119,7 @@ struct ProvenanceSQLiteDatabaseTests {
         try await writer.appendEvent(
             ProvenanceEvent(
                 id: "event-newer-relationship",
-                eventType: .subsessionStarted,
+                eventType: .sessionStarted,
                 timestamp: newerRelationship.updatedAt,
                 sessionID: newerChild.id,
                 source: .observed,
@@ -2133,7 +2133,7 @@ struct ProvenanceSQLiteDatabaseTests {
         try await writer.appendEvent(
             ProvenanceEvent(
                 id: "event-grandchild-relationship",
-                eventType: .subsessionStarted,
+                eventType: .sessionStarted,
                 timestamp: grandchildRelationship.updatedAt,
                 sessionID: grandchild.id,
                 source: .declared,
@@ -2218,7 +2218,7 @@ struct ProvenanceSQLiteDatabaseTests {
         try await repository.appendEvent(
             ProvenanceEvent(
                 id: "event-dangling-child",
-                eventType: .subsessionStarted,
+                eventType: .sessionStarted,
                 timestamp: childSession.updatedAt,
                 sessionID: childSession.id,
                 source: .observed,
@@ -2302,7 +2302,7 @@ struct ProvenanceSQLiteDatabaseTests {
         try await repository.appendEvent(
             ProvenanceEvent(
                 id: "event-child",
-                eventType: .subsessionStarted,
+                eventType: .sessionStarted,
                 timestamp: childSession.updatedAt,
                 sessionID: childSession.id,
                 source: .observed,
@@ -2316,7 +2316,7 @@ struct ProvenanceSQLiteDatabaseTests {
         try await repository.appendEvent(
             ProvenanceEvent(
                 id: "event-grandchild",
-                eventType: .subsessionStarted,
+                eventType: .sessionStarted,
                 timestamp: grandchildSession.updatedAt,
                 sessionID: grandchildSession.id,
                 source: .observed,
@@ -2350,7 +2350,7 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
-    func repositoryRecordsSubsessionLifecycleThroughContractAfterReopen() async throws {
+    func repositoryRecordsSessionLifecycleThroughContractAfterReopen() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
         let rootTimestamp = Date(timeIntervalSince1970: 1_800_000_000)
@@ -2380,14 +2380,14 @@ struct ProvenanceSQLiteDatabaseTests {
             createdAt: parentTimestamp,
             updatedAt: parentTimestamp
         )
-        let request = ProvenanceSubsessionLifecycleRequest(
+        let request = ProvenanceSessionLifecycleRequest(
             phase: .started,
             parentSessionID: parentSession.id,
             agentKind: "codex",
             workspaceID: "workspace-1",
             surfaceID: "surface-1",
             workingDirectory: "/repos/project",
-            externalIdentityKind: "subsession",
+            externalIdentityKind: "worker",
             externalIdentityValue: "native-child-1",
             displayName: "Child worker",
             timestamp: childTimestamp
@@ -2395,13 +2395,13 @@ struct ProvenanceSQLiteDatabaseTests {
         let stableIDFactory = ProvenanceStableIDFactory()
         let expectedChildSessionID = stableIDFactory.subsessionSessionID(
             agentKind: request.agentKind,
-            parentSessionID: request.parentSessionID,
-            identityKind: "subsession",
+            parentSessionID: parentSession.id,
+            identityKind: "worker",
             identityValue: "native-child-1"
         )
         let expectedExternalIdentityID = stableIDFactory.externalIdentityID(
             system: request.agentKind,
-            kind: "subsession",
+            kind: "worker",
             externalID: "native-child-1"
         )
         let repository = try ProvenanceSQLiteRepository(url: url)
@@ -2419,7 +2419,7 @@ struct ProvenanceSQLiteDatabaseTests {
         try await repository.appendEvent(
             ProvenanceEvent(
                 id: "event-parent",
-                eventType: .subsessionStarted,
+                eventType: .sessionStarted,
                 timestamp: parentTimestamp,
                 sessionID: parentSession.id,
                 source: .observed,
@@ -2431,21 +2431,21 @@ struct ProvenanceSQLiteDatabaseTests {
             )
         )
 
-        let builtEvent = try await repository.subsessionLifecycleEvent(for: request)
-        let response = await repository.recordSubsessionLifecycle(request)
-        let duplicateResponse = await repository.recordSubsessionLifecycle(request)
+        let builtEvent = try await repository.sessionLifecycleEvent(for: request)
+        let response = await repository.recordSessionLifecycle(request)
+        let duplicateResponse = await repository.recordSessionLifecycle(request)
         let reader = try ProvenanceSQLiteRepository(url: url)
         let storedEvent = try await reader.event(id: builtEvent.id)
         let tree = try await reader.sessionTree(
             ProvenanceSessionTreeRequest(rootSessionID: rootSession.id)
         )
 
-        #expect(builtEvent.id == stableIDFactory.subsessionLifecycleEventID(
+        #expect(builtEvent.id == stableIDFactory.sessionLifecycleEventID(
             phase: request.phase.rawValue,
-            childSessionID: expectedChildSessionID,
+            sessionID: expectedChildSessionID,
             timestamp: childTimestamp
         ))
-        #expect(builtEvent.eventType == .subsessionStarted)
+        #expect(builtEvent.eventType == .sessionStarted)
         #expect(builtEvent.sessionID == expectedChildSessionID)
         #expect(builtEvent.payload.session == ProvenanceSessionRecord(
             id: expectedChildSessionID,
@@ -2472,7 +2472,7 @@ struct ProvenanceSQLiteDatabaseTests {
                 id: expectedExternalIdentityID,
                 sessionID: expectedChildSessionID,
                 system: "codex",
-                kind: "subsession",
+                kind: "worker",
                 externalID: "native-child-1",
                 source: .observed,
                 confidence: .high,
@@ -2480,16 +2480,16 @@ struct ProvenanceSQLiteDatabaseTests {
                 updatedAt: childTimestamp
             ),
         ])
-        #expect(response == ProvenanceSubsessionLifecycleResponse(
+        #expect(response == ProvenanceSessionLifecycleResponse(
             accepted: true,
             eventID: builtEvent.id,
-            childSessionID: expectedChildSessionID,
+            sessionID: expectedChildSessionID,
             relationshipSessionID: expectedChildSessionID,
             externalIdentityID: expectedExternalIdentityID
         ))
         #expect(duplicateResponse.accepted == false)
         #expect(duplicateResponse.eventID == builtEvent.id)
-        #expect(duplicateResponse.childSessionID == expectedChildSessionID)
+        #expect(duplicateResponse.sessionID == expectedChildSessionID)
         #expect(duplicateResponse.relationshipSessionID == expectedChildSessionID)
         #expect(duplicateResponse.externalIdentityID == expectedExternalIdentityID)
         #expect(duplicateResponse.errorDescription?.contains("UNIQUE") == true
@@ -2508,7 +2508,7 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
-    func repositoryRecordsSubsessionStopWithoutClearingStartTime() async throws {
+    func repositoryRecordsSessionStopWithoutClearingStartTime() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
         let parentTimestamp = Date(timeIntervalSince1970: 1_800_000_000)
@@ -2521,33 +2521,33 @@ struct ProvenanceSQLiteDatabaseTests {
             startedAt: parentTimestamp,
             updatedAt: parentTimestamp
         )
-        let startRequest = ProvenanceSubsessionLifecycleRequest(
+        let startRequest = ProvenanceSessionLifecycleRequest(
             phase: .started,
             parentSessionID: parentSession.id,
             agentKind: "codex",
             workspaceID: "workspace-1",
             surfaceID: "surface-1",
             workingDirectory: "/repos/project",
-            externalIdentityKind: "subsession",
+            externalIdentityKind: "worker",
             externalIdentityValue: "native-child-1",
             timestamp: childStartTimestamp
         )
-        let stopRequest = ProvenanceSubsessionLifecycleRequest(
+        let stopRequest = ProvenanceSessionLifecycleRequest(
             phase: .stopped,
             parentSessionID: parentSession.id,
             agentKind: "codex",
             workspaceID: "workspace-1",
             surfaceID: "surface-1",
             workingDirectory: "/repos/project",
-            externalIdentityKind: "subsession",
+            externalIdentityKind: "worker",
             externalIdentityValue: "native-child-1",
             timestamp: childStopTimestamp
         )
         let stableIDFactory = ProvenanceStableIDFactory()
         let expectedChildSessionID = stableIDFactory.subsessionSessionID(
             agentKind: startRequest.agentKind,
-            parentSessionID: startRequest.parentSessionID,
-            identityKind: "subsession",
+            parentSessionID: parentSession.id,
+            identityKind: "worker",
             identityValue: "native-child-1"
         )
         let repository = try ProvenanceSQLiteRepository(url: url)
@@ -2563,16 +2563,16 @@ struct ProvenanceSQLiteDatabaseTests {
             )
         )
 
-        let startResponse = await repository.recordSubsessionLifecycle(startRequest)
-        let stopEvent = try await repository.subsessionLifecycleEvent(for: stopRequest)
-        let stopResponse = await repository.recordSubsessionLifecycle(stopRequest)
+        let startResponse = await repository.recordSessionLifecycle(startRequest)
+        let stopEvent = try await repository.sessionLifecycleEvent(for: stopRequest)
+        let stopResponse = await repository.recordSessionLifecycle(stopRequest)
         let storedSession = try await repository.session(id: expectedChildSessionID)
         let storedStopEvent = try await repository.event(id: stopEvent.id)
 
         #expect(startResponse.accepted)
         #expect(stopResponse.accepted)
-        #expect(stopResponse.childSessionID == expectedChildSessionID)
-        #expect(stopEvent.eventType == .subsessionStopped)
+        #expect(stopResponse.sessionID == expectedChildSessionID)
+        #expect(stopEvent.eventType == .sessionStopped)
         #expect(stopEvent.payload.session?.status == "completed")
         #expect(stopEvent.payload.session?.startedAt == childStartTimestamp)
         #expect(storedStopEvent == stopEvent)

@@ -2,16 +2,16 @@ import Foundation
 import ProvenanceEngineContracts
 
 /// Creates SQLite-backed engine clients for higher-level SDK composition.
-public struct ProvenanceSQLiteClientFactory: Sendable {
+package struct ProvenanceSQLiteClientFactory: Sendable {
     /// Creates a SQLite client factory.
-    public init() {}
+    package init() {}
 
     /// Opens a SQLite-backed ``ProvenanceEngineClient`` at a specific database URL.
     ///
     /// - Parameter databaseURL: SQLite database file URL to open or create.
     /// - Returns: An in-process client backed by engine-owned SQLite storage.
     /// - Throws: ``ProvenanceSQLiteError`` or filesystem errors when opening or migrating fails.
-    public func client(databaseURL: URL) throws -> any ProvenanceEngineClient {
+    package func client(databaseURL: URL) throws -> any ProvenanceEngineClient {
         try ProvenanceSQLiteRepository(url: databaseURL)
     }
 
@@ -20,7 +20,7 @@ public struct ProvenanceSQLiteClientFactory: Sendable {
     /// - Parameter homeDirectory: User home directory used to resolve the engine-owned default state path.
     /// - Returns: An in-process client backed by engine-owned SQLite storage.
     /// - Throws: ``ProvenanceSQLiteError`` or filesystem errors when opening or migrating fails.
-    public func client(
+    package func client(
         homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
     ) throws -> any ProvenanceEngineClient {
         try ProvenanceSQLiteRepository(

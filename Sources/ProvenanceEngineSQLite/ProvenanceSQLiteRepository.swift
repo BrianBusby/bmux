@@ -2748,7 +2748,7 @@ actor ProvenanceSQLiteRepository {
     }
 
     private func lifecycleIdentity(
-        for request: ProvenanceSubsessionLifecycleRequest
+        for request: ProvenanceSessionLifecycleRequest
     ) -> (
         kind: String,
         value: String,
@@ -2759,14 +2759,30 @@ actor ProvenanceSQLiteRepository {
             let identityKind = request.externalIdentityKind?
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             return (
-                kind: identityKind.flatMap { $0.isEmpty ? nil : $0 } ?? "subsession",
+                kind: identityKind.flatMap { $0.isEmpty ? nil : $0 } ?? "session",
                 value: trimmed,
                 confidence: .high
             )
         }
+        let sessionID = request.sessionID?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let sessionID, !sessionID.isEmpty {
+            return (
+                kind: "session",
+                value: sessionID,
+                confidence: .high
+            )
+        }
+        if let parentSessionID = request.parentSessionID?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !parentSessionID.isEmpty {
+            return (
+                kind: "unresolved_session",
+                value: "\(request.agentKind):\(parentSessionID):default",
+                confidence: .low
+            )
+        }
         return (
-            kind: "unresolved_subsession",
-            value: "\(request.agentKind):\(request.parentSessionID):default",
+            kind: "unresolved_session",
+            value: "\(request.agentKind):default",
             confidence: .low
         )
     }
@@ -3119,27 +3135,27 @@ actor ProvenanceSQLiteRepository {
     ]
 }
 
-extension ProvenanceSQLiteRepository: ProvenanceSubsessionLifecycleRecording {
-    func recordSubsessionLifecycle(
-        _ request: ProvenanceSubsessionLifecycleRequest
-    ) async -> ProvenanceSubsessionLifecycleResponse {
+extension ProvenanceSQLiteRepository: ProvenanceSessionLifecycleRecording {
+    func recordSessionLifecycle(
+        _ request: ProvenanceSessionLifecycleRequest
+    ) async -> ProvenanceSessionLifecycleResponse {
         var builtEvent: ProvenanceEvent?
         do {
-            let event = try await subsessionLifecycleEvent(for: request)
+            let event = try await sessionLifecycleEvent(for: request)
             builtEvent = event
             try appendEvent(event)
-            return ProvenanceSubsessionLifecycleResponse(
+            return ProvenanceSessionLifecycleResponse(
                 accepted: true,
                 eventID: event.id,
-                childSessionID: event.payload.session?.id,
+                sessionID: event.payload.session?.id,
                 relationshipSessionID: event.payload.sessionRelationship?.sessionID,
                 externalIdentityID: event.payload.externalIdentities.first?.id
             )
         } catch {
-            return ProvenanceSubsessionLifecycleResponse(
+            return ProvenanceSessionLifecycleResponse(
                 accepted: false,
                 eventID: builtEvent?.id,
-                childSessionID: builtEvent?.payload.session?.id,
+                sessionID: builtEvent?.payload.session?.id,
                 relationshipSessionID: builtEvent?.payload.sessionRelationship?.sessionID,
                 externalIdentityID: builtEvent?.payload.externalIdentities.first?.id,
                 errorDescription: boundedErrorSummary(error)
@@ -3147,60 +3163,61 @@ extension ProvenanceSQLiteRepository: ProvenanceSubsessionLifecycleRecording {
         }
     }
 
-    func subsessionLifecycleEvent(
-        for request: ProvenanceSubsessionLifecycleRequest
+    func sessionLifecycleEvent(
+        for request: ProvenanceSessionLifecycleRequest
     ) async throws -> ProvenanceEvent {
         let identity = lifecycleIdentity(for: request)
-        let childSessionID = stableIDFactory.subsessionSessionID(
-            agentKind: request.agentKind,
-            parentSessionID: request.parentSessionID,
-            identityKind: identity.kind,
-            identityValue: identity.value
-        )
-        let parentRelationship = try parentSession(for: request.parentSessionID)
-        let rootSessionID = parentRelationship?.rootSessionID ?? request.parentSessionID
-        let depth = (parentRelationship?.depth ?? 0) + 1
-        let existingChildSession = try session(id: childSessionID)
+        let sessionID = try lifecycleSessionID(for: request, identity: identity)
+        let trimmedParentSessionID = request.parentSessionID?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let parentSessionID = trimmedParentSessionID?.isEmpty == false ? trimmedParentSessionID : nil
+        let parentRelationship = try parentSessionID.flatMap { try parentSession(for: $0) }
+        let rootSessionID = parentSessionID.map { parentRelationship?.rootSessionID ?? $0 }
+        let depth = parentRelationship.map { $0.depth + 1 } ?? 1
+        let existingSession = try session(id: sessionID)
         let status: String
         let eventType: ProvenanceEventType
         let startedAt: Date?
         switch request.phase {
         case .started:
             status = "active"
-            eventType = .subsessionStarted
+            eventType = .sessionStarted
             startedAt = request.timestamp
         case .stopped:
             status = "completed"
-            eventType = .subsessionStopped
-            startedAt = existingChildSession?.startedAt
+            eventType = .sessionStopped
+            startedAt = existingSession?.startedAt
         }
         let session = ProvenanceSessionRecord(
-            id: childSessionID,
+            id: sessionID,
             agentKind: request.agentKind,
             workspaceID: request.workspaceID,
             surfaceID: request.surfaceID,
+            worktreeID: request.worktreeID,
             cwd: request.workingDirectory,
             status: status,
             startedAt: startedAt,
             updatedAt: request.timestamp
         )
-        let relationship = ProvenanceSessionRelationshipRecord(
-            sessionID: childSessionID,
-            parentSessionID: request.parentSessionID,
-            rootSessionID: rootSessionID,
-            depth: depth,
-            source: .observed,
-            confidence: identity.confidence,
-            createdAt: request.timestamp,
-            updatedAt: request.timestamp
-        )
+        let relationship = parentSessionID.map {
+            ProvenanceSessionRelationshipRecord(
+                sessionID: sessionID,
+                parentSessionID: $0,
+                rootSessionID: rootSessionID ?? $0,
+                depth: depth,
+                source: .observed,
+                confidence: identity.confidence,
+                createdAt: request.timestamp,
+                updatedAt: request.timestamp
+            )
+        }
         let externalIdentity = ProvenanceExternalIdentityRecord(
             id: stableIDFactory.externalIdentityID(
                 system: request.agentKind,
                 kind: identity.kind,
                 externalID: identity.value
             ),
-            sessionID: childSessionID,
+            sessionID: sessionID,
             system: request.agentKind,
             kind: identity.kind,
             externalID: identity.value,
@@ -3210,14 +3227,14 @@ extension ProvenanceSQLiteRepository: ProvenanceSubsessionLifecycleRecording {
             updatedAt: request.timestamp
         )
         return ProvenanceEvent(
-            id: stableIDFactory.subsessionLifecycleEventID(
+            id: stableIDFactory.sessionLifecycleEventID(
                 phase: request.phase.rawValue,
-                childSessionID: childSessionID,
+                sessionID: sessionID,
                 timestamp: request.timestamp
             ),
             eventType: eventType,
             timestamp: request.timestamp,
-            sessionID: childSessionID,
+            sessionID: sessionID,
             source: .observed,
             confidence: identity.confidence,
             payload: ProvenanceEventPayload(
@@ -3225,6 +3242,30 @@ extension ProvenanceSQLiteRepository: ProvenanceSubsessionLifecycleRecording {
                 sessionRelationship: relationship,
                 externalIdentities: [externalIdentity]
             )
+        )
+    }
+
+    private func lifecycleSessionID(
+        for request: ProvenanceSessionLifecycleRequest,
+        identity: (kind: String, value: String, confidence: ProvenanceConfidence)
+    ) throws -> String {
+        let explicitSessionID = request.sessionID?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let explicitSessionID, !explicitSessionID.isEmpty {
+            return explicitSessionID
+        }
+        if let parentSessionID = request.parentSessionID?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !parentSessionID.isEmpty {
+            return stableIDFactory.subsessionSessionID(
+                agentKind: request.agentKind,
+                parentSessionID: parentSessionID,
+                identityKind: identity.kind,
+                identityValue: identity.value
+            )
+        }
+        return stableIDFactory.sessionID(
+            agentKind: request.agentKind,
+            identityKind: identity.kind,
+            identityValue: identity.value
         )
     }
 }

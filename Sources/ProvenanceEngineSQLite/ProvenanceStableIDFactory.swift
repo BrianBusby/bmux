@@ -22,6 +22,23 @@ struct ProvenanceStableIDFactory: Sendable {
         )
     }
 
+    /// Stable session id for a producer-observed session without an explicit id.
+    func sessionID(
+        agentKind: String,
+        identityKind: String,
+        identityValue: String
+    ) -> String {
+        id(
+            prefix: "session",
+            value: [
+                "session-lifecycle",
+                agentKind,
+                identityKind,
+                identityValue,
+            ].joined(separator: "\n")
+        )
+    }
+
     /// Stable external identity id for a session identity link.
     func externalIdentityID(system: String, kind: String, externalID: String) -> String {
         id(
@@ -47,6 +64,24 @@ struct ProvenanceStableIDFactory: Sendable {
                 "subsession-lifecycle",
                 phase,
                 childSessionID,
+                String(timestampMicroseconds),
+            ].joined(separator: "\n")
+        )
+    }
+
+    /// Stable event id for one observed producer-neutral lifecycle transition.
+    func sessionLifecycleEventID(
+        phase: String,
+        sessionID: String,
+        timestamp: Date
+    ) -> String {
+        let timestampMicroseconds = Int64((timestamp.timeIntervalSince1970 * 1_000_000).rounded())
+        return id(
+            prefix: "event",
+            value: [
+                "session-lifecycle",
+                phase,
+                sessionID,
                 String(timestampMicroseconds),
             ].joined(separator: "\n")
         )

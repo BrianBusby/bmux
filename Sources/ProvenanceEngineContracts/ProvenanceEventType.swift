@@ -52,9 +52,17 @@ public struct ProvenanceEventType: Codable, Equatable, Hashable, Sendable, RawRe
     /// A client observed session metadata.
     public static let sessionObserved = Self(rawValue: "session_observed")
 
+    /// A producer observed a session start.
+    public static let sessionStarted = Self(rawValue: "session_started")
+
+    /// A producer observed a session stop.
+    public static let sessionStopped = Self(rawValue: "session_stopped")
+
     /// A client observed a child session start.
+    @available(*, deprecated, renamed: "sessionStarted")
     public static let subsessionStarted = Self(rawValue: "subsession_started")
 
     /// A client observed a child session stop.
+    @available(*, deprecated, renamed: "sessionStopped")
     public static let subsessionStopped = Self(rawValue: "subsession_stopped")
 }

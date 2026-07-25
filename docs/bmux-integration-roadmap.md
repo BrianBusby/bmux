@@ -8,7 +8,9 @@ Detailed technical contract rules remain in `docs/integration-contract.md`. The 
 
 V1 adoption is a controlled migration. The first external bmux path, `bmux provenance worktrees list`, is complete. Slice C session-tree read migration is accepted after bmux PR 7 merged at `08763dd0d3256989180dcc04f426da1f24369175` with an explicit GitHub Actions waiver for unavailable Blacksmith runner evidence.
 
-Slice D file-explanation read migration is accepted after bmux PR 9 merged at `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374` on 2026-07-24T21:54:46Z. The existing public contract was sufficient, bmux repinned to merged engine revision `126afde36671f53a137953200e7883e6b4093ac3`, and the temporary feature-branch dependency pin was removed everywhere. No next migration slice is active.
+Slice D file-explanation read migration is accepted after bmux PR 9 merged at `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374` on 2026-07-24T21:54:46Z. The existing public contract was sufficient, bmux repinned to merged engine revision `126afde36671f53a137953200e7883e6b4093ac3`, and the temporary feature-branch dependency pin was removed everywhere.
+
+Slice E current-context engine readiness is complete in provenance-engine. The required bmux migration is now `bmux provenance context current`, using `ProvenanceEngineClient.currentContext(ProvenanceCurrentContextRequest(...))` through the public SDK. Slice E is not accepted until bmux adoption lands and is reviewed.
 
 Planned order after Slice D acceptance: current context, lifecycle recording, worktree observation capture, storage ownership migration, daemon or service transport, then shared evidence and Knowledge Compiler adoption.
 
@@ -116,7 +118,7 @@ Capability owner: provenance-engine. Adopter: bmux.
 
 Required contract: `ProvenanceEngineClient.currentContext(ProvenanceCurrentContextRequest())`.
 
-Provenance-engine work: preserve bounded current-context projection reads. Keep retrieval and semantic expansion out of this V1 command migration unless explicitly approved later.
+Provenance-engine work: preserve bounded current-context projection reads. Engine readiness is complete and recorded in `docs/current-context-readiness-slice-completion.md`. Keep retrieval and semantic expansion out of this V1 command migration unless explicitly approved later.
 
 bmux work: migrate only the current-context CLI path. Keep current directory resolution, default section limits, command parsing, fallback text, and rendering in bmux.
 
@@ -130,7 +132,7 @@ Rollback strategy: scoped bmux revert to the local current-context adapter.
 
 Migration or cleanup: remove current-context-only local SQL helpers when unused.
 
-Status: Planned.
+Status: Engine readiness complete; bmux adoption pending.
 
 ## Milestone: Storage Ownership Leaves bmux
 

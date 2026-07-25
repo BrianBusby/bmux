@@ -26,7 +26,7 @@ struct ProvenanceEngineHealthTests {
     @Test
     func capabilityRawValuesAreStableSnakeCaseNames() {
         #expect(ProvenanceEngineCapability.appendEvent.rawValue == "append_event")
-        #expect(ProvenanceEngineCapability.recordSubsessionLifecycle.rawValue == "record_subsession_lifecycle")
+        #expect(ProvenanceEngineCapability.recordSessionLifecycle.rawValue == "record_session_lifecycle")
         #expect(ProvenanceEngineCapability.querySessionTree.rawValue == "query_session_tree")
         #expect(ProvenanceEngineCapability.queryFileExplanation.rawValue == "query_file_explanation")
         #expect(ProvenanceEngineCapability.queryWorktrees.rawValue == "query_worktrees")
@@ -132,7 +132,7 @@ struct ProvenanceEngineHealthTests {
         let client = StaticProvenanceEngineClient()
 
         let append = try await client.appendEvent(ProvenanceAppendEventRequest(event: Self.event))
-        let lifecycle = await client.recordSubsessionLifecycle(Self.lifecycleRequest)
+        let lifecycle = await client.recordSessionLifecycle(Self.lifecycleRequest)
         let tree = try await client.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: "session-1"))
         let context = try await client.currentContext(ProvenanceCurrentContextRequest(repositoryPath: "/repo"))
 
@@ -213,7 +213,7 @@ struct ProvenanceEngineHealthTests {
         confidence: .medium
     )
 
-    fileprivate static let lifecycleRequest = ProvenanceSubsessionLifecycleRequest(
+    fileprivate static let lifecycleRequest = ProvenanceSessionLifecycleRequest(
         phase: .started,
         parentSessionID: "session-1",
         agentKind: "codex",
@@ -239,7 +239,7 @@ private struct StaticProvenanceEngineClient: ProvenanceEngineClient {
         ProvenanceEngineHealth(
             status: .available,
             version: "0.1.0",
-            capabilities: [.appendEvent, .recordSubsessionLifecycle, .queryCurrentContext]
+            capabilities: [.appendEvent, .recordSessionLifecycle, .queryCurrentContext]
         )
     }
 
@@ -247,13 +247,13 @@ private struct StaticProvenanceEngineClient: ProvenanceEngineClient {
         ProvenanceAppendEventResponse(eventID: request.event.id, eventType: request.event.eventType.rawValue)
     }
 
-    func recordSubsessionLifecycle(
-        _ request: ProvenanceSubsessionLifecycleRequest
-    ) async -> ProvenanceSubsessionLifecycleResponse {
-        ProvenanceSubsessionLifecycleResponse(
+    func recordSessionLifecycle(
+        _ request: ProvenanceSessionLifecycleRequest
+    ) async -> ProvenanceSessionLifecycleResponse {
+        ProvenanceSessionLifecycleResponse(
             accepted: true,
             eventID: "event-1",
-            childSessionID: request.parentSessionID,
+            sessionID: request.parentSessionID,
             relationshipSessionID: request.parentSessionID,
             externalIdentityID: nil
         )

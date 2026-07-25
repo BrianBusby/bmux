@@ -37,6 +37,8 @@ Evidence Adapters
         ->
 Evidence Store
         ->
+Deterministic Current State
+        ->
 Knowledge Compiler
         ->
 Knowledge Store
@@ -102,7 +104,7 @@ Increasing project knowledge should improve agent effectiveness rather than incr
 
 ## 2. System Overview
 
-The platform consists of six major layers.
+The platform consists of seven major layers.
 
 ```text
 +---------------------------------------------------------------+
@@ -120,6 +122,12 @@ The platform consists of six major layers.
 +---------------------------------------------------------------+
 |                         Evidence Store                        |
 | Immutable events | source records | relationships | lineage   |
++------------------------------+--------------------------------+
+                               |
+                               v
++---------------------------------------------------------------+
+|                 Deterministic Current State                   |
+| Present context | relationships | derived bounded views          |
 +------------------------------+--------------------------------+
                                |
                                v
@@ -233,7 +241,7 @@ Examples:
 - Codex
 - Claude Code
 - future coding agents
-- agent subsessions
+- child agent sessions
 - orchestrated review agents
 
 Potential evidence includes:
@@ -600,6 +608,25 @@ The platform may use separate physical stores for:
 These stores should still participate in a coherent logical architecture.
 
 The system should not require all private local evidence to be uploaded to a central organization service before it can be useful.
+
+
+### 6.7 Deterministic Current State
+
+Current State is the canonical deterministic interpretation of engineering evidence.
+
+It is derived only from accepted evidence and deterministic engine rules. It answers present-tense provenance questions such as which sessions are active, which work is current, which files have recent evidence, which checkpoints and validation runs are relevant, and where active contributions may overlap.
+
+Current State is not raw evidence. It is also not the Knowledge Compiler. It must not contain model-generated conclusions, semantic summaries, or AI-authored durable knowledge artifacts. Those belong to later compiler and retrieval layers.
+
+Current State is rebuildable from the Evidence Store. If projection state is deleted or drifts from the ledger, the engine should be able to replay accepted evidence and reproduce the same bounded public query results. This makes the Evidence Store the durable system of record and Current State disposable derived state.
+
+Current State powers V1 read APIs such as worktrees, session trees, file explanations, and current context. Producers do not compute it, and consumers should not reconstruct it from raw events or storage tables. The engine owns deterministic ordering, relationship derivation, evidence attribution, and bounded query behavior.
+
+Ownership boundaries:
+
+- Producers own observing activity, assigning stable source/domain identities, emitting observable or declared facts, and retrying failed or unacknowledged delivery where needed.
+- Provenance Engine owns evidence validation, durable evidence storage, deterministic ordering and relationships, Current State derivation, projection rebuild, bounded provenance queries, and evidence attribution.
+- Consumers own presentation, UI, CLI formatting, local fallback policy, live Git probing when explicitly outside persisted provenance, and product-specific interaction behavior.
 
 ## 7. Knowledge Compiler
 

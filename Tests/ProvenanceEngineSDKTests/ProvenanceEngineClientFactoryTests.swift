@@ -91,7 +91,7 @@ struct ProvenanceEngineClientFactoryTests {
             id: "identity-child",
             sessionID: childSession.id,
             system: "codex",
-            kind: "subsession",
+            kind: "worker",
             externalID: "child-1",
             source: .observed,
             confidence: .high,
@@ -118,7 +118,7 @@ struct ProvenanceEngineClientFactoryTests {
             ProvenanceAppendEventRequest(
                 event: ProvenanceEvent(
                     id: "event-relationship",
-                    eventType: .subsessionStarted,
+                    eventType: .sessionStarted,
                     timestamp: relationship.updatedAt,
                     sessionID: childSession.id,
                     source: .observed,

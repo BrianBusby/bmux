@@ -2,8 +2,9 @@
 
 This document records the accepted baseline and active integration gate. The complete platform north star is `docs/reference-architecture.md`; the currently implemented architecture and active design boundaries are in `docs/architecture.md`.
 
-Accepted baseline: `0.1.0` plus Slice C session-tree read contract acceptance
-and Slice D file-explanation read adoption acceptance.
+Accepted baseline: `0.1.0` plus Slice C session-tree read contract acceptance,
+Slice D file-explanation read adoption acceptance, and Slice E current-context
+engine readiness.
 
 Source baseline: `main` through Slice D readiness merge commit
 `126afde36671f53a137953200e7883e6b4093ac3`.
@@ -18,7 +19,10 @@ The supported client entrypoint is `ProvenanceEngineClientFactory`, which create
 
 The first bmux adoption path, `bmux provenance worktrees list`, now consumes this package through `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.worktrees(...)`.
 
-Current integration gate: none selected after Slice D acceptance.
+Current integration gate: Slice E bmux adoption pending for
+`bmux provenance context current`. Engine readiness is complete in this
+repository and recorded in `docs/current-context-readiness-slice-completion.md`,
+but Slice E is not accepted until bmux consumes the ready contract.
 
 Slice C consumer adoption merged in bmux PR 7 at
 `08763dd0d3256989180dcc04f426da1f24369175` on 2026-07-24T17:20:04Z with an
@@ -39,10 +43,11 @@ head `ea72bfd7dc28cd60b093b5a4d0bebc5853c32f59`. bmux repinned to merged engine
 revision `126afde36671f53a137953200e7883e6b4093ac3` and removed the temporary
 feature-branch dependency pin everywhere.
 
-The next bmux migration slice may now be selected, but no next slice is active.
-Provenance Engine should not add storage, daemon, migration, retrieval,
-semantic, observability, GitHub ingestion, or Knowledge Compiler implementation
-until a new migration slice explicitly proves the need.
+Slice E readiness validated the existing `currentContext` public contract,
+required no new public API, and did not cross the storage boundary. Provenance
+Engine should not add storage, daemon, migration, retrieval, semantic,
+observability, GitHub ingestion, or Knowledge Compiler implementation during
+bmux adoption.
 
 Long-term architecture note: shared repository evidence and Knowledge Compiler work are accepted as post-V1 planning targets only. The current package preserves optional event evidence-origin and evidence-scope metadata, but GitHub ingestion, shared evidence-store deployment, retrieval, and compiler implementation remain frozen until after the current V1 bmux adoption sequence.
 
@@ -60,3 +65,48 @@ Last local verification for Slice D readiness on 2026-07-24:
 - `git diff --check`: passed.
 - Markdown link scan over `README.md` and `docs`: no links found to validate.
 - Consumer-style tests contain no `import ProvenanceEngineSQLite`.
+
+Last local verification for Slice E readiness on 2026-07-25:
+
+- `swift test --filter CurrentContextSDKTests`: 5 tests passed.
+- `swift build`: passed.
+- `swift test`: 83 tests passed.
+- Package description and public import validation passed.
+- `git diff --check`: passed.
+- Additional validation is recorded in `docs/current-context-readiness-slice-completion.md`.
+
+## V1 Write-Side Validation
+
+V1 write-side validation is complete in this repository and recorded in
+`docs/write-side-validation-milestone.md`. The validation added a generic
+non-bmux producer example, SDK tests that write only through public
+`appendEvent(...)`, and a projection rebuild test proving that current-state
+projections can be deleted and rebuilt from the immutable event ledger with
+identical query results.
+
+The result keeps the public write primitive unchanged. Producer integration
+friction is domain-shape verbosity and stable-ID discipline, not implementation
+leakage. No public API redesign is justified by this milestone.
+
+## V1 Boundary Review
+
+The canonical V1 platform boundary is recorded in
+`docs/v1-boundary-review.md`. V1 is defined as the local-first public SDK
+platform for immutable engineering evidence and deterministic Current State.
+Knowledge Compiler, semantic retrieval, organization-wide evidence stores,
+remote services, cross-machine sync, authentication, GitHub organization
+ingestion, and AI-generated knowledge remain explicitly outside V1.
+
+## V1 Boundary Refinement
+
+The final V1 boundary refinement is complete in this repository. The canonical
+public lifecycle helper is `recordSessionLifecycle(...)`; the earlier
+`recordSubsessionLifecycle(...)` name remains only as a deprecated compatibility
+wrapper. V1 now explicitly guarantees that successful local SDK writes are
+committed to the local event ledger before success is returned. Producer-side
+retry/outbox delivery before acceptance remains outside the core engine boundary.
+
+Current State is now documented as the canonical deterministic interpretation of
+engineering evidence in `docs/reference-architecture.md` and the V1 completion
+statement in `docs/v1-boundary-review.md` has been updated to include durable
+accepted writes and producer-neutral lifecycle terminology.

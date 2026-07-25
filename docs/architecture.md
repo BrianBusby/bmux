@@ -47,3 +47,9 @@ Contracts are the lowest layer. SDK depends on Contracts and SQLite. SQLite depe
 Additional daemon, migration, retrieval, semantic, and observability capabilities are intentionally frozen until external adoption proves the contract from a real bmux path.
 
 GitHub ingestion and Knowledge Compiler implementation are also frozen until after the current V1 adoption milestone. The accepted V1-compatible change is limited to preserving source-origin and scope metadata on events so later shared evidence does not require reworking the core ledger contract.
+
+## Current State
+
+Current State is a first-class V1 subsystem, not a storage-detail synonym for projection tables. It is the canonical deterministic interpretation of accepted engineering evidence for present-tense provenance questions.
+
+The SQLite target implements Current State with rebuildable projection tables, but those tables are not the public contract. The public contract is the bounded domain behavior exposed through worktrees, session trees, file explanations, and current context. Producers append evidence; the engine derives Current State; consumers present the returned domain records.

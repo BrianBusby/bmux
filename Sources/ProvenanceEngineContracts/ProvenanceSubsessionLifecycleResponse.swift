@@ -1,6 +1,7 @@
 import Foundation
 
 /// Response for a normalized child-session lifecycle record request.
+@available(*, deprecated, renamed: "ProvenanceSessionLifecycleResponse")
 public struct ProvenanceSubsessionLifecycleResponse: Codable, Equatable, Sendable {
     /// Schema version for this response shape.
     public let schemaVersion: Int
@@ -40,5 +41,26 @@ public struct ProvenanceSubsessionLifecycleResponse: Codable, Equatable, Sendabl
         self.relationshipSessionID = relationshipSessionID
         self.externalIdentityID = externalIdentityID
         self.errorDescription = errorDescription
+    }
+
+    /// Creates a deprecated child-session response from the producer-neutral response.
+    public init(_ response: ProvenanceSessionLifecycleResponse) {
+        self.init(
+            schemaVersion: response.schemaVersion,
+            accepted: response.accepted,
+            eventID: response.eventID,
+            childSessionID: response.sessionID,
+            relationshipSessionID: response.relationshipSessionID,
+            externalIdentityID: response.externalIdentityID,
+            errorDescription: response.errorDescription
+        )
+    }
+}
+
+extension ProvenanceSessionLifecycleResponse {
+    /// Equivalent deprecated child-session lifecycle response.
+    @available(*, deprecated, renamed: "ProvenanceSessionLifecycleResponse")
+    public var subsessionLifecycleResponse: ProvenanceSubsessionLifecycleResponse {
+        ProvenanceSubsessionLifecycleResponse(self)
     }
 }

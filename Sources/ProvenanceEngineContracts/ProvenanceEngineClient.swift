@@ -9,13 +9,13 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     /// - Throws: An implementation-defined error when append fails.
     func appendEvent(_ request: ProvenanceAppendEventRequest) async throws -> ProvenanceAppendEventResponse
 
-    /// Records one normalized child-session lifecycle transition.
+    /// Records one normalized session lifecycle transition.
     ///
     /// - Parameter request: Normalized lifecycle request supplied by a client adapter.
     /// - Returns: Bounded response describing the accepted event or persistence failure.
-    func recordSubsessionLifecycle(
-        _ request: ProvenanceSubsessionLifecycleRequest
-    ) async -> ProvenanceSubsessionLifecycleResponse
+    func recordSessionLifecycle(
+        _ request: ProvenanceSessionLifecycleRequest
+    ) async -> ProvenanceSessionLifecycleResponse
 
     /// Returns a bounded session tree rooted at the requested session.
     ///
@@ -45,4 +45,17 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     /// - Throws: An implementation-defined error when the query fails.
     func currentContext(_ request: ProvenanceCurrentContextRequest) async throws
         -> ProvenanceCurrentContextResponse
+}
+
+public extension ProvenanceEngineClient {
+    /// Records one normalized child-session lifecycle transition.
+    ///
+    /// - Parameter request: Normalized lifecycle request supplied by a client adapter.
+    /// - Returns: Bounded response describing the accepted event or persistence failure.
+    @available(*, deprecated, renamed: "recordSessionLifecycle")
+    func recordSubsessionLifecycle(
+        _ request: ProvenanceSubsessionLifecycleRequest
+    ) async -> ProvenanceSubsessionLifecycleResponse {
+        await recordSessionLifecycle(request.sessionLifecycleRequest).subsessionLifecycleResponse
+    }
 }

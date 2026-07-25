@@ -1,6 +1,7 @@
 import Foundation
 
 /// Request to record one normalized child-session lifecycle transition.
+@available(*, deprecated, renamed: "ProvenanceSessionLifecycleRequest")
 public struct ProvenanceSubsessionLifecycleRequest: Codable, Equatable, Sendable {
     /// Observed lifecycle phase.
     public let phase: ProvenanceSubsessionLifecyclePhase
@@ -55,5 +56,21 @@ public struct ProvenanceSubsessionLifecycleRequest: Codable, Equatable, Sendable
         self.externalIdentityValue = externalIdentityValue
         self.displayName = displayName
         self.timestamp = timestamp
+    }
+
+    /// Equivalent producer-neutral session lifecycle request.
+    public var sessionLifecycleRequest: ProvenanceSessionLifecycleRequest {
+        ProvenanceSessionLifecycleRequest(
+            phase: phase,
+            parentSessionID: parentSessionID,
+            agentKind: agentKind,
+            workspaceID: workspaceID,
+            surfaceID: surfaceID,
+            workingDirectory: workingDirectory,
+            externalIdentityKind: externalIdentityKind,
+            externalIdentityValue: externalIdentityValue,
+            displayName: displayName,
+            timestamp: timestamp
+        )
     }
 }
