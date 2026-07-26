@@ -4,6 +4,7 @@ import SQLite3
 /// Thin SQLite connection wrapper intended to be owned by a higher-level repository actor.
 final class ProvenanceSQLiteDatabase {
     private var handle: OpaquePointer?
+    let url: URL
 
     /// Opens or creates a SQLite database file.
     ///
@@ -12,6 +13,7 @@ final class ProvenanceSQLiteDatabase {
     ///   - fileManager: Filesystem dependency used to create the parent directory.
     /// - Throws: ``ProvenanceSQLiteError`` or filesystem errors.
     init(url: URL, fileManager: FileManager = .default) throws {
+        self.url = url
         try fileManager.createDirectory(
             at: url.deletingLastPathComponent(),
             withIntermediateDirectories: true

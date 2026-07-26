@@ -3132,6 +3132,24 @@ actor ProvenanceSQLiteRepository {
                 """,
             ]
         ),
+        ProvenanceSQLiteMigration(
+            version: 10,
+            statements: [
+                """
+                CREATE TABLE provenance_metadata (
+                    key TEXT PRIMARY KEY NOT NULL,
+                    value TEXT NOT NULL
+                )
+                """,
+                """
+                INSERT INTO provenance_metadata (key, value)
+                VALUES
+                    ('schema_family', 'provenance-engine'),
+                    ('schema_identity_version', '1'),
+                    ('schema_version', '10')
+                """,
+            ]
+        ),
     ]
 }
 

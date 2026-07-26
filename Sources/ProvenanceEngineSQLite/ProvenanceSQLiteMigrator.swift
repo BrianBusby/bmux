@@ -2,7 +2,13 @@ import Foundation
 
 /// Applies ordered SQLite schema migrations using `PRAGMA user_version`.
 struct ProvenanceSQLiteMigrator: Sendable {
+    private static let schemaFamilyKey = "schema_family"
+    private static let schemaFamilyValue = "provenance-engine"
+    private static let schemaIdentityVersionKey = "schema_identity_version"
+    private static let schemaIdentityVersionValue = "1"
+    private static let schemaVersionKey = "schema_version"
     private let migrations: [ProvenanceSQLiteMigration]
+    private let enforcesSchemaIdentity: Bool
 
     /// Creates a migrator with strictly increasing migration versions.
     ///
@@ -19,6 +25,11 @@ struct ProvenanceSQLiteMigrator: Sendable {
             previousVersion = migration.version
         }
         self.migrations = migrations
+        self.enforcesSchemaIdentity = migrations.contains { migration in
+            migration.statements.contains { statement in
+                statement.contains("provenance_events") || statement.contains("provenance_metadata")
+            }
+        }
     }
 
     /// Applies migrations newer than the database's current `user_version`.
@@ -34,8 +45,17 @@ struct ProvenanceSQLiteMigrator: Sendable {
             )
         }
 
+        if enforcesSchemaIdentity {
+            try validateSchemaIdentity(for: database, currentVersion: currentVersion)
+        }
+
         let pendingMigrations = migrations.filter { $0.version > currentVersion }
-        guard !pendingMigrations.isEmpty else { return }
+        guard !pendingMigrations.isEmpty else {
+            if enforcesSchemaIdentity {
+                try validateCurrentSchemaIdentity(for: database)
+            }
+            return
+        }
 
         try database.execute("BEGIN IMMEDIATE TRANSACTION")
         do {
@@ -53,6 +73,9 @@ struct ProvenanceSQLiteMigrator: Sendable {
         } catch {
             try? database.execute("ROLLBACK")
             throw error
+        }
+        if enforcesSchemaIdentity {
+            try validateCurrentSchemaIdentity(for: database)
         }
     }
 
@@ -87,5 +110,143 @@ struct ProvenanceSQLiteMigrator: Sendable {
         )
         defer { query.finalize() }
         return try query.step()
+    }
+
+    private func validateSchemaIdentity(
+        for database: ProvenanceSQLiteDatabase,
+        currentVersion: Int32
+    ) throws {
+        if try metadataTableExists(in: database) {
+            try validateMetadata(in: database)
+            return
+        }
+
+        if currentVersion == 0 {
+            let tables = try userTableNames(in: database)
+            guard tables.isEmpty else {
+                throw incompatibleDatabase(
+                    database,
+                    "expected a new empty database, but found existing tables: \(tables.sorted().joined(separator: ", "))"
+                )
+            }
+            return
+        }
+
+        let missingTables = try requiredTables(for: currentVersion).filter { tableName in
+            try !tableExists(tableName, in: database)
+        }
+        guard missingTables.isEmpty else {
+            throw incompatibleDatabase(
+                database,
+                "schema version \(currentVersion) is missing required Provenance Engine tables: \(missingTables.sorted().joined(separator: ", "))"
+            )
+        }
+    }
+
+    private func validateCurrentSchemaIdentity(for database: ProvenanceSQLiteDatabase) throws {
+        guard try metadataTableExists(in: database) else {
+            throw incompatibleDatabase(database, "current schema is missing provenance_metadata")
+        }
+        try validateMetadata(in: database)
+    }
+
+    private func validateMetadata(in database: ProvenanceSQLiteDatabase) throws {
+        let metadata = try metadataValues(in: database)
+        guard metadata[Self.schemaFamilyKey] == Self.schemaFamilyValue else {
+            throw incompatibleDatabase(
+                database,
+                "metadata key \(Self.schemaFamilyKey) does not identify \(Self.schemaFamilyValue)"
+            )
+        }
+        guard metadata[Self.schemaIdentityVersionKey] == Self.schemaIdentityVersionValue else {
+            throw incompatibleDatabase(
+                database,
+                "metadata key \(Self.schemaIdentityVersionKey) is not supported"
+            )
+        }
+        guard metadata[Self.schemaVersionKey] == "\(targetVersion)" else {
+            throw incompatibleDatabase(
+                database,
+                "metadata key \(Self.schemaVersionKey) does not match schema version \(targetVersion)"
+            )
+        }
+    }
+
+    private func metadataValues(in database: ProvenanceSQLiteDatabase) throws -> [String: String] {
+        let query = try database.prepare("SELECT key, value FROM provenance_metadata")
+        defer { query.finalize() }
+
+        var values: [String: String] = [:]
+        while try query.step() {
+            guard let key = query.string(at: 0),
+                  let value = query.string(at: 1) else {
+                continue
+            }
+            values[key] = value
+        }
+        return values
+    }
+
+    private func metadataTableExists(in database: ProvenanceSQLiteDatabase) throws -> Bool {
+        try tableExists("provenance_metadata", in: database)
+    }
+
+    private func tableExists(_ tableName: String, in database: ProvenanceSQLiteDatabase) throws -> Bool {
+        let query = try database.prepare(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?"
+        )
+        defer { query.finalize() }
+        try query.bind(tableName, at: 1)
+        return try query.step()
+    }
+
+    private func userTableNames(in database: ProvenanceSQLiteDatabase) throws -> [String] {
+        let query = try database.prepare(
+            """
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name NOT LIKE 'sqlite_%'
+            ORDER BY name
+            """
+        )
+        defer { query.finalize() }
+
+        var names: [String] = []
+        while try query.step() {
+            if let name = query.string(at: 0) {
+                names.append(name)
+            }
+        }
+        return names
+    }
+
+    private func requiredTables(for version: Int32) -> [String] {
+        [
+            (1, ["provenance_events"]),
+            (2, ["provenance_sessions"]),
+            (3, ["provenance_repositories", "provenance_worktrees"]),
+            (4, ["provenance_session_relationships", "provenance_session_external_identities"]),
+            (5, [
+                "provenance_work_items",
+                "provenance_work_contributions",
+                "provenance_checkpoints",
+                "provenance_change_sets",
+                "provenance_file_changes",
+            ]),
+            (6, ["provenance_validation_runs"]),
+            (7, ["provenance_storage_repair_attempts"]),
+            (8, ["provenance_schema_migrations"]),
+            (10, ["provenance_metadata"]),
+        ].flatMap { migrationVersion, tableNames in
+            migrationVersion <= version ? tableNames : []
+        }
+    }
+
+    private func incompatibleDatabase(
+        _ database: ProvenanceSQLiteDatabase,
+        _ message: String
+    ) -> ProvenanceSQLiteError {
+        ProvenanceSQLiteError.incompatibleDatabase(path: database.url.path, message: message)
     }
 }

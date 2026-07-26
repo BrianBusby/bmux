@@ -1,4 +1,5 @@
 import Foundation
+import SQLite3
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
 import Testing
@@ -159,6 +160,96 @@ struct ProvenanceEngineClientFactoryTests {
         #expect(FileManager.default.fileExists(atPath: expectedDatabaseURL.path))
     }
 
+
+    @Test
+    func defaultSQLiteClientBootstrapsSchemaIdentityAndPersistsEvents() async throws {
+        let homeDirectory = Self.temporaryHomeDirectory()
+        defer { try? FileManager.default.removeItem(at: homeDirectory) }
+        let expectedDatabaseURL = Self.defaultDatabaseURL(homeDirectory: homeDirectory)
+        #expect(!FileManager.default.fileExists(atPath: expectedDatabaseURL.path))
+
+        let writer = try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_100)
+        let repository = ProvenanceRepositoryRecord(
+            id: "repository-default-bootstrap",
+            path: "/repos/default-bootstrap",
+            remoteSlug: "owner/default-bootstrap",
+            createdAt: timestamp,
+            updatedAt: timestamp
+        )
+        let worktree = ProvenanceWorktreeRecord(
+            id: "worktree-default-bootstrap",
+            repositoryID: repository.id,
+            path: repository.path,
+            branch: "main",
+            currentHEAD: "bootstrap-head",
+            isDirty: false,
+            status: "active",
+            updatedAt: timestamp
+        )
+
+        _ = try await writer.appendEvent(ProvenanceAppendEventRequest(event: ProvenanceEvent(
+            id: "event-default-bootstrap",
+            eventType: .worktreeObserved,
+            timestamp: timestamp,
+            repositoryID: repository.id,
+            worktreeID: worktree.id,
+            source: .observed,
+            confidence: .high,
+            payload: ProvenanceEventPayload(repository: repository, worktree: worktree)
+        )))
+
+        #expect(FileManager.default.fileExists(atPath: expectedDatabaseURL.path))
+        #expect(try Self.tableNames(in: expectedDatabaseURL).contains("provenance_events"))
+        #expect(try Self.metadata(in: expectedDatabaseURL) == [
+            "schema_family": "provenance-engine",
+            "schema_identity_version": "1",
+            "schema_version": "10",
+        ])
+
+        let reader = try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
+        let worktrees = try await reader.worktrees(ProvenanceWorktreeListRequest())
+        #expect(worktrees.worktrees == [ProvenanceWorktreeListEntry(worktree: worktree, repository: repository)])
+    }
+
+    @Test
+    func sqliteClientMigratesValidOlderEngineStoreAndAddsSchemaIdentity() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        try Self.createVersionOneEngineStore(at: url)
+
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
+        _ = try await client.health()
+
+        #expect(try Self.userVersion(in: url) == 10)
+        #expect(try Self.metadata(in: url)["schema_family"] == "provenance-engine")
+        #expect(try Self.tableNames(in: url).contains("provenance_metadata"))
+    }
+
+    @Test
+    func sqliteClientRejectsForeignDatabaseBeforeQueriesWithoutDestructiveChanges() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        try Self.createForeignStore(at: url)
+        let beforeTables = try Self.tableNames(in: url)
+        let beforeUserVersion = try Self.userVersion(in: url)
+
+        do {
+            _ = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
+            Issue.record("Expected incompatible database to throw")
+        } catch {
+            let description = String(describing: error)
+            #expect(description.contains(url.path))
+            #expect(description.contains("not a compatible Provenance Engine store"))
+            #expect(description.contains("Automatic conversion was not performed"))
+            #expect(description.contains("provenance_events"))
+        }
+
+        #expect(try Self.tableNames(in: url) == beforeTables)
+        #expect(try Self.userVersion(in: url) == beforeUserVersion)
+        #expect(!Self.fileContainsTable(url: url, tableName: "provenance_metadata"))
+    }
+
     private static func temporaryDatabaseURL() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("provenance-engine-sdk-tests", isDirectory: true)
@@ -174,5 +265,153 @@ struct ProvenanceEngineClientFactoryTests {
 
     private static func removeTemporaryDatabaseDirectory(for url: URL) {
         try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+    }
+
+
+    private static func defaultDatabaseURL(homeDirectory: URL) -> URL {
+        homeDirectory
+            .appendingPathComponent(".local", isDirectory: true)
+            .appendingPathComponent("state", isDirectory: true)
+            .appendingPathComponent("provenance-engine", isDirectory: true)
+            .appendingPathComponent("provenance.sqlite")
+    }
+
+    private static func createVersionOneEngineStore(at url: URL) throws {
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try withSQLiteDatabase(at: url) { database in
+            try execute(
+                database,
+                """
+                CREATE TABLE provenance_events (
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id TEXT NOT NULL UNIQUE,
+                    schema_version INTEGER NOT NULL,
+                    event_type TEXT NOT NULL,
+                    timestamp_seconds REAL NOT NULL,
+                    repository_id TEXT,
+                    worktree_id TEXT,
+                    session_id TEXT,
+                    contribution_id TEXT,
+                    source TEXT NOT NULL,
+                    confidence TEXT NOT NULL,
+                    payload_json TEXT NOT NULL
+                );
+                PRAGMA user_version = 1;
+                """
+            )
+        }
+    }
+
+    private static func createForeignStore(at url: URL) throws {
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try withSQLiteDatabase(at: url) { database in
+            try execute(
+                database,
+                """
+                CREATE TABLE events (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    payload TEXT NOT NULL
+                );
+                CREATE TABLE sessions (
+                    id TEXT PRIMARY KEY NOT NULL
+                );
+                PRAGMA user_version = 3;
+                """
+            )
+        }
+    }
+
+    private static func metadata(in url: URL) throws -> [String: String] {
+        try withSQLiteDatabase(at: url) { database in
+            let statement = try prepare(database, "SELECT key, value FROM provenance_metadata")
+            defer { sqlite3_finalize(statement) }
+            var values: [String: String] = [:]
+            while sqlite3_step(statement) == SQLITE_ROW {
+                guard let keyPointer = sqlite3_column_text(statement, 0),
+                      let valuePointer = sqlite3_column_text(statement, 1) else {
+                    continue
+                }
+                values[String(cString: keyPointer)] = String(cString: valuePointer)
+            }
+            return values
+        }
+    }
+
+    private static func tableNames(in url: URL) throws -> [String] {
+        try withSQLiteDatabase(at: url) { database in
+            let statement = try prepare(
+                database,
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type = 'table'
+                  AND name NOT LIKE 'sqlite_%'
+                ORDER BY name
+                """
+            )
+            defer { sqlite3_finalize(statement) }
+            var names: [String] = []
+            while sqlite3_step(statement) == SQLITE_ROW {
+                if let pointer = sqlite3_column_text(statement, 0) {
+                    names.append(String(cString: pointer))
+                }
+            }
+            return names
+        }
+    }
+
+    private static func userVersion(in url: URL) throws -> Int32 {
+        try withSQLiteDatabase(at: url) { database in
+            let statement = try prepare(database, "PRAGMA user_version")
+            defer { sqlite3_finalize(statement) }
+            guard sqlite3_step(statement) == SQLITE_ROW else { return 0 }
+            return sqlite3_column_int(statement, 0)
+        }
+    }
+
+    private static func fileContainsTable(url: URL, tableName: String) -> Bool {
+        (try? tableNames(in: url).contains(tableName)) ?? false
+    }
+
+    private static func withSQLiteDatabase<T>(at url: URL, _ body: (OpaquePointer) throws -> T) throws -> T {
+        var database: OpaquePointer?
+        guard sqlite3_open_v2(url.path, &database, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, nil) == SQLITE_OK,
+              let opened = database else {
+            let message = database.flatMap { sqlite3_errmsg($0) }.map { String(cString: $0) } ?? "open failed"
+            if let database {
+                sqlite3_close(database)
+            }
+            throw SQLiteTestError.message(message)
+        }
+        defer { sqlite3_close(opened) }
+        return try body(opened)
+    }
+
+    private static func execute(_ database: OpaquePointer, _ sql: String) throws {
+        var errorMessage: UnsafeMutablePointer<CChar>?
+        guard sqlite3_exec(database, sql, nil, nil, &errorMessage) == SQLITE_OK else {
+            let message = errorMessage.map { String(cString: $0) } ?? "sqlite exec failed"
+            sqlite3_free(errorMessage)
+            throw SQLiteTestError.message(message)
+        }
+    }
+
+    private static func prepare(_ database: OpaquePointer, _ sql: String) throws -> OpaquePointer {
+        var statement: OpaquePointer?
+        guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK,
+              let statement else {
+            throw SQLiteTestError.message(String(cString: sqlite3_errmsg(database)))
+        }
+        return statement
+    }
+
+    private enum SQLiteTestError: Error {
+        case message(String)
     }
 }
