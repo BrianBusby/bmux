@@ -1,14 +1,14 @@
 # Provenance Engine Adoption
 
-Status: Slice E V1 consumer adoption implemented locally. bmux now uses the finalized Provenance Engine V1 public contract for adopted read and write paths.
+Status: Operational V1 integration complete with named caveats. bmux uses the finalized Provenance Engine V1 public contract for adopted read and write paths, and production defaults now cut over to the engine-owned V1 store.
 
-Engine revision: `7ed4450410f344f01472ba62f534a04c6c0d2774` from `git@github.com:BrianBusby/provenance-engine.git`.
+Engine revision: `18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03` from `git@github.com:BrianBusby/provenance-engine.git`.
 
 Planning authority: this is the bmux-local adoption inventory and implementation state. The canonical cross-repository roadmap is `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
 
 ## Current State
 
-The Xcode project links the public products `ProvenanceEngineContracts` and `ProvenanceEngineSDK`. Adopted bmux paths construct clients with `ProvenanceEngineClientFactory().sqliteClient(databaseURL:)` and do not import implementation targets such as `ProvenanceEngineSQLite`.
+The Xcode project links the public products `ProvenanceEngineContracts` and `ProvenanceEngineSDK`. Adopted bmux default paths construct clients with `ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory:)` and do not import implementation targets such as `ProvenanceEngineSQLite`.
 
 Adopted read paths:
 
@@ -24,7 +24,7 @@ Adopted write paths:
 
 bmux still owns CLI parsing, Git path resolution, fallback behavior, output compatibility, UI/workspace orchestration, capture scheduling, duplicate-observation policy, and presentation. Provenance Engine owns immutable evidence, deterministic Current State, provenance interpretation, and bounded provenance queries.
 
-## Slice E Completion
+## Operational Cutover
 
 Current-context migration: `bmux provenance context current` now resolves the bmux Git target, constructs the public SDK client, and calls `currentContext(...)`. CLI output behavior is preserved through bmux-owned adapters in `CLIProvenanceContext`.
 
@@ -33,6 +33,12 @@ Lifecycle migration: production lifecycle capture now records through `recordSes
 Capture migration: `WorkProvenanceObservationService` now appends observable worktree facts through public `appendEvent(...)`. Git inspection, snapshot deduplication, and best-effort runtime degradation remain bmux-owned producer responsibilities.
 
 Test fixtures: session tree, file explanation, and current context CLI fixtures seed provenance databases through public engine SDK packages rather than direct projection inserts for adopted paths.
+
+Runtime cutover: default production clients now use the engine-owned store at `~/.local/state/provenance-engine/provenance.sqlite`. `BMUX_PROVENANCE_HOME` overrides the default home for isolated tests/dev runs, and CLI `--database <path>` remains an explicit one-command override.
+
+Schema identity: Provenance Engine revision `18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03` writes `provenance_metadata` identity rows and rejects foreign/legacy databases before normal queries.
+
+Live validation: build `bmux DEV slice-e-v1.app` build 248 opened the canonical V1 store, observed Git worktrees, accepted hook-derived Codex lifecycle evidence, and `bmux provenance context current` returned one active Codex session for the bmux worktree.
 
 ## Reference Consumer Pattern
 

@@ -58,9 +58,9 @@ extension BMUXCLI {
             throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
         }
 
-        let databaseURL = provenanceDatabaseURL(databasePath: databasePath)
         let target = try CLIProvenanceGitResolver().resolve(path: path, commandLabel: commandName)
-        guard FileManager.default.fileExists(atPath: databaseURL.path) else {
+        if let databaseURL = provenanceDatabaseOverrideURL(databasePath: databasePath),
+           !FileManager.default.fileExists(atPath: databaseURL.path) {
             let explanation = CLIProvenanceExplanation(
                 requestedPath: target.requestedPath,
                 repositoryPath: target.repositoryRoot,
@@ -82,9 +82,7 @@ extension BMUXCLI {
             printProvenanceExplanation(explanation, jsonOutput: jsonOutput)
             return
         }
-
-        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
-            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+        let (client, _) = try provenanceEngineClient(databasePath: databasePath)
         let worktrees = try await client.worktrees(ProvenanceWorktreeListRequest())
         guard let worktreeEntry = worktrees.worktrees.first(where: { $0.worktree.path == target.repositoryRoot }) else {
             let explanation = CLIProvenanceExplanation(
@@ -137,8 +135,8 @@ extension BMUXCLI {
         }
 
         let target = try CLIProvenanceGitResolver().resolve(path: ".", commandLabel: commandName)
-        let databaseURL = provenanceDatabaseURL(databasePath: databasePath)
-        guard FileManager.default.fileExists(atPath: databaseURL.path) else {
+        if let databaseURL = provenanceDatabaseOverrideURL(databasePath: databasePath),
+           !FileManager.default.fileExists(atPath: databaseURL.path) {
             let context = CLIProvenanceContext(
                 found: false,
                 reason: String(localized: "cli.provenance.reason.noDatabase", defaultValue: "no provenance database exists yet"),
@@ -156,8 +154,7 @@ extension BMUXCLI {
             return
         }
 
-        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
-            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+        let (client, _) = try provenanceEngineClient(databasePath: databasePath)
         let response = try await client.currentContext(ProvenanceEngineContracts.ProvenanceCurrentContextRequest(
             repositoryPath: target.repositoryRoot
         ))
@@ -185,8 +182,8 @@ extension BMUXCLI {
             throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
         }
 
-        let databaseURL = provenanceDatabaseURL(databasePath: databasePath)
-        guard FileManager.default.fileExists(atPath: databaseURL.path) else {
+        if let databaseURL = provenanceDatabaseOverrideURL(databasePath: databasePath),
+           !FileManager.default.fileExists(atPath: databaseURL.path) {
             let list = CLIProvenanceWorktreeList(
                 worktrees: [],
                 reason: String(localized: "cli.provenance.reason.noDatabase", defaultValue: "no provenance database exists yet")
@@ -195,8 +192,7 @@ extension BMUXCLI {
             return
         }
 
-        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
-            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+        let (client, _) = try provenanceEngineClient(databasePath: databasePath)
         let response = try await client.worktrees(ProvenanceWorktreeListRequest())
         let list = CLIProvenanceWorktreeList(response: response)
         printProvenanceWorktreeList(list, jsonOutput: jsonOutput)
@@ -219,8 +215,8 @@ extension BMUXCLI {
             throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
         }
 
-        let databaseURL = provenanceDatabaseURL(databasePath: databasePath)
-        guard FileManager.default.fileExists(atPath: databaseURL.path) else {
+        if let databaseURL = provenanceDatabaseOverrideURL(databasePath: databasePath),
+           !FileManager.default.fileExists(atPath: databaseURL.path) {
             let tree = CLIProvenanceSessionTree(
                 rootSessionID: sessionID,
                 found: false,
@@ -235,8 +231,7 @@ extension BMUXCLI {
 
         let legacySessionLimit = 100
         let engineRowLimit = (legacySessionLimit * 2) - 1
-        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
-            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+        let (client, _) = try provenanceEngineClient(databasePath: databasePath)
         let response = try await client.sessionTree(ProvenanceEngineContracts.ProvenanceSessionTreeRequest(
             rootSessionID: sessionID,
             limit: engineRowLimit
@@ -330,17 +325,29 @@ extension BMUXCLI {
         )
     }
 
-    private func provenanceDatabaseURL(databasePath: String?) -> URL {
+    private func provenanceEngineClient(
+        databasePath: String?
+    ) throws -> (client: any ProvenanceEngineContracts.ProvenanceEngineClient, databaseURL: URL) {
+        if let databaseURL = provenanceDatabaseOverrideURL(databasePath: databasePath) {
+            return (
+                try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL),
+                databaseURL
+            )
+        }
+        let homeDirectory = WorkProvenanceStorageLocation.defaultHomeDirectory()
+        let location = WorkProvenanceStorageLocation(homeDirectory: homeDirectory)
+        return (
+            try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory),
+            location.databaseURL
+        )
+    }
+
+    private func provenanceDatabaseOverrideURL(databasePath: String?) -> URL? {
         if let databasePath = databasePath?.trimmingCharacters(in: .whitespacesAndNewlines),
            !databasePath.isEmpty {
             return URL(fileURLWithPath: NSString(string: databasePath).expandingTildeInPath)
         }
-        return FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".local", isDirectory: true)
-            .appendingPathComponent("state", isDirectory: true)
-            .appendingPathComponent("bmux", isDirectory: true)
-            .appendingPathComponent("work-provenance", isDirectory: true)
-            .appendingPathComponent("bmux-work-provenance.sqlite", isDirectory: false)
+        return nil
     }
 
     private func provenanceObservabilityDatabaseURL(databasePath: String?) -> URL {

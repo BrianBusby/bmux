@@ -19,14 +19,24 @@ import ProvenanceEngineContracts
 import ProvenanceEngineSDK
 ```
 
-Client construction happens through the public SDK factory:
+Client construction happens through the public SDK factory. bmux embeds Provenance Engine as a Swift package; there is no engine daemon or external service to start.
 
 ```swift
 let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
-    try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+    try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
 ```
 
 The SQLite-backed factory is an SDK construction detail. bmux code must not import engine implementation targets, instantiate engine SQLite types directly, or read engine projection tables from adopted read/write paths.
+
+## Runtime Store
+
+The canonical default store is owned by Provenance Engine: `~/.local/state/provenance-engine/provenance.sqlite`.
+
+The previous bmux-local database remains at `~/.local/state/bmux/work-provenance/bmux-work-provenance.sqlite`. That legacy file is not deleted, archived, or opened as the default V1 store. In the local cutover validation it contained the old bmux schema, `PRAGMA user_version = 3`, and no useful event/session/worktree rows.
+
+For tests and development, `BMUX_PROVENANCE_HOME` overrides the home directory used by bmux default-path resolution. Explicit CLI `--database <path>` is supported for provenance CLI fixture/debug use and applies only to that CLI invocation.
+
+Startup breadcrumbs include the effective V1 database path in `app.init.workProvenance.created`. Producer failures are logged instead of being silently discarded.
 
 ## Current State Reads
 
@@ -49,6 +59,30 @@ bmux records observable activity through public engine writes:
 - Git/worktree observations are normalized into immutable `ProvenanceEvent` values and sent through `client.appendEvent(...)`.
 
 bmux producer responsibilities are limited to observing engineering activity, assigning stable producer identities when available, recording observable or declared facts, and retaining best-effort error state for diagnostics. bmux must not compute deterministic Current State or reinterpret evidence already owned by the engine.
+
+Captured workflows today:
+
+- Worktree observation records Git repository/worktree/change-set/file-change evidence for bmux workspaces whose current directory is inside a Git repository.
+- Agent lifecycle recording records hook-derived Codex/Claude-style subagent lifecycle through `ProvenanceSessionLifecycleRequest`.
+
+Not every agent UI action implies a recorded session. Opening an agent-session surface alone creates UI state; durable lifecycle evidence is recorded when supported hooks/feed events reach bmux. Engine durability covers accepted events after they reach the SDK; producer delivery reliability remains bmux-owned.
+
+## Smoke Test
+
+Use the tagged debug build and bundled CLI when validating local integration:
+
+```bash
+./scripts/reload.sh --tag slice-e-v1
+BMUX_TAG=slice-e-v1 scripts/bmux-debug-cli.sh list-workspaces
+sqlite3 ~/.local/state/provenance-engine/provenance.sqlite "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
+sqlite3 ~/.local/state/provenance-engine/provenance.sqlite "SELECT COUNT(*) FROM provenance_events;"
+bmux provenance worktrees list
+bmux provenance context current
+bmux provenance explain <changed-file>
+bmux provenance sessions tree <session-id>
+```
+
+Required schema identity rows live in `provenance_metadata`: `schema_family = provenance-engine`, `schema_identity_version = 1`, and the current `schema_version`.
 
 ## Remaining Local Code
 

@@ -43,14 +43,21 @@ actor WorkProvenanceObservationService {
             try await appendObservationIfChanged(for: snapshot)
             lastErrorDescription = nil
         } catch {
-            lastErrorDescription = String(describing: error)
+            let description = String(describing: error)
+            lastErrorDescription = description
+            NSLog("bmux provenance worktree observation failed: %@", description)
         }
     }
 
     private func appendObservationIfChanged(for workspace: WorkProvenanceWorkspaceSnapshot) async throws {
         let directory = workspace.currentDirectory.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !directory.isEmpty,
-              let gitSnapshot = await gitInspector.snapshot(for: directory) else {
+        StartupBreadcrumbLog.append("workProvenance.observe.begin", fields: ["workspace": workspace.workspaceID.uuidString, "directory": directory])
+        guard !directory.isEmpty else { return }
+        guard let gitSnapshot = await gitInspector.snapshot(for: directory) else {
+            let description = "no Git snapshot for workspace directory: \(directory)"
+            lastErrorDescription = description
+            NSLog("bmux provenance worktree observation skipped: %@", description)
+            StartupBreadcrumbLog.append("workProvenance.observe.noGitSnapshot", fields: ["workspace": workspace.workspaceID.uuidString, "directory": directory])
             return
         }
 
@@ -123,7 +130,8 @@ actor WorkProvenanceObservationService {
             )
         )
 
-        _ = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
+        let response = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
+        StartupBreadcrumbLog.append("workProvenance.observe.appended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
     }
 
     private static func summary(fileCount: Int, isDirty: Bool) -> String {

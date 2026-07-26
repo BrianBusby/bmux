@@ -1131,6 +1131,11 @@ class TabManager: ObservableObject {
                 updatedTabs.append(newWorkspace)
             }
             tabs = updatedTabs
+            StartupBreadcrumbLog.append("workspace.created.observeWorkProvenance", fields: [
+                "workspace": newWorkspace.id.uuidString,
+                "directory": newWorkspace.currentDirectory
+            ])
+            workProvenanceRuntime?.observeWorkspaces([newWorkspace])
             // The global insertion-index rules don't know about group sections.
             // Re-run the group-aware normalize so a freshly-added workspace
             // can't land inside another group's contiguous section.

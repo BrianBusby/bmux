@@ -12,6 +12,50 @@ import Testing
 @Suite
 struct WorkProvenanceObserverTests {
     @Test
+    func defaultRuntimeStoreObservationCanBeReadThroughPublicCurrentContext() async throws {
+        let homeDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-work-provenance-default-home-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: homeDirectory) }
+        let location = WorkProvenanceStorageLocation(homeDirectory: homeDirectory)
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
+        let repositoryRoot = "/tmp/bmux-default-observed-repo"
+        let snapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "/tmp/bmux-default-observed-repo/.git",
+            remoteSlug: "manaflow-ai/bmux",
+            branch: "slice-e-provenance-v1-adoption",
+            headCommit: "abcdefabcdefabcdefabcdefabcdefabcdefabcd",
+            isDirty: true,
+            statusEntries: [
+                WorkProvenanceGitStatusEntry(path: "Sources/DefaultStore.swift", status: "modified")
+            ]
+        )
+        let service = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            dateProvider: { Date(timeIntervalSince1970: 400) }
+        )
+        let workspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: UUID(uuidString: "55555555-5555-5555-5555-555555555555")!,
+            stableWorkspaceID: UUID(uuidString: "66666666-6666-6666-6666-666666666666")!,
+            title: "Default Store",
+            currentDirectory: repositoryRoot
+        )
+
+        await service.observeWorkspaceSnapshot(workspace)
+
+        let reader = try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
+        let context = try await reader.currentContext(ProvenanceCurrentContextRequest(repositoryPath: repositoryRoot))
+
+        #expect(FileManager.default.fileExists(atPath: location.databaseURL.path))
+        #expect(!FileManager.default.fileExists(atPath: location.legacyDatabaseURL.path))
+        #expect(context.found)
+        #expect(context.worktree?.path == repositoryRoot)
+        #expect(context.dirtyFiles.map(\.fileChange.path) == ["Sources/DefaultStore.swift"])
+    }
+
+    @Test
     func observeDirtyWorkspacePersistsUnattributedFileProvenanceAndDedupesUnchangedState() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }

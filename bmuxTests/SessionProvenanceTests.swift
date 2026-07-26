@@ -1,5 +1,6 @@
 import Foundation
 import ProvenanceEngineContracts
+import ProvenanceEngineSDK
 import XCTest
 
 #if canImport(bmux_DEV)
@@ -9,9 +10,47 @@ import XCTest
 #endif
 
 final class SessionProvenanceTests: XCTestCase {
+    @MainActor
+    func testLiveRuntimeUsesCanonicalEngineOwnedDefaultStore() throws {
+        let homeDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-provenance-runtime-home-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: homeDirectory) }
+        let location = WorkProvenanceStorageLocation(homeDirectory: homeDirectory)
+
+        let runtime = WorkProvenanceRuntime.live(homeDirectory: homeDirectory)
+
+        XCTAssertTrue(runtime.isEnabled)
+        XCTAssertNil(runtime.startupErrorDescription)
+        XCTAssertEqual(runtime.effectiveDatabaseURL, location.databaseURL)
+        XCTAssertEqual(
+            location.databaseURL.path,
+            homeDirectory
+                .appendingPathComponent(".local", isDirectory: true)
+                .appendingPathComponent("state", isDirectory: true)
+                .appendingPathComponent("provenance-engine", isDirectory: true)
+                .appendingPathComponent("provenance.sqlite", isDirectory: false)
+                .path
+        )
+        XCTAssertTrue(FileManager.default.fileExists(atPath: location.databaseURL.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: location.legacyDatabaseURL.path))
+    }
+
     func testSessionLifecycleRecorderUsesPublicEngineLifecycleAPI() async throws {
         let client = CapturingProvenanceEngineClient()
-        let recorder = WorkProvenanceSessionLifecycleRecorder(client: client)
+        let recorder = WorkProvenanceSessionLifecycleRecorder(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [
+                "/repo/subdir": WorkProvenanceGitSnapshot(
+                    repositoryRoot: "/repo",
+                    commonDirectory: "/repo/.git",
+                    remoteSlug: "example/repo",
+                    branch: "main",
+                    headCommit: "abc123",
+                    isDirty: false,
+                    statusEntries: []
+                )
+            ])
+        )
         let timestamp = Date(timeIntervalSince1970: 1_725_000_000)
 
         await recorder.record(
@@ -21,7 +60,7 @@ final class SessionProvenanceTests: XCTestCase {
                 agentKind: .codex,
                 workspaceID: "workspace-1",
                 surfaceID: "surface-1",
-                workingDirectory: "/repo",
+                workingDirectory: "/repo/subdir",
                 externalSessionID: "external-session-1",
                 displayName: "Build agent"
             ),
@@ -35,8 +74,8 @@ final class SessionProvenanceTests: XCTestCase {
         XCTAssertEqual(request?.agentKind, "codex")
         XCTAssertEqual(request?.workspaceID, "workspace-1")
         XCTAssertEqual(request?.surfaceID, "surface-1")
-        XCTAssertEqual(request?.worktreeID, nil)
-        XCTAssertEqual(request?.workingDirectory, "/repo")
+        XCTAssertEqual(request?.worktreeID, WorkProvenanceStableIDFactory().worktreeID(repositoryRoot: "/repo"))
+        XCTAssertEqual(request?.workingDirectory, "/repo/subdir")
         XCTAssertEqual(request?.externalIdentityKind, "subagent")
         XCTAssertEqual(request?.externalIdentityValue, "external-session-1")
         XCTAssertEqual(request?.displayName, "Build agent")
@@ -74,6 +113,14 @@ final class SessionProvenanceTests: XCTestCase {
 
         let lastErrorDescription = await recorder.lastErrorDescription
         XCTAssertEqual(lastErrorDescription, "database unavailable")
+    }
+
+    private struct FakeGitInspector: WorkProvenanceGitInspecting {
+        let snapshotsByDirectory: [String: WorkProvenanceGitSnapshot]
+
+        func snapshot(for directory: String) async -> WorkProvenanceGitSnapshot? {
+            snapshotsByDirectory[directory]
+        }
     }
 }
 

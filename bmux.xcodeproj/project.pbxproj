@@ -1525,6 +1525,7 @@
 		48A91734B0908DBEFF52445F /* WorkProvenanceStableIDFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E58AA160D397E44554E0EBB /* WorkProvenanceStableIDFactory.swift */; };
 		CE0D101B0000000000000001 /* WorkProvenanceStableIDFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E58AA160D397E44554E0EBB /* WorkProvenanceStableIDFactory.swift */; };
 		2F23C7CCE50C7034B7FC32DA /* WorkProvenanceStorageLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C750C2129178A43E2E64EE /* WorkProvenanceStorageLocation.swift */; };
+		CE0D10260000000000000001 /* WorkProvenanceStorageLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C750C2129178A43E2E64EE /* WorkProvenanceStorageLocation.swift */; };
 		CE0C00080000000000000001 /* WorkProvenanceStore+BmuxLegacyProvenanceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00080000000000000002 /* WorkProvenanceStore+BmuxLegacyProvenanceClient.swift */; };
 		CE0D101C0000000000000001 /* WorkProvenanceStore+BmuxLegacyProvenanceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00080000000000000002 /* WorkProvenanceStore+BmuxLegacyProvenanceClient.swift */; };
 		CE0D101D0000000000000001 /* WorkProvenanceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B101A5E8045CF2BD5561744 /* WorkProvenanceStore.swift */; };
@@ -6455,6 +6456,7 @@
 				CE0D10150000000000000001 /* WorkProvenanceSQLiteDatabase.swift in Sources */,
 				CE0D10160000000000000001 /* WorkProvenanceSQLiteStatement.swift in Sources */,
 				CE0D101B0000000000000001 /* WorkProvenanceStableIDFactory.swift in Sources */,
+				CE0D10260000000000000001 /* WorkProvenanceStorageLocation.swift in Sources */,
 				CE0D101C0000000000000001 /* WorkProvenanceStore+BmuxLegacyProvenanceClient.swift in Sources */,
 				CE0D101D0000000000000001 /* WorkProvenanceStore.swift in Sources */,
 				CE0D101E0000000000000001 /* WorkProvenanceStoreError.swift in Sources */,
@@ -7518,7 +7520,7 @@
 			repositoryURL = "git@github.com:BrianBusby/provenance-engine.git";
 			requirement = {
 				kind = revision;
-				revision = 7ed4450410f344f01472ba62f534a04c6c0d2774;
+				revision = 18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
