@@ -156,8 +156,9 @@ extension BMUXCLI {
             return
         }
 
-        let client: any BmuxLegacyProvenanceClient = try WorkProvenanceStore(databaseURL: databaseURL)
-        let response = try await client.currentContext(ProvenanceCurrentContextRequest(
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+        let response = try await client.currentContext(ProvenanceEngineContracts.ProvenanceCurrentContextRequest(
             repositoryPath: target.repositoryRoot
         ))
         let context = CLIProvenanceContext(

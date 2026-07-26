@@ -1,11 +1,13 @@
 import Foundation
+import ProvenanceEngineContracts
+import ProvenanceEngineSDK
 
 /// Main-actor runtime that wires workspace lifecycle to observe-only provenance storage.
 @MainActor
 final class WorkProvenanceRuntime {
     private weak var tabManager: TabManager?
     private let observationService: WorkProvenanceObservationService?
-    private let subsessionLifecycleRecorder: WorkProvenanceSubsessionLifecycleRecorder?
+    private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
     private var directoryObservationTask: Task<Void, Never>?
 
     /// Whether the runtime has a usable provenance store.
@@ -14,10 +16,10 @@ final class WorkProvenanceRuntime {
     /// Creates a provenance runtime.
     init(
         observationService: WorkProvenanceObservationService?,
-        subsessionLifecycleRecorder: WorkProvenanceSubsessionLifecycleRecorder? = nil
+        sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil
     ) {
         self.observationService = observationService
-        self.subsessionLifecycleRecorder = subsessionLifecycleRecorder
+        self.sessionLifecycleRecorder = sessionLifecycleRecorder
         self.isEnabled = observationService != nil
     }
 
@@ -29,19 +31,15 @@ final class WorkProvenanceRuntime {
     static func live(fileManager: FileManager = .default) -> WorkProvenanceRuntime {
         let location = WorkProvenanceStorageLocation(homeDirectory: fileManager.homeDirectoryForCurrentUser)
         do {
-            let store = try WorkProvenanceStore(databaseURL: location.databaseURL, fileManager: fileManager)
-            let observabilityStore = try? ProvenanceObservabilityStore(
-                databaseURL: location.observabilityDatabaseURL,
-                fileManager: fileManager
-            )
+            let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+                try ProvenanceEngineClientFactory().sqliteClient(databaseURL: location.databaseURL)
             return WorkProvenanceRuntime(
                 observationService: WorkProvenanceObservationService(
-                    store: store,
+                    client: client,
                     gitInspector: WorkProvenanceGitInspector()
                 ),
-                subsessionLifecycleRecorder: WorkProvenanceSubsessionLifecycleRecorder(
-                    store: store,
-                    observabilityStore: observabilityStore
+                sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder(
+                    client: client
                 )
             )
         } catch {
@@ -69,11 +67,11 @@ final class WorkProvenanceRuntime {
         }
     }
 
-    /// Persists an observed agent subsession lifecycle change.
-    func recordSubsessionLifecycleChange(_ change: AgentSubsessionLifecycleChange, timestamp: Date) {
-        guard let subsessionLifecycleRecorder else { return }
+    /// Persists an observed agent session lifecycle change.
+    func recordSessionLifecycleChange(_ change: AgentSessionLifecycleChange, timestamp: Date) {
+        guard let sessionLifecycleRecorder else { return }
         Task {
-            await subsessionLifecycleRecorder.record(change, timestamp: timestamp)
+            await sessionLifecycleRecorder.record(change, timestamp: timestamp)
         }
     }
 

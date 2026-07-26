@@ -38,7 +38,7 @@ nonisolated struct ObservedAgentSession: Sendable {
     }
 }
 
-struct AgentSubsessionLifecycleChange: Sendable, Equatable {
+struct AgentSessionLifecycleChange: Sendable, Equatable {
     enum Phase: Sendable, Equatable {
         case started
         case stopped
@@ -50,7 +50,7 @@ struct AgentSubsessionLifecycleChange: Sendable, Equatable {
     let workspaceID: String?
     let surfaceID: String?
     let workingDirectory: String?
-    let subsessionID: String?
+    let externalSessionID: String?
     let displayName: String?
 }
 
@@ -114,11 +114,11 @@ extension AgentChatSessionRegistry {
         }
     }
 
-    nonisolated static func subsessionLifecycleChange(
+    nonisolated static func sessionLifecycleChange(
         for event: WorkstreamEvent,
         record: AgentChatSessionRecord
-    ) -> AgentSubsessionLifecycleChange? {
-        let phase: AgentSubsessionLifecycleChange.Phase
+    ) -> AgentSessionLifecycleChange? {
+        let phase: AgentSessionLifecycleChange.Phase
         switch event.hookEventName {
         case .subagentStart:
             phase = .started
@@ -131,14 +131,14 @@ extension AgentChatSessionRegistry {
             return nil
         }
         let metadata = AgentSubsessionEventMetadata(event: event)
-        return AgentSubsessionLifecycleChange(
+        return AgentSessionLifecycleChange(
             phase: phase,
             parentSessionID: record.sessionID,
             agentKind: record.agentKind,
             workspaceID: record.workspaceID ?? event.workspaceId,
             surfaceID: record.surfaceID ?? event.surfaceId,
             workingDirectory: record.workingDirectory ?? event.cwd,
-            subsessionID: metadata.identifier ?? event.requestId,
+            externalSessionID: metadata.identifier ?? event.requestId,
             displayName: metadata.displayName
         )
     }

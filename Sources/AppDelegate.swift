@@ -2092,7 +2092,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // entry). No-op on Release / when the flag is off.
         MacPairedMacBackupPublisher.shared.configure(auth: auth.coordinator)
         TerminalController.shared.attachAuth(coordinator: auth.coordinator, browserSignIn: auth.browserSignIn)
-        agentChatTranscriptService.recordSubsessionLifecycleChanges(with: workProvenanceRuntime)
+        agentChatTranscriptService.recordSessionLifecycleChanges(with: workProvenanceRuntime)
         TerminalController.shared.agentChatTranscriptService = agentChatTranscriptService
         auth.start()
         ensureMobileWorkspaceListObserver(for: tabManager)

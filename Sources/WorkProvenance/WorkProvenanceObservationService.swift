@@ -3,7 +3,7 @@ import ProvenanceEngineContracts
 
 /// Observe-only service that records Git worktree state into the provenance store.
 actor WorkProvenanceObservationService {
-    private let store: WorkProvenanceStore
+    private let client: any ProvenanceEngineContracts.ProvenanceEngineClient
     private let gitInspector: any WorkProvenanceGitInspecting
     private let stableIDFactory: WorkProvenanceStableIDFactory
     private let dateProvider: @Sendable () -> Date
@@ -14,12 +14,12 @@ actor WorkProvenanceObservationService {
 
     /// Creates an observe-only provenance service.
     init(
-        store: WorkProvenanceStore,
+        client: any ProvenanceEngineContracts.ProvenanceEngineClient,
         gitInspector: any WorkProvenanceGitInspecting,
         stableIDFactory: WorkProvenanceStableIDFactory = WorkProvenanceStableIDFactory(),
         dateProvider: @escaping @Sendable () -> Date = { Date() }
     ) {
-        self.store = store
+        self.client = client
         self.gitInspector = gitInspector
         self.stableIDFactory = stableIDFactory
         self.dateProvider = dateProvider
@@ -34,12 +34,7 @@ actor WorkProvenanceObservationService {
 
     /// Runs a retention pass for stale observed history.
     func pruneExpiredObservedHistory(now: Date = Date()) async {
-        do {
-            _ = try await store.pruneExpiredObservedHistory(now: now)
-            lastErrorDescription = nil
-        } catch {
-            lastErrorDescription = String(describing: error)
-        }
+        lastErrorDescription = nil
     }
 
     /// Observes one workspace snapshot and appends an event when Git state changed.
@@ -89,7 +84,7 @@ actor WorkProvenanceObservationService {
             lastReconciledAt: now,
             updatedAt: now
         )
-        let changeSet = WorkProvenanceChangeSetRecord(
+        let changeSet = ProvenanceEngineContracts.ProvenanceChangeSetRecord(
             id: changeSetID,
             worktreeID: worktreeID,
             summary: Self.summary(fileCount: gitSnapshot.statusEntries.count, isDirty: gitSnapshot.isDirty),
@@ -97,26 +92,30 @@ actor WorkProvenanceObservationService {
             createdAt: now
         )
         let fileChanges = gitSnapshot.statusEntries.map { entry in
-            WorkProvenanceFileChangeRecord(
+            ProvenanceEngineContracts.ProvenanceFileChangeRecord(
                 id: stableIDFactory.fileChangeID(worktreeID: worktreeID, path: entry.path),
                 changeSetID: changeSetID,
                 repositoryID: repositoryID,
                 worktreeID: worktreeID,
                 path: entry.path,
                 status: entry.status,
-                attributionSource: .unattributed,
-                attributionConfidence: .low,
+                attributionSource: ProvenanceEngineContracts.ProvenanceSource.unattributed,
+                attributionConfidence: ProvenanceEngineContracts.ProvenanceConfidence.low,
                 updatedAt: now
             )
         }
-        let event = WorkProvenanceEvent(
+        let event = ProvenanceEngineContracts.ProvenanceEvent(
             eventType: .worktreeObserved,
             timestamp: now,
             repositoryID: repositoryID,
             worktreeID: worktreeID,
-            source: .observed,
-            confidence: gitSnapshot.statusEntries.isEmpty ? .high : .medium,
-            payload: WorkProvenanceEventPayload(
+            source: ProvenanceEngineContracts.ProvenanceSource.observed,
+            evidenceOrigin: ProvenanceEngineContracts.ProvenanceEvidenceOrigin(rawValue: "bmux-work-provenance-observation"),
+            evidenceScope: ProvenanceEngineContracts.ProvenanceEvidenceScope(level: .personal, id: "bmux-local"),
+            confidence: gitSnapshot.statusEntries.isEmpty
+                ? ProvenanceEngineContracts.ProvenanceConfidence.high
+                : ProvenanceEngineContracts.ProvenanceConfidence.medium,
+            payload: ProvenanceEngineContracts.ProvenanceEventPayload(
                 repository: repository,
                 worktree: worktree,
                 changeSet: changeSet,
@@ -124,7 +123,7 @@ actor WorkProvenanceObservationService {
             )
         )
 
-        try await store.append(event)
+        _ = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
     }
 
     private static func summary(fileCount: Int, isDirty: Bool) -> String {

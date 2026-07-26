@@ -254,7 +254,7 @@ struct ProvenanceEngineSessionTreeSeeder {
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(
             event: ProvenanceEvent(
                 id: "event-relationship-\(relationship.sessionID)",
-                eventType: .subsessionStarted,
+                eventType: .sessionStarted,
                 timestamp: relationship.updatedAt,
                 sessionID: relationship.sessionID,
                 source: .observed,
