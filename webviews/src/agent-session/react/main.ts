@@ -271,6 +271,10 @@ export function AgentSessionApp() {
   return h(SessionSurface, { state, dispatch, renderer: "React" });
 }
 
+export function composerSurfaceOverflowClass(isSingleLineComposer: boolean): string {
+  return isSingleLineComposer ? "overflow-visible rounded-full" : "overflow-visible rounded-3xl";
+}
+
 function SessionSurface({
   state,
   dispatch,
@@ -860,8 +864,7 @@ function SessionSurface({
               "div",
               {
                 className:
-                  CODEX_COMPOSER_SURFACE + " " +
-                  (isSingleLineComposer ? "overflow-visible rounded-full" : "overflow-y-auto rounded-3xl"),
+                  `${CODEX_COMPOSER_SURFACE} ${composerSurfaceOverflowClass(isSingleLineComposer)}`,
               },
               composerControls,
             ),
