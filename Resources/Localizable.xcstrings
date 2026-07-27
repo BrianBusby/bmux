@@ -229260,6 +229260,23 @@
         }
       }
     },
+    "dialog.bmuxConfig.disclosure.agentSession": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent session: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントセッション: %@"
+          }
+        }
+      }
+    },
     "dialog.deleteWorkspaceLayout.cancel": {
       "extractionState": "manual",
       "localizations": {

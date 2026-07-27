@@ -7983,20 +7983,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         guard let bmuxConfigStore = context.bmuxConfigStore,
               let commandName = box.action.workspaceCommandName,
               let command = bmuxConfigStore.loadedCommands.first(where: { $0.name == commandName }),
-              let agent = RepoAgentLauncherCommandCustomizer().agent(for: command) else {
+              RepoAgentLauncherCommandCustomizer().agent(for: command) != nil else {
             NSSound.beep()
-            return
-        }
-        guard let parameters = promptForRepoAgentLauncherParametersIfRequested(
-            actionTitle: box.action.title,
-            agent: agent,
-            presentingWindow: window
-        ) else {
             return
         }
         guard executeRepoAgentLauncherAction(
             box.action,
-            parameters: parameters,
+            parameters: [],
             context: context,
             preferredWindow: window
         ) else {
@@ -8282,9 +8275,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 "layout": [
                     "pane": [
                         "surfaces": [[
-                            "type": "terminal",
+                            "type": "agent-session",
                             "name": agentLabel,
-                            "command": agent.commandName,
+                            "provider": agent.agentSessionProviderID?.rawValue ?? agent.commandName,
+                            "renderer": AgentSessionRendererKind.react.rawValue,
                             "focus": true,
                         ]],
                     ],

@@ -84,6 +84,54 @@ final class SessionProvenanceTests: XCTestCase {
         XCTAssertNil(lastErrorDescription)
     }
 
+    func testSessionLifecycleRecorderRecordsRootProviderSessionID() async throws {
+        let client = CapturingProvenanceEngineClient()
+        let recorder = WorkProvenanceSessionLifecycleRecorder(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [
+                "/repo": WorkProvenanceGitSnapshot(
+                    repositoryRoot: "/repo",
+                    commonDirectory: "/repo/.git",
+                    remoteSlug: "example/repo",
+                    branch: "main",
+                    headCommit: "abc123",
+                    isDirty: false,
+                    statusEntries: []
+                )
+            ])
+        )
+        let timestamp = Date(timeIntervalSince1970: 1_725_000_002)
+
+        await recorder.record(
+            AgentSessionLifecycleChange(
+                phase: .started,
+                sessionID: "provider-session-1",
+                parentSessionID: "provider-session-1",
+                agentKind: .codex,
+                workspaceID: "workspace-1",
+                surfaceID: "surface-1",
+                workingDirectory: "/repo",
+                externalSessionID: nil,
+                displayName: "Codex"
+            ),
+            timestamp: timestamp
+        )
+
+        let request = await client.recordedLifecycleRequests.first
+        XCTAssertEqual(request?.phase, .started)
+        XCTAssertEqual(request?.sessionID, "provider-session-1")
+        XCTAssertEqual(request?.parentSessionID, nil)
+        XCTAssertEqual(request?.agentKind, "codex")
+        XCTAssertEqual(request?.workspaceID, "workspace-1")
+        XCTAssertEqual(request?.surfaceID, "surface-1")
+        XCTAssertEqual(request?.worktreeID, WorkProvenanceStableIDFactory().worktreeID(repositoryRoot: "/repo"))
+        XCTAssertEqual(request?.workingDirectory, "/repo")
+        XCTAssertEqual(request?.externalIdentityKind, nil)
+        XCTAssertEqual(request?.externalIdentityValue, nil)
+        XCTAssertEqual(request?.displayName, "Codex")
+        XCTAssertEqual(request?.timestamp, timestamp)
+    }
+
     func testSessionLifecycleRecorderRetainsBoundedEngineError() async throws {
         let client = CapturingProvenanceEngineClient(
             lifecycleResponse: ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse(

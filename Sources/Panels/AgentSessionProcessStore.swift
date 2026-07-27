@@ -15,6 +15,7 @@ final class AgentSessionProcessStore {
             emitActiveWorkStateIfNeeded()
         }
     }
+    var lifecycleSink: ((AgentSessionLifecycleChange.Phase, AgentSessionRunningSession) -> Void)?
     var hasActiveProviderSession: Bool {
         !sessions.isEmpty
     }
@@ -238,11 +239,7 @@ final class AgentSessionProcessStore {
         cancelSessionTasks(session)
         resetWorkState()
         emitActiveProviderStateIfNeeded()
-        emitExit(
-            sessionId: session.sessionId,
-            providerID: session.providerID,
-            status: status
-        )
+        emitExit(session: session, status: status)
     }
 
     private func failSession(sessionId: String, status: Int32) {
@@ -254,11 +251,7 @@ final class AgentSessionProcessStore {
         emitActiveProviderStateIfNeeded()
         cancelSessionTasks(session)
         requestTermination(for: session)
-        emitExit(
-            sessionId: session.sessionId,
-            providerID: session.providerID,
-            status: status
-        )
+        emitExit(session: session, status: status)
     }
 
     private func requestTermination(for session: AgentSessionRunningSession) {
@@ -432,11 +425,7 @@ final class AgentSessionProcessStore {
                     stream: "stderr",
                     text: "\(message)\n"
                 )
-                self.emitExit(
-                    sessionId: session.sessionId,
-                    providerID: session.providerID,
-                    status: 1
-                )
+                self.emitExit(session: session, status: 1)
             }
         }
     }
@@ -656,6 +645,7 @@ final class AgentSessionProcessStore {
     }
 
     private func emitStarted(session: AgentSessionRunningSession) {
+        lifecycleSink?(.started, session)
         eventSink?([
             "type": "provider.started",
             "sessionId": session.sessionId,
@@ -787,15 +777,12 @@ final class AgentSessionProcessStore {
         ])
     }
 
-    private func emitExit(
-        sessionId: String,
-        providerID: AgentSessionProviderID,
-        status: Int32
-    ) {
+    private func emitExit(session: AgentSessionRunningSession, status: Int32) {
+        lifecycleSink?(.stopped, session)
         eventSink?([
             "type": "provider.exit",
-            "sessionId": sessionId,
-            "providerId": providerID.rawValue,
+            "sessionId": session.sessionId,
+            "providerId": session.providerID.rawValue,
             "status": status
         ])
     }

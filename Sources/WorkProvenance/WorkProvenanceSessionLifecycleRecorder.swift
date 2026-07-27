@@ -26,13 +26,14 @@ actor WorkProvenanceSessionLifecycleRecorder {
         let worktreeID = await resolvedWorktreeID(for: change.workingDirectory)
         let response = await client.recordSessionLifecycle(ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest(
             phase: ProvenanceEngineContracts.ProvenanceSessionLifecyclePhase(change.phase),
-            parentSessionID: change.parentSessionID,
+            sessionID: change.sessionID,
+            parentSessionID: change.sessionID == nil ? change.parentSessionID : nil,
             agentKind: change.agentKind.sourceName,
             workspaceID: change.workspaceID,
             surfaceID: change.surfaceID,
             worktreeID: worktreeID,
             workingDirectory: change.workingDirectory,
-            externalIdentityKind: "subagent",
+            externalIdentityKind: change.externalSessionID == nil ? nil : "subagent",
             externalIdentityValue: change.externalSessionID,
             displayName: change.displayName,
             timestamp: timestamp

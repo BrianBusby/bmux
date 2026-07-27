@@ -185,6 +185,20 @@ extension Workspace {
                 sendInputWhenReady(input, to: terminal)
             }
 
+        case .agentSession:
+            let resolvedCwd = BmuxConfigStore.resolveCwd(surface.cwd, relativeTo: baseCwd)
+            if let panel = newAgentSessionSurface(
+                inPane: paneId,
+                providerID: surface.provider ?? .codex,
+                rendererKind: surface.renderer ?? .react,
+                workingDirectory: resolvedCwd,
+                focus: false
+            ) {
+                _ = closePanel(panelId, force: true)
+                if let name = surface.name { setPanelCustomTitle(panelId: panel.id, title: name) }
+                if surface.focus == true { focusPanelId = panel.id }
+            }
+
         case .browser:
             let url = surface.url.flatMap { URL(string: $0) }
             if let panel = newBrowserSurface(
@@ -241,6 +255,19 @@ extension Workspace {
                 url: url,
                 focus: false,
                 creationPolicy: .restoration
+            ) {
+                if let name = surface.name { setPanelCustomTitle(panelId: panel.id, title: name) }
+                if surface.focus == true { focusPanelId = panel.id }
+            }
+
+        case .agentSession:
+            let resolvedCwd = BmuxConfigStore.resolveCwd(surface.cwd, relativeTo: baseCwd)
+            if let panel = newAgentSessionSurface(
+                inPane: paneId,
+                providerID: surface.provider ?? .codex,
+                rendererKind: surface.renderer ?? .react,
+                workingDirectory: resolvedCwd,
+                focus: false
             ) {
                 if let name = surface.name { setPanelCustomTitle(panelId: panel.id, title: name) }
                 if surface.focus == true { focusPanelId = panel.id }

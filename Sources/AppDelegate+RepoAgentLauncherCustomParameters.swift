@@ -44,17 +44,11 @@ extension AppDelegate {
         context: MainWindowContext,
         preferredWindow: NSWindow?
     ) -> Bool {
-        guard !parameters.isEmpty else {
-            return executeConfiguredBmuxAction(action, context: context, preferredWindow: preferredWindow)
-        }
         guard let bmuxConfigStore = context.bmuxConfigStore,
-              let commandName = action.workspaceCommandName,
-              let command = bmuxConfigStore.loadedCommands.first(where: { $0.name == commandName }),
-              let agent = RepoAgentLauncherCommandCustomizer().agent(for: command),
-              let customizedCommand = RepoAgentLauncherCommandCustomizer().command(
-                byAppending: parameters,
-                to: command,
-                for: agent
+              let launch = RepoAgentLauncherCommandCustomizer().launchCommand(
+                for: action,
+                commands: bmuxConfigStore.loadedCommands,
+                parameters: parameters
               ) else {
             return false
         }
@@ -63,10 +57,10 @@ extension AppDelegate {
         let baseCwd = (rawCwd?.isEmpty == false) ? rawCwd!
             : FileManager.default.homeDirectoryForCurrentUser.path
         return BmuxConfigExecutor.execute(
-            command: customizedCommand,
+            command: launch.command,
             tabManager: context.tabManager,
             baseCwd: baseCwd,
-            configSourcePath: bmuxConfigStore.commandSourcePaths[command.id] ?? action.actionSourcePath,
+            configSourcePath: bmuxConfigStore.commandSourcePaths[launch.sourceCommandID] ?? action.actionSourcePath,
             globalConfigPath: bmuxConfigStore.globalConfigPath,
             displayTitle: action.title,
             actionID: action.id,

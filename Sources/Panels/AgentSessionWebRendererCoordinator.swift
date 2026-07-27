@@ -1,4 +1,5 @@
 import AppKit
+import BmuxAgentChat
 import UniformTypeIdentifiers
 import WebKit
 
@@ -21,6 +22,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
     private var isClosed = false
     private var isProviderStartPending = false
     private var processStore = AgentSessionProcessStore()
+    private weak var workProvenanceRuntime: WorkProvenanceRuntime?
     nonisolated private static let imagePreviewMaxBytes = 512 * 1024
     nonisolated private static let imagePreviewTotalMaxBytes = 2 * 1024 * 1024
     var onHasActiveProviderChanged: ((Bool) -> Void)? {
@@ -34,6 +36,11 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         }
     }
     var onProviderIDChanged: ((AgentSessionProviderID) -> Void)?
+
+    init(workProvenanceRuntime: WorkProvenanceRuntime? = nil) {
+        self.workProvenanceRuntime = workProvenanceRuntime
+        super.init()
+    }
 
     func bind(
         panelId: UUID,
@@ -70,6 +77,9 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         processStore.activeWorkSink = { [weak self] hasActiveWork in
             self?.onHasActiveWorkChanged?(hasActiveWork)
         }
+        processStore.lifecycleSink = { [weak self] phase, session in
+            self?.recordProviderLifecycle(phase: phase, session: session)
+        }
     }
 
     func ensureWebView(onPointerDown: @escaping () -> Void) -> AgentSessionWebView {
@@ -80,6 +90,8 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
 
         let configuration = WKWebViewConfiguration()
         configuration.suppressesIncrementalRendering = false
+        // The bundled agent UI is an ES module graph loaded from app-owned file URLs.
+        configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
         configuration.userContentController.addScriptMessageHandler(
             self,
             contentWorld: .page,
@@ -172,19 +184,43 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         replyHandler: @escaping (Any?, String?) -> Void
     ) {
         guard isTrustedBridgeFrame(message.frameInfo) else {
+#if DEBUG
+            bmuxDebugLog(
+                "agentSession.bridge.rejected reason=untrustedFrame " +
+                "url=\(message.frameInfo.request.url?.path ?? "nil")"
+            )
+#endif
             replyHandler(["ok": false, "error": [:]], nil)
             return
         }
         Task { @MainActor in
             do {
                 let request = try AgentSessionBridgeRequest(body: message.body)
+#if DEBUG
+                bmuxDebugLog("agentSession.bridge.request method=\(request.method)")
+#endif
                 let reply = try await self.handle(request)
+#if DEBUG
+                bmuxDebugLog("agentSession.bridge.reply method=\(request.method) ok=1")
+#endif
                 replyHandler(["ok": true, "value": reply], nil)
             } catch let error as AgentExecutableResolverError {
+#if DEBUG
+                bmuxDebugLog("agentSession.bridge.reply ok=0 error=resolver message=\(error.message)")
+#endif
                 replyHandler(["ok": false, "error": ["userMessage": error.message]], nil)
             } catch let error as AgentSessionBridgeError {
+#if DEBUG
+                bmuxDebugLog(
+                    "agentSession.bridge.reply ok=0 error=bridge code=\(error.code) " +
+                    "message=\(error.localizedDescription)"
+                )
+#endif
                 replyHandler(["ok": false, "error": ["code": error.code, "userMessage": error.localizedDescription]], nil)
             } catch {
+#if DEBUG
+                bmuxDebugLog("agentSession.bridge.reply ok=0 error=unknown message=\(error.localizedDescription)")
+#endif
                 replyHandler(["ok": false, "error": [:]], nil)
             }
         }
@@ -193,6 +229,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
 #if DEBUG
         bmuxDebugLog("agentSession.web.didFinish renderer=\(rendererKind.rawValue)")
+        logPageDiagnostics(for: webView)
 #endif
         hasFinishedNavigation = true
         applyThemeToLoadedPage()
@@ -295,6 +332,48 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             completion?()
         }
     }
+
+#if DEBUG
+    private func logPageDiagnostics(for webView: WKWebView) {
+        let script = """
+        (() => {
+          const root = document.getElementById("root");
+          return JSON.stringify({
+            readyState: document.readyState,
+            location: window.location.href,
+            rootChildCount: root ? root.childElementCount : -1,
+            rootTextLength: root ? root.innerText.length : -1,
+            bodyTextLength: document.body ? document.body.innerText.length : -1,
+            hasAgentBridge: typeof window.bmuxAgentBridge !== "undefined",
+            hasWebkit: typeof window.webkit !== "undefined",
+            hasAgentHandler: typeof window.webkit?.messageHandlers?.agentSession?.postMessage === "function"
+          });
+        })()
+        """
+        webView.evaluateJavaScript(script) { result, error in
+            if let error {
+                bmuxDebugLog("agentSession.web.diagnostics.failed error=\(error.localizedDescription)")
+                return
+            }
+            bmuxDebugLog("agentSession.web.diagnostics immediate=\(result ?? "nil")")
+        }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            guard let currentWebView = self.webView,
+                  currentWebView === webView,
+                  !self.isClosed else {
+                return
+            }
+            webView.evaluateJavaScript(script) { result, error in
+                if let error {
+                    bmuxDebugLog("agentSession.web.diagnostics.delayed.failed error=\(error.localizedDescription)")
+                    return
+                }
+                bmuxDebugLog("agentSession.web.diagnostics delayed=\(result ?? "nil")")
+            }
+        }
+    }
+#endif
 
     private func applyThemeToLoadedPage() {
         guard let webView,
@@ -590,6 +669,9 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             onProviderIDChanged?(provider)
             return ["providerId": provider.rawValue]
         case "provider.start":
+#if DEBUG
+            bmuxDebugLog("agentSession.provider.start.begin closed=\(isClosed) active=\(processStore.hasActiveProviderSession)")
+#endif
             guard !isClosed else {
                 throw AgentSessionBridgeError.invalidRequest
             }
@@ -609,6 +691,12 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
                 let resolver = AgentExecutableResolver(configuredExecutablePaths: configuredExecutablePaths)
                 return try resolver.resolve(provider)
             }.value
+#if DEBUG
+            bmuxDebugLog(
+                "agentSession.provider.start.resolved provider=\(provider.rawValue) " +
+                "executable=\(plan.executableURL.path)"
+            )
+#endif
             guard !isClosed else {
                 throw AgentSessionBridgeError.invalidRequest
             }
@@ -616,6 +704,12 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
                 plan: plan,
                 workingDirectory: request.string("workingDirectory") ?? workingDirectory
             )
+#if DEBUG
+            bmuxDebugLog(
+                "agentSession.provider.start.started provider=\(provider.rawValue) " +
+                "session=\(session.sessionId)"
+            )
+#endif
             return [
                 "sessionId": session.sessionId,
                 "providerId": provider.rawValue,
@@ -732,6 +826,32 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         }
     }
 
+    private func recordProviderLifecycle(
+        phase: AgentSessionLifecycleChange.Phase,
+        session: AgentSessionRunningSession
+    ) {
+#if DEBUG
+        bmuxDebugLog(
+            "agentSession.provenance.lifecycle phase=\(String(describing: phase)) " +
+            "session=\(session.sessionId) provider=\(session.providerID.rawValue)"
+        )
+#endif
+        workProvenanceRuntime?.recordSessionLifecycleChange(
+            AgentSessionLifecycleChange(
+                phase: phase,
+                sessionID: session.sessionId,
+                parentSessionID: session.sessionId,
+                agentKind: session.providerID.provenanceAgentKind,
+                workspaceID: workspaceId.uuidString,
+                surfaceID: panelId.uuidString,
+                workingDirectory: session.workingDirectory ?? workingDirectory,
+                externalSessionID: nil,
+                displayName: session.providerID.displayName
+            ),
+            timestamp: Date()
+        )
+    }
+
     private func handleExternalLink(_ url: URL) {
         guard let scheme = url.scheme?.lowercased(),
               scheme == "http" || scheme == "https" || scheme == "mailto" else {
@@ -784,5 +904,18 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             current = item.nextResponder
         }
         return false
+    }
+}
+
+private extension AgentSessionProviderID {
+    var provenanceAgentKind: ChatAgentKind {
+        switch self {
+        case .codex:
+            return .codex
+        case .claude:
+            return .claude
+        case .opencode:
+            return .other("opencode")
+        }
     }
 }

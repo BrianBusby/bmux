@@ -9127,7 +9127,8 @@ final class Workspace: Identifiable, ObservableObject {
             workspaceId: id,
             rendererKind: rendererKind,
             initialProviderID: providerID,
-            workingDirectory: directory
+            workingDirectory: directory,
+            workProvenanceRuntime: owningTabManager?.workProvenanceRuntime
         )
         panels[agentPanel.id] = agentPanel
         panelTitles[agentPanel.id] = agentPanel.displayTitle

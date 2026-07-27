@@ -47,6 +47,10 @@ extension BmuxConfigExecutor {
         String(localized: "dialog.bmuxConfig.disclosure.url", defaultValue: "url: %@")
     }
 
+    private static var agentSessionDisclosureFormat: String {
+        String(localized: "dialog.bmuxConfig.disclosure.agentSession", defaultValue: "agent session: %@")
+    }
+
     private static func envDisclosureLines(_ env: [String: String]) -> [String] {
         env.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }
     }
@@ -88,6 +92,12 @@ extension BmuxConfigExecutor {
                     // Browser/project surfaces open these on run; URLs can
                     // carry private query strings.
                     lines.append(String(format: urlDisclosureFormat, url))
+                }
+                if surface.type == .agentSession {
+                    lines.append(String(
+                        format: agentSessionDisclosureFormat,
+                        (surface.provider ?? .codex).displayName
+                    ))
                 }
                 if let env = surface.env {
                     lines.append(contentsOf: envDisclosureLines(env))

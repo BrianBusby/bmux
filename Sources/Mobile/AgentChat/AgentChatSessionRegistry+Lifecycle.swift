@@ -45,6 +45,7 @@ struct AgentSessionLifecycleChange: Sendable, Equatable {
     }
 
     let phase: Phase
+    let sessionID: String?
     let parentSessionID: String
     let agentKind: ChatAgentKind
     let workspaceID: String?
@@ -52,6 +53,28 @@ struct AgentSessionLifecycleChange: Sendable, Equatable {
     let workingDirectory: String?
     let externalSessionID: String?
     let displayName: String?
+
+    init(
+        phase: Phase,
+        sessionID: String? = nil,
+        parentSessionID: String,
+        agentKind: ChatAgentKind,
+        workspaceID: String?,
+        surfaceID: String?,
+        workingDirectory: String?,
+        externalSessionID: String?,
+        displayName: String?
+    ) {
+        self.phase = phase
+        self.sessionID = sessionID
+        self.parentSessionID = parentSessionID
+        self.agentKind = agentKind
+        self.workspaceID = workspaceID
+        self.surfaceID = surfaceID
+        self.workingDirectory = workingDirectory
+        self.externalSessionID = externalSessionID
+        self.displayName = displayName
+    }
 }
 
 extension AgentChatSessionRegistry {
