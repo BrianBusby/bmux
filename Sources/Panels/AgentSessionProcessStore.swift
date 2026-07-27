@@ -73,6 +73,7 @@ final class AgentSessionProcessStore {
         )
         if plan.provider == .codex {
             running.codexAppServerSession = CodexAppServerSession(
+                debugSessionID: sessionId,
                 workingDirectory: workingDirectory,
                 writeData: { data in
                     try await inputWriter.write(data)
@@ -99,7 +100,14 @@ final class AgentSessionProcessStore {
                         providerID: plan.provider
                     )
                 },
-                failureSink: { [weak self] _ in
+                failureSink: { [weak self] details in
+#if DEBUG
+                    if let details, !details.isEmpty {
+                        bmuxDebugLog("agentSession.codex.failure session=\(sessionId) details=\(details)")
+                    } else {
+                        bmuxDebugLog("agentSession.codex.failure session=\(sessionId)")
+                    }
+#endif
                     self?.failSession(sessionId: sessionId, status: 1)
                 }
             )
@@ -110,6 +118,12 @@ final class AgentSessionProcessStore {
         running.stderrReadTask = makeReadTask(stderr.fileHandleForReading, sessionId: sessionId, stream: "stderr")
         process.terminationHandler = { [weak self] process in
             Task { @MainActor in
+#if DEBUG
+                bmuxDebugLog(
+                    "agentSession.process.terminated session=\(sessionId) " +
+                    "provider=\(plan.provider.rawValue) status=\(process.terminationStatus)"
+                )
+#endif
                 guard let self,
                       let session = self.sessions[sessionId] else {
                     return
@@ -194,20 +208,22 @@ final class AgentSessionProcessStore {
     }
 
     private func makeReadTask(_ fileHandle: FileHandle, sessionId: String, stream: String) -> Task<Void, Never> {
-        Task.detached(priority: .utility) { [weak self] in
-            while !Task.isCancelled {
-                let data: Data
-                do {
-                    data = try fileHandle.read(upToCount: 64 * 1024) ?? Data()
-                } catch {
-                    data = Data()
+        let state = AgentSessionProcessReadTaskState()
+        return Task(priority: .utility) { [weak self] in
+            fileHandle.readabilityHandler = { handle in
+                let data = handle.availableData
+                Task { @MainActor [weak self] in
+                    self?.consumeOutputData(data, sessionId: sessionId, stream: stream)
                 }
-
-                await self?.consumeOutputData(data, sessionId: sessionId, stream: stream)
-                if data.isEmpty {
-                    return
+                if data.isEmpty, state.markFinished() {
+                    handle.readabilityHandler = nil
                 }
             }
+
+            while !Task.isCancelled && !state.isFinished {
+                try? await Task.sleep(nanoseconds: 250_000_000)
+            }
+            fileHandle.readabilityHandler = nil
         }
     }
 
@@ -778,6 +794,12 @@ final class AgentSessionProcessStore {
     }
 
     private func emitExit(session: AgentSessionRunningSession, status: Int32) {
+#if DEBUG
+        bmuxDebugLog(
+            "agentSession.provider.exit session=\(session.sessionId) " +
+            "provider=\(session.providerID.rawValue) status=\(status)"
+        )
+#endif
         lifecycleSink?(.stopped, session)
         eventSink?([
             "type": "provider.exit",
@@ -861,6 +883,27 @@ final class AgentSessionProcessStore {
 
     func markTurnCompleteForTesting() {
         resetWorkState()
+    }
+}
+
+private final class AgentSessionProcessReadTaskState: @unchecked Sendable {
+    private let lock = NSLock()
+    private var finished = false
+
+    var isFinished: Bool {
+        lock.withLock {
+            finished
+        }
+    }
+
+    func markFinished() -> Bool {
+        lock.withLock {
+            guard !finished else {
+                return false
+            }
+            finished = true
+            return true
+        }
     }
 }
 

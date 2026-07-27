@@ -85,7 +85,7 @@ struct AgentExecutableResolver {
             let candidatePath = candidateURL.path
             guard fileManager.isExecutableFile(atPath: candidatePath) else { continue }
             guard !isBundledProviderExecutable(candidateURL) else { continue }
-            guard !isKnownBmuxClaudeCommandShim(candidateURL, provider: provider) else { continue }
+            guard !isKnownBmuxCommandShim(candidateURL, provider: provider) else { continue }
             guard !isKnownBmuxClaudeWrapper(candidateURL, provider: provider) else { continue }
 
             return launchPlan(provider: provider, executableURL: candidateURL, searchDirectories: searchDirectories)
@@ -226,7 +226,7 @@ struct AgentExecutableResolver {
               !isDirectory.boolValue,
               fileManager.isExecutableFile(atPath: candidateURL.path),
               !isBundledProviderExecutable(candidateURL),
-              !isKnownBmuxClaudeCommandShim(candidateURL, provider: provider),
+              !isKnownBmuxCommandShim(candidateURL, provider: provider),
               !isKnownBmuxClaudeWrapper(candidateURL, provider: provider) else {
             return nil
         }
@@ -248,13 +248,15 @@ struct AgentExecutableResolver {
         return false
     }
 
-    private func isKnownBmuxClaudeCommandShim(_ url: URL, provider: AgentSessionProviderID) -> Bool {
-        guard provider == .claude else { return false }
+    private func isKnownBmuxCommandShim(_ url: URL, provider: AgentSessionProviderID) -> Bool {
+        guard url.lastPathComponent == provider.executableName else { return false }
         let candidatePath = url.standardizedFileURL.path
-        if let shimPath = environment["BMUX_CLAUDE_WRAPPER_SHIM"]?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !shimPath.isEmpty,
-           candidatePath == URL(fileURLWithPath: shimPath, isDirectory: false).standardizedFileURL.path {
-            return true
+        if provider == .claude {
+            if let shimPath = environment["BMUX_CLAUDE_WRAPPER_SHIM"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !shimPath.isEmpty,
+               candidatePath == URL(fileURLWithPath: shimPath, isDirectory: false).standardizedFileURL.path {
+                return true
+            }
         }
 
         let shimRoots: [String?] = [

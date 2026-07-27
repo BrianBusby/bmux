@@ -694,7 +694,9 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
 #if DEBUG
             bmuxDebugLog(
                 "agentSession.provider.start.resolved provider=\(provider.rawValue) " +
-                "executable=\(plan.executableURL.path)"
+                "executable=\(plan.executableURL.path) " +
+                "arguments=\(plan.arguments.joined(separator: ",")) " +
+                "cwd=\(request.string("workingDirectory") ?? workingDirectory ?? "nil")"
             )
 #endif
             guard !isClosed else {
