@@ -3811,20 +3811,39 @@ final class Workspace: Identifiable, ObservableObject {
             guard let self,
                   let agentPanel,
                   let tabId = self.surfaceIdFromPanelId(agentPanel.id) else { return }
-            guard let existing = self.bonsplitController.tab(tabId) else { return }
-
-            if self.panelTitles[agentPanel.id] != newTitle {
-                self.panelTitles[agentPanel.id] = newTitle
+            let tabManager = self.owningTabManager
+            let previousDisplayTitle = tabManager?
+                .resolvedWorkspaceDisplayTitle(for: self)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            _ = self.updatePanelTitle(panelId: agentPanel.id, title: newTitle)
+            if self.focusedPanelId == agentPanel.id {
+                self.applyProcessTitle(newTitle)
+                if tabManager?.selectedTabId == self.id {
+                    tabManager?.updateWindowTitle(for: self)
+                }
             }
-            let resolvedTitle = self.resolvedPanelTitle(panelId: agentPanel.id, fallback: newTitle)
-            let titleUpdate: String? = existing.title == resolvedTitle ? nil : resolvedTitle
+            guard let existing = self.bonsplitController.tab(tabId) else { return }
             let dirtyUpdate: Bool? = existing.isDirty == isDirty ? nil : isDirty
-            if titleUpdate != nil || dirtyUpdate != nil {
+            if dirtyUpdate != nil {
                 self.bonsplitController.updateTab(
                     tabId,
-                    title: titleUpdate,
                     hasCustomTitle: self.panelCustomTitles[agentPanel.id] != nil,
                     isDirty: dirtyUpdate
+                )
+            }
+            let currentDisplayTitle = tabManager?
+                .resolvedWorkspaceDisplayTitle(for: self)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if let previousDisplayTitle,
+               let currentDisplayTitle,
+               currentDisplayTitle != previousDisplayTitle {
+                NotificationCenter.default.post(
+                    name: .workspaceTitleDidChange,
+                    object: tabManager,
+                    userInfo: [
+                        GhosttyNotificationKey.tabId: self.id,
+                        GhosttyNotificationKey.surfaceId: agentPanel.id,
+                    ]
                 )
             }
             if dirtyUpdate != nil {
