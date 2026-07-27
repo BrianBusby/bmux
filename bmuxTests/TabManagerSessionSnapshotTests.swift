@@ -3551,6 +3551,40 @@ final class TabManagerSessionSnapshotTests: XCTestCase {
         XCTAssertNotEqual(restoredTab.title, "Terminal")
     }
 
+    func testFocusedAgentSessionPanelTitleSyncsToWorkspaceTitle() throws {
+        let manager = TabManager()
+        let workspace = try XCTUnwrap(manager.selectedWorkspace)
+        manager.selectedTabId = workspace.id
+        let pane = try XCTUnwrap(workspace.bonsplitController.allPaneIds.first)
+        let agentPanel = try XCTUnwrap(workspace.newAgentSessionSurface(
+            inPane: pane,
+            rendererKind: .react,
+            focus: true
+        ))
+        let updatedTitle = "Investigate provenance capture"
+        var titleChangeCount = 0
+        let observer = NotificationCenter.default.addObserver(
+            forName: .workspaceTitleDidChange,
+            object: manager,
+            queue: .main
+        ) { notification in
+            guard notification.userInfo?[GhosttyNotificationKey.tabId] as? UUID == workspace.id,
+                  notification.userInfo?[GhosttyNotificationKey.surfaceId] as? UUID == agentPanel.id else {
+                return
+            }
+            titleChangeCount += 1
+        }
+        defer { NotificationCenter.default.removeObserver(observer) }
+
+        agentPanel.onDisplayStateChanged?(updatedTitle, true)
+        drainMainQueue()
+
+        XCTAssertEqual(workspace.panelTitle(panelId: agentPanel.id), updatedTitle)
+        XCTAssertEqual(workspace.title, updatedTitle)
+        XCTAssertEqual(manager.resolvedWorkspaceDisplayTitle(for: workspace), updatedTitle)
+        XCTAssertEqual(titleChangeCount, 1)
+    }
+
     private static func persistentSSHWorkspaceSnapshot(
         panel: SessionPanelSnapshot,
         focusedPanelId: UUID
