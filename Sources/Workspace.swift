@@ -3863,18 +3863,6 @@ final class Workspace: Identifiable, ObservableObject {
                 surfaceId: agentPanel.id,
                 iMessageModeEnabled: IMessageModeSettings.isEnabled()
             )
-            guard let title = Self.conversationMessagePreview(from: text, maxLength: 80) else { return }
-            _ = tabManager.applyCustomTitle(
-                tabId: self.id,
-                title: title,
-                source: .autoPrompt,
-                propagateToRemoteTmux: false
-            )
-            _ = self.applyPanelCustomTitle(
-                panelId: agentPanel.id,
-                title: title,
-                source: .autoPrompt
-            )
         }
         agentSessionPanelCallbackIds.insert(agentPanel.id)
         publishAgentSessionActiveWorkIfNeeded()
@@ -4403,6 +4391,7 @@ final class Workspace: Identifiable, ObservableObject {
         case user
         /// Legacy auto title source used by older session snapshots and clients.
         case auto
+        /// Legacy prompt-submit title source. New socket callers cannot request it.
         case autoPrompt = "auto_prompt"
         case autoSummary = "auto_summary"
         case agentSeed = "agent_seed"
@@ -4424,8 +4413,6 @@ final class Workspace: Identifiable, ObservableObject {
             switch normalized {
             case "auto":
                 return .auto
-            case "prompt", "prompt_submit", "auto_prompt":
-                return .autoPrompt
             case "summary", "stop", "stop_summary", "auto_summary":
                 return .autoSummary
             case "seed", "agent_seed":

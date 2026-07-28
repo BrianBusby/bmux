@@ -203,36 +203,30 @@ import Testing
 
                 let applyEnvelope = try call(method: "workspace.set_auto_title", params: [
                     "workspace_id": workspace.id.uuidString,
-                    "source": "auto_prompt",
+                    "source": "auto_summary",
                     "title": "Fix workspace titles"
                 ])
                 let applyResult = try #require(applyEnvelope["result"] as? [String: Any])
                 #expect(applyResult["workspace_applied"] as? Bool == true)
-                #expect(applyResult["source"] as? String == "auto_prompt")
+                #expect(applyResult["source"] as? String == "auto_summary")
                 #expect(workspace.title == "Fix workspace titles")
-                #expect(workspace.effectiveCustomTitleSource == .autoPrompt)
+                #expect(workspace.effectiveCustomTitleSource == .autoSummary)
             }
         }
     }
 
-    @Test func summarySourceCanRefinePromptSource() throws {
+    @Test func summarySourceCanRefineLegacyPromptSource() throws {
         try withAutoNamingSetting(true) {
             try withManager { _, workspace in
-                var envelope = try call(method: "workspace.set_auto_title", params: [
-                    "workspace_id": workspace.id.uuidString,
-                    "source": "auto_prompt",
-                    "title": "Fix auth bug"
-                ])
-                var result = try #require(envelope["result"] as? [String: Any])
-                #expect(result["workspace_applied"] as? Bool == true)
+                workspace.setCustomTitle("Fix auth bug", source: .autoPrompt)
                 #expect(workspace.effectiveCustomTitleSource == .autoPrompt)
 
-                envelope = try call(method: "workspace.set_auto_title", params: [
+                let envelope = try call(method: "workspace.set_auto_title", params: [
                     "workspace_id": workspace.id.uuidString,
                     "source": "auto_summary",
                     "title": "Debug login flow"
                 ])
-                result = try #require(envelope["result"] as? [String: Any])
+                let result = try #require(envelope["result"] as? [String: Any])
                 #expect(result["workspace_applied"] as? Bool == true)
                 #expect(result["workspace_rejection_reason"] is NSNull)
                 #expect(workspace.title == "Debug login flow")
@@ -241,7 +235,7 @@ import Testing
         }
     }
 
-    @Test func promptSourceCanReplacePreviousSummaryForNewTurn() throws {
+    @Test func promptSourceIsRejectedBySocket() throws {
         try withAutoNamingSetting(true) {
             try withManager { _, workspace in
                 _ = try call(method: "workspace.set_auto_title", params: [
@@ -255,10 +249,11 @@ import Testing
                     "source": "auto_prompt",
                     "title": "Fix workspace titles"
                 ])
-                let result = try #require(envelope["result"] as? [String: Any])
-                #expect(result["workspace_applied"] as? Bool == true)
-                #expect(workspace.title == "Fix workspace titles")
-                #expect(workspace.effectiveCustomTitleSource == .autoPrompt)
+                #expect(envelope["ok"] as? Bool == false)
+                let error = try #require(envelope["error"] as? [String: Any])
+                #expect(error["code"] as? String == "invalid_params")
+                #expect(workspace.title == "Debug login flow")
+                #expect(workspace.effectiveCustomTitleSource == .autoSummary)
             }
         }
     }
@@ -365,13 +360,13 @@ import Testing
                 let envelope = try call(method: "workspace.set_auto_title", params: [
                     "workspace_id": workspace.id.uuidString,
                     "panel_id": panelId.uuidString,
-                    "source": "auto_prompt",
+                    "source": "auto_summary",
                     "title": "Debug login flow"
                 ])
                 let result = try #require(envelope["result"] as? [String: Any])
                 #expect(result["panel_applied"] as? Bool == true)
                 #expect(workspace.panelCustomTitles[panelId] == "Debug login flow")
-                #expect(workspace.panelCustomTitleSources[panelId] == .autoPrompt)
+                #expect(workspace.panelCustomTitleSources[panelId] == .autoSummary)
             }
         }
     }
