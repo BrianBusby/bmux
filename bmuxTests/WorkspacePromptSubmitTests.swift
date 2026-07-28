@@ -151,6 +151,39 @@ struct WorkspacePromptSubmitTests {
         #expect(workspace.effectiveCustomTitleSource == .agentSeed)
         #expect(manager.resolvedWorkspaceDisplayTitle(for: workspace) == prompt)
         #expect(workspace.panelTitle(panelId: agentPanel.id) == prompt)
+        let surfaceId = try #require(workspace.surfaceIdFromPanelId(agentPanel.id))
+        #expect(workspace.bonsplitController.tab(surfaceId)?.title == prompt)
+    }
+
+    @Test func testPromptSeedTitleAcceptsBonsplitSurfaceIdFromHook() throws {
+        let manager = TabManager(initialWorkingDirectory: "/tmp/bmux")
+        let workspace = try #require(manager.selectedWorkspace)
+        let paneId = try #require(workspace.bonsplitController.allPaneIds.first)
+        let agentPanel = try #require(
+            workspace.newAgentSessionSurface(
+                inPane: paneId,
+                rendererKind: .react,
+                focus: true
+            )
+        )
+        let surfaceId = try #require(workspace.surfaceIdFromPanelId(agentPanel.id))
+        let prompt = "make custom hook prompt titles replace the built in agent title"
+
+        let outcome = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: prompt,
+                surfaceId: surfaceId.id,
+                iMessageModeEnabled: false,
+                seedTitleFromPrompt: true
+            )
+        )
+
+        #expect(outcome.messageRecorded)
+        #expect(workspace.customTitle == prompt)
+        #expect(workspace.effectiveCustomTitleSource == .agentSeed)
+        #expect(workspace.panelTitle(panelId: agentPanel.id) == prompt)
+        #expect(workspace.bonsplitController.tab(surfaceId)?.title == prompt)
     }
 
     @Test func testReactAgentPromptSeedDoesNotReplaceSummaryTitle() throws {
@@ -173,6 +206,8 @@ struct WorkspacePromptSubmitTests {
         #expect(workspace.customTitle == "Summarized title")
         #expect(workspace.effectiveCustomTitleSource == .autoSummary)
         #expect(workspace.panelTitle(panelId: agentPanel.id) == "Summarized title")
+        let surfaceId = try #require(workspace.surfaceIdFromPanelId(agentPanel.id))
+        #expect(workspace.bonsplitController.tab(surfaceId)?.title == "Summarized title")
         #expect(workspace.panelCustomTitleSources[agentPanel.id] == .autoSummary)
     }
 

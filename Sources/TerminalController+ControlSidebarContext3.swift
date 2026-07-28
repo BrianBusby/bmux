@@ -56,10 +56,11 @@ extension TerminalController {
         let selectedTab = tab.bonsplitController.selectedTab(inPane: paneId)
 
         return .rows(tabs.map { bonsplitTab in
-            ControlSidebarPaneSurfacesResolution.Row(
+            let panelId = tab.panelIdFromSurfaceId(bonsplitTab.id)
+            return ControlSidebarPaneSurfacesResolution.Row(
                 isSelected: bonsplitTab.id == selectedTab?.id,
-                title: bonsplitTab.title,
-                panelIDString: tab.panelIdFromSurfaceId(bonsplitTab.id)?.uuidString
+                title: panelId.flatMap { tab.panelTitle(panelId: $0) } ?? bonsplitTab.title,
+                panelIDString: panelId?.uuidString
             )
         })
     }

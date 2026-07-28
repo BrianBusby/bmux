@@ -259,9 +259,10 @@ extension TerminalController: ControlPaneContext {
         let surfaces: [ControlPaneSurfaceSummary] = tabs.map { tab in
             let panelId = ws.panelIdFromSurfaceId(tab.id)
             let panel = panelId.flatMap { ws.panels[$0] }
+            let title = panelId.flatMap { ws.panelTitle(panelId: $0) } ?? tab.title
             return ControlPaneSurfaceSummary(
                 surfaceID: panelId,
-                title: tab.title,
+                title: title,
                 typeRawValue: panel?.panelType.rawValue,
                 isSelected: tab.id == selectedTab?.id
             )

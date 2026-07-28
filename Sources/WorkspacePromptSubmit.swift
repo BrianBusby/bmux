@@ -247,9 +247,15 @@ extension TabManager {
             source: .agentSeed,
             propagateToRemoteTmux: false
         )
-        if let surfaceId {
+        let panelId = surfaceId.flatMap { surfaceId -> UUID? in
+            if workspace.panels[surfaceId] != nil {
+                return surfaceId
+            }
+            return workspace.panelIdFromSurfaceId(TabID(uuid: surfaceId))
+        }
+        if let panelId {
             _ = workspace.applyPanelCustomTitle(
-                panelId: surfaceId,
+                panelId: panelId,
                 title: title,
                 source: .agentSeed
             )
