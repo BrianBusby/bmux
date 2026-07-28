@@ -6,7 +6,7 @@
 - Slice: Slice 0 - Repository audit and event-flow inventory
 - Branch: `execution-telemetry-slice-0`
 - Starting commit: `d346355724b4d85339b0604dcdb6aa559973d4ae`
-- Ending commit: `this commit (branch HEAD after Slice 0 commit)`
+- Slice 0 audit commit: `703c11782b9ef440762c1e28f9cd6ba73326dd74`
 - Working tree status: documentation changes only at handoff creation time
 
 ## Objective completed
