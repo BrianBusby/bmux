@@ -54,8 +54,9 @@ Every future bus publish should wrap one `TelemetryEvent` in a
 - `providerEvent` may retain bounded source references such as app-server
   method, JSON-RPC request id, provider item id, provider turn id, or provider
   sequence. It must not contain the raw provider envelope.
-- `metadata` is for small provider-neutral or provider-specific scalar facts.
-  It is not a transcript, command-output, diff, or raw-envelope escape hatch.
+- `metadata` is for small provider-neutral or provider-specific scalar facts
+  and scalar lists. It is not a transcript, command-output, diff, nested
+  object payload, or raw-envelope escape hatch.
 
 ## Minimal Event Set
 

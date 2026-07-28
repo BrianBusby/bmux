@@ -4,7 +4,10 @@ export type TelemetryJsonPrimitive = string | number | boolean | null;
 export type TelemetryJsonValue =
   | TelemetryJsonPrimitive
   | TelemetryJsonValue[]
-  | { [key: string]: TelemetryJsonValue | undefined };
+  | { [key: string]: TelemetryJsonValue };
+export type TelemetryMetadataValue =
+  | TelemetryJsonPrimitive
+  | TelemetryJsonPrimitive[];
 
 export type TelemetrySource =
   | "provider"
@@ -40,7 +43,7 @@ export interface TelemetryEventEnvelope {
   providerTurnId?: TelemetryProviderTurnId;
   providerEvent?: TelemetryProviderEventRef;
   event: TelemetryEvent;
-  metadata?: Record<string, TelemetryJsonValue>;
+  metadata?: Record<string, TelemetryMetadataValue>;
 }
 
 export type TelemetryOptionValue = string | boolean;
