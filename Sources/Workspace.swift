@@ -4429,7 +4429,7 @@ final class Workspace: Identifiable, ObservableObject {
             guard let existing else { return true }
             guard existing != .user else { return false }
             if self == .agentSeed {
-                return existing == .agentSeed
+                return existing == .agentSeed || existing == .auto || existing == .autoPrompt
             }
             return true
         }
