@@ -19,7 +19,14 @@ Provenance is narrower. Provenance records durable engineering facts and evidenc
 
 ## Current State
 
-Slice 1 is complete as a provider-neutral contract and ownership-boundary slice only. No runtime extraction, event bus, persistence, provenance projection, or React behavior change has been implemented.
+Slice 2 adds the first sidecar-owned fanout/projection seam in
+`agent-chat/executionTelemetryFanout.ts`. It assigns telemetry identity and
+ordering in one place, supports sidecar telemetry subscribers, and projects
+telemetry envelopes to the existing `AgentEvent` UI stream.
+
+Existing provider adapters still emit `AgentEvent` directly, so no React
+rendering behavior, WebSocket payload schema, persistence, provenance
+projection, Swift bridge, or Claude source selection has been changed.
 
 The structured Codex path currently enters bmux through `agent-chat/adapters/codex.ts`, which talks to `codex app-server` over JSON-RPC/NDJSON. That adapter converts app-server notifications directly into display-oriented `AgentEvent` values from `agent-chat/types.ts`. The server in `agent-chat/server.ts` owns session identity, status, bounded event replay, and WebSocket/REST fanout. React in `agent-chat/src/session.ts` consumes those events and folds them into renderable blocks.
 

@@ -69,3 +69,20 @@ Rationale: Hand-maintained Swift and sidecar event unions would drift before the
 Alternatives rejected: add Swift mirror types in Slice 1; move the canonical contract to Swift first.
 
 Consequences: Slice 1 changes no Swift code. A future native bridge must include schema drift validation.
+
+## 2026-07-28 - Fanout Publishes Telemetry Before UI Projection
+
+Decision: Slice 2 introduces `ExecutionTelemetryFanout` as a per-session
+sidecar object that assigns canonical envelope fields, notifies telemetry
+subscribers, and projects envelopes to the existing `AgentEvent` stream.
+
+Rationale: Identity and replay ordering must have one sidecar owner before
+providers are migrated. Keeping `AgentEvent` as the final projection preserves
+React behavior while giving future non-UI subscribers a typed event path.
+
+Alternatives rejected: reconstruct telemetry from `AgentEvent`; rewrite Codex
+normalization in the same slice; add persistence or provenance writes now.
+
+Consequences: Provider adapters can migrate incrementally to
+`SessionCtx.emitTelemetry`. Until they do, existing `SessionCtx.emit` events
+remain the UI path only and are not treated as canonical telemetry.

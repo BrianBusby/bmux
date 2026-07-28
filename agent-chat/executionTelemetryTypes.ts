@@ -46,6 +46,20 @@ export interface TelemetryEventEnvelope {
   metadata?: Record<string, TelemetryMetadataValue>;
 }
 
+export type TelemetrySidecarAssignedEnvelopeField =
+  | "schema"
+  | "eventId"
+  | "sessionId"
+  | "sequence"
+  | "capturedAtMs"
+  | "provider";
+
+export type TelemetryEventEnvelopeDraft =
+  Omit<TelemetryEventEnvelope, TelemetrySidecarAssignedEnvelopeField>
+  & Partial<Pick<TelemetryEventEnvelope, TelemetrySidecarAssignedEnvelopeField>>;
+
+export type TelemetryEnvelopeSubscriber = (envelope: TelemetryEventEnvelope) => void;
+
 export type TelemetryOptionValue = string | boolean;
 
 export type TelemetryEvent =

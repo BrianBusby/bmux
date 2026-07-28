@@ -11,6 +11,7 @@ import type {
   SessionOption,
   SessionStatus,
 } from "./types";
+import { ExecutionTelemetryFanout } from "./executionTelemetryFanout";
 import { claudeAdapter } from "./adapters/claude";
 import { codexAdapter } from "./adapters/codex";
 import { piAdapter } from "./adapters/pi";
@@ -100,6 +101,7 @@ for (const def of PROVIDERS) {
 
 interface Session extends SessionCtx {
   adapter: Adapter;
+  telemetry: ExecutionTelemetryFanout;
   sockets: Set<Bun.ServerWebSocket<WsData>>;
   createdAt: number;
 }
@@ -204,7 +206,13 @@ function createSession(
   const adapter = adapters.get(provider);
   if (!adapter) throw new Error(`unknown provider: ${provider}`);
   const id = crypto.randomUUID().slice(0, 8);
-  const sess: Session = {
+  let sess!: Session;
+  const telemetry = new ExecutionTelemetryFanout({
+    sessionId: id,
+    provider,
+    emitAgentEvent: (evt) => sess.emit(evt),
+  });
+  sess = {
     id,
     provider,
     cwd,
@@ -216,6 +224,7 @@ function createSession(
     events: [],
     internal: {},
     adapter,
+    telemetry,
     sockets: new Set(),
     createdAt: Date.now(),
     emit(evt: AgentEvent) {
@@ -224,6 +233,12 @@ function createSession(
         return;
       }
       emitSessionEvent(sess, evt);
+    },
+    emitTelemetry(evt) {
+      return telemetry.publish(evt);
+    },
+    subscribeTelemetry(subscriber) {
+      return telemetry.subscribe(subscriber);
     },
     setStatus(status: SessionStatus) {
       const pendingDone = sess.internal.pendingDoneEmit as Promise<void> | undefined;

@@ -1,10 +1,9 @@
 # Telemetry Contract
 
-Status: Slice 1 provider-neutral contract. This defines ownership and the
-minimal event shape only.
+Status: Slice 2 provider-neutral contract and sidecar fanout seam.
 
-No bus, persistence, provenance projection, or React behavior change has been
-implemented.
+The sidecar fanout path has been added without persistence, provenance
+projection, provider rewrites, or React behavior changes.
 
 ## Contract Location
 
@@ -18,7 +17,7 @@ It is deliberately outside `agent-chat/src/session.ts`, which remains the React
 projection, and outside `webviews/src/agent-session/shared`, which is a
 separate webview package.
 
-`agent-chat/types.ts` remains the current WebSocket UI schema for Slice 1.
+`agent-chat/types.ts` remains the current WebSocket UI schema for Slice 2.
 `AgentEvent` must not become the canonical telemetry contract and must not be
 parsed back into telemetry.
 
@@ -58,6 +57,24 @@ Every future bus publish should wrap one `TelemetryEvent` in a
   and scalar lists. It is not a transcript, command-output, diff, nested
   object payload, or raw-envelope escape hatch.
 
+## Sidecar Fanout
+
+`agent-chat/executionTelemetryFanout.ts` owns the first runtime publish seam.
+It accepts `TelemetryEventEnvelopeDraft` values, overwrites all sidecar-owned
+envelope fields, notifies telemetry subscribers with the assigned envelope, and
+projects the envelope to the existing `AgentEvent` UI stream.
+
+`TelemetryEventEnvelopeDraft` is intentionally assignable from a full
+`TelemetryEventEnvelope` so future provider adapters or hook paths can pass
+envelope-shaped objects, but `schema`, `eventId`, `sessionId`, `sequence`,
+`capturedAtMs`, and `provider` are still assigned by the sidecar fanout.
+
+`SessionCtx.emitTelemetry` and `SessionCtx.subscribeTelemetry` are optional
+seams for future producers and subscribers. Existing adapters still emit the
+current `AgentEvent` stream directly until later slices migrate specific
+provider events. The reverse direction remains prohibited: do not reconstruct
+canonical telemetry from `AgentEvent`.
+
 ## Minimal Event Set
 
 The Slice 1 union covers the events required to preserve the fields that the
@@ -92,11 +109,9 @@ CI.
 
 ## Deferred Work
 
-Slice 1 does not:
+Slice 2 does not:
 
-- create the bus;
 - dual-publish from providers;
-- project telemetry into `AgentEvent`;
 - add telemetry persistence;
 - write to provenance-engine;
 - choose or implement a Claude structured event source.

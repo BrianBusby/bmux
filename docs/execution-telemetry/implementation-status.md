@@ -4,7 +4,7 @@ Last updated: 2026-07-28
 
 ## Active Slice
 
-Slice 1 - Ownership boundaries and provider-neutral contract.
+Slice 2 - Sidecar-owned telemetry fanout path and projection seam.
 
 Status: completed in branch `execution-telemetry-slice-1`.
 
@@ -12,6 +12,8 @@ Status: completed in branch `execution-telemetry-slice-1`.
 
 - Slice 0: current-state audit only. Created the execution telemetry document structure, traced the current Codex app-server path, documented lossy normalization points, recorded provider capability findings, and wrote a handoff for Slice 1.
 - Slice 1: validated PR #11 / branch `execution-telemetry-slice-0`, including follow-up commit `6cc83ff8e`; added the canonical provider-neutral telemetry type contract in `agent-chat/executionTelemetryTypes.ts`; hardened metadata in `964e11313` so it cannot carry nested raw-provider payloads; documented sidecar/provider/React/native/provenance ownership boundaries, ordering policy, metadata policy, and Swift sync policy.
+- Slice 2: added the sidecar fanout seam in `agent-chat`.
+  Existing adapters and React rendering remain unchanged.
 
 ## Current Branch
 
@@ -29,9 +31,13 @@ Slice 0 ending commit after autoreview follow-up:
 
 Slice 1 started from that commit.
 
-Slice 1 current head:
+Slice 1 handoff head:
 
 `964e1131354ae277d896e5db9c61f10973a9d906`
+
+Slice 2 implementation commit before handoff polish:
+
+`c976231ed`
 
 ## Tests Currently Passing
 
@@ -68,15 +74,26 @@ npm exec --yes --package typescript@5.9.3 -- tsc --noEmit --target ES2022 --modu
 
 Result: succeeded.
 
+Slice 2 validation:
+
+```bash
+git diff --check
+```
+
+Result: succeeded.
+
+Slice 2 focused TypeScript check, fanout behavior test, and tagged Debug build all succeeded.
+
 ## Known Failures
 
 - `bun` is unavailable on PATH for this shell, so the targeted webview baseline test could not run.
+- The full `agent-chat` tsconfig check fails before source checking because the required `bun` type library is unavailable in this shell.
 - No runtime code changed in Slice 0, so no app build was run.
 - No runtime behavior changed in Slice 1; only a type-only contract module and docs were added.
 
 ## Next Required Action
 
-Begin Slice 2 only: introduce the sidecar-owned telemetry fanout path and projection seam. Do not add persistence or provenance writes.
+Start provider migration only in a later slice after PR #12 review or dogfood. Preferred first target: Codex session/provider linkage and prompt submission through `SessionCtx.emitTelemetry`.
 
 ## Blocked Decisions
 

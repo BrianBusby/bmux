@@ -62,7 +62,22 @@ React is not required for lifecycle capture once a session exists. `POST /api/se
 
 React is not required for session ownership. The `sessions` map and `Session.events` replay buffer are process memory in `agent-chat/server.ts`; React reconnects and receives history from that owner.
 
-Multiple React/WebSocket consumers can subscribe to the same session. Each `Session` has a `sockets` set, `subscribe()` adds a socket, and `broadcastSessionEvent()` sends each event to all subscribed sockets. This multiple-consumer support is UI-only; there is no renderer-independent execution-event bus, native subscriber API, or provider-neutral event contract.
+Multiple React/WebSocket consumers can subscribe to the same session. Each `Session` has a `sockets` set, `subscribe()` adds a socket, and `broadcastSessionEvent()` sends each event to all subscribed sockets. This multiple-consumer support is UI-only; before Slice 2 there was no renderer-independent execution-event fanout, native subscriber API, or provider-neutral event contract.
+
+## Slice 2 Fanout Seam
+
+`agent-chat/executionTelemetryFanout.ts` now provides the first
+renderer-independent sidecar fanout path. A per-session
+`ExecutionTelemetryFanout` assigns `eventId`, `sequence`, `capturedAtMs`,
+`sessionId`, and `provider` in one place, notifies telemetry subscribers, and
+projects each envelope to the existing `AgentEvent` stream through
+`SessionCtx.emitTelemetry`.
+
+Existing provider adapters still call `SessionCtx.emit(AgentEvent)` directly,
+so React WebSocket payloads and `foldEvent()` behavior are unchanged in Slice
+2. Later slices should migrate provider events by publishing
+`TelemetryEventEnvelopeDraft` values first and treating `AgentEvent` as the
+fanout projection only.
 
 ## Current Lossy Boundary
 
@@ -89,8 +104,8 @@ This means Codex app-server lifecycle telemetry currently reaches the React agen
 
 Slice 1 defines the common telemetry contract in
 `agent-chat/executionTelemetryTypes.ts`, outside React component code and
-outside the current `AgentEvent` UI schema. Slice 2 should introduce a
-sidecar-owned event bus so this direction is possible:
+outside the current `AgentEvent` UI schema. Slice 2 introduced the first
+sidecar-owned fanout/projection seam so this direction is possible:
 
 ```text
 Raw Codex app-server notification
