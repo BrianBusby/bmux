@@ -18,6 +18,7 @@ import {
 } from "../shared/codexClassNames";
 import { CODEX_FOLDER_ICON_PATH } from "../shared/codexIconPaths";
 import { shouldUseSingleLineComposer } from "../shared/composerLayout";
+import { dataTransferHasFiles, droppedFilePayloadsFromDataTransfer } from "../shared/droppedFiles";
 import {
   computeFooterCollapse,
   footerCollapseStatesEqual,
@@ -330,6 +331,7 @@ function SessionSurface({
   const [providerMenuOpen, setProviderMenuOpen] = useState(false);
   const [addContextMenuOpen, setAddContextMenuOpen] = useState(false);
   const [isPickingFiles, setIsPickingFiles] = useState(false);
+  const [isComposerDragActive, setIsComposerDragActive] = useState(false);
   const [isPlanMode, setIsPlanMode] = useState(false);
   const [isPlanSuggestionDismissed, setIsPlanSuggestionDismissed] = useState(false);
   const [permissionsMenuOpen, setPermissionsMenuOpen] = useState(false);
@@ -410,6 +412,13 @@ function SessionSurface({
     setMenuKind(null);
     editorRef.current?.focus();
   };
+  const addPickedLocalFiles = (files: PickedLocalFile[]) => {
+    const nextAttachments = files
+      .filter((file) => file.path.trim().length > 0)
+      .map(pickedLocalFileToAttachment);
+    setAttachments((existing) => dedupeAttachments([...existing, ...nextAttachments]));
+    editorRef.current?.focus();
+  };
   const pickLocalFiles = async () => {
     if (isPickingFiles) {
       return;
@@ -423,22 +432,7 @@ function SessionSurface({
     setPermissionsMenuOpen(false);
     try {
       const result = await callNative<{ files?: PickedLocalFile[] }>("app.pickFiles");
-      const nextAttachments = (result.files ?? [])
-        .filter((file) => file.path.trim().length > 0)
-        .map((file): ComposerAttachment => {
-          const label = file.label && file.label.trim().length > 0 ? file.label : basename(file.path);
-          return {
-            dataUrl: file.dataUrl,
-            fsPath: file.fsPath ?? file.path,
-            id: `${file.path}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            kind: file.isImage || file.dataUrl?.startsWith("data:image/") ? "image" : "file",
-            label,
-            mimeType: file.mimeType,
-            path: file.path,
-          };
-        });
-      setAttachments((existing) => dedupeAttachments([...existing, ...nextAttachments]));
-      editorRef.current?.focus();
+      addPickedLocalFiles(result.files ?? []);
     } catch (error) {
       if (!sessionId) {
         dispatch({ type: "failed", message: messageForError(error, state) });
@@ -446,6 +440,42 @@ function SessionSurface({
     } finally {
       setIsPickingFiles(false);
     }
+  };
+  const materializeDroppedFiles = async (dataTransfer: DataTransfer) => {
+    const files = await droppedFilePayloadsFromDataTransfer(dataTransfer);
+    if (files.length === 0) {
+      return;
+    }
+    const result = await callNative<{ files?: PickedLocalFile[] }>("app.materializeDroppedFiles", { files });
+    addPickedLocalFiles(result.files ?? []);
+  };
+  const handleComposerDragOver = (event: React.DragEvent) => {
+    if (!dataTransferHasFiles(event.dataTransfer)) {
+      return;
+    }
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    setIsComposerDragActive(true);
+  };
+  const handleComposerDragLeave = (event: React.DragEvent) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      setIsComposerDragActive(false);
+    }
+  };
+  const handleComposerDrop = (event: React.DragEvent) => {
+    if (!dataTransferHasFiles(event.dataTransfer)) {
+      return;
+    }
+    event.preventDefault();
+    setIsComposerDragActive(false);
+    setMenuKind(null);
+    setMenuQuery("");
+    setMenuIndex(0);
+    setAddContextMenuOpen(false);
+    setPermissionsMenuOpen(false);
+    void materializeDroppedFiles(event.dataTransfer).catch((error) => {
+      dispatch({ type: "failed", message: messageForError(error, state) });
+    });
   };
   const updateComposerAutocomplete = (autocomplete: PromptAutocompleteState | null) => {
     if (!autocomplete) {
@@ -865,6 +895,10 @@ function SessionSurface({
               {
                 className:
                   `${CODEX_COMPOSER_SURFACE} ${composerSurfaceOverflowClass(isSingleLineComposer)}`,
+                "data-drag-active": isComposerDragActive ? "true" : undefined,
+                onDragLeave: handleComposerDragLeave,
+                onDragOver: handleComposerDragOver,
+                onDropCapture: handleComposerDrop,
               },
               composerControls,
             ),
@@ -2696,6 +2730,19 @@ function permissionModeIcon(mode: ComposerPermissionMode, className = "icon-xs s
 function basename(path: string): string {
   const segments = path.split("/").filter(Boolean);
   return segments[segments.length - 1] ?? path;
+}
+
+function pickedLocalFileToAttachment(file: PickedLocalFile): ComposerAttachment {
+  const label = file.label && file.label.trim().length > 0 ? file.label : basename(file.path);
+  return {
+    dataUrl: file.dataUrl,
+    fsPath: file.fsPath ?? file.path,
+    id: `${file.path}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    kind: file.isImage || file.dataUrl?.startsWith("data:image/") ? "image" : "file",
+    label,
+    mimeType: file.mimeType,
+    path: file.path,
+  };
 }
 
 function dedupeAttachments(attachments: ComposerAttachment[]): ComposerAttachment[] {

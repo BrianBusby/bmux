@@ -25,6 +25,9 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
     private weak var workProvenanceRuntime: WorkProvenanceRuntime?
     nonisolated private static let imagePreviewMaxBytes = 512 * 1024
     nonisolated private static let imagePreviewTotalMaxBytes = 2 * 1024 * 1024
+    nonisolated private static let droppedFileMaxBytes = 32 * 1024 * 1024
+    nonisolated private static let droppedFileTotalMaxBytes = 64 * 1024 * 1024
+    nonisolated private static let droppedFileMaxCount = 16
     var onHasActiveProviderChanged: ((Bool) -> Void)? {
         didSet {
             onHasActiveProviderChanged?(processStore.hasActiveProviderSession)
@@ -649,6 +652,8 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             return context
         case "app.pickFiles":
             return await pickLocalFiles()
+        case "app.materializeDroppedFiles":
+            return try await materializeDroppedFiles(request)
         case "provider.list":
             return AgentSessionProviderID.allCases.map { provider in
                 [
@@ -778,6 +783,57 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         }.value
     }
 
+    private func materializeDroppedFiles(_ request: AgentSessionBridgeRequest) async throws -> [String: Any] {
+        guard let files = request.params["files"] as? [[String: Any]] else {
+            throw AgentSessionBridgeError.missingParameter("files")
+        }
+        return try await Task.detached(priority: .userInitiated) {
+            var remainingImagePreviewBytes = Self.imagePreviewTotalMaxBytes
+            var remainingDroppedFileBytes = Self.droppedFileTotalMaxBytes
+            var didCreateDropDirectory = false
+            let fileManager = FileManager.default
+            let dropDirectory = fileManager.temporaryDirectory
+                .appendingPathComponent("bmux-agent-session-drops", isDirectory: true)
+                .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            var materializedFiles: [[String: Any]] = []
+
+            for file in files.prefix(Self.droppedFileMaxCount) {
+                if let path = Self.trimmedString(file["path"]) {
+                    let url = URL(fileURLWithPath: path).standardizedFileURL
+                    guard fileManager.isReadableFile(atPath: url.path) else {
+                        continue
+                    }
+                    materializedFiles.append(
+                        Self.pickedLocalFileDictionary(url, remainingImagePreviewBytes: &remainingImagePreviewBytes)
+                    )
+                    continue
+                }
+
+                guard let dataURL = Self.trimmedString(file["dataUrl"]),
+                      let decoded = Self.decodeDataURL(dataURL),
+                      !decoded.data.isEmpty,
+                      decoded.data.count <= Self.droppedFileMaxBytes,
+                      decoded.data.count <= remainingDroppedFileBytes else {
+                    continue
+                }
+                if !didCreateDropDirectory {
+                    try fileManager.createDirectory(at: dropDirectory, withIntermediateDirectories: true)
+                    didCreateDropDirectory = true
+                }
+                remainingDroppedFileBytes -= decoded.data.count
+                let label = Self.trimmedString(file["label"]) ?? "dropped-file"
+                let destinationURL = dropDirectory
+                    .appendingPathComponent("\(UUID().uuidString)-\(Self.safeDroppedFileName(label))", isDirectory: false)
+                try decoded.data.write(to: destinationURL, options: [.atomic])
+                materializedFiles.append(
+                    Self.pickedLocalFileDictionary(destinationURL, remainingImagePreviewBytes: &remainingImagePreviewBytes)
+                )
+            }
+
+            return ["files": materializedFiles]
+        }.value
+    }
+
     nonisolated private static func pickedLocalFileDictionary(
         _ url: URL,
         remainingImagePreviewBytes: inout Int
@@ -812,6 +868,39 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         }
         let byteCount = size.intValue
         return byteCount >= 0 ? byteCount : nil
+    }
+
+    nonisolated private static func trimmedString(_ value: Any?) -> String? {
+        let trimmed = (value as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed?.isEmpty == false ? trimmed : nil
+    }
+
+    nonisolated private static func decodeDataURL(_ dataURL: String) -> (mimeType: String?, data: Data)? {
+        guard dataURL.hasPrefix("data:"),
+              let commaIndex = dataURL.firstIndex(of: ",") else {
+            return nil
+        }
+        let metadata = String(dataURL[dataURL.index(dataURL.startIndex, offsetBy: 5)..<commaIndex])
+        let payload = String(dataURL[dataURL.index(after: commaIndex)...])
+        let parts = metadata.split(separator: ";", omittingEmptySubsequences: false)
+        let mimeType = parts.first.map(String.init).flatMap { $0.contains("/") ? $0 : nil }
+        if parts.dropFirst().contains(where: { $0.caseInsensitiveCompare("base64") == .orderedSame }) {
+            return Data(base64Encoded: payload, options: [.ignoreUnknownCharacters]).map { (mimeType, $0) }
+        }
+        guard let decoded = payload.removingPercentEncoding,
+              let data = decoded.data(using: .utf8) else {
+            return nil
+        }
+        return (mimeType, data)
+    }
+
+    nonisolated private static func safeDroppedFileName(_ value: String) -> String {
+        let lastPathComponent = URL(fileURLWithPath: value).lastPathComponent
+        let sanitizedScalars = lastPathComponent.unicodeScalars.map { scalar in
+            CharacterSet(charactersIn: "/:\0").contains(scalar) ? "-" : String(scalar)
+        }
+        let sanitized = sanitizedScalars.joined().trimmingCharacters(in: .whitespacesAndNewlines)
+        return sanitized.isEmpty ? "dropped-file" : String(sanitized.prefix(120))
     }
 
     private func sendEvent(_ event: [String: Any]) {
