@@ -121,6 +121,19 @@ import Testing
         #expect(workspace.customTitleSource == .autoSummary)
     }
 
+    @Test func promptSeedTitleCanReplaceLegacyAutoWorkspaceTitle() {
+        let workspace = Workspace(
+            title: "Company-Cam-API",
+            workingDirectory: "/Users/example/repos/Company-Cam-API"
+        )
+        workspace.setCustomTitle("Company-Cam-API", source: .auto)
+
+        #expect(workspace.effectiveCustomTitleSource == .auto)
+        #expect(workspace.setCustomTitle("how many prs do I have open locally for this repo?", source: .agentSeed))
+        #expect(workspace.title == "how many prs do I have open locally for this repo?")
+        #expect(workspace.effectiveCustomTitleSource == .agentSeed)
+    }
+
     @Test func arbitraryAgentLookingUserTitleStillBlocksAutoWrite() {
         let workspace = Workspace(
             title: "Personal (Codex)",
@@ -160,6 +173,22 @@ import Testing
         #expect(workspace.panelCustomTitleSources[panelId] == nil)
         #expect(workspace.setPanelCustomTitle(panelId: panelId, title: "Refreshed", source: .autoSummary))
         #expect(workspace.panelCustomTitleSources[panelId] == .autoSummary)
+    }
+
+    @Test func promptSeedTitleCanReplaceLegacyAutoPanelTitle() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panelId = try #require(workspace.newTerminalSurface(inPane: pane, focus: true)?.id)
+
+        #expect(workspace.setPanelCustomTitle(panelId: panelId, title: "Codex", source: .auto))
+        #expect(workspace.setPanelCustomTitle(
+            panelId: panelId,
+            title: "how many prs do I have open locally for this repo?",
+            source: .agentSeed
+        ))
+        #expect(workspace.panelTitle(panelId: panelId) == "how many prs do I have open locally for this repo?")
+        #expect(workspace.panelCustomTitleSources[panelId] == .agentSeed)
     }
 
     @Test func panelAutoWriteRejectedForCarriedTitleWithoutProvenance() throws {
