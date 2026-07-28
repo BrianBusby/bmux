@@ -7,7 +7,8 @@
 - Branch: `execution-telemetry-slice-1`
 - Base branch: stacked on PR #11 / `execution-telemetry-slice-0`
 - Slice 0 accepted head: `6cc83ff8e2cdde480e1a00295e40d0abd51b4cf7`
-- Working tree status: type-only contract and documentation changes at handoff creation time
+- Slice 1 head after autoreview fix: `964e1131354ae277d896e5db9c61f10973a9d906`
+- Working tree status: clean at final handoff
 
 ## Objective completed
 
@@ -26,6 +27,7 @@ PR #11 is open, draft, clean against `main`, and docs-only. The branch contains 
 ## Work completed
 
 - Added `agent-chat/executionTelemetryTypes.ts` as the canonical sidecar-owned provider-neutral telemetry type module.
+- Hardened the metadata contract in `964e11313` so `TelemetryJsonValue` does not allow `undefined` and `metadata` only allows scalar facts or scalar lists.
 - Added `docs/execution-telemetry/contract.md` with ownership boundaries, envelope rules, minimal event variants, Swift sync policy, and deferred work.
 - Updated `docs/execution-telemetry/architecture.md` to point at the Slice 1 contract and ownership boundary.
 - Updated `docs/execution-telemetry/decisions.md` with Slice 1 ADRs for contract location, event identity/ordering, bounded provider metadata, and Swift drift policy.

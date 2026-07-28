@@ -11,7 +11,7 @@ Status: completed in branch `execution-telemetry-slice-1`.
 ## Completed Slices
 
 - Slice 0: current-state audit only. Created the execution telemetry document structure, traced the current Codex app-server path, documented lossy normalization points, recorded provider capability findings, and wrote a handoff for Slice 1.
-- Slice 1: validated PR #11 / branch `execution-telemetry-slice-0`, including follow-up commit `6cc83ff8e`; added the canonical provider-neutral telemetry type contract in `agent-chat/executionTelemetryTypes.ts`; documented sidecar/provider/React/native/provenance ownership boundaries, ordering policy, metadata policy, and Swift sync policy.
+- Slice 1: validated PR #11 / branch `execution-telemetry-slice-0`, including follow-up commit `6cc83ff8e`; added the canonical provider-neutral telemetry type contract in `agent-chat/executionTelemetryTypes.ts`; hardened metadata in `964e11313` so it cannot carry nested raw-provider payloads; documented sidecar/provider/React/native/provenance ownership boundaries, ordering policy, metadata policy, and Swift sync policy.
 
 ## Current Branch
 
@@ -28,6 +28,10 @@ Slice 0 ending commit after autoreview follow-up:
 `6cc83ff8e2cdde480e1a00295e40d0abd51b4cf7`
 
 Slice 1 started from that commit.
+
+Slice 1 current head:
+
+`964e1131354ae277d896e5db9c61f10973a9d906`
 
 ## Tests Currently Passing
 
