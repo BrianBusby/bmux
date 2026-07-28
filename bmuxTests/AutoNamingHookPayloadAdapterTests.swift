@@ -41,6 +41,19 @@ import Testing
         ])
     }
 
+    @Test func stripsBmuxWorkspaceContextFromHookPromptMessages() {
+        let object: [String: Any] = [
+            "session_id": "codex-session",
+            "prompt": "[bmux](/Users/brianbusby/repos/bmux) fix workspace title hooks"
+        ]
+
+        let messages = engine.extractHookMessages(fromPayloadObjects: [object])
+
+        #expect(messages == [
+            AutoNamingTranscriptMessage(role: "user", text: "fix workspace title hooks")
+        ])
+    }
+
     @Test func hookMessageLineEquivalentsReachSharedThrottleFloor() {
         let messages = [
             AutoNamingTranscriptMessage(role: "user", text: "Name this workspace"),

@@ -155,6 +155,35 @@ struct WorkspacePromptSubmitTests {
         #expect(workspace.bonsplitController.tab(surfaceId)?.title == prompt)
     }
 
+    @Test func testPromptSeedTitleStripsBmuxWorkspaceContextPrefix() throws {
+        let manager = TabManager(initialWorkingDirectory: "/tmp/bmux")
+        let workspace = try #require(manager.selectedWorkspace)
+        let paneId = try #require(workspace.bonsplitController.allPaneIds.first)
+        let agentPanel = try #require(
+            workspace.newAgentSessionSurface(
+                inPane: paneId,
+                rendererKind: .react,
+                focus: true
+            )
+        )
+        let rawPrompt = "[bmux](/Users/brianbusby/repos/bmux) fix workspace title hooks"
+
+        let outcome = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: rawPrompt,
+                surfaceId: agentPanel.id,
+                iMessageModeEnabled: false,
+                seedTitleFromPrompt: true
+            )
+        )
+
+        #expect(outcome.messageRecorded)
+        #expect(workspace.latestSubmittedMessage == "fix workspace title hooks")
+        #expect(workspace.customTitle == "fix workspace title hooks")
+        #expect(workspace.panelTitle(panelId: agentPanel.id) == "fix workspace title hooks")
+    }
+
     @Test func testPromptSeedTitleAcceptsBonsplitSurfaceIdFromHook() throws {
         let manager = TabManager(initialWorkingDirectory: "/tmp/bmux")
         let workspace = try #require(manager.selectedWorkspace)
@@ -469,7 +498,7 @@ struct WorkspacePromptSubmitTests {
             hookEventName: .userPromptSubmit,
             source: "codex",
             workspaceId: UUID().uuidString,
-            context: WorkstreamContext(lastUserMessage: "from context")
+            context: WorkstreamContext(lastUserMessage: "[bmux](/Users/brianbusby/repos/bmux) from context")
         )
 
         #expect(event.submittedPromptMessage == "from context")

@@ -56,6 +56,21 @@ import Testing
         #expect(messages[0].text == "Actual user question about flaky tests")
     }
 
+    @Test func stripsBmuxWorkspaceContextFromUserMessages() {
+        let lines = [
+            messageLine(
+                role: "user",
+                content: "[Company-Cam-API](/Users/brianbusby/repos/Company-Cam-API) how many prs are open locally?"
+            )
+        ]
+
+        let messages = engine.extractCodexMessages(fromRolloutLines: lines)
+
+        #expect(messages == [
+            AutoNamingTranscriptMessage(role: "user", text: "how many prs are open locally?")
+        ])
+    }
+
     @Test func missingOrEmptyRolloutYieldsNoContext() {
         #expect(engine.extractCodexMessages(fromRolloutLines: []).isEmpty)
         let onlyNoise = [
