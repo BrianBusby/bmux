@@ -130,7 +130,7 @@ struct WorkspacePromptSubmitTests {
         #expect(terminalPanel.promptNavigationCanMoveForward)
     }
 
-    @Test func testReactAgentPromptSubmitDoesNotApplyPromptTitleOverAgentSeed() throws {
+    @Test func testReactAgentPromptSubmitAppliesPromptSeedTitleOverAgentSeed() throws {
         let manager = TabManager(initialWorkingDirectory: "/tmp/bmux")
         let workspace = try #require(manager.selectedWorkspace)
         workspace.setCustomTitle("bmux (Codex)", source: .agentSeed)
@@ -147,10 +147,33 @@ struct WorkspacePromptSubmitTests {
         agentPanel.onPromptSubmitted?(prompt)
 
         #expect(workspace.latestConversationMessage == prompt)
-        #expect(workspace.customTitle == "bmux (Codex)")
+        #expect(workspace.customTitle == prompt)
         #expect(workspace.effectiveCustomTitleSource == .agentSeed)
-        #expect(manager.resolvedWorkspaceDisplayTitle(for: workspace) == "bmux (Codex)")
-        #expect(workspace.panelTitle(panelId: agentPanel.id) != prompt)
+        #expect(manager.resolvedWorkspaceDisplayTitle(for: workspace) == prompt)
+        #expect(workspace.panelTitle(panelId: agentPanel.id) == prompt)
+    }
+
+    @Test func testReactAgentPromptSeedDoesNotReplaceSummaryTitle() throws {
+        let manager = TabManager(initialWorkingDirectory: "/tmp/bmux")
+        let workspace = try #require(manager.selectedWorkspace)
+        let paneId = try #require(workspace.bonsplitController.allPaneIds.first)
+        let agentPanel = try #require(
+            workspace.newAgentSessionSurface(
+                inPane: paneId,
+                rendererKind: .react,
+                focus: true
+            )
+        )
+        workspace.setCustomTitle("Summarized title", source: .autoSummary)
+        workspace.setPanelCustomTitle(panelId: agentPanel.id, title: "Summarized title", source: .autoSummary)
+
+        agentPanel.onPromptSubmitted?("replace this with raw prompt text")
+
+        #expect(workspace.latestConversationMessage == "replace this with raw prompt text")
+        #expect(workspace.customTitle == "Summarized title")
+        #expect(workspace.effectiveCustomTitleSource == .autoSummary)
+        #expect(workspace.panelTitle(panelId: agentPanel.id) == "Summarized title")
+        #expect(workspace.panelCustomTitleSources[agentPanel.id] == .autoSummary)
     }
 
     @Test func testAssistantFinalMessageRecordsMessageAndMovesWorkspaceToTopWhenIMessageModeEnabled() throws {

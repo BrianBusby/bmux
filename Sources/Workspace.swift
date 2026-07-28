@@ -3861,7 +3861,8 @@ final class Workspace: Identifiable, ObservableObject {
                 workspaceId: self.id,
                 message: text,
                 surfaceId: agentPanel.id,
-                iMessageModeEnabled: IMessageModeSettings.isEnabled()
+                iMessageModeEnabled: IMessageModeSettings.isEnabled(),
+                seedTitleFromPrompt: true
             )
         }
         agentSessionPanelCallbackIds.insert(agentPanel.id)
@@ -4394,6 +4395,7 @@ final class Workspace: Identifiable, ObservableObject {
         /// Legacy prompt-submit title source. New socket callers cannot request it.
         case autoPrompt = "auto_prompt"
         case autoSummary = "auto_summary"
+        /// App-generated starter or prompt-seed title that a later summary may replace.
         case agentSeed = "agent_seed"
 
         var isUserOwned: Bool {
@@ -4468,8 +4470,9 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     /// App-generated starter titles such as `bmux (Codex)` should not block the
-    /// auto-naming engine. Older builds stored them as user custom titles, so
-    /// recognize the shape from the workspace directory and known agent names.
+    /// auto-naming engine. Older builds stored starter titles as user custom
+    /// titles, so recognize the shape from the workspace directory and known
+    /// agent names.
     private var isAutoReplaceableAgentSeedTitle: Bool {
         guard let customTitle = customTitle?.trimmingCharacters(in: .whitespacesAndNewlines),
               !customTitle.isEmpty else {

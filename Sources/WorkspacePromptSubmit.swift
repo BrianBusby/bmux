@@ -149,7 +149,8 @@ extension TabManager {
         workspaceId: UUID,
         message: String?,
         surfaceId: UUID? = nil,
-        iMessageModeEnabled: Bool = IMessageModeSettings.isEnabled()
+        iMessageModeEnabled: Bool = IMessageModeSettings.isEnabled(),
+        seedTitleFromPrompt: Bool = false
     ) -> (messageRecorded: Bool, reordered: Bool, index: Int)? {
         handleConversationMessage(
             workspaceId: workspaceId,
@@ -157,7 +158,8 @@ extension TabManager {
             surfaceId: surfaceId,
             iMessageModeEnabled: iMessageModeEnabled,
             kind: .promptSubmission,
-            reorderWithoutMessage: true
+            reorderWithoutMessage: true,
+            seedTitleFromPrompt: seedTitleFromPrompt
         )
     }
 
@@ -184,7 +186,8 @@ extension TabManager {
         surfaceId: UUID? = nil,
         iMessageModeEnabled: Bool,
         kind: ConversationMessageKind,
-        reorderWithoutMessage: Bool
+        reorderWithoutMessage: Bool,
+        seedTitleFromPrompt: Bool = false
     ) -> (messageRecorded: Bool, reordered: Bool, index: Int)? {
         guard let originalIndex = tabs.firstIndex(where: { $0.id == workspaceId }) else {
             return nil
@@ -198,6 +201,14 @@ extension TabManager {
             _ = workspace.recordPromptNavigationBookmark(surfaceId: surfaceId, message: message)
             _ = workspace.recordSubmittedPullRequestMention(message, surfaceId: surfaceId)
             messageRecorded = workspace.recordSubmittedMessage(message)
+            if seedTitleFromPrompt, messageRecorded {
+                seedPromptTitle(
+                    workspaceId: workspaceId,
+                    workspace: workspace,
+                    surfaceId: surfaceId,
+                    message: message
+                )
+            }
             if messageRecorded {
                 BmuxEventBus.shared.publishWorkspacePromptSubmitted(
                     workspaceId: workspaceId,
@@ -221,6 +232,28 @@ extension TabManager {
         moveTabToTop(workspaceId)
         let newIndex = tabs.firstIndex(where: { $0.id == workspaceId }) ?? originalIndex
         return (messageRecorded, newIndex != originalIndex, newIndex)
+    }
+
+    private func seedPromptTitle(
+        workspaceId: UUID,
+        workspace: Workspace,
+        surfaceId: UUID?,
+        message: String?
+    ) {
+        guard let title = Workspace.conversationMessagePreview(from: message, maxLength: 80) else { return }
+        _ = applyCustomTitle(
+            tabId: workspaceId,
+            title: title,
+            source: .agentSeed,
+            propagateToRemoteTmux: false
+        )
+        if let surfaceId {
+            _ = workspace.applyPanelCustomTitle(
+                panelId: surfaceId,
+                title: title,
+                source: .agentSeed
+            )
+        }
     }
 }
 
