@@ -280,7 +280,8 @@ struct AutoNamingEngine: Sendable {
             // Codex injects framework context as user messages wrapped in
             // angle-bracket tags; they describe the harness, not the topic.
             if trimmed.hasPrefix("<"), trimmed.contains(">") { continue }
-            messages.append(AutoNamingTranscriptMessage(role: role, text: trimmed))
+            let normalized = role == "user" ? normalizedUserPromptText(trimmed) : trimmed
+            messages.append(AutoNamingTranscriptMessage(role: role, text: normalized))
         }
         return messages
     }
@@ -307,7 +308,8 @@ struct AutoNamingEngine: Sendable {
                   !trimmed.isEmpty else {
                 continue
             }
-            messages.append(AutoNamingTranscriptMessage(role: role, text: trimmed))
+            let normalized = role == "user" ? normalizedUserPromptText(trimmed) : trimmed
+            messages.append(AutoNamingTranscriptMessage(role: role, text: normalized))
         }
         return messages
     }
@@ -583,10 +585,11 @@ struct AutoNamingEngine: Sendable {
               !text.isEmpty else {
             return
         }
-        if messages.last == AutoNamingTranscriptMessage(role: role, text: text) {
+        let normalized = role == "user" ? normalizedUserPromptText(text) : text
+        if messages.last == AutoNamingTranscriptMessage(role: role, text: normalized) {
             return
         }
-        messages.append(AutoNamingTranscriptMessage(role: role, text: text))
+        messages.append(AutoNamingTranscriptMessage(role: role, text: normalized))
     }
 
     private func hookUserText(in object: [String: Any]) -> String? {
@@ -693,5 +696,33 @@ struct AutoNamingEngine: Sendable {
             return nil
         }
         return firstString(in: block, keys: ["text", "input_text", "content"])
+    }
+
+    private func normalizedUserPromptText(_ text: String) -> String {
+        var collapsed = text
+            .split(whereSeparator: { $0.isWhitespace })
+            .joined(separator: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if let stripped = strippedLeadingWorkspaceContext(from: collapsed) {
+            collapsed = stripped
+        }
+        return collapsed
+    }
+
+    private func strippedLeadingWorkspaceContext(from text: String) -> String? {
+        guard text.first == "[",
+              let labelEnd = text.firstIndex(of: "]") else {
+            return nil
+        }
+        let pathOpen = text.index(after: labelEnd)
+        guard pathOpen < text.endIndex,
+              text[pathOpen] == "(",
+              let pathEnd = text[pathOpen...].firstIndex(of: ")") else {
+            return nil
+        }
+        let remainderStart = text.index(after: pathEnd)
+        let remainder = text[remainderStart...]
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return remainder.isEmpty ? nil : remainder
     }
 }

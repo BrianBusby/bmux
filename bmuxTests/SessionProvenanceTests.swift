@@ -1,0 +1,227 @@
+import Foundation
+import ProvenanceEngineContracts
+import ProvenanceEngineSDK
+import XCTest
+
+#if canImport(bmux_DEV)
+@testable import bmux_DEV
+#elseif canImport(bmux)
+@testable import bmux
+#endif
+
+final class SessionProvenanceTests: XCTestCase {
+    @MainActor
+    func testLiveRuntimeUsesCanonicalEngineOwnedDefaultStore() throws {
+        let homeDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-provenance-runtime-home-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: homeDirectory) }
+        let location = WorkProvenanceStorageLocation(homeDirectory: homeDirectory)
+
+        let runtime = WorkProvenanceRuntime.live(homeDirectory: homeDirectory)
+
+        XCTAssertTrue(runtime.isEnabled)
+        XCTAssertNil(runtime.startupErrorDescription)
+        XCTAssertEqual(runtime.effectiveDatabaseURL, location.databaseURL)
+        XCTAssertEqual(
+            location.databaseURL.path,
+            homeDirectory
+                .appendingPathComponent(".local", isDirectory: true)
+                .appendingPathComponent("state", isDirectory: true)
+                .appendingPathComponent("provenance-engine", isDirectory: true)
+                .appendingPathComponent("provenance.sqlite", isDirectory: false)
+                .path
+        )
+        XCTAssertTrue(FileManager.default.fileExists(atPath: location.databaseURL.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: location.legacyDatabaseURL.path))
+    }
+
+    func testSessionLifecycleRecorderUsesPublicEngineLifecycleAPI() async throws {
+        let client = CapturingProvenanceEngineClient()
+        let recorder = WorkProvenanceSessionLifecycleRecorder(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [
+                "/repo/subdir": WorkProvenanceGitSnapshot(
+                    repositoryRoot: "/repo",
+                    commonDirectory: "/repo/.git",
+                    remoteSlug: "example/repo",
+                    branch: "main",
+                    headCommit: "abc123",
+                    isDirty: false,
+                    statusEntries: []
+                )
+            ])
+        )
+        let timestamp = Date(timeIntervalSince1970: 1_725_000_000)
+
+        await recorder.record(
+            AgentSessionLifecycleChange(
+                phase: .started,
+                parentSessionID: "parent-session",
+                agentKind: .codex,
+                workspaceID: "workspace-1",
+                surfaceID: "surface-1",
+                workingDirectory: "/repo/subdir",
+                externalSessionID: "external-session-1",
+                displayName: "Build agent"
+            ),
+            timestamp: timestamp
+        )
+
+        let request = await client.recordedLifecycleRequests.first
+        XCTAssertEqual(request?.phase, .started)
+        XCTAssertEqual(request?.sessionID, nil)
+        XCTAssertEqual(request?.parentSessionID, "parent-session")
+        XCTAssertEqual(request?.agentKind, "codex")
+        XCTAssertEqual(request?.workspaceID, "workspace-1")
+        XCTAssertEqual(request?.surfaceID, "surface-1")
+        XCTAssertEqual(request?.worktreeID, WorkProvenanceStableIDFactory().worktreeID(repositoryRoot: "/repo"))
+        XCTAssertEqual(request?.workingDirectory, "/repo/subdir")
+        XCTAssertEqual(request?.externalIdentityKind, "subagent")
+        XCTAssertEqual(request?.externalIdentityValue, "external-session-1")
+        XCTAssertEqual(request?.displayName, "Build agent")
+        XCTAssertEqual(request?.timestamp, timestamp)
+        let lastErrorDescription = await recorder.lastErrorDescription
+        XCTAssertNil(lastErrorDescription)
+    }
+
+    func testSessionLifecycleRecorderRecordsRootProviderSessionID() async throws {
+        let client = CapturingProvenanceEngineClient()
+        let recorder = WorkProvenanceSessionLifecycleRecorder(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [
+                "/repo": WorkProvenanceGitSnapshot(
+                    repositoryRoot: "/repo",
+                    commonDirectory: "/repo/.git",
+                    remoteSlug: "example/repo",
+                    branch: "main",
+                    headCommit: "abc123",
+                    isDirty: false,
+                    statusEntries: []
+                )
+            ])
+        )
+        let timestamp = Date(timeIntervalSince1970: 1_725_000_002)
+
+        await recorder.record(
+            AgentSessionLifecycleChange(
+                phase: .started,
+                sessionID: "provider-session-1",
+                parentSessionID: "provider-session-1",
+                agentKind: .codex,
+                workspaceID: "workspace-1",
+                surfaceID: "surface-1",
+                workingDirectory: "/repo",
+                externalSessionID: nil,
+                displayName: "Codex"
+            ),
+            timestamp: timestamp
+        )
+
+        let request = await client.recordedLifecycleRequests.first
+        XCTAssertEqual(request?.phase, .started)
+        XCTAssertEqual(request?.sessionID, "provider-session-1")
+        XCTAssertEqual(request?.parentSessionID, nil)
+        XCTAssertEqual(request?.agentKind, "codex")
+        XCTAssertEqual(request?.workspaceID, "workspace-1")
+        XCTAssertEqual(request?.surfaceID, "surface-1")
+        XCTAssertEqual(request?.worktreeID, WorkProvenanceStableIDFactory().worktreeID(repositoryRoot: "/repo"))
+        XCTAssertEqual(request?.workingDirectory, "/repo")
+        XCTAssertEqual(request?.externalIdentityKind, nil)
+        XCTAssertEqual(request?.externalIdentityValue, nil)
+        XCTAssertEqual(request?.displayName, "Codex")
+        XCTAssertEqual(request?.timestamp, timestamp)
+    }
+
+    func testSessionLifecycleRecorderRetainsBoundedEngineError() async throws {
+        let client = CapturingProvenanceEngineClient(
+            lifecycleResponse: ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse(
+                accepted: false,
+                eventID: nil,
+                sessionID: nil,
+                relationshipSessionID: nil,
+                externalIdentityID: nil,
+                errorDescription: "database unavailable"
+            )
+        )
+        let recorder = WorkProvenanceSessionLifecycleRecorder(client: client)
+
+        await recorder.record(
+            AgentSessionLifecycleChange(
+                phase: .stopped,
+                parentSessionID: "parent-session",
+                agentKind: .claude,
+                workspaceID: nil,
+                surfaceID: nil,
+                workingDirectory: nil,
+                externalSessionID: nil,
+                displayName: nil
+            ),
+            timestamp: Date(timeIntervalSince1970: 1_725_000_001)
+        )
+
+        let lastErrorDescription = await recorder.lastErrorDescription
+        XCTAssertEqual(lastErrorDescription, "database unavailable")
+    }
+
+    private struct FakeGitInspector: WorkProvenanceGitInspecting {
+        let snapshotsByDirectory: [String: WorkProvenanceGitSnapshot]
+
+        func snapshot(for directory: String) async -> WorkProvenanceGitSnapshot? {
+            snapshotsByDirectory[directory]
+        }
+    }
+}
+
+private actor CapturingProvenanceEngineClient: ProvenanceEngineContracts.ProvenanceEngineClient {
+    private(set) var recordedLifecycleRequests: [ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest] = []
+    private let lifecycleResponse: ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse
+
+    init(
+        lifecycleResponse: ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse = ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse(
+            accepted: true,
+            eventID: "event-1",
+            sessionID: "session-1",
+            relationshipSessionID: "session-1",
+            externalIdentityID: "identity-1"
+        )
+    ) {
+        self.lifecycleResponse = lifecycleResponse
+    }
+
+    func health() async throws -> ProvenanceEngineContracts.ProvenanceEngineHealth {
+        throw TestError.unimplemented
+    }
+
+    func appendEvent(_ request: ProvenanceEngineContracts.ProvenanceAppendEventRequest) async throws -> ProvenanceEngineContracts.ProvenanceAppendEventResponse {
+        throw TestError.unimplemented
+    }
+
+    func recordSessionLifecycle(
+        _ request: ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest
+    ) async -> ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse {
+        recordedLifecycleRequests.append(request)
+        return lifecycleResponse
+    }
+
+    func sessionTree(_ request: ProvenanceEngineContracts.ProvenanceSessionTreeRequest) async throws -> ProvenanceEngineContracts.ProvenanceSessionTreeResponse {
+        throw TestError.unimplemented
+    }
+
+    func fileExplanation(_ request: ProvenanceEngineContracts.ProvenanceFileExplanationRequest) async throws
+        -> ProvenanceEngineContracts.ProvenanceFileExplanationResponse {
+        throw TestError.unimplemented
+    }
+
+    func worktrees(_ request: ProvenanceEngineContracts.ProvenanceWorktreeListRequest) async throws -> ProvenanceEngineContracts.ProvenanceWorktreeListResponse {
+        throw TestError.unimplemented
+    }
+
+    func currentContext(_ request: ProvenanceEngineContracts.ProvenanceCurrentContextRequest) async throws
+        -> ProvenanceEngineContracts.ProvenanceCurrentContextResponse {
+        throw TestError.unimplemented
+    }
+
+    private enum TestError: Error {
+        case unimplemented
+    }
+}

@@ -3811,20 +3811,39 @@ final class Workspace: Identifiable, ObservableObject {
             guard let self,
                   let agentPanel,
                   let tabId = self.surfaceIdFromPanelId(agentPanel.id) else { return }
-            guard let existing = self.bonsplitController.tab(tabId) else { return }
-
-            if self.panelTitles[agentPanel.id] != newTitle {
-                self.panelTitles[agentPanel.id] = newTitle
+            let tabManager = self.owningTabManager
+            let previousDisplayTitle = tabManager?
+                .resolvedWorkspaceDisplayTitle(for: self)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            _ = self.updatePanelTitle(panelId: agentPanel.id, title: newTitle)
+            if self.focusedPanelId == agentPanel.id {
+                self.applyProcessTitle(newTitle)
+                if tabManager?.selectedTabId == self.id {
+                    tabManager?.updateWindowTitle(for: self)
+                }
             }
-            let resolvedTitle = self.resolvedPanelTitle(panelId: agentPanel.id, fallback: newTitle)
-            let titleUpdate: String? = existing.title == resolvedTitle ? nil : resolvedTitle
+            guard let existing = self.bonsplitController.tab(tabId) else { return }
             let dirtyUpdate: Bool? = existing.isDirty == isDirty ? nil : isDirty
-            if titleUpdate != nil || dirtyUpdate != nil {
+            if dirtyUpdate != nil {
                 self.bonsplitController.updateTab(
                     tabId,
-                    title: titleUpdate,
                     hasCustomTitle: self.panelCustomTitles[agentPanel.id] != nil,
                     isDirty: dirtyUpdate
+                )
+            }
+            let currentDisplayTitle = tabManager?
+                .resolvedWorkspaceDisplayTitle(for: self)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if let previousDisplayTitle,
+               let currentDisplayTitle,
+               currentDisplayTitle != previousDisplayTitle {
+                NotificationCenter.default.post(
+                    name: .workspaceTitleDidChange,
+                    object: tabManager,
+                    userInfo: [
+                        GhosttyNotificationKey.tabId: self.id,
+                        GhosttyNotificationKey.surfaceId: agentPanel.id,
+                    ]
                 )
             }
             if dirtyUpdate != nil {
@@ -3834,6 +3853,18 @@ final class Workspace: Identifiable, ObservableObject {
         agentPanel.onWorkStateChanged = { [weak self] _ in
             self?.publishAgentSessionActiveWorkIfNeeded()
         }
+        agentPanel.onPromptSubmitted = { [weak self, weak agentPanel] text in
+            guard let self,
+                  let agentPanel,
+                  let tabManager = self.owningTabManager else { return }
+            _ = tabManager.handlePromptSubmit(
+                workspaceId: self.id,
+                message: text,
+                surfaceId: agentPanel.id,
+                iMessageModeEnabled: IMessageModeSettings.isEnabled(),
+                seedTitleFromPrompt: true
+            )
+        }
         agentSessionPanelCallbackIds.insert(agentPanel.id)
         publishAgentSessionActiveWorkIfNeeded()
     }
@@ -3842,6 +3873,7 @@ final class Workspace: Identifiable, ObservableObject {
         if let agentPanel = panel as? AgentSessionPanel {
             agentPanel.onDisplayStateChanged = nil
             agentPanel.onWorkStateChanged = nil
+            agentPanel.onPromptSubmitted = nil
         }
         agentSessionPanelCallbackIds.remove(panelId)
     }
@@ -4360,8 +4392,10 @@ final class Workspace: Identifiable, ObservableObject {
         case user
         /// Legacy auto title source used by older session snapshots and clients.
         case auto
+        /// Legacy prompt-submit title source. New socket callers cannot request it.
         case autoPrompt = "auto_prompt"
         case autoSummary = "auto_summary"
+        /// App-generated starter or prompt-seed title that a later summary may replace.
         case agentSeed = "agent_seed"
 
         var isUserOwned: Bool {
@@ -4381,8 +4415,6 @@ final class Workspace: Identifiable, ObservableObject {
             switch normalized {
             case "auto":
                 return .auto
-            case "prompt", "prompt_submit", "auto_prompt":
-                return .autoPrompt
             case "summary", "stop", "stop_summary", "auto_summary":
                 return .autoSummary
             case "seed", "agent_seed":
@@ -4397,7 +4429,7 @@ final class Workspace: Identifiable, ObservableObject {
             guard let existing else { return true }
             guard existing != .user else { return false }
             if self == .agentSeed {
-                return existing == .agentSeed
+                return existing == .agentSeed || existing == .auto || existing == .autoPrompt
             }
             return true
         }
@@ -4438,8 +4470,9 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     /// App-generated starter titles such as `bmux (Codex)` should not block the
-    /// auto-naming engine. Older builds stored them as user custom titles, so
-    /// recognize the shape from the workspace directory and known agent names.
+    /// auto-naming engine. Older builds stored starter titles as user custom
+    /// titles, so recognize the shape from the workspace directory and known
+    /// agent names.
     private var isAutoReplaceableAgentSeedTitle: Bool {
         guard let customTitle = customTitle?.trimmingCharacters(in: .whitespacesAndNewlines),
               !customTitle.isEmpty else {
@@ -9127,7 +9160,8 @@ final class Workspace: Identifiable, ObservableObject {
             workspaceId: id,
             rendererKind: rendererKind,
             initialProviderID: providerID,
-            workingDirectory: directory
+            workingDirectory: directory,
+            workProvenanceRuntime: owningTabManager?.workProvenanceRuntime
         )
         panels[agentPanel.id] = agentPanel
         panelTitles[agentPanel.id] = agentPanel.displayTitle

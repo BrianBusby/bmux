@@ -7686,6 +7686,7 @@ final class CLINotifyProcessIntegrationRegressionTests: XCTestCase {
         let workspaceId = "33333333-3333-3333-3333-333333333333"
         let surfaceId = "44444444-4444-4444-4444-444444444444"
         let sessionId = "codex-auto-name-prompt-cache-session"
+        let rawPrompt = "[bmux](/Users/brianbusby/repos/bmux) debug first prompt workspace auto naming"
         let prompt = "debug first prompt workspace auto naming"
         let autoNameLogURL = root.appendingPathComponent("codex-auto-name-prompt-cache.log")
         let detachedHookPath = root.appendingPathComponent("bmux-codex-auto-name-detached.sh")
@@ -7753,7 +7754,7 @@ fi
             executablePath: cliPath,
             arguments: ["hooks", "codex", "prompt-submit"],
             environment: environment,
-            standardInput: #"{"session_id":"\#(sessionId)","cwd":"\#(root.path)","hook_event_name":"UserPromptSubmit","prompt":"\#(prompt)"}"#,
+            standardInput: #"{"session_id":"\#(sessionId)","cwd":"\#(root.path)","hook_event_name":"UserPromptSubmit","context":{"lastUserMessage":"\#(rawPrompt)"}}"#,
             timeout: 5
         )
 

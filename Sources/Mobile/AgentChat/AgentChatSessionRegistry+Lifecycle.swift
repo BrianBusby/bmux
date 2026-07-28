@@ -38,20 +38,43 @@ nonisolated struct ObservedAgentSession: Sendable {
     }
 }
 
-struct AgentSubsessionLifecycleChange: Sendable, Equatable {
+struct AgentSessionLifecycleChange: Sendable, Equatable {
     enum Phase: Sendable, Equatable {
         case started
         case stopped
     }
 
     let phase: Phase
+    let sessionID: String?
     let parentSessionID: String
     let agentKind: ChatAgentKind
     let workspaceID: String?
     let surfaceID: String?
     let workingDirectory: String?
-    let subsessionID: String?
+    let externalSessionID: String?
     let displayName: String?
+
+    init(
+        phase: Phase,
+        sessionID: String? = nil,
+        parentSessionID: String,
+        agentKind: ChatAgentKind,
+        workspaceID: String?,
+        surfaceID: String?,
+        workingDirectory: String?,
+        externalSessionID: String?,
+        displayName: String?
+    ) {
+        self.phase = phase
+        self.sessionID = sessionID
+        self.parentSessionID = parentSessionID
+        self.agentKind = agentKind
+        self.workspaceID = workspaceID
+        self.surfaceID = surfaceID
+        self.workingDirectory = workingDirectory
+        self.externalSessionID = externalSessionID
+        self.displayName = displayName
+    }
 }
 
 extension AgentChatSessionRegistry {
@@ -114,11 +137,11 @@ extension AgentChatSessionRegistry {
         }
     }
 
-    nonisolated static func subsessionLifecycleChange(
+    nonisolated static func sessionLifecycleChange(
         for event: WorkstreamEvent,
         record: AgentChatSessionRecord
-    ) -> AgentSubsessionLifecycleChange? {
-        let phase: AgentSubsessionLifecycleChange.Phase
+    ) -> AgentSessionLifecycleChange? {
+        let phase: AgentSessionLifecycleChange.Phase
         switch event.hookEventName {
         case .subagentStart:
             phase = .started
@@ -131,14 +154,14 @@ extension AgentChatSessionRegistry {
             return nil
         }
         let metadata = AgentSubsessionEventMetadata(event: event)
-        return AgentSubsessionLifecycleChange(
+        return AgentSessionLifecycleChange(
             phase: phase,
             parentSessionID: record.sessionID,
             agentKind: record.agentKind,
             workspaceID: record.workspaceID ?? event.workspaceId,
             surfaceID: record.surfaceID ?? event.surfaceId,
             workingDirectory: record.workingDirectory ?? event.cwd,
-            subsessionID: metadata.identifier ?? event.requestId,
+            externalSessionID: metadata.identifier ?? event.requestId,
             displayName: metadata.displayName
         )
     }

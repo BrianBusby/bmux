@@ -1,4 +1,5 @@
 import AppKit
+import BmuxAgentChat
 import UniformTypeIdentifiers
 import WebKit
 
@@ -21,8 +22,12 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
     private var isClosed = false
     private var isProviderStartPending = false
     private var processStore = AgentSessionProcessStore()
+    private weak var workProvenanceRuntime: WorkProvenanceRuntime?
     nonisolated private static let imagePreviewMaxBytes = 512 * 1024
     nonisolated private static let imagePreviewTotalMaxBytes = 2 * 1024 * 1024
+    nonisolated private static let droppedFileMaxBytes = 32 * 1024 * 1024
+    nonisolated private static let droppedFileTotalMaxBytes = 64 * 1024 * 1024
+    nonisolated private static let droppedFileMaxCount = 16
     var onHasActiveProviderChanged: ((Bool) -> Void)? {
         didSet {
             onHasActiveProviderChanged?(processStore.hasActiveProviderSession)
@@ -34,6 +39,12 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         }
     }
     var onProviderIDChanged: ((AgentSessionProviderID) -> Void)?
+    var onPromptSubmitted: ((String) -> Void)?
+
+    init(workProvenanceRuntime: WorkProvenanceRuntime? = nil) {
+        self.workProvenanceRuntime = workProvenanceRuntime
+        super.init()
+    }
 
     func bind(
         panelId: UUID,
@@ -70,6 +81,9 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         processStore.activeWorkSink = { [weak self] hasActiveWork in
             self?.onHasActiveWorkChanged?(hasActiveWork)
         }
+        processStore.lifecycleSink = { [weak self] phase, session in
+            self?.recordProviderLifecycle(phase: phase, session: session)
+        }
     }
 
     func ensureWebView(onPointerDown: @escaping () -> Void) -> AgentSessionWebView {
@@ -80,6 +94,8 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
 
         let configuration = WKWebViewConfiguration()
         configuration.suppressesIncrementalRendering = false
+        // The bundled agent UI is an ES module graph loaded from app-owned file URLs.
+        configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
         configuration.userContentController.addScriptMessageHandler(
             self,
             contentWorld: .page,
@@ -172,19 +188,43 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         replyHandler: @escaping (Any?, String?) -> Void
     ) {
         guard isTrustedBridgeFrame(message.frameInfo) else {
+#if DEBUG
+            bmuxDebugLog(
+                "agentSession.bridge.rejected reason=untrustedFrame " +
+                "url=\(message.frameInfo.request.url?.path ?? "nil")"
+            )
+#endif
             replyHandler(["ok": false, "error": [:]], nil)
             return
         }
         Task { @MainActor in
             do {
                 let request = try AgentSessionBridgeRequest(body: message.body)
+#if DEBUG
+                bmuxDebugLog("agentSession.bridge.request method=\(request.method)")
+#endif
                 let reply = try await self.handle(request)
+#if DEBUG
+                bmuxDebugLog("agentSession.bridge.reply method=\(request.method) ok=1")
+#endif
                 replyHandler(["ok": true, "value": reply], nil)
             } catch let error as AgentExecutableResolverError {
+#if DEBUG
+                bmuxDebugLog("agentSession.bridge.reply ok=0 error=resolver message=\(error.message)")
+#endif
                 replyHandler(["ok": false, "error": ["userMessage": error.message]], nil)
             } catch let error as AgentSessionBridgeError {
+#if DEBUG
+                bmuxDebugLog(
+                    "agentSession.bridge.reply ok=0 error=bridge code=\(error.code) " +
+                    "message=\(error.localizedDescription)"
+                )
+#endif
                 replyHandler(["ok": false, "error": ["code": error.code, "userMessage": error.localizedDescription]], nil)
             } catch {
+#if DEBUG
+                bmuxDebugLog("agentSession.bridge.reply ok=0 error=unknown message=\(error.localizedDescription)")
+#endif
                 replyHandler(["ok": false, "error": [:]], nil)
             }
         }
@@ -193,6 +233,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
 #if DEBUG
         bmuxDebugLog("agentSession.web.didFinish renderer=\(rendererKind.rawValue)")
+        logPageDiagnostics(for: webView)
 #endif
         hasFinishedNavigation = true
         applyThemeToLoadedPage()
@@ -295,6 +336,48 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             completion?()
         }
     }
+
+#if DEBUG
+    private func logPageDiagnostics(for webView: WKWebView) {
+        let script = """
+        (() => {
+          const root = document.getElementById("root");
+          return JSON.stringify({
+            readyState: document.readyState,
+            location: window.location.href,
+            rootChildCount: root ? root.childElementCount : -1,
+            rootTextLength: root ? root.innerText.length : -1,
+            bodyTextLength: document.body ? document.body.innerText.length : -1,
+            hasAgentBridge: typeof window.bmuxAgentBridge !== "undefined",
+            hasWebkit: typeof window.webkit !== "undefined",
+            hasAgentHandler: typeof window.webkit?.messageHandlers?.agentSession?.postMessage === "function"
+          });
+        })()
+        """
+        webView.evaluateJavaScript(script) { result, error in
+            if let error {
+                bmuxDebugLog("agentSession.web.diagnostics.failed error=\(error.localizedDescription)")
+                return
+            }
+            bmuxDebugLog("agentSession.web.diagnostics immediate=\(result ?? "nil")")
+        }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            guard let currentWebView = self.webView,
+                  currentWebView === webView,
+                  !self.isClosed else {
+                return
+            }
+            webView.evaluateJavaScript(script) { result, error in
+                if let error {
+                    bmuxDebugLog("agentSession.web.diagnostics.delayed.failed error=\(error.localizedDescription)")
+                    return
+                }
+                bmuxDebugLog("agentSession.web.diagnostics delayed=\(result ?? "nil")")
+            }
+        }
+    }
+#endif
 
     private func applyThemeToLoadedPage() {
         guard let webView,
@@ -569,6 +652,8 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             return context
         case "app.pickFiles":
             return await pickLocalFiles()
+        case "app.materializeDroppedFiles":
+            return try await materializeDroppedFiles(request)
         case "provider.list":
             return AgentSessionProviderID.allCases.map { provider in
                 [
@@ -590,6 +675,9 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             onProviderIDChanged?(provider)
             return ["providerId": provider.rawValue]
         case "provider.start":
+#if DEBUG
+            bmuxDebugLog("agentSession.provider.start.begin closed=\(isClosed) active=\(processStore.hasActiveProviderSession)")
+#endif
             guard !isClosed else {
                 throw AgentSessionBridgeError.invalidRequest
             }
@@ -609,6 +697,14 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
                 let resolver = AgentExecutableResolver(configuredExecutablePaths: configuredExecutablePaths)
                 return try resolver.resolve(provider)
             }.value
+#if DEBUG
+            bmuxDebugLog(
+                "agentSession.provider.start.resolved provider=\(provider.rawValue) " +
+                "executable=\(plan.executableURL.path) " +
+                "arguments=\(plan.arguments.joined(separator: ",")) " +
+                "cwd=\(request.string("workingDirectory") ?? workingDirectory ?? "nil")"
+            )
+#endif
             guard !isClosed else {
                 throw AgentSessionBridgeError.invalidRequest
             }
@@ -616,6 +712,12 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
                 plan: plan,
                 workingDirectory: request.string("workingDirectory") ?? workingDirectory
             )
+#if DEBUG
+            bmuxDebugLog(
+                "agentSession.provider.start.started provider=\(provider.rawValue) " +
+                "session=\(session.sessionId)"
+            )
+#endif
             return [
                 "sessionId": session.sessionId,
                 "providerId": provider.rawValue,
@@ -623,11 +725,13 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
                 "arguments": plan.arguments
             ] as [String: Any]
         case "provider.writeLine":
+            let text = try request.requiredRawString("text")
             try await processStore.writeLine(
                 sessionId: request.requiredString("sessionId"),
                 permissionMode: request.permissionMode(),
-                text: request.requiredRawString("text")
+                text: text
             )
+            onPromptSubmitted?(text)
             return ["sent": true]
         case "provider.stop":
             try processStore.stop(sessionId: request.requiredString("sessionId"))
@@ -679,6 +783,57 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         }.value
     }
 
+    private func materializeDroppedFiles(_ request: AgentSessionBridgeRequest) async throws -> [String: Any] {
+        guard let files = request.params["files"] as? [[String: Any]] else {
+            throw AgentSessionBridgeError.missingParameter("files")
+        }
+        return try await Task.detached(priority: .userInitiated) {
+            var remainingImagePreviewBytes = Self.imagePreviewTotalMaxBytes
+            var remainingDroppedFileBytes = Self.droppedFileTotalMaxBytes
+            var didCreateDropDirectory = false
+            let fileManager = FileManager.default
+            let dropDirectory = fileManager.temporaryDirectory
+                .appendingPathComponent("bmux-agent-session-drops", isDirectory: true)
+                .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            var materializedFiles: [[String: Any]] = []
+
+            for file in files.prefix(Self.droppedFileMaxCount) {
+                if let path = Self.trimmedString(file["path"]) {
+                    let url = URL(fileURLWithPath: path).standardizedFileURL
+                    guard fileManager.isReadableFile(atPath: url.path) else {
+                        continue
+                    }
+                    materializedFiles.append(
+                        Self.pickedLocalFileDictionary(url, remainingImagePreviewBytes: &remainingImagePreviewBytes)
+                    )
+                    continue
+                }
+
+                guard let dataURL = Self.trimmedString(file["dataUrl"]),
+                      let decoded = Self.decodeDataURL(dataURL),
+                      !decoded.data.isEmpty,
+                      decoded.data.count <= Self.droppedFileMaxBytes,
+                      decoded.data.count <= remainingDroppedFileBytes else {
+                    continue
+                }
+                if !didCreateDropDirectory {
+                    try fileManager.createDirectory(at: dropDirectory, withIntermediateDirectories: true)
+                    didCreateDropDirectory = true
+                }
+                remainingDroppedFileBytes -= decoded.data.count
+                let label = Self.trimmedString(file["label"]) ?? "dropped-file"
+                let destinationURL = dropDirectory
+                    .appendingPathComponent("\(UUID().uuidString)-\(Self.safeDroppedFileName(label))", isDirectory: false)
+                try decoded.data.write(to: destinationURL, options: [.atomic])
+                materializedFiles.append(
+                    Self.pickedLocalFileDictionary(destinationURL, remainingImagePreviewBytes: &remainingImagePreviewBytes)
+                )
+            }
+
+            return ["files": materializedFiles]
+        }.value
+    }
+
     nonisolated private static func pickedLocalFileDictionary(
         _ url: URL,
         remainingImagePreviewBytes: inout Int
@@ -715,6 +870,39 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         return byteCount >= 0 ? byteCount : nil
     }
 
+    nonisolated private static func trimmedString(_ value: Any?) -> String? {
+        let trimmed = (value as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed?.isEmpty == false ? trimmed : nil
+    }
+
+    nonisolated private static func decodeDataURL(_ dataURL: String) -> (mimeType: String?, data: Data)? {
+        guard dataURL.hasPrefix("data:"),
+              let commaIndex = dataURL.firstIndex(of: ",") else {
+            return nil
+        }
+        let metadata = String(dataURL[dataURL.index(dataURL.startIndex, offsetBy: 5)..<commaIndex])
+        let payload = String(dataURL[dataURL.index(after: commaIndex)...])
+        let parts = metadata.split(separator: ";", omittingEmptySubsequences: false)
+        let mimeType = parts.first.map(String.init).flatMap { $0.contains("/") ? $0 : nil }
+        if parts.dropFirst().contains(where: { $0.caseInsensitiveCompare("base64") == .orderedSame }) {
+            return Data(base64Encoded: payload, options: [.ignoreUnknownCharacters]).map { (mimeType, $0) }
+        }
+        guard let decoded = payload.removingPercentEncoding,
+              let data = decoded.data(using: .utf8) else {
+            return nil
+        }
+        return (mimeType, data)
+    }
+
+    nonisolated private static func safeDroppedFileName(_ value: String) -> String {
+        let lastPathComponent = URL(fileURLWithPath: value).lastPathComponent
+        let sanitizedScalars = lastPathComponent.unicodeScalars.map { scalar in
+            CharacterSet(charactersIn: "/:\0").contains(scalar) ? "-" : String(scalar)
+        }
+        let sanitized = sanitizedScalars.joined().trimmingCharacters(in: .whitespacesAndNewlines)
+        return sanitized.isEmpty ? "dropped-file" : String(sanitized.prefix(120))
+    }
+
     private func sendEvent(_ event: [String: Any]) {
         guard let webView,
               let data = try? JSONSerialization.data(withJSONObject: event),
@@ -730,6 +918,32 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             _ = error
 #endif
         }
+    }
+
+    private func recordProviderLifecycle(
+        phase: AgentSessionLifecycleChange.Phase,
+        session: AgentSessionRunningSession
+    ) {
+#if DEBUG
+        bmuxDebugLog(
+            "agentSession.provenance.lifecycle phase=\(String(describing: phase)) " +
+            "session=\(session.sessionId) provider=\(session.providerID.rawValue)"
+        )
+#endif
+        workProvenanceRuntime?.recordSessionLifecycleChange(
+            AgentSessionLifecycleChange(
+                phase: phase,
+                sessionID: session.sessionId,
+                parentSessionID: session.sessionId,
+                agentKind: session.providerID.provenanceAgentKind,
+                workspaceID: workspaceId.uuidString,
+                surfaceID: panelId.uuidString,
+                workingDirectory: session.workingDirectory ?? workingDirectory,
+                externalSessionID: nil,
+                displayName: session.providerID.displayName
+            ),
+            timestamp: Date()
+        )
     }
 
     private func handleExternalLink(_ url: URL) {
@@ -784,5 +998,18 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             current = item.nextResponder
         }
         return false
+    }
+}
+
+private extension AgentSessionProviderID {
+    var provenanceAgentKind: ChatAgentKind {
+        switch self {
+        case .codex:
+            return .codex
+        case .claude:
+            return .claude
+        case .opencode:
+            return .other("opencode")
+        }
     }
 }

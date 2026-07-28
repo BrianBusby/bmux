@@ -494,7 +494,7 @@ def test_codex_prompt_submit_starts_monitor_when_lease_write_fails(cli_path: str
                 subprocess.run(["/bin/kill", str(pid)], check=False)
 
 
-def test_codex_prompt_submit_applies_provisional_workspace_title(cli_path: str, root: Path) -> None:
+def test_codex_prompt_submit_does_not_apply_provisional_workspace_title(cli_path: str, root: Path) -> None:
     socket_path = root / "bmux-prompt-title.sock"
     transcript_path = root / "codex-prompt-title.jsonl"
     state_dir = root / "hook-state-prompt-title"
@@ -537,15 +537,10 @@ def test_codex_prompt_submit_applies_provisional_workspace_title(cli_path: str, 
                 frame for frame in fake.frames
                 if frame.get("method") == "workspace.set_auto_title"
                 and not (frame.get("params") or {}).get("probe")
+                and (frame.get("params") or {}).get("source") == "auto_prompt"
             ]
-            if not apply_frames:
-                raise AssertionError(f"prompt-submit did not apply an auto title: {fake.frames!r}")
-            params = apply_frames[-1].get("params") or {}
-            assert params.get("workspace_id") == FAKE_WORKSPACE_ID
-            assert params.get("panel_id") == FAKE_SURFACE_ID
-            assert params.get("panel_only_if_multiple") is True
-            assert params.get("source") == "auto_prompt"
-            assert params.get("title") == prompt_title
+            if apply_frames:
+                raise AssertionError(f"prompt-submit applied a provisional auto title: {fake.frames!r}")
         finally:
             for pid in monitor_pids_for_session(session_id):
                 subprocess.run(["/bin/kill", str(pid)], check=False)

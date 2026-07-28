@@ -130,6 +130,116 @@ struct WorkspacePromptSubmitTests {
         #expect(terminalPanel.promptNavigationCanMoveForward)
     }
 
+    @Test func testReactAgentPromptSubmitAppliesPromptSeedTitleOverAgentSeed() throws {
+        let manager = TabManager(initialWorkingDirectory: "/tmp/bmux")
+        let workspace = try #require(manager.selectedWorkspace)
+        workspace.setCustomTitle("bmux (Codex)", source: .agentSeed)
+        let paneId = try #require(workspace.bonsplitController.allPaneIds.first)
+        let agentPanel = try #require(
+            workspace.newAgentSessionSurface(
+                inPane: paneId,
+                rendererKind: .react,
+                focus: true
+            )
+        )
+        let prompt = "ok let's talk about how we can improve bmux"
+
+        agentPanel.onPromptSubmitted?(prompt)
+
+        #expect(workspace.latestConversationMessage == prompt)
+        #expect(workspace.customTitle == prompt)
+        #expect(workspace.effectiveCustomTitleSource == .agentSeed)
+        #expect(manager.resolvedWorkspaceDisplayTitle(for: workspace) == prompt)
+        #expect(workspace.panelTitle(panelId: agentPanel.id) == prompt)
+        let surfaceId = try #require(workspace.surfaceIdFromPanelId(agentPanel.id))
+        #expect(workspace.bonsplitController.tab(surfaceId)?.title == prompt)
+    }
+
+    @Test func testPromptSeedTitleStripsBmuxWorkspaceContextPrefix() throws {
+        let manager = TabManager(initialWorkingDirectory: "/tmp/bmux")
+        let workspace = try #require(manager.selectedWorkspace)
+        let paneId = try #require(workspace.bonsplitController.allPaneIds.first)
+        let agentPanel = try #require(
+            workspace.newAgentSessionSurface(
+                inPane: paneId,
+                rendererKind: .react,
+                focus: true
+            )
+        )
+        let rawPrompt = "[bmux](/Users/brianbusby/repos/bmux) fix workspace title hooks"
+
+        let outcome = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: rawPrompt,
+                surfaceId: agentPanel.id,
+                iMessageModeEnabled: false,
+                seedTitleFromPrompt: true
+            )
+        )
+
+        #expect(outcome.messageRecorded)
+        #expect(workspace.latestSubmittedMessage == "fix workspace title hooks")
+        #expect(workspace.customTitle == "fix workspace title hooks")
+        #expect(workspace.panelTitle(panelId: agentPanel.id) == "fix workspace title hooks")
+    }
+
+    @Test func testPromptSeedTitleAcceptsBonsplitSurfaceIdFromHook() throws {
+        let manager = TabManager(initialWorkingDirectory: "/tmp/bmux")
+        let workspace = try #require(manager.selectedWorkspace)
+        let paneId = try #require(workspace.bonsplitController.allPaneIds.first)
+        let agentPanel = try #require(
+            workspace.newAgentSessionSurface(
+                inPane: paneId,
+                rendererKind: .react,
+                focus: true
+            )
+        )
+        let surfaceId = try #require(workspace.surfaceIdFromPanelId(agentPanel.id))
+        let prompt = "make custom hook prompt titles replace the built in agent title"
+
+        let outcome = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: prompt,
+                surfaceId: surfaceId.id,
+                iMessageModeEnabled: false,
+                seedTitleFromPrompt: true
+            )
+        )
+
+        #expect(outcome.messageRecorded)
+        #expect(workspace.customTitle == prompt)
+        #expect(workspace.effectiveCustomTitleSource == .agentSeed)
+        #expect(workspace.panelTitle(panelId: agentPanel.id) == prompt)
+        #expect(workspace.bonsplitController.tab(surfaceId)?.title == prompt)
+    }
+
+    @Test func testReactAgentPromptSeedDoesNotReplaceSummaryTitle() throws {
+        let manager = TabManager(initialWorkingDirectory: "/tmp/bmux")
+        let workspace = try #require(manager.selectedWorkspace)
+        let paneId = try #require(workspace.bonsplitController.allPaneIds.first)
+        let agentPanel = try #require(
+            workspace.newAgentSessionSurface(
+                inPane: paneId,
+                rendererKind: .react,
+                focus: true
+            )
+        )
+        workspace.setCustomTitle("Summarized title", source: .autoSummary)
+        workspace.setPanelCustomTitle(panelId: agentPanel.id, title: "Summarized title", source: .autoSummary)
+
+        agentPanel.onPromptSubmitted?("replace this with raw prompt text")
+
+        #expect(workspace.latestConversationMessage == "replace this with raw prompt text")
+        #expect(workspace.customTitle == "Summarized title")
+        #expect(workspace.effectiveCustomTitleSource == .autoSummary)
+        #expect(workspace.panelTitle(panelId: agentPanel.id) == "Summarized title")
+        let surfaceId = try #require(workspace.surfaceIdFromPanelId(agentPanel.id))
+        #expect(workspace.bonsplitController.tab(surfaceId)?.title == "Summarized title")
+        #expect(workspace.panelCustomTitleSources[agentPanel.id] == .autoSummary)
+    }
+
     @Test func testAssistantFinalMessageRecordsMessageAndMovesWorkspaceToTopWhenIMessageModeEnabled() throws {
         let manager = TabManager()
         let pinned = manager.tabs[0]
@@ -388,7 +498,7 @@ struct WorkspacePromptSubmitTests {
             hookEventName: .userPromptSubmit,
             source: "codex",
             workspaceId: UUID().uuidString,
-            context: WorkstreamContext(lastUserMessage: "from context")
+            context: WorkstreamContext(lastUserMessage: "[bmux](/Users/brianbusby/repos/bmux) from context")
         )
 
         #expect(event.submittedPromptMessage == "from context")

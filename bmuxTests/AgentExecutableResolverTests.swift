@@ -367,6 +367,41 @@ struct AgentExecutableResolverTests {
     }
 
     @Test
+    func testSkipsBmuxCodexCommandShimFromTemporaryShimRoot() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(
+                "AgentExecutableResolverTests-\(UUID().uuidString)", isDirectory: true)
+        let tmpRoot = root.appendingPathComponent("tmp", isDirectory: true)
+        let shimBin = tmpRoot
+            .appendingPathComponent("bmux-cli-shims", isDirectory: true)
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let realBin = root.appendingPathComponent("real-bin", isDirectory: true)
+        try FileManager.default.createDirectory(at: shimBin, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: realBin, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let shimCodex = shimBin.appendingPathComponent("codex")
+        let realCodex = realBin.appendingPathComponent("codex")
+        try "#!/bin/sh\nexit 42\n".write(to: shimCodex, atomically: true, encoding: .utf8)
+        try "#!/bin/sh\nexit 0\n".write(to: realCodex, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: shimCodex.path)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: realCodex.path)
+
+        let resolver = AgentExecutableResolver(
+            environment: [
+                "PATH": "\(shimBin.path):\(realBin.path)",
+                "HOME": root.path,
+                "TMPDIR": tmpRoot.path,
+            ],
+            bundleResourceURL: root.appendingPathComponent("Resources", isDirectory: true),
+            includeStandardSearchDirectories: false
+        )
+
+        let plan = try resolver.resolve(.codex)
+        expectEqual(plan.executableURL.path, realCodex.standardizedFileURL.path)
+    }
+
+    @Test
     func testProviderLaunchPlansNeverUseEnvFallback() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(

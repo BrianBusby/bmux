@@ -1645,6 +1645,8 @@ struct BmuxSurfaceDefinition: Codable, Sendable, Hashable {
     var cwd: String?
     var env: [String: String]?
     var url: String?
+    var provider: AgentSessionProviderID?
+    var renderer: AgentSessionRendererKind?
     var focus: Bool?
 }
 
@@ -1652,6 +1654,7 @@ enum BmuxSurfaceType: String, Codable, Sendable {
     case terminal
     case browser
     case project
+    case agentSession = "agent-session"
 }
 
 struct BmuxResolvedCommand: Sendable {

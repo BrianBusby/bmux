@@ -292,7 +292,8 @@ extension TerminalController: ControlWorkspaceContext {
             workspaceId: workspaceID,
             message: message,
             surfaceId: routing.surfaceID,
-            iMessageModeEnabled: iMessageModeEnabled
+            iMessageModeEnabled: iMessageModeEnabled,
+            seedTitleFromPrompt: true
         ) else {
             return .notFound
         }

@@ -59,13 +59,21 @@ struct WorkProvenanceGitInspector: WorkProvenanceGitInspecting {
     }
 
     private func gitData(_ arguments: [String], workingDirectory: String) async -> Data? {
-        guard let result = try? await commandRunner.runGit(
-            arguments: arguments,
-            workingDirectory: workingDirectory
-        ), result.exitCode == 0 else {
+        do {
+            let result = try await commandRunner.runGit(
+                arguments: arguments,
+                workingDirectory: workingDirectory
+            )
+            guard result.exitCode == 0 else {
+                let stderr = String(data: result.standardError, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                NSLog("bmux provenance git command failed: git %@ cwd=%@ exit=%d stderr=%@", arguments.joined(separator: " "), workingDirectory, result.exitCode, stderr)
+                return nil
+            }
+            return result.standardOutput
+        } catch {
+            NSLog("bmux provenance git command could not run: git %@ cwd=%@ error=%@", arguments.joined(separator: " "), workingDirectory, String(describing: error))
             return nil
         }
-        return result.standardOutput
     }
 
     static func statusEntries(from data: Data) -> [WorkProvenanceGitStatusEntry] {

@@ -38,7 +38,6 @@ extension BMUXCLI {
         }
         let isCodexPromptSubmit = def.name == "codex"
             && hookEventName == "UserPromptSubmit"
-            && rawObject.flatMap({ firstString(in: $0, keys: ["prompt", "text", "message", "body"]) }) != nil
         guard (usesHookMessageCacheForAutoNaming(def) || isCodexPromptSubmit),
               let object = parsedInput.rawObject ?? parsedInput.object else {
             return []
@@ -150,51 +149,6 @@ extension BMUXCLI {
                 return nil
             }
             return raw
-        }
-    }
-
-    func applyPromptSubmitAutoTitle(
-        def: AgentHookDef,
-        parsedInput: ClaudeHookParsedInput,
-        workspaceId: String,
-        surfaceId: String,
-        client: SocketClient,
-        telemetry: CLISocketSentryTelemetry
-    ) {
-        guard def.name == "claude" || autoNamingSource(for: def) != nil else { return }
-        let engine = AutoNamingEngine()
-        let promptText = [parsedInput.rawObject, parsedInput.object]
-            .compactMap { $0 }
-            .flatMap { engine.extractHookMessages(fromPayloadObjects: [$0]) }
-            .last { $0.role == "user" }?
-            .text
-        guard let title = engine.sanitizeResponse(promptText, currentTitle: nil) else { return }
-        guard let probe = try? client.sendV2(
-            method: "workspace.set_auto_title",
-            params: ["probe": true, "workspace_id": workspaceId]
-        ), probe["enabled"] as? Bool == true else {
-            telemetry.breadcrumb("\(def.name)-hook.prompt-title.disabled")
-            return
-        }
-        guard probe["workspace_user_owned"] as? Bool != true else {
-            telemetry.breadcrumb("\(def.name)-hook.prompt-title.user-owned")
-            return
-        }
-        guard let payload = try? client.sendV2(method: "workspace.set_auto_title", params: [
-            "workspace_id": workspaceId,
-            "panel_id": surfaceId,
-            "panel_only_if_multiple": true,
-            "source": "auto_prompt",
-            "title": title
-        ]) else {
-            telemetry.breadcrumb("\(def.name)-hook.prompt-title.socket-failed")
-            return
-        }
-        if payload["workspace_applied"] as? Bool == true {
-            telemetry.breadcrumb("\(def.name)-hook.prompt-title.applied")
-        } else {
-            let reason = payload["workspace_rejection_reason"] as? String ?? "unknown"
-            telemetry.breadcrumb("\(def.name)-hook.prompt-title.rejected.\(reason)")
         }
     }
 

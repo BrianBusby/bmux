@@ -18,17 +18,17 @@ import Testing
 
     @Test func autoWriteOnUntitledWorkspaceLands() {
         let workspace = Workspace(title: "Terminal")
-        let applied = workspace.setCustomTitle("Fix auth bug", source: .autoPrompt)
+        let applied = workspace.setCustomTitle("Fix auth bug", source: .autoSummary)
         #expect(applied)
         #expect(workspace.title == "Fix auth bug")
         #expect(workspace.customTitle == "Fix auth bug")
-        #expect(workspace.effectiveCustomTitleSource == .autoPrompt)
+        #expect(workspace.effectiveCustomTitleSource == .autoSummary)
     }
 
     @Test func autoWriteOverUserTitleIsRejected() {
         let workspace = Workspace(title: "Terminal")
         workspace.setCustomTitle("My Project")
-        let applied = workspace.setCustomTitle("Fix auth bug", source: .autoPrompt)
+        let applied = workspace.setCustomTitle("Fix auth bug", source: .autoSummary)
         #expect(!applied)
         #expect(workspace.title == "My Project")
         #expect(workspace.effectiveCustomTitleSource == .user)
@@ -36,7 +36,7 @@ import Testing
 
     @Test func userWriteOverAutoTitleLandsAndClaimsOwnership() {
         let workspace = Workspace(title: "Terminal")
-        workspace.setCustomTitle("Fix auth bug", source: .autoPrompt)
+        workspace.setCustomTitle("Fix auth bug", source: .autoSummary)
         let applied = workspace.setCustomTitle("Release prep")
         #expect(applied)
         #expect(workspace.title == "Release prep")
@@ -54,19 +54,19 @@ import Testing
         #expect(workspace.effectiveCustomTitleSource == .autoSummary)
     }
 
-    @Test func newPromptCanReplacePreviousSummaryTitle() {
+    @Test func autoSummaryCanReplacePreviousSummaryTitle() {
         let workspace = Workspace(title: "Terminal")
         workspace.setCustomTitle("Debug login flow", source: .autoSummary)
-        let applied = workspace.setCustomTitle("Fix workspace titles", source: .autoPrompt)
+        let applied = workspace.setCustomTitle("Fix workspace titles", source: .autoSummary)
         #expect(applied)
         #expect(workspace.title == "Fix workspace titles")
-        #expect(workspace.effectiveCustomTitleSource == .autoPrompt)
+        #expect(workspace.effectiveCustomTitleSource == .autoSummary)
     }
 
     @Test func autoWriteNeverClears() {
         let workspace = Workspace(title: "Terminal")
-        workspace.setCustomTitle("Fix auth bug", source: .autoPrompt)
-        #expect(!workspace.setCustomTitle(nil, source: .autoPrompt))
+        workspace.setCustomTitle("Fix auth bug", source: .autoSummary)
+        #expect(!workspace.setCustomTitle(nil, source: .autoSummary))
         #expect(!workspace.setCustomTitle("   ", source: .autoSummary))
         #expect(workspace.title == "Fix auth bug")
     }
@@ -79,8 +79,8 @@ import Testing
         #expect(workspace.title == "zsh")
         #expect(workspace.customTitle == nil)
         #expect(workspace.effectiveCustomTitleSource == nil)
-        #expect(workspace.setCustomTitle("Fix auth bug", source: .autoPrompt))
-        #expect(workspace.effectiveCustomTitleSource == .autoPrompt)
+        #expect(workspace.setCustomTitle("Fix auth bug", source: .autoSummary))
+        #expect(workspace.effectiveCustomTitleSource == .autoSummary)
     }
 
     @Test func carriedTitleWithoutProvenanceIsNotTreatedAsUserOwned() {
@@ -89,7 +89,7 @@ import Testing
         // restore, carried panel move): direct assignment bypasses the setter.
         workspace.customTitle = "Carried Title"
         #expect(workspace.effectiveCustomTitleSource == .user)
-        #expect(!workspace.setCustomTitle("Fix auth bug", source: .autoPrompt))
+        #expect(!workspace.setCustomTitle("Fix auth bug", source: .autoSummary))
         #expect(workspace.customTitle == "Carried Title")
     }
 
@@ -101,10 +101,10 @@ import Testing
         workspace.setCustomTitle("bmux (Codex)")
 
         #expect(workspace.effectiveCustomTitleSource == .agentSeed)
-        #expect(workspace.setCustomTitle("Fix workspace titles", source: .autoPrompt))
+        #expect(workspace.setCustomTitle("Fix workspace titles", source: .autoSummary))
         #expect(workspace.title == "Fix workspace titles")
         #expect(workspace.customTitle == "Fix workspace titles")
-        #expect(workspace.customTitleSource == .autoPrompt)
+        #expect(workspace.customTitleSource == .autoSummary)
     }
 
     @Test func generatedAgentSeedTitleIsAutoReplaceableWithoutRecordedProvenance() {
@@ -115,10 +115,23 @@ import Testing
         workspace.customTitle = "bmux (Codex)"
 
         #expect(workspace.effectiveCustomTitleSource == .agentSeed)
-        #expect(workspace.setCustomTitle("Fix workspace titles", source: .autoPrompt))
+        #expect(workspace.setCustomTitle("Fix workspace titles", source: .autoSummary))
         #expect(workspace.title == "Fix workspace titles")
         #expect(workspace.customTitle == "Fix workspace titles")
-        #expect(workspace.customTitleSource == .autoPrompt)
+        #expect(workspace.customTitleSource == .autoSummary)
+    }
+
+    @Test func promptSeedTitleCanReplaceLegacyAutoWorkspaceTitle() {
+        let workspace = Workspace(
+            title: "Company-Cam-API",
+            workingDirectory: "/Users/example/repos/Company-Cam-API"
+        )
+        workspace.setCustomTitle("Company-Cam-API", source: .auto)
+
+        #expect(workspace.effectiveCustomTitleSource == .auto)
+        #expect(workspace.setCustomTitle("how many prs do I have open locally for this repo?", source: .agentSeed))
+        #expect(workspace.title == "how many prs do I have open locally for this repo?")
+        #expect(workspace.effectiveCustomTitleSource == .agentSeed)
     }
 
     @Test func arbitraryAgentLookingUserTitleStillBlocksAutoWrite() {
@@ -129,7 +142,7 @@ import Testing
         workspace.setCustomTitle("Personal (Codex)")
 
         #expect(workspace.effectiveCustomTitleSource == .user)
-        #expect(!workspace.setCustomTitle("Fix workspace titles", source: .autoPrompt))
+        #expect(!workspace.setCustomTitle("Fix workspace titles", source: .autoSummary))
         #expect(workspace.title == "Personal (Codex)")
     }
 
@@ -141,9 +154,9 @@ import Testing
         let pane = try #require(workspace.bonsplitController.allPaneIds.first)
         let panelId = try #require(workspace.newTerminalSurface(inPane: pane, focus: true)?.id)
 
-        #expect(workspace.setPanelCustomTitle(panelId: panelId, title: "Fix auth bug", source: .autoPrompt))
+        #expect(workspace.setPanelCustomTitle(panelId: panelId, title: "Fix auth bug", source: .autoSummary))
         #expect(workspace.panelCustomTitles[panelId] == "Fix auth bug")
-        #expect(workspace.panelCustomTitleSources[panelId] == .autoPrompt)
+        #expect(workspace.panelCustomTitleSources[panelId] == .autoSummary)
 
         #expect(workspace.setPanelCustomTitle(panelId: panelId, title: "Debug login flow", source: .autoSummary))
         #expect(workspace.panelCustomTitleSources[panelId] == .autoSummary)
@@ -151,15 +164,31 @@ import Testing
         // User rename wins and claims ownership.
         #expect(workspace.setPanelCustomTitle(panelId: panelId, title: "Build Pane"))
         #expect(workspace.panelCustomTitleSources[panelId] == .user)
-        #expect(!workspace.setPanelCustomTitle(panelId: panelId, title: "Other", source: .autoPrompt))
+        #expect(!workspace.setPanelCustomTitle(panelId: panelId, title: "Other", source: .autoSummary))
         #expect(workspace.panelCustomTitles[panelId] == "Build Pane")
 
         // Clearing resets provenance and re-opens the panel to auto naming.
         #expect(workspace.setPanelCustomTitle(panelId: panelId, title: nil))
         #expect(workspace.panelCustomTitles[panelId] == nil)
         #expect(workspace.panelCustomTitleSources[panelId] == nil)
-        #expect(workspace.setPanelCustomTitle(panelId: panelId, title: "Refreshed", source: .autoPrompt))
-        #expect(workspace.panelCustomTitleSources[panelId] == .autoPrompt)
+        #expect(workspace.setPanelCustomTitle(panelId: panelId, title: "Refreshed", source: .autoSummary))
+        #expect(workspace.panelCustomTitleSources[panelId] == .autoSummary)
+    }
+
+    @Test func promptSeedTitleCanReplaceLegacyAutoPanelTitle() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panelId = try #require(workspace.newTerminalSurface(inPane: pane, focus: true)?.id)
+
+        #expect(workspace.setPanelCustomTitle(panelId: panelId, title: "Codex", source: .auto))
+        #expect(workspace.setPanelCustomTitle(
+            panelId: panelId,
+            title: "how many prs do I have open locally for this repo?",
+            source: .agentSeed
+        ))
+        #expect(workspace.panelTitle(panelId: panelId) == "how many prs do I have open locally for this repo?")
+        #expect(workspace.panelCustomTitleSources[panelId] == .agentSeed)
     }
 
     @Test func panelAutoWriteRejectedForCarriedTitleWithoutProvenance() throws {
@@ -171,7 +200,7 @@ import Testing
         // Simulate a carried title (move/respawn flows write the dictionary
         // directly when no provenance traveled with the title).
         workspace.panelCustomTitles[panelId] = "Carried Tab"
-        #expect(!workspace.setPanelCustomTitle(panelId: panelId, title: "Other", source: .autoPrompt))
+        #expect(!workspace.setPanelCustomTitle(panelId: panelId, title: "Other", source: .autoSummary))
         #expect(workspace.panelCustomTitles[panelId] == "Carried Tab")
     }
 

@@ -2,7 +2,14 @@ import Foundation
 
 @MainActor
 final class AgentSessionWebRendererSession {
-    private let ownedCoordinator = AgentSessionWebRendererCoordinator()
+    private let ownedCoordinator: AgentSessionWebRendererCoordinator
+
+    init(workProvenanceRuntime: WorkProvenanceRuntime? = nil) {
+        self.ownedCoordinator = AgentSessionWebRendererCoordinator(
+            workProvenanceRuntime: workProvenanceRuntime
+        )
+    }
+
     var onHasActiveProviderChanged: ((Bool) -> Void)? {
         didSet {
             ownedCoordinator.onHasActiveProviderChanged = onHasActiveProviderChanged
@@ -16,6 +23,11 @@ final class AgentSessionWebRendererSession {
     var onProviderIDChanged: ((AgentSessionProviderID) -> Void)? {
         didSet {
             ownedCoordinator.onProviderIDChanged = onProviderIDChanged
+        }
+    }
+    var onPromptSubmitted: ((String) -> Void)? {
+        didSet {
+            ownedCoordinator.onPromptSubmitted = onPromptSubmitted
         }
     }
 

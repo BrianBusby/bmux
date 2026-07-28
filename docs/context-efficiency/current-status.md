@@ -1,10 +1,8 @@
 # Bmux Context Efficiency: Current Status
 
-Last updated: 2026-07-24
+Last updated: 2026-07-26
 
-This file is the live handoff index for context-efficiency, provenance, and
-handoff work. Keep it concise; move slice history and detailed findings into
-topic documents.
+This file is the live handoff index for context-efficiency, provenance, and handoff work. Keep it concise; move slice history and detailed findings into topic documents.
 
 ## Read Order
 
@@ -22,71 +20,41 @@ topic documents.
 
 ## Active State
 
-The standalone Provenance Engine is the accepted provenance storage/query
-boundary. Slice C session-tree read migration and Slice D file-explanation read
-migration are accepted. Both bmux PRs used explicit GitHub Actions waivers
-because the Blacksmith-backed workflows did not produce usable CI evidence; the
-infrastructure issue remains tracked separately in bmux issue 8.
+Operational V1 integration is complete with named caveats on branch `slice-e-provenance-v1-adoption`.
 
-bmux consumer adoption merged through PR 7
-(`https://github.com/BrianBusby/bmux/pull/7`) using the normal GitHub merge
-method at merge commit `08763dd0d3256989180dcc04f426da1f24369175` on
-2026-07-24T17:20:04Z. The final PR head was
-`322629bf0fa0bd19367f090bdfcf1bc21c6a1e95`.
+bmux now pins Provenance Engine revision `18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03`, which contains the finalized V1 public contract and producer-neutral lifecycle API. The Xcode project links only the public engine products `ProvenanceEngineContracts` and `ProvenanceEngineSDK`.
 
-Provenance Engine PR 5 (`https://github.com/BrianBusby/provenance-engine/pull/5`)
-merged on 2026-07-24T20:38:37Z at merge commit
-`126afde36671f53a137953200e7883e6b4093ac3`. bmux now pins that merged engine
-revision from `git@github.com:BrianBusby/provenance-engine.git`; the temporary
-Slice D readiness pin `384026e36087dda576e25343907c3e06d8a4d594` was removed
-from the Xcode project, workspace lockfile, fixture packages, fixture lockfiles,
-and dynamic CLI test seeder fallback.
+Adopted read paths use public Current State/query APIs:
 
-bmux now consumes provenance-engine as an external Swift package. The Xcode
-project links the public products `ProvenanceEngineContracts` and
-`ProvenanceEngineSDK`.
+- `bmux provenance worktrees list` calls `client.worktrees(...)`.
+- `bmux provenance sessions tree <session-id>` calls `client.sessionTree(...)`.
+- `bmux provenance explain <path>` calls `client.fileExplanation(...)`.
+- `bmux provenance context current` calls `client.currentContext(...)`.
 
-The first external query path is complete: `bmux provenance worktrees list`
-constructs an in-process SQLite-backed engine client through
-`ProvenanceEngineClientFactory().sqliteClient(databaseURL:)` and calls
-`ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest())`.
+Adopted write paths use public SDK APIs:
 
-The second external query path is complete in bmux: `bmux provenance sessions
-tree <session-id>` constructs an in-process SQLite-backed engine client through
-`ProvenanceEngineClientFactory().sqliteClient(databaseURL:)` and calls
-`ProvenanceEngineClient.sessionTree(ProvenanceSessionTreeRequest(...))`.
+- Agent lifecycle capture calls `client.recordSessionLifecycle(...)` with `ProvenanceSessionLifecycleRequest`.
+- Git/worktree observation capture calls `client.appendEvent(...)` with public `ProvenanceEvent` contracts.
 
-The third external query path is accepted: `bmux provenance explain <path>`
-still resolves Git paths and renders output in bmux, then resolves the engine
-worktree through
-`ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest())` and calls
-`ProvenanceEngineClient.fileExplanation(ProvenanceFileExplanationRequest(...))`.
-
-CLI presentation and compatibility remain owned by bmux. The worktree-list JSON
-shape, text shape, missing-database behavior, empty-database behavior,
-newest-first ordering, and the 25-row text cap were preserved.
-
-The project is now in controlled incremental migration from bmux-local
-provenance storage/query code to the external engine. This is a transitional
-state, not a target architecture.
+bmux owns observation, stable producer identity assignment where available, retry/error policy, command parsing, Git path normalization, UI/workflow orchestration, and presentation. Provenance Engine owns evidence, deterministic Current State, provenance interpretation, and bounded provenance queries.
 
 ## Current Boundary
 
-Externalized work includes the worktree-list read path, the session-tree read path, the accepted Slice D file-explanation read path, engine package pin, public SDK client construction for those paths, and migrated test seeding through public engine APIs.
+Do not add new provenance consumer behavior to bmux-local direct SQLite readers, `WorkProvenanceStore`, or `BmuxLegacyProvenanceClient`. Those remain only for legacy support, tests, and lifecycle trace presentation until a separate cleanup slice removes or replaces them.
 
-Slice B clarified the legacy boundary: the bmux-local contract-shaped seam is now `BmuxLegacyProvenanceClient`, while the external `ProvenanceEngineContracts.ProvenanceEngineClient` remains untouched. The complete remaining consumer inventory lives in `docs/context-efficiency/integration/provenance-engine-adoption.md`.
+The CLI trace path `bmux provenance traces lifecycle-ingestion` still reads bmux-local observability SQLite because V1 has no public observability trace API. This is not an adopted Current State path.
 
-Still bmux-local: legacy SQLite schema ownership, event/projection storage used by unmigrated paths, current-context reads, lifecycle/capture recording, observability tracing, presentation, command parsing, fallback messages, and output formatting.
-
-Do not add engine features speculatively. Engine expansion is frozen until a real bmux migration slice proves a concrete missing contract or correctness defect.
+Historical slice details live in `docs/context-efficiency/integration/provenance-engine-adoption-history.md`. Current Slice E adoption details live in `docs/context-efficiency/integration/provenance-engine-adoption.md`.
 
 ## Next Target
 
-Active milestone: none selected after Slice D acceptance.
+Active milestone after this branch: Engineering Observation Period, plus cleanup of named legacy surfaces.
 
-Slice D migrated only `bmux provenance explain <path>` to the external SQLite-backed engine client and `ProvenanceEngineClient.fileExplanation(...)`; preserved existing CLI compatibility; seeded the file-explanation fixture through public engine APIs; removed only file-explanation legacy code that became unused; and merged through bmux PR 9 (`https://github.com/BrianBusby/bmux/pull/9`) at merge commit `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374` on 2026-07-24T21:54:46Z.
+Potential follow-up work:
 
-The next migration slice is now safe to select, but no next slice is active in this handoff. Do not begin current-context migration, lifecycle writes, capture migration, data migration, semantic retrieval, daemon transport, UI work, observability expansion, or unrelated refactoring until a new slice is explicitly chosen.
+- Remove or retire `WorkProvenanceStore` and `BmuxLegacyProvenanceClient` after all remaining legacy tests and observability support have replacement contracts or are declared obsolete.
+- Decide whether lifecycle observability traces need a public engine API or should remain bmux-local diagnostics.
+- Cut a tagged Provenance Engine release so bmux can depend on a version tag rather than a revision pin.
 
 ## Canonical Details
 
@@ -108,37 +76,19 @@ Phase 4 migration plan: `docs/context-efficiency/provenance-engine-phase4-reconn
 
 ## Validation Notes
 
-Slice C acceptance validation completed on 2026-07-24:
+Runtime cutover validation completed locally on 2026-07-26:
 
-- `./scripts/reload.sh --tag slice-c-main`: passed and built the tagged Debug app plus bundled CLI.
-- `BMUX_BUNDLED_CLI_PATH=... python3 tests/test_provenance_cli.py`: passed against the tagged bundled CLI.
-- `xcodebuild -project bmux.xcodeproj -scheme bmux-unit -configuration Debug -destination 'platform=macOS' -derivedDataPath /Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-slice-c-main BMUX_SKIP_ZIG_BUILD=1 -only-testing:bmuxTests/WorkProvenanceStoreTests -only-testing:bmuxTests/SubsessionProvenanceTests test`: passed 31 tests.
-- `scripts/check-pbxproj.sh`: passed.
-- `python3 scripts/check-package-resolved-policy.py`: passed.
-- `python3 scripts/check-workspace-package-groups.py --check`: passed.
-- `git diff --check`: passed.
-- Scans confirmed no `ProvenanceEngineSQLite` import and no direct session-tree table reads in the migrated CLI path.
-- GitHub Actions waiver: bmux PR 7 Actions did not complete because PR-event
-  runs for CI and Activation performance remained pending with zero jobs/check
-  runs, while manually dispatched runs queued without runner assignment on
-  `blacksmith-4vcpu-ubuntu-2404`. No failing CI result was observed, `main`
-  had no required status-check branch protection, and acceptance relied on the
-  local validation suite above. This waiver applies only to Slice C and does
-  not permanently remove CI expectations; runner or workflow scheduling should
-  be tracked separately as repository infrastructure work in
-  `https://github.com/BrianBusby/bmux/issues/8`.
-
-Slice D acceptance validation completed locally on 2026-07-24 against provenance-engine revision `126afde36671f53a137953200e7883e6b4093ac3`:
-
-- File-explanation fixture `swift package resolve`: passed.
-- Session-tree fixture `swift package resolve`: passed.
-- `xcodebuild -resolvePackageDependencies -project bmux.xcodeproj -scheme bmux -derivedDataPath /Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-slice-d-acceptance`: passed.
-- `./scripts/reload.sh --tag slice-d-acceptance`: passed and built the tagged Debug app plus bundled CLI.
-- `BMUX_BUNDLED_CLI_PATH=... python3 tests/test_provenance_cli.py`: passed against the tagged bundled CLI.
-- Targeted `xcodebuild ... -only-testing:bmuxTests/WorkProvenanceStoreTests -only-testing:bmuxTests/WorkProvenanceObserverTests test`: passed 17 tests.
-- `scripts/check-pbxproj.sh`: passed.
-- `python3 scripts/check-package-resolved-policy.py`: passed.
-- `python3 scripts/check-workspace-package-groups.py --check`: passed.
-- `git diff --check`: passed.
-- Scans confirmed no old engine feature commit in dependency files, no `ProvenanceEngineSQLite` imports in CLI/Sources/Packages/tests/bmuxTests, and no direct file-explanation table reads in the migrated CLI path.
-- GitHub Actions waiver: bmux PR 9 final head `ea72bfd7dc28cd60b093b5a4d0bebc5853c32f59` created PR-event CI run `30129193072` and Activation performance run `30129193044`, both pending with zero jobs materialized at final inspection. Earlier PR-head runs materialized queued jobs without runner assignment on `blacksmith-4vcpu-ubuntu-2404`: CI run `30123744339` jobs `89582203845` and `89582203944`, and Activation performance run `30123744296` job `89582203380`. No failing CI result or logs existed, `main` had no required status-check branch protection, and acceptance relied on the local validation suite above. This waiver applies only to Slice D; runner scheduling remains tracked in `https://github.com/BrianBusby/bmux/issues/8`.
+- Provenance Engine `swift build --package-path /Users/brianbusby/repos/provenance-engine`: passed.
+- Provenance Engine `swift test --package-path /Users/brianbusby/repos/provenance-engine`: passed 93 tests.
+- Provenance Engine `git -C /Users/brianbusby/repos/provenance-engine diff --check`: passed.
+- Provenance Engine schema identity commit `18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03` was pushed to `origin/main`.
+- bmux `xcodebuild -resolvePackageDependencies -project bmux.xcodeproj -scheme bmux -derivedDataPath /Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-slice-e-v1`: passed.
+- bmux focused provenance tests (`SessionProvenanceTests`, `WorkProvenanceObserverTests`) with `BMUX_SKIP_ZIG_BUILD=1`: passed 6 tests.
+- bmux provenance CLI integration tests with `BMUX_BUNDLED_CLI_PATH` pointing at the tagged bundled CLI: passed after default bootstrap and incompatible-store coverage.
+- bmux `./scripts/reload.sh --tag slice-e-v1 --launch`: passed for build 248. Local `--launch` exited after startup in this environment, so build 248 was manually opened from the exact `App path:` for live validation.
+- Live canonical store: `~/.local/state/provenance-engine/provenance.sqlite`; schema tables and `provenance_metadata` identity rows were present.
+- Live event count increased from 0 before app activity to 22 after restored worktree observation, fresh workspace/command activity, and hook-derived Codex lifecycle events.
+- Public CLI reads verified: `provenance worktrees list`, `provenance context current`, `provenance explain provenance-live-validation.txt`, and `provenance sessions tree session-fec80075f92fc25a2978d2c1`.
+- Current State showed one active Codex session attached to the bmux worktree after lifecycle writes included `worktreeID`.
+- Legacy database `~/.local/state/bmux/work-provenance/bmux-work-provenance.sqlite` was left intact and is no longer opened by default.
+- Remaining caveat: opening an agent-session surface alone does not create lifecycle evidence; supported hook/feed events must reach bmux.

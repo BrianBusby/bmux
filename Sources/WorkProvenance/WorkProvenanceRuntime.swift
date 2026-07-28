@@ -1,12 +1,20 @@
 import Foundation
+import ProvenanceEngineContracts
+import ProvenanceEngineSDK
 
 /// Main-actor runtime that wires workspace lifecycle to observe-only provenance storage.
 @MainActor
 final class WorkProvenanceRuntime {
     private weak var tabManager: TabManager?
     private let observationService: WorkProvenanceObservationService?
-    private let subsessionLifecycleRecorder: WorkProvenanceSubsessionLifecycleRecorder?
+    private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
     private var directoryObservationTask: Task<Void, Never>?
+
+    /// Effective V1 database path when the runtime starts successfully.
+    let effectiveDatabaseURL: URL?
+
+    /// Startup failure retained for diagnostics when provenance is disabled.
+    let startupErrorDescription: String?
 
     /// Whether the runtime has a usable provenance store.
     let isEnabled: Bool
@@ -14,10 +22,14 @@ final class WorkProvenanceRuntime {
     /// Creates a provenance runtime.
     init(
         observationService: WorkProvenanceObservationService?,
-        subsessionLifecycleRecorder: WorkProvenanceSubsessionLifecycleRecorder? = nil
+        sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil,
+        effectiveDatabaseURL: URL? = nil,
+        startupErrorDescription: String? = nil
     ) {
         self.observationService = observationService
-        self.subsessionLifecycleRecorder = subsessionLifecycleRecorder
+        self.sessionLifecycleRecorder = sessionLifecycleRecorder
+        self.effectiveDatabaseURL = effectiveDatabaseURL
+        self.startupErrorDescription = startupErrorDescription
         self.isEnabled = observationService != nil
     }
 
@@ -26,26 +38,32 @@ final class WorkProvenanceRuntime {
     }
 
     /// Creates the standard runtime backed by the per-user bmux state directory.
-    static func live(fileManager: FileManager = .default) -> WorkProvenanceRuntime {
-        let location = WorkProvenanceStorageLocation(homeDirectory: fileManager.homeDirectoryForCurrentUser)
+    static func live(
+        homeDirectory: URL = WorkProvenanceStorageLocation.defaultHomeDirectory()
+    ) -> WorkProvenanceRuntime {
+        let location = WorkProvenanceStorageLocation(homeDirectory: homeDirectory)
         do {
-            let store = try WorkProvenanceStore(databaseURL: location.databaseURL, fileManager: fileManager)
-            let observabilityStore = try? ProvenanceObservabilityStore(
-                databaseURL: location.observabilityDatabaseURL,
-                fileManager: fileManager
-            )
+            let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+                try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
+            NSLog("bmux provenance runtime using database: %@", location.databaseURL.path)
             return WorkProvenanceRuntime(
                 observationService: WorkProvenanceObservationService(
-                    store: store,
+                    client: client,
                     gitInspector: WorkProvenanceGitInspector()
                 ),
-                subsessionLifecycleRecorder: WorkProvenanceSubsessionLifecycleRecorder(
-                    store: store,
-                    observabilityStore: observabilityStore
-                )
+                sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder(
+                    client: client
+                ),
+                effectiveDatabaseURL: location.databaseURL
             )
         } catch {
-            return WorkProvenanceRuntime(observationService: nil)
+            let description = String(describing: error)
+            NSLog("bmux provenance runtime unavailable: %@", description)
+            return WorkProvenanceRuntime(
+                observationService: nil,
+                effectiveDatabaseURL: location.databaseURL,
+                startupErrorDescription: description
+            )
         }
     }
 
@@ -62,6 +80,9 @@ final class WorkProvenanceRuntime {
 
     /// Observes the provided live workspaces.
     func observeWorkspaces(_ workspaces: [Workspace]) {
+        StartupBreadcrumbLog.append("workProvenance.runtime.observeWorkspaces", fields: [
+            "count": "\(workspaces.count)"
+        ])
         guard let observationService else { return }
         let snapshots = workspaces.map(WorkProvenanceWorkspaceSnapshot.init(workspace:))
         Task {
@@ -69,11 +90,11 @@ final class WorkProvenanceRuntime {
         }
     }
 
-    /// Persists an observed agent subsession lifecycle change.
-    func recordSubsessionLifecycleChange(_ change: AgentSubsessionLifecycleChange, timestamp: Date) {
-        guard let subsessionLifecycleRecorder else { return }
+    /// Persists an observed agent session lifecycle change.
+    func recordSessionLifecycleChange(_ change: AgentSessionLifecycleChange, timestamp: Date) {
+        guard let sessionLifecycleRecorder else { return }
         Task {
-            await subsessionLifecycleRecorder.record(change, timestamp: timestamp)
+            await sessionLifecycleRecorder.record(change, timestamp: timestamp)
         }
     }
 

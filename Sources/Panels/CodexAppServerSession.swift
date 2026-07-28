@@ -10,13 +10,14 @@ final class CodexAppServerSession {
 
     private static let maxQueuedInputCount = 1
     private static let maxQueuedInputBytes = 64 * 1024
-
+    private let debugSessionID: String?
     private let workingDirectory: String?
     private let writeData: DataWriter
     private let outputSink: OutputSink
     private let activitySink: ActivitySink
     private let turnCompleteSink: TurnCompleteSink
     private let failureSink: FailureSink
+    private let startupTimeoutNanoseconds: UInt64
     private var nextRequestID = 1
     private var initializeRequestID: Int?
     private var didInitialize = false
@@ -25,24 +26,29 @@ final class CodexAppServerSession {
     private var queuedInputs: [CodexAppServerQueuedInput] = []
     private var stdoutBuffer = ""
     private var didFailStartup = false
+    private var startupTimeoutTask: Task<Void, Never>?
     private var activePermissionMode: AgentSessionPermissionMode = .standard
     private var isTurnInFlight = false
     private var turnStartRequestIDs: Set<Int> = []
 
     init(
+        debugSessionID: String? = nil,
         workingDirectory: String?,
         writeData: @escaping DataWriter,
         outputSink: @escaping OutputSink,
         activitySink: @escaping ActivitySink = { _ in },
         turnCompleteSink: @escaping TurnCompleteSink = {},
-        failureSink: @escaping FailureSink = { _ in }
+        failureSink: @escaping FailureSink = { _ in },
+        startupTimeoutNanoseconds: UInt64 = 15_000_000_000
     ) {
+        self.debugSessionID = debugSessionID
         self.workingDirectory = workingDirectory
         self.writeData = writeData
         self.outputSink = outputSink
         self.activitySink = activitySink
         self.turnCompleteSink = turnCompleteSink
         self.failureSink = failureSink
+        self.startupTimeoutNanoseconds = startupTimeoutNanoseconds
     }
 
     func start() async throws {
@@ -60,6 +66,7 @@ final class CodexAppServerSession {
                 ]
             ]
         )
+        armStartupTimeout()
     }
 
     func submit(_ text: String, permissionMode: AgentSessionPermissionMode = .standard) async throws {
@@ -119,6 +126,9 @@ final class CodexAppServerSession {
         guard let data = line.data(using: .utf8),
               let decoded = try? JSONSerialization.jsonObject(with: data),
               let object = decoded as? [String: Any] else {
+#if DEBUG
+            bmuxDebugLog("agentSession.codex.stdout.invalidJSON")
+#endif
             outputSink("stderr", String(localized: "agentSession.codex.error.invalidJSON", defaultValue: "Codex app-server response was not valid JSON."))
             return
         }
@@ -165,6 +175,7 @@ final class CodexAppServerSession {
             }
             threadID = id
             threadStartRequestID = nil
+            cancelStartupTimeout()
             drainCodexAppServerQueuedInputs()
             return
         }
@@ -197,6 +208,7 @@ final class CodexAppServerSession {
                let id = thread["id"] as? String {
                 threadID = id
                 threadStartRequestID = nil
+                cancelStartupTimeout()
                 drainCodexAppServerQueuedInputs()
             }
         case "item/agentMessage/delta":
@@ -549,6 +561,7 @@ final class CodexAppServerSession {
     private func failStartup(details: String?) {
         guard !didFailStartup else { return }
         didFailStartup = true
+        cancelStartupTimeout()
         initializeRequestID = nil
         didInitialize = false
         threadStartRequestID = nil
@@ -559,6 +572,35 @@ final class CodexAppServerSession {
         failQueuedInputs(AgentSessionBridgeError.providerNotReady(AgentSessionProviderID.codex.displayName))
         emitCodexRPCFailure(details: details)
         failureSink(details)
+    }
+
+    private func armStartupTimeout() {
+        cancelStartupTimeout()
+        startupTimeoutTask = Task { @MainActor in
+            do {
+                try await Task.sleep(nanoseconds: startupTimeoutNanoseconds)
+            } catch {
+                return
+            }
+            guard !didFailStartup,
+                  threadID == nil else {
+                return
+            }
+#if DEBUG
+            bmuxDebugLog(
+                "agentSession.codex.startup.timeout session=\(debugSessionID ?? "nil") " +
+                "didInitialize=\(didInitialize) " +
+                "initializeRequestID=\(String(describing: initializeRequestID)) " +
+                "threadStartRequestID=\(String(describing: threadStartRequestID))"
+            )
+#endif
+            failStartup(details: "Codex app-server did not become ready before the startup timeout.")
+        }
+    }
+
+    private func cancelStartupTimeout() {
+        startupTimeoutTask?.cancel()
+        startupTimeoutTask = nil
     }
 
     private func failQueuedInputs(_ error: Error) {

@@ -130,11 +130,7 @@ extension WorkstreamEvent {
     }
 
     private static func normalizedPromptText(_ value: String) -> String? {
-        let normalized = value
-            .split(whereSeparator: { $0.isWhitespace })
-            .joined(separator: " ")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        return normalized.isEmpty ? nil : normalized
+        Workspace.normalizedConversationMessageText(from: value)
     }
 }
 
@@ -149,7 +145,8 @@ extension TabManager {
         workspaceId: UUID,
         message: String?,
         surfaceId: UUID? = nil,
-        iMessageModeEnabled: Bool = IMessageModeSettings.isEnabled()
+        iMessageModeEnabled: Bool = IMessageModeSettings.isEnabled(),
+        seedTitleFromPrompt: Bool = false
     ) -> (messageRecorded: Bool, reordered: Bool, index: Int)? {
         handleConversationMessage(
             workspaceId: workspaceId,
@@ -157,7 +154,8 @@ extension TabManager {
             surfaceId: surfaceId,
             iMessageModeEnabled: iMessageModeEnabled,
             kind: .promptSubmission,
-            reorderWithoutMessage: true
+            reorderWithoutMessage: true,
+            seedTitleFromPrompt: seedTitleFromPrompt
         )
     }
 
@@ -184,7 +182,8 @@ extension TabManager {
         surfaceId: UUID? = nil,
         iMessageModeEnabled: Bool,
         kind: ConversationMessageKind,
-        reorderWithoutMessage: Bool
+        reorderWithoutMessage: Bool,
+        seedTitleFromPrompt: Bool = false
     ) -> (messageRecorded: Bool, reordered: Bool, index: Int)? {
         guard let originalIndex = tabs.firstIndex(where: { $0.id == workspaceId }) else {
             return nil
@@ -198,6 +197,14 @@ extension TabManager {
             _ = workspace.recordPromptNavigationBookmark(surfaceId: surfaceId, message: message)
             _ = workspace.recordSubmittedPullRequestMention(message, surfaceId: surfaceId)
             messageRecorded = workspace.recordSubmittedMessage(message)
+            if seedTitleFromPrompt, messageRecorded {
+                seedPromptTitle(
+                    workspaceId: workspaceId,
+                    workspace: workspace,
+                    surfaceId: surfaceId,
+                    message: message
+                )
+            }
             if messageRecorded {
                 BmuxEventBus.shared.publishWorkspacePromptSubmitted(
                     workspaceId: workspaceId,
@@ -222,18 +229,70 @@ extension TabManager {
         let newIndex = tabs.firstIndex(where: { $0.id == workspaceId }) ?? originalIndex
         return (messageRecorded, newIndex != originalIndex, newIndex)
     }
+
+    private func seedPromptTitle(
+        workspaceId: UUID,
+        workspace: Workspace,
+        surfaceId: UUID?,
+        message: String?
+    ) {
+        guard let title = Workspace.conversationMessagePreview(from: message, maxLength: 80) else { return }
+        _ = applyCustomTitle(
+            tabId: workspaceId,
+            title: title,
+            source: .agentSeed,
+            propagateToRemoteTmux: false
+        )
+        let panelId = surfaceId.flatMap { surfaceId -> UUID? in
+            if workspace.panels[surfaceId] != nil {
+                return surfaceId
+            }
+            return workspace.panelIdFromSurfaceId(TabID(uuid: surfaceId))
+        }
+        if let panelId {
+            _ = workspace.applyPanelCustomTitle(
+                panelId: panelId,
+                title: title,
+                source: .agentSeed
+            )
+        }
+    }
 }
 
 extension Workspace {
-    static func conversationMessagePreview(from message: String?, maxLength: Int = 240) -> String? {
+    nonisolated static func normalizedConversationMessageText(from message: String?) -> String? {
         guard let message else { return nil }
-        let collapsed = message
+        var collapsed = message
             .split(whereSeparator: { $0.isWhitespace })
             .joined(separator: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !collapsed.isEmpty else { return nil }
+        if let stripped = strippedLeadingWorkspaceContext(from: collapsed) {
+            collapsed = stripped
+        }
+        return collapsed.isEmpty ? nil : collapsed
+    }
+
+    nonisolated static func conversationMessagePreview(from message: String?, maxLength: Int = 240) -> String? {
+        guard let collapsed = normalizedConversationMessageText(from: message) else { return nil }
         guard collapsed.count > maxLength else { return collapsed }
         return "\(collapsed.prefix(maxLength))..."
+    }
+
+    private nonisolated static func strippedLeadingWorkspaceContext(from message: String) -> String? {
+        guard message.first == "[",
+              let labelEnd = message.firstIndex(of: "]") else {
+            return nil
+        }
+        let pathOpen = message.index(after: labelEnd)
+        guard pathOpen < message.endIndex,
+              message[pathOpen] == "(",
+              let pathEnd = message[pathOpen...].firstIndex(of: ")") else {
+            return nil
+        }
+        let remainderStart = message.index(after: pathEnd)
+        let remainder = message[remainderStart...]
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return remainder.isEmpty ? nil : remainder
     }
 
     @discardableResult

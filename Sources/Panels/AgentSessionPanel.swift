@@ -10,7 +10,7 @@ final class AgentSessionPanel: Panel {
     let rendererKind: AgentSessionRendererKind
     let initialProviderID: AgentSessionProviderID
     private(set) var workingDirectory: String?
-    let rendererSession = AgentSessionWebRendererSession()
+    let rendererSession: AgentSessionWebRendererSession
 
     private(set) var currentProviderID: AgentSessionProviderID
     private(set) var displayTitle: String
@@ -28,12 +28,14 @@ final class AgentSessionPanel: Panel {
             onWorkStateChanged?(hasActiveWork)
         }
     }
+    var onPromptSubmitted: ((String) -> Void)?
 
     init(
         workspaceId: UUID,
         rendererKind: AgentSessionRendererKind,
         initialProviderID: AgentSessionProviderID = .codex,
-        workingDirectory: String? = nil
+        workingDirectory: String? = nil,
+        workProvenanceRuntime: WorkProvenanceRuntime? = nil
     ) {
         self.id = UUID()
         self.workspaceId = workspaceId
@@ -41,6 +43,9 @@ final class AgentSessionPanel: Panel {
         self.initialProviderID = initialProviderID
         self.currentProviderID = initialProviderID
         self.workingDirectory = workingDirectory
+        self.rendererSession = AgentSessionWebRendererSession(
+            workProvenanceRuntime: workProvenanceRuntime
+        )
         self.displayTitle = Self.title(provider: initialProviderID, rendererKind: rendererKind)
         self.rendererSession.onHasActiveProviderChanged = { [weak self] hasActiveProvider in
             self?.setHasActiveProvider(hasActiveProvider)
@@ -50,6 +55,9 @@ final class AgentSessionPanel: Panel {
         }
         self.rendererSession.onProviderIDChanged = { [weak self] providerID in
             self?.setCurrentProviderID(providerID)
+        }
+        self.rendererSession.onPromptSubmitted = { [weak self] text in
+            self?.onPromptSubmitted?(text)
         }
     }
 
