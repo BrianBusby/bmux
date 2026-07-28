@@ -130,6 +130,29 @@ struct WorkspacePromptSubmitTests {
         #expect(terminalPanel.promptNavigationCanMoveForward)
     }
 
+    @Test func testReactAgentPromptSubmitAppliesAutoPromptTitleOverAgentSeed() throws {
+        let manager = TabManager(initialWorkingDirectory: "/tmp/bmux")
+        let workspace = try #require(manager.selectedWorkspace)
+        workspace.setCustomTitle("bmux (Codex)", source: .agentSeed)
+        let paneId = try #require(workspace.bonsplitController.allPaneIds.first)
+        let agentPanel = try #require(
+            workspace.newAgentSessionSurface(
+                inPane: paneId,
+                rendererKind: .react,
+                focus: true
+            )
+        )
+        let prompt = "ok let's talk about how we can improve bmux"
+
+        agentPanel.onPromptSubmitted?(prompt)
+
+        #expect(workspace.latestConversationMessage == prompt)
+        #expect(workspace.customTitle == prompt)
+        #expect(workspace.effectiveCustomTitleSource == .autoPrompt)
+        #expect(manager.resolvedWorkspaceDisplayTitle(for: workspace) == prompt)
+        #expect(workspace.panelTitle(panelId: agentPanel.id) == prompt)
+    }
+
     @Test func testAssistantFinalMessageRecordsMessageAndMovesWorkspaceToTopWhenIMessageModeEnabled() throws {
         let manager = TabManager()
         let pinned = manager.tabs[0]
