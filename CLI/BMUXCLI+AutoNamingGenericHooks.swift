@@ -38,7 +38,6 @@ extension BMUXCLI {
         }
         let isCodexPromptSubmit = def.name == "codex"
             && hookEventName == "UserPromptSubmit"
-            && rawObject.flatMap({ firstString(in: $0, keys: ["prompt", "text", "message", "body"]) }) != nil
         guard (usesHookMessageCacheForAutoNaming(def) || isCodexPromptSubmit),
               let object = parsedInput.rawObject ?? parsedInput.object else {
             return []
