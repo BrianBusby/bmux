@@ -28,6 +28,7 @@ final class AgentSessionPanel: Panel {
             onWorkStateChanged?(hasActiveWork)
         }
     }
+    var onPromptSubmitted: ((String) -> Void)?
 
     init(
         workspaceId: UUID,
@@ -54,6 +55,9 @@ final class AgentSessionPanel: Panel {
         }
         self.rendererSession.onProviderIDChanged = { [weak self] providerID in
             self?.setCurrentProviderID(providerID)
+        }
+        self.rendererSession.onPromptSubmitted = { [weak self] text in
+            self?.onPromptSubmitted?(text)
         }
     }
 

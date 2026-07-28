@@ -3853,6 +3853,29 @@ final class Workspace: Identifiable, ObservableObject {
         agentPanel.onWorkStateChanged = { [weak self] _ in
             self?.publishAgentSessionActiveWorkIfNeeded()
         }
+        agentPanel.onPromptSubmitted = { [weak self, weak agentPanel] text in
+            guard let self,
+                  let agentPanel,
+                  let tabManager = self.owningTabManager else { return }
+            _ = tabManager.handlePromptSubmit(
+                workspaceId: self.id,
+                message: text,
+                surfaceId: agentPanel.id,
+                iMessageModeEnabled: IMessageModeSettings.isEnabled()
+            )
+            guard let title = Self.conversationMessagePreview(from: text, maxLength: 80) else { return }
+            _ = tabManager.applyCustomTitle(
+                tabId: self.id,
+                title: title,
+                source: .autoPrompt,
+                propagateToRemoteTmux: false
+            )
+            _ = self.applyPanelCustomTitle(
+                panelId: agentPanel.id,
+                title: title,
+                source: .autoPrompt
+            )
+        }
         agentSessionPanelCallbackIds.insert(agentPanel.id)
         publishAgentSessionActiveWorkIfNeeded()
     }
@@ -3861,6 +3884,7 @@ final class Workspace: Identifiable, ObservableObject {
         if let agentPanel = panel as? AgentSessionPanel {
             agentPanel.onDisplayStateChanged = nil
             agentPanel.onWorkStateChanged = nil
+            agentPanel.onPromptSubmitted = nil
         }
         agentSessionPanelCallbackIds.remove(panelId)
     }

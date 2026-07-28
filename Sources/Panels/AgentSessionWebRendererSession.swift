@@ -25,6 +25,11 @@ final class AgentSessionWebRendererSession {
             ownedCoordinator.onProviderIDChanged = onProviderIDChanged
         }
     }
+    var onPromptSubmitted: ((String) -> Void)? {
+        didSet {
+            ownedCoordinator.onPromptSubmitted = onPromptSubmitted
+        }
+    }
 
     func coordinator(
         panelId: UUID,

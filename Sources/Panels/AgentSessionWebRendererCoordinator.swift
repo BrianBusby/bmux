@@ -36,6 +36,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         }
     }
     var onProviderIDChanged: ((AgentSessionProviderID) -> Void)?
+    var onPromptSubmitted: ((String) -> Void)?
 
     init(workProvenanceRuntime: WorkProvenanceRuntime? = nil) {
         self.workProvenanceRuntime = workProvenanceRuntime
@@ -719,11 +720,13 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
                 "arguments": plan.arguments
             ] as [String: Any]
         case "provider.writeLine":
+            let text = try request.requiredRawString("text")
             try await processStore.writeLine(
                 sessionId: request.requiredString("sessionId"),
                 permissionMode: request.permissionMode(),
-                text: request.requiredRawString("text")
+                text: text
             )
+            onPromptSubmitted?(text)
             return ["sent": true]
         case "provider.stop":
             try processStore.stop(sessionId: request.requiredString("sessionId"))
