@@ -87,7 +87,10 @@ This means Codex app-server lifecycle telemetry currently reaches the React agen
 
 ## Target Direction For Later Slices
 
-Slice 1 should define a common execution-event contract outside React component code. Slice 2 should introduce a sidecar-owned event bus so this direction is possible:
+Slice 1 defines the common telemetry contract in
+`agent-chat/executionTelemetryTypes.ts`, outside React component code and
+outside the current `AgentEvent` UI schema. Slice 2 should introduce a
+sidecar-owned event bus so this direction is possible:
 
 ```text
 Raw Codex app-server notification
@@ -102,3 +105,13 @@ ExecutionEventEnvelope
 ```
 
 The reverse direction should remain prohibited: raw provider event -> AgentEvent/status string -> reconstructed execution telemetry.
+
+## Slice 1 Ownership Boundary
+
+The sidecar owns the canonical envelope fields: bmux session id, event id,
+per-session sequence, captured timestamp, provider id, provider session id, and
+provider turn id. Provider adapters own bounded normalization from provider
+messages into typed event payloads. React owns only the current render
+projection. Native Swift can consume a future JSON bridge but should not define
+an independent schema. provenance-engine remains a later selected projection,
+not the owner of high-frequency telemetry.

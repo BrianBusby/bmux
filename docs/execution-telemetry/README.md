@@ -9,6 +9,7 @@ Provenance is narrower. Provenance records durable engineering facts and evidenc
 ## Documents
 
 - `architecture.md`: current and target ownership boundaries.
+- `contract.md`: Slice 1 provider-neutral telemetry contract and ownership policy.
 - `event-inventory.md`: current Codex event mappings, lost fields, and persistence/provenance decisions.
 - `provider-capabilities.md`: provider capability matrix.
 - `persistence-policy.md`: initial retention categories and separation from provenance.
@@ -18,7 +19,7 @@ Provenance is narrower. Provenance records durable engineering facts and evidenc
 
 ## Current State
 
-Slice 0 is complete as a current-state audit only. No runtime extraction, event bus, persistence, or React behavior change has been implemented.
+Slice 1 is complete as a provider-neutral contract and ownership-boundary slice only. No runtime extraction, event bus, persistence, provenance projection, or React behavior change has been implemented.
 
 The structured Codex path currently enters bmux through `agent-chat/adapters/codex.ts`, which talks to `codex app-server` over JSON-RPC/NDJSON. That adapter converts app-server notifications directly into display-oriented `AgentEvent` values from `agent-chat/types.ts`. The server in `agent-chat/server.ts` owns session identity, status, bounded event replay, and WebSocket/REST fanout. React in `agent-chat/src/session.ts` consumes those events and folds them into renderable blocks.
 
