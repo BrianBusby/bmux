@@ -2,11 +2,18 @@
 
 Last updated: 2026-07-29
 
+## Plan Orientation
+
+| Plan area | Current position | Notes |
+| --- | --- | --- |
+| Provider-neutral Codex telemetry migration | Slices 0 through 11 completed on the stacked Slice 1 branch history. | Existing React `AgentEvent` projection behavior is preserved. |
+| Live session projection foundation | Plan Slice 4A completed on `execution-telemetry-live-projection`. | Adds a renderer-independent replay projection from ordered `TelemetryEventEnvelope` values; no server wiring, persistence, provenance writes, Swift schema ownership, or WebSocket payload changes. |
+
 ## Active Slice
 
-Slice 11 - Codex app-server exit diagnostic telemetry migration.
+Plan Slice 4A - live session projection foundation.
 
-Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
+Status: completed in branch `execution-telemetry-live-projection`; awaiting review.
 
 ## Completed Slices
 
@@ -22,10 +29,11 @@ Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 - Slice 9: migrated Codex denial and unsupported request status diagnostics through `SessionCtx.emitTelemetry`, preserving existing React `status` projection while publishing bounded `diagnostic` envelopes.
 - Slice 10: migrated Codex send-failure diagnostics through `SessionCtx.emitTelemetry`, preserving existing React `error` projection and direct `done` close-out while publishing bounded `diagnostic` envelopes.
 - Slice 11: migrated Codex app-server process-exit mid-turn diagnostics through `SessionCtx.emitTelemetry`, preserving existing React `error` projection and direct `done` close-out while publishing bounded `diagnostic` envelopes.
+- Plan Slice 4A: added a renderer-independent live session projection module in `agent-chat` that replays ordered `TelemetryEventEnvelope` values into a small deterministic snapshot with session/provider identity, provider session/turn ids, lifecycle state, active operation count, latest activity timestamp, usage summary, diagnostic summary, approval-blocked state, and files-changed summary. Existing React `AgentEvent` projection behavior and WebSocket payloads remain unchanged.
 
 ## Current Branch
 
-`execution-telemetry-slice-1`
+`execution-telemetry-live-projection`
 
 Starting branch before Slice 0 was `fix-react-submit-bar-photo-drop-v2`, clean at `c19c835e8b58e138aa11d50c6ee9ef75be1cdc7a`. Slice 0 was moved to a scoped branch from `origin/main`.
 
@@ -234,6 +242,15 @@ Slice 11 validation:
 - `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: succeeded.
 - `./scripts/reload.sh --tag execution-telemetry-slice-11`: succeeded.
 
+Plan Slice 4A validation:
+
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/execution-telemetry-live-projection.test.ts`: succeeded.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/execution-telemetry-fanout.test.ts`: succeeded.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/codex-telemetry-migration.test.ts`: succeeded.
+- `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: succeeded.
+- `git diff --check`: succeeded.
+- `./scripts/reload.sh --tag execution-telemetry-live-projection`: succeeded.
+
 ## Known Failures
 
 - Running `tsc` from the repo root through transient `npm exec` still does not resolve local Bun and Node ambient types. Run TypeScript checks from `agent-chat` with `PATH="$HOME/.bun/bin:$PATH"` so local package types are used.
@@ -242,11 +259,11 @@ Slice 11 validation:
 
 ## Next Required Action
 
-Review PR #12 before the next code slice. The next code slice should stay narrow: continue Codex migration only if there is another bounded diagnostic path worth preserving.
+Review `execution-telemetry-live-projection`. A later slice can wire this replay projection to a sidecar subscriber or native bridge, but should still avoid persistence, provenance writes, Swift schema ownership, React rendering changes, and WebSocket `AgentEvent` payload changes until those are explicitly in scope.
 
 ## Blocked Decisions
 
-No current blocked decisions for Slice 11. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion.
+No current blocked decisions for Plan Slice 4A. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion. Plan Slice 4A adds the first live projection replay policy in `docs/execution-telemetry/decisions.md`.
 
 ## Deviations From Original Plan
 

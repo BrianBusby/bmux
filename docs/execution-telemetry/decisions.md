@@ -294,3 +294,26 @@ Consequences: Codex app-server exit diagnostics now have a canonical producer
 path without changing React rendering, WebSocket payload shape, persistence,
 provenance, Swift ownership, Claude source selection, or non-Codex behavior.
 Ignored app-server notifications remain deferred.
+
+## 2026-07-29 - Live Session Projection Replays One Ordered Telemetry Stream
+
+Decision: Plan Slice 4A adds a renderer-independent live session projection in
+`agent-chat` that consumes ordered `TelemetryEventEnvelope` values for exactly
+one bmux session/provider stream and rejects mixed-session or mixed-provider
+replay input.
+
+Rationale: The sidecar already owns canonical event identity and per-session
+sequence ordering. A live projection should trust that ordered canonical stream
+directly, rather than reconstructing state from React `AgentEvent` history or
+provider-specific raw envelopes.
+
+Alternatives rejected: parse existing React history back into lifecycle state;
+accept mixed-session replay and silently pick the latest identity; introduce
+server persistence or a native bridge in the same slice.
+
+Consequences: `LiveSessionProjection` can deterministically derive a small
+snapshot with session/provider identity, provider session/turn ids, lifecycle
+state, active tool-operation count, latest activity timestamp from the most
+recently applied envelope, latest usage and diagnostic summaries, pending
+approval-blocked state, and a unique files-changed count. React rendering and
+WebSocket `AgentEvent` payload behavior remain unchanged.
