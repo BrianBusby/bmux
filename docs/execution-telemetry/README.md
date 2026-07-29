@@ -19,15 +19,17 @@ Provenance is narrower. Provenance records durable engineering facts and evidenc
 
 ## Current State
 
-Slice 2 adds the first sidecar-owned fanout/projection seam in
-`agent-chat/executionTelemetryFanout.ts`. It assigns telemetry identity and
+Slice 2 added the first sidecar-owned fanout/projection seam in
+`agent-chat/executionTelemetryFanout.ts`. Slice 3 migrated Codex prompt
+submission and provider session linkage through that seam. It assigns telemetry identity and
 ordering in one place, supports sidecar telemetry subscribers, and projects
 telemetry envelopes to the existing `AgentEvent` UI stream.
 
-Existing provider adapters still emit `AgentEvent` directly, so no React
-rendering behavior, WebSocket payload schema, persistence, provenance
+Most provider adapter events still emit `AgentEvent` directly. The migrated
+Codex prompt/linkage path projects back to the same `AgentEvent` stream, so no
+React rendering behavior, WebSocket payload schema, persistence, provenance
 projection, Swift bridge, or Claude source selection has been changed.
 
-The structured Codex path currently enters bmux through `agent-chat/adapters/codex.ts`, which talks to `codex app-server` over JSON-RPC/NDJSON. That adapter converts app-server notifications directly into display-oriented `AgentEvent` values from `agent-chat/types.ts`. The server in `agent-chat/server.ts` owns session identity, status, bounded event replay, and WebSocket/REST fanout. React in `agent-chat/src/session.ts` consumes those events and folds them into renderable blocks.
+The structured Codex path currently enters bmux through `agent-chat/adapters/codex.ts`, which talks to `codex app-server` over JSON-RPC/NDJSON. Most of that adapter still converts app-server notifications directly into display-oriented `AgentEvent` values from `agent-chat/types.ts`, except the migrated provider session linkage path. The server in `agent-chat/server.ts` owns session identity, status, bounded event replay, and WebSocket/REST fanout. React in `agent-chat/src/session.ts` consumes those events and folds them into renderable blocks.
 
 The current structured app-server path does not write to provenance-engine. Existing provenance writes found in this audit are driven by native Swift/CLI hook and provenance paths, especially `CLI/bmux.swift`, `CLI/BMUXCLI+AgentHookCatalog.swift`, `CLI/BMUXCLI+CodexFireAndForgetHooks.swift`, `CLI/BMUXCLI+Provenance.swift`, and `bmuxTests/SubsessionProvenanceTests.swift`.

@@ -1,9 +1,10 @@
 # Telemetry Contract
 
-Status: Slice 2 provider-neutral contract and sidecar fanout seam.
+Status: Slice 3 provider-neutral contract, sidecar fanout seam, and first Codex producer migration.
 
 The sidecar fanout path has been added without persistence, provenance
-projection, provider rewrites, or React behavior changes.
+projection, React behavior changes, or broad provider rewrites. Slice 3 routes
+Codex prompt submission and provider session linkage through the seam.
 
 ## Contract Location
 
@@ -17,7 +18,7 @@ It is deliberately outside `agent-chat/src/session.ts`, which remains the React
 projection, and outside `webviews/src/agent-session/shared`, which is a
 separate webview package.
 
-`agent-chat/types.ts` remains the current WebSocket UI schema for Slice 2.
+`agent-chat/types.ts` remains the current WebSocket UI schema for Slice 3.
 `AgentEvent` must not become the canonical telemetry contract and must not be
 parsed back into telemetry.
 
@@ -70,7 +71,7 @@ envelope-shaped objects, but `schema`, `eventId`, `sessionId`, `sequence`,
 `capturedAtMs`, and `provider` are still assigned by the sidecar fanout.
 
 `SessionCtx.emitTelemetry` and `SessionCtx.subscribeTelemetry` are optional
-seams for future producers and subscribers. Existing adapters still emit the
+seams for future producers and subscribers. Most adapters and most Codex events still emit the
 current `AgentEvent` stream directly until later slices migrate specific
 provider events. The reverse direction remains prohibited: do not reconstruct
 canonical telemetry from `AgentEvent`.
@@ -109,9 +110,9 @@ CI.
 
 ## Deferred Work
 
-Slice 2 does not:
+Slice 3 does not:
 
-- dual-publish from providers;
+- broadly migrate provider events beyond Codex prompt/linkage;
 - add telemetry persistence;
 - write to provenance-engine;
 - choose or implement a Claude structured event source.

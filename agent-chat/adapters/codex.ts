@@ -1,6 +1,7 @@
 import type { Adapter, CommandEntry, OptionChoice, OptionValue, SessionCtx, SessionOption } from "../types";
 import { readLines, tryParse, truncate } from "./lines";
 import { prettifyModelLabel } from "./model-label";
+import { emitCodexProviderSessionLinked } from "./codexTelemetry";
 
 // Codex: one shared `codex app-server` process (JSON-RPC over NDJSON stdio,
 // the same interface the codex IDE extension uses) hosts a thread per chat
@@ -84,7 +85,7 @@ export const codexAdapter: Adapter = {
             if (!id) throw new Error("codex thread/start returned no thread id");
             sess.internal.threadId = id;
             srv.sessionsByThread.set(id, sess);
-            sess.emit({ kind: "meta", providerSessionId: id });
+            emitCodexProviderSessionLinked(sess, id, "thread/start");
             emitOptions(sess);
             await refreshCommands(sess);
             return id;
@@ -175,7 +176,7 @@ export const codexAdapter: Adapter = {
     const sourceState = codexState(source);
     target.internal.codex = forkedCodexState(sourceState);
     target.internal.deltaItems = new Set<string>();
-    target.emit({ kind: "meta", providerSessionId: forkThreadId });
+    emitCodexProviderSessionLinked(target, forkThreadId, "thread/fork");
     emitOptions(target);
   },
 };

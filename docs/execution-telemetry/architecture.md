@@ -73,9 +73,11 @@ renderer-independent sidecar fanout path. A per-session
 projects each envelope to the existing `AgentEvent` stream through
 `SessionCtx.emitTelemetry`.
 
-Existing provider adapters still call `SessionCtx.emit(AgentEvent)` directly,
-so React WebSocket payloads and `foldEvent()` behavior are unchanged in Slice
-2. Later slices should migrate provider events by publishing
+Most provider adapter events still call `SessionCtx.emit(AgentEvent)` directly.
+Slice 3 migrates Codex prompt submission and provider session linkage through
+`SessionCtx.emitTelemetry`; those envelopes project back to the same `AgentEvent`
+stream, so React WebSocket payloads and `foldEvent()` behavior are unchanged.
+Later slices should migrate more provider events by publishing
 `TelemetryEventEnvelopeDraft` values first and treating `AgentEvent` as the
 fanout projection only.
 

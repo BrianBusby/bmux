@@ -86,3 +86,23 @@ normalization in the same slice; add persistence or provenance writes now.
 Consequences: Provider adapters can migrate incrementally to
 `SessionCtx.emitTelemetry`. Until they do, existing `SessionCtx.emit` events
 remain the UI path only and are not treated as canonical telemetry.
+
+## 2026-07-28 - Migrate Codex Prompt And Linkage First
+
+Decision: Slice 3 migrates only Codex prompt submission and provider session
+linkage (`thread/start` and `thread/fork`) to `SessionCtx.emitTelemetry`.
+Non-Codex prompt echoes and the rest of the Codex adapter continue using the
+existing `AgentEvent` path until later narrow slices.
+
+Rationale: These events are small, deterministic, and already project to simple
+`user` and `meta` UI events. They prove provider-owned telemetry can fan out
+before React projection without changing rendering, WebSocket payload shape,
+persistence, provenance, Swift ownership, or Claude source selection.
+
+Alternatives rejected: migrate all Codex adapter events in one slice; migrate
+all providers' prompt echoes through telemetry; introduce persistence while
+moving the first provider events.
+
+Consequences: The telemetry fanout now has its first production Codex producer
+path, but high-volume turn, message, tool, approval, usage, and diagnostic
+Codex events still need future focused migrations.
