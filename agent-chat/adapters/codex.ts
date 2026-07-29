@@ -1,6 +1,21 @@
 import type { Adapter, CommandEntry, OptionChoice, OptionValue, SessionCtx, SessionOption } from "../types";
 import { readLines, tryParse, truncate } from "./lines";
 import { prettifyModelLabel } from "./model-label";
+import {
+  emitCodexApprovalRequested,
+  emitCodexApprovalResolved,
+  emitCodexDiagnostic,
+  emitCodexMessageCompleted,
+  emitCodexMessageDelta,
+  emitCodexProviderSessionLinked,
+  emitCodexToolCompleted,
+  emitCodexToolStarted,
+  emitCodexTurnCompleted,
+  emitCodexTurnFailed,
+  emitCodexTurnStarted,
+  emitCodexUsageUpdated,
+} from "./codexTelemetry";
+import type { TelemetryApprovalDecision, TelemetryApprovalKind, TelemetryToolKind, TelemetryToolStatus } from "../executionTelemetryTypes";
 
 // Codex: one shared `codex app-server` process (JSON-RPC over NDJSON stdio,
 // the same interface the codex IDE extension uses) hosts a thread per chat
@@ -37,6 +52,7 @@ interface CodexState {
   currentTurnId?: string;
   turnActive: boolean;
   activeGeneration?: number;
+  usageByTurnId: Map<string, unknown>;
   turnWaiters: ((id: string | null) => void)[];
   commands: CommandEntry[];
 }
@@ -69,8 +85,10 @@ export const codexAdapter: Adapter = {
     ],
   },
   async send(sess, prompt, generation?: number) {
+    let diagnosticMethod: string | undefined = "app-server/start";
     try {
       const srv = await ensureServer();
+      diagnosticMethod = "codex-state/ensure";
       const st = await ensureCodexState(sess);
       let threadId = sess.internal.threadId as string | undefined;
       if (!threadId) {
@@ -79,12 +97,13 @@ export const codexAdapter: Adapter = {
         let starting = sess.internal.threadStarting as Promise<string> | undefined;
         if (!starting) {
           starting = (async () => {
+            diagnosticMethod = "thread/start";
             const res = await srv.request("thread/start", { cwd: sess.cwd });
             const id: string | undefined = res.thread?.id;
             if (!id) throw new Error("codex thread/start returned no thread id");
             sess.internal.threadId = id;
             srv.sessionsByThread.set(id, sess);
-            sess.emit({ kind: "meta", providerSessionId: id });
+            emitCodexProviderSessionLinked(sess, id, "thread/start");
             emitOptions(sess);
             await refreshCommands(sess);
             return id;
@@ -94,11 +113,13 @@ export const codexAdapter: Adapter = {
             if (sess.internal.threadStarting === starting) sess.internal.threadStarting = undefined;
           });
         }
+        diagnosticMethod = "thread/start";
         threadId = await starting;
       }
       if (codexSendRoute(st) === "steer") {
         const turnId = st.currentTurnId ?? await waitForTurnId(st);
         if (!turnId) throw new Error("codex turn is still starting");
+        diagnosticMethod = "turn/steer";
         await srv.request("turn/steer", {
           threadId,
           expectedTurnId: turnId,
@@ -109,6 +130,7 @@ export const codexAdapter: Adapter = {
       sess.setStatus("running");
       st.turnActive = true;
       st.activeGeneration = generation;
+      diagnosticMethod = "turn/start";
       await srv.request("turn/start", {
         threadId,
         input: [{ type: "text", text: prompt }],
@@ -121,17 +143,7 @@ export const codexAdapter: Adapter = {
       });
       // Completion arrives via the turn/completed notification.
     } catch (err) {
-      const st = sess.internal.codex as CodexState | undefined;
-      const generation = st?.activeGeneration;
-      if (st) {
-        st.turnActive = false;
-        st.currentTurnId = undefined;
-        st.activeGeneration = undefined;
-        resolveTurnWaiters(st, null);
-      }
-      sess.emit({ kind: "error", message: truncate(String(err), 400) });
-      sess.emit({ kind: "done", generation } as any);
-      sess.setStatus("idle");
+      handleCodexSendFailure(sess, err, diagnosticMethod);
     }
   },
   stop(sess) {
@@ -175,7 +187,7 @@ export const codexAdapter: Adapter = {
     const sourceState = codexState(source);
     target.internal.codex = forkedCodexState(sourceState);
     target.internal.deltaItems = new Set<string>();
-    target.emit({ kind: "meta", providerSessionId: forkThreadId });
+    emitCodexProviderSessionLinked(target, forkThreadId, "thread/fork");
     emitOptions(target);
   },
 };
@@ -187,6 +199,7 @@ function forkedCodexState(sourceState: CodexState): CodexState {
     currentTurnId: undefined,
     turnActive: false,
     activeGeneration: undefined,
+    usageByTurnId: new Map(),
     commands: sourceState.commands.slice(),
   };
 }
@@ -252,23 +265,7 @@ async function startServer(): Promise<AppServer> {
     }
     handleServerMessage(srv, msg);
   }, () => {
-    for (const p of pending.values()) p.reject(new Error("codex app-server exited"));
-    pending.clear();
-    for (const sess of srv.sessionsByThread.values()) {
-      const st = codexState(sess);
-      if (st.turnActive) {
-        const generation = st.activeGeneration;
-        st.turnActive = false;
-        st.currentTurnId = undefined;
-        st.activeGeneration = undefined;
-        resolveTurnWaiters(st, null);
-        sess.emit({ kind: "error", message: "codex app-server exited mid-turn" });
-        sess.emit({ kind: "done", generation } as any);
-        sess.setStatus("idle");
-      }
-      sess.internal.threadId = undefined;
-    }
-    if (shared === srv) shared = null;
+    handleCodexAppServerExit(srv, pending);
   });
   readLines(proc.stderr, () => {});
 
@@ -323,11 +320,28 @@ function handleServerMessage(srv: AppServer, msg: any) {
   if (msg.id != null && msg.method) {
     const approve = sess ? codexState(sess).approvals === "never" : false;
     const response = approvalResponse(msg.method, approve);
+    if (sess) emitCodexApprovalLifecycle(sess, msg, p, response, approve);
     srv.write({ jsonrpc: "2.0", id: msg.id, ...response });
     if (sess && "result" in response && !approve) {
-      sess.emit({ kind: "status", text: `denied: ${truncate(String(p.command ?? msg.method), 120)} (auto-approve is off)` });
+      emitCodexDiagnostic(sess, {
+        providerSessionId: requestProviderSessionId(sess, p),
+        turnId: codexState(sess).currentTurnId,
+        method: msg.method,
+        requestId: msg.id,
+        level: "info",
+        message: `denied: ${truncate(String(p.command ?? msg.method), 120)} (auto-approve is off)`,
+        code: "approval.denied",
+      });
     } else if (sess && "error" in response) {
-      sess.emit({ kind: "status", text: `declined unsupported request: ${truncate(String(msg.method), 120)}` });
+      emitCodexDiagnostic(sess, {
+        providerSessionId: requestProviderSessionId(sess, p),
+        turnId: codexState(sess).currentTurnId,
+        method: msg.method,
+        requestId: msg.id,
+        level: "warning",
+        message: `declined unsupported request: ${truncate(String(msg.method), 120)}`,
+        code: "request.unsupported",
+      });
     }
     return;
   }
@@ -338,7 +352,14 @@ function handleServerMessage(srv: AppServer, msg: any) {
     case "turn/started":
       st.turnActive = true;
       st.currentTurnId = p.turn?.id;
+      st.usageByTurnId.clear();
       resolveTurnWaiters(st, st.currentTurnId ?? null);
+      emitCodexTurnStarted(sess, {
+        providerSessionId: sess.internal.threadId as string | undefined,
+        turnId: st.currentTurnId,
+        model: st.model,
+        effort: st.effort,
+      });
       break;
     case "thread/settings/updated":
       applyThreadSettings(sess, p.settings);
@@ -348,15 +369,31 @@ function handleServerMessage(srv: AppServer, msg: any) {
       break;
     case "item/agentMessage/delta":
       if (p.delta) {
-        (sess.internal.deltaItems as Set<string>).add(p.itemId);
-        sess.emit({ kind: "delta", text: p.delta });
+        ((sess.internal.deltaItems ??= new Set<string>()) as Set<string>).add(p.itemId);
+        emitCodexMessageDelta(sess, {
+          providerSessionId: sess.internal.threadId as string | undefined,
+          turnId: st.currentTurnId,
+          itemId: typeof p.itemId === "string" ? p.itemId : undefined,
+          method: "item/agentMessage/delta",
+          stream: "assistant",
+          text: String(p.delta),
+        });
       }
       break;
     case "item/reasoning/delta":
     case "item/reasoningSummary/delta":
     case "item/reasoning/textDelta":
     case "item/reasoning/summaryTextDelta":
-      if (p.delta) sess.emit({ kind: "thinking", text: p.delta });
+      if (p.delta) {
+        emitCodexMessageDelta(sess, {
+          providerSessionId: sess.internal.threadId as string | undefined,
+          turnId: st.currentTurnId,
+          itemId: typeof p.itemId === "string" ? p.itemId : undefined,
+          method: msg.method,
+          stream: "reasoning",
+          text: String(p.delta),
+        });
+      }
       break;
     case "item/started":
       itemStarted(sess, p.item);
@@ -365,84 +402,358 @@ function handleServerMessage(srv: AppServer, msg: any) {
       itemCompleted(sess, p.item);
       break;
     case "thread/tokenUsage/updated":
-      sess.internal.lastUsage = p.tokenUsage?.total;
+      recordCodexTokenUsage(st, p.turnId, p.tokenUsage);
+      emitCodexUsageUpdated(sess, {
+        providerSessionId: sess.internal.threadId as string | undefined,
+        turnId: typeof p.turnId === "string" ? p.turnId : undefined,
+        usage: codexUsageTotal(p.tokenUsage),
+      });
       break;
     case "turn/completed": {
       st.turnActive = false;
+      const turnId = p.turn?.id ?? st.currentTurnId;
       st.currentTurnId = undefined;
       const generation = st.activeGeneration;
       st.activeGeneration = undefined;
+      const usage = takeCodexTokenUsage(st, turnId);
       resolveTurnWaiters(st, null);
-      const u = sess.internal.lastUsage as any;
-      const secs = p.turn?.durationMs != null ? `${(p.turn.durationMs / 1000).toFixed(1)}s` : null;
-      const stats = [
-        u ? `${u.inputTokens ?? 0} in · ${u.outputTokens ?? 0} out` : null,
-        secs,
-      ].filter(Boolean).join(" · ");
-      sess.emit({ kind: "done", stats, generation } as any);
+      emitCodexTurnCompleted(sess, {
+        providerSessionId: sess.internal.threadId as string | undefined,
+        turnId,
+        durationMs: p.turn?.durationMs,
+        usage,
+        generation,
+      });
       sess.setStatus("idle");
       break;
     }
     case "turn/failed": {
       st.turnActive = false;
+      const turnId = p.turn?.id ?? st.currentTurnId;
       st.currentTurnId = undefined;
       const generation = st.activeGeneration;
       st.activeGeneration = undefined;
+      st.usageByTurnId.clear();
       resolveTurnWaiters(st, null);
-      sess.emit({ kind: "error", message: truncate(p.error?.message ?? p.turn?.error?.message ?? "turn failed", 400) });
-      sess.emit({ kind: "done", generation } as any);
+      emitCodexTurnFailed(sess, {
+        providerSessionId: sess.internal.threadId as string | undefined,
+        turnId,
+        durationMs: p.turn?.durationMs,
+        message: p.error?.message ?? p.turn?.error?.message,
+        code: p.error?.code ?? p.turn?.error?.code,
+        generation,
+      });
       sess.setStatus("idle");
       break;
     }
   }
 }
 
+function handleCodexSendFailure(sess: SessionCtx, err: unknown, method: string | undefined) {
+  const st = sess.internal.codex as CodexState | undefined;
+  const generation = st?.activeGeneration;
+  const turnId = st?.currentTurnId;
+  if (st) {
+    st.turnActive = false;
+    st.currentTurnId = undefined;
+    st.activeGeneration = undefined;
+    resolveTurnWaiters(st, null);
+  }
+  emitCodexDiagnostic(sess, {
+    providerSessionId: sess.internal.threadId as string | undefined,
+    turnId,
+    method,
+    level: "error",
+    message: truncate(String(err), 400),
+    code: "send.failed",
+  });
+  sess.emit({ kind: "done", generation } as any);
+  sess.setStatus("idle");
+}
+
+function handleCodexAppServerExit(
+  srv: AppServer,
+  pending: Map<number, { reject: (e: Error) => void }> = new Map(),
+) {
+  for (const p of pending.values()) p.reject(new Error("codex app-server exited"));
+  pending.clear();
+  for (const sess of srv.sessionsByThread.values()) {
+    const st = codexState(sess);
+    if (st.turnActive) {
+      const generation = st.activeGeneration;
+      const turnId = st.currentTurnId;
+      st.turnActive = false;
+      st.currentTurnId = undefined;
+      st.activeGeneration = undefined;
+      resolveTurnWaiters(st, null);
+      emitCodexDiagnostic(sess, {
+        providerSessionId: sess.internal.threadId as string | undefined,
+        turnId,
+        method: "app-server/exit",
+        level: "error",
+        message: "codex app-server exited mid-turn",
+        code: "app_server.exited",
+      });
+      sess.emit({ kind: "done", generation } as any);
+      sess.setStatus("idle");
+    }
+    sess.internal.threadId = undefined;
+  }
+  if (shared === srv) shared = null;
+}
+
+function requestProviderSessionId(sess: SessionCtx, params: Record<string, unknown>): string | undefined {
+  if (typeof params.threadId === "string") return params.threadId;
+  if (typeof params.conversationId === "string") return params.conversationId;
+  return sess.internal.threadId as string | undefined;
+}
+
+function emitCodexApprovalLifecycle(
+  sess: SessionCtx,
+  msg: { id: string | number; method: string },
+  params: Record<string, unknown>,
+  response: { result: unknown } | { error: unknown },
+  approve: boolean,
+) {
+  const st = codexState(sess);
+  const requestId = msg.id;
+  const approvalId = `codex-approval-${requestId}`;
+  const providerSessionId = requestProviderSessionId(sess, params);
+  emitCodexApprovalRequested(sess, {
+    providerSessionId,
+    turnId: st.currentTurnId,
+    requestId,
+    approvalId,
+    approvalKind: codexApprovalKind(msg.method),
+    method: msg.method,
+    operationId: codexApprovalOperationId(params),
+    summary: codexApprovalSummary(msg.method, params),
+  });
+  emitCodexApprovalResolved(sess, {
+    providerSessionId,
+    turnId: st.currentTurnId,
+    requestId,
+    approvalId,
+    method: msg.method,
+    decision: codexApprovalDecision(response, approve),
+    reason: codexApprovalReason(response, approve),
+  });
+}
+
+function codexApprovalKind(method: string): TelemetryApprovalKind {
+  switch (method) {
+    case "execCommandApproval":
+    case "item/commandExecution/requestApproval":
+      return "command";
+    case "applyPatchApproval":
+    case "item/fileChange/requestApproval":
+      return "file-change";
+    default:
+      return "other";
+  }
+}
+
+function codexApprovalOperationId(params: Record<string, unknown>): string | undefined {
+  if (typeof params.itemId === "string") return params.itemId;
+  if (typeof params.callId === "string") return params.callId;
+  if (params.item && typeof params.item === "object" && typeof (params.item as Record<string, unknown>).id === "string") {
+    return (params.item as Record<string, unknown>).id as string;
+  }
+  return undefined;
+}
+
+function codexApprovalSummary(method: string, params: Record<string, unknown>): string {
+  const commandSummary = approvalCommandSummary(params);
+  if (commandSummary) return truncate(commandSummary, 400);
+  const fileSummary = approvalFileSummary(params);
+  if (fileSummary) return truncate(fileSummary, 400);
+  if (typeof params.reason === "string" && params.reason) return truncate(params.reason, 400);
+  return truncate(method, 400);
+}
+
+function approvalCommandSummary(params: Record<string, unknown>): string | undefined {
+  if (typeof params.command === "string" && params.command) return params.command;
+  if (Array.isArray(params.command) && params.command.length) {
+    const parts = params.command.filter((part): part is string => typeof part === "string");
+    if (parts.length) return parts.join(" ");
+  }
+  if (params.item && typeof params.item === "object") {
+    const command = (params.item as Record<string, unknown>).command;
+    if (typeof command === "string" && command) return command;
+  }
+  return undefined;
+}
+
+function approvalFileSummary(params: Record<string, unknown>): string | undefined {
+  if (params.item && typeof params.item === "object") return summarizeChanges(params.item);
+  const changes = params.changes;
+  if (Array.isArray(changes) && changes.length) return summarizeChanges(params);
+  const fileChanges = params.fileChanges;
+  if (fileChanges && typeof fileChanges === "object" && !Array.isArray(fileChanges)) {
+    const entries = Object.entries(fileChanges as Record<string, unknown>);
+    if (entries.length) {
+      return entries.map(([path, change]) => `${fileChangeApprovalType(change)} ${path}`).join(", ");
+    }
+  }
+  if (typeof params.grantRoot === "string" && params.grantRoot) return `grant write access ${params.grantRoot}`;
+  return undefined;
+}
+
+function fileChangeApprovalType(change: unknown): string {
+  if (change && typeof change === "object" && typeof (change as Record<string, unknown>).type === "string") {
+    return (change as Record<string, unknown>).type as string;
+  }
+  return "change";
+}
+
+function codexApprovalDecision(
+  response: { result: unknown } | { error: unknown },
+  approve: boolean,
+): TelemetryApprovalDecision {
+  if ("error" in response) return "unsupported";
+  return approve ? "approved" : "denied";
+}
+
+function codexApprovalReason(
+  response: { result: unknown } | { error: unknown },
+  approve: boolean,
+): string | undefined {
+  if ("error" in response) return "unsupported request";
+  return approve ? undefined : "auto-approve is off";
+}
+
 function itemStarted(sess: SessionCtx, item: any) {
   if (!item) return;
+  const st = codexState(sess);
+  const common = {
+    providerSessionId: sess.internal.threadId as string | undefined,
+    turnId: st.currentTurnId,
+    operationId: toolOperationId(item),
+    providerItemType: typeof item.type === "string" ? item.type : undefined,
+  };
   switch (item.type) {
     case "commandExecution":
-      sess.emit({ kind: "tool-start", toolId: item.id, name: "shell", detail: truncate(item.command ?? "") });
+      emitCodexToolStarted(sess, {
+        ...common,
+        toolKind: "command",
+        name: "shell",
+        inputSummary: truncate(item.command ?? ""),
+      });
       break;
     case "fileChange":
     case "patchApply":
-      sess.emit({ kind: "tool-start", toolId: item.id, name: "edit", detail: truncate(summarizeChanges(item)) });
+      emitCodexToolStarted(sess, {
+        ...common,
+        toolKind: "file-change",
+        name: "edit",
+        inputSummary: truncate(summarizeChanges(item)),
+      });
       break;
     case "webSearch":
-      sess.emit({ kind: "tool-start", toolId: item.id, name: "web_search", detail: truncate(item.query ?? "") });
+      emitCodexToolStarted(sess, {
+        ...common,
+        toolKind: "web-search",
+        name: "web_search",
+        inputSummary: truncate(item.query ?? ""),
+      });
       break;
     case "mcpToolCall":
-      sess.emit({ kind: "tool-start", toolId: item.id, name: item.tool ?? "mcp", detail: truncate(JSON.stringify(item.arguments ?? {})) });
+      emitCodexToolStarted(sess, {
+        ...common,
+        toolKind: "mcp",
+        name: item.tool ?? "mcp",
+        inputSummary: truncate(JSON.stringify(item.arguments ?? {})),
+      });
       break;
   }
 }
 
 function itemCompleted(sess: SessionCtx, item: any) {
   if (!item) return;
+  const st = codexState(sess);
+  const common = {
+    providerSessionId: sess.internal.threadId as string | undefined,
+    turnId: st.currentTurnId,
+    operationId: toolOperationId(item),
+    providerItemType: typeof item.type === "string" ? item.type : undefined,
+    providerStatus: typeof item.status === "string" ? item.status : undefined,
+  };
   switch (item.type) {
     case "agentMessage": {
-      const seen = sess.internal.deltaItems as Set<string>;
-      if (item.text && !seen.has(item.id)) sess.emit({ kind: "assistant", text: item.text });
+      const seen = (sess.internal.deltaItems ??= new Set<string>()) as Set<string>;
+      if (item.text && !seen.has(item.id)) {
+        const st = codexState(sess);
+        emitCodexMessageCompleted(sess, {
+          providerSessionId: sess.internal.threadId as string | undefined,
+          turnId: st.currentTurnId,
+          itemId: typeof item.id === "string" ? item.id : undefined,
+          stream: "assistant",
+          text: String(item.text),
+        });
+      }
       seen.delete(item.id);
       break;
     }
     case "commandExecution":
-      sess.emit({
-        kind: "tool-end",
-        toolId: item.id,
+      emitCodexToolCompleted(sess, {
+        ...common,
+        toolKind: "command",
         name: "shell",
-        ok: item.status !== "failed" && (item.exitCode == null || item.exitCode === 0),
-        detail: truncate(item.aggregatedOutput ?? "", 400),
+        status: codexCommandToolStatus(item),
+        outputSummary: truncate(item.aggregatedOutput ?? "", 400),
+        exitCode: item.exitCode,
+        durationMs: item.durationMs,
       });
       break;
     case "fileChange":
     case "patchApply":
-      sess.emit({ kind: "tool-end", toolId: item.id, name: "edit", ok: item.status !== "failed", detail: truncate(summarizeChanges(item)) });
+      emitCodexToolCompleted(sess, {
+        ...common,
+        toolKind: "file-change",
+        name: "edit",
+        status: codexLegacyOkStatus(item.status !== "failed"),
+        outputSummary: truncate(summarizeChanges(item)),
+        durationMs: item.durationMs,
+      });
       break;
     case "webSearch":
     case "mcpToolCall":
-      sess.emit({ kind: "tool-end", toolId: item.id, ok: item.status !== "failed" });
+      emitCodexToolCompleted(sess, {
+        ...common,
+        toolKind: toolKindForItemType(item.type),
+        status: codexLegacyOkStatus(item.status !== "failed"),
+        durationMs: item.durationMs,
+      });
       break;
   }
+}
+
+function toolOperationId(item: any): string {
+  return typeof item.id === "string" ? item.id : String(item.id ?? "");
+}
+
+function toolKindForItemType(type: string): TelemetryToolKind {
+  switch (type) {
+    case "commandExecution":
+      return "command";
+    case "fileChange":
+    case "patchApply":
+      return "file-change";
+    case "webSearch":
+      return "web-search";
+    case "mcpToolCall":
+      return "mcp";
+    default:
+      return "other";
+  }
+}
+
+function codexCommandToolStatus(item: any): TelemetryToolStatus {
+  return codexLegacyOkStatus(item.status !== "failed" && (item.exitCode == null || item.exitCode === 0));
+}
+
+function codexLegacyOkStatus(ok: boolean): TelemetryToolStatus {
+  return ok ? "succeeded" : "failed";
 }
 
 function summarizeChanges(item: any): string {
@@ -465,9 +776,41 @@ function defaultState(autoApprove: boolean): CodexState {
     mode: "default",
     turnActive: false,
     activeGeneration: undefined,
+    usageByTurnId: new Map(),
     turnWaiters: [],
     commands: [],
   };
+}
+
+function recordCodexTokenUsage(st: CodexState, turnId: unknown, tokenUsage: unknown) {
+  if (typeof turnId !== "string") return;
+  if (!tokenUsage || typeof tokenUsage !== "object") return;
+  const total = codexUsageTotal(tokenUsage);
+  if (!total || typeof total !== "object") return;
+  st.usageByTurnId.set(turnId, {
+    ...(total as Record<string, unknown>),
+  });
+}
+
+function codexUsageTotal(tokenUsage: unknown): unknown {
+  if (!tokenUsage || typeof tokenUsage !== "object") return undefined;
+  const raw = tokenUsage as Record<string, unknown>;
+  const total = raw.total;
+  if (!total || typeof total !== "object") return undefined;
+  return {
+    ...(total as Record<string, unknown>),
+    modelContextWindow: raw.modelContextWindow,
+  };
+}
+
+function takeCodexTokenUsage(st: CodexState, turnId: unknown): unknown {
+  if (typeof turnId !== "string") {
+    st.usageByTurnId.clear();
+    return undefined;
+  }
+  const usage = st.usageByTurnId.get(turnId);
+  st.usageByTurnId.clear();
+  return usage;
 }
 
 export function codexForkStateForTest(sourceState: Partial<CodexState>): { turnActive: boolean; currentTurnId?: string; activeGeneration?: number } {
@@ -738,6 +1081,37 @@ function applyThreadSettings(sess: SessionCtx, settings: any) {
   if (settings.sandboxPolicy?.type) st.sandbox = sandboxValue(settings.sandboxPolicy.type);
   if (settings.collaborationMode?.mode) st.mode = String(settings.collaborationMode.mode);
   emitOptions(sess);
+}
+
+export function codexHandleServerMessageForTest(sess: SessionCtx, msg: any) {
+  const p = msg.params ?? {};
+  const threadKey = p.threadId ?? p.conversationId ?? sess.internal.threadId ?? "codex-test-thread";
+  sess.internal.threadId ??= threadKey;
+  handleServerMessage({
+    proc: undefined as unknown as Bun.Subprocess<"pipe", "pipe", "pipe">,
+    request: async () => {
+      throw new Error("unexpected Codex request in server-message test");
+    },
+    write: () => {},
+    sessionsByThread: new Map([[threadKey, sess]]),
+  }, msg);
+}
+
+export function codexHandleSendFailureForTest(sess: SessionCtx, err: unknown, method?: string) {
+  handleCodexSendFailure(sess, err, method);
+}
+
+export function codexHandleAppServerExitForTest(sess: SessionCtx) {
+  const threadKey = sess.internal.threadId ?? "codex-test-thread";
+  sess.internal.threadId ??= threadKey;
+  handleCodexAppServerExit({
+    proc: undefined as unknown as Bun.Subprocess<"pipe", "pipe", "pipe">,
+    request: async () => {
+      throw new Error("unexpected Codex request in app-server-exit test");
+    },
+    write: () => {},
+    sessionsByThread: new Map([[String(threadKey), sess]]),
+  });
 }
 
 function sandboxValue(type: string): string {

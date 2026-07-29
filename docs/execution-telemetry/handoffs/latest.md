@@ -2,117 +2,74 @@
 
 ## Session identity
 
-- Date: 2026-07-28
-- Slice: Slice 0 - Repository audit and event-flow inventory
-- Branch: `execution-telemetry-slice-0`
-- Starting commit: `d346355724b4d85339b0604dcdb6aa559973d4ae`
-- Slice 0 audit commit: `703c11782b9ef440762c1e28f9cd6ba73326dd74`
-- Working tree status: documentation changes only at handoff creation time
+- Date: 2026-07-29
+- Slice: Slice 11 - Codex app-server exit diagnostic telemetry migration
+- Branch: `execution-telemetry-slice-1`
+- PR: https://github.com/BrianBusby/bmux/pull/12
+- Base branch: stacked on PR #11 / `execution-telemetry-slice-0`
+- Slice 6 implementation head before Slice 7: `ae19a8d78e2db9445991f89b289720e855d3892e`
+- Slice 6 autoreview: clean; Archimedes made no changes and pushed no commits
+- Slice 7 implementation head: `8c1405d7fe32c77cc5bddb1604f3be442d32be37`
+- Slice 8 implementation head: branch head after the final Slice 8 commit
+- Slice 9 implementation head: branch head after the final Slice 9 commit
+- Slice 10 implementation head: `9fdfef92b85524375144b28157933fba8e03eb0b`
+- Slice 11 implementation head: branch head after the final Slice 11 commit
+- Tagged Debug build: `execution-telemetry-slice-11` succeeded
+- Tagged Debug app: `/Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-execution-telemetry-slice-11/Build/Products/Debug/bmux DEV execution-telemetry-slice-11.app`
 
 ## Objective completed
 
-Audit the current structured Codex lifecycle path without refactoring it: Codex app-server input, provider adapter normalization, sidecar session ownership, `AgentEvent` replay/fanout, React consumption, native bridge, and provenance boundaries.
+Migrated one narrow Codex diagnostic path onto `SessionCtx.emitTelemetry` while preserving the existing React `AgentEvent` stream. Codex app-server process exits during an active turn now publish bounded `diagnostic` telemetry envelopes when `emitTelemetry` is available, while preserving the existing React `error` projection and direct `done` close-out.
 
 ## Work completed
 
-- Created `docs/execution-telemetry/` document structure.
-- Documented current architecture in `architecture.md`.
-- Documented raw Codex app-server mappings and lossy fields in `event-inventory.md`.
-- Added initial provider capability matrix in `provider-capabilities.md`.
-- Added initial persistence/provenance separation in `persistence-policy.md`.
-- Added status and decisions documents.
-- Generated local Codex app-server schema under `/tmp` for audit evidence.
-
-No production code, tests, migrations, or provenance-engine files were changed.
-
-## Architecture findings
-
-- `agent-chat/adapters/codex.ts` starts one shared `codex app-server` process and maps notifications directly to display-oriented `AgentEvent` values.
-- `agent-chat/server.ts` owns sidecar sessions, status, replay, WebSocket subscribers, and REST session creation.
-- React consumes history/live events and folds `AgentEvent` into `Block` rows; it is not required for sidecar session ownership.
-- `POST /api/sessions` can start a session without a React subscriber.
-- Multiple WebSocket consumers can subscribe to one sidecar session, but there is no provider-neutral non-UI event bus.
-- Current app-server normalization loses structured Codex fields before any native, analytics, persistence, or provenance consumer can see them.
-- No Codex app-server lifecycle events were found reaching provenance-engine. Existing provenance paths are Swift/CLI hook-driven and separate from agent-chat sidecar events.
-
-## Decisions made
-
-See `../decisions.md`:
-
-- `2026-07-28 - Slice 0 Is Audit-Only`
-- `2026-07-28 - Treat AgentEvent As Current UI Projection`
-- `2026-07-28 - Keep Provenance Projection Separate`
+- Routed Codex app-server stdout-close mid-turn failures through telemetry from `agent-chat/adapters/codex.ts`.
+- Preserved the exact existing React `error` message projection.
+- Preserved the direct `done` close-out and generation value as current UI projection behavior, not canonical telemetry.
+- Preserved bounded provider references for app-server exit method, thread id, and turn id when available.
+- Preserved bounded diagnostic level, code, and message only; no raw process handle, raw error object, or raw JSON-RPC provider envelope was added to canonical telemetry.
+- Extended `agent-chat/test/codex-telemetry-migration.test.ts` proving telemetry subscribers receive the app-server exit diagnostic envelope and React receives the same `error` plus `done` events.
 
 ## Tests run
 
-```bash
-bun run agent-session-web:test
-```
-
-Result: failed before tests ran because `bun` was not on PATH: `zsh:1: command not found: bun`.
-
-```bash
-codex --version
-codex app-server generate-json-schema --out /tmp/bmux-codex-schema-1785276507
-```
-
-Result: passed. Codex version was `codex-cli 0.144.5`; schema files were generated under `/tmp`.
+- `git diff --check`: passed.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/codex-telemetry-migration.test.ts`: passed.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/execution-telemetry-fanout.test.ts`: passed.
+- `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: passed.
+- `./scripts/reload.sh --tag execution-telemetry-slice-11`: passed.
 
 ## Known failures or limitations
 
-Pre-existing failures:
-
-- `bun` unavailable on PATH in this shell, preventing the targeted agent-session web test from running.
-
-Failures introduced by this slice:
-
-- None known. Documentation-only changes.
-
-Intentionally deferred behavior:
-
-- No provider-neutral contract.
-- No execution-event bus.
-- No dual-publish path.
-- No telemetry persistence.
-- No provenance projection.
-- No Claude structured-source audit beyond noting current code boundaries.
+- Existing non-migrated adapter events still emit `AgentEvent` directly by design.
+- Codex ignored app-server notifications are not migrated in Slice 11.
+- No telemetry persistence or provenance projection exists.
+- No Swift decoder or native subscriber exists.
+- No Claude structured-source work has started.
 
 ## Important files for the next session
 
-- `docs/execution-telemetry/architecture.md`
-- `docs/execution-telemetry/event-inventory.md`
-- `docs/execution-telemetry/provider-capabilities.md`
-- `docs/execution-telemetry/decisions.md`
-- `agent-chat/types.ts`
-- `agent-chat/server.ts`
+- `agent-chat/adapters/codexTelemetry.ts`
 - `agent-chat/adapters/codex.ts`
-- `agent-chat/src/session.ts`
-- `Sources/AppDelegate+AgentChat.swift`
-- `CLI/bmux.swift`
-- `CLI/BMUXCLI+AgentHookCatalog.swift`
-- `CLI/BMUXCLI+CodexFireAndForgetHooks.swift`
-- `/Users/brianbusby/repos/provenance-engine/Sources/ProvenanceEngineContracts/ProvenanceSessionLifecycleRequest.swift`
+- `agent-chat/server.ts`
+- `agent-chat/executionTelemetryFanout.ts`
+- `agent-chat/executionTelemetryTypes.ts`
+- `agent-chat/types.ts`
+- `agent-chat/test/codex-telemetry-migration.test.ts`
+- `agent-chat/test/execution-telemetry-fanout.test.ts`
+- `docs/execution-telemetry/contract.md`
+- `docs/execution-telemetry/architecture.md`
+- `docs/execution-telemetry/decisions.md`
+- `docs/execution-telemetry/implementation-status.md`
 
 ## Next slice
 
-Slice 1 - Define ownership boundaries and provider-neutral contract.
-
-## First action for the next agent
-
-Choose the contract module location by inspecting existing TypeScript build and test boundaries around `agent-chat/types.ts`, `agent-chat/server.ts`, and `webviews/src/agent-session/shared`.
+After Slice 11 review, continue only if there is another bounded Codex diagnostic path worth preserving. The only obvious remaining diagnostic candidate is ignored app-server notifications, and it should stay deferred unless there is a concrete reason to surface them. Keep proving that the existing React `AgentEvent` stream remains equivalent for any migrated path.
 
 ## Do not do yet
 
-- Do not implement the execution-event bus; that is Slice 2.
-- Do not change React rendering.
-- Do not add telemetry persistence.
+- Do not add persistence.
 - Do not add provenance writes.
-- Do not start Claude implementation or source selection.
-- Do not use `AgentEvent` as the canonical contract.
-
-## Review notes
-
-- The strongest Slice 1 risk is TypeScript/Swift contract drift. The final contract location and generation/synchronization policy must be explicit.
-- The local Codex schema is from `codex-cli 0.144.5`; regenerate if the local CLI changes.
-- Current `AgentEvent.done.stats` is a display string and must not be parsed back into telemetry.
-- Approval handling currently auto-responds inside `handleServerMessage()`; a future contract must model request and resolution separately.
+- Do not start Claude implementation or structured-source selection.
+- Do not change React rendering behavior.
+- Do not make Swift the schema owner.
+- Do not store raw provider envelopes in canonical telemetry events.

@@ -62,7 +62,26 @@ React is not required for lifecycle capture once a session exists. `POST /api/se
 
 React is not required for session ownership. The `sessions` map and `Session.events` replay buffer are process memory in `agent-chat/server.ts`; React reconnects and receives history from that owner.
 
-Multiple React/WebSocket consumers can subscribe to the same session. Each `Session` has a `sockets` set, `subscribe()` adds a socket, and `broadcastSessionEvent()` sends each event to all subscribed sockets. This multiple-consumer support is UI-only; there is no renderer-independent execution-event bus, native subscriber API, or provider-neutral event contract.
+Multiple React/WebSocket consumers can subscribe to the same session. Each `Session` has a `sockets` set, `subscribe()` adds a socket, and `broadcastSessionEvent()` sends each event to all subscribed sockets. This multiple-consumer support is UI-only; before Slice 2 there was no renderer-independent execution-event fanout, native subscriber API, or provider-neutral event contract.
+
+## Slice 2 Fanout Seam
+
+`agent-chat/executionTelemetryFanout.ts` now provides the first
+renderer-independent sidecar fanout path. A per-session
+`ExecutionTelemetryFanout` assigns `eventId`, `sequence`, `capturedAtMs`,
+`sessionId`, and `provider` in one place, notifies telemetry subscribers, and
+projects each envelope to the existing `AgentEvent` stream through
+`SessionCtx.emitTelemetry`.
+
+Most provider adapter events still call `SessionCtx.emit(AgentEvent)` directly.
+Slices 3 through 9 migrate Codex prompt submission, provider session linkage,
+turn lifecycle, message lifecycle, tool lifecycle, approval lifecycle,
+standalone usage observations, and request-status diagnostics through
+`SessionCtx.emitTelemetry`; those envelopes project back to the same
+`AgentEvent` stream, so React WebSocket payloads and `foldEvent()` behavior are
+unchanged. Later slices should migrate more provider events by publishing
+`TelemetryEventEnvelopeDraft` values first and treating `AgentEvent` as the
+fanout projection only.
 
 ## Current Lossy Boundary
 
@@ -72,8 +91,8 @@ Important reductions:
 
 - `turn/completed` token usage and duration become a display string in `done.stats`.
 - `thread/tokenUsage/updated` stores only `tokenUsage.total` in `sess.internal.lastUsage`; `tokenUsage.last`, cached-input tokens, reasoning-output tokens, total tokens, model context window, and `turnId` do not reach `AgentEvent`.
-- Tool events drop provider turn id, timestamps, cwd, process id, numeric duration, command actions, source, MCP server/plugin details, structured results, and several item variants.
-- Approval requests are answered immediately and reduced to status text only when denied or unsupported.
+- Remaining non-migrated tool details still drop process id, command actions, source, MCP server/plugin details, structured results, and several item variants. Slice 6 preserves provider turn id, item id, tool kind, bounded summaries, exit code, duration when present, and provider item/status scalar metadata for migrated Codex tool events.
+- Approval requests are answered immediately; denied and unsupported request status text now also publishes bounded diagnostic telemetry.
 - Reasoning and assistant deltas drop item id, turn id, index, and ordering metadata.
 - App-server errors, compaction, hooks, model reroutes, warnings, guardian review, process output/exit, realtime, thread status/name/goal, and several other notifications are currently ignored.
 
@@ -87,7 +106,10 @@ This means Codex app-server lifecycle telemetry currently reaches the React agen
 
 ## Target Direction For Later Slices
 
-Slice 1 should define a common execution-event contract outside React component code. Slice 2 should introduce a sidecar-owned event bus so this direction is possible:
+Slice 1 defines the common telemetry contract in
+`agent-chat/executionTelemetryTypes.ts`, outside React component code and
+outside the current `AgentEvent` UI schema. Slice 2 introduced the first
+sidecar-owned fanout/projection seam so this direction is possible:
 
 ```text
 Raw Codex app-server notification
@@ -102,3 +124,13 @@ ExecutionEventEnvelope
 ```
 
 The reverse direction should remain prohibited: raw provider event -> AgentEvent/status string -> reconstructed execution telemetry.
+
+## Slice 1 Ownership Boundary
+
+The sidecar owns the canonical envelope fields: bmux session id, event id,
+per-session sequence, captured timestamp, provider id, provider session id, and
+provider turn id. Provider adapters own bounded normalization from provider
+messages into typed event payloads. React owns only the current render
+projection. Native Swift can consume a future JSON bridge but should not define
+an independent schema. provenance-engine remains a later selected projection,
+not the owner of high-frequency telemetry.

@@ -11,8 +11,10 @@ import type {
   SessionOption,
   SessionStatus,
 } from "./types";
+import { ExecutionTelemetryFanout } from "./executionTelemetryFanout";
 import { claudeAdapter } from "./adapters/claude";
 import { codexAdapter } from "./adapters/codex";
+import { emitCodexPromptSubmitted } from "./adapters/codexTelemetry";
 import { piAdapter } from "./adapters/pi";
 import { makeAcpAdapter } from "./adapters/acp";
 import { resolveGhosttyTheme, type GhosttyTheme } from "./theme";
@@ -100,6 +102,7 @@ for (const def of PROVIDERS) {
 
 interface Session extends SessionCtx {
   adapter: Adapter;
+  telemetry: ExecutionTelemetryFanout;
   sockets: Set<Bun.ServerWebSocket<WsData>>;
   createdAt: number;
 }
@@ -204,7 +207,13 @@ function createSession(
   const adapter = adapters.get(provider);
   if (!adapter) throw new Error(`unknown provider: ${provider}`);
   const id = crypto.randomUUID().slice(0, 8);
-  const sess: Session = {
+  let sess!: Session;
+  const telemetry = new ExecutionTelemetryFanout({
+    sessionId: id,
+    provider,
+    emitAgentEvent: (evt) => sess.emit(evt),
+  });
+  sess = {
     id,
     provider,
     cwd,
@@ -216,6 +225,7 @@ function createSession(
     events: [],
     internal: {},
     adapter,
+    telemetry,
     sockets: new Set(),
     createdAt: Date.now(),
     emit(evt: AgentEvent) {
@@ -224,6 +234,12 @@ function createSession(
         return;
       }
       emitSessionEvent(sess, evt);
+    },
+    emitTelemetry(evt, projection) {
+      return telemetry.publish(evt, projection);
+    },
+    subscribeTelemetry(subscriber) {
+      return telemetry.subscribe(subscriber);
     },
     setStatus(status: SessionStatus) {
       const pendingDone = sess.internal.pendingDoneEmit as Promise<void> | undefined;
@@ -404,7 +420,7 @@ function emitDoneAfterFiles(sess: Session, evt: InternalDoneEvent) {
 function sendPrompt(sess: Session, prompt: string) {
   const activeGeneration = activeAttributionGeneration(sess);
   if (adapterAttributionMode(sess) === "current-turn" && activeGeneration) {
-    sess.emit({ kind: "user", text: prompt });
+    emitPromptSubmitted(sess, prompt);
     Promise.resolve((sess.adapter.send as any)(sess, prompt, activeGeneration)).catch((err) => {
       console.error("[agent-chat] send failed", err);
       sess.emit({ kind: "error", message: safeErrorMessage("send", err) });
@@ -423,7 +439,7 @@ function sendPrompt(sess: Session, prompt: string) {
   }));
   baselines.set(generation, baseline);
   pruneTurnBaselines(baselines);
-  sess.emit({ kind: "user", text: prompt });
+  emitPromptSubmitted(sess, prompt);
   // Conscious tradeoff: the prompt dispatches IMMEDIATELY and the baseline
   // captures concurrently. Gating send on capture cost up to ~3.5s per
   // message in large dirty repos (the primary chat path); the price of not
@@ -438,6 +454,14 @@ function sendPrompt(sess: Session, prompt: string) {
     sess.emit({ kind: "done", generation } as any);
     sess.setStatus("idle");
   });
+}
+
+function emitPromptSubmitted(sess: Session, prompt: string) {
+  if (sess.provider === "codex") {
+    emitCodexPromptSubmitted(sess, prompt);
+    return;
+  }
+  sess.emit({ kind: "user", text: prompt });
 }
 
 function refreshSession(sess: Session) {
