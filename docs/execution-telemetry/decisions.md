@@ -271,3 +271,26 @@ without changing React rendering, WebSocket payload shape, persistence,
 provenance, Swift ownership, Claude source selection, or non-Codex behavior.
 App-server process-exit diagnostics and ignored app-server notifications remain
 deferred.
+
+## 2026-07-29 - Migrate Codex App-Server Exit Diagnostics With Done Close-Out
+
+Decision: Slice 11 migrates the Codex app-server stdout-close mid-turn path to
+`SessionCtx.emitTelemetry` by publishing a bounded `diagnostic` envelope for
+the process-exit condition. The existing React `error` projection keeps the
+same message text, and the existing direct `done` close-out is preserved as
+projection-only UI behavior.
+
+Rationale: A Codex app-server exit during an active turn already collapses to a
+bounded, display-oriented error message plus a current thread and turn id when
+available. Publishing that diagnostic preserves useful provider/turn references
+for non-UI consumers without storing process handles, raw errors, JSON-RPC
+envelopes, provider params, or changing the UI turn-closing contract.
+
+Alternatives rejected: migrate ignored app-server notifications in the same
+slice; store raw process state in telemetry metadata; change diagnostic
+projection so it also synthesizes `done` events.
+
+Consequences: Codex app-server exit diagnostics now have a canonical producer
+path without changing React rendering, WebSocket payload shape, persistence,
+provenance, Swift ownership, Claude source selection, or non-Codex behavior.
+Ignored app-server notifications remain deferred.

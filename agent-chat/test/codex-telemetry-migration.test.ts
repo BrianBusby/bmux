@@ -1,5 +1,5 @@
 import { ExecutionTelemetryFanout } from "../executionTelemetryFanout";
-import { codexHandleSendFailureForTest, codexHandleServerMessageForTest } from "../adapters/codex";
+import { codexHandleAppServerExitForTest, codexHandleSendFailureForTest, codexHandleServerMessageForTest } from "../adapters/codex";
 import {
   emitCodexApprovalRequested,
   emitCodexApprovalResolved,
@@ -549,6 +549,49 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   assert(diagnosticEvents[0].event.code === "send.failed", "send failure diagnostic code changed");
   assert(diagnosticEvents[0].event.message === "Error: turn/start broke", "send failure diagnostic message changed");
   assert(!("err" in diagnosticEvents[0]), "send failure telemetry must not store raw errors");
+}
+
+{
+  const { sess, agentEvents, telemetryEvents } = makeCodexSession();
+  sess.internal.threadId = "thread-app-server-exit";
+
+  codexHandleServerMessageForTest(sess, {
+    method: "turn/started",
+    params: { threadId: "thread-app-server-exit", turn: { id: "turn-app-server-exit" } },
+  });
+  const st = sess.internal.codex as { activeGeneration?: number; turnActive?: boolean };
+  st.activeGeneration = 66;
+  st.turnActive = true;
+
+  codexHandleAppServerExitForTest(sess);
+  const exitedSt = sess.internal.codex as { activeGeneration?: number; turnActive?: boolean };
+
+  assert(agentEvents.length === 2, `app-server exit projection changed: ${JSON.stringify(agentEvents)}`);
+  assert(
+    agentEvents[0].kind === "error" && agentEvents[0].message === "codex app-server exited mid-turn",
+    "app-server exit error projection changed",
+  );
+  assert(agentEvents[1].kind === "done", "app-server exit should still close the UI turn");
+  assert((agentEvents[1] as any).generation === 66, "app-server exit done generation changed");
+  assert(sess.status === "idle", `app-server exit should return session to idle: ${sess.status}`);
+  assert(exitedSt.activeGeneration === undefined, "app-server exit should clear active generation");
+  assert(exitedSt.turnActive === false, "app-server exit should clear active turn state");
+  assert(sess.internal.threadId === undefined, "app-server exit should clear provider thread id");
+
+  const diagnosticEvents = telemetryEvents.filter((event) => event.event.type === "diagnostic");
+  assert(diagnosticEvents.length === 1, `expected app-server exit diagnostic telemetry: ${JSON.stringify(telemetryEvents)}`);
+  assert(diagnosticEvents[0].event.type === "diagnostic", "app-server exit should publish diagnostic telemetry");
+  assert(diagnosticEvents[0].providerSessionId === "thread-app-server-exit", "app-server exit provider session id changed");
+  assert(diagnosticEvents[0].providerTurnId === "turn-app-server-exit", "app-server exit provider turn id changed");
+  assert(diagnosticEvents[0].providerEvent?.method === "app-server/exit", "app-server exit provider method changed");
+  assert(diagnosticEvents[0].providerEvent?.turnId === "turn-app-server-exit", "app-server exit provider turn ref changed");
+  assert(diagnosticEvents[0].event.level === "error", "app-server exit diagnostic level changed");
+  assert(diagnosticEvents[0].event.code === "app_server.exited", "app-server exit diagnostic code changed");
+  assert(
+    diagnosticEvents[0].event.message === "codex app-server exited mid-turn",
+    "app-server exit diagnostic message changed",
+  );
+  assert(!("proc" in diagnosticEvents[0]), "app-server exit telemetry must not store raw process handles");
 }
 
 {

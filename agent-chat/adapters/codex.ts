@@ -265,23 +265,7 @@ async function startServer(): Promise<AppServer> {
     }
     handleServerMessage(srv, msg);
   }, () => {
-    for (const p of pending.values()) p.reject(new Error("codex app-server exited"));
-    pending.clear();
-    for (const sess of srv.sessionsByThread.values()) {
-      const st = codexState(sess);
-      if (st.turnActive) {
-        const generation = st.activeGeneration;
-        st.turnActive = false;
-        st.currentTurnId = undefined;
-        st.activeGeneration = undefined;
-        resolveTurnWaiters(st, null);
-        sess.emit({ kind: "error", message: "codex app-server exited mid-turn" });
-        sess.emit({ kind: "done", generation } as any);
-        sess.setStatus("idle");
-      }
-      sess.internal.threadId = undefined;
-    }
-    if (shared === srv) shared = null;
+    handleCodexAppServerExit(srv, pending);
   });
   readLines(proc.stderr, () => {});
 
@@ -485,6 +469,37 @@ function handleCodexSendFailure(sess: SessionCtx, err: unknown, method: string |
   });
   sess.emit({ kind: "done", generation } as any);
   sess.setStatus("idle");
+}
+
+function handleCodexAppServerExit(
+  srv: AppServer,
+  pending: Map<number, { reject: (e: Error) => void }> = new Map(),
+) {
+  for (const p of pending.values()) p.reject(new Error("codex app-server exited"));
+  pending.clear();
+  for (const sess of srv.sessionsByThread.values()) {
+    const st = codexState(sess);
+    if (st.turnActive) {
+      const generation = st.activeGeneration;
+      const turnId = st.currentTurnId;
+      st.turnActive = false;
+      st.currentTurnId = undefined;
+      st.activeGeneration = undefined;
+      resolveTurnWaiters(st, null);
+      emitCodexDiagnostic(sess, {
+        providerSessionId: sess.internal.threadId as string | undefined,
+        turnId,
+        method: "app-server/exit",
+        level: "error",
+        message: "codex app-server exited mid-turn",
+        code: "app_server.exited",
+      });
+      sess.emit({ kind: "done", generation } as any);
+      sess.setStatus("idle");
+    }
+    sess.internal.threadId = undefined;
+  }
+  if (shared === srv) shared = null;
 }
 
 function requestProviderSessionId(sess: SessionCtx, params: Record<string, unknown>): string | undefined {
@@ -1084,6 +1099,19 @@ export function codexHandleServerMessageForTest(sess: SessionCtx, msg: any) {
 
 export function codexHandleSendFailureForTest(sess: SessionCtx, err: unknown, method?: string) {
   handleCodexSendFailure(sess, err, method);
+}
+
+export function codexHandleAppServerExitForTest(sess: SessionCtx) {
+  const threadKey = sess.internal.threadId ?? "codex-test-thread";
+  sess.internal.threadId ??= threadKey;
+  handleCodexAppServerExit({
+    proc: undefined as unknown as Bun.Subprocess<"pipe", "pipe", "pipe">,
+    request: async () => {
+      throw new Error("unexpected Codex request in app-server-exit test");
+    },
+    write: () => {},
+    sessionsByThread: new Map([[String(threadKey), sess]]),
+  });
 }
 
 function sandboxValue(type: string): string {
