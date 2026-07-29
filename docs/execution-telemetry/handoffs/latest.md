@@ -68,6 +68,10 @@ Recommended scope: add an `agent-chat` projection module that consumes ordered `
 
 ## First action for the next agent
 
+Before branching, read the Plan Orientation table near the top of
+`docs/execution-telemetry/implementation-status.md`. It maps the original plan
+slice numbers to the repo's implementation slice history.
+
 ```bash
 git fetch origin
 git checkout execution-telemetry-slice-0

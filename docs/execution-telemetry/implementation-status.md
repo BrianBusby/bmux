@@ -15,6 +15,25 @@ a replayable sidecar-owned projection derived from telemetry envelopes before
 adding persistence, provenance writes, Claude source selection, diagnostic
 checkpoint scheduling, or broad native UI work.
 
+## Plan Orientation
+
+The original provider-neutral execution telemetry plan and the repo's
+implementation slice history use different numbering after the first fanout
+work. Use this table to orient new sessions before reading the detailed history.
+
+| Original plan phase | Repo implementation status | Next action |
+| --- | --- | --- |
+| Slice 0 - repository audit and event-flow inventory | Done in Slice 0 docs. | None. |
+| Slice 1 - ownership boundaries and provider-neutral contract | Done in Slice 1. | None. |
+| Slice 2 - execution-event bus and compatibility projection | Done in Slice 2. | None. |
+| Slice 3 - loss-minimizing Codex normalization | Mostly done through repo Slices 3-11. | Continue only for a concrete bounded Codex event. |
+| Slice 4 - live session projection | Not started. | Start Plan Slice 4A with an `agent-chat` replay projection. |
+| Slice 5 - telemetry persistence | Not started. | Wait for stable live projection semantics. |
+| Slice 6 - diagnostic checkpoints | Not started. | Wait for projection and persistence decisions. |
+| Slice 7 - provenance projection boundary | Not started. | Wait for telemetry persistence/projection policy. |
+| Slice 8 - Claude source selection | Not started. | Wait for a non-React consumer path. |
+| Slices 9-12 - Claude, analytics, stabilization | Not started. | Defer until Slice 8 selects Claude sources. |
+
 ## Completed Slices
 
 - Slice 0: current-state audit only. Created the execution telemetry document structure, traced the current Codex app-server path, documented lossy normalization points, recorded provider capability findings, and wrote a handoff for Slice 1.
