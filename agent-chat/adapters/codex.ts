@@ -503,11 +503,47 @@ function codexApprovalOperationId(params: Record<string, unknown>): string | und
 }
 
 function codexApprovalSummary(method: string, params: Record<string, unknown>): string {
-  if (typeof params.command === "string") return truncate(params.command, 400);
-  if (params.item && typeof params.item === "object") return truncate(summarizeChanges(params.item), 400);
-  const changes = params.changes;
-  if (Array.isArray(changes) && changes.length) return truncate(summarizeChanges(params), 400);
+  const commandSummary = approvalCommandSummary(params);
+  if (commandSummary) return truncate(commandSummary, 400);
+  const fileSummary = approvalFileSummary(params);
+  if (fileSummary) return truncate(fileSummary, 400);
+  if (typeof params.reason === "string" && params.reason) return truncate(params.reason, 400);
   return truncate(method, 400);
+}
+
+function approvalCommandSummary(params: Record<string, unknown>): string | undefined {
+  if (typeof params.command === "string" && params.command) return params.command;
+  if (Array.isArray(params.command) && params.command.length) {
+    const parts = params.command.filter((part): part is string => typeof part === "string");
+    if (parts.length) return parts.join(" ");
+  }
+  if (params.item && typeof params.item === "object") {
+    const command = (params.item as Record<string, unknown>).command;
+    if (typeof command === "string" && command) return command;
+  }
+  return undefined;
+}
+
+function approvalFileSummary(params: Record<string, unknown>): string | undefined {
+  if (params.item && typeof params.item === "object") return summarizeChanges(params.item);
+  const changes = params.changes;
+  if (Array.isArray(changes) && changes.length) return summarizeChanges(params);
+  const fileChanges = params.fileChanges;
+  if (fileChanges && typeof fileChanges === "object" && !Array.isArray(fileChanges)) {
+    const entries = Object.entries(fileChanges as Record<string, unknown>);
+    if (entries.length) {
+      return entries.map(([path, change]) => `${fileChangeApprovalType(change)} ${path}`).join(", ");
+    }
+  }
+  if (typeof params.grantRoot === "string" && params.grantRoot) return `grant write access ${params.grantRoot}`;
+  return undefined;
+}
+
+function fileChangeApprovalType(change: unknown): string {
+  if (change && typeof change === "object" && typeof (change as Record<string, unknown>).type === "string") {
+    return (change as Record<string, unknown>).type as string;
+  }
+  return "change";
 }
 
 function codexApprovalDecision(

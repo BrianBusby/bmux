@@ -357,7 +357,11 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   codexHandleServerMessageForTest(sess, {
     id: 101,
     method: "execCommandApproval",
-    params: { conversationId: "thread-approval", command: "echo approved" },
+    params: {
+      conversationId: "thread-approval",
+      callId: "cmd-call-1",
+      command: ["echo", "approved"],
+    },
   });
 
   assert(agentEvents.length === 0, `approved approval request should not project React events: ${JSON.stringify(agentEvents)}`);
@@ -369,11 +373,40 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   assert(approvalEvents[0].providerEvent?.requestId === 101, "approval request provider request id changed");
   assert(approvalEvents[0].event.approvalId === "codex-approval-101", "approval id changed");
   assert(approvalEvents[0].event.approvalKind === "command", "approval kind changed");
+  assert(approvalEvents[0].event.operationId === "cmd-call-1", "legacy command approval operation id changed");
   assert(approvalEvents[0].event.summary === "echo approved", "approval summary changed");
   assert(approvalEvents[1].event.type === "approval.resolved", "approved request should publish approval.resolved telemetry");
   assert(approvalEvents[1].event.approvalId === "codex-approval-101", "resolved approval id changed");
   assert(approvalEvents[1].event.decision === "approved", "approved decision changed");
   assert(!("params" in approvalEvents[0]), "approval telemetry must not store raw provider request params");
+}
+
+{
+  const { sess, agentEvents, telemetryEvents } = makeCodexSession();
+  sess.internal.threadId = "thread-patch-approval";
+
+  codexHandleServerMessageForTest(sess, {
+    id: 102,
+    method: "applyPatchApproval",
+    params: {
+      conversationId: "thread-patch-approval",
+      callId: "patch-call-1",
+      fileChanges: {
+        "src/secret.ts": { type: "update", unified_diff: "SECRET_DIFF" },
+      },
+    },
+  });
+
+  assert(agentEvents.length === 0, `approved patch approval should not project React events: ${JSON.stringify(agentEvents)}`);
+  const approvalEvents = telemetryEvents.filter((event) => event.event.type === "approval.requested" || event.event.type === "approval.resolved");
+  assert(approvalEvents.length === 2, `expected patch approval telemetry pair: ${JSON.stringify(telemetryEvents)}`);
+  assert(approvalEvents[0].event.type === "approval.requested", "patch request should publish approval.requested telemetry");
+  assert(approvalEvents[0].event.approvalKind === "file-change", "patch approval kind changed");
+  assert(approvalEvents[0].event.operationId === "patch-call-1", "patch approval operation id changed");
+  assert(approvalEvents[0].event.summary === "update src/secret.ts", "patch approval summary changed");
+  assert(!JSON.stringify(approvalEvents).includes("SECRET_DIFF"), "patch approval telemetry must not store raw diffs");
+  assert(approvalEvents[1].event.type === "approval.resolved", "patch approval should publish approval.resolved telemetry");
+  assert(approvalEvents[1].event.decision === "approved", "patch approval decision changed");
 }
 
 {
@@ -388,7 +421,7 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
     params: {
       threadId: "thread-denied-approval",
       itemId: "file-approval-1",
-      changes: [{ kind: "modify", path: "src/file.ts" }],
+      grantRoot: "/tmp/project",
     },
   });
 
@@ -403,7 +436,7 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   assert(approvalEvents[0].event.type === "approval.requested", "denied request should publish approval.requested telemetry");
   assert(approvalEvents[0].event.approvalKind === "file-change", "file approval kind changed");
   assert(approvalEvents[0].event.operationId === "file-approval-1", "file approval operation id changed");
-  assert(approvalEvents[0].event.summary === "modify src/file.ts", "file approval summary changed");
+  assert(approvalEvents[0].event.summary === "grant write access /tmp/project", "file approval summary changed");
   assert(approvalEvents[1].event.type === "approval.resolved", "denied request should publish approval.resolved telemetry");
   assert(approvalEvents[1].event.decision === "denied", "denied decision changed");
   assert(approvalEvents[1].event.reason === "auto-approve is off", "denied reason changed");
