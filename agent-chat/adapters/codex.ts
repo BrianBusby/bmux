@@ -1,7 +1,12 @@
 import type { Adapter, CommandEntry, OptionChoice, OptionValue, SessionCtx, SessionOption } from "../types";
 import { readLines, tryParse, truncate } from "./lines";
 import { prettifyModelLabel } from "./model-label";
-import { emitCodexProviderSessionLinked } from "./codexTelemetry";
+import {
+  emitCodexProviderSessionLinked,
+  emitCodexTurnCompleted,
+  emitCodexTurnFailed,
+  emitCodexTurnStarted,
+} from "./codexTelemetry";
 
 // Codex: one shared `codex app-server` process (JSON-RPC over NDJSON stdio,
 // the same interface the codex IDE extension uses) hosts a thread per chat
@@ -340,6 +345,12 @@ function handleServerMessage(srv: AppServer, msg: any) {
       st.turnActive = true;
       st.currentTurnId = p.turn?.id;
       resolveTurnWaiters(st, st.currentTurnId ?? null);
+      emitCodexTurnStarted(sess, {
+        providerSessionId: sess.internal.threadId as string | undefined,
+        turnId: st.currentTurnId,
+        model: st.model,
+        effort: st.effort,
+      });
       break;
     case "thread/settings/updated":
       applyThreadSettings(sess, p.settings);
@@ -370,28 +381,36 @@ function handleServerMessage(srv: AppServer, msg: any) {
       break;
     case "turn/completed": {
       st.turnActive = false;
+      const turnId = p.turn?.id ?? st.currentTurnId;
       st.currentTurnId = undefined;
       const generation = st.activeGeneration;
       st.activeGeneration = undefined;
       resolveTurnWaiters(st, null);
-      const u = sess.internal.lastUsage as any;
-      const secs = p.turn?.durationMs != null ? `${(p.turn.durationMs / 1000).toFixed(1)}s` : null;
-      const stats = [
-        u ? `${u.inputTokens ?? 0} in · ${u.outputTokens ?? 0} out` : null,
-        secs,
-      ].filter(Boolean).join(" · ");
-      sess.emit({ kind: "done", stats, generation } as any);
+      emitCodexTurnCompleted(sess, {
+        providerSessionId: sess.internal.threadId as string | undefined,
+        turnId,
+        durationMs: p.turn?.durationMs,
+        usage: sess.internal.lastUsage,
+        generation,
+      });
       sess.setStatus("idle");
       break;
     }
     case "turn/failed": {
       st.turnActive = false;
+      const turnId = p.turn?.id ?? st.currentTurnId;
       st.currentTurnId = undefined;
       const generation = st.activeGeneration;
       st.activeGeneration = undefined;
       resolveTurnWaiters(st, null);
-      sess.emit({ kind: "error", message: truncate(p.error?.message ?? p.turn?.error?.message ?? "turn failed", 400) });
-      sess.emit({ kind: "done", generation } as any);
+      emitCodexTurnFailed(sess, {
+        providerSessionId: sess.internal.threadId as string | undefined,
+        turnId,
+        durationMs: p.turn?.durationMs,
+        message: p.error?.message ?? p.turn?.error?.message,
+        code: p.error?.code ?? p.turn?.error?.code,
+        generation,
+      });
       sess.setStatus("idle");
       break;
     }

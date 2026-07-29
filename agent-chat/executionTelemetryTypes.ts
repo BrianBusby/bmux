@@ -60,6 +60,10 @@ export type TelemetryEventEnvelopeDraft =
 
 export type TelemetryEnvelopeSubscriber = (envelope: TelemetryEventEnvelope) => void;
 
+export interface TelemetryPublishProjectionOptions {
+  doneGeneration?: number;
+}
+
 export type TelemetryOptionValue = string | boolean;
 
 export type TelemetryEvent =

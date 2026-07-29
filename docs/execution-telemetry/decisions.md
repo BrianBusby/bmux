@@ -106,3 +106,26 @@ moving the first provider events.
 Consequences: The telemetry fanout now has its first production Codex producer
 path, but high-volume turn, message, tool, approval, usage, and diagnostic
 Codex events still need future focused migrations.
+
+## 2026-07-28 - Migrate Codex Turn Lifecycle With Projection-Only Generation
+
+Decision: Slice 4 migrates Codex `turn/started`, `turn/completed`, and
+`turn/failed` notifications to `SessionCtx.emitTelemetry`. The server-only
+`done.generation` field used for file-change attribution is carried as a
+projection option, not as canonical telemetry envelope data.
+
+Rationale: Turn lifecycle events preserve bounded provider facts such as method,
+thread id, turn id, duration, token totals, model/effort, and error code/message.
+The existing React `AgentEvent` stream still needs the private generation value
+to defer file-change events into the correct turn, but that value is an
+implementation detail of the current UI projection rather than provider-neutral
+execution telemetry.
+
+Alternatives rejected: store `generation` in envelope metadata; drop generation
+from projected `done` events; keep Codex turn lifecycle on direct `AgentEvent`
+emits until a broader server attribution rewrite.
+
+Consequences: Codex turn lifecycle now has a canonical producer path without
+changing React rendering, WebSocket payload shape, persistence, provenance,
+Swift ownership, Claude source selection, or non-Codex behavior. Message, tool,
+approval, usage, and diagnostic Codex events still need future narrow migrations.

@@ -1,5 +1,11 @@
 import { ExecutionTelemetryFanout } from "../executionTelemetryFanout";
-import { emitCodexPromptSubmitted, emitCodexProviderSessionLinked } from "../adapters/codexTelemetry";
+import {
+  emitCodexPromptSubmitted,
+  emitCodexProviderSessionLinked,
+  emitCodexTurnCompleted,
+  emitCodexTurnFailed,
+  emitCodexTurnStarted,
+} from "../adapters/codexTelemetry";
 import type { AgentEvent, SessionCtx, SessionStatus } from "../types";
 import type { TelemetryEventEnvelope } from "../executionTelemetryTypes";
 
@@ -34,8 +40,8 @@ function makeCodexSession(): { sess: SessionCtx; agentEvents: AgentEvent[]; tele
     emit(evt) {
       agentEvents.push(evt);
     },
-    emitTelemetry(evt) {
-      return fanout.publish(evt);
+    emitTelemetry(evt, projection) {
+      return fanout.publish(evt, projection);
     },
     subscribeTelemetry(subscriber) {
       return fanout.subscribe(subscriber);
@@ -75,6 +81,67 @@ function makeCodexSession(): { sess: SessionCtx; agentEvents: AgentEvent[]; tele
 }
 
 {
+  const { sess, agentEvents, telemetryEvents } = makeCodexSession();
+
+  emitCodexTurnStarted(sess, {
+    providerSessionId: "thread-123",
+    turnId: "turn-1",
+    model: "gpt-5",
+    effort: "high",
+  });
+  emitCodexTurnCompleted(sess, {
+    providerSessionId: "thread-123",
+    turnId: "turn-1",
+    durationMs: 1250,
+    usage: {
+      inputTokens: 3,
+      outputTokens: 5,
+      totalTokens: 8,
+      ignoredNestedPayload: { raw: true },
+    },
+    generation: 7,
+  });
+  emitCodexTurnFailed(sess, {
+    providerSessionId: "thread-123",
+    turnId: "turn-2",
+    durationMs: 2000,
+    message: "turn exploded",
+    code: "boom",
+    generation: 8,
+  });
+
+  assert(agentEvents.length === 3, `turn lifecycle AgentEvent projection changed: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents[0].kind === "done" && agentEvents[0].stats === "3 in · 5 out · 1.3s", "turn completion done stats changed");
+  assert((agentEvents[0] as any).generation === 7, "turn completion generation should stay available to server projection");
+  assert(agentEvents[1].kind === "error" && agentEvents[1].message === "turn exploded", "turn failure error projection changed");
+  assert(agentEvents[2].kind === "done", "turn failure should still close the UI turn");
+  assert((agentEvents[2] as any).generation === 8, "turn failure generation should stay available to server projection");
+
+  assert(telemetryEvents.length === 3, `expected three turn telemetry envelopes: ${JSON.stringify(telemetryEvents)}`);
+  assert(telemetryEvents[0].event.type === "turn.started", "turn start should publish turn.started telemetry");
+  assert(telemetryEvents[0].providerSessionId === "thread-123", "turn start provider session id was not preserved");
+  assert(telemetryEvents[0].providerTurnId === "turn-1", "turn start provider turn id was not preserved");
+  assert(telemetryEvents[0].providerEvent?.method === "turn/started", "turn start provider method was not preserved");
+  assert(telemetryEvents[0].event.model === "gpt-5" && telemetryEvents[0].event.effort === "high", "turn settings changed");
+
+  assert(telemetryEvents[1].event.type === "turn.completed", "turn completion should publish turn.completed telemetry");
+  assert(telemetryEvents[1].providerEvent?.method === "turn/completed", "turn completion provider method was not preserved");
+  assert(telemetryEvents[1].event.durationMs === 1250, "turn completion duration changed");
+  assert(telemetryEvents[1].event.usage?.inputTokens === 3, "turn completion input tokens changed");
+  assert(telemetryEvents[1].event.usage?.outputTokens === 5, "turn completion output tokens changed");
+  assert(telemetryEvents[1].event.usage?.totalTokens === 8, "turn completion total tokens changed");
+  assert(!("ignoredNestedPayload" in (telemetryEvents[1].event.usage as any)), "turn completion usage should stay bounded");
+  assert(!("generation" in telemetryEvents[1]), "server projection generation must not be stored on telemetry envelope");
+
+  assert(telemetryEvents[2].event.type === "turn.failed", "turn failure should publish turn.failed telemetry");
+  assert(telemetryEvents[2].providerEvent?.method === "turn/failed", "turn failure provider method was not preserved");
+  assert(telemetryEvents[2].event.durationMs === 2000, "turn failure duration changed");
+  assert(telemetryEvents[2].event.error.message === "turn exploded", "turn failure message changed");
+  assert(telemetryEvents[2].event.error.code === "boom", "turn failure code changed");
+  assert(!("generation" in telemetryEvents[2]), "server projection generation must not be stored on failed telemetry envelope");
+}
+
+{
   const agentEvents: AgentEvent[] = [];
   const sess: SessionCtx = {
     id: "legacy-codex-session",
@@ -96,13 +163,32 @@ function makeCodexSession(): { sess: SessionCtx; agentEvents: AgentEvent[]; tele
 
   emitCodexPromptSubmitted(sess, "fallback prompt");
   emitCodexProviderSessionLinked(sess, "thread-fallback", "thread/fork");
+  emitCodexTurnStarted(sess, { providerSessionId: "thread-fallback", turnId: "turn-fallback" });
+  emitCodexTurnCompleted(sess, {
+    providerSessionId: "thread-fallback",
+    turnId: "turn-fallback",
+    durationMs: 500,
+    usage: { inputTokens: 1, outputTokens: 2 },
+    generation: 3,
+  });
+  emitCodexTurnFailed(sess, {
+    providerSessionId: "thread-fallback",
+    turnId: "turn-failed",
+    message: "fallback failed",
+    generation: 4,
+  });
 
-  assert(agentEvents.length === 2, `legacy AgentEvent fallback changed: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents.length === 5, `legacy AgentEvent fallback changed: ${JSON.stringify(agentEvents)}`);
   assert(agentEvents[0].kind === "user" && agentEvents[0].text === "fallback prompt", "legacy prompt fallback changed");
   assert(
     agentEvents[1].kind === "meta" && agentEvents[1].providerSessionId === "thread-fallback",
     "legacy provider link fallback changed",
   );
+  assert(agentEvents[2].kind === "done" && agentEvents[2].stats === "1 in · 2 out · 0.5s", "legacy turn completion fallback changed");
+  assert((agentEvents[2] as any).generation === 3, "legacy turn completion generation changed");
+  assert(agentEvents[3].kind === "error" && agentEvents[3].message === "fallback failed", "legacy turn failure fallback changed");
+  assert(agentEvents[4].kind === "done", "legacy turn failure fallback should close the UI turn");
+  assert((agentEvents[4] as any).generation === 4, "legacy turn failure generation changed");
 }
 
 console.log("codex telemetry migration assertions passed");

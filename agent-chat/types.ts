@@ -1,5 +1,10 @@
 // Common event schema every adapter normalizes into. The UI only knows this.
-import type { TelemetryEnvelopeSubscriber, TelemetryEventEnvelope, TelemetryEventEnvelopeDraft } from "./executionTelemetryTypes";
+import type {
+  TelemetryEnvelopeSubscriber,
+  TelemetryEventEnvelope,
+  TelemetryEventEnvelopeDraft,
+  TelemetryPublishProjectionOptions,
+} from "./executionTelemetryTypes";
 
 export type AgentEvent =
   | { kind: "meta"; model?: string; providerSessionId?: string }
@@ -75,7 +80,7 @@ export interface SessionCtx {
   // Adapter-private state (child proc, provider session/thread ids, rpc counters).
   internal: Record<string, unknown>;
   emit(evt: AgentEvent): void;
-  emitTelemetry?(evt: TelemetryEventEnvelopeDraft): TelemetryEventEnvelope;
+  emitTelemetry?(evt: TelemetryEventEnvelopeDraft, projection?: TelemetryPublishProjectionOptions): TelemetryEventEnvelope;
   subscribeTelemetry?(subscriber: TelemetryEnvelopeSubscriber): () => void;
   setStatus(status: SessionStatus): void;
 }

@@ -3,25 +3,26 @@
 ## Session identity
 
 - Date: 2026-07-28
-- Slice: Slice 3 - Codex prompt and provider session linkage telemetry migration
+- Slice: Slice 4 - Codex turn lifecycle telemetry migration
 - Branch: `execution-telemetry-slice-1`
 - PR: https://github.com/BrianBusby/bmux/pull/12
 - Base branch: stacked on PR #11 / `execution-telemetry-slice-0`
-- Slice 2 head before Slice 3: `d005aa66f3cdeec11e2a5cbe85782fcc6b39252d`
-- Slice 3 implementation head: branch head after the final Slice 3 commit
-- Tagged Debug build: `execution-telemetry-slice-3` succeeded
+- Slice 3 head before Slice 4: `d69a8ae3253fd21821a350b946ef04a26f31b324`
+- Slice 4 implementation head: branch head after the final Slice 4 commit
+- Tagged Debug build: `execution-telemetry-slice-4` succeeded
 
 ## Objective completed
 
-Migrated the first narrow Codex event path onto `SessionCtx.emitTelemetry` while preserving the existing React `AgentEvent` stream. Codex prompt submission and provider session linkage now publish telemetry envelopes first and rely on the fanout projection for the UI path when `emitTelemetry` is available.
+Migrated one narrow Codex lifecycle path onto `SessionCtx.emitTelemetry` while preserving the existing React `AgentEvent` stream. Codex `turn/started`, `turn/completed`, and `turn/failed` notifications now publish telemetry envelopes first and rely on the fanout projection for the UI path when `emitTelemetry` is available.
 
 ## Work completed
 
-- Added `agent-chat/adapters/codexTelemetry.ts` for Codex-specific telemetry producers.
-- Routed Codex prompt submission through telemetry from `agent-chat/server.ts` without changing non-Codex prompt echo behavior.
-- Routed Codex `thread/start` and `thread/fork` provider session linkage through telemetry from `agent-chat/adapters/codex.ts`.
+- Added Codex turn lifecycle producers in `agent-chat/adapters/codexTelemetry.ts`.
+- Routed Codex `turn/started`, `turn/completed`, and `turn/failed` notifications through telemetry from `agent-chat/adapters/codex.ts`.
+- Preserved Codex `done.generation` for server-side file-change attribution as a projection-only option; it is not stored on canonical telemetry envelopes.
+- Preserved bounded provider references for method, thread id, and turn id, plus bounded model/effort, duration, token usage, and error facts.
 - Preserved a direct `AgentEvent` fallback because `SessionCtx.emitTelemetry` remains optional.
-- Added `agent-chat/test/codex-telemetry-migration.test.ts` proving telemetry subscribers receive envelopes and React receives the same projected `user` / `meta` events.
+- Extended `agent-chat/test/codex-telemetry-migration.test.ts` proving telemetry subscribers receive turn lifecycle envelopes and React receives the same projected `done` / `error` events.
 
 ## Tests run
 
@@ -29,13 +30,13 @@ Migrated the first narrow Codex event path onto `SessionCtx.emitTelemetry` while
 - `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/codex-telemetry-migration.test.ts`: passed.
 - `npm exec --yes --package typescript@5.9.3 -- tsc --noEmit --target ES2022 --module ESNext --moduleResolution Bundler --strict agent-chat/executionTelemetryTypes.ts agent-chat/executionTelemetryFanout.ts agent-chat/adapters/codexTelemetry.ts agent-chat/test/codex-telemetry-migration.test.ts`: passed.
 - `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/execution-telemetry-fanout.test.ts`: passed.
-- Broader focused `tsc` including `agent-chat/server.ts` and `agent-chat/adapters/codex.ts`: blocked before source checking because Bun type definitions could not be resolved in this shell, matching the existing `bun` limitation.
-- `./scripts/reload.sh --tag execution-telemetry-slice-3`: passed.
+- Broader focused `tsc` including `agent-chat/server.ts` and `agent-chat/adapters/codex.ts`: blocked before useful source checking because Bun and Node type definitions could not be resolved in this shell, matching the existing `bun` limitation.
+- `./scripts/reload.sh --tag execution-telemetry-slice-4`: passed.
 
 ## Known failures or limitations
 
 - `bun` is unavailable on PATH in this shell.
-- Full `agent-chat` tsconfig/package checks remain blocked by missing Bun types.
+- Full `agent-chat` tsconfig/package checks remain blocked by missing Bun and Node type resolution in this shell.
 - Existing non-migrated adapter events still emit `AgentEvent` directly by design.
 - No telemetry persistence or provenance projection exists.
 - No Swift decoder or native subscriber exists.
@@ -58,7 +59,7 @@ Migrated the first narrow Codex event path onto `SessionCtx.emitTelemetry` while
 
 ## Next slice
 
-After Slice 3 review, continue Codex migration with one narrow lifecycle path, preferably turn lifecycle or message/tool lifecycle. Keep proving that the existing React `AgentEvent` stream remains equivalent for the migrated path.
+After Slice 4 review, continue Codex migration with one narrow path, preferably message/tool lifecycle or approval/usage lifecycle. Keep proving that the existing React `AgentEvent` stream remains equivalent for the migrated path.
 
 ## Do not do yet
 

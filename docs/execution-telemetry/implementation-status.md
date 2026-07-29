@@ -4,7 +4,7 @@ Last updated: 2026-07-28
 
 ## Active Slice
 
-Slice 3 - Codex prompt and provider session linkage telemetry migration.
+Slice 4 - Codex turn lifecycle telemetry migration.
 
 Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 
@@ -14,6 +14,7 @@ Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 - Slice 1: validated PR #11 / branch `execution-telemetry-slice-0`, including follow-up commit `6cc83ff8e`; added the canonical provider-neutral telemetry type contract in `agent-chat/executionTelemetryTypes.ts`; hardened metadata in `964e11313` so it cannot carry nested raw-provider payloads; documented sidecar/provider/React/native/provenance ownership boundaries, ordering policy, metadata policy, and Swift sync policy.
 - Slice 2: added the sidecar fanout seam in `agent-chat`. Existing adapters and React rendering remain unchanged.
 - Slice 3: migrated Codex prompt submission and provider session linkage (`thread/start` and `thread/fork`) through `SessionCtx.emitTelemetry`, with a direct `AgentEvent` fallback while the seam remains optional.
+- Slice 4: migrated Codex turn lifecycle (`turn/started`, `turn/completed`, and `turn/failed`) through `SessionCtx.emitTelemetry`, preserving existing React `done` / `error` projection and server-only done generation for file attribution.
 
 ## Current Branch
 
@@ -41,7 +42,11 @@ Slice 2 implementation head before autoreview:
 
 Slice 3 implementation head:
 
-branch head after the final Slice 3 commit
+`d69a8ae3253fd21821a350b946ef04a26f31b324`
+
+Slice 4 implementation head:
+
+branch head after the final Slice 4 commit
 
 ## Tests Currently Passing
 
@@ -120,21 +125,29 @@ Result: succeeded.
 
 Result: succeeded.
 
+Slice 4 validation:
+
+- `git diff --check`: succeeded.
+- `agent-chat/test/codex-telemetry-migration.test.ts` via `tsx@4.20.5`: succeeded.
+- Focused strict TypeScript check for telemetry contract, fanout, Codex telemetry producers, and the migration test: succeeded.
+- `agent-chat/test/execution-telemetry-fanout.test.ts` via `tsx@4.20.5`: succeeded.
+- `./scripts/reload.sh --tag execution-telemetry-slice-4`: succeeded.
+
 ## Known Failures
 
 - `bun` is unavailable on PATH for this shell, so the targeted webview baseline test could not run.
-- The full `agent-chat` tsconfig check fails before source checking because the required `bun` type library is unavailable in this shell.
-- A broader focused `tsc` attempt that included `agent-chat/server.ts` and `agent-chat/adapters/codex.ts` still could not resolve Bun type libraries, even with transient `@types/bun` / `bun-types` package attempts.
+- The full `agent-chat` tsconfig check fails before source checking because the required Bun and Node type libraries are unavailable in this shell.
+- A broader focused `tsc` attempt that included `agent-chat/server.ts` and `agent-chat/adapters/codex.ts` still could not resolve Bun and Node type libraries, even with transient `@types/bun` / `bun-types` package attempts.
 - No runtime code changed in Slice 0, so no app build was run.
 - No runtime behavior changed in Slice 1; only a type-only contract module and docs were added.
 
 ## Next Required Action
 
-Review PR #12 before the next code slice. The next code slice should stay narrow: continue Codex migration with turn lifecycle or message/tool lifecycle only after reviewing Slice 3.
+Review PR #12 before the next code slice. The next code slice should stay narrow: continue Codex migration with message/tool lifecycle or approval/usage lifecycle only after reviewing Slice 4.
 
 ## Blocked Decisions
 
-No current blocked decisions for Slice 3. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion.
+No current blocked decisions for Slice 4. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion.
 
 ## Deviations From Original Plan
 

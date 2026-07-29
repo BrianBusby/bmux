@@ -235,8 +235,8 @@ function createSession(
       }
       emitSessionEvent(sess, evt);
     },
-    emitTelemetry(evt) {
-      return telemetry.publish(evt);
+    emitTelemetry(evt, projection) {
+      return telemetry.publish(evt, projection);
     },
     subscribeTelemetry(subscriber) {
       return telemetry.subscribe(subscriber);

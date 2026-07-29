@@ -1,10 +1,11 @@
 # Telemetry Contract
 
-Status: Slice 3 provider-neutral contract, sidecar fanout seam, and first Codex producer migration.
+Status: Slice 4 provider-neutral contract, sidecar fanout seam, and first Codex lifecycle migrations.
 
 The sidecar fanout path has been added without persistence, provenance
-projection, React behavior changes, or broad provider rewrites. Slice 3 routes
-Codex prompt submission and provider session linkage through the seam.
+projection, React behavior changes, or broad provider rewrites. Slices 3 and 4
+route Codex prompt submission, provider session linkage, and turn lifecycle
+through the seam.
 
 ## Contract Location
 
@@ -76,6 +77,12 @@ current `AgentEvent` stream directly until later slices migrate specific
 provider events. The reverse direction remains prohibited: do not reconstruct
 canonical telemetry from `AgentEvent`.
 
+`TelemetryPublishProjectionOptions` carries sidecar-local projection details
+that must not be copied into canonical envelopes. Slice 4 uses this only to
+preserve the private `done.generation` value required by current server
+file-change attribution while projecting Codex `turn.completed` and
+`turn.failed` events back to `AgentEvent`.
+
 ## Minimal Event Set
 
 The Slice 1 union covers the events required to preserve the fields that the
@@ -110,9 +117,9 @@ CI.
 
 ## Deferred Work
 
-Slice 3 does not:
+Slice 4 does not:
 
-- broadly migrate provider events beyond Codex prompt/linkage;
+- broadly migrate provider events beyond Codex prompt/linkage and turn lifecycle;
 - add telemetry persistence;
 - write to provenance-engine;
 - choose or implement a Claude structured event source.

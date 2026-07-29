@@ -5,6 +5,7 @@ import type {
   TelemetryEventEnvelopeDraft,
   TelemetryEnvelopeSubscriber,
   TelemetryProviderId,
+  TelemetryPublishProjectionOptions,
   TelemetrySessionId,
   TelemetryToolStatus,
   TelemetryTokenUsage,
@@ -44,10 +45,10 @@ export class ExecutionTelemetryFanout {
     };
   }
 
-  publish(draft: TelemetryEventEnvelopeDraft): TelemetryEventEnvelope {
+  publish(draft: TelemetryEventEnvelopeDraft, projection?: TelemetryPublishProjectionOptions): TelemetryEventEnvelope {
     const envelope = this.assignEnvelope(draft);
     for (const subscriber of this.subscribers) subscriber(envelope);
-    for (const event of projectTelemetryEnvelopeToAgentEvents(envelope)) this.emitAgentEvent(event);
+    for (const event of projectTelemetryEnvelopeToAgentEvents(envelope, projection)) this.emitAgentEvent(event);
     return envelope;
   }
 
@@ -71,7 +72,10 @@ export class ExecutionTelemetryFanout {
   }
 }
 
-export function projectTelemetryEnvelopeToAgentEvents(envelope: TelemetryEventEnvelope): AgentEvent[] {
+export function projectTelemetryEnvelopeToAgentEvents(
+  envelope: TelemetryEventEnvelope,
+  projection?: TelemetryPublishProjectionOptions,
+): AgentEvent[] {
   const event = envelope.event;
   switch (event.type) {
     case "session.started":
@@ -83,11 +87,11 @@ export function projectTelemetryEnvelopeToAgentEvents(envelope: TelemetryEventEn
     case "turn.started":
       return [];
     case "turn.completed":
-      return [{ kind: "done", stats: formatUsageStats(event.usage, event.durationMs) }];
+      return [withDoneGeneration({ kind: "done", stats: formatUsageStats(event.usage, event.durationMs) ?? "" }, projection)];
     case "turn.failed":
       return [
         { kind: "error", message: event.error.message },
-        { kind: "done", stats: formatDuration(event.durationMs) },
+        withDoneGeneration({ kind: "done" }, projection),
       ];
     case "message.delta":
       return [{ kind: event.stream === "reasoning" ? "thinking" : "delta", text: event.text }];
@@ -116,6 +120,14 @@ export function projectTelemetryEnvelopeToAgentEvents(envelope: TelemetryEventEn
         ? [{ kind: "error", message: event.message }]
         : [{ kind: "status", text: event.message }];
   }
+}
+
+function withDoneGeneration(
+  event: Extract<AgentEvent, { kind: "done" }>,
+  projection: TelemetryPublishProjectionOptions | undefined,
+): Extract<AgentEvent, { kind: "done" }> {
+  if (projection?.doneGeneration === undefined) return event;
+  return { ...event, generation: projection.doneGeneration } as Extract<AgentEvent, { kind: "done" }>;
 }
 
 function defaultEventId(): string {
