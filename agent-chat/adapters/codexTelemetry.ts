@@ -131,7 +131,7 @@ export function codexTokenUsage(value: unknown): TelemetryTokenUsage | undefined
     outputTokens: finiteNumber(raw.outputTokens),
     reasoningOutputTokens: finiteNumber(raw.reasoningOutputTokens),
     totalTokens: finiteNumber(raw.totalTokens),
-    contextWindowTokens: finiteNumber(raw.contextWindowTokens),
+    contextWindowTokens: finiteNumber(raw.contextWindowTokens ?? raw.modelContextWindow),
     model: typeof raw.model === "string" ? raw.model : undefined,
   };
   return Object.values(usage).some((entry) => entry !== undefined) ? usage : undefined;

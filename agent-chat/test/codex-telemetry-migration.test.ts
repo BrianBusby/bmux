@@ -1,4 +1,5 @@
 import { ExecutionTelemetryFanout } from "../executionTelemetryFanout";
+import { codexHandleServerMessageForTest } from "../adapters/codex";
 import {
   emitCodexPromptSubmitted,
   emitCodexProviderSessionLinked,
@@ -51,6 +52,26 @@ function makeCodexSession(): { sess: SessionCtx; agentEvents: AgentEvent[]; tele
     },
   };
   return { sess, agentEvents, telemetryEvents };
+}
+
+function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens: number, modelContextWindow: number) {
+  return {
+    last: {
+      cachedInputTokens: 0,
+      inputTokens,
+      outputTokens,
+      reasoningOutputTokens: 0,
+      totalTokens,
+    },
+    modelContextWindow,
+    total: {
+      cachedInputTokens: 0,
+      inputTokens,
+      outputTokens,
+      reasoningOutputTokens: 0,
+      totalTokens,
+    },
+  };
 }
 
 {
@@ -139,6 +160,60 @@ function makeCodexSession(): { sess: SessionCtx; agentEvents: AgentEvent[]; tele
   assert(telemetryEvents[2].event.error.message === "turn exploded", "turn failure message changed");
   assert(telemetryEvents[2].event.error.code === "boom", "turn failure code changed");
   assert(!("generation" in telemetryEvents[2]), "server projection generation must not be stored on failed telemetry envelope");
+}
+
+{
+  const { sess, agentEvents, telemetryEvents } = makeCodexSession();
+  sess.internal.threadId = "thread-usage";
+
+  codexHandleServerMessageForTest(sess, {
+    method: "turn/started",
+    params: { threadId: "thread-usage", turn: { id: "turn-without-usage" } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "thread/tokenUsage/updated",
+    params: {
+      threadId: "thread-usage",
+      turnId: "other-turn",
+      tokenUsage: codexTokenUsage(50, 60, 110, 128_000),
+    },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "turn/completed",
+    params: { threadId: "thread-usage", turn: { id: "turn-without-usage", durationMs: 1000 } },
+  });
+
+  codexHandleServerMessageForTest(sess, {
+    method: "turn/started",
+    params: { threadId: "thread-usage", turn: { id: "turn-with-usage" } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "thread/tokenUsage/updated",
+    params: {
+      threadId: "thread-usage",
+      turnId: "turn-with-usage",
+      tokenUsage: codexTokenUsage(7, 11, 18, 256_000),
+    },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "turn/completed",
+    params: { threadId: "thread-usage", turn: { id: "turn-with-usage", durationMs: 2000 } },
+  });
+
+  const completed = telemetryEvents.filter((event) => event.event.type === "turn.completed");
+  assert(completed.length === 2, `expected two completed turn telemetry events: ${JSON.stringify(telemetryEvents)}`);
+  assert(completed[0].event.type === "turn.completed" && completed[0].event.usage === undefined, "mismatched turn usage should not attach");
+  assert(completed[1].event.type === "turn.completed", "second completion should be turn.completed");
+  assert(completed[1].providerTurnId === "turn-with-usage", "matching usage completion should preserve provider turn id");
+  assert(completed[1].event.usage?.inputTokens === 7, "matching usage input tokens changed");
+  assert(completed[1].event.usage?.outputTokens === 11, "matching usage output tokens changed");
+  assert(completed[1].event.usage?.totalTokens === 18, "matching usage total tokens changed");
+  assert(completed[1].event.usage?.contextWindowTokens === 256_000, "modelContextWindow should map to contextWindowTokens");
+
+  const doneEvents = agentEvents.filter((event) => event.kind === "done");
+  assert(doneEvents.length === 2, `expected two projected done events: ${JSON.stringify(agentEvents)}`);
+  assert(doneEvents[0].stats === "1.0s", "completion without matching usage should only project duration stats");
+  assert(doneEvents[1].stats === "7 in · 11 out · 2.0s", "completion with matching usage should project matching usage stats");
 }
 
 {

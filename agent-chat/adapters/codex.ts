@@ -43,6 +43,7 @@ interface CodexState {
   currentTurnId?: string;
   turnActive: boolean;
   activeGeneration?: number;
+  usageByTurnId: Map<string, unknown>;
   turnWaiters: ((id: string | null) => void)[];
   commands: CommandEntry[];
 }
@@ -193,6 +194,7 @@ function forkedCodexState(sourceState: CodexState): CodexState {
     currentTurnId: undefined,
     turnActive: false,
     activeGeneration: undefined,
+    usageByTurnId: new Map(),
     commands: sourceState.commands.slice(),
   };
 }
@@ -344,7 +346,7 @@ function handleServerMessage(srv: AppServer, msg: any) {
     case "turn/started":
       st.turnActive = true;
       st.currentTurnId = p.turn?.id;
-      sess.internal.lastUsage = undefined;
+      st.usageByTurnId.clear();
       resolveTurnWaiters(st, st.currentTurnId ?? null);
       emitCodexTurnStarted(sess, {
         providerSessionId: sess.internal.threadId as string | undefined,
@@ -378,7 +380,7 @@ function handleServerMessage(srv: AppServer, msg: any) {
       itemCompleted(sess, p.item);
       break;
     case "thread/tokenUsage/updated":
-      sess.internal.lastUsage = p.tokenUsage?.total;
+      recordCodexTokenUsage(st, p.turnId, p.tokenUsage);
       break;
     case "turn/completed": {
       st.turnActive = false;
@@ -386,8 +388,7 @@ function handleServerMessage(srv: AppServer, msg: any) {
       st.currentTurnId = undefined;
       const generation = st.activeGeneration;
       st.activeGeneration = undefined;
-      const usage = sess.internal.lastUsage;
-      sess.internal.lastUsage = undefined;
+      const usage = takeCodexTokenUsage(st, turnId);
       resolveTurnWaiters(st, null);
       emitCodexTurnCompleted(sess, {
         providerSessionId: sess.internal.threadId as string | undefined,
@@ -405,7 +406,7 @@ function handleServerMessage(srv: AppServer, msg: any) {
       st.currentTurnId = undefined;
       const generation = st.activeGeneration;
       st.activeGeneration = undefined;
-      sess.internal.lastUsage = undefined;
+      st.usageByTurnId.clear();
       resolveTurnWaiters(st, null);
       emitCodexTurnFailed(sess, {
         providerSessionId: sess.internal.threadId as string | undefined,
@@ -489,9 +490,32 @@ function defaultState(autoApprove: boolean): CodexState {
     mode: "default",
     turnActive: false,
     activeGeneration: undefined,
+    usageByTurnId: new Map(),
     turnWaiters: [],
     commands: [],
   };
+}
+
+function recordCodexTokenUsage(st: CodexState, turnId: unknown, tokenUsage: unknown) {
+  if (typeof turnId !== "string") return;
+  if (!tokenUsage || typeof tokenUsage !== "object") return;
+  const raw = tokenUsage as Record<string, unknown>;
+  const total = raw.total;
+  if (!total || typeof total !== "object") return;
+  st.usageByTurnId.set(turnId, {
+    ...(total as Record<string, unknown>),
+    modelContextWindow: raw.modelContextWindow,
+  });
+}
+
+function takeCodexTokenUsage(st: CodexState, turnId: unknown): unknown {
+  if (typeof turnId !== "string") {
+    st.usageByTurnId.clear();
+    return undefined;
+  }
+  const usage = st.usageByTurnId.get(turnId);
+  st.usageByTurnId.clear();
+  return usage;
 }
 
 export function codexForkStateForTest(sourceState: Partial<CodexState>): { turnActive: boolean; currentTurnId?: string; activeGeneration?: number } {
@@ -762,6 +786,20 @@ function applyThreadSettings(sess: SessionCtx, settings: any) {
   if (settings.sandboxPolicy?.type) st.sandbox = sandboxValue(settings.sandboxPolicy.type);
   if (settings.collaborationMode?.mode) st.mode = String(settings.collaborationMode.mode);
   emitOptions(sess);
+}
+
+export function codexHandleServerMessageForTest(sess: SessionCtx, msg: any) {
+  const p = msg.params ?? {};
+  const threadKey = p.threadId ?? p.conversationId ?? sess.internal.threadId ?? "codex-test-thread";
+  sess.internal.threadId ??= threadKey;
+  handleServerMessage({
+    proc: undefined as unknown as Bun.Subprocess<"pipe", "pipe", "pipe">,
+    request: async () => {
+      throw new Error("unexpected Codex request in server-message test");
+    },
+    write: () => {},
+    sessionsByThread: new Map([[threadKey, sess]]),
+  }, msg);
 }
 
 function sandboxValue(type: string): string {
