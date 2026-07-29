@@ -4,6 +4,7 @@ import { prettifyModelLabel } from "./model-label";
 import {
   emitCodexApprovalRequested,
   emitCodexApprovalResolved,
+  emitCodexDiagnostic,
   emitCodexMessageCompleted,
   emitCodexMessageDelta,
   emitCodexProviderSessionLinked,
@@ -342,9 +343,25 @@ function handleServerMessage(srv: AppServer, msg: any) {
     if (sess) emitCodexApprovalLifecycle(sess, msg, p, response, approve);
     srv.write({ jsonrpc: "2.0", id: msg.id, ...response });
     if (sess && "result" in response && !approve) {
-      sess.emit({ kind: "status", text: `denied: ${truncate(String(p.command ?? msg.method), 120)} (auto-approve is off)` });
+      emitCodexDiagnostic(sess, {
+        providerSessionId: requestProviderSessionId(sess, p),
+        turnId: codexState(sess).currentTurnId,
+        method: msg.method,
+        requestId: msg.id,
+        level: "info",
+        message: `denied: ${truncate(String(p.command ?? msg.method), 120)} (auto-approve is off)`,
+        code: "approval.denied",
+      });
     } else if (sess && "error" in response) {
-      sess.emit({ kind: "status", text: `declined unsupported request: ${truncate(String(msg.method), 120)}` });
+      emitCodexDiagnostic(sess, {
+        providerSessionId: requestProviderSessionId(sess, p),
+        turnId: codexState(sess).currentTurnId,
+        method: msg.method,
+        requestId: msg.id,
+        level: "warning",
+        message: `declined unsupported request: ${truncate(String(msg.method), 120)}`,
+        code: "request.unsupported",
+      });
     }
     return;
   }
@@ -452,6 +469,12 @@ function handleServerMessage(srv: AppServer, msg: any) {
   }
 }
 
+function requestProviderSessionId(sess: SessionCtx, params: Record<string, unknown>): string | undefined {
+  if (typeof params.threadId === "string") return params.threadId;
+  if (typeof params.conversationId === "string") return params.conversationId;
+  return sess.internal.threadId as string | undefined;
+}
+
 function emitCodexApprovalLifecycle(
   sess: SessionCtx,
   msg: { id: string | number; method: string },
@@ -462,9 +485,7 @@ function emitCodexApprovalLifecycle(
   const st = codexState(sess);
   const requestId = msg.id;
   const approvalId = `codex-approval-${requestId}`;
-  const providerSessionId = typeof params.threadId === "string"
-    ? params.threadId
-    : (typeof params.conversationId === "string" ? params.conversationId : sess.internal.threadId as string | undefined);
+  const providerSessionId = requestProviderSessionId(sess, params);
   emitCodexApprovalRequested(sess, {
     providerSessionId,
     turnId: st.currentTurnId,

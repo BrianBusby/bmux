@@ -2,6 +2,7 @@ import type { SessionCtx } from "../types";
 import type {
   TelemetryApprovalDecision,
   TelemetryApprovalKind,
+  TelemetryDiagnosticLevel,
   TelemetryEventEnvelope,
   TelemetryMessageStream,
   TelemetryProviderTurnId,
@@ -367,6 +368,42 @@ export function emitCodexUsageUpdated(
       usage,
     },
   });
+}
+
+export function emitCodexDiagnostic(
+  sess: SessionCtx,
+  params: {
+    providerSessionId?: string;
+    turnId?: TelemetryProviderTurnId;
+    method?: string;
+    requestId?: string | number;
+    level: TelemetryDiagnosticLevel;
+    message: string;
+    code?: string;
+  },
+): TelemetryEventEnvelope | undefined {
+  const message = truncate(params.message, 400);
+  return sess.emitTelemetry?.({
+    source: "provider",
+    providerSessionId: params.providerSessionId,
+    providerTurnId: params.turnId,
+    providerEvent: {
+      method: params.method,
+      requestId: params.requestId,
+      turnId: params.turnId,
+    },
+    event: {
+      type: "diagnostic",
+      level: params.level,
+      message,
+      code: params.code,
+    },
+  }) ?? (
+    params.level === "error"
+      ? sess.emit({ kind: "error", message })
+      : sess.emit({ kind: "status", text: message }),
+    undefined
+  );
 }
 
 export function codexTokenUsage(value: unknown): TelemetryTokenUsage | undefined {

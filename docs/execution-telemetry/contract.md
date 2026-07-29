@@ -1,12 +1,12 @@
 # Telemetry Contract
 
-Status: Slice 8 provider-neutral contract, sidecar fanout seam, and first Codex lifecycle migrations.
+Status: Slice 9 provider-neutral contract, sidecar fanout seam, and first Codex lifecycle migrations.
 
 The sidecar fanout path has been added without persistence, provenance
 projection, React behavior changes, or broad provider rewrites. Slices 3 through
-8 route Codex prompt submission, provider session linkage, turn lifecycle,
+9 route Codex prompt submission, provider session linkage, turn lifecycle,
 message lifecycle, tool lifecycle, approval lifecycle, and standalone usage
-observations through the seam.
+observations plus request-status diagnostics through the seam.
 
 ## Contract Location
 
@@ -20,7 +20,7 @@ It is deliberately outside `agent-chat/src/session.ts`, which remains the React
 projection, and outside `webviews/src/agent-session/shared`, which is a
 separate webview package.
 
-`agent-chat/types.ts` remains the current WebSocket UI schema for Slice 7.
+`agent-chat/types.ts` remains the current WebSocket UI schema for Slice 9.
 `AgentEvent` must not become the canonical telemetry contract and must not be
 parsed back into telemetry.
 
@@ -74,10 +74,10 @@ envelope-shaped objects, but `schema`, `eventId`, `sessionId`, `sequence`,
 
 `SessionCtx.emitTelemetry` and `SessionCtx.subscribeTelemetry` are optional
 seams for future producers and subscribers. Most adapters and the remaining
-non-migrated Codex diagnostic events still emit the current `AgentEvent` stream
-directly until later slices migrate specific provider events. The reverse
-direction remains prohibited: do not reconstruct canonical telemetry from
-`AgentEvent`.
+non-migrated Codex transport failure diagnostics still emit the current
+`AgentEvent` stream directly until later slices migrate specific provider
+events. The reverse direction remains prohibited: do not reconstruct canonical
+telemetry from `AgentEvent`.
 
 `TelemetryPublishProjectionOptions` carries sidecar-local projection details
 that must not be copied into canonical envelopes. Slice 4 uses this only to
@@ -119,11 +119,11 @@ CI.
 
 ## Deferred Work
 
-Slice 8 does not:
+Slice 9 does not:
 
 - broadly migrate provider events beyond Codex prompt/linkage, turn lifecycle,
   message lifecycle, tool lifecycle, approval lifecycle, and standalone usage
-  observations;
+  observations plus request-status diagnostics;
 - add telemetry persistence;
 - write to provenance-engine;
 - choose or implement a Claude structured event source.

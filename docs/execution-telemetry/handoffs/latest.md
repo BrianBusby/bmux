@@ -3,7 +3,7 @@
 ## Session identity
 
 - Date: 2026-07-29
-- Slice: Slice 8 - Codex standalone usage telemetry migration
+- Slice: Slice 9 - Codex request-status diagnostic telemetry migration
 - Branch: `execution-telemetry-slice-1`
 - PR: https://github.com/BrianBusby/bmux/pull/12
 - Base branch: stacked on PR #11 / `execution-telemetry-slice-0`
@@ -11,22 +11,24 @@
 - Slice 6 autoreview: clean; Archimedes made no changes and pushed no commits
 - Slice 7 implementation head: `8c1405d7fe32c77cc5bddb1604f3be442d32be37`
 - Slice 8 implementation head: branch head after the final Slice 8 commit
-- Tagged Debug build: `execution-telemetry-slice-8` succeeded
+- Slice 9 implementation head: branch head after the final Slice 9 commit
+- Tagged Debug build: `execution-telemetry-slice-9` succeeded
+- Tagged Debug app: `/Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-execution-telemetry-slice-9/Build/Products/Debug/bmux DEV execution-telemetry-slice-9.app`
 
 ## Objective completed
 
-Migrated one narrow Codex standalone usage observation path onto `SessionCtx.emitTelemetry` while preserving the existing React `AgentEvent` stream. Codex `thread/tokenUsage/updated` notifications now publish bounded `usage.updated` telemetry envelopes when `emitTelemetry` is available.
+Migrated one narrow Codex diagnostic path onto `SessionCtx.emitTelemetry` while preserving the existing React `AgentEvent` stream. Codex denied-approval and unsupported-request status messages now publish bounded `diagnostic` telemetry envelopes when `emitTelemetry` is available.
 
 ## Work completed
 
-- Added Codex standalone usage producer support in `agent-chat/adapters/codexTelemetry.ts`.
-- Routed Codex `thread/tokenUsage/updated` notifications through telemetry from `agent-chat/adapters/codex.ts`.
-- Preserved the existing buffered usage path that attaches matching usage to `turn.completed` for current React `done.stats`.
-- Preserved existing React behavior: standalone usage updates project no `AgentEvent`.
-- Preserved bounded provider references for method, thread id, and turn id when available.
-- Preserved bounded usage fields only; no raw provider `tokenUsage` envelope was added to canonical telemetry.
-- Preserved no-op direct fallback for standalone usage because `SessionCtx.emitTelemetry` remains optional and usage telemetry has no legacy UI projection.
-- Extended `agent-chat/test/codex-telemetry-migration.test.ts` proving telemetry subscribers receive standalone usage envelopes and React receives the same projected turn completion stats.
+- Added Codex diagnostic producer support in `agent-chat/adapters/codexTelemetry.ts`.
+- Routed denied approval status messages through telemetry from `agent-chat/adapters/codex.ts`.
+- Routed unsupported JSON-RPC request status messages through telemetry from `agent-chat/adapters/codex.ts`.
+- Preserved the exact existing React `status` message projection for both paths.
+- Preserved bounded provider references for method, request id, thread id, and turn id when available.
+- Preserved bounded diagnostic level, code, and message only; no raw JSON-RPC request or response envelope was added to canonical telemetry.
+- Extended `agent-chat/test/codex-telemetry-migration.test.ts` proving telemetry subscribers receive diagnostic envelopes and React receives the same status messages.
+- Extended `agent-chat/test/execution-telemetry-fanout.test.ts` proving diagnostic envelopes project to the existing status event.
 
 ## Tests run
 
@@ -37,12 +39,12 @@ Migrated one narrow Codex standalone usage observation path onto `SessionCtx.emi
 - `agent-chat` package check: passed.
 - `git diff --check`: passed.
 
-- `./scripts/reload.sh --tag execution-telemetry-slice-8`: passed.
+- `./scripts/reload.sh --tag execution-telemetry-slice-9`: passed.
 
 ## Known failures or limitations
 
 - Existing non-migrated adapter events still emit `AgentEvent` directly by design.
-- Codex diagnostics are not migrated in Slice 8.
+- Broader Codex transport failure diagnostics and ignored app-server notifications are not migrated in Slice 9.
 - No telemetry persistence or provenance projection exists.
 - No Swift decoder or native subscriber exists.
 - No Claude structured-source work has started.
@@ -64,7 +66,7 @@ Migrated one narrow Codex standalone usage observation path onto `SessionCtx.emi
 
 ## Next slice
 
-After Slice 8 review, continue Codex migration with one narrow path, preferably diagnostics. Keep proving that the existing React `AgentEvent` stream remains equivalent for any migrated path.
+After Slice 9 review, continue only if there is another bounded Codex diagnostic path worth preserving. Keep proving that the existing React `AgentEvent` stream remains equivalent for any migrated path.
 
 ## Do not do yet
 

@@ -3,6 +3,7 @@ import { codexHandleServerMessageForTest } from "../adapters/codex";
 import {
   emitCodexApprovalRequested,
   emitCodexApprovalResolved,
+  emitCodexDiagnostic,
   emitCodexMessageCompleted,
   emitCodexMessageDelta,
   emitCodexPromptSubmitted,
@@ -457,6 +458,19 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   assert(approvalEvents[1].event.type === "approval.resolved", "denied request should publish approval.resolved telemetry");
   assert(approvalEvents[1].event.decision === "denied", "denied decision changed");
   assert(approvalEvents[1].event.reason === "auto-approve is off", "denied reason changed");
+
+  const diagnosticEvents = telemetryEvents.filter((event) => event.event.type === "diagnostic");
+  assert(diagnosticEvents.length === 1, `expected denied status diagnostic telemetry: ${JSON.stringify(telemetryEvents)}`);
+  assert(diagnosticEvents[0].event.type === "diagnostic", "denied status should publish diagnostic telemetry");
+  assert(diagnosticEvents[0].providerSessionId === "thread-denied-approval", "denied diagnostic provider session id changed");
+  assert(diagnosticEvents[0].providerEvent?.method === "item/fileChange/requestApproval", "denied diagnostic provider method changed");
+  assert(diagnosticEvents[0].providerEvent?.requestId === "deny-1", "denied diagnostic request id changed");
+  assert(diagnosticEvents[0].event.level === "info", "denied diagnostic level changed");
+  assert(diagnosticEvents[0].event.code === "approval.denied", "denied diagnostic code changed");
+  assert(
+    diagnosticEvents[0].event.message === "denied: item/fileChange/requestApproval (auto-approve is off)",
+    "denied diagnostic message changed",
+  );
 }
 
 {
@@ -483,6 +497,19 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   assert(approvalEvents[1].event.type === "approval.resolved", "unsupported request should publish approval.resolved telemetry");
   assert(approvalEvents[1].event.decision === "unsupported", "unsupported decision changed");
   assert(approvalEvents[1].event.reason === "unsupported request", "unsupported reason changed");
+
+  const diagnosticEvents = telemetryEvents.filter((event) => event.event.type === "diagnostic");
+  assert(diagnosticEvents.length === 1, `expected unsupported status diagnostic telemetry: ${JSON.stringify(telemetryEvents)}`);
+  assert(diagnosticEvents[0].event.type === "diagnostic", "unsupported status should publish diagnostic telemetry");
+  assert(diagnosticEvents[0].providerSessionId === "thread-unsupported-approval", "unsupported diagnostic provider session id changed");
+  assert(diagnosticEvents[0].providerEvent?.method === "toolUserInput/request", "unsupported diagnostic provider method changed");
+  assert(diagnosticEvents[0].providerEvent?.requestId === 202, "unsupported diagnostic request id changed");
+  assert(diagnosticEvents[0].event.level === "warning", "unsupported diagnostic level changed");
+  assert(diagnosticEvents[0].event.code === "request.unsupported", "unsupported diagnostic code changed");
+  assert(
+    diagnosticEvents[0].event.message === "declined unsupported request: toolUserInput/request",
+    "unsupported diagnostic message changed",
+  );
 }
 
 {
@@ -586,8 +613,17 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
       outputTokens: 10,
     },
   });
+  emitCodexDiagnostic(sess, {
+    providerSessionId: "thread-fallback",
+    turnId: "turn-fallback",
+    method: "diagnostic/fallback",
+    requestId: "diagnostic-fallback",
+    level: "warning",
+    message: "fallback diagnostic",
+    code: "diagnostic.fallback",
+  });
 
-  assert(agentEvents.length === 10, `legacy AgentEvent fallback changed: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents.length === 11, `legacy AgentEvent fallback changed: ${JSON.stringify(agentEvents)}`);
   assert(agentEvents[0].kind === "user" && agentEvents[0].text === "fallback prompt", "legacy prompt fallback changed");
   assert(
     agentEvents[1].kind === "meta" && agentEvents[1].providerSessionId === "thread-fallback",
@@ -603,6 +639,7 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   assert(agentEvents[7].kind === "assistant" && agentEvents[7].text === "fallback assistant", "legacy assistant completed fallback changed");
   assert(agentEvents[8].kind === "tool-start" && agentEvents[8].toolId === "tool-fallback" && agentEvents[8].detail === "echo fallback", "legacy tool start fallback changed");
   assert(agentEvents[9].kind === "tool-end" && agentEvents[9].toolId === "tool-fallback" && agentEvents[9].ok === true && agentEvents[9].detail === "fallback output", "legacy tool completion fallback changed");
+  assert(agentEvents[10].kind === "status" && agentEvents[10].text === "fallback diagnostic", "legacy diagnostic fallback changed");
 }
 
 console.log("codex telemetry migration assertions passed");

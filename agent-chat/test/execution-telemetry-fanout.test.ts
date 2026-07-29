@@ -58,6 +58,18 @@ const third = fanout.publish({
   },
 });
 
+const fourth = fanout.publish({
+  source: "provider",
+  providerSessionId: "thread-1",
+  providerEvent: { method: "diagnostic/test", requestId: 7 },
+  event: {
+    type: "diagnostic",
+    level: "warning",
+    message: "diagnostic checkpoint",
+    code: "diagnostic.test",
+  },
+});
+
 assert(first.eventId === "event-1", `sidecar did not assign the first event id: ${first.eventId}`);
 assert(first.sessionId === "session-a", `sidecar did not assign the session id: ${first.sessionId}`);
 assert(first.sequence === 1, `sidecar did not assign sequence 1: ${first.sequence}`);
@@ -66,17 +78,19 @@ assert(first.provider === "codex", `sidecar did not assign provider: ${first.pro
 assert(first.providerSessionId === "thread-1", "bounded provider reference should be preserved");
 assert(second.eventId === "event-2" && second.sequence === 2, "second event should advance id and sequence");
 assert(third.eventId === "event-3" && third.sequence === 3, "third event should advance id and sequence");
+assert(fourth.eventId === "event-4" && fourth.sequence === 4, "fourth event should advance id and sequence");
 
 assert(
-  telemetryEvents.map((event) => event.eventId).join("|") === "event-1|event-2|event-3",
+  telemetryEvents.map((event) => event.eventId).join("|") === "event-1|event-2|event-3|event-4",
   "telemetry subscribers did not receive assigned envelopes",
 );
-assert(agentEvents.length === 3, `unexpected AgentEvent count: ${JSON.stringify(agentEvents)}`);
+assert(agentEvents.length === 4, `unexpected AgentEvent count: ${JSON.stringify(agentEvents)}`);
 assert(agentEvents[0].kind === "user" && agentEvents[0].text === "hello", "prompt should project to the existing user event");
 assert(agentEvents[1].kind === "delta" && agentEvents[1].text === "world", "assistant delta should project to the existing delta event");
 assert(
   agentEvents[2].kind === "files-changed" && agentEvents[2].files[0].adds === 2 && agentEvents[2].files[0].dels === 0,
   "files.changed should project to the existing files-changed event",
 );
+assert(agentEvents[3].kind === "status" && agentEvents[3].text === "diagnostic checkpoint", "diagnostic should project to the existing status event");
 
 console.log("execution telemetry fanout assertions passed");

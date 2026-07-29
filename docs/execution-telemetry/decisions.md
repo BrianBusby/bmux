@@ -224,3 +224,26 @@ Consequences: Codex standalone usage observations now have a canonical producer
 path without changing React rendering, WebSocket payload shape, persistence,
 provenance, Swift ownership, Claude source selection, or non-Codex behavior.
 Diagnostic Codex events still need a future narrow migration.
+
+## 2026-07-29 - Migrate Codex Request-Status Diagnostics With Legacy Projection
+
+Decision: Slice 9 migrates the Codex denied-approval and unsupported-request
+status messages to `SessionCtx.emitTelemetry` by publishing bounded
+`diagnostic` envelopes. The existing React `status` projection keeps the same
+message text.
+
+Rationale: These messages are the first narrow diagnostic path that already has
+clear provider request identity and bounded display text. Keeping the current
+UI projection stable avoids rendering or WebSocket schema changes while making
+request id, method, provider session id, level, code, and message observable to
+future non-UI consumers.
+
+Alternatives rejected: migrate transport/send failures in the same slice; emit
+raw JSON-RPC request or response envelopes; introduce new React diagnostic
+blocks.
+
+Consequences: Codex request-status diagnostics now have a canonical producer
+path without changing React rendering, WebSocket payload shape, persistence,
+provenance, Swift ownership, Claude source selection, or non-Codex behavior.
+Broader Codex transport failure diagnostics and ignored app-server
+notifications remain deferred.
