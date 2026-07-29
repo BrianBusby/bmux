@@ -6,13 +6,26 @@ Detailed technical contract rules remain in `docs/integration-contract.md`. The 
 
 ## Current Priority
 
-V1 adoption is a controlled migration. The first external bmux path, `bmux provenance worktrees list`, is complete. Slice C session-tree read migration is accepted after bmux PR 7 merged at `08763dd0d3256989180dcc04f426da1f24369175` with an explicit GitHub Actions waiver for unavailable Blacksmith runner evidence.
+V1 adoption is operationally complete with named caveats. The first external
+bmux path, `bmux provenance worktrees list`, is complete. Slice C session-tree
+read migration is accepted after bmux PR 7 merged at
+`08763dd0d3256989180dcc04f426da1f24369175` with an explicit GitHub Actions
+waiver for unavailable Blacksmith runner evidence.
 
 Slice D file-explanation read migration is accepted after bmux PR 9 merged at `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374` on 2026-07-24T21:54:46Z. The existing public contract was sufficient, bmux repinned to merged engine revision `126afde36671f53a137953200e7883e6b4093ac3`, and the temporary feature-branch dependency pin was removed everywhere.
 
-Slice E current-context engine readiness is complete in provenance-engine. The required bmux migration is now `bmux provenance context current`, using `ProvenanceEngineClient.currentContext(ProvenanceCurrentContextRequest(...))` through the public SDK. Slice E is not accepted until bmux adoption lands and is reviewed.
+Slice E operational runtime cutover is accepted after bmux main merge
+`3cbacd150`. bmux adopted `bmux provenance context current`, lifecycle
+recording, worktree observation capture, production default storage cutover to
+`~/.local/state/provenance-engine/provenance.sqlite`, and Provenance Engine
+schema identity hardening at engine revision
+`18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03`.
 
-Planned order after Slice D acceptance: current context, lifecycle recording, worktree observation capture, storage ownership migration, daemon or service transport, then shared evidence and Knowledge Compiler adoption.
+Current gate after Slice E: Engineering Observation Period, plus cleanup of
+named legacy bmux-local support surfaces. Planned order after observation:
+legacy cleanup, observability API decision, tagged engine release, daemon or
+service transport if needed, then shared evidence and Knowledge Compiler
+adoption.
 
 ## Milestone: bmux Worktree Reads
 
@@ -132,7 +145,7 @@ Rollback strategy: scoped bmux revert to the local current-context adapter.
 
 Migration or cleanup: remove current-context-only local SQL helpers when unused.
 
-Status: Engine readiness complete; bmux adoption pending.
+Status: Accepted in Slice E; bmux adoption merged to main at `3cbacd150`.
 
 ## Milestone: Storage Ownership Leaves bmux
 
@@ -154,7 +167,8 @@ Rollback strategy: restore previous bmux storage adapter only through a document
 
 Migration or cleanup: remove legacy bmux-local durable provenance storage after migration is verified.
 
-Status: Gated post-read/write adoption.
+Status: Operational default cutover accepted in Slice E. Broad legacy data
+migration and cleanup remain gated by explicit design and observation evidence.
 
 ## Milestone: Daemon or Service Transport
 
@@ -204,7 +218,7 @@ Status: Post-V1, planned and gated.
 
 Capability owner: provenance-engine. Adopter: bmux.
 
-Required contract: `ProvenanceEngineClient.recordSubsessionLifecycle(...)` or `appendEvent(...)`.
+Required contract: `ProvenanceEngineClient.recordSessionLifecycle(...)` or `appendEvent(...)`.
 
 Provenance-engine work: preserve normalized lifecycle recording behavior and deterministic identity handling.
 
@@ -220,7 +234,8 @@ Rollback strategy: scoped bmux revert to local lifecycle recording.
 
 Migration or cleanup: remove direct lifecycle append coupling to bmux-local provenance storage when unused.
 
-Status: Planned after read-path migrations.
+Status: Accepted in Slice E for supported hook/feed lifecycle events. Opening
+an agent-session surface alone does not create lifecycle evidence.
 
 ## Milestone: bmux Worktree Observation Capture
 
@@ -244,4 +259,4 @@ Rollback strategy: scoped bmux revert to local append adapter.
 
 Migration or cleanup: remove direct local store append and retention SQL only after replacement is accepted.
 
-Status: Planned.
+Status: Accepted in Slice E for bmux-owned Git/worktree observation capture.
