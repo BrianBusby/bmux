@@ -53,9 +53,10 @@ struct WorkProvenanceEventType: Codable, Equatable, Hashable, Sendable, RawRepre
     /// Bmux observed session metadata.
     static let sessionObserved = Self(rawValue: "session_observed")
 
-    /// Bmux observed a child session start.
-    static let subsessionStarted = Self(rawValue: "subsession_started")
+    /// Bmux observed a session start.
+    static let sessionStarted = Self(rawValue: "session_started")
 
-    /// Bmux observed a child session stop.
-    static let subsessionStopped = Self(rawValue: "subsession_stopped")
+    /// Bmux observed a session stop.
+    static let sessionStopped = Self(rawValue: "session_stopped")
+
 }

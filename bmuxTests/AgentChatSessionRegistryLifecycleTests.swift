@@ -15,8 +15,8 @@ struct AgentChatSessionRegistryLifecycleTests {
         let sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b"
         let workspaceID = UUID().uuidString
         let surfaceID = UUID().uuidString
-        var changes: [AgentSubsessionLifecycleChange] = []
-        registry.onSubsessionLifecycleChanged = { changes.append($0) }
+        var changes: [AgentSessionLifecycleChange] = []
+        registry.onSessionLifecycleChanged = { changes.append($0) }
 
         let startRecord = registry.noteHookEvent(WorkstreamEvent(
             sessionId: sessionID,
@@ -47,10 +47,10 @@ struct AgentChatSessionRegistryLifecycleTests {
         #expect(changes.first?.workspaceID == workspaceID)
         #expect(changes.first?.surfaceID == surfaceID)
         #expect(changes.first?.workingDirectory == "/Users/example/project")
-        #expect(changes.first?.subsessionID == "subagent-1")
+        #expect(changes.first?.externalSessionID == "subagent-1")
         #expect(changes.first?.displayName == "Reviewer")
         #expect(changes.last?.phase == .stopped)
-        #expect(changes.last?.subsessionID == "subagent-1")
+        #expect(changes.last?.externalSessionID == "subagent-1")
     }
 
     @MainActor
@@ -58,8 +58,8 @@ struct AgentChatSessionRegistryLifecycleTests {
         let registry = AgentChatSessionRegistry()
         let sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b"
         let workspaceID = UUID().uuidString
-        var changes: [AgentSubsessionLifecycleChange] = []
-        registry.onSubsessionLifecycleChanged = { changes.append($0) }
+        var changes: [AgentSessionLifecycleChange] = []
+        registry.onSessionLifecycleChanged = { changes.append($0) }
 
         registry.noteHookEvent(WorkstreamEvent(
             sessionId: sessionID,
@@ -94,7 +94,7 @@ struct AgentChatSessionRegistryLifecycleTests {
 
         #expect(lateStartRecord.state == .ended)
         #expect(changes.map(\.phase) == [.started, .stopped])
-        #expect(changes.map(\.subsessionID) == ["subagent-1", "subagent-1"])
+        #expect(changes.map(\.externalSessionID) == ["subagent-1", "subagent-1"])
     }
 
     @MainActor

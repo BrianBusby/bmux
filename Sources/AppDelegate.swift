@@ -680,6 +680,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     weak var tabManager: TabManager?
     weak var notificationStore: TerminalNotificationStore?
     weak var sidebarState: SidebarState?
+    private var workProvenanceRuntime: WorkProvenanceRuntime?
 
     /// Notification jump/open navigation, extracted into `BmuxNotifications`.
     /// `AppDelegate` is the composition root: it conforms to every seam (see
@@ -2076,6 +2077,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         workProvenanceRuntime: WorkProvenanceRuntime
     ) {
         self.tabManager = tabManager
+        self.workProvenanceRuntime = workProvenanceRuntime
+        tabManager.workProvenanceRuntime = workProvenanceRuntime
         self.settingsRuntime = settingsRuntime
         self.notificationStore = notificationStore
         self.sidebarState = sidebarState
@@ -2092,7 +2095,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // entry). No-op on Release / when the flag is off.
         MacPairedMacBackupPublisher.shared.configure(auth: auth.coordinator)
         TerminalController.shared.attachAuth(coordinator: auth.coordinator, browserSignIn: auth.browserSignIn)
-        agentChatTranscriptService.recordSubsessionLifecycleChanges(with: workProvenanceRuntime)
+        agentChatTranscriptService.recordSessionLifecycleChanges(with: workProvenanceRuntime)
         TerminalController.shared.agentChatTranscriptService = agentChatTranscriptService
         auth.start()
         ensureMobileWorkspaceListObserver(for: tabManager)
@@ -4648,6 +4651,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             }
             tabManager.window = window
             tabManager.windowId = windowId
+            tabManager.workProvenanceRuntime = workProvenanceRuntime
             existing.window = window
             let resolvedFileExplorerState = fileExplorerState ?? existing.fileExplorerState
             if let fileExplorerState {
@@ -4666,6 +4670,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         } else {
             tabManager.window = window
             tabManager.windowId = windowId
+            tabManager.workProvenanceRuntime = workProvenanceRuntime
             let context = MainWindowContext(
                 windowId: windowId,
                 tabManager: tabManager,

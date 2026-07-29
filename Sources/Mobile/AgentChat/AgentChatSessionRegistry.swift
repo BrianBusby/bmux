@@ -16,7 +16,7 @@ final class AgentChatSessionRegistry {
     /// one place instead of hand-maintained flags.
     var onRecordChanged: ((AgentChatSessionRecord, _ previous: AgentChatSessionRecord?) -> Void)?
     var onRecordRemoved: ((AgentChatSessionRecord) -> Void)?
-    var onSubsessionLifecycleChanged: ((AgentSubsessionLifecycleChange) -> Void)?
+    var onSessionLifecycleChanged: ((AgentSessionLifecycleChange) -> Void)?
     /// Per-session timestamp of the last hook-store file consult, bounding
     /// main-actor disk reads during tool storms.
     private var hookStoreConsultedAt: [String: Date] = [:]
@@ -466,8 +466,8 @@ final class AgentChatSessionRegistry {
         syncProcessExitWatch(for: record)
         updateLiveSessionIndex(previous: previous, current: record)
         onRecordChanged?(record, previous)
-        if let change = Self.subsessionLifecycleChange(for: event, record: record) {
-            onSubsessionLifecycleChanged?(change)
+        if let change = Self.sessionLifecycleChange(for: event, record: record) {
+            onSessionLifecycleChanged?(change)
         }
         if shouldConsultStore {
             backfillBindingsFromStore(

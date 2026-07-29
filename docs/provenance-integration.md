@@ -1,57 +1,103 @@
 # bmux Provenance Integration
 
-This document records bmux-local integration responsibilities. The canonical cross-repository bmux to provenance-engine integration roadmap lives in provenance-engine:
+This document records bmux's reference integration with the finalized Provenance Engine V1 public contract.
+
+The cross-repository roadmap remains in provenance-engine:
 
 https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md
 
-The provenance-engine integration contract remains the technical authority for public APIs:
+The Provenance Engine integration contract remains the technical authority for public APIs:
 
 https://github.com/BrianBusby/provenance-engine/blob/main/docs/integration-contract.md
 
-## Repository Boundary
+## Public SDK Boundary
 
-bmux owns the product workflow around provenance:
+bmux imports only the public engine products for adopted provenance paths:
 
-- command parsing and CLI/socket presentation
-- JSON and text output compatibility
-- user-facing fallback messages
-- terminal, workspace, browser, notification, and UI behavior
-- Codex and agent orchestration
-- transcript and hook capture at the bmux boundary
-- Git observation scheduling and duplicate-capture policy
-- prompt/context assembly and user-facing reports
+```swift
+import ProvenanceEngineContracts
+import ProvenanceEngineSDK
+```
 
-provenance-engine owns reusable provenance infrastructure:
+Client construction happens through the public SDK factory. bmux embeds Provenance Engine as a Swift package; there is no engine daemon or external service to start.
 
-- public event and evidence contracts
-- durable event ledger and projections
-- evidence persistence and storage integrity
-- query and retrieval APIs
-- SDK and future transport boundaries
-- shared evidence-store architecture
-- Knowledge Compiler artifacts
-- versioning, release, and compatibility policy
+```swift
+let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+    try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
+```
 
-## Current bmux-Owned Integration Work
+The SQLite-backed factory is an SDK construction detail. bmux code must not import engine implementation targets, instantiate engine SQLite types directly, or read engine projection tables from adopted read/write paths.
 
-Current active milestone: none selected after Slice D acceptance. Slice C session-tree read migration and Slice D file-explanation read migration are accepted with explicit GitHub Actions waivers for bmux PR 7 and PR 9.
+## Runtime Store
 
-Slice D migrated only `bmux provenance explain <path>` to the external SQLite-backed provenance-engine client, preserved existing presentation and fallback behavior, used public engine APIs for file-explanation fixture setup, and removed only file-explanation-specific legacy code that became unused. The final engine dependency is merged revision `126afde36671f53a137953200e7883e6b4093ac3`; bmux PR 9 merged at `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374` on 2026-07-24T21:54:46Z.
+The canonical default store is owned by Provenance Engine: `~/.local/state/provenance-engine/provenance.sqlite`.
 
-The completed first adoption path is `bmux provenance worktrees list`. It reads through provenance-engine `0.1.0` while bmux continues to own CLI output compatibility.
+The previous bmux-local database remains at `~/.local/state/bmux/work-provenance/bmux-work-provenance.sqlite`. That legacy file is not deleted, archived, or opened as the default V1 store. In the local cutover validation it contained the old bmux schema, `PRAGMA user_version = 3`, and no useful event/session/worktree rows.
 
-The completed second adoption path is `bmux provenance sessions tree <session-id>`. It reads through provenance-engine revision `2026914454a00ccc6c45d686ea741111b0a01229` while bmux continues to own CLI output compatibility. The engine limit is a combined session-plus-relationship row budget; bmux adapts it at the CLI boundary to preserve the legacy 100-session presentation cap.
+For tests and development, `BMUX_PROVENANCE_HOME` overrides the home directory used by bmux default-path resolution. Explicit CLI `--database <path>` is supported for provenance CLI fixture/debug use and applies only to that CLI invocation.
 
-Slice D added the third adoption path, `bmux provenance explain <path>`. bmux still resolves the Git worktree and repository-relative path, then resolves the engine worktree through `ProvenanceEngineClient.worktrees(ProvenanceWorktreeListRequest())` and calls `ProvenanceEngineClient.fileExplanation(ProvenanceFileExplanationRequest(...))`.
+Startup breadcrumbs include the effective V1 database path in `app.init.workProvenance.created`. Producer failures are logged instead of being silently discarded.
 
-## Local Operational Notes
+## Current State Reads
 
-- The live handoff index remains `docs/context-efficiency/current-status.md`.
-- The local adoption inventory remains `docs/context-efficiency/integration/provenance-engine-adoption.md`.
-- The detailed Phase 4 reconnect plan remains `docs/context-efficiency/provenance-engine-phase4-reconnect-plan.md`.
+bmux treats Provenance Engine Current State as authoritative present-tense provenance.
 
-Do not begin current context, lifecycle writes, capture append migration, storage migration, daemon transport, retrieval, UI work, GitHub ingestion, or Knowledge Compiler implementation.
+Adopted CLI reads:
 
-Slice D is accepted. Do not begin the next migration slice until it is explicitly selected.
+- `bmux provenance worktrees list` calls `client.worktrees(...)`.
+- `bmux provenance sessions tree <session-id>` calls `client.sessionTree(...)`.
+- `bmux provenance explain <path>` calls `client.fileExplanation(...)`.
+- `bmux provenance context current` calls `client.currentContext(...)`.
 
-Avoid permanent dual reads.
+bmux still owns command parsing, Git path normalization, output compatibility, fallback text, JSON/text rendering, and UI presentation. The engine owns evidence, deterministic Current State, provenance interpretation, and bounded provenance queries.
+
+## Producer Writes
+
+bmux records observable activity through public engine writes:
+
+- Agent lifecycle changes are normalized into `ProvenanceSessionLifecycleRequest` and sent through `client.recordSessionLifecycle(...)`.
+- Git/worktree observations are normalized into immutable `ProvenanceEvent` values and sent through `client.appendEvent(...)`.
+
+bmux producer responsibilities are limited to observing engineering activity, assigning stable producer identities when available, recording observable or declared facts, and retaining best-effort error state for diagnostics. bmux must not compute deterministic Current State or reinterpret evidence already owned by the engine.
+
+Captured workflows today:
+
+- Worktree observation records Git repository/worktree/change-set/file-change evidence for bmux workspaces whose current directory is inside a Git repository.
+- Agent lifecycle recording records hook-derived Codex/Claude-style subagent lifecycle through `ProvenanceSessionLifecycleRequest`.
+
+Not every agent UI action implies a recorded session. Opening an agent-session surface alone creates UI state; durable lifecycle evidence is recorded when supported hooks/feed events reach bmux. Engine durability covers accepted events after they reach the SDK; producer delivery reliability remains bmux-owned.
+
+## Smoke Test
+
+Use the tagged debug build and bundled CLI when validating local integration:
+
+```bash
+./scripts/reload.sh --tag slice-e-v1
+BMUX_TAG=slice-e-v1 scripts/bmux-debug-cli.sh list-workspaces
+sqlite3 ~/.local/state/provenance-engine/provenance.sqlite "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
+sqlite3 ~/.local/state/provenance-engine/provenance.sqlite "SELECT COUNT(*) FROM provenance_events;"
+bmux provenance worktrees list
+bmux provenance context current
+bmux provenance explain <changed-file>
+bmux provenance sessions tree <session-id>
+```
+
+Required schema identity rows live in `provenance_metadata`: `schema_family = provenance-engine`, `schema_identity_version = 1`, and the current `schema_version`.
+
+## Remaining Local Code
+
+Some bmux-local storage and observability files remain for historical compatibility tests and lifecycle trace presentation. They are not the adopted runtime source of truth for Current State reads or lifecycle writes.
+
+Do not add new provenance consumer behavior to `WorkProvenanceStore`, `BmuxLegacyProvenanceClient`, or direct SQLite readers. New consumer behavior must use `ProvenanceEngineContracts` and `ProvenanceEngineSDK`.
+
+## Reference Integration Checklist
+
+Future producers should follow bmux's adopted pattern:
+
+1. Import `ProvenanceEngineContracts` and `ProvenanceEngineSDK`.
+2. Create a `ProvenanceEngineClient` through `ProvenanceEngineClientFactory`.
+3. Record lifecycle with `recordSessionLifecycle(...)`.
+4. Record immutable evidence with `appendEvent(...)`.
+5. Read present-tense provenance through Current State APIs.
+6. Keep presentation and workflow policy in the consumer.
+7. Keep evidence interpretation and deterministic state in the engine.

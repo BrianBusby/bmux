@@ -605,7 +605,7 @@ struct WorkProvenanceStoreTests {
         )
         return WorkProvenanceEvent(
             id: id,
-            eventType: status == "completed" ? .subsessionStopped : .subsessionStarted,
+            eventType: status == "completed" ? .sessionStopped : .sessionStarted,
             timestamp: now,
             sessionID: session.id,
             source: .observed,
@@ -653,7 +653,7 @@ struct WorkProvenanceStoreTests {
         )
         return WorkProvenanceEvent(
             id: "conflicting-identity-event",
-            eventType: .subsessionStarted,
+            eventType: .sessionStarted,
             timestamp: now,
             sessionID: session.id,
             source: .observed,
