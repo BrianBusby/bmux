@@ -2,6 +2,11 @@
 
 Status: Slice 11 provider-neutral contract, sidecar fanout seam, first Codex lifecycle migrations, Plan Slice 4B live projection sidecar read surface, and Plan Slice 4C native read client.
 
+Canonical bmux roadmap reconciliation note: Provenance Engine Slice E is
+operationally complete on main, and the active product gate is the Engineering
+Observation Period. Execution telemetry Plan Slice 4B is unrelated to
+Provenance Engine Slice E numbering.
+
 The sidecar fanout path has been added without persistence, provenance
 projection, React behavior changes, or broad provider rewrites. Slices 3 through
 11 route Codex prompt submission, provider session linkage, turn lifecycle,
@@ -39,8 +44,10 @@ parsed back into telemetry.
 - React owns only the current `AgentEvent -> Block[]` render projection.
 - Native Swift owns future display or notification projections after a bridge is
   added; it does not own this source of truth.
-- provenance-engine owns durable engineering provenance only. It is not an
-  execution telemetry store and does not receive this stream in Slice 1.
+- Provenance Engine owns selected durable evidence and deterministic Current
+  State. It is not a high-frequency execution telemetry store and does not
+  receive this canonical stream unless a later policy slice selects specific
+  execution facts as durable engineering evidence.
 
 ## Envelope Rules
 

@@ -4,6 +4,16 @@ Last updated: 2026-07-29
 
 ## Plan Orientation
 
+Canonical bmux roadmap reconciliation completed on 2026-07-29 by merging
+`origin/main` into this branch. Current main defines Provenance Engine Slice E
+as operationally complete and sets the active product gate to the Engineering
+Observation Period.
+
+Execution telemetry is bmux-owned high-frequency runtime state. Provenance
+Engine owns selected durable evidence and deterministic Current State. The
+execution telemetry plan's "Plan Slice 4B" numbering is unrelated to Provenance
+Engine Slice E.
+
 | Plan area | Current position | Notes |
 | --- | --- | --- |
 | Provider-neutral Codex telemetry migration | Slices 0 through 11 completed on the stacked Slice 1 branch history. | Existing React `AgentEvent` projection behavior is preserved. |
@@ -15,7 +25,13 @@ Last updated: 2026-07-29
 
 Plan Slice 4C - native live projection read client.
 
-Status: completed in branch `execution-telemetry-live-projection`; awaiting review.
+Status: completed in branch `execution-telemetry-live-projection`; reconciled
+with current main after Provenance Engine Slice E. No next execution telemetry
+implementation slice is selected.
+
+Main reconciliation validation: focused execution telemetry TS tests,
+`agent-chat` checks, shared BmuxAgentChat package tests, repository policy
+checks, focused Slice E provenance tests, and the tagged Debug build passed.
 
 ## Completed Slices
 
@@ -274,7 +290,28 @@ Plan Slice 4C validation: succeeded.
 
 ## Next Required Action
 
-Review `execution-telemetry-live-projection`. A later slice can wire an app/native consumer to the package live projection client or continue provider migration, but should still avoid persistence, provenance writes, Swift schema ownership, React rendering changes, and WebSocket `AgentEvent` payload changes until those are explicitly in scope.
+Review `execution-telemetry-live-projection` after the main reconciliation
+merge. A later slice can evaluate a bounded observation diagnostic comparing
+the live execution projection with Provenance Engine Current State, wire an
+app/native consumer to the package client, or continue provider migration.
+Do not add telemetry persistence or broad provenance writes until a later
+explicit policy slice selects which execution facts qualify as durable
+engineering evidence.
+
+## Observation Diagnostic Evaluation
+
+A bounded diagnostic is feasible as a read-only comparison between
+`ExecutionTelemetryLiveProjectionClient.read(sessionID:)` and
+`ProvenanceEngineClient.currentContext(...)`.
+
+Keep the diagnostic observational:
+
+- compare session/provider/turn presence and lifecycle broad state only;
+- report mismatches without writing telemetry or provenance records;
+- treat Provenance Engine Current State as authoritative durable evidence;
+- treat the live projection as ephemeral runtime state;
+- avoid command output, transcripts, changed file paths, raw errors, and raw
+  provider envelopes.
 
 ## Blocked Decisions
 

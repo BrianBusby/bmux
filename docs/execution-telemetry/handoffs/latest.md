@@ -3,34 +3,44 @@
 ## Session identity
 
 - Date: 2026-07-29
-- Slice: Plan Slice 4C - native live projection read client
+- Slice: Main reconciliation after Plan Slice 4C
 - Branch: `execution-telemetry-live-projection`
-- Base branch: `execution-telemetry-slice-0`
-- Starting commit: `f7e0ab63f55056e299f4230698416e535dd2bdbf`
-- Implementation head: branch head after the final Slice 4C commit
-- Tagged Debug build: `execution-telemetry-live-projection` succeeded
+- Starting commit: `b6820446fdd29a83d27cbe24f42fe33dbdc2848e`
+- Reconciliation merge: merged `origin/main` after Provenance Engine Slice E
 
 ## Objective completed
 
-Added a bounded native-side read client for the existing live projection REST
-payload. Swift now decodes `{ sessionId, snapshot }` through an injected
-package client.
+Reconciled the execution telemetry branch with current main. Main defines
+Provenance Engine Slice E as operationally complete and the active product gate
+as the Engineering Observation Period.
+
+Execution telemetry remains bmux-owned high-frequency runtime state. Provenance
+Engine owns selected durable evidence and deterministic Current State.
 
 ## Work completed
 
-- Added Swift DTOs and read client.
-- Added an injected HTTP seam.
-- Added shared fixture checks.
+- Merged `origin/main` into `execution-telemetry-live-projection`.
+- Preserved the completed telemetry stack and Slice 4C client.
+- Adopted main's Slice E roadmap, provenance integration, and current-status docs.
+- Clarified execution telemetry versus Provenance Engine ownership.
 
 ## Validation
 
-- Focused and package validation passed.
+- `git diff --check`
+- Focused execution telemetry TS tests passed.
+- Agent-chat type and unit checks passed.
+- Shared BmuxAgentChat Swift package tests passed.
+- Repository policy checks passed.
+- Focused Slice E provenance tests passed.
+- Tagged Debug build passed.
 
 ## Known limitations
 
-- No app UI consumer was wired.
-- No persistence or provenance writes were added.
-- React and WebSocket `AgentEvent` behavior stayed unchanged.
+- No new execution telemetry implementation slice was selected.
+- No telemetry persistence was added.
+- No broad provenance writes were added.
+- Plan Slice 4B is execution-telemetry numbering only and is unrelated to
+  Provenance Engine Slice E.
 
 ## Next slice
 
@@ -39,3 +49,7 @@ telemetry migration. Keep persistence, provenance writes, Swift schema
 ownership, React rendering changes, WebSocket payload changes, Claude
 structured-source work, and automatic diagnostic checkpoints out of scope
 unless explicitly requested.
+
+Bounded observation diagnostic evaluation: compare live projection broad
+session/provider/turn/lifecycle presence against Provenance Engine Current
+State read-only. Report mismatch only; do not persist or write provenance.

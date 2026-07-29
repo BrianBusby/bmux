@@ -343,3 +343,13 @@ transcripts, private reasoning, or changed file paths.
 ## 2026-07-29 - Native Client Consumes Live Projection JSON Only
 
 Decision: Plan Slice 4C adds a Swift REST read client for the bounded live projection payload without making Swift the canonical telemetry schema owner.
+
+## 2026-07-29 - Reconcile With Provenance Slice E Boundary
+
+Decision: Execution telemetry remains bmux-owned high-frequency runtime state
+after merging current main. Provenance Engine Slice E is complete and owns
+selected durable evidence plus deterministic Current State.
+
+Consequence: compare live telemetry with Current State only as a bounded
+observation diagnostic unless a later policy slice selects durable execution
+facts for provenance writes.

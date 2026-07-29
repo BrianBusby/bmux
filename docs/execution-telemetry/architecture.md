@@ -46,6 +46,11 @@ provenance-engine
   for selected durable provenance queries and lifecycle records
 ```
 
+Mainline reconciliation note: current bmux main has accepted Provenance Engine
+Slice E. The active product gate is the Engineering Observation Period. This
+execution telemetry plan's Plan Slice 4B numbering is unrelated to Provenance
+Engine Slice E.
+
 ## Current Ownership Boundaries
 
 `agent-chat/server.ts` owns the current agent-chat session object: bmux-local session id, provider id, cwd, title, auto-approve flag, status, adapter-private state, sockets, created-at timestamp, and replayable `events`.
@@ -122,11 +127,16 @@ Important reductions:
 
 ## Provenance Boundary Today
 
-The app-server path does not currently call provenance-engine. Searches for `ProvenanceEngineContracts`, `ProvenanceEngineSDK`, `WorkProvenanceStore`, and subsession lifecycle paths led to Swift/CLI code rather than `agent-chat`.
+Execution telemetry remains bmux-owned high-frequency runtime state. The
+agent-chat app-server path does not write canonical telemetry to Provenance
+Engine.
 
-Current provenance-related code includes `CLI/BMUXCLI+Provenance.swift`, `CLI/CLIProvenanceContext.swift`, `CLI/bmux.swift`, `bmuxTests/SubsessionProvenanceTests.swift`, and `provenance-engine/Sources/ProvenanceEngineContracts`.
-
-This means Codex app-server lifecycle telemetry currently reaches the React agent-chat UI, but not provenance-engine.
+After accepted Provenance Engine Slice E, bmux production provenance defaults
+use the engine-owned store for selected durable evidence, lifecycle writes,
+worktree observation writes, schema identity, and deterministic Current State.
+Those durable evidence paths stay separate from the high-frequency execution
+telemetry stream until an explicit policy slice selects which execution facts
+qualify as durable engineering evidence.
 
 ## Target Direction For Later Slices
 
