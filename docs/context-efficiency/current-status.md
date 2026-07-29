@@ -62,6 +62,12 @@ Historical slice details live in `docs/context-efficiency/integration/provenance
 
 Active milestone after Slice E: Engineering Observation Period, plus cleanup of named legacy surfaces.
 
+Execution telemetry observation diagnostic completed on 2026-07-29 in branch
+`execution-telemetry-live-projection`: `bmux provenance diagnostics
+execution-telemetry-live <session-id>` compares the live projection with
+Provenance Engine Current State read-only and reports bounded mismatch rows
+only.
+
 Potential follow-up work:
 
 - Remove or retire `WorkProvenanceStore` and `BmuxLegacyProvenanceClient` after all remaining legacy tests and observability support have replacement contracts or are declared obsolete.

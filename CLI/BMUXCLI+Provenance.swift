@@ -1,4 +1,5 @@
 import Foundation
+import BmuxAgentChat
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
 
@@ -28,6 +29,11 @@ extension BMUXCLI {
             )
         case "traces":
             try runProvenanceTraces(
+                commandArgs: Array(commandArgs.dropFirst()),
+                jsonOutput: jsonOutput
+            )
+        case "diagnostics":
+            try await runProvenanceDiagnostics(
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
@@ -244,6 +250,84 @@ extension BMUXCLI {
         printProvenanceSessionTree(tree, jsonOutput: jsonOutput)
     }
 
+    private func runProvenanceDiagnostics(commandArgs: [String], jsonOutput: Bool) async throws {
+        let commandName = "provenance diagnostics execution-telemetry-live"
+        let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
+        let (agentChatURLText, remainingAfterAgentChatURL) = parseOption(
+            remainingAfterDatabase,
+            name: "--agent-chat-url"
+        )
+        let (repositoryPath, remainingAfterRepository) = parseOption(
+            remainingAfterAgentChatURL,
+            name: "--repository"
+        )
+        var remaining = remainingAfterRepository
+        try rejectProvenanceUnknownFlags(remaining, commandName: commandName)
+        guard remaining.first?.lowercased() == "execution-telemetry-live" else {
+            throw CLIError(message: String(
+                localized: "cli.provenance.diagnostics.executionTelemetry.usage",
+                defaultValue: "Usage: bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]"
+            ))
+        }
+        remaining.removeFirst()
+        guard let sessionID = remaining.first?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !sessionID.isEmpty else {
+            throw CLIError(message: String(
+                localized: "cli.provenance.diagnostics.executionTelemetry.usage",
+                defaultValue: "Usage: bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]"
+            ))
+        }
+        remaining.removeFirst()
+        guard remaining.isEmpty else {
+            throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
+        }
+
+        let agentChatURL = try provenanceExecutionTelemetryAgentChatURL(agentChatURLText)
+        let livePayload: ExecutionTelemetryLiveProjectionReadPayload
+        do {
+            livePayload = try await ExecutionTelemetryLiveProjectionClient(baseURL: agentChatURL).read(sessionID: sessionID)
+        } catch {
+            throw CLIError(message: String(
+                localized: "cli.provenance.diagnostics.executionTelemetry.error.liveReadFailed",
+                defaultValue: "failed to read live execution telemetry projection"
+            ))
+        }
+
+        let target = try CLIProvenanceGitResolver().resolve(
+            path: repositoryPath ?? ".",
+            commandLabel: commandName
+        )
+        let currentContext: ProvenanceEngineContracts.ProvenanceCurrentContextResponse
+        if let databaseURL = provenanceDatabaseOverrideURL(databasePath: databasePath),
+           !FileManager.default.fileExists(atPath: databaseURL.path) {
+            currentContext = ProvenanceEngineContracts.ProvenanceCurrentContextResponse(
+                found: false,
+                reason: "no_database",
+                repositoryPath: target.repositoryRoot,
+                worktree: nil,
+                repository: nil,
+                activeSessions: [],
+                dirtyFiles: [],
+                unattributedChanges: [],
+                recentCheckpoints: [],
+                validationRuns: [],
+                conflicts: []
+            )
+        } else {
+            let (client, _) = try provenanceEngineClient(databasePath: databasePath)
+            currentContext = try await client.currentContext(ProvenanceEngineContracts.ProvenanceCurrentContextRequest(
+                repositoryPath: target.repositoryRoot
+            ))
+        }
+
+        let payload = provenanceExecutionTelemetryObservationDiagnosticPayload(
+            sessionID: sessionID,
+            livePayload: livePayload,
+            currentContext: currentContext
+        )
+        printProvenanceExecutionTelemetryObservationDiagnostic(payload, jsonOutput: jsonOutput)
+    }
+
     private func runProvenanceTraces(commandArgs: [String], jsonOutput: Bool) throws {
         let commandName = "provenance traces lifecycle-ingestion"
         let (databasePath, remainingAfterDatabase) = parseOption(
@@ -400,6 +484,26 @@ extension BMUXCLI {
         return normalized
     }
 
+    private func provenanceExecutionTelemetryAgentChatURL(_ value: String?) throws -> URL {
+        let raw = value?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let text: String
+        if let raw, !raw.isEmpty {
+            text = raw
+        } else {
+            text = "http://127.0.0.1:7739"
+        }
+        guard let url = URL(string: text),
+              let scheme = url.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              url.host?.isEmpty == false else {
+            throw CLIError(message: String(
+                localized: "cli.provenance.diagnostics.executionTelemetry.error.invalidAgentChatURL",
+                defaultValue: "provenance diagnostics execution-telemetry-live requires an absolute http or https --agent-chat-url"
+            ))
+        }
+        return url
+    }
+
     private func provenanceTraceFilterValue(_ value: String?) -> String? {
         guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
               !trimmed.isEmpty else {
@@ -449,6 +553,17 @@ extension BMUXCLI {
             return
         }
         print(renderProvenanceLifecycleTraceList(list))
+    }
+
+    private func printProvenanceExecutionTelemetryObservationDiagnostic(
+        _ payload: [String: Any],
+        jsonOutput: Bool
+    ) {
+        if jsonOutput {
+            print(jsonString(payload))
+            return
+        }
+        print(renderProvenanceExecutionTelemetryObservationDiagnostic(payload))
     }
 
     private func renderProvenanceExplanation(_ explanation: CLIProvenanceExplanation) -> String {
@@ -740,6 +855,82 @@ extension BMUXCLI {
         return lines.joined(separator: "\n")
     }
 
+    private func renderProvenanceExecutionTelemetryObservationDiagnostic(_ payload: [String: Any]) -> String {
+        let sessionID = payload["session_id"] as? String ?? "?"
+        let mismatchCount = payload["mismatch_count"] as? Int ?? 0
+        guard mismatchCount > 0 else {
+            return String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.diagnostics.executionTelemetry.output.matched",
+                    defaultValue: "No execution telemetry observation mismatches for %@."
+                ),
+                sessionID
+            )
+        }
+
+        var lines = [
+            String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.diagnostics.executionTelemetry.output.header",
+                    defaultValue: "Execution telemetry observation mismatches for %@: %d"
+                ),
+                sessionID,
+                mismatchCount
+            )
+        ]
+        let mismatches = payload["mismatches"] as? [[String: Any]] ?? []
+        for mismatch in mismatches {
+            let code = mismatch["code"] as? String ?? "unknown"
+            let live = mismatch["live"] as? String ?? "unknown"
+            let currentState = mismatch["current_state"] as? String ?? "unknown"
+            lines.append(String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.diagnostics.executionTelemetry.output.row",
+                    defaultValue: "  %@ (live: %@, current state: %@)"
+                ),
+                provenanceExecutionTelemetryMismatchDescription(code),
+                live,
+                currentState
+            ))
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private func provenanceExecutionTelemetryMismatchDescription(_ code: String) -> String {
+        switch code {
+        case "live_snapshot_missing":
+            return String(
+                localized: "cli.provenance.diagnostics.executionTelemetry.mismatch.liveSnapshotMissing",
+                defaultValue: "live projection snapshot is missing"
+            )
+        case "current_state_context_missing":
+            return String(
+                localized: "cli.provenance.diagnostics.executionTelemetry.mismatch.currentStateContextMissing",
+                defaultValue: "Current State context is missing"
+            )
+        case "current_state_session_missing":
+            return String(
+                localized: "cli.provenance.diagnostics.executionTelemetry.mismatch.currentStateSessionMissing",
+                defaultValue: "Current State active session is missing"
+            )
+        case "provider_identity_mismatch":
+            return String(
+                localized: "cli.provenance.diagnostics.executionTelemetry.mismatch.providerIdentity",
+                defaultValue: "provider identity differs"
+            )
+        case "lifecycle_presence_mismatch":
+            return String(
+                localized: "cli.provenance.diagnostics.executionTelemetry.mismatch.lifecyclePresence",
+                defaultValue: "broad lifecycle presence differs"
+            )
+        default:
+            return String(
+                localized: "cli.provenance.diagnostics.executionTelemetry.mismatch.unknown",
+                defaultValue: "unknown mismatch"
+            )
+        }
+    }
+
     private func appendProvenanceRows(
         _ rows: [[String: AnyHashable]],
         title: String,
@@ -826,9 +1017,42 @@ extension BMUXCLI {
               bmux provenance worktrees list [--json]
               bmux provenance sessions tree <session-id> [--json]
               bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]
+              bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]
 
             Inspect bmux work provenance without requiring a live app socket.
             """
         )
+    }
+
+    func provenanceExecutionTelemetryObservationDiagnosticPayload(
+        sessionID: String,
+        livePayload: ExecutionTelemetryLiveProjectionReadPayload,
+        currentContext: ProvenanceEngineContracts.ProvenanceCurrentContextResponse
+    ) -> [String: Any] {
+        let diagnostic = ExecutionTelemetryObservationDiagnostic.compare(
+            sessionID: sessionID,
+            livePayload: livePayload,
+            currentStateFound: currentContext.found,
+            currentStateSessions: currentContext.activeSessions.map { row in
+                ExecutionTelemetryObservationCurrentStateSession(
+                    sessionID: row.session.id,
+                    provider: row.session.agentKind,
+                    lifecycleStatus: row.session.status
+                )
+            }
+        )
+
+        return [
+            "session_id": diagnostic.sessionID,
+            "status": diagnostic.status,
+            "mismatch_count": diagnostic.mismatches.count,
+            "mismatches": diagnostic.mismatches.map { mismatch in
+                [
+                    "code": mismatch.code,
+                    "live": mismatch.live,
+                    "current_state": mismatch.currentState
+                ]
+            }
+        ]
     }
 }

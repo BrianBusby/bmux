@@ -267,8 +267,82 @@ struct ChatMessageCodableTests {
         }
     }
 
+    @Test("execution telemetry observation diagnostic matches bounded current state facts")
+    func executionTelemetryObservationDiagnosticMatchesBoundedCurrentStateFacts() {
+        let diagnostic = ExecutionTelemetryObservationDiagnostic.compare(
+            sessionID: "session-1",
+            livePayload: executionTelemetryObservationLivePayload(
+                sessionID: "session-1",
+                provider: "codex",
+                providerSessionID: "thread-1",
+                lifecycleState: .running
+            ),
+            currentStateFound: true,
+            currentStateSessions: [
+                ExecutionTelemetryObservationCurrentStateSession(
+                    sessionID: "session-1",
+                    provider: "codex",
+                    lifecycleStatus: "active"
+                )
+            ]
+        )
+
+        #expect(diagnostic.status == "matched")
+        #expect(diagnostic.mismatches.isEmpty)
+    }
+
+    @Test("execution telemetry observation diagnostic reports broad mismatches only")
+    func executionTelemetryObservationDiagnosticReportsBroadMismatchesOnly() {
+        let diagnostic = ExecutionTelemetryObservationDiagnostic.compare(
+            sessionID: "session-1",
+            livePayload: executionTelemetryObservationLivePayload(
+                sessionID: "session-1",
+                provider: "codex",
+                providerSessionID: nil,
+                lifecycleState: .running
+            ),
+            currentStateFound: true,
+            currentStateSessions: [
+                ExecutionTelemetryObservationCurrentStateSession(
+                    sessionID: "session-1",
+                    provider: "claude",
+                    lifecycleStatus: "completed"
+                )
+            ]
+        )
+
+        #expect(diagnostic.status == "mismatched")
+        #expect(diagnostic.mismatches.map(\.code) == [
+            "provider_identity_mismatch",
+            "lifecycle_presence_mismatch",
+        ])
+        #expect(diagnostic.mismatches.first?.live == "codex")
+        #expect(diagnostic.mismatches.first?.currentState == "claude")
+    }
+
     private func executionTelemetryLiveProjectionFixtureData() throws -> Data {
         try Data(contentsOf: executionTelemetryLiveProjectionFixtureURL())
+    }
+
+    private func executionTelemetryObservationLivePayload(
+        sessionID: String,
+        provider: String,
+        providerSessionID: String?,
+        lifecycleState: ExecutionTelemetryLiveLifecycleState
+    ) -> ExecutionTelemetryLiveProjectionReadPayload {
+        ExecutionTelemetryLiveProjectionReadPayload(
+            sessionID: sessionID,
+            snapshot: ExecutionTelemetryLiveProjectionSnapshot(
+                sessionID: sessionID,
+                provider: provider,
+                providerSessionID: providerSessionID,
+                currentProviderTurnID: lifecycleState == .running ? "turn-1" : nil,
+                lifecycleState: lifecycleState,
+                activeOperationCount: lifecycleState == .running ? 1 : 0,
+                latestActivityAtMs: 1_000,
+                approvalBlocked: ExecutionTelemetryLiveApprovalBlockedState(blocked: false, pendingCount: 0)
+            )
+        )
     }
 
     private func executionTelemetryLiveProjectionFixtureURL() -> URL {

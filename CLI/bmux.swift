@@ -17070,6 +17070,9 @@ struct BMUXCLI {
               bmux provenance explain <path> [--json]
               bmux provenance context current [--json]
               bmux provenance worktrees list [--json]
+              bmux provenance sessions tree <session-id> [--json]
+              bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]
+              bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]
 
             Inspect bmux work provenance without requiring a live app socket.
             """)

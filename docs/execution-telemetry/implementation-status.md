@@ -20,18 +20,20 @@ Engine Slice E.
 | Live session projection foundation | Plan Slice 4A completed on `execution-telemetry-live-projection`. | Adds a renderer-independent replay projection from ordered `TelemetryEventEnvelope` values. |
 | Live projection sidecar read surface | Plan Slice 4B completed on `execution-telemetry-live-projection`. | Wires the live projection to the sidecar fanout as an in-memory subscriber and exposes a bounded REST read payload; no React rendering, WebSocket `AgentEvent`, persistence, or provenance changes. |
 | Native live projection read client | Plan Slice 4C completed on `execution-telemetry-live-projection`. | Adds Swift DTOs and an injected HTTP read client in `BmuxAgentChat` for the existing REST payload, plus a shared JSON fixture drift check; no rendering, WebSocket, persistence, provenance, or Swift schema ownership changes. |
+| Read-only observation diagnostic | Completed on `execution-telemetry-live-projection`. | Adds a provider-neutral package comparison value and `bmux provenance diagnostics execution-telemetry-live <session-id>` CLI report. It compares only session presence, provider identity, and broad lifecycle presence between the live projection and Provenance Engine Current State; no persistence, provenance writes, React rendering changes, WebSocket changes, or automatic scheduling. |
 
 ## Active Slice
 
-Plan Slice 4C - native live projection read client.
+Read-only observation diagnostic after Plan Slice 4C.
 
 Status: completed in branch `execution-telemetry-live-projection`; reconciled
 with current main after Provenance Engine Slice E. No next execution telemetry
 implementation slice is selected.
 
-Main reconciliation validation: focused execution telemetry TS tests,
-`agent-chat` checks, shared BmuxAgentChat package tests, repository policy
-checks, focused Slice E provenance tests, and the tagged Debug build passed.
+Latest validation: localization JSON parse, `git diff --check`, focused
+`BmuxAgentChat` live-projection/diagnostic tests, full serialized
+`BmuxAgentChat` package tests, focused Slice E provenance observer tests, and
+the tagged Debug reload build passed.
 
 ## Completed Slices
 
@@ -50,6 +52,7 @@ checks, focused Slice E provenance tests, and the tagged Debug build passed.
 - Plan Slice 4A: added a renderer-independent live session projection module in `agent-chat` that replays ordered `TelemetryEventEnvelope` values into a small deterministic snapshot with session/provider identity, provider session/turn ids, lifecycle state, active operation count, latest activity timestamp, usage summary, diagnostic summary, approval-blocked state, and files-changed summary. Existing React `AgentEvent` projection behavior and WebSocket payloads remain unchanged.
 - Plan Slice 4B: added `LiveSessionProjectionStore`, attached it beside each sidecar `ExecutionTelemetryFanout`, and exposed a bounded REST read payload at `GET /api/sessions/:id/execution-telemetry/live`. The endpoint returns `{ sessionId, snapshot }`, with `snapshot: null` until canonical telemetry exists. Existing React rendering and WebSocket `AgentEvent` payload behavior remain unchanged.
 - Plan Slice 4C: added the native live projection read client and shared fixture drift check.
+- Observation diagnostic: added `ExecutionTelemetryObservationDiagnostic` in `BmuxAgentChat` and a read-only CLI surface at `bmux provenance diagnostics execution-telemetry-live <session-id>`. The CLI reads the live projection through `ExecutionTelemetryLiveProjectionClient.read(sessionID:)`, reads Provenance Engine Current State through the existing public client/current-context path, and reports mismatch rows only. It does not store raw provider envelopes, raw errors, command output, transcripts, private reasoning, changed file paths, telemetry state, or provenance events.
 
 ## Current Branch
 
@@ -282,27 +285,31 @@ Plan Slice 4B validation:
 
 Plan Slice 4C validation: succeeded.
 
+Observation diagnostic validation:
+
+- `python3 -m json.tool Resources/Localizable.xcstrings >/dev/null`: succeeded.
+- `git diff --check`: succeeded.
+- `swift test --package-path Packages/Shared/BmuxAgentChat --filter ChatMessageCodableTests`: succeeded with 13 Swift Testing cases, including the new observation diagnostic coverage.
+- `swift test --package-path Packages/Shared/BmuxAgentChat --no-parallel`: succeeded with 203 Swift Testing cases.
+- `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -destination 'platform=macOS' -derivedDataPath /tmp/bmux-execution-telemetry-live-projection -only-testing:bmuxTests/WorkProvenanceObserverTests`: succeeded with 3 Swift Testing cases.
+- `./scripts/reload.sh --tag execution-telemetry-live-projection`: succeeded, local build number 292.
+
 ## Known Failures
 
 - Running `tsc` from the repo root through transient `npm exec` still does not resolve local Bun and Node ambient types. Run TypeScript checks from `agent-chat` with `PATH="$HOME/.bun/bin:$PATH"` so local package types are used.
+- `swift test --package-path Packages/Shared/BmuxAgentChat` without `--no-parallel` aborted once with `freed pointer was not the last allocation`; the same full package suite passed with `--no-parallel`.
 - No runtime code changed in Slice 0, so no app build was run.
 - No runtime behavior changed in Slice 1; only a type-only contract module and docs were added.
 
 ## Next Required Action
 
-Review `execution-telemetry-live-projection` after the main reconciliation
-merge. A later slice can evaluate a bounded observation diagnostic comparing
-the live execution projection with Provenance Engine Current State, wire an
-app/native consumer to the package client, or continue provider migration.
-Do not add telemetry persistence or broad provenance writes until a later
-explicit policy slice selects which execution facts qualify as durable
-engineering evidence.
+The bounded read-only observation diagnostic is implemented and verified. No next execution telemetry implementation slice is selected. A later slice can wire an app/native consumer to the package client, continue provider migration, or decide durable execution-evidence policy. Do not add telemetry persistence, broad provenance writes, React rendering changes, WebSocket payload changes, Swift schema ownership, or automatic diagnostic scheduling without an explicit policy slice.
 
 ## Observation Diagnostic Evaluation
 
-A bounded diagnostic is feasible as a read-only comparison between
-`ExecutionTelemetryLiveProjectionClient.read(sessionID:)` and
-`ProvenanceEngineClient.currentContext(...)`.
+The bounded diagnostic is implemented as a read-only comparison between
+`ExecutionTelemetryLiveProjectionClient.read(sessionID:)` and the existing
+Provenance Engine Current State client path.
 
 Keep the diagnostic observational:
 

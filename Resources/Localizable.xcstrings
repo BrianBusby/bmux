@@ -231025,6 +231025,210 @@
         }
       }
     },
+    "cli.provenance.diagnostics.executionTelemetry.error.invalidAgentChatURL": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance diagnostics execution-telemetry-live requires an absolute http or https --agent-chat-url"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance diagnostics execution-telemetry-live には絶対 http または https の --agent-chat-url が必要です"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.executionTelemetry.error.liveReadFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "failed to read live execution telemetry projection"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライブ実行テレメトリ投影を読み取れませんでした"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.executionTelemetry.mismatch.currentStateContextMissing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current State context is missing"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current State コンテキストが見つかりません"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.executionTelemetry.mismatch.currentStateSessionMissing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current State active session is missing"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current State のアクティブセッションが見つかりません"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.executionTelemetry.mismatch.lifecyclePresence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "broad lifecycle presence differs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大まかなライフサイクル存在状態が異なります"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.executionTelemetry.mismatch.liveSnapshotMissing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "live projection snapshot is missing"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライブ投影スナップショットが見つかりません"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.executionTelemetry.mismatch.providerIdentity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provider identity differs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロバイダー識別子が異なります"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.executionTelemetry.mismatch.unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unknown mismatch"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明な不一致"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.executionTelemetry.output.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Execution telemetry observation mismatches for %@: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の実行テレメトリ観測の不一致: %d"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.executionTelemetry.output.matched": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No execution telemetry observation mismatches for %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の実行テレメトリ観測の不一致はありません。"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.executionTelemetry.output.row": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ (live: %@, current state: %@)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@（ライブ: %@、Current State: %@）"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.executionTelemetry.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法: bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]"
+          }
+        }
+      }
+    },
     "cli.provenance.error.commandPathOutsideWorktree": {
       "extractionState": "manual",
       "localizations": {
@@ -231677,13 +231881,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n\nInspect bmux work provenance without requiring a live app socket."
+            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\nInspect bmux work provenance without requiring a live app socket."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
+            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
           }
         }
       }
