@@ -1,5 +1,7 @@
 import type { SessionCtx } from "../types";
 import type {
+  TelemetryApprovalDecision,
+  TelemetryApprovalKind,
   TelemetryEventEnvelope,
   TelemetryMessageStream,
   TelemetryProviderTurnId,
@@ -276,6 +278,69 @@ export function emitCodexToolCompleted(
     }),
     undefined
   );
+}
+
+export function emitCodexApprovalRequested(
+  sess: SessionCtx,
+  params: {
+    providerSessionId?: string;
+    turnId?: TelemetryProviderTurnId;
+    requestId: string | number;
+    approvalId: string;
+    approvalKind: TelemetryApprovalKind;
+    method: string;
+    operationId?: string;
+    summary?: string;
+  },
+): TelemetryEventEnvelope | undefined {
+  return sess.emitTelemetry?.({
+    source: "provider",
+    providerSessionId: params.providerSessionId,
+    providerTurnId: params.turnId,
+    providerEvent: {
+      method: params.method,
+      requestId: params.requestId,
+      itemId: params.operationId,
+      turnId: params.turnId,
+    },
+    event: {
+      type: "approval.requested",
+      approvalId: params.approvalId,
+      approvalKind: params.approvalKind,
+      operationId: params.operationId,
+      summary: params.summary,
+    },
+  });
+}
+
+export function emitCodexApprovalResolved(
+  sess: SessionCtx,
+  params: {
+    providerSessionId?: string;
+    turnId?: TelemetryProviderTurnId;
+    requestId: string | number;
+    approvalId: string;
+    method: string;
+    decision: TelemetryApprovalDecision;
+    reason?: string;
+  },
+): TelemetryEventEnvelope | undefined {
+  return sess.emitTelemetry?.({
+    source: "provider",
+    providerSessionId: params.providerSessionId,
+    providerTurnId: params.turnId,
+    providerEvent: {
+      method: params.method,
+      requestId: params.requestId,
+      turnId: params.turnId,
+    },
+    event: {
+      type: "approval.resolved",
+      approvalId: params.approvalId,
+      decision: params.decision,
+      reason: params.reason,
+    },
+  });
 }
 
 export function codexTokenUsage(value: unknown): TelemetryTokenUsage | undefined {

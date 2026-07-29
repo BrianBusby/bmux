@@ -4,7 +4,7 @@ Last updated: 2026-07-29
 
 ## Active Slice
 
-Slice 6 - Codex tool lifecycle telemetry migration.
+Slice 7 - Codex approval lifecycle telemetry migration.
 
 Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 
@@ -17,6 +17,7 @@ Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 - Slice 4: migrated Codex turn lifecycle (`turn/started`, `turn/completed`, and `turn/failed`) through `SessionCtx.emitTelemetry`, preserving existing React `done` / `error` projection and server-only done generation for file attribution.
 - Slice 5: migrated Codex message lifecycle (`item/agentMessage/delta`, reasoning delta variants, and completed non-streamed `agentMessage` items) through `SessionCtx.emitTelemetry`, preserving existing React `delta` / `thinking` / `assistant` projection and streamed-message duplicate suppression.
 - Slice 6: migrated Codex tool lifecycle (`item/started` and `item/completed` for command execution, file changes, web search, and MCP tool calls) through `SessionCtx.emitTelemetry`, preserving existing React `tool-start` / `tool-end` projection.
+- Slice 7: migrated Codex approval lifecycle (`approval.requested` and `approval.resolved` for approved, denied, and unsupported JSON-RPC approval requests) through `SessionCtx.emitTelemetry`, preserving existing React no-op approval projection plus direct denial / unsupported status messages.
 
 ## Current Branch
 
@@ -60,7 +61,15 @@ No findings. Lagrange reviewed PR #12 at actual head `32e0d07da33f94e868735577ce
 
 Slice 6 implementation head:
 
-branch head after the final Slice 6 commit
+`ae19a8d78e2db9445991f89b289720e855d3892e`
+
+Slice 6 autoreview result:
+
+No findings. Archimedes reviewed PR #12 at actual head `ae19a8d78e2db9445991f89b289720e855d3892e`, made no changes, pushed no commits, and reported no GitHub comments, reviews, or check rollup findings for that head.
+
+Slice 7 implementation head:
+
+branch head after the final Slice 7 commit
 
 ## Tests Currently Passing
 
@@ -165,6 +174,14 @@ Slice 6 validation:
 - `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: succeeded.
 - `./scripts/reload.sh --tag execution-telemetry-slice-6`: succeeded.
 
+Slice 7 validation:
+
+- `git diff --check`: succeeded.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/codex-telemetry-migration.test.ts`: succeeded.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/execution-telemetry-fanout.test.ts`: succeeded.
+- `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: succeeded.
+- `./scripts/reload.sh --tag execution-telemetry-slice-7`: succeeded.
+
 ## Known Failures
 
 - Running `tsc` from the repo root through transient `npm exec` still does not resolve local Bun and Node ambient types. Run TypeScript checks from `agent-chat` with `PATH="$HOME/.bun/bin:$PATH"` so local package types are used.
@@ -173,11 +190,11 @@ Slice 6 validation:
 
 ## Next Required Action
 
-Review PR #12 before the next code slice. The next code slice should stay narrow: continue Codex migration with approval lifecycle, standalone usage observations, or diagnostics only after reviewing Slice 6.
+Review PR #12 before the next code slice. The next code slice should stay narrow: continue Codex migration with standalone usage observations or diagnostics only after reviewing Slice 7.
 
 ## Blocked Decisions
 
-No current blocked decisions for Slice 6. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion.
+No current blocked decisions for Slice 7. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion.
 
 ## Deviations From Original Plan
 

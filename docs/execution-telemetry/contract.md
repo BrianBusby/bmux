@@ -1,11 +1,11 @@
 # Telemetry Contract
 
-Status: Slice 6 provider-neutral contract, sidecar fanout seam, and first Codex lifecycle migrations.
+Status: Slice 7 provider-neutral contract, sidecar fanout seam, and first Codex lifecycle migrations.
 
 The sidecar fanout path has been added without persistence, provenance
 projection, React behavior changes, or broad provider rewrites. Slices 3 through
-6 route Codex prompt submission, provider session linkage, turn lifecycle,
-message lifecycle, and tool lifecycle through the seam.
+7 route Codex prompt submission, provider session linkage, turn lifecycle,
+message lifecycle, tool lifecycle, and approval lifecycle through the seam.
 
 ## Contract Location
 
@@ -19,7 +19,7 @@ It is deliberately outside `agent-chat/src/session.ts`, which remains the React
 projection, and outside `webviews/src/agent-session/shared`, which is a
 separate webview package.
 
-`agent-chat/types.ts` remains the current WebSocket UI schema for Slice 6.
+`agent-chat/types.ts` remains the current WebSocket UI schema for Slice 7.
 `AgentEvent` must not become the canonical telemetry contract and must not be
 parsed back into telemetry.
 
@@ -73,7 +73,7 @@ envelope-shaped objects, but `schema`, `eventId`, `sessionId`, `sequence`,
 
 `SessionCtx.emitTelemetry` and `SessionCtx.subscribeTelemetry` are optional
 seams for future producers and subscribers. Most adapters and the remaining
-non-migrated Codex approval, usage, and diagnostic events still emit the current
+non-migrated Codex usage and diagnostic events still emit the current
 `AgentEvent` stream directly until later slices migrate specific provider
 events. The reverse direction remains prohibited: do not reconstruct canonical
 telemetry from `AgentEvent`.
@@ -118,10 +118,10 @@ CI.
 
 ## Deferred Work
 
-Slice 6 does not:
+Slice 7 does not:
 
 - broadly migrate provider events beyond Codex prompt/linkage, turn lifecycle,
-  message lifecycle, and tool lifecycle;
+  message lifecycle, tool lifecycle, and approval lifecycle;
 - add telemetry persistence;
 - write to provenance-engine;
 - choose or implement a Claude structured event source.

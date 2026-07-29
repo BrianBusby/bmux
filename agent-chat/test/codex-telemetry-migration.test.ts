@@ -1,6 +1,8 @@
 import { ExecutionTelemetryFanout } from "../executionTelemetryFanout";
 import { codexHandleServerMessageForTest } from "../adapters/codex";
 import {
+  emitCodexApprovalRequested,
+  emitCodexApprovalResolved,
   emitCodexMessageCompleted,
   emitCodexMessageDelta,
   emitCodexPromptSubmitted,
@@ -349,6 +351,91 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
 }
 
 {
+  const { sess, agentEvents, telemetryEvents } = makeCodexSession();
+  sess.internal.threadId = "thread-approval";
+
+  codexHandleServerMessageForTest(sess, {
+    id: 101,
+    method: "execCommandApproval",
+    params: { conversationId: "thread-approval", command: "echo approved" },
+  });
+
+  assert(agentEvents.length === 0, `approved approval request should not project React events: ${JSON.stringify(agentEvents)}`);
+  const approvalEvents = telemetryEvents.filter((event) => event.event.type === "approval.requested" || event.event.type === "approval.resolved");
+  assert(approvalEvents.length === 2, `expected approved approval telemetry pair: ${JSON.stringify(telemetryEvents)}`);
+  assert(approvalEvents[0].event.type === "approval.requested", "approved request should publish approval.requested telemetry");
+  assert(approvalEvents[0].providerSessionId === "thread-approval", "approval request provider session id changed");
+  assert(approvalEvents[0].providerEvent?.method === "execCommandApproval", "approval request provider method changed");
+  assert(approvalEvents[0].providerEvent?.requestId === 101, "approval request provider request id changed");
+  assert(approvalEvents[0].event.approvalId === "codex-approval-101", "approval id changed");
+  assert(approvalEvents[0].event.approvalKind === "command", "approval kind changed");
+  assert(approvalEvents[0].event.summary === "echo approved", "approval summary changed");
+  assert(approvalEvents[1].event.type === "approval.resolved", "approved request should publish approval.resolved telemetry");
+  assert(approvalEvents[1].event.approvalId === "codex-approval-101", "resolved approval id changed");
+  assert(approvalEvents[1].event.decision === "approved", "approved decision changed");
+  assert(!("params" in approvalEvents[0]), "approval telemetry must not store raw provider request params");
+}
+
+{
+  const { sess, agentEvents, telemetryEvents } = makeCodexSession();
+  sess.autoApprove = false;
+  sess.startOptions.approvals = "on-request";
+  sess.internal.threadId = "thread-denied-approval";
+
+  codexHandleServerMessageForTest(sess, {
+    id: "deny-1",
+    method: "item/fileChange/requestApproval",
+    params: {
+      threadId: "thread-denied-approval",
+      itemId: "file-approval-1",
+      changes: [{ kind: "modify", path: "src/file.ts" }],
+    },
+  });
+
+  assert(agentEvents.length === 1, `denied approval status projection changed: ${JSON.stringify(agentEvents)}`);
+  assert(
+    agentEvents[0].kind === "status"
+      && agentEvents[0].text === "denied: item/fileChange/requestApproval (auto-approve is off)",
+    "denied approval status text changed",
+  );
+  const approvalEvents = telemetryEvents.filter((event) => event.event.type === "approval.requested" || event.event.type === "approval.resolved");
+  assert(approvalEvents.length === 2, `expected denied approval telemetry pair: ${JSON.stringify(telemetryEvents)}`);
+  assert(approvalEvents[0].event.type === "approval.requested", "denied request should publish approval.requested telemetry");
+  assert(approvalEvents[0].event.approvalKind === "file-change", "file approval kind changed");
+  assert(approvalEvents[0].event.operationId === "file-approval-1", "file approval operation id changed");
+  assert(approvalEvents[0].event.summary === "modify src/file.ts", "file approval summary changed");
+  assert(approvalEvents[1].event.type === "approval.resolved", "denied request should publish approval.resolved telemetry");
+  assert(approvalEvents[1].event.decision === "denied", "denied decision changed");
+  assert(approvalEvents[1].event.reason === "auto-approve is off", "denied reason changed");
+}
+
+{
+  const { sess, agentEvents, telemetryEvents } = makeCodexSession();
+  sess.internal.threadId = "thread-unsupported-approval";
+
+  codexHandleServerMessageForTest(sess, {
+    id: 202,
+    method: "toolUserInput/request",
+    params: { threadId: "thread-unsupported-approval" },
+  });
+
+  assert(agentEvents.length === 1, `unsupported approval status projection changed: ${JSON.stringify(agentEvents)}`);
+  assert(
+    agentEvents[0].kind === "status"
+      && agentEvents[0].text === "declined unsupported request: toolUserInput/request",
+    "unsupported approval status text changed",
+  );
+  const approvalEvents = telemetryEvents.filter((event) => event.event.type === "approval.requested" || event.event.type === "approval.resolved");
+  assert(approvalEvents.length === 2, `expected unsupported approval telemetry pair: ${JSON.stringify(telemetryEvents)}`);
+  assert(approvalEvents[0].event.type === "approval.requested", "unsupported request should publish approval.requested telemetry");
+  assert(approvalEvents[0].event.approvalKind === "other", "unsupported approval kind changed");
+  assert(approvalEvents[0].event.summary === "toolUserInput/request", "unsupported approval summary changed");
+  assert(approvalEvents[1].event.type === "approval.resolved", "unsupported request should publish approval.resolved telemetry");
+  assert(approvalEvents[1].event.decision === "unsupported", "unsupported decision changed");
+  assert(approvalEvents[1].event.reason === "unsupported request", "unsupported reason changed");
+}
+
+{
   const agentEvents: AgentEvent[] = [];
   const sess: SessionCtx = {
     id: "legacy-codex-session",
@@ -423,6 +510,23 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
     name: "shell",
     status: "succeeded",
     outputSummary: "fallback output",
+  });
+  emitCodexApprovalRequested(sess, {
+    providerSessionId: "thread-fallback",
+    turnId: "turn-fallback",
+    requestId: "approval-fallback",
+    approvalId: "approval-fallback",
+    approvalKind: "command",
+    method: "execCommandApproval",
+    summary: "echo fallback",
+  });
+  emitCodexApprovalResolved(sess, {
+    providerSessionId: "thread-fallback",
+    turnId: "turn-fallback",
+    requestId: "approval-fallback",
+    approvalId: "approval-fallback",
+    method: "execCommandApproval",
+    decision: "approved",
   });
 
   assert(agentEvents.length === 10, `legacy AgentEvent fallback changed: ${JSON.stringify(agentEvents)}`);

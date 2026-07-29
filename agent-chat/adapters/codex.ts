@@ -2,6 +2,8 @@ import type { Adapter, CommandEntry, OptionChoice, OptionValue, SessionCtx, Sess
 import { readLines, tryParse, truncate } from "./lines";
 import { prettifyModelLabel } from "./model-label";
 import {
+  emitCodexApprovalRequested,
+  emitCodexApprovalResolved,
   emitCodexMessageCompleted,
   emitCodexMessageDelta,
   emitCodexProviderSessionLinked,
@@ -11,7 +13,7 @@ import {
   emitCodexTurnFailed,
   emitCodexTurnStarted,
 } from "./codexTelemetry";
-import type { TelemetryToolKind, TelemetryToolStatus } from "../executionTelemetryTypes";
+import type { TelemetryApprovalDecision, TelemetryApprovalKind, TelemetryToolKind, TelemetryToolStatus } from "../executionTelemetryTypes";
 
 // Codex: one shared `codex app-server` process (JSON-RPC over NDJSON stdio,
 // the same interface the codex IDE extension uses) hosts a thread per chat
@@ -336,6 +338,7 @@ function handleServerMessage(srv: AppServer, msg: any) {
   if (msg.id != null && msg.method) {
     const approve = sess ? codexState(sess).approvals === "never" : false;
     const response = approvalResponse(msg.method, approve);
+    if (sess) emitCodexApprovalLifecycle(sess, msg, p, response, approve);
     srv.write({ jsonrpc: "2.0", id: msg.id, ...response });
     if (sess && "result" in response && !approve) {
       sess.emit({ kind: "status", text: `denied: ${truncate(String(p.command ?? msg.method), 120)} (auto-approve is off)` });
@@ -441,6 +444,86 @@ function handleServerMessage(srv: AppServer, msg: any) {
       break;
     }
   }
+}
+
+function emitCodexApprovalLifecycle(
+  sess: SessionCtx,
+  msg: { id: string | number; method: string },
+  params: Record<string, unknown>,
+  response: { result: unknown } | { error: unknown },
+  approve: boolean,
+) {
+  const st = codexState(sess);
+  const requestId = msg.id;
+  const approvalId = `codex-approval-${requestId}`;
+  const providerSessionId = typeof params.threadId === "string"
+    ? params.threadId
+    : (typeof params.conversationId === "string" ? params.conversationId : sess.internal.threadId as string | undefined);
+  emitCodexApprovalRequested(sess, {
+    providerSessionId,
+    turnId: st.currentTurnId,
+    requestId,
+    approvalId,
+    approvalKind: codexApprovalKind(msg.method),
+    method: msg.method,
+    operationId: codexApprovalOperationId(params),
+    summary: codexApprovalSummary(msg.method, params),
+  });
+  emitCodexApprovalResolved(sess, {
+    providerSessionId,
+    turnId: st.currentTurnId,
+    requestId,
+    approvalId,
+    method: msg.method,
+    decision: codexApprovalDecision(response, approve),
+    reason: codexApprovalReason(response, approve),
+  });
+}
+
+function codexApprovalKind(method: string): TelemetryApprovalKind {
+  switch (method) {
+    case "execCommandApproval":
+    case "item/commandExecution/requestApproval":
+      return "command";
+    case "applyPatchApproval":
+    case "item/fileChange/requestApproval":
+      return "file-change";
+    default:
+      return "other";
+  }
+}
+
+function codexApprovalOperationId(params: Record<string, unknown>): string | undefined {
+  if (typeof params.itemId === "string") return params.itemId;
+  if (typeof params.callId === "string") return params.callId;
+  if (params.item && typeof params.item === "object" && typeof (params.item as Record<string, unknown>).id === "string") {
+    return (params.item as Record<string, unknown>).id as string;
+  }
+  return undefined;
+}
+
+function codexApprovalSummary(method: string, params: Record<string, unknown>): string {
+  if (typeof params.command === "string") return truncate(params.command, 400);
+  if (params.item && typeof params.item === "object") return truncate(summarizeChanges(params.item), 400);
+  const changes = params.changes;
+  if (Array.isArray(changes) && changes.length) return truncate(summarizeChanges(params), 400);
+  return truncate(method, 400);
+}
+
+function codexApprovalDecision(
+  response: { result: unknown } | { error: unknown },
+  approve: boolean,
+): TelemetryApprovalDecision {
+  if ("error" in response) return "unsupported";
+  return approve ? "approved" : "denied";
+}
+
+function codexApprovalReason(
+  response: { result: unknown } | { error: unknown },
+  approve: boolean,
+): string | undefined {
+  if ("error" in response) return "unsupported request";
+  return approve ? undefined : "auto-approve is off";
 }
 
 function itemStarted(sess: SessionCtx, item: any) {

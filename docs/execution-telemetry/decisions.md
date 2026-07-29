@@ -177,3 +177,29 @@ changing React rendering, WebSocket payload shape, persistence, provenance,
 Swift ownership, Claude source selection, or non-Codex behavior. Approval,
 standalone usage, diagnostic, and unsupported request status Codex events still
 need future narrow migrations.
+
+## 2026-07-29 - Migrate Codex Approval Lifecycle Without UI Projection Changes
+
+Decision: Slice 7 migrates Codex JSON-RPC approval requests to
+`SessionCtx.emitTelemetry` by publishing `approval.requested` and
+`approval.resolved` envelopes for approved, denied, and unsupported request
+outcomes. Approval telemetry keeps bounded provider references and summaries,
+while existing denial and unsupported-request `status` messages remain direct
+`AgentEvent` emits.
+
+Rationale: Approval requests are the next bounded Codex lifecycle path after
+tool events and already have provider-neutral contract variants. The current
+React projection intentionally has no approval block, so keeping approval
+telemetry projection-free preserves rendering while making request id, method,
+approval kind, operation id, summary, decision, and reason observable to future
+non-UI consumers.
+
+Alternatives rejected: project approval lifecycle into new React events; store
+raw JSON-RPC request params or response envelopes in canonical telemetry; fold
+unsupported request status messages into diagnostics in the same slice.
+
+Consequences: Codex approval lifecycle now has a canonical producer path
+without changing React rendering, WebSocket payload shape, persistence,
+provenance, Swift ownership, Claude source selection, or non-Codex behavior.
+Standalone usage and diagnostic Codex events still need future narrow
+migrations.
