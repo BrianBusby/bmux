@@ -5,7 +5,6 @@
 - Date: 2026-07-29
 - Slice: Plan Slice 4C - native live projection read client
 - Branch: `execution-telemetry-live-projection`
-- Base branch: `execution-telemetry-slice-0`
 - Starting commit: `f7e0ab63f55056e299f4230698416e535dd2bdbf`
 - Implementation head: branch head after the final Slice 4C commit
 - Tagged Debug build: `execution-telemetry-live-projection` succeeded

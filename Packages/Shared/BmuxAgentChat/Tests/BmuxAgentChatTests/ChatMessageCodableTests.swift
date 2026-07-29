@@ -197,4 +197,88 @@ struct ChatMessageCodableTests {
             #expect(decoded == state)
         }
     }
+
+    @Test("execution telemetry live projection fixture decodes")
+    func executionTelemetryLiveProjectionFixtureDecodes() throws {
+        let payload = try ChatWireCoding().decode(
+            ExecutionTelemetryLiveProjectionReadPayload.self,
+            from: executionTelemetryLiveProjectionFixtureData()
+        )
+        let snapshot = try #require(payload.snapshot)
+
+        #expect(payload.sessionID == "session-sidecar")
+        #expect(snapshot.sessionID == "session-sidecar")
+        #expect(snapshot.provider == "codex")
+        #expect(snapshot.providerSessionID == "thread-sidecar")
+        #expect(snapshot.currentProviderTurnID == "turn-sidecar")
+        #expect(snapshot.lifecycleState == .running)
+        #expect(snapshot.activeOperationCount == 0)
+        #expect(snapshot.latestActivityAtMs == 50_000)
+        #expect(snapshot.latestUsageSummary?.turnID == "turn-sidecar")
+        #expect(snapshot.latestUsageSummary?.inputTokens == 20)
+        #expect(snapshot.latestUsageSummary?.outputTokens == 30)
+        #expect(snapshot.latestUsageSummary?.totalTokens == 50)
+        #expect(snapshot.latestUsageSummary?.observedAtMs == 50_000)
+        #expect(snapshot.approvalBlocked.blocked == false)
+        #expect(snapshot.approvalBlocked.pendingCount == 0)
+        #expect(snapshot.filesChanged == nil)
+    }
+
+    @Test("execution telemetry live projection client reads endpoint")
+    func executionTelemetryLiveProjectionClientReadsEndpoint() async throws {
+        let loader = LiveProjectionFixtureHTTPLoader(
+            response: AgentChatHTTPResponse(
+                data: try executionTelemetryLiveProjectionFixtureData(),
+                statusCode: 200
+            )
+        )
+        let client = ExecutionTelemetryLiveProjectionClient(
+            baseURL: URL(string: "http://127.0.0.1:7739/s/old?x=1")!,
+            loader: loader
+        )
+
+        let payload = try await client.read(sessionID: "session-sidecar")
+        let request = try await loader.onlyRequest()
+
+        #expect(payload.snapshot?.provider == "codex")
+        #expect(request.httpMethod == "GET")
+        #expect(request.url?.absoluteString == "http://127.0.0.1:7739/api/sessions/session-sidecar/execution-telemetry/live")
+        #expect(request.cachePolicy == .reloadIgnoringLocalAndRemoteCacheData)
+    }
+
+    @Test("execution telemetry live projection client rejects failures")
+    func executionTelemetryLiveProjectionClientRejectsFailures() async throws {
+        let loader = LiveProjectionFixtureHTTPLoader(
+            response: AgentChatHTTPResponse(data: Data(), statusCode: 404)
+        )
+        let client = ExecutionTelemetryLiveProjectionClient(
+            baseURL: URL(string: "http://127.0.0.1:7739")!,
+            loader: loader
+        )
+
+        await #expect(throws: ExecutionTelemetryLiveProjectionClientError.httpStatus(404)) {
+            try await client.read(sessionID: "missing")
+        }
+        #expect(throws: ExecutionTelemetryLiveProjectionClientError.invalidSessionID) {
+            _ = try client.liveProjectionURL(sessionID: "")
+        }
+        #expect(throws: ExecutionTelemetryLiveProjectionClientError.invalidSessionID) {
+            _ = try client.liveProjectionURL(sessionID: "a/b")
+        }
+    }
+
+    private func executionTelemetryLiveProjectionFixtureData() throws -> Data {
+        try Data(contentsOf: executionTelemetryLiveProjectionFixtureURL())
+    }
+
+    private func executionTelemetryLiveProjectionFixtureURL() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("docs/execution-telemetry/fixtures/live-projection-read-payload.json")
+    }
 }

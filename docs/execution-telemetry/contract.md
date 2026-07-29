@@ -1,6 +1,6 @@
 # Telemetry Contract
 
-Status: Slice 11 provider-neutral contract, sidecar fanout seam, first Codex lifecycle migrations, and Plan Slice 4B live projection sidecar read surface.
+Status: Slice 11 provider-neutral contract, sidecar fanout seam, first Codex lifecycle migrations, Plan Slice 4B live projection sidecar read surface, and Plan Slice 4C native read client.
 
 The sidecar fanout path has been added without persistence, provenance
 projection, React behavior changes, or broad provider rewrites. Slices 3 through
@@ -9,7 +9,9 @@ message lifecycle, tool lifecycle, approval lifecycle, and standalone usage
 observations plus request-status, send-failure, and app-server exit diagnostics through the seam.
 Plan Slice 4B attaches an in-memory live projection subscriber to each sidecar
 session and exposes a bounded REST read payload without changing React or
-WebSocket `AgentEvent` behavior.
+WebSocket `AgentEvent` behavior. Plan Slice 4C adds Swift DTOs and an injected
+HTTP read client for that existing payload without making Swift the schema
+owner.
 
 ## Contract Location
 
@@ -104,6 +106,10 @@ GET /api/sessions/:id/execution-telemetry/live
 It returns `{ sessionId, snapshot }`, with `snapshot: null` until canonical
 telemetry exists. This endpoint must not expose raw provider envelopes, raw
 errors, command output, transcripts, private reasoning, or changed file paths.
+
+`Packages/Shared/BmuxAgentChat` consumes this payload through
+`ExecutionTelemetryLiveProjectionClient`. Swift reads this bounded JSON shape
+only; the canonical event union remains in `agent-chat`.
 
 ## Minimal Event Set
 

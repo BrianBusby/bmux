@@ -8,11 +8,12 @@ Last updated: 2026-07-29
 | --- | --- | --- |
 | Provider-neutral Codex telemetry migration | Slices 0 through 11 completed on the stacked Slice 1 branch history. | Existing React `AgentEvent` projection behavior is preserved. |
 | Live session projection foundation | Plan Slice 4A completed on `execution-telemetry-live-projection`. | Adds a renderer-independent replay projection from ordered `TelemetryEventEnvelope` values. |
-| Live projection sidecar read surface | Plan Slice 4B completed on `execution-telemetry-live-projection`. | Wires the live projection to the sidecar fanout as an in-memory subscriber and exposes a bounded REST read payload; no React rendering, WebSocket `AgentEvent`, persistence, provenance, or native bridge changes. |
+| Live projection sidecar read surface | Plan Slice 4B completed on `execution-telemetry-live-projection`. | Wires the live projection to the sidecar fanout as an in-memory subscriber and exposes a bounded REST read payload; no React rendering, WebSocket `AgentEvent`, persistence, or provenance changes. |
+| Native live projection read client | Plan Slice 4C completed on `execution-telemetry-live-projection`. | Adds Swift DTOs and an injected HTTP read client in `BmuxAgentChat` for the existing REST payload, plus a shared JSON fixture drift check; no rendering, WebSocket, persistence, provenance, or Swift schema ownership changes. |
 
 ## Active Slice
 
-Plan Slice 4B - live projection sidecar read surface.
+Plan Slice 4C - native live projection read client.
 
 Status: completed in branch `execution-telemetry-live-projection`; awaiting review.
 
@@ -32,6 +33,7 @@ Status: completed in branch `execution-telemetry-live-projection`; awaiting revi
 - Slice 11: migrated Codex app-server process-exit mid-turn diagnostics through `SessionCtx.emitTelemetry`, preserving existing React `error` projection and direct `done` close-out while publishing bounded `diagnostic` envelopes.
 - Plan Slice 4A: added a renderer-independent live session projection module in `agent-chat` that replays ordered `TelemetryEventEnvelope` values into a small deterministic snapshot with session/provider identity, provider session/turn ids, lifecycle state, active operation count, latest activity timestamp, usage summary, diagnostic summary, approval-blocked state, and files-changed summary. Existing React `AgentEvent` projection behavior and WebSocket payloads remain unchanged.
 - Plan Slice 4B: added `LiveSessionProjectionStore`, attached it beside each sidecar `ExecutionTelemetryFanout`, and exposed a bounded REST read payload at `GET /api/sessions/:id/execution-telemetry/live`. The endpoint returns `{ sessionId, snapshot }`, with `snapshot: null` until canonical telemetry exists. Existing React rendering and WebSocket `AgentEvent` payload behavior remain unchanged.
+- Plan Slice 4C: added the native live projection read client and shared fixture drift check.
 
 ## Current Branch
 
@@ -262,6 +264,8 @@ Plan Slice 4B validation:
 - `git diff --check`: succeeded.
 - `./scripts/reload.sh --tag execution-telemetry-live-projection`: succeeded.
 
+Plan Slice 4C validation: succeeded.
+
 ## Known Failures
 
 - Running `tsc` from the repo root through transient `npm exec` still does not resolve local Bun and Node ambient types. Run TypeScript checks from `agent-chat` with `PATH="$HOME/.bun/bin:$PATH"` so local package types are used.
@@ -270,11 +274,11 @@ Plan Slice 4B validation:
 
 ## Next Required Action
 
-Review `execution-telemetry-live-projection`. A later slice can add a native bridge consumer for the bounded live projection or continue provider migration, but should still avoid persistence, provenance writes, Swift schema ownership, React rendering changes, and WebSocket `AgentEvent` payload changes until those are explicitly in scope.
+Review `execution-telemetry-live-projection`. A later slice can wire an app/native consumer to the package live projection client or continue provider migration, but should still avoid persistence, provenance writes, Swift schema ownership, React rendering changes, and WebSocket `AgentEvent` payload changes until those are explicitly in scope.
 
 ## Blocked Decisions
 
-No current blocked decisions for Plan Slice 4B. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion. Plan Slice 4A adds the first live projection replay policy in `docs/execution-telemetry/decisions.md`; Plan Slice 4B adds the in-memory REST-only live read boundary.
+No current blocked decisions for Plan Slice 4C. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion. Plan Slice 4A adds the first live projection replay policy in `docs/execution-telemetry/decisions.md`; Plan Slice 4B adds the in-memory REST-only live read boundary; Plan Slice 4C adds the native read-client boundary and shared fixture drift check.
 
 ## Deviations From Original Plan
 

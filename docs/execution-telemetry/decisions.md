@@ -339,3 +339,7 @@ where `snapshot` is `null` until canonical telemetry exists. The snapshot is
 derived only from assigned `TelemetryEventEnvelope` values and remains bounded;
 it does not expose raw provider envelopes, raw errors, command output,
 transcripts, private reasoning, or changed file paths.
+
+## 2026-07-29 - Native Client Consumes Live Projection JSON Only
+
+Decision: Plan Slice 4C adds a Swift REST read client for the bounded live projection payload without making Swift the canonical telemetry schema owner.

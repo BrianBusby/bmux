@@ -102,6 +102,11 @@ does not append projection state to `Session.events`, broadcast new WebSocket
 messages, change React rendering, persist telemetry, write provenance records,
 or introduce a native bridge.
 
+## Plan Slice 4C Native Read Client
+
+`Packages/Shared/BmuxAgentChat` now has a Swift read client for the existing
+live projection REST payload. Swift consumes the bounded JSON shape only.
+
 ## Current Lossy Boundary
 
 The lossy boundary is inside `agent-chat/adapters/codex.ts`, primarily `handleServerMessage()`, `itemStarted()`, and `itemCompleted()`. Raw Codex notifications are reduced directly into `AgentEvent`, whose schema is display-oriented.

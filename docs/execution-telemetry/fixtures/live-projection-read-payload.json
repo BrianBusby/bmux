@@ -1,0 +1,23 @@
+{
+  "sessionId": "session-sidecar",
+  "snapshot": {
+    "sessionId": "session-sidecar",
+    "provider": "codex",
+    "providerSessionId": "thread-sidecar",
+    "currentProviderTurnId": "turn-sidecar",
+    "lifecycleState": "running",
+    "activeOperationCount": 0,
+    "latestActivityAtMs": 50000,
+    "latestUsageSummary": {
+      "turnId": "turn-sidecar",
+      "inputTokens": 20,
+      "outputTokens": 30,
+      "totalTokens": 50,
+      "observedAtMs": 50000
+    },
+    "approvalBlocked": {
+      "blocked": false,
+      "pendingCount": 0
+    }
+  }
+}

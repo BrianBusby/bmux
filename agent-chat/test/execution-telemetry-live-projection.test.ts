@@ -5,6 +5,7 @@ import {
   LiveSessionProjection,
   LiveSessionProjectionStore,
 } from "../executionTelemetryLiveProjection";
+import { readFileSync } from "node:fs";
 import type { AgentEvent } from "../types";
 import type { TelemetryEventEnvelope, TelemetryEvent } from "../executionTelemetryTypes";
 
@@ -267,6 +268,11 @@ function envelope(
   });
 
   const payload = liveSessionProjectionPayload("session-sidecar", store);
+  const fixtureUrl = new URL(
+    "../../docs/execution-telemetry/fixtures/live-projection-read-payload.json",
+    import.meta.url,
+  );
+  const fixture = JSON.parse(readFileSync(fixtureUrl, "utf8"));
   assert(payload.snapshot !== null, "live projection read surface should expose the latest snapshot");
   assert(payload.snapshot.sessionId === "session-sidecar", "sidecar projection session id changed");
   assert(payload.snapshot.provider === "codex", "sidecar projection provider changed");
@@ -276,6 +282,7 @@ function envelope(
   assert(payload.snapshot.latestUsageSummary?.totalTokens === 50, "sidecar projection usage summary changed");
   assert(payload.snapshot.latestActivityAtMs === 50_000, "sidecar projection activity timestamp should use assigned envelope time");
   assert(agentEvents.length === 1 && agentEvents[0].kind === "user", "live projection subscription should not change AgentEvent projection behavior");
+  assert(JSON.stringify(payload) === JSON.stringify(fixture), "shared live projection fixture drifted");
 
   payload.snapshot.latestUsageSummary!.totalTokens = 999;
   assert(store.snapshot()?.latestUsageSummary?.totalTokens === 50, "live projection snapshots should be defensive copies");
