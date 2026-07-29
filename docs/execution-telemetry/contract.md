@@ -1,12 +1,15 @@
 # Telemetry Contract
 
-Status: Slice 11 provider-neutral contract, sidecar fanout seam, and first Codex lifecycle migrations.
+Status: Slice 11 provider-neutral contract, sidecar fanout seam, first Codex lifecycle migrations, and Plan Slice 4B live projection sidecar read surface.
 
 The sidecar fanout path has been added without persistence, provenance
 projection, React behavior changes, or broad provider rewrites. Slices 3 through
 11 route Codex prompt submission, provider session linkage, turn lifecycle,
 message lifecycle, tool lifecycle, approval lifecycle, and standalone usage
 observations plus request-status, send-failure, and app-server exit diagnostics through the seam.
+Plan Slice 4B attaches an in-memory live projection subscriber to each sidecar
+session and exposes a bounded REST read payload without changing React or
+WebSocket `AgentEvent` behavior.
 
 ## Contract Location
 
@@ -85,6 +88,23 @@ preserve the private `done.generation` value required by current server
 file-change attribution while projecting Codex `turn.completed` and
 `turn.failed` events back to `AgentEvent`.
 
+## Live Projection Read Surface
+
+`agent-chat/executionTelemetryLiveProjection.ts` owns the renderer-independent
+live projection and `LiveSessionProjectionStore`. The store subscribes to
+assigned `TelemetryEventEnvelope` values from the session fanout and keeps only
+the latest bounded snapshot in memory.
+
+The current sidecar read endpoint is:
+
+```text
+GET /api/sessions/:id/execution-telemetry/live
+```
+
+It returns `{ sessionId, snapshot }`, with `snapshot: null` until canonical
+telemetry exists. This endpoint must not expose raw provider envelopes, raw
+errors, command output, transcripts, private reasoning, or changed file paths.
+
 ## Minimal Event Set
 
 The Slice 1 union covers the events required to preserve the fields that the
@@ -128,3 +148,8 @@ Slice 11 does not:
 - add telemetry persistence;
 - write to provenance-engine;
 - choose or implement a Claude structured event source.
+
+Plan Slice 4B still does not add telemetry persistence, provenance writes,
+Swift/native bridge decoding, React rendering changes, WebSocket `AgentEvent`
+payload changes, Claude structured-source selection, or automatic diagnostic
+checkpoint scheduling.

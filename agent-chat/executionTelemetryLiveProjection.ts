@@ -1,6 +1,7 @@
 import type {
   TelemetryApprovalKind,
   TelemetryDiagnosticLevel,
+  TelemetryEnvelopeSubscriber,
   TelemetryEventEnvelope,
   TelemetryProviderId,
   TelemetryProviderSessionId,
@@ -50,6 +51,11 @@ export interface LiveSessionProjectionSnapshot {
   latestDiagnostic?: LiveSessionDiagnosticSummary;
   approvalBlocked: LiveSessionApprovalBlockedState;
   filesChanged?: LiveSessionFilesChangedSummary;
+}
+
+export interface LiveSessionProjectionReadPayload {
+  sessionId: TelemetrySessionId;
+  snapshot: LiveSessionProjectionSnapshot | null;
 }
 
 interface PendingApproval {
@@ -212,6 +218,44 @@ export class LiveSessionProjection {
   }
 }
 
+export class LiveSessionProjectionStore {
+  private readonly projection = new LiveSessionProjection();
+  private latestSnapshot: LiveSessionProjectionSnapshot | undefined;
+  private unsubscribe: (() => void) | undefined;
+
+  attach(subscribe: (subscriber: TelemetryEnvelopeSubscriber) => () => void): () => void {
+    this.detach();
+    this.unsubscribe = subscribe((envelope) => {
+      this.latestSnapshot = this.projection.apply(envelope);
+    });
+    return () => this.detach();
+  }
+
+  detach() {
+    this.unsubscribe?.();
+    this.unsubscribe = undefined;
+  }
+
+  apply(envelope: TelemetryEventEnvelope): LiveSessionProjectionSnapshot {
+    this.latestSnapshot = this.projection.apply(envelope);
+    return cloneSnapshot(this.latestSnapshot);
+  }
+
+  snapshot(): LiveSessionProjectionSnapshot | undefined {
+    return this.latestSnapshot ? cloneSnapshot(this.latestSnapshot) : undefined;
+  }
+}
+
+export function liveSessionProjectionPayload(
+  sessionId: TelemetrySessionId,
+  store: Pick<LiveSessionProjectionStore, "snapshot">,
+): LiveSessionProjectionReadPayload {
+  return {
+    sessionId,
+    snapshot: store.snapshot() ?? null,
+  };
+}
+
 export function replayLiveSessionProjection(envelopes: Iterable<TelemetryEventEnvelope>): LiveSessionProjectionSnapshot {
   const projection = new LiveSessionProjection();
   let snapshot: LiveSessionProjectionSnapshot | undefined;
@@ -235,5 +279,15 @@ function usageSummary(
     contextWindowTokens: usage.contextWindowTokens,
     model: usage.model,
     observedAtMs,
+  };
+}
+
+function cloneSnapshot(snapshot: LiveSessionProjectionSnapshot): LiveSessionProjectionSnapshot {
+  return {
+    ...snapshot,
+    latestUsageSummary: snapshot.latestUsageSummary ? { ...snapshot.latestUsageSummary } : undefined,
+    latestDiagnostic: snapshot.latestDiagnostic ? { ...snapshot.latestDiagnostic } : undefined,
+    approvalBlocked: { ...snapshot.approvalBlocked },
+    filesChanged: snapshot.filesChanged ? { ...snapshot.filesChanged } : undefined,
   };
 }

@@ -83,6 +83,25 @@ unchanged. Later slices should migrate more provider events by publishing
 `TelemetryEventEnvelopeDraft` values first and treating `AgentEvent` as the
 fanout projection only.
 
+## Plan Slice 4B Live Projection Read Surface
+
+Each `agent-chat/server.ts` session now attaches a
+`LiveSessionProjectionStore` beside its `ExecutionTelemetryFanout`. The store
+subscribes to assigned canonical envelopes and keeps only the latest bounded
+`LiveSessionProjectionSnapshot` in sidecar process memory.
+
+The read surface is REST-only:
+
+```text
+GET /api/sessions/:id/execution-telemetry/live
+  -> { sessionId, snapshot }
+```
+
+`snapshot` is `null` until the session has emitted canonical telemetry. This
+does not append projection state to `Session.events`, broadcast new WebSocket
+messages, change React rendering, persist telemetry, write provenance records,
+or introduce a native bridge.
+
 ## Current Lossy Boundary
 
 The lossy boundary is inside `agent-chat/adapters/codex.ts`, primarily `handleServerMessage()`, `itemStarted()`, and `itemCompleted()`. Raw Codex notifications are reduced directly into `AgentEvent`, whose schema is display-oriented.

@@ -12,6 +12,7 @@ import type {
   SessionStatus,
 } from "./types";
 import { ExecutionTelemetryFanout } from "./executionTelemetryFanout";
+import { liveSessionProjectionPayload, LiveSessionProjectionStore } from "./executionTelemetryLiveProjection";
 import { claudeAdapter } from "./adapters/claude";
 import { codexAdapter } from "./adapters/codex";
 import { emitCodexPromptSubmitted } from "./adapters/codexTelemetry";
@@ -103,6 +104,7 @@ for (const def of PROVIDERS) {
 interface Session extends SessionCtx {
   adapter: Adapter;
   telemetry: ExecutionTelemetryFanout;
+  liveProjection: LiveSessionProjectionStore;
   sockets: Set<Bun.ServerWebSocket<WsData>>;
   createdAt: number;
 }
@@ -213,6 +215,8 @@ function createSession(
     provider,
     emitAgentEvent: (evt) => sess.emit(evt),
   });
+  const liveProjection = new LiveSessionProjectionStore();
+  liveProjection.attach((subscriber) => telemetry.subscribe(subscriber));
   sess = {
     id,
     provider,
@@ -226,6 +230,7 @@ function createSession(
     internal: {},
     adapter,
     telemetry,
+    liveProjection,
     sockets: new Set(),
     createdAt: Date.now(),
     emit(evt: AgentEvent) {
@@ -1460,6 +1465,12 @@ function startServer() {
     }
     if (url.pathname === "/api/sessions" && req.method === "GET") {
       return Response.json([...sessions.values()].sort((a, b) => b.createdAt - a.createdAt).map(sessionSummary));
+    }
+    const liveProjectionMatch = url.pathname.match(/^\/api\/sessions\/([^/]+)\/execution-telemetry\/live$/);
+    if (liveProjectionMatch && req.method === "GET") {
+      const sess = sessions.get(decodeURIComponent(liveProjectionMatch[1]));
+      if (!sess) return Response.json({ error: "no session" }, { status: 404 });
+      return Response.json(liveSessionProjectionPayload(sess.id, sess.liveProjection));
     }
     return new Response(renderPage(url), { headers: { "content-type": "text/html; charset=utf-8" } });
     },

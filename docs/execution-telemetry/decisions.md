@@ -317,3 +317,25 @@ state, active tool-operation count, latest activity timestamp from the most
 recently applied envelope, latest usage and diagnostic summaries, pending
 approval-blocked state, and a unique files-changed count. React rendering and
 WebSocket `AgentEvent` payload behavior remain unchanged.
+
+## 2026-07-29 - Live Projection Read Surface Is In-Memory And REST-Only
+
+Decision: Plan Slice 4B wires `LiveSessionProjectionStore` to each sidecar
+session's `ExecutionTelemetryFanout` as an in-memory subscriber and exposes the
+latest bounded projection through `GET /api/sessions/:id/execution-telemetry/live`.
+
+Rationale: The live projection needs a sidecar-owned read surface before a
+native bridge or persistence layer can consume it. Keeping the surface in
+process memory and REST-only proves the subscriber/read boundary without
+changing React rendering, WebSocket `AgentEvent` payloads, replay history,
+persistence, provenance writes, or Swift schema ownership.
+
+Alternatives rejected: publish live projection updates over the existing
+WebSocket stream; append projection snapshots to `Session.events`; persist
+projection snapshots; add the native bridge in the same slice.
+
+Consequences: Consumers can poll a small `{ sessionId, snapshot }` payload,
+where `snapshot` is `null` until canonical telemetry exists. The snapshot is
+derived only from assigned `TelemetryEventEnvelope` values and remains bounded;
+it does not expose raw provider envelopes, raw errors, command output,
+transcripts, private reasoning, or changed file paths.

@@ -1,4 +1,11 @@
-import { replayLiveSessionProjection, LiveSessionProjection } from "../executionTelemetryLiveProjection";
+import { ExecutionTelemetryFanout } from "../executionTelemetryFanout";
+import {
+  liveSessionProjectionPayload,
+  replayLiveSessionProjection,
+  LiveSessionProjection,
+  LiveSessionProjectionStore,
+} from "../executionTelemetryLiveProjection";
+import type { AgentEvent } from "../types";
 import type { TelemetryEventEnvelope, TelemetryEvent } from "../executionTelemetryTypes";
 
 function assert(cond: unknown, message: string): asserts cond {
@@ -208,6 +215,70 @@ function envelope(
     threw = true;
   }
   assert(threw, "mixed session replay should be rejected");
+}
+
+{
+  const agentEvents: AgentEvent[] = [];
+  const fanout = new ExecutionTelemetryFanout({
+    sessionId: "session-sidecar",
+    provider: "codex",
+    nowMs: () => 50_000,
+    idFactory: ({ sequence }) => `sidecar-event-${sequence}`,
+    emitAgentEvent: (event) => {
+      agentEvents.push(event);
+    },
+  });
+  const store = new LiveSessionProjectionStore();
+  store.attach((subscriber) => fanout.subscribe(subscriber));
+
+  const initialPayload = liveSessionProjectionPayload("session-sidecar", store);
+  assert(initialPayload.sessionId === "session-sidecar", "live projection payload session id changed");
+  assert(initialPayload.snapshot === null, "live projection read surface should be empty before telemetry");
+
+  fanout.publish({
+    source: "sidecar",
+    event: {
+      type: "prompt.submitted",
+      text: "sidecar read",
+    },
+  });
+  fanout.publish({
+    source: "provider",
+    providerSessionId: "thread-sidecar",
+    providerTurnId: "turn-sidecar",
+    event: {
+      type: "turn.started",
+      turnId: "turn-sidecar",
+    },
+  });
+  fanout.publish({
+    source: "provider",
+    providerSessionId: "thread-sidecar",
+    providerTurnId: "turn-sidecar",
+    event: {
+      type: "usage.updated",
+      turnId: "turn-sidecar",
+      usage: {
+        inputTokens: 20,
+        outputTokens: 30,
+        totalTokens: 50,
+      },
+    },
+  });
+
+  const payload = liveSessionProjectionPayload("session-sidecar", store);
+  assert(payload.snapshot !== null, "live projection read surface should expose the latest snapshot");
+  assert(payload.snapshot.sessionId === "session-sidecar", "sidecar projection session id changed");
+  assert(payload.snapshot.provider === "codex", "sidecar projection provider changed");
+  assert(payload.snapshot.providerSessionId === "thread-sidecar", "sidecar projection provider session id changed");
+  assert(payload.snapshot.currentProviderTurnId === "turn-sidecar", "sidecar projection current turn changed");
+  assert(payload.snapshot.lifecycleState === "running", "sidecar projection should track running lifecycle");
+  assert(payload.snapshot.latestUsageSummary?.totalTokens === 50, "sidecar projection usage summary changed");
+  assert(payload.snapshot.latestActivityAtMs === 50_000, "sidecar projection activity timestamp should use assigned envelope time");
+  assert(agentEvents.length === 1 && agentEvents[0].kind === "user", "live projection subscription should not change AgentEvent projection behavior");
+
+  payload.snapshot.latestUsageSummary!.totalTokens = 999;
+  assert(store.snapshot()?.latestUsageSummary?.totalTokens === 50, "live projection snapshots should be defensive copies");
 }
 
 console.log("execution telemetry live projection assertions passed");
