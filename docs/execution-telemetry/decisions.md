@@ -129,3 +129,25 @@ Consequences: Codex turn lifecycle now has a canonical producer path without
 changing React rendering, WebSocket payload shape, persistence, provenance,
 Swift ownership, Claude source selection, or non-Codex behavior. Message, tool,
 approval, usage, and diagnostic Codex events still need future narrow migrations.
+
+## 2026-07-29 - Migrate Codex Message Lifecycle Without Tool Changes
+
+Decision: Slice 5 migrates Codex assistant text deltas, reasoning deltas, and
+completed non-streamed assistant messages to `SessionCtx.emitTelemetry`. Codex
+tool lifecycle, approval lifecycle, standalone usage observations, diagnostics,
+and unsupported request status messages remain on their existing paths.
+
+Rationale: Message events already have a provider-neutral contract and fanout
+projection to the existing `delta`, `thinking`, and `assistant` UI events. This
+is a narrow producer migration that preserves the duplicate-suppression behavior
+for streamed assistant messages before touching tool or approval semantics.
+
+Alternatives rejected: migrate message and tool lifecycle together; emit
+completed assistant telemetry for streamed messages that the UI currently
+suppresses; add persistence while migrating transcript events.
+
+Consequences: Codex text message lifecycle now has a canonical producer path
+without changing React rendering, WebSocket payload shape, persistence,
+provenance, Swift ownership, Claude source selection, or non-Codex behavior.
+Tool, approval, usage, and diagnostic Codex events still need future narrow
+migrations.

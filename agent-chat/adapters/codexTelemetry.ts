@@ -1,5 +1,10 @@
 import type { SessionCtx } from "../types";
-import type { TelemetryEventEnvelope, TelemetryProviderTurnId, TelemetryTokenUsage } from "../executionTelemetryTypes";
+import type {
+  TelemetryEventEnvelope,
+  TelemetryMessageStream,
+  TelemetryProviderTurnId,
+  TelemetryTokenUsage,
+} from "../executionTelemetryTypes";
 import { truncate } from "./lines";
 
 export function emitCodexPromptSubmitted(sess: SessionCtx, text: string): TelemetryEventEnvelope | undefined {
@@ -118,6 +123,69 @@ export function emitCodexTurnFailed(
   }, { doneGeneration: params.generation }) ?? (
     sess.emit({ kind: "error", message }),
     sess.emit({ kind: "done", generation: params.generation } as any),
+    undefined
+  );
+}
+
+export function emitCodexMessageDelta(
+  sess: SessionCtx,
+  params: {
+    providerSessionId?: string;
+    turnId?: TelemetryProviderTurnId;
+    itemId?: string;
+    method: string;
+    stream: TelemetryMessageStream;
+    text: string;
+  },
+): TelemetryEventEnvelope | undefined {
+  return sess.emitTelemetry?.({
+    source: "provider",
+    providerSessionId: params.providerSessionId,
+    providerTurnId: params.turnId,
+    providerEvent: {
+      method: params.method,
+      itemId: params.itemId,
+      turnId: params.turnId,
+    },
+    event: {
+      type: "message.delta",
+      stream: params.stream,
+      itemId: params.itemId,
+      text: params.text,
+    },
+  }) ?? (
+    sess.emit({ kind: params.stream === "reasoning" ? "thinking" : "delta", text: params.text }),
+    undefined
+  );
+}
+
+export function emitCodexMessageCompleted(
+  sess: SessionCtx,
+  params: {
+    providerSessionId?: string;
+    turnId?: TelemetryProviderTurnId;
+    itemId?: string;
+    stream: TelemetryMessageStream;
+    text?: string;
+  },
+): TelemetryEventEnvelope | undefined {
+  return sess.emitTelemetry?.({
+    source: "provider",
+    providerSessionId: params.providerSessionId,
+    providerTurnId: params.turnId,
+    providerEvent: {
+      method: "item/completed",
+      itemId: params.itemId,
+      turnId: params.turnId,
+    },
+    event: {
+      type: "message.completed",
+      stream: params.stream,
+      itemId: params.itemId,
+      text: params.text,
+    },
+  }) ?? (
+    params.text ? sess.emit({ kind: params.stream === "reasoning" ? "thinking" : "assistant", text: params.text }) : undefined,
     undefined
   );
 }

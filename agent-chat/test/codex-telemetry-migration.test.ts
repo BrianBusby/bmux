@@ -1,6 +1,8 @@
 import { ExecutionTelemetryFanout } from "../executionTelemetryFanout";
 import { codexHandleServerMessageForTest } from "../adapters/codex";
 import {
+  emitCodexMessageCompleted,
+  emitCodexMessageDelta,
   emitCodexPromptSubmitted,
   emitCodexProviderSessionLinked,
   emitCodexTurnCompleted,
@@ -217,6 +219,55 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
 }
 
 {
+  const { sess, agentEvents, telemetryEvents } = makeCodexSession();
+  sess.internal.threadId = "thread-message";
+
+  codexHandleServerMessageForTest(sess, {
+    method: "turn/started",
+    params: { threadId: "thread-message", turn: { id: "turn-message" } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/agentMessage/delta",
+    params: { threadId: "thread-message", itemId: "msg-streamed", delta: "hello " },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/reasoning/summaryTextDelta",
+    params: { threadId: "thread-message", itemId: "reasoning-1", delta: "thinking" },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/completed",
+    params: { threadId: "thread-message", item: { id: "msg-streamed", type: "agentMessage", text: "hello world" } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/completed",
+    params: { threadId: "thread-message", item: { id: "msg-completed", type: "agentMessage", text: "full answer" } },
+  });
+
+  assert(agentEvents.length === 3, `message lifecycle AgentEvent projection changed: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents[0].kind === "delta" && agentEvents[0].text === "hello ", "assistant delta projection changed");
+  assert(agentEvents[1].kind === "thinking" && agentEvents[1].text === "thinking", "reasoning delta projection changed");
+  assert(agentEvents[2].kind === "assistant" && agentEvents[2].text === "full answer", "completed assistant projection changed");
+
+  const messageEvents = telemetryEvents.filter((event) => event.event.type === "message.delta" || event.event.type === "message.completed");
+  assert(messageEvents.length === 3, `expected three message telemetry envelopes: ${JSON.stringify(telemetryEvents)}`);
+
+  assert(messageEvents[0].event.type === "message.delta", "assistant delta should publish message.delta telemetry");
+  assert(messageEvents[0].providerTurnId === "turn-message", "assistant delta provider turn id was not preserved");
+  assert(messageEvents[0].providerEvent?.method === "item/agentMessage/delta", "assistant delta provider method changed");
+  assert(messageEvents[0].providerEvent?.itemId === "msg-streamed", "assistant delta provider item id changed");
+  assert(messageEvents[0].event.stream === "assistant" && messageEvents[0].event.text === "hello ", "assistant delta telemetry changed");
+
+  assert(messageEvents[1].event.type === "message.delta", "reasoning delta should publish message.delta telemetry");
+  assert(messageEvents[1].providerEvent?.method === "item/reasoning/summaryTextDelta", "reasoning delta provider method changed");
+  assert(messageEvents[1].event.stream === "reasoning" && messageEvents[1].event.text === "thinking", "reasoning delta telemetry changed");
+
+  assert(messageEvents[2].event.type === "message.completed", "completed assistant should publish message.completed telemetry");
+  assert(messageEvents[2].providerEvent?.method === "item/completed", "completed assistant provider method changed");
+  assert(messageEvents[2].event.itemId === "msg-completed", "completed assistant item id changed");
+  assert(messageEvents[2].event.text === "full answer", "completed assistant text changed");
+}
+
+{
   const agentEvents: AgentEvent[] = [];
   const sess: SessionCtx = {
     id: "legacy-codex-session",
@@ -252,8 +303,31 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
     message: "fallback failed",
     generation: 4,
   });
+  emitCodexMessageDelta(sess, {
+    providerSessionId: "thread-fallback",
+    turnId: "turn-fallback",
+    itemId: "msg-fallback",
+    method: "item/agentMessage/delta",
+    stream: "assistant",
+    text: "fallback delta",
+  });
+  emitCodexMessageDelta(sess, {
+    providerSessionId: "thread-fallback",
+    turnId: "turn-fallback",
+    itemId: "reasoning-fallback",
+    method: "item/reasoning/delta",
+    stream: "reasoning",
+    text: "fallback thinking",
+  });
+  emitCodexMessageCompleted(sess, {
+    providerSessionId: "thread-fallback",
+    turnId: "turn-fallback",
+    itemId: "msg-completed-fallback",
+    stream: "assistant",
+    text: "fallback assistant",
+  });
 
-  assert(agentEvents.length === 5, `legacy AgentEvent fallback changed: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents.length === 8, `legacy AgentEvent fallback changed: ${JSON.stringify(agentEvents)}`);
   assert(agentEvents[0].kind === "user" && agentEvents[0].text === "fallback prompt", "legacy prompt fallback changed");
   assert(
     agentEvents[1].kind === "meta" && agentEvents[1].providerSessionId === "thread-fallback",
@@ -264,6 +338,9 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   assert(agentEvents[3].kind === "error" && agentEvents[3].message === "fallback failed", "legacy turn failure fallback changed");
   assert(agentEvents[4].kind === "done", "legacy turn failure fallback should close the UI turn");
   assert((agentEvents[4] as any).generation === 4, "legacy turn failure generation changed");
+  assert(agentEvents[5].kind === "delta" && agentEvents[5].text === "fallback delta", "legacy assistant delta fallback changed");
+  assert(agentEvents[6].kind === "thinking" && agentEvents[6].text === "fallback thinking", "legacy reasoning delta fallback changed");
+  assert(agentEvents[7].kind === "assistant" && agentEvents[7].text === "fallback assistant", "legacy assistant completed fallback changed");
 }
 
 console.log("codex telemetry migration assertions passed");

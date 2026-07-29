@@ -1,10 +1,10 @@
 # Execution Telemetry Implementation Status
 
-Last updated: 2026-07-28
+Last updated: 2026-07-29
 
 ## Active Slice
 
-Slice 4 - Codex turn lifecycle telemetry migration.
+Slice 5 - Codex message lifecycle telemetry migration.
 
 Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 
@@ -15,6 +15,7 @@ Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 - Slice 2: added the sidecar fanout seam in `agent-chat`. Existing adapters and React rendering remain unchanged.
 - Slice 3: migrated Codex prompt submission and provider session linkage (`thread/start` and `thread/fork`) through `SessionCtx.emitTelemetry`, with a direct `AgentEvent` fallback while the seam remains optional.
 - Slice 4: migrated Codex turn lifecycle (`turn/started`, `turn/completed`, and `turn/failed`) through `SessionCtx.emitTelemetry`, preserving existing React `done` / `error` projection and server-only done generation for file attribution.
+- Slice 5: migrated Codex message lifecycle (`item/agentMessage/delta`, reasoning delta variants, and completed non-streamed `agentMessage` items) through `SessionCtx.emitTelemetry`, preserving existing React `delta` / `thinking` / `assistant` projection and streamed-message duplicate suppression.
 
 ## Current Branch
 
@@ -46,7 +47,11 @@ Slice 3 implementation head:
 
 Slice 4 implementation head:
 
-branch head after the final Slice 4 commit
+`416824d9cb4e6e8b28a8fb32095b88ea56da14e3`
+
+Slice 5 implementation head:
+
+branch head after the final Slice 5 commit
 
 ## Tests Currently Passing
 
@@ -133,21 +138,28 @@ Slice 4 validation:
 - `agent-chat/test/execution-telemetry-fanout.test.ts` via `tsx@4.20.5`: succeeded.
 - `./scripts/reload.sh --tag execution-telemetry-slice-4`: succeeded.
 
+Slice 5 validation:
+
+- `git diff --check`: succeeded.
+- `agent-chat/test/codex-telemetry-migration.test.ts` via `tsx@4.20.5`: succeeded.
+- `agent-chat/test/execution-telemetry-fanout.test.ts` via `tsx@4.20.5`: succeeded.
+- Focused strict TypeScript check from `agent-chat` with Bun types, including `adapters/codex.ts`: succeeded.
+- `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: succeeded.
+- `./scripts/reload.sh --tag execution-telemetry-slice-5`: succeeded.
+
 ## Known Failures
 
-- `bun` is unavailable on PATH for this shell, so the targeted webview baseline test could not run.
-- The full `agent-chat` tsconfig check fails before source checking because the required Bun and Node type libraries are unavailable in this shell.
-- A broader focused `tsc` attempt that included `agent-chat/server.ts` and `agent-chat/adapters/codex.ts` still could not resolve Bun and Node type libraries, even with transient `@types/bun` / `bun-types` package attempts.
+- Running `tsc` from the repo root through transient `npm exec` still does not resolve local Bun and Node ambient types. Run TypeScript checks from `agent-chat` with `PATH="$HOME/.bun/bin:$PATH"` so local package types are used.
 - No runtime code changed in Slice 0, so no app build was run.
 - No runtime behavior changed in Slice 1; only a type-only contract module and docs were added.
 
 ## Next Required Action
 
-Review PR #12 before the next code slice. The next code slice should stay narrow: continue Codex migration with message/tool lifecycle or approval/usage lifecycle only after reviewing Slice 4.
+Review PR #12 before the next code slice. The next code slice should stay narrow: continue Codex migration with tool lifecycle or approval lifecycle only after reviewing Slice 5.
 
 ## Blocked Decisions
 
-No current blocked decisions for Slice 4. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion.
+No current blocked decisions for Slice 5. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion.
 
 ## Deviations From Original Plan
 

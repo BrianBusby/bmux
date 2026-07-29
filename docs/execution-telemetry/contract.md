@@ -1,11 +1,11 @@
 # Telemetry Contract
 
-Status: Slice 4 provider-neutral contract, sidecar fanout seam, and first Codex lifecycle migrations.
+Status: Slice 5 provider-neutral contract, sidecar fanout seam, and first Codex lifecycle migrations.
 
 The sidecar fanout path has been added without persistence, provenance
-projection, React behavior changes, or broad provider rewrites. Slices 3 and 4
-route Codex prompt submission, provider session linkage, and turn lifecycle
-through the seam.
+projection, React behavior changes, or broad provider rewrites. Slices 3 through
+5 route Codex prompt submission, provider session linkage, turn lifecycle, and
+message lifecycle through the seam.
 
 ## Contract Location
 
@@ -19,7 +19,7 @@ It is deliberately outside `agent-chat/src/session.ts`, which remains the React
 projection, and outside `webviews/src/agent-session/shared`, which is a
 separate webview package.
 
-`agent-chat/types.ts` remains the current WebSocket UI schema for Slice 3.
+`agent-chat/types.ts` remains the current WebSocket UI schema for Slice 5.
 `AgentEvent` must not become the canonical telemetry contract and must not be
 parsed back into telemetry.
 
@@ -72,7 +72,8 @@ envelope-shaped objects, but `schema`, `eventId`, `sessionId`, `sequence`,
 `capturedAtMs`, and `provider` are still assigned by the sidecar fanout.
 
 `SessionCtx.emitTelemetry` and `SessionCtx.subscribeTelemetry` are optional
-seams for future producers and subscribers. Most adapters and most Codex events still emit the
+seams for future producers and subscribers. Most adapters and the remaining
+non-migrated Codex tool, approval, usage, and diagnostic events still emit the
 current `AgentEvent` stream directly until later slices migrate specific
 provider events. The reverse direction remains prohibited: do not reconstruct
 canonical telemetry from `AgentEvent`.
@@ -117,9 +118,10 @@ CI.
 
 ## Deferred Work
 
-Slice 4 does not:
+Slice 5 does not:
 
-- broadly migrate provider events beyond Codex prompt/linkage and turn lifecycle;
+- broadly migrate provider events beyond Codex prompt/linkage, turn lifecycle,
+  and message lifecycle;
 - add telemetry persistence;
 - write to provenance-engine;
 - choose or implement a Claude structured event source.

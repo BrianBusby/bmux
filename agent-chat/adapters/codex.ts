@@ -2,6 +2,8 @@ import type { Adapter, CommandEntry, OptionChoice, OptionValue, SessionCtx, Sess
 import { readLines, tryParse, truncate } from "./lines";
 import { prettifyModelLabel } from "./model-label";
 import {
+  emitCodexMessageCompleted,
+  emitCodexMessageDelta,
   emitCodexProviderSessionLinked,
   emitCodexTurnCompleted,
   emitCodexTurnFailed,
@@ -363,15 +365,31 @@ function handleServerMessage(srv: AppServer, msg: any) {
       break;
     case "item/agentMessage/delta":
       if (p.delta) {
-        (sess.internal.deltaItems as Set<string>).add(p.itemId);
-        sess.emit({ kind: "delta", text: p.delta });
+        ((sess.internal.deltaItems ??= new Set<string>()) as Set<string>).add(p.itemId);
+        emitCodexMessageDelta(sess, {
+          providerSessionId: sess.internal.threadId as string | undefined,
+          turnId: st.currentTurnId,
+          itemId: typeof p.itemId === "string" ? p.itemId : undefined,
+          method: "item/agentMessage/delta",
+          stream: "assistant",
+          text: String(p.delta),
+        });
       }
       break;
     case "item/reasoning/delta":
     case "item/reasoningSummary/delta":
     case "item/reasoning/textDelta":
     case "item/reasoning/summaryTextDelta":
-      if (p.delta) sess.emit({ kind: "thinking", text: p.delta });
+      if (p.delta) {
+        emitCodexMessageDelta(sess, {
+          providerSessionId: sess.internal.threadId as string | undefined,
+          turnId: st.currentTurnId,
+          itemId: typeof p.itemId === "string" ? p.itemId : undefined,
+          method: msg.method,
+          stream: "reasoning",
+          text: String(p.delta),
+        });
+      }
       break;
     case "item/started":
       itemStarted(sess, p.item);
@@ -445,8 +463,17 @@ function itemCompleted(sess: SessionCtx, item: any) {
   if (!item) return;
   switch (item.type) {
     case "agentMessage": {
-      const seen = sess.internal.deltaItems as Set<string>;
-      if (item.text && !seen.has(item.id)) sess.emit({ kind: "assistant", text: item.text });
+      const seen = (sess.internal.deltaItems ??= new Set<string>()) as Set<string>;
+      if (item.text && !seen.has(item.id)) {
+        const st = codexState(sess);
+        emitCodexMessageCompleted(sess, {
+          providerSessionId: sess.internal.threadId as string | undefined,
+          turnId: st.currentTurnId,
+          itemId: typeof item.id === "string" ? item.id : undefined,
+          stream: "assistant",
+          text: String(item.text),
+        });
+      }
       seen.delete(item.id);
       break;
     }
