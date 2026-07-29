@@ -344,6 +344,7 @@ function handleServerMessage(srv: AppServer, msg: any) {
     case "turn/started":
       st.turnActive = true;
       st.currentTurnId = p.turn?.id;
+      sess.internal.lastUsage = undefined;
       resolveTurnWaiters(st, st.currentTurnId ?? null);
       emitCodexTurnStarted(sess, {
         providerSessionId: sess.internal.threadId as string | undefined,
@@ -385,12 +386,14 @@ function handleServerMessage(srv: AppServer, msg: any) {
       st.currentTurnId = undefined;
       const generation = st.activeGeneration;
       st.activeGeneration = undefined;
+      const usage = sess.internal.lastUsage;
+      sess.internal.lastUsage = undefined;
       resolveTurnWaiters(st, null);
       emitCodexTurnCompleted(sess, {
         providerSessionId: sess.internal.threadId as string | undefined,
         turnId,
         durationMs: p.turn?.durationMs,
-        usage: sess.internal.lastUsage,
+        usage,
         generation,
       });
       sess.setStatus("idle");
@@ -402,6 +405,7 @@ function handleServerMessage(srv: AppServer, msg: any) {
       st.currentTurnId = undefined;
       const generation = st.activeGeneration;
       st.activeGeneration = undefined;
+      sess.internal.lastUsage = undefined;
       resolveTurnWaiters(st, null);
       emitCodexTurnFailed(sess, {
         providerSessionId: sess.internal.threadId as string | undefined,
