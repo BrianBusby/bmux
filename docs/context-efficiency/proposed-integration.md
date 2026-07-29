@@ -8,6 +8,7 @@ Status: proposed integration map after Phase 0 discovery. This is not an impleme
 - Keep raw evidence recoverable. Reduced output, summaries, and policy labels must point back to raw artifacts or source offsets.
 - Keep facts separate from inference. Token counts, timestamps, commands, commits, and file changes are facts; loop/waste labels are versioned inferences.
 - Reuse existing identity and storage seams. Do not create a parallel session/workspace model when bmux already has one.
+- Prefer supported provider APIs for live provider-owned data. For Codex, app-server should be the primary live thread/session/event source; local rollout/state files remain backfill, recovery, and raw-evidence references.
 - Do not put large parsing or disk writes on UI, typing, PTY, or Ghostty hot paths.
 - Version every parser, schema, policy, and report format from the beginning.
 - Let project knowledge grow without growing default agent context. Future context should be assembled dynamically from hierarchical knowledge and evidence references, with a task-specific reason for each included item.
@@ -22,7 +23,8 @@ BmuxContextEfficiencyStore
   SQLite migrations, import cursors, event/model-call repositories, artifact references.
 
 BmuxContextEfficiencyImport
-  Codex rollout/state importers, defensive JSONL parsing, duplicate suppression.
+  Codex app-server live ingestion, rollout/state backfill importers, defensive
+  JSONL parsing, duplicate suppression.
 
 BmuxContextEfficiencyReports
   Markdown/JSON/CSV summaries and CLI-facing DTOs.
@@ -53,8 +55,9 @@ Why one package first:
 
 | Need | Existing Component | Proposed Use |
 | --- | --- | --- |
-| Codex thread metadata | `SessionIndexStore+CodexSQL.swift`, `CLI/BMUXCLI+CodexTokenAudit.swift` | Reuse SQL field knowledge and highest-state-DB resolution. Move durable import logic into new package. |
-| Codex rollout path | `AgentChatTranscriptResolver`, process FD detection in `AgentChatSessionRegistry+ObserveScan.swift` | Use as live identity hints; importer should still accept explicit paths. |
+| Codex live thread/session events | `agent-chat/adapters/codex.ts` and `codex app-server` | Promote app-server from UI-only usage to the primary live Codex ingestion source for supported thread, turn, item, token, tool, process, goal, and metadata events. Persist compact facts through the context-efficiency store rather than keeping token usage only in session memory. |
+| Codex thread metadata backfill | `SessionIndexStore+CodexSQL.swift`, `CLI/BMUXCLI+CodexTokenAudit.swift` | Reuse SQL field knowledge and highest-state-DB resolution for historical/offline import, recovery, and source-evidence references. Do not treat Codex SQLite as the preferred live API when app-server exposes the needed field. |
+| Codex rollout backfill | `AgentChatTranscriptResolver`, process FD detection in `AgentChatSessionRegistry+ObserveScan.swift` | Use rollout paths as backfill and raw-evidence artifacts. Importer should still accept explicit paths and record source offsets for reproducibility. |
 | Live agent identity | `AgentChatSessionRegistry`, hook session store | Link `AgentThreadRecord` to `AgentChatSessionRecord` IDs and bmux surface/workspace IDs. |
 | Workspace identity | `TabManager`, `Workspace`, `SessionWorkspaceSnapshot` | Store workspace/window/surface IDs as references; do not persist whole UI snapshots in telemetry rows. |
 | Repository/worktree identity | `BmuxGit`, `WorkProvenanceGitInspector`, `WorkProvenanceStableIDFactory` | Reuse Git resolution and stable ID/fingerprint logic. |
@@ -63,6 +66,70 @@ Why one package first:
 | Output reduction | `TokenOptimizationLayer`, `CommandOutputOptimizer` | Keep as independent reducer; measure reduction separately from thread handoff savings. |
 | Raw output recovery | `ChatRawTerminalOutputRecord`, `ChatRawTerminalOutputFileStore`, `agent-token-output show` | Reuse record shape and reference style. Add artifact index rather than embedding large output in analysis rows. |
 | Live UI updates | `BmuxEventBus` | Publish lightweight import/profiler events later. Do not use it as the durable store. |
+
+## Codex Data Source Hierarchy
+
+Use one hierarchy for Codex-owned session data so bmux does not permanently
+maintain competing live reads:
+
+```text
+codex app-server
+        |
+        v
+primary live ingestion for supported thread/session/turn/item/token/tool events
+        |
+        +------------------------------+
+                                       |
+Codex rollout JSONL + state_N.sqlite   |
+        |                              |
+        v                              v
+historical backfill, recovery, raw evidence references, unavailable fields
+        |
+        v
+BmuxContextEfficiency compact facts
+        |
+        v
+Provenance Engine normalized work provenance and lifecycle inputs
+```
+
+Rules:
+
+- Use app-server first for live Codex sessions when the needed field is exposed
+  by a stable or accepted experimental API.
+- Use rollout JSONL and `state_N.sqlite` for historical import, offline reports,
+  startup catch-up, recovery from missed live events, source offsets, and fields
+  app-server does not expose.
+- Keep rollout/state parsing defensive and versioned because those formats are
+  local implementation details, not the primary live contract.
+- Store compact facts and evidence references in `BmuxContextEfficiency`; store
+  causal work relationships and lifecycle/provenance projections in the
+  Provenance Engine.
+- Do not duplicate complete transcripts, tool outputs, diffs, or other large raw
+  payloads in frequently queried SQLite rows.
+
+## Next Codex Live Ingestion Sequence
+
+After the normalization/provenance boundary is accepted for the active slice,
+the next Codex-specific implementation sequence is:
+
+1. App-server capability audit.
+   Verify which live fields are available and reliable across thread/list,
+   thread/read, turn/item pagination, streamed item events, token usage,
+   compaction events, process/tool events, goals, metadata, and ID mapping to
+   rollout/state records.
+2. Live ingestion adapter.
+   Persist compact events from the existing `agent-chat/adapters/codex.ts`
+   app-server stream into `BmuxContextEfficiency` instead of keeping live token
+   and tool telemetry only in session memory.
+3. Backfill reconciliation.
+   Keep rollout JSONL and `state_N.sqlite` import for startup catch-up,
+   historical sessions, missed live events, source offsets, raw-evidence
+   recovery, and fields app-server does not expose.
+4. Provenance identity linking.
+   Map app-server thread, turn, and item IDs to bmux workspace, surface, panel,
+   agent-session, repository, and worktree identities, then expose those links
+   as normalized provenance inputs rather than duplicating provider records in
+   the Provenance Engine.
 
 ## What Should Not Be Reused Directly
 
@@ -73,6 +140,10 @@ Why one package first:
 - `BmuxEventBus` retained events and rotated JSONL should not be authoritative historical data.
 
 ## Data Flow for Milestone 2
+
+Milestone 2 was intentionally read-only and file-backed. That remains the
+correct backfill/offline path, but later live ingestion slices should prefer
+app-server before expanding direct rollout/state scraping.
 
 ```text
 Codex state_N.sqlite
@@ -181,13 +252,20 @@ Decision needed:
 Proposed:
 
 - Keep chat transcript projection unchanged.
-- Add a non-UI telemetry parser for Codex JSONL.
+- Treat `codex app-server` as the primary live Codex session/event source and
+  persist the compact telemetry events already emitted by the agent-chat Codex
+  adapter.
+- Keep the non-UI Codex JSONL telemetry parser for backfill, recovery, and raw
+  evidence references.
 - Link imported `AgentThreadRecord.externalThreadID` to `AgentChatSessionRecord.sessionID` when the hook/session registry provides a reliable mapping.
 - Do not make AgentChat tailers parse token telemetry for now; they are optimized for UI subscriptions and chat rows.
 
 Future:
 
-- Live app-server token usage events can feed the same telemetry store after the read-only importer proves the schema.
+- Add an app-server capability/field audit before expanding Codex telemetry
+  ingestion, covering thread/list, thread/read, turn/item pagination, streamed
+  item events, token usage fields, compaction events, process/tool events, and
+  ID mapping to rollout/state records.
 
 ## Integration With Output Reduction
 
@@ -223,6 +301,7 @@ Future UI should extend existing surfaces conservatively:
 3. Storage strategy: separate context-efficiency SQLite DB now, or same WorkProvenance DB with new tables?
 4. Retention default for raw artifacts once command/evidence capture begins.
 5. Whether future lifecycle warnings should initially appear in Feed, Session Index, or a new coordination window.
+6. Whether bmux should run one shared app-server process, one per workspace, or attach to an already-running app-server for live Codex ingestion.
 
 ## Stop Conditions Before Runtime Changes
 
@@ -230,5 +309,6 @@ Future UI should extend existing surfaces conservatively:
 - Parser fixture coverage exists.
 - SQLite migration tests exist.
 - Importer proves it does not load large rollouts into memory.
+- App-server field/capability audit proves which live fields can replace rollout/state scraping and which fields still need backfill.
 - Reports explain data confidence and unavailable token splits.
 - No change to live Codex command execution until read-only telemetry is trustworthy.

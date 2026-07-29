@@ -193,6 +193,16 @@ Metrics include required-record recall, misleading-record rate, stale-record rat
 
 Retrieval observability must preserve coverage and correctness as separate measurements. A broad candidate set, high selected-record count, or high attribution rate is not by itself a quality improvement.
 
+Empirical learning loop deferral: do not build the full A/B replay harness,
+usage/correction feedback loop, or promotion criteria before normalized
+records, stable session/file/worktree identities, and the first retrieval
+fixtures exist. When starting retrieval or context-package implementation, make
+this loop concrete by comparing transcript-only, flat-summary, typed-fact,
+typed-fact-plus-edge, and scoped context-package variants against real
+continuation tasks. Promotion from compact summary to first-class record type
+should require repeated fixture or live-feedback evidence that agents need that
+shape to resume work correctly with less context and fewer rediscovery errors.
+
 ## Migration Sequence
 
 Do not add every concept in one migration. Recommended order: R1 decisions/findings/edges, R2 knowledge records plus FTS, and R3 optional context package manifests/projection state. Follow current `WorkProvenance` migration and replay conventions.

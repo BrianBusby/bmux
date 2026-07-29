@@ -1,6 +1,6 @@
 # Bmux Context Efficiency: Current Status
 
-Last updated: 2026-07-24
+Last updated: 2026-07-29
 
 This file is the live handoff index for context-efficiency, provenance, and
 handoff work. Keep it concise; move slice history and detailed findings into
@@ -69,6 +69,16 @@ newest-first ordering, and the 25-row text cap were preserved.
 The project is now in controlled incremental migration from bmux-local
 provenance storage/query code to the external engine. This is a transitional
 state, not a target architecture.
+
+Planning clarification on 2026-07-29: Codex app-server should be the primary
+live source for supported Codex-owned session/thread/event data in future
+context-efficiency slices. Codex rollout JSONL and `state_N.sqlite` remain
+historical backfill, recovery, unavailable-field, and raw-evidence sources.
+The Provenance Engine remains the durable normalized provenance and lifecycle
+query boundary; bmux remains responsible for capture orchestration,
+presentation, fallback behavior, and workflow policy.
+The explicit four-step Codex live ingestion sequence is recorded in
+`docs/context-efficiency/proposed-integration.md`.
 
 ## Current Boundary
 

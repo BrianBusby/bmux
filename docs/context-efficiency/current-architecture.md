@@ -133,6 +133,10 @@ Confirmed:
 - `AgentChatSessionRegistry+ObserveScan.swift` can discover Codex processes under bmux surfaces and find open Codex rollout files via process file descriptors.
 - `agent-chat/adapters/codex.ts` uses `codex app-server`, starts/forks threads, observes `thread/tokenUsage/updated`, and displays turn completion token stats.
 - `SessionIndexStore+CodexSQL.swift` reads Codex `~/.codex/state_5.sqlite` `threads` rows for session index/search and copies SQLite sidecars to a temp snapshot before querying.
+- Target planning direction: app-server should become the primary live Codex
+  session/thread/event source. Rollout JSONL and Codex state SQLite should
+  remain backfill, recovery, and raw-evidence sources rather than the preferred
+  live API.
 
 Partial:
 
@@ -143,7 +147,9 @@ Partial:
 Unknown:
 
 - The exact current Codex rollout JSONL token event shape and whether it includes cached-input, uncached-input, output, and reasoning-token splits.
-- Whether Codex app-server `thread/tokenUsage/updated` exposes enough detail for cached-token attribution in all modes.
+- Whether Codex app-server exposes enough detail across token, compaction,
+  tool/process, pagination, and metadata APIs to be the complete live source for
+  Codex-owned session telemetry.
 - Whether Codex state DB version has advanced beyond `state_5.sqlite` in all local installs. The token-audit prototype handles `state_N.sqlite`; the session index currently names `state_5.sqlite` by default.
 
 ## Transcript, Terminal Output, and Compression
@@ -258,7 +264,9 @@ TerminalSurface spawn env and Codex wrapper hooks
         v
 AgentChatSessionRegistry / hook stores / process observation
         |
-        +----> Codex state DB + rollout JSONL importer
+        +----> codex app-server live event ingestion
+        |
+        +----> Codex state DB + rollout JSONL backfill/evidence importer
         |
         +----> SessionIndex Codex SQL metadata loader
         |
@@ -277,6 +285,8 @@ Reports, fleet/thread UI, lifecycle shadow policy, handoff preview
 
 Expected extension points:
 
+- Codex live data: promote `agent-chat/adapters/codex.ts` app-server usage from
+  UI/session memory into compact durable telemetry ingestion.
 - Codex session metadata: reuse `SessionIndexStore+CodexSQL.swift` query ideas and `AgentChatTranscriptResolver`.
 - Live session identity: link to `AgentChatSessionRecord` and hook-store session IDs.
 - Repository/worktree state: reuse `BmuxGit` and `WorkProvenanceGitInspector`.
@@ -320,5 +330,7 @@ Important coupling risks:
 - App-target `WorkProvenance` code may be hard to reuse in CLI/package tests.
 - `AppDelegate` and `Workspace` are large and main-actor heavy; telemetry ingestion should avoid these paths.
 - Terminal byte tee is output hot path; durable capture must be gated and measured.
-- Codex-local schemas are not stable API; parsers must be defensive and versioned.
+- Codex-local rollout/state schemas are not stable API; parsers must be
+  defensive, versioned, and treated as backfill/evidence rather than the
+  preferred live contract.
 - User-authored decisions can appear in chat/prose, docs, and git commits; inferred summaries must not overwrite them.
