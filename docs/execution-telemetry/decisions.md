@@ -151,3 +151,29 @@ without changing React rendering, WebSocket payload shape, persistence,
 provenance, Swift ownership, Claude source selection, or non-Codex behavior.
 Tool, approval, usage, and diagnostic Codex events still need future narrow
 migrations.
+
+## 2026-07-29 - Migrate Codex Tool Lifecycle With Legacy UI Projection
+
+Decision: Slice 6 migrates Codex `item/started` and `item/completed` tool
+lifecycle notifications to `SessionCtx.emitTelemetry` for command execution,
+file changes, web search, and MCP tool calls. The existing `tool-start` /
+`tool-end` React projection remains unchanged, including current names,
+summaries, and success calculation.
+
+Rationale: Tool lifecycle events already have a provider-neutral contract and
+are the next bounded Codex path after message lifecycle. Preserving the legacy
+projection keeps React/WebSocket behavior stable while capturing provider
+session id, turn id, item id, tool kind, bounded input/output summaries,
+exit code, duration when present, and provider item/status scalar metadata for
+non-UI consumers.
+
+Alternatives rejected: migrate approval requests together with tool lifecycle;
+store raw provider items in telemetry metadata; change the UI success behavior
+for provider statuses that were previously treated as successful by the
+display-oriented `AgentEvent` projection.
+
+Consequences: Codex tool lifecycle now has a canonical producer path without
+changing React rendering, WebSocket payload shape, persistence, provenance,
+Swift ownership, Claude source selection, or non-Codex behavior. Approval,
+standalone usage, diagnostic, and unsupported request status Codex events still
+need future narrow migrations.

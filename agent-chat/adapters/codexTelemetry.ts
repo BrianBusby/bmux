@@ -3,6 +3,8 @@ import type {
   TelemetryEventEnvelope,
   TelemetryMessageStream,
   TelemetryProviderTurnId,
+  TelemetryToolKind,
+  TelemetryToolStatus,
   TelemetryTokenUsage,
 } from "../executionTelemetryTypes";
 import { truncate } from "./lines";
@@ -190,6 +192,92 @@ export function emitCodexMessageCompleted(
   );
 }
 
+export function emitCodexToolStarted(
+  sess: SessionCtx,
+  params: {
+    providerSessionId?: string;
+    turnId?: TelemetryProviderTurnId;
+    operationId: string;
+    toolKind: TelemetryToolKind;
+    name: string;
+    inputSummary?: string;
+    providerItemType?: string;
+  },
+): TelemetryEventEnvelope | undefined {
+  return sess.emitTelemetry?.({
+    source: "provider",
+    providerSessionId: params.providerSessionId,
+    providerTurnId: params.turnId,
+    providerEvent: {
+      method: "item/started",
+      itemId: params.operationId,
+      turnId: params.turnId,
+    },
+    metadata: params.providerItemType ? { providerItemType: params.providerItemType } : undefined,
+    event: {
+      type: "tool.started",
+      operationId: params.operationId,
+      toolKind: params.toolKind,
+      name: params.name,
+      inputSummary: params.inputSummary,
+    },
+  }) ?? (
+    sess.emit({ kind: "tool-start", toolId: params.operationId, name: params.name, detail: params.inputSummary }),
+    undefined
+  );
+}
+
+export function emitCodexToolCompleted(
+  sess: SessionCtx,
+  params: {
+    providerSessionId?: string;
+    turnId?: TelemetryProviderTurnId;
+    operationId: string;
+    toolKind?: TelemetryToolKind;
+    name?: string;
+    status: TelemetryToolStatus;
+    outputSummary?: string;
+    exitCode?: number;
+    durationMs?: number;
+    providerItemType?: string;
+    providerStatus?: string;
+  },
+): TelemetryEventEnvelope | undefined {
+  return sess.emitTelemetry?.({
+    source: "provider",
+    providerSessionId: params.providerSessionId,
+    providerTurnId: params.turnId,
+    providerEvent: {
+      method: "item/completed",
+      itemId: params.operationId,
+      turnId: params.turnId,
+    },
+    metadata: boundedMetadata({
+      providerItemType: params.providerItemType,
+      providerStatus: params.providerStatus,
+    }),
+    event: {
+      type: "tool.completed",
+      operationId: params.operationId,
+      toolKind: params.toolKind,
+      name: params.name,
+      status: params.status,
+      outputSummary: params.outputSummary,
+      exitCode: finiteNumber(params.exitCode),
+      durationMs: finiteNumber(params.durationMs),
+    },
+  }) ?? (
+    sess.emit({
+      kind: "tool-end",
+      toolId: params.operationId,
+      name: params.name,
+      ok: params.status === "succeeded",
+      detail: params.outputSummary,
+    }),
+    undefined
+  );
+}
+
 export function codexTokenUsage(value: unknown): TelemetryTokenUsage | undefined {
   if (!value || typeof value !== "object") return undefined;
   const raw = value as Record<string, unknown>;
@@ -215,4 +303,9 @@ function formatCodexDoneStats(usage: TelemetryTokenUsage | undefined, durationMs
 
 function finiteNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function boundedMetadata(values: Record<string, string | undefined>): Record<string, string> | undefined {
+  const entries = Object.entries(values).filter((entry): entry is [string, string] => typeof entry[1] === "string");
+  return entries.length ? Object.fromEntries(entries) : undefined;
 }

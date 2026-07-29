@@ -5,10 +5,13 @@ import {
   emitCodexMessageCompleted,
   emitCodexMessageDelta,
   emitCodexProviderSessionLinked,
+  emitCodexToolCompleted,
+  emitCodexToolStarted,
   emitCodexTurnCompleted,
   emitCodexTurnFailed,
   emitCodexTurnStarted,
 } from "./codexTelemetry";
+import type { TelemetryToolKind, TelemetryToolStatus } from "../executionTelemetryTypes";
 
 // Codex: one shared `codex app-server` process (JSON-RPC over NDJSON stdio,
 // the same interface the codex IDE extension uses) hosts a thread per chat
@@ -442,25 +445,60 @@ function handleServerMessage(srv: AppServer, msg: any) {
 
 function itemStarted(sess: SessionCtx, item: any) {
   if (!item) return;
+  const st = codexState(sess);
+  const common = {
+    providerSessionId: sess.internal.threadId as string | undefined,
+    turnId: st.currentTurnId,
+    operationId: toolOperationId(item),
+    providerItemType: typeof item.type === "string" ? item.type : undefined,
+  };
   switch (item.type) {
     case "commandExecution":
-      sess.emit({ kind: "tool-start", toolId: item.id, name: "shell", detail: truncate(item.command ?? "") });
+      emitCodexToolStarted(sess, {
+        ...common,
+        toolKind: "command",
+        name: "shell",
+        inputSummary: truncate(item.command ?? ""),
+      });
       break;
     case "fileChange":
     case "patchApply":
-      sess.emit({ kind: "tool-start", toolId: item.id, name: "edit", detail: truncate(summarizeChanges(item)) });
+      emitCodexToolStarted(sess, {
+        ...common,
+        toolKind: "file-change",
+        name: "edit",
+        inputSummary: truncate(summarizeChanges(item)),
+      });
       break;
     case "webSearch":
-      sess.emit({ kind: "tool-start", toolId: item.id, name: "web_search", detail: truncate(item.query ?? "") });
+      emitCodexToolStarted(sess, {
+        ...common,
+        toolKind: "web-search",
+        name: "web_search",
+        inputSummary: truncate(item.query ?? ""),
+      });
       break;
     case "mcpToolCall":
-      sess.emit({ kind: "tool-start", toolId: item.id, name: item.tool ?? "mcp", detail: truncate(JSON.stringify(item.arguments ?? {})) });
+      emitCodexToolStarted(sess, {
+        ...common,
+        toolKind: "mcp",
+        name: item.tool ?? "mcp",
+        inputSummary: truncate(JSON.stringify(item.arguments ?? {})),
+      });
       break;
   }
 }
 
 function itemCompleted(sess: SessionCtx, item: any) {
   if (!item) return;
+  const st = codexState(sess);
+  const common = {
+    providerSessionId: sess.internal.threadId as string | undefined,
+    turnId: st.currentTurnId,
+    operationId: toolOperationId(item),
+    providerItemType: typeof item.type === "string" ? item.type : undefined,
+    providerStatus: typeof item.status === "string" ? item.status : undefined,
+  };
   switch (item.type) {
     case "agentMessage": {
       const seen = (sess.internal.deltaItems ??= new Set<string>()) as Set<string>;
@@ -478,23 +516,65 @@ function itemCompleted(sess: SessionCtx, item: any) {
       break;
     }
     case "commandExecution":
-      sess.emit({
-        kind: "tool-end",
-        toolId: item.id,
+      emitCodexToolCompleted(sess, {
+        ...common,
+        toolKind: "command",
         name: "shell",
-        ok: item.status !== "failed" && (item.exitCode == null || item.exitCode === 0),
-        detail: truncate(item.aggregatedOutput ?? "", 400),
+        status: codexCommandToolStatus(item),
+        outputSummary: truncate(item.aggregatedOutput ?? "", 400),
+        exitCode: item.exitCode,
+        durationMs: item.durationMs,
       });
       break;
     case "fileChange":
     case "patchApply":
-      sess.emit({ kind: "tool-end", toolId: item.id, name: "edit", ok: item.status !== "failed", detail: truncate(summarizeChanges(item)) });
+      emitCodexToolCompleted(sess, {
+        ...common,
+        toolKind: "file-change",
+        name: "edit",
+        status: codexLegacyOkStatus(item.status !== "failed"),
+        outputSummary: truncate(summarizeChanges(item)),
+        durationMs: item.durationMs,
+      });
       break;
     case "webSearch":
     case "mcpToolCall":
-      sess.emit({ kind: "tool-end", toolId: item.id, ok: item.status !== "failed" });
+      emitCodexToolCompleted(sess, {
+        ...common,
+        toolKind: toolKindForItemType(item.type),
+        status: codexLegacyOkStatus(item.status !== "failed"),
+        durationMs: item.durationMs,
+      });
       break;
   }
+}
+
+function toolOperationId(item: any): string {
+  return typeof item.id === "string" ? item.id : String(item.id ?? "");
+}
+
+function toolKindForItemType(type: string): TelemetryToolKind {
+  switch (type) {
+    case "commandExecution":
+      return "command";
+    case "fileChange":
+    case "patchApply":
+      return "file-change";
+    case "webSearch":
+      return "web-search";
+    case "mcpToolCall":
+      return "mcp";
+    default:
+      return "other";
+  }
+}
+
+function codexCommandToolStatus(item: any): TelemetryToolStatus {
+  return codexLegacyOkStatus(item.status !== "failed" && (item.exitCode == null || item.exitCode === 0));
+}
+
+function codexLegacyOkStatus(ok: boolean): TelemetryToolStatus {
+  return ok ? "succeeded" : "failed";
 }
 
 function summarizeChanges(item: any): string {

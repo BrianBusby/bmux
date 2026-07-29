@@ -74,10 +74,11 @@ projects each envelope to the existing `AgentEvent` stream through
 `SessionCtx.emitTelemetry`.
 
 Most provider adapter events still call `SessionCtx.emit(AgentEvent)` directly.
-Slice 3 migrates Codex prompt submission and provider session linkage through
-`SessionCtx.emitTelemetry`; those envelopes project back to the same `AgentEvent`
-stream, so React WebSocket payloads and `foldEvent()` behavior are unchanged.
-Later slices should migrate more provider events by publishing
+Slices 3 through 6 migrate Codex prompt submission, provider session linkage,
+turn lifecycle, message lifecycle, and tool lifecycle through
+`SessionCtx.emitTelemetry`; those envelopes project back to the same
+`AgentEvent` stream, so React WebSocket payloads and `foldEvent()` behavior are
+unchanged. Later slices should migrate more provider events by publishing
 `TelemetryEventEnvelopeDraft` values first and treating `AgentEvent` as the
 fanout projection only.
 
@@ -89,7 +90,7 @@ Important reductions:
 
 - `turn/completed` token usage and duration become a display string in `done.stats`.
 - `thread/tokenUsage/updated` stores only `tokenUsage.total` in `sess.internal.lastUsage`; `tokenUsage.last`, cached-input tokens, reasoning-output tokens, total tokens, model context window, and `turnId` do not reach `AgentEvent`.
-- Tool events drop provider turn id, timestamps, cwd, process id, numeric duration, command actions, source, MCP server/plugin details, structured results, and several item variants.
+- Remaining non-migrated tool details still drop process id, command actions, source, MCP server/plugin details, structured results, and several item variants. Slice 6 preserves provider turn id, item id, tool kind, bounded summaries, exit code, duration when present, and provider item/status scalar metadata for migrated Codex tool events.
 - Approval requests are answered immediately and reduced to status text only when denied or unsupported.
 - Reasoning and assistant deltas drop item id, turn id, index, and ordering metadata.
 - App-server errors, compaction, hooks, model reroutes, warnings, guardian review, process output/exit, realtime, thread status/name/goal, and several other notifications are currently ignored.

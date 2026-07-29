@@ -4,7 +4,7 @@ Last updated: 2026-07-29
 
 ## Active Slice
 
-Slice 5 - Codex message lifecycle telemetry migration.
+Slice 6 - Codex tool lifecycle telemetry migration.
 
 Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 
@@ -16,6 +16,7 @@ Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 - Slice 3: migrated Codex prompt submission and provider session linkage (`thread/start` and `thread/fork`) through `SessionCtx.emitTelemetry`, with a direct `AgentEvent` fallback while the seam remains optional.
 - Slice 4: migrated Codex turn lifecycle (`turn/started`, `turn/completed`, and `turn/failed`) through `SessionCtx.emitTelemetry`, preserving existing React `done` / `error` projection and server-only done generation for file attribution.
 - Slice 5: migrated Codex message lifecycle (`item/agentMessage/delta`, reasoning delta variants, and completed non-streamed `agentMessage` items) through `SessionCtx.emitTelemetry`, preserving existing React `delta` / `thinking` / `assistant` projection and streamed-message duplicate suppression.
+- Slice 6: migrated Codex tool lifecycle (`item/started` and `item/completed` for command execution, file changes, web search, and MCP tool calls) through `SessionCtx.emitTelemetry`, preserving existing React `tool-start` / `tool-end` projection.
 
 ## Current Branch
 
@@ -51,7 +52,15 @@ Slice 4 implementation head:
 
 Slice 5 implementation head:
 
-branch head after the final Slice 5 commit
+`32e0d07da33f94e868735577cef551fd8b1b9e62`
+
+Slice 5 autoreview result:
+
+No findings. Lagrange reviewed PR #12 at actual head `32e0d07da33f94e868735577cef551fd8b1b9e62`, made no changes, pushed no commits, and reported no GitHub checks on `execution-telemetry-slice-1`.
+
+Slice 6 implementation head:
+
+branch head after the final Slice 6 commit
 
 ## Tests Currently Passing
 
@@ -134,8 +143,8 @@ Slice 4 validation:
 
 - `git diff --check`: succeeded.
 - `agent-chat/test/codex-telemetry-migration.test.ts` via `tsx@4.20.5`: succeeded.
-- Focused strict TypeScript check for telemetry contract, fanout, Codex telemetry producers, and the migration test: succeeded.
 - `agent-chat/test/execution-telemetry-fanout.test.ts` via `tsx@4.20.5`: succeeded.
+- Focused strict TypeScript check for telemetry contract, fanout, Codex telemetry producers, and the migration test: succeeded.
 - `./scripts/reload.sh --tag execution-telemetry-slice-4`: succeeded.
 
 Slice 5 validation:
@@ -147,6 +156,15 @@ Slice 5 validation:
 - `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: succeeded.
 - `./scripts/reload.sh --tag execution-telemetry-slice-5`: succeeded.
 
+Slice 6 validation:
+
+- `git diff --check`: succeeded.
+- `agent-chat/test/codex-telemetry-migration.test.ts` via `tsx@4.20.5`: succeeded.
+- `agent-chat/test/execution-telemetry-fanout.test.ts` via `tsx@4.20.5`: succeeded.
+- Focused strict TypeScript check from `agent-chat` with Bun types, including `adapters/codex.ts`: succeeded.
+- `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: succeeded.
+- `./scripts/reload.sh --tag execution-telemetry-slice-6`: succeeded.
+
 ## Known Failures
 
 - Running `tsc` from the repo root through transient `npm exec` still does not resolve local Bun and Node ambient types. Run TypeScript checks from `agent-chat` with `PATH="$HOME/.bun/bin:$PATH"` so local package types are used.
@@ -155,11 +173,11 @@ Slice 5 validation:
 
 ## Next Required Action
 
-Review PR #12 before the next code slice. The next code slice should stay narrow: continue Codex migration with tool lifecycle or approval lifecycle only after reviewing Slice 5.
+Review PR #12 before the next code slice. The next code slice should stay narrow: continue Codex migration with approval lifecycle, standalone usage observations, or diagnostics only after reviewing Slice 6.
 
 ## Blocked Decisions
 
-No current blocked decisions for Slice 5. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion.
+No current blocked decisions for Slice 6. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion.
 
 ## Deviations From Original Plan
 

@@ -5,6 +5,8 @@ import {
   emitCodexMessageDelta,
   emitCodexPromptSubmitted,
   emitCodexProviderSessionLinked,
+  emitCodexToolCompleted,
+  emitCodexToolStarted,
   emitCodexTurnCompleted,
   emitCodexTurnFailed,
   emitCodexTurnStarted,
@@ -268,6 +270,85 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
 }
 
 {
+  const { sess, agentEvents, telemetryEvents } = makeCodexSession();
+  sess.internal.threadId = "thread-tools";
+
+  codexHandleServerMessageForTest(sess, {
+    method: "turn/started",
+    params: { threadId: "thread-tools", turn: { id: "turn-tools" } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/started",
+    params: { threadId: "thread-tools", item: { id: "cmd-1", type: "commandExecution", command: "echo hello" } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/completed",
+    params: { threadId: "thread-tools", item: { id: "cmd-1", type: "commandExecution", status: "completed", exitCode: 0, aggregatedOutput: "hello\n" } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/started",
+    params: { threadId: "thread-tools", item: { id: "file-1", type: "patchApply", changes: [{ kind: "modify", path: "src/a.ts" }] } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/completed",
+    params: { threadId: "thread-tools", item: { id: "file-1", type: "patchApply", status: "failed", changes: [{ kind: "modify", path: "src/a.ts" }] } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/started",
+    params: { threadId: "thread-tools", item: { id: "web-1", type: "webSearch", query: "bmux telemetry" } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/completed",
+    params: { threadId: "thread-tools", item: { id: "web-1", type: "webSearch", status: "completed" } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/started",
+    params: { threadId: "thread-tools", item: { id: "mcp-1", type: "mcpToolCall", tool: "linear.search", arguments: { query: "abc" } } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/completed",
+    params: { threadId: "thread-tools", item: { id: "mcp-1", type: "mcpToolCall", status: "completed" } },
+  });
+
+  assert(agentEvents.length === 8, `tool lifecycle AgentEvent projection changed: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents[0].kind === "tool-start" && agentEvents[0].toolId === "cmd-1" && agentEvents[0].name === "shell" && agentEvents[0].detail === "echo hello", "command start projection changed");
+  assert(agentEvents[1].kind === "tool-end" && agentEvents[1].toolId === "cmd-1" && agentEvents[1].name === "shell" && agentEvents[1].ok === true && agentEvents[1].detail === "hello", "command completion projection changed");
+  assert(agentEvents[2].kind === "tool-start" && agentEvents[2].name === "edit" && agentEvents[2].detail === "modify src/a.ts", "file-change start projection changed");
+  assert(agentEvents[3].kind === "tool-end" && agentEvents[3].name === "edit" && agentEvents[3].ok === false && agentEvents[3].detail === "modify src/a.ts", "file-change completion projection changed");
+  assert(agentEvents[4].kind === "tool-start" && agentEvents[4].name === "web_search" && agentEvents[4].detail === "bmux telemetry", "web search start projection changed");
+  assert(agentEvents[5].kind === "tool-end" && agentEvents[5].toolId === "web-1" && agentEvents[5].ok === true && agentEvents[5].name === undefined && agentEvents[5].detail === undefined, "web search completion projection changed");
+  assert(agentEvents[6].kind === "tool-start" && agentEvents[6].name === "linear.search" && agentEvents[6].detail === "{\"query\":\"abc\"}", "mcp start projection changed");
+  assert(agentEvents[7].kind === "tool-end" && agentEvents[7].toolId === "mcp-1" && agentEvents[7].ok === true && agentEvents[7].name === undefined && agentEvents[7].detail === undefined, "mcp completion projection changed");
+
+  const toolEvents = telemetryEvents.filter((event) => event.event.type === "tool.started" || event.event.type === "tool.completed");
+  assert(toolEvents.length === 8, `expected eight tool telemetry envelopes: ${JSON.stringify(telemetryEvents)}`);
+
+  assert(toolEvents[0].event.type === "tool.started", "command start should publish tool.started telemetry");
+  assert(toolEvents[0].providerSessionId === "thread-tools", "command start provider session id was not preserved");
+  assert(toolEvents[0].providerTurnId === "turn-tools", "command start provider turn id was not preserved");
+  assert(toolEvents[0].providerEvent?.method === "item/started", "command start provider method changed");
+  assert(toolEvents[0].providerEvent?.itemId === "cmd-1", "command start provider item id changed");
+  assert(toolEvents[0].event.toolKind === "command" && toolEvents[0].event.name === "shell", "command start telemetry changed");
+  assert(toolEvents[0].event.inputSummary === "echo hello", "command start input summary changed");
+
+  assert(toolEvents[1].event.type === "tool.completed", "command completion should publish tool.completed telemetry");
+  assert(toolEvents[1].providerEvent?.method === "item/completed", "command completion provider method changed");
+  assert(toolEvents[1].event.status === "succeeded", "command completion status changed");
+  assert(toolEvents[1].event.exitCode === 0, "command completion exit code changed");
+  assert(toolEvents[1].event.outputSummary === "hello", "command output summary changed");
+  assert(toolEvents[1].metadata?.providerStatus === "completed", "command provider status should stay bounded metadata");
+
+  assert(toolEvents[3].event.type === "tool.completed", "file completion should publish tool.completed telemetry");
+  assert(toolEvents[3].event.toolKind === "file-change", "file completion tool kind changed");
+  assert(toolEvents[3].event.status === "failed", "file completion status changed");
+  assert(toolEvents[3].metadata?.providerItemType === "patchApply", "file provider item type should stay bounded metadata");
+
+  assert(toolEvents[4].event.type === "tool.started" && toolEvents[4].event.toolKind === "web-search", "web search start telemetry changed");
+  assert(toolEvents[6].event.type === "tool.started" && toolEvents[6].event.toolKind === "mcp" && toolEvents[6].event.name === "linear.search", "mcp start telemetry changed");
+  assert(!("item" in toolEvents[6]), "tool telemetry must not store raw provider items");
+}
+
+{
   const agentEvents: AgentEvent[] = [];
   const sess: SessionCtx = {
     id: "legacy-codex-session",
@@ -326,8 +407,25 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
     stream: "assistant",
     text: "fallback assistant",
   });
+  emitCodexToolStarted(sess, {
+    providerSessionId: "thread-fallback",
+    turnId: "turn-fallback",
+    operationId: "tool-fallback",
+    toolKind: "command",
+    name: "shell",
+    inputSummary: "echo fallback",
+  });
+  emitCodexToolCompleted(sess, {
+    providerSessionId: "thread-fallback",
+    turnId: "turn-fallback",
+    operationId: "tool-fallback",
+    toolKind: "command",
+    name: "shell",
+    status: "succeeded",
+    outputSummary: "fallback output",
+  });
 
-  assert(agentEvents.length === 8, `legacy AgentEvent fallback changed: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents.length === 10, `legacy AgentEvent fallback changed: ${JSON.stringify(agentEvents)}`);
   assert(agentEvents[0].kind === "user" && agentEvents[0].text === "fallback prompt", "legacy prompt fallback changed");
   assert(
     agentEvents[1].kind === "meta" && agentEvents[1].providerSessionId === "thread-fallback",
@@ -341,6 +439,8 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   assert(agentEvents[5].kind === "delta" && agentEvents[5].text === "fallback delta", "legacy assistant delta fallback changed");
   assert(agentEvents[6].kind === "thinking" && agentEvents[6].text === "fallback thinking", "legacy reasoning delta fallback changed");
   assert(agentEvents[7].kind === "assistant" && agentEvents[7].text === "fallback assistant", "legacy assistant completed fallback changed");
+  assert(agentEvents[8].kind === "tool-start" && agentEvents[8].toolId === "tool-fallback" && agentEvents[8].detail === "echo fallback", "legacy tool start fallback changed");
+  assert(agentEvents[9].kind === "tool-end" && agentEvents[9].toolId === "tool-fallback" && agentEvents[9].ok === true && agentEvents[9].detail === "fallback output", "legacy tool completion fallback changed");
 }
 
 console.log("codex telemetry migration assertions passed");
