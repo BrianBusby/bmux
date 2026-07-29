@@ -12,6 +12,7 @@ import {
   emitCodexTurnCompleted,
   emitCodexTurnFailed,
   emitCodexTurnStarted,
+  emitCodexUsageUpdated,
 } from "../adapters/codexTelemetry";
 import type { AgentEvent, SessionCtx, SessionStatus } from "../types";
 import type { TelemetryEventEnvelope } from "../executionTelemetryTypes";
@@ -215,6 +216,22 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   assert(completed[1].event.usage?.outputTokens === 11, "matching usage output tokens changed");
   assert(completed[1].event.usage?.totalTokens === 18, "matching usage total tokens changed");
   assert(completed[1].event.usage?.contextWindowTokens === 256_000, "modelContextWindow should map to contextWindowTokens");
+
+  const usageUpdates = telemetryEvents.filter((event) => event.event.type === "usage.updated");
+  assert(usageUpdates.length === 2, `expected two standalone usage telemetry events: ${JSON.stringify(telemetryEvents)}`);
+  assert(usageUpdates[0].event.type === "usage.updated", "first usage update should publish usage.updated telemetry");
+  assert(usageUpdates[0].providerSessionId === "thread-usage", "usage update provider session id changed");
+  assert(usageUpdates[0].providerTurnId === "other-turn", "usage update provider turn id changed");
+  assert(usageUpdates[0].providerEvent?.method === "thread/tokenUsage/updated", "usage update provider method changed");
+  assert(usageUpdates[0].event.turnId === "other-turn", "usage update turn id changed");
+  assert(usageUpdates[0].event.usage.inputTokens === 50, "standalone usage input tokens changed");
+  assert(usageUpdates[0].event.usage.outputTokens === 60, "standalone usage output tokens changed");
+  assert(usageUpdates[0].event.usage.totalTokens === 110, "standalone usage total tokens changed");
+  assert(usageUpdates[0].event.usage.contextWindowTokens === 128_000, "standalone usage context window changed");
+  assert(usageUpdates[1].event.type === "usage.updated", "second usage update should publish usage.updated telemetry");
+  assert(usageUpdates[1].providerTurnId === "turn-with-usage", "matching usage update provider turn id changed");
+  assert(usageUpdates[1].event.usage.inputTokens === 7, "matching standalone usage input tokens changed");
+  assert(!("tokenUsage" in usageUpdates[1]), "usage telemetry must not store raw provider tokenUsage");
 
   const doneEvents = agentEvents.filter((event) => event.kind === "done");
   assert(doneEvents.length === 2, `expected two projected done events: ${JSON.stringify(agentEvents)}`);
@@ -560,6 +577,14 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
     approvalId: "approval-fallback",
     method: "execCommandApproval",
     decision: "approved",
+  });
+  emitCodexUsageUpdated(sess, {
+    providerSessionId: "thread-fallback",
+    turnId: "turn-fallback",
+    usage: {
+      inputTokens: 9,
+      outputTokens: 10,
+    },
   });
 
   assert(agentEvents.length === 10, `legacy AgentEvent fallback changed: ${JSON.stringify(agentEvents)}`);

@@ -203,3 +203,24 @@ without changing React rendering, WebSocket payload shape, persistence,
 provenance, Swift ownership, Claude source selection, or non-Codex behavior.
 Standalone usage and diagnostic Codex events still need future narrow
 migrations.
+
+## 2026-07-29 - Migrate Codex Standalone Usage Without UI Projection Changes
+
+Decision: Slice 8 migrates Codex `thread/tokenUsage/updated` notifications to
+`SessionCtx.emitTelemetry` by publishing bounded `usage.updated` envelopes,
+while preserving the existing buffered usage path that attaches matching usage
+to `turn.completed` for current React `done.stats`.
+
+Rationale: Usage observations are bounded numeric provider facts that already
+fit the provider-neutral contract and currently have no standalone React UI
+projection. Publishing them directly lets future non-UI consumers observe token
+updates before turn completion without changing WebSocket rendering behavior.
+
+Alternatives rejected: store the raw provider `tokenUsage` envelope; move
+completion stats exclusively to standalone usage telemetry; migrate diagnostics
+in the same slice.
+
+Consequences: Codex standalone usage observations now have a canonical producer
+path without changing React rendering, WebSocket payload shape, persistence,
+provenance, Swift ownership, Claude source selection, or non-Codex behavior.
+Diagnostic Codex events still need a future narrow migration.

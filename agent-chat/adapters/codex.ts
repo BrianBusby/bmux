@@ -12,6 +12,7 @@ import {
   emitCodexTurnCompleted,
   emitCodexTurnFailed,
   emitCodexTurnStarted,
+  emitCodexUsageUpdated,
 } from "./codexTelemetry";
 import type { TelemetryApprovalDecision, TelemetryApprovalKind, TelemetryToolKind, TelemetryToolStatus } from "../executionTelemetryTypes";
 
@@ -405,6 +406,11 @@ function handleServerMessage(srv: AppServer, msg: any) {
       break;
     case "thread/tokenUsage/updated":
       recordCodexTokenUsage(st, p.turnId, p.tokenUsage);
+      emitCodexUsageUpdated(sess, {
+        providerSessionId: sess.internal.threadId as string | undefined,
+        turnId: typeof p.turnId === "string" ? p.turnId : undefined,
+        usage: codexUsageTotal(p.tokenUsage),
+      });
       break;
     case "turn/completed": {
       st.turnActive = false;
@@ -725,13 +731,22 @@ function defaultState(autoApprove: boolean): CodexState {
 function recordCodexTokenUsage(st: CodexState, turnId: unknown, tokenUsage: unknown) {
   if (typeof turnId !== "string") return;
   if (!tokenUsage || typeof tokenUsage !== "object") return;
-  const raw = tokenUsage as Record<string, unknown>;
-  const total = raw.total;
+  const total = codexUsageTotal(tokenUsage);
   if (!total || typeof total !== "object") return;
   st.usageByTurnId.set(turnId, {
     ...(total as Record<string, unknown>),
-    modelContextWindow: raw.modelContextWindow,
   });
+}
+
+function codexUsageTotal(tokenUsage: unknown): unknown {
+  if (!tokenUsage || typeof tokenUsage !== "object") return undefined;
+  const raw = tokenUsage as Record<string, unknown>;
+  const total = raw.total;
+  if (!total || typeof total !== "object") return undefined;
+  return {
+    ...(total as Record<string, unknown>),
+    modelContextWindow: raw.modelContextWindow,
+  };
 }
 
 function takeCodexTokenUsage(st: CodexState, turnId: unknown): unknown {

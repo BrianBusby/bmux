@@ -1,11 +1,12 @@
 # Telemetry Contract
 
-Status: Slice 7 provider-neutral contract, sidecar fanout seam, and first Codex lifecycle migrations.
+Status: Slice 8 provider-neutral contract, sidecar fanout seam, and first Codex lifecycle migrations.
 
 The sidecar fanout path has been added without persistence, provenance
 projection, React behavior changes, or broad provider rewrites. Slices 3 through
-7 route Codex prompt submission, provider session linkage, turn lifecycle,
-message lifecycle, tool lifecycle, and approval lifecycle through the seam.
+8 route Codex prompt submission, provider session linkage, turn lifecycle,
+message lifecycle, tool lifecycle, approval lifecycle, and standalone usage
+observations through the seam.
 
 ## Contract Location
 
@@ -73,10 +74,10 @@ envelope-shaped objects, but `schema`, `eventId`, `sessionId`, `sequence`,
 
 `SessionCtx.emitTelemetry` and `SessionCtx.subscribeTelemetry` are optional
 seams for future producers and subscribers. Most adapters and the remaining
-non-migrated Codex usage and diagnostic events still emit the current
-`AgentEvent` stream directly until later slices migrate specific provider
-events. The reverse direction remains prohibited: do not reconstruct canonical
-telemetry from `AgentEvent`.
+non-migrated Codex diagnostic events still emit the current `AgentEvent` stream
+directly until later slices migrate specific provider events. The reverse
+direction remains prohibited: do not reconstruct canonical telemetry from
+`AgentEvent`.
 
 `TelemetryPublishProjectionOptions` carries sidecar-local projection details
 that must not be copied into canonical envelopes. Slice 4 uses this only to
@@ -118,10 +119,11 @@ CI.
 
 ## Deferred Work
 
-Slice 7 does not:
+Slice 8 does not:
 
 - broadly migrate provider events beyond Codex prompt/linkage, turn lifecycle,
-  message lifecycle, tool lifecycle, and approval lifecycle;
+  message lifecycle, tool lifecycle, approval lifecycle, and standalone usage
+  observations;
 - add telemetry persistence;
 - write to provenance-engine;
 - choose or implement a Claude structured event source.

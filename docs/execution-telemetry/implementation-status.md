@@ -4,7 +4,7 @@ Last updated: 2026-07-29
 
 ## Active Slice
 
-Slice 7 - Codex approval lifecycle telemetry migration.
+Slice 8 - Codex standalone usage telemetry migration.
 
 Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 
@@ -18,6 +18,7 @@ Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 - Slice 5: migrated Codex message lifecycle (`item/agentMessage/delta`, reasoning delta variants, and completed non-streamed `agentMessage` items) through `SessionCtx.emitTelemetry`, preserving existing React `delta` / `thinking` / `assistant` projection and streamed-message duplicate suppression.
 - Slice 6: migrated Codex tool lifecycle (`item/started` and `item/completed` for command execution, file changes, web search, and MCP tool calls) through `SessionCtx.emitTelemetry`, preserving existing React `tool-start` / `tool-end` projection.
 - Slice 7: migrated Codex approval lifecycle (`approval.requested` and `approval.resolved` for approved, denied, and unsupported JSON-RPC approval requests) through `SessionCtx.emitTelemetry`, preserving existing React no-op approval projection plus direct denial / unsupported status messages.
+- Slice 8: migrated Codex standalone usage observations (`thread/tokenUsage/updated`) through `SessionCtx.emitTelemetry`, preserving existing React no-op usage projection and matching-turn usage stats on `turn.completed`.
 
 ## Current Branch
 
@@ -69,7 +70,11 @@ No findings. Archimedes reviewed PR #12 at actual head `ae19a8d78e2db9445991f89b
 
 Slice 7 implementation head:
 
-branch head after the final Slice 7 commit
+`8c1405d7fe32c77cc5bddb1604f3be442d32be37`
+
+Slice 8 implementation head:
+
+branch head after the final Slice 8 commit
 
 ## Tests Currently Passing
 
@@ -182,6 +187,14 @@ Slice 7 validation:
 - `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: succeeded.
 - `./scripts/reload.sh --tag execution-telemetry-slice-7`: succeeded.
 
+Slice 8 validation:
+
+- `git diff --check`: succeeded.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/codex-telemetry-migration.test.ts`: succeeded.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/execution-telemetry-fanout.test.ts`: succeeded.
+- `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: succeeded.
+- `./scripts/reload.sh --tag execution-telemetry-slice-8`: succeeded.
+
 ## Known Failures
 
 - Running `tsc` from the repo root through transient `npm exec` still does not resolve local Bun and Node ambient types. Run TypeScript checks from `agent-chat` with `PATH="$HOME/.bun/bin:$PATH"` so local package types are used.
@@ -190,7 +203,7 @@ Slice 7 validation:
 
 ## Next Required Action
 
-Review PR #12 before the next code slice. The next code slice should stay narrow: continue Codex migration with standalone usage observations or diagnostics only after reviewing Slice 7.
+Review PR #12 before the next code slice. The next code slice should stay narrow: continue Codex migration with diagnostics only after reviewing Slice 8.
 
 ## Blocked Decisions
 

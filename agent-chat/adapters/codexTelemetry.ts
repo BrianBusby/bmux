@@ -343,6 +343,32 @@ export function emitCodexApprovalResolved(
   });
 }
 
+export function emitCodexUsageUpdated(
+  sess: SessionCtx,
+  params: {
+    providerSessionId?: string;
+    turnId?: TelemetryProviderTurnId;
+    usage: unknown;
+  },
+): TelemetryEventEnvelope | undefined {
+  const usage = codexTokenUsage(params.usage);
+  if (!usage) return undefined;
+  return sess.emitTelemetry?.({
+    source: "provider",
+    providerSessionId: params.providerSessionId,
+    providerTurnId: params.turnId,
+    providerEvent: {
+      method: "thread/tokenUsage/updated",
+      turnId: params.turnId,
+    },
+    event: {
+      type: "usage.updated",
+      turnId: params.turnId,
+      usage,
+    },
+  });
+}
+
 export function codexTokenUsage(value: unknown): TelemetryTokenUsage | undefined {
   if (!value || typeof value !== "object") return undefined;
   const raw = value as Record<string, unknown>;
