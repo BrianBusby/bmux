@@ -1,5 +1,5 @@
 import { ExecutionTelemetryFanout } from "../executionTelemetryFanout";
-import { codexHandleServerMessageForTest } from "../adapters/codex";
+import { codexHandleSendFailureForTest, codexHandleServerMessageForTest } from "../adapters/codex";
 import {
   emitCodexApprovalRequested,
   emitCodexApprovalResolved,
@@ -510,6 +510,45 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
     diagnosticEvents[0].event.message === "declined unsupported request: toolUserInput/request",
     "unsupported diagnostic message changed",
   );
+}
+
+{
+  const { sess, agentEvents, telemetryEvents } = makeCodexSession();
+  sess.internal.threadId = "thread-send-failure";
+
+  codexHandleServerMessageForTest(sess, {
+    method: "turn/started",
+    params: { threadId: "thread-send-failure", turn: { id: "turn-send-failure" } },
+  });
+  const st = sess.internal.codex as { activeGeneration?: number; turnActive?: boolean };
+  st.activeGeneration = 55;
+  st.turnActive = true;
+
+  codexHandleSendFailureForTest(sess, new Error("turn/start broke"), "turn/start");
+  const failedSt = sess.internal.codex as { activeGeneration?: number; turnActive?: boolean };
+
+  assert(agentEvents.length === 2, `send failure projection changed: ${JSON.stringify(agentEvents)}`);
+  assert(
+    agentEvents[0].kind === "error" && agentEvents[0].message === "Error: turn/start broke",
+    "send failure error projection changed",
+  );
+  assert(agentEvents[1].kind === "done", "send failure should still close the UI turn");
+  assert((agentEvents[1] as any).generation === 55, "send failure done generation changed");
+  assert(sess.status === "idle", `send failure should return session to idle: ${sess.status}`);
+  assert(failedSt.activeGeneration === undefined, "send failure should clear active generation");
+  assert(failedSt.turnActive === false, "send failure should clear active turn state");
+
+  const diagnosticEvents = telemetryEvents.filter((event) => event.event.type === "diagnostic");
+  assert(diagnosticEvents.length === 1, `expected send failure diagnostic telemetry: ${JSON.stringify(telemetryEvents)}`);
+  assert(diagnosticEvents[0].event.type === "diagnostic", "send failure should publish diagnostic telemetry");
+  assert(diagnosticEvents[0].providerSessionId === "thread-send-failure", "send failure provider session id changed");
+  assert(diagnosticEvents[0].providerTurnId === "turn-send-failure", "send failure provider turn id changed");
+  assert(diagnosticEvents[0].providerEvent?.method === "turn/start", "send failure provider method changed");
+  assert(diagnosticEvents[0].providerEvent?.turnId === "turn-send-failure", "send failure provider turn ref changed");
+  assert(diagnosticEvents[0].event.level === "error", "send failure diagnostic level changed");
+  assert(diagnosticEvents[0].event.code === "send.failed", "send failure diagnostic code changed");
+  assert(diagnosticEvents[0].event.message === "Error: turn/start broke", "send failure diagnostic message changed");
+  assert(!("err" in diagnosticEvents[0]), "send failure telemetry must not store raw errors");
 }
 
 {

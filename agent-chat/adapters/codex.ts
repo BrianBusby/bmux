@@ -85,8 +85,10 @@ export const codexAdapter: Adapter = {
     ],
   },
   async send(sess, prompt, generation?: number) {
+    let diagnosticMethod: string | undefined = "app-server/start";
     try {
       const srv = await ensureServer();
+      diagnosticMethod = "codex-state/ensure";
       const st = await ensureCodexState(sess);
       let threadId = sess.internal.threadId as string | undefined;
       if (!threadId) {
@@ -95,6 +97,7 @@ export const codexAdapter: Adapter = {
         let starting = sess.internal.threadStarting as Promise<string> | undefined;
         if (!starting) {
           starting = (async () => {
+            diagnosticMethod = "thread/start";
             const res = await srv.request("thread/start", { cwd: sess.cwd });
             const id: string | undefined = res.thread?.id;
             if (!id) throw new Error("codex thread/start returned no thread id");
@@ -110,11 +113,13 @@ export const codexAdapter: Adapter = {
             if (sess.internal.threadStarting === starting) sess.internal.threadStarting = undefined;
           });
         }
+        diagnosticMethod = "thread/start";
         threadId = await starting;
       }
       if (codexSendRoute(st) === "steer") {
         const turnId = st.currentTurnId ?? await waitForTurnId(st);
         if (!turnId) throw new Error("codex turn is still starting");
+        diagnosticMethod = "turn/steer";
         await srv.request("turn/steer", {
           threadId,
           expectedTurnId: turnId,
@@ -125,6 +130,7 @@ export const codexAdapter: Adapter = {
       sess.setStatus("running");
       st.turnActive = true;
       st.activeGeneration = generation;
+      diagnosticMethod = "turn/start";
       await srv.request("turn/start", {
         threadId,
         input: [{ type: "text", text: prompt }],
@@ -137,17 +143,7 @@ export const codexAdapter: Adapter = {
       });
       // Completion arrives via the turn/completed notification.
     } catch (err) {
-      const st = sess.internal.codex as CodexState | undefined;
-      const generation = st?.activeGeneration;
-      if (st) {
-        st.turnActive = false;
-        st.currentTurnId = undefined;
-        st.activeGeneration = undefined;
-        resolveTurnWaiters(st, null);
-      }
-      sess.emit({ kind: "error", message: truncate(String(err), 400) });
-      sess.emit({ kind: "done", generation } as any);
-      sess.setStatus("idle");
+      handleCodexSendFailure(sess, err, diagnosticMethod);
     }
   },
   stop(sess) {
@@ -467,6 +463,28 @@ function handleServerMessage(srv: AppServer, msg: any) {
       break;
     }
   }
+}
+
+function handleCodexSendFailure(sess: SessionCtx, err: unknown, method: string | undefined) {
+  const st = sess.internal.codex as CodexState | undefined;
+  const generation = st?.activeGeneration;
+  const turnId = st?.currentTurnId;
+  if (st) {
+    st.turnActive = false;
+    st.currentTurnId = undefined;
+    st.activeGeneration = undefined;
+    resolveTurnWaiters(st, null);
+  }
+  emitCodexDiagnostic(sess, {
+    providerSessionId: sess.internal.threadId as string | undefined,
+    turnId,
+    method,
+    level: "error",
+    message: truncate(String(err), 400),
+    code: "send.failed",
+  });
+  sess.emit({ kind: "done", generation } as any);
+  sess.setStatus("idle");
 }
 
 function requestProviderSessionId(sess: SessionCtx, params: Record<string, unknown>): string | undefined {
@@ -1062,6 +1080,10 @@ export function codexHandleServerMessageForTest(sess: SessionCtx, msg: any) {
     write: () => {},
     sessionsByThread: new Map([[threadKey, sess]]),
   }, msg);
+}
+
+export function codexHandleSendFailureForTest(sess: SessionCtx, err: unknown, method?: string) {
+  handleCodexSendFailure(sess, err, method);
 }
 
 function sandboxValue(type: string): string {

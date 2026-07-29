@@ -247,3 +247,27 @@ path without changing React rendering, WebSocket payload shape, persistence,
 provenance, Swift ownership, Claude source selection, or non-Codex behavior.
 Broader Codex transport failure diagnostics and ignored app-server
 notifications remain deferred.
+
+## 2026-07-29 - Migrate Codex Send-Failure Diagnostics With Done Close-Out
+
+Decision: Slice 10 migrates the Codex `send` catch path to
+`SessionCtx.emitTelemetry` by publishing a bounded `diagnostic` envelope for the
+failed send operation. The existing React `error` projection keeps the same
+message text, and the existing direct `done` close-out is preserved as
+projection-only UI behavior.
+
+Rationale: Send failures from app-server startup, thread creation, turn start,
+or steering already collapse to a bounded error message and a current operation
+label. Publishing that diagnostic preserves useful provider/turn references for
+non-UI consumers without storing raw errors, JSON-RPC envelopes, provider
+params, or changing the UI turn-closing contract.
+
+Alternatives rejected: migrate app-server process-exit diagnostics in the same
+slice; store raw thrown errors in telemetry metadata; change diagnostic
+projection so it also synthesizes `done` events.
+
+Consequences: Codex send-failure diagnostics now have a canonical producer path
+without changing React rendering, WebSocket payload shape, persistence,
+provenance, Swift ownership, Claude source selection, or non-Codex behavior.
+App-server process-exit diagnostics and ignored app-server notifications remain
+deferred.

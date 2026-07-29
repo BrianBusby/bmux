@@ -1,12 +1,12 @@
 # Telemetry Contract
 
-Status: Slice 9 provider-neutral contract, sidecar fanout seam, and first Codex lifecycle migrations.
+Status: Slice 10 provider-neutral contract, sidecar fanout seam, and first Codex lifecycle migrations.
 
 The sidecar fanout path has been added without persistence, provenance
 projection, React behavior changes, or broad provider rewrites. Slices 3 through
-9 route Codex prompt submission, provider session linkage, turn lifecycle,
+10 route Codex prompt submission, provider session linkage, turn lifecycle,
 message lifecycle, tool lifecycle, approval lifecycle, and standalone usage
-observations plus request-status diagnostics through the seam.
+observations plus request-status and send-failure diagnostics through the seam.
 
 ## Contract Location
 
@@ -74,7 +74,7 @@ envelope-shaped objects, but `schema`, `eventId`, `sessionId`, `sequence`,
 
 `SessionCtx.emitTelemetry` and `SessionCtx.subscribeTelemetry` are optional
 seams for future producers and subscribers. Most adapters and the remaining
-non-migrated Codex transport failure diagnostics still emit the current
+non-migrated Codex app-server process-exit diagnostics still emit the current
 `AgentEvent` stream directly until later slices migrate specific provider
 events. The reverse direction remains prohibited: do not reconstruct canonical
 telemetry from `AgentEvent`.
@@ -119,11 +119,11 @@ CI.
 
 ## Deferred Work
 
-Slice 9 does not:
+Slice 10 does not:
 
 - broadly migrate provider events beyond Codex prompt/linkage, turn lifecycle,
   message lifecycle, tool lifecycle, approval lifecycle, and standalone usage
-  observations plus request-status diagnostics;
+  observations plus request-status and send-failure diagnostics;
 - add telemetry persistence;
 - write to provenance-engine;
 - choose or implement a Claude structured event source.

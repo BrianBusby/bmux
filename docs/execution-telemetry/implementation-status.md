@@ -4,7 +4,7 @@ Last updated: 2026-07-29
 
 ## Active Slice
 
-Slice 9 - Codex request-status diagnostic telemetry migration.
+Slice 10 - Codex send-failure diagnostic telemetry migration.
 
 Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 
@@ -20,6 +20,7 @@ Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 - Slice 7: migrated Codex approval lifecycle (`approval.requested` and `approval.resolved` for approved, denied, and unsupported JSON-RPC approval requests) through `SessionCtx.emitTelemetry`, preserving existing React no-op approval projection plus direct denial / unsupported status messages.
 - Slice 8: migrated Codex standalone usage observations (`thread/tokenUsage/updated`) through `SessionCtx.emitTelemetry`, preserving existing React no-op usage projection and matching-turn usage stats on `turn.completed`.
 - Slice 9: migrated Codex denial and unsupported request status diagnostics through `SessionCtx.emitTelemetry`, preserving existing React `status` projection while publishing bounded `diagnostic` envelopes.
+- Slice 10: migrated Codex send-failure diagnostics through `SessionCtx.emitTelemetry`, preserving existing React `error` projection and direct `done` close-out while publishing bounded `diagnostic` envelopes.
 
 ## Current Branch
 
@@ -80,6 +81,10 @@ branch head after the final Slice 8 commit
 Slice 9 implementation head:
 
 branch head after the final Slice 9 commit
+
+Slice 10 implementation head:
+
+branch head after the final Slice 10 commit
 
 ## Tests Currently Passing
 
@@ -208,6 +213,14 @@ Slice 9 validation:
 - `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: succeeded.
 - `./scripts/reload.sh --tag execution-telemetry-slice-9`: succeeded.
 
+Slice 10 validation:
+
+- `git diff --check`: succeeded.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/codex-telemetry-migration.test.ts`: succeeded.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/execution-telemetry-fanout.test.ts`: succeeded.
+- `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: succeeded.
+- `./scripts/reload.sh --tag execution-telemetry-slice-10`: succeeded.
+
 ## Known Failures
 
 - Running `tsc` from the repo root through transient `npm exec` still does not resolve local Bun and Node ambient types. Run TypeScript checks from `agent-chat` with `PATH="$HOME/.bun/bin:$PATH"` so local package types are used.
@@ -220,7 +233,7 @@ Review PR #12 before the next code slice. The next code slice should stay narrow
 
 ## Blocked Decisions
 
-No current blocked decisions for Slice 7. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion.
+No current blocked decisions for Slice 10. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion.
 
 ## Deviations From Original Plan
 

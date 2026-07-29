@@ -20,10 +20,10 @@ Provenance is narrower. Provenance records durable engineering facts and evidenc
 ## Current State
 
 Slice 2 added the first sidecar-owned fanout/projection seam in
-`agent-chat/executionTelemetryFanout.ts`. Slices 3 through 9 migrated Codex
+`agent-chat/executionTelemetryFanout.ts`. Slices 3 through 10 migrated Codex
 prompt submission, provider session linkage, turn lifecycle, message lifecycle,
 tool lifecycle, approval lifecycle, standalone usage observations, and
-request-status diagnostics through that seam. It assigns telemetry identity and
+request-status plus send-failure diagnostics through that seam. It assigns telemetry identity and
 ordering in one place, supports sidecar telemetry subscribers, and projects
 telemetry envelopes to the existing `AgentEvent` UI stream.
 
