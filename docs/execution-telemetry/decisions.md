@@ -294,3 +294,17 @@ Consequences: Codex app-server exit diagnostics now have a canonical producer
 path without changing React rendering, WebSocket payload shape, persistence,
 provenance, Swift ownership, Claude source selection, or non-Codex behavior.
 Ignored app-server notifications remain deferred.
+
+## 2026-07-29 - Build Live Projection Before Persistence Or Claude
+
+Decision: After the merged Codex telemetry migration phase, the next selected
+target is Plan Slice 4A: a small sidecar-owned live session projection derived
+from `TelemetryEventEnvelope` replay.
+
+Rationale: Persistence, diagnostic checkpoints, provenance projection, and
+Claude structured-source work all need a stable renderer-independent view of
+current session state. Building that replayable projection first validates that
+React is no longer the lifecycle owner without committing to storage,
+retention, provenance schema, or cross-provider source-selection decisions.
+
+Consequences: The next code slice should stay focused on projection state.

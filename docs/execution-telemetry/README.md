@@ -27,11 +27,19 @@ request-status plus send-failure and app-server exit diagnostics through that se
 ordering in one place, supports sidecar telemetry subscribers, and projects
 telemetry envelopes to the existing `AgentEvent` UI stream.
 
-Most provider adapter events still emit `AgentEvent` directly. The migrated
-Codex paths project back to the same `AgentEvent` stream, so no React rendering
-behavior, WebSocket payload schema, persistence, provenance projection, Swift
-bridge, or Claude source selection has been changed.
+Most non-Codex provider adapter events still emit `AgentEvent` directly. The
+migrated Codex paths project back to the same `AgentEvent` stream, so no React
+rendering behavior, WebSocket payload schema, persistence, provenance
+projection, Swift bridge, or Claude source selection has been changed.
 
 The structured Codex path currently enters bmux through `agent-chat/adapters/codex.ts`, which talks to `codex app-server` over JSON-RPC/NDJSON. The remaining ignored app-server notification paths still no-op directly by design. The server in `agent-chat/server.ts` owns session identity, status, bounded event replay, and WebSocket/REST fanout. React in `agent-chat/src/session.ts` consumes those events and folds them into renderable blocks.
 
 The current structured app-server path does not write to provenance-engine. Existing provenance writes found in this audit are driven by native Swift/CLI hook and provenance paths, especially `CLI/bmux.swift`, `CLI/BMUXCLI+AgentHookCatalog.swift`, `CLI/BMUXCLI+CodexFireAndForgetHooks.swift`, `CLI/BMUXCLI+Provenance.swift`, and `bmuxTests/SubsessionProvenanceTests.swift`.
+
+## Next Target
+
+The selected next target is Plan Slice 4A: live session projection foundation.
+Add a small, replayable sidecar-owned projection derived from
+`TelemetryEventEnvelope` values before starting persistence, provenance
+projection, Claude structured-source selection, diagnostic checkpoint
+scheduling, or broad native UI integration.

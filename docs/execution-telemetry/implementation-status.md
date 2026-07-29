@@ -4,9 +4,16 @@ Last updated: 2026-07-29
 
 ## Active Slice
 
-Slice 11 - Codex app-server exit diagnostic telemetry migration.
+No implementation slice is currently active.
 
-Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
+Status: PR #12 / `execution-telemetry-slice-1` merged into
+`execution-telemetry-slice-0` on 2026-07-29 at merge commit
+`c32ed93989c8ed8531d9b573bb34b36149461475`.
+
+Next selected target: Plan Slice 4A - live session projection foundation. Build
+a replayable sidecar-owned projection derived from telemetry envelopes before
+adding persistence, provenance writes, Claude source selection, diagnostic
+checkpoint scheduling, or broad native UI work.
 
 ## Completed Slices
 
@@ -25,7 +32,17 @@ Status: completed in branch `execution-telemetry-slice-1`; awaiting PR review.
 
 ## Current Branch
 
-`execution-telemetry-slice-1`
+Canonical base branch for the next slice:
+
+`execution-telemetry-slice-0`
+
+Current merged base head:
+
+`c32ed93989c8ed8531d9b573bb34b36149461475`
+
+The Slice 11 implementation branch was `execution-telemetry-slice-1`; its PR
+merged into the base and should not be used as the starting branch for the next
+slice.
 
 Starting branch before Slice 0 was `fix-react-submit-bar-photo-drop-v2`, clean at `c19c835e8b58e138aa11d50c6ee9ef75be1cdc7a`. Slice 0 was moved to a scoped branch from `origin/main`.
 
@@ -242,11 +259,15 @@ Slice 11 validation:
 
 ## Next Required Action
 
-Review PR #12 before the next code slice. The next code slice should stay narrow: continue Codex migration only if there is another bounded diagnostic path worth preserving.
+Start a new scoped branch from updated `execution-telemetry-slice-0` for Plan
+Slice 4A. Add a small live session projection first.
 
 ## Blocked Decisions
 
-No current blocked decisions for Slice 11. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion.
+No current blocked decisions for Plan Slice 4A. The selected ordering is
+projection first, then a minimal native bridge/UI proof, then persistence or
+diagnostic checkpoints. Ignored Codex app-server notifications remain deferred
+unless a concrete debugging or product need appears.
 
 ## Deviations From Original Plan
 

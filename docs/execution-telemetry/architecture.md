@@ -74,13 +74,14 @@ projects each envelope to the existing `AgentEvent` stream through
 `SessionCtx.emitTelemetry`.
 
 Most provider adapter events still call `SessionCtx.emit(AgentEvent)` directly.
-Slices 3 through 9 migrate Codex prompt submission, provider session linkage,
+Slices 3 through 11 migrated Codex prompt submission, provider session linkage,
 turn lifecycle, message lifecycle, tool lifecycle, approval lifecycle,
-standalone usage observations, and request-status diagnostics through
-`SessionCtx.emitTelemetry`; those envelopes project back to the same
-`AgentEvent` stream, so React WebSocket payloads and `foldEvent()` behavior are
-unchanged. Later slices should migrate more provider events by publishing
-`TelemetryEventEnvelopeDraft` values first and treating `AgentEvent` as the
+standalone usage observations, and request-status, send-failure, and
+app-server-exit diagnostics through `SessionCtx.emitTelemetry`; those envelopes
+project back to the same `AgentEvent` stream, so React WebSocket payloads and
+`foldEvent()` behavior are unchanged. Later Codex migrations should happen only
+for concrete bounded provider events and should continue publishing
+`TelemetryEventEnvelopeDraft` values first while treating `AgentEvent` as the
 fanout projection only.
 
 ## Current Lossy Boundary
@@ -124,6 +125,18 @@ ExecutionEventEnvelope
 ```
 
 The reverse direction should remain prohibited: raw provider event -> AgentEvent/status string -> reconstructed execution telemetry.
+
+## Next Target: Live Session Projection
+
+The next selected architectural step is a small live session projection derived
+from execution telemetry envelopes. This projection should be sidecar-owned,
+replayable from ordered telemetry envelopes, and independent of React block
+state.
+
+Initial projected state should be deliberately small: bmux session id, provider,
+provider session id, current provider turn id, lifecycle state, active operation
+count, last meaningful activity timestamp, latest bounded usage summary, latest
+diagnostic, and files-changed indicator.
 
 ## Slice 1 Ownership Boundary
 
