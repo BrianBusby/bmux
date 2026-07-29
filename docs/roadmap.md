@@ -31,36 +31,41 @@ Local bmux integration notes live in `docs/provenance-integration.md`.
 - Native macOS app with Ghostty terminal rendering, vertical workspace tabs, split panes, browser panes, CLI/socket automation, and custom configuration.
 - Agent-aware workspace state including notifications, busy/idle detection, unread routing, command/browser automation, and short refs for windows, workspaces, panes, and surfaces.
 - Context-efficiency telemetry package and CLI surfaces for read-only Codex rollout inspection.
-- Local WorkProvenance capture, projections, lifecycle relationship recording, and provenance CLI presentation.
-- First external provenance-engine adoption path: `bmux provenance worktrees list` now reads through provenance-engine `0.1.0`.
-- Second external provenance-engine adoption path: `bmux provenance sessions tree <session-id>` now reads through `ProvenanceEngineClient.sessionTree(...)` at engine revision `2026914454a00ccc6c45d686ea741111b0a01229`.
-- Slice D accepted: `bmux provenance explain <path>` now reads through `ProvenanceEngineClient.fileExplanation(...)` at merged engine revision `126afde36671f53a137953200e7883e6b4093ac3`; bmux PR 9 merged at `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374` on 2026-07-24T21:54:46Z.
-- Transitional legacy boundary clarified as `BmuxLegacyProvenanceClient` for remaining bmux-local provenance paths.
+- Local WorkProvenance capture, projections, lifecycle relationship recording, and provenance CLI presentation for legacy support and observability traces.
+- Provenance Engine V1 read adoption for `bmux provenance worktrees list`, `bmux provenance sessions tree <session-id>`, `bmux provenance explain <path>`, and `bmux provenance context current`.
+- Slice E operational Provenance Engine V1 runtime cutover: default production storage now resolves to the engine-owned store, lifecycle recording and worktree observation write through public SDK APIs, and incompatible stores are rejected by engine schema identity checks.
+- Transitional legacy boundary clarified as `BmuxLegacyProvenanceClient` for remaining bmux-local support paths. New provenance consumer behavior should use `ProvenanceEngineContracts` and `ProvenanceEngineSDK`.
 
 ## Active Work
 
-Active gate: none selected after Slice D acceptance.
+Active gate: Engineering Observation Period after Slice E.
 
-Slice D is complete: `bmux provenance explain <path>` reads through the external SQLite-backed provenance-engine client while retaining bmux ownership of Git path resolution, fallback behavior, and JSON/text rendering.
+Slice E is complete with named caveats: bmux is operationally integrated with
+Provenance Engine V1 for adopted read and write paths. Production defaults now
+open the canonical engine-owned SQLite store at
+`~/.local/state/provenance-engine/provenance.sqlite`; the old bmux-local
+database remains intact and is no longer the default V1 store.
 
-Preserved existing JSON, text, missing-database, no-worktree, no-file, relative-path, absolute-path, unknown-flag, extra-argument, and outside-worktree behavior.
+bmux continues to own workflow capture, Git path normalization, fallback
+behavior, CLI/socket presentation, and runtime policy. Provenance Engine owns
+durable evidence, schema compatibility, deterministic Current State, and
+bounded provenance queries.
 
-File-explanation CLI fixture setup uses public provenance-engine APIs via `appendEvent` and does not import `ProvenanceEngineSQLite`.
+Named caveats: `bmux provenance traces lifecycle-ingestion` still reads
+bmux-local observability SQLite because V1 has no public observability trace
+API, and opening an agent-session surface alone does not create lifecycle
+evidence unless supported hooks/feed events reach bmux.
 
-Removed only file-explanation legacy code that became unused.
+GitHub Actions waivers for Slice C and Slice D: bmux PR 7 and PR 9 Actions remained unavailable as acceptance evidence. No failing CI result was observed, branch protection did not require checks, and the runner scheduling issue remains tracked in bmux issue 8. Slice E validation is recorded in `docs/context-efficiency/current-status.md`.
 
-GitHub Actions waivers for Slice C and Slice D: bmux PR 7 and PR 9 Actions remained unavailable as acceptance evidence. No failing CI result was observed, branch protection did not require checks, and the runner scheduling issue remains tracked in bmux issue 8.
-
-Still out of scope until a new slice is explicitly selected: current context, lifecycle writes, worktree observation capture, storage migration, daemon transport, UI work, observability expansion, GitHub ingestion, and Knowledge Compiler implementation.
+Still out of scope until a new slice is explicitly selected: daemon transport, UI work, observability API expansion, GitHub ingestion, Knowledge Compiler implementation, semantic retrieval, broad legacy data migration, and lifecycle policy automation.
 
 ## Near-Term Planned Work
 
-- Produce the integration findings report after each accepted migration slice.
-- Choose the next single bmux provenance path from the completed findings rather than opening parallel paths.
-- The next eligible provenance read migration target is current context, but it is not active until explicitly selected.
-- Reconnect lifecycle writes only after durable read paths prove contract compatibility.
-- Reconnect capture append paths while keeping Git observation policy and runtime degradation in bmux.
-- Remove migrated bmux-local provenance query code slice by slice.
+- Run an Engineering Observation Period against the Slice E runtime cutover.
+- Remove or retire legacy WorkProvenance storage and client support after replacement contracts or obsolescence decisions.
+- Decide whether lifecycle observability traces need a public engine API or should remain bmux-local diagnostics.
+- Cut a tagged Provenance Engine release so bmux can depend on a version tag rather than a revision pin.
 
 ## Longer-Term Direction
 

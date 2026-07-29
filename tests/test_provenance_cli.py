@@ -20,6 +20,9 @@ SESSION_TREE_SEEDER_PACKAGE = (
 FILE_EXPLANATION_SEEDER_PACKAGE = (
     Path(__file__).parent / "fixtures" / "provenance-engine-file-explanation-seeder"
 )
+CURRENT_CONTEXT_SEEDER_PACKAGE = (
+    Path(__file__).parent / "fixtures" / "provenance-engine-current-context-seeder"
+)
 
 
 def stable_id(prefix: str, value: str) -> str:
@@ -377,6 +380,33 @@ def create_provenance_explain_database(
 
 
 def create_provenance_context_database(path: Path, repository_root: str) -> None:
+    if path.exists():
+        path.unlink()
+    result = subprocess.run(
+        [
+            "swift",
+            "run",
+            "--package-path",
+            str(CURRENT_CONTEXT_SEEDER_PACKAGE),
+            "--scratch-path",
+            str(path.parent / "current-context-seeder-build"),
+            "ProvenanceEngineCurrentContextSeeder",
+            str(path),
+            repository_root,
+            stable_repository_id(repository_root),
+            stable_worktree_id(repository_root),
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            "failed to seed current context through Provenance Engine SDK\n"
+            f"stdout={result.stdout}\nstderr={result.stderr}"
+        )
+    return
+
     create_legacy_provenance_context_seed_database(path, repository_root)
     repository_id = stable_repository_id(repository_root)
     worktree_id = stable_worktree_id(repository_root)
@@ -672,6 +702,25 @@ def create_provenance_context_database(path: Path, repository_root: str) -> None
         )
 
 
+
+def create_provenance_context_database_with_mode(path: Path, repository_root: str, mode: str) -> None:
+    if path.exists():
+        path.unlink()
+    result = subprocess.run(
+        [
+            "swift", "run", "--package-path", str(CURRENT_CONTEXT_SEEDER_PACKAGE),
+            "--scratch-path", str(path.parent / "current-context-seeder-build"),
+            "ProvenanceEngineCurrentContextSeeder", str(path), repository_root,
+            stable_repository_id(repository_root), stable_worktree_id(repository_root), mode,
+        ],
+        text=True, capture_output=True, check=False,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            "failed to seed current context through Provenance Engine SDK\n"
+            f"stdout={result.stdout}\nstderr={result.stderr}"
+        )
+
 def create_worktree_list_database(path: Path, include_rows: bool = True) -> None:
     if path.exists():
         path.unlink()
@@ -687,7 +736,7 @@ def provenance_engine_package_dependency() -> str:
     if sibling.exists():
         return f'.package(path: "{sibling}")'
 
-    return '.package(url: "git@github.com:BrianBusby/provenance-engine.git", revision: "126afde36671f53a137953200e7883e6b4093ac3")'
+    return '.package(url: "git@github.com:BrianBusby/provenance-engine.git", revision: "7ed4450410f344f01472ba62f534a04c6c0d2774")'
 
 
 def ensure_worktree_seed_package(root: Path) -> Path:
@@ -961,7 +1010,7 @@ def create_observability_database(path: Path) -> None:
                 (
                     "run-success",
                     "lifecycle_ingestion",
-                    "AgentSubsessionLifecycleChange",
+                    "AgentSessionLifecycleChange",
                     "codex-parent",
                     "codex-child",
                     "event-child-start",
@@ -980,7 +1029,7 @@ def create_observability_database(path: Path) -> None:
                 (
                     "run-failed",
                     "lifecycle_ingestion",
-                    "AgentSubsessionLifecycleChange",
+                    "AgentSessionLifecycleChange",
                     "codex-parent",
                     "codex-child",
                     "event-child-start",
@@ -999,7 +1048,7 @@ def create_observability_database(path: Path) -> None:
                 (
                     "run-second-parent",
                     "lifecycle_ingestion",
-                    "AgentSubsessionLifecycleChange",
+                    "AgentSessionLifecycleChange",
                     "other-parent",
                     "other-child",
                     "event-other-start",
@@ -1196,9 +1245,9 @@ def create_observability_database(path: Path) -> None:
                 (
                     "run-success:subsession_identity",
                     "run-success",
-                    "subsession_lifecycle_identity",
+                    "session_lifecycle_identity",
                     "o2",
-                    "AgentSubsessionLifecycleChange",
+                    "AgentSessionLifecycleChange",
                     "started",
                     "codex",
                     "codex-parent",
@@ -1228,9 +1277,9 @@ def create_observability_database(path: Path) -> None:
                 (
                     "run-second-parent:subsession_identity",
                     "run-second-parent",
-                    "subsession_lifecycle_identity",
+                    "session_lifecycle_identity",
                     "o2",
-                    "AgentSubsessionLifecycleChange",
+                    "AgentSessionLifecycleChange",
                     "started",
                     "codex",
                     "other-parent",
@@ -1260,9 +1309,9 @@ def create_observability_database(path: Path) -> None:
                 (
                     "run-failed:subsession_identity",
                     "run-failed",
-                    "subsession_lifecycle_identity",
+                    "session_lifecycle_identity",
                     "o2",
-                    "AgentSubsessionLifecycleChange",
+                    "AgentSessionLifecycleChange",
                     "started",
                     "codex",
                     "codex-parent",
@@ -1310,7 +1359,7 @@ def create_observability_database(path: Path) -> None:
                     "work_provenance_projection_update",
                     "lifecycle_ingestion_projection",
                     "event-child-start",
-                    "subsession_started",
+                    "session_started",
                     1,
                     "payload-success",
                     "sessions",
@@ -1329,7 +1378,7 @@ def create_observability_database(path: Path) -> None:
                     "work_provenance_projection_update",
                     "lifecycle_ingestion_projection",
                     "event-child-start",
-                    "subsession_started",
+                    "session_started",
                     1,
                     "payload-success",
                     "session_relationships",
@@ -1348,7 +1397,7 @@ def create_observability_database(path: Path) -> None:
                     "work_provenance_projection_update",
                     "lifecycle_ingestion_projection",
                     "event-child-start",
-                    "subsession_started",
+                    "session_started",
                     1,
                     "payload-success",
                     "session_external_identities",
@@ -1367,7 +1416,7 @@ def create_observability_database(path: Path) -> None:
                     "work_provenance_projection_update",
                     "lifecycle_ingestion_projection",
                     "event-other-start",
-                    "subsession_started",
+                    "session_started",
                     1,
                     "payload-second-parent",
                     "sessions",
@@ -1386,7 +1435,7 @@ def create_observability_database(path: Path) -> None:
                     "work_provenance_projection_update",
                     "lifecycle_ingestion_projection",
                     "event-other-start",
-                    "subsession_started",
+                    "session_started",
                     1,
                     "payload-second-parent",
                     "session_relationships",
@@ -1405,7 +1454,7 @@ def create_observability_database(path: Path) -> None:
                     "work_provenance_projection_update",
                     "lifecycle_ingestion_projection",
                     "event-other-start",
-                    "subsession_started",
+                    "session_started",
                     1,
                     "payload-second-parent",
                     "session_external_identities",
@@ -1426,6 +1475,7 @@ def run_cli(
     cli_path: str,
     args: list[str],
     cwd: Path | None = None,
+    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
         [cli_path, *args],
@@ -1434,6 +1484,7 @@ def run_cli(
         check=False,
         timeout=10,
         cwd=cwd,
+        env=env,
     )
     if result.returncode != 0:
         raise AssertionError(
@@ -1801,7 +1852,7 @@ def check_provenance_context_json(cli_path: str, root: Path) -> None:
         raise AssertionError(f"expected conflict contribution counts: {payload!r}")
 
     empty_database = root / "context-empty-work-provenance.sqlite"
-    create_legacy_provenance_context_seed_database(empty_database, repository_root, include_file=False)
+    create_provenance_context_database_with_mode(empty_database, repository_root, "--empty")
     empty_result = run_cli(
         cli_path,
         [
@@ -1819,7 +1870,7 @@ def check_provenance_context_json(cli_path: str, root: Path) -> None:
         raise AssertionError(f"empty sections should preserve found empty context: {empty!r}")
 
     no_worktree_database = root / "context-no-worktree.sqlite"
-    create_legacy_provenance_context_seed_database(no_worktree_database, repository_root, include_worktree=False)
+    create_provenance_context_database_with_mode(no_worktree_database, repository_root, "--no-worktree")
     no_worktree_result = run_cli(
         cli_path,
         [
@@ -2157,6 +2208,139 @@ def check_provenance_worktrees_text(cli_path: str, root: Path) -> None:
         raise AssertionError(f"no-database text output changed:\n{no_database_result.stdout}")
 
 
+def canonical_default_database(home: Path) -> Path:
+    return home / ".local" / "state" / "provenance-engine" / "provenance.sqlite"
+
+
+def metadata_values(database: Path) -> dict[str, str]:
+    with sqlite3.connect(database) as conn:
+        return dict(conn.execute("SELECT key, value FROM provenance_metadata"))
+
+
+def table_names(database: Path) -> list[str]:
+    with sqlite3.connect(database) as conn:
+        return [
+            row[0]
+            for row in conn.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type = 'table'
+                  AND name NOT LIKE 'sqlite_%'
+                ORDER BY name
+                """
+            )
+        ]
+
+
+def user_version(database: Path) -> int:
+    with sqlite3.connect(database) as conn:
+        return int(conn.execute("PRAGMA user_version").fetchone()[0])
+
+
+def event_count(database: Path) -> int:
+    with sqlite3.connect(database) as conn:
+        return int(conn.execute("SELECT COUNT(*) FROM provenance_events").fetchone()[0])
+
+
+def create_foreign_default_database(database: Path) -> None:
+    database.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(database) as conn:
+        conn.executescript(
+            """
+            CREATE TABLE events (
+                id TEXT PRIMARY KEY NOT NULL,
+                payload TEXT NOT NULL
+            );
+            CREATE TABLE sessions (
+                id TEXT PRIMARY KEY NOT NULL
+            );
+            PRAGMA user_version = 3;
+            """
+        )
+
+
+def check_provenance_default_path_bootstrap(cli_path: str, root: Path) -> None:
+    home = root / "default-home"
+    database = canonical_default_database(home)
+    env = os.environ.copy()
+    env["BMUX_PROVENANCE_HOME"] = str(home)
+    if database.exists():
+        raise AssertionError(f"isolated default database unexpectedly exists: {database}")
+
+    empty_result = run_cli(
+        cli_path,
+        ["--json", "provenance", "worktrees", "list"],
+        env=env,
+    )
+    empty = json.loads(empty_result.stdout)
+    if empty != {"count": 0, "reason": None, "worktrees": []}:
+        raise AssertionError(f"default V1 bootstrap should return empty current state: {empty!r}")
+    if not database.exists():
+        raise AssertionError(f"default V1 store was not created at {database}")
+    if "provenance_events" not in table_names(database):
+        raise AssertionError(f"default V1 store missing provenance_events: {table_names(database)!r}")
+    if metadata_values(database) != {
+        "schema_family": "provenance-engine",
+        "schema_identity_version": "1",
+        "schema_version": "10",
+    }:
+        raise AssertionError(f"default V1 store metadata mismatch: {metadata_values(database)!r}")
+    if event_count(database) != 0:
+        raise AssertionError(f"empty default V1 store should have no events: {event_count(database)}")
+
+    seed_engine_worktree_database(database, include_rows=True)
+    populated_result = run_cli(
+        cli_path,
+        ["--json", "provenance", "worktrees", "list"],
+        env=env,
+    )
+    populated = json.loads(populated_result.stdout)
+    if populated["count"] != 2 or populated["reason"] is not None:
+        raise AssertionError(f"default V1 store should read seeded events: {populated!r}")
+    if event_count(database) != 2:
+        raise AssertionError(f"seeded default V1 store should contain two events: {event_count(database)}")
+
+    legacy_database = home / ".local" / "state" / "bmux" / "work-provenance" / "bmux-work-provenance.sqlite"
+    if legacy_database.exists():
+        raise AssertionError(f"default command should not create legacy database: {legacy_database}")
+
+
+def check_provenance_default_path_rejects_incompatible_store(cli_path: str, root: Path) -> None:
+    home = root / "foreign-home"
+    database = canonical_default_database(home)
+    create_foreign_default_database(database)
+    before_tables = table_names(database)
+    before_version = user_version(database)
+    env = os.environ.copy()
+    env["BMUX_PROVENANCE_HOME"] = str(home)
+
+    result = subprocess.run(
+        [cli_path, "--json", "provenance", "worktrees", "list"],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=10,
+        env=env,
+    )
+    if result.returncode == 0:
+        raise AssertionError("foreign default database should fail compatibility validation")
+    for expected in [
+        str(database),
+        "not a compatible Provenance Engine store",
+        "Automatic conversion was not performed",
+        "provenance_events",
+    ]:
+        if expected not in result.stderr:
+            raise AssertionError(f"compatibility error missing {expected!r}:\n{result.stderr}")
+    if table_names(database) != before_tables:
+        raise AssertionError("foreign database tables were modified")
+    if user_version(database) != before_version:
+        raise AssertionError("foreign database user_version was modified")
+    if "provenance_metadata" in table_names(database):
+        raise AssertionError("foreign database should not be stamped with engine metadata")
+
+
 def check_provenance_lifecycle_trace_json(cli_path: str, root: Path) -> None:
     database = root / "ProvenanceObservability.sqlite"
     create_observability_database(database)
@@ -2358,6 +2542,8 @@ def main() -> int:
             check_provenance_session_tree_text(cli_path, root)
             check_provenance_worktrees_json(cli_path, root)
             check_provenance_worktrees_text(cli_path, root)
+            check_provenance_default_path_bootstrap(cli_path, root)
+            check_provenance_default_path_rejects_incompatible_store(cli_path, root)
             check_provenance_lifecycle_trace_json(cli_path, root)
             check_provenance_lifecycle_trace_text(cli_path, root)
         except Exception as exc:

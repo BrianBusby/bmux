@@ -26,7 +26,7 @@ final class AgentChatTranscriptService {
     private var activeSubsessionWorkspaces: [String: ActiveSubsessionWorkspace] = [:]
     private let hasEventSubscribers: @MainActor () -> Bool
     private let emitEventPayload: @MainActor ([String: Any]) -> Void
-    private var recordSubsessionLifecycle: @MainActor (AgentSubsessionLifecycleChange, Date) -> Void
+    private var recordSessionLifecycle: @MainActor (AgentSessionLifecycleChange, Date) -> Void
     private let now: () -> Date
     /// Drives the live agent-prose streaming preview.
     private var proseStreamer: AgentChatProseStreamer!
@@ -66,7 +66,7 @@ final class AgentChatTranscriptService {
         emitEventPayload: @escaping @MainActor ([String: Any]) -> Void = { payload in
             MobileHostService.emitEvent(topic: AgentChatTranscriptService.eventTopic, payload: payload)
         },
-        recordSubsessionLifecycle: @escaping @MainActor (AgentSubsessionLifecycleChange, Date) -> Void = { _, _ in },
+        recordSessionLifecycle: @escaping @MainActor (AgentSessionLifecycleChange, Date) -> Void = { _, _ in },
         now: @escaping () -> Date = { Date() }
     ) {
         self.registry = registry
@@ -75,7 +75,7 @@ final class AgentChatTranscriptService {
         self.tokenOptimizationModeProvider = tokenOptimizationModeProvider
         self.hasEventSubscribers = hasEventSubscribers
         self.emitEventPayload = emitEventPayload
-        self.recordSubsessionLifecycle = recordSubsessionLifecycle
+        self.recordSessionLifecycle = recordSessionLifecycle
         self.now = now
         registry.onRecordChanged = { [weak self] record, previous in
             self?.handleRecordChange(record, previous: previous)
@@ -83,8 +83,8 @@ final class AgentChatTranscriptService {
         registry.onRecordRemoved = { [weak self] record in
             self?.handleRecordRemoval(record)
         }
-        registry.onSubsessionLifecycleChanged = { [weak self] change in
-            self?.handleSubsessionLifecycleChange(change)
+        registry.onSessionLifecycleChanged = { [weak self] change in
+            self?.handleSessionLifecycleChange(change)
         }
         self.proseStreamer = AgentChatProseStreamer(
             emit: { [weak self] frame in self?.emit(frame: frame) },
@@ -177,10 +177,10 @@ final class AgentChatTranscriptService {
         Task { [weak self] in await self?.registry.seedFromHookStores() }
     }
 
-    /// Routes subsession lifecycle changes into the provenance runtime.
-    func recordSubsessionLifecycleChanges(with runtime: WorkProvenanceRuntime) {
-        recordSubsessionLifecycle = { change, timestamp in
-            runtime.recordSubsessionLifecycleChange(change, timestamp: timestamp)
+    /// Routes session lifecycle changes into the provenance runtime.
+    func recordSessionLifecycleChanges(with runtime: WorkProvenanceRuntime) {
+        recordSessionLifecycle = { change, timestamp in
+            runtime.recordSessionLifecycleChange(change, timestamp: timestamp)
         }
     }
 
@@ -533,8 +533,8 @@ final class AgentChatTranscriptService {
         emitEventPayload(payload)
     }
 
-    private func handleSubsessionLifecycleChange(_ change: AgentSubsessionLifecycleChange) {
-        recordSubsessionLifecycle(change, now())
+    private func handleSessionLifecycleChange(_ change: AgentSessionLifecycleChange) {
+        recordSessionLifecycle(change, now())
         switch change.phase {
         case .started:
             showSubsessionWorkspace(change)
@@ -543,7 +543,7 @@ final class AgentChatTranscriptService {
         }
     }
 
-    private func showSubsessionWorkspace(_ change: AgentSubsessionLifecycleChange) {
+    private func showSubsessionWorkspace(_ change: AgentSessionLifecycleChange) {
         guard let parentWorkspaceID = change.workspaceID.flatMap(UUID.init(uuidString:)),
               let appDelegate = AppDelegate.shared,
               let tabManager = appDelegate.tabManagerFor(tabId: parentWorkspaceID),
@@ -583,7 +583,7 @@ final class AgentChatTranscriptService {
         )
     }
 
-    private func removeSubsessionWorkspace(_ change: AgentSubsessionLifecycleChange) {
+    private func removeSubsessionWorkspace(_ change: AgentSessionLifecycleChange) {
         let exactKey = subsessionWorkspaceKey(change)
         let key = activeSubsessionWorkspaces[exactKey] == nil
             ? latestSubsessionWorkspaceKey(parentSessionID: change.parentSessionID)
@@ -620,9 +620,9 @@ final class AgentChatTranscriptService {
             .key
     }
 
-    private func subsessionWorkspaceKey(_ change: AgentSubsessionLifecycleChange) -> String {
+    private func subsessionWorkspaceKey(_ change: AgentSessionLifecycleChange) -> String {
         let identifier: String
-        if let trimmed = change.subsessionID?.trimmingCharacters(in: .whitespacesAndNewlines),
+        if let trimmed = change.externalSessionID?.trimmingCharacters(in: .whitespacesAndNewlines),
            !trimmed.isEmpty {
             identifier = trimmed
         } else {
@@ -635,7 +635,7 @@ final class AgentChatTranscriptService {
         ].joined(separator: ":")
     }
 
-    private func subsessionWorkspaceTitle(_ change: AgentSubsessionLifecycleChange) -> String {
+    private func subsessionWorkspaceTitle(_ change: AgentSessionLifecycleChange) -> String {
         let fallback = String(
             localized: "workspace.agentSubsession.defaultTitle",
             defaultValue: "Subagent"

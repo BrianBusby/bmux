@@ -3,7 +3,7 @@ import ProvenanceEngineContracts
 
 /// Observe-only service that records Git worktree state into the provenance store.
 actor WorkProvenanceObservationService {
-    private let store: WorkProvenanceStore
+    private let client: any ProvenanceEngineContracts.ProvenanceEngineClient
     private let gitInspector: any WorkProvenanceGitInspecting
     private let stableIDFactory: WorkProvenanceStableIDFactory
     private let dateProvider: @Sendable () -> Date
@@ -14,12 +14,12 @@ actor WorkProvenanceObservationService {
 
     /// Creates an observe-only provenance service.
     init(
-        store: WorkProvenanceStore,
+        client: any ProvenanceEngineContracts.ProvenanceEngineClient,
         gitInspector: any WorkProvenanceGitInspecting,
         stableIDFactory: WorkProvenanceStableIDFactory = WorkProvenanceStableIDFactory(),
         dateProvider: @escaping @Sendable () -> Date = { Date() }
     ) {
-        self.store = store
+        self.client = client
         self.gitInspector = gitInspector
         self.stableIDFactory = stableIDFactory
         self.dateProvider = dateProvider
@@ -34,12 +34,7 @@ actor WorkProvenanceObservationService {
 
     /// Runs a retention pass for stale observed history.
     func pruneExpiredObservedHistory(now: Date = Date()) async {
-        do {
-            _ = try await store.pruneExpiredObservedHistory(now: now)
-            lastErrorDescription = nil
-        } catch {
-            lastErrorDescription = String(describing: error)
-        }
+        lastErrorDescription = nil
     }
 
     /// Observes one workspace snapshot and appends an event when Git state changed.
@@ -48,14 +43,21 @@ actor WorkProvenanceObservationService {
             try await appendObservationIfChanged(for: snapshot)
             lastErrorDescription = nil
         } catch {
-            lastErrorDescription = String(describing: error)
+            let description = String(describing: error)
+            lastErrorDescription = description
+            NSLog("bmux provenance worktree observation failed: %@", description)
         }
     }
 
     private func appendObservationIfChanged(for workspace: WorkProvenanceWorkspaceSnapshot) async throws {
         let directory = workspace.currentDirectory.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !directory.isEmpty,
-              let gitSnapshot = await gitInspector.snapshot(for: directory) else {
+        StartupBreadcrumbLog.append("workProvenance.observe.begin", fields: ["workspace": workspace.workspaceID.uuidString, "directory": directory])
+        guard !directory.isEmpty else { return }
+        guard let gitSnapshot = await gitInspector.snapshot(for: directory) else {
+            let description = "no Git snapshot for workspace directory: \(directory)"
+            lastErrorDescription = description
+            NSLog("bmux provenance worktree observation skipped: %@", description)
+            StartupBreadcrumbLog.append("workProvenance.observe.noGitSnapshot", fields: ["workspace": workspace.workspaceID.uuidString, "directory": directory])
             return
         }
 
@@ -89,7 +91,7 @@ actor WorkProvenanceObservationService {
             lastReconciledAt: now,
             updatedAt: now
         )
-        let changeSet = WorkProvenanceChangeSetRecord(
+        let changeSet = ProvenanceEngineContracts.ProvenanceChangeSetRecord(
             id: changeSetID,
             worktreeID: worktreeID,
             summary: Self.summary(fileCount: gitSnapshot.statusEntries.count, isDirty: gitSnapshot.isDirty),
@@ -97,26 +99,30 @@ actor WorkProvenanceObservationService {
             createdAt: now
         )
         let fileChanges = gitSnapshot.statusEntries.map { entry in
-            WorkProvenanceFileChangeRecord(
+            ProvenanceEngineContracts.ProvenanceFileChangeRecord(
                 id: stableIDFactory.fileChangeID(worktreeID: worktreeID, path: entry.path),
                 changeSetID: changeSetID,
                 repositoryID: repositoryID,
                 worktreeID: worktreeID,
                 path: entry.path,
                 status: entry.status,
-                attributionSource: .unattributed,
-                attributionConfidence: .low,
+                attributionSource: ProvenanceEngineContracts.ProvenanceSource.unattributed,
+                attributionConfidence: ProvenanceEngineContracts.ProvenanceConfidence.low,
                 updatedAt: now
             )
         }
-        let event = WorkProvenanceEvent(
+        let event = ProvenanceEngineContracts.ProvenanceEvent(
             eventType: .worktreeObserved,
             timestamp: now,
             repositoryID: repositoryID,
             worktreeID: worktreeID,
-            source: .observed,
-            confidence: gitSnapshot.statusEntries.isEmpty ? .high : .medium,
-            payload: WorkProvenanceEventPayload(
+            source: ProvenanceEngineContracts.ProvenanceSource.observed,
+            evidenceOrigin: ProvenanceEngineContracts.ProvenanceEvidenceOrigin(rawValue: "bmux-work-provenance-observation"),
+            evidenceScope: ProvenanceEngineContracts.ProvenanceEvidenceScope(level: .personal, id: "bmux-local"),
+            confidence: gitSnapshot.statusEntries.isEmpty
+                ? ProvenanceEngineContracts.ProvenanceConfidence.high
+                : ProvenanceEngineContracts.ProvenanceConfidence.medium,
+            payload: ProvenanceEngineContracts.ProvenanceEventPayload(
                 repository: repository,
                 worktree: worktree,
                 changeSet: changeSet,
@@ -124,7 +130,8 @@ actor WorkProvenanceObservationService {
             )
         )
 
-        try await store.append(event)
+        let response = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
+        StartupBreadcrumbLog.append("workProvenance.observe.appended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
     }
 
     private static func summary(fileCount: Int, isDirty: Bool) -> String {

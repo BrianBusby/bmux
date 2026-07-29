@@ -41,7 +41,7 @@ struct CLIProvenanceContext: Equatable {
     }
 
     init(
-        response: ProvenanceCurrentContextResponse,
+        response: ProvenanceEngineContracts.ProvenanceCurrentContextResponse,
         fallbackRepositoryPath: String,
         noWorktreeReason: String
     ) {
@@ -101,7 +101,7 @@ struct CLIProvenanceContext: Equatable {
     }
 
     private static func activeSessionPayload(
-        _ row: ProvenanceCurrentContextSession
+        _ row: ProvenanceEngineContracts.ProvenanceCurrentContextSession
     ) -> [String: AnyHashable] {
         compactPayload([
             "id": row.session.id,
@@ -122,7 +122,7 @@ struct CLIProvenanceContext: Equatable {
     }
 
     private static func fileChangePayload(
-        _ row: ProvenanceCurrentContextFileChange
+        _ row: ProvenanceEngineContracts.ProvenanceCurrentContextFileChange
     ) -> [String: AnyHashable] {
         compactPayload([
             "path": row.fileChange.path,
@@ -141,7 +141,7 @@ struct CLIProvenanceContext: Equatable {
     }
 
     private static func checkpointPayload(
-        _ row: ProvenanceCurrentContextCheckpoint
+        _ row: ProvenanceEngineContracts.ProvenanceCurrentContextCheckpoint
     ) -> [String: AnyHashable] {
         compactPayload([
             "id": row.checkpoint.id,
@@ -165,7 +165,7 @@ struct CLIProvenanceContext: Equatable {
     }
 
     private static func validationRunPayload(
-        _ row: ProvenanceCurrentContextValidationRun
+        _ row: ProvenanceEngineContracts.ProvenanceCurrentContextValidationRun
     ) -> [String: AnyHashable] {
         compactPayload([
             "id": row.validationRun.id,
@@ -183,7 +183,7 @@ struct CLIProvenanceContext: Equatable {
     }
 
     private static func conflictPayload(
-        _ row: ProvenanceCurrentContextConflict
+        _ row: ProvenanceEngineContracts.ProvenanceCurrentContextConflict
     ) -> [String: AnyHashable] {
         compactPayload([
             "path": row.path,
@@ -193,7 +193,9 @@ struct CLIProvenanceContext: Equatable {
         ])
     }
 
-    private static func worktreePayload(_ worktree: ProvenanceWorktreeRecord) -> [String: AnyHashable] {
+    private static func worktreePayload(
+        _ worktree: ProvenanceEngineContracts.ProvenanceWorktreeRecord
+    ) -> [String: AnyHashable] {
         compactPayload([
             "id": worktree.id,
             "repository_id": worktree.repositoryID,
@@ -208,7 +210,7 @@ struct CLIProvenanceContext: Equatable {
     }
 
     private static func repositoryPayload(
-        _ repository: ProvenanceRepositoryRecord?,
+        _ repository: ProvenanceEngineContracts.ProvenanceRepositoryRecord?,
         fallbackRepositoryID: String?,
         fallbackPath: String
     ) -> [String: AnyHashable] {

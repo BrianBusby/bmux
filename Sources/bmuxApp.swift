@@ -196,9 +196,16 @@ struct bmuxApp: App {
         StartupBreadcrumbLog.append("app.init.keyboardShortcuts.sideEffectsApplied")
         let workProvenanceRuntime = WorkProvenanceRuntime.live()
         self.workProvenanceRuntime = workProvenanceRuntime
-        StartupBreadcrumbLog.append("app.init.workProvenance.created", fields: [
+        var provenanceFields = [
             "enabled": workProvenanceRuntime.isEnabled ? "1" : "0"
-        ])
+        ]
+        if let effectiveDatabaseURL = workProvenanceRuntime.effectiveDatabaseURL {
+            provenanceFields["database"] = effectiveDatabaseURL.path
+        }
+        if let startupErrorDescription = workProvenanceRuntime.startupErrorDescription {
+            provenanceFields["error"] = startupErrorDescription
+        }
+        StartupBreadcrumbLog.append("app.init.workProvenance.created", fields: provenanceFields)
         StartupBreadcrumbLog.append("app.init.tabManager.begin")
         let tabManager = TabManager()
         tabManager.workProvenanceRuntime = workProvenanceRuntime
