@@ -80,6 +80,28 @@ final class SessionProvenanceTests: XCTestCase {
         XCTAssertEqual(request?.externalIdentityValue, "external-session-1")
         XCTAssertEqual(request?.displayName, "Build agent")
         XCTAssertEqual(request?.timestamp, timestamp)
+
+        await recorder.recordExecutionTelemetrySessionStarted(
+            sessionID: "session-sidecar",
+            provider: "codex",
+            providerSessionID: "thread-sidecar",
+            workingDirectory: "/repo/subdir",
+            timestamp: timestamp.addingTimeInterval(1)
+        )
+
+        let sidecarRequest = await client.recordedLifecycleRequests.dropFirst().first
+        XCTAssertEqual(sidecarRequest?.phase, .started)
+        XCTAssertEqual(sidecarRequest?.sessionID, "session-sidecar")
+        XCTAssertEqual(sidecarRequest?.parentSessionID, nil)
+        XCTAssertEqual(sidecarRequest?.agentKind, "codex")
+        XCTAssertEqual(sidecarRequest?.workspaceID, nil)
+        XCTAssertEqual(sidecarRequest?.surfaceID, nil)
+        XCTAssertEqual(sidecarRequest?.worktreeID, WorkProvenanceStableIDFactory().worktreeID(repositoryRoot: "/repo"))
+        XCTAssertEqual(sidecarRequest?.workingDirectory, nil)
+        XCTAssertEqual(sidecarRequest?.externalIdentityKind, "provider_session")
+        XCTAssertEqual(sidecarRequest?.externalIdentityValue, "thread-sidecar")
+        XCTAssertEqual(sidecarRequest?.displayName, nil)
+        XCTAssertEqual(sidecarRequest?.timestamp, timestamp.addingTimeInterval(1))
         let lastErrorDescription = await recorder.lastErrorDescription
         XCTAssertNil(lastErrorDescription)
     }

@@ -78,6 +78,7 @@ extension AppDelegate {
         Task { @MainActor [weak self, weak tabManager] in
             defer { AgentChatActionInFlightGate.end() }
             guard let self else { return }
+            self.startAgentChatExecutionTelemetryProjection(agentChatURL: agentChat.url)
             let isReachable = await self.ensureAgentChatServerAvailable(
                 agentChat,
                 globalConfigPath: globalConfigPath,

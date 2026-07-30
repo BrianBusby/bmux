@@ -2068,6 +2068,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         ClosedItemHistoryStore.shared.flushPendingSaves()
     }
 
+    func startAgentChatExecutionTelemetryProjection(agentChatURL: URL) {
+        workProvenanceRuntime?.startExecutionTelemetryProjection(agentChatURL: agentChatURL)
+    }
+
     func configure(
         tabManager: TabManager,
         notificationStore: TerminalNotificationStore,

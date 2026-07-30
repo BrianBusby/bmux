@@ -9,6 +9,7 @@ final class WorkProvenanceRuntime {
     private let observationService: WorkProvenanceObservationService?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
     private var directoryObservationTask: Task<Void, Never>?
+    private var executionTelemetryProjectionService: ExecutionTelemetryProvenanceProjectionService?
 
     /// Effective V1 database path when the runtime starts successfully.
     let effectiveDatabaseURL: URL?
@@ -76,6 +77,25 @@ final class WorkProvenanceRuntime {
         }
         observeWorkspaces(tabManager.tabs)
         startDirectoryObservationIfNeeded()
+        if !Self.isRunningUnderXCTest {
+            startExecutionTelemetryProjection(agentChatURL: BmuxAgentChatConfiguration.default.url)
+        }
+    }
+
+    /// Starts projecting eligible live execution telemetry facts into provenance.
+    func startExecutionTelemetryProjection(agentChatURL: URL) {
+        guard let sessionLifecycleRecorder else { return }
+        guard executionTelemetryProjectionService?.agentChatURL != agentChatURL else {
+            executionTelemetryProjectionService?.start()
+            return
+        }
+        executionTelemetryProjectionService?.stop()
+        let service = ExecutionTelemetryProvenanceProjectionService(
+            agentChatURL: agentChatURL,
+            lifecycleRecorder: sessionLifecycleRecorder
+        )
+        executionTelemetryProjectionService = service
+        service.start()
     }
 
     /// Observes the provided live workspaces.
@@ -116,5 +136,9 @@ final class WorkProvenanceRuntime {
             return
         }
         observeWorkspaces([workspace])
+    }
+
+    private static var isRunningUnderXCTest: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 }

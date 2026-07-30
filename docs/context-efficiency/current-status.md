@@ -36,6 +36,8 @@ Adopted read paths use public Current State/query APIs:
 Adopted write paths use public SDK APIs:
 
 - Agent lifecycle capture calls `client.recordSessionLifecycle(...)` with `ProvenanceSessionLifecycleRequest`.
+- Supported live sidecar execution telemetry sessions project only broad
+  session/provider/lifecycle facts through `client.recordSessionLifecycle(...)`.
 - Git/worktree observation capture calls `client.appendEvent(...)` with public `ProvenanceEvent` contracts.
 
 bmux owns observation, stable producer identity assignment where available, retry/error policy, command parsing, Git path normalization, UI/workflow orchestration, and presentation. Provenance Engine owns evidence, deterministic Current State, provenance interpretation, and bounded provenance queries.
@@ -76,16 +78,23 @@ not durable provenance evidence by default; only broad
 session/provider/lifecycle facts are eligible for a future explicit projection
 slice.
 
+The narrow durable lifecycle producer completed on 2026-07-30 in the same
+branch. Dogfood against live Codex sidecar session `79a4701f` reached provider
+`codex`, provider session `019fb1bd-bc6b-7141-8926-df2554f0c5e4`, lifecycle
+`idle`, and the read-only diagnostic reported zero mismatches in text and JSON
+modes.
+
 Potential follow-up work:
 
 - Remove or retire `WorkProvenanceStore` and `BmuxLegacyProvenanceClient` after all remaining legacy tests and observability support have replacement contracts or are declared obsolete.
 - Decide whether lifecycle observability traces need a public engine API or should remain bmux-local diagnostics.
 - Cut a tagged Provenance Engine release so bmux can depend on a version tag rather than a revision pin.
-- If selected, implement a narrow durable producer for broad
-  session/provider/lifecycle facts only. Keep telemetry persistence, raw
-  provider data, transcript/tool/usage details, React/WebSocket changes, Swift
-  schema ownership, and automatic diagnostic scheduling out of scope unless a
-  later policy slice selects them.
+- Dogfood a configured non-default Agent Chat URL, decide whether sidecar
+  session disappearance should record stopped lifecycle facts, or continue
+  provider migration. Keep telemetry persistence, raw provider data,
+  transcript/tool/usage details, React/WebSocket changes, Swift schema
+  ownership, and automatic diagnostic scheduling out of scope unless a later
+  policy slice selects them.
 
 ## Canonical Details
 

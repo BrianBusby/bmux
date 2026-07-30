@@ -43,6 +43,39 @@ actor WorkProvenanceSessionLifecycleRecorder {
         }
     }
 
+    /// Records a broad sidecar execution-telemetry lifecycle presence fact.
+    func recordExecutionTelemetrySessionStarted(
+        sessionID: String,
+        provider: String,
+        providerSessionID: String?,
+        workingDirectory: String?,
+        timestamp: Date
+    ) async {
+        let trimmedSessionID = Self.trimmedNonEmpty(sessionID)
+        let trimmedProvider = Self.trimmedNonEmpty(provider)
+        guard let trimmedSessionID, let trimmedProvider else { return }
+        let trimmedProviderSessionID = Self.trimmedNonEmpty(providerSessionID)
+        let worktreeID = await resolvedWorktreeID(for: workingDirectory)
+        let response = await client.recordSessionLifecycle(ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest(
+            phase: .started,
+            sessionID: trimmedSessionID,
+            parentSessionID: nil,
+            agentKind: trimmedProvider,
+            workspaceID: nil,
+            surfaceID: nil,
+            worktreeID: worktreeID,
+            workingDirectory: nil,
+            externalIdentityKind: trimmedProviderSessionID == nil ? nil : "provider_session",
+            externalIdentityValue: trimmedProviderSessionID,
+            displayName: nil,
+            timestamp: timestamp
+        ))
+        lastErrorDescription = response.errorDescription
+        if let errorDescription = response.errorDescription {
+            NSLog("bmux provenance execution telemetry lifecycle recording failed: %@", errorDescription)
+        }
+    }
+
     private func resolvedWorktreeID(for workingDirectory: String?) async -> String? {
         guard let workingDirectory = workingDirectory?.trimmingCharacters(in: .whitespacesAndNewlines),
               !workingDirectory.isEmpty,
@@ -50,6 +83,14 @@ actor WorkProvenanceSessionLifecycleRecorder {
             return nil
         }
         return stableIDFactory.worktreeID(repositoryRoot: snapshot.repositoryRoot)
+    }
+
+    private static func trimmedNonEmpty(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
     }
 }
 

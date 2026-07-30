@@ -22,27 +22,29 @@ Engine Slice E.
 | Native live projection read client | Plan Slice 4C completed on `execution-telemetry-live-projection`. | Adds Swift DTOs and an injected HTTP read client in `BmuxAgentChat` for the existing REST payload, plus a shared JSON fixture drift check; no rendering, WebSocket, persistence, provenance, or Swift schema ownership changes. |
 | Read-only observation diagnostic | Completed on `execution-telemetry-live-projection`. | Adds a provider-neutral package comparison value and `bmux provenance diagnostics execution-telemetry-live <session-id>` CLI report. It compares only session presence, provider identity, and broad lifecycle presence between the live projection and Provenance Engine Current State; no persistence, provenance writes, React rendering changes, WebSocket changes, or automatic scheduling. |
 | Durable execution-evidence policy | Completed on `execution-telemetry-live-projection`. | Dogfooded the diagnostic against a real live Codex sidecar session and recorded the policy that execution telemetry is not durable provenance evidence by default. Only broad session/provider/lifecycle facts are eligible for a future explicit projection slice. |
+| Narrow durable lifecycle producer | Completed on `execution-telemetry-live-projection`. | Adds an app-side producer for broad live sidecar session/provider/lifecycle facts only. The existing diagnostic remains read-only and now matches supported lifecycle-backed live sessions. |
 
 ## Active Slice
 
-Durable execution-evidence policy after the read-only observation diagnostic.
+Narrow durable lifecycle producer for live execution telemetry.
 
 Status: completed in branch `execution-telemetry-live-projection`; reconciled
 with current main after Provenance Engine Slice E. No next execution telemetry
 implementation slice is selected.
+
+Current producer validation passed with zero diagnostic mismatches for live
+session `79a4701f`.
 
 Recent implementation validation: localization JSON parse, `git diff --check`,
 `BmuxAgentChat` live-projection/diagnostic tests, full serialized
 `BmuxAgentChat` package tests, focused Slice E provenance observer tests, and
 the tagged Debug reload build passed.
 
-Latest dogfood: launched the existing tagged Debug app, started the sidecar,
-created Codex session `05384b5e`, confirmed the live projection reached idle
-with provider identity, then ran the tagged diagnostic in text and JSON modes.
-Both reported one bounded mismatch:
-`current_state_session_missing`. This matches the expected boundary that a live
-sidecar session does not automatically create durable Current State lifecycle
-evidence.
+Latest dogfood: launched the tagged Debug app, started the sidecar, created
+Codex session `79a4701f`, confirmed the live projection reached idle with
+provider identity, then ran the tagged diagnostic in text and JSON modes. Both
+reported zero mismatches after the durable lifecycle producer recorded the
+broad sidecar session/provider/lifecycle facts.
 
 ## Completed Slices
 
@@ -67,6 +69,11 @@ evidence.
   not durable provenance evidence by default. Only broad
   session/provider/lifecycle facts are eligible for a future explicit
   projection slice.
+- Narrow durable lifecycle producer: added an app-side producer that reads the
+  existing sidecar session list and bounded live projection, then records only
+  broad session/provider/lifecycle facts through the public Provenance Engine
+  lifecycle API. Dogfood against live Codex session `79a4701f` reported zero
+  diagnostic mismatches.
 
 ## Current Branch
 
@@ -328,13 +335,15 @@ Durable execution-evidence policy dogfood:
 ## Next Required Action
 
 The bounded read-only observation diagnostic is implemented, verified, and
-dogfooded. The durable execution-evidence policy is recorded. No next execution
-telemetry implementation slice is selected. A later slice can implement a
-narrow durable producer for broad session/provider/lifecycle facts, wire an
-app/native consumer to the package client, or continue provider migration. Do
-not add telemetry persistence, broad provenance writes, React rendering
-changes, WebSocket payload changes, Swift schema ownership, or automatic
-diagnostic scheduling without an explicit policy slice.
+dogfooded. The durable execution-evidence policy is recorded. The narrow
+durable lifecycle producer for broad sidecar session/provider/lifecycle facts
+is implemented and dogfooded. No next execution telemetry implementation slice
+is selected. A later slice can dogfood configured non-default Agent Chat URLs,
+decide whether sidecar session disappearance should record stopped lifecycle
+facts, wire more app/native consumers to the package client, or continue
+provider migration. Do not add telemetry persistence, broad provenance writes,
+React rendering changes, WebSocket payload changes, Swift schema ownership, or
+automatic diagnostic scheduling without an explicit policy slice.
 
 ## Observation Diagnostic Evaluation
 

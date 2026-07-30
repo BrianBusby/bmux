@@ -267,6 +267,46 @@ struct ChatMessageCodableTests {
         }
     }
 
+    @Test("agent chat session list client reads bounded summaries")
+    func agentChatSessionListClientReadsBoundedSummaries() async throws {
+        let data = Data("""
+        [
+          {
+            "id": "session-sidecar",
+            "provider": "codex",
+            "cwd": "/repo",
+            "title": "ignored",
+            "status": "idle",
+            "createdAt": 1725000000000,
+            "capabilities": {"ignored": true}
+          }
+        ]
+        """.utf8)
+        let loader = LiveProjectionFixtureHTTPLoader(
+            response: AgentChatHTTPResponse(data: data, statusCode: 200)
+        )
+        let client = AgentChatSessionListClient(
+            baseURL: URL(string: "http://127.0.0.1:7739/s/old?x=1")!,
+            loader: loader
+        )
+
+        let sessions = try await client.list()
+        let request = try await loader.onlyRequest()
+
+        #expect(sessions == [
+            AgentChatSessionSummary(
+                id: "session-sidecar",
+                provider: "codex",
+                cwd: "/repo",
+                status: "idle",
+                createdAt: 1_725_000_000_000
+            )
+        ])
+        #expect(request.httpMethod == "GET")
+        #expect(request.url?.absoluteString == "http://127.0.0.1:7739/api/sessions")
+        #expect(request.cachePolicy == .reloadIgnoringLocalAndRemoteCacheData)
+    }
+
     @Test("execution telemetry observation diagnostic matches bounded current state facts")
     func executionTelemetryObservationDiagnosticMatchesBoundedCurrentStateFacts() {
         let diagnostic = ExecutionTelemetryObservationDiagnostic.compare(
