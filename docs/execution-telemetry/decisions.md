@@ -353,3 +353,41 @@ selected durable evidence plus deterministic Current State.
 Consequence: compare live telemetry with Current State only as a bounded
 observation diagnostic unless a later policy slice selects durable execution
 facts for provenance writes.
+
+## 2026-07-30 - Durable Execution Evidence Remains Opt-In
+
+Decision: The live execution telemetry stream is not durable provenance
+evidence by default. After dogfooding the observation diagnostic, the only
+execution telemetry facts eligible for a future durable provenance projection
+are broad session/provider/lifecycle facts:
+
+- bmux session id and provider kind;
+- provider session id when the provider exposes one;
+- repository or worktree association when bmux can determine it without raw
+  path leakage beyond the existing provenance boundary;
+- broad lifecycle presence such as active/running versus inactive/idle.
+
+All other execution telemetry remains out of durable provenance scope unless a
+later policy slice explicitly selects it. That includes message text and
+deltas, private reasoning, tool inputs and outputs, command output, raw
+provider envelopes, raw errors, changed file paths, approval request payloads,
+and token usage details.
+
+Rationale: Local dogfood of
+`bmux provenance diagnostics execution-telemetry-live 05384b5e` reported one
+bounded mismatch, `current_state_session_missing`, for a real Codex sidecar
+session that had live provider identity and an idle projection but no durable
+Current State lifecycle evidence. That mismatch is useful observation data, not
+a reason to dump the telemetry stream into Provenance Engine.
+
+Alternatives rejected: write every live session snapshot to Provenance Engine;
+persist the canonical telemetry stream first and decide policy later; treat
+usage, transcript, tool, approval, or diagnostic details as durable engineering
+evidence by default.
+
+Consequences: A future implementation slice may add a narrow producer that
+records only the eligible broad session/provider/lifecycle facts through public
+Provenance Engine APIs. That slice must still avoid telemetry persistence,
+broad provenance writes, raw provider data, React rendering changes, WebSocket
+payload changes, Swift schema ownership, and automatic diagnostic checkpoint
+scheduling unless those are separately selected.

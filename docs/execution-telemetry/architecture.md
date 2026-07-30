@@ -138,6 +138,28 @@ Those durable evidence paths stay separate from the high-frequency execution
 telemetry stream until an explicit policy slice selects which execution facts
 qualify as durable engineering evidence.
 
+## Durable Execution Evidence Policy
+
+The first dogfood pass of the read-only diagnostic confirmed that a real live
+Codex sidecar session can have provider identity and an idle live projection
+while Provenance Engine Current State has no matching active lifecycle
+evidence. That is an expected boundary mismatch, not an ingestion bug.
+
+Execution telemetry is therefore still not durable provenance evidence by
+default. A future explicit producer may project only broad
+session/provider/lifecycle facts into Provenance Engine:
+
+- bmux session id and provider kind;
+- provider session id when available;
+- repository or worktree association when bmux can derive it within the
+  existing provenance boundary;
+- broad lifecycle presence such as active/running versus inactive/idle.
+
+The following remain outside durable provenance by default: message text and
+deltas, private reasoning, tool inputs and outputs, command output, raw provider
+envelopes, raw errors, changed file paths, approval request payloads, and token
+usage details.
+
 ## Target Direction For Later Slices
 
 Slice 1 defines the common telemetry contract in

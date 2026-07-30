@@ -1,6 +1,6 @@
 # Bmux Context Efficiency: Current Status
 
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 
 This file is the live handoff index for context-efficiency, provenance, and handoff work. Keep it concise; move slice history and detailed findings into topic documents.
 
@@ -68,11 +68,24 @@ execution-telemetry-live <session-id>` compares the live projection with
 Provenance Engine Current State read-only and reports bounded mismatch rows
 only.
 
+Execution telemetry diagnostic dogfood and durable evidence policy completed
+on 2026-07-30 in the same branch. Dogfood against live Codex sidecar session
+`05384b5e` reported the expected bounded mismatch
+`current_state_session_missing`. Policy now records that execution telemetry is
+not durable provenance evidence by default; only broad
+session/provider/lifecycle facts are eligible for a future explicit projection
+slice.
+
 Potential follow-up work:
 
 - Remove or retire `WorkProvenanceStore` and `BmuxLegacyProvenanceClient` after all remaining legacy tests and observability support have replacement contracts or are declared obsolete.
 - Decide whether lifecycle observability traces need a public engine API or should remain bmux-local diagnostics.
 - Cut a tagged Provenance Engine release so bmux can depend on a version tag rather than a revision pin.
+- If selected, implement a narrow durable producer for broad
+  session/provider/lifecycle facts only. Keep telemetry persistence, raw
+  provider data, transcript/tool/usage details, React/WebSocket changes, Swift
+  schema ownership, and automatic diagnostic scheduling out of scope unless a
+  later policy slice selects them.
 
 ## Canonical Details
 

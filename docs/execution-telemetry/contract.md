@@ -1,6 +1,6 @@
 # Telemetry Contract
 
-Status: Slice 11 provider-neutral contract, sidecar fanout seam, first Codex lifecycle migrations, Plan Slice 4B live projection sidecar read surface, and Plan Slice 4C native read client.
+Status: Slice 11 provider-neutral contract, sidecar fanout seam, first Codex lifecycle migrations, Plan Slice 4B live projection sidecar read surface, Plan Slice 4C native read client, observation diagnostic, and durable execution-evidence policy.
 
 Canonical bmux roadmap reconciliation note: Provenance Engine Slice E is
 operationally complete on main, and the active product gate is the Engineering
@@ -48,6 +48,13 @@ parsed back into telemetry.
   State. It is not a high-frequency execution telemetry store and does not
   receive this canonical stream unless a later policy slice selects specific
   execution facts as durable engineering evidence.
+
+The current durable execution-evidence policy selects no automatic telemetry
+persistence or provenance writes. Only broad session/provider/lifecycle facts
+are eligible for a future explicit projection slice: bmux session id, provider
+kind, provider session id when available, repository/worktree association within
+the existing provenance boundary, and broad active/running versus inactive/idle
+lifecycle presence.
 
 ## Envelope Rules
 
@@ -166,3 +173,8 @@ Plan Slice 4B still does not add telemetry persistence, provenance writes,
 Swift/native bridge decoding, React rendering changes, WebSocket `AgentEvent`
 payload changes, Claude structured-source selection, or automatic diagnostic
 checkpoint scheduling.
+
+The durable execution-evidence policy still does not allow message text,
+deltas, private reasoning, tool inputs or outputs, command output, raw provider
+envelopes, raw errors, changed file paths, approval request payloads, or token
+usage details to become durable provenance evidence by default.

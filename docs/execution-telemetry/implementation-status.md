@@ -1,6 +1,6 @@
 # Execution Telemetry Implementation Status
 
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 
 ## Plan Orientation
 
@@ -21,19 +21,28 @@ Engine Slice E.
 | Live projection sidecar read surface | Plan Slice 4B completed on `execution-telemetry-live-projection`. | Wires the live projection to the sidecar fanout as an in-memory subscriber and exposes a bounded REST read payload; no React rendering, WebSocket `AgentEvent`, persistence, or provenance changes. |
 | Native live projection read client | Plan Slice 4C completed on `execution-telemetry-live-projection`. | Adds Swift DTOs and an injected HTTP read client in `BmuxAgentChat` for the existing REST payload, plus a shared JSON fixture drift check; no rendering, WebSocket, persistence, provenance, or Swift schema ownership changes. |
 | Read-only observation diagnostic | Completed on `execution-telemetry-live-projection`. | Adds a provider-neutral package comparison value and `bmux provenance diagnostics execution-telemetry-live <session-id>` CLI report. It compares only session presence, provider identity, and broad lifecycle presence between the live projection and Provenance Engine Current State; no persistence, provenance writes, React rendering changes, WebSocket changes, or automatic scheduling. |
+| Durable execution-evidence policy | Completed on `execution-telemetry-live-projection`. | Dogfooded the diagnostic against a real live Codex sidecar session and recorded the policy that execution telemetry is not durable provenance evidence by default. Only broad session/provider/lifecycle facts are eligible for a future explicit projection slice. |
 
 ## Active Slice
 
-Read-only observation diagnostic after Plan Slice 4C.
+Durable execution-evidence policy after the read-only observation diagnostic.
 
 Status: completed in branch `execution-telemetry-live-projection`; reconciled
 with current main after Provenance Engine Slice E. No next execution telemetry
 implementation slice is selected.
 
-Latest validation: localization JSON parse, `git diff --check`, focused
+Recent implementation validation: localization JSON parse, `git diff --check`,
 `BmuxAgentChat` live-projection/diagnostic tests, full serialized
 `BmuxAgentChat` package tests, focused Slice E provenance observer tests, and
 the tagged Debug reload build passed.
+
+Latest dogfood: launched the existing tagged Debug app, started the sidecar,
+created Codex session `05384b5e`, confirmed the live projection reached idle
+with provider identity, then ran the tagged diagnostic in text and JSON modes.
+Both reported one bounded mismatch:
+`current_state_session_missing`. This matches the expected boundary that a live
+sidecar session does not automatically create durable Current State lifecycle
+evidence.
 
 ## Completed Slices
 
@@ -53,6 +62,11 @@ the tagged Debug reload build passed.
 - Plan Slice 4B: added `LiveSessionProjectionStore`, attached it beside each sidecar `ExecutionTelemetryFanout`, and exposed a bounded REST read payload at `GET /api/sessions/:id/execution-telemetry/live`. The endpoint returns `{ sessionId, snapshot }`, with `snapshot: null` until canonical telemetry exists. Existing React rendering and WebSocket `AgentEvent` payload behavior remain unchanged.
 - Plan Slice 4C: added the native live projection read client and shared fixture drift check.
 - Observation diagnostic: added `ExecutionTelemetryObservationDiagnostic` in `BmuxAgentChat` and a read-only CLI surface at `bmux provenance diagnostics execution-telemetry-live <session-id>`. The CLI reads the live projection through `ExecutionTelemetryLiveProjectionClient.read(sessionID:)`, reads Provenance Engine Current State through the existing public client/current-context path, and reports mismatch rows only. It does not store raw provider envelopes, raw errors, command output, transcripts, private reasoning, changed file paths, telemetry state, or provenance events.
+- Durable execution-evidence policy: dogfooded the observation diagnostic
+  against live Codex session `05384b5e` and decided that execution telemetry is
+  not durable provenance evidence by default. Only broad
+  session/provider/lifecycle facts are eligible for a future explicit
+  projection slice.
 
 ## Current Branch
 
@@ -294,6 +308,16 @@ Observation diagnostic validation:
 - `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -destination 'platform=macOS' -derivedDataPath /tmp/bmux-execution-telemetry-live-projection -only-testing:bmuxTests/WorkProvenanceObserverTests`: succeeded with 3 Swift Testing cases.
 - `./scripts/reload.sh --tag execution-telemetry-live-projection`: succeeded, local build number 292.
 
+Durable execution-evidence policy dogfood:
+
+- Existing tagged Debug app launched from the tag-specific DerivedData app path.
+- The tag-bound CLI helper succeeded against the tagged socket.
+- `PATH="$HOME/.bun/bin:$PATH" bun server.ts` from `agent-chat`: started the sidecar on `127.0.0.1:7739`.
+- `POST /api/sessions` created Codex session `05384b5e`.
+- The live projection for `05384b5e` returned provider `codex`, provider session id `019fb0b3-ca8f-7cb1-88b0-31412a83a332`, lifecycle `idle`, a usage summary, and no active operations.
+- Diagnostic text mode reported one bounded mismatch, `current_state_session_missing`.
+- Diagnostic JSON mode returned `status: mismatched`, `mismatch_count: 1`, and only the mismatch code plus broad live/current-state presence values.
+
 ## Known Failures
 
 - Running `tsc` from the repo root through transient `npm exec` still does not resolve local Bun and Node ambient types. Run TypeScript checks from `agent-chat` with `PATH="$HOME/.bun/bin:$PATH"` so local package types are used.
@@ -303,7 +327,14 @@ Observation diagnostic validation:
 
 ## Next Required Action
 
-The bounded read-only observation diagnostic is implemented and verified. No next execution telemetry implementation slice is selected. A later slice can wire an app/native consumer to the package client, continue provider migration, or decide durable execution-evidence policy. Do not add telemetry persistence, broad provenance writes, React rendering changes, WebSocket payload changes, Swift schema ownership, or automatic diagnostic scheduling without an explicit policy slice.
+The bounded read-only observation diagnostic is implemented, verified, and
+dogfooded. The durable execution-evidence policy is recorded. No next execution
+telemetry implementation slice is selected. A later slice can implement a
+narrow durable producer for broad session/provider/lifecycle facts, wire an
+app/native consumer to the package client, or continue provider migration. Do
+not add telemetry persistence, broad provenance writes, React rendering
+changes, WebSocket payload changes, Swift schema ownership, or automatic
+diagnostic scheduling without an explicit policy slice.
 
 ## Observation Diagnostic Evaluation
 
@@ -320,9 +351,32 @@ Keep the diagnostic observational:
 - avoid command output, transcripts, changed file paths, raw errors, and raw
   provider envelopes.
 
+## Durable Execution Evidence Policy
+
+Execution telemetry remains bmux-owned high-frequency runtime state and is not
+durable provenance evidence by default.
+
+Eligible future durable projection facts are limited to broad
+session/provider/lifecycle facts: bmux session id, provider kind, provider
+session id when available, repository/worktree association when bmux can derive
+it within the existing provenance boundary, and broad lifecycle presence such
+as active/running versus inactive/idle.
+
+Message text, deltas, private reasoning, tool inputs or outputs, command
+output, raw provider envelopes, raw errors, changed file paths, approval request
+payloads, and token usage details remain out of durable provenance scope unless
+a later policy slice explicitly selects them.
+
 ## Blocked Decisions
 
-No current blocked decisions for Plan Slice 4C. Slice 1 decided the canonical contract location, Swift sync policy, event id and ordering policy, provider metadata policy, and raw-envelope exclusion. Plan Slice 4A adds the first live projection replay policy in `docs/execution-telemetry/decisions.md`; Plan Slice 4B adds the in-memory REST-only live read boundary; Plan Slice 4C adds the native read-client boundary and shared fixture drift check.
+No current blocked decisions for durable execution-evidence policy. Slice 1
+decided the canonical contract location, Swift sync policy, event id and
+ordering policy, provider metadata policy, and raw-envelope exclusion. Plan
+Slice 4A adds the first live projection replay policy in
+`docs/execution-telemetry/decisions.md`; Plan Slice 4B adds the in-memory
+REST-only live read boundary; Plan Slice 4C adds the native read-client
+boundary and shared fixture drift check. The durable execution-evidence policy
+records that execution telemetry is not durable provenance evidence by default.
 
 ## Deviations From Original Plan
 
