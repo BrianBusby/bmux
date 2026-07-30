@@ -350,7 +350,7 @@ func TestWebSocketPTYRunsShellOverBinaryFrames(t *testing.T) {
 		t.Fatalf("first frame should be ready text, type=%v payload=%q", msgType, string(payload))
 	}
 
-	if err := conn.Write(ctx, websocket.MessageBinary, []byte("printf '%b\\n' '\\103\\115\\125\\130\\137\\127\\123\\137\\117\\113'; exit\r")); err != nil {
+	if err := conn.Write(ctx, websocket.MessageBinary, []byte("printf '%b\\n' '\\102\\115\\125\\130\\137\\127\\123\\137\\117\\113'; exit\r")); err != nil {
 		t.Fatalf("write terminal command: %v", err)
 	}
 
@@ -522,7 +522,7 @@ func TestWebSocketPTYStressSessionCleanupAndBoundedScrollback(t *testing.T) {
 		conn := dialPTY(t, ctx, server.URL)
 		sendAuth(t, ctx, conn, token, sessionID, 80+i, 24)
 		readReady(t, ctx, conn)
-		if err := conn.Write(ctx, websocket.MessageBinary, []byte("printf '%8192s\\n' x; printf '%b\\n' '\\103\\115\\125\\130\\137\\110\\117\\114\\104'; read line; exit\r")); err != nil {
+		if err := conn.Write(ctx, websocket.MessageBinary, []byte("printf '%8192s\\n' x; printf '%b\\n' '\\102\\115\\125\\130\\137\\110\\117\\114\\104'; read line; exit\r")); err != nil {
 			t.Fatalf("write stress command %d: %v", i, err)
 		}
 		waitForBinaryContainsLabel(t, ctx, conn, "stress session "+sessionID+" hold marker", "BMUX_HOLD", 10*time.Second)
