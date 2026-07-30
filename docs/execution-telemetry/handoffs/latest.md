@@ -3,73 +3,65 @@
 ## Session identity
 
 - Date: 2026-07-30
-- Slice: Narrow durable lifecycle producer for live execution telemetry
-- Branch: `execution-telemetry-live-projection`
-- Starting commit: `036693febe00cc620aeb149595e0339e45b9307a`
+- Slice: First non-Codex provider migration
+- Branch: `execution-telemetry-provider-migration-next`
+- Starting commit: `9d7fefacbb40`
+- Implementation commit: this branch's pushed head.
 
 ## Objective completed
 
-Implemented the narrow durable producer for broad sidecar
-session/provider/lifecycle facts. Supported live sidecar sessions with a
-bounded live projection now produce enough Provenance Engine lifecycle evidence
-for the existing read-only diagnostic to match Current State.
+Audited Claude support in `agent-chat/adapters/claude.ts` and migrated only the
+narrow lifecycle/identity facts that have an authoritative source in the
+current stream-json path.
 
-The diagnostic remains observational and read-only.
+This does not claim Claude parity with Codex.
 
 ## Implementation completed
 
-- Added a native `AgentChatSessionListClient` and bounded
-  `AgentChatSessionSummary` DTO for the existing `GET /api/sessions` sidecar
-  endpoint.
-- Added `ExecutionTelemetryProvenanceProjectionService`, a native app-side
-  observer that polls the sidecar session list, reads each bounded live
-  projection, and records only idle/running lifecycle presence.
-- Reused the existing public Provenance Engine SDK write path through
-  `WorkProvenanceSessionLifecycleRecorder`.
-- Recorded only the allowed durable facts: bmux sidecar session id, provider
-  kind, provider session id when available, and a derived worktree id.
-- Did not persist working-directory paths in the new sidecar lifecycle request;
-  the cwd is used only to derive the worktree id.
-- Dedupe is in memory per sidecar session/provider/provider-session identity.
-- The observer starts for the default sidecar URL at runtime and switches to a
-  configured Agent Chat URL when the Agent Chat action uses one.
-- XCTest app bootstraps skip the sidecar poller to avoid unit-test network
-  noise.
+- Added `agent-chat/adapters/claudeTelemetry.ts` with bounded Claude producers
+  for prompt submission, provider session linking, turn completion, and turn
+  failure.
+- Routed Claude sidecar prompt submission through the existing shared
+  `server.ts` prompt hook and `ExecutionTelemetryFanout`.
+- Routed Claude stream-json `system/init` provider session identity through
+  `session.provider-linked` telemetry while preserving the existing single
+  React `meta` event with `model` and `providerSessionId`.
+- Routed Claude stream-json `result` success/error closure through
+  `turn.completed` / `turn.failed` telemetry while keeping Claude cost,
+  duration, turn-count display stats projection-only.
+- Routed sidecar process-close failure for unfinished Claude turns through
+  bounded `turn.failed` telemetry so live lifecycle state does not remain
+  running after a mid-turn process exit.
+- Extended the projection-only options with `doneStats` and
+  `providerLinkedModel`; these values are not canonical envelope data.
 
 ## Preserved boundaries
 
 - No telemetry persistence.
-- No raw provider envelopes.
+- No provenance writes or broad durable evidence expansion.
+- No raw Claude stream-json envelopes.
 - No raw errors, command output, transcripts, private reasoning, changed file
-  paths, approval payloads, or token usage details are written to provenance.
+  paths, approval payloads, or token usage details.
+- No Claude message, thinking, tool-use/tool-result, command-list,
+  control/status, token usage, or changed-file migration.
 - No React rendering changes.
-- No WebSocket `AgentEvent` changes.
+- No WebSocket `AgentEvent` schema changes.
 - No Swift ownership of the canonical telemetry schema.
-- No Claude structured-source work.
-- No automatic diagnostic checkpoint scheduling.
-
-## Dogfood completed
-
-- Built tagged Debug app with `./scripts/reload.sh --tag
-  execution-telemetry-live-projection`, build 293.
-- Launched the tagged app from the exact DerivedData app path.
-- Started `agent-chat` on `127.0.0.1:7739`.
-- Created Codex sidecar session `79a4701f` in `/Users/brianbusby/repos/bmux`.
-- Live projection settled to provider `codex`, provider session id
-  `019fb1bd-bc6b-7141-8926-df2554f0c5e4`, lifecycle `idle`.
-- The tagged CLI diagnostic text mode reported:
-  `No execution telemetry observation mismatches for 79a4701f.`
-- The tagged CLI diagnostic JSON mode reported `status: matched`,
-  `mismatch_count: 0`, and an empty `mismatches` array.
 
 ## Validation
 
-- Focused `BmuxAgentChat` `ChatMessageCodableTests`: passed.
-- Full `BmuxAgentChat` package suite with `--no-parallel`: passed.
-- Focused `bmux-unit` `SessionProvenanceTests`: passed.
-- Focused `bmux-unit` `WorkProvenanceObserverTests`: passed.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/claude-active-turn.test.ts`: passed.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/execution-telemetry-fanout.test.ts`: passed.
+- `npm exec --yes --package tsx@4.20.5 -- tsx agent-chat/test/codex-telemetry-migration.test.ts`: passed.
+- `cd agent-chat && PATH="$HOME/.bun/bin:$PATH" bun run check`: passed.
 - `git diff --check`: passed.
-- Tagged reload passed with local build number 293.
+- `./scripts/reload.sh --tag execution-telemetry-provider-migration-next`: passed, local build number 294.
+
+## Dogfood
+
+No live Claude dogfood session was run in this slice. The selected behavior is
+covered by handler-level tests against the audited Claude stream-json
+`system/init` and `result` events plus sidecar process-close failure behavior.
 
 ## Next slice
 
@@ -77,12 +69,15 @@ No next execution telemetry implementation slice is selected.
 
 Reasonable later work:
 
-- dogfood with a configured non-default Agent Chat URL;
-- decide whether sidecar session disappearance should record a stopped
-  lifecycle fact;
-- continue provider migration.
+- live-dogfood Claude Agent Chat sessions against the sidecar live projection;
+- decide whether a bounded Claude tool lifecycle source is safe to migrate;
+- dogfood configured non-default Agent Chat URLs;
+- decide whether sidecar session disappearance should record stopped lifecycle
+  facts;
+- wire more app/native consumers to the package client.
 
 Keep telemetry persistence, broad provenance writes, React rendering changes,
-WebSocket payload changes, Swift schema ownership, Claude structured-source
-work, and automatic diagnostic checkpoint scheduling out of scope unless a
-later policy slice selects them.
+WebSocket payload changes, Swift schema ownership, raw provider envelopes,
+transcripts, tool output, token usage assumptions, changed-file paths, and
+automatic diagnostic checkpoint scheduling out of scope unless a later policy
+slice selects them.

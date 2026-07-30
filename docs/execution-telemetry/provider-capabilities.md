@@ -1,6 +1,8 @@
 # Provider Capability Matrix
 
-Status: initial Slice 0 model based on current bmux code and local Codex app-server schema from `codex-cli 0.144.5`.
+Status: Codex capabilities are based on the Slice 0 schema audit from
+`codex-cli 0.144.5`; Claude capabilities include the first non-Codex provider
+migration audit from `agent-chat/adapters/claude.ts`.
 
 ## Codex app-server in agent-chat
 
@@ -23,7 +25,30 @@ Status: initial Slice 0 model based on current bmux code and local Codex app-ser
 
 ## Claude in agent-chat
 
-Claude is listed as a provider in `agent-chat/server.ts`, but Slice 0 did not audit its adapter deeply. Do not assume Claude capability parity with Codex until Slice 8 selects an authoritative structured Claude source.
+- Provider session id: authoritative `session_id` from Claude stream-json
+  `system/init`.
+- bmux session id: sidecar-generated id in `agent-chat/server.ts`.
+- Prompt submission: sidecar-owned prompt dispatch, now emitted as
+  `prompt.submitted` for live lifecycle projection.
+- Turn boundaries: no Codex-parity provider turn id is exposed in the audited
+  stream. Claude stream-json `result` is authoritative for coarse completion or
+  result-error closure of the active sidecar turn; sidecar process close is a
+  bounded failure closure for an unfinished active turn.
+- Turn id: unavailable in the audited Claude stream-json path.
+- Model identity: available on `system/init`; retained only as projection data
+  for the existing React `meta` event, not canonical telemetry.
+- Tool lifecycle: assistant `tool_use` and user `tool_result` stream-json
+  blocks exist, but remain on the existing `AgentEvent` path for now because
+  this slice did not select tool input/result migration.
+- Token usage: not exposed in the audited stream-json events used by this
+  slice. Cost, duration, and turn count from `result` remain projection-only
+  display stats.
+- File changes: no structured changed-file list selected in this path.
+- Replay: sidecar process memory, capped at 5000 `AgentEvent`s.
+- Headless capture: yes through REST `/api/sessions`.
+- Provenance writes: none from the Claude app-server path beyond the existing
+  broad live projection producer consuming bounded session/provider/lifecycle
+  facts.
 
 ## Terminal and hook path
 

@@ -391,3 +391,27 @@ Provenance Engine APIs. That slice must still avoid telemetry persistence,
 broad provenance writes, raw provider data, React rendering changes, WebSocket
 payload changes, Swift schema ownership, and automatic diagnostic checkpoint
 scheduling unless those are separately selected.
+
+## 2026-07-30 - Migrate Only Claude Lifecycle And Identity Facts
+
+Decision: The first non-Codex provider migration selects only Claude sidecar
+prompt submission, stream-json `system/init` provider session identity, Claude
+stream-json `result` completion/result-error closure, and sidecar
+process-close failure closure for canonical telemetry.
+
+Rationale: `agent-chat/adapters/claude.ts` has structured stream-json events,
+but they do not expose Codex-parity turn ids, token usage, structured changed
+files, or a selected safe tool lifecycle source. The audited authoritative
+facts are enough to make the live projection lifecycle/provider identity useful
+for Claude sessions without widening the privacy or provenance boundary.
+
+Alternatives rejected: migrate Claude message deltas, thinking deltas,
+tool-use/tool-result blocks, command lists, status/control responses, cost
+display stats, raw stream-json envelopes, or token usage assumptions in the
+same slice; synthesize provider turn ids for Claude.
+
+Consequences: Claude live telemetry can report sidecar session id, provider
+kind, provider session id when `system/init` arrives, and broad running versus
+idle/failed lifecycle. React `AgentEvent` behavior remains unchanged, and
+Claude message/tool/content events remain direct UI projection until a later
+bounded source-selection slice.

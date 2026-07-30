@@ -16,6 +16,7 @@ import { liveSessionProjectionPayload, LiveSessionProjectionStore } from "./exec
 import { claudeAdapter } from "./adapters/claude";
 import { codexAdapter } from "./adapters/codex";
 import { emitCodexPromptSubmitted } from "./adapters/codexTelemetry";
+import { emitClaudePromptSubmitted } from "./adapters/claudeTelemetry";
 import { piAdapter } from "./adapters/pi";
 import { makeAcpAdapter } from "./adapters/acp";
 import { resolveGhosttyTheme, type GhosttyTheme } from "./theme";
@@ -464,6 +465,10 @@ function sendPrompt(sess: Session, prompt: string) {
 function emitPromptSubmitted(sess: Session, prompt: string) {
   if (sess.provider === "codex") {
     emitCodexPromptSubmitted(sess, prompt);
+    return;
+  }
+  if (sess.provider === "claude") {
+    emitClaudePromptSubmitted(sess, prompt);
     return;
   }
   sess.emit({ kind: "user", text: prompt });

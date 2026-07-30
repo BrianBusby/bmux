@@ -81,17 +81,17 @@ export function projectTelemetryEnvelopeToAgentEvents(
     case "session.started":
       return [];
     case "session.provider-linked":
-      return [{ kind: "meta", providerSessionId: event.providerSessionId }];
+      return [{ kind: "meta", model: projection?.providerLinkedModel, providerSessionId: event.providerSessionId }];
     case "prompt.submitted":
       return [{ kind: "user", text: event.text }];
     case "turn.started":
       return [];
     case "turn.completed":
-      return [withDoneGeneration({ kind: "done", stats: formatUsageStats(event.usage, event.durationMs) ?? "" }, projection)];
+      return [withDoneGeneration({ kind: "done", stats: projection?.doneStats ?? formatUsageStats(event.usage, event.durationMs) ?? "" }, projection)];
     case "turn.failed":
       return [
         { kind: "error", message: event.error.message },
-        withDoneGeneration({ kind: "done" }, projection),
+        withDoneGeneration({ kind: "done", stats: projection?.doneStats }, projection),
       ];
     case "message.delta":
       return [{ kind: event.stream === "reasoning" ? "thinking" : "delta", text: event.text }];
