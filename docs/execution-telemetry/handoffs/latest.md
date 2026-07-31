@@ -2,11 +2,12 @@
 
 ## Session identity
 
-- Date: 2026-07-30
-- Slice: First non-Codex provider migration
-- Branch: `execution-telemetry-provider-migration-next`
+- Date: 2026-07-31
+- Slice: First non-Codex provider migration merged via PR #13
+- Historical branch: `execution-telemetry-provider-migration-next`
 - Starting commit: `9d7fefacbb40`
-- Implementation commit: this branch's pushed head.
+- Implementation head: `010ea333b24ccca71b6cea4c1bad19642ffaa6c8`
+- Merge commit: `3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9`
 
 ## Objective completed
 
@@ -15,6 +16,10 @@ narrow lifecycle/identity facts that have an authoritative source in the
 current stream-json path.
 
 This does not claim Claude parity with Codex.
+
+This implementation is now contained in `main`. Do not treat the historical
+branch as an active implementation branch unless new work is explicitly
+selected.
 
 ## Implementation completed
 
@@ -65,7 +70,9 @@ covered by handler-level tests against the audited Claude stream-json
 
 ## Next slice
 
-No next execution telemetry implementation slice is selected.
+The first non-Codex provider migration, Claude lifecycle telemetry, is
+implemented and merged to `main` via PR #13. No subsequent execution telemetry
+implementation slice is selected.
 
 Reasonable later work:
 
@@ -74,6 +81,8 @@ Reasonable later work:
 - dogfood configured non-default Agent Chat URLs;
 - decide whether sidecar session disappearance should record stopped lifecycle
   facts;
+- design automatic 5/10/15/20/25-minute diagnostic checkpoint policy and then
+  implement it;
 - wire more app/native consumers to the package client.
 
 Keep telemetry persistence, broad provenance writes, React rendering changes,

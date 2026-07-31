@@ -25,6 +25,7 @@ provenance-engine owns reusable provenance contracts, durable evidence storage, 
 https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md
 
 Local bmux integration notes live in `docs/provenance-integration.md`.
+Execution telemetry status and policy live in `docs/execution-telemetry/`.
 
 ## Implemented Capabilities
 
@@ -56,7 +57,14 @@ bmux-local observability SQLite because V1 has no public observability trace
 API, and opening an agent-session surface alone does not create lifecycle
 evidence unless supported hooks/feed events reach bmux.
 
-GitHub Actions waivers for Slice C and Slice D: bmux PR 7 and PR 9 Actions remained unavailable as acceptance evidence. No failing CI result was observed, branch protection did not require checks, and the runner scheduling issue remains tracked in bmux issue 8. Slice E validation is recorded in `docs/context-efficiency/current-status.md`.
+GitHub Actions waivers for Slice C and Slice D remain historical acceptance
+records: bmux PR 7 and PR 9 Actions were unavailable as acceptance evidence, no
+failing CI result was observed, and branch protection did not require checks.
+PR #14 repaired the fork CI baseline and restored job materialization and
+runner assignment sufficiently for current PR validation. Issue #8 remains open
+pending evidence that new pull-request jobs reliably receive runners and
+complete with usable results. Slice E validation is recorded in
+`docs/context-efficiency/current-status.md`.
 
 Still out of scope until a new slice is explicitly selected: daemon transport, UI work, observability API expansion, GitHub ingestion, Knowledge Compiler implementation, semantic retrieval, broad legacy data migration, and lifecycle policy automation.
 

@@ -59,7 +59,12 @@ Engine Slice E.
 
 React does not own provider session identity or app-server lifecycle. React owns only a browser-side projection: `agent-chat/src/session.ts` duplicates the `AgentEvent` union and `foldEvent()` maps events into renderable `Block` values.
 
-Native Swift does not currently subscribe to the TypeScript `AgentEvent` stream. `Sources/AppDelegate+AgentChat.swift` only starts or opens the sidecar URL in a browser surface. The shared Swift package `Packages/Shared/BmuxAgentChat` models native chat transcripts and hook-derived agent kinds, but this audit did not find a bridge from TypeScript `AgentEvent` to that package.
+Native Swift does not subscribe to the TypeScript `AgentEvent` UI stream. The
+shared Swift package `Packages/Shared/BmuxAgentChat` now reads the bounded live
+projection REST payload through `ExecutionTelemetryLiveProjectionClient` and
+uses shared fixtures to catch payload drift. Swift consumes that read payload;
+it does not own the canonical telemetry schema or reconstruct telemetry from
+React events.
 
 ## Renderer Independence Today
 
@@ -79,7 +84,7 @@ projects each envelope to the existing `AgentEvent` stream through
 `SessionCtx.emitTelemetry`.
 
 Most provider adapter events still call `SessionCtx.emit(AgentEvent)` directly.
-Slices 3 through 9 migrate Codex prompt submission, provider session linkage,
+Slices 3 through 11 migrate Codex prompt submission, provider session linkage,
 turn lifecycle, message lifecycle, tool lifecycle, approval lifecycle,
 standalone usage observations, and request-status diagnostics through
 `SessionCtx.emitTelemetry`; those envelopes project back to the same
@@ -112,8 +117,9 @@ GET /api/sessions/:id/execution-telemetry/live
 
 `snapshot` is `null` until the session has emitted canonical telemetry. This
 does not append projection state to `Session.events`, broadcast new WebSocket
-messages, change React rendering, persist telemetry, write provenance records,
-or introduce a native bridge.
+messages, change React rendering, persist telemetry, or write provenance
+records. Plan Slice 4C later added the native read client for this existing
+REST payload.
 
 ## Plan Slice 4C Native Read Client
 
@@ -137,24 +143,27 @@ Important reductions:
 
 Execution telemetry remains bmux-owned high-frequency runtime state. The
 agent-chat app-server path does not write canonical telemetry to Provenance
-Engine.
+Engine, and the live projection is not durable.
 
 After accepted Provenance Engine Slice E, bmux production provenance defaults
 use the engine-owned store for selected durable evidence, lifecycle writes,
 worktree observation writes, schema identity, and deterministic Current State.
 Those durable evidence paths stay separate from the high-frequency execution
-telemetry stream until an explicit policy slice selects which execution facts
-qualify as durable engineering evidence.
+telemetry stream. The current app-side projection records only broad sidecar
+session/provider/lifecycle presence facts through the public
+`recordSessionLifecycle(...)` SDK path.
 
 ## Durable Execution Evidence Policy
 
 The first dogfood pass of the read-only diagnostic confirmed that a real live
 Codex sidecar session can have provider identity and an idle live projection
 while Provenance Engine Current State has no matching active lifecycle
-evidence. That is an expected boundary mismatch, not an ingestion bug.
+evidence. That was an expected boundary mismatch before a durable lifecycle
+producer was selected. Supported lifecycle-backed live sessions can now match
+Current State because the narrow producer records only broad lifecycle facts.
 
 Execution telemetry is therefore still not durable provenance evidence by
-default. A future explicit producer may project only broad
+default. The implemented explicit producer projects only broad
 session/provider/lifecycle facts into Provenance Engine:
 
 - bmux session id and provider kind;
@@ -184,7 +193,8 @@ ExecutionEventEnvelope
         +--> AgentEvent UI projection
         +--> live bmux/native projection
         +--> future bounded telemetry store
-        +--> future selected provenance projection
+        +--> current narrow lifecycle provenance projection
+        +--> future selected durable projections
 ```
 
 The reverse direction should remain prohibited: raw provider event -> AgentEvent/status string -> reconstructed execution telemetry.
@@ -195,6 +205,7 @@ The sidecar owns the canonical envelope fields: bmux session id, event id,
 per-session sequence, captured timestamp, provider id, provider session id, and
 provider turn id. Provider adapters own bounded normalization from provider
 messages into typed event payloads. React owns only the current render
-projection. Native Swift can consume a future JSON bridge but should not define
-an independent schema. provenance-engine remains a later selected projection,
-not the owner of high-frequency telemetry.
+projection. Native Swift consumes the bounded live projection JSON payload but
+should not define an independent schema. Provenance Engine owns only explicitly
+selected durable evidence written through the public SDK, not high-frequency
+telemetry.

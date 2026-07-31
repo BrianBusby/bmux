@@ -64,8 +64,16 @@ Captured workflows today:
 
 - Worktree observation records Git repository/worktree/change-set/file-change evidence for bmux workspaces whose current directory is inside a Git repository.
 - Agent lifecycle recording records hook-derived Codex/Claude-style subagent lifecycle through `ProvenanceSessionLifecycleRequest`.
+- Supported live sidecar execution telemetry sessions record only broad
+  session/provider/lifecycle presence through the same public lifecycle
+  recorder, with cwd used only to derive a worktree id when possible.
 
 Not every agent UI action implies a recorded session. Opening an agent-session surface alone creates UI state; durable lifecycle evidence is recorded when supported hooks/feed events reach bmux. Engine durability covers accepted events after they reach the SDK; producer delivery reliability remains bmux-owned.
+
+The engine does not ingest or own the full execution telemetry stream. Raw
+provider envelopes, message text, reasoning, command output, approval payloads,
+token details, changed-file paths, diagnostics scheduling, UI, and analytics
+remain bmux-owned unless a later policy slice explicitly changes that boundary.
 
 ## Smoke Test
 

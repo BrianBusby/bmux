@@ -49,16 +49,16 @@ parsed back into telemetry.
   payloads, plus bounded provider references such as method, request id, item
   id, turn id, and provider session id.
 - React owns only the current `AgentEvent -> Block[]` render projection.
-- Native Swift owns future display or notification projections after a bridge is
-  added; it does not own this source of truth.
+- Native Swift owns display or notification consumers of bounded telemetry read
+  payloads; it does not own this source of truth.
 - Provenance Engine owns selected durable evidence and deterministic Current
   State. It is not a high-frequency execution telemetry store and does not
-  receive this canonical stream unless a later policy slice selects specific
-  execution facts as durable engineering evidence.
+  receive the canonical telemetry stream. Selected broad lifecycle facts cross
+  only through explicit durable projection.
 
 The current durable execution-evidence policy selects no automatic telemetry
-persistence or provenance writes. Only broad session/provider/lifecycle facts
-are eligible for a future explicit projection slice: bmux session id, provider
+persistence and no broad provenance stream. The implemented durable projection
+records only broad session/provider/lifecycle facts: bmux session id, provider
 kind, provider session id when available, repository/worktree association within
 the existing provenance boundary, and broad active/running versus inactive/idle
 lifecycle presence.
