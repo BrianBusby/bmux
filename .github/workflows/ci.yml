@@ -959,10 +959,10 @@ jobs:
             fi
             echo "::group::swift test $pkgdir"
             case "$pkg" in
-            BmuxAuthRuntime)
+            BmuxAuthRuntime|BmuxRemoteSession)
               suite_list="$(
-                find "$pkgdir/Tests" -name '*.swift' -print0 \
-                  | xargs -0 perl -ne 'print "$1\n" if /^\s*@Suite(?:\([^)]*\))?\s+struct\s+([A-Za-z0-9_]+)/' \
+                swift test --package-path "$pkgdir" list \
+                  | awk -F'[./]' '/^[A-Za-z0-9_]+Tests\.[A-Za-z0-9_]+\// { print $2 }' \
                   | sort -u
               )"
               if [ -z "$suite_list" ]; then
