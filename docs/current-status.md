@@ -2,12 +2,11 @@
 
 This document records the accepted baseline and active integration gate. The complete platform north star is `docs/reference-architecture.md`; the currently implemented architecture and active design boundaries are in `docs/architecture.md`.
 
-Accepted baseline: `0.1.0` plus Slice C session-tree read contract acceptance,
-Slice D file-explanation read adoption acceptance, and Slice E current-context
-engine readiness.
+Accepted baseline: `main` at
+`0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc`, which includes Provenance Engine
+V1, bmux Slice E operational acceptance, and schema identity hardening.
 
-Source baseline: `main` through Slice D readiness merge commit
-`126afde36671f53a137953200e7883e6b4093ac3`.
+Current cross-repository gate: Engineering Observation Period after Slice E.
 
 The accepted engine is an independent Swift package with three modules:
 
@@ -15,14 +14,26 @@ The accepted engine is an independent Swift package with three modules:
 - `ProvenanceEngineSDK`
 - `ProvenanceEngineSQLite`
 
-The supported client entrypoint is `ProvenanceEngineClientFactory`, which creates an in-process SQLite-backed `any ProvenanceEngineClient`. The current storage backend owns SQLite schema creation, event ledger persistence, worktree/session/file/current-context projections, validation summaries, and repair reports.
+The supported client entrypoint is `ProvenanceEngineClientFactory`, which creates an in-process SQLite-backed `any ProvenanceEngineClient`. The current storage backend owns SQLite schema creation, event ledger persistence, worktree/session/file/current-context projections, validation summaries, repair reports, default storage path resolution, and schema identity validation.
 
-The first bmux adoption path, `bmux provenance worktrees list`, now consumes this package through `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.worktrees(...)`.
+bmux now consumes the public SDK for adopted V1 reads and bounded writes:
 
-Current integration gate: Slice E bmux adoption pending for
-`bmux provenance context current`. Engine readiness is complete in this
-repository and recorded in `docs/current-context-readiness-slice-completion.md`,
-but Slice E is not accepted until bmux consumes the ready contract.
+- `bmux provenance worktrees list` calls `ProvenanceEngineClient.worktrees(...)`.
+- `bmux provenance sessions tree <session-id>` calls `ProvenanceEngineClient.sessionTree(...)`.
+- `bmux provenance explain <path>` calls `ProvenanceEngineClient.fileExplanation(...)`.
+- `bmux provenance context current` calls `ProvenanceEngineClient.currentContext(...)`.
+- supported lifecycle facts are recorded with `ProvenanceEngineClient.recordSessionLifecycle(...)`.
+- accepted Git/worktree observations are recorded with `ProvenanceEngineClient.appendEvent(...)`.
+
+Slice E is operationally accepted. bmux merged the runtime cutover at
+`3cbacd1501768f79ea377eb2d6aea9113f199d1b`; this repository accepted the shared
+roadmap update at `0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc`; and schema
+identity hardening landed at `18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03`.
+
+Production default storage now resolves to the engine-owned store at
+`~/.local/state/provenance-engine/provenance.sqlite`, and incompatible stores
+are rejected by engine schema identity validation. The prior bmux-local
+database is not the canonical V1 Current State store.
 
 Slice C consumer adoption merged in bmux PR 7 at
 `08763dd0d3256989180dcc04f426da1f24369175` on 2026-07-24T17:20:04Z with an
@@ -43,18 +54,31 @@ head `ea72bfd7dc28cd60b093b5a4d0bebc5853c32f59`. bmux repinned to merged engine
 revision `126afde36671f53a137953200e7883e6b4093ac3` and removed the temporary
 feature-branch dependency pin everywhere.
 
-Slice E readiness validated the existing `currentContext` public contract,
-required no new public API, and did not cross the storage boundary. Provenance
-Engine should not add storage, daemon, migration, retrieval, semantic,
-observability, GitHub ingestion, or Knowledge Compiler implementation during
-bmux adoption.
+Slice E validated the existing `currentContext` public contract, lifecycle
+recording, accepted Git/worktree observation append path, engine-owned
+production default storage, and schema identity hardening. Provenance Engine did
+not take ownership of bmux UI, orchestration, capture policy, observability
+trace presentation, or execution telemetry.
 
-Long-term architecture note: shared repository evidence and Knowledge Compiler work are accepted as post-V1 planning targets only. The current package preserves optional event evidence-origin and evidence-scope metadata, but GitHub ingestion, shared evidence-store deployment, retrieval, and compiler implementation remain frozen until after the current V1 bmux adoption sequence.
+Current caveats and gates:
 
-Required verification for this baseline:
+- Broad migration or removal of legacy bmux-local provenance data remains a
+  separate, explicitly gated cleanup/migration decision.
+- The current observability trace path remains bmux-local because V1 has no
+  public observability trace API.
+- Opening an agent-session UI surface alone does not necessarily create durable
+  lifecycle evidence; supported hooks, feeds, or approved lifecycle producers
+  must emit facts to bmux first.
+- Daemon/service transport, GitHub ingestion, retrieval, Knowledge Compiler
+  work, shared evidence deployment, execution analytics, and automatic
+  diagnostic checkpoint scheduling remain unimplemented and gated.
+
+Long-term architecture note: shared repository evidence and Knowledge Compiler work are accepted as post-V1 planning targets only. The current package preserves optional event evidence-origin and evidence-scope metadata, but GitHub ingestion, shared evidence-store deployment, retrieval, and compiler implementation remain frozen until the Engineering Observation Period produces an explicit next-slice decision.
+
+Required verification for this repository baseline:
 
 ```bash
-swift test --package-path /Users/brianbusby/repos/provenance-engine
+swift test
 ```
 
 Last local verification for Slice D readiness on 2026-07-24:

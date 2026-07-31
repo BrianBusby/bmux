@@ -1,6 +1,10 @@
 # ProvenanceEngine
 
-ProvenanceEngine is the independent local-first provenance product. This repository currently contains the initial contract module, a small public in-process SDK, and the first internal storage support module.
+ProvenanceEngine is the independent local-first provenance product. The
+implemented V1 platform provides public contracts, a public in-process SDK,
+engine-owned SQLite storage, an immutable ledger, deterministic Current State,
+and adopted bmux integration through the public SDK. The active
+cross-repository gate is the Engineering Observation Period after Slice E.
 
 ## Planning
 
@@ -10,8 +14,8 @@ ProvenanceEngine is the independent local-first provenance product. This reposit
 - Technical integration contract: `docs/integration-contract.md`
 - Canonical bmux integration roadmap: `docs/bmux-integration-roadmap.md`
 - Current status and active gate: `docs/current-status.md`
-- Slice D file-explanation readiness evidence: `docs/file-explanation-readiness-slice-completion.md`
-- Slice E current-context readiness evidence: `docs/current-context-readiness-slice-completion.md`
+- Historical Slice D file-explanation readiness evidence: `docs/file-explanation-readiness-slice-completion.md`
+- Historical Slice E current-context readiness evidence: `docs/current-context-readiness-slice-completion.md`
 - V1 write-side validation evidence: `docs/write-side-validation-milestone.md`
 - Canonical V1 platform boundary: `docs/v1-boundary-review.md`
 
@@ -22,7 +26,7 @@ ProvenanceEngine is the independent local-first provenance product. This reposit
 - Public in-process SDK module: `ProvenanceEngineSDK`
 - Internal storage module: `ProvenanceEngineSQLite`
 - Language mode: Swift 6
-- Scope: Foundation-only contracts, optional event evidence-origin and evidence-scope metadata, public factory construction for SQLite-backed in-process clients, engine-owned SQLite storage location, connection, statement, migration, repository-opening, internal schema-migration metadata, internal event-ledger support, durable accepted local SDK writes, bounded append-order ledger cursor reads, internal event-ledger validation, internal projection-count/key validation and repair, internal storage summary, integrity reports, gated repair attempts, bounded repair-attempt metadata, internal projection rebuild from ledger replay, session/worktree tree projections, file-explanation projection storage, and current-context projection reads
+- Scope: Foundation-only contracts, optional event evidence-origin and evidence-scope metadata, public factory construction for SQLite-backed in-process clients, engine-owned SQLite storage location, connection, statement, migration, repository-opening, schema identity validation, internal schema-migration metadata, internal event-ledger support, durable accepted local SDK writes, bounded append-order ledger cursor reads, internal event-ledger validation, internal projection-count/key validation and repair, internal storage summary, integrity reports, gated repair attempts, bounded repair-attempt metadata, internal projection rebuild from ledger replay, session/worktree tree projections, file-explanation projection storage, current-context projection reads, and producer-neutral lifecycle recording
 
 The public modules are intentionally narrow. They do not include bmux imports, AppKit, SwiftUI, daemon or IPC transport, launch agents, CLI surfaces, storage migration from bmux, retrieval, lifecycle policy, UI, or observability.
 

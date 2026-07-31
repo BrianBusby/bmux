@@ -8,6 +8,12 @@ Contract assessment: A. Existing public contract is sufficient.
 
 This document preserves the engine-side readiness evidence for migrating `bmux provenance context current` to `ProvenanceEngineClient.currentContext(...)`. It does not mark Slice E accepted. Acceptance requires the bmux repository to consume this readiness work and preserve bmux command behavior through the public SDK.
 
+Historical status note: this file is preserved as the 2026-07-25 engine-side
+readiness record. Slice E was later operationally accepted after bmux consumed
+the ready contract and merged the runtime cutover at
+`3cbacd1501768f79ea377eb2d6aea9113f199d1b`. The current gate is recorded in
+`docs/current-status.md` and `docs/bmux-integration-roadmap.md`.
+
 ## Baseline Confirmation
 
 Confirmed on 2026-07-25:
@@ -202,7 +208,8 @@ This slice did not implement bmux migration, lifecycle recording, capture migrat
 
 ## Readiness Status
 
-Engine readiness is complete. Slice E remains pending bmux adoption and review.
+Historical readiness result: engine readiness was complete. At the time this
+record was authored, bmux adoption and review had not happened yet.
 
 ## Validation Results
 

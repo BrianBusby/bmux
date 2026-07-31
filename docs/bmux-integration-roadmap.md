@@ -23,9 +23,15 @@ schema identity hardening at engine revision
 
 Current gate after Slice E: Engineering Observation Period, plus cleanup of
 named legacy bmux-local support surfaces. Planned order after observation:
-legacy cleanup, observability API decision, tagged engine release, daemon or
-service transport if needed, then shared evidence and Knowledge Compiler
-adoption.
+legacy cleanup, observability API decision if the remaining bmux-local trace
+path needs an engine contract, tagged engine release, daemon or service
+transport only if needed, then shared evidence and Knowledge Compiler adoption.
+
+bmux execution telemetry is a bmux-owned live runtime system. Only explicitly
+approved broad lifecycle facts cross into Provenance Engine through the public
+SDK; raw or high-frequency telemetry, diagnostics policy, UI, analytics, and
+capture orchestration remain bmux-owned. See the bmux execution-telemetry docs
+for the live projection and diagnostic status.
 
 ## Milestone: bmux Worktree Reads
 
