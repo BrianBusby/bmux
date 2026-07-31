@@ -66,15 +66,18 @@ milestones:
   - id: claude_lifecycle_telemetry
     title: Claude lifecycle telemetry migration
     owner: bmux
-    delivery_status: draft
+    delivery_status: merged
     acceptance_status: implemented
     evidence:
       commits:
         - repository: BrianBusby/bmux
           sha: 5a4a463f17e07a1c5e2a037f07bfe4f743f839c5
+        - repository: BrianBusby/bmux
+          sha: 3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9
       pull_requests:
         - repository: BrianBusby/bmux
           number: 13
+    completed_at: 2026-07-31
 
 ownership:
   durable_evidence: provenance_engine
