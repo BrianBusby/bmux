@@ -2,9 +2,9 @@
 
 This document records the accepted baseline and active integration gate. The complete platform north star is `docs/reference-architecture.md`; the currently implemented architecture and active design boundaries are in `docs/architecture.md`.
 
-Accepted baseline: `main` at
-`0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc`, which includes Provenance Engine
-V1, bmux Slice E operational acceptance, and schema identity hardening.
+Accepted implementation baseline verified through
+`0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc`: Provenance Engine V1, bmux Slice
+E operational acceptance, and schema identity hardening.
 
 Current cross-repository gate: Engineering Observation Period after Slice E.
 

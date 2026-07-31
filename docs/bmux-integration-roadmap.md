@@ -151,7 +151,7 @@ Rollback strategy: scoped bmux revert to the local current-context adapter.
 
 Migration or cleanup: remove current-context-only local SQL helpers when unused.
 
-Status: Accepted in Slice E; bmux adoption merged to main at `3cbacd150`.
+Status: Accepted in Slice E; bmux adoption merge commit `3cbacd150`.
 
 ## Milestone: Storage Ownership Leaves bmux
 
