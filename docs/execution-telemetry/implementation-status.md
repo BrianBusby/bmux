@@ -4,11 +4,12 @@ Last updated: 2026-07-31
 
 ## Plan Orientation
 
-Implementation through `c616bcfbb4dc222a1d4c3c99ab3a933383714cab` includes the
+Implementation through `3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9` includes the
 live projection, native read client, read-only diagnostic, durable
-execution-evidence policy, narrow durable lifecycle producer, and fork CI
-baseline repair. Provenance Engine Slice E is operationally complete and the
-active product gate is the Engineering Observation Period.
+execution-evidence policy, narrow durable lifecycle producer, fork CI baseline
+repair, and Claude lifecycle telemetry migration. Provenance Engine Slice E is
+operationally complete and the active product gate is the Engineering
+Observation Period.
 
 Execution telemetry is bmux-owned high-frequency runtime state. Provenance
 Engine owns selected durable evidence and deterministic Current State. The
@@ -24,19 +25,15 @@ Engine Slice E.
 | Read-only observation diagnostic | Completed and merged to `main`. | Adds a provider-neutral package comparison value and `bmux provenance diagnostics execution-telemetry-live <session-id>` CLI report. It compares only session presence, provider identity, and broad lifecycle presence between the live projection and Provenance Engine Current State; no persistence, provenance writes, React rendering changes, WebSocket changes, or automatic scheduling. |
 | Durable execution-evidence policy | Completed and merged to `main`. | Dogfooded the diagnostic against a real live Codex sidecar session and recorded the policy that execution telemetry is not durable provenance evidence by default. The implemented durable projection is limited to approved broad session/provider/lifecycle facts and derived worktree association. |
 | Narrow durable lifecycle producer | Completed and merged to `main` at `9d7fefacbb402bc918b22888214021a8223f14ff`. | Adds an app-side producer for broad live sidecar session/provider/lifecycle facts only. The existing diagnostic remains read-only and now matches supported lifecycle-backed live sessions. |
-| First non-Codex provider migration | Implemented on draft PR #13 at `5a4a463f17e07a1c5e2a037f07bfe4f743f839c5`; pending review. | Migrates only Claude prompt submission, provider session identity, coarse result lifecycle, and sidecar process-close failure through the existing telemetry fanout. |
+| First non-Codex provider migration | Implemented and merged to `main` via PR #13 at `3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9`. | Migrates only Claude prompt submission, provider session identity, coarse result lifecycle, and sidecar process-close failure through the existing telemetry fanout. |
 
 ## Active Slice
-
-Claude lifecycle telemetry is the current pending execution-telemetry
-implementation slice.
 
 Status: observation on `main`. The narrow durable lifecycle producer is
 implemented, merged, and available for dogfood. Branch
 `execution-telemetry-live-projection` is historical implementation context.
-The first non-Codex provider migration is implemented on draft PR #13 and is
-pending review. No subsequent execution-telemetry implementation slice is
-selected.
+The first non-Codex provider migration is implemented and merged to `main` via
+PR #13. No subsequent execution-telemetry implementation slice is selected.
 
 Current producer validation passed with zero diagnostic mismatches for live
 session `79a4701f`.
@@ -80,7 +77,7 @@ broad sidecar session/provider/lifecycle facts.
   broad session/provider/lifecycle facts through the public Provenance Engine
   lifecycle API. Dogfood against live Codex session `79a4701f` reported zero
   diagnostic mismatches.
-- First non-Codex provider migration: implemented on draft PR #13. It migrates
+- First non-Codex provider migration: implemented and merged via PR #13. It migrates
   Claude prompt submission, `system/init` provider session linking, `result`
   completion/result-error closure, and sidecar process-close active-turn
   failure through `ExecutionTelemetryFanout`. It does not claim Claude parity

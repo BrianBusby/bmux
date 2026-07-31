@@ -93,6 +93,14 @@ unchanged. Later slices should migrate more provider events by publishing
 `TelemetryEventEnvelopeDraft` values first and treating `AgentEvent` as the
 fanout projection only.
 
+The first non-Codex provider migration applies that same seam to a narrow
+Claude lifecycle/identity subset only: sidecar prompt submission, Claude
+stream-json `system/init` provider session identity, Claude stream-json
+`result` completion/result-error closure, and sidecar process-close failure
+closure for active turns. Claude message, thinking, tool, command-list,
+control/status, token usage, file-change, and raw stream-json payloads remain
+outside canonical telemetry until a later source-selection slice.
+
 ## Plan Slice 4B Live Projection Read Surface
 
 Each `agent-chat/server.ts` session now attaches a

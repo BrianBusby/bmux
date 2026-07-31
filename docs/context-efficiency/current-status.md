@@ -85,9 +85,9 @@ branch. Dogfood against live Codex sidecar session `79a4701f` reached provider
 modes.
 
 The first non-Codex provider migration, Claude lifecycle telemetry, is
-implemented on draft PR #13 at
-`5a4a463f17e07a1c5e2a037f07bfe4f743f839c5` and is pending review. No
-subsequent execution-telemetry implementation slice is selected.
+implemented and merged to `main` via PR #13 at
+`3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9`. No subsequent
+execution-telemetry implementation slice is selected.
 
 Potential follow-up work:
 

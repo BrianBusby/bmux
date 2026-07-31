@@ -1,6 +1,11 @@
 import type { Adapter, CommandEntry, OptionChoice, OptionValue, SessionCtx, SessionOption } from "../types";
 import { readLines, tryParse, truncate } from "./lines";
 import { prettifyModelLabel } from "./model-label";
+import {
+  emitClaudeProviderSessionLinked,
+  emitClaudeTurnCompleted,
+  emitClaudeTurnFailed,
+} from "./claudeTelemetry";
 
 const PERMISSION_CHOICES: OptionChoice[] = [
   { value: "default", label: "Default" },
@@ -226,12 +231,31 @@ function beginTurn(sess: SessionCtx, generation?: number) {
   st.activeGenerations.push(generation);
 }
 
-function finishTurn(sess: SessionCtx, stats?: string): number {
+function finishTurn(sess: SessionCtx, params: { stats?: string; durationMs?: number; errorMessage?: string; errorCode?: string } = {}): number {
   const st = state(sess);
   if (st.activeTurns <= 0) return 0;
   st.activeTurns -= 1;
   const generation = st.activeGenerations.shift();
-  sess.emit({ kind: "done", stats, generation } as any);
+  const providerSessionId = typeof sess.internal.providerSessionId === "string" ? sess.internal.providerSessionId : undefined;
+  if (params.errorMessage) {
+    emitClaudeTurnFailed(sess, {
+      providerSessionId,
+      message: params.errorMessage,
+      code: params.errorCode,
+      durationMs: params.durationMs,
+      stats: params.stats,
+      generation,
+      source: "provider",
+      method: "result",
+    });
+  } else {
+    emitClaudeTurnCompleted(sess, {
+      providerSessionId,
+      durationMs: params.durationMs,
+      stats: params.stats,
+      generation,
+    });
+  }
   return st.activeTurns;
 }
 
@@ -244,9 +268,16 @@ function handleProcessClose(sess: SessionCtx, st: ClaudeState, pendingMessage: s
   st.proc = undefined;
   rejectPending(st, pendingMessage);
   if (wasActive) {
+    const providerSessionId = typeof sess.internal.providerSessionId === "string" ? sess.internal.providerSessionId : undefined;
     for (const generation of generations) {
-      sess.emit({ kind: "error", message: turnError });
-      sess.emit({ kind: "done", generation } as any);
+      emitClaudeTurnFailed(sess, {
+        providerSessionId,
+        message: turnError,
+        code: "claude.process_exited",
+        generation,
+        source: "sidecar",
+        method: "process/exit",
+      });
     }
   }
   sess.setStatus("idle");
@@ -632,7 +663,14 @@ function handleLine(sess: SessionCtx, line: string) {
         sess.internal.providerSessionId = ev.session_id;
         const fork = sess.internal.claudeFork as { providerSessionId?: string } | undefined;
         if (fork && ev.session_id) fork.providerSessionId = ev.session_id;
-        sess.emit({ kind: "meta", model: ev.model, providerSessionId: ev.session_id });
+        if (ev.session_id) {
+          emitClaudeProviderSessionLinked(sess, {
+            providerSessionId: String(ev.session_id),
+            model: typeof ev.model === "string" ? ev.model : undefined,
+          });
+        } else {
+          sess.emit({ kind: "meta", model: ev.model, providerSessionId: ev.session_id });
+        }
         if (st.commands.length) sess.emit({ kind: "commands", trigger: "/", commands: st.commands });
       } else if (ev.subtype === "status" && ev.permissionMode) {
         state(sess).permissionMode = String(ev.permissionMode);
@@ -680,18 +718,31 @@ function handleLine(sess: SessionCtx, line: string) {
       break;
     }
     case "result": {
+      const durationMs = finiteNumber(ev.duration_ms);
       const stats = [
         ev.total_cost_usd != null ? `$${ev.total_cost_usd.toFixed(3)}` : null,
-        ev.duration_ms != null ? `${(ev.duration_ms / 1000).toFixed(1)}s` : null,
+        durationMs != null ? `${(durationMs / 1000).toFixed(1)}s` : null,
         ev.num_turns != null ? `${ev.num_turns} turn${ev.num_turns === 1 ? "" : "s"}` : null,
       ].filter(Boolean).join(" · ");
+      const errorMessage = ev.is_error ? truncate(String(ev.result ?? ev.subtype), 400) : undefined;
+      const hadActiveTurn = state(sess).activeTurns > 0;
       if (ev.is_error) {
-        sess.emit({ kind: "error", message: truncate(String(ev.result ?? ev.subtype), 400) });
+        if (hadActiveTurn) {
+          if (finishTurn(sess, { stats, durationMs, errorMessage, errorCode: "claude.result_error" }) === 0) sess.setStatus("idle");
+        } else {
+          sess.emit({ kind: "error", message: errorMessage ?? truncate(String(ev.subtype), 400) });
+          sess.setStatus("idle");
+        }
+      } else if (finishTurn(sess, { stats, durationMs }) === 0) {
+        sess.setStatus("idle");
       }
-      if (finishTurn(sess, stats) === 0) sess.setStatus("idle");
       break;
     }
   }
+}
+
+function finiteNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function normalizeCommands(commands: any): CommandEntry[] {

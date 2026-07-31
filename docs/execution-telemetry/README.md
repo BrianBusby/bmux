@@ -68,7 +68,7 @@ by this work. Automatic checkpoint scheduling has not been implemented.
 
 The implemented telemetry foundation is available for observation and dogfood
 on `main`. The first non-Codex provider migration, Claude lifecycle telemetry,
-is implemented on draft PR #13 and is pending review. No subsequent
+is implemented and merged to `main` via PR #13. No subsequent
 execution-telemetry implementation slice is selected. Automatic
 5/10/15/20/25-minute diagnostics require a separate explicit policy and
 implementation slice.
