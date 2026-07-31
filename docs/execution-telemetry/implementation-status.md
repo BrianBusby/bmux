@@ -1,13 +1,14 @@
 # Execution Telemetry Implementation Status
 
-Last updated: 2026-07-30
+Last updated: 2026-07-31
 
 ## Plan Orientation
 
-Canonical bmux roadmap reconciliation completed on 2026-07-29 by merging
-`origin/main` into this branch. Current main defines Provenance Engine Slice E
-as operationally complete and sets the active product gate to the Engineering
-Observation Period.
+Current `main` at `c616bcfbb4dc222a1d4c3c99ab3a933383714cab` contains the
+live projection, native read client, read-only diagnostic, durable
+execution-evidence policy, and narrow durable lifecycle producer. Provenance
+Engine Slice E is operationally complete and the active product gate is the
+Engineering Observation Period.
 
 Execution telemetry is bmux-owned high-frequency runtime state. Provenance
 Engine owns selected durable evidence and deterministic Current State. The
@@ -17,20 +18,20 @@ Engine Slice E.
 | Plan area | Current position | Notes |
 | --- | --- | --- |
 | Provider-neutral Codex telemetry migration | Slices 0 through 11 completed on the stacked Slice 1 branch history. | Existing React `AgentEvent` projection behavior is preserved. |
-| Live session projection foundation | Plan Slice 4A completed on `execution-telemetry-live-projection`. | Adds a renderer-independent replay projection from ordered `TelemetryEventEnvelope` values. |
-| Live projection sidecar read surface | Plan Slice 4B completed on `execution-telemetry-live-projection`. | Wires the live projection to the sidecar fanout as an in-memory subscriber and exposes a bounded REST read payload; no React rendering, WebSocket `AgentEvent`, persistence, or provenance changes. |
-| Native live projection read client | Plan Slice 4C completed on `execution-telemetry-live-projection`. | Adds Swift DTOs and an injected HTTP read client in `BmuxAgentChat` for the existing REST payload, plus a shared JSON fixture drift check; no rendering, WebSocket, persistence, provenance, or Swift schema ownership changes. |
-| Read-only observation diagnostic | Completed on `execution-telemetry-live-projection`. | Adds a provider-neutral package comparison value and `bmux provenance diagnostics execution-telemetry-live <session-id>` CLI report. It compares only session presence, provider identity, and broad lifecycle presence between the live projection and Provenance Engine Current State; no persistence, provenance writes, React rendering changes, WebSocket changes, or automatic scheduling. |
-| Durable execution-evidence policy | Completed on `execution-telemetry-live-projection`. | Dogfooded the diagnostic against a real live Codex sidecar session and recorded the policy that execution telemetry is not durable provenance evidence by default. Only broad session/provider/lifecycle facts are eligible for a future explicit projection slice. |
-| Narrow durable lifecycle producer | Completed on `execution-telemetry-live-projection`. | Adds an app-side producer for broad live sidecar session/provider/lifecycle facts only. The existing diagnostic remains read-only and now matches supported lifecycle-backed live sessions. |
+| Live session projection foundation | Plan Slice 4A completed and merged to `main`. | Adds a renderer-independent replay projection from ordered `TelemetryEventEnvelope` values. |
+| Live projection sidecar read surface | Plan Slice 4B completed and merged to `main`. | Wires the live projection to the sidecar fanout as an in-memory subscriber and exposes a bounded REST read payload; no React rendering, WebSocket `AgentEvent`, persistence, or provenance changes. |
+| Native live projection read client | Plan Slice 4C completed and merged to `main`. | Adds Swift DTOs and an injected HTTP read client in `BmuxAgentChat` for the existing REST payload, plus a shared JSON fixture drift check; no rendering, WebSocket, persistence, provenance, or Swift schema ownership changes. |
+| Read-only observation diagnostic | Completed and merged to `main`. | Adds a provider-neutral package comparison value and `bmux provenance diagnostics execution-telemetry-live <session-id>` CLI report. It compares only session presence, provider identity, and broad lifecycle presence between the live projection and Provenance Engine Current State; no persistence, provenance writes, React rendering changes, WebSocket changes, or automatic scheduling. |
+| Durable execution-evidence policy | Completed and merged to `main`. | Dogfooded the diagnostic against a real live Codex sidecar session and recorded the policy that execution telemetry is not durable provenance evidence by default. Only broad session/provider/lifecycle facts are eligible for explicit durable projection. |
+| Narrow durable lifecycle producer | Completed and merged to `main` at `9d7fefacbb402bc918b22888214021a8223f14ff`. | Adds an app-side producer for broad live sidecar session/provider/lifecycle facts only. The existing diagnostic remains read-only and now matches supported lifecycle-backed live sessions. |
 
 ## Active Slice
 
-Narrow durable lifecycle producer for live execution telemetry.
+No execution telemetry implementation slice is currently selected.
 
-Status: completed in branch `execution-telemetry-live-projection`; reconciled
-with current main after Provenance Engine Slice E. No next execution telemetry
-implementation slice is selected.
+Status: observation on `main`. The narrow durable lifecycle producer is
+implemented, merged, and available for dogfood. Branch
+`execution-telemetry-live-projection` is historical implementation context.
 
 Current producer validation passed with zero diagnostic mismatches for live
 session `79a4701f`.
@@ -67,17 +68,19 @@ broad sidecar session/provider/lifecycle facts.
 - Durable execution-evidence policy: dogfooded the observation diagnostic
   against live Codex session `05384b5e` and decided that execution telemetry is
   not durable provenance evidence by default. Only broad
-  session/provider/lifecycle facts are eligible for a future explicit
-  projection slice.
+  session/provider/lifecycle facts are eligible for explicit durable
+  projection.
 - Narrow durable lifecycle producer: added an app-side producer that reads the
   existing sidecar session list and bounded live projection, then records only
   broad session/provider/lifecycle facts through the public Provenance Engine
   lifecycle API. Dogfood against live Codex session `79a4701f` reported zero
   diagnostic mismatches.
 
-## Current Branch
+## Historical Branch
 
 `execution-telemetry-live-projection`
+
+The implementation from this branch is now contained in `main`.
 
 Starting branch before Slice 0 was `fix-react-submit-bar-photo-drop-v2`, clean at `c19c835e8b58e138aa11d50c6ee9ef75be1cdc7a`. Slice 0 was moved to a scoped branch from `origin/main`.
 

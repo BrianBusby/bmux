@@ -12,26 +12,59 @@ Provenance is narrower. Provenance records durable engineering facts and evidenc
 - `contract.md`: Slice 1 provider-neutral telemetry contract and ownership policy.
 - `event-inventory.md`: current Codex event mappings, lost fields, and persistence/provenance decisions.
 - `provider-capabilities.md`: provider capability matrix.
-- `persistence-policy.md`: initial retention categories and separation from provenance.
-- `implementation-status.md`: active slice status and validation notes.
+- `persistence-policy.md`: current retention categories and separation from provenance.
+- `implementation-status.md`: merged implementation status, active gate, and validation notes.
 - `decisions.md`: short architecture decision records.
 - `handoffs/latest.md`: required entry point for the next Codex session.
 
 ## Current State
 
-Slice 2 added the first sidecar-owned fanout/projection seam in
-`agent-chat/executionTelemetryFanout.ts`. Slices 3 through 11 migrated Codex
-prompt submission, provider session linkage, turn lifecycle, message lifecycle,
-tool lifecycle, approval lifecycle, standalone usage observations, and
-request-status plus send-failure and app-server exit diagnostics through that seam. It assigns telemetry identity and
-ordering in one place, supports sidecar telemetry subscribers, and projects
-telemetry envelopes to the existing `AgentEvent` UI stream.
+The canonical provider-neutral telemetry contract lives in
+`agent-chat/executionTelemetryTypes.ts`. The sidecar-owned fanout seam in
+`agent-chat/executionTelemetryFanout.ts` assigns telemetry identity and ordering
+in one place, supports sidecar telemetry subscribers, and projects canonical
+telemetry envelopes back to the existing React `AgentEvent` UI stream.
 
-Most provider adapter events still emit `AgentEvent` directly. The migrated
-Codex paths project back to the same `AgentEvent` stream, so no React rendering
-behavior, WebSocket payload schema, persistence, provenance projection, Swift
-bridge, or Claude source selection has been changed.
+Completed Codex migrations publish prompt submission, provider session linkage,
+turn lifecycle, message lifecycle, tool lifecycle, approval lifecycle,
+standalone usage observations, request-status diagnostics, send-failure
+diagnostics, and app-server exit diagnostics through that seam. React rendering
+behavior and WebSocket `AgentEvent` payloads remain compatibility projections,
+not the canonical telemetry contract.
 
-The structured Codex path currently enters bmux through `agent-chat/adapters/codex.ts`, which talks to `codex app-server` over JSON-RPC/NDJSON. The remaining ignored app-server notification paths still no-op directly by design. The server in `agent-chat/server.ts` owns session identity, status, bounded event replay, and WebSocket/REST fanout. React in `agent-chat/src/session.ts` consumes those events and folds them into renderable blocks.
+The renderer-independent live projection in
+`agent-chat/executionTelemetryLiveProjection.ts` replays ordered
+`TelemetryEventEnvelope` values into a bounded in-memory snapshot. The sidecar
+exposes that snapshot through the REST-only read surface
+`GET /api/sessions/:id/execution-telemetry/live`. The live projection itself is
+not persisted and is not appended to `Session.events`.
 
-The current structured app-server path does not write to provenance-engine. Existing provenance writes found in this audit are driven by native Swift/CLI hook and provenance paths, especially `CLI/bmux.swift`, `CLI/BMUXCLI+AgentHookCatalog.swift`, `CLI/BMUXCLI+CodexFireAndForgetHooks.swift`, `CLI/BMUXCLI+Provenance.swift`, and `bmuxTests/SubsessionProvenanceTests.swift`.
+`Packages/Shared/BmuxAgentChat` contains the native Swift read client and wire
+DTOs for the live projection payload. Shared JSON fixture coverage protects
+the TypeScript-to-Swift payload shape from drift while leaving the TypeScript
+contract as the schema owner.
+
+`bmux provenance diagnostics execution-telemetry-live <session-id>` is a
+read-only observation diagnostic. It compares bounded live projection facts
+with Provenance Engine Current State and reports mismatches; it does not write
+telemetry or provenance records.
+
+The durable execution-evidence policy is intentionally narrow. Execution
+telemetry remains bmux-owned, high-frequency runtime state and is not durable
+provenance by default. The app-side
+`ExecutionTelemetryProvenanceProjectionService` records only approved broad
+sidecar session/provider/lifecycle facts through the existing public
+Provenance Engine SDK lifecycle path. Supported lifecycle-backed sessions can
+therefore match Provenance Engine Current State in the diagnostic.
+
+Raw and high-frequency telemetry remains ephemeral. Message text, reasoning,
+command output, raw errors, provider envelopes, changed-file paths, approval
+payloads, token details, and the live projection snapshot are not made durable
+by this work. Automatic checkpoint scheduling has not been implemented.
+
+## Current Gate
+
+The implemented telemetry foundation is available for observation and dogfood
+on `main`. No next execution-telemetry implementation slice is selected.
+Automatic 5/10/15/20/25-minute diagnostics require a separate explicit policy
+and implementation slice.

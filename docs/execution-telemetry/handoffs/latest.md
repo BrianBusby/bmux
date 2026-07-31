@@ -2,10 +2,10 @@
 
 ## Session identity
 
-- Date: 2026-07-30
-- Slice: Narrow durable lifecycle producer for live execution telemetry
-- Branch: `execution-telemetry-live-projection`
-- Starting commit: `036693febe00cc620aeb149595e0339e45b9307a`
+- Date: 2026-07-31
+- Slice: none selected; observation after completed narrow durable lifecycle producer
+- Main baseline: `c616bcfbb4dc222a1d4c3c99ab3a933383714cab`
+- Historical implementation branch: `execution-telemetry-live-projection`
 
 ## Objective completed
 
@@ -15,6 +15,10 @@ bounded live projection now produce enough Provenance Engine lifecycle evidence
 for the existing read-only diagnostic to match Current State.
 
 The diagnostic remains observational and read-only.
+
+This implementation is now contained in `main`. Do not treat the historical
+branch as an active implementation branch unless new work is explicitly
+selected.
 
 ## Implementation completed
 
@@ -75,11 +79,13 @@ The diagnostic remains observational and read-only.
 
 No next execution telemetry implementation slice is selected.
 
-Reasonable later work:
+Explicitly selectable later work:
 
 - dogfood with a configured non-default Agent Chat URL;
 - decide whether sidecar session disappearance should record a stopped
   lifecycle fact;
+- design automatic 5/10/15/20/25-minute diagnostic checkpoint policy and then
+  implement it;
 - continue provider migration.
 
 Keep telemetry persistence, broad provenance writes, React rendering changes,

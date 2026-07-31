@@ -25,6 +25,7 @@ provenance-engine owns reusable provenance contracts, durable evidence storage, 
 https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md
 
 Local bmux integration notes live in `docs/provenance-integration.md`.
+Execution telemetry status and policy live in `docs/execution-telemetry/`.
 
 ## Implemented Capabilities
 
