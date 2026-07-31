@@ -1,0 +1,22 @@
+schema_version: 1
+repository: BrianBusby/provenance-engine
+
+current_work:
+  active_slice: null
+  state: observation
+
+release:
+  latest_tag: "0.1.0"
+  release_status: tagged
+
+local_capabilities:
+  public_in_process_sdk: implemented
+  engine_owned_sqlite_store: implemented
+  immutable_ledger: implemented
+  deterministic_current_state: implemented
+  schema_identity_validation: implemented
+  producer_neutral_lifecycle_recording: implemented
+
+local_caveats:
+  - id: observability_trace_api
+    status: open

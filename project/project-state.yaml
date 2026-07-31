@@ -1,0 +1,116 @@
+schema_version: 1
+
+project:
+  id: bmux-provenance-platform
+  name: Bmux and Provenance Engine
+  shared_state_owner: BrianBusby/provenance-engine
+
+repositories:
+  provenance_engine:
+    slug: BrianBusby/provenance-engine
+    role: durable_evidence_and_current_state
+  bmux:
+    slug: BrianBusby/bmux
+    role: observation_workflow_and_presentation
+
+cross_repository:
+  active_gate:
+    id: engineering_observation_period
+    title: Engineering Observation Period
+    status: active
+
+milestones:
+  - id: provenance_engine_v1
+    title: Provenance Engine V1 package
+    owner: provenance_engine
+    delivery_status: merged
+    acceptance_status: accepted
+    evidence:
+      commits:
+        - repository: BrianBusby/provenance-engine
+          sha: 18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03
+        - repository: BrianBusby/provenance-engine
+          sha: 0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc
+      pull_requests: []
+    accepted_at: 2026-07-29
+
+  - id: bmux_slice_e_adoption
+    title: Bmux Provenance Engine Slice E adoption
+    owner: bmux
+    delivery_status: merged
+    acceptance_status: accepted
+    evidence:
+      commits:
+        - repository: BrianBusby/bmux
+          sha: 3cbacd1501768f79ea377eb2d6aea9113f199d1b
+        - repository: BrianBusby/provenance-engine
+          sha: 0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc
+      pull_requests: []
+    accepted_at: 2026-07-29
+
+  - id: execution_telemetry_foundation
+    title: Provider-neutral execution telemetry foundation
+    owner: bmux
+    delivery_status: merged
+    acceptance_status: implemented
+    evidence:
+      commits:
+        - repository: BrianBusby/bmux
+          sha: c32ed93989c8ed8531d9b573bb34b36149461475
+        - repository: BrianBusby/bmux
+          sha: 9d7fefacbb402bc918b22888214021a8223f14ff
+      pull_requests:
+        - repository: BrianBusby/bmux
+          number: 12
+
+  - id: claude_lifecycle_telemetry
+    title: Claude lifecycle telemetry migration
+    owner: bmux
+    delivery_status: draft
+    acceptance_status: implemented
+    evidence:
+      commits:
+        - repository: BrianBusby/bmux
+          sha: 5a4a463f17e07a1c5e2a037f07bfe4f743f839c5
+      pull_requests:
+        - repository: BrianBusby/bmux
+          number: 13
+
+ownership:
+  durable_evidence: provenance_engine
+  deterministic_current_state: provenance_engine
+  schema_compatibility: provenance_engine
+  bounded_provenance_queries: provenance_engine
+  workflow_observation: bmux
+  execution_telemetry: bmux
+  capture_policy: bmux
+  runtime_orchestration: bmux
+  user_interface: bmux
+  presentation: bmux
+
+policies:
+  raw_execution_telemetry_persisted: false
+  live_projection_persisted: false
+  narrow_lifecycle_projection_enabled: true
+  automatic_checkpoint_diagnostics:
+    status: not_implemented
+    selected_for_implementation: false
+
+caveats:
+  - id: broad_legacy_storage_migration
+    title: Broad legacy bmux-local storage migration
+    status: open
+    owner: bmux
+
+  - id: observability_trace_api
+    title: Observability trace API boundary
+    status: open
+    owner: provenance_engine
+
+  - id: github_actions_runner_reliability
+    title: GitHub Actions runner reliability
+    status: open
+    owner: bmux
+    issue:
+      repository: BrianBusby/bmux
+      number: 8

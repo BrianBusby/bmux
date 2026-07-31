@@ -1,3 +1,5 @@
+> **Historical record:** This document records the state at the time it was written and is not the current project-status authority. See `docs/generated/project-status.md`.
+
 # Current-Context Readiness Slice Completion
 
 Branch: Slice E current-context readiness.

@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BrianBusby/provenance-engine/project/schema/project-state.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "project", "repositories", "cross_repository", "milestones", "ownership", "policies", "caveats"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "shared_state_owner"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$" },
+        "name": { "type": "string", "minLength": 1 },
+        "shared_state_owner": { "$ref": "#/$defs/repositorySlug" }
+      }
+    },
+    "repositories": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slug", "role"],
+        "properties": {
+          "slug": { "$ref": "#/$defs/repositorySlug" },
+          "role": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "cross_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active_gate"],
+      "properties": {
+        "active_gate": { "$ref": "#/$defs/gate" }
+      }
+    },
+    "milestones": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/milestone" }
+    },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": { "enum": ["provenance_engine", "bmux"] },
+      "minProperties": 1
+    },
+    "policies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_execution_telemetry_persisted", "live_projection_persisted", "narrow_lifecycle_projection_enabled", "automatic_checkpoint_diagnostics"],
+      "properties": {
+        "raw_execution_telemetry_persisted": { "type": "boolean" },
+        "live_projection_persisted": { "type": "boolean" },
+        "narrow_lifecycle_projection_enabled": { "type": "boolean" },
+        "automatic_checkpoint_diagnostics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "selected_for_implementation"],
+          "properties": {
+            "status": { "enum": ["not_implemented", "implemented"] },
+            "selected_for_implementation": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "caveats": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/caveat" }
+    }
+  },
+  "$defs": {
+    "repositorySlug": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_]*$"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commits", "pull_requests"],
+      "properties": {
+        "commits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["repository", "sha"],
+            "properties": {
+              "repository": { "$ref": "#/$defs/repositorySlug" },
+              "sha": { "$ref": "#/$defs/sha" }
+            }
+          }
+        },
+        "pull_requests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["repository", "number"],
+            "properties": {
+              "repository": { "$ref": "#/$defs/repositorySlug" },
+              "number": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["planned", "active", "complete", "blocked", "superseded"] }
+      }
+    },
+    "milestone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "owner", "delivery_status", "acceptance_status", "evidence"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 },
+        "owner": { "enum": ["provenance_engine", "bmux"] },
+        "delivery_status": { "enum": ["proposed", "draft", "open", "merged", "closed", "superseded"] },
+        "acceptance_status": { "enum": ["proposed", "implemented", "under_observation", "accepted", "rejected", "superseded"] },
+        "evidence": { "$ref": "#/$defs/evidence" },
+        "completed_at": { "anyOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }] },
+        "accepted_at": { "anyOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }] },
+        "acceptance_reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "caveat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "status", "owner"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["open", "monitoring", "resolved", "accepted_risk", "superseded"] },
+        "owner": { "enum": ["provenance_engine", "bmux"] },
+        "issue": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repository", "number"],
+          "properties": {
+            "repository": { "$ref": "#/$defs/repositorySlug" },
+            "number": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    }
+  }
+}

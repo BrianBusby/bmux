@@ -1,3 +1,5 @@
+> **Historical record:** This document records the state at the time it was written and is not the current project-status authority. See `docs/generated/project-status.md`.
+
 # V1 Write-Side Validation Milestone
 
 Status: complete in provenance-engine as of 2026-07-25.

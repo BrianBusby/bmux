@@ -4,34 +4,18 @@ This is the canonical shared roadmap for work that crosses the bmux and provenan
 
 Detailed technical contract rules remain in `docs/integration-contract.md`. The provenance-engine product roadmap is `docs/roadmap.md`. The bmux product roadmap should link here instead of duplicating these milestones.
 
-## Current Priority
+## Current Project Status
 
-V1 adoption is operationally complete with named caveats. The first external
-bmux path, `bmux provenance worktrees list`, is complete. Slice C session-tree
-read migration is accepted after bmux PR 7 merged at
-`08763dd0d3256989180dcc04f426da1f24369175` with an explicit GitHub Actions
-waiver for unavailable Blacksmith runner evidence.
+The authoritative generated status is:
 
-Slice D file-explanation read migration is accepted after bmux PR 9 merged at `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374` on 2026-07-24T21:54:46Z. The existing public contract was sufficient, bmux repinned to merged engine revision `126afde36671f53a137953200e7883e6b4093ac3`, and the temporary feature-branch dependency pin was removed everywhere.
+- [Project status](generated/project-status.md)
+- [Ownership boundary](generated/ownership-boundary.md)
+- [Repository status](generated/repository-status.md)
 
-Slice E operational runtime cutover is accepted after bmux main merge
-`3cbacd150`. bmux adopted `bmux provenance context current`, lifecycle
-recording, worktree observation capture, production default storage cutover to
-`~/.local/state/provenance-engine/provenance.sqlite`, and Provenance Engine
-schema identity hardening at engine revision
-`18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03`.
-
-Current gate after Slice E: Engineering Observation Period, plus cleanup of
-named legacy bmux-local support surfaces. Planned order after observation:
-legacy cleanup, observability API decision if the remaining bmux-local trace
-path needs an engine contract, tagged engine release, daemon or service
-transport only if needed, then shared evidence and Knowledge Compiler adoption.
-
-bmux execution telemetry is a bmux-owned live runtime system. Only explicitly
-approved broad lifecycle facts cross into Provenance Engine through the public
-SDK; raw or high-frequency telemetry, diagnostics policy, UI, analytics, and
-capture orchestration remain bmux-owned. See the bmux execution-telemetry docs
-for the live projection and diagnostic status.
+This roadmap defines cross-repository sequencing, ownership rationale,
+acceptance criteria, compatibility expectations, and rollback strategy. It must
+not independently maintain the active gate, milestone state, evidence commits,
+current caveat status, or telemetry persistence policy.
 
 ## Milestone: bmux Worktree Reads
 
