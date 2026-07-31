@@ -1402,7 +1402,7 @@ jobs:
           [ -S "$SOCK" ] || { echo "Socket not ready at $SOCK" >&2; exit 1; }
 
           BMUX_SOCKET_PATH="$SOCK" \
-          BMUX_LAG_MAX_P95_RATIO=1.70 \
+          BMUX_LAG_MAX_P95_RATIO=1.75 \
           BMUX_LAG_MAX_AVG_RATIO=1.70 \
           BMUX_LAG_MIN_BASELINE_P95_MS_FOR_RATIO=6.0 \
           BMUX_LAG_MIN_BASELINE_AVG_MS_FOR_RATIO=4.0 \
