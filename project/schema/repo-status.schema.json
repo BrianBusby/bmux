@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BrianBusby/provenance-engine/project/schema/repo-status.schema.json",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "repository", "current_work", "release", "local_caveats"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "repository": { "$ref": "#/$defs/repositorySlug" },
+    "current_work": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["state"],
+      "properties": {
+        "active_slice": {
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "title", "state"],
+              "properties": {
+                "id": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+                "title": { "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }] },
+                "state": { "enum": ["none_selected", "proposed", "draft", "open", "implemented", "under_observation", "accepted", "blocked"] },
+                "owner": { "type": "string", "minLength": 1 }
+              }
+            }
+          ]
+        },
+        "state": { "enum": ["planning", "active", "observation", "blocked", "none_selected"] }
+      }
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["latest_tag", "release_status"],
+      "properties": {
+        "latest_tag": { "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }] },
+        "release_status": { "enum": ["untagged", "tagged", "released", "prerelease"] }
+      }
+    },
+    "local_capabilities": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/capabilityStatus" }
+    },
+    "execution_telemetry": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/capabilityStatus" }
+    },
+    "local_caveats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "status": { "enum": ["open", "monitoring", "resolved", "accepted_risk", "superseded"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "repositorySlug": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_]*$"
+    },
+    "capabilityStatus": {
+      "enum": ["planned", "not_implemented", "implemented", "under_observation", "accepted", "deprecated"]
+    }
+  }
+}

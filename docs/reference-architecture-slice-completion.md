@@ -1,3 +1,5 @@
+> **Historical record:** This document records the state at the time it was written and is not the current project-status authority. See `docs/generated/project-status.md`.
+
 # Reference Architecture Slice Completion
 
 Implementation commit: `7405e5ee0d4121aaa1904fe9f578a064636107ea`

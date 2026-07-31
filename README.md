@@ -3,17 +3,18 @@
 ProvenanceEngine is the independent local-first provenance product. The
 implemented V1 platform provides public contracts, a public in-process SDK,
 engine-owned SQLite storage, an immutable ledger, deterministic Current State,
-and adopted bmux integration through the public SDK. The active
-cross-repository gate is the Engineering Observation Period after Slice E.
+and adopted bmux integration through the public SDK.
 
 ## Planning
 
 - Platform reference architecture: `docs/reference-architecture.md`
+- Documentation authority index: `docs/README.md`
+- Generated project status: `docs/generated/project-status.md`
 - Current implemented architecture: `docs/architecture.md`
 - Product roadmap and implementation sequence: `docs/roadmap.md`
 - Technical integration contract: `docs/integration-contract.md`
 - Canonical bmux integration roadmap: `docs/bmux-integration-roadmap.md`
-- Current status and active gate: `docs/current-status.md`
+- Historical current-status baseline: `docs/current-status.md`
 - Historical Slice D file-explanation readiness evidence: `docs/file-explanation-readiness-slice-completion.md`
 - Historical Slice E current-context readiness evidence: `docs/current-context-readiness-slice-completion.md`
 - V1 write-side validation evidence: `docs/write-side-validation-milestone.md`
