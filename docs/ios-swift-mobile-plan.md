@@ -4,7 +4,8 @@ Goal: ship the iOS path from current bmux main with Swift-owned app, session, tr
 
 ## Baseline
 
-- Current main pins `ghostty` to `22fa801f88f96fa842e54ecce6c34a5d36003d19`.
+- This plan's baseline verified the `ghostty` submodule at
+  `22fa801f88f96fa842e54ecce6c34a5d36003d19`.
 - The first production slice should use only main Ghostty APIs. Fork-only helpers such as an active-screen getter or text snapshot helper are useful learnings, but they should not block the Swift rewrite.
 - Main's current mobile host snapshot is not sufficient for Zig-parity terminal rendering. It emits `fidelity: text_vt` with `styled_cells_unavailable`, so iOS can preserve layout but cannot reproduce ANSI/TUI colors until the Mac host exports real styled cells from Ghostty.
 - The original Zig/Tailscale branch remains useful for dogfooding behavior and shell UX. It should not be the production base.

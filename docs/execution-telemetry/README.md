@@ -51,11 +51,13 @@ telemetry or provenance records.
 
 The durable execution-evidence policy is intentionally narrow. Execution
 telemetry remains bmux-owned, high-frequency runtime state and is not durable
-provenance by default. The app-side
-`ExecutionTelemetryProvenanceProjectionService` records only approved broad
-sidecar session/provider/lifecycle facts through the existing public
-Provenance Engine SDK lifecycle path. Supported lifecycle-backed sessions can
-therefore match Provenance Engine Current State in the diagnostic.
+provenance by default. The implemented durable projection is limited to
+approved broad sidecar session/provider/lifecycle facts and derived worktree
+association when available. The app-side
+`ExecutionTelemetryProvenanceProjectionService` records that narrow subset
+through the existing public Provenance Engine SDK lifecycle path. Supported
+lifecycle-backed sessions can therefore match Provenance Engine Current State
+in the diagnostic.
 
 Raw and high-frequency telemetry remains ephemeral. Message text, reasoning,
 command output, raw errors, provider envelopes, changed-file paths, approval
@@ -65,6 +67,8 @@ by this work. Automatic checkpoint scheduling has not been implemented.
 ## Current Gate
 
 The implemented telemetry foundation is available for observation and dogfood
-on `main`. No next execution-telemetry implementation slice is selected.
-Automatic 5/10/15/20/25-minute diagnostics require a separate explicit policy
-and implementation slice.
+on `main`. The first non-Codex provider migration, Claude lifecycle telemetry,
+is implemented on draft PR #13 and is pending review. No subsequent
+execution-telemetry implementation slice is selected. Automatic
+5/10/15/20/25-minute diagnostics require a separate explicit policy and
+implementation slice.

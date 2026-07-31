@@ -4,11 +4,11 @@ Last updated: 2026-07-31
 
 ## Plan Orientation
 
-Current `main` at `c616bcfbb4dc222a1d4c3c99ab3a933383714cab` contains the
+Implementation through `c616bcfbb4dc222a1d4c3c99ab3a933383714cab` includes the
 live projection, native read client, read-only diagnostic, durable
-execution-evidence policy, and narrow durable lifecycle producer. Provenance
-Engine Slice E is operationally complete and the active product gate is the
-Engineering Observation Period.
+execution-evidence policy, narrow durable lifecycle producer, and fork CI
+baseline repair. Provenance Engine Slice E is operationally complete and the
+active product gate is the Engineering Observation Period.
 
 Execution telemetry is bmux-owned high-frequency runtime state. Provenance
 Engine owns selected durable evidence and deterministic Current State. The
@@ -17,21 +17,26 @@ Engine Slice E.
 
 | Plan area | Current position | Notes |
 | --- | --- | --- |
-| Provider-neutral Codex telemetry migration | Slices 0 through 11 completed on the stacked Slice 1 branch history. | Existing React `AgentEvent` projection behavior is preserved. |
+| Provider-neutral Codex telemetry migration | Slices 0 through 11 are completed and merged to `main`; the stacked branch history is retained as historical implementation context. | Existing React `AgentEvent` projection behavior is preserved. |
 | Live session projection foundation | Plan Slice 4A completed and merged to `main`. | Adds a renderer-independent replay projection from ordered `TelemetryEventEnvelope` values. |
 | Live projection sidecar read surface | Plan Slice 4B completed and merged to `main`. | Wires the live projection to the sidecar fanout as an in-memory subscriber and exposes a bounded REST read payload; no React rendering, WebSocket `AgentEvent`, persistence, or provenance changes. |
 | Native live projection read client | Plan Slice 4C completed and merged to `main`. | Adds Swift DTOs and an injected HTTP read client in `BmuxAgentChat` for the existing REST payload, plus a shared JSON fixture drift check; no rendering, WebSocket, persistence, provenance, or Swift schema ownership changes. |
 | Read-only observation diagnostic | Completed and merged to `main`. | Adds a provider-neutral package comparison value and `bmux provenance diagnostics execution-telemetry-live <session-id>` CLI report. It compares only session presence, provider identity, and broad lifecycle presence between the live projection and Provenance Engine Current State; no persistence, provenance writes, React rendering changes, WebSocket changes, or automatic scheduling. |
-| Durable execution-evidence policy | Completed and merged to `main`. | Dogfooded the diagnostic against a real live Codex sidecar session and recorded the policy that execution telemetry is not durable provenance evidence by default. Only broad session/provider/lifecycle facts are eligible for explicit durable projection. |
+| Durable execution-evidence policy | Completed and merged to `main`. | Dogfooded the diagnostic against a real live Codex sidecar session and recorded the policy that execution telemetry is not durable provenance evidence by default. The implemented durable projection is limited to approved broad session/provider/lifecycle facts and derived worktree association. |
 | Narrow durable lifecycle producer | Completed and merged to `main` at `9d7fefacbb402bc918b22888214021a8223f14ff`. | Adds an app-side producer for broad live sidecar session/provider/lifecycle facts only. The existing diagnostic remains read-only and now matches supported lifecycle-backed live sessions. |
+| First non-Codex provider migration | Implemented on draft PR #13 at `5a4a463f17e07a1c5e2a037f07bfe4f743f839c5`; pending review. | Migrates only Claude prompt submission, provider session identity, coarse result lifecycle, and sidecar process-close failure through the existing telemetry fanout. |
 
 ## Active Slice
 
-No execution telemetry implementation slice is currently selected.
+Claude lifecycle telemetry is the current pending execution-telemetry
+implementation slice.
 
 Status: observation on `main`. The narrow durable lifecycle producer is
 implemented, merged, and available for dogfood. Branch
 `execution-telemetry-live-projection` is historical implementation context.
+The first non-Codex provider migration is implemented on draft PR #13 and is
+pending review. No subsequent execution-telemetry implementation slice is
+selected.
 
 Current producer validation passed with zero diagnostic mismatches for live
 session `79a4701f`.
@@ -75,6 +80,13 @@ broad sidecar session/provider/lifecycle facts.
   broad session/provider/lifecycle facts through the public Provenance Engine
   lifecycle API. Dogfood against live Codex session `79a4701f` reported zero
   diagnostic mismatches.
+- First non-Codex provider migration: implemented on draft PR #13. It migrates
+  Claude prompt submission, `system/init` provider session linking, `result`
+  completion/result-error closure, and sidecar process-close active-turn
+  failure through `ExecutionTelemetryFanout`. It does not claim Claude parity
+  with Codex and does not migrate Claude message/tool streams, raw stream-json
+  envelopes, token usage assumptions, changed files, telemetry persistence,
+  provenance writes, WebSocket payloads, or React rendering behavior.
 
 ## Historical Branch
 
@@ -368,16 +380,16 @@ Keep the diagnostic observational:
 Execution telemetry remains bmux-owned high-frequency runtime state and is not
 durable provenance evidence by default.
 
-Eligible future durable projection facts are limited to broad
+The implemented durable projection is limited to approved broad
 session/provider/lifecycle facts: bmux session id, provider kind, provider
-session id when available, repository/worktree association when bmux can derive
-it within the existing provenance boundary, and broad lifecycle presence such
-as active/running versus inactive/idle.
+session id when available, derived worktree association when bmux can derive it
+within the existing provenance boundary, and broad lifecycle presence such as
+active/running versus inactive/idle.
 
-Message text, deltas, private reasoning, tool inputs or outputs, command
-output, raw provider envelopes, raw errors, changed file paths, approval request
-payloads, and token usage details remain out of durable provenance scope unless
-a later policy slice explicitly selects them.
+Message text, deltas, reasoning, command or tool output, raw provider
+envelopes, raw errors, changed-file paths from telemetry, approval payloads,
+detailed token information, and live projection snapshots remain out of durable
+provenance scope unless a later policy slice explicitly selects them.
 
 ## Blocked Decisions
 

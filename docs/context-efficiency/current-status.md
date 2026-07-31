@@ -74,15 +74,20 @@ Execution telemetry diagnostic dogfood and durable evidence policy completed
 on 2026-07-30 in the same branch. Dogfood against live Codex sidecar session
 `05384b5e` reported the expected bounded mismatch
 `current_state_session_missing`. Policy now records that execution telemetry is
-not durable provenance evidence by default; only broad
-session/provider/lifecycle facts are eligible for a future explicit projection
-slice.
+not durable provenance evidence by default; the implemented durable projection
+is limited to approved broad session/provider/lifecycle facts and derived
+worktree association.
 
 The narrow durable lifecycle producer completed on 2026-07-30 in the same
 branch. Dogfood against live Codex sidecar session `79a4701f` reached provider
 `codex`, provider session `019fb1bd-bc6b-7141-8926-df2554f0c5e4`, lifecycle
 `idle`, and the read-only diagnostic reported zero mismatches in text and JSON
 modes.
+
+The first non-Codex provider migration, Claude lifecycle telemetry, is
+implemented on draft PR #13 at
+`5a4a463f17e07a1c5e2a037f07bfe4f743f839c5` and is pending review. No
+subsequent execution-telemetry implementation slice is selected.
 
 Potential follow-up work:
 
@@ -91,10 +96,10 @@ Potential follow-up work:
 - Cut a tagged Provenance Engine release so bmux can depend on a version tag rather than a revision pin.
 - Dogfood a configured non-default Agent Chat URL, decide whether sidecar
   session disappearance should record stopped lifecycle facts, or continue
-  provider migration. Keep telemetry persistence, raw provider data,
-  transcript/tool/usage details, React/WebSocket changes, Swift schema
-  ownership, and automatic diagnostic scheduling out of scope unless a later
-  policy slice selects them.
+  provider migration after the Claude lifecycle PR is accepted or closed. Keep
+  telemetry persistence, raw provider data, transcript/tool/usage details,
+  React/WebSocket changes, Swift schema ownership, and automatic diagnostic
+  scheduling out of scope unless a later policy slice selects them.
 
 ## Canonical Details
 

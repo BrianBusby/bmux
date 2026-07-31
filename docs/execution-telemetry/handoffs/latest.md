@@ -3,8 +3,8 @@
 ## Session identity
 
 - Date: 2026-07-31
-- Slice: none selected; observation after completed narrow durable lifecycle producer
-- Main baseline: `c616bcfbb4dc222a1d4c3c99ab3a933383714cab`
+- Slice: Claude lifecycle telemetry pending review on draft PR #13
+- Main evidence baseline: `c616bcfbb4dc222a1d4c3c99ab3a933383714cab`
 - Historical implementation branch: `execution-telemetry-live-projection`
 
 ## Objective completed
@@ -77,18 +77,25 @@ selected.
 
 ## Next slice
 
-No next execution telemetry implementation slice is selected.
+The first non-Codex provider migration, Claude lifecycle telemetry, is
+implemented on draft PR #13 at
+`5a4a463f17e07a1c5e2a037f07bfe4f743f839c5` and is pending review. No
+subsequent execution telemetry implementation slice is selected.
 
 Explicitly selectable later work:
 
+- live-dogfood Claude Agent Chat sessions after PR #13 review;
+- decide whether to migrate a bounded Claude tool lifecycle source;
 - dogfood with a configured non-default Agent Chat URL;
 - decide whether sidecar session disappearance should record a stopped
   lifecycle fact;
 - design automatic 5/10/15/20/25-minute diagnostic checkpoint policy and then
   implement it;
-- continue provider migration.
+- continue provider migration after the Claude lifecycle PR is accepted or
+  closed.
 
 Keep telemetry persistence, broad provenance writes, React rendering changes,
-WebSocket payload changes, Swift schema ownership, Claude structured-source
-work, and automatic diagnostic checkpoint scheduling out of scope unless a
-later policy slice selects them.
+WebSocket payload changes, Swift schema ownership, raw Claude stream-json
+envelopes, transcript/tool output capture, token usage assumptions,
+changed-file paths, and automatic diagnostic checkpoint scheduling out of scope
+unless a later policy slice selects them.
