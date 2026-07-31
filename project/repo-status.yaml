@@ -3,10 +3,9 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: claude_lifecycle_telemetry
-    title: Claude lifecycle telemetry migration
-    state: implemented
-    owner: bmux
+    id: null
+    title: null
+    state: none_selected
   state: observation
 
 execution_telemetry:

@@ -1,6 +1,9 @@
 # Telemetry Contract
 
-Status: Slice 11 provider-neutral contract, sidecar fanout seam, first Codex lifecycle migrations, Plan Slice 4B live projection sidecar read surface, Plan Slice 4C native read client, observation diagnostic, and durable execution-evidence policy.
+Status: Slice 11 provider-neutral contract, sidecar fanout seam, first Codex
+lifecycle migrations, first narrow Claude lifecycle/identity migration, Plan
+Slice 4B live projection sidecar read surface, Plan Slice 4C native read
+client, observation diagnostic, and durable execution-evidence policy.
 
 Canonical bmux roadmap reconciliation note: Provenance Engine Slice E is
 operationally complete on main, and the active product gate is the Engineering
@@ -11,7 +14,11 @@ The sidecar fanout path has been added without persistence, provenance
 projection, React behavior changes, or broad provider rewrites. Slices 3 through
 11 route Codex prompt submission, provider session linkage, turn lifecycle,
 message lifecycle, tool lifecycle, approval lifecycle, and standalone usage
-observations plus request-status, send-failure, and app-server exit diagnostics through the seam.
+observations plus request-status, send-failure, and app-server exit diagnostics
+through the seam. The first Claude migration routes only sidecar prompt
+submission, `system/init` provider session identity, Claude `result`
+completion/result-error closure, and sidecar process-close failure closure
+through the same seam.
 Plan Slice 4B attaches an in-memory live projection subscriber to each sidecar
 session and exposes a bounded REST read payload without changing React or
 WebSocket `AgentEvent` behavior. Plan Slice 4C adds Swift DTOs and an injected
@@ -99,10 +106,10 @@ provider events. The reverse direction remains prohibited: do not reconstruct
 canonical telemetry from `AgentEvent`.
 
 `TelemetryPublishProjectionOptions` carries sidecar-local projection details
-that must not be copied into canonical envelopes. Slice 4 uses this only to
-preserve the private `done.generation` value required by current server
-file-change attribution while projecting Codex `turn.completed` and
-`turn.failed` events back to `AgentEvent`.
+that must not be copied into canonical envelopes. It preserves private
+`done.generation`, Claude display-only `done.stats`, and Claude init `meta`
+model projection details while projecting canonical envelopes back to
+`AgentEvent`.
 
 ## Live Projection Read Surface
 
@@ -159,19 +166,19 @@ CI.
 
 ## Deferred Work
 
-Slice 11 does not:
+The first Claude migration does not:
 
-- broadly migrate provider events beyond Codex prompt/linkage, turn lifecycle,
-  message lifecycle, tool lifecycle, approval lifecycle, and standalone usage
-  observations plus request-status, send-failure, and app-server exit
-  diagnostics;
+- claim Claude parity with Codex;
+- migrate Claude message deltas, thinking deltas, tool use/result blocks,
+  slash command lists, option/status control responses, token usage, file
+  changes, or raw stream-json envelopes;
 - add telemetry persistence;
 - write to provenance-engine;
-- choose or implement a Claude structured event source.
+- change React rendering or WebSocket `AgentEvent` payload behavior.
 
 Plan Slice 4B still does not add telemetry persistence, provenance writes,
 Swift/native bridge decoding, React rendering changes, WebSocket `AgentEvent`
-payload changes, Claude structured-source selection, or automatic diagnostic
+payload changes, broader Claude provider migration, or automatic diagnostic
 checkpoint scheduling.
 
 The durable execution-evidence policy still does not allow message text,

@@ -14,9 +14,7 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Claude lifecycle telemetry migration (`claude_lifecycle_telemetry`)
-- Slice state: implemented
-- Owner: bmux
+- Active slice: none selected
 - Repository state: observation
 
 ## Release

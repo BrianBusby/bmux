@@ -62,6 +62,8 @@ export type TelemetryEnvelopeSubscriber = (envelope: TelemetryEventEnvelope) => 
 
 export interface TelemetryPublishProjectionOptions {
   doneGeneration?: number;
+  doneStats?: string;
+  providerLinkedModel?: string;
 }
 
 export type TelemetryOptionValue = string | boolean;
