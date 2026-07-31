@@ -1,0 +1,34 @@
+schema_version: 1
+repository: BrianBusby/bmux
+
+current_work:
+  active_slice:
+    id: claude_lifecycle_telemetry
+    title: Claude lifecycle telemetry migration
+    state: implemented
+    owner: bmux
+  state: observation
+
+execution_telemetry:
+  provider_neutral_contract: implemented
+  codex_fanout: implemented
+  live_projection: implemented
+  native_read_client: implemented
+  diagnostic: implemented
+  lifecycle_producer: implemented
+  claude_lifecycle_telemetry: implemented
+  automatic_checkpoint_scheduler: not_implemented
+
+release:
+  latest_tag: null
+  release_status: untagged
+
+local_caveats:
+  - id: broad_legacy_storage_migration
+    status: open
+  - id: github_actions_runner_reliability
+    status: open
+  - id: non_default_agent_chat_url_dogfood
+    status: open
+  - id: sidecar_disappearance_lifecycle_policy
+    status: open

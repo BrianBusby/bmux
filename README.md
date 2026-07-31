@@ -30,6 +30,11 @@ This fork keeps the core cmux model: native Swift/AppKit UI, libghostty terminal
 
 The canonical bmux roadmap is `docs/roadmap.md`. Cross-repository bmux to provenance-engine adoption milestones are canonical in the provenance-engine shared integration roadmap linked from `docs/provenance-integration.md`.
 
+Documentation authority and generated current status:
+
+- `docs/README.md`
+- `docs/generated/project-status.md`
+
 ## Install
 
 There is no public bmux release artifact yet.

@@ -46,10 +46,9 @@ provenance-engine
   for selected durable provenance queries and lifecycle records
 ```
 
-Mainline reconciliation note: current bmux main has accepted Provenance Engine
-Slice E. The active product gate is the Engineering Observation Period. This
-execution telemetry plan's Plan Slice 4B numbering is unrelated to Provenance
-Engine Slice E.
+Mainline reconciliation note: this execution telemetry plan's Plan Slice 4B
+numbering is unrelated to Provenance Engine Slice E. Current project gate and
+milestone state are generated in `docs/generated/project-status.md`.
 
 ## Current Ownership Boundaries
 

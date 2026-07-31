@@ -1,0 +1,4 @@
+schema_version: 1
+repository: BrianBusby/provenance-engine
+path: project/project-state.yaml
+default_ref: main
