@@ -13,35 +13,64 @@ This is the authoritative roadmap for the provenance-engine repository. It defin
 
 ## Current V1 Adoption
 
-The current roadmap priority is not new engine expansion. It is proving that the accepted public contracts can replace bmux-local provenance paths one path at a time.
+The current roadmap priority is not new engine expansion. Slice E is
+operationally accepted, and the active priority is observing and validating the
+accepted bmux integration before choosing cleanup, release, or post-V1 work.
 
 Completed:
 
 - `bmux provenance worktrees list` adopted `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.worktrees(...)` through provenance-engine `0.1.0`.
 - Slice C: `bmux provenance sessions tree <session-id>` adopted `ProvenanceEngineClientFactory` and `ProvenanceEngineClient.sessionTree(...)` through the accepted session-tree read contract. bmux PR 7 merged at `08763dd0d3256989180dcc04f426da1f24369175` with an explicit GitHub Actions waiver for unavailable Blacksmith runner evidence.
 - Slice D: `bmux provenance explain <path>` adopted `ProvenanceEngineClientFactory`, `ProvenanceEngineClient.worktrees(...)`, and `ProvenanceEngineClient.fileExplanation(...)` through the accepted file-explanation contract. bmux PR 9 merged at `c1c5fce0eb7526d321dbed6c8a6f25f0d9aaf374` with a Slice D-specific GitHub Actions waiver for unavailable Blacksmith runner evidence.
+- Slice E: bmux adopted `bmux provenance context current`, supported
+  lifecycle recording through `recordSessionLifecycle(...)`, accepted
+  Git/worktree observation capture through `appendEvent(...)`, production
+  default storage cutover to the engine-owned SQLite store, and schema identity
+  hardening. bmux merged the operational runtime cutover at
+  `3cbacd1501768f79ea377eb2d6aea9113f199d1b`; this repository recorded the
+  acceptance update at `0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc`.
 
 Current gate:
 
-- Slice E engine readiness for current session and task context is complete in this repository and recorded in `docs/current-context-readiness-slice-completion.md`.
-- Do not mark Slice E accepted until bmux migrates `bmux provenance context current` through the public SDK and that adoption is reviewed.
+- Engineering Observation Period after Slice E.
+- Observe the operational integration, collect failures or compatibility gaps,
+  and decide later whether the next selected work is legacy cleanup,
+  observability API design, a tagged engine release, or another explicit slice.
 
 Canonical cross-repository details: `docs/bmux-integration-roadmap.md`.
 
 ## Additional Bmux Adoption Paths
 
-After each path is accepted, produce an integration findings report and choose the next single path. Do not open multiple adoption paths in parallel.
+The initial V1 package and bmux adoption sequence is complete. Future bmux
+adoption work should still be selected one path at a time after observation
+findings justify it.
 
-Planned sequence:
+Accepted V1 adoption paths:
 
-1. Current session and task context: engine readiness complete; bmux adoption pending.
-2. Session lifecycle recording.
-3. Worktree observation and other capture append paths.
-4. Storage ownership and cleanup after bmux runtime paths stop depending on bmux-local provenance storage.
+- Current session and task context through `currentContext(...)`.
+- Supported lifecycle recording through `recordSessionLifecycle(...)`.
+- Accepted Git/worktree observation capture through `appendEvent(...)`.
+- Operational production default storage cutover to
+  `~/.local/state/provenance-engine/provenance.sqlite`.
+
+Still gated:
+
+- Broad legacy bmux-local database migration or deletion.
+- A public observability trace API, if observation proves one is needed.
+- A tagged Provenance Engine release to replace revision pins.
+- Daemon/service transport, only if the in-process SDK boundary proves
+  insufficient.
+- Shared evidence, GitHub ingestion, retrieval, and Knowledge Compiler work.
+
+Execution-telemetry live state, capture policy, diagnostics, orchestration, UI,
+and analytics remain bmux-owned. Provenance Engine receives only explicitly
+approved durable engineering evidence and broad lifecycle facts through the
+public SDK.
 
 ## External Evidence Model Validation
 
-Status: planned and gated after V1 bmux adoption proves the package boundary.
+Status: planned and gated after Engineering Observation Period findings justify
+the next post-V1 evidence-model slice.
 
 This phase validates repository and external evidence without conflating it with personal AI-session evidence. It should refine origin/scope usage, authorization expectations, compatibility rules, and evidence-store boundaries before adding broad ingestion.
 
