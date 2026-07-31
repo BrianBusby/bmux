@@ -482,7 +482,7 @@ the expected text without connecting to a bmux socket.
 - `bmux feedback --help` -> `Usage: bmux feedback`
 - `bmux feed --help` -> `Usage: bmux feed tui [--opentui|--legacy]`
 - `bmux hooks --help` -> `Usage: bmux hooks setup [agent] [--agent <name>] [--yes|-y]`
-- `bmux codex --help` -> `Usage: bmux codex <install-hooks|uninstall-hooks>`
+- `bmux codex --help` -> `Usage: bmux codex <install-hooks|uninstall-hooks|token-audit>`
 - `bmux themes --help` -> `Usage: bmux themes`
 - `bmux omo --help` -> `Usage: bmux omo [opencode-args...]`
 - `bmux omx --help` -> `Usage: bmux omx [omx-args...]`
