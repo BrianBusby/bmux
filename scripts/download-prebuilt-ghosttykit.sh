@@ -20,12 +20,24 @@ TAG="${GHOSTTYKIT_RELEASE_TAG:-xcframework-$GHOSTTY_SHA-$GHOSTTYKIT_BUILD_FLAVOR
 ARCHIVE_NAME="${GHOSTTYKIT_ARCHIVE_NAME:-GhosttyKit.xcframework.tar.gz}"
 OUTPUT_DIR="${GHOSTTYKIT_OUTPUT_DIR:-GhosttyKit.xcframework}"
 CHECKSUMS_FILE="${GHOSTTYKIT_CHECKSUMS_FILE:-$SCRIPT_DIR/ghosttykit-checksums.txt}"
-DOWNLOAD_URL="${GHOSTTYKIT_URL:-https://github.com/manaflow-ai/ghostty/releases/download/$TAG/$ARCHIVE_NAME}"
 DOWNLOAD_RETRIES="${GHOSTTYKIT_DOWNLOAD_RETRIES:-30}"
 DOWNLOAD_RETRY_DELAY="${GHOSTTYKIT_DOWNLOAD_RETRY_DELAY:-20}"
 DOWNLOAD_CONNECT_TIMEOUT="${GHOSTTYKIT_DOWNLOAD_CONNECT_TIMEOUT:-10}"
 DOWNLOAD_MAX_TIME="${GHOSTTYKIT_DOWNLOAD_MAX_TIME:-300}"
 ARCHIVE_VALIDATOR="${GHOSTTYKIT_ARCHIVE_VALIDATOR:-$SCRIPT_DIR/validate-xcframework-archive.py}"
+
+DOWNLOAD_CANDIDATES=()
+if [ -n "${GHOSTTYKIT_URL:-}" ]; then
+  DOWNLOAD_CANDIDATES+=("$GHOSTTYKIT_URL")
+else
+  DOWNLOAD_CANDIDATES+=("https://github.com/manaflow-ai/ghostty/releases/download/$TAG/$ARCHIVE_NAME")
+  LEGACY_CMUX_TAG="xcframework-$GHOSTTY_SHA-crashsubdir-cmux-crash-v1"
+  if [ "$GHOSTTYKIT_CRASH_REPORT_SUBDIR" = "bmux/crash" ] \
+    && [ "${GHOSTTYKIT_ALLOW_LEGACY_CMUX_PREBUILT:-1}" = "1" ] \
+    && [ "$LEGACY_CMUX_TAG" != "$TAG" ]; then
+    DOWNLOAD_CANDIDATES+=("https://github.com/manaflow-ai/ghostty/releases/download/$LEGACY_CMUX_TAG/$ARCHIVE_NAME")
+  fi
+fi
 
 if [ ! -f "$CHECKSUMS_FILE" ]; then
   echo "Missing checksum file: $CHECKSUMS_FILE" >&2
@@ -59,6 +71,25 @@ ARCHIVE_BASENAME="$(basename "$ARCHIVE_NAME")"
 ARCHIVE_PATH="$TMP_DIR/$ARCHIVE_BASENAME"
 EXTRACT_DIR="$TMP_DIR/extract"
 mkdir -p "$EXTRACT_DIR"
+
+DOWNLOAD_URL=""
+for CANDIDATE_URL in "${DOWNLOAD_CANDIDATES[@]}"; do
+  echo "Checking GhosttyKit archive URL: $CANDIDATE_URL"
+  if curl --fail --silent --show-error --location --head \
+    --connect-timeout "$DOWNLOAD_CONNECT_TIMEOUT" \
+    --max-time 60 \
+    -o /dev/null \
+    "$CANDIDATE_URL" >/dev/null; then
+    DOWNLOAD_URL="$CANDIDATE_URL"
+    break
+  fi
+  echo "GhosttyKit archive not available at $CANDIDATE_URL"
+done
+
+if [ -z "$DOWNLOAD_URL" ]; then
+  echo "No pre-built GhosttyKit archive found for ghostty $GHOSTTY_SHA" >&2
+  exit 1
+fi
 
 curl --fail --show-error --location \
   --connect-timeout "$DOWNLOAD_CONNECT_TIMEOUT" \

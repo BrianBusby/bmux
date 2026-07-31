@@ -7521,7 +7521,7 @@
 		};
 		CE1E00000000000000000001 /* XCRemoteSwiftPackageReference "provenance-engine" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "git@github.com:BrianBusby/provenance-engine.git";
+			repositoryURL = "https://github.com/BrianBusby/provenance-engine.git";
 			requirement = {
 				kind = revision;
 				revision = 18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03;

@@ -147,7 +147,11 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           ref: ${{ inputs.ref || github.ref }}
-          submodules: recursive
+
+      - name: Checkout benchmark submodules
+        run: |
+          set -euo pipefail
+          git submodule update --init --depth=1 ghostty vendor/bonsplit
 
       - name: Select Xcode
         run: |

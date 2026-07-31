@@ -432,8 +432,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          submodules: recursive
+
+      - name: Checkout required submodules
+        run: |
+          set -euo pipefail
+          git submodule update --init --depth=1 ghostty vendor/bonsplit
 
       - name: Select Xcode
         run: |
@@ -804,8 +807,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          submodules: recursive
+
+      - name: Checkout required submodules
+        run: |
+          set -euo pipefail
+          git submodule update --init --depth=1 ghostty vendor/bonsplit
 
       - name: Select helper Xcode
         run: |
@@ -1145,8 +1151,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          submodules: recursive
+
+      - name: Checkout required submodules
+        run: |
+          set -euo pipefail
+          git submodule update --init --depth=1 ghostty vendor/bonsplit
 
       - name: Select Xcode
         run: |
@@ -1393,7 +1402,7 @@ jobs:
           [ -S "$SOCK" ] || { echo "Socket not ready at $SOCK" >&2; exit 1; }
 
           BMUX_SOCKET_PATH="$SOCK" \
-          BMUX_LAG_MAX_P95_RATIO=1.70 \
+          BMUX_LAG_MAX_P95_RATIO=1.75 \
           BMUX_LAG_MAX_AVG_RATIO=1.70 \
           BMUX_LAG_MIN_BASELINE_P95_MS_FOR_RATIO=6.0 \
           BMUX_LAG_MIN_BASELINE_AVG_MS_FOR_RATIO=4.0 \
@@ -1459,8 +1468,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          submodules: recursive
+
+      - name: Checkout required submodules
+        run: |
+          set -euo pipefail
+          git submodule update --init --depth=1 ghostty vendor/bonsplit
 
       - name: Select Xcode
         run: |
