@@ -3,14 +3,19 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import http.client
 import json
 import os
 import re
 import shutil
 import sys
 import tempfile
+import urllib.error
+import urllib.parse
+import urllib.request
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 import jsonschema
 import yaml
@@ -24,6 +29,9 @@ GENERATED_FILES = (
     "repository-status.md",
 )
 GENERATED_WARNING = "GENERATED FILE. DO NOT EDIT MANUALLY."
+CANONICAL_SHARED_REPOSITORY = "BrianBusby/provenance-engine"
+CANONICAL_SHARED_PATH = "project/project-state.yaml"
+PROVIDER_ERROR = object()
 
 DELIVERY_STATUSES = ("proposed", "draft", "open", "merged", "closed", "superseded")
 ACCEPTANCE_STATUSES = (
@@ -54,6 +62,54 @@ RESPONSIBILITY_LABELS = {
 }
 
 
+@dataclass(frozen=True)
+class ValidationIssue:
+    category: str
+    name: str
+    path: str
+    message: str
+
+    def sort_key(self) -> tuple[str, str, str, str]:
+        return (self.category, self.name, self.path, self.message)
+
+    def format(self) -> str:
+        label = self.category if not self.name else f"{self.category}:{self.name}"
+        return f"[{label}] {self.path}: {self.message}"
+
+
+@dataclass(frozen=True)
+class PullRequestEvidence:
+    state: str
+    draft: bool
+    merged: bool
+
+
+@dataclass(frozen=True)
+class IssueEvidence:
+    state: str
+
+
+@dataclass(frozen=True)
+class TagEvidence:
+    target_sha: str
+
+
+class GitHubProviderError(Exception):
+    def __init__(self, kind: str, message: str):
+        super().__init__(message)
+        self.kind = kind
+        self.message = message
+
+
+class GitHubEvidenceProvider(Protocol):
+    def repository_exists(self, repository: str) -> bool: ...
+    def commit_exists(self, repository: str, sha: str) -> bool: ...
+    def pull_request(self, repository: str, number: int) -> PullRequestEvidence | None: ...
+    def issue(self, repository: str, number: int) -> IssueEvidence | None: ...
+    def tag(self, repository: str, tag: str) -> TagEvidence | None: ...
+    def release_exists(self, repository: str, tag: str) -> bool: ...
+
+
 class ProjectDocsError(Exception):
     pass
 
@@ -68,6 +124,74 @@ for first_letter, resolvers in list(NoTimestampSafeLoader.yaml_implicit_resolver
         for tag, regexp in resolvers
         if tag != "tag:yaml.org,2002:timestamp"
     ]
+
+
+class GitHubRestEvidenceProvider:
+    def __init__(self, token: str | None = None, api_url: str | None = None):
+        self.token = token
+        self.api_url = (api_url or "https://api.github.com").rstrip("/")
+
+    def _get(self, path: str) -> Any | None:
+        request = urllib.request.Request(f"{self.api_url}{path}")
+        request.add_header("Accept", "application/vnd.github+json")
+        request.add_header("X-GitHub-Api-Version", "2022-11-28")
+        request.add_header("User-Agent", "project-truth-ci")
+        if self.token:
+            request.add_header("Authorization", f"Bearer {self.token}")
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                payload = response.read().decode("utf-8")
+                return json.loads(payload) if payload else None
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace")
+            if exc.code == 404:
+                return None
+            if exc.code in (401, 403):
+                remaining = exc.headers.get("X-RateLimit-Remaining")
+                lowered = body.lower()
+                if remaining == "0" or "rate limit" in lowered:
+                    raise GitHubProviderError("rate_limit", f"GitHub API rate limit hit for {path}") from exc
+                raise GitHubProviderError("auth", f"GitHub API denied access to {path}: HTTP {exc.code}") from exc
+            raise GitHubProviderError("network", f"GitHub API request failed for {path}: HTTP {exc.code}") from exc
+        except (urllib.error.URLError, TimeoutError, http.client.HTTPException) as exc:
+            raise GitHubProviderError("network", f"GitHub API request failed for {path}: {exc}") from exc
+
+    def repository_exists(self, repository: str) -> bool:
+        return self._get(f"/repos/{quote_slug(repository)}") is not None
+
+    def commit_exists(self, repository: str, sha: str) -> bool:
+        return self._get(f"/repos/{quote_slug(repository)}/commits/{urllib.parse.quote(sha)}") is not None
+
+    def pull_request(self, repository: str, number: int) -> PullRequestEvidence | None:
+        data = self._get(f"/repos/{quote_slug(repository)}/pulls/{number}")
+        if data is None:
+            return None
+        return PullRequestEvidence(
+            state=str(data.get("state", "")),
+            draft=bool(data.get("draft")),
+            merged=bool(data.get("merged_at")),
+        )
+
+    def issue(self, repository: str, number: int) -> IssueEvidence | None:
+        data = self._get(f"/repos/{quote_slug(repository)}/issues/{number}")
+        if data is None:
+            return None
+        return IssueEvidence(state=str(data.get("state", "")))
+
+    def tag(self, repository: str, tag: str) -> TagEvidence | None:
+        data = self._get(f"/repos/{quote_slug(repository)}/git/ref/tags/{urllib.parse.quote(tag, safe='')}")
+        if data is None:
+            return None
+        target = data.get("object", {}) if isinstance(data, dict) else {}
+        return TagEvidence(target_sha=str(target.get("sha", "")))
+
+    def release_exists(self, repository: str, tag: str) -> bool:
+        return self._get(f"/repos/{quote_slug(repository)}/releases/tags/{urllib.parse.quote(tag, safe='')}") is not None
+
+
+def quote_slug(repository: str) -> str:
+    owner, name = repository.split("/", 1)
+    return f"{urllib.parse.quote(owner, safe='')}/{urllib.parse.quote(name, safe='')}"
 
 
 def load_yaml(path: Path) -> Any:
@@ -86,15 +210,27 @@ def load_json(path: Path) -> Any:
 
 
 def validate_schema(document: Any, schema_path: Path, document_path: Path) -> None:
+    issues = schema_issues(document, schema_path, document_path)
+    if issues:
+        raise_issues(issues)
+
+
+def schema_issues(document: Any, schema_path: Path, document_path: Path) -> list[ValidationIssue]:
     schema = load_json(schema_path)
     validator = jsonschema.Draft202012Validator(schema)
     errors = sorted(validator.iter_errors(document), key=lambda err: list(err.path))
-    if errors:
-        lines = []
-        for error in errors:
-            field = ".".join(str(part) for part in error.path) or "<root>"
-            lines.append(f"{document_path}: {field}: {error.message}")
-        raise ProjectDocsError("\n".join(lines))
+    issues: list[ValidationIssue] = []
+    for error in errors:
+        field = ".".join(str(part) for part in error.path) or "<root>"
+        issues.append(ValidationIssue("schema", schema_path.name, f"{document_path}:{field}", error.message))
+    return issues
+
+
+def raise_issues(issues: list[ValidationIssue]) -> None:
+    if not issues:
+        return
+    formatted = "\n".join(issue.format() for issue in sorted(issues, key=lambda item: item.sort_key()))
+    raise ProjectDocsError(formatted)
 
 
 def resolve_shared_state(repo_root: Path, explicit_shared_state: str | None) -> tuple[Path, dict[str, Any] | None]:
@@ -154,67 +290,254 @@ def load_inputs(repo_root: Path, explicit_shared_state: str | None = None) -> di
 
 
 def semantic_validate(shared: dict[str, Any], repo_status: dict[str, Any], repo_status_path: Path) -> None:
-    errors: list[str] = []
+    issues = invariant_issues(shared, [repo_status], {repo_status.get("repository", "<unknown>"): repo_status_path})
+    raise_issues(issues)
+
+
+def invariant_issues(
+    shared: dict[str, Any],
+    repo_statuses: list[dict[str, Any]],
+    repo_status_paths: dict[str, Path],
+) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+
+    def add(name: str, path: str, message: str) -> None:
+        issues.append(ValidationIssue("invariant", name, path, message))
+
+    repo_status = repo_statuses[0] if repo_statuses else {}
+    repo_status_path = repo_status_paths.get(repo_status.get("repository", ""), Path("project/repo-status.yaml"))
 
     milestone_ids = [item["id"] for item in shared.get("milestones", [])]
     duplicate_milestones = sorted({item for item in milestone_ids if milestone_ids.count(item) > 1})
     for milestone_id in duplicate_milestones:
-        errors.append(f"project/project-state.yaml: milestones: duplicate milestone id '{milestone_id}'")
+        add("unique_milestone_ids", "project/project-state.yaml:milestones", f"duplicate milestone id '{milestone_id}'")
 
     caveat_ids = [item["id"] for item in shared.get("caveats", [])]
     duplicate_caveats = sorted({item for item in caveat_ids if caveat_ids.count(item) > 1})
     for caveat_id in duplicate_caveats:
-        errors.append(f"project/project-state.yaml: caveats: duplicate caveat id '{caveat_id}'")
+        add("unique_caveat_ids", "project/project-state.yaml:caveats", f"duplicate caveat id '{caveat_id}'")
 
     gate = shared.get("cross_repository", {}).get("active_gate")
     if gate and gate.get("status") != "active":
-        errors.append("project/project-state.yaml: cross_repository.active_gate must have status active")
+        add("active_gate_is_active", "project/project-state.yaml:cross_repository.active_gate", "must have status active")
 
     for index, milestone in enumerate(shared.get("milestones", [])):
         path = f"project/project-state.yaml: milestones[{index}] ({milestone.get('id')})"
         if milestone["acceptance_status"] == "accepted":
             evidence = milestone.get("evidence", {})
             if not evidence.get("commits") and not evidence.get("pull_requests"):
-                errors.append(f"{path}: accepted milestone must have commit or pull request evidence")
+                add("accepted_requires_evidence", path, "accepted milestone must have commit or pull request evidence")
             if not milestone.get("accepted_at") and not milestone.get("acceptance_reason"):
-                errors.append(f"{path}: accepted milestone must have accepted_at or acceptance_reason")
+                add("accepted_requires_acceptance_evidence", path, "accepted milestone must have accepted_at or acceptance_reason")
             if milestone["delivery_status"] in ("proposed", "draft"):
-                errors.append(f"{path}: accepted milestone cannot have delivery_status {milestone['delivery_status']}")
+                add("accepted_delivery_not_draft", path, f"accepted milestone cannot have delivery_status {milestone['delivery_status']}")
+        if milestone["delivery_status"] == "merged" and milestone["acceptance_status"] == "accepted":
+            if not milestone.get("accepted_at") and not milestone.get("acceptance_reason"):
+                add("merged_not_automatically_accepted", path, "merged delivery must retain explicit acceptance evidence")
+        if milestone["acceptance_status"] == "under_observation" and milestone.get("accepted_at"):
+            add("observation_not_accepted", path, "under_observation milestone must not carry accepted_at")
+        if milestone["delivery_status"] == "superseded" and milestone["acceptance_status"] not in ("superseded", "rejected"):
+            add("superseded_not_active", path, "superseded delivery must not remain active or accepted")
 
     ownership = shared.get("ownership", {})
     if ownership.get("durable_evidence") != "provenance_engine":
-        errors.append("project/project-state.yaml: durable_evidence must be owned by provenance_engine")
+        add("ownership_durable_evidence", "project/project-state.yaml:ownership.durable_evidence", "must be owned by provenance_engine")
     if ownership.get("deterministic_current_state") != "provenance_engine":
-        errors.append("project/project-state.yaml: deterministic_current_state must be owned by provenance_engine")
+        add("ownership_current_state", "project/project-state.yaml:ownership.deterministic_current_state", "must be owned by provenance_engine")
     if ownership.get("execution_telemetry") != "bmux":
-        errors.append("project/project-state.yaml: execution_telemetry must be owned by bmux")
+        add("ownership_execution_telemetry", "project/project-state.yaml:ownership.execution_telemetry", "must be owned by bmux")
 
     policies = shared.get("policies", {})
     checkpoints = policies.get("automatic_checkpoint_diagnostics", {})
     if policies.get("raw_execution_telemetry_persisted") is not False:
-        errors.append("project/project-state.yaml: raw_execution_telemetry_persisted must be false for this slice")
+        add("raw_telemetry_not_persisted", "project/project-state.yaml:policies.raw_execution_telemetry_persisted", "must be false for this slice")
     if checkpoints.get("status") == "not_implemented" and checkpoints.get("selected_for_implementation"):
-        errors.append("project/project-state.yaml: not_implemented automatic checkpoints cannot be selected")
+        add("automatic_checkpoints_unselected", "project/project-state.yaml:policies.automatic_checkpoint_diagnostics", "not_implemented automatic checkpoints cannot be selected")
 
-    if "ownership" in repo_status:
-        errors.append(f"{repo_status_path}: repo-local manifest cannot redefine shared ownership")
+    active_slices: list[tuple[str, dict[str, Any]]] = []
+    for candidate in repo_statuses:
+        repository = candidate.get("repository", "<unknown>")
+        candidate_path = repo_status_paths.get(repository, Path("project/repo-status.yaml"))
+        if "ownership" in candidate:
+            add("local_cannot_redefine_ownership", str(candidate_path), "repo-local manifest cannot redefine shared ownership")
 
-    repository = repo_status.get("repository")
-    if repository == "BrianBusby/bmux":
-        capabilities = set(repo_status.get("local_capabilities", {}).keys())
-        if "durable_evidence" in capabilities or "deterministic_current_state" in capabilities:
-            errors.append(f"{repo_status_path}: bmux cannot claim durable evidence or Current State ownership")
-    if repository == "BrianBusby/provenance-engine" and "execution_telemetry" in repo_status:
-        errors.append(f"{repo_status_path}: Provenance Engine cannot claim live execution telemetry ownership")
+        if repository == "BrianBusby/bmux":
+            capabilities = set(candidate.get("local_capabilities", {}).keys())
+            if "durable_evidence" in capabilities or "deterministic_current_state" in capabilities:
+                add("bmux_no_durable_ownership", str(candidate_path), "bmux cannot claim durable evidence or Current State ownership")
+        if repository == "BrianBusby/provenance-engine" and "execution_telemetry" in candidate:
+            add("provenance_no_runtime_capture", str(candidate_path), "Provenance Engine cannot claim live execution telemetry ownership")
 
-    active_slice = repo_status.get("current_work", {}).get("active_slice")
-    if isinstance(active_slice, dict):
-        selected = active_slice.get("id") is not None or active_slice.get("state") not in (None, "none_selected")
-        if selected and not active_slice.get("owner"):
-            errors.append(f"{repo_status_path}: selected current slice must have owner")
+        active_slice = candidate.get("current_work", {}).get("active_slice")
+        current_state = candidate.get("current_work", {}).get("state")
+        if isinstance(active_slice, dict):
+            selected = active_slice.get("id") is not None or active_slice.get("state") not in (None, "none_selected")
+            if selected:
+                active_slices.append((repository, active_slice))
+                if not active_slice.get("owner"):
+                    add("active_slice_has_owner", str(candidate_path), "selected current slice must have owner")
+                if current_state in ("observation", "none_selected"):
+                    add("active_slice_matches_repo_state", str(candidate_path), "active implementation slice cannot coexist with observation or none_selected repository state")
+            elif current_state == "active":
+                add("no_active_slice_matches_repo_state", str(candidate_path), "active repository state must name an active slice")
 
-    if errors:
-        raise ProjectDocsError("\n".join(errors))
+        telemetry = candidate.get("execution_telemetry", {})
+        if telemetry.get("automatic_checkpoint_scheduler") in ("implemented", "under_observation", "accepted"):
+            if checkpoints.get("status") == "not_implemented" or not checkpoints.get("selected_for_implementation"):
+                add("automatic_checkpoints_not_claimed", str(candidate_path), "automatic checkpoint scheduling cannot be claimed before the shared policy selects and implements it")
+        if telemetry.get("raw_execution_telemetry_persisted") in ("implemented", "under_observation", "accepted"):
+            if policies.get("raw_execution_telemetry_persisted") is False:
+                add("raw_telemetry_not_persisted", str(candidate_path), "repo-local capabilities cannot claim durable raw execution telemetry persistence")
+
+    if len(active_slices) > 1:
+        repositories = ", ".join(f"{repo}:{slice_['id']}" for repo, slice_ in active_slices)
+        add("no_conflicting_active_slices", "project/repo-status.yaml", f"multiple active implementation slices are selected: {repositories}")
+
+    shared_caveats = {item["id"]: item for item in shared.get("caveats", [])}
+    for candidate in repo_statuses:
+        repository = candidate.get("repository", "<unknown>")
+        candidate_path = repo_status_paths.get(repository, Path("project/repo-status.yaml"))
+        for caveat in candidate.get("local_caveats", []):
+            shared_caveat = shared_caveats.get(caveat["id"])
+            if shared_caveat and shared_caveat["status"] in ("open", "monitoring") and caveat["status"] in ("resolved", "superseded"):
+                add("known_caveats_do_not_disappear", str(candidate_path), f"local caveat {caveat['id']} cannot be {caveat['status']} while shared caveat is {shared_caveat['status']}")
+
+    return issues
+
+
+def validate_shared_source_issues(context: dict[str, Any]) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    repo_root = context["repo_root"]
+    repo_status = context["repo_status"]
+    pointer = context["pointer"]
+    shared = context["shared"]
+    shared_path = context["shared_path"]
+    pointer_path = repo_root / "project" / "shared-project-source.yaml"
+
+    def add(name: str, path: str, message: str) -> None:
+        issues.append(ValidationIssue("invariant", name, path, message))
+
+    if repo_status.get("repository") == "BrianBusby/bmux":
+        if pointer is None:
+            add("shared_source_declared", str(pointer_path), "bmux must declare the canonical shared project-state source")
+        else:
+            if pointer.get("repository") != CANONICAL_SHARED_REPOSITORY:
+                add("shared_source_repository", str(pointer_path), f"repository must be {CANONICAL_SHARED_REPOSITORY}")
+            if pointer.get("path") != CANONICAL_SHARED_PATH:
+                add("shared_source_path", str(pointer_path), f"path must be {CANONICAL_SHARED_PATH}")
+        unauthorized_copy = repo_root / "project" / "project-state.yaml"
+        if unauthorized_copy.exists():
+            add("no_copied_shared_manifest", str(unauthorized_copy), "bmux must resolve the shared manifest through shared-project-source.yaml instead of committing a copy")
+
+    if pointer is not None:
+        if shared.get("project", {}).get("shared_state_owner") != pointer.get("repository"):
+            add("shared_source_owner_matches_manifest", str(pointer_path), "pointer repository must match project.shared_state_owner in the resolved shared manifest")
+        if not shared_path.exists():
+            add("shared_source_resolves", str(pointer_path), f"resolved shared manifest does not exist: {shared_path}")
+
+    return issues
+
+
+def collect_evidence_repositories(shared: dict[str, Any], repo_statuses: list[dict[str, Any]]) -> set[str]:
+    repositories = {shared.get("project", {}).get("shared_state_owner", "")}
+    repositories.update(repo.get("slug", "") for repo in shared.get("repositories", {}).values())
+    repositories.update(repo.get("repository", "") for repo in repo_statuses)
+    for milestone in shared.get("milestones", []):
+        evidence = milestone.get("evidence", {})
+        repositories.update(item.get("repository", "") for item in evidence.get("commits", []))
+        repositories.update(item.get("repository", "") for item in evidence.get("pull_requests", []))
+    for caveat in shared.get("caveats", []):
+        issue = caveat.get("issue")
+        if issue:
+            repositories.add(issue.get("repository", ""))
+    return {repo for repo in repositories if repo}
+
+
+def github_evidence_issues(
+    shared: dict[str, Any],
+    repo_statuses: list[dict[str, Any]],
+    provider: GitHubEvidenceProvider,
+) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+
+    def add(name: str, path: str, message: str) -> None:
+        issues.append(ValidationIssue("github", name, path, message))
+
+    def call(name: str, path: str, fn):
+        try:
+            return fn()
+        except GitHubProviderError as exc:
+            add(exc.kind, path, f"{name}: {exc.message}")
+            return PROVIDER_ERROR
+
+    for repository in sorted(collect_evidence_repositories(shared, repo_statuses)):
+            exists = call("repository", repository, lambda repository=repository: provider.repository_exists(repository))
+            if exists is False:
+                add("missing_repository", repository, "repository does not exist or is not visible")
+
+    for milestone_index, milestone in enumerate(shared.get("milestones", [])):
+        milestone_path = f"project/project-state.yaml:milestones[{milestone_index}]({milestone.get('id')})"
+        evidence = milestone.get("evidence", {})
+        for commit in evidence.get("commits", []):
+            path = f"{milestone_path}.evidence.commits[{commit['repository']}@{commit['sha']}]"
+            exists = call("commit", path, lambda commit=commit: provider.commit_exists(commit["repository"], commit["sha"]))
+            if exists is False:
+                add("missing_commit", path, "commit does not exist in the declared repository")
+        for pr in evidence.get("pull_requests", []):
+            path = f"{milestone_path}.evidence.pull_requests[{pr['repository']}#{pr['number']}]"
+            state = call("pull request", path, lambda pr=pr: provider.pull_request(pr["repository"], pr["number"]))
+            if state is PROVIDER_ERROR:
+                continue
+            if state is None:
+                add("missing_pr", path, "pull request does not exist in the declared repository")
+                continue
+            delivery = milestone.get("delivery_status")
+            if delivery == "merged" and not state.merged:
+                add("pr_merged_state_mismatch", path, "milestone declares merged delivery but pull request is not merged")
+            elif delivery == "open" and (state.state != "open" or state.draft):
+                add("pr_open_state_mismatch", path, "milestone declares open delivery but pull request is not an open non-draft PR")
+            elif delivery == "draft" and (state.state != "open" or not state.draft):
+                add("pr_draft_state_mismatch", path, "milestone declares draft delivery but pull request is not an open draft PR")
+            elif delivery == "closed" and (state.state != "closed" or state.merged):
+                add("pr_closed_state_mismatch", path, "milestone declares closed delivery but pull request is merged or still open")
+
+    for caveat_index, caveat in enumerate(shared.get("caveats", [])):
+        issue = caveat.get("issue")
+        if not issue:
+            continue
+        path = f"project/project-state.yaml:caveats[{caveat_index}]({caveat['id']}).issue[{issue['repository']}#{issue['number']}]"
+        state = call("issue", path, lambda issue=issue: provider.issue(issue["repository"], issue["number"]))
+        if state is PROVIDER_ERROR:
+            continue
+        if state is None:
+            add("missing_issue", path, "issue does not exist in the declared repository")
+            continue
+        if caveat["status"] in ("open", "monitoring") and state.state != "open":
+            add("issue_state_mismatch", path, f"caveat is {caveat['status']} but GitHub issue is {state.state}")
+        if caveat["status"] in ("resolved", "superseded") and state.state != "closed":
+            add("issue_state_mismatch", path, f"caveat is {caveat['status']} but GitHub issue is {state.state}")
+
+    for repo_status in repo_statuses:
+        release = repo_status.get("release", {})
+        tag = release.get("latest_tag")
+        if not tag:
+            continue
+        repository = repo_status.get("repository", "<unknown>")
+        path = f"project/repo-status.yaml:release[{repository}@{tag}]"
+        tag_state = call("tag", path, lambda repository=repository, tag=tag: provider.tag(repository, tag))
+        if tag_state is PROVIDER_ERROR:
+            continue
+        if tag_state is None:
+            add("missing_tag", path, "tag does not exist in the declared repository")
+            continue
+        if not tag_state.target_sha:
+            add("tag_target_missing", path, "tag did not resolve to a target commit or tag object")
+        if release.get("release_status") in ("released", "prerelease"):
+            exists = call("release", path, lambda repository=repository, tag=tag: provider.release_exists(repository, tag))
+            if exists is False:
+                add("missing_release", path, "release_status requires a GitHub Release for the latest tag")
+
+    return issues
 
 
 def titleize(value: str) -> str:
@@ -456,7 +779,68 @@ def check_generated(context: dict[str, Any]) -> None:
                 sys.stderr.write("\n".join(diff) + "\n")
     if stale:
         formatted = "\n".join(f"- {path}" for path in stale)
-        raise ProjectDocsError(f"Generated documentation is stale:\n{formatted}")
+        raise ProjectDocsError(
+            "[generation:generated_docs_fresh] Generated documentation is stale:\n"
+            f"{formatted}\nRegenerate with: ./scripts/project-docs generate"
+        )
+
+
+def generated_drift_issues(context: dict[str, Any]) -> list[ValidationIssue]:
+    repo_root = context["repo_root"]
+    committed_root = repo_root / "docs" / "generated"
+    issues: list[ValidationIssue] = []
+    with tempfile.TemporaryDirectory(prefix="project-docs-") as tmp:
+        tmp_root = Path(tmp)
+        write_generated(context, tmp_root)
+        for filename in GENERATED_FILES:
+            committed = committed_root / filename
+            generated = tmp_root / filename
+            if not committed.exists():
+                issues.append(ValidationIssue("generation", "generated_docs_fresh", str(committed), "generated file is missing; regenerate with ./scripts/project-docs generate"))
+                continue
+            committed_text = committed.read_text(encoding="utf-8")
+            generated_text = generated.read_text(encoding="utf-8")
+            if committed_text != generated_text:
+                issues.append(ValidationIssue("generation", "generated_docs_fresh", str(committed), "generated file is stale; regenerate with ./scripts/project-docs generate"))
+    return issues
+
+
+VOLATILE_STATUS_PATTERNS = (
+    re.compile(r"\bactive gate is\b", re.IGNORECASE),
+    re.compile(r"\bactive product gate is\b", re.IGNORECASE),
+    re.compile(r"\bno (?:subsequent )?(?:implementation )?slice is selected\b", re.IGNORECASE),
+    re.compile(r"\bCI enforcement is not implemented yet\b", re.IGNORECASE),
+    re.compile(r"\blatest tag:\s*`?[^`\n]+`?", re.IGNORECASE),
+    re.compile(r"\brelease status:\s*`?[^`\n]+`?", re.IGNORECASE),
+)
+
+
+AUTHORED_DOCS = (
+    "docs/current-status.md",
+    "docs/roadmap.md",
+    "docs/handoffs/latest.md",
+    "docs/execution-telemetry/implementation-status.md",
+    "project/README.md",
+)
+
+
+def authored_doc_drift_issues(repo_root: Path) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for relative in AUTHORED_DOCS:
+        path = repo_root / relative
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        is_historical = text.lstrip().startswith("> **Historical record:**")
+        if "docs/generated/project-status.md" not in text and "generated/project-status.md" not in text:
+            issues.append(ValidationIssue("authored-doc", "generated_status_link", relative, "authored status-bearing document must link to generated project status"))
+        if is_historical:
+            continue
+        for pattern in VOLATILE_STATUS_PATTERNS:
+            match = pattern.search(text)
+            if match:
+                issues.append(ValidationIssue("authored-doc", "volatile_status_claim", relative, f"contains duplicated volatile status claim '{match.group(0)}'; reference docs/generated/ instead"))
+    return issues
 
 
 def replace_generated_block(text: str, block_name: str, replacement: str) -> str:
@@ -499,12 +883,51 @@ def command_check(args: argparse.Namespace) -> None:
     check_generated(context)
 
 
+def load_peer_repo_statuses(peer_roots: list[str]) -> tuple[list[dict[str, Any]], dict[str, Path]]:
+    statuses: list[dict[str, Any]] = []
+    paths: dict[str, Path] = {}
+    for peer_root in peer_roots:
+        root = Path(peer_root).expanduser().resolve()
+        path = root / "project" / "repo-status.yaml"
+        status = load_yaml(path)
+        validate_schema(status, SCHEMA_ROOT / "repo-status.schema.json", path)
+        repository = status.get("repository", str(path))
+        statuses.append(status)
+        paths[repository] = path
+    return statuses, paths
+
+
+def command_ci(args: argparse.Namespace) -> None:
+    context = load_inputs(Path(args.repo_root), args.shared_state)
+    repo_statuses = [context["repo_status"]]
+    repo_status_paths = {context["repo_status"].get("repository", "<current>"): context["repo_status_path"]}
+    peer_statuses, peer_paths = load_peer_repo_statuses(args.peer_repo_root)
+    repo_statuses.extend(peer_statuses)
+    repo_status_paths.update(peer_paths)
+
+    issues: list[ValidationIssue] = []
+    issues.extend(invariant_issues(context["shared"], repo_statuses, repo_status_paths))
+    issues.extend(validate_shared_source_issues(context))
+    ensure_generated_warning(context["repo_root"])
+    issues.extend(generated_drift_issues(context))
+    issues.extend(authored_doc_drift_issues(context["repo_root"]))
+
+    if not args.skip_github:
+        token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+        provider = GitHubRestEvidenceProvider(token=token, api_url=os.environ.get("GITHUB_API_URL"))
+        issues.extend(github_evidence_issues(context["shared"], repo_statuses, provider))
+
+    raise_issues(issues)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate and render project truth documentation.")
-    parser.add_argument("command", choices=("validate", "generate", "check"))
+    parser.add_argument("command", choices=("validate", "generate", "check", "ci"))
     parser.add_argument("--repo-root", default=os.getcwd())
     parser.add_argument("--shared-state", default=os.environ.get("PROJECT_TRUTH_SHARED_STATE"))
     parser.add_argument("--require-generated", action="store_true")
+    parser.add_argument("--peer-repo-root", action="append", default=[], help="Additional checkout root whose project/repo-status.yaml participates in cross-repository invariants.")
+    parser.add_argument("--skip-github", action="store_true", help="Skip live GitHub evidence verification. Do not use in CI.")
     args = parser.parse_args(argv)
 
     try:
@@ -514,6 +937,8 @@ def main(argv: list[str] | None = None) -> int:
             command_generate(args)
         elif args.command == "check":
             command_check(args)
+        elif args.command == "ci":
+            command_ci(args)
         return 0
     except ProjectDocsError as exc:
         sys.stderr.write(f"project-docs: {exc}\n")

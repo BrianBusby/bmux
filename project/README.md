@@ -52,10 +52,33 @@ Do not encode live GitHub URLs when repository slug plus number is sufficient.
 ```
 
 Generated files live under `docs/generated/` and must not be edited manually.
+The authoritative generated status starts at
+[`docs/generated/project-status.md`](../docs/generated/project-status.md).
 
-## Not Automated Yet
+## CI Validation
 
-This foundation does not implement required CI enforcement, GitHub App
-synchronization, live PR or issue verification, or provenance-backed
-project-state events. Those belong after the read-only validation path is
-stable.
+Use the deterministic CI gate before making Project Truth changes mergeable:
+
+```bash
+./scripts/project-docs ci
+```
+
+`ci` validates schemas, named invariants, generated-document freshness,
+bounded authored-document drift, and read-only GitHub evidence. It uses
+`GITHUB_TOKEN` or `GH_TOKEN` when available and otherwise performs unauthenticated
+public GitHub reads. In CI, evidence verification fails closed for missing
+resources, API authentication failures, rate limits, and network failures.
+
+For coordinated local validation with a bmux sibling checkout, include bmux's
+repo-local manifest in cross-repository invariant checks:
+
+```bash
+./scripts/project-docs ci --peer-repo-root ../bmux
+```
+
+`--skip-github` exists only for offline unit tests and local diagnosis; do not
+use it for branch-protection checks.
+
+This validation remains read-only. It does not implement GitHub App
+synchronization, automatic manifest updates, automatic documentation commits,
+or provenance-backed project-state events.

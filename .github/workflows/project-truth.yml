@@ -1,0 +1,46 @@
+name: Project Truth
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate:
+    name: project-truth
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout provenance-engine
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Checkout bmux repository status
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: BrianBusby/bmux
+          path: .project-truth/bmux
+
+      - name: Install Project Truth dependencies
+        run: python3 -m pip install -r tools/project-docs/requirements.txt
+
+      - name: Validate manifests
+        run: ./scripts/project-docs validate
+
+      - name: Check generated docs
+        run: ./scripts/project-docs check
+
+      - name: Run read-only CI validation
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./scripts/project-docs ci --peer-repo-root .project-truth/bmux
