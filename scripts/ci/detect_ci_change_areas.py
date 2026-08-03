@@ -107,9 +107,17 @@ def is_agent_session_web_change(path: str) -> bool:
 def is_macos_neutral(path: str) -> bool:
     # `mux/` is the standalone bmux-mux Rust project, gated by its own `mux`
     # workflow; it never affects the macOS app build or app-host tests.
-    if path.startswith(("docs/", "design/", "plans/", "ios/", "web/", "webviews/", "daemon/remote/", "mux/")):
+    if path.startswith(
+        ("docs/", "design/", "plans/", "ios/", "web/", "webviews/", "daemon/remote/", "mux/", "project/")
+    ):
         return True
-    return path == "README.md" or (path.startswith("README.") and path.endswith(".md"))
+    return path in {
+        ".github/pull_request_template.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "README.md",
+        "scripts/project-docs",
+    } or (path.startswith("README.") and path.endswith(".md"))
 
 
 def is_macos_change(path: str) -> bool:

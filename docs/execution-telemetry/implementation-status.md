@@ -1,8 +1,12 @@
+> **Historical record:** This document records execution-telemetry implementation state at the time it was written and is not the current project-status authority. See `docs/generated/repository-status.md`.
+
 # Execution Telemetry Implementation Status
 
 Last updated: 2026-07-31
 
 ## Plan Orientation
+
+The authoritative current status is generated from project manifests. See `docs/generated/project-status.md`, `docs/generated/ownership-boundary.md`, and `docs/generated/repository-status.md`.
 
 Implementation through `3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9` includes the
 live projection, native read client, read-only diagnostic, durable
@@ -27,7 +31,7 @@ Engine Slice E.
 | Narrow durable lifecycle producer | Completed and merged to `main` at `9d7fefacbb402bc918b22888214021a8223f14ff`. | Adds an app-side producer for broad live sidecar session/provider/lifecycle facts only. The existing diagnostic remains read-only and now matches supported lifecycle-backed live sessions. |
 | First non-Codex provider migration | Implemented and merged to `main` via PR #13 at `3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9`. | Migrates only Claude prompt submission, provider session identity, coarse result lifecycle, and sidecar process-close failure through the existing telemetry fanout. |
 
-## Active Slice
+## Historical Active Slice
 
 Status: observation on `main`. The narrow durable lifecycle producer is
 implemented, merged, and available for dogfood. Branch

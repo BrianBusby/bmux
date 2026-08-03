@@ -10,6 +10,13 @@ The Provenance Engine integration contract remains the technical authority for p
 
 https://github.com/BrianBusby/provenance-engine/blob/main/docs/integration-contract.md
 
+Current milestone, ownership, policy, caveat, and local status facts are
+generated from the project manifests:
+
+- [Project status](generated/project-status.md)
+- [Ownership boundary](generated/ownership-boundary.md)
+- [Repository status](generated/repository-status.md)
+
 ## Public SDK Boundary
 
 bmux imports only the public engine products for adopted provenance paths:

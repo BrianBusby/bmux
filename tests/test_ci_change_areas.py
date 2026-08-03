@@ -43,6 +43,26 @@ def test_docs_only_skips_expensive_areas() -> None:
     assert_areas(["docs/ci.md", "README.md"], macos=False, web=False, go=False)
 
 
+def test_project_truth_docs_only_skips_expensive_areas() -> None:
+    assert_areas(
+        [
+            ".github/pull_request_template.md",
+            "CLAUDE.md",
+            "README.md",
+            "docs/README.md",
+            "docs/generated/project-status.md",
+            "docs/handoffs/latest.md",
+            "project/README.md",
+            "project/repo-status.yaml",
+            "project/shared-project-source.yaml",
+            "scripts/project-docs",
+        ],
+        macos=False,
+        web=False,
+        go=False,
+    )
+
+
 def test_cli_contract_doc_runs_macos_contract_tests() -> None:
     assert_areas(["docs/cli-contract.md"], macos=True, web=False, go=False)
 

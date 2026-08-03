@@ -1,5 +1,18 @@
 # Execution Telemetry Handoff
 
+## Project Truth Note
+
+Before changing execution-telemetry milestone, slice, persistence-policy, release,
+or caveat state, update `project/repo-status.yaml` or the shared manifest in
+`provenance-engine/project/project-state.yaml`, then run project-docs validation
+and generation. Current generated status lives in:
+
+- `docs/generated/project-status.md`
+- `docs/generated/ownership-boundary.md`
+- `docs/generated/repository-status.md`
+
+Generated files must not be edited manually.
+
 ## Session identity
 
 - Date: 2026-07-31
@@ -90,3 +103,7 @@ WebSocket payload changes, Swift schema ownership, raw provider envelopes,
 transcripts, tool output, token usage assumptions, changed-file paths, and
 automatic diagnostic checkpoint scheduling out of scope unless a later policy
 slice selects them.
+
+## Next Project Truth Slice
+
+Add required `project-truth` CI validation, cross-repository invariant checking, GitHub PR/issue state verification, and drift detection. Do not select GitHub App synchronization before the read-only CI checks have been proven.
