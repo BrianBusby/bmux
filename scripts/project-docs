@@ -5,6 +5,9 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 if [[ -n "${PROJECT_TRUTH_TOOL_ROOT:-}" ]]; then
   tool_root="$PROJECT_TRUTH_TOOL_ROOT"
+  if [[ ! -f "$tool_root/project_docs.py" && -f "$tool_root/tools/project-docs/project_docs.py" ]]; then
+    tool_root="$tool_root/tools/project-docs"
+  fi
 else
   tool_root="$(cd "$repo_root/.." && pwd)/provenance-engine/tools/project-docs"
 fi
