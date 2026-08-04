@@ -16,4 +16,6 @@ A project-status change is incomplete until:
 4. `./scripts/project-docs check` passes;
 5. authored documents do not contradict the generated state.
 
-CI enforcement is not implemented yet.
+CI enforcement runs the read-only `./scripts/project-docs ci` gate. It validates
+schema, generation freshness, named invariants, authored-doc drift, and GitHub
+evidence without writing repository state.

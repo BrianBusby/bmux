@@ -3,6 +3,9 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 tool_root="${PROJECT_TRUTH_TOOL_ROOT:-"$repo_root/tools/project-docs"}"
+if [[ ! -f "$tool_root/project_docs.py" && -f "$tool_root/tools/project-docs/project_docs.py" ]]; then
+  tool_root="$tool_root/tools/project-docs"
+fi
 
 if [[ ! -f "$tool_root/project_docs.py" ]]; then
   echo "project-docs: cannot find canonical tool at $tool_root" >&2
