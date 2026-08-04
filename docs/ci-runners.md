@@ -21,6 +21,23 @@ Workflows reference them as `runs-on: ${{ vars.LINUX_RUNNER || 'warp-ubuntu-late
 If a variable is unset the job uses the fallback, so CI is never broken by a
 missing variable.
 
+## Fork/local repository overrides
+
+The table above is the canonical `manaflow-ai/bmux` policy. Forks or local
+repository mirrors may need different repo-variable values when they do not
+have the same paid runner providers connected. For example, `BrianBusby/bmux`
+currently has no registered self-hosted runners, so `MACOS_RUNNER_26_RELEASE`
+must use the GitHub-hosted `macos-26` label there; both `depot-macos-26` and
+`blacksmith-6vcpu-macos-26` queued the `release-build` job with zero steps in
+that fork, while `macos-26` scheduled and completed the Release build.
+
+Treat those overrides as repository-local configuration, not upstream workflow
+policy. Before changing a fork back to the documented Blacksmith value, confirm
+the provider is actually connected for that repository. GitHub Actions resolves
+repository variables when a workflow run is created, so changing a variable does
+not fix jobs already queued inside an existing run; cancel/rerun or dispatch a
+fresh CI run after changing the variable.
+
 ## Deliberate exceptions (not on Blacksmith)
 
 Blacksmith macOS runners cannot initiate a testmanagerd control session (no GUI
