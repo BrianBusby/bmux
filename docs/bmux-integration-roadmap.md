@@ -250,3 +250,90 @@ Rollback strategy: scoped bmux revert to local append adapter.
 Migration or cleanup: remove direct local store append and retention SQL only after replacement is accepted.
 
 Status: Accepted in Slice E for bmux-owned Git/worktree observation capture.
+
+## Milestone: bmux Workspace Display Current State Projection
+
+Capability owner: provenance-engine for durable evidence contracts, projection
+semantics, and Current State APIs. bmux owns observation adapters, display
+rendering, optimistic UI, fallback behavior, and rollout decisions.
+
+Adopter: bmux.
+
+Required contract: existing public SDK writes where sufficient, plus new public
+workspace-display event/domain contracts and Current State read contracts if the
+existing V1 API surface cannot represent the accepted facts.
+
+Provenance-engine work: accept deterministic workspace-display facts, persist
+durable evidence, and derive Current State for workspace display metadata. The
+projection should cover workspace display title, title source, repository and
+worktree identity, branch, accepted dirty state if already part of worktree
+observation, PR number/status/url/branch/staleness, and projection
+revision/cursor/timestamp.
+
+bmux work: observe workspace created/selected/renamed events, tab rename events,
+worktree branch and repository HEAD changes, PR metadata found/changed/cleared
+events, PR state changes (`open`, `merged`, `closed`), and auto-name
+applied/suppressed/cleared events. Append accepted facts through the public
+engine contract, then render workspace tabs, sidebar rows, and custom sidebar
+fields such as `workspace.branch`, `workspace.pr`, and `workspace.prs` from PE
+Current State.
+
+Dependencies: accepted worktree observation capture and an explicit diagnostic
+slice selection. This milestone is not active until selected through the project
+manifest.
+
+Acceptance criteria: bmux display reads PE Current State for workspace title,
+branch, and PR metadata after the slice is implemented. Live session data is not
+the durable or steady-state display source of truth for those fields. Any
+optimistic bmux-local display state is temporary, request-scoped, reconciled
+from PE Current State, and rolled back or surfaced as an error when PE rejects a
+write.
+
+Diagnostics requirements: provide read-only diagnostics that compare observed
+bmux UI/model display, PE Current State, and the latest accepted evidence for a
+workspace. Diagnostics must measure correctness, stale/cleared PR state, and
+latency for branch changes, PR mapping, PR state changes, leaving a PR-backed
+branch, leaving a Git worktree, and workspace rename triggers.
+
+Suggested diagnostic commands:
+
+```bash
+bmux provenance diagnostics workspace-display --workspace <id> --json
+bmux provenance diagnostics workspace-display --workspace <id> --watch --json
+bmux provenance diagnostics workspace-rename --workspace <id> --json
+```
+
+Diagnostic output should compare:
+
+```text
+observed bmux UI/model display
+vs
+PE Current State
+vs
+latest accepted evidence
+```
+
+The diagnostic should record workspace id; tab or surface id when applicable;
+repository root; branch before/after; PR before/after; PR status before/after;
+evidence accepted timestamp; PE Current State projection timestamp, revision,
+or cursor; display observed timestamp; expected and observed display values;
+latency in milliseconds; pass/fail; and stale/cleared-state correctness. Rename
+diagnostics should additionally record old title, new title or a
+privacy-preserving hash, title source, user-set state, auto-name suppression
+state, request timestamp, rollback/error state if the write failed, and later
+overwrite or revert detection.
+
+Compatibility expectations: bmux keeps UI presentation, CLI formatting, custom
+sidebar field compatibility, and local fallback behavior. Provenance Engine owns
+deterministic projection semantics and API compatibility.
+
+Rollback strategy: scoped bmux revert to the existing bmux-local/live display
+metadata path while preserving already accepted PE evidence. Engine schema or
+contract rollback requires explicit compatibility handling.
+
+Implementation boundary: do not include broad GitHub ingestion, Knowledge
+Compiler work, semantic or AI interpretation of PRs, raw execution telemetry
+persistence, raw live session event storage, transcript storage, broad UI
+rewrite, automatic workspace naming redesign, or GitHub write synchronization.
+
+Status: Planned and gated.

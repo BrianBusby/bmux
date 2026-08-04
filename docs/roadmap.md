@@ -43,6 +43,9 @@ Still gated as planning topics until selected through the project manifest:
 
 - Broad legacy bmux-local database migration or deletion.
 - A public observability trace API, if observation proves one is needed.
+- bmux Workspace Display Current State Projection, with diagnostics-first
+  validation for workspace title, branch, PR metadata, PR stale clearing, and
+  display latency.
 - A tagged Provenance Engine release to replace revision pins.
 - Daemon/service transport, only if the in-process SDK boundary proves
   insufficient.
@@ -52,6 +55,15 @@ Execution-telemetry live state, capture policy, diagnostics, orchestration, UI,
 and analytics remain bmux-owned. Provenance Engine receives only explicitly
 approved durable engineering evidence and broad lifecycle facts through the
 public SDK.
+
+Workspace display Current State is a candidate post-observation slice, not the
+active project slice. If selected, Provenance Engine should own accepted
+workspace-display evidence contracts, deterministic projection semantics, and
+Current State APIs for workspace title, repository/worktree identity, branch,
+and PR metadata. bmux should own observation adapters, UI rendering, custom
+sidebar field compatibility, temporary optimistic rename display, fallback
+behavior, and diagnostics that compare observed display state with PE Current
+State and latest accepted evidence.
 
 ## External Evidence Model Validation
 

@@ -622,6 +622,13 @@ Current State is rebuildable from the Evidence Store. If projection state is del
 
 Current State powers V1 read APIs such as worktrees, session trees, file explanations, and current context. Producers do not compute it, and consumers should not reconstruct it from raw events or storage tables. The engine owns deterministic ordering, relationship derivation, evidence attribution, and bounded query behavior.
 
+Consumers may also use Current State as the source for present-tense display
+metadata when the metadata is derived from accepted evidence. For example, a
+bmux workspace tab or sidebar row may read engine-projected workspace title,
+branch, and pull request state. This does not make Provenance Engine responsible
+for UI presentation, layout, optimistic interaction behavior, or product
+fallback policy; those remain consumer responsibilities.
+
 Ownership boundaries:
 
 - Producers own observing activity, assigning stable source/domain identities, emitting observable or declared facts, and retrying failed or unacknowledged delivery where needed.
@@ -982,6 +989,9 @@ It may use Provenance Engine for:
 - recording sessions
 - recording tasks and agent relationships
 - recording commands and artifacts
+- reading Current State for workspace tab and sidebar metadata such as title,
+  branch, and pull request status after the relevant display projection
+  contract exists
 - displaying session trees
 - current-task context
 - worktree awareness
@@ -995,6 +1005,11 @@ It may use Provenance Engine for:
 Bmux owns the user experience.
 
 Provenance Engine owns reusable provenance capabilities and data contracts.
+
+When bmux uses Current State for UI display, Provenance Engine still owns only
+the evidence-backed facts and deterministic projection. bmux remains responsible
+for the visual presentation, custom sidebar contract, latency diagnostics,
+temporary optimistic UI, and user-facing error or fallback behavior.
 
 ### 10.2 AI agents
 
