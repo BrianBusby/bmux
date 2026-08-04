@@ -40,3 +40,13 @@ Keep the read-only checks under observation as required branch-protection
 candidates. Do not build GitHub App synchronization, automatic manifest edits,
 provenance-backed project-state events, telemetry checkpoint automation, or new
 bmux UI work until the observation gate produces a specific follow-up decision.
+
+A newly documented candidate is the Workspace Display Current State Projection
+planning and diagnostics slice. If selected, keep it diagnostics-first: specify
+how bmux observes workspace title, branch, PR metadata, PR state, and stale PR
+clearing facts; writes accepted evidence to Provenance Engine; reads PE Current
+State for workspace tabs, sidebar rows, and custom sidebar fields; and measures
+display correctness plus latency for branch/PR/title updates. Do not broaden
+that slice into GitHub ingestion, Knowledge Compiler work, transcript storage,
+raw execution telemetry persistence, automatic workspace naming redesign, or a
+broad UI rewrite.
