@@ -47,6 +47,11 @@ Still out of scope until a new slice is explicitly selected: daemon transport, U
 - Run an observation period against the accepted runtime cutover.
 - Remove or retire legacy WorkProvenance storage and client support after replacement contracts or obsolescence decisions.
 - Decide whether lifecycle observability traces need a public engine API or should remain bmux-local diagnostics.
+- Plan the Workspace Display Current State Projection slice: bmux should
+  observe workspace title, branch, and PR facts, write accepted evidence to
+  Provenance Engine, and render workspace tabs, sidebar rows, and custom sidebar
+  branch/PR/title fields from PE Current State once the projection contract is
+  implemented.
 - Cut a tagged Provenance Engine release so bmux can depend on a version tag rather than a revision pin.
 
 ## Longer-Term Direction
@@ -66,6 +71,8 @@ Still out of scope until a new slice is explicitly selected: daemon transport, U
 - Evidence-backed retrieval adoption from shared project or organization evidence.
 - GitHub ingestion and Knowledge Compiler features.
 - Broad lifecycle policy automation, warnings, or automatic context mutation.
+- Broad workspace UI rewrite or automatic workspace naming redesign beyond the
+  deterministic display-fact projection slice.
 - Organization-scale provenance deployment.
 
 These ideas should remain gated by the shared integration roadmap and by explicit findings from prior slices.

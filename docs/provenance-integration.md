@@ -58,6 +58,74 @@ Adopted CLI reads:
 
 bmux still owns command parsing, Git path normalization, output compatibility, fallback text, JSON/text rendering, and UI presentation. The engine owns evidence, deterministic Current State, provenance interpretation, and bounded provenance queries.
 
+## Workspace Display State
+
+Current truth: workspace tab titles, sidebar titles, branch labels, PR numbers,
+PR state, stale PR clearing, and custom sidebar workspace display fields are not
+yet implemented as a PE-backed display source. They remain bmux-local/live
+display state until a dedicated Workspace Display Current State Projection slice
+is selected and implemented.
+
+Desired truth: bmux observes deterministic display facts, writes accepted
+evidence to Provenance Engine, and reads PE Current State for display metadata.
+The display projection should cover workspace title and title source, repository
+and worktree identity, branch, accepted dirty state if already part of worktree
+observation, PR number/status/url/branch/staleness, and projection
+revision/cursor/timestamp.
+
+Observed facts should include workspace created/selected/renamed events, tab
+renames, worktree branch changes, repository HEAD changes, PR metadata
+found/changed/cleared events, PR state transitions (`open`, `merged`, `closed`),
+and auto-name applied/suppressed/cleared events. Live session data must not be
+the durable or steady-state display source of truth for these fields.
+
+bmux may use optimistic UI only as temporary pending state, such as immediately
+reflecting a user rename while writing to PE. The pending value must reconcile
+from PE Current State and must roll back or surface an error if PE rejects the
+write.
+
+Planning diagnostics should be read-only and should compare:
+
+```text
+observed bmux UI/model display
+vs
+PE Current State
+vs
+latest accepted evidence
+```
+
+Suggested commands:
+
+```bash
+bmux provenance diagnostics workspace-display --workspace <id> --json
+bmux provenance diagnostics workspace-display --workspace <id> --watch --json
+bmux provenance diagnostics workspace-rename --workspace <id> --json
+```
+
+Branch/PR diagnostics should measure whether display updates correctly when a
+workspace moves from `main` to `feature/foo`, from `feature/foo` to
+`feature/bar`, maps to PR `#N`, changes PR state from open to merged or closed,
+leaves a PR-backed branch, or leaves a Git worktree. Rename diagnostics should
+cover sidebar rename, command palette rename, `CLI rename-workspace`,
+workspace-action rename, clear-name, auto-name, and agent `/rename` if
+supported.
+
+Diagnostics should record workspace id; tab or surface id when applicable;
+repository root; branch before/after; PR before/after; PR status before/after;
+evidence accepted timestamp; PE Current State projection timestamp, revision,
+or cursor; display observed timestamp; expected and observed display values;
+latency in milliseconds; pass/fail; and stale/cleared-state correctness. Rename
+diagnostics should additionally record old title, new title or a
+privacy-preserving hash, title source, whether the name is user-set, whether
+auto-name was suppressed, request timestamp, rollback/error state if the write
+failed, and later overwrite or revert detection.
+
+This slice must stay focused on deterministic display facts. It must not
+include broad GitHub ingestion, Knowledge Compiler work, semantic or AI
+interpretation of PRs, raw execution telemetry persistence, raw live session
+event storage, transcript storage, broad UI rewrite, automatic workspace naming
+redesign, or GitHub write synchronization.
+
 ## Producer Writes
 
 bmux records observable activity through public engine writes:

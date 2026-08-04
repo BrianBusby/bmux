@@ -147,6 +147,13 @@ Optional fields are omitted when the workspace doesn't have them, so guard with
 `if let b = w.branch { ... }` or `w.pr != nil ? ... : ...` rather than assuming
 they exist.
 
+Today these workspace display fields are live bmux sidebar state. A planned
+Workspace Display Current State Projection slice should move `title`, `branch`,
+`dirty` when already accepted as worktree observation, `pr`, and `prs` to PE
+Current State as the steady-state source for custom sidebar data. Until that
+slice is implemented, do not assume Provenance Engine backs those custom
+sidebar fields.
+
 ## Views
 
 Containers: `VStack(alignment:spacing:)`, `HStack`, `ZStack`, `LazyVStack`,
