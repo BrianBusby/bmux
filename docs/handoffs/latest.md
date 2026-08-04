@@ -43,6 +43,13 @@ resource, and contradictory-evidence failures are reported separately.
 ## Next Recommended Slice
 
 Keep the read-only checks under observation as required branch-protection
-candidates. Do not build GitHub App synchronization, automatic manifest edits,
-provenance-backed project-state events, or telemetry checkpoint automation until
-the observation gate produces a specific follow-up decision.
+candidates. A newly documented candidate is the bmux Workspace Display Current
+State Projection planning and diagnostics slice: specify how workspace title,
+branch, and PR metadata flow from bmux observations through durable PE evidence
+into deterministic Current State, and how bmux verifies tab/sidebar/custom
+sidebar display latency and stale-state correctness.
+
+Do not mark that slice active, build GitHub App synchronization, automatic
+manifest edits, provenance-backed project-state events, telemetry checkpoint
+automation, or broad bmux UI migration until the observation gate produces a
+specific follow-up decision.
