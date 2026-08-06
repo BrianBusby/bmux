@@ -2527,20 +2527,17 @@ class GhosttyApp {
         }
         #endif
 
-        let openedInBrowser: Bool
-        if let targetPane = workspace.preferredRightSideTargetPane(fromPanelId: sourcePanelId) {
-            #if DEBUG
-            bmuxDebugLog("link.openURL opening in existing browser pane=\(targetPane)")
-            #endif
-            openedInBrowser = workspace.newBrowserSurface(inPane: targetPane, url: url, focus: true) != nil
-        } else {
-            #if DEBUG
-            bmuxDebugLog("link.openURL opening as new browser split from surface=\(sourcePanelId)")
-            #endif
-            openedInBrowser = workspace.newBrowserSplit(from: sourcePanelId, orientation: .horizontal, url: url) != nil
+        let openResult = workspace.openBrowserSplitForAction(from: sourcePanelId, url: url, focus: true)
+#if DEBUG
+        if let openResult {
+            bmuxDebugLog(
+                "link.openURL opened embedded browser surface=\(openResult.panel.id.uuidString.prefix(5)) " +
+                "placement=\(openResult.placementStrategy)"
+            )
         }
+#endif
 
-        guard openedInBrowser else {
+        guard openResult != nil else {
             #if DEBUG
             bmuxDebugLog(
                 "link.openURL deferred embedded browser creation failed, opening externally " +
