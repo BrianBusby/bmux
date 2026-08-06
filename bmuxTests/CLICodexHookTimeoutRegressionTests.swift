@@ -366,7 +366,18 @@ struct CLICodexHookTimeoutRegressionTests {
         let sentCommands = commands.snapshot()
         #expect(!sentCommands.contains { $0.hasPrefix("set_status codex Running ") })
         #expect(!sentCommands.contains { $0.hasPrefix("clear_notifications ") })
-        #expect(!sentCommands.contains { codexHookJSONObject($0)?["method"] as? String == "feed.push" })
+        let feedPush = try #require(
+            sentCommands
+                .compactMap(codexHookJSONObject)
+                .first { $0["method"] as? String == "feed.push" },
+            "Stale Codex prompt-submit must still publish Feed telemetry so prompt navigation records the user prompt"
+        )
+        let params = try #require(feedPush["params"] as? [String: Any])
+        let event = try #require(params["event"] as? [String: Any])
+        #expect(event["hook_event_name"] as? String == "UserPromptSubmit")
+        #expect(event["workspace_id"] as? String == workspaceId)
+        #expect(event["surface_id"] as? String == surfaceId)
+        #expect(event["prompt"] as? String == "late")
         #expect(!sentCommands.contains { codexHookJSONObject($0)?["method"] as? String == "surface.resume.set" })
 
         let saved = try #require(
