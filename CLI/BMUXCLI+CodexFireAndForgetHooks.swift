@@ -152,7 +152,7 @@ extension BMUXCLI {
     }
 
     private static func codexWrapperBMUXCompatibleCustomAutoTitleCommand(_ command: String) -> String {
-        command
+        let compatibleCommand = command
             .replacingOccurrences(
                 of: "cmux_cli=\"${CMUX_BUNDLED_CLI_PATH:-}\"",
                 with: "cmux_cli=\"${BMUX_CODEX_HOOK_BMUX_BIN:-${BMUX_BUNDLED_CLI_PATH:-}}\""
@@ -163,6 +163,15 @@ extension BMUXCLI {
             )
             .replacingOccurrences(of: "CMUX_", with: "BMUX_")
             .replacingOccurrences(of: "command -v cmux", with: "command -v bmux")
+
+        return [
+            "CMUX_WORKSPACE_ID=\"${BMUX_WORKSPACE_ID:-${CMUX_WORKSPACE_ID:-}}\"",
+            "CMUX_SOCKET_PATH=\"${BMUX_SOCKET_PATH:-${CMUX_SOCKET_PATH:-}}\"",
+            "CMUX_BUNDLED_CLI_PATH=\"${BMUX_CODEX_HOOK_BMUX_BIN:-${BMUX_BUNDLED_CLI_PATH:-${CMUX_BUNDLED_CLI_PATH:-}}}\"",
+            "CMUX_CODEX_HOOKS_DISABLED=\"${BMUX_CODEX_HOOKS_DISABLED:-${CMUX_CODEX_HOOKS_DISABLED:-}}\"",
+            "export CMUX_WORKSPACE_ID CMUX_SOCKET_PATH CMUX_BUNDLED_CLI_PATH CMUX_CODEX_HOOKS_DISABLED",
+            compatibleCommand
+        ].joined(separator: "; ")
     }
 
     private static func codexWrapperHookTimeoutMs(_ value: Any?) -> Int? {
