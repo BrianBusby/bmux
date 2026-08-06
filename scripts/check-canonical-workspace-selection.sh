@@ -20,14 +20,22 @@ is_allowed_file() {
 }
 
 violations=()
+if command -v rg >/dev/null 2>&1; then
+  selection_lines="$(rg -n -P '\b([A-Za-z_][A-Za-z0-9_]*(?:[?!])?\.)*selectedTabId\s*=(?!=)' Sources --glob '*.swift' || true)"
+else
+  selection_lines="$(grep -RInE --include='*.swift' 'selectedTabId[[:space:]]*=' Sources || true)"
+fi
+
 while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
   file="${line%%:*}"
   rest="${line#*:}"
   source_line="${rest#*:}"
   [[ "$source_line" =~ (^|[[:space:]])(let|var)[[:space:]]+selectedTabId[[:space:]]*= ]] && continue
+  [[ "$source_line" =~ selectedTabId[[:space:]]*== ]] && continue
   is_allowed_file "$file" && continue
   violations+=("$line")
-done < <(rg -n -P '\b([A-Za-z_][A-Za-z0-9_]*(?:[?!])?\.)*selectedTabId\s*=(?!=)' Sources --glob '*.swift' || true)
+done <<< "$selection_lines"
 
 if (( ${#violations[@]} > 0 )); then
   {
