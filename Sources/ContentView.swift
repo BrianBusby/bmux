@@ -2560,7 +2560,9 @@ struct ContentView: View {
 
                 // Ensure selectedTabId points to an existing workspace.
                 if tabManager.selectedTabId == nil || !tabManager.tabs.contains(where: { $0.id == tabManager.selectedTabId }) {
-                    tabManager.selectedTabId = tabManager.tabs.first?.id
+                    if let workspaceId = tabManager.tabs.first?.id {
+                        tabManager.selectWorkspaceIdForAction(workspaceId, notificationDismissalContext: nil)
+                    }
                     didRecover = true
                 }
 
@@ -7867,7 +7869,7 @@ struct ContentView: View {
                 NSSound.beep()
                 return
             }
-            tabManager.moveTabsToTop([workspace.id])
+            guard tabManager.moveWorkspaceToTopForAction(tabId: workspace.id) != nil else { return }
             tabManager.selectWorkspace(workspace)
         }
         registry.register(commandId: "palette.closeOtherWorkspaces") {
@@ -9237,35 +9239,23 @@ struct ContentView: View {
 
     private func moveSelectedWorkspace(by delta: Int) {
         guard let workspace = tabManager.selectedWorkspace,
-              let currentIndex = selectedWorkspaceIndex() else { return }
-        let targetIndex = currentIndex + delta
-        guard targetIndex >= 0, targetIndex < tabManager.tabs.count else { return }
-        _ = tabManager.reorderWorkspace(tabId: workspace.id, toIndex: targetIndex)
+              tabManager.moveWorkspaceForAction(tabId: workspace.id, by: delta) != nil else { return }
         tabManager.selectWorkspace(workspace)
-    }
-
-    private func closeWorkspaceIds(_ workspaceIds: [UUID], allowPinned: Bool) {
-        tabManager.closeWorkspacesWithConfirmation(workspaceIds, allowPinned: allowPinned)
     }
 
     private func closeOtherSelectedWorkspaces() {
         guard let workspace = tabManager.selectedWorkspace else { return }
-        let workspaceIds = tabManager.tabs.compactMap { $0.id == workspace.id ? nil : $0.id }
-        closeWorkspaceIds(workspaceIds, allowPinned: true)
+        tabManager.closeWorkspacesWithConfirmation(.others(keeping: [workspace.id]), allowPinned: true)
     }
 
     private func closeSelectedWorkspacesBelow() {
-        guard tabManager.selectedWorkspace != nil,
-              let anchorIndex = selectedWorkspaceIndex() else { return }
-        let workspaceIds = tabManager.tabs.suffix(from: anchorIndex + 1).map(\.id)
-        closeWorkspaceIds(workspaceIds, allowPinned: true)
+        guard let workspace = tabManager.selectedWorkspace else { return }
+        tabManager.closeWorkspacesWithConfirmation(.below(anchor: workspace.id), allowPinned: true)
     }
 
     private func closeSelectedWorkspacesAbove() {
-        guard tabManager.selectedWorkspace != nil,
-              let anchorIndex = selectedWorkspaceIndex() else { return }
-        let workspaceIds = tabManager.tabs.prefix(upTo: anchorIndex).map(\.id)
-        closeWorkspaceIds(workspaceIds, allowPinned: true)
+        guard let workspace = tabManager.selectedWorkspace else { return }
+        tabManager.closeWorkspacesWithConfirmation(.above(anchor: workspace.id), allowPinned: true)
     }
 
     private func syncSidebarSelectedWorkspaceIds() {
@@ -9394,7 +9384,11 @@ struct ContentView: View {
 
         switch target.kind {
         case .workspace(let workspaceId):
-            tabManager.setCustomTitle(tabId: workspaceId, title: normalizedName)
+            tabManager.applyWorkspaceTitleEdit(
+                tabId: workspaceId,
+                title: normalizedName,
+                emptyTitleClears: true
+            )
         case .tab(let workspaceId, let panelId):
             guard let workspace = tabManager.tabs.first(where: { $0.id == workspaceId }) else {
                 NSSound.beep()
@@ -11133,13 +11127,12 @@ struct VerticalTabsSidebar: View {
                 ?? .rejected(String(localized: "sidebar.extensions.action.surfaceCreateRejected", defaultValue: "Surface could not be created"))
 
         case .selectSurface(let workspaceId, let surfaceId):
-            guard let workspace = tabManager.tabs.first(where: { $0.id == workspaceId }),
-                  workspace.panels[surfaceId] != nil else {
+            switch tabManager.focusWorkspaceSurfaceForAction(workspaceId: workspaceId, surfaceId: surfaceId) {
+            case .focused:
+                return .accepted
+            case .workspaceNotFound, .surfaceNotFound:
                 return .rejected(String(localized: "sidebar.extensions.action.surfaceNotFound", defaultValue: "Surface not found"))
             }
-            tabManager.selectWorkspace(workspace)
-            workspace.focusPanel(surfaceId)
-            return .accepted
 
         case .selectNextSurface:
             tabManager.selectNextSurface()
@@ -11172,12 +11165,9 @@ struct VerticalTabsSidebar: View {
                 return .rejected(String(localized: "sidebar.extensions.action.urlRejected", defaultValue: "URL could not be opened"))
             }
             guard let splitDirection = splitDirection(from: direction),
-                  let tab = tabManager.tabs.first(where: { $0.id == workspaceId }),
-                  tab.panels[surfaceId] != nil else {
+                  case .focused = tabManager.focusWorkspaceSurfaceForAction(workspaceId: workspaceId, surfaceId: surfaceId) else {
                 return .rejected(String(localized: "sidebar.extensions.action.surfaceCreateRejected", defaultValue: "Surface could not be created"))
             }
-            tabManager.selectWorkspace(tab)
-            tab.focusPanel(surfaceId)
             let panelId = tabManager.createBrowserSplit(direction: splitDirection, url: validatedURL.url)
             return panelId.map { BmuxSidebarActionResult(accepted: true, message: $0.uuidString) }
                 ?? .rejected(String(localized: "sidebar.extensions.action.surfaceCreateRejected", defaultValue: "Surface could not be created"))
@@ -13847,7 +13837,7 @@ struct TabItemView: View, Equatable {
                                 baseline: renameDraft,
                                 baselineHadUserCustomTitle: renameBaselineHadUserCustomTitle
                             ) {
-                                tabManager.setCustomTitle(tabId: tab.id, title: title)
+                                tabManager.renameWorkspaceTitle(tabId: tab.id, title: title)
                             }
                             isEditing = false
                         },
@@ -14725,9 +14715,7 @@ struct TabItemView: View, Equatable {
     }
 
     private func moveBy(_ delta: Int) {
-        let targetIndex = index + delta
-        guard targetIndex >= 0, targetIndex < tabManager.tabs.count else { return }
-        guard tabManager.reorderWorkspace(tabId: tab.id, toIndex: targetIndex) else { return }
+        guard tabManager.moveWorkspaceForAction(tabId: tab.id, by: delta) != nil else { return }
         selectedTabIds = [tab.id]
         lastSidebarSelectionIndex = tabManager.tabs.firstIndex { $0.id == tab.id }
         tabManager.selectTab(tab)
@@ -14818,21 +14806,18 @@ struct TabItemView: View, Equatable {
     }
 
     private func closeOtherTabs(_ targetIds: [UUID]) {
-        let keepIds = Set(targetIds)
-        let idsToClose = tabManager.tabs.compactMap { keepIds.contains($0.id) ? nil : $0.id }
-        closeTabs(idsToClose, allowPinned: true)
+        tabManager.closeWorkspacesWithConfirmation(.others(keeping: Set(targetIds)), allowPinned: true)
+        syncSelectionAfterMutation()
     }
 
     private func closeTabsBelow(tabId: UUID) {
-        guard let anchorIndex = tabManager.tabs.firstIndex(where: { $0.id == tabId }) else { return }
-        let idsToClose = tabManager.tabs.suffix(from: anchorIndex + 1).map { $0.id }
-        closeTabs(idsToClose, allowPinned: true)
+        tabManager.closeWorkspacesWithConfirmation(.below(anchor: tabId), allowPinned: true)
+        syncSelectionAfterMutation()
     }
 
     private func closeTabsAbove(tabId: UUID) {
-        guard let anchorIndex = tabManager.tabs.firstIndex(where: { $0.id == tabId }) else { return }
-        let idsToClose = tabManager.tabs.prefix(upTo: anchorIndex).map { $0.id }
-        closeTabs(idsToClose, allowPinned: true)
+        tabManager.closeWorkspacesWithConfirmation(.above(anchor: tabId), allowPinned: true)
+        syncSelectionAfterMutation()
     }
 
     private func markTabsRead(_ targetIds: [UUID]) {
@@ -15480,7 +15465,7 @@ struct TabItemView: View, Equatable {
         }
         let response = alert.runModal()
         guard response == .alertFirstButtonReturn else { return }
-        tabManager.setCustomTitle(tabId: tab.id, title: input.stringValue)
+        tabManager.commitWorkspaceTitleEdit(tabId: tab.id, title: input.stringValue)
     }
 
     private func beginWorkspaceDescriptionEditFromContextMenu() {

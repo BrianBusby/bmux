@@ -294,11 +294,15 @@ extension TerminalController: ControlSurfaceContext {
             _ = AppDelegate.shared?.focusMainWindow(windowId: windowId)
             setActiveTabManager(tabManager)
         }
-        if tabManager.selectedTabId != ws.id {
-            tabManager.selectWorkspace(ws)
-        }
         if ws.panels[surfaceID] != nil {
-            ws.focusPanel(surfaceID)
+            switch tabManager.focusWorkspaceSurfaceForAction(workspaceId: ws.id, surfaceId: surfaceID) {
+            case .focused:
+                break
+            case .workspaceNotFound:
+                return .workspaceNotFound
+            case .surfaceNotFound:
+                return .surfaceNotFound(surfaceID)
+            }
         } else if ws.containsDockPanel(surfaceID) {
             revealDockForFocus(tabManager: tabManager)
             ws.dockSplit.focusPanel(surfaceID)

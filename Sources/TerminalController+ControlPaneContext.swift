@@ -198,7 +198,7 @@ extension TerminalController: ControlPaneContext {
             setActiveTabManager(tabManager)
         }
         if tabManager.selectedTabId != ws.id {
-            tabManager.selectWorkspace(ws)
+            tabManager.selectWorkspaceIdForAction(ws.id)
         }
         ws.bonsplitController.focusPane(paneId)
         let windowId = v2ResolveWindowId(tabManager: tabManager)

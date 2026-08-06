@@ -75,6 +75,45 @@ struct ControlCommandCoordinatorWorkspaceTests {
         #expect(workspace["has_custom_title"] == .bool(false))
     }
 
+    @Test func workspaceRenameForwardsTitleToWorkspaceContext() throws {
+        let (coordinator, context) = coordinator()
+        let workspaceID = UUID()
+        let windowID = UUID()
+        context.renameResolution = .resolved(windowID: windowID)
+
+        guard case .ok(.object(let payload)) = coordinator.handle(request("workspace.rename", [
+            "workspace_id": .string(workspaceID.uuidString),
+            "title": .string("  Shared Path  "),
+        ])) else {
+            Issue.record("unexpected workspace.rename result")
+            return
+        }
+
+        #expect(context.renameCall?.workspaceID == workspaceID)
+        #expect(context.renameCall?.title == "Shared Path")
+        #expect(payload["workspace_id"] == .string(workspaceID.uuidString))
+        #expect(payload["window_id"] == .string(windowID.uuidString))
+        #expect(payload["title"] == .string("Shared Path"))
+    }
+
+    @Test func workspaceRenameRejectsEmptyTitleBeforeCallingWorkspaceContext() throws {
+        let (coordinator, context) = coordinator()
+        let workspaceID = UUID()
+        context.renameResolution = .resolved(windowID: nil)
+
+        guard case .err(let code, let message, _) = coordinator.handle(request("workspace.rename", [
+            "workspace_id": .string(workspaceID.uuidString),
+            "title": .string("   "),
+        ])) else {
+            Issue.record("unexpected workspace.rename result")
+            return
+        }
+
+        #expect(code == "invalid_params")
+        #expect(message == "Missing or invalid title")
+        #expect(context.renameCall == nil)
+    }
+
     @Test func workspaceGroupAddForwardsPlacementAndReference() throws {
         let (coordinator, context) = coordinator()
         let groupID = UUID()

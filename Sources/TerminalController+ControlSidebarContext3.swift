@@ -156,16 +156,21 @@ extension TerminalController {
         }
 
         guard let panelId = controlSidebarResolveSurfaceId(from: surfaceArg, tab: tab),
-              let bonsplitTabId = tab.surfaceIdFromPanelId(panelId) else {
+              tab.surfaceIdFromPanelId(panelId) != nil,
+              let sourcePane = tab.paneId(forPanelId: panelId) else {
             return .surfaceNotFound
         }
 
         let orientation: SplitOrientation = orientationIsHorizontal ? .horizontal : .vertical
-        guard let newPaneId = tab.bonsplitController.splitPane(
-            orientation: orientation,
-            movingTab: bonsplitTabId,
-            insertFirst: insertFirst
-        ) else {
+        guard AppDelegate.shared?.moveSurface(
+            panelId: panelId,
+            toWorkspace: tab.id,
+            targetPane: sourcePane,
+            splitTarget: (orientation: orientation, insertFirst: insertFirst),
+            focus: true,
+            focusWindow: false
+        ) == true,
+              let newPaneId = tab.paneId(forPanelId: panelId) else {
             return .splitFailed
         }
 

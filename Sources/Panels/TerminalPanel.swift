@@ -826,6 +826,24 @@ final class TerminalPanel: Panel, ObservableObject {
     }
 
     @discardableResult
+    func sendSocketInputForAction(_ text: String, refreshReason: String) -> TerminalSurface.InputSendResult {
+        let result = sendInputResult(text)
+        if result == .sent {
+            surface.forceRefresh(reason: refreshReason)
+        }
+        return result
+    }
+
+    @discardableResult
+    func sendSocketNamedKeyForAction(_ keyName: String, refreshReason: String) -> TerminalSurface.NamedKeySendResult {
+        let result = sendNamedKeyResult(keyName)
+        if result == .sent {
+            surface.forceRefresh(reason: refreshReason)
+        }
+        return result
+    }
+
+    @discardableResult
     func sendNamedKey(_ keyName: String) -> Bool {
         switch sendNamedKeyResult(keyName) {
         case .sent, .queued:

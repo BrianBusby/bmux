@@ -7352,7 +7352,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         guard focusWindowForAppActivation(window, reason: .workspaceCreation) else {
             return false
         }
-        context.tabManager.selectedTabId = workspace.id
+        context.tabManager.selectWorkspaceIdForAction(workspace.id)
         guard let browserPanel = workspace.focusedSurfaceId.flatMap({ workspace.browserPanel(for: $0) })
             ?? workspace.panels.values.compactMap({ $0 as? BrowserPanel }).first else {
             return false
@@ -7584,7 +7584,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let workspace: Workspace
         if let existingWorkspace {
             workspace = existingWorkspace
-            context.tabManager.selectedTabId = workspace.id
+            context.tabManager.selectWorkspaceIdForAction(workspace.id)
             context.tabManager.setPinned(workspace, pinned: true)
             if let loadingPanel = workspace.panels.values.first(where: { $0.panelType == .cloudVMLoading }) as? CloudVMLoadingPanel {
                 if !loadingPanel.hasFailed {
@@ -10451,7 +10451,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 * self.debugStressTabsPerPane
             if let originalSelectedWorkspaceId,
                tabManager.tabs.contains(where: { $0.id == originalSelectedWorkspaceId }) {
-                tabManager.selectedTabId = originalSelectedWorkspaceId
+                tabManager.selectWorkspaceIdForAction(
+                    originalSelectedWorkspaceId,
+                    notificationDismissalContext: nil
+                )
             }
 
             bmuxDebugLog(
@@ -13387,7 +13390,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         let response = alert.runModal()
         guard response == .alertFirstButtonReturn else { return true }
-        tabManager.setCustomTitle(tabId: tab.id, title: input.stringValue)
+        tabManager.commitWorkspaceTitleEdit(tabId: tab.id, title: input.stringValue)
         return true
     }
 
@@ -15897,7 +15900,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let previousSelectedId = tabManager.selectedTabId
         if let anchorId, anchorId != previousSelectedId,
            tabManager.tabs.contains(where: { $0.id == anchorId }) {
-            tabManager.selectedTabId = anchorId
+            tabManager.selectWorkspaceIdForAction(anchorId, notificationDismissalContext: nil)
         }
         var asyncObserverId: UUID?
         let onExecuted: () -> Void = { [weak tabManager, groupId, beforeIds, previousSelectedId, anchorId, groupPlacement, action] in
@@ -15937,7 +15940,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                let previousSelectedId,
                previousSelectedId != tabManager.selectedTabId,
                tabManager.tabs.contains(where: { $0.id == previousSelectedId }) {
-                tabManager.selectedTabId = previousSelectedId
+                tabManager.selectWorkspaceIdForAction(previousSelectedId, notificationDismissalContext: nil)
             }
         }
         let onCloudVMCompletion: (CloudVMActionLauncher.Completion) -> Void = { [weak tabManager] completion in
@@ -15966,7 +15969,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
            let previousSelectedId,
            previousSelectedId != tabManager.selectedTabId,
            tabManager.tabs.contains(where: { $0.id == previousSelectedId }) {
-            tabManager.selectedTabId = previousSelectedId
+            tabManager.selectWorkspaceIdForAction(previousSelectedId, notificationDismissalContext: nil)
         }
         return didRun
     }

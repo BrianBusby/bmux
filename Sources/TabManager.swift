@@ -29,6 +29,18 @@ enum WorkspaceOrderChangeNotificationKey {
     static let movedWorkspaceIds = "movedWorkspaceIds"
 }
 
+enum WorkspaceRelativeCloseScope: Equatable {
+    case others(keeping: Set<UUID>)
+    case above(anchor: UUID)
+    case below(anchor: UUID)
+}
+
+enum WorkspaceSurfaceFocusActionResult: Equatable {
+    case focused(workspaceId: UUID, surfaceId: UUID)
+    case workspaceNotFound
+    case surfaceNotFound
+}
+
 #if DEBUG
 // Sample the actual IOSurface-backed terminal layer at vsync cadence so UI tests can reliably
 // catch a single compositor-frame blank flash and any transient compositor scaling (stretched text).
@@ -1663,6 +1675,23 @@ class TabManager: ObservableObject {
         workspaceReordering.reorderWorkspace(tabId: tabId, before: beforeId, after: afterId, isDragOperation: isDragOperation)
     }
 
+    func moveWorkspaceForAction(tabId: UUID, by delta: Int) -> Int? {
+        guard let currentIndex = tabs.firstIndex(where: { $0.id == tabId }) else {
+            return nil
+        }
+        let targetIndex = min(max(currentIndex + delta, 0), tabs.count - 1)
+        _ = reorderWorkspace(tabId: tabId, toIndex: targetIndex)
+        return tabs.firstIndex(where: { $0.id == tabId })
+    }
+
+    func moveWorkspaceToTopForAction(tabId: UUID) -> Int? {
+        guard tabs.contains(where: { $0.id == tabId }) else {
+            return nil
+        }
+        moveTabToTop(tabId)
+        return tabs.firstIndex(where: { $0.id == tabId })
+    }
+
     func workspaceReorderPlan(tabId: UUID, before beforeId: UUID? = nil, after afterId: UUID? = nil) -> WorkspaceReorderPlanItem? {
         workspaceReordering.workspaceReorderPlan(tabId: tabId, before: beforeId, after: afterId)
     }
@@ -1686,13 +1715,56 @@ class TabManager: ObservableObject {
         tabs[index].setCustomDescription(description)
     }
 
+    @discardableResult
+    func setWorkspaceDescriptionForAction(tabId: UUID, description: String) -> String? {
+        guard let index = tabs.firstIndex(where: { $0.id == tabId }) else {
+            return nil
+        }
+        tabs[index].setCustomDescription(description)
+        return tabs[index].customDescription
+    }
+
     func clearCustomDescription(tabId: UUID) {
         setCustomDescription(tabId: tabId, description: nil)
+    }
+
+    @discardableResult
+    func clearWorkspaceDescriptionForAction(tabId: UUID) -> Bool {
+        guard tabs.contains(where: { $0.id == tabId }) else {
+            return false
+        }
+        clearCustomDescription(tabId: tabId)
+        return true
     }
 
     func setTabColor(tabId: UUID, color: String?) {
         guard let tab = tabs.first(where: { $0.id == tabId }) else { return }
         tab.setCustomColor(color)
+    }
+
+    func workspaceActionColorNames() -> [String] {
+        WorkspaceTabColorSettings.palette().map(\.name)
+    }
+
+    @discardableResult
+    func setWorkspaceColorForAction(tabId: UUID, colorInput: String) -> String? {
+        guard tabs.contains(where: { $0.id == tabId }) else {
+            return nil
+        }
+        guard let color = WorkspaceTabColorSettings.resolvedColorHex(colorInput) else {
+            return nil
+        }
+        setTabColor(tabId: tabId, color: color)
+        return color
+    }
+
+    @discardableResult
+    func clearWorkspaceColorForAction(tabId: UUID) -> Bool {
+        guard tabs.contains(where: { $0.id == tabId }) else {
+            return false
+        }
+        setTabColor(tabId: tabId, color: nil)
+        return true
     }
 
     func applyWorkspaceColor(_ color: String?, toWorkspaceIds workspaceIds: [UUID]) {
@@ -1737,6 +1809,15 @@ class TabManager: ObservableObject {
 
     func setPinned(_ tab: Workspace, pinned: Bool) {
         workspaceReordering.setPinned(tab, pinned: pinned)
+    }
+
+    @discardableResult
+    func setWorkspacePinnedForAction(tabId: UUID, pinned: Bool) -> Bool {
+        guard tabs.contains(where: { $0.id == tabId }) else {
+            return false
+        }
+        workspaceReordering.setPinned(workspaceIds: [tabId], pinned: pinned)
+        return true
     }
 
     @discardableResult
@@ -2306,11 +2387,53 @@ class TabManager: ObservableObject {
         }
     }
 
+    func workspaceIdsForRelativeClose(
+        _ scope: WorkspaceRelativeCloseScope,
+        allowPinned: Bool
+    ) -> [UUID] {
+        workspacesForRelativeClose(scope, allowPinned: allowPinned).map(\.id)
+    }
+
+    func closeWorkspacesWithConfirmation(
+        _ scope: WorkspaceRelativeCloseScope,
+        allowPinned: Bool
+    ) {
+        closeWorkspacesWithConfirmation(
+            workspaceIdsForRelativeClose(scope, allowPinned: allowPinned),
+            allowPinned: allowPinned
+        )
+    }
+
+    @discardableResult
+    func closeWorkspacesForAction(_ scope: WorkspaceRelativeCloseScope) -> Int {
+        var closed = 0
+        for workspace in workspacesForRelativeClose(scope, allowPinned: false) {
+            guard tabs.contains(where: { $0.id == workspace.id }) else { continue }
+            closeWorkspace(workspace)
+            if !tabs.contains(where: { $0.id == workspace.id }) {
+                closed += 1
+            }
+        }
+        return closed
+    }
+
     func selectWorkspace(_ workspace: Workspace) {
+        selectWorkspaceIdForAction(workspace.id)
+    }
+
+    @discardableResult
+    func selectWorkspaceIdForAction(
+        _ workspaceId: UUID,
+        notificationDismissalContext: NotificationDismissalContext? = .explicitWorkspaceResume
+    ) -> Bool {
+        guard tabs.contains(where: { $0.id == workspaceId }) else {
+            return false
+        }
 #if DEBUG
-        debugPrimeWorkspaceSwitchTrigger("select", to: workspace.id)
+        debugPrimeWorkspaceSwitchTrigger("select", to: workspaceId)
 #endif
-        selectWorkspaceId(workspace.id, notificationDismissalContext: .explicitWorkspaceResume)
+        selectWorkspaceId(workspaceId, notificationDismissalContext: notificationDismissalContext)
+        return true
     }
 
     // Keep selectTab as convenience alias
@@ -2458,6 +2581,29 @@ class TabManager: ObservableObject {
             guard allowPinned || !workspace.isPinned else { return nil }
             return workspace
         }
+    }
+
+    private func workspacesForRelativeClose(
+        _ scope: WorkspaceRelativeCloseScope,
+        allowPinned: Bool
+    ) -> [Workspace] {
+        let workspaceIds: [UUID]
+        switch scope {
+        case .others(let keeping):
+            workspaceIds = tabs.compactMap { keeping.contains($0.id) ? nil : $0.id }
+        case .above(let anchor):
+            guard let anchorIndex = tabs.firstIndex(where: { $0.id == anchor }) else {
+                return []
+            }
+            workspaceIds = tabs.prefix(upTo: anchorIndex).map(\.id)
+        case .below(let anchor):
+            guard let anchorIndex = tabs.firstIndex(where: { $0.id == anchor }),
+                  anchorIndex + 1 < tabs.count else {
+                return []
+            }
+            workspaceIds = tabs.suffix(from: anchorIndex + 1).map(\.id)
+        }
+        return orderedClosableWorkspaces(workspaceIds, allowPinned: allowPinned)
     }
 
     private func orderedSidebarSelectedWorkspaceIds() -> [UUID] {
@@ -3625,6 +3771,25 @@ class TabManager: ObservableObject {
     /// Select the next surface in the currently focused pane of the selected workspace
     func selectNextSurface() {
         selectedWorkspace?.selectNextSurface()
+    }
+
+    @discardableResult
+    func focusWorkspaceSurfaceForAction(
+        workspaceId: UUID,
+        surfaceId: UUID,
+        focusIntent: PanelFocusIntent? = nil
+    ) -> WorkspaceSurfaceFocusActionResult {
+        guard let workspace = tabs.first(where: { $0.id == workspaceId }) else {
+            return .workspaceNotFound
+        }
+        guard workspace.panels[surfaceId] != nil else {
+            return .surfaceNotFound
+        }
+        if selectedTabId != workspace.id {
+            selectWorkspaceIdForAction(workspace.id)
+        }
+        workspace.focusPanel(surfaceId, focusIntent: focusIntent)
+        return .focused(workspaceId: workspace.id, surfaceId: surfaceId)
     }
 
     /// Select the previous surface in the currently focused pane of the selected workspace

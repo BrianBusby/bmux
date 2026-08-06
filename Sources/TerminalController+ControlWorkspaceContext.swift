@@ -319,7 +319,7 @@ extension TerminalController: ControlWorkspaceContext {
         guard tabManager.tabs.contains(where: { $0.id == workspaceID }) else {
             return .notFound
         }
-        tabManager.setCustomTitle(tabId: workspaceID, title: title)
+        tabManager.renameWorkspaceTitle(tabId: workspaceID, title: title)
         let windowId = AppDelegate.shared?.windowId(for: tabManager)
         return .resolved(windowID: windowId)
     }

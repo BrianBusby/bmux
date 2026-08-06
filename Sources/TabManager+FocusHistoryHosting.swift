@@ -38,9 +38,7 @@ extension TabManager: FocusHistoryHosting {
     }
 
     func selectWorkspace(_ workspaceId: UUID) {
-        if selectedTabId != workspaceId {
-            selectedTabId = workspaceId
-        }
+        selectWorkspaceIdForAction(workspaceId, notificationDismissalContext: nil)
     }
 
     func rememberFocusedSurface(workspaceId: UUID, surfaceId: UUID) {

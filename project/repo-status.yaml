@@ -3,10 +3,11 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: null
-    title: null
-    state: none_selected
-  state: observation
+    id: canonical_domain_mutation_paths
+    title: Domain-specific canonical mutation paths
+    state: draft
+    owner: Codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented
