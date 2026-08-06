@@ -109,6 +109,25 @@ import Testing
         #expect(manager.tabs.map(\.id) == [second.id, first.id])
     }
 
+    @Test func workspaceActionBatchPinFiltersStaleAndDuplicateTargets() throws {
+        let manager = TabManager()
+        let first = try #require(manager.tabs.first)
+        let second = manager.addWorkspace()
+        let third = manager.addWorkspace()
+        let missingWorkspaceId = UUID()
+
+        let changedWorkspaceIds = manager.setWorkspacesPinnedForAction(
+            workspaceIds: [second.id, missingWorkspaceId, second.id, first.id],
+            pinned: true
+        )
+
+        #expect(changedWorkspaceIds == [second.id, first.id])
+        #expect(first.isPinned)
+        #expect(second.isPinned)
+        #expect(!third.isPinned)
+        #expect(manager.tabs.map(\.id) == [second.id, first.id, third.id])
+    }
+
     @Test func workspaceActionMoveUsesWorkspaceReorderCoordinatorPath() throws {
         let manager = TabManager()
         _ = manager.addWorkspace()

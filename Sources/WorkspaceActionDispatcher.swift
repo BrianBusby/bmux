@@ -93,7 +93,7 @@ enum WorkspaceActionDispatcher {
         in tabManager: TabManager
     ) -> PinResult {
         let targetWorkspaceIds = liveWorkspaceIds(in: tabManager, from: state.targetWorkspaceIds)
-        let changedWorkspaceIds = tabManager.setPinned(
+        let changedWorkspaceIds = tabManager.setWorkspacesPinnedForAction(
             workspaceIds: targetWorkspaceIds,
             pinned: state.pinned
         )

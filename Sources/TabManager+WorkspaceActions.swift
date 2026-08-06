@@ -82,8 +82,24 @@ extension TabManager {
         guard tabs.contains(where: { $0.id == tabId }) else {
             return false
         }
-        workspaceReordering.setPinned(workspaceIds: [tabId], pinned: pinned)
+        _ = setWorkspacesPinnedForAction(workspaceIds: [tabId], pinned: pinned)
         return true
+    }
+
+    @discardableResult
+    func setWorkspacesPinnedForAction(workspaceIds: [UUID], pinned: Bool) -> [UUID] {
+        let liveWorkspaceIds = Set(tabs.map(\.id))
+        var seen = Set<UUID>()
+        let targetWorkspaceIds = workspaceIds.filter { workspaceId in
+            guard liveWorkspaceIds.contains(workspaceId), !seen.contains(workspaceId) else {
+                return false
+            }
+            seen.insert(workspaceId)
+            return true
+        }
+
+        guard !targetWorkspaceIds.isEmpty else { return [] }
+        return workspaceReordering.setPinned(workspaceIds: targetWorkspaceIds, pinned: pinned)
     }
 
     func workspaceIdsForRelativeClose(

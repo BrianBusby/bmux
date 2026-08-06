@@ -7431,7 +7431,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                         initialWorkspaceId: initialWorkspace?.id,
                         in: context
                     )
-                    context.tabManager.setPinned(workspace, pinned: true)
+                    context.tabManager.setWorkspacePinnedForAction(tabId: workspace.id, pinned: true)
                 }
             }
             return true
@@ -7585,7 +7585,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         if let existingWorkspace {
             workspace = existingWorkspace
             context.tabManager.selectWorkspaceIdForAction(workspace.id)
-            context.tabManager.setPinned(workspace, pinned: true)
+            context.tabManager.setWorkspacePinnedForAction(tabId: workspace.id, pinned: true)
             if let loadingPanel = workspace.panels.values.first(where: { $0.panelType == .cloudVMLoading }) as? CloudVMLoadingPanel {
                 if !loadingPanel.hasFailed {
                     onCompletion?(CloudVMActionLauncher.Completion(terminationStatus: 0, output: "", workspaceId: workspace.id))
@@ -7603,7 +7603,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 select: true,
                 autoWelcomeIfNeeded: false
             )
-            context.tabManager.setPinned(workspace, pinned: true)
+            context.tabManager.setWorkspacePinnedForAction(tabId: workspace.id, pinned: true)
         }
         if let loadingPanel = workspace.panels.values.first(where: { $0.panelType == .cloudVMLoading }) as? CloudVMLoadingPanel {
             loadingPanel.resetLoading()
