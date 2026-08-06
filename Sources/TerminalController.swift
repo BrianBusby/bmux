@@ -4526,7 +4526,8 @@ class TerminalController {
                 finish(["title": workspace.title])
 
             case "set_description":
-                guard let descriptionRaw = v2String(params, "description") else {
+                guard let descriptionRaw = v2String(params, "description"),
+                      !descriptionRaw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                     result = .err(code: "invalid_params", message: "Missing or invalid description", data: nil)
                     return
                 }
