@@ -143,10 +143,13 @@ def check_wrapper_inject_args_chains_custom_auto_title_hook_with_bmux_env(
             "BMUX_CODEX_HOOKS_DISABLED",
             "BMUX_CODEX_HOOK_BMUX_BIN",
             "command -v bmux",
+            'CMUX_WORKSPACE_ID="${BMUX_WORKSPACE_ID:-${CMUX_WORKSPACE_ID:-}}"',
+            'CMUX_SOCKET_PATH="${BMUX_SOCKET_PATH:-${CMUX_SOCKET_PATH:-}}"',
+            "export CMUX_WORKSPACE_ID CMUX_SOCKET_PATH CMUX_BUNDLED_CLI_PATH CMUX_CODEX_HOOKS_DISABLED",
         ]:
             if expected not in config:
                 raise AssertionError(f"wrapper did not preserve normalized auto-title hook {expected}: {config!r}")
-        for forbidden in ["CMUX_", "command -v cmux", "third-party unrelated"]:
+        for forbidden in ["command -v cmux", "third-party unrelated"]:
             if forbidden in config:
                 raise AssertionError(f"wrapper preserved unsafe or legacy hook content {forbidden}: {config!r}")
 
