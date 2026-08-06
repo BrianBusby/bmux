@@ -264,6 +264,21 @@ import Testing
         }
     }
 
+    @Test func workspaceCloseActionRejectsMissingAndPinnedTargets() throws {
+        let manager = TabManager()
+        let first = try #require(manager.tabs.first)
+        let second = manager.addWorkspace()
+
+        #expect(manager.closeWorkspaceForAction(tabId: UUID()) == .notFound)
+
+        #expect(manager.setWorkspacePinnedForAction(tabId: second.id, pinned: true))
+        #expect(manager.closeWorkspaceForAction(tabId: second.id) == .protected)
+        #expect(manager.tabs.map(\.id) == [second.id, first.id])
+
+        #expect(manager.closeWorkspaceForAction(tabId: second.id, allowPinned: true) == .accepted)
+        #expect(manager.tabs.map(\.id) == [first.id])
+    }
+
     @Test func workspaceSelectionActionRejectsMissingWorkspaceWithoutChangingSelection() throws {
         let manager = TabManager()
         _ = manager.addWorkspace()

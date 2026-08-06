@@ -13203,13 +13203,13 @@ class TerminalController {
 
         var result = "ERROR: Tab not found"
         v2MainSync {
-            if let tab = tabManager.tabs.first(where: { $0.id == uuid }) {
-                guard tabManager.canCloseWorkspace(tab) else {
-                    result = "ERROR: \(workspaceCloseProtectedMessage())"
-                    return
-                }
-                tabManager.closeTab(tab)
+            switch tabManager.closeWorkspaceForAction(tabId: uuid) {
+            case .accepted:
                 result = "OK"
+            case .notFound:
+                break
+            case .protected:
+                result = "ERROR: \(workspaceCloseProtectedMessage())"
             }
         }
         return result

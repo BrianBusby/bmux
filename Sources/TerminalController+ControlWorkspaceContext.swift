@@ -155,14 +155,14 @@ extension TerminalController: ControlWorkspaceContext {
             return .tabManagerUnavailable
         }
         let windowId = AppDelegate.shared?.windowId(for: tabManager)
-        guard let ws = tabManager.tabs.first(where: { $0.id == workspaceID }) else {
+        switch tabManager.closeWorkspaceForAction(tabId: workspaceID) {
+        case .accepted:
+            return .resolved(windowID: windowId)
+        case .notFound:
             return .notFound
-        }
-        guard tabManager.canCloseWorkspace(ws) else {
+        case .protected:
             return .protected(windowID: windowId)
         }
-        tabManager.closeWorkspace(ws)
-        return .resolved(windowID: windowId)
     }
 
     func controlMoveWorkspaceToWindow(

@@ -16,6 +16,12 @@ enum WorkspaceSurfaceFocusActionResult: Equatable {
     case surfaceNotFound
 }
 
+enum WorkspaceCloseActionResult: Equatable {
+    case accepted
+    case notFound
+    case protected
+}
+
 extension TabManager {
     func moveWorkspaceForAction(tabId: UUID, by delta: Int) -> Int? {
         guard let currentIndex = tabs.firstIndex(where: { $0.id == tabId }) else {
@@ -136,12 +142,28 @@ extension TabManager {
         var closed = 0
         for workspace in workspacesForRelativeClose(scope, allowPinned: false) {
             guard tabs.contains(where: { $0.id == workspace.id }) else { continue }
-            closeWorkspace(workspace)
+            guard closeWorkspaceForAction(tabId: workspace.id) == .accepted else { continue }
             if !tabs.contains(where: { $0.id == workspace.id }) {
                 closed += 1
             }
         }
         return closed
+    }
+
+    @discardableResult
+    func closeWorkspaceForAction(
+        tabId: UUID,
+        allowPinned: Bool = false,
+        recordHistory: Bool = true
+    ) -> WorkspaceCloseActionResult {
+        guard let workspace = tabs.first(where: { $0.id == tabId }) else {
+            return .notFound
+        }
+        guard canCloseWorkspace(workspace, allowPinned: allowPinned) else {
+            return .protected
+        }
+        closeWorkspace(workspace, recordHistory: recordHistory)
+        return .accepted
     }
 
     @discardableResult
