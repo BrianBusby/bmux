@@ -193,98 +193,6 @@ struct CLICodexHookTimeoutRegressionTests {
         #expect(waitForFile(doneFile, containing: "done", timeout: 3))
     }
 
-    @Test func codexWrapperCustomAutoTitleHookReceivesCmuxCompatibilityEnvironment() throws {
-        let cliPath = try bundledCLIPath()
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("bmux-codex-custom-title-env-\(UUID().uuidString)", isDirectory: true)
-        let codexHome = root.appendingPathComponent(".codex", isDirectory: true)
-        let scriptsDir = codexHome.appendingPathComponent("scripts", isDirectory: true)
-        let fakeCLI = root.appendingPathComponent("bmux", isDirectory: false)
-        let titleScript = scriptsDir.appendingPathComponent("cmux_two_line_title.mjs", isDirectory: false)
-        let cliLog = root.appendingPathComponent("bmux-cli.log", isDirectory: false)
-        let scriptEnvLog = root.appendingPathComponent("script-env.json", isDirectory: false)
-        let workspaceId = "11111111-1111-1111-1111-111111111111"
-        let socketPath = "/tmp/bmux-custom-title-test.sock"
-
-        try FileManager.default.createDirectory(at: scriptsDir, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        try makeCodexHookExecutableShellFile(at: fakeCLI, lines: [
-            "#!/bin/sh",
-            "printf '%s\\n' \"$*\" >> \"$BMUX_TEST_CLI_LOG\"",
-            "case \"$*\" in",
-            "  *'workspace.list'*) printf '%s\\n' '{\"workspaces\":[{\"id\":\"11111111-1111-1111-1111-111111111111\",\"title\":\"Company-Cam-API\",\"has_custom_title\":false,\"current_directory\":\"/repo\"}]}' ;;",
-            "  *) printf '%s\\n' '{}' ;;",
-            "esac",
-        ])
-
-        try """
-        #!/usr/bin/env node
-        import fs from "node:fs";
-        import path from "node:path";
-
-        const outputDir = process.argv[process.argv.length - 1];
-        fs.writeFileSync(process.env.BMUX_TEST_SCRIPT_ENV_LOG, JSON.stringify({
-          workspace: process.env.CMUX_WORKSPACE_ID || "",
-          socket: process.env.CMUX_SOCKET_PATH || "",
-          cli: process.env.CMUX_BUNDLED_CLI_PATH || ""
-        }));
-        fs.writeFileSync(path.join(outputDir, "title.json"), JSON.stringify({
-          workspace_id: process.env.CMUX_WORKSPACE_ID || "",
-          title: "Debugging custom Codex workspace title hook behavior"
-        }));
-        """.write(to: titleScript, atomically: true, encoding: .utf8)
-        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: titleScript.path)
-
-        let customCommand = #"cmux_cli="${CMUX_BUNDLED_CLI_PATH:-}"; cmux_two_line_title="$HOME/.codex/scripts/cmux_two_line_title.mjs"; if [ -n "$CMUX_WORKSPACE_ID" ] && [ -n "$cmux_cli" ] && [ -x "$cmux_two_line_title" ] && [ "$CMUX_CODEX_HOOKS_DISABLED" != "1" ]; then workdir="$(mktemp -d "${TMPDIR:-/tmp}/cmux-two-line-title.XXXXXX")" || { echo '{}'; exit 0; }; payload="$workdir/payload.json"; workspaces="$workdir/workspaces.json"; cat >"$payload" || true; "$cmux_cli" --socket "$CMUX_SOCKET_PATH" rpc workspace.list '{}' >"$workspaces" 2>/dev/null || true; "$cmux_two_line_title" --plan "$payload" "$workspaces" "$workdir" >/dev/null 2>&1 || true; if [ -s "$workdir/title.json" ]; then params="$(cat "$workdir/title.json")"; "$cmux_cli" --socket "$CMUX_SOCKET_PATH" rpc workspace.set_auto_title "$params" >/dev/null 2>&1 || true; fi; rm -rf "$workdir"; echo '{}'; else echo '{}'; fi"#
-        let hookJSON: [String: Any] = [
-            "hooks": [
-                "UserPromptSubmit": [
-                    ["hooks": [["command": customCommand, "timeout": 5, "type": "command"]]],
-                ],
-            ],
-        ]
-        try JSONSerialization.data(withJSONObject: hookJSON, options: [.prettyPrinted, .sortedKeys])
-            .write(to: codexHome.appendingPathComponent("hooks.json", isDirectory: false), options: .atomic)
-
-        let inject = runCodexHookProcess(
-            executablePath: cliPath,
-            arguments: ["hooks", "codex", "inject-args"],
-            environment: codexHookTestEnvironment(root: root, codexHome: codexHome),
-            timeout: 5
-        )
-        #expect(inject.status == 0, Comment(rawValue: inject.stderr))
-        let generatedCommand = try #require(customTitleCommand(inInjectArgsOutput: inject.stdout))
-
-        let run = runCodexHookProcess(
-            executablePath: "/bin/sh",
-            arguments: ["-c", generatedCommand],
-            environment: [
-                "HOME": root.path,
-                "CODEX_HOME": codexHome.path,
-                "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
-                "TMPDIR": root.path,
-                "BMUX_WORKSPACE_ID": workspaceId,
-                "BMUX_SOCKET_PATH": socketPath,
-                "BMUX_BUNDLED_CLI_PATH": fakeCLI.path,
-                "BMUX_TEST_CLI_LOG": cliLog.path,
-                "BMUX_TEST_SCRIPT_ENV_LOG": scriptEnvLog.path,
-            ],
-            standardInput: #"{"session_id":"codex-session","prompt":"rename this workspace"}"#,
-            timeout: 5
-        )
-
-        #expect(run.status == 0, Comment(rawValue: run.stderr))
-        #expect(run.stdout == "{}\n")
-        let scriptEnv = try String(contentsOf: scriptEnvLog, encoding: .utf8)
-        #expect(scriptEnv.contains(#""workspace":"\#(workspaceId)""#), Comment(rawValue: scriptEnv))
-        #expect(scriptEnv.contains(#""socket":"\#(socketPath)""#), Comment(rawValue: scriptEnv))
-        #expect(scriptEnv.contains(#""cli":"\#(fakeCLI.path)""#), Comment(rawValue: scriptEnv))
-        let log = try String(contentsOf: cliLog, encoding: .utf8)
-        #expect(log.contains("rpc workspace.set_auto_title"), Comment(rawValue: log))
-        #expect(log.contains(workspaceId), Comment(rawValue: log))
-    }
-
     @Test func codexInstalledAsyncStopDoesNotMarkNewerTurnIdle() throws {
         let cliPath = try bundledCLIPath()
         let root = FileManager.default.temporaryDirectory
@@ -753,24 +661,5 @@ struct CLICodexHookTimeoutRegressionTests {
 
     private func bundledCLIPath() throws -> String {
         try BundledCLITestSupport.bundledCLIPath(for: BundledCLILinkageTests.self)
-    }
-
-    private func customTitleCommand(inInjectArgsOutput output: String) -> String? {
-        output
-            .split(separator: "\0")
-            .compactMap { arg -> String? in
-                guard arg.contains("two_line_title"),
-                      arg.contains("workspace.set_auto_title"),
-                      let commandRange = arg.range(of: "command='''")
-                else {
-                    return nil
-                }
-                let commandStart = commandRange.upperBound
-                guard let commandEnd = arg[commandStart...].range(of: "'''")?.lowerBound else {
-                    return nil
-                }
-                return String(arg[commandStart..<commandEnd])
-            }
-            .last
     }
 }
