@@ -279,6 +279,26 @@ import Testing
         #expect(manager.tabs.map(\.id) == [first.id])
     }
 
+    @Test func workspaceSurfaceCloseActionRecordsHistoryAndProtectsLastSurface() throws {
+        ClosedItemHistoryStore.shared.removeAll()
+        defer { ClosedItemHistoryStore.shared.removeAll() }
+
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let firstSurfaceId = try #require(workspace.focusedPanelId)
+
+        #expect(workspace.closeSurfaceForAction(surfaceId: UUID(), force: true) == .surfaceNotFound)
+        #expect(workspace.closeSurfaceForAction(surfaceId: firstSurfaceId, force: true) == .lastSurface)
+
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+        let panel = try #require(workspace.newTerminalSurface(inPane: pane, focus: true))
+        workspace.setPanelCustomTitle(panelId: panel.id, title: "Surface Action Terminal")
+
+        #expect(workspace.closeSurfaceForAction(surfaceId: panel.id, force: true) == .closed)
+        #expect(workspace.panels[panel.id] == nil)
+        #expect(ClosedItemHistoryStore.shared.menuSnapshot().items.map(\.title) == ["Surface Action Terminal"])
+    }
+
     @Test func workspaceSelectionActionRejectsMissingWorkspaceWithoutChangingSelection() throws {
         let manager = TabManager()
         _ = manager.addWorkspace()

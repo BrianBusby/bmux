@@ -4615,15 +4615,11 @@ class TerminalController {
     @MainActor
     @discardableResult
     func closeSurfaceRecordingHistory(in workspace: Workspace, surfaceId: UUID, force: Bool) -> Bool {
-        if let tabId = workspace.surfaceIdFromPanelId(surfaceId) {
-            if force {
-                return workspace.requestNonInteractiveCloseTabRecordingHistory(tabId)
-            }
-            return workspace.requestCloseTabRecordingHistory(tabId, force: force)
-        }
-
-        workspace.markCloseHistoryEligible(panelId: surfaceId)
-        return workspace.closePanel(surfaceId, force: force)
+        workspace.closeSurfaceForAction(
+            surfaceId: surfaceId,
+            force: force,
+            allowLastSurface: true
+        ) == .closed
     }
 
     func v2ResolveWorkspace(params: [String: Any], tabManager: TabManager) -> Workspace? {
