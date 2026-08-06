@@ -10451,10 +10451,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 * self.debugStressTabsPerPane
             if let originalSelectedWorkspaceId,
                tabManager.tabs.contains(where: { $0.id == originalSelectedWorkspaceId }) {
-                tabManager.selectWorkspaceIdForAction(
-                    originalSelectedWorkspaceId,
-                    notificationDismissalContext: nil
-                )
+                tabManager.selectWorkspaceIdForAction(originalSelectedWorkspaceId, notificationDismissalContext: nil)
             }
 
             bmuxDebugLog(

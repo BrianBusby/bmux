@@ -27,7 +27,7 @@ while IFS= read -r line; do
   [[ "$source_line" =~ (^|[[:space:]])(let|var)[[:space:]]+selectedTabId[[:space:]]*= ]] && continue
   is_allowed_file "$file" && continue
   violations+=("$line")
-done < <(rg -n -P '\b([A-Za-z_][A-Za-z0-9_]*\.)?selectedTabId\s*=(?!=)' Sources --glob '*.swift' || true)
+done < <(rg -n -P '\b([A-Za-z_][A-Za-z0-9_]*(?:[?!])?\.)*selectedTabId\s*=(?!=)' Sources --glob '*.swift' || true)
 
 if (( ${#violations[@]} > 0 )); then
   {
