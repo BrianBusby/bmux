@@ -174,6 +174,34 @@ import Testing
         #expect(workspace.customColor == nil)
     }
 
+    @Test func workspaceActionBatchColorFiltersStaleAndDuplicateTargets() throws {
+        let manager = TabManager()
+        let first = try #require(manager.tabs.first)
+        let second = manager.addWorkspace()
+        let third = manager.addWorkspace()
+        let missingWorkspaceId = UUID()
+
+        let coloredWorkspaceIds = manager.setWorkspacesColorForAction(
+            workspaceIds: [second.id, missingWorkspaceId, second.id, first.id],
+            color: "#123456"
+        )
+
+        #expect(coloredWorkspaceIds == [second.id, first.id])
+        #expect(first.customColor == "#123456")
+        #expect(second.customColor == "#123456")
+        #expect(third.customColor == nil)
+
+        let clearedWorkspaceIds = manager.setWorkspacesColorForAction(
+            workspaceIds: [first.id, third.id],
+            color: nil
+        )
+
+        #expect(clearedWorkspaceIds == [first.id, third.id])
+        #expect(first.customColor == nil)
+        #expect(second.customColor == "#123456")
+        #expect(third.customColor == nil)
+    }
+
     @Test func relativeCloseCandidatesUseCurrentWorkspaceOrder() throws {
         let manager = TabManager()
         _ = manager.addWorkspace()

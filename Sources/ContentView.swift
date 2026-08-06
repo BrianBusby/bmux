@@ -7823,7 +7823,7 @@ struct ContentView: View {
                 NSSound.beep()
                 return
             }
-            tabManager.clearCustomDescription(tabId: workspace.id)
+            tabManager.clearWorkspaceDescriptionForAction(tabId: workspace.id)
         }
         registry.register(commandId: "palette.toggleWorkspacePin") {
             guard let workspace = tabManager.selectedWorkspace else {
@@ -7841,7 +7841,7 @@ struct ContentView: View {
                 NSSound.beep()
                 return
             }
-            tabManager.applyWorkspaceColor(nil, toWorkspaceIds: [workspace.id])
+            tabManager.clearWorkspaceColorForAction(tabId: workspace.id)
         }
         for entry in WorkspaceTabColorSettings.palette() {
             registry.register(commandId: commandPaletteWorkspaceColorCommandID(entry.name)) {
@@ -7849,7 +7849,7 @@ struct ContentView: View {
                     NSSound.beep()
                     return
                 }
-                tabManager.applyWorkspacePaletteColor(named: entry.name, toWorkspaceIds: [workspace.id])
+                tabManager.setWorkspaceColorForAction(tabId: workspace.id, colorInput: entry.name)
             }
         }
         registry.register(commandId: "palette.nextWorkspace") {
@@ -9419,7 +9419,10 @@ struct ContentView: View {
             "text=\"\(debugCommandPaletteTextPreview(proposedDescription))\""
         )
 #endif
-        tabManager.setCustomDescription(tabId: target.workspaceId, description: proposedDescription)
+        tabManager.setWorkspaceDescriptionForAction(
+            tabId: target.workspaceId,
+            description: proposedDescription
+        )
 #if DEBUG
         if let updatedWorkspace = tabManager.tabs.first(where: { $0.id == target.workspaceId }) {
             let persisted = updatedWorkspace.customDescription ?? ""
@@ -14489,7 +14492,7 @@ struct TabItemView: View, Equatable {
 
             if tab.hasCustomDescription {
                 Button(String(localized: "contextMenu.clearWorkspaceDescription", defaultValue: "Clear Workspace Description")) {
-                    tabManager.clearCustomDescription(tabId: tab.id)
+                    tabManager.clearWorkspaceDescriptionForAction(tabId: tab.id)
                 }
             }
         }
@@ -15401,7 +15404,7 @@ struct TabItemView: View, Equatable {
     }
 
     private func applyTabColor(_ hex: String?, targetIds: [UUID]) {
-        tabManager.applyWorkspaceColor(hex, toWorkspaceIds: targetIds)
+        tabManager.setWorkspacesColorForAction(workspaceIds: targetIds, color: hex)
     }
 
     private func promptCustomColor(targetIds: [UUID]) {

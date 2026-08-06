@@ -58,23 +58,35 @@ extension TabManager {
 
     @discardableResult
     func setWorkspaceColorForAction(tabId: UUID, colorInput: String) -> String? {
-        guard tabs.contains(where: { $0.id == tabId }) else {
-            return nil
-        }
         guard let color = WorkspaceTabColorSettings.resolvedColorHex(colorInput) else {
             return nil
         }
-        setTabColor(tabId: tabId, color: color)
+        guard !setWorkspacesColorForAction(workspaceIds: [tabId], color: color).isEmpty else {
+            return nil
+        }
         return color
     }
 
     @discardableResult
     func clearWorkspaceColorForAction(tabId: UUID) -> Bool {
-        guard tabs.contains(where: { $0.id == tabId }) else {
-            return false
+        !setWorkspacesColorForAction(workspaceIds: [tabId], color: nil).isEmpty
+    }
+
+    @discardableResult
+    func setWorkspacesColorForAction(workspaceIds: [UUID], color: String?) -> [UUID] {
+        let liveWorkspaceIds = Set(tabs.map(\.id))
+        var seen = Set<UUID>()
+        let targetWorkspaceIds = workspaceIds.filter { workspaceId in
+            guard liveWorkspaceIds.contains(workspaceId), !seen.contains(workspaceId) else {
+                return false
+            }
+            seen.insert(workspaceId)
+            return true
         }
-        setTabColor(tabId: tabId, color: nil)
-        return true
+
+        guard !targetWorkspaceIds.isEmpty else { return [] }
+        applyWorkspaceColor(color, toWorkspaceIds: targetWorkspaceIds)
+        return targetWorkspaceIds
     }
 
     @discardableResult

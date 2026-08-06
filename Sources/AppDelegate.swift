@@ -10374,7 +10374,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 targetTab = tabManager.addTab()
             }
             tabManager.setCustomTitle(tabId: targetTab.id, title: title)
-            tabManager.setTabColor(tabId: targetTab.id, color: entry.hex)
+            tabManager.setWorkspaceColorForAction(tabId: targetTab.id, colorInput: entry.hex)
         }
     }
 
