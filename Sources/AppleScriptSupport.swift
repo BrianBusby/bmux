@@ -602,8 +602,14 @@ final class ScriptTerminal: NSObject {
         if let app = AppDelegate.shared {
             _ = app.focusScriptableMainWindow(windowId: state.windowId, bringToFront: true)
         }
-        state.tabManager.selectWorkspace(workspace)
-        workspace.focusPanel(terminalId)
+        guard case .focused = state.tabManager.focusWorkspaceSurfaceForAction(
+            workspaceId: workspace.id,
+            surfaceId: terminalId
+        ) else {
+            command.scriptErrorNumber = errAEEventFailed
+            command.scriptErrorString = AppleScriptStrings.terminalUnavailable
+            return nil
+        }
         return nil
     }
 
@@ -635,7 +641,7 @@ final class ScriptTerminal: NSObject {
             return nil
         }
 
-        guard workspace.closePanel(terminalId, force: true) else {
+        guard workspace.closeSurfaceForAction(surfaceId: terminalId, force: true) == .closed else {
             command.scriptErrorNumber = errAEEventFailed
             command.scriptErrorString = AppleScriptStrings.terminalUnavailable
             return nil
