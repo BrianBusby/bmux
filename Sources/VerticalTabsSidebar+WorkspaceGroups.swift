@@ -104,8 +104,7 @@ extension VerticalTabsSidebar {
             },
             onFocusAnchor: { [weak tabManager, anchorId = group.anchorWorkspaceId, selectedTabIds = $selectedTabIds, lastSidebarSelectionIndex = $lastSidebarSelectionIndex] in
                 guard let tabManager else { return }
-                guard let anchorTab = tabManager.tabs.first(where: { $0.id == anchorId }) else { return }
-                tabManager.selectWorkspace(anchorTab)
+                guard tabManager.selectWorkspaceIdForAction(anchorId) else { return }
                 if selectedTabIds.wrappedValue != [anchorId] {
                     selectedTabIds.wrappedValue = [anchorId]
                 }

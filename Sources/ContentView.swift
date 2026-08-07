@@ -7870,7 +7870,7 @@ struct ContentView: View {
                 return
             }
             guard tabManager.moveWorkspaceToTopForAction(tabId: workspace.id) != nil else { return }
-            tabManager.selectWorkspace(workspace)
+            tabManager.selectWorkspaceIdForAction(workspace.id)
         }
         registry.register(commandId: "palette.closeOtherWorkspaces") {
             closeOtherSelectedWorkspaces()
@@ -9240,7 +9240,7 @@ struct ContentView: View {
     private func moveSelectedWorkspace(by delta: Int) {
         guard let workspace = tabManager.selectedWorkspace,
               tabManager.moveWorkspaceForAction(tabId: workspace.id, by: delta) != nil else { return }
-        tabManager.selectWorkspace(workspace)
+        tabManager.selectWorkspaceIdForAction(workspace.id)
     }
 
     private func closeOtherSelectedWorkspaces() {
@@ -9286,7 +9286,7 @@ struct ContentView: View {
         let selectedIds = Set(indices.map { tabs[$0].id })
         selectedTabIds = selectedIds
         lastSidebarSelectionIndex = lastIndex
-        tabManager.selectWorkspace(tabs[lastIndex])
+        tabManager.selectWorkspaceIdForAction(tabs[lastIndex].id)
         sidebarSelectionState.selection = .tabs
 #if DEBUG
         UITestRecorder.record([
@@ -11069,13 +11069,12 @@ struct VerticalTabsSidebar: View {
             return BmuxSidebarActionResult(accepted: true, message: workspace.id.uuidString)
 
         case .selectWorkspace(let workspaceId):
-            guard let workspace = tabManager.tabs.first(where: { $0.id == workspaceId }) else {
+            guard tabManager.selectWorkspaceIdForAction(workspaceId) else {
                 return BmuxSidebarActionResult(
                     accepted: false,
                     message: String(localized: "sidebar.extensions.action.workspaceNotFound", defaultValue: "Workspace not found")
                 )
             }
-            tabManager.selectWorkspace(workspace)
             return .accepted
 
         case .closeWorkspace(let workspaceId):
@@ -11100,7 +11099,9 @@ struct VerticalTabsSidebar: View {
                 return .rejected(String(localized: "sidebar.extensions.action.workspaceNotFound", defaultValue: "Workspace not found"))
             }
             if tabManager.selectedTabId != workspace.id {
-                tabManager.selectWorkspace(workspace)
+                guard tabManager.selectWorkspaceIdForAction(workspace.id) else {
+                    return .rejected(String(localized: "sidebar.extensions.action.workspaceNotFound", defaultValue: "Workspace not found"))
+                }
             }
             let panel = workspace.newTerminalSurfaceInFocusedPane(focus: true, initialInput: nil)
             if panel == nil, workspace.isRemoteTmuxMirror {
@@ -11123,7 +11124,9 @@ struct VerticalTabsSidebar: View {
                 return .rejected(String(localized: "sidebar.extensions.action.workspaceNotFound", defaultValue: "Workspace not found"))
             }
             if tabManager.selectedTabId != workspace.id {
-                tabManager.selectWorkspace(workspace)
+                guard tabManager.selectWorkspaceIdForAction(workspace.id) else {
+                    return .rejected(String(localized: "sidebar.extensions.action.workspaceNotFound", defaultValue: "Workspace not found"))
+                }
             }
             let panelId = tabManager.createBrowserSplit(direction: .right, url: validatedURL.url)
             return panelId.map { BmuxSidebarActionResult(accepted: true, message: $0.uuidString) }
@@ -11782,11 +11785,10 @@ struct VerticalTabsSidebar: View {
     }
 
     private func selectExtensionSidebarWorkspace(_ workspaceId: UUID) {
-        guard let workspace = tabManager.tabs.first(where: { $0.id == workspaceId }) else { return }
+        guard tabManager.selectWorkspaceIdForAction(workspaceId) else { return }
         selection = .tabs
         selectedTabIds = [workspaceId]
         lastSidebarSelectionIndex = tabManager.tabs.firstIndex { $0.id == workspaceId }
-        tabManager.selectWorkspace(workspace)
     }
 
     private func createExtensionWorktreeWorkspace(for section: BmuxSidebarProviderTreeSection) {

@@ -438,7 +438,7 @@ class TerminalController {
     func v2MaybeSelectWorkspace(_ tabManager: TabManager, workspace: Workspace) {
         guard socketCommandAllowsInAppFocusMutations() else { return }
         if tabManager.selectedTabId != workspace.id {
-            tabManager.selectWorkspace(workspace)
+            tabManager.selectWorkspaceIdForAction(workspace.id)
         }
     }
 
@@ -8503,11 +8503,8 @@ class TerminalController {
                     setActiveTabManager(tabManager)
                 }
                 if let ws = v2ResolveWorkspace(params: params, tabManager: tabManager) {
-                    if tabManager.selectedTabId != ws.id {
-                        tabManager.selectWorkspace(ws)
-                    }
-                    if ws.focusedPanelId != surfaceId {
-                        ws.focusPanel(surfaceId)
+                    if tabManager.selectedTabId != ws.id || ws.focusedPanelId != surfaceId {
+                        _ = tabManager.focusWorkspaceSurfaceForAction(workspaceId: ws.id, surfaceId: surfaceId)
                     }
                 }
             }

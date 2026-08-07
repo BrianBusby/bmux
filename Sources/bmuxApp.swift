@@ -1245,13 +1245,13 @@ struct bmuxApp: App {
     private func moveSelectedWorkspace(in manager: TabManager, by delta: Int) {
         guard let workspace = manager.selectedWorkspace,
               manager.moveWorkspaceForAction(tabId: workspace.id, by: delta) != nil else { return }
-        manager.selectWorkspace(workspace)
+        manager.selectWorkspaceIdForAction(workspace.id)
     }
 
     private func moveSelectedWorkspaceToTop(in manager: TabManager) {
         guard let workspace = manager.selectedWorkspace else { return }
         guard manager.moveWorkspaceToTopForAction(tabId: workspace.id) != nil else { return }
-        manager.selectWorkspace(workspace)
+        manager.selectWorkspaceIdForAction(workspace.id)
     }
 
     private func moveSelectedWorkspace(in manager: TabManager, toWindow windowId: UUID) {
