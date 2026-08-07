@@ -34,7 +34,10 @@ while IFS= read -r line; do
   rest="${line#*:}"
   source_line="${rest#*:}"
   [[ "$source_line" =~ (^|[[:space:]])(let|var)[[:space:]]+selectedTabId[[:space:]]*= ]] && continue
-  [[ "$source_line" =~ selectedTabId[[:space:]]*== ]] && continue
+  if [[ "$source_line" =~ selectedTabId[[:space:]]*== ]] &&
+     [[ ! "$source_line" =~ selectedTabId[[:space:]]*=[[:space:]]*[^=] ]]; then
+    continue
+  fi
   is_allowed_file "$file" && continue
   violations+=("$line")
 done <<< "$selection_lines"
