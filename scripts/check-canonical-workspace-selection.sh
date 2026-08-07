@@ -23,9 +23,11 @@ violations=()
 if command -v rg >/dev/null 2>&1; then
     selection_lines="$(rg -n -P '\b([A-Za-z_][A-Za-z0-9_]*(?:[?!])?\.)*selectedTabId\s*=(?!=)' Sources --glob '*.swift' || true)"
     adapter_selection_lines="$(rg -n -P '\.selectWorkspace\(' Sources --glob '*.swift' || true)"
+    control_adapter_selection_alias_lines="$(rg -n -P '\.selectTab\(' Sources/TerminalController+Control*.swift --glob '*.swift' || true)"
 else
     selection_lines="$(grep -RInE --include='*.swift' 'selectedTabId[[:space:]]*=' Sources || true)"
     adapter_selection_lines="$(grep -RInE --include='*.swift' '\.selectWorkspace\(' Sources || true)"
+    control_adapter_selection_alias_lines="$(grep -InE '\.selectTab\(' Sources/TerminalController+Control*.swift || true)"
 fi
 
 while IFS= read -r line; do
@@ -52,10 +54,15 @@ while IFS= read -r line; do
   violations+=("$line")
 done <<< "$adapter_selection_lines"
 
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done <<< "$control_adapter_selection_alias_lines"
+
 if (( ${#violations[@]} > 0 )); then
   {
     echo "check-canonical-workspace-selection: direct workspace selection mutations must stay in the workspace selection domain."
-    echo "Use TabManager.selectWorkspaceIdForAction/selectWorkspace/focusTab, or extend the domain path when a new mutation policy is needed."
+    echo "Use TabManager.selectWorkspaceIdForAction/focusWorkspaceSurfaceForAction/focusTab, or extend the domain path when a new mutation policy is needed."
     printf '  %s\n' "${violations[@]}"
   } >&2
   exit 1
