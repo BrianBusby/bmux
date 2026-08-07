@@ -21,9 +21,11 @@ is_allowed_file() {
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
-  selection_lines="$(rg -n -P '\b([A-Za-z_][A-Za-z0-9_]*(?:[?!])?\.)*selectedTabId\s*=(?!=)' Sources --glob '*.swift' || true)"
+    selection_lines="$(rg -n -P '\b([A-Za-z_][A-Za-z0-9_]*(?:[?!])?\.)*selectedTabId\s*=(?!=)' Sources --glob '*.swift' || true)"
+    socket_adapter_selection_lines="$(rg -n -P '\.selectWorkspace\(' Sources/TerminalController+Control*.swift --glob '*.swift' || true)"
 else
-  selection_lines="$(grep -RInE --include='*.swift' 'selectedTabId[[:space:]]*=' Sources || true)"
+    selection_lines="$(grep -RInE --include='*.swift' 'selectedTabId[[:space:]]*=' Sources || true)"
+    socket_adapter_selection_lines="$(grep -InE '\.selectWorkspace\(' Sources/TerminalController+Control*.swift || true)"
 fi
 
 while IFS= read -r line; do
@@ -37,9 +39,14 @@ while IFS= read -r line; do
   violations+=("$line")
 done <<< "$selection_lines"
 
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done <<< "$socket_adapter_selection_lines"
+
 if (( ${#violations[@]} > 0 )); then
   {
-    echo "check-canonical-workspace-selection: direct selectedTabId assignment must stay in the workspace selection domain."
+    echo "check-canonical-workspace-selection: direct workspace selection mutations must stay in the workspace selection domain."
     echo "Use TabManager.selectWorkspaceIdForAction/selectWorkspace/focusTab, or extend the domain path when a new mutation policy is needed."
     printf '  %s\n' "${violations[@]}"
   } >&2

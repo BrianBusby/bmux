@@ -357,17 +357,16 @@ extension TerminalController: ControlWorkspaceGroupContext {
             return .tabManagerUnavailable
         }
         guard let group = tabManager.workspaceGroups.first(where: { $0.id == groupID }),
-              let anchor = tabManager.tabs.first(where: { $0.id == group.anchorWorkspaceId }) else {
+              tabManager.tabs.contains(where: { $0.id == group.anchorWorkspaceId }) else {
             return .notFound
         }
         if let windowId = AppDelegate.shared?.windowId(for: tabManager) {
             _ = AppDelegate.shared?.focusMainWindow(windowId: windowId)
             setActiveTabManager(tabManager)
         }
-        // Route through selectWorkspace so the explicit-resume notification
-        // dismissal and other selection side effects fire, matching
-        // workspace.select and the sidebar header click path.
-        tabManager.selectWorkspace(anchor)
-        return .focused(anchorWorkspaceID: anchor.id)
+        guard tabManager.selectWorkspaceIdForAction(group.anchorWorkspaceId) else {
+            return .notFound
+        }
+        return .focused(anchorWorkspaceID: group.anchorWorkspaceId)
     }
 }

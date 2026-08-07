@@ -133,7 +133,7 @@ extension TerminalController: ControlWorkspaceContext {
         guard let tabManager = resolveTabManager(routing: routing) else {
             return .tabManagerUnavailable
         }
-        guard let ws = tabManager.tabs.first(where: { $0.id == workspaceID }) else {
+        guard tabManager.tabs.contains(where: { $0.id == workspaceID }) else {
             return .notFound
         }
         // If this workspace belongs to another window, bring it forward so focus
@@ -143,7 +143,9 @@ extension TerminalController: ControlWorkspaceContext {
             _ = AppDelegate.shared?.focusMainWindow(windowId: windowId)
             setActiveTabManager(tabManager)
         }
-        tabManager.selectWorkspace(ws)
+        guard tabManager.selectWorkspaceIdForAction(workspaceID) else {
+            return .notFound
+        }
         return .resolved(windowID: windowId)
     }
 

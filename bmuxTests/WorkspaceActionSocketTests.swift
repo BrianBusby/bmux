@@ -10,6 +10,52 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct WorkspaceActionSocketTests {
+    @Test func workspaceSelectUsesCanonicalSelectionPath() throws {
+        let manager = TabManager()
+        let originalWorkspace = try #require(manager.selectedWorkspace)
+        let targetWorkspace = manager.addWorkspace(select: false)
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+
+        let response = try handleV2Request(
+            method: "workspace.select",
+            params: ["workspace_id": targetWorkspace.id.uuidString]
+        )
+
+        #expect(response["ok"] as? Bool == true)
+        let result = try #require(response["result"] as? [String: Any])
+        #expect(result["workspace_id"] as? String == targetWorkspace.id.uuidString)
+        #expect(manager.selectedTabId == targetWorkspace.id)
+        #expect(manager.selectedTabId != originalWorkspace.id)
+    }
+
+    @Test func workspaceGroupFocusUsesCanonicalSelectionPath() throws {
+        let manager = TabManager()
+        let originalWorkspace = try #require(manager.selectedWorkspace)
+        let childWorkspace = manager.addWorkspace(select: false)
+        let groupId = try #require(manager.createWorkspaceGroup(
+            name: "Focus Group",
+            childWorkspaceIds: [childWorkspace.id],
+            selectAnchor: false,
+            collapseSidebarSelection: false
+        ))
+        let group = try #require(manager.workspaceGroups.first(where: { $0.id == groupId }))
+        #expect(manager.selectedTabId == originalWorkspace.id)
+
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+
+        let response = try handleV2Request(
+            method: "workspace.group.focus",
+            params: ["group_id": groupId.uuidString]
+        )
+
+        #expect(response["ok"] as? Bool == true)
+        let result = try #require(response["result"] as? [String: Any])
+        #expect(result["anchor_workspace_id"] as? String == group.anchorWorkspaceId.uuidString)
+        #expect(manager.selectedTabId == group.anchorWorkspaceId)
+    }
+
     @Test func setDescriptionRejectsWhitespaceOnlyDescription() throws {
         let manager = TabManager()
         let workspace = try #require(manager.selectedWorkspace)
