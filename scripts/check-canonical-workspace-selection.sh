@@ -23,11 +23,11 @@ violations=()
 if command -v rg >/dev/null 2>&1; then
     selection_lines="$(rg -n -P '\b([A-Za-z_][A-Za-z0-9_]*(?:[?!])?\.)*selectedTabId\s*=(?!=)' Sources --glob '*.swift' || true)"
     adapter_selection_lines="$(rg -n -P '\.selectWorkspace\(' Sources --glob '*.swift' || true)"
-    control_adapter_selection_alias_lines="$(rg -n -P '\.selectTab\(' Sources/TerminalController+Control*.swift --glob '*.swift' || true)"
+    control_adapter_selection_alias_lines="$(rg -n -P '\.selectTab\(' Sources/TerminalController.swift Sources/TerminalController+Control*.swift --glob '*.swift' || true)"
 else
     selection_lines="$(grep -RInE --include='*.swift' 'selectedTabId[[:space:]]*=' Sources || true)"
     adapter_selection_lines="$(grep -RInE --include='*.swift' '\.selectWorkspace\(' Sources || true)"
-    control_adapter_selection_alias_lines="$(grep -InE '\.selectTab\(' Sources/TerminalController+Control*.swift || true)"
+    control_adapter_selection_alias_lines="$(grep -InE '\.selectTab\(' Sources/TerminalController.swift Sources/TerminalController+Control*.swift || true)"
 fi
 
 while IFS= read -r line; do

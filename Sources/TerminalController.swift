@@ -13196,15 +13196,11 @@ class TerminalController {
         v2MainSync {
             // Try as UUID first
             if let uuid = UUID(uuidString: arg) {
-                if let tab = tabManager.tabs.first(where: { $0.id == uuid }) {
-                    tabManager.selectTab(tab)
-                    success = true
-                }
+                success = tabManager.selectWorkspaceIdForAction(uuid)
             }
             // Try as index
             else if let index = Int(arg), index >= 0, index < tabManager.tabs.count {
-                tabManager.selectTab(at: index)
-                success = true
+                success = tabManager.selectWorkspaceIdForAction(tabManager.tabs[index].id)
             }
         }
         return success ? "OK" : "ERROR: Tab not found"
