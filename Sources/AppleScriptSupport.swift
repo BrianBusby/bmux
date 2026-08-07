@@ -454,7 +454,11 @@ final class ScriptTab: NSObject {
             return nil
         }
 
-        state.tabManager.selectWorkspace(workspace)
+        guard state.tabManager.selectWorkspaceIdForAction(workspace.id) else {
+            command.scriptErrorNumber = errAEEventFailed
+            command.scriptErrorString = AppleScriptStrings.workspaceUnavailable
+            return nil
+        }
         return nil
     }
 
