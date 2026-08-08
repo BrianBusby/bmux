@@ -1,6 +1,68 @@
 import Foundation
 
 extension TabManager {
+    /// Applies a user-facing workspace rename. Empty input is rejected instead
+    /// of being interpreted as a clear-name request.
+    @discardableResult
+    func renameWorkspaceTitle(
+        tabId: UUID,
+        title: String,
+        propagateToRemoteTmux: Bool = true
+    ) -> Workspace.CustomTitleApplyOutcome {
+        applyWorkspaceTitleEdit(
+            tabId: tabId,
+            title: title,
+            emptyTitleClears: false,
+            propagateToRemoteTmux: propagateToRemoteTmux
+        )
+    }
+
+    /// Commits a user-facing workspace title draft. Empty input clears the
+    /// custom title, matching palette/modal rename behavior.
+    @discardableResult
+    func commitWorkspaceTitleEdit(
+        tabId: UUID,
+        title: String,
+        propagateToRemoteTmux: Bool = true
+    ) -> Workspace.CustomTitleApplyOutcome {
+        applyWorkspaceTitleEdit(
+            tabId: tabId,
+            title: title,
+            emptyTitleClears: true,
+            propagateToRemoteTmux: propagateToRemoteTmux
+        )
+    }
+
+    /// Shared user-input path for workspace title mutation. Entry points choose
+    /// whether an empty draft clears or rejects, but normalization, mutation,
+    /// event emission, and remote tmux propagation stay here.
+    @discardableResult
+    func applyWorkspaceTitleEdit(
+        tabId: UUID,
+        title: String?,
+        emptyTitleClears: Bool,
+        propagateToRemoteTmux: Bool = true
+    ) -> Workspace.CustomTitleApplyOutcome {
+        let trimmed = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !trimmed.isEmpty else {
+            if emptyTitleClears {
+                return applyCustomTitle(
+                    tabId: tabId,
+                    title: nil,
+                    source: .user,
+                    propagateToRemoteTmux: propagateToRemoteTmux
+                )
+            }
+            return .rejected(.emptyTitle)
+        }
+        return applyCustomTitle(
+            tabId: tabId,
+            title: trimmed,
+            source: .user,
+            propagateToRemoteTmux: propagateToRemoteTmux
+        )
+    }
+
     /// Sets, replaces, or clears a workspace custom title. Returns whether the
     /// write landed (auto writes are rejected over user-set titles; see
     /// ``Workspace/setCustomTitle(_:source:)``).
@@ -58,7 +120,7 @@ extension TabManager {
     }
 
     func clearCustomTitle(tabId: UUID) {
-        setCustomTitle(tabId: tabId, title: nil)
+        applyWorkspaceTitleEdit(tabId: tabId, title: nil, emptyTitleClears: true)
     }
 
     /// Whether a `.workspaceTitleDidChange` notification should refresh cached

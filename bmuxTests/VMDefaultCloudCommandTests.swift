@@ -39,23 +39,8 @@ extension CLINotifyProcessIntegrationRegressionTests {
                         "image": "snapshot-default",
                     ]
                 )
-            case "vm.ssh_info":
-                let params = payload["params"] as? [String: Any] ?? [:]
-                XCTAssertEqual(params["id"] as? String, vmID)
-                return self.v2Response(
-                    id: id,
-                    ok: true,
-                    result: [
-                        "transport": "ssh",
-                        "host": "vm-ssh.freestyle.sh",
-                        "port": 22,
-                        "username": "\(vmID)+bmux",
-                        "credential": [
-                            "kind": "password",
-                            "value": "lease-token",
-                        ],
-                    ]
-                )
+            case "vm.attach_info":
+                return self.defaultFreestyleAttachInfoResponse(id: id, payload: payload, vmID: vmID)
             case "workspace.list":
                 return self.v2Response(id: id, ok: true, result: ["workspaces": []])
             case "workspace.create":
@@ -153,7 +138,7 @@ extension CLINotifyProcessIntegrationRegressionTests {
             state.commands.compactMap { self.jsonObject($0)?["method"] as? String },
             [
                 "vm.create",
-                "vm.ssh_info",
+                "vm.attach_info",
                 "workspace.list",
                 "workspace.create",
                 "workspace.rename",
@@ -272,21 +257,8 @@ extension CLINotifyProcessIntegrationRegressionTests {
                         "image": "snapshot-default",
                     ]
                 )
-            case "vm.ssh_info":
-                return self.v2Response(
-                    id: id,
-                    ok: true,
-                    result: [
-                        "transport": "ssh",
-                        "host": "vm-ssh.freestyle.sh",
-                        "port": 22,
-                        "username": "\(vmID)+bmux",
-                        "credential": [
-                            "kind": "password",
-                            "value": "lease-token",
-                        ],
-                    ]
-                )
+            case "vm.attach_info":
+                return self.defaultFreestyleAttachInfoResponse(id: id, payload: payload, vmID: vmID)
             case "workspace.list":
                 return self.v2Response(
                     id: id,
@@ -409,7 +381,7 @@ extension CLINotifyProcessIntegrationRegressionTests {
             state.commands.compactMap { self.jsonObject($0)?["method"] as? String },
             [
                 "vm.create",
-                "vm.ssh_info",
+                "vm.attach_info",
                 "workspace.list",
                 "workspace.action",
                 "workspace.action",
@@ -459,21 +431,8 @@ extension CLINotifyProcessIntegrationRegressionTests {
                         "image": "snapshot-default",
                     ]
                 )
-            case "vm.ssh_info":
-                return self.v2Response(
-                    id: id,
-                    ok: true,
-                    result: [
-                        "transport": "ssh",
-                        "host": "vm-ssh.freestyle.sh",
-                        "port": 22,
-                        "username": "\(vmID)+bmux",
-                        "credential": [
-                            "kind": "password",
-                            "value": "lease-token",
-                        ],
-                    ]
-                )
+            case "vm.attach_info":
+                return self.defaultFreestyleAttachInfoResponse(id: id, payload: payload, vmID: vmID)
             case "workspace.list":
                 return self.v2Response(
                     id: id,
@@ -568,7 +527,7 @@ extension CLINotifyProcessIntegrationRegressionTests {
             state.commands.compactMap { self.jsonObject($0)?["method"] as? String },
             [
                 "vm.create",
-                "vm.ssh_info",
+                "vm.attach_info",
                 "workspace.list",
                 "workspace.create",
                 "workspace.rename",
@@ -1173,6 +1132,26 @@ extension CLINotifyProcessIntegrationRegressionTests {
             return command
         }
         return decoded
+    }
+
+    private func defaultFreestyleAttachInfoResponse(id: String, payload: [String: Any], vmID: String) -> String {
+        let params = payload["params"] as? [String: Any] ?? [:]
+        XCTAssertEqual(params["id"] as? String, vmID)
+        XCTAssertEqual(params["require_daemon"] as? Bool, true)
+        return v2Response(
+            id: id,
+            ok: true,
+            result: [
+                "transport": "ssh",
+                "host": "vm-ssh.freestyle.sh",
+                "port": 22,
+                "username": "\(vmID)+bmux",
+                "credential": [
+                    "kind": "password",
+                    "value": "lease-token",
+                ],
+            ]
+        )
     }
 
     private func decodedFirstEmbeddedStartupScript(_ command: String) -> String? {

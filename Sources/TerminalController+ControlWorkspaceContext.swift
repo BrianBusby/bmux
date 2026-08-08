@@ -133,7 +133,7 @@ extension TerminalController: ControlWorkspaceContext {
         guard let tabManager = resolveTabManager(routing: routing) else {
             return .tabManagerUnavailable
         }
-        guard let ws = tabManager.tabs.first(where: { $0.id == workspaceID }) else {
+        guard tabManager.tabs.contains(where: { $0.id == workspaceID }) else {
             return .notFound
         }
         // If this workspace belongs to another window, bring it forward so focus
@@ -143,7 +143,9 @@ extension TerminalController: ControlWorkspaceContext {
             _ = AppDelegate.shared?.focusMainWindow(windowId: windowId)
             setActiveTabManager(tabManager)
         }
-        tabManager.selectWorkspace(ws)
+        guard tabManager.selectWorkspaceIdForAction(workspaceID) else {
+            return .notFound
+        }
         return .resolved(windowID: windowId)
     }
 
@@ -155,14 +157,14 @@ extension TerminalController: ControlWorkspaceContext {
             return .tabManagerUnavailable
         }
         let windowId = AppDelegate.shared?.windowId(for: tabManager)
-        guard let ws = tabManager.tabs.first(where: { $0.id == workspaceID }) else {
+        switch tabManager.closeWorkspaceForAction(tabId: workspaceID) {
+        case .accepted:
+            return .resolved(windowID: windowId)
+        case .notFound:
             return .notFound
-        }
-        guard tabManager.canCloseWorkspace(ws) else {
+        case .protected:
             return .protected(windowID: windowId)
         }
-        tabManager.closeWorkspace(ws)
-        return .resolved(windowID: windowId)
     }
 
     func controlMoveWorkspaceToWindow(
@@ -319,7 +321,7 @@ extension TerminalController: ControlWorkspaceContext {
         guard tabManager.tabs.contains(where: { $0.id == workspaceID }) else {
             return .notFound
         }
-        tabManager.setCustomTitle(tabId: workspaceID, title: title)
+        tabManager.renameWorkspaceTitle(tabId: workspaceID, title: title)
         let windowId = AppDelegate.shared?.windowId(for: tabManager)
         return .resolved(windowID: windowId)
     }

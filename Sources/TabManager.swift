@@ -2307,10 +2307,7 @@ class TabManager: ObservableObject {
     }
 
     func selectWorkspace(_ workspace: Workspace) {
-#if DEBUG
-        debugPrimeWorkspaceSwitchTrigger("select", to: workspace.id)
-#endif
-        selectWorkspaceId(workspace.id, notificationDismissalContext: .explicitWorkspaceResume)
+        selectWorkspaceIdForAction(workspace.id)
     }
 
     // Keep selectTab as convenience alias
@@ -2451,7 +2448,7 @@ class TabManager: ObservableObject {
         )
     }
 
-    private func orderedClosableWorkspaces(_ workspaceIds: [UUID], allowPinned: Bool) -> [Workspace] {
+    func orderedClosableWorkspaces(_ workspaceIds: [UUID], allowPinned: Bool) -> [Workspace] {
         let targetIds = Set(workspaceIds)
         return tabs.compactMap { workspace in
             guard targetIds.contains(workspace.id) else { return nil }
@@ -3229,7 +3226,7 @@ class TabManager: ObservableObject {
     // TabManager hosts its seam (TabManager+NotificationDismissalHosting)
     // and forwards the legacy entry points below.
 
-    private func selectWorkspaceId(
+    func selectWorkspaceId(
         _ tabId: UUID,
         notificationDismissalContext: NotificationDismissalContext?
     ) {

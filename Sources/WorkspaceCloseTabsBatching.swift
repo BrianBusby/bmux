@@ -2,6 +2,13 @@ import Bonsplit
 import BmuxSettings
 import Foundation
 
+enum SurfaceCloseActionResult: Equatable {
+    case closed
+    case surfaceNotFound
+    case lastSurface
+    case failed
+}
+
 struct CloseOtherTabsConfirmationPrompt: Sendable {
     let title: String
     let message: String
@@ -39,6 +46,34 @@ struct CloseOtherTabsConfirmationPrompt: Sendable {
 }
 
 extension Workspace {
+    @discardableResult
+    func closeSurfaceForAction(
+        surfaceId: UUID,
+        force: Bool,
+        allowLastSurface: Bool = false
+    ) -> SurfaceCloseActionResult {
+        guard panels[surfaceId] != nil else {
+            return .surfaceNotFound
+        }
+        guard allowLastSurface || panels.count > 1 else {
+            return .lastSurface
+        }
+
+        let didClose: Bool
+        if let tabId = surfaceIdFromPanelId(surfaceId) {
+            if force {
+                didClose = requestNonInteractiveCloseTabRecordingHistory(tabId)
+            } else {
+                didClose = requestCloseTabRecordingHistory(tabId, force: force)
+            }
+        } else {
+            markCloseHistoryEligible(panelId: surfaceId)
+            didClose = closePanel(surfaceId, force: force)
+        }
+
+        return didClose ? .closed : .failed
+    }
+
     func closeTabsFromContextMenu(_ tabIds: [TabID], skipPinned: Bool = true) {
         let confirmationManager = owningTabManager
             ?? AppDelegate.shared?.tabManagerFor(tabId: id)

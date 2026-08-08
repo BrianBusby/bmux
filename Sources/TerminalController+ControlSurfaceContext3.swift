@@ -1,6 +1,7 @@
 import AppKit
 import Bonsplit
 import BmuxControlSocket
+import BmuxTerminal
 import Foundation
 
 /// The surface-domain input / read / resume / reporting witnesses, plus the
@@ -261,6 +262,44 @@ extension TerminalController {
         return .surface(focused)
     }
 
+    private func socketTextSendResolution(
+        surfaceId: UUID,
+        sendResult: TerminalSurface.InputSendResult
+    ) -> ControlSurfaceSendResolution? {
+        switch sendResult {
+        case .sent:
+            return nil
+        case .queued:
+            return nil
+        case .inputQueueFull:
+            return .inputQueueFull(surfaceId)
+        case .surfaceUnavailable:
+            return .surfaceUnavailable(surfaceId)
+        case .processExited:
+            return .processExited(surfaceId)
+        }
+    }
+
+    private func socketKeySendResolution(
+        surfaceId: UUID,
+        sendResult: TerminalSurface.NamedKeySendResult
+    ) -> ControlSurfaceSendResolution? {
+        switch sendResult {
+        case .sent:
+            return nil
+        case .queued:
+            return nil
+        case .unknownKey:
+            return .unknownKey
+        case .inputQueueFull:
+            return .inputQueueFull(surfaceId)
+        case .surfaceUnavailable:
+            return .surfaceUnavailable(surfaceId)
+        case .processExited:
+            return .processExited(surfaceId)
+        }
+    }
+
     func controlSurfaceSendText(
         routing: ControlRoutingSelectors,
         surfaceID: UUID?,
@@ -286,25 +325,21 @@ extension TerminalController {
             guard let terminalPanel = target.terminalPanel else {
                 return .surfaceNotTerminal(surfaceId)
             }
-            let queued: Bool
-            switch terminalPanel.sendInputResult(text) {
-            case .sent:
-                terminalPanel.surface.forceRefresh(reason: "terminalController.v2SurfaceSendText.windowDock")
-                queued = false
-            case .queued:
-                queued = true
-            case .inputQueueFull:
-                return .inputQueueFull(surfaceId)
-            case .surfaceUnavailable:
-                return .surfaceUnavailable(surfaceId)
-            case .processExited:
-                return .processExited(surfaceId)
+            let sendResult = terminalPanel.sendSocketInputForAction(
+                text,
+                refreshReason: "terminalController.v2SurfaceSendText.windowDock"
+            )
+            if let errorResolution = socketTextSendResolution(
+                surfaceId: surfaceId,
+                sendResult: sendResult
+            ) {
+                return errorResolution
             }
             return .sent(
                 windowID: dockResultWindowId(for: dock, tabManager: tabManager),
                 workspaceID: dock.workspaceId,
                 surfaceID: surfaceId,
-                queued: queued
+                queued: sendResult == .queued
             )
         }
         guard let ws = resolveSurfaceWorkspace(routing: routing, tabManager: tabManager) else {
@@ -318,25 +353,21 @@ extension TerminalController {
         guard let terminalPanel = ws.terminalPanel(for: surfaceId) else {
             return .surfaceNotTerminal(surfaceId)
         }
-        let queued: Bool
-        switch terminalPanel.sendInputResult(text) {
-        case .sent:
-            terminalPanel.surface.forceRefresh(reason: "terminalController.v2SurfaceSendText")
-            queued = false
-        case .queued:
-            queued = true
-        case .inputQueueFull:
-            return .inputQueueFull(surfaceId)
-        case .surfaceUnavailable:
-            return .surfaceUnavailable(surfaceId)
-        case .processExited:
-            return .processExited(surfaceId)
+        let sendResult = terminalPanel.sendSocketInputForAction(
+            text,
+            refreshReason: "terminalController.v2SurfaceSendText"
+        )
+        if let errorResolution = socketTextSendResolution(
+            surfaceId: surfaceId,
+            sendResult: sendResult
+        ) {
+            return errorResolution
         }
         return .sent(
             windowID: v2ResolveWindowId(tabManager: tabManager),
             workspaceID: ws.id,
             surfaceID: surfaceId,
-            queued: queued
+            queued: sendResult == .queued
         )
     }
 
@@ -365,20 +396,15 @@ extension TerminalController {
             guard let terminalPanel = target.terminalPanel else {
                 return .surfaceNotTerminal(surfaceId)
             }
-            let sendResult = terminalPanel.sendNamedKeyResult(key)
-            switch sendResult {
-            case .sent:
-                terminalPanel.surface.forceRefresh(reason: "terminalController.v2SurfaceSendKey.windowDock")
-            case .queued:
-                break
-            case .unknownKey:
-                return .unknownKey
-            case .inputQueueFull:
-                return .inputQueueFull(surfaceId)
-            case .surfaceUnavailable:
-                return .surfaceUnavailable(surfaceId)
-            case .processExited:
-                return .processExited(surfaceId)
+            let sendResult = terminalPanel.sendSocketNamedKeyForAction(
+                key,
+                refreshReason: "terminalController.v2SurfaceSendKey.windowDock"
+            )
+            if let errorResolution = socketKeySendResolution(
+                surfaceId: surfaceId,
+                sendResult: sendResult
+            ) {
+                return errorResolution
             }
             return .sent(
                 windowID: dockResultWindowId(for: dock, tabManager: tabManager),
@@ -398,20 +424,15 @@ extension TerminalController {
         guard let terminalPanel = ws.terminalPanel(for: surfaceId) else {
             return .surfaceNotTerminal(surfaceId)
         }
-        let sendResult = terminalPanel.sendNamedKeyResult(key)
-        switch sendResult {
-        case .sent:
-            terminalPanel.surface.forceRefresh(reason: "terminalController.v2SurfaceSendKey")
-        case .queued:
-            break
-        case .unknownKey:
-            return .unknownKey
-        case .inputQueueFull:
-            return .inputQueueFull(surfaceId)
-        case .surfaceUnavailable:
-            return .surfaceUnavailable(surfaceId)
-        case .processExited:
-            return .processExited(surfaceId)
+        let sendResult = terminalPanel.sendSocketNamedKeyForAction(
+            key,
+            refreshReason: "terminalController.v2SurfaceSendKey"
+        )
+        if let errorResolution = socketKeySendResolution(
+            surfaceId: surfaceId,
+            sendResult: sendResult
+        ) {
+            return errorResolution
         }
         return .sent(
             windowID: v2ResolveWindowId(tabManager: tabManager),

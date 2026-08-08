@@ -475,40 +475,20 @@ extension TerminalController {
                 surfaceID: surfaceId
             )
         }
-        guard ws.panels[surfaceId] != nil else {
+        switch ws.closeSurfaceForAction(surfaceId: surfaceId, force: true) {
+        case .closed:
+            return .closed(
+                windowID: v2ResolveWindowId(tabManager: tabManager),
+                workspaceID: ws.id,
+                surfaceID: surfaceId
+            )
+        case .surfaceNotFound:
             return .surfaceNotFound(surfaceId)
-        }
-        if ws.panels.count <= 1 {
+        case .lastSurface:
             return .lastSurface
-        }
-        // Socket API must be non-interactive: bypass close-confirmation gating.
-        guard controlCloseSurfaceRecordingHistory(in: ws, surfaceId: surfaceId, force: true) else {
+        case .failed:
             return .closeFailed(surfaceId)
         }
-        return .closed(
-            windowID: v2ResolveWindowId(tabManager: tabManager),
-            workspaceID: ws.id,
-            surfaceID: surfaceId
-        )
-    }
-
-    /// The byte-faithful twin of the file-private `closeSurfaceRecordingHistory`,
-    /// re-declared here because `private` is file-scoped and the original lives in
-    /// `TerminalController.swift`.
-    @discardableResult
-    private func controlCloseSurfaceRecordingHistory(
-        in workspace: Workspace,
-        surfaceId: UUID,
-        force: Bool
-    ) -> Bool {
-        if let tabId = workspace.surfaceIdFromPanelId(surfaceId) {
-            if force {
-                return workspace.requestNonInteractiveCloseTabRecordingHistory(tabId)
-            }
-            return workspace.requestCloseTabRecordingHistory(tabId, force: force)
-        }
-        workspace.markCloseHistoryEligible(panelId: surfaceId)
-        return workspace.closePanel(surfaceId, force: force)
     }
 
     /// The byte-faithful twin of `v2PanelType`'s token mapping (the `v2PanelType`

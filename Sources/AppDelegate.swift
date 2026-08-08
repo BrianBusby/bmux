@@ -1178,7 +1178,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let eventWindowNumber = event?.window?.windowNumber ?? -1
         let eventNumber = event?.windowNumber ?? -1
         let eventChars = safeShortcutCharactersIgnoringModifiers(for: event)
-        let eventKeyCode = event.map { String($0.keyCode) } ?? "nil"
+        let eventKeyCode = event.flatMap { [.keyDown, .keyUp, .flagsChanged].contains($0.type) ? String($0.keyCode) : nil } ?? "nil"
         let keyWindowNumber = NSApp.keyWindow?.windowNumber ?? -1
         let mainWindowNumber = NSApp.mainWindow?.windowNumber ?? -1
         let ws = workspaceId.map { String($0.uuidString.prefix(8)) } ?? "nil"
@@ -7352,7 +7352,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         guard focusWindowForAppActivation(window, reason: .workspaceCreation) else {
             return false
         }
-        context.tabManager.selectedTabId = workspace.id
+        context.tabManager.selectWorkspaceIdForAction(workspace.id)
         guard let browserPanel = workspace.focusedSurfaceId.flatMap({ workspace.browserPanel(for: $0) })
             ?? workspace.panels.values.compactMap({ $0 as? BrowserPanel }).first else {
             return false
@@ -7431,7 +7431,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                         initialWorkspaceId: initialWorkspace?.id,
                         in: context
                     )
-                    context.tabManager.setPinned(workspace, pinned: true)
+                    context.tabManager.setWorkspacePinnedForAction(tabId: workspace.id, pinned: true)
                 }
             }
             return true
@@ -7584,8 +7584,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let workspace: Workspace
         if let existingWorkspace {
             workspace = existingWorkspace
-            context.tabManager.selectedTabId = workspace.id
-            context.tabManager.setPinned(workspace, pinned: true)
+            context.tabManager.selectWorkspaceIdForAction(workspace.id)
+            context.tabManager.setWorkspacePinnedForAction(tabId: workspace.id, pinned: true)
             if let loadingPanel = workspace.panels.values.first(where: { $0.panelType == .cloudVMLoading }) as? CloudVMLoadingPanel {
                 if !loadingPanel.hasFailed {
                     onCompletion?(CloudVMActionLauncher.Completion(terminationStatus: 0, output: "", workspaceId: workspace.id))
@@ -7603,7 +7603,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 select: true,
                 autoWelcomeIfNeeded: false
             )
-            context.tabManager.setPinned(workspace, pinned: true)
+            context.tabManager.setWorkspacePinnedForAction(tabId: workspace.id, pinned: true)
         }
         if let loadingPanel = workspace.panels.values.first(where: { $0.panelType == .cloudVMLoading }) as? CloudVMLoadingPanel {
             loadingPanel.resetLoading()
@@ -10374,7 +10374,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 targetTab = tabManager.addTab()
             }
             tabManager.setCustomTitle(tabId: targetTab.id, title: title)
-            tabManager.setTabColor(tabId: targetTab.id, color: entry.hex)
+            tabManager.setWorkspaceColorForAction(tabId: targetTab.id, colorInput: entry.hex)
         }
     }
 
@@ -10451,7 +10451,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 * self.debugStressTabsPerPane
             if let originalSelectedWorkspaceId,
                tabManager.tabs.contains(where: { $0.id == originalSelectedWorkspaceId }) {
-                tabManager.selectedTabId = originalSelectedWorkspaceId
+                tabManager.selectWorkspaceIdForAction(originalSelectedWorkspaceId, notificationDismissalContext: nil)
             }
 
             bmuxDebugLog(
@@ -13387,7 +13387,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         let response = alert.runModal()
         guard response == .alertFirstButtonReturn else { return true }
-        tabManager.setCustomTitle(tabId: tab.id, title: input.stringValue)
+        tabManager.commitWorkspaceTitleEdit(tabId: tab.id, title: input.stringValue)
         return true
     }
 
@@ -15897,7 +15897,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let previousSelectedId = tabManager.selectedTabId
         if let anchorId, anchorId != previousSelectedId,
            tabManager.tabs.contains(where: { $0.id == anchorId }) {
-            tabManager.selectedTabId = anchorId
+            tabManager.selectWorkspaceIdForAction(anchorId, notificationDismissalContext: nil)
         }
         var asyncObserverId: UUID?
         let onExecuted: () -> Void = { [weak tabManager, groupId, beforeIds, previousSelectedId, anchorId, groupPlacement, action] in
@@ -15937,7 +15937,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                let previousSelectedId,
                previousSelectedId != tabManager.selectedTabId,
                tabManager.tabs.contains(where: { $0.id == previousSelectedId }) {
-                tabManager.selectedTabId = previousSelectedId
+                tabManager.selectWorkspaceIdForAction(previousSelectedId, notificationDismissalContext: nil)
             }
         }
         let onCloudVMCompletion: (CloudVMActionLauncher.Completion) -> Void = { [weak tabManager] completion in
@@ -15966,7 +15966,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
            let previousSelectedId,
            previousSelectedId != tabManager.selectedTabId,
            tabManager.tabs.contains(where: { $0.id == previousSelectedId }) {
-            tabManager.selectedTabId = previousSelectedId
+            tabManager.selectWorkspaceIdForAction(previousSelectedId, notificationDismissalContext: nil)
         }
         return didRun
     }

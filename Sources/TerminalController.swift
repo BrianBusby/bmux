@@ -438,7 +438,7 @@ class TerminalController {
     func v2MaybeSelectWorkspace(_ tabManager: TabManager, workspace: Workspace) {
         guard socketCommandAllowsInAppFocusMutations() else { return }
         if tabManager.selectedTabId != workspace.id {
-            tabManager.selectWorkspace(workspace)
+            tabManager.selectWorkspaceIdForAction(workspace.id)
         }
     }
 
@@ -4486,20 +4486,6 @@ class TerminalController {
             let windowId = v2ResolveWindowId(tabManager: tabManager)
 
             @MainActor
-            func closeWorkspaces(_ workspaces: [Workspace]) -> Int {
-                var closed = 0
-                for candidate in workspaces where candidate.id != workspace.id {
-                    let existedBefore = tabManager.tabs.contains(where: { $0.id == candidate.id })
-                    guard existedBefore else { continue }
-                    tabManager.closeWorkspace(candidate)
-                    if !tabManager.tabs.contains(where: { $0.id == candidate.id }) {
-                        closed += 1
-                    }
-                }
-                return closed
-            }
-
-            @MainActor
             func finish(_ extras: [String: Any] = [:]) {
                 var payload: [String: Any] = [
                     "action": action,
@@ -4516,22 +4502,24 @@ class TerminalController {
 
             switch action {
             case "pin":
-                tabManager.setPinned(workspace, pinned: true)
+                tabManager.setWorkspacePinnedForAction(tabId: workspace.id, pinned: true)
                 finish(["pinned": true])
 
             case "unpin":
-                tabManager.setPinned(workspace, pinned: false)
+                tabManager.setWorkspacePinnedForAction(tabId: workspace.id, pinned: false)
                 finish(["pinned": false])
 
             case "rename":
-                guard let titleRaw = v2String(params, "title"),
-                      !titleRaw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                guard let titleRaw = v2String(params, "title") else {
                     result = .err(code: "invalid_params", message: "Missing or invalid title", data: nil)
                     return
                 }
-                let title = titleRaw.trimmingCharacters(in: .whitespacesAndNewlines)
-                tabManager.setCustomTitle(tabId: workspace.id, title: title)
-                finish(["title": title])
+                let titleOutcome = tabManager.renameWorkspaceTitle(tabId: workspace.id, title: titleRaw)
+                guard titleOutcome.applied else {
+                    result = .err(code: "invalid_params", message: "Missing or invalid title", data: nil)
+                    return
+                }
+                finish(["title": workspace.customTitle ?? workspace.title])
 
             case "clear_name":
                 tabManager.clearCustomTitle(tabId: workspace.id)
@@ -4543,59 +4531,47 @@ class TerminalController {
                     result = .err(code: "invalid_params", message: "Missing or invalid description", data: nil)
                     return
                 }
-                tabManager.setCustomDescription(tabId: workspace.id, description: descriptionRaw)
-                finish(["description": v2OrNull(workspace.customDescription)])
+                let description = tabManager.setWorkspaceDescriptionForAction(
+                    tabId: workspace.id,
+                    description: descriptionRaw
+                )
+                finish(["description": v2OrNull(description)])
 
             case "clear_description":
-                tabManager.clearCustomDescription(tabId: workspace.id)
+                tabManager.clearWorkspaceDescriptionForAction(tabId: workspace.id)
                 finish(["description": NSNull()])
 
             case "move_up":
-                guard let currentIndex = tabManager.tabs.firstIndex(where: { $0.id == workspace.id }) else {
+                guard let index = tabManager.moveWorkspaceForAction(tabId: workspace.id, by: -1) else {
                     result = .err(code: "not_found", message: "Workspace not found", data: nil)
                     return
                 }
-                _ = tabManager.reorderWorkspace(tabId: workspace.id, toIndex: max(currentIndex - 1, 0))
-                finish(["index": v2OrNull(tabManager.tabs.firstIndex(where: { $0.id == workspace.id }))])
+                finish(["index": index])
 
             case "move_down":
-                guard let currentIndex = tabManager.tabs.firstIndex(where: { $0.id == workspace.id }) else {
+                guard let index = tabManager.moveWorkspaceForAction(tabId: workspace.id, by: 1) else {
                     result = .err(code: "not_found", message: "Workspace not found", data: nil)
                     return
                 }
-                _ = tabManager.reorderWorkspace(tabId: workspace.id, toIndex: min(currentIndex + 1, tabManager.tabs.count - 1))
-                finish(["index": v2OrNull(tabManager.tabs.firstIndex(where: { $0.id == workspace.id }))])
+                finish(["index": index])
 
             case "move_top":
-                tabManager.moveTabToTop(workspace.id)
-                finish(["index": v2OrNull(tabManager.tabs.firstIndex(where: { $0.id == workspace.id }))])
+                guard let index = tabManager.moveWorkspaceToTopForAction(tabId: workspace.id) else {
+                    result = .err(code: "not_found", message: "Workspace not found", data: nil)
+                    return
+                }
+                finish(["index": index])
 
             case "close_others":
-                let candidates = tabManager.tabs.filter { $0.id != workspace.id && !$0.isPinned }
-                let closed = closeWorkspaces(candidates)
+                let closed = tabManager.closeWorkspacesForAction(.others(keeping: [workspace.id]))
                 finish(["closed": closed])
 
             case "close_above":
-                guard let index = tabManager.tabs.firstIndex(where: { $0.id == workspace.id }) else {
-                    result = .err(code: "not_found", message: "Workspace not found", data: nil)
-                    return
-                }
-                let candidates = Array(tabManager.tabs.prefix(index)).filter { !$0.isPinned }
-                let closed = closeWorkspaces(candidates)
+                let closed = tabManager.closeWorkspacesForAction(.above(anchor: workspace.id))
                 finish(["closed": closed])
 
             case "close_below":
-                guard let index = tabManager.tabs.firstIndex(where: { $0.id == workspace.id }) else {
-                    result = .err(code: "not_found", message: "Workspace not found", data: nil)
-                    return
-                }
-                let candidates: [Workspace]
-                if index + 1 < tabManager.tabs.count {
-                    candidates = Array(tabManager.tabs.suffix(from: index + 1)).filter { !$0.isPinned }
-                } else {
-                    candidates = []
-                }
-                let closed = closeWorkspaces(candidates)
+                let closed = tabManager.closeWorkspacesForAction(.below(anchor: workspace.id))
                 finish(["closed": closed])
 
             case "mark_read":
@@ -4607,33 +4583,20 @@ class TerminalController {
                 finish()
 
             case "set_color":
-                guard let colorRaw = v2String(params, "color"),
-                      !colorRaw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                guard let colorRaw = v2String(params, "color") else {
                     result = .err(code: "invalid_params", message: "Missing or invalid color", data: nil)
                     return
                 }
-                let colorInput = colorRaw.trimmingCharacters(in: .whitespacesAndNewlines)
-                // Resolve named colors from the effective palette, including file-defined additions.
-                let effectivePalette = WorkspaceTabColorSettings.palette()
-                let hex: String
-                if let entry = effectivePalette.first(where: {
-                    $0.name.caseInsensitiveCompare(colorInput) == .orderedSame
-                }) {
-                    hex = entry.hex
-                } else if let normalized = WorkspaceTabColorSettings.normalizedHex(colorInput) {
-                    hex = normalized
-                } else {
-                    let colorNames = effectivePalette.map(\.name)
+                guard let hex = tabManager.setWorkspaceColorForAction(tabId: workspace.id, colorInput: colorRaw) else {
                     result = .err(code: "invalid_params", message: "Invalid color. Use a hex value (#RRGGBB) or a named color.", data: [
-                        "named_colors": colorNames
+                        "named_colors": tabManager.workspaceActionColorNames()
                     ])
                     return
                 }
-                tabManager.setTabColor(tabId: workspace.id, color: hex)
                 finish(["color": hex])
 
             case "clear_color":
-                tabManager.setTabColor(tabId: workspace.id, color: nil)
+                tabManager.clearWorkspaceColorForAction(tabId: workspace.id)
                 finish(["color": NSNull()])
 
             default:
@@ -4652,15 +4615,11 @@ class TerminalController {
     @MainActor
     @discardableResult
     func closeSurfaceRecordingHistory(in workspace: Workspace, surfaceId: UUID, force: Bool) -> Bool {
-        if let tabId = workspace.surfaceIdFromPanelId(surfaceId) {
-            if force {
-                return workspace.requestNonInteractiveCloseTabRecordingHistory(tabId)
-            }
-            return workspace.requestCloseTabRecordingHistory(tabId, force: force)
-        }
-
-        workspace.markCloseHistoryEligible(panelId: surfaceId)
-        return workspace.closePanel(surfaceId, force: force)
+        workspace.closeSurfaceForAction(
+            surfaceId: surfaceId,
+            force: force,
+            allowLastSurface: true
+        ) == .closed
     }
 
     func v2ResolveWorkspace(params: [String: Any], tabManager: TabManager) -> Workspace? {
@@ -4773,13 +4732,11 @@ class TerminalController {
                 return
             }
 
-            let sourcePane = sourceWorkspace.paneId(forPanelId: surfaceId)
-            let sourceIndex = sourceWorkspace.indexInPane(forPanelId: surfaceId)
-
             var targetWindowId = source.windowId
-            var targetTabManager = source.tabManager
             var targetWorkspace = sourceWorkspace
-            var targetPane = sourcePane ?? sourceWorkspace.bonsplitController.focusedPaneId ?? sourceWorkspace.bonsplitController.allPaneIds.first
+            var targetPane = sourceWorkspace.paneId(forPanelId: surfaceId)
+                ?? sourceWorkspace.bonsplitController.focusedPaneId
+                ?? sourceWorkspace.bonsplitController.allPaneIds.first
             var targetIndex = explicitIndex
 
             if let anchorSurfaceId = beforeSurfaceId ?? afterSurfaceId {
@@ -4791,7 +4748,6 @@ class TerminalController {
                     return
                 }
                 targetWindowId = anchor.windowId
-                targetTabManager = anchor.tabManager
                 targetWorkspace = anchorWorkspace
                 targetPane = anchorPane
                 targetIndex = (beforeSurfaceId != nil) ? anchorIndex : (anchorIndex + 1)
@@ -4801,7 +4757,6 @@ class TerminalController {
                     return
                 }
                 targetWindowId = located.windowId
-                targetTabManager = located.tabManager
                 targetWorkspace = located.workspace
                 targetPane = located.paneId
             } else if let workspaceUUID = requestedWorkspaceUUID {
@@ -4810,7 +4765,6 @@ class TerminalController {
                     result = .err(code: "not_found", message: "Workspace not found", data: ["workspace_id": workspaceUUID.uuidString])
                     return
                 }
-                targetTabManager = tm
                 targetWorkspace = ws
                 targetWindowId = app.windowId(for: tm) ?? targetWindowId
                 targetPane = ws.bonsplitController.focusedPaneId ?? ws.bonsplitController.allPaneIds.first
@@ -4820,7 +4774,6 @@ class TerminalController {
                     return
                 }
                 targetWindowId = windowUUID
-                targetTabManager = tm
                 guard let selectedWorkspaceId = tm.selectedTabId,
                       let ws = tm.tabs.first(where: { $0.id == selectedWorkspaceId }) else {
                     result = .err(code: "not_found", message: "Target window has no selected workspace", data: ["window_id": windowUUID.uuidString])
@@ -4835,45 +4788,19 @@ class TerminalController {
                 return
             }
 
-            if targetWorkspace.id == sourceWorkspace.id {
-                guard sourceWorkspace.moveSurface(panelId: surfaceId, toPane: destinationPane, atIndex: targetIndex, focus: focus) else {
-                    result = .err(code: "internal_error", message: "Failed to move surface", data: nil)
-                    return
-                }
-                result = .ok([
-                    "window_id": targetWindowId.uuidString,
-                    "window_ref": v2Ref(kind: .window, uuid: targetWindowId),
-                    "workspace_id": targetWorkspace.id.uuidString,
-                    "workspace_ref": v2Ref(kind: .workspace, uuid: targetWorkspace.id),
-                    "pane_id": destinationPane.id.uuidString,
-                    "pane_ref": v2Ref(kind: .pane, uuid: destinationPane.id),
-                    "surface_id": surfaceId.uuidString,
-                    "surface_ref": v2Ref(kind: .surface, uuid: surfaceId)
-                ])
+            guard app.moveSurface(
+                panelId: surfaceId,
+                toWorkspace: targetWorkspace.id,
+                targetPane: destinationPane,
+                targetIndex: targetIndex,
+                focus: focus,
+                focusWindow: true
+            ) else {
+                let message = targetWorkspace.id == sourceWorkspace.id
+                    ? "Failed to move surface"
+                    : "Failed to attach surface to destination"
+                result = .err(code: "internal_error", message: message, data: nil)
                 return
-            }
-
-            guard let transfer = sourceWorkspace.detachSurface(panelId: surfaceId) else {
-                result = .err(code: "internal_error", message: "Failed to detach surface", data: nil)
-                return
-            }
-
-            if targetWorkspace.attachDetachedSurface(transfer, inPane: destinationPane, atIndex: targetIndex, focus: focus) == nil {
-                // Roll back to source workspace if attach fails.
-                let rollbackPane = sourcePane.flatMap { sp in sourceWorkspace.bonsplitController.allPaneIds.first(where: { $0 == sp }) }
-                    ?? sourceWorkspace.bonsplitController.focusedPaneId
-                    ?? sourceWorkspace.bonsplitController.allPaneIds.first
-                if let rollbackPane {
-                    _ = sourceWorkspace.attachDetachedSurface(transfer, inPane: rollbackPane, atIndex: sourceIndex, focus: focus)
-                }
-                result = .err(code: "internal_error", message: "Failed to attach surface to destination", data: nil)
-                return
-            }
-
-            if focus {
-                _ = app.focusMainWindow(windowId: targetWindowId)
-                setActiveTabManager(targetTabManager)
-                targetTabManager.selectWorkspace(targetWorkspace)
             }
 
             result = .ok([
@@ -6711,40 +6638,21 @@ class TerminalController {
             let transparentBackground = v2Bool(params, "transparent_background") ?? false
             let bypassRemoteProxy = v2Bool(params, "bypass_remote_proxy") ?? v2IsDiffViewerURL(url)
 
-            var createdSplit = true
-            var placementStrategy = "split_right"
-            let createdPanel: BrowserPanel?
-            if let targetPane = ws.preferredRightSideTargetPane(fromPanelId: sourceSurfaceId) {
-                createdPanel = ws.newBrowserSurface(
-                    inPane: targetPane,
-                    url: url,
-                    focus: focus,
-                    selectWhenNotFocused: true,
-                    creationPolicy: .automationPreload,
-                    omnibarVisible: omnibarVisible,
-                    transparentBackground: transparentBackground,
-                    bypassRemoteProxy: bypassRemoteProxy
-                )
-                createdSplit = false
-                placementStrategy = "reuse_right_sibling"
-            } else {
-                createdPanel = ws.newBrowserSplit(
-                    from: sourceSurfaceId,
-                    orientation: .horizontal,
-                    url: url,
-                    focus: focus,
-                    creationPolicy: .automationPreload,
-                    omnibarVisible: omnibarVisible,
-                    transparentBackground: transparentBackground,
-                    bypassRemoteProxy: bypassRemoteProxy
-                )
-            }
-
-            guard let browserPanelId = createdPanel?.id else {
+            guard let openResult = ws.openBrowserSplitForAction(
+                from: sourceSurfaceId,
+                url: url,
+                focus: focus,
+                selectWhenNotFocused: true,
+                creationPolicy: .automationPreload,
+                omnibarVisible: omnibarVisible,
+                transparentBackground: transparentBackground,
+                bypassRemoteProxy: bypassRemoteProxy
+            ) else {
                 result = .err(code: "internal_error", message: "Failed to create browser", data: nil)
                 return
             }
 
+            let browserPanelId = openResult.panel.id
             let targetPaneUUID = ws.paneId(forPanelId: browserPanelId)?.id
             let windowId = v2ResolveWindowId(tabManager: tabManager)
             result = .ok([
@@ -6762,9 +6670,9 @@ class TerminalController {
                 "source_pane_ref": v2Ref(kind: .pane, uuid: sourcePaneUUID),
                 "target_pane_id": v2OrNull(targetPaneUUID?.uuidString),
                 "target_pane_ref": v2Ref(kind: .pane, uuid: targetPaneUUID),
-                "created_split": createdSplit,
-                "placement_strategy": placementStrategy,
-                "show_omnibar": createdPanel?.isOmnibarVisible ?? omnibarVisible,
+                "created_split": openResult.createdSplit,
+                "placement_strategy": openResult.placementStrategy,
+                "show_omnibar": openResult.panel.isOmnibarVisible,
                 "transparent_background": transparentBackground,
                 "bypass_remote_proxy": bypassRemoteProxy
             ])
@@ -8595,11 +8503,8 @@ class TerminalController {
                     setActiveTabManager(tabManager)
                 }
                 if let ws = v2ResolveWorkspace(params: params, tabManager: tabManager) {
-                    if tabManager.selectedTabId != ws.id {
-                        tabManager.selectWorkspace(ws)
-                    }
-                    if ws.focusedPanelId != surfaceId {
-                        ws.focusPanel(surfaceId)
+                    if tabManager.selectedTabId != ws.id || ws.focusedPanelId != surfaceId {
+                        _ = tabManager.focusWorkspaceSurfaceForAction(workspaceId: ws.id, surfaceId: surfaceId)
                     }
                 }
             }
@@ -13272,13 +13177,13 @@ class TerminalController {
 
         var result = "ERROR: Tab not found"
         v2MainSync {
-            if let tab = tabManager.tabs.first(where: { $0.id == uuid }) {
-                guard tabManager.canCloseWorkspace(tab) else {
-                    result = "ERROR: \(workspaceCloseProtectedMessage())"
-                    return
-                }
-                tabManager.closeTab(tab)
+            switch tabManager.closeWorkspaceForAction(tabId: uuid) {
+            case .accepted:
                 result = "OK"
+            case .notFound:
+                break
+            case .protected:
+                result = "ERROR: \(workspaceCloseProtectedMessage())"
             }
         }
         return result
@@ -13291,15 +13196,11 @@ class TerminalController {
         v2MainSync {
             // Try as UUID first
             if let uuid = UUID(uuidString: arg) {
-                if let tab = tabManager.tabs.first(where: { $0.id == uuid }) {
-                    tabManager.selectTab(tab)
-                    success = true
-                }
+                success = tabManager.selectWorkspaceIdForAction(uuid)
             }
             // Try as index
             else if let index = Int(arg), index >= 0, index < tabManager.tabs.count {
-                tabManager.selectTab(at: index)
-                success = true
+                success = tabManager.selectWorkspaceIdForAction(tabManager.tabs[index].id)
             }
         }
         return success ? "OK" : "ERROR: Tab not found"
@@ -13370,9 +13271,8 @@ class TerminalController {
         text: String,
         refreshReason: String
     ) -> V1SendHopOutcome {
-        switch terminalPanel.sendInputResult(text) {
+        switch terminalPanel.sendSocketInputForAction(text, refreshReason: refreshReason) {
         case .sent:
-            terminalPanel.surface.forceRefresh(reason: refreshReason)
             return .sent
         case .queued:
             return .sent
@@ -13392,9 +13292,8 @@ class TerminalController {
         keyName: String,
         refreshReason: String
     ) -> V1SendHopOutcome {
-        switch terminalPanel.sendNamedKeyResult(keyName) {
+        switch terminalPanel.sendSocketNamedKeyForAction(keyName, refreshReason: refreshReason) {
         case .sent:
-            terminalPanel.surface.forceRefresh(reason: refreshReason)
             return .sent
         case .queued:
             return .sent
