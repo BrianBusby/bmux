@@ -77,22 +77,24 @@ final class WorkProvenanceRuntime {
         }
         observeWorkspaces(tabManager.tabs)
         startDirectoryObservationIfNeeded()
-        if !Self.isRunningUnderXCTest {
-            startExecutionTelemetryProjection(agentChatURL: BmuxAgentChatConfiguration.default.url)
-        }
     }
 
     /// Starts projecting eligible live execution telemetry facts into provenance.
-    func startExecutionTelemetryProjection(agentChatURL: URL) {
+    func startExecutionTelemetryProjection(
+        agentChatURL: URL,
+        sidecarStatusHandler: @escaping (ExecutionTelemetryProjectionSidecarStatus) -> Void = { _ in }
+    ) {
         guard let sessionLifecycleRecorder else { return }
         guard executionTelemetryProjectionService?.agentChatURL != agentChatURL else {
+            executionTelemetryProjectionService?.updateSidecarStatusHandler(sidecarStatusHandler)
             executionTelemetryProjectionService?.start()
             return
         }
         executionTelemetryProjectionService?.stop()
         let service = ExecutionTelemetryProvenanceProjectionService(
             agentChatURL: agentChatURL,
-            lifecycleRecorder: sessionLifecycleRecorder
+            lifecycleRecorder: sessionLifecycleRecorder,
+            sidecarStatusHandler: sidecarStatusHandler
         )
         executionTelemetryProjectionService = service
         service.start()

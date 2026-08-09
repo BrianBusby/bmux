@@ -78,7 +78,10 @@ extension AppDelegate {
         Task { @MainActor [weak self, weak tabManager] in
             defer { AgentChatActionInFlightGate.end() }
             guard let self else { return }
-            self.startAgentChatExecutionTelemetryProjection(agentChatURL: agentChat.url)
+            self.startAgentChatExecutionTelemetryProjection(
+                agentChat: agentChat,
+                globalConfigPath: globalConfigPath
+            )
             let isReachable = await self.ensureAgentChatServerAvailable(
                 agentChat,
                 globalConfigPath: globalConfigPath,
@@ -176,6 +179,116 @@ extension AppDelegate {
             body: body,
             cooldownKey: "agent-chat-server-unavailable.\(agentChat.url.absoluteString)",
             cooldownInterval: 30
+        )
+    }
+
+    func handleAgentChatProjectionSidecarStatus(
+        _ status: ExecutionTelemetryProjectionSidecarStatus,
+        agentChat: BmuxAgentChatConfiguration,
+        globalConfigPath: String?
+    ) {
+        switch status {
+        case .available(let agentChatURL):
+            guard agentChatURL == agentChat.url else { return }
+            agentChatProjectionSidecarRecoveryTask?.cancel()
+            agentChatProjectionSidecarRecoveryTask = nil
+            agentChatProjectionSidecarRecoveryCooldownUntil = nil
+            agentChatProjectionSidecarRecoveryURL = agentChatURL
+        case .unavailable(let agentChatURL, let errorDescription):
+            guard agentChatURL == agentChat.url else { return }
+            recoverUnavailableAgentChatProjectionSidecar(
+                agentChat: agentChat,
+                globalConfigPath: globalConfigPath,
+                errorDescription: errorDescription
+            )
+        }
+    }
+
+    private func recoverUnavailableAgentChatProjectionSidecar(
+        agentChat: BmuxAgentChatConfiguration,
+        globalConfigPath: String?,
+        errorDescription: String
+    ) {
+        if agentChatProjectionSidecarRecoveryURL != agentChat.url {
+            agentChatProjectionSidecarRecoveryTask?.cancel()
+            agentChatProjectionSidecarRecoveryTask = nil
+            agentChatProjectionSidecarRecoveryCooldownUntil = nil
+            agentChatProjectionSidecarRecoveryURL = agentChat.url
+        }
+        guard let startCommand = agentChat.startCommand else {
+            postAgentChatProjectionServerUnavailableNotification(
+                agentChat: agentChat,
+                startCommand: nil,
+                errorDescription: errorDescription
+            )
+            return
+        }
+        if let cooldownUntil = agentChatProjectionSidecarRecoveryCooldownUntil,
+           Date() < cooldownUntil {
+            return
+        }
+        guard agentChatProjectionSidecarRecoveryTask == nil else { return }
+        agentChatProjectionSidecarRecoveryCooldownUntil = Date().addingTimeInterval(60)
+        agentChatProjectionSidecarRecoveryTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer { self.agentChatProjectionSidecarRecoveryTask = nil }
+            let isReachable = await self.ensureAgentChatServerAvailable(
+                agentChat,
+                globalConfigPath: globalConfigPath,
+                preferredWindow: NSApp.keyWindow ?? NSApp.mainWindow
+            )
+            if isReachable {
+                self.agentChatProjectionSidecarRecoveryCooldownUntil = nil
+            } else {
+                self.postAgentChatProjectionServerUnavailableNotification(
+                    agentChat: agentChat,
+                    startCommand: startCommand,
+                    errorDescription: errorDescription
+                )
+            }
+        }
+    }
+
+    private func postAgentChatProjectionServerUnavailableNotification(
+        agentChat: BmuxAgentChatConfiguration,
+        startCommand: String?,
+        errorDescription: String
+    ) {
+#if DEBUG
+        bmuxDebugLog("agentChat.provenanceProjection.unavailable url=\(agentChat.url.absoluteString) error=\(errorDescription)")
+#endif
+        guard let workspace = tabManager?.selectedWorkspace
+            ?? mainWindowContexts.values.compactMap({ $0.tabManager.selectedWorkspace }).first else {
+            return
+        }
+        let body: String
+        if let startCommand {
+            let format = String(
+                localized: "notification.agentChat.provenanceServerUnavailable.bodyWithCommand",
+                defaultValue: "bmux couldn't reach %@ while syncing provenance, and the configured start command did not make it available: %@"
+            )
+            body = String(format: format, agentChat.url.absoluteString, startCommand)
+        } else {
+            let format = String(
+                localized: "notification.agentChat.provenanceServerUnavailable.bodyDefault",
+                defaultValue: "bmux couldn't reach %@ while syncing provenance. Start the server with bmux-chat or configure agentChat.startCommand in bmux.json."
+            )
+            body = String(format: format, agentChat.url.absoluteString)
+        }
+        TerminalNotificationStore.shared.addNotification(
+            tabId: workspace.id,
+            surfaceId: workspace.focusedPanelId,
+            title: String(
+                localized: "notification.agentChat.provenanceServerUnavailable.title",
+                defaultValue: "Agent Chat server isn't running"
+            ),
+            subtitle: String(
+                localized: "notification.agentChat.provenanceServerUnavailable.subtitle",
+                defaultValue: "Provenance sync"
+            ),
+            body: body,
+            cooldownKey: "agent-chat-provenance-server-unavailable.\(agentChat.url.absoluteString)",
+            cooldownInterval: 60
         )
     }
 
