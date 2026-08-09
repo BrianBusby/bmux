@@ -7915,10 +7915,9 @@ struct ContentView: View {
                 NSSound.beep()
                 return
             }
-            panelContext.workspace.setPanelPinned(
-                panelId: panelContext.panelId,
-                pinned: !panelContext.workspace.isPanelPinned(panelContext.panelId)
-            )
+            if panelContext.workspace.toggleSurfacePinnedForAction(surfaceId: panelContext.panelId) == nil {
+                NSSound.beep()
+            }
         }
         registry.register(commandId: "palette.toggleTabUnread") {
             guard let panelContext = focusedPanelContext else {

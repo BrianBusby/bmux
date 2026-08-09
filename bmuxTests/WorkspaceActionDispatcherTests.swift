@@ -336,6 +336,22 @@ import Testing
         #expect(ClosedItemHistoryStore.shared.menuSnapshot().items.map(\.title) == ["Surface Action Terminal"])
     }
 
+    @Test func workspaceSurfacePinActionRejectsMissingAndTogglesPinnedState() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+        let panel = try #require(workspace.newTerminalSurface(inPane: pane, focus: true))
+
+        #expect(!workspace.setSurfacePinnedForAction(surfaceId: UUID(), pinned: true))
+        #expect(!workspace.isPanelPinned(panel.id))
+
+        #expect(workspace.setSurfacePinnedForAction(surfaceId: panel.id, pinned: true))
+        #expect(workspace.isPanelPinned(panel.id))
+        #expect(workspace.toggleSurfacePinnedForAction(surfaceId: panel.id) == false)
+        #expect(!workspace.isPanelPinned(panel.id))
+        #expect(workspace.toggleSurfacePinnedForAction(surfaceId: UUID()) == nil)
+    }
+
     @Test func workspaceSelectionActionRejectsMissingWorkspaceWithoutChangingSelection() throws {
         let manager = TabManager()
         _ = manager.addWorkspace()

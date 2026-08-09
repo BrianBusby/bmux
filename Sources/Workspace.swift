@@ -4113,6 +4113,24 @@ final class Workspace: Identifiable, ObservableObject {
         )
     }
 
+    /// Applies a user-facing surface/tab pin mutation through one validation and
+    /// Bonsplit reconciliation path.
+    @discardableResult
+    func setSurfacePinnedForAction(surfaceId: UUID, pinned: Bool) -> Bool {
+        guard panels[surfaceId] != nil else { return false }
+        setPanelPinned(panelId: surfaceId, pinned: pinned)
+        return true
+    }
+
+    /// Toggles a user-facing surface/tab pin and returns the resulting state.
+    @discardableResult
+    func toggleSurfacePinnedForAction(surfaceId: UUID) -> Bool? {
+        guard panels[surfaceId] != nil else { return nil }
+        let pinned = !isPanelPinned(surfaceId)
+        setPanelPinned(panelId: surfaceId, pinned: pinned)
+        return pinned
+    }
+
     /// Shared user-input path for surface/tab title mutation. Entry points choose
     /// whether an empty draft clears or rejects, but normalization, mutation,
     /// provenance policy, bonsplit reconciliation, and remote tmux propagation
@@ -13504,8 +13522,7 @@ extension Workspace: BonsplitDelegate {
             _ = duplicateBrowserToRight(panelId: panelId)
         case .togglePin:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
-            let shouldPin = !pinnedPanelIds.contains(panelId)
-            setPanelPinned(panelId: panelId, pinned: shouldPin)
+            toggleSurfacePinnedForAction(surfaceId: panelId)
         case .markAsRead:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
             markPanelRead(panelId)

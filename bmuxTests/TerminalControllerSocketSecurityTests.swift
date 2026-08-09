@@ -1529,6 +1529,46 @@ final class TerminalControllerSocketSecurityTests {
         XCTAssertEqual(workspace.panelCustomTitleSources[panel.id], nil)
     }
 
+    @Test func testV2TabPinAndUnpinUseWorkspaceSurfacePinPolicy() throws {
+        defer {
+            TerminalController.shared.setActiveTabManager(nil)
+        }
+
+        let manager = TabManager()
+        let workspace = try XCTUnwrap(manager.selectedWorkspace)
+        let pane = try XCTUnwrap(workspace.bonsplitController.allPaneIds.first)
+        let panel = try XCTUnwrap(workspace.newTerminalSurface(inPane: pane, focus: true))
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let pinResponse = try handleV2Request(
+            method: "tab.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "surface_id": panel.id.uuidString,
+                "action": "pin"
+            ]
+        )
+
+        XCTAssertEqual(pinResponse["ok"] as? Bool, true, "Unexpected JSON-RPC response: \(pinResponse)")
+        let pinResult = try XCTUnwrap(pinResponse["result"] as? [String: Any], "Unexpected JSON-RPC response: \(pinResponse)")
+        XCTAssertEqual(pinResult["pinned"] as? Bool, true)
+        XCTAssertTrue(workspace.isPanelPinned(panel.id))
+
+        let unpinResponse = try handleV2Request(
+            method: "tab.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "surface_id": panel.id.uuidString,
+                "action": "unpin"
+            ]
+        )
+
+        XCTAssertEqual(unpinResponse["ok"] as? Bool, true, "Unexpected JSON-RPC response: \(unpinResponse)")
+        let unpinResult = try XCTUnwrap(unpinResponse["result"] as? [String: Any], "Unexpected JSON-RPC response: \(unpinResponse)")
+        XCTAssertEqual(unpinResult["pinned"] as? Bool, false)
+        XCTAssertFalse(workspace.isPanelPinned(panel.id))
+    }
+
     @Test func testBrowserOpenSplitDoesNotExternallyOpenDiffViewerWhenBrowserDisabled() throws {
         let defaults = UserDefaults.standard
         let previousBrowserDisabled = defaults.object(forKey: BrowserAvailabilitySettings.disabledKey)

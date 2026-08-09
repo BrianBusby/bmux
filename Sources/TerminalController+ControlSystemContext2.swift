@@ -119,11 +119,15 @@ extension TerminalController {
             return finish(.none)
 
         case "pin":
-            workspace.setPanelPinned(panelId: surfaceId, pinned: true)
+            guard workspace.setSurfacePinnedForAction(surfaceId: surfaceId, pinned: true) else {
+                return .tabNotFound(surfaceID: surfaceId)
+            }
             return finish(.pinned(true))
 
         case "unpin":
-            workspace.setPanelPinned(panelId: surfaceId, pinned: false)
+            guard workspace.setSurfacePinnedForAction(surfaceId: surfaceId, pinned: false) else {
+                return .tabNotFound(surfaceID: surfaceId)
+            }
             return finish(.pinned(false))
 
         case "mark_read":
