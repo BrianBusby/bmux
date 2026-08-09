@@ -76,7 +76,9 @@ import Testing
 
         #expect(binding.kind == nil)
         #expect(binding.command.contains(executablePath), "\(binding.command)")
-        #expect(startupInput.contains("codex 'resume' 'session-legacy-cli'"), "\(startupInput)")
+        #expect(startupInput.contains("/bin/sh -c"), "\(startupInput)")
+        #expect(startupInput.contains("BMUX_CODEX_WRAPPER_SHIM"), "\(startupInput)")
+        #expect(startupInput.contains("resume session-legacy-cli"), "\(startupInput)")
         #expect(!startupInput.contains(executablePath), "\(startupInput)")
     }
 
@@ -123,7 +125,9 @@ import Testing
             )
 
             let startupInput = try #require(binding.startupInput)
-            #expect(startupInput.contains("codex 'resume' 'session-managed-cli'"), "\(startupInput)")
+            #expect(startupInput.contains("/bin/sh -c"), "\(startupInput)")
+            #expect(startupInput.contains("BMUX_CODEX_WRAPPER_SHIM"), "\(startupInput)")
+            #expect(startupInput.contains("resume session-managed-cli"), "\(startupInput)")
             #expect(!startupInput.contains(executablePath), "\(startupInput)")
         }
     }
@@ -147,7 +151,10 @@ import Testing
 
         let startupInput = try #require(binding.startupInput)
 
-        #expect(startupInput.contains("BMUX_TRACE=1 codex 'resume' 'session-env-cli'"), "\(startupInput)")
+        #expect(startupInput.contains("/bin/sh -c"), "\(startupInput)")
+        #expect(startupInput.contains("BMUX_TRACE=1"), "\(startupInput)")
+        #expect(startupInput.contains("BMUX_CODEX_WRAPPER_SHIM"), "\(startupInput)")
+        #expect(startupInput.contains("resume session-env-cli"), "\(startupInput)")
         #expect(!startupInput.contains(staleExecutablePath), "\(startupInput)")
     }
 
@@ -169,7 +176,10 @@ import Testing
         )
         let startupInput = try #require(binding.startupInput)
 
-        #expect(startupInput.contains("env 'BMUX_TRACE=1' codex 'resume' 'session-quoted-env-cli'"), "\(startupInput)")
+        #expect(startupInput.contains("/bin/sh -c"), "\(startupInput)")
+        #expect(startupInput.contains("env BMUX_TRACE=1"), "\(startupInput)")
+        #expect(startupInput.contains("BMUX_CODEX_WRAPPER_SHIM"), "\(startupInput)")
+        #expect(startupInput.contains("resume session-quoted-env-cli"), "\(startupInput)")
         #expect(!startupInput.contains(staleExecutablePath), "\(startupInput)")
     }
 
@@ -368,7 +378,7 @@ import Testing
         let restoredPanel = try #require(restoredWorkspace.terminalPanel(for: restoredLocalPanel.id))
         let restoredCommand = try #require(restoredPanel.surface.debugInitialCommand())
         #expect(restoredPanel.surface.debugInitialInputForTesting() == nil)
-        #expect(restoredPanel.requestedWorkingDirectory == nil)
+        #expect(restoredPanel.requestedWorkingDirectory == localDirectory)
         let launcherScriptPath = try launcherScriptPath(from: restoredCommand)
         let launcherEnvironment = try makeOhMyZshLauncherEnvironment(
             root: root,

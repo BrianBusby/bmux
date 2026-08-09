@@ -112,14 +112,22 @@ struct CLISSHPTYResizeInputTests {
         slaveFD = -1
         process.executableURL = URL(fileURLWithPath: cliPath)
         process.arguments = [
+            "--socket", socketPath,
             "ssh-pty-attach",
             "--workspace", workspaceId,
             "--session-id", sessionId,
             "--attachment-id", surfaceId,
         ]
-        var environment = ProcessInfo.processInfo.environment
-        environment["BMUX_SOCKET_PATH"] = socketPath
-        environment["BMUX_CLI_SENTRY_DISABLED"] = "1"
+        let processEnvironment = ProcessInfo.processInfo.environment
+        var environment: [String: String] = [
+            "BMUX_SOCKET_PATH": socketPath,
+            "BMUX_CLI_SENTRY_DISABLED": "1",
+        ]
+        for key in ["HOME", "PATH", "TMPDIR", "LANG", "LC_ALL"] {
+            if let value = processEnvironment[key] {
+                environment[key] = value
+            }
+        }
         process.environment = environment
         process.standardInput = stdinHandle
         process.standardOutput = stdoutHandle
@@ -133,7 +141,10 @@ struct CLISSHPTYResizeInputTests {
                 process.terminate()
             }
         }
-        #expect(bridgeReady.wait(timeout: .now() + 5) == .success)
+        #expect(
+            bridgeReady.wait(timeout: .now() + 5) == .success,
+            "Mock socket lines before bridge ready: \(state.snapshot())"
+        )
 
         try setPTYSize(masterFD: masterFD, cols: 120, rows: 40)
         writeAll(fd: masterFD, data: Data("stty size\n".utf8))
@@ -172,7 +183,10 @@ struct CLISSHPTYResizeInputTests {
         #expect(bridgeHandled.wait(timeout: .now() + 5) == .success)
 
         let stderr = String(data: stderrPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        #expect(process.terminationStatus == 0, Comment(rawValue: stderr))
+        #expect(
+            process.terminationStatus == 0,
+            Comment(rawValue: "\(stderr)\nMock socket lines: \(state.snapshot())")
+        )
         let resizeParams = capturedResizeParams.snapshot()
         #expect(resizeParams?["attachment_token"] as? String == "attach-token")
         #expect(resizeParams?["cols"] as? Int == 120)
@@ -277,7 +291,7 @@ struct CLISSHPTYResizeInputTests {
 
     private func makeSocketPath(_ name: String) -> String {
         let shortID = UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(8)
-        return URL(fileURLWithPath: NSTemporaryDirectory())
+        return URL(fileURLWithPath: "/tmp", isDirectory: true)
             .appendingPathComponent("cli-\(name.prefix(6))-\(shortID).sock")
             .path
     }
@@ -392,6 +406,10 @@ struct CLISSHPTYResizeInputTests {
                     }
                 }
                 if clientFD >= 0 {
+                    let clientFlags = fcntl(clientFD, F_GETFL, 0)
+                    if clientFlags >= 0 {
+                        _ = fcntl(clientFD, F_SETFL, clientFlags & ~O_NONBLOCK)
+                    }
                     clientGroup.enter()
                     DispatchQueue.global(qos: .userInitiated).async {
                         defer {
@@ -437,6 +455,9 @@ struct CLISSHPTYResizeInputTests {
                 pending.append(buffer, count: count)
             } else if count == 0 {
                 return
+            } else if errno == EAGAIN || errno == EWOULDBLOCK {
+                usleep(10_000)
+                continue
             } else if errno != EINTR {
                 return
             }

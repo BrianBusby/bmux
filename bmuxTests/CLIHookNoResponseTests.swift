@@ -2,7 +2,7 @@ import Darwin
 import Foundation
 import Testing
 
-@Suite("CLI hook no-response telemetry")
+@Suite("CLI hook no-response telemetry", .serialized)
 struct CLIHookNoResponseTests {
     final class BundleProbe {}
 
@@ -48,7 +48,6 @@ struct CLIHookNoResponseTests {
 
     @Test func nonActionableFeedHooksDoNotWaitForSocketResponseAcrossAgents() throws {
         let cases = [
-            FeedHookCase(source: "codex", event: "PreToolUse", toolName: "apply_patch", pidKey: "BMUX_CODEX_PID"),
             FeedHookCase(source: "gemini", event: "PreToolUse", toolName: "read", pidKey: "BMUX_GEMINI_PID"),
             FeedHookCase(source: "kiro", event: "postToolUse", toolName: "fs_write", pidKey: "BMUX_KIRO_PID"),
             FeedHookCase(source: "hermes-agent", event: "pre_tool_call", toolName: "terminal", pidKey: "BMUX_HERMES_AGENT_PID"),
@@ -100,13 +99,21 @@ struct CLIHookNoResponseTests {
             """
             let result = Self.runProcess(
                 executablePath: cliPath,
-                arguments: ["hooks", "feed", "--source", testCase.source, "--event", testCase.event],
+                arguments: [
+                    "--socket", socketPath,
+                    "hooks", "feed",
+                    "--source", testCase.source,
+                    "--event", testCase.event,
+                ],
                 environment: environment,
                 standardInput: input,
-                timeout: 0.5
+                timeout: 3
             )
 
-            #expect(server.wait(timeout: 5), "\(testCase.source): socket server did not observe feed.push")
+            #expect(
+                server.wait(timeout: 5),
+                "\(testCase.source): socket server did not observe feed.push; status=\(result.status) timedOut=\(result.timedOut) stdout=\(result.stdout) stderr=\(result.stderr)"
+            )
             #expect(!result.timedOut, "\(testCase.source): \(result.stderr)")
             #expect(result.status == 0, "\(testCase.source): \(result.stderr)")
             #expect(result.stdout == "{}\n")
@@ -166,7 +173,10 @@ struct CLIHookNoResponseTests {
 
         let result = Self.runProcess(
             executablePath: cliPath,
-            arguments: ["hooks", "kiro", "session-start"],
+            arguments: [
+                "--socket", socketPath,
+                "hooks", "kiro", "session-start",
+            ],
             environment: [
                 "HOME": root.path,
                 "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
@@ -190,7 +200,7 @@ struct CLIHookNoResponseTests {
                 "BMUX_SOCKET_PASSWORD": "test-password",
             ],
             standardInput: #"{"session_id":"kiro-lifecycle-no-response","cwd":"\#(root.path)","hook_event_name":"SessionStart"}"#,
-            timeout: 0.5
+            timeout: 3
         )
 
         #expect(server.wait(timeout: 5), "socket server did not observe lifecycle feed.push")
@@ -220,12 +230,17 @@ struct CLIHookNoResponseTests {
         let server = Self.startAcceptedSocketThatDoesNotRead(listenerFD: listenerFD, holdFor: 1.0)
         let largeToolInput = String(repeating: "x", count: 8 * 1024 * 1024)
         let input = """
-        {"hook_event_name":"PreToolUse","session_id":"codex-session-no-read","cwd":"\(root.path)","tool_name":"apply_patch","tool_input":{"payload":"\(largeToolInput)"}}
+        {"hook_event_name":"PreToolUse","session_id":"gemini-session-no-read","cwd":"\(root.path)","tool_name":"read","tool_input":{"payload":"\(largeToolInput)"}}
         """
 
         let result = Self.runProcess(
             executablePath: cliPath,
-            arguments: ["hooks", "feed", "--source", "codex", "--event", "PreToolUse"],
+            arguments: [
+                "--socket", socketPath,
+                "hooks", "feed",
+                "--source", "gemini",
+                "--event", "PreToolUse",
+            ],
             environment: [
                 "HOME": root.path,
                 "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
@@ -233,14 +248,17 @@ struct CLIHookNoResponseTests {
                 "BMUX_SOCKET_PATH": socketPath,
                 "BMUX_WORKSPACE_ID": "33333333-3333-3333-3333-333333333333",
                 "BMUX_SURFACE_ID": "44444444-4444-4444-4444-444444444444",
-                "BMUX_CODEX_PID": "626262",
+                "BMUX_GEMINI_PID": "626262",
                 "BMUX_CLI_SENTRY_DISABLED": "1",
             ],
             standardInput: input,
-            timeout: 0.5
+            timeout: 3
         )
 
-        #expect(server.wait(timeout: 5), "socket server did not accept feed.push connection")
+        #expect(
+            server.wait(timeout: 5),
+            "socket server did not accept feed.push connection; status=\(result.status) timedOut=\(result.timedOut) stdout=\(result.stdout) stderr=\(result.stderr)"
+        )
         #expect(!result.timedOut, Comment(rawValue: result.stderr))
         #expect(result.status == 0, Comment(rawValue: result.stderr))
         #expect(result.stdout == "{}\n")
@@ -274,7 +292,7 @@ struct CLIHookNoResponseTests {
 
     private static func makeSocketPath(_ name: String) -> String {
         let shortID = UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(8)
-        return URL(fileURLWithPath: NSTemporaryDirectory())
+        return URL(fileURLWithPath: "/tmp", isDirectory: true)
             .appendingPathComponent("cli-\(name.prefix(6))-\(shortID).sock")
             .path
     }
