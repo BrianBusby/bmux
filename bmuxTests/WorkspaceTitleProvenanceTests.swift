@@ -238,6 +238,56 @@ import Testing
         #expect(workspace.panelCustomTitles[panelId] == "Carried Tab")
     }
 
+    @Test func surfaceTitleActionTrimsRenameAndRejectsEmptyInput() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panelId = try #require(workspace.newTerminalSurface(inPane: pane, focus: true)?.id)
+        let surfaceId = try #require(workspace.surfaceIdFromPanelId(panelId)?.uuid)
+
+        let applied = workspace.renameSurfaceTitleForAction(
+            surfaceId: surfaceId,
+            title: "  Build Pane  "
+        )
+
+        #expect(applied.applied)
+        #expect(workspace.panelCustomTitles[panelId] == "Build Pane")
+        #expect(workspace.panelCustomTitleSources[panelId] == .user)
+
+        let rejected = workspace.renameSurfaceTitleForAction(surfaceId: surfaceId, title: "   ")
+        #expect(!rejected.applied)
+        #expect(rejected.rejectionReason == .emptyTitle)
+        #expect(workspace.panelCustomTitles[panelId] == "Build Pane")
+    }
+
+    @Test func surfaceTitleEditCanTreatEmptyInputAsClear() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panelId = try #require(workspace.newTerminalSurface(inPane: pane, focus: true)?.id)
+
+        workspace.renameSurfaceTitleForAction(surfaceId: panelId, title: "Review")
+        let cleared = workspace.commitSurfaceTitleEditForAction(surfaceId: panelId, title: "   ")
+
+        #expect(cleared.applied)
+        #expect(workspace.panelCustomTitles[panelId] == nil)
+        #expect(workspace.panelCustomTitleSources[panelId] == nil)
+    }
+
+    @Test func surfaceTitleActionRejectsMissingSurfaceWithoutMutatingExistingTitles() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panelId = try #require(workspace.newTerminalSurface(inPane: pane, focus: true)?.id)
+        workspace.renameSurfaceTitleForAction(surfaceId: panelId, title: "Stable")
+
+        let rejected = workspace.commitSurfaceTitleEditForAction(surfaceId: UUID(), title: "Other")
+
+        #expect(!rejected.applied)
+        #expect(rejected.rejectionReason == .targetMissing)
+        #expect(workspace.panelCustomTitles[panelId] == "Stable")
+    }
+
     // MARK: - Snapshot round-trip
 
     @Test func workspaceSnapshotRoundTripPreservesProvenance() throws {

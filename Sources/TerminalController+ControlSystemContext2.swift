@@ -108,11 +108,14 @@ extension TerminalController {
                 return .invalidTitle
             }
             let trimmedTitle = titleRaw.trimmingCharacters(in: .whitespacesAndNewlines)
-            workspace.setPanelCustomTitle(panelId: surfaceId, title: trimmedTitle)
-            return finish(.title(trimmedTitle))
+            let titleOutcome = workspace.renameSurfaceTitleForAction(surfaceId: surfaceId, title: titleRaw)
+            guard titleOutcome.applied else {
+                return .invalidTitle
+            }
+            return finish(.title(workspace.panelCustomTitles[surfaceId] ?? trimmedTitle))
 
         case "clear_name":
-            workspace.setPanelCustomTitle(panelId: surfaceId, title: nil)
+            workspace.clearSurfaceTitleForAction(surfaceId: surfaceId)
             return finish(.none)
 
         case "pin":

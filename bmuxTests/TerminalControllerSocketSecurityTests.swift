@@ -1445,6 +1445,62 @@ final class TerminalControllerSocketSecurityTests {
         )
     }
 
+    @Test func testV2TabRenameAndClearUseUserTitlePolicy() throws {
+        defer {
+            TerminalController.shared.setActiveTabManager(nil)
+        }
+
+        let manager = TabManager()
+        let workspace = try XCTUnwrap(manager.selectedWorkspace)
+        let pane = try XCTUnwrap(workspace.bonsplitController.allPaneIds.first)
+        let panel = try XCTUnwrap(workspace.newTerminalSurface(inPane: pane, focus: true))
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let renameResponse = try handleV2Request(
+            method: "tab.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "surface_id": panel.id.uuidString,
+                "action": "rename",
+                "title": "  Socket Tab  "
+            ]
+        )
+
+        XCTAssertEqual(renameResponse["ok"] as? Bool, true, "Unexpected JSON-RPC response: \(renameResponse)")
+        let renameResult = try XCTUnwrap(renameResponse["result"] as? [String: Any], "Unexpected JSON-RPC response: \(renameResponse)")
+        XCTAssertEqual(renameResult["title"] as? String, "Socket Tab")
+        XCTAssertEqual(workspace.panelCustomTitles[panel.id], "Socket Tab")
+        XCTAssertEqual(workspace.panelCustomTitleSources[panel.id], .user)
+
+        let invalidRename = try handleV2Request(
+            method: "tab.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "surface_id": panel.id.uuidString,
+                "action": "rename",
+                "title": "   "
+            ]
+        )
+
+        XCTAssertEqual(invalidRename["ok"] as? Bool, false, "Unexpected JSON-RPC response: \(invalidRename)")
+        let invalidError = try XCTUnwrap(invalidRename["error"] as? [String: Any], "Unexpected JSON-RPC response: \(invalidRename)")
+        XCTAssertEqual(invalidError["code"] as? String, "invalid_params")
+        XCTAssertEqual(workspace.panelCustomTitles[panel.id], "Socket Tab")
+
+        let clearResponse = try handleV2Request(
+            method: "tab.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "surface_id": panel.id.uuidString,
+                "action": "clear_name"
+            ]
+        )
+
+        XCTAssertEqual(clearResponse["ok"] as? Bool, true, "Unexpected JSON-RPC response: \(clearResponse)")
+        XCTAssertEqual(workspace.panelCustomTitles[panel.id], nil)
+        XCTAssertEqual(workspace.panelCustomTitleSources[panel.id], nil)
+    }
+
     @Test func testBrowserOpenSplitDoesNotExternallyOpenDiffViewerWhenBrowserDisabled() throws {
         let defaults = UserDefaults.standard
         let previousBrowserDisabled = defaults.object(forKey: BrowserAvailabilitySettings.disabledKey)

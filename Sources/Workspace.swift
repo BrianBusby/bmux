@@ -4075,6 +4075,67 @@ final class Workspace: Identifiable, ObservableObject {
         applyPanelCustomTitle(panelId: panelId, title: title, source: source).applied
     }
 
+    /// Applies a user-facing surface/tab rename. Empty input is rejected instead
+    /// of being interpreted as a clear-name request.
+    @discardableResult
+    func renameSurfaceTitleForAction(
+        surfaceId: UUID,
+        title: String
+    ) -> CustomTitleApplyOutcome {
+        applySurfaceTitleEditForAction(
+            surfaceId: surfaceId,
+            title: title,
+            emptyTitleClears: false
+        )
+    }
+
+    /// Commits a user-facing surface/tab title draft. Empty input clears the
+    /// custom title, matching palette/modal rename behavior.
+    @discardableResult
+    func commitSurfaceTitleEditForAction(
+        surfaceId: UUID,
+        title: String
+    ) -> CustomTitleApplyOutcome {
+        applySurfaceTitleEditForAction(
+            surfaceId: surfaceId,
+            title: title,
+            emptyTitleClears: true
+        )
+    }
+
+    /// Clears a user-facing surface/tab title through the shared action path.
+    @discardableResult
+    func clearSurfaceTitleForAction(surfaceId: UUID) -> CustomTitleApplyOutcome {
+        applySurfaceTitleEditForAction(
+            surfaceId: surfaceId,
+            title: nil,
+            emptyTitleClears: true
+        )
+    }
+
+    /// Shared user-input path for surface/tab title mutation. Entry points choose
+    /// whether an empty draft clears or rejects, but normalization, mutation,
+    /// provenance policy, bonsplit reconciliation, and remote tmux propagation
+    /// stay here.
+    @discardableResult
+    func applySurfaceTitleEditForAction(
+        surfaceId: UUID,
+        title: String?,
+        emptyTitleClears: Bool
+    ) -> CustomTitleApplyOutcome {
+        guard let panelId = panelIdForSurfaceTitleAction(surfaceId) else {
+            return .rejected(.targetMissing)
+        }
+        let trimmed = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !trimmed.isEmpty else {
+            if emptyTitleClears {
+                return applyPanelCustomTitle(panelId: panelId, title: nil, source: .user)
+            }
+            return .rejected(.emptyTitle)
+        }
+        return applyPanelCustomTitle(panelId: panelId, title: trimmed, source: .user)
+    }
+
     @discardableResult
     func applyPanelCustomTitle(
         panelId: UUID,
@@ -4124,6 +4185,13 @@ final class Workspace: Identifiable, ObservableObject {
             )
         }
         return .success
+    }
+
+    private func panelIdForSurfaceTitleAction(_ surfaceId: UUID) -> UUID? {
+        if panels[surfaceId] != nil {
+            return surfaceId
+        }
+        return panelIdFromSurfaceId(TabID(uuid: surfaceId))
     }
 
     func isPanelPinned(_ panelId: UUID) -> Bool {
@@ -11465,7 +11533,7 @@ final class Workspace: Identifiable, ObservableObject {
         }
         let response = alert.runModal()
         guard response == .alertFirstButtonReturn else { return }
-        setPanelCustomTitle(panelId: panelId, title: input.stringValue)
+        commitSurfaceTitleEditForAction(surfaceId: panelId, title: input.stringValue)
     }
 
     private static let bonsplitMoveNewWorkspaceDestinationId = "new-workspace"
@@ -13393,7 +13461,7 @@ extension Workspace: BonsplitDelegate {
             promptRenamePanel(tabId: tab.id)
         case .clearName:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
-            setPanelCustomTitle(panelId: panelId, title: nil)
+            clearSurfaceTitleForAction(surfaceId: panelId)
         case .copyIdentifiers:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
             copyIdentifiersToPasteboard(surfaceId: panelId)

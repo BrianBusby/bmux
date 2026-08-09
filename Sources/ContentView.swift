@@ -7905,7 +7905,7 @@ struct ContentView: View {
                 NSSound.beep()
                 return
             }
-            panelContext.workspace.setPanelCustomTitle(panelId: panelContext.panelId, title: nil)
+            panelContext.workspace.clearSurfaceTitleForAction(surfaceId: panelContext.panelId)
         }
         registry.register(commandId: "palette.moveTabToNewWorkspace") {
             guard moveFocusedPanelToNewWorkspace() else { NSSound.beep(); return }
@@ -9394,7 +9394,11 @@ struct ContentView: View {
                 NSSound.beep()
                 return
             }
-            workspace.setPanelCustomTitle(panelId: panelId, title: normalizedName)
+            workspace.applySurfaceTitleEditForAction(
+                surfaceId: panelId,
+                title: normalizedName,
+                emptyTitleClears: true
+            )
         }
 
         dismissCommandPalette()
