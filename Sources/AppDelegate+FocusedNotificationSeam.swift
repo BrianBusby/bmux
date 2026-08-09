@@ -55,11 +55,19 @@ extension AppDelegate {
     }
 
     func storeMarkRead(forTabId tabId: UUID) {
-        notificationStore?.markRead(forTabId: tabId)
+        tabManagerFor(tabId: tabId)?.setWorkspaceUnreadForAction(
+            tabId: tabId,
+            unread: false,
+            notificationStore: notificationStore
+        )
     }
 
     func storeMarkUnread(forTabId tabId: UUID) {
-        notificationStore?.markUnread(forTabId: tabId)
+        tabManagerFor(tabId: tabId)?.setWorkspaceUnreadForAction(
+            tabId: tabId,
+            unread: true,
+            notificationStore: notificationStore
+        )
     }
 
     func storeClearManualUnread(forTabId tabId: UUID) {

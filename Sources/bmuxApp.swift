@@ -1291,12 +1291,20 @@ struct bmuxApp: App {
 
     private func markSelectedWorkspaceRead(in manager: TabManager) {
         guard let workspaceId = manager.selectedWorkspace?.id else { return }
-        notificationStore.markRead(forTabId: workspaceId)
+        manager.setWorkspaceUnreadForAction(
+            tabId: workspaceId,
+            unread: false,
+            notificationStore: notificationStore
+        )
     }
 
     private func markSelectedWorkspaceUnread(in manager: TabManager) {
         guard let workspaceId = manager.selectedWorkspace?.id else { return }
-        notificationStore.markUnread(forTabId: workspaceId)
+        manager.setWorkspaceUnreadForAction(
+            tabId: workspaceId,
+            unread: true,
+            notificationStore: notificationStore
+        )
     }
 
     @ViewBuilder

@@ -137,11 +137,19 @@ extension VerticalTabsSidebar {
             onTogglePinned: { [weak tabManager, groupId = group.id] in
                 tabManager?.toggleWorkspaceGroupPinned(groupId: groupId)
             },
-            onMarkRead: { [weak notificationStore, anchorId = group.anchorWorkspaceId] in
-                notificationStore?.markRead(forTabId: anchorId)
+            onMarkRead: { [weak tabManager, weak notificationStore, anchorId = group.anchorWorkspaceId] in
+                tabManager?.setWorkspaceUnreadForAction(
+                    tabId: anchorId,
+                    unread: false,
+                    notificationStore: notificationStore
+                )
             },
-            onMarkUnread: { [weak notificationStore, anchorId = group.anchorWorkspaceId] in
-                notificationStore?.markUnread(forTabId: anchorId)
+            onMarkUnread: { [weak tabManager, weak notificationStore, anchorId = group.anchorWorkspaceId] in
+                tabManager?.setWorkspaceUnreadForAction(
+                    tabId: anchorId,
+                    unread: true,
+                    notificationStore: notificationStore
+                )
             },
             onClearLatestNotifications: { [weak notificationStore, anchorId = group.anchorWorkspaceId] in
                 notificationStore?.clearLatestNotification(forTabId: anchorId)
@@ -152,22 +160,20 @@ extension VerticalTabsSidebar {
                 // and closures are excluded from ==, so a captured ID list could
                 // go stale across a same-count membership swap.
                 let ids = tabManager.tabs.compactMap { $0.groupId == groupId && $0.id != anchorId ? $0.id : nil }
-                // Only touch members that are actually unread, so we never run
-                // notification teardown on already-read workspaces.
-                for id in ids where notificationStore.canMarkWorkspaceRead(forTabIds: [id]) {
-                    notificationStore.markRead(forTabId: id)
-                }
+                tabManager.setWorkspacesUnreadForAction(
+                    workspaceIds: ids,
+                    unread: false,
+                    notificationStore: notificationStore
+                )
             },
             onMarkAllUnread: { [weak tabManager, weak notificationStore, groupId = group.id, anchorId = group.anchorWorkspaceId] in
                 guard let tabManager, let notificationStore else { return }
                 let ids = tabManager.tabs.compactMap { $0.groupId == groupId && $0.id != anchorId ? $0.id : nil }
-                // Only mark members that are not already unread. Calling
-                // markUnread on an already-unread member would set its manual
-                // unread flag, which a later notification dismissal cannot
-                // clear, leaving the workspace stuck unread.
-                for id in ids where notificationStore.canMarkWorkspaceUnread(forTabIds: [id]) {
-                    notificationStore.markUnread(forTabId: id)
-                }
+                tabManager.setWorkspacesUnreadForAction(
+                    workspaceIds: ids,
+                    unread: true,
+                    notificationStore: notificationStore
+                )
             },
             onUngroup: { [weak tabManager, groupId = group.id] in
                 tabManager?.ungroupWorkspaceGroup(groupId: groupId)

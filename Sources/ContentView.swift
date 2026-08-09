@@ -7886,14 +7886,22 @@ struct ContentView: View {
                 NSSound.beep()
                 return
             }
-            notificationStore.markRead(forTabId: workspaceId)
+            tabManager.setWorkspaceUnreadForAction(
+                tabId: workspaceId,
+                unread: false,
+                notificationStore: notificationStore
+            )
         }
         registry.register(commandId: "palette.markWorkspaceUnread") {
             guard let workspaceId = tabManager.selectedWorkspace?.id else {
                 NSSound.beep()
                 return
             }
-            notificationStore.markUnread(forTabId: workspaceId)
+            tabManager.setWorkspaceUnreadForAction(
+                tabId: workspaceId,
+                unread: true,
+                notificationStore: notificationStore
+            )
         }
         registerIdentifierCopyCommandHandlers(&registry)
 
@@ -14824,15 +14832,19 @@ struct TabItemView: View, Equatable {
     }
 
     private func markTabsRead(_ targetIds: [UUID]) {
-        for id in targetIds {
-            notificationStore.markRead(forTabId: id)
-        }
+        tabManager.setWorkspacesUnreadForAction(
+            workspaceIds: targetIds,
+            unread: false,
+            notificationStore: notificationStore
+        )
     }
 
     private func markTabsUnread(_ targetIds: [UUID]) {
-        for id in targetIds {
-            notificationStore.markUnread(forTabId: id)
-        }
+        tabManager.setWorkspacesUnreadForAction(
+            workspaceIds: targetIds,
+            unread: true,
+            notificationStore: notificationStore
+        )
     }
 
     private func clearLatestNotifications(_ targetIds: [UUID]) {

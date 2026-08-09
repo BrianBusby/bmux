@@ -78,6 +78,45 @@ struct WorkspaceActionSocketTests {
         #expect(workspace.customDescription == "Existing")
     }
 
+    @Test func workspaceActionMarkReadAndUnreadUseCanonicalWorkspaceUnreadPath() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let store = TerminalNotificationStore.shared
+        store.replaceNotificationsForTesting([])
+        let previousAppDelegate = AppDelegate.shared
+        let appDelegate = AppDelegate()
+        AppDelegate.shared = appDelegate
+        appDelegate.notificationStore = store
+        TerminalController.shared.setActiveTabManager(manager)
+        defer {
+            TerminalController.shared.setActiveTabManager(nil)
+            AppDelegate.shared = previousAppDelegate
+            store.replaceNotificationsForTesting([])
+        }
+
+        let unreadResponse = try handleV2Request(
+            method: "workspace.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "action": "mark_unread"
+            ]
+        )
+
+        #expect(unreadResponse["ok"] as? Bool == true)
+        #expect(store.workspaceIsUnread(forTabId: workspace.id))
+
+        let readResponse = try handleV2Request(
+            method: "workspace.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "action": "mark_read"
+            ]
+        )
+
+        #expect(readResponse["ok"] as? Bool == true)
+        #expect(!store.workspaceIsUnread(forTabId: workspace.id))
+    }
+
     private func handleV2Request(
         method: String,
         params: [String: Any]

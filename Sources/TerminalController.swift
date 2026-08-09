@@ -4575,11 +4575,19 @@ class TerminalController {
                 finish(["closed": closed])
 
             case "mark_read":
-                AppDelegate.shared?.notificationStore?.markRead(forTabId: workspace.id)
+                tabManager.setWorkspaceUnreadForAction(
+                    tabId: workspace.id,
+                    unread: false,
+                    notificationStore: AppDelegate.shared?.notificationStore
+                )
                 finish()
 
             case "mark_unread":
-                AppDelegate.shared?.notificationStore?.markUnread(forTabId: workspace.id)
+                tabManager.setWorkspaceUnreadForAction(
+                    tabId: workspace.id,
+                    unread: true,
+                    notificationStore: AppDelegate.shared?.notificationStore
+                )
                 finish()
 
             case "set_color":

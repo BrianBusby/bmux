@@ -128,6 +128,40 @@ import Testing
         #expect(manager.tabs.map(\.id) == [second.id, first.id, third.id])
     }
 
+    @Test func workspaceUnreadActionFiltersStaleDuplicateAndAlreadyMatchingTargets() throws {
+        let manager = TabManager()
+        let store = TerminalNotificationStore.shared
+        store.replaceNotificationsForTesting([])
+        defer { store.replaceNotificationsForTesting([]) }
+
+        let first = try #require(manager.tabs.first)
+        let second = manager.addWorkspace()
+        let third = manager.addWorkspace()
+        let missingWorkspaceId = UUID()
+        store.markUnread(forTabId: second.id)
+
+        let markedUnread = manager.setWorkspacesUnreadForAction(
+            workspaceIds: [second.id, missingWorkspaceId, third.id, third.id],
+            unread: true,
+            notificationStore: store
+        )
+
+        #expect(markedUnread == [third.id])
+        #expect(!store.workspaceIsUnread(forTabId: first.id))
+        #expect(store.workspaceIsUnread(forTabId: second.id))
+        #expect(store.workspaceIsUnread(forTabId: third.id))
+
+        let markedRead = manager.setWorkspacesUnreadForAction(
+            workspaceIds: [second.id, third.id, missingWorkspaceId, second.id],
+            unread: false,
+            notificationStore: store
+        )
+
+        #expect(markedRead == [second.id, third.id])
+        #expect(!store.workspaceIsUnread(forTabId: second.id))
+        #expect(!store.workspaceIsUnread(forTabId: third.id))
+    }
+
     @Test func workspaceActionMoveUsesWorkspaceReorderCoordinatorPath() throws {
         let manager = TabManager()
         _ = manager.addWorkspace()

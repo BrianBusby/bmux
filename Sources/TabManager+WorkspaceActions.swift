@@ -161,6 +161,48 @@ extension TabManager {
         return workspaceReordering.setPinned(workspaceIds: targetWorkspaceIds, pinned: pinned)
     }
 
+    @discardableResult
+    func setWorkspaceUnreadForAction(
+        tabId: UUID,
+        unread: Bool,
+        notificationStore: TerminalNotificationStore?
+    ) -> Bool {
+        !setWorkspacesUnreadForAction(
+            workspaceIds: [tabId],
+            unread: unread,
+            notificationStore: notificationStore
+        ).isEmpty
+    }
+
+    @discardableResult
+    func setWorkspacesUnreadForAction(
+        workspaceIds: [UUID],
+        unread: Bool,
+        notificationStore: TerminalNotificationStore?
+    ) -> [UUID] {
+        guard let notificationStore else { return [] }
+        let liveWorkspaceIds = Set(tabs.map(\.id))
+        var seen = Set<UUID>()
+        let targetWorkspaceIds = workspaceIds.filter { workspaceId in
+            guard liveWorkspaceIds.contains(workspaceId), !seen.contains(workspaceId) else {
+                return false
+            }
+            seen.insert(workspaceId)
+            return unread
+                ? notificationStore.canMarkWorkspaceUnread(forTabIds: [workspaceId])
+                : notificationStore.canMarkWorkspaceRead(forTabIds: [workspaceId])
+        }
+
+        for workspaceId in targetWorkspaceIds {
+            if unread {
+                notificationStore.markUnread(forTabId: workspaceId)
+            } else {
+                notificationStore.markRead(forTabId: workspaceId)
+            }
+        }
+        return targetWorkspaceIds
+    }
+
     func workspaceIdsForRelativeClose(
         _ scope: WorkspaceRelativeCloseScope,
         allowPinned: Bool
