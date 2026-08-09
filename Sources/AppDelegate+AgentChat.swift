@@ -24,7 +24,56 @@ nonisolated struct AgentChatActionInFlightGate {
     }
 }
 
+@MainActor
+private enum AgentChatProjectionSidecarRecoveryState {
+    static var task: Task<Void, Never>?
+    static var cooldownUntil: Date?
+    static var url: URL?
+}
+
 extension AppDelegate {
+
+    func startAgentChatExecutionTelemetryProjection(
+        agentChat: BmuxAgentChatConfiguration,
+        globalConfigPath: String? = nil
+    ) {
+        guard !Self.detectRunningUnderXCTest(ProcessInfo.processInfo.environment) else { return }
+        workProvenanceRuntime?.startExecutionTelemetryProjection(
+            agentChatURL: agentChat.url,
+            sidecarStatusHandler: { [weak self] status in
+                self?.handleAgentChatProjectionSidecarStatus(
+                    status,
+                    agentChat: agentChat,
+                    globalConfigPath: globalConfigPath
+                )
+            }
+        )
+    }
+
+    func startAgentChatExecutionTelemetryProjection(agentChatURL: URL) {
+        startAgentChatExecutionTelemetryProjection(
+            agentChat: BmuxAgentChatConfiguration(
+                url: agentChatURL,
+                startCommand: nil,
+                source: .defaults
+            )
+        )
+    }
+
+    func startAgentChatExecutionTelemetryProjectionFromLoadedConfigStore() {
+        guard let bmuxConfigStore = mainWindowContexts.values.compactMap(\.bmuxConfigStore).first else {
+            return
+        }
+        startAgentChatExecutionTelemetryProjection(
+            agentChat: bmuxConfigStore.agentChat,
+            globalConfigPath: bmuxConfigStore.globalConfigPath
+        )
+    }
+
+    func cancelAgentChatProjectionSidecarRecovery() {
+        AgentChatProjectionSidecarRecoveryState.task?.cancel()
+        AgentChatProjectionSidecarRecoveryState.task = nil
+    }
 
     @discardableResult
     func performConfiguredNewAgentChatAction(
@@ -190,10 +239,10 @@ extension AppDelegate {
         switch status {
         case .available(let agentChatURL):
             guard agentChatURL == agentChat.url else { return }
-            agentChatProjectionSidecarRecoveryTask?.cancel()
-            agentChatProjectionSidecarRecoveryTask = nil
-            agentChatProjectionSidecarRecoveryCooldownUntil = nil
-            agentChatProjectionSidecarRecoveryURL = agentChatURL
+            AgentChatProjectionSidecarRecoveryState.task?.cancel()
+            AgentChatProjectionSidecarRecoveryState.task = nil
+            AgentChatProjectionSidecarRecoveryState.cooldownUntil = nil
+            AgentChatProjectionSidecarRecoveryState.url = agentChatURL
         case .unavailable(let agentChatURL, let errorDescription):
             guard agentChatURL == agentChat.url else { return }
             recoverUnavailableAgentChatProjectionSidecar(
@@ -209,11 +258,11 @@ extension AppDelegate {
         globalConfigPath: String?,
         errorDescription: String
     ) {
-        if agentChatProjectionSidecarRecoveryURL != agentChat.url {
-            agentChatProjectionSidecarRecoveryTask?.cancel()
-            agentChatProjectionSidecarRecoveryTask = nil
-            agentChatProjectionSidecarRecoveryCooldownUntil = nil
-            agentChatProjectionSidecarRecoveryURL = agentChat.url
+        if AgentChatProjectionSidecarRecoveryState.url != agentChat.url {
+            AgentChatProjectionSidecarRecoveryState.task?.cancel()
+            AgentChatProjectionSidecarRecoveryState.task = nil
+            AgentChatProjectionSidecarRecoveryState.cooldownUntil = nil
+            AgentChatProjectionSidecarRecoveryState.url = agentChat.url
         }
         guard let startCommand = agentChat.startCommand else {
             postAgentChatProjectionServerUnavailableNotification(
@@ -223,22 +272,22 @@ extension AppDelegate {
             )
             return
         }
-        if let cooldownUntil = agentChatProjectionSidecarRecoveryCooldownUntil,
+        if let cooldownUntil = AgentChatProjectionSidecarRecoveryState.cooldownUntil,
            Date() < cooldownUntil {
             return
         }
-        guard agentChatProjectionSidecarRecoveryTask == nil else { return }
-        agentChatProjectionSidecarRecoveryCooldownUntil = Date().addingTimeInterval(60)
-        agentChatProjectionSidecarRecoveryTask = Task { @MainActor [weak self] in
+        guard AgentChatProjectionSidecarRecoveryState.task == nil else { return }
+        AgentChatProjectionSidecarRecoveryState.cooldownUntil = Date().addingTimeInterval(60)
+        AgentChatProjectionSidecarRecoveryState.task = Task { @MainActor [weak self] in
             guard let self else { return }
-            defer { self.agentChatProjectionSidecarRecoveryTask = nil }
+            defer { AgentChatProjectionSidecarRecoveryState.task = nil }
             let isReachable = await self.ensureAgentChatServerAvailable(
                 agentChat,
                 globalConfigPath: globalConfigPath,
                 preferredWindow: NSApp.keyWindow ?? NSApp.mainWindow
             )
             if isReachable {
-                self.agentChatProjectionSidecarRecoveryCooldownUntil = nil
+                AgentChatProjectionSidecarRecoveryState.cooldownUntil = nil
             } else {
                 self.postAgentChatProjectionServerUnavailableNotification(
                     agentChat: agentChat,
