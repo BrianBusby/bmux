@@ -258,13 +258,20 @@ extension TerminalController {
         var result: V2CallResult = .err(code: "internal_error", message: "Failed to close workspace", data: nil)
         v2MainSync {
             let windowID = v2ResolveWindowId(tabManager: tabManager)
-            guard let workspace = tabManager.tabs.first(where: { $0.id == workspaceID }) else {
+            switch tabManager.closeWorkspaceForAction(tabId: workspaceID) {
+            case .accepted:
+                result = .ok([
+                    "closed": true,
+                    "workspace_id": workspaceID.uuidString,
+                    "workspace_ref": v2Ref(kind: .workspace, uuid: workspaceID),
+                    "window_id": v2OrNull(windowID?.uuidString),
+                    "window_ref": v2Ref(kind: .window, uuid: windowID),
+                ])
+            case .notFound:
                 result = .err(code: "not_found", message: "Workspace not found", data: [
                     "workspace_id": workspaceID.uuidString
                 ])
-                return
-            }
-            guard tabManager.tabs.count > 1, tabManager.canCloseWorkspace(workspace) else {
+            case .protected:
                 result = .err(
                     code: "protected",
                     message: String(
@@ -278,16 +285,7 @@ extension TerminalController {
                         "window_ref": v2Ref(kind: .window, uuid: windowID),
                     ]
                 )
-                return
             }
-            tabManager.closeWorkspace(workspace)
-            result = .ok([
-                "closed": true,
-                "workspace_id": workspaceID.uuidString,
-                "workspace_ref": v2Ref(kind: .workspace, uuid: workspaceID),
-                "window_id": v2OrNull(windowID?.uuidString),
-                "window_ref": v2Ref(kind: .window, uuid: windowID),
-            ])
         }
         return result
     }

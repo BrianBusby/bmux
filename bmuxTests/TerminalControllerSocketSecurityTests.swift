@@ -1391,6 +1391,34 @@ final class TerminalControllerSocketSecurityTests {
         XCTAssertTrue(manager.tabs.contains(where: { $0.id == pinnedWorkspace.id }))
     }
 
+    @Test func testWorkspaceCloseRejectsLastWorkspace() async throws {
+        let socketPath = makeSocketPath("close-last")
+        let manager = TabManager()
+        let workspace = try XCTUnwrap(manager.selectedWorkspace)
+
+        TerminalController.shared.start(
+            tabManager: manager,
+            socketPath: socketPath,
+            accessMode: .allowAll
+        )
+        try waitForSocket(at: socketPath)
+
+        let response = try await sendV2RequestAsync(
+            method: "workspace.close",
+            params: ["workspace_id": workspace.id.uuidString],
+            to: socketPath
+        )
+
+        XCTAssertEqual(response["ok"] as? Bool, false, "Unexpected JSON-RPC response: \(response)")
+        let error = try XCTUnwrap(response["error"] as? [String: Any], "Unexpected JSON-RPC response: \(response)")
+        XCTAssertEqual(error["code"] as? String, "protected")
+
+        let data = try XCTUnwrap(error["data"] as? [String: Any], "Expected error data payload")
+        XCTAssertEqual(data["workspace_id"] as? String, workspace.id.uuidString)
+        XCTAssertEqual(data["pinned"] as? Bool, false)
+        XCTAssertEqual(manager.tabs.map(\.id), [workspace.id])
+    }
+
     @Test func testV2SurfaceCloseCommandsRecordRecentlyClosedHistory() throws {
         ClosedItemHistoryStore.shared.removeAll()
         let defaults = UserDefaults.standard

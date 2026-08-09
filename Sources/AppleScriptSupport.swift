@@ -473,9 +473,15 @@ final class ScriptTab: NSObject {
             return nil
         }
 
-        if state.tabManager.tabs.count > 1 {
-            state.tabManager.closeWorkspace(workspace)
+        switch state.tabManager.closeWorkspaceForAction(tabId: workspace.id, allowPinned: true) {
+        case .accepted:
             return nil
+        case .notFound:
+            command.scriptErrorNumber = errAEEventFailed
+            command.scriptErrorString = AppleScriptStrings.workspaceUnavailable
+            return nil
+        case .protected:
+            break
         }
 
         guard let window = state.window else {
@@ -630,9 +636,15 @@ final class ScriptTerminal: NSObject {
         }
 
         if workspace.panels.count == 1 {
-            if state.tabManager.tabs.count > 1 {
-                state.tabManager.closeWorkspace(workspace)
+            switch state.tabManager.closeWorkspaceForAction(tabId: workspace.id, allowPinned: true) {
+            case .accepted:
                 return nil
+            case .notFound:
+                command.scriptErrorNumber = errAEEventFailed
+                command.scriptErrorString = AppleScriptStrings.workspaceUnavailable
+                return nil
+            case .protected:
+                break
             }
 
             guard let window = state.window else {

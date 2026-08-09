@@ -200,6 +200,9 @@ extension TabManager {
         guard let workspace = tabs.first(where: { $0.id == tabId }) else {
             return .notFound
         }
+        guard tabs.count > 1 else {
+            return .protected
+        }
         guard canCloseWorkspace(workspace, allowPinned: allowPinned) else {
             return .protected
         }

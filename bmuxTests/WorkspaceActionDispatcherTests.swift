@@ -311,6 +311,9 @@ import Testing
 
         #expect(manager.closeWorkspaceForAction(tabId: second.id, allowPinned: true) == .accepted)
         #expect(manager.tabs.map(\.id) == [first.id])
+
+        #expect(manager.closeWorkspaceForAction(tabId: first.id, allowPinned: true) == .protected)
+        #expect(manager.tabs.map(\.id) == [first.id])
     }
 
     @Test func workspaceSurfaceCloseActionRecordsHistoryAndProtectsLastSurface() throws {

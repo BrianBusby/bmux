@@ -111,4 +111,46 @@ struct WorkspaceGroupMoveToMenuStateTests {
         #expect(manager.workspaceGroups.contains { $0.id == groupId })
         #expect(manager.tabs.filter { $0.groupId == groupId }.count == originalIds.count + 1)
     }
+
+    @Test func mobileWorkspaceCloseUsesWorkspaceCloseActionPolicy() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+
+        let previousManager = TerminalController.shared.activeTabManagerForCallerNotification()
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(previousManager) }
+
+        let lastWorkspaceResult = TerminalController.shared.v2MobileWorkspaceClose(params: [
+            "workspace_id": workspace.id.uuidString,
+        ])
+
+        guard case .err(let lastWorkspaceCode, _, _) = lastWorkspaceResult else {
+            return #expect(Bool(false), "mobile close should reject the last workspace")
+        }
+        #expect(lastWorkspaceCode == "protected")
+        #expect(manager.tabs.map(\.id) == [workspace.id])
+
+        let second = manager.addWorkspace(autoWelcomeIfNeeded: false)
+        #expect(manager.setWorkspacePinnedForAction(tabId: second.id, pinned: true))
+
+        let pinnedResult = TerminalController.shared.v2MobileWorkspaceClose(params: [
+            "workspace_id": second.id.uuidString,
+        ])
+
+        guard case .err(let pinnedCode, _, _) = pinnedResult else {
+            return #expect(Bool(false), "mobile close should reject pinned workspaces")
+        }
+        #expect(pinnedCode == "protected")
+        #expect(manager.tabs.map(\.id) == [second.id, workspace.id])
+
+        #expect(manager.setWorkspacePinnedForAction(tabId: second.id, pinned: false))
+        let acceptedResult = TerminalController.shared.v2MobileWorkspaceClose(params: [
+            "workspace_id": second.id.uuidString,
+        ])
+
+        guard case .ok = acceptedResult else {
+            return #expect(Bool(false), "mobile close should accept an unpinned non-last workspace")
+        }
+        #expect(manager.tabs.map(\.id) == [workspace.id])
+    }
 }
