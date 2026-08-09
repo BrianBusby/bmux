@@ -67,11 +67,11 @@ extension AppDelegate {
     }
 
     func markPanelRead(_ panel: FocusedPanel) {
-        workspaceFor(tabId: panel.tabId)?.markPanelRead(panel.panelId)
+        workspaceFor(tabId: panel.tabId)?.setSurfaceUnreadForAction(surfaceId: panel.panelId, unread: false)
     }
 
     func markPanelUnread(_ panel: FocusedPanel) {
-        workspaceFor(tabId: panel.tabId)?.markPanelUnread(panel.panelId)
+        workspaceFor(tabId: panel.tabId)?.setSurfaceUnreadForAction(surfaceId: panel.panelId, unread: true)
     }
 
     func markLatestNotificationAsOldestUnread(forTabId tabId: UUID, surfaceId: UUID?) -> UUID? {
