@@ -145,6 +145,40 @@ import Testing
         #expect(manager.tabs.map(\.id) == expectedOrder)
     }
 
+    @Test func workspaceActionReorderPlansRelativeTargetsAndDryRun() throws {
+        let manager = TabManager()
+        _ = manager.addWorkspace()
+        _ = manager.addWorkspace()
+        let originalOrder = manager.tabs.map(\.id)
+        #expect(originalOrder.count == 3)
+
+        let dryRunResult = manager.reorderWorkspaceForAction(
+            tabId: originalOrder[0],
+            target: .after(originalOrder[2]),
+            dryRun: true
+        )
+        guard case .resolved(let dryRunPlan) = dryRunResult else {
+            Issue.record("Expected dry-run reorder plan")
+            return
+        }
+        #expect(dryRunPlan.workspaceId == originalOrder[0])
+        #expect(dryRunPlan.fromIndex == 0)
+        #expect(dryRunPlan.toIndex == 2)
+        #expect(manager.tabs.map(\.id) == originalOrder)
+
+        let appliedResult = manager.reorderWorkspaceForAction(
+            tabId: originalOrder[0],
+            target: .after(originalOrder[2])
+        )
+        guard case .resolved(let appliedPlan) = appliedResult else {
+            Issue.record("Expected applied reorder plan")
+            return
+        }
+        #expect(appliedPlan == dryRunPlan)
+        #expect(manager.tabs.map(\.id) == [originalOrder[1], originalOrder[2], originalOrder[0]])
+        #expect(manager.reorderWorkspaceForAction(tabId: UUID(), target: .end) == .notFound)
+    }
+
     @Test func workspaceActionDescriptionNormalizesThroughWorkspaceModel() throws {
         let manager = TabManager()
         let workspace = try #require(manager.tabs.first)

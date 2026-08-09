@@ -22,14 +22,55 @@ enum WorkspaceCloseActionResult: Equatable {
     case protected
 }
 
+enum WorkspaceReorderActionTarget: Equatable {
+    case index(Int)
+    case before(UUID)
+    case after(UUID)
+    case end
+}
+
+enum WorkspaceReorderActionResult: Equatable {
+    case resolved(WorkspaceReorderPlanItem)
+    case notFound
+}
+
 extension TabManager {
+    func reorderWorkspaceForAction(
+        tabId: UUID,
+        target: WorkspaceReorderActionTarget,
+        dryRun: Bool = false
+    ) -> WorkspaceReorderActionResult {
+        let plan: WorkspaceReorderPlanItem?
+        switch target {
+        case .index(let index):
+            plan = workspaceReorderPlan(tabId: tabId, toIndex: index)
+        case .before(let beforeId):
+            plan = workspaceReorderPlan(tabId: tabId, before: beforeId, after: nil)
+        case .after(let afterId):
+            plan = workspaceReorderPlan(tabId: tabId, before: nil, after: afterId)
+        case .end:
+            plan = workspaceReorderPlan(tabId: tabId, toIndex: tabs.endIndex)
+        }
+        guard let plan else {
+            return .notFound
+        }
+        if !dryRun {
+            _ = reorderWorkspace(tabId: tabId, toIndex: plan.toIndex)
+        }
+        return .resolved(plan)
+    }
+
     func moveWorkspaceForAction(tabId: UUID, by delta: Int) -> Int? {
         guard let currentIndex = tabs.firstIndex(where: { $0.id == tabId }) else {
             return nil
         }
         let targetIndex = min(max(currentIndex + delta, 0), tabs.count - 1)
-        _ = reorderWorkspace(tabId: tabId, toIndex: targetIndex)
-        return tabs.firstIndex(where: { $0.id == tabId })
+        switch reorderWorkspaceForAction(tabId: tabId, target: .index(targetIndex)) {
+        case .resolved(let plan):
+            return plan.toIndex
+        case .notFound:
+            return nil
+        }
     }
 
     func moveWorkspaceToTopForAction(tabId: UUID) -> Int? {

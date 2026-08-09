@@ -206,21 +206,24 @@ extension TerminalController: ControlWorkspaceContext {
             // not-found to match the legacy outcome.
             return .notFound
         }
-        let plan: WorkspaceReorderPlanItem?
+        let target: WorkspaceReorderActionTarget
         if let toIndex {
-            plan = tabManager.workspaceReorderPlan(tabId: workspaceID, toIndex: toIndex)
+            target = .index(toIndex)
+        } else if let beforeWorkspaceID {
+            target = .before(beforeWorkspaceID)
+        } else if let afterWorkspaceID {
+            target = .after(afterWorkspaceID)
         } else {
-            plan = tabManager.workspaceReorderPlan(
-                tabId: workspaceID,
-                before: beforeWorkspaceID,
-                after: afterWorkspaceID
-            )
-        }
-        guard let plan else {
             return .notFound
         }
-        if !dryRun {
-            _ = tabManager.reorderWorkspace(tabId: workspaceID, toIndex: plan.toIndex)
+
+        let result = tabManager.reorderWorkspaceForAction(
+            tabId: workspaceID,
+            target: target,
+            dryRun: dryRun
+        )
+        guard case .resolved(let plan) = result else {
+            return .notFound
         }
         let windowId = AppDelegate.shared?.windowId(for: tabManager)
         return .resolved(
