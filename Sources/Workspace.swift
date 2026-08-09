@@ -4131,6 +4131,38 @@ final class Workspace: Identifiable, ObservableObject {
         return pinned
     }
 
+    /// Returns whether a user-facing surface/tab has workspace-local or
+    /// notification-owned unread state.
+    func surfaceIsUnreadForAction(surfaceId: UUID) -> Bool? {
+        guard panels[surfaceId] != nil else { return nil }
+        return manualUnreadPanelIds.contains(surfaceId) ||
+            restoredUnreadPanelIds.contains(surfaceId) ||
+            hasUnreadNotification(panelId: surfaceId)
+    }
+
+    /// Applies a user-facing surface/tab unread mutation through one validation
+    /// and notification reconciliation path.
+    @discardableResult
+    func setSurfaceUnreadForAction(surfaceId: UUID, unread: Bool) -> Bool {
+        guard panels[surfaceId] != nil else { return false }
+        if unread {
+            markPanelUnread(surfaceId)
+        } else {
+            markPanelRead(surfaceId)
+        }
+        return true
+    }
+
+    /// Toggles a user-facing surface/tab unread marker and returns the resulting
+    /// unread state.
+    @discardableResult
+    func toggleSurfaceUnreadForAction(surfaceId: UUID) -> Bool? {
+        guard let isUnread = surfaceIsUnreadForAction(surfaceId: surfaceId) else { return nil }
+        let unread = !isUnread
+        setSurfaceUnreadForAction(surfaceId: surfaceId, unread: unread)
+        return unread
+    }
+
     /// Shared user-input path for surface/tab title mutation. Entry points choose
     /// whether an empty draft clears or rejects, but normalization, mutation,
     /// provenance policy, bonsplit reconciliation, and remote tmux propagation
@@ -13525,10 +13557,10 @@ extension Workspace: BonsplitDelegate {
             toggleSurfacePinnedForAction(surfaceId: panelId)
         case .markAsRead:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
-            markPanelRead(panelId)
+            setSurfaceUnreadForAction(surfaceId: panelId, unread: false)
         case .markAsUnread:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
-            markPanelUnread(panelId)
+            setSurfaceUnreadForAction(surfaceId: panelId, unread: true)
         case .toggleZoom:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
             toggleSplitZoom(panelId: panelId)

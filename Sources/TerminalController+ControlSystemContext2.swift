@@ -131,11 +131,15 @@ extension TerminalController {
             return finish(.pinned(false))
 
         case "mark_read":
-            workspace.markPanelRead(surfaceId)
+            guard workspace.setSurfaceUnreadForAction(surfaceId: surfaceId, unread: false) else {
+                return .tabNotFound(surfaceID: surfaceId)
+            }
             return finish(.none)
 
         case "mark_unread", "mark_as_unread":
-            workspace.markPanelUnread(surfaceId)
+            guard workspace.setSurfaceUnreadForAction(surfaceId: surfaceId, unread: true) else {
+                return .tabNotFound(surfaceID: surfaceId)
+            }
             return finish(.none)
 
         case "toggle_full_width_tab", "toggle_full_width", "toggle_full_width_tab_mode":

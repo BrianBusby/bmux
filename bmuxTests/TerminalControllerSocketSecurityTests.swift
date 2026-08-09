@@ -1569,6 +1569,42 @@ final class TerminalControllerSocketSecurityTests {
         XCTAssertFalse(workspace.isPanelPinned(panel.id))
     }
 
+    @Test func testV2TabReadAndUnreadUseWorkspaceSurfaceUnreadPolicy() throws {
+        defer {
+            TerminalController.shared.setActiveTabManager(nil)
+        }
+
+        let manager = TabManager()
+        let workspace = try XCTUnwrap(manager.selectedWorkspace)
+        let pane = try XCTUnwrap(workspace.bonsplitController.allPaneIds.first)
+        let panel = try XCTUnwrap(workspace.newTerminalSurface(inPane: pane, focus: true))
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let unreadResponse = try handleV2Request(
+            method: "tab.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "surface_id": panel.id.uuidString,
+                "action": "mark_unread"
+            ]
+        )
+
+        XCTAssertEqual(unreadResponse["ok"] as? Bool, true, "Unexpected JSON-RPC response: \(unreadResponse)")
+        XCTAssertTrue(workspace.manualUnreadPanelIds.contains(panel.id))
+
+        let readResponse = try handleV2Request(
+            method: "tab.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "surface_id": panel.id.uuidString,
+                "action": "mark_read"
+            ]
+        )
+
+        XCTAssertEqual(readResponse["ok"] as? Bool, true, "Unexpected JSON-RPC response: \(readResponse)")
+        XCTAssertFalse(workspace.manualUnreadPanelIds.contains(panel.id))
+    }
+
     @Test func testBrowserOpenSplitDoesNotExternallyOpenDiffViewerWhenBrowserDisabled() throws {
         let defaults = UserDefaults.standard
         let previousBrowserDisabled = defaults.object(forKey: BrowserAvailabilitySettings.disabledKey)
