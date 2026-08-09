@@ -67,8 +67,8 @@ public protocol ControlWorkspaceContext: AnyObject {
         workspaceID: UUID
     ) -> ControlWorkspaceRoutedResolution
 
-    /// Closes a workspace for `workspace.close`, honoring the pinned-protection
-    /// guard.
+    /// Closes a workspace for `workspace.close`, honoring the protected-close
+    /// policy such as pinned or last-workspace guards.
     ///
     /// - Parameters:
     ///   - routing: The routing selectors used for TabManager resolution.
