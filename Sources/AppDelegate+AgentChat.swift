@@ -24,7 +24,56 @@ nonisolated struct AgentChatActionInFlightGate {
     }
 }
 
+@MainActor
+private enum AgentChatProjectionSidecarRecoveryState {
+    static var task: Task<Void, Never>?
+    static var cooldownUntil: Date?
+    static var url: URL?
+}
+
 extension AppDelegate {
+
+    func startAgentChatExecutionTelemetryProjection(
+        agentChat: BmuxAgentChatConfiguration,
+        globalConfigPath: String? = nil
+    ) {
+        guard !Self.detectRunningUnderXCTest(ProcessInfo.processInfo.environment) else { return }
+        workProvenanceRuntime?.startExecutionTelemetryProjection(
+            agentChatURL: agentChat.url,
+            sidecarStatusHandler: { [weak self] status in
+                self?.handleAgentChatProjectionSidecarStatus(
+                    status,
+                    agentChat: agentChat,
+                    globalConfigPath: globalConfigPath
+                )
+            }
+        )
+    }
+
+    func startAgentChatExecutionTelemetryProjection(agentChatURL: URL) {
+        startAgentChatExecutionTelemetryProjection(
+            agentChat: BmuxAgentChatConfiguration(
+                url: agentChatURL,
+                startCommand: nil,
+                source: .defaults
+            )
+        )
+    }
+
+    func startAgentChatExecutionTelemetryProjectionFromLoadedConfigStore() {
+        guard let bmuxConfigStore = mainWindowContexts.values.compactMap(\.bmuxConfigStore).first else {
+            return
+        }
+        startAgentChatExecutionTelemetryProjection(
+            agentChat: bmuxConfigStore.agentChat,
+            globalConfigPath: bmuxConfigStore.globalConfigPath
+        )
+    }
+
+    func cancelAgentChatProjectionSidecarRecovery() {
+        AgentChatProjectionSidecarRecoveryState.task?.cancel()
+        AgentChatProjectionSidecarRecoveryState.task = nil
+    }
 
     @discardableResult
     func performConfiguredNewAgentChatAction(
@@ -78,7 +127,10 @@ extension AppDelegate {
         Task { @MainActor [weak self, weak tabManager] in
             defer { AgentChatActionInFlightGate.end() }
             guard let self else { return }
-            self.startAgentChatExecutionTelemetryProjection(agentChatURL: agentChat.url)
+            self.startAgentChatExecutionTelemetryProjection(
+                agentChat: agentChat,
+                globalConfigPath: globalConfigPath
+            )
             let isReachable = await self.ensureAgentChatServerAvailable(
                 agentChat,
                 globalConfigPath: globalConfigPath,
@@ -176,6 +228,116 @@ extension AppDelegate {
             body: body,
             cooldownKey: "agent-chat-server-unavailable.\(agentChat.url.absoluteString)",
             cooldownInterval: 30
+        )
+    }
+
+    func handleAgentChatProjectionSidecarStatus(
+        _ status: ExecutionTelemetryProjectionSidecarStatus,
+        agentChat: BmuxAgentChatConfiguration,
+        globalConfigPath: String?
+    ) {
+        switch status {
+        case .available(let agentChatURL):
+            guard agentChatURL == agentChat.url else { return }
+            AgentChatProjectionSidecarRecoveryState.task?.cancel()
+            AgentChatProjectionSidecarRecoveryState.task = nil
+            AgentChatProjectionSidecarRecoveryState.cooldownUntil = nil
+            AgentChatProjectionSidecarRecoveryState.url = agentChatURL
+        case .unavailable(let agentChatURL, let errorDescription):
+            guard agentChatURL == agentChat.url else { return }
+            recoverUnavailableAgentChatProjectionSidecar(
+                agentChat: agentChat,
+                globalConfigPath: globalConfigPath,
+                errorDescription: errorDescription
+            )
+        }
+    }
+
+    private func recoverUnavailableAgentChatProjectionSidecar(
+        agentChat: BmuxAgentChatConfiguration,
+        globalConfigPath: String?,
+        errorDescription: String
+    ) {
+        if AgentChatProjectionSidecarRecoveryState.url != agentChat.url {
+            AgentChatProjectionSidecarRecoveryState.task?.cancel()
+            AgentChatProjectionSidecarRecoveryState.task = nil
+            AgentChatProjectionSidecarRecoveryState.cooldownUntil = nil
+            AgentChatProjectionSidecarRecoveryState.url = agentChat.url
+        }
+        guard let startCommand = agentChat.startCommand else {
+            postAgentChatProjectionServerUnavailableNotification(
+                agentChat: agentChat,
+                startCommand: nil,
+                errorDescription: errorDescription
+            )
+            return
+        }
+        if let cooldownUntil = AgentChatProjectionSidecarRecoveryState.cooldownUntil,
+           Date() < cooldownUntil {
+            return
+        }
+        guard AgentChatProjectionSidecarRecoveryState.task == nil else { return }
+        AgentChatProjectionSidecarRecoveryState.cooldownUntil = Date().addingTimeInterval(60)
+        AgentChatProjectionSidecarRecoveryState.task = Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer { AgentChatProjectionSidecarRecoveryState.task = nil }
+            let isReachable = await self.ensureAgentChatServerAvailable(
+                agentChat,
+                globalConfigPath: globalConfigPath,
+                preferredWindow: NSApp.keyWindow ?? NSApp.mainWindow
+            )
+            if isReachable {
+                AgentChatProjectionSidecarRecoveryState.cooldownUntil = nil
+            } else {
+                self.postAgentChatProjectionServerUnavailableNotification(
+                    agentChat: agentChat,
+                    startCommand: startCommand,
+                    errorDescription: errorDescription
+                )
+            }
+        }
+    }
+
+    private func postAgentChatProjectionServerUnavailableNotification(
+        agentChat: BmuxAgentChatConfiguration,
+        startCommand: String?,
+        errorDescription: String
+    ) {
+#if DEBUG
+        bmuxDebugLog("agentChat.provenanceProjection.unavailable url=\(agentChat.url.absoluteString) error=\(errorDescription)")
+#endif
+        guard let workspace = tabManager?.selectedWorkspace
+            ?? mainWindowContexts.values.compactMap({ $0.tabManager.selectedWorkspace }).first else {
+            return
+        }
+        let body: String
+        if let startCommand {
+            let format = String(
+                localized: "notification.agentChat.provenanceServerUnavailable.bodyWithCommand",
+                defaultValue: "bmux couldn't reach %@ while syncing provenance, and the configured start command did not make it available: %@"
+            )
+            body = String(format: format, agentChat.url.absoluteString, startCommand)
+        } else {
+            let format = String(
+                localized: "notification.agentChat.provenanceServerUnavailable.bodyDefault",
+                defaultValue: "bmux couldn't reach %@ while syncing provenance. Start the server with bmux-chat or configure agentChat.startCommand in bmux.json."
+            )
+            body = String(format: format, agentChat.url.absoluteString)
+        }
+        TerminalNotificationStore.shared.addNotification(
+            tabId: workspace.id,
+            surfaceId: workspace.focusedPanelId,
+            title: String(
+                localized: "notification.agentChat.provenanceServerUnavailable.title",
+                defaultValue: "Agent Chat server isn't running"
+            ),
+            subtitle: String(
+                localized: "notification.agentChat.provenanceServerUnavailable.subtitle",
+                defaultValue: "Provenance sync"
+            ),
+            body: body,
+            cooldownKey: "agent-chat-provenance-server-unavailable.\(agentChat.url.absoluteString)",
+            cooldownInterval: 60
         )
     }
 

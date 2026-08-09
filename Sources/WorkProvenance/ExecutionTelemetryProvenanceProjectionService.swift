@@ -1,6 +1,12 @@
 import BmuxAgentChat
 import Foundation
 
+/// Reachability state observed while polling the Agent Chat sidecar for execution telemetry.
+enum ExecutionTelemetryProjectionSidecarStatus: Equatable {
+    case available(agentChatURL: URL)
+    case unavailable(agentChatURL: URL, errorDescription: String)
+}
+
 /// Projects selected live execution telemetry facts into durable provenance lifecycle evidence.
 @MainActor
 final class ExecutionTelemetryProvenanceProjectionService {
@@ -10,6 +16,7 @@ final class ExecutionTelemetryProvenanceProjectionService {
     private let liveProjectionClient: ExecutionTelemetryLiveProjectionClient
     private let lifecycleRecorder: WorkProvenanceSessionLifecycleRecorder
     private let pollInterval: Duration
+    private var sidecarStatusHandler: (ExecutionTelemetryProjectionSidecarStatus) -> Void
     private var projectionTask: Task<Void, Never>?
     private var recordedLifecycleKeys: Set<String> = []
 
@@ -19,13 +26,15 @@ final class ExecutionTelemetryProvenanceProjectionService {
         lifecycleRecorder: WorkProvenanceSessionLifecycleRecorder,
         sessionListClient: AgentChatSessionListClient? = nil,
         liveProjectionClient: ExecutionTelemetryLiveProjectionClient? = nil,
-        pollInterval: Duration = .seconds(5)
+        pollInterval: Duration = .seconds(5),
+        sidecarStatusHandler: @escaping (ExecutionTelemetryProjectionSidecarStatus) -> Void = { _ in }
     ) {
         self.agentChatURL = agentChatURL
         self.lifecycleRecorder = lifecycleRecorder
         self.sessionListClient = sessionListClient ?? AgentChatSessionListClient(baseURL: agentChatURL)
         self.liveProjectionClient = liveProjectionClient ?? ExecutionTelemetryLiveProjectionClient(baseURL: agentChatURL)
         self.pollInterval = pollInterval
+        self.sidecarStatusHandler = sidecarStatusHandler
     }
 
     deinit {
@@ -54,14 +63,28 @@ final class ExecutionTelemetryProvenanceProjectionService {
         projectionTask = nil
     }
 
+    /// Updates the callback used for the current sidecar URL.
+    func updateSidecarStatusHandler(
+        _ sidecarStatusHandler: @escaping (ExecutionTelemetryProjectionSidecarStatus) -> Void
+    ) {
+        self.sidecarStatusHandler = sidecarStatusHandler
+    }
+
     /// Projects currently known sidecar sessions once.
     func projectKnownSessions() async {
         let summaries: [AgentChatSessionSummary]
         do {
             summaries = try await sessionListClient.list()
         } catch {
+            sidecarStatusHandler(
+                .unavailable(
+                    agentChatURL: agentChatURL,
+                    errorDescription: String(describing: error)
+                )
+            )
             return
         }
+        sidecarStatusHandler(.available(agentChatURL: agentChatURL))
         for summary in summaries {
             await project(summary: summary)
         }

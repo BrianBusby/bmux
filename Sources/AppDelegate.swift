@@ -521,7 +521,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     private var bmuxThemePreviewReloadGeneration = 0
     private var bmuxThemePreviewReloadWorkItem: DispatchWorkItem?
 
-    private static func detectRunningUnderXCTest(_ env: [String: String]) -> Bool {
+    static func detectRunningUnderXCTest(_ env: [String: String]) -> Bool {
         if env["XCTestConfigurationFilePath"] != nil { return true }
         if env["XCTestBundlePath"] != nil { return true }
         if env["XCTestSessionIdentifier"] != nil { return true }
@@ -680,7 +680,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     weak var tabManager: TabManager?
     weak var notificationStore: TerminalNotificationStore?
     weak var sidebarState: SidebarState?
-    private var workProvenanceRuntime: WorkProvenanceRuntime?
+    var workProvenanceRuntime: WorkProvenanceRuntime?
 
     /// Notification jump/open navigation, extracted into `BmuxNotifications`.
     /// `AppDelegate` is the composition root: it conforms to every seam (see
@@ -2046,6 +2046,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         BrowserProfileStore.shared.flushPendingSaves()
         ghosttyCrashBreadcrumbTask?.cancel()
         ghosttyCrashBreadcrumbTask = nil
+        cancelAgentChatProjectionSidecarRecovery()
         notificationStore?.clearAll()
         GhosttyCrashBreadcrumb.markCleanExit()
         unregisterDisplayReconfigurationCallbackIfNeeded()
@@ -2066,10 +2067,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         isTerminatingApp = true
         _ = saveSessionSnapshotIncludingProcessDetectedIndexes(includeScrollback: true, removeWhenEmpty: false)
         ClosedItemHistoryStore.shared.flushPendingSaves()
-    }
-
-    func startAgentChatExecutionTelemetryProjection(agentChatURL: URL) {
-        workProvenanceRuntime?.startExecutionTelemetryProjection(agentChatURL: agentChatURL)
     }
 
     func configure(
@@ -9200,6 +9197,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let bmuxConfigStore = BmuxConfigStore()
         bmuxConfigStore.wireDirectoryTracking(tabManager: tabManager)
         bmuxConfigStore.loadAll()
+        startAgentChatExecutionTelemetryProjection(agentChat: bmuxConfigStore.agentChat, globalConfigPath: bmuxConfigStore.globalConfigPath)
 
         let fileExplorerState = FileExplorerState()
 #if DEBUG
@@ -13275,6 +13273,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     func reloadBmuxConfigStores(source: String) {
         configStoreReloadCoordinator.reload(source: source)
+        startAgentChatExecutionTelemetryProjectionFromLoadedConfigStore()
     }
 
     var reloadableConfigStores: [any BmuxConfigStoreReloading] {

@@ -229617,6 +229617,74 @@
         }
       }
     },
+    "notification.agentChat.provenanceServerUnavailable.bodyDefault": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux couldn't reach %@ while syncing provenance. Start the server with bmux-chat or configure agentChat.startCommand in bmux.json."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance の同期中に bmux は %@ に接続できませんでした。bmux-chat でサーバーを起動するか、bmux.json で agentChat.startCommand を設定してください。"
+          }
+        }
+      }
+    },
+    "notification.agentChat.provenanceServerUnavailable.bodyWithCommand": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux couldn't reach %@ while syncing provenance, and the configured start command did not make it available: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "provenance の同期中に bmux は %@ に接続できず、設定済みの起動コマンドでも利用可能にできませんでした: %@"
+          }
+        }
+      }
+    },
+    "notification.agentChat.provenanceServerUnavailable.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provenance sync"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provenance 同期"
+          }
+        }
+      }
+    },
+    "notification.agentChat.provenanceServerUnavailable.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent Chat server isn't running"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent Chat サーバーが起動していません"
+          }
+        }
+      }
+    },
     "notification.agentChat.serverUnavailable.bodyDefault": {
       "extractionState": "manual",
       "localizations": {
