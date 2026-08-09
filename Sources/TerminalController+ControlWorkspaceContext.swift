@@ -157,13 +157,14 @@ extension TerminalController: ControlWorkspaceContext {
             return .tabManagerUnavailable
         }
         let windowId = AppDelegate.shared?.windowId(for: tabManager)
+        let wasPinned = tabManager.tabs.first(where: { $0.id == workspaceID })?.isPinned ?? false
         switch tabManager.closeWorkspaceForAction(tabId: workspaceID) {
         case .accepted:
             return .resolved(windowID: windowId)
         case .notFound:
             return .notFound
         case .protected:
-            return .protected(windowID: windowId)
+            return .protected(windowID: windowId, pinned: wasPinned)
         }
     }
 

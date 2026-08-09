@@ -11,6 +11,7 @@ extension TerminalControllerSocketSecurityTests {
     @Test func v1CommandsDriveExistingState() throws {
         let previousAppDelegate = AppDelegate.shared
         let appDelegate = AppDelegate()
+        AppDelegate.shared = appDelegate
         defer { AppDelegate.shared = previousAppDelegate }
 
         let windowId = UUID()
@@ -80,11 +81,14 @@ extension TerminalControllerSocketSecurityTests {
 
             let previousAppDelegate = AppDelegate.shared
             let appDelegate = AppDelegate()
+            AppDelegate.shared = appDelegate
             defer { AppDelegate.shared = previousAppDelegate }
 
             let windowId = UUID()
             let tabManager = TabManager()
             let fileExplorerState = FileExplorerState()
+            fileExplorerState.setVisible(false)
+            fileExplorerState.mode = .files
 
             appDelegate.fileExplorerState = fileExplorerState
             appDelegate.registerMainWindowContextForTesting(
@@ -93,6 +97,9 @@ extension TerminalControllerSocketSecurityTests {
                 fileExplorerState: fileExplorerState
             )
             defer { appDelegate.unregisterMainWindowContextForTesting(windowId: windowId) }
+
+            fileExplorerState.setVisible(false)
+            fileExplorerState.mode = .files
 
             #expect(TerminalController.shared.handleSocketLine("right_sidebar set \(name) --no-focus").hasPrefix("ERROR:"))
             #expect(!fileExplorerState.isVisible)

@@ -7,10 +7,11 @@ public enum ControlWorkspaceCloseResolution: Sendable, Equatable {
     /// No TabManager resolved (legacy `unavailable` / "TabManager not
     /// available").
     case tabManagerUnavailable
-    /// The workspace exists but is pinned and cannot be closed (legacy
-    /// `protected`). Carries the owning window id (may be absent); the localized
-    /// message is supplied via ``ControlWorkspaceStrings``.
-    case protected(windowID: UUID?)
+    /// The workspace exists but cannot be closed (legacy `protected`). Carries
+    /// the owning window id (may be absent) and whether pinning caused the
+    /// protection; the localized message is supplied via
+    /// ``ControlWorkspaceStrings``.
+    case protected(windowID: UUID?, pinned: Bool)
     /// The workspace was not in the resolved TabManager (legacy `not_found` /
     /// "Workspace not found"). The legacy failure payload carries only the
     /// workspace identity.

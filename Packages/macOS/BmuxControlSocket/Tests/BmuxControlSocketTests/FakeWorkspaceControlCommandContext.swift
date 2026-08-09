@@ -6,12 +6,17 @@ import BmuxSettings
 final class FakeWorkspaceControlCommandContext: ControlCommandContext {
     var listResolution: ControlWorkspaceListResolution = .tabManagerUnavailable
     var currentResolution: ControlWorkspaceCurrentResolution = .tabManagerUnavailable
+    var closeResolution: ControlWorkspaceCloseResolution = .tabManagerUnavailable
     var renameResolution: ControlWorkspaceRoutedResolution = .tabManagerUnavailable
     var addWorkspaceToGroupResolution: ControlWorkspaceGroupAddResolution = .tabManagerUnavailable
     var renameCall: (
         routing: ControlRoutingSelectors,
         workspaceID: UUID,
         title: String
+    )?
+    var closeCall: (
+        routing: ControlRoutingSelectors,
+        workspaceID: UUID
     )?
     var addWorkspaceToGroupCall: (
         groupID: UUID,
@@ -53,6 +58,14 @@ final class FakeWorkspaceControlCommandContext: ControlCommandContext {
 
     func controlWorkspaceCurrent(routing: ControlRoutingSelectors) -> ControlWorkspaceCurrentResolution {
         currentResolution
+    }
+
+    func controlCloseWorkspace(
+        routing: ControlRoutingSelectors,
+        workspaceID: UUID
+    ) -> ControlWorkspaceCloseResolution {
+        closeCall = (routing, workspaceID)
+        return closeResolution
     }
 
     func controlRenameWorkspace(

@@ -297,14 +297,14 @@ extension ControlCommandCoordinator {
         switch resolution {
         case .tabManagerUnavailable:
             return .err(code: "unavailable", message: "TabManager not available", data: nil)
-        case .protected(let windowID):
+        case .protected(let windowID, let pinned):
             let message = context?.controlWorkspaceStrings().closeProtected ?? ""
             return .err(code: "protected", message: message, data: .object([
                 "window_id": orNull(windowID?.uuidString),
                 "window_ref": ref(.window, windowID),
                 "workspace_id": .string(workspaceID.uuidString),
                 "workspace_ref": ref(.workspace, workspaceID),
-                "pinned": .bool(true),
+                "pinned": .bool(pinned),
             ]))
         case .notFound:
             return .err(code: "not_found", message: "Workspace not found", data: .object([
