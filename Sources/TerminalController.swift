@@ -14569,11 +14569,12 @@ class TerminalController {
         #if DEBUG
         let sendStart = ProcessInfo.processInfo.systemUptime
         #endif
-        let sendResult = terminalPanel.surface.sendInputResult(text)
+        let sendResult = terminalPanel.sendSocketInputForAction(
+            text,
+            refreshReason: "mobileHost.terminalInput"
+        )
         switch sendResult {
-        case .sent:
-            terminalPanel.surface.forceRefresh(reason: "mobileHost.terminalInput")
-        case .queued:
+        case .sent, .queued:
             break
         case .inputQueueFull:
             return .err(code: "input_queue_full", message: Self.terminalInputQueueFullMessage, data: ["surface_id": surfaceId.uuidString])
@@ -14628,11 +14629,12 @@ class TerminalController {
             return .err(code: "invalid_params", message: "Image payload was empty or exceeded the size limit", data: nil)
         }
 
-        let sendResult = terminalPanel.surface.sendInputResult(escapedPath)
+        let sendResult = terminalPanel.sendSocketInputForAction(
+            escapedPath,
+            refreshReason: "mobileHost.terminalPasteImage"
+        )
         switch sendResult {
-        case .sent:
-            terminalPanel.surface.forceRefresh(reason: "mobileHost.terminalPasteImage")
-        case .queued:
+        case .sent, .queued:
             break
         case .inputQueueFull:
             return .err(code: "input_queue_full", message: Self.terminalInputQueueFullMessage, data: ["surface_id": surfaceId.uuidString])
