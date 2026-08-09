@@ -7,7 +7,7 @@ import Testing
 @testable import bmux
 #endif
 
-@Suite("Workspace group move-to menu state")
+@Suite("Workspace group move-to menu state", .serialized)
 @MainActor
 struct WorkspaceGroupMoveToMenuStateTests {
     @Test func isDisabledWhenThereAreNoGroups() {
@@ -67,7 +67,7 @@ struct WorkspaceGroupMoveToMenuStateTests {
             originalIds[2],
         ]))
         let group = try #require(manager.workspaceGroups.first { $0.id == groupId })
-        let memberID = originalIds[2]
+        let memberIDs = [originalIds[1], originalIds[2]]
 
         let previousManager = TerminalController.shared.activeTabManagerForCallerNotification()
         TerminalController.shared.setActiveTabManager(manager)
@@ -84,9 +84,8 @@ struct WorkspaceGroupMoveToMenuStateTests {
         #expect(manager.workspaceGroups.contains { $0.id == groupId })
         #expect(manager.tabs.filter { $0.groupId == groupId }.map(\.id) == [
             group.anchorWorkspaceId,
-            memberID,
-        ])
-        #expect(manager.tabs.suffix(2).map(\.id) == [group.anchorWorkspaceId, memberID])
+        ] + memberIDs)
+        #expect(manager.tabs.suffix(3).map(\.id) == [group.anchorWorkspaceId] + memberIDs)
     }
 
     @Test func mobileWorkspaceGroupDeleteRejectsGroupContainingEveryWorkspace() throws {
