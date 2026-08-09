@@ -3123,12 +3123,12 @@ final class Workspace: Identifiable, ObservableObject {
         bonsplitController.onTabZoomToggleRequest = { [weak self] tabId, _ in
             guard let self,
                   let panelId = self.panelIdFromSurfaceId(tabId) else { return false }
-            return self.toggleSplitZoom(panelId: panelId)
+            return self.toggleSurfaceSplitZoomForAction(surfaceId: panelId)
         }
         bonsplitController.onTabFullWidthToggleRequest = { [weak self] tabId, _ in
             guard let self,
                   let panelId = self.panelIdFromSurfaceId(tabId) else { return false }
-            return self.toggleFullWidthTabMode(panelId: panelId)
+            return self.toggleSurfaceFullWidthTabForAction(surfaceId: panelId) != nil
         }
 
         // Set ourselves as delegate
@@ -4161,6 +4161,24 @@ final class Workspace: Identifiable, ObservableObject {
         let unread = !isUnread
         setSurfaceUnreadForAction(surfaceId: surfaceId, unread: unread)
         return unread
+    }
+
+    /// Toggles user-facing surface/tab split zoom through one validation path.
+    @discardableResult
+    func toggleSurfaceSplitZoomForAction(surfaceId: UUID) -> Bool {
+        guard panels[surfaceId] != nil else { return false }
+        return toggleSplitZoom(panelId: surfaceId)
+    }
+
+    /// Toggles user-facing full-width tab mode and returns the resulting mode.
+    @discardableResult
+    func toggleSurfaceFullWidthTabForAction(surfaceId: UUID) -> Bool? {
+        guard panels[surfaceId] != nil,
+              let paneId = paneId(forPanelId: surfaceId),
+              toggleFullWidthTabMode(panelId: surfaceId) else {
+            return nil
+        }
+        return bonsplitController.isFullWidthTabMode(inPane: paneId)
     }
 
     /// Shared user-input path for surface/tab title mutation. Entry points choose
@@ -13563,10 +13581,10 @@ extension Workspace: BonsplitDelegate {
             setSurfaceUnreadForAction(surfaceId: panelId, unread: true)
         case .toggleZoom:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
-            toggleSplitZoom(panelId: panelId)
+            toggleSurfaceSplitZoomForAction(surfaceId: panelId)
         case .toggleFullWidthTab:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
-            toggleFullWidthTabMode(panelId: panelId)
+            toggleSurfaceFullWidthTabForAction(surfaceId: panelId)
         case .forkConversation,
              .forkConversationRight,
              .forkConversationLeft,

@@ -1605,6 +1605,46 @@ final class TerminalControllerSocketSecurityTests {
         XCTAssertFalse(workspace.manualUnreadPanelIds.contains(panel.id))
     }
 
+    @Test func testV2TabFullWidthToggleUsesWorkspaceSurfaceLayoutPolicy() throws {
+        defer {
+            TerminalController.shared.setActiveTabManager(nil)
+        }
+
+        let manager = TabManager()
+        let workspace = try XCTUnwrap(manager.selectedWorkspace)
+        let pane = try XCTUnwrap(workspace.bonsplitController.allPaneIds.first)
+        let panel = try XCTUnwrap(workspace.newTerminalSurface(inPane: pane, focus: true))
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let enabledResponse = try handleV2Request(
+            method: "tab.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "surface_id": panel.id.uuidString,
+                "action": "toggle_full_width_tab"
+            ]
+        )
+
+        XCTAssertEqual(enabledResponse["ok"] as? Bool, true, "Unexpected JSON-RPC response: \(enabledResponse)")
+        let enabledResult = try XCTUnwrap(enabledResponse["result"] as? [String: Any], "Unexpected JSON-RPC response: \(enabledResponse)")
+        XCTAssertEqual(enabledResult["full_width_tab_mode"] as? Bool, true)
+        XCTAssertTrue(workspace.bonsplitController.isFullWidthTabMode(inPane: pane))
+
+        let disabledResponse = try handleV2Request(
+            method: "tab.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "surface_id": panel.id.uuidString,
+                "action": "toggle_full_width_tab"
+            ]
+        )
+
+        XCTAssertEqual(disabledResponse["ok"] as? Bool, true, "Unexpected JSON-RPC response: \(disabledResponse)")
+        let disabledResult = try XCTUnwrap(disabledResponse["result"] as? [String: Any], "Unexpected JSON-RPC response: \(disabledResponse)")
+        XCTAssertEqual(disabledResult["full_width_tab_mode"] as? Bool, false)
+        XCTAssertFalse(workspace.bonsplitController.isFullWidthTabMode(inPane: pane))
+    }
+
     @Test func testBrowserOpenSplitDoesNotExternallyOpenDiffViewerWhenBrowserDisabled() throws {
         let defaults = UserDefaults.standard
         let previousBrowserDisabled = defaults.object(forKey: BrowserAvailabilitySettings.disabledKey)

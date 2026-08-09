@@ -143,13 +143,14 @@ extension TerminalController {
             return finish(.none)
 
         case "toggle_full_width_tab", "toggle_full_width", "toggle_full_width_tab_mode":
-            guard let paneId = workspace.paneId(forPanelId: surfaceId) else {
+            guard workspace.panels[surfaceId] != nil,
+                  workspace.paneId(forPanelId: surfaceId) != nil else {
                 return .tabPaneNotFound
             }
-            guard workspace.toggleFullWidthTabMode(panelId: surfaceId) else {
+            guard let isFullWidthTabMode = workspace.toggleSurfaceFullWidthTabForAction(surfaceId: surfaceId) else {
                 return .fullWidthTabToggleFailed
             }
-            return finish(.fullWidthTabMode(workspace.bonsplitController.isFullWidthTabMode(inPane: paneId)))
+            return finish(.fullWidthTabMode(isFullWidthTabMode))
 
         case "move_to_new_workspace", "detach_to_workspace", "detach_to_new_workspace":
             // The move-to-new-workspace family stays app-side (it re-homes

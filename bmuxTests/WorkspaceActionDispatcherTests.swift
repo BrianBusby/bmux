@@ -369,6 +369,29 @@ import Testing
         #expect(workspace.toggleSurfaceUnreadForAction(surfaceId: UUID()) == nil)
     }
 
+    @Test func workspaceSurfaceLayoutActionsRejectMissingAndToggleState() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let firstPanelId = try #require(workspace.focusedPanelId)
+        let panel = try #require(workspace.newTerminalSplit(from: firstPanelId, orientation: .horizontal))
+        let pane = try #require(workspace.paneId(forPanelId: panel.id))
+
+        #expect(!workspace.toggleSurfaceSplitZoomForAction(surfaceId: UUID()))
+        #expect(workspace.toggleSurfaceFullWidthTabForAction(surfaceId: UUID()) == nil)
+
+        #expect(!workspace.bonsplitController.isSplitZoomed)
+        #expect(workspace.toggleSurfaceSplitZoomForAction(surfaceId: panel.id))
+        #expect(workspace.bonsplitController.isSplitZoomed)
+        #expect(workspace.toggleSurfaceSplitZoomForAction(surfaceId: panel.id))
+        #expect(!workspace.bonsplitController.isSplitZoomed)
+
+        #expect(!workspace.bonsplitController.isFullWidthTabMode(inPane: pane))
+        #expect(workspace.toggleSurfaceFullWidthTabForAction(surfaceId: panel.id) == true)
+        #expect(workspace.bonsplitController.isFullWidthTabMode(inPane: pane))
+        #expect(workspace.toggleSurfaceFullWidthTabForAction(surfaceId: panel.id) == false)
+        #expect(!workspace.bonsplitController.isFullWidthTabMode(inPane: pane))
+    }
+
     @Test func workspaceSelectionActionRejectsMissingWorkspaceWithoutChangingSelection() throws {
         let manager = TabManager()
         _ = manager.addWorkspace()

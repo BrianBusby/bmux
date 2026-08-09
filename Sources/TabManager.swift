@@ -3854,7 +3854,7 @@ class TabManager: ObservableObject {
     /// Toggle zoom on a panel.
     func toggleSplitZoom(tabId: UUID, surfaceId: UUID) -> Bool {
         guard let tab = tabs.first(where: { $0.id == tabId }) else { return false }
-        return tab.toggleSplitZoom(panelId: surfaceId)
+        return tab.toggleSurfaceSplitZoomForAction(surfaceId: surfaceId)
     }
 
     /// Toggle zoom for the currently focused panel in the selected workspace.
@@ -3862,7 +3862,7 @@ class TabManager: ObservableObject {
     func toggleFocusedSplitZoom() -> Bool {
         guard let tab = selectedWorkspace,
               let focusedPanelId = tab.focusedPanelId else { return false }
-        return tab.toggleSplitZoom(panelId: focusedPanelId)
+        return tab.toggleSurfaceSplitZoomForAction(surfaceId: focusedPanelId)
     }
 
     /// Toggle full-width-tab mode for the currently focused panel in the selected workspace.
@@ -3870,7 +3870,7 @@ class TabManager: ObservableObject {
     func toggleFocusedFullWidthTab() -> Bool {
         guard let tab = selectedWorkspace,
               let focusedPanelId = tab.focusedPanelId else { return false }
-        return tab.toggleFullWidthTabMode(panelId: focusedPanelId)
+        return tab.toggleSurfaceFullWidthTabForAction(surfaceId: focusedPanelId) != nil
     }
 
     /// Close a surface/panel
