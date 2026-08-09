@@ -41,7 +41,7 @@ Run the setup script to initialize submodules, build GhosttyKit, and install the
 
 ## Local dev
 
-After making code changes, always run the reload script with a tag to build the Debug app:
+For app/runtime verification, run the reload script with a tag to build the Debug app:
 
 ```bash
 ./scripts/reload.sh --tag fix-zsh-autosuggestions
@@ -94,7 +94,14 @@ BMUX_TAG=<tag> scripts/bmux-debug-cli.sh send --workspace workspace:1 --surface 
 
 The helper refuses to run without `BMUX_TAG`, targets `/tmp/bmux-debug-<tag>.sock`, and uses the matching tagged CLI from `~/Library/Developer/Xcode/DerivedData/bmux-<tag>/...`. It also scrubs ambient bmux terminal context (`BMUX_SOCKET`, `BMUX_SOCKET_PASSWORD`, workspace/surface/tab/panel IDs, bmuxd socket, and debug log), then sets `BMUX_SOCKET_PATH`, `BMUX_BUNDLE_ID`, and `BMUX_BUNDLED_CLI_PATH` for the selected tag.
 
-After making code changes, always use `reload.sh --tag` to build. **Never run bare `xcodebuild` or `open` an untagged `bmux DEV.app`.** Untagged builds share the default debug socket and bundle ID with other agents, causing conflicts and stealing focus.
+Use this verification cadence for bmux app/runtime work:
+
+- While designing or fixing a slice, iterate with focused tests first.
+- Before pushing a PR update that changes production app/runtime behavior, run focused tests plus `./scripts/reload.sh --tag <branch-slug>`.
+- Before dogfood or handoff of runtime behavior, run a tagged reload, then targeted CLI/socket dogfood against that tag when relevant.
+- For test-only stabilization, do not run a tagged reload unless production code changed.
+
+When a tagged build is required, always use `reload.sh --tag`. **Never run bare `xcodebuild` or `open` an untagged `bmux DEV.app`.** Untagged builds share the default debug socket and bundle ID with other agents, causing conflicts and stealing focus.
 
 ```bash
 ./scripts/reload.sh --tag <your-branch-slug>

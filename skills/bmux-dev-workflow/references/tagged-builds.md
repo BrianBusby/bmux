@@ -2,6 +2,14 @@
 
 Tagged builds isolate app name, bundle ID, socket, and DerivedData path so multiple agents and the user's normal app do not collide.
 
+## Cadence
+
+Use focused tests while designing or fixing a slice. Before pushing a PR update
+that changes production app/runtime behavior, run focused tests plus a tagged
+reload. Before dogfood or handoff of runtime behavior, run a tagged reload and
+targeted CLI/socket dogfood against that tag when relevant. For test-only
+stabilization, skip tagged reload unless production code changed.
+
 ## Reload
 
 Use:

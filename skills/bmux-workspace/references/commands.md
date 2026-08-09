@@ -104,6 +104,12 @@ bmux reload-config
 
 ## Tagged Reloads
 
+Use focused tests while designing or fixing a slice. Before pushing a PR update
+that changes production app/runtime behavior, run focused tests plus a tagged
+reload. Before dogfood or handoff of runtime behavior, run a tagged reload and
+targeted CLI/socket dogfood against that tag when relevant. For test-only
+stabilization, skip tagged reload unless production code changed.
+
 ```bash
 ./scripts/reload.sh --tag <short-tag>
 BMUX_SOCKET_PATH=/tmp/bmux-debug-<short-tag>.sock bmux identify --json

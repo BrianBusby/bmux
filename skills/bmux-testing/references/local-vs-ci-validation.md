@@ -1,5 +1,24 @@
 # Local vs CI Validation
 
+## Iteration cadence
+
+Use focused tests as the primary loop while designing or fixing a slice. They are
+faster, compile the relevant test targets, and keep failures close to the
+behavior being changed.
+
+Before pushing a PR update that changes production app/runtime behavior, run the
+focused tests for the affected surface plus:
+
+```bash
+./scripts/reload.sh --tag <branch-slug>
+```
+
+Before dogfood or handoff of runtime behavior, run a tagged reload and then use
+targeted CLI/socket dogfood against that tag when relevant.
+
+For test-only stabilization, do not run a tagged reload unless production code
+changed.
+
 ## `reload.sh`
 
 `reload.sh` builds the Debug app for a tag. It does not compile the test target.
