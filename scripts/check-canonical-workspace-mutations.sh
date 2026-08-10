@@ -182,7 +182,8 @@ while IFS= read -r line; do
   violations+=("$line")
 done < <(rg -n -P "$socket_surface_reorder_pattern" \
   "Sources/TerminalController+ControlSurfaceContext3.swift" \
-  "Sources/TerminalController+ControlSystemContext2.swift" || true)
+  "Sources/TerminalController+ControlSystemContext2.swift" \
+  "Sources/TabManager.swift" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {

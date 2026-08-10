@@ -3564,6 +3564,8 @@ final class TabManagerReopenClosedBrowserFocusTests: XCTestCase {
         let manager = TabManager()
         let expectedURL = URL(string: "https://example.com/self-close")
         guard let workspace = manager.selectedWorkspace,
+              let paneId = workspace.bonsplitController.focusedPaneId,
+              let initialPanelId = workspace.focusedPanelId,
               let closedBrowserId = manager.openBrowser(url: expectedURL),
               let browserPanel = workspace.panels[closedBrowserId] as? BrowserPanel else {
             XCTFail("Expected browser panel setup")
@@ -3575,18 +3577,23 @@ final class TabManagerReopenClosedBrowserFocusTests: XCTestCase {
         drainMainQueue()
 
         XCTAssertNil(workspace.panels[closedBrowserId])
-        let panelIdsAfterClose = Set(workspace.panels.keys)
+        guard let laterPanel = workspace.createTerminalSurfaceForAction(inPane: paneId, focus: false).panel else {
+            XCTFail("Expected later terminal panel setup")
+            return
+        }
+        let panelIdsBeforeReopen = Set(workspace.panels.keys)
 
         XCTAssertTrue(manager.reopenMostRecentlyClosedBrowserPanel())
         drainMainQueue()
 
-        guard let reopenedPanelId = singleNewPanelId(in: workspace, comparedTo: panelIdsAfterClose),
+        guard let reopenedPanelId = singleNewPanelId(in: workspace, comparedTo: panelIdsBeforeReopen),
               let reopenedPanel = workspace.panels[reopenedPanelId] as? BrowserPanel else {
             XCTFail("Expected Cmd+Shift+T to restore the self-closed browser panel")
             return
         }
         XCTAssertEqual(reopenedPanel.currentURL, expectedURL)
         XCTAssertEqual(workspace.focusedPanelId, reopenedPanelId)
+        XCTAssertEqual(panelOrder(in: workspace, pane: paneId), [initialPanelId, reopenedPanelId, laterPanel.id])
     }
 
     func testReopenClosedItemFallsBackToLegacyClosedBrowserStack() {
@@ -3875,6 +3882,12 @@ final class TabManagerReopenClosedBrowserFocusTests: XCTestCase {
         }
         let result = XCTWaiter().wait(for: [expectation], timeout: 3.0)
         XCTAssertEqual(result, .completed)
+    }
+
+    private func panelOrder(in workspace: Workspace, pane: PaneID) -> [UUID] {
+        workspace.bonsplitController.tabs(inPane: pane).compactMap {
+            workspace.panelIdFromSurfaceId($0.id)
+        }
     }
 }
 

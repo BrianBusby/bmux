@@ -4269,7 +4269,10 @@ class TabManager: ObservableObject {
             let tabCount = workspace.bonsplitController.tabs(inPane: originalPane).count
             let maxIndex = max(0, tabCount - 1)
             let targetIndex = min(max(snapshot.originalTabIndex, 0), maxIndex)
-            _ = workspace.reorderSurface(panelId: browserPanel.id, toIndex: targetIndex)
+            _ = workspace.reorderSurfaceForAction(
+                panelId: browserPanel.id,
+                target: .index(targetIndex)
+            )
             return browserPanel.id
         }
 
