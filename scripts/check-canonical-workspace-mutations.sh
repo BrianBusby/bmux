@@ -15,7 +15,7 @@ migrated_files=(
   "Sources/bmuxApp.swift"
 )
 
-mutation_pattern='\.((closeWorkspace|reorderWorkspace|clearCustomDescription|setCustomDescription|setTabColor|moveTabToTop|moveTabsToTop)\()'
+mutation_pattern='\.((closeWorkspace|reorderWorkspace|clearCustomDescription|setCustomDescription|setTabColor|moveTabToTop|moveTabsToTop)\(|selectTab\(at:)'
 
 violations=()
 if command -v rg >/dev/null 2>&1; then

@@ -10973,7 +10973,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                         "expectedSurfaceId": targetPanelId.uuidString
                     ])
 
-                    tabManager.selectTab(at: initialIndex)
+                    tabManager.selectWorkspaceIndexForAction(initialIndex)
                 }
             }
         }
@@ -12606,7 +12606,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
             _ = self.focusMainWindow(windowId: windowId)
             if let tab = tabManager.tabs.first(where: { $0.id == tabId }) {
-                tabManager.selectTab(tab)
+                tabManager.selectWorkspaceIdForAction(tab.id)
                 tabManager.focusSurface(tabId: tabId, surfaceId: surfaceId)
             }
         }
@@ -14338,7 +14338,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                     "shortcut.action name=workspaceDigit digit=\(digit) targetIndex=\(targetIndex) manager=\(debugManagerToken(manager)) \(debugShortcutRouteSnapshot(event: event))"
                 )
 #endif
-                manager.selectTab(at: targetIndex)
+                manager.selectWorkspaceIndexForAction(targetIndex)
             }
             return true
         }

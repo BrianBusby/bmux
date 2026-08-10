@@ -3605,11 +3605,7 @@ class TabManager: ObservableObject {
 #endif
 
     func selectTab(at index: Int) {
-        guard index >= 0 && index < tabs.count else { return }
-#if DEBUG
-        debugPrimeWorkspaceSwitchTrigger("select_index", to: tabs[index].id)
-#endif
-        selectWorkspaceId(tabs[index].id, notificationDismissalContext: .explicitWorkspaceResume)
+        selectWorkspaceIndexForAction(index)
     }
 
     func selectLastTab() {

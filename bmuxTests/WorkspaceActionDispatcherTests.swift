@@ -438,6 +438,19 @@ import Testing
         #expect(manager.selectedTabId == targetWorkspace.id)
     }
 
+    @Test func workspaceSelectionIndexActionRejectsInvalidIndexWithoutChangingSelection() throws {
+        let manager = TabManager()
+        _ = manager.addWorkspace()
+        let targetWorkspace = try #require(manager.tabs.last)
+
+        #expect(manager.selectWorkspaceIndexForAction(1))
+        #expect(manager.selectedTabId == targetWorkspace.id)
+
+        #expect(!manager.selectWorkspaceIndexForAction(-1))
+        #expect(!manager.selectWorkspaceIndexForAction(manager.tabs.count))
+        #expect(manager.selectedTabId == targetWorkspace.id)
+    }
+
     @Test func workspaceSurfaceFocusActionSelectsWorkspaceAndRejectsInvalidTargets() throws {
         let manager = TabManager()
         let originalWorkspace = try #require(manager.tabs.first)

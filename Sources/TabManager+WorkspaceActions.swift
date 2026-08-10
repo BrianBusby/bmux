@@ -289,6 +289,22 @@ extension TabManager {
     }
 
     @discardableResult
+    func selectWorkspaceIndexForAction(
+        _ index: Int,
+        notificationDismissalContext: NotificationDismissalContext? = .explicitWorkspaceResume
+    ) -> Bool {
+        guard index >= 0 && index < tabs.count else {
+            return false
+        }
+        let workspaceId = tabs[index].id
+#if DEBUG
+        debugPrimeWorkspaceSwitchTrigger("select_index", to: workspaceId)
+#endif
+        selectWorkspaceId(workspaceId, notificationDismissalContext: notificationDismissalContext)
+        return true
+    }
+
+    @discardableResult
     func focusWorkspaceSurfaceForAction(
         workspaceId: UUID,
         surfaceId: UUID,
