@@ -198375,6 +198375,54 @@
         }
       }
     },
+    "sidebar.pullRequest.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "bs": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "da": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "de": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "en": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "es": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "it": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "nb": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "pl": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "pt-BR": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "th": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "tr": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "uk": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "PR" } }
+      }
+    },
+    "sidebar.ticket.openTooltip": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": { "stringUnit": { "state": "translated", "value": "فتح %@" } },
+        "bs": { "stringUnit": { "state": "translated", "value": "Otvori %@" } },
+        "da": { "stringUnit": { "state": "translated", "value": "Åbn %@" } },
+        "de": { "stringUnit": { "state": "translated", "value": "%@ öffnen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Open %@" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Abrir %@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir %@" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Apri %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@を開く" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "%@ 열기" } },
+        "nb": { "stringUnit": { "state": "translated", "value": "Åpne %@" } },
+        "pl": { "stringUnit": { "state": "translated", "value": "Otwórz %@" } },
+        "pt-BR": { "stringUnit": { "state": "translated", "value": "Abrir %@" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Открыть %@" } },
+        "th": { "stringUnit": { "state": "translated", "value": "เปิด %@" } },
+        "tr": { "stringUnit": { "state": "translated", "value": "%@ Aç" } },
+        "uk": { "stringUnit": { "state": "translated", "value": "Відкрити %@" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "打开 %@" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "開啟 %@" } }
+      }
+    },
     "sidebar.pullRequest.statusClosed": {
       "extractionState": "manual",
       "localizations": {

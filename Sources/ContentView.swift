@@ -12395,6 +12395,7 @@ struct VerticalTabsSidebar: View {
             tabManager: tabManager,
             notificationStore: notificationStore,
             tab: tab,
+            provenanceDisplaySnapshot: tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: tab),
             index: index,
             workspaceShortcutDigit: WorkspaceShortcutMapper.digitForWorkspace(
                 at: index,
@@ -13157,118 +13158,6 @@ private struct ExtensionSidebarBrowserStackEmptyArea: View {
     }
 }
 
-// PERF: TabItemView is Equatable so SwiftUI skips body re-evaluation when
-// the parent rebuilds with unchanged values. Without this, every TabManager
-// or NotificationStore publish causes ALL tab items to re-evaluate (~18% of
-// main thread during typing). If you add new properties, update == below.
-// Reactive workspace state inside the row must not rely on parent diffs alone:
-// `.equatable()` can otherwise leave sidebar badges/details stale until an
-// unrelated parent change sneaks through. Keep the workspace reference plain
-// and bridge only sidebar-visible workspace changes into local state.
-// Do NOT add @EnvironmentObject or new @Binding without updating ==.
-// Do NOT remove .equatable() from the ForEach call site in VerticalTabsSidebar.
-struct SidebarWorkspaceSnapshotBuilder {
-    struct PresentationKey: Equatable {
-        let showsWorkspaceDescription: Bool
-        let usesVerticalBranchLayout: Bool
-        let showsGitBranch: Bool
-        let usesViewportAwarePath: Bool
-        let visibleAuxiliaryDetails: SidebarWorkspaceAuxiliaryDetailVisibility
-    }
-
-    struct VerticalBranchDirectoryLine: Equatable {
-        let branch: String?
-        // Ordered longest → shortest. Empty means no directory to show.
-        // First element is the canonical display string when only one is needed.
-        let directoryCandidates: [String]
-
-        var directory: String? { directoryCandidates.first }
-    }
-
-    struct PullRequestDisplay: Identifiable, Equatable {
-        let id: String
-        let number: Int
-        let label: String
-        let url: URL
-        let status: SidebarPullRequestStatus
-        let isStale: Bool
-    }
-
-    struct Snapshot: Equatable {
-        let presentationKey: PresentationKey
-        let title: String
-        let customDescription: String?
-        let isPinned: Bool
-        let customColorHex: String?
-        let remoteWorkspaceSidebarText: String?
-        let remoteConnectionStatusText: String
-        let remoteStateHelpText: String
-        let showsRemoteReconnectAffordance: Bool
-        let copyableSidebarSSHError: String?
-        let latestConversationMessage: String?
-        let latestSubmittedMessage: String?
-        let metadataEntries: [SidebarStatusEntry]
-        let metadataBlocks: [SidebarMetadataBlock]
-        let latestLog: SidebarLogEntry?
-        let progress: SidebarProgressState?
-        let compactGitBranchSummaryText: String?
-        let compactDirectoryCandidates: [String]
-        let compactBranchDirectoryCandidates: [String]
-        let branchDirectoryLines: [VerticalBranchDirectoryLine]
-        let branchLinesContainBranch: Bool
-        let pullRequestRows: [PullRequestDisplay]
-        let listeningPorts: [Int]
-        let finderDirectoryPath: String?
-        let repoBadgeAppearance: WorkspaceRepoBadgeAppearance?
-        let mediaActivity: BrowserMediaActivity
-        let hasActiveAIWork: Bool
-    }
-}
-
-private struct SidebarTabItemContextMenuState {
-    var hasDeferredWorkspaceObservationInvalidation = false
-    var pendingWorkspaceSnapshot: SidebarWorkspaceSnapshotBuilder.Snapshot?
-}
-
-struct SidebarWorkspaceRowLineLimitPolicy {
-    struct Subtitle: Equatable {
-        let text: String
-        let lineLimit: Int
-    }
-
-    private static let compactNotificationSubtitleLines = 2
-    private static let conversationSubtitleLines = 3
-    private static let wrappedWorkspaceTitleLines = 3
-
-    static func titleLineLimit(wrapsWorkspaceTitles: Bool) -> Int {
-        wrapsWorkspaceTitles ? wrappedWorkspaceTitleLines : 1
-    }
-
-    static func conversationMessage(
-        latestSubmittedMessage: String?,
-        latestConversationMessage _: String?,
-        hidesAllDetails: Bool,
-        iMessageModeEnabled: Bool
-    ) -> String? {
-        guard !hidesAllDetails, iMessageModeEnabled else { return nil }
-        return latestSubmittedMessage?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .nilIfEmpty
-    }
-
-    static func subtitle(notificationText: String?, conversationMessage: String?) -> Subtitle? {
-        if let notificationText {
-            return Subtitle(text: notificationText, lineLimit: compactNotificationSubtitleLines)
-        }
-        guard let conversationMessage = conversationMessage?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .nilIfEmpty else {
-            return nil
-        }
-        return Subtitle(text: conversationMessage, lineLimit: conversationSubtitleLines)
-    }
-}
-
 struct TabItemView: View, Equatable {
     private static let workspaceObservationCoalesceInterval: RunLoop.SchedulerTimeType.Stride = .milliseconds(40)
     private static let terminalAgentStatusLineRefreshInterval: RunLoop.SchedulerTimeType.Stride = .seconds(1)
@@ -13278,6 +13167,7 @@ struct TabItemView: View, Equatable {
     // because they're recreated every parent eval but don't affect rendering.
     nonisolated static func == (lhs: TabItemView, rhs: TabItemView) -> Bool {
         lhs.tab === rhs.tab &&
+        lhs.provenanceDisplaySnapshot == rhs.provenanceDisplaySnapshot &&
         lhs.index == rhs.index &&
         lhs.workspaceShortcutDigit == rhs.workspaceShortcutDigit &&
         lhs.workspaceShortcutModifierSymbol == rhs.workspaceShortcutModifierSymbol &&
@@ -13322,6 +13212,7 @@ struct TabItemView: View, Equatable {
     @Environment(\.sidebarLazyContractProbe) private var sidebarLazyContractProbe
 #endif
     let tab: Tab
+    let provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot?
     let index: Int
     let workspaceShortcutDigit: Int?
     let workspaceShortcutModifierSymbol: String
@@ -13707,7 +13598,8 @@ struct TabItemView: View, Equatable {
             usesVerticalBranchLayout: sidebarBranchVerticalLayout,
             showsGitBranch: sidebarShowGitBranch,
             usesViewportAwarePath: sidebarUsesLastSegmentPath,
-            visibleAuxiliaryDetails: visibleAuxiliaryDetails
+            visibleAuxiliaryDetails: visibleAuxiliaryDetails,
+            provenanceDisplaySnapshot: provenanceDisplaySnapshot
         )
     }
 
@@ -14073,6 +13965,11 @@ struct TabItemView: View, Equatable {
                 pullRequestRowsView(workspaceSnapshot.pullRequestRows)
             }
 
+            // Ticket rows
+            if !workspaceSnapshot.ticketRows.isEmpty {
+                ticketRowsView(workspaceSnapshot.ticketRows)
+            }
+
             // Ports row
             if detailVisibility.showsPorts, !workspaceSnapshot.listeningPorts.isEmpty {
                 HStack(spacing: 4) {
@@ -14176,6 +14073,7 @@ struct TabItemView: View, Equatable {
         .onAppear {
             updateObservedActiveState(tabManager.selectedTabId == tab.id)
             updateTerminalAgentStatusLineObservation()
+            tabManager.workProvenanceRuntime?.refreshWorkspaceDisplayCurrentState(for: tab)
             refreshWorkspaceSnapshot(force: true)
         }
         .onDisappear {
@@ -14939,20 +14837,28 @@ struct TabItemView: View, Equatable {
         let signpost = SidebarProfilingSignposts.begin("sidebar-workspace-snapshot", "workspace=\(sidebarShortTabId(tab.id)) details=\(settings.visibleAuxiliaryDetails)"); defer { SidebarProfilingSignposts.end(signpost) }
         let detailVisibility = visibleAuxiliaryDetails
         let orderedPanelIds = tab.sidebarOrderedPanelIds()
+        let provenanceDirectoryCandidates = provenanceDisplaySnapshot
+            .flatMap { directoryCandidates(forProvenanceDisplaySnapshot: $0) } ?? []
         let compactGitBranchSummaryText: String? = {
             guard detailVisibility.showsBranchDirectory,
                   !sidebarBranchVerticalLayout,
                   sidebarShowGitBranch,
-                  !orderedPanelIds.isEmpty else {
+                  (!orderedPanelIds.isEmpty || provenanceDisplaySnapshot?.branch != nil) else {
                 return nil
+            }
+            if let provenanceGitSummary = gitBranchSummaryText(forProvenanceDisplaySnapshot: provenanceDisplaySnapshot) {
+                return provenanceGitSummary
             }
             return gitBranchSummaryText(orderedPanelIds: orderedPanelIds)
         }()
         let compactDirectoryCandidates: [String] = {
             guard detailVisibility.showsBranchDirectory,
                   !sidebarBranchVerticalLayout,
-                  !orderedPanelIds.isEmpty else {
+                  (!orderedPanelIds.isEmpty || !provenanceDirectoryCandidates.isEmpty) else {
                 return []
+            }
+            if !provenanceDirectoryCandidates.isEmpty {
+                return provenanceDirectoryCandidates
             }
             return compactDirectoryCandidatesList(orderedPanelIds: orderedPanelIds)
         }()
@@ -14963,20 +14869,28 @@ struct TabItemView: View, Equatable {
         let branchDirectoryLines: [SidebarWorkspaceSnapshotBuilder.VerticalBranchDirectoryLine] = {
             guard detailVisibility.showsBranchDirectory,
                   sidebarBranchVerticalLayout,
-                  !orderedPanelIds.isEmpty else {
+                  (!orderedPanelIds.isEmpty || provenanceDisplaySnapshot != nil) else {
                 return []
+            }
+            let provenanceLines = verticalBranchDirectoryLines(forProvenanceDisplaySnapshot: provenanceDisplaySnapshot)
+            if !provenanceLines.isEmpty {
+                return provenanceLines
             }
             return verticalBranchDirectoryLines(orderedPanelIds: orderedPanelIds)
         }()
         let branchLinesContainBranch = sidebarShowGitBranch && branchDirectoryLines.contains { $0.branch != nil }
         let pullRequestRows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay] = {
+            if let provenancePullRequestDisplay {
+                return [provenancePullRequestDisplay]
+            }
             guard !orderedPanelIds.isEmpty else { return [] }
             return pullRequestDisplays(orderedPanelIds: orderedPanelIds)
         }()
+        let ticketRows = provenanceTicketDisplays
 
         return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: workspaceSnapshotPresentationKey,
-            title: tab.title,
+            title: provenanceDisplaySnapshot?.title ?? tab.title,
             customDescription: settings.showsWorkspaceDescription ? sidebarVisibleCustomDescription : nil,
             isPinned: tab.isPinned,
             customColorHex: tab.customColor,
@@ -14998,6 +14912,7 @@ struct TabItemView: View, Equatable {
             branchDirectoryLines: branchDirectoryLines,
             branchLinesContainBranch: branchLinesContainBranch,
             pullRequestRows: pullRequestRows,
+            ticketRows: ticketRows,
             listeningPorts: detailVisibility.showsPorts ? tab.listeningPorts : [],
             finderDirectoryPath: WorkspaceFinderDirectoryResolver.path(for: tab),
             repoBadgeAppearance: WorkspaceRepoBadgeAppearanceResolver.sessionAppearance(
@@ -15078,10 +14993,42 @@ struct TabItemView: View, Equatable {
         return lines.joined(separator: " | ")
     }
 
+    private func gitBranchSummaryText(
+        forProvenanceDisplaySnapshot snapshot: WorkspaceDisplayCurrentStateSnapshot?
+    ) -> String? {
+        guard let branch = snapshot?.branch else { return nil }
+        return "\(branch)\(snapshot?.isDirty == true ? "*" : "")"
+    }
+
     private func gitBranchSummaryLines(orderedPanelIds: [UUID]) -> [String] {
         tab.sidebarGitBranchesInDisplayOrder(orderedPanelIds: orderedPanelIds).map { branch in
             "\(branch.branch)\(branch.isDirty ? "*" : "")"
         }
+    }
+
+    private func verticalBranchDirectoryLines(
+        forProvenanceDisplaySnapshot snapshot: WorkspaceDisplayCurrentStateSnapshot?
+    ) -> [SidebarWorkspaceSnapshotBuilder.VerticalBranchDirectoryLine] {
+        guard snapshot != nil else { return [] }
+        let branchText = sidebarShowGitBranch ? gitBranchSummaryText(forProvenanceDisplaySnapshot: snapshot) : nil
+        let provenanceDirectoryCandidates = snapshot.flatMap { directoryCandidates(forProvenanceDisplaySnapshot: $0) } ?? []
+        guard branchText != nil || !provenanceDirectoryCandidates.isEmpty else { return [] }
+        return [SidebarWorkspaceSnapshotBuilder.VerticalBranchDirectoryLine(
+            branch: branchText,
+            directoryCandidates: provenanceDirectoryCandidates
+        )]
+    }
+
+    private func directoryCandidates(
+        forProvenanceDisplaySnapshot snapshot: WorkspaceDisplayCurrentStateSnapshot
+    ) -> [String] {
+        guard let directory = snapshot.currentDirectory else { return [] }
+        let home = SidebarPathFormatter.homeDirectoryPath
+        if sidebarUsesLastSegmentPath {
+            return SidebarPathFormatter.pathCandidates(directory, homeDirectoryPath: home)
+        }
+        let shortened = SidebarPathFormatter.shortenedPath(directory, homeDirectoryPath: home)
+        return shortened.isEmpty ? [] : [shortened]
     }
 
     private func verticalBranchDirectoryLines(orderedPanelIds: [UUID]) -> [SidebarWorkspaceSnapshotBuilder.VerticalBranchDirectoryLine] {
@@ -15176,6 +15123,25 @@ struct TabItemView: View, Equatable {
         }
     }
 
+    private var provenancePullRequestDisplay: SidebarWorkspaceSnapshotBuilder.PullRequestDisplay? {
+        guard let pullRequest = provenanceDisplaySnapshot?.pullRequest else { return nil }
+        let label = String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
+        return SidebarWorkspaceSnapshotBuilder.PullRequestDisplay(
+            id: "\(label.lowercased())#\(pullRequest.number)|\(pullRequest.url?.absoluteString ?? "")",
+            number: pullRequest.number,
+            label: label,
+            url: pullRequest.url,
+            status: pullRequest.status.flatMap(SidebarPullRequestStatus.init(rawValue:)) ?? .open,
+            isStale: pullRequest.isStale
+        )
+    }
+
+    private var provenanceTicketDisplays: [SidebarWorkspaceSnapshotBuilder.TicketDisplay] {
+        provenanceDisplaySnapshot?.ticketLinks.map {
+            SidebarWorkspaceSnapshotBuilder.TicketDisplay(id: $0.id, url: $0.url)
+        } ?? []
+    }
+
     @ViewBuilder
     private func pullRequestRowsView(_ rows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay]) -> some View {
         VStack(alignment: .leading, spacing: 1) {
@@ -15188,21 +15154,64 @@ struct TabItemView: View, Equatable {
                         color: pullRequestForegroundColor,
                         fontScale: fontScale
                     )
-                    Text(pullRequestTitle).underline(settings.makesPullRequestsClickable).lineLimit(1).truncationMode(.tail)
+                    Text(pullRequestTitle).underline(settings.makesPullRequestsClickable && pullRequest.url != nil).lineLimit(1).truncationMode(.tail)
                     Text(pullRequestStatusLabel(pullRequest.status)).lineLimit(1)
                     Spacer(minLength: 0)
                 }
                 .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
                 .foregroundColor(pullRequestForegroundColor)
                 .opacity(pullRequest.isStale ? 0.5 : 1)
-                if settings.makesPullRequestsClickable {
-                    Button(action: { openPullRequestLink(pullRequest.url) }) { rowContent }
+                if settings.makesPullRequestsClickable, let url = pullRequest.url {
+                    Button(action: { openPullRequestLink(url) }) { rowContent }
                         .buttonStyle(.plain)
                         .tint(pullRequestForegroundColor)
-                        .safeHelp(String(localized: "sidebar.pullRequest.openTooltip", defaultValue: "Open \(pullRequestTitle)"))
+                        .safeHelp(String(
+                            format: String(
+                                localized: "sidebar.pullRequest.openTooltip",
+                                defaultValue: "Open %1$@ #%2$lld"
+                            ),
+                            locale: .current,
+                            pullRequest.label,
+                            pullRequest.number
+                        ))
                         .accessibilityIdentifier("SidebarPullRequestRow")
                 } else {
                     rowContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarPullRequestRow")
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func ticketRowsView(_ rows: [SidebarWorkspaceSnapshotBuilder.TicketDisplay]) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            ForEach(rows) { ticket in
+                let rowContent = HStack(spacing: 4) {
+                    BmuxSystemSymbolImage(magnified: "ticket", pointSize: scaledFontSize(9), weight: .medium)
+                        .foregroundColor(activeSecondaryColor(0.72))
+                    Text(ticket.id)
+                        .underline(ticket.url != nil)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Spacer(minLength: 0)
+                }
+                .font(magnifiedFont(scaledFontSize(10), weight: .semibold, design: .monospaced))
+                .foregroundColor(activeSecondaryColor(0.75))
+                if let url = ticket.url {
+                    Button(action: { openTicketLink(url) }) { rowContent }
+                        .buttonStyle(.plain)
+                        .tint(activeSecondaryColor(0.75))
+                        .safeHelp(String(
+                            format: String(
+                                localized: "sidebar.ticket.openTooltip",
+                                defaultValue: "Open %@"
+                            ),
+                            locale: .current,
+                            ticket.id
+                        ))
+                        .accessibilityIdentifier("SidebarTicketRow")
+                } else {
+                    rowContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarTicketRow")
                 }
             }
         }
@@ -15213,6 +15222,14 @@ struct TabItemView: View, Equatable {
     }
 
     private func openPullRequestLink(_ url: URL) {
+        openWorkspaceExternalLink(url)
+    }
+
+    private func openTicketLink(_ url: URL) {
+        openWorkspaceExternalLink(url)
+    }
+
+    private func openWorkspaceExternalLink(_ url: URL) {
         updateSelection()
         if openSidebarPullRequestLinksInBmuxBrowser {
             if tabManager.openBrowser(
@@ -15297,114 +15314,6 @@ struct TabItemView: View, Equatable {
             return "~" + trimmed.dropFirst(home.count)
         }
         return trimmed
-    }
-
-    private struct PullRequestStatusIcon: View {
-        let status: SidebarPullRequestStatus
-        let color: Color
-        var fontScale: CGFloat = 1
-        private static let closedFrameSize: CGFloat = 12
-        private static let customFrameSize: CGFloat = 13
-
-        private var closedFrameSize: CGFloat {
-            Self.closedFrameSize * fontScale
-        }
-
-        private var customFrameSize: CGFloat {
-            Self.customFrameSize * fontScale
-        }
-
-        var body: some View {
-            switch status {
-            case .open:
-                PullRequestOpenIcon(color: color)
-                    .scaleEffect(fontScale)
-                    .frame(width: customFrameSize, height: customFrameSize)
-            case .merged:
-                PullRequestMergedIcon(color: color)
-                    .scaleEffect(fontScale)
-                    .frame(width: customFrameSize, height: customFrameSize)
-            case .closed:
-                BmuxSystemSymbolImage(magnified: "xmark.circle", pointSize: 7 * fontScale, weight: .regular)
-                    .foregroundColor(color)
-                    .frame(width: closedFrameSize, height: closedFrameSize)
-            }
-        }
-    }
-
-    private struct PullRequestOpenIcon: View {
-        let color: Color
-        private static let stroke = StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round)
-        private static let nodeDiameter: CGFloat = 3.0
-        private static let frameSize: CGFloat = 13
-
-        var body: some View {
-            ZStack {
-                Path { path in
-                    path.move(to: CGPoint(x: 3.0, y: 4.8))
-                    path.addLine(to: CGPoint(x: 3.0, y: 9.2))
-
-                    path.move(to: CGPoint(x: 4.8, y: 3.0))
-                    path.addLine(to: CGPoint(x: 9.4, y: 3.0))
-                    path.addLine(to: CGPoint(x: 11.0, y: 4.6))
-                    path.addLine(to: CGPoint(x: 11.0, y: 9.2))
-                }
-                .stroke(color, style: Self.stroke)
-
-                Circle()
-                    .stroke(color, lineWidth: Self.stroke.lineWidth)
-                    .frame(width: Self.nodeDiameter, height: Self.nodeDiameter)
-                    .position(x: 3.0, y: 3.0)
-
-                Circle()
-                    .stroke(color, lineWidth: Self.stroke.lineWidth)
-                    .frame(width: Self.nodeDiameter, height: Self.nodeDiameter)
-                    .position(x: 3.0, y: 11.0)
-
-                Circle()
-                    .stroke(color, lineWidth: Self.stroke.lineWidth)
-                    .frame(width: Self.nodeDiameter, height: Self.nodeDiameter)
-                    .position(x: 11.0, y: 11.0)
-            }
-            .frame(width: Self.frameSize, height: Self.frameSize)
-        }
-    }
-
-    private struct PullRequestMergedIcon: View {
-        let color: Color
-        private static let stroke = StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round)
-        private static let nodeDiameter: CGFloat = 3.0
-        private static let frameSize: CGFloat = 13
-
-        var body: some View {
-            ZStack {
-                Path { path in
-                    path.move(to: CGPoint(x: 4.6, y: 4.6))
-                    path.addLine(to: CGPoint(x: 7.1, y: 7.0))
-                    path.addLine(to: CGPoint(x: 9.2, y: 7.0))
-
-                    path.move(to: CGPoint(x: 4.6, y: 9.4))
-                    path.addLine(to: CGPoint(x: 7.1, y: 7.0))
-                }
-                .stroke(color, style: Self.stroke)
-
-                Circle()
-                    .stroke(color, lineWidth: Self.stroke.lineWidth)
-                    .frame(width: Self.nodeDiameter, height: Self.nodeDiameter)
-                    .position(x: 3.0, y: 3.0)
-
-                Circle()
-                    .stroke(color, lineWidth: Self.stroke.lineWidth)
-                    .frame(width: Self.nodeDiameter, height: Self.nodeDiameter)
-                    .position(x: 3.0, y: 11.0)
-
-                Circle()
-                    .stroke(color, lineWidth: Self.stroke.lineWidth)
-                    .frame(width: Self.nodeDiameter, height: Self.nodeDiameter)
-                    .position(x: 11.0, y: 7.0)
-            }
-            .frame(width: Self.frameSize, height: Self.frameSize)
-        }
     }
 
     private func applyTabColor(_ hex: String?, targetIds: [UUID]) {
