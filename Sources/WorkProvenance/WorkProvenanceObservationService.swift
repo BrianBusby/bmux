@@ -155,6 +155,7 @@ actor WorkProvenanceObservationService {
                 workspace.pullRequest?.branch
             ].compactMap { $0 }
         )
+        let ticketLinks = Self.ticketLinks(ticketIDs: ticketIDs)
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
             title: workspace.title,
@@ -167,7 +168,8 @@ actor WorkProvenanceObservationService {
             pullRequestBranch: workspace.pullRequest?.branch,
             pullRequestIsStale: workspace.pullRequest?.isStale ?? false,
             gitSnapshot: gitSnapshot,
-            ticketIDs: ticketIDs
+            ticketIDs: ticketIDs,
+            ticketLinks: ticketLinks
         )
         guard latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] != fingerprint else {
             return
@@ -194,6 +196,7 @@ actor WorkProvenanceObservationService {
             pullRequestIsStale: pullRequest?.isStale ?? false,
             isDirty: gitSnapshot?.isDirty,
             ticketIDs: ticketIDs,
+            ticketLinks: ticketLinks,
             observedAt: now,
             updatedAt: now
         )
@@ -242,5 +245,13 @@ actor WorkProvenanceObservationService {
             }
         }
         return ticketIDs
+    }
+
+    private static func ticketLinks(
+        ticketIDs: [String]
+    ) -> [ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord] {
+        ticketIDs.map { ticketID in
+            ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord(id: ticketID)
+        }
     }
 }

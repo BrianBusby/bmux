@@ -1029,7 +1029,8 @@ extension BMUXCLI {
                 status
             ))
         }
-        if let tickets = currentState["ticket_ids"] as? [String], !tickets.isEmpty {
+        let tickets = provenanceWorkspaceDisplayTicketLabels(currentState)
+        if !tickets.isEmpty {
             lines.append(String.localizedStringWithFormat(
                 String(localized: "cli.provenance.diagnostics.workspaceDisplay.output.tickets", defaultValue: "Tickets: %@"),
                 tickets.joined(separator: ", ")
@@ -1226,6 +1227,7 @@ extension BMUXCLI {
             "pull_request": provenanceWorkspaceDisplayPullRequestPayload(display),
             "is_dirty": display.isDirty,
             "ticket_ids": display.ticketIDs,
+            "ticket_links": provenanceWorkspaceDisplayTicketLinksPayload(display.ticketLinks),
             "observed_at": formattedProvenanceDate(display.observedAt.timeIntervalSince1970),
             "updated_at": formattedProvenanceDate(display.updatedAt.timeIntervalSince1970)
         ])
@@ -1248,6 +1250,31 @@ extension BMUXCLI {
             "is_stale": display.pullRequestIsStale
         ])
         return payload.isEmpty ? nil : payload
+    }
+
+    private func provenanceWorkspaceDisplayTicketLinksPayload(
+        _ ticketLinks: [ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord]
+    ) -> [[String: Any]] {
+        ticketLinks.map { ticketLink in
+            provenanceCompactPayload([
+                "id": ticketLink.id,
+                "system": ticketLink.system,
+                "url": ticketLink.url
+            ])
+        }
+    }
+
+    private func provenanceWorkspaceDisplayTicketLabels(_ currentState: [String: Any]) -> [String] {
+        let ticketLinks = currentState["ticket_links"] as? [[String: Any]] ?? []
+        let linkedLabels = ticketLinks.compactMap { ticketLink -> String? in
+            guard let id = ticketLink["id"] as? String else { return nil }
+            guard let url = ticketLink["url"] as? String, !url.isEmpty else { return id }
+            return "\(id) <\(url)>"
+        }
+        if !linkedLabels.isEmpty {
+            return linkedLabels
+        }
+        return currentState["ticket_ids"] as? [String] ?? []
     }
 
     private func provenanceCompactPayload(_ values: [String: Any?]) -> [String: Any] {
