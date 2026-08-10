@@ -574,7 +574,10 @@ final class AgentChatTranscriptService {
                 referenceWorkspaceId: parentWorkspace.id
             )
         } else {
-            _ = tabManager.reorderWorkspace(tabId: workspace.id, after: parentWorkspace.id)
+            _ = tabManager.reorderWorkspaceForAction(
+                tabId: workspace.id,
+                target: .after(parentWorkspace.id)
+            )
         }
         activeSubsessionWorkspaces[key] = ActiveSubsessionWorkspace(
             workspaceID: workspace.id,
@@ -592,10 +595,14 @@ final class AgentChatTranscriptService {
               let active = activeSubsessionWorkspaces.removeValue(forKey: key),
               let appDelegate = AppDelegate.shared,
               let tabManager = appDelegate.tabManagerFor(tabId: active.workspaceID),
-              let workspace = tabManager.tabs.first(where: { $0.id == active.workspaceID }) else {
+              tabManager.tabs.contains(where: { $0.id == active.workspaceID }) else {
             return
         }
-        tabManager.closeWorkspace(workspace, recordHistory: false)
+        _ = tabManager.closeWorkspaceForAction(
+            tabId: active.workspaceID,
+            allowPinned: true,
+            recordHistory: false
+        )
     }
 
     private func removeSubsessionWorkspaces(parentSessionID: String) {
@@ -606,10 +613,14 @@ final class AgentChatTranscriptService {
             guard let active = activeSubsessionWorkspaces.removeValue(forKey: key),
                   let appDelegate = AppDelegate.shared,
                   let tabManager = appDelegate.tabManagerFor(tabId: active.workspaceID),
-                  let workspace = tabManager.tabs.first(where: { $0.id == active.workspaceID }) else {
+                  tabManager.tabs.contains(where: { $0.id == active.workspaceID }) else {
                 continue
             }
-            tabManager.closeWorkspace(workspace, recordHistory: false)
+            _ = tabManager.closeWorkspaceForAction(
+                tabId: active.workspaceID,
+                allowPinned: true,
+                recordHistory: false
+            )
         }
     }
 

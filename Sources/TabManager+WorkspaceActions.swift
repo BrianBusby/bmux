@@ -74,11 +74,27 @@ extension TabManager {
     }
 
     func moveWorkspaceToTopForAction(tabId: UUID) -> Int? {
-        guard tabs.contains(where: { $0.id == tabId }) else {
+        guard !moveWorkspacesToTopForAction(workspaceIds: [tabId]).isEmpty else {
             return nil
         }
-        moveTabToTop(tabId)
         return tabs.firstIndex(where: { $0.id == tabId })
+    }
+
+    @discardableResult
+    func moveWorkspacesToTopForAction(workspaceIds: [UUID]) -> [UUID] {
+        let liveWorkspaceIds = Set(tabs.map(\.id))
+        var seen = Set<UUID>()
+        let targetWorkspaceIds = workspaceIds.filter { workspaceId in
+            guard liveWorkspaceIds.contains(workspaceId), !seen.contains(workspaceId) else {
+                return false
+            }
+            seen.insert(workspaceId)
+            return true
+        }
+
+        guard !targetWorkspaceIds.isEmpty else { return [] }
+        moveTabsToTop(Set(targetWorkspaceIds))
+        return targetWorkspaceIds
     }
 
     @discardableResult

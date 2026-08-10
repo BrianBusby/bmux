@@ -78,6 +78,31 @@ struct WorkspaceActionSocketTests {
         #expect(workspace.customDescription == "Existing")
     }
 
+    @Test func workspaceActionMoveTopUsesCanonicalMoveToTopPath() throws {
+        let manager = TabManager()
+        _ = try #require(manager.selectedWorkspace)
+        _ = manager.addWorkspace(select: false)
+        _ = manager.addWorkspace(select: false)
+        let originalOrder = manager.tabs.map(\.id)
+        let targetWorkspaceId = try #require(originalOrder.last)
+        let expectedOrder = [targetWorkspaceId] + originalOrder.dropLast()
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+
+        let response = try handleV2Request(
+            method: "workspace.action",
+            params: [
+                "workspace_id": targetWorkspaceId.uuidString,
+                "action": "move_top"
+            ]
+        )
+
+        #expect(response["ok"] as? Bool == true)
+        let result = try #require(response["result"] as? [String: Any])
+        #expect(result["index"] as? Int == 0)
+        #expect(manager.tabs.map(\.id) == expectedOrder)
+    }
+
     @Test func workspaceActionClearNameUsesCanonicalWorkspaceTitlePath() throws {
         let manager = TabManager()
         let workspace = try #require(manager.selectedWorkspace)

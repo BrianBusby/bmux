@@ -14570,7 +14570,7 @@ struct TabItemView: View, Equatable {
         .disabled(index >= tabManager.tabs.count - 1)
 
         Button(String(localized: "contextMenu.moveToTop", defaultValue: "Move to Top")) {
-            tabManager.moveTabsToTop(Set(targetIds))
+            guard !tabManager.moveWorkspacesToTopForAction(workspaceIds: targetIds).isEmpty else { return }
             syncSelectionAfterMutation()
         }
         .disabled(targetIds.isEmpty)
