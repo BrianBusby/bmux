@@ -272,7 +272,7 @@ import WebKit
         if let url = navigationAction.request.url,
            shouldOpenCheckoutInSystemBrowser(navigationAction, url: url) {
             clearAttemptedRequest(discardPendingBypasses: true)
-            let opened = NSWorkspace.shared.open(url)
+            let opened = BrowserExternalLinkOpener().openWebLink(url)
 #if DEBUG
             bmuxDebugLog(
                 "browser.nav.decidePolicy.action kind=openCheckoutInSystemBrowser opened=\(opened ? 1 : 0) " +

@@ -587,6 +587,6 @@ extension TextBoxInputContainer {
         guard let url = URL(string: "https://github.com/manaflow-ai/bmux/blob/main/docs/configuration.md#terminaltextboxsubmitactions") else {
             return
         }
-        NSWorkspace.shared.open(url)
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 }

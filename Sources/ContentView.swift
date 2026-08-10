@@ -7025,9 +7025,9 @@ struct ContentView: View {
         contributions.append(
             CommandPaletteCommandContribution(
                 commandId: "palette.browserOpenDefault",
-                title: constant(String(localized: "command.browserOpenDefault.title", defaultValue: "Open Current Page in Default Browser")),
+                title: constant(String(localized: "command.browserOpenChrome.title", defaultValue: "Open Current Page in Chrome")),
                 subtitle: browserPanelSubtitle,
-                keywords: ["open", "default", "external", "browser"],
+                keywords: ["open", "chrome", "external", "browser"],
                 when: { $0.bool(CommandPaletteContextKeys.panelIsBrowser) }
             )
         )
@@ -7968,7 +7968,7 @@ struct ContentView: View {
             tabManager.focusedBrowserPanel?.reload()
         }
         registry.register(commandId: "palette.browserOpenDefault") {
-            if !openFocusedBrowserInDefaultBrowser() {
+            if !openFocusedBrowserInChrome() {
                 NSSound.beep()
             }
         }
@@ -9442,7 +9442,7 @@ struct ContentView: View {
         return true
     }
 
-    private func openFocusedBrowserInDefaultBrowser() -> Bool {
+    private func openFocusedBrowserInChrome() -> Bool {
         guard let panel = tabManager.focusedBrowserPanel,
               let rawURL = panel.preferredURLStringForOmnibar(),
               let url = URL(string: rawURL),
@@ -9450,7 +9450,7 @@ struct ContentView: View {
               scheme == "http" || scheme == "https" else {
             return false
         }
-        return NSWorkspace.shared.open(url)
+        return BrowserExternalLinkOpener().openWebLink(url)
     }
 
     private func openWorkspacePullRequestsInConfiguredBrowser() -> Bool {
@@ -9463,7 +9463,7 @@ struct ContentView: View {
             for pullRequest in pullRequests {
                 if tabManager.openBrowser(url: pullRequest.url, insertAtEnd: true) != nil {
                     openedCount += 1
-                } else if NSWorkspace.shared.open(pullRequest.url) {
+                } else if BrowserExternalLinkOpener().openWebLink(pullRequest.url) {
                     openedCount += 1
                 }
             }
@@ -9471,7 +9471,7 @@ struct ContentView: View {
         }
 
         for pullRequest in pullRequests {
-            if NSWorkspace.shared.open(pullRequest.url) {
+            if BrowserExternalLinkOpener().openWebLink(pullRequest.url) {
                 openedCount += 1
             }
         }
@@ -11181,7 +11181,7 @@ struct VerticalTabsSidebar: View {
 
         case .openURL(let urlString):
             guard let url = bmuxSidebarExtensionRequiredHTTPURL(from: urlString),
-                  NSWorkspace.shared.open(url) else {
+                  BrowserExternalLinkOpener().openWebLink(url) else {
                 return BmuxSidebarActionResult(
                     accepted: false,
                     message: String(localized: "sidebar.extensions.action.urlRejected", defaultValue: "URL could not be opened")
@@ -12919,19 +12919,19 @@ private struct SidebarHelpMenuButton: View {
             }
         case .docs:
             guard let docsURL else { return }
-            NSWorkspace.shared.open(docsURL)
+            BrowserExternalLinkOpener().openWebLink(docsURL)
         case .changelog:
             guard let changelogURL else { return }
-            NSWorkspace.shared.open(changelogURL)
+            BrowserExternalLinkOpener().openWebLink(changelogURL)
         case .github:
             guard let githubURL else { return }
-            NSWorkspace.shared.open(githubURL)
+            BrowserExternalLinkOpener().openWebLink(githubURL)
         case .githubIssues:
             guard let githubIssuesURL else { return }
-            NSWorkspace.shared.open(githubIssuesURL)
+            BrowserExternalLinkOpener().openWebLink(githubIssuesURL)
         case .discord:
             guard let discordURL else { return }
-            NSWorkspace.shared.open(discordURL)
+            BrowserExternalLinkOpener().openWebLink(discordURL)
         case .checkForUpdates:
             Task { @MainActor in
                 AppDelegate.shared?.checkForUpdates(nil)
@@ -15238,11 +15238,11 @@ struct TabItemView: View, Equatable {
                 preferSplitRight: true,
                 insertAtEnd: true
             ) == nil {
-                NSWorkspace.shared.open(url)
+                BrowserExternalLinkOpener().openWebLink(url)
             }
             return
         }
-        NSWorkspace.shared.open(url)
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     private func openPortLink(_ port: Int) {
@@ -15255,11 +15255,11 @@ struct TabItemView: View, Equatable {
                 preferSplitRight: true,
                 insertAtEnd: true
             ) == nil {
-                NSWorkspace.shared.open(url)
+                BrowserExternalLinkOpener().openWebLink(url)
             }
             return
         }
-        NSWorkspace.shared.open(url)
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     private func pullRequestStatusLabel(_ status: SidebarPullRequestStatus) -> String {
@@ -15562,7 +15562,7 @@ private struct SidebarMetadataEntryRow: View {
             if let url = entry.url {
                 Button {
                     onFocus()
-                    NSWorkspace.shared.open(url)
+                    BrowserExternalLinkOpener().openWebLink(url)
                 } label: {
                     rowContent(underlined: true)
                 }

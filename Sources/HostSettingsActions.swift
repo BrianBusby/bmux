@@ -99,7 +99,7 @@ final class HostSettingsActions: SettingsHostActions {
 
     func sendFeedback() {
         guard let url = URL(string: "https://github.com/manaflow-ai/bmux/issues/new") else { return }
-        NSWorkspace.shared.open(url)
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     func sendTestNotification() {
@@ -108,7 +108,7 @@ final class HostSettingsActions: SettingsHostActions {
 
     func openSystemNotificationSettings() {
         guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") else { return }
-        NSWorkspace.shared.open(url)
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     func restartApp() {

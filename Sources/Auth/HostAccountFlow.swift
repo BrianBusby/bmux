@@ -75,7 +75,7 @@ final class HostAccountFlow: AccountFlow {
 
     func openSignInInDefaultBrowser() {
         guard let url = browserSignIn.activeAttemptSignInURL else { return }
-        NSWorkspace.shared.open(url)
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     func signOut() async {

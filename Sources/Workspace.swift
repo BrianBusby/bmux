@@ -8306,7 +8306,7 @@ final class Workspace: Identifiable, ObservableObject {
         let browserEnabled = BrowserAvailabilitySettings.isEnabled()
         guard browserEnabled || creationPolicy.permitsCreationWhenBrowserDisabled else {
             if let url {
-                _ = NSWorkspace.shared.open(url)
+                _ = BrowserExternalLinkOpener().openWebLink(url)
             }
             return nil
         }
@@ -8422,7 +8422,7 @@ final class Workspace: Identifiable, ObservableObject {
         let browserEnabled = BrowserAvailabilitySettings.isEnabled()
         guard browserEnabled || creationPolicy.permitsCreationWhenBrowserDisabled else {
             if let externalURL = url ?? initialRequest?.url {
-                _ = NSWorkspace.shared.open(externalURL)
+                BrowserExternalLinkOpener().openWebLink(externalURL)
             }
             return nil
         }

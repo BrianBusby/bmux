@@ -1101,7 +1101,7 @@ enum TextBoxAttachmentPreviewOpening {
             let configuration = NSWorkspace.OpenConfiguration()
             NSWorkspace.shared.open([url], withApplicationAt: previewURL, configuration: configuration)
         } else {
-            NSWorkspace.shared.open(url)
+            BrowserExternalLinkOpener().openWebLink(url)
         }
     }
 }

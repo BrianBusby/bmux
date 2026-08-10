@@ -6,7 +6,7 @@ import WebKit
 ///
 /// WebKit's own context-menu hit test knows the exact element under the
 /// cursor but does not expose it through public macOS API, so the custom menu
-/// actions ("Open Link in Default Browser", "Open Link in New Tab") used to
+/// actions ("Open Link in Chrome", "Open Link in New Tab") used to
 /// re-resolve the link later with a main-frame `document.elementFromPoint`
 /// hit test at the AppKit event coordinates. That re-resolution can disagree
 /// with the link the user actually right-clicked (page zoom scales CSS
@@ -177,7 +177,7 @@ extension BmuxWebView {
             _ = contextMenuDefaultBrowserOpener(url)
             return
         }
-        _ = NSWorkspace.shared.open(url)
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     /// Converts a view-local AppKit point to the CSS viewport coordinates

@@ -470,7 +470,7 @@ final class DockSplitStore: BonsplitDelegate {
             )
         case .browser:
             guard browserAvailabilityProvider() else {
-                if let externalURL = url ?? initialRequest?.url { _ = NSWorkspace.shared.open(externalURL) }
+                if let externalURL = url ?? initialRequest?.url { BrowserExternalLinkOpener().openWebLink(externalURL) }
                 return nil
             }
             return makeBrowserPanel(

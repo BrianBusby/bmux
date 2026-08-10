@@ -192,7 +192,7 @@ final class BrowserPopupWindowController: NSObject, NSWindowDelegate {
             if let opener = self?.openerPanel {
                 opener.openLinkInNewTab(url: url)
             } else {
-                NSWorkspace.shared.open(url)
+                BrowserExternalLinkOpener().openWebLink(url)
             }
         }
 
@@ -328,7 +328,7 @@ final class BrowserPopupWindowController: NSObject, NSWindowDelegate {
         if let openerPanel {
             openerPanel.openLinkInNewTab(request: request)
         } else if let url = request.url {
-            NSWorkspace.shared.open(url)
+            BrowserExternalLinkOpener().openWebLink(url)
         }
     }
 
@@ -371,8 +371,8 @@ final class BrowserPopupWindowController: NSObject, NSWindowDelegate {
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = String(localized: "browser.error.insecure.title", defaultValue: "Connection isn\u{2019}t secure")
-        alert.informativeText = String(localized: "browser.error.insecure.message", defaultValue: "\(host) uses plain HTTP, so traffic can be read or modified on the network.\n\nOpen this URL in your default browser, or proceed in bmux.")
-        alert.addButton(withTitle: String(localized: "browser.openInDefaultBrowser", defaultValue: "Open in Default Browser"))
+        alert.informativeText = String(localized: "browser.error.insecure.message", defaultValue: "\(host) uses plain HTTP, so traffic can be read or modified on the network.\n\nOpen this URL in Chrome, or proceed in bmux.")
+        alert.addButton(withTitle: String(localized: "browser.openInChrome", defaultValue: "Open in Chrome"))
         alert.addButton(withTitle: String(localized: "browser.proceedInBmux", defaultValue: "Proceed in bmux"))
         alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel"))
         alert.showsSuppressionButton = true
@@ -385,10 +385,10 @@ final class BrowserPopupWindowController: NSObject, NSWindowDelegate {
             ) {
                 BrowserInsecureHTTPSettings.addAllowedHost(host)
             }
-            switch response {
-            case .alertFirstButtonReturn:
-                // Open in default browser, cancel popup navigation
-                NSWorkspace.shared.open(url)
+        switch response {
+        case .alertFirstButtonReturn:
+                // Open in Chrome, cancel popup navigation
+                BrowserExternalLinkOpener().openWebLink(url)
                 decisionHandler(.cancel)
             case .alertSecondButtonReturn:
                 // Proceed in popup

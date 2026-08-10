@@ -851,12 +851,12 @@ struct MarkdownWebRenderer: NSViewRepresentable {
             // Route those to the system handler so the user's default app picks them up.
             if let scheme = url.scheme?.lowercased(),
                scheme != "http", scheme != "https" {
-                NSWorkspace.shared.open(url)
+                BrowserExternalLinkOpener().openWebLink(url)
                 return
             }
 
             guard BrowserAvailabilitySettings.isEnabled() else {
-                NSWorkspace.shared.open(url)
+                BrowserExternalLinkOpener().openWebLink(url)
                 return
             }
 
@@ -867,7 +867,7 @@ struct MarkdownWebRenderer: NSViewRepresentable {
                   ),
                   let paneId = location.workspace.paneId(forPanelId: panelId) else {
                 // No workspace context — last-resort fallback.
-                NSWorkspace.shared.open(url)
+                BrowserExternalLinkOpener().openWebLink(url)
                 return
             }
 

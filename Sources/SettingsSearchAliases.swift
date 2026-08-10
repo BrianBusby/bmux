@@ -24,7 +24,7 @@ enum SettingsSearchAliasIndex {
         case .automation:
             return localized("settings.search.alias.section.automation", defaultValue: "api cli control socket mcp agents hooks ports")
         case .browser:
-            return localized("settings.search.alias.section.browser", defaultValue: "web webview address bar omnibar links urls embedded default browser")
+            return localized("settings.search.alias.section.browser", defaultValue: "web webview address bar omnibar links urls embedded chrome browser")
         case .browserImport:
             return localized("settings.search.alias.section.browserImport", defaultValue: "chrome safari firefox brave edge arc bookmarks history cookies profiles")
         case .globalHotkey:
@@ -150,7 +150,7 @@ enum SettingsSearchAliasIndex {
         "browser:terminal-links": localized("settings.search.alias.setting.browser.terminal-links", defaultValue: "browser.openTerminalLinksInBmuxBrowser click url terminal links open in browser href"),
         "browser:intercept-open": localized("settings.search.alias.setting.browser.intercept-open", defaultValue: "browser.interceptTerminalOpenCommandInBmuxBrowser open command http https url terminal intercept"),
         "browser:host-whitelist": localized("settings.search.alias.setting.browser.host-whitelist", defaultValue: "browser.hostsToOpenInEmbeddedBrowser allowlist whitelist host wildcard domain embedded browser"),
-        "browser:external-patterns": localized("settings.search.alias.setting.browser.external-patterns", defaultValue: "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser"),
+        "browser:external-patterns": localized("settings.search.alias.setting.browser.external-patterns", defaultValue: "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser"),
         "browser:http-allowlist": localized("settings.search.alias.setting.browser.http-allowlist", defaultValue: "browser.insecureHttpHostsAllowedInEmbeddedBrowser insecure http allowlist localhost localtest non-https warning"),
         "browserImport:import-data": localized("settings.search.alias.setting.browserImport.import-data", defaultValue: "chrome safari firefox brave edge arc bookmarks history cookies profiles migration"),
         "browserImport:import-hint": localized("settings.search.alias.setting.browserImport.import-hint", defaultValue: "browser.showImportHintOnBlankTabs blank tab onboarding hint import prompt dismiss"),

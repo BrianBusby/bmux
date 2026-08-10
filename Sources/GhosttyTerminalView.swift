@@ -2500,7 +2500,7 @@ class GhosttyApp {
             #if DEBUG
             bmuxDebugLog("link.openURL deferred embedded but bmuxBrowser=disabled, opening externally url=\(url)")
             #endif
-            return NSWorkspace.shared.open(url)
+            return BrowserExternalLinkOpener().openWebLink(url)
         }
 
         guard let app = AppDelegate.shared,
@@ -2514,7 +2514,7 @@ class GhosttyApp {
                 "tabId=\(sourceWorkspaceId) surfaceId=\(sourcePanelId) url=\(url)"
             )
             #endif
-            return NSWorkspace.shared.open(url)
+            return BrowserExternalLinkOpener().openWebLink(url)
         }
 
         let workspace = resolved.workspace
@@ -2544,7 +2544,7 @@ class GhosttyApp {
                 "host=\(host) url=\(url)"
             )
             #endif
-            return NSWorkspace.shared.open(url)
+            return BrowserExternalLinkOpener().openWebLink(url)
         }
 
         return true
@@ -3135,7 +3135,7 @@ class GhosttyApp {
                 bmuxDebugLog("link.openURL bmuxBrowser=disabled, opening externally url=\(target.url)")
                 #endif
                 return performOnMain {
-                    NSWorkspace.shared.open(target.url)
+                    BrowserExternalLinkOpener().openWebLink(target.url)
                 }
             }
             switch target {
@@ -3144,7 +3144,7 @@ class GhosttyApp {
                 bmuxDebugLog("link.openURL target=external, opening externally url=\(url)")
                 #endif
                 return performOnMain {
-                    NSWorkspace.shared.open(url)
+                    BrowserExternalLinkOpener().openWebLink(url)
                 }
             case let .embeddedBrowser(url):
                 if BrowserLinkOpenSettings.shouldOpenExternally(url) {
@@ -3152,7 +3152,7 @@ class GhosttyApp {
                     bmuxDebugLog("link.openURL target=embedded but shouldOpenExternally=true url=\(url)")
                     #endif
                     return performOnMain {
-                        NSWorkspace.shared.open(url)
+                        BrowserExternalLinkOpener().openWebLink(url)
                     }
                 }
                 guard let host = BrowserInsecureHTTPSettings.normalizeHost(url.host ?? "") else {
@@ -3160,7 +3160,7 @@ class GhosttyApp {
                     bmuxDebugLog("link.openURL target=embedded but normalizeHost=nil host=\(url.host ?? "nil") url=\(url)")
                     #endif
                     return performOnMain {
-                        NSWorkspace.shared.open(url)
+                        BrowserExternalLinkOpener().openWebLink(url)
                     }
                 }
 
@@ -3170,7 +3170,7 @@ class GhosttyApp {
                     bmuxDebugLog("link.openURL target=embedded but hostWhitelist miss host=\(host) url=\(url)")
                     #endif
                     return performOnMain {
-                        NSWorkspace.shared.open(url)
+                        BrowserExternalLinkOpener().openWebLink(url)
                     }
                 }
                 let sourceWorkspaceId = callbackTabId ?? surfaceView.tabId
@@ -3203,7 +3203,7 @@ class GhosttyApp {
                     )
                     #endif
                     return performOnMain {
-                        NSWorkspace.shared.open(url)
+                        BrowserExternalLinkOpener().openWebLink(url)
                     }
                 }
 

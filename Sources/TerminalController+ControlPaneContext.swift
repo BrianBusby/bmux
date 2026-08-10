@@ -445,7 +445,7 @@ extension TerminalController: ControlPaneContext {
         guard let url else {
             return .browserDisabledNoURL
         }
-        guard NSWorkspace.shared.open(url) else {
+        guard BrowserExternalLinkOpener().openWebLink(url) else {
             return .browserDisabledExternalOpenFailed(url: url.absoluteString)
         }
         let windowId = v2ResolveWindowId(tabManager: tabManager)

@@ -11,7 +11,7 @@ import WebKit
 @MainActor
 @Suite(.serialized)
 struct BmuxWebViewContextMenuLinkCaptureTests {
-    // Regression test: "Open Link in Default Browser" must open the link the
+    // Regression test: "Open Link in Chrome" must open the link the
     // user actually right-clicked (the DOM contextmenu target), not whatever a
     // later elementFromPoint hit test finds at the AppKit event coordinates.
     // The two diverge under page zoom and inside iframes, which opened the
@@ -154,7 +154,7 @@ struct BmuxWebViewContextMenuLinkCaptureTests {
     }
 
     /// Opens the synthesized context menu at `menuEventLocation` and invokes
-    /// "Open Link in Default Browser", returning the URL handed to the opener.
+    /// "Open Link in Chrome", returning the URL handed to the opener.
     private func openLinkInDefaultBrowser(
         _ webView: BmuxWebView,
         menuEventLocation: NSPoint,
@@ -186,7 +186,7 @@ struct BmuxWebViewContextMenuLinkCaptureTests {
         )
         webView.willOpenMenu(menu, with: rightMouseDown)
 
-        let item = try #require(menu.items.first { $0.title == "Open Link in Default Browser" })
+        let item = try #require(menu.items.first { $0.title == "Open Link in Chrome" })
         let action = try #require(item.action)
         _ = NSApp.sendAction(action, to: item.target, from: item)
 

@@ -79,7 +79,7 @@ extension bmuxApp {
 
     private func helpResourceButton(_ resource: BmuxHelpResource) -> some View {
         Button(resource.title) {
-            NSWorkspace.shared.open(resource.url)
+            BrowserExternalLinkOpener().openWebLink(resource.url)
         }
     }
 

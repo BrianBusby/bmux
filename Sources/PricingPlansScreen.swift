@@ -40,7 +40,7 @@ enum ProUpgradePresenter {
     static func presentAppPricingWeb() {
         let url = appPricingURLForCurrentAppearance()
         guard BrowserAvailabilitySettings.isEnabled() else {
-            NSWorkspace.shared.open(url)
+            BrowserExternalLinkOpener().openWebLink(url)
             return
         }
         if presentDedicatedPricingWorkspace(url: url) {
@@ -56,12 +56,12 @@ enum ProUpgradePresenter {
 
     @MainActor
     static func presentCheckout() {
-        NSWorkspace.shared.open(AuthEnvironment.billingCheckoutURL)
+        BrowserExternalLinkOpener().openWebLink(AuthEnvironment.billingCheckoutURL)
     }
 
     @MainActor
     static func presentBillingPortal() {
-        NSWorkspace.shared.open(AuthEnvironment.billingPortalURL)
+        BrowserExternalLinkOpener().openWebLink(AuthEnvironment.billingPortalURL)
     }
 
     @MainActor
@@ -110,7 +110,7 @@ enum ProUpgradePresenter {
         if AppDelegate.shared?.openBrowserAndFocusAddressBar(url: url) != nil {
             return
         }
-        NSWorkspace.shared.open(url)
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     @MainActor
@@ -417,7 +417,7 @@ private struct NativePricingPlansView: View {
                 period: String(localized: "pricing.native.period.userMonth", defaultValue: "/user/month"),
                 isCurrent: false,
                 actionTitle: String(localized: "pricing.native.team.cta", defaultValue: "Get Teams"),
-                action: { NSWorkspace.shared.open(AuthEnvironment.websiteOrigin) },
+                action: { BrowserExternalLinkOpener().openWebLink(AuthEnvironment.websiteOrigin) },
                 features: [
                     String(localized: "pricing.native.team.feature.billing", defaultValue: "Unified billing for the whole team"),
                     String(localized: "pricing.native.team.feature.seats", defaultValue: "Centralized seat management"),
@@ -434,7 +434,7 @@ private struct NativePricingPlansView: View {
                 actionTitle: String(localized: "pricing.native.enterprise.cta", defaultValue: "Contact sales"),
                 action: {
                     if let url = URL(string: "mailto:founders@manaflow.com") {
-                        NSWorkspace.shared.open(url)
+                        BrowserExternalLinkOpener().openWebLink(url)
                     }
                 },
                 features: [

@@ -6532,7 +6532,7 @@ class TerminalController {
             data: ["url": url.absoluteString]
         )
         v2MainSync {
-            guard NSWorkspace.shared.open(url) else { return }
+            guard BrowserExternalLinkOpener().openWebLink(url) else { return }
             let windowId = v2ResolveWindowId(tabManager: tabManager)
             result = .ok([
                 "window_id": v2OrNull(windowId?.uuidString),
@@ -6606,7 +6606,7 @@ class TerminalController {
             if let url,
                respectExternalOpenRules,
                BrowserLinkOpenSettings.shouldOpenExternally(url) {
-                guard NSWorkspace.shared.open(url) else {
+                guard BrowserExternalLinkOpener().openWebLink(url) else {
                     result = .err(
                         code: "external_open_failed",
                         message: "Failed to open URL externally",

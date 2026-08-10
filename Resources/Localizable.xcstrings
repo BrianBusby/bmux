@@ -19554,121 +19554,121 @@
         }
       }
     },
-    "browser.contextMenu.openLinkInDefaultBrowser": {
+    "browser.contextMenu.openLinkInChrome": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "فتح الرابط في المتصفح الافتراضي"
+            "value": "فتح الرابط في Chrome"
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Otvori link u podrazumijevanom pregledniku"
+            "value": "Otvori link u Chromeu"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Åbn link i standardbrowser"
+            "value": "Åbn link i Chrome"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Link im Standardbrowser öffnen"
+            "value": "Link in Chrome öffnen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Link in Default Browser"
+            "value": "Open Link in Chrome"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir enlace en el navegador predeterminado"
+            "value": "Abrir enlace en Chrome"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrir le lien dans le navigateur par défaut"
+            "value": "Ouvrir le lien dans Chrome"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apri link nel browser predefinito"
+            "value": "Apri link in Chrome"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "デフォルトブラウザでリンクを開く"
+            "value": "Chromeでリンクを開く"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "기본 브라우저에서 링크 열기"
+            "value": "Chrome에서 링크 열기"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Åpne lenke i standard nettleser"
+            "value": "Åpne lenke i Chrome"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Otwórz odnośnik w domyślnej przeglądarce"
+            "value": "Otwórz odnośnik w Chrome"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir Link no Navegador Padrão"
+            "value": "Abrir link no Chrome"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Открыть ссылку в браузере по умолчанию"
+            "value": "Открыть ссылку в Chrome"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "เปิดลิงก์ในเบราว์เซอร์เริ่มต้น"
+            "value": "เปิดลิงก์ใน Chrome"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bağlantıyı Varsayılan Tarayıcıda Aç"
+            "value": "Bağlantıyı Chrome’da Aç"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Відкрити посилання в стандартному браузері"
+            "value": "Відкрити посилання в Chrome"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在默认浏览器中打开链接"
+            "value": "在 Chrome 中打开链接"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在預設瀏覽器中開啟連結"
+            "value": "在 Chrome 中開啟連結"
           }
         }
       }
@@ -23607,115 +23607,115 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يستخدم %@ بروتوكول HTTP غير مشفر، لذا يمكن قراءة حركة البيانات أو تعديلها على الشبكة.\n\nافتح هذا URL في متصفحك الافتراضي، أو تابع في bmux."
+            "value": "يستخدم %@ بروتوكول HTTP غير مشفر، لذا يمكن قراءة حركة البيانات أو تعديلها على الشبكة.\n\nافتح هذا URL في Chrome، أو تابع في bmux."
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ koristi čisti HTTP, pa se promet može čitati ili mijenjati na mreži.\n\nOtvorite ovaj URL u podrazumijevanom pregledniku ili nastavite u bmux."
+            "value": "%@ koristi čisti HTTP, pa se promet može čitati ili mijenjati na mreži.\n\nOtvorite ovaj URL u Chromeu ili nastavite u bmux."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ bruger almindelig HTTP, så trafikken kan læses eller ændres på netværket.\n\nÅbn denne URL i din standardbrowser, eller fortsæt i bmux."
+            "value": "%@ bruger almindelig HTTP, så trafikken kan læses eller ændres på netværket.\n\nÅbn denne URL i Chrome, eller fortsæt i bmux."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ verwendet unverschlüsseltes HTTP, daher kann der Datenverkehr im Netzwerk gelesen oder verändert werden.\n\nÖffnen Sie diese URL in Ihrem Standardbrowser oder fahren Sie in bmux fort."
+            "value": "%@ verwendet unverschlüsseltes HTTP, daher kann der Datenverkehr im Netzwerk gelesen oder verändert werden.\n\nÖffnen Sie diese URL in Chrome oder fahren Sie in bmux fort."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ uses plain HTTP, so traffic can be read or modified on the network.\n\nOpen this URL in your default browser, or proceed in bmux."
+            "value": "%@ uses plain HTTP, so traffic can be read or modified on the network.\n\nOpen this URL in Chrome, or proceed in bmux."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ usa HTTP sin cifrar, por lo que el tráfico puede ser leído o modificado en la red.\n\nAbre esta URL en tu navegador predeterminado o continúa en bmux."
+            "value": "%@ usa HTTP sin cifrar, por lo que el tráfico puede ser leído o modificado en la red.\n\nAbre esta URL en Chrome o continúa en bmux."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ utilise le protocole HTTP non chiffré, le trafic peut donc être lu ou modifié sur le réseau.\n\nOuvrez cette URL dans votre navigateur par défaut ou continuez dans bmux."
+            "value": "%@ utilise le protocole HTTP non chiffré, le trafic peut donc être lu ou modifié sur le réseau.\n\nOuvrez cette URL dans Chrome ou continuez dans bmux."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ utilizza HTTP non crittografato, quindi il traffico può essere letto o modificato sulla rete.\n\nApri questo URL nel browser predefinito oppure continua in bmux."
+            "value": "%@ utilizza HTTP non crittografato, quindi il traffico può essere letto o modificato sulla rete.\n\nApri questo URL in Chrome oppure continua in bmux."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ は HTTP 接続を使用しているため、通信内容がネットワーク上で読み取られたり改ざんされる可能性があります。\n\nデフォルトブラウザで開くか、bmux で続行してください。"
+            "value": "%@ は HTTP 接続を使用しているため、通信内容がネットワーク上で読み取られたり改ざんされる可能性があります。\n\nChromeで開くか、bmux で続行してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@은(는) 일반 HTTP를 사용하므로, 네트워크에서 트래픽이 읽히거나 변조될 수 있습니다.\n\n기본 브라우저에서 이 URL을 열거나, bmux에서 계속 진행하세요."
+            "value": "%@은(는) 일반 HTTP를 사용하므로, 네트워크에서 트래픽이 읽히거나 변조될 수 있습니다.\n\nChrome에서 이 URL을 열거나, bmux에서 계속 진행하세요."
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ bruker vanlig HTTP, så trafikk kan leses eller endres på nettverket.\n\nÅpne denne URL-en i standard nettleser, eller fortsett i bmux."
+            "value": "%@ bruker vanlig HTTP, så trafikk kan leses eller endres på nettverket.\n\nÅpne denne URL-en i Chrome, eller fortsett i bmux."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ używa zwykłego HTTP, więc ruch sieciowy może być odczytany lub zmodyfikowany.\n\nOtwórz ten URL w domyślnej przeglądarce lub kontynuuj w bmux."
+            "value": "%@ używa zwykłego HTTP, więc ruch sieciowy może być odczytany lub zmodyfikowany.\n\nOtwórz ten URL w Chrome lub kontynuuj w bmux."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ usa HTTP simples, então o tráfego pode ser lido ou modificado na rede.\n\nAbra esta URL no seu navegador padrão ou continue no bmux."
+            "value": "%@ usa HTTP simples, então o tráfego pode ser lido ou modificado na rede.\n\nAbra esta URL no Chrome ou continue no bmux."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ использует незащищенный протокол HTTP, поэтому трафик может быть перехвачен или изменен в сети.\n\nОткройте этот URL в браузере по умолчанию или продолжите в bmux."
+            "value": "%@ использует незащищенный протокол HTTP, поэтому трафик может быть перехвачен или изменен в сети.\n\nОткройте этот URL в Chrome или продолжите в bmux."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ ใช้ HTTP แบบธรรมดา ดังนั้นข้อมูลอาจถูกอ่านหรือแก้ไขบนเครือข่ายได้\n\nเปิด URL นี้ในเบราว์เซอร์เริ่มต้น หรือดำเนินการต่อใน bmux"
+            "value": "%@ ใช้ HTTP แบบธรรมดา ดังนั้นข้อมูลอาจถูกอ่านหรือแก้ไขบนเครือข่ายได้\n\nเปิด URL นี้ใน Chrome หรือดำเนินการต่อใน bmux"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ düz HTTP kullanıyor, bu nedenle trafik ağda okunabilir veya değiştirilebilir.\n\nBu URL'yi varsayılan tarayıcınızda açın ya da bmux'ta devam edin."
+            "value": "%@ düz HTTP kullanıyor, bu nedenle trafik ağda okunabilir veya değiştirilebilir.\n\nBu URL'yi Chrome’da açın ya da bmux'ta devam edin."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ використовує незахищений HTTP, тому трафік може бути прочитаний або змінений у мережі.\n\nВідкрийте цю URL-адресу у стандартному браузері або продовжте в bmux, якщо довіряєте цьому ресурсу."
+            "value": "%@ використовує незахищений HTTP, тому трафік може бути прочитаний або змінений у мережі.\n\nВідкрийте цю URL-адресу у Chrome або продовжте в bmux, якщо довіряєте цьому ресурсу."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ 使用纯 HTTP 连接，网络上的流量可能被读取或修改。\n\n请在默认浏览器中打开此 URL，或在 bmux 中继续访问。"
+            "value": "%@ 使用纯 HTTP 连接，网络上的流量可能被读取或修改。\n\n请在 Chrome 中打开此 URL，或在 bmux 中继续访问。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ 使用未加密的 HTTP，網路上的流量可能被讀取或竄改。\n\n在您的預設瀏覽器中開啟此 URL，或在 bmux 中繼續。"
+            "value": "%@ 使用未加密的 HTTP，網路上的流量可能被讀取或竄改。\n\n在 Chrome 中開啟此 URL，或在 bmux 中繼續。"
           }
         }
       }
@@ -28317,121 +28317,121 @@
         }
       }
     },
-    "browser.openInDefaultBrowser": {
+    "browser.openInChrome": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "فتح في المتصفح الافتراضي"
+            "value": "فتح في Chrome"
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Otvori u podrazumijevanom pregledniku"
+            "value": "Otvori u Chromeu"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Åbn i standardbrowser"
+            "value": "Åbn i Chrome"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Im Standardbrowser öffnen"
+            "value": "In Chrome öffnen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open in Default Browser"
+            "value": "Open in Chrome"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir en el navegador predeterminado"
+            "value": "Abrir en Chrome"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrir dans le navigateur par défaut"
+            "value": "Ouvrir dans Chrome"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apri nel browser predefinito"
+            "value": "Apri in Chrome"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "デフォルトブラウザで開く"
+            "value": "Chromeで開く"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "기본 브라우저에서 열기"
+            "value": "Chrome에서 열기"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Åpne i standard nettleser"
+            "value": "Åpne i Chrome"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Otwórz w domyślnej przeglądarce"
+            "value": "Otwórz w Chrome"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir no Navegador Padrão"
+            "value": "Abrir no Chrome"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Открыть в браузере по умолчанию"
+            "value": "Открыть в Chrome"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "เปิดในเบราว์เซอร์เริ่มต้น"
+            "value": "เปิดใน Chrome"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Varsayılan Tarayıcıda Aç"
+            "value": "Chrome’da Aç"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Відкрити у стандартному браузері"
+            "value": "Відкрити у Chrome"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在默认浏览器中打开"
+            "value": "在 Chrome 中打开"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在預設瀏覽器中開啟"
+            "value": "在 Chrome 中開啟"
           }
         }
       }
@@ -46027,121 +46027,121 @@
         }
       }
     },
-    "command.browserOpenDefault.title": {
+    "command.browserOpenChrome.title": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "فتح الصفحة الحالية في المتصفح الافتراضي"
+            "value": "فتح الصفحة الحالية في Chrome"
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Otvori trenutnu stranicu u podrazumijevanom pregledniku"
+            "value": "Otvori trenutnu stranicu u Chromeu"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Åbn aktuel side i standardbrowser"
+            "value": "Åbn aktuel side i Chrome"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aktuelle Seite im Standardbrowser öffnen"
+            "value": "Aktuelle Seite in Chrome öffnen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Current Page in Default Browser"
+            "value": "Open Current Page in Chrome"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir página actual en el navegador predeterminado"
+            "value": "Abrir página actual en Chrome"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrir la page dans le navigateur par défaut"
+            "value": "Ouvrir la page dans Chrome"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apri la pagina corrente nel browser predefinito"
+            "value": "Apri la pagina corrente in Chrome"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "現在のページをデフォルトブラウザで開く"
+            "value": "現在のページをChromeで開く"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "현재 페이지를 기본 브라우저에서 열기"
+            "value": "현재 페이지를 Chrome에서 열기"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Åpne gjeldende side i standard nettleser"
+            "value": "Åpne gjeldende side i Chrome"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Otwórz bieżącą stronę w domyślnej przeglądarce"
+            "value": "Otwórz bieżącą stronę w Chrome"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir Página Atual no Navegador Padrão"
+            "value": "Abrir página atual no Chrome"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Открыть текущую страницу в браузере по умолчанию"
+            "value": "Открыть текущую страницу в Chrome"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "เปิดหน้าปัจจุบันในเบราว์เซอร์เริ่มต้น"
+            "value": "เปิดหน้าปัจจุบันใน Chrome"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geçerli Sayfayı Varsayılan Tarayıcıda Aç"
+            "value": "Geçerli Sayfayı Chrome’da Aç"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Відкрити поточну сторінку у стандартному браузері"
+            "value": "Відкрити поточну сторінку у Chrome"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在默认浏览器中打开当前页面"
+            "value": "在 Chrome 中打开当前页面"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在預設瀏覽器中開啟目前頁面"
+            "value": "在 Chrome 中開啟目前頁面"
           }
         }
       }
@@ -122456,7 +122456,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The system sign-in window may stop responding. If nothing happens, open sign-in in your default browser instead."
+            "value": "The system sign-in window may stop responding. If nothing happens, open sign-in in Chrome instead."
           }
         },
         "es": {
@@ -132545,7 +132545,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The system sign-in window may stop responding. If nothing happens, open sign-in in your default browser instead."
+            "value": "The system sign-in window may stop responding. If nothing happens, open sign-in in Chrome instead."
           }
         },
         "ja": {
@@ -137964,115 +137964,115 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "النقرات تفتح في متصفحك الافتراضي."
+            "value": "النقرات تفتح في Chrome."
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klikovi se otvaraju u podrazumijevanom pregledniku."
+            "value": "Klikovi se otvaraju u Chromeu."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klik åbner i din standardbrowser."
+            "value": "Klik åbner i Chrome."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klicks öffnen in Ihrem Standardbrowser."
+            "value": "Klicks öffnen in Chrome."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clicks open in your default browser."
+            "value": "Clicks open in Chrome."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los clics abren en tu navegador predeterminado."
+            "value": "Los clics abren en Chrome."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les clics ouvrent dans votre navigateur par défaut."
+            "value": "Les clics ouvrent dans Chrome."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I clic aprono nel browser predefinito."
+            "value": "I clic aprono in Chrome."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "クリックするとデフォルトブラウザで開きます。"
+            "value": "クリックするとChromeで開きます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "클릭하면 기본 브라우저에서 열립니다."
+            "value": "클릭하면 Chrome에서 열립니다."
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klikk åpner i standard nettleser."
+            "value": "Klikk åpner i Chrome."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kliknięcia otwierają w domyślnej przeglądarce."
+            "value": "Kliknięcia otwierają w Chrome."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cliques abrem no seu navegador padrão."
+            "value": "Cliques abrem no Chrome."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ссылки открываются в браузере по умолчанию."
+            "value": "Ссылки открываются в Chrome."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "คลิกจะเปิดในเบราว์เซอร์เริ่มต้นของคุณ"
+            "value": "คลิกจะเปิดใน Chrome"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tıklamalar varsayılan tarayıcınızda açılır."
+            "value": "Tıklamalar Chrome’da açılır."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Кліки відкриваються у стандартному браузері."
+            "value": "Кліки відкриваються у Chrome."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "点击在默认浏览器中打开。"
+            "value": "点击在 Chrome 中打开。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "點擊會在您的預設瀏覽器中開啟。"
+            "value": "點擊會在 Chrome 中開啟。"
           }
         }
       }
@@ -138321,115 +138321,115 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "نقرات المنافذ تفتح في متصفحك الافتراضي."
+            "value": "نقرات المنافذ تفتح في Chrome."
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klikovi na portove se otvaraju u podrazumijevanom pregledniku."
+            "value": "Klikovi na portove se otvaraju u Chromeu."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Portklik åbner i din standardbrowser."
+            "value": "Portklik åbner i Chrome."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Port-Klicks öffnen in Ihrem Standardbrowser."
+            "value": "Port-Klicks öffnen in Chrome."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Port clicks open in your default browser."
+            "value": "Port clicks open in Chrome."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los clics en puertos abren en tu navegador predeterminado."
+            "value": "Los clics en puertos abren en Chrome."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les clics de port ouvrent dans votre navigateur par défaut."
+            "value": "Les clics de port ouvrent dans Chrome."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I clic sulle porte aprono nel browser predefinito."
+            "value": "I clic sulle porte aprono in Chrome."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ポートをクリックするとデフォルトブラウザで開きます。"
+            "value": "ポートをクリックするとChromeで開きます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "포트를 클릭하면 기본 브라우저에서 열립니다."
+            "value": "포트를 클릭하면 Chrome에서 열립니다."
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Portklikk åpner i standard nettleser."
+            "value": "Portklikk åpner i Chrome."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kliknięcia portów otwierają w domyślnej przeglądarce."
+            "value": "Kliknięcia portów otwierają w Chrome."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cliques em portas abrem no seu navegador padrão."
+            "value": "Cliques em portas abrem no Chrome."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ссылки портов открываются в браузере по умолчанию."
+            "value": "Ссылки портов открываются в Chrome."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "คลิกพอร์ตจะเปิดในเบราว์เซอร์เริ่มต้นของคุณ"
+            "value": "คลิกพอร์ตจะเปิดใน Chrome"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Port tıklamaları varsayılan tarayıcınızda açılır."
+            "value": "Port tıklamaları Chrome’da açılır."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Кліки по портах відкриваються у стандартному браузері."
+            "value": "Кліки по портах відкриваються у Chrome."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "端口点击在默认浏览器中打开。"
+            "value": "端口点击在 Chrome 中打开。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "連接埠點擊會在您的預設瀏覽器中開啟。"
+            "value": "連接埠點擊會在 Chrome 中開啟。"
           }
         }
       }
@@ -150681,13 +150681,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Browser tabs, terminal link clicks, and intercepted open commands are disabled. Links open in your default browser."
+            "value": "Browser tabs, terminal link clicks, and intercepted open commands are disabled. Links open in Chrome."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ブラウザタブ、ターミナルのリンククリック、インターセプトされたopenコマンドは無効です。リンクはデフォルトブラウザで開きます。"
+            "value": "ブラウザタブ、ターミナルのリンククリック、インターセプトされたopenコマンドは無効です。リンクはChromeで開きます。"
           }
         }
       }
@@ -152410,109 +152410,109 @@
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Primjenjuje se na klikove linkova u terminalu i presretnute `open https://...` pozive. Samo se ovi hostovi otvaraju u bmux. Ostali se otvaraju u podrazumijevanom pregledniku. Jedan host ili zamjenski znak po redu (na primjer: example.com, *.internal.example). Ostavite prazno da otvorite sve hostove u bmux."
+            "value": "Primjenjuje se na klikove linkova u terminalu i presretnute `open https://...` pozive. Samo se ovi hostovi otvaraju u bmux. Ostali se otvaraju u Chromeu. Jedan host ili zamjenski znak po redu (na primjer: example.com, *.internal.example). Ostavite prazno da otvorite sve hostove u bmux."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gælder for terminallinksklik og opfangede `open https://...`-kald. Kun disse værter åbnes i bmux. Andre åbnes i din standardbrowser. Én vært eller wildcard pr. linje (f.eks.: example.com, *.internal.example). Lad stå tomt for at åbne alle værter i bmux."
+            "value": "Gælder for terminallinksklik og opfangede `open https://...`-kald. Kun disse værter åbnes i bmux. Andre åbnes i Chrome. Én vært eller wildcard pr. linje (f.eks.: example.com, *.internal.example). Lad stå tomt for at åbne alle værter i bmux."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gilt für Klicks auf Terminal-Links und abgefangene `open https://...`-Aufrufe. Nur diese Hosts werden in bmux geöffnet. Andere werden in Ihrem Standardbrowser geöffnet. Ein Host oder Platzhalter pro Zeile (zum Beispiel: example.com, *.internal.example). Leer lassen, um alle Hosts in bmux zu öffnen."
+            "value": "Gilt für Klicks auf Terminal-Links und abgefangene `open https://...`-Aufrufe. Nur diese Hosts werden in bmux geöffnet. Andere werden in Chrome geöffnet. Ein Host oder Platzhalter pro Zeile (zum Beispiel: example.com, *.internal.example). Leer lassen, um alle Hosts in bmux zu öffnen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Applies to terminal link clicks and intercepted `open https://...` calls. Only these hosts open in bmux. Others open in your default browser. One host or wildcard per line (for example: example.com, *.internal.example). Leave empty to open all hosts in bmux."
+            "value": "Applies to terminal link clicks and intercepted `open https://...` calls. Only these hosts open in bmux. Others open in Chrome. One host or wildcard per line (for example: example.com, *.internal.example). Leave empty to open all hosts in bmux."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se aplica a clics en enlaces del terminal y llamadas interceptadas de `open https://...`. Solo estos hosts se abren en bmux. Los demás se abren en tu navegador predeterminado. Un host o comodín por línea (por ejemplo: example.com, *.internal.example). Déjalo vacío para abrir todos los hosts en bmux."
+            "value": "Se aplica a clics en enlaces del terminal y llamadas interceptadas de `open https://...`. Solo estos hosts se abren en bmux. Los demás se abren en Chrome. Un host o comodín por línea (por ejemplo: example.com, *.internal.example). Déjalo vacío para abrir todos los hosts en bmux."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "S'applique aux clics sur les liens du terminal et aux appels `open https://...` interceptés. Seuls ces hôtes s'ouvrent dans bmux. Les autres s'ouvrent dans votre navigateur par défaut. Un hôte ou caractère générique par ligne (par exemple : example.com, *.internal.example). Laissez vide pour ouvrir tous les hôtes dans bmux."
+            "value": "S'applique aux clics sur les liens du terminal et aux appels `open https://...` interceptés. Seuls ces hôtes s'ouvrent dans bmux. Les autres s'ouvrent dans Chrome. Un hôte ou caractère générique par ligne (par exemple : example.com, *.internal.example). Laissez vide pour ouvrir tous les hôtes dans bmux."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si applica ai clic sui link nel terminale e alle chiamate intercettate `open https://...`. Solo questi host si aprono in bmux. Gli altri si aprono nel browser predefinito. Un host o wildcard per riga (ad esempio: example.com, *.internal.example). Lascia vuoto per aprire tutti gli host in bmux."
+            "value": "Si applica ai clic sui link nel terminale e alle chiamate intercettate `open https://...`. Solo questi host si aprono in bmux. Gli altri si aprono in Chrome. Un host o wildcard per riga (ad esempio: example.com, *.internal.example). Lascia vuoto per aprire tutti gli host in bmux."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ターミナルのリンククリックおよびインターセプトされた`open https://...`呼び出しに適用されます。これらのホストのみbmuxで開きます。その他はデフォルトブラウザで開きます。1行に1つのホストまたはワイルドカード（例: example.com, *.internal.example）。空欄にするとすべてのホストをbmuxで開きます。"
+            "value": "ターミナルのリンククリックおよびインターセプトされた`open https://...`呼び出しに適用されます。これらのホストのみbmuxで開きます。その他はChromeで開きます。1行に1つのホストまたはワイルドカード（例: example.com, *.internal.example）。空欄にするとすべてのホストをbmuxで開きます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "터미널 링크 클릭 및 인터셉트된 `open https://...` 호출에 적용됩니다. 이 호스트만 bmux에서 열립니다. 나머지는 기본 브라우저에서 열립니다. 한 줄에 하나의 호스트 또는 와일드카드 (예: example.com, *.internal.example). 비워두면 모든 호스트가 bmux에서 열립니다."
+            "value": "터미널 링크 클릭 및 인터셉트된 `open https://...` 호출에 적용됩니다. 이 호스트만 bmux에서 열립니다. 나머지는 Chrome에서 열립니다. 한 줄에 하나의 호스트 또는 와일드카드 (예: example.com, *.internal.example). 비워두면 모든 호스트가 bmux에서 열립니다."
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gjelder for terminallenkeklikk og avlyttede `open https://...`-kall. Bare disse vertene åpnes i bmux. Andre åpnes i standard nettleser. Én vert eller jokertegn per linje (for eksempel: example.com, *.internal.example). La stå tom for å åpne alle verter i bmux."
+            "value": "Gjelder for terminallenkeklikk og avlyttede `open https://...`-kall. Bare disse vertene åpnes i bmux. Andre åpnes i Chrome. Én vert eller jokertegn per linje (for eksempel: example.com, *.internal.example). La stå tom for å åpne alle verter i bmux."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dotyczy kliknięć linków w terminalu i przechwyconych wywołań `open https://...`. Tylko te hosty otwierają się w bmux. Pozostałe otwierają się w domyślnej przeglądarce. Jeden host lub wzorzec na wiersz (na przykład: example.com, *.internal.example). Pozostaw puste, aby otwierać wszystkie hosty w bmux."
+            "value": "Dotyczy kliknięć linków w terminalu i przechwyconych wywołań `open https://...`. Tylko te hosty otwierają się w bmux. Pozostałe otwierają się w Chrome. Jeden host lub wzorzec na wiersz (na przykład: example.com, *.internal.example). Pozostaw puste, aby otwierać wszystkie hosty w bmux."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aplica-se a cliques em links do terminal e chamadas interceptadas de `open https://...`. Apenas estes hosts abrem no bmux. Outros abrem no seu navegador padrão. Um host ou curinga por linha (por exemplo: example.com, *.internal.example). Deixe vazio para abrir todos os hosts no bmux."
+            "value": "Aplica-se a cliques em links do terminal e chamadas interceptadas de `open https://...`. Apenas estes hosts abrem no bmux. Outros abrem no Chrome. Um host ou curinga por linha (por exemplo: example.com, *.internal.example). Deixe vazio para abrir todos os hosts no bmux."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Применяется к нажатиям на ссылки в терминале и перехваченным вызовам `open https://...`. Только эти хосты открываются в bmux. Остальные открываются в браузере по умолчанию. Один хост или шаблон на строку (например: example.com, *.internal.example). Оставьте пустым, чтобы открывать все хосты в bmux."
+            "value": "Применяется к нажатиям на ссылки в терминале и перехваченным вызовам `open https://...`. Только эти хосты открываются в bmux. Остальные открываются в Chrome. Один хост или шаблон на строку (например: example.com, *.internal.example). Оставьте пустым, чтобы открывать все хосты в bmux."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ใช้กับการคลิกลิงก์ในเทอร์มินัลและการดักจับคำสั่ง `open https://...` เฉพาะโฮสต์เหล่านี้เท่านั้นที่จะเปิดใน bmux โฮสต์อื่นจะเปิดในเบราว์เซอร์เริ่มต้นของคุณ โฮสต์หรือ wildcard หนึ่งรายการต่อบรรทัด (ตัวอย่าง: example.com, *.internal.example) เว้นว่างเพื่อเปิดโฮสต์ทั้งหมดใน bmux"
+            "value": "ใช้กับการคลิกลิงก์ในเทอร์มินัลและการดักจับคำสั่ง `open https://...` เฉพาะโฮสต์เหล่านี้เท่านั้นที่จะเปิดใน bmux โฮสต์อื่นจะเปิดใน Chrome โฮสต์หรือ wildcard หนึ่งรายการต่อบรรทัด (ตัวอย่าง: example.com, *.internal.example) เว้นว่างเพื่อเปิดโฮสต์ทั้งหมดใน bmux"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terminal bağlantı tıklamalarına ve yakalanan `open https://...` çağrılarına uygulanır. Yalnızca bu ana bilgisayarlar bmux'ta açılır. Diğerleri varsayılan tarayıcınızda açılır. Satır başına bir ana bilgisayar veya joker karakter (örneğin: example.com, *.internal.example). Tüm ana bilgisayarları bmux'ta açmak için boş bırakın."
+            "value": "Terminal bağlantı tıklamalarına ve yakalanan `open https://...` çağrılarına uygulanır. Yalnızca bu ana bilgisayarlar bmux'ta açılır. Diğerleri Chrome’da açılır. Satır başına bir ana bilgisayar veya joker karakter (örneğin: example.com, *.internal.example). Tüm ana bilgisayarları bmux'ta açmak için boş bırakın."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Застосовується до кліків на посилання в терміналі та перехоплених викликів `open https://...`. Тільки ці хости відкриваються в bmux. Інші відкриваються у стандартному браузері. Один хост або шаблон на рядок (наприклад: example.com, *.internal.example). Залиште порожнім, щоб відкривати всі хости в bmux."
+            "value": "Застосовується до кліків на посилання в терміналі та перехоплених викликів `open https://...`. Тільки ці хости відкриваються в bmux. Інші відкриваються у Chrome. Один хост або шаблон на рядок (наприклад: example.com, *.internal.example). Залиште порожнім, щоб відкривати всі хости в bmux."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "适用于终端中的链接点击和拦截的 `open https://...` 调用。仅这些主机在 bmux 中打开，其他主机在默认浏览器中打开。每行一个主机或通配符（例如：example.com、*.internal.example）。留空则在 bmux 中打开所有主机。"
+            "value": "适用于终端中的链接点击和拦截的 `open https://...` 调用。仅这些主机在 bmux 中打开，其他主机在 Chrome 中打开。每行一个主机或通配符（例如：example.com、*.internal.example）。留空则在 bmux 中打开所有主机。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "套用於終端機連結點擊和攔截的 `open https://...` 呼叫。僅這些主機會在 bmux 中開啟，其他主機會在您的預設瀏覽器中開啟。每行一個主機或萬用字元（例如：example.com、*.internal.example）。留空則在 bmux 中開啟所有主機。"
+            "value": "套用於終端機連結點擊和攔截的 `open https://...` 呼叫。僅這些主機會在 bmux 中開啟，其他主機會在 Chrome 中開啟。每行一個主機或萬用字元（例如：example.com、*.internal.example）。留空則在 bmux 中開啟所有主機。"
           }
         }
       }
@@ -153463,115 +153463,115 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "عند التعطيل، يستخدم `open https://...` و `open http://...` دائمًا متصفحك الافتراضي."
+            "value": "عند التعطيل، يستخدم `open https://...` و `open http://...` دائمًا Chrome."
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kada je isključeno, `open https://...` i `open http://...` uvijek koriste podrazumijevani preglednik."
+            "value": "Kada je isključeno, `open https://...` i `open http://...` uvijek koriste Chrome."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Når deaktiveret, bruger `open https://...` og `open http://...` altid din standardbrowser."
+            "value": "Når deaktiveret, bruger `open https://...` og `open http://...` altid Chrome."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wenn deaktiviert, verwenden `open https://...` und `open http://...` immer Ihren Standardbrowser."
+            "value": "Wenn deaktiviert, verwenden `open https://...` und `open http://...` immer Chrome."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When off, `open https://...` and `open http://...` always use your default browser."
+            "value": "When off, `open https://...` and `open http://...` always use Chrome."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando está desactivado, `open https://...` y `open http://...` siempre usan tu navegador predeterminado."
+            "value": "Cuando está desactivado, `open https://...` y `open http://...` siempre usan Chrome."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lorsque désactivé, `open https://...` et `open http://...` utilisent toujours votre navigateur par défaut."
+            "value": "Lorsque désactivé, `open https://...` et `open http://...` utilisent toujours Chrome."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando disattivato, `open https://...` e `open http://...` usano sempre il browser predefinito."
+            "value": "Quando disattivato, `open https://...` e `open http://...` usano sempre Chrome."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "オフの場合、`open https://...`および`open http://...`は常にデフォルトブラウザを使用します。"
+            "value": "オフの場合、`open https://...`および`open http://...`は常にChromeを使用します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "비활성화하면 `open https://...` 및 `open http://...`가 항상 기본 브라우저를 사용합니다."
+            "value": "비활성화하면 `open https://...` 및 `open http://...`가 항상 Chrome을 사용합니다."
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Når av, bruker `open https://...` og `open http://...` alltid standard nettleser."
+            "value": "Når av, bruker `open https://...` og `open http://...` alltid Chrome."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Po wyłączeniu `open https://...` i `open http://...` zawsze używają domyślnej przeglądarki."
+            "value": "Po wyłączeniu `open https://...` i `open http://...` zawsze używają Chrome."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando desativado, `open https://...` e `open http://...` sempre usam seu navegador padrão."
+            "value": "Quando desativado, `open https://...` e `open http://...` sempre usam Chrome."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "При отключении `open https://...` и `open http://...` всегда используют браузер по умолчанию."
+            "value": "При отключении `open https://...` и `open http://...` всегда используют Chrome."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "เมื่อปิด `open https://...` และ `open http://...` จะใช้เบราว์เซอร์เริ่มต้นของคุณเสมอ"
+            "value": "เมื่อปิด `open https://...` และ `open http://...` จะใช้ Chrome เสมอ"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kapalıyken, `open https://...` ve `open http://...` her zaman varsayılan tarayıcınızı kullanır."
+            "value": "Kapalıyken, `open https://...` ve `open http://...` her zaman Chrome’u kullanır."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Якщо вимкнено, `open https://...` та `open http://...` завжди використовують стандартний браузер."
+            "value": "Якщо вимкнено, `open https://...` та `open http://...` завжди використовують Chrome."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "关闭后，`open https://...` 和 `open http://...` 始终使用默认浏览器。"
+            "value": "关闭后，`open https://...` 和 `open http://...` 始终使用 Chrome。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "關閉時，`open https://...` 和 `open http://...` 一律使用您的預設瀏覽器。"
+            "value": "關閉時，`open https://...` 和 `open http://...` 一律使用 Chrome。"
           }
         }
       }
@@ -153719,97 +153719,97 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wenn deaktiviert, werden im Terminal angeklickte Links in Ihrem Standardbrowser geöffnet."
+            "value": "Wenn deaktiviert, werden im Terminal angeklickte Links in Chrome geöffnet."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When off, links clicked in terminal output open in your default browser."
+            "value": "When off, links clicked in terminal output open in Chrome."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando está desactivado, los enlaces en la salida del terminal se abren en tu navegador predeterminado."
+            "value": "Cuando está desactivado, los enlaces en la salida del terminal se abren en Chrome."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lorsque désactivé, les liens cliqués dans la sortie du terminal s'ouvrent dans votre navigateur par défaut."
+            "value": "Lorsque désactivé, les liens cliqués dans la sortie du terminal s'ouvrent dans Chrome."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando disattivato, i link cliccati nell'output del terminale si aprono nel browser predefinito."
+            "value": "Quando disattivato, i link cliccati nell'output del terminale si aprono in Chrome."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "オフの場合、ターミナル出力のリンクはデフォルトブラウザで開きます。"
+            "value": "オフの場合、ターミナル出力のリンクはChromeで開きます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "비활성화하면 터미널 출력에서 클릭한 링크가 기본 브라우저에서 열립니다."
+            "value": "비활성화하면 터미널 출력에서 클릭한 링크가 Chrome에서 열립니다."
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Når av, åpnes lenker som klikkes i terminalutdata i standard nettleser."
+            "value": "Når av, åpnes lenker som klikkes i terminalutdata i Chrome."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Po wyłączeniu linki kliknięte w terminalu otwierają się w domyślnej przeglądarce."
+            "value": "Po wyłączeniu linki kliknięte w terminalu otwierają się w Chrome."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando desativado, links clicados na saída do terminal abrem no seu navegador padrão."
+            "value": "Quando desativado, links clicados na saída do terminal abrem no Chrome."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "При отключении ссылки из терминала открываются в браузере по умолчанию."
+            "value": "При отключении ссылки из терминала открываются в Chrome."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "เมื่อปิด ลิงก์ที่คลิกในเอาต์พุตเทอร์มินัลจะเปิดในเบราว์เซอร์เริ่มต้นของคุณ"
+            "value": "เมื่อปิด ลิงก์ที่คลิกในเอาต์พุตเทอร์มินัลจะเปิดใน Chrome"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kapalıyken, terminal çıktısında tıklanan bağlantılar varsayılan tarayıcınızda açılır."
+            "value": "Kapalıyken, terminal çıktısında tıklanan bağlantılar Chrome’da açılır."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Якщо вимкнено, посилання у виводі терміналу відкриваються у стандартному браузері."
+            "value": "Якщо вимкнено, посилання у виводі терміналу відкриваються у Chrome."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "关闭后，终端输出中点击的链接在默认浏览器中打开。"
+            "value": "关闭后，终端输出中点击的链接在 Chrome 中打开。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "關閉時，終端機輸出中點擊的連結會在您的預設瀏覽器中開啟。"
+            "value": "關閉時，終端機輸出中點擊的連結會在 Chrome 中開啟。"
           }
         }
       }
@@ -161273,115 +161273,115 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser تطبيق عام تفضيلات سلوك شريط القائمة حالة الشريط الجانبي متصفح ويب عرض العنوان روابط عناوين مضمّن صفحة تبويبات إعادة ضبط مصنع افتراضي استعادة مسح المتصفح • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser تطبيق عام تفضيلات سلوك شريط القائمة حالة الشريط الجانبي متصفح ويب عرض العنوان روابط عناوين مضمّن صفحة تبويبات إعادة ضبط مصنع افتراضي استعادة مسح المتصفح • %@"
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser aplikacija opće postavke ponašanje dock traka menija status bočna preglednik adresna linkovi url ugrađen stranica kartice reset fabrički zadano vrati očisti • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser aplikacija opće postavke ponašanje dock traka menija status bočna preglednik adresna linkovi url ugrađen stranica kartice reset fabrički zadano vrati očisti • %@"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser app generelt indstillinger adfærd dock menulinje status sidepanel webvisning adresselinje url indlejret side faner nulstil fabrik standard gendan ryd • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser app generelt indstillinger adfærd dock menulinje status sidepanel webvisning adresselinje url indlejret side faner nulstil fabrik standard gendan ryd • %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser app allgemein einstellungen verhalten dock menüleiste status seitenleiste adressleiste eingebettet seite tabs zurücksetzen werkseinstellungen standard wiederherstellen löschen • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser app allgemein einstellungen verhalten dock menüleiste status seitenleiste adressleiste eingebettet seite tabs zurücksetzen werkseinstellungen standard wiederherstellen löschen • %@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser"
+            "value": "web webview address bar omnibar links urls embedded chrome browser"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser aplicación general preferencias comportamiento dock barra de menú estado lateral navegador direcciones enlaces integrado página pestañas restablecer fábrica predeterminado restaurar borrar • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser aplicación general preferencias comportamiento dock barra de menú estado lateral navegador direcciones enlaces integrado página pestañas restablecer fábrica predeterminado restaurar borrar • %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser application général préférences comportement dock barre de menus état latérale navigateur adresse liens intégré page onglets réinitialiser usine défaut restaurer effacer • %@ Par"
+            "value": "web webview address bar omnibar links urls embedded chrome browser application général préférences comportement dock barre de menus état latérale navigateur adresse liens intégré page onglets réinitialiser usine défaut restaurer effacer • %@ Par"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser app generale preferenze comportamento dock barra menu stato laterale indirizzi link url incorporato pagina schede reimposta fabbrica predefinito ripristina cancella • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser app generale preferenze comportamento dock barra menu stato laterale indirizzi link url incorporato pagina schede reimposta fabbrica predefinito ripristina cancella • %@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser ウェブ webview アドレスバー オムニバー リンク url 内蔵ブラウザ デフォルトブラウザ"
+            "value": "web webview address bar omnibar links urls embedded chrome browser ウェブ webview アドレスバー オムニバー リンク url 内蔵ブラウザ デフォルトブラウザ"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser 앱 일반 환경설정 동작 독 메뉴 막대 상태 사이드바 브라우저 웹 웹뷰 주소 표시줄 링크 url 내장 페이지 탭 재설정 초기화 기본값 복원 지우기 브라우저: %@ •"
+            "value": "web webview address bar omnibar links urls embedded chrome browser 앱 일반 환경설정 동작 독 메뉴 막대 상태 사이드바 브라우저 웹 웹뷰 주소 표시줄 링크 url 내장 페이지 탭 재설정 초기화 기본값 복원 지우기 브라우저: %@ •"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser app generelt innstillinger oppførsel dock menylinje status sidepanel nettleser webvisning adresselinje lenker url innebygd side faner tilbakestill fabrikk standard gjenopprett tøm • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser app generelt innstillinger oppførsel dock menylinje status sidepanel nettleser webvisning adresselinje lenker url innebygd side faner tilbakestill fabrikk standard gjenopprett tøm • %@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser aplikacja ogólne preferencje zachowanie dock pasek menu status boczny przeglądarka adresu linki url osadzony strona karty reset fabryczne domyślne przywróć wyczyść • %@ Domyślny"
+            "value": "web webview address bar omnibar links urls embedded chrome browser aplikacja ogólne preferencje zachowanie dock pasek menu status boczny przeglądarka adresu linki url osadzony strona karty reset fabryczne domyślne przywróć wyczyść • %@ Domyślny"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser app geral preferências comportamento dock barra de menu status lateral navegador endereço incorporado página abas redefinir fábrica padrão restaurar limpar • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser app geral preferências comportamento dock barra de menu status lateral navegador endereço incorporado página abas redefinir fábrica padrão restaurar limpar • %@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser приложение общие настройки поведение док строка меню статус боковая панель браузер веб адресная ссылки url встроенный страница вкладки сброс заводские по умолчанию восстановить очистить • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser приложение общие настройки поведение док строка меню статус боковая панель браузер веб адресная ссылки url встроенный страница вкладки сброс заводские по умолчанию восстановить очистить • %@"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser แอป ทั่วไป ค่ากำหนด พฤติกรรม ด็อก แถบเมนู สถานะ แถบด้านข้าง เบราว์เซอร์ เว็บ เว็บวิว แถบที่อยู่ ลิงก์ url ฝัง หน้า แท็บ รีเซ็ต โรงงาน ค่าเริ่มต้น กู้คืน ล้าง • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser แอป ทั่วไป ค่ากำหนด พฤติกรรม ด็อก แถบเมนู สถานะ แถบด้านข้าง เบราว์เซอร์ เว็บ เว็บวิว แถบที่อยู่ ลิงก์ url ฝัง หน้า แท็บ รีเซ็ต โรงงาน ค่าเริ่มต้น กู้คืน ล้าง • %@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser uygulama genel tercihler davranış dock menü çubuğu durum kenar tarayıcı adres bağlantılar url gömülü sayfa sekmeler sıfırla fabrika varsayılan geri yükle temizle • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser uygulama genel tercihler davranış dock menü çubuğu durum kenar tarayıcı adres bağlantılar url gömülü sayfa sekmeler sıfırla fabrika varsayılan geri yükle temizle • %@"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser програма загальні параметри поведінка док рядок меню статус бічна панель браузер веб адресний посилання url вбудований сторінка вкладки скидання заводські типові відновити очистити Стандартний Браузер: %@ •"
+            "value": "web webview address bar omnibar links urls embedded chrome browser програма загальні параметри поведінка док рядок меню статус бічна панель браузер веб адресний посилання url вбудований сторінка вкладки скидання заводські типові відновити очистити Стандартний Браузер: %@ •"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser 应用 通用 偏好设置 行为 程序坞 菜单栏 状态 侧边栏 浏览器 网页 地址栏 链接 URL 内嵌 页面 标签页 重置 出厂 默认 恢复 清除 • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser 应用 通用 偏好设置 行为 程序坞 菜单栏 状态 侧边栏 浏览器 网页 地址栏 链接 URL 内嵌 页面 标签页 重置 出厂 默认 恢复 清除 • %@"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "web webview address bar omnibar links urls embedded default browser 應用程式 一般 偏好設定 行為 Dock 選單列 狀態 側邊欄 瀏覽器 網頁 位址列 連結 URL 內嵌 頁面 分頁 重置 出廠 預設 還原 清除 • %@"
+            "value": "web webview address bar omnibar links urls embedded chrome browser 應用程式 一般 偏好設定 行為 Dock 選單列 狀態 側邊欄 瀏覽器 網頁 位址列 連結 URL 內嵌 頁面 分頁 重置 出廠 預設 還原 清除 • %@"
           }
         }
       }
@@ -169064,115 +169064,115 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser متصفح ويب عرض شريط العنوان روابط عناوين مضمّن صفحة تبويبات إعادة ضبط مصنع افتراضي استعادة مسح المتصفح • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser متصفح ويب عرض شريط العنوان روابط عناوين مضمّن صفحة تبويبات إعادة ضبط مصنع افتراضي استعادة مسح المتصفح • %@"
           }
         },
         "bs": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser preglednik web webview adresna traka linkovi url ugrađen stranica kartice reset fabrički zadano vrati očisti • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser preglednik web webview adresna traka linkovi url ugrađen stranica kartice reset fabrički zadano vrati očisti • %@"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser web webvisning adresselinje links url indlejret side faner nulstil fabrik standard gendan ryd • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser web webvisning adresselinje links url indlejret side faner nulstil fabrik standard gendan ryd • %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser web webview adressleiste links urls eingebettet seite tabs zurücksetzen werkseinstellungen standard wiederherstellen löschen • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser web webview adressleiste links urls eingebettet seite tabs zurücksetzen werkseinstellungen standard wiederherstellen löschen • %@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser navegador web webview barra de direcciones enlaces urls integrado página pestañas restablecer fábrica predeterminado restaurar borrar • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser navegador web webview barra de direcciones enlaces urls integrado página pestañas restablecer fábrica predeterminado restaurar borrar • %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser navigateur web webview barre adresse liens urls intégré page onglets réinitialiser usine défaut restaurer effacer • %@ Par"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser navigateur web webview barre adresse liens urls intégré page onglets réinitialiser usine défaut restaurer effacer • %@ Par"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser web webview barra indirizzi link url incorporato pagina schede reimposta fabbrica predefinito ripristina cancella • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser web webview barra indirizzi link url incorporato pagina schede reimposta fabbrica predefinito ripristina cancella • %@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser 拒否リスト ブロックリスト regex ルール 外部 デフォルトブラウザ"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser 拒否リスト ブロックリスト regex ルール 外部 デフォルトブラウザ"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser 브라우저 웹 웹뷰 주소 표시줄 링크 url 내장 페이지 탭 재설정 초기화 기본값 복원 지우기 브라우저: %@ •"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser 브라우저 웹 웹뷰 주소 표시줄 링크 url 내장 페이지 탭 재설정 초기화 기본값 복원 지우기 브라우저: %@ •"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser nettleser web webvisning adresselinje lenker url innebygd side faner tilbakestill fabrikk standard gjenopprett tøm • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser nettleser web webvisning adresselinje lenker url innebygd side faner tilbakestill fabrikk standard gjenopprett tøm • %@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser przeglądarka web webview pasek adresu linki url osadzony strona karty reset fabryczne domyślne przywróć wyczyść • %@ Domyślny"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser przeglądarka web webview pasek adresu linki url osadzony strona karty reset fabryczne domyślne przywróć wyczyść • %@ Domyślny"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser navegador web webview barra de endereço links urls incorporado página abas redefinir fábrica padrão restaurar limpar • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser navegador web webview barra de endereço links urls incorporado página abas redefinir fábrica padrão restaurar limpar • %@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser браузер веб webview адресная строка ссылки url встроенный страница вкладки сброс заводские по умолчанию восстановить очистить • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser браузер веб webview адресная строка ссылки url встроенный страница вкладки сброс заводские по умолчанию восстановить очистить • %@"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser เบราว์เซอร์ เว็บ เว็บวิว แถบที่อยู่ ลิงก์ url ฝัง หน้า แท็บ รีเซ็ต โรงงาน ค่าเริ่มต้น กู้คืน ล้าง • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser เบราว์เซอร์ เว็บ เว็บวิว แถบที่อยู่ ลิงก์ url ฝัง หน้า แท็บ รีเซ็ต โรงงาน ค่าเริ่มต้น กู้คืน ล้าง • %@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser tarayıcı web webview adres çubuğu bağlantılar url gömülü sayfa sekmeler sıfırla fabrika varsayılan geri yükle temizle • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser tarayıcı web webview adres çubuğu bağlantılar url gömülü sayfa sekmeler sıfırla fabrika varsayılan geri yükle temizle • %@"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser браузер веб webview адресний рядок посилання url вбудований сторінка вкладки скидання заводські типові відновити очистити Стандартний Браузер: %@ •"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser браузер веб webview адресний рядок посилання url вбудований сторінка вкладки скидання заводські типові відновити очистити Стандартний Браузер: %@ •"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser 浏览器 网页 WebView 地址栏 链接 URL 内嵌 页面 标签页 重置 出厂 默认 恢复 清除 • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser 浏览器 网页 WebView 地址栏 链接 URL 内嵌 页面 标签页 重置 出厂 默认 恢复 清除 • %@"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external default browser 瀏覽器 網頁 WebView 位址列 連結 URL 內嵌 頁面 分頁 重置 出廠 預設 還原 清除 • %@"
+            "value": "browser.urlsToAlwaysOpenExternally denylist blocklist regex rules external chrome browser 瀏覽器 網頁 WebView 位址列 連結 URL 內嵌 頁面 分頁 重置 出廠 預設 還原 清除 • %@"
           }
         }
       }

@@ -1586,7 +1586,7 @@ final class BmuxWebViewContextMenuTests: XCTestCase {
         return event
     }
 
-    func testWillOpenMenuAddsOpenLinkInDefaultBrowserAndRoutesSelectionToDefaultBrowserOpener() {
+    func testWillOpenMenuAddsOpenLinkInChromeAndRoutesSelectionToExternalLinkOpener() {
         _ = NSApplication.shared
         let webView = BmuxWebView(frame: NSRect(x: 0, y: 0, width: 800, height: 600), configuration: WKWebViewConfiguration())
         let menu = NSMenu()
@@ -1606,8 +1606,8 @@ final class BmuxWebViewContextMenuTests: XCTestCase {
 
         webView.willOpenMenu(menu, with: makeRightMouseDownEvent())
 
-        guard let defaultBrowserItemIndex = menu.items.firstIndex(where: { $0.title == "Open Link in Default Browser" }) else {
-            XCTFail("Expected Open Link in Default Browser item in context menu")
+        guard let chromeItemIndex = menu.items.firstIndex(where: { $0.title == "Open Link in Chrome" }) else {
+            XCTFail("Expected Open Link in Chrome item in context menu")
             return
         }
         guard let openLinkIndex = menu.items.firstIndex(where: { $0.identifier?.rawValue == "WKMenuItemIdentifierOpenLink" }) else {
@@ -1615,15 +1615,15 @@ final class BmuxWebViewContextMenuTests: XCTestCase {
             return
         }
 
-        XCTAssertEqual(defaultBrowserItemIndex, openLinkIndex + 1)
-        let defaultBrowserItem = menu.items[defaultBrowserItemIndex]
-        XCTAssertTrue(defaultBrowserItem.target === webView)
-        XCTAssertNotNil(defaultBrowserItem.action)
+        XCTAssertEqual(chromeItemIndex, openLinkIndex + 1)
+        let chromeItem = menu.items[chromeItemIndex]
+        XCTAssertTrue(chromeItem.target === webView)
+        XCTAssertNotNil(chromeItem.action)
 
         let dispatched = NSApp.sendAction(
-            defaultBrowserItem.action!,
-            to: defaultBrowserItem.target,
-            from: defaultBrowserItem
+            chromeItem.action!,
+            to: chromeItem.target,
+            from: chromeItem
         )
         XCTAssertTrue(dispatched)
         XCTAssertEqual(openedURL?.absoluteString, "https://example.com/docs")
@@ -1637,7 +1637,7 @@ final class BmuxWebViewContextMenuTests: XCTestCase {
 
         webView.willOpenMenu(menu, with: makeRightMouseDownEvent())
 
-        XCTAssertFalse(menu.items.contains { $0.title == "Open Link in Default Browser" })
+        XCTAssertFalse(menu.items.contains { $0.title == "Open Link in Chrome" })
     }
 
     func testWillOpenMenuHooksDownloadImageToDiskMenuVariant() {
@@ -5294,6 +5294,74 @@ final class BrowserLinkOpenSettingsTests: XCTestCase {
                 defaults: defaults
             )
         )
+    }
+}
+
+@Suite struct BrowserExternalLinkOpenerTests {
+    @Test func webLinksOpenWithChromeWhenChromeIsAvailable() throws {
+        let url = try #require(URL(string: "https://example.com/docs"))
+        let chromeURL = URL(fileURLWithPath: "/Applications/Google Chrome.app")
+        var openedInChrome: ([URL], URL)?
+        var systemOpenedURL: URL?
+
+        let opener = BrowserExternalLinkOpener(
+            chromeApplicationURL: { chromeURL },
+            openURLsInChrome: { urls, applicationURL, _ in
+                openedInChrome = (urls, applicationURL)
+            },
+            openURLWithSystemHandler: { url in
+                systemOpenedURL = url
+                return true
+            }
+        )
+
+        #expect(opener.openWebLink(url))
+        #expect(openedInChrome?.0 == [url])
+        #expect(openedInChrome?.1 == chromeURL)
+        #expect(systemOpenedURL == nil)
+    }
+
+    @Test func webLinksFallBackToSystemHandlerWhenChromeIsUnavailable() throws {
+        let url = try #require(URL(string: "https://example.com/docs"))
+        var didTryChrome = false
+        var systemOpenedURL: URL?
+
+        let opener = BrowserExternalLinkOpener(
+            chromeApplicationURL: { nil },
+            openURLsInChrome: { _, _, _ in
+                didTryChrome = true
+            },
+            openURLWithSystemHandler: { url in
+                systemOpenedURL = url
+                return true
+            }
+        )
+
+        #expect(opener.openWebLink(url))
+        #expect(!didTryChrome)
+        #expect(systemOpenedURL == url)
+    }
+
+    @Test func nonWebLinksUseSystemHandler() throws {
+        let url = try #require(URL(string: "mailto:test@example.com"))
+        var didResolveChrome = false
+        var systemOpenedURL: URL?
+
+        let opener = BrowserExternalLinkOpener(
+            chromeApplicationURL: {
+                didResolveChrome = true
+                return URL(fileURLWithPath: "/Applications/Google Chrome.app")
+            },
+            openURLsInChrome: { _, _, _ in },
+            openURLWithSystemHandler: { url in
+                systemOpenedURL = url
+                return true
+            }
+        )
+
+        #expect(opener.openWebLink(url))
+        #expect(!didResolveChrome)
+        #expect(systemOpenedURL == url)
     }
 }
 

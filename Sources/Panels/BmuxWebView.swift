@@ -2106,7 +2106,7 @@ final class BmuxWebView: WKWebView {
             debugLogContextMenuDownloadCandidate(item, index: index)
             if !hasDefaultBrowserOpenLinkItem,
                (item.action == #selector(contextMenuOpenLinkInDefaultBrowser(_:))
-                || item.title == String(localized: "browser.contextMenu.openLinkInDefaultBrowser", defaultValue: "Open Link in Default Browser")) {
+                || item.title == String(localized: "browser.contextMenu.openLinkInChrome", defaultValue: "Open Link in Chrome")) {
                 hasDefaultBrowserOpenLinkItem = true
             }
 
@@ -2180,7 +2180,7 @@ final class BmuxWebView: WKWebView {
 
         if let openLinkInsertionIndex, !hasDefaultBrowserOpenLinkItem {
             let item = NSMenuItem(
-                title: String(localized: "browser.contextMenu.openLinkInDefaultBrowser", defaultValue: "Open Link in Default Browser"),
+                title: String(localized: "browser.contextMenu.openLinkInChrome", defaultValue: "Open Link in Chrome"),
                 action: #selector(contextMenuOpenLinkInDefaultBrowser(_:)),
                 keyEquivalent: ""
             )

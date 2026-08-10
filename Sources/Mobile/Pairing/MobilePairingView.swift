@@ -236,7 +236,7 @@ struct MobilePairingView: View {
         VStack(spacing: 8) {
             Text(String(
                 localized: "mobile.pairing.signIn.slowHint",
-                defaultValue: "The system sign-in window may stop responding. If nothing happens, open sign-in in your default browser instead."
+                defaultValue: "The system sign-in window may stop responding. If nothing happens, open sign-in in Chrome instead."
             ))
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -245,7 +245,7 @@ struct MobilePairingView: View {
 
             Button {
                 guard let url = browserSignIn?.activeAttemptSignInURL else { return }
-                NSWorkspace.shared.open(url)
+                BrowserExternalLinkOpener().openWebLink(url)
             } label: {
                 Text(String(
                     localized: "mobile.pairing.signIn.openInBrowser",

@@ -439,7 +439,7 @@ final class TerminalNotificationStore: ObservableObject {
         }
     }
     private var notificationSettingsURLOpener: (URL) -> Void = { url in
-        NSWorkspace.shared.open(url)
+        BrowserExternalLinkOpener().openWebLink(url)
     }
     private var notificationDeliveryHandler: (TerminalNotificationStore, TerminalNotification, TerminalNotificationPolicyEffects) -> Void = {
         store,
@@ -2045,7 +2045,7 @@ final class TerminalNotificationStore: ObservableObject {
                 block()
             }
         }
-        notificationSettingsURLOpener = { url in NSWorkspace.shared.open(url) }
+        notificationSettingsURLOpener = { url in BrowserExternalLinkOpener().openWebLink(url) }
         hasPromptedForSettings = false
     }
 

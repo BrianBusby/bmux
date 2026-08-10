@@ -1652,7 +1652,7 @@
       "automationCallout": "On shared machines, consider using \"Off\" or \"bmux processes only\" mode.",
       "browserLinkBehavior": "Browser link behavior",
       "browserLinkDesc": "In Settings > Browser, bmux exposes two host lists with different purposes:",
-      "browserHostsEmbed": "Hosts to Open in Embedded Browser: applies to links clicked from terminal output. Hosts in this list open in bmux; other hosts open in your default browser. Supports one host or wildcard per line (for example: example.com, *.internal.example).",
+      "browserHostsEmbed": "Hosts to Open in Embedded Browser: applies to links clicked from terminal output. Hosts in this list open in bmux; other hosts open in Chrome. Supports one host or wildcard per line (for example: example.com, *.internal.example).",
       "browserHostsHttp": "HTTP Hosts Allowed in Embedded Browser: applies only to HTTP (non-HTTPS) URLs. Hosts in this list can open in bmux without a warning prompt. Defaults include localhost, *.localhost, 127.0.0.1, ::1, 0.0.0.0, and *.localtest.me.",
       "settingsFile": "bmux.json",
       "settingsFileDesc": "bmux.json stores bmux-owned app settings, shortcuts, actions, commands, and workspace layouts.",

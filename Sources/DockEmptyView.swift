@@ -88,7 +88,7 @@ struct DockEmptyView: View {
 
     private func openDockDocs() {
         guard let url = URL(string: "https://bmux.com/docs/dock") else { return }
-        NSWorkspace.shared.open(url)
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     private var agentPrompt: String {

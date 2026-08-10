@@ -1159,7 +1159,7 @@ private func browserOpenExternalNavigationURL(
     webView: WKWebView,
     presentAlert: BrowserAlertPresenter = browserPresentAlert
 ) -> Bool {
-    let opened = NSWorkspace.shared.open(url)
+    let opened = BrowserExternalLinkOpener().openWebLink(url)
     if !opened {
         browserPresentExternalNavigationFailure(for: url, in: webView, presentAlert: presentAlert)
     }
@@ -4463,7 +4463,7 @@ final class BrowserPanel: Panel, ObservableObject {
             NSSound.beep()
             return
         }
-        NSWorkspace.shared.open(url)
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     /// Reveal a completed download in Finder (Safari/Chrome "Show in Finder").
@@ -5918,8 +5918,8 @@ final class BrowserPanel: Panel, ObservableObject {
         let alert = insecureHTTPAlertFactory()
         alert.alertStyle = .warning
         alert.messageText = String(localized: "browser.error.insecure.title", defaultValue: "Connection isn\u{2019}t secure")
-        alert.informativeText = String(localized: "browser.error.insecure.message", defaultValue: "\(host) uses plain HTTP, so traffic can be read or modified on the network.\n\nOpen this URL in your default browser, or proceed in bmux.")
-        alert.addButton(withTitle: String(localized: "browser.openInDefaultBrowser", defaultValue: "Open in Default Browser"))
+        alert.informativeText = String(localized: "browser.error.insecure.message", defaultValue: "\(host) uses plain HTTP, so traffic can be read or modified on the network.\n\nOpen this URL in Chrome, or proceed in bmux.")
+        alert.addButton(withTitle: String(localized: "browser.openInChrome", defaultValue: "Open in Chrome"))
         alert.addButton(withTitle: String(localized: "browser.proceedInBmux", defaultValue: "Proceed in bmux"))
         alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel"))
         alert.showsSuppressionButton = true
@@ -5967,7 +5967,7 @@ final class BrowserPanel: Panel, ObservableObject {
         }
         switch response {
         case .alertFirstButtonReturn:
-            NSWorkspace.shared.open(url)
+            BrowserExternalLinkOpener().openWebLink(url)
         case .alertSecondButtonReturn:
             switch intent {
             case .currentTab:
@@ -6349,7 +6349,7 @@ extension BrowserPanel {
         )
 #endif
         guard BrowserAvailabilitySettings.isEnabled() else {
-            _ = NSWorkspace.shared.open(seed.url)
+            BrowserExternalLinkOpener().openWebLink(seed.url)
 #if DEBUG
             bmuxDebugLog("browser.newTab.open.external panel=\(id.uuidString.prefix(5)) reason=browser_disabled")
 #endif
