@@ -6,6 +6,8 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
     struct PullRequest: Equatable, Sendable {
         let number: Int
         let url: String
+        let ownerLogin: String?
+        let ownerURL: String?
         let status: String
         let branch: String?
         let isStale: Bool
@@ -73,6 +75,8 @@ private extension Workspace {
         return WorkProvenanceWorkspaceSnapshot.PullRequest(
             number: state.number,
             url: state.url.absoluteString,
+            ownerLogin: state.ownerLogin,
+            ownerURL: state.ownerURL?.absoluteString,
             status: state.status.rawValue,
             branch: state.branch,
             isStale: state.isStale

@@ -618,8 +618,8 @@ class TerminalController {
         number: Int,
         label: String,
         url: URL,
-        ownerLogin: String?,
-        ownerURL: URL?,
+        ownerLogin: String? = nil,
+        ownerURL: URL? = nil,
         status: SidebarPullRequestStatus,
         branch: String?
     ) -> Bool {

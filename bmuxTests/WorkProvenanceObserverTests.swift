@@ -172,6 +172,8 @@ struct WorkProvenanceObserverTests {
             pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
                 number: 41,
                 url: "https://github.com/manaflow-ai/bmux/pull/41",
+                ownerLogin: "alice",
+                ownerURL: "https://github.com/alice",
                 status: "open",
                 branch: "ste-1964-canonical-domain-mutation-paths",
                 isStale: false
@@ -187,6 +189,8 @@ struct WorkProvenanceObserverTests {
             pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
                 number: 42,
                 url: "https://github.com/manaflow-ai/bmux/pull/42",
+                ownerLogin: "BrianBusby",
+                ownerURL: "https://github.com/BrianBusby",
                 status: "merged",
                 branch: "ste-1964-canonical-domain-mutation-paths",
                 isStale: true
@@ -208,6 +212,8 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.branch == "ste-1964-canonical-domain-mutation-paths")
         #expect(display.display?.pullRequestNumber == 42)
         #expect(display.display?.pullRequestURL == "https://github.com/manaflow-ai/bmux/pull/42")
+        #expect(display.display?.pullRequestOwnerLogin == "BrianBusby")
+        #expect(display.display?.pullRequestOwnerURL == "https://github.com/BrianBusby")
         #expect(display.display?.pullRequestStatus == "merged")
         #expect(display.display?.pullRequestBranch == "ste-1964-canonical-domain-mutation-paths")
         #expect(display.display?.pullRequestIsStale == true)

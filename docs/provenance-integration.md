@@ -61,17 +61,17 @@ bmux still owns command parsing, Git path normalization, output compatibility, f
 ## Workspace Display State
 
 Current truth: workspace tab titles, sidebar titles, branch labels, PR numbers,
-PR state, stale PR clearing, and custom sidebar workspace display fields are not
-yet implemented as a PE-backed display source. They remain bmux-local/live
-display state until a dedicated Workspace Display Current State Projection slice
-is selected and implemented.
+PR owner fields, PR state, stale PR clearing, and custom sidebar workspace
+display fields are not yet implemented as a PE-backed display source. They
+remain bmux-local/live display state until a dedicated Workspace Display Current
+State Projection slice is selected and implemented.
 
 Desired truth: bmux observes deterministic display facts, writes accepted
 evidence to Provenance Engine, and reads PE Current State for display metadata.
 The display projection should cover workspace title and title source, repository
 and worktree identity, branch, accepted dirty state if already part of worktree
-observation, PR number/status/url/branch/staleness, and projection
-revision/cursor/timestamp.
+observation, PR number/status/url/owner login/owner profile URL/branch/staleness,
+and projection revision/cursor/timestamp.
 
 Observed facts should include workspace created/selected/renamed events, tab
 renames, worktree branch changes, repository HEAD changes, PR metadata
