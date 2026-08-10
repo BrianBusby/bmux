@@ -14811,9 +14811,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     @discardableResult
     func focusBrowserAddressBar(panelId: UUID) -> Bool {
-        guard let tabManager,
-              let workspace = tabManager.selectedWorkspace,
-              let panel = workspace.browserPanel(for: panelId) else {
+        var visitedManagers = Set<ObjectIdentifier>()
+        var candidateManagers: [TabManager] = []
+        func appendCandidateManager(_ manager: TabManager?) {
+            guard let manager else { return }
+            let id = ObjectIdentifier(manager)
+            guard !visitedManagers.contains(id) else { return }
+            visitedManagers.insert(id)
+            candidateManagers.append(manager)
+        }
+
+        appendCandidateManager(synchronizeActiveMainWindowContext())
+        appendCandidateManager(tabManager)
+        for context in mainWindowContexts.values {
+            appendCandidateManager(context.tabManager)
+        }
+
+        guard let target = candidateManagers.lazy.compactMap({ manager -> (TabManager, Workspace, BrowserPanel)? in
+            guard let workspace = manager.tabs.first(where: { $0.browserPanel(for: panelId) != nil }),
+                  let panel = workspace.browserPanel(for: panelId) else {
+                return nil
+            }
+            return (manager, workspace, panel)
+        }).first else {
 #if DEBUG
             bmuxDebugLog(
                 "browser.focus.addressBar.route panel=\(panelId.uuidString.prefix(5)) " +
@@ -14822,13 +14842,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 #endif
             return false
         }
+        let (tabManager, workspace, panel) = target
 #if DEBUG
         bmuxDebugLog(
             "browser.focus.addressBar.route panel=\(panel.id.uuidString.prefix(5)) " +
             "workspace=\(workspace.id.uuidString.prefix(5)) result=hit \(browserFocusStateSnapshot())"
         )
 #endif
-        workspace.focusPanel(panel.id)
+        if let context = mainWindowContexts.values.first(where: { $0.tabManager === tabManager }) {
+            activateMainWindowContext(context)
+        }
+        guard case .focused = tabManager.focusWorkspaceSurfaceForAction(
+            workspaceId: workspace.id,
+            surfaceId: panel.id,
+            focusIntent: .browser(.addressBar)
+        ) else {
+#if DEBUG
+            bmuxDebugLog(
+                "browser.focus.addressBar.route panel=\(panel.id.uuidString.prefix(5)) " +
+                "workspace=\(workspace.id.uuidString.prefix(5)) result=focus_failed \(browserFocusStateSnapshot())"
+            )
+#endif
+            return false
+        }
 #if DEBUG
         let focusedAfter = workspace.focusedPanelId.map { String($0.uuidString.prefix(5)) } ?? "nil"
         bmuxDebugLog(

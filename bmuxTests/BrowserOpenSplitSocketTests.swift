@@ -144,6 +144,42 @@ struct BrowserOpenSplitSocketTests {
         #expect(targetWorkspace.focusedPanelId == targetSurfaceId)
     }
 
+    @Test func appDelegateBrowserAddressBarFocusUsesCanonicalWorkspaceSurfaceFocusPath() throws {
+        let defaults = UserDefaults.standard
+        let previousBrowserDisabled = defaults.object(forKey: BrowserAvailabilitySettings.disabledKey)
+        BrowserAvailabilitySettings.setDisabled(false)
+        defer {
+            if let previousBrowserDisabled {
+                defaults.set(previousBrowserDisabled, forKey: BrowserAvailabilitySettings.disabledKey)
+            } else {
+                defaults.removeObject(forKey: BrowserAvailabilitySettings.disabledKey)
+            }
+            TerminalController.shared.setActiveTabManager(nil)
+        }
+
+        let app = AppDelegate()
+        let manager = TabManager()
+        let windowId = app.registerMainWindowContextForTesting(tabManager: manager)
+        defer {
+            app.unregisterMainWindowContextForTesting(windowId: windowId)
+        }
+
+        let originalWorkspace = try #require(manager.selectedWorkspace)
+        let targetWorkspace = manager.addWorkspace(select: false, placementOverride: .end)
+        let paneId = try #require(targetWorkspace.bonsplitController.focusedPaneId)
+        let browser = try #require(targetWorkspace.createBrowserSurfaceForAction(
+            inPane: paneId,
+            url: URL(string: "https://example.com"),
+            focus: false
+        ))
+
+        #expect(manager.selectedTabId == originalWorkspace.id)
+
+        #expect(app.focusBrowserAddressBar(panelId: browser.id))
+        #expect(manager.selectedTabId == targetWorkspace.id)
+        #expect(targetWorkspace.focusedPanelId == browser.id)
+    }
+
     private func result(method: String, params: [String: Any]) throws -> [String: Any] {
         let envelope = try response(method: method, params: params)
         #expect(envelope["ok"] as? Bool == true, "Unexpected JSON-RPC response: \(envelope)")
