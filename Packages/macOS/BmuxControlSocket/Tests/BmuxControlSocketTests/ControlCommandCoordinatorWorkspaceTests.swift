@@ -15,9 +15,15 @@ struct ControlCommandCoordinatorWorkspaceTests {
         ControlRequest(id: .int(1), method: method, params: params)
     }
 
-    private func summary(id: UUID = UUID(), title: String, customTitle: String?) -> ControlWorkspaceSummary {
+    private func summary(
+        id: UUID = UUID(),
+        stableWorkspaceID: UUID? = nil,
+        title: String,
+        customTitle: String?
+    ) -> ControlWorkspaceSummary {
         ControlWorkspaceSummary(
             id: id,
+            stableWorkspaceID: stableWorkspaceID ?? id,
             title: title,
             customTitle: customTitle,
             customDescription: nil,
@@ -35,9 +41,15 @@ struct ControlCommandCoordinatorWorkspaceTests {
     @Test func workspaceListExposesCustomTitleState() throws {
         let (coordinator, context) = coordinator()
         let workspaceID = UUID()
+        let stableWorkspaceID = UUID()
         context.listResolution = .resolved(
             windowID: nil,
-            workspaces: [summary(id: workspaceID, title: "Manual name", customTitle: "Manual name")],
+            workspaces: [summary(
+                id: workspaceID,
+                stableWorkspaceID: stableWorkspaceID,
+                title: "Manual name",
+                customTitle: "Manual name"
+            )],
             selectedIndex: 0
         )
 
@@ -49,6 +61,7 @@ struct ControlCommandCoordinatorWorkspaceTests {
         }
 
         #expect(row["id"] == .string(workspaceID.uuidString))
+        #expect(row["stable_workspace_id"] == .string(stableWorkspaceID.uuidString))
         #expect(row["title"] == .string("Manual name"))
         #expect(row["custom_title"] == .string("Manual name"))
         #expect(row["has_custom_title"] == .bool(true))

@@ -3297,7 +3297,13 @@ struct BMUXCLI {
         }
 
         if command == "provenance" {
-            try await runProvenanceCommand(commandArgs: commandArgs, jsonOutput: jsonOutput)
+            try await runProvenanceCommand(
+                commandArgs: commandArgs,
+                jsonOutput: jsonOutput,
+                explicitSocketPath: explicitSocketPath,
+                processEnv: processEnv,
+                cliBundleIdentifier: cliBundleIdentifier
+            )
             return
         }
 
