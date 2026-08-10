@@ -54,7 +54,7 @@ extension Workspace {
         guard panels[surfaceId] != nil else { return nil }
         return manualUnreadPanelIds.contains(surfaceId) ||
             restoredUnreadPanelIds.contains(surfaceId) ||
-            hasUnreadNotification(panelId: surfaceId)
+            hasUnreadNotificationForSurfaceAction(panelId: surfaceId)
     }
 
     @discardableResult

@@ -4831,7 +4831,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
            bootstrapWorkspaceId != workspaceId,
            let bootstrapWorkspace = destinationManager.tabs.first(where: { $0.id == bootstrapWorkspaceId }),
            destinationManager.tabs.count > 1 {
-            destinationManager.closeWorkspace(bootstrapWorkspace, recordHistory: false)
+            _ = destinationManager.closeWorkspaceForAction(
+                tabId: bootstrapWorkspace.id,
+                allowPinned: true,
+                recordHistory: false
+            )
         }
         return windowId
     }
@@ -5857,7 +5861,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         guard sourceManager.tabs.contains(where: { $0.id == sourceWorkspace.id }) else { return }
 
         if sourceManager.tabs.count > 1 {
-            sourceManager.closeWorkspace(sourceWorkspace, recordHistory: false)
+            _ = sourceManager.closeWorkspaceForAction(
+                tabId: sourceWorkspace.id,
+                allowPinned: true,
+                recordHistory: false
+            )
         } else {
             _ = closeMainWindow(windowId: sourceWindowId, recordHistory: false)
         }
@@ -7920,7 +7928,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
               context.tabManager.selectedWorkspace?.id != initialWorkspaceId else {
             return
         }
-        context.tabManager.closeWorkspace(initialWorkspace, recordHistory: false)
+        _ = context.tabManager.closeWorkspaceForAction(
+            tabId: initialWorkspace.id,
+            allowPinned: true,
+            recordHistory: false
+        )
     }
 
     @discardableResult

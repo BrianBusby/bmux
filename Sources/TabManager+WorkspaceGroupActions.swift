@@ -1,3 +1,5 @@
+import BmuxSettings
+import BmuxWorkspaces
 import Foundation
 
 extension TabManager {

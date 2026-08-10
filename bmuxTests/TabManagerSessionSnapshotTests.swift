@@ -2060,7 +2060,7 @@ final class TabManagerSessionSnapshotTests: XCTestCase {
         XCTAssertFalse(ClosedItemHistoryStore.shared.canReopen)
     }
 
-    func testCleanupEmptySourceWorkspaceDoesNotRecordRecentlyClosedWorkspace() {
+    func testCleanupEmptySourceWorkspaceDoesNotRecordRecentlyClosedPinnedWorkspace() {
         let originalAppDelegate = AppDelegate.shared
         let appDelegate = AppDelegate()
         AppDelegate.shared = appDelegate
@@ -2070,7 +2070,8 @@ final class TabManagerSessionSnapshotTests: XCTestCase {
 
         let manager = TabManager()
         let sourceWorkspace = manager.addWorkspace(select: true)
-        sourceWorkspace.setCustomTitle("Move Cleanup Placeholder")
+        sourceWorkspace.setCustomTitle("Pinned Move Cleanup Placeholder")
+        XCTAssertTrue(manager.setWorkspacePinnedForAction(tabId: sourceWorkspace.id, pinned: true))
         sourceWorkspace.withClosedPanelHistorySuppressed {
             sourceWorkspace.teardownAllPanels()
         }

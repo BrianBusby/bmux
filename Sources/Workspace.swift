@@ -3971,6 +3971,10 @@ final class Workspace: Identifiable, ObservableObject {
         AppDelegate.shared?.notificationStore?.hasUnreadNotification(forTabId: id, surfaceId: panelId) ?? false
     }
 
+    func hasUnreadNotificationForSurfaceAction(panelId: UUID) -> Bool {
+        hasUnreadNotification(panelId: panelId)
+    }
+
     private func attentionPersistentState() -> WorkspaceAttentionPersistentState {
         let notificationStore = AppDelegate.shared?.notificationStore
         let unreadPanelIDs = Set(
@@ -5391,6 +5395,12 @@ final class Workspace: Identifiable, ObservableObject {
         latestSubmittedAt = Date()
         _ = recordConversationMessage(preview)
         return true
+    }
+
+    func clearRecordedPromptMessages() {
+        latestConversationMessage = nil
+        latestSubmittedMessage = nil
+        latestSubmittedAt = nil
     }
 
     var isRemoteWorkspace: Bool {

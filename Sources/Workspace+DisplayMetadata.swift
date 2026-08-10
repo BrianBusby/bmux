@@ -1,3 +1,4 @@
+import BmuxSidebar
 import Foundation
 
 extension Notification.Name {
@@ -186,9 +187,7 @@ extension Workspace {
         clearAllAgentPIDs(refreshPorts: false)
         clearAllAgentLifecycleStates()
         agentListeningPorts.removeAll()
-        latestConversationMessage = nil
-        latestSubmittedMessage = nil
-        latestSubmittedAt = nil
+        clearRecordedPromptMessages()
         logEntries.removeAll()
         progress = nil
         gitBranch = nil
