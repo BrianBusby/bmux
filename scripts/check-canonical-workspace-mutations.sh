@@ -11,6 +11,7 @@ migrated_files=(
   "Sources/RemoteTmuxController.swift"
   "Sources/ContentView.swift"
   "Sources/TerminalController.swift"
+  "Sources/Workspace.swift"
   "Sources/bmuxApp.swift"
 )
 

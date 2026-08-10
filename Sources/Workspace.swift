@@ -12695,7 +12695,15 @@ extension Workspace: BonsplitDelegate {
             if remoteTmuxWorkspaceCloseButton != nil {
                 detachRemoteTmuxMirrorKeptOpenLocallyIfNeeded()
                 let manager = owningTabManager ?? AppDelegate.shared?.tabManagerFor(tabId: id) ?? AppDelegate.shared?.tabManager
-                if let manager, manager.tabs.count > 1 { manager.closeWorkspace(self, recordHistory: false); scheduleTerminalGeometryReconcile(); return }
+                if let manager, manager.tabs.count > 1 {
+                    _ = manager.closeWorkspaceForAction(
+                        tabId: id,
+                        allowPinned: true,
+                        recordHistory: false
+                    )
+                    scheduleTerminalGeometryReconcile()
+                    return
+                }
                 if let manager, let appDelegate = AppDelegate.shared, appDelegate.mainWindowContexts.count > 1,
                    let windowId = appDelegate.windowId(for: manager) { appDelegate.discardMainWindowWithoutClosedHistory(windowId: windowId); scheduleTerminalGeometryReconcile(); return }
             }
