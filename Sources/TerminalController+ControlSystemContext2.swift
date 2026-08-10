@@ -91,11 +91,13 @@ extension TerminalController {
                     skippedPinned += 1
                     continue
                 }
-                if workspace.panels.count <= 1 {
-                    break
-                }
-                if workspace.requestNonInteractiveCloseTabRecordingHistory(tabId) {
+                switch workspace.closeSurfaceForAction(surfaceId: panelId, force: true) {
+                case .closed:
                     closed += 1
+                case .lastSurface:
+                    return (closed, skippedPinned)
+                case .surfaceNotFound, .failed:
+                    continue
                 }
             }
             return (closed, skippedPinned)

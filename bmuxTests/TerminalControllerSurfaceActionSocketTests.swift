@@ -242,6 +242,37 @@ struct TerminalControllerSurfaceActionSocketTests {
         #expect(!workspace.isPanelPinned(panel.id))
     }
 
+    @Test func v2TabCloseOthersUsesWorkspaceSurfaceClosePolicy() throws {
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let anchorPanelId = try #require(workspace.focusedPanelId)
+        let pane = try #require(workspace.paneId(forPanelId: anchorPanelId))
+        let pinnedPanel = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: pane, focus: false).panel
+        )
+        let closablePanel = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: pane, focus: false).panel
+        )
+        workspace.setSurfacePinnedForAction(surfaceId: pinnedPanel.id, pinned: true)
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let response = try handleV2Request(method: "tab.action", params: [
+            "workspace_id": workspace.id.uuidString,
+            "surface_id": anchorPanelId.uuidString,
+            "action": "close_others"
+        ])
+
+        #expect(response["ok"] as? Bool == true)
+        let result = try #require(response["result"] as? [String: Any])
+        #expect(result["closed"] as? Int == 1)
+        #expect(result["skipped_pinned"] as? Int == 1)
+        #expect(workspace.panels[anchorPanelId] != nil)
+        #expect(workspace.panels[pinnedPanel.id] != nil)
+        #expect(workspace.panels[closablePanel.id] == nil)
+        #expect(workspace.panels.count == 2)
+    }
+
     @Test func v2TabReadAndUnreadUseWorkspaceSurfaceUnreadPolicy() throws {
         defer { TerminalController.shared.setActiveTabManager(nil) }
         let manager = TabManager()

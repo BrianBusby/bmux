@@ -52,6 +52,7 @@ canvas_surface_close_pattern='workspace\?\.closePanel\(panelId\)'
 tab_manager_close_surface_pattern='^[[:space:]]*tab\.closePanel\(surfaceId\)[[:space:]]*$'
 socket_surface_reorder_pattern='\.reorderSurface\(panelId:'
 tab_manager_close_adapter_pattern='(plan\.workspace\.closePanel|let closed = tab\.closePanel|_ = tab\.closePanel\(surfaceId)'
+socket_close_adapter_pattern='requestNonInteractiveCloseTabRecordingHistory\(tabId\)'
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -190,6 +191,12 @@ done < <(rg -n -P "$socket_surface_reorder_pattern" \
   "Sources/TerminalController+ControlSurfaceContext3.swift" \
   "Sources/TerminalController+ControlSystemContext2.swift" \
   "Sources/TabManager.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$socket_close_adapter_pattern" \
+  "Sources/TerminalController+ControlSystemContext2.swift" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {
