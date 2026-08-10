@@ -57,6 +57,7 @@ workspace_adjacent_selection_pattern='\.(selectNextTab|selectPreviousTab)\('
 browser_socket_focus_pattern='ws\.focusPanel\((target\.surfaceId|targetId)\)'
 canvas_socket_focus_pattern='ws\.focusPanel\(surfaceID\)'
 browser_address_bar_direct_focus_pattern='workspace\.focusPanel\((panel|browserPanel)\.id\)'
+app_delegate_external_terminal_paste_direct_focus_pattern='workspace\.focusPanel\(terminalPanel\.id\)'
 browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 browser_split_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSplit\('
 
@@ -229,6 +230,12 @@ while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   violations+=("$line")
 done < <(rg -n -P "$browser_address_bar_direct_focus_pattern" \
+  "Sources/AppDelegate.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$app_delegate_external_terminal_paste_direct_focus_pattern" \
   "Sources/AppDelegate.swift" || true)
 
 while IFS= read -r line; do

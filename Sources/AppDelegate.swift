@@ -8697,7 +8697,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         bmuxDebugLog("textURL.paste source=\(debugSource) workspace=\(workspace.id.uuidString.prefix(8)) surface=\(terminalPanel.id.uuidString.prefix(8)) chars=\(text.count)")
 #endif
         if shouldBringToFront {
-            workspace.focusPanel(terminalPanel.id)
+            _ = context.tabManager.focusWorkspaceSurfaceForAction(
+                workspaceId: workspace.id,
+                surfaceId: terminalPanel.id,
+                focusIntent: .terminal(.surface)
+            )
         }
         sendTextWhenReady(
             text,
