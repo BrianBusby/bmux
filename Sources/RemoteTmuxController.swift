@@ -413,11 +413,7 @@ final class RemoteTmuxController {
            manager.tabs.count > 1,
            let bootstrap = manager.tabs.first(where: { $0.id == bootstrapWorkspaceId }),
            !bootstrap.isRemoteTmuxMirror {
-            _ = manager.closeWorkspaceForAction(
-                tabId: bootstrap.id,
-                allowPinned: true,
-                recordHistory: false
-            )
+            _ = manager.closeWorkspaceAllowingPinnedForAction(tabId: bootstrap.id, recordHistory: false)
         }
         return .mirrored(windowId: windowId)
     }
@@ -987,10 +983,7 @@ final class RemoteTmuxController {
                 if manager.tabs.count == 1 {
                     _ = manager.addWorkspace(inheritWorkingDirectory: false, select: false)
                 }
-                _ = manager.closeWorkspaceForAction(
-                    tabId: workspace.id,
-                    allowPinned: true
-                )
+                _ = manager.closeWorkspaceAllowingPinnedForAction(tabId: workspace.id)
             }
         }
     }
@@ -1156,7 +1149,6 @@ final class RemoteTmuxController {
             sessionName: sessionName
         )]
     }
-
     /// Detaches a control client and removes its mirror workspace while leaving
     /// the remote session alive (#7364). Internal callers that already removed the
     /// mirror keep the low-level stop-only path, preserving their kill semantics.

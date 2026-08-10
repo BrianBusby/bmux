@@ -269,6 +269,11 @@ extension TabManager {
     }
 
     @discardableResult
+    func closeWorkspaceAllowingPinnedForAction(tabId: UUID, recordHistory: Bool = true) -> WorkspaceCloseActionResult {
+        closeWorkspaceForAction(tabId: tabId, allowPinned: true, recordHistory: recordHistory)
+    }
+
+    @discardableResult
     func selectWorkspaceIdForAction(
         _ workspaceId: UUID,
         notificationDismissalContext: NotificationDismissalContext? = .explicitWorkspaceResume

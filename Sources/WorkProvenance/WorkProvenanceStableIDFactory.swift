@@ -65,21 +65,28 @@ struct WorkProvenanceStableIDFactory: Sendable {
         gitSnapshot: WorkProvenanceGitSnapshot?,
         ticketIDs: [String]
     ) -> String {
-        let payload = [
+        let repositoryRoot = gitSnapshot.map { normalizedPath($0.repositoryRoot) } ?? ""
+        let remoteSlug = gitSnapshot?.remoteSlug ?? ""
+        let effectiveBranch = branch ?? gitSnapshot?.branch ?? ""
+        let pullRequestNumberValue = pullRequestNumber.map(String.init) ?? ""
+        let pullRequestStaleness = pullRequestIsStale ? "stale" : "fresh"
+        let ticketIDList = ticketIDs.joined(separator: ",")
+        let payloadParts: [String] = [
             stableWorkspaceID.uuidString.lowercased(),
             title,
             titleSource ?? "",
             currentDirectory,
-            gitSnapshot.map { normalizedPath($0.repositoryRoot) } ?? "",
-            gitSnapshot?.remoteSlug ?? "",
-            branch ?? gitSnapshot?.branch ?? "",
-            pullRequestNumber.map { "\($0)" } ?? "",
+            repositoryRoot,
+            remoteSlug,
+            effectiveBranch,
+            pullRequestNumberValue,
             pullRequestURL ?? "",
             pullRequestStatus ?? "",
             pullRequestBranch ?? "",
-            pullRequestIsStale ? "stale" : "fresh",
-            ticketIDs.joined(separator: ",")
-        ].joined(separator: "\n")
+            pullRequestStaleness,
+            ticketIDList
+        ]
+        let payload = payloadParts.joined(separator: "\n")
         return "workspace-display-\(digest(payload))"
     }
 

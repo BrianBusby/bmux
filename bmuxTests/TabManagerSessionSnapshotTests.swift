@@ -2067,7 +2067,6 @@ final class TabManagerSessionSnapshotTests: XCTestCase {
         defer {
             AppDelegate.shared = originalAppDelegate
         }
-
         let manager = TabManager()
         let sourceWorkspace = manager.addWorkspace(select: true)
         sourceWorkspace.setCustomTitle("Pinned Move Cleanup Placeholder")
