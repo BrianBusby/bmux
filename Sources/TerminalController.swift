@@ -12007,7 +12007,7 @@ class TerminalController {
                 return
             }
 
-            switch tab.newTerminalSplitOutcome(
+            switch tab.createTerminalSplitForAction(
                 from: targetSurface,
                 orientation: direction.orientation,
                 insertFirst: direction.insertFirst,

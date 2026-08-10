@@ -207,7 +207,7 @@ extension TerminalController {
             }
 
             let targetIndex = insertionIndexToRight(anchorTabId: anchorTabId, inPane: paneId)
-            switch workspace.newTerminalSurfaceOutcome(
+            switch workspace.createTerminalSurfaceForAction(
                 inPane: paneId,
                 focus: focus,
                 inheritWorkingDirectoryFallback: true,

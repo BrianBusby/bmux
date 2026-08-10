@@ -22,7 +22,10 @@ workspace_creation_migrated_files=(
 
 surface_creation_migrated_files=(
   "Sources/TerminalController+ControlPaneContext.swift"
+  "Sources/TerminalController+ControlSidebarContext3.swift"
   "Sources/TerminalController+ControlSurfaceContext2.swift"
+  "Sources/TerminalController+ControlSystemContext2.swift"
+  "Sources/TerminalController.swift"
 )
 
 mutation_pattern='\.((closeWorkspace|reorderWorkspace|clearCustomDescription|setCustomDescription|setTabColor|moveTabToTop|moveTabsToTop)\(|selectTab\(at:)'

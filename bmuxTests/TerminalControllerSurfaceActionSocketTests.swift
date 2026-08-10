@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import BmuxControlSocket
 import BmuxTerminal
 
 #if canImport(bmux_DEV)
@@ -9,7 +10,95 @@ import BmuxTerminal
 #endif
 
 @MainActor
+@Suite(.serialized)
 struct TerminalControllerSurfaceActionSocketTests {
+    @Test func controlSidebarNewSurfaceCreatesTerminalWithoutStealingFocus() throws {
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let originalPanelId = try #require(workspace.focusedPanelId)
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let result = TerminalController.shared.controlSidebarNewSurface(
+            isBrowser: false,
+            paneArg: nil,
+            url: nil
+        )
+
+        guard case .created(let panelId) = result else {
+            Issue.record("Expected sidebar new surface action to create a terminal panel")
+            return
+        }
+        #expect(panelId != originalPanelId)
+        #expect(workspace.panels[panelId] != nil)
+        #expect(workspace.focusedPanelId == originalPanelId)
+    }
+
+    @Test func controlSidebarPaneSplitCreatesTerminalWithoutStealingFocus() throws {
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let originalPanelId = try #require(workspace.focusedPanelId)
+        let originalPane = try #require(workspace.paneId(forPanelId: originalPanelId))
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let result = TerminalController.shared.controlSidebarCreatePaneSplit(
+            isBrowser: false,
+            orientationIsHorizontal: true,
+            insertFirst: false,
+            url: nil
+        )
+
+        guard case .created(let panelId) = result else {
+            Issue.record("Expected sidebar pane split action to create a terminal panel")
+            return
+        }
+        let splitPane = try #require(workspace.paneId(forPanelId: panelId))
+        #expect(panelId != originalPanelId)
+        #expect(splitPane != originalPane)
+        #expect(workspace.focusedPanelId == originalPanelId)
+    }
+
+    @Test func controlTabActionNewTerminalRightCreatesTerminalNextToAnchor() throws {
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let originalPanelId = try #require(workspace.focusedPanelId)
+        let pane = try #require(workspace.paneId(forPanelId: originalPanelId))
+        let originalSurfaceId = try #require(workspace.surfaceIdFromPanelId(originalPanelId))
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let result = TerminalController.shared.controlTabAction(
+            routing: ControlRoutingSelectors(
+                hasWindowIDParam: false,
+                windowID: nil,
+                groupID: nil,
+                workspaceID: workspace.id,
+                surfaceID: nil,
+                paneID: nil
+            ),
+            actionKey: "new_terminal_right",
+            title: nil,
+            rawURL: nil,
+            surfaceID: originalPanelId,
+            requestedFocus: false,
+            moveParams: [:]
+        )
+
+        guard case .completed(let outcome) = result,
+              case .created(let panelId) = outcome.extras else {
+            Issue.record("Expected tab action to create a terminal panel")
+            return
+        }
+        #expect(panelId != originalPanelId)
+        #expect(workspace.panels[panelId] != nil)
+        #expect(workspace.paneId(forPanelId: panelId) == pane)
+        let paneTabIds = workspace.bonsplitController.tabs(inPane: pane).map(\.id)
+        let anchorIndex = try #require(paneTabIds.firstIndex(of: originalSurfaceId))
+        #expect(anchorIndex + 1 < paneTabIds.count)
+        #expect(workspace.surfaceIdFromPanelId(panelId) == paneTabIds[anchorIndex + 1])
+    }
+
     @Test func v2TabRenameAndClearUseUserTitlePolicy() throws {
         defer { TerminalController.shared.setActiveTabManager(nil) }
         let manager = TabManager()

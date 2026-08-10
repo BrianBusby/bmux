@@ -210,7 +210,7 @@ extension TerminalController {
             // pane; reject before mutating the remote session.
             return .mirrorInsertFirstRejected
         }
-        switch tab.newTerminalSplitOutcome(
+        switch tab.createTerminalSplitForAction(
             from: focusedPanelId,
             orientation: orientation,
             insertFirst: insertFirst,
@@ -266,7 +266,7 @@ extension TerminalController {
             }
             return .created(id)
         }
-        switch tab.newTerminalSurfaceOutcome(
+        switch tab.createTerminalSurfaceForAction(
             inPane: targetPaneId,
             focus: focus,
             inheritWorkingDirectoryFallback: true,
