@@ -35,6 +35,9 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
     /// Validation-run projection update.
     public var validationRun: ProvenanceValidationRunRecord?
 
+    /// Workspace display projection update.
+    public var workspaceDisplay: ProvenanceWorkspaceDisplayRecord?
+
     private enum CodingKeys: String, CodingKey {
         case repository
         case worktree
@@ -47,6 +50,7 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         case changeSet
         case fileChanges
         case validationRun
+        case workspaceDisplay
     }
 
     /// Creates an event payload.
@@ -61,7 +65,8 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         checkpoint: ProvenanceCheckpointRecord? = nil,
         changeSet: ProvenanceChangeSetRecord? = nil,
         fileChanges: [ProvenanceFileChangeRecord] = [],
-        validationRun: ProvenanceValidationRunRecord? = nil
+        validationRun: ProvenanceValidationRunRecord? = nil,
+        workspaceDisplay: ProvenanceWorkspaceDisplayRecord? = nil
     ) {
         self.repository = repository
         self.worktree = worktree
@@ -74,6 +79,7 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         self.changeSet = changeSet
         self.fileChanges = fileChanges
         self.validationRun = validationRun
+        self.workspaceDisplay = workspaceDisplay
     }
 
     /// Creates an event payload from stored JSON, preserving compatibility with older payload shapes.
@@ -101,6 +107,10 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         self.validationRun = try container.decodeIfPresent(
             ProvenanceValidationRunRecord.self,
             forKey: .validationRun
+        )
+        self.workspaceDisplay = try container.decodeIfPresent(
+            ProvenanceWorkspaceDisplayRecord.self,
+            forKey: .workspaceDisplay
         )
     }
 }

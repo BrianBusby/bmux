@@ -14,6 +14,7 @@ local_capabilities:
   engine_owned_sqlite_store: implemented
   immutable_ledger: implemented
   deterministic_current_state: implemented
+  workspace_display_current_state: implemented
   schema_identity_validation: implemented
   producer_neutral_lifecycle_recording: implemented
 

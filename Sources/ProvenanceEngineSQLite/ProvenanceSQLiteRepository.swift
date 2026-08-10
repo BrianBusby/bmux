@@ -74,7 +74,8 @@ actor ProvenanceSQLiteRepository {
             checkpointCount: try countRows(in: "provenance_checkpoints"),
             changeSetCount: try countRows(in: "provenance_change_sets"),
             fileChangeCount: try countRows(in: "provenance_file_changes"),
-            validationRunCount: try countRows(in: "provenance_validation_runs")
+            validationRunCount: try countRows(in: "provenance_validation_runs"),
+            workspaceDisplayCount: try countRows(in: "provenance_workspace_display")
         )
     }
 
@@ -959,6 +960,28 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
+    /// Reads current display metadata for one workspace.
+    ///
+    /// - Parameter request: Workspace display query parameters.
+    /// - Returns: Found response with current display metadata, or `no_workspace_display` when absent.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func workspaceDisplay(_ request: ProvenanceWorkspaceDisplayRequest) throws -> ProvenanceWorkspaceDisplayResponse {
+        guard let display = try workspaceDisplay(workspaceID: request.workspaceID) else {
+            return ProvenanceWorkspaceDisplayResponse(
+                found: false,
+                reason: "no_workspace_display",
+                workspaceID: request.workspaceID,
+                display: nil
+            )
+        }
+
+        return ProvenanceWorkspaceDisplayResponse(
+            found: true,
+            workspaceID: request.workspaceID,
+            display: display
+        )
+    }
+
     private func worktree(from query: ProvenanceSQLiteStatement) -> ProvenanceWorktreeRecord? {
         guard let id = query.string(at: 0),
               let repositoryID = query.string(at: 1),
@@ -1001,6 +1024,7 @@ actor ProvenanceSQLiteRepository {
         var changeSets = Set<String>()
         var fileChanges = Set<String>()
         var validationRuns = Set<String>()
+        var workspaceDisplays = Set<String>()
 
         for payload in payloads {
             if let repository = payload.repository {
@@ -1036,6 +1060,9 @@ actor ProvenanceSQLiteRepository {
             if let validationRun = payload.validationRun {
                 validationRuns.insert(validationRun.id)
             }
+            if let workspaceDisplay = payload.workspaceDisplay {
+                workspaceDisplays.insert(workspaceDisplay.id)
+            }
         }
 
         return [
@@ -1050,6 +1077,7 @@ actor ProvenanceSQLiteRepository {
             "provenance_change_sets": changeSets.count,
             "provenance_file_changes": fileChanges.count,
             "provenance_validation_runs": validationRuns.count,
+            "provenance_workspace_display": workspaceDisplays.count,
         ]
     }
 
@@ -1065,6 +1093,7 @@ actor ProvenanceSQLiteRepository {
         var changeSets = Set<String>()
         var fileChanges = Set<String>()
         var validationRuns = Set<String>()
+        var workspaceDisplays = Set<String>()
 
         for payload in payloads {
             if let repository = payload.repository {
@@ -1100,6 +1129,9 @@ actor ProvenanceSQLiteRepository {
             if let validationRun = payload.validationRun {
                 validationRuns.insert(validationRun.id)
             }
+            if let workspaceDisplay = payload.workspaceDisplay {
+                workspaceDisplays.insert(workspaceDisplay.id)
+            }
         }
 
         return [
@@ -1114,6 +1146,7 @@ actor ProvenanceSQLiteRepository {
             "provenance_change_sets": changeSets,
             "provenance_file_changes": fileChanges,
             "provenance_validation_runs": validationRuns,
+            "provenance_workspace_display": workspaceDisplays,
         ]
     }
 
@@ -1194,6 +1227,7 @@ actor ProvenanceSQLiteRepository {
             "provenance_change_sets",
             "provenance_file_changes",
             "provenance_validation_runs",
+            "provenance_workspace_display",
         ]
     }
 
@@ -1313,6 +1347,66 @@ actor ProvenanceSQLiteRepository {
         try query.bind(path, at: 1)
         guard try query.step() else { return nil }
         return worktree(from: query)
+    }
+
+    private func workspaceDisplay(workspaceID: String) throws -> ProvenanceWorkspaceDisplayRecord? {
+        let query = try database.prepare(
+            """
+            SELECT
+                id,
+                workspace_id,
+                repository_id,
+                worktree_id,
+                title,
+                title_source,
+                branch,
+                pull_request_number,
+                pull_request_url,
+                pull_request_status,
+                pull_request_branch,
+                pull_request_is_stale,
+                ticket_ids_json,
+                observed_at_seconds,
+                updated_at_seconds
+            FROM provenance_workspace_display
+            WHERE workspace_id = ?
+            ORDER BY updated_at_seconds DESC, rowid DESC
+            LIMIT 1
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(workspaceID, at: 1)
+        guard try query.step() else { return nil }
+        return try workspaceDisplay(from: query)
+    }
+
+    private func workspaceDisplay(from query: ProvenanceSQLiteStatement) throws -> ProvenanceWorkspaceDisplayRecord? {
+        guard let id = query.string(at: 0),
+              let workspaceID = query.string(at: 1),
+              let ticketIDsJSON = query.string(at: 12),
+              let ticketIDsData = ticketIDsJSON.data(using: .utf8) else {
+            return nil
+        }
+
+        let ticketIDs = (try? payloadDecoder.decode([String].self, from: ticketIDsData)) ?? []
+        return ProvenanceWorkspaceDisplayRecord(
+            id: id,
+            workspaceID: workspaceID,
+            repositoryID: query.string(at: 2),
+            worktreeID: query.string(at: 3),
+            title: query.string(at: 4),
+            titleSource: query.string(at: 5),
+            branch: query.string(at: 6),
+            pullRequestNumber: query.double(at: 7).map(Int.init),
+            pullRequestURL: query.string(at: 8),
+            pullRequestStatus: query.string(at: 9),
+            pullRequestBranch: query.string(at: 10),
+            pullRequestIsStale: query.int(at: 11) != 0,
+            ticketIDs: ticketIDs,
+            observedAt: Date(timeIntervalSince1970: query.double(at: 13) ?? 0),
+            updatedAt: Date(timeIntervalSince1970: query.double(at: 14) ?? 0)
+        )
     }
 
     private func currentContextFileChanges(
@@ -2270,10 +2364,14 @@ actor ProvenanceSQLiteRepository {
         if let validationRun = payload.validationRun {
             try upsertValidationRun(validationRun)
         }
+        if let workspaceDisplay = payload.workspaceDisplay {
+            try upsertWorkspaceDisplay(workspaceDisplay)
+        }
     }
 
     private func clearProjectionTables() throws {
         for tableName in [
+            "provenance_workspace_display",
             "provenance_validation_runs",
             "provenance_file_changes",
             "provenance_change_sets",
@@ -2716,6 +2814,73 @@ actor ProvenanceSQLiteRepository {
         _ = try upsert.step()
     }
 
+    private func upsertWorkspaceDisplay(_ display: ProvenanceWorkspaceDisplayRecord) throws {
+        let ticketIDsData = try payloadEncoder.encode(display.ticketIDs)
+        guard let ticketIDsJSON = String(data: ticketIDsData, encoding: .utf8) else {
+            throw ProvenanceSQLiteError.sqlite(message: "failed to encode workspace display ticket IDs")
+        }
+
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_workspace_display (
+                id,
+                workspace_id,
+                repository_id,
+                worktree_id,
+                title,
+                title_source,
+                branch,
+                pull_request_number,
+                pull_request_url,
+                pull_request_status,
+                pull_request_branch,
+                pull_request_is_stale,
+                ticket_ids_json,
+                observed_at_seconds,
+                updated_at_seconds
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                workspace_id = excluded.workspace_id,
+                repository_id = excluded.repository_id,
+                worktree_id = excluded.worktree_id,
+                title = excluded.title,
+                title_source = excluded.title_source,
+                branch = excluded.branch,
+                pull_request_number = excluded.pull_request_number,
+                pull_request_url = excluded.pull_request_url,
+                pull_request_status = excluded.pull_request_status,
+                pull_request_branch = excluded.pull_request_branch,
+                pull_request_is_stale = excluded.pull_request_is_stale,
+                ticket_ids_json = excluded.ticket_ids_json,
+                observed_at_seconds = excluded.observed_at_seconds,
+                updated_at_seconds = excluded.updated_at_seconds
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(display.id, at: 1)
+        try upsert.bind(display.workspaceID, at: 2)
+        try upsert.bind(display.repositoryID, at: 3)
+        try upsert.bind(display.worktreeID, at: 4)
+        try upsert.bind(display.title, at: 5)
+        try upsert.bind(display.titleSource, at: 6)
+        try upsert.bind(display.branch, at: 7)
+        if let pullRequestNumber = display.pullRequestNumber {
+            try upsert.bind(pullRequestNumber, at: 8)
+        } else {
+            try upsert.bind(nil as String?, at: 8)
+        }
+        try upsert.bind(display.pullRequestURL, at: 9)
+        try upsert.bind(display.pullRequestStatus, at: 10)
+        try upsert.bind(display.pullRequestBranch, at: 11)
+        try upsert.bind(display.pullRequestIsStale ? 1 : 0, at: 12)
+        try upsert.bind(ticketIDsJSON, at: 13)
+        try upsert.bind(display.observedAt.timeIntervalSince1970, at: 14)
+        try upsert.bind(display.updatedAt.timeIntervalSince1970, at: 15)
+
+        _ = try upsert.step()
+    }
+
     private func insertStorageRepairAttempt(
         _ report: ProvenanceSQLiteStorageRepairReport,
         attemptedAt: Date
@@ -3147,6 +3312,43 @@ actor ProvenanceSQLiteRepository {
                     ('schema_family', 'provenance-engine'),
                     ('schema_identity_version', '1'),
                     ('schema_version', '10')
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 11,
+            statements: [
+                """
+                CREATE TABLE provenance_workspace_display (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    workspace_id TEXT NOT NULL UNIQUE,
+                    repository_id TEXT,
+                    worktree_id TEXT,
+                    title TEXT,
+                    title_source TEXT,
+                    branch TEXT,
+                    pull_request_number INTEGER,
+                    pull_request_url TEXT,
+                    pull_request_status TEXT,
+                    pull_request_branch TEXT,
+                    pull_request_is_stale INTEGER NOT NULL,
+                    ticket_ids_json TEXT NOT NULL,
+                    observed_at_seconds REAL NOT NULL,
+                    updated_at_seconds REAL NOT NULL
+                )
+                """,
+                """
+                CREATE INDEX provenance_workspace_display_workspace_index
+                ON provenance_workspace_display (workspace_id, updated_at_seconds)
+                """,
+                """
+                CREATE INDEX provenance_workspace_display_worktree_index
+                ON provenance_workspace_display (worktree_id, updated_at_seconds)
+                """,
+                """
+                UPDATE provenance_metadata
+                SET value = '11'
+                WHERE key = 'schema_version'
                 """,
             ]
         ),

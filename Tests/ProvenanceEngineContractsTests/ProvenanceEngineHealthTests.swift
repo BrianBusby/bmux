@@ -31,6 +31,7 @@ struct ProvenanceEngineHealthTests {
         #expect(ProvenanceEngineCapability.queryFileExplanation.rawValue == "query_file_explanation")
         #expect(ProvenanceEngineCapability.queryWorktrees.rawValue == "query_worktrees")
         #expect(ProvenanceEngineCapability.queryCurrentContext.rawValue == "query_current_context")
+        #expect(ProvenanceEngineCapability.queryWorkspaceDisplay.rawValue == "query_workspace_display")
     }
 
     @Test
@@ -80,7 +81,8 @@ struct ProvenanceEngineHealthTests {
                 session: Self.session,
                 sessionRelationship: Self.relationship,
                 externalIdentities: [Self.externalIdentity],
-                fileChanges: [Self.fileChange]
+                fileChanges: [Self.fileChange],
+                workspaceDisplay: Self.workspaceDisplay
             )
         )
 
@@ -92,6 +94,7 @@ struct ProvenanceEngineHealthTests {
         #expect(decoded.evidenceScope == ProvenanceEvidenceScope(level: .organization, id: "companycam"))
         #expect(decoded.payload.externalIdentities == [Self.externalIdentity])
         #expect(decoded.payload.fileChanges == [Self.fileChange])
+        #expect(decoded.payload.workspaceDisplay == Self.workspaceDisplay)
     }
 
     @Test
@@ -135,11 +138,13 @@ struct ProvenanceEngineHealthTests {
         let lifecycle = await client.recordSessionLifecycle(Self.lifecycleRequest)
         let tree = try await client.sessionTree(ProvenanceSessionTreeRequest(rootSessionID: "session-1"))
         let context = try await client.currentContext(ProvenanceCurrentContextRequest(repositoryPath: "/repo"))
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: "workspace-1"))
 
         #expect(append.eventID == "event-1")
         #expect(lifecycle.accepted)
         #expect(tree.sessions == [Self.session])
         #expect(context.repositoryPath == "/repo")
+        #expect(display.display == Self.workspaceDisplay)
     }
 
     fileprivate static let timestamp = Date(timeIntervalSince1970: 1)
@@ -205,6 +210,24 @@ struct ProvenanceEngineHealthTests {
         updatedAt: timestamp
     )
 
+    fileprivate static let workspaceDisplay = ProvenanceWorkspaceDisplayRecord(
+        id: "workspace-display-1",
+        workspaceID: "workspace-1",
+        repositoryID: "repo-1",
+        worktreeID: "worktree-1",
+        title: "Canonical domain mutation paths",
+        titleSource: "user",
+        branch: "canonical-domain-mutation-paths",
+        pullRequestNumber: 42,
+        pullRequestURL: "https://github.com/BrianBusby/bmux/pull/42",
+        pullRequestStatus: "open",
+        pullRequestBranch: "canonical-domain-mutation-paths",
+        pullRequestIsStale: false,
+        ticketIDs: ["STE-1964"],
+        observedAt: timestamp,
+        updatedAt: timestamp
+    )
+
     fileprivate static let event = ProvenanceEvent(
         id: "event-1",
         eventType: .progressCheckpoint,
@@ -239,7 +262,7 @@ private struct StaticProvenanceEngineClient: ProvenanceEngineClient {
         ProvenanceEngineHealth(
             status: .available,
             version: "0.1.0",
-            capabilities: [.appendEvent, .recordSessionLifecycle, .queryCurrentContext]
+            capabilities: [.appendEvent, .recordSessionLifecycle, .queryCurrentContext, .queryWorkspaceDisplay]
         )
     }
 
@@ -293,6 +316,16 @@ private struct StaticProvenanceEngineClient: ProvenanceEngineClient {
             recentCheckpoints: [],
             validationRuns: [],
             conflicts: []
+        )
+    }
+
+    func workspaceDisplay(
+        _ request: ProvenanceWorkspaceDisplayRequest
+    ) async throws -> ProvenanceWorkspaceDisplayResponse {
+        ProvenanceWorkspaceDisplayResponse(
+            found: true,
+            workspaceID: request.workspaceID,
+            display: ProvenanceEngineHealthTests.workspaceDisplay
         )
     }
 }
