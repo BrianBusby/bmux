@@ -187,7 +187,7 @@ extension Workspace {
 
         case .browser:
             let url = surface.url.flatMap { URL(string: $0) }
-            if let panel = newBrowserSurface(
+            if let panel = createBrowserSurfaceForAction(
                 inPane: paneId,
                 url: url,
                 focus: false,
@@ -236,7 +236,7 @@ extension Workspace {
 
         case .browser:
             let url = surface.url.flatMap { URL(string: $0) }
-            if let panel = newBrowserSurface(
+            if let panel = createBrowserSurfaceForAction(
                 inPane: paneId,
                 url: url,
                 focus: false,

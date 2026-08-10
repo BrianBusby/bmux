@@ -871,7 +871,7 @@ struct MarkdownWebRenderer: NSViewRepresentable {
                 return
             }
 
-            _ = location.workspace.newBrowserSurface(
+            _ = location.workspace.createBrowserSurfaceForAction(
                 inPane: paneId,
                 url: url,
                 focus: true

@@ -250,7 +250,7 @@ extension TerminalController {
             }
 
             let targetIndex = insertionIndexToRight(anchorTabId: anchorTabId, inPane: paneId)
-            guard let newPanel = workspace.newBrowserSurface(
+            guard let newPanel = workspace.createBrowserSurfaceForAction(
                 inPane: paneId,
                 url: url,
                 focus: focus,

@@ -55,6 +55,7 @@ tab_manager_close_adapter_pattern='(plan\.workspace\.closePanel|let closed = tab
 socket_close_adapter_pattern='requestNonInteractiveCloseTabRecordingHistory\(tabId\)'
 workspace_adjacent_selection_pattern='\.(selectNextTab|selectPreviousTab)\('
 browser_socket_focus_pattern='ws\.focusPanel\((target\.surfaceId|targetId)\)'
+browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -214,6 +215,18 @@ while IFS= read -r line; do
   violations+=("$line")
 done < <(rg -n -P "$browser_socket_focus_pattern" \
   "Sources/TerminalController.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  source_line="${line#*:}"
+  source_line="${source_line#*:}"
+  [[ "$source_line" =~ ^[[:space:]]*func[[:space:]]+newBrowserSurface\( ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$browser_surface_creation_pattern" \
+  "Sources" \
+  --glob "*.swift" \
+  --glob "!Workspace.swift" \
+  --glob "!Workspace+SurfaceActions.swift" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {

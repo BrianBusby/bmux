@@ -374,7 +374,7 @@ extension TerminalController {
         let useLocalContext = surfaceRemoteContextWantsLocal(inputs.remoteContextRaw)
         let newPanelId: UUID?
         if panelType == .browser {
-            newPanelId = ws.newBrowserSurface(
+            newPanelId = ws.createBrowserSurfaceForAction(
                 inPane: paneId,
                 url: url,
                 focus: focus,

@@ -9811,7 +9811,7 @@ class TerminalController {
                 return
             }
 
-            guard let panel = ws.newBrowserSurface(
+            guard let panel = ws.createBrowserSurfaceForAction(
                 inPane: pane,
                 url: url,
                 focus: true,

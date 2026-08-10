@@ -6377,7 +6377,7 @@ extension BrowserPanel {
 #endif
             return
         }
-        guard let _ = workspace.newBrowserSurface(
+        guard let _ = workspace.createBrowserSurfaceForAction(
             inPane: paneId,
             url: seed.url,
             initialRequest: seed.initialRequest,

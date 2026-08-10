@@ -17,7 +17,7 @@ extension Workspace {
         guard panels[sourcePanelId] != nil else { return nil }
 
         if let targetPane = preferredRightSideTargetPane(fromPanelId: sourcePanelId),
-           let panel = newBrowserSurface(
+           let panel = createBrowserSurfaceForAction(
                inPane: targetPane,
                url: url,
                focus: focus,

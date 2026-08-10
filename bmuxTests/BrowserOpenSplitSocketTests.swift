@@ -88,6 +88,39 @@ struct BrowserOpenSplitSocketTests {
         #expect(targetWorkspace.focusedPanelId == secondBrowser.id)
     }
 
+    @Test func browserTabNewCreatesBrowserSurfaceInRequestedWorkspace() throws {
+        let defaults = UserDefaults.standard
+        let previousBrowserDisabled = defaults.object(forKey: BrowserAvailabilitySettings.disabledKey)
+        BrowserAvailabilitySettings.setDisabled(false)
+        defer {
+            if let previousBrowserDisabled {
+                defaults.set(previousBrowserDisabled, forKey: BrowserAvailabilitySettings.disabledKey)
+            } else {
+                defaults.removeObject(forKey: BrowserAvailabilitySettings.disabledKey)
+            }
+            TerminalController.shared.setActiveTabManager(nil)
+        }
+
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let paneId = try #require(workspace.bonsplitController.focusedPaneId)
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let newResult = try result(method: "browser.tab.new", params: [
+            "workspace_id": workspace.id.uuidString,
+            "pane_id": paneId.id.uuidString,
+            "url": "https://example.com"
+        ])
+
+        let surfaceIdString = try #require(newResult["surface_id"] as? String)
+        let surfaceId = try #require(UUID(uuidString: surfaceIdString))
+        #expect(newResult["workspace_id"] as? String == workspace.id.uuidString)
+        #expect(newResult["pane_id"] as? String == paneId.id.uuidString)
+        #expect(workspace.browserPanel(for: surfaceId) != nil)
+        #expect(workspace.paneId(forPanelId: surfaceId) == paneId)
+        #expect(workspace.focusedPanelId == surfaceId)
+    }
+
     private func result(method: String, params: [String: Any]) throws -> [String: Any] {
         let envelope = try response(method: method, params: params)
         #expect(envelope["ok"] as? Bool == true, "Unexpected JSON-RPC response: \(envelope)")

@@ -256,7 +256,7 @@ extension TerminalController {
         }
 
         if isBrowser {
-            guard let id = tab.newBrowserSurface(
+            guard let id = tab.createBrowserSurfaceForAction(
                 inPane: targetPaneId,
                 url: url,
                 focus: focus,

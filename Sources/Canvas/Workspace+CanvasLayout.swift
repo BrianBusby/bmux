@@ -248,7 +248,7 @@ extension Workspace {
             }
             newPanelId = panel.id
         case .browser:
-            guard let panel = newBrowserSurface(inPane: focusedPaneId, focus: focus) else {
+            guard let panel = createBrowserSurfaceForAction(inPane: focusedPaneId, focus: focus) else {
                 return nil
             }
             newPanelId = panel.id

@@ -737,7 +737,7 @@ struct EmptyPanelView: View {
         bmuxDebugLog("emptyPane.newBrowser pane=\(paneId.id.uuidString.prefix(5))")
         #endif
         focusPane()
-        _ = workspace.newBrowserSurface(inPane: paneId)
+        _ = workspace.createBrowserSurfaceForAction(inPane: paneId)
     }
 
     private var newSurfaceShortcut: StoredShortcut {

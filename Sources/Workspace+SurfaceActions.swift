@@ -97,6 +97,37 @@ extension Workspace {
     }
 
     @discardableResult
+    func createBrowserSurfaceForAction(
+        inPane paneId: PaneID,
+        url: URL? = nil,
+        initialRequest: URLRequest? = nil,
+        focus: Bool? = nil,
+        selectWhenNotFocused: Bool = false,
+        insertAtEnd: Bool = false,
+        preferredProfileID: UUID? = nil,
+        bypassInsecureHTTPHostOnce: String? = nil,
+        creationPolicy: BrowserPanelCreationPolicy = .userInitiated,
+        omnibarVisible: Bool = true,
+        transparentBackground: Bool = false,
+        bypassRemoteProxy: Bool = false
+    ) -> BrowserPanel? {
+        newBrowserSurface(
+            inPane: paneId,
+            url: url,
+            initialRequest: initialRequest,
+            focus: focus,
+            selectWhenNotFocused: selectWhenNotFocused,
+            insertAtEnd: insertAtEnd,
+            preferredProfileID: preferredProfileID,
+            bypassInsecureHTTPHostOnce: bypassInsecureHTTPHostOnce,
+            creationPolicy: creationPolicy,
+            omnibarVisible: omnibarVisible,
+            transparentBackground: transparentBackground,
+            bypassRemoteProxy: bypassRemoteProxy
+        )
+    }
+
+    @discardableResult
     func reorderSurfaceForAction(
         panelId: UUID,
         target: SurfaceReorderActionTarget,
