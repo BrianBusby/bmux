@@ -348,6 +348,42 @@ struct TerminalControllerSurfaceActionSocketTests {
         #expect(manager.tabs.map(\.id) == [workspace.id])
     }
 
+    @Test func surfaceFocusSelectsWorkspaceDockSurfaceThroughSocketPath() throws {
+        let previousAppDelegate = AppDelegate.shared
+        let previousManager = TerminalController.shared.activeTabManagerForCallerNotification()
+        let appDelegate = AppDelegate()
+        let manager = TabManager(autoWelcomeIfNeeded: false)
+        AppDelegate.shared = appDelegate
+        appDelegate.tabManager = manager
+        TerminalController.shared.setActiveTabManager(manager)
+        let windowId = appDelegate.registerMainWindowContextForTesting(tabManager: manager)
+        defer {
+            TerminalController.shared.setActiveTabManager(previousManager)
+            appDelegate.unregisterMainWindowContextForTesting(windowId: windowId)
+            manager.tabs.forEach { $0.teardownAllPanels() }
+            AppDelegate.shared = previousAppDelegate
+        }
+
+        let workspace = try #require(manager.tabs.first)
+        let store = workspace.dockSplit
+        let rootPane = try #require(store.bonsplitController.allPaneIds.first)
+        let firstPanelId = try #require(store.newSurface(kind: .terminal, inPane: rootPane, focus: true))
+        let secondPanelId = try #require(store.newSurface(kind: .terminal, inPane: rootPane, focus: false))
+        #expect(store.focusedPanelId == firstPanelId)
+
+        let response = try handleV2Request(
+            method: "surface.focus",
+            params: ["surface_id": secondPanelId.uuidString]
+        )
+
+        #expect(response["ok"] as? Bool == true)
+        let result = try #require(response["result"] as? [String: Any])
+        #expect(result["window_id"] as? String == windowId.uuidString)
+        #expect(result["workspace_id"] as? String == workspace.id.uuidString)
+        #expect(result["surface_id"] as? String == secondPanelId.uuidString)
+        #expect(store.focusedPanelId == secondPanelId)
+    }
+
     private func handleV2Request(method: String, params: [String: Any]) throws -> [String: Any] {
         let payload: [String: Any] = ["jsonrpc": "2.0", "id": 1, "method": method, "params": params]
         let data = try JSONSerialization.data(withJSONObject: payload)

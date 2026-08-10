@@ -308,8 +308,11 @@ extension TerminalController: ControlSurfaceContext {
                 return .surfaceNotFound(surfaceID)
             }
         } else if ws.containsDockPanel(surfaceID) {
-            revealDockForFocus(tabManager: tabManager)
-            ws.dockSplit.focusPanel(surfaceID)
+            focusWorkspaceDockSurfaceForAction(
+                surfaceID: surfaceID,
+                in: ws,
+                tabManager: tabManager
+            )
         } else {
             return .surfaceNotFound(surfaceID)
         }

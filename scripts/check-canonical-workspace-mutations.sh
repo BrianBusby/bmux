@@ -63,6 +63,7 @@ workspace_content_panel_request_direct_focus_pattern='workspace\.focusPanel\(pan
 canvas_host_panel_request_direct_focus_pattern='workspace\?\.focusPanel\(panel\.id\)'
 canvas_host_panel_callback_direct_focus_pattern='workspace\??\.focusPanel\(panelId\)'
 window_dock_surface_direct_focus_pattern='(windowDock|dock)\.focusPanel\((context\.surfaceId|surfaceId|targetId|surfaceID)\)'
+workspace_dock_surface_direct_focus_pattern='ws\.dockSplit\.focusPanel\(surfaceID\)'
 main_window_focus_controller_direct_focus_pattern='workspace\.focusPanel\((panelId|terminalPanel\.id)\)'
 browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 browser_split_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSplit\('
@@ -273,6 +274,12 @@ while IFS= read -r line; do
   violations+=("$line")
 done < <(rg -n -P "$window_dock_surface_direct_focus_pattern" \
   "Sources/TerminalController.swift" \
+  "Sources/TerminalController+ControlSurfaceContext.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$workspace_dock_surface_direct_focus_pattern" \
   "Sources/TerminalController+ControlSurfaceContext.swift" || true)
 
 while IFS= read -r line; do
