@@ -7580,7 +7580,7 @@
 			repositoryURL = "https://github.com/BrianBusby/provenance-engine.git";
 			requirement = {
 				kind = revision;
-				revision = fbbbfd2cc72330ae6c987cde7ed6680fae97b8a5;
+				revision = b023be0e66998bdc78af9a0f13ddccf54d10ff78;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

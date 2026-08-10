@@ -222,6 +222,9 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.latestEventID != nil)
         #expect(display.display?.latestEventSequence == 3)
         #expect(display.display?.ticketIDs == ["STE-1964"])
+        #expect(display.display?.ticketLinks == [
+            ProvenanceWorkspaceDisplayTicketLinkRecord(id: "STE-1964")
+        ])
     }
 
     private struct FakeGitInspector: WorkProvenanceGitInspecting {

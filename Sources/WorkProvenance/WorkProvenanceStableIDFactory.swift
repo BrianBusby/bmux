@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import ProvenanceEngineContracts
 
 /// Builds stable identifiers and fingerprints for observed provenance records.
 struct WorkProvenanceStableIDFactory: Sendable {
@@ -63,7 +64,8 @@ struct WorkProvenanceStableIDFactory: Sendable {
         pullRequestBranch: String?,
         pullRequestIsStale: Bool,
         gitSnapshot: WorkProvenanceGitSnapshot?,
-        ticketIDs: [String]
+        ticketIDs: [String],
+        ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord]
     ) -> String {
         let repositoryRoot = gitSnapshot.map { normalizedPath($0.repositoryRoot) } ?? ""
         let remoteSlug = gitSnapshot?.remoteSlug ?? ""
@@ -72,6 +74,9 @@ struct WorkProvenanceStableIDFactory: Sendable {
         let pullRequestNumberValue = pullRequestNumber.map(String.init) ?? ""
         let pullRequestStaleness = pullRequestIsStale ? "stale" : "fresh"
         let ticketIDList = ticketIDs.joined(separator: ",")
+        let ticketLinkList = ticketLinks
+            .map { "\($0.id)|\($0.system ?? "")|\($0.url ?? "")" }
+            .joined(separator: ",")
         let payloadParts: [String] = [
             stableWorkspaceID.uuidString.lowercased(),
             title,
@@ -86,7 +91,8 @@ struct WorkProvenanceStableIDFactory: Sendable {
             pullRequestStatus ?? "",
             pullRequestBranch ?? "",
             pullRequestStaleness,
-            ticketIDList
+            ticketIDList,
+            ticketLinkList
         ]
         let payload = payloadParts.joined(separator: "\n")
         return "workspace-display-\(digest(payload))"
