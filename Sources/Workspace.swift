@@ -8475,7 +8475,7 @@ final class Workspace: Identifiable, ObservableObject {
 
         // Keyboard/browser-open paths want "new tab at end" regardless of global new-tab placement.
         if insertAtEnd {
-            let targetIndex = max(0, bonsplitController.tabs(inPane: paneId).count - 1)
+            let targetIndex = bonsplitController.tabs(inPane: paneId).count
             _ = bonsplitController.reorderTab(newTabId, toIndex: targetIndex)
         }
         publishBmuxSurfaceCreated(browserPanel.id, paneId: paneId, kind: "browser", origin: "browser_tab", focused: shouldFocusNewTab)
@@ -10187,12 +10187,13 @@ final class Workspace: Identifiable, ObservableObject {
         // remember the anchor panel so the new one joins its pane instead of
         // floating as a separate canvas pane.
         let canvasAnchorPanelId = layoutMode == .canvas ? focusedPanelId : nil
-        let panel = newTerminalSurface(
+        let outcome = createTerminalSurfaceForAction(
             inPane: focusedPaneId,
             focus: focus,
             initialInput: initialInput,
             inheritWorkingDirectoryFallback: true
         )
+        let panel = outcome.panel
         if let panel, let anchor = canvasAnchorPanelId {
             joinNewPanelIntoCanvasPane(panel.id, anchor: anchor)
         }

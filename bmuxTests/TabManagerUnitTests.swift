@@ -2593,6 +2593,25 @@ final class TabManagerSurfaceCreationTests: XCTestCase {
         )
     }
 
+    func testCreateSplitFocusesCreatedTerminalSplit() {
+        let manager = TabManager()
+        guard let workspace = manager.selectedWorkspace,
+              let originalPanelId = workspace.focusedPanelId,
+              let originalPaneId = workspace.paneId(forPanelId: originalPanelId) else {
+            XCTFail("Expected a selected workspace with focused terminal")
+            return
+        }
+
+        guard let createdPanelId = manager.createSplit(direction: .right) else {
+            XCTFail("Expected split creation to return a panel")
+            return
+        }
+
+        XCTAssertNotEqual(createdPanelId, originalPanelId)
+        XCTAssertNotEqual(workspace.paneId(forPanelId: createdPanelId), originalPaneId)
+        XCTAssertEqual(workspace.focusedPanelId, createdPanelId)
+    }
+
     func testOpenBrowserInsertAtEndPlacesNewBrowserAtPaneEnd() {
         let manager = TabManager()
         guard let workspace = manager.selectedWorkspace,

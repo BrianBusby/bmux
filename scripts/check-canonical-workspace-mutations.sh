@@ -31,6 +31,8 @@ surface_creation_migrated_files=(
 mutation_pattern='\.((closeWorkspace|reorderWorkspace|clearCustomDescription|setCustomDescription|setTabColor|moveTabToTop|moveTabsToTop)\(|selectTab\(at:)'
 creation_mutation_pattern='\.addWorkspace\('
 surface_creation_mutation_pattern='\.newTerminal(Surface|Split)Outcome\('
+ui_surface_creation_mutation_pattern='workspace\.newTerminalSurface\(inPane: paneId'
+tab_manager_split_creation_mutation_pattern='return tab\.newTerminalSplit\('
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -61,6 +63,16 @@ while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   violations+=("$line")
 done < <(rg -n -P "$surface_creation_mutation_pattern" "${surface_creation_migrated_files[@]}" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$ui_surface_creation_mutation_pattern" "Sources/WorkspaceContentView.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$tab_manager_split_creation_mutation_pattern" "Sources/TabManager.swift" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {

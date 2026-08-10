@@ -3806,7 +3806,7 @@ class TabManager: ObservableObject {
         remotePTYSessionID: String? = nil
     ) -> UUID? {
         guard let tab = tabs.first(where: { $0.id == tabId }) else { return nil }
-        return tab.newTerminalSplit(
+        return tab.createTerminalSplitForAction(
             from: surfaceId,
             orientation: direction.orientation,
             insertFirst: direction.insertFirst,
@@ -3817,7 +3817,7 @@ class TabManager: ObservableObject {
             startupEnvironment: startupEnvironment,
             initialDividerPosition: initialDividerPosition,
             remotePTYSessionID: remotePTYSessionID
-        )?.id
+        ).panel?.id
     }
 
     /// Move focus in the specified direction
