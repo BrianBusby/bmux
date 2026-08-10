@@ -61,7 +61,10 @@ struct WorkspaceCanvasHostView: View {
                         panelId: panelId,
                         container: container,
                         onFocusPanel: { [weak workspace] panelId in
-                            workspace?.focusPanel(panelId)
+                            workspace?.requestPanelFocusForAction(
+                                panelId: panelId,
+                                in: NSApp.keyWindow ?? NSApp.mainWindow
+                            )
                         }
                     )
                 },
