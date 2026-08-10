@@ -267,8 +267,8 @@ Provenance-engine work: accept deterministic workspace-display facts, persist
 durable evidence, and derive Current State for workspace display metadata. The
 projection should cover workspace display title, title source, repository and
 worktree identity, branch, accepted dirty state if already part of worktree
-observation, PR number/status/url/branch/staleness, and projection
-revision/cursor/timestamp.
+observation, PR number/status/url/owner login/owner profile URL/branch/staleness,
+and projection revision/cursor/timestamp.
 
 bmux work: observe workspace created/selected/renamed events, tab rename events,
 worktree branch and repository HEAD changes, PR metadata found/changed/cleared

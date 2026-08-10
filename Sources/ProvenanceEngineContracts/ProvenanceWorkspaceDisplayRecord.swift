@@ -32,6 +32,12 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
     /// Current pull request URL, when known.
     public let pullRequestURL: String?
 
+    /// Pull request author's login, when known.
+    public let pullRequestOwnerLogin: String?
+
+    /// Pull request author's profile URL, when known.
+    public let pullRequestOwnerURL: String?
+
     /// Current pull request lifecycle status, such as `open`, `merged`, or `closed`.
     public let pullRequestStatus: String?
 
@@ -73,6 +79,8 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         case branch
         case pullRequestNumber
         case pullRequestURL
+        case pullRequestOwnerLogin
+        case pullRequestOwnerURL
         case pullRequestStatus
         case pullRequestBranch
         case pullRequestIsStale
@@ -97,6 +105,8 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         branch: String? = nil,
         pullRequestNumber: Int? = nil,
         pullRequestURL: String? = nil,
+        pullRequestOwnerLogin: String? = nil,
+        pullRequestOwnerURL: String? = nil,
         pullRequestStatus: String? = nil,
         pullRequestBranch: String? = nil,
         pullRequestIsStale: Bool = false,
@@ -118,6 +128,8 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.branch = branch
         self.pullRequestNumber = pullRequestNumber
         self.pullRequestURL = pullRequestURL
+        self.pullRequestOwnerLogin = pullRequestOwnerLogin
+        self.pullRequestOwnerURL = pullRequestOwnerURL
         self.pullRequestStatus = pullRequestStatus
         self.pullRequestBranch = pullRequestBranch
         self.pullRequestIsStale = pullRequestIsStale
@@ -143,6 +155,8 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.branch = try container.decodeIfPresent(String.self, forKey: .branch)
         self.pullRequestNumber = try container.decodeIfPresent(Int.self, forKey: .pullRequestNumber)
         self.pullRequestURL = try container.decodeIfPresent(String.self, forKey: .pullRequestURL)
+        self.pullRequestOwnerLogin = try container.decodeIfPresent(String.self, forKey: .pullRequestOwnerLogin)
+        self.pullRequestOwnerURL = try container.decodeIfPresent(String.self, forKey: .pullRequestOwnerURL)
         self.pullRequestStatus = try container.decodeIfPresent(String.self, forKey: .pullRequestStatus)
         self.pullRequestBranch = try container.decodeIfPresent(String.self, forKey: .pullRequestBranch)
         self.pullRequestIsStale = try container.decode(Bool.self, forKey: .pullRequestIsStale)

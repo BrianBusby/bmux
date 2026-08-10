@@ -424,7 +424,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 13)
+        #expect(try await repository.schemaVersion() == 14)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
@@ -442,7 +442,7 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_workspace_display", in: database))
         #expect(try Self.tableExists("provenance_storage_repair_attempts", in: database))
         #expect(try Self.tableExists("provenance_schema_migrations", in: database))
-        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [13, 12, 11, 10, 9, 8])
+        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [14, 13, 12, 11, 10, 9, 8])
     }
 
     @Test
@@ -502,7 +502,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
 
-        #expect(try await repository.schemaVersion() == 13)
+        #expect(try await repository.schemaVersion() == 14)
         #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
     }
 
@@ -768,7 +768,7 @@ struct ProvenanceSQLiteDatabaseTests {
         let summary = try await repository.storageSummary()
 
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 13,
+            schemaVersion: 14,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,
@@ -2775,6 +2775,8 @@ struct ProvenanceSQLiteDatabaseTests {
             branch: "canonical-domain-mutation-paths",
             pullRequestNumber: 42,
             pullRequestURL: "https://github.com/BrianBusby/bmux/pull/42",
+            pullRequestOwnerLogin: "BrianBusby",
+            pullRequestOwnerURL: "https://github.com/BrianBusby",
             pullRequestStatus: "open",
             pullRequestBranch: "canonical-domain-mutation-paths",
             pullRequestIsStale: false,
@@ -2806,6 +2808,8 @@ struct ProvenanceSQLiteDatabaseTests {
             branch: "canonical-domain-mutation-paths",
             pullRequestNumber: 42,
             pullRequestURL: "https://github.com/BrianBusby/bmux/pull/42",
+            pullRequestOwnerLogin: "BrianBusby",
+            pullRequestOwnerURL: "https://github.com/BrianBusby",
             pullRequestStatus: "open",
             pullRequestBranch: "canonical-domain-mutation-paths",
             pullRequestIsStale: false,

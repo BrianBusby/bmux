@@ -1378,6 +1378,8 @@ actor ProvenanceSQLiteRepository {
                 branch,
                 pull_request_number,
                 pull_request_url,
+                pull_request_owner_login,
+                pull_request_owner_url,
                 pull_request_status,
                 pull_request_branch,
                 pull_request_is_stale,
@@ -1405,9 +1407,9 @@ actor ProvenanceSQLiteRepository {
     private func workspaceDisplay(from query: ProvenanceSQLiteStatement) throws -> ProvenanceWorkspaceDisplayRecord? {
         guard let id = query.string(at: 0),
               let workspaceID = query.string(at: 1),
-              let ticketIDsJSON = query.string(at: 14),
+              let ticketIDsJSON = query.string(at: 16),
               let ticketIDsData = ticketIDsJSON.data(using: .utf8),
-              let ticketLinksJSON = query.string(at: 15),
+              let ticketLinksJSON = query.string(at: 17),
               let ticketLinksData = ticketLinksJSON.data(using: .utf8) else {
             return nil
         }
@@ -1422,22 +1424,24 @@ actor ProvenanceSQLiteRepository {
             workspaceID: workspaceID,
             repositoryID: query.string(at: 2),
             worktreeID: query.string(at: 3),
-            currentDirectory: query.string(at: 12),
+            currentDirectory: query.string(at: 14),
             title: query.string(at: 4),
             titleSource: query.string(at: 5),
             branch: query.string(at: 6),
             pullRequestNumber: query.double(at: 7).map(Int.init),
             pullRequestURL: query.string(at: 8),
-            pullRequestStatus: query.string(at: 9),
-            pullRequestBranch: query.string(at: 10),
-            pullRequestIsStale: query.int(at: 11) != 0,
-            isDirty: query.double(at: 13).map { Int($0) != 0 },
+            pullRequestOwnerLogin: query.string(at: 9),
+            pullRequestOwnerURL: query.string(at: 10),
+            pullRequestStatus: query.string(at: 11),
+            pullRequestBranch: query.string(at: 12),
+            pullRequestIsStale: query.int(at: 13) != 0,
+            isDirty: query.double(at: 15).map { Int($0) != 0 },
             ticketIDs: ticketIDs,
             ticketLinks: ticketLinks,
-            latestEventID: query.string(at: 16),
-            latestEventSequence: query.double(at: 17).map(Int.init),
-            observedAt: Date(timeIntervalSince1970: query.double(at: 18) ?? 0),
-            updatedAt: Date(timeIntervalSince1970: query.double(at: 19) ?? 0)
+            latestEventID: query.string(at: 18),
+            latestEventSequence: query.double(at: 19).map(Int.init),
+            observedAt: Date(timeIntervalSince1970: query.double(at: 20) ?? 0),
+            updatedAt: Date(timeIntervalSince1970: query.double(at: 21) ?? 0)
         )
     }
 
@@ -2880,6 +2884,8 @@ actor ProvenanceSQLiteRepository {
                 branch,
                 pull_request_number,
                 pull_request_url,
+                pull_request_owner_login,
+                pull_request_owner_url,
                 pull_request_status,
                 pull_request_branch,
                 pull_request_is_stale,
@@ -2891,7 +2897,7 @@ actor ProvenanceSQLiteRepository {
                 latest_event_sequence,
                 observed_at_seconds,
                 updated_at_seconds
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 workspace_id = excluded.workspace_id,
                 repository_id = excluded.repository_id,
@@ -2901,6 +2907,8 @@ actor ProvenanceSQLiteRepository {
                 branch = excluded.branch,
                 pull_request_number = excluded.pull_request_number,
                 pull_request_url = excluded.pull_request_url,
+                pull_request_owner_login = excluded.pull_request_owner_login,
+                pull_request_owner_url = excluded.pull_request_owner_url,
                 pull_request_status = excluded.pull_request_status,
                 pull_request_branch = excluded.pull_request_branch,
                 pull_request_is_stale = excluded.pull_request_is_stale,
@@ -2929,25 +2937,27 @@ actor ProvenanceSQLiteRepository {
             try upsert.bind(nil as String?, at: 8)
         }
         try upsert.bind(display.pullRequestURL, at: 9)
-        try upsert.bind(display.pullRequestStatus, at: 10)
-        try upsert.bind(display.pullRequestBranch, at: 11)
-        try upsert.bind(display.pullRequestIsStale ? 1 : 0, at: 12)
-        try upsert.bind(display.currentDirectory, at: 13)
+        try upsert.bind(display.pullRequestOwnerLogin, at: 10)
+        try upsert.bind(display.pullRequestOwnerURL, at: 11)
+        try upsert.bind(display.pullRequestStatus, at: 12)
+        try upsert.bind(display.pullRequestBranch, at: 13)
+        try upsert.bind(display.pullRequestIsStale ? 1 : 0, at: 14)
+        try upsert.bind(display.currentDirectory, at: 15)
         if let isDirty = display.isDirty {
-            try upsert.bind(isDirty ? 1 : 0, at: 14)
+            try upsert.bind(isDirty ? 1 : 0, at: 16)
         } else {
-            try upsert.bind(nil as String?, at: 14)
+            try upsert.bind(nil as String?, at: 16)
         }
-        try upsert.bind(ticketIDsJSON, at: 15)
-        try upsert.bind(ticketLinksJSON, at: 16)
-        try upsert.bind(display.latestEventID ?? latestEventID, at: 17)
+        try upsert.bind(ticketIDsJSON, at: 17)
+        try upsert.bind(ticketLinksJSON, at: 18)
+        try upsert.bind(display.latestEventID ?? latestEventID, at: 19)
         if let latestEventSequence = display.latestEventSequence ?? latestEventSequence {
-            try upsert.bind(latestEventSequence, at: 18)
+            try upsert.bind(latestEventSequence, at: 20)
         } else {
-            try upsert.bind(nil as String?, at: 18)
+            try upsert.bind(nil as String?, at: 20)
         }
-        try upsert.bind(display.observedAt.timeIntervalSince1970, at: 19)
-        try upsert.bind(display.updatedAt.timeIntervalSince1970, at: 20)
+        try upsert.bind(display.observedAt.timeIntervalSince1970, at: 21)
+        try upsert.bind(display.updatedAt.timeIntervalSince1970, at: 22)
 
         _ = try upsert.step()
     }
@@ -3444,6 +3454,18 @@ actor ProvenanceSQLiteRepository {
                 """
                 UPDATE provenance_metadata
                 SET value = '13'
+                WHERE key = 'schema_version'
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 14,
+            statements: [
+                "ALTER TABLE provenance_workspace_display ADD COLUMN pull_request_owner_login TEXT",
+                "ALTER TABLE provenance_workspace_display ADD COLUMN pull_request_owner_url TEXT",
+                """
+                UPDATE provenance_metadata
+                SET value = '14'
                 WHERE key = 'schema_version'
                 """,
             ]
