@@ -402,6 +402,47 @@ struct TerminalControllerSurfaceActionSocketTests {
         #expect(store.focusedPanelId == secondPanelId)
     }
 
+    @Test func surfaceSplitOffWithoutFocusPreservesPreviousFocusThroughMoveAction() throws {
+        let previousAppDelegate = AppDelegate.shared
+        let previousManager = TerminalController.shared.activeTabManagerForCallerNotification()
+        let appDelegate = AppDelegate()
+        let manager = TabManager(autoWelcomeIfNeeded: false)
+        AppDelegate.shared = appDelegate
+        appDelegate.tabManager = manager
+        TerminalController.shared.setActiveTabManager(manager)
+        let windowId = appDelegate.registerMainWindowContextForTesting(tabManager: manager)
+        defer {
+            TerminalController.shared.setActiveTabManager(previousManager)
+            appDelegate.unregisterMainWindowContextForTesting(windowId: windowId)
+            manager.tabs.forEach { $0.teardownAllPanels() }
+            AppDelegate.shared = previousAppDelegate
+        }
+
+        let workspace = try #require(manager.selectedWorkspace)
+        let sourcePane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let focusedPanelId = try #require(workspace.focusedPanelId)
+        let splitPanel = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: sourcePane, focus: false).panel
+        )
+        #expect(workspace.focusedPanelId == focusedPanelId)
+        #expect(workspace.paneId(forPanelId: splitPanel.id) == sourcePane)
+
+        let response = try handleV2Request(
+            method: "surface.split_off",
+            params: [
+                "surface_id": splitPanel.id.uuidString,
+                "direction": "right",
+                "focus": false
+            ]
+        )
+
+        #expect(response["ok"] as? Bool == true)
+        let result = try #require(response["result"] as? [String: Any])
+        let newPaneIdString = try #require(result["pane_id"] as? String)
+        #expect(UUID(uuidString: newPaneIdString) != sourcePane.id)
+        #expect(workspace.focusedPanelId == focusedPanelId)
+    }
+
     private func handleV2Request(method: String, params: [String: Any]) throws -> [String: Any] {
         let payload: [String: Any] = ["jsonrpc": "2.0", "id": 1, "method": method, "params": params]
         let data = try JSONSerialization.data(withJSONObject: payload)

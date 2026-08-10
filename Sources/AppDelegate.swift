@@ -4930,6 +4930,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         if destinationWorkspace.id == sourceWorkspace.id {
             if let splitTarget {
+                let previousFocusedPanelId = sourceWorkspace.focusedPanelId
+                let previousHostedView = sourceWorkspace.focusedTerminalPanel?.hostedView
                 guard let sourceTabId = sourceWorkspace.surfaceIdFromPanelId(panelId),
                       sourceWorkspace.bonsplitController.splitPane(
                         resolvedTargetPane,
@@ -4948,6 +4950,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 }
                 if focus {
                     source.tabManager.focusTab(sourceWorkspace.id, surfaceId: panelId, suppressFlash: true)
+                } else {
+                    sourceWorkspace.preserveFocusAfterNonFocusSplit(
+                        preferredPanelId: previousFocusedPanelId,
+                        splitPanelId: panelId,
+                        previousHostedView: previousHostedView
+                    )
                 }
 #if DEBUG
                 bmuxDebugLog(
