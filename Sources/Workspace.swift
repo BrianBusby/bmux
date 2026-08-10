@@ -49,6 +49,10 @@ private struct SessionPaneRestoreEntry {
     let snapshot: SessionPaneLayoutSnapshot
 }
 
+extension Notification.Name {
+    static let workspaceDisplayMetadataDidChange = Notification.Name("bmux.workspaceDisplayMetadataDidChange")
+}
+
 extension Workspace {
     func sessionSnapshot(
         includeScrollback: Bool,
@@ -4612,6 +4616,7 @@ final class Workspace: Identifiable, ObservableObject {
         )
 #endif
         self.title = sanitizedTitle
+        postWorkspaceDisplayMetadataDidChange()
     }
 
     func setCustomColor(_ hex: String?) {
@@ -4659,6 +4664,8 @@ final class Workspace: Identifiable, ObservableObject {
                 return .rejected(existingSource == .user ? .userOwned : .lowerPriority)
             }
         }
+        let previousTitle = customTitle ?? self.title
+        let previousSource = effectiveCustomTitleSource
         if trimmed.isEmpty {
             customTitle = nil
             customTitleSource = nil
@@ -4668,7 +4675,18 @@ final class Workspace: Identifiable, ObservableObject {
             customTitleSource = source
             self.title = trimmed
         }
+        if previousTitle != (customTitle ?? self.title) || previousSource != effectiveCustomTitleSource {
+            postWorkspaceDisplayMetadataDidChange()
+        }
         return .success
+    }
+
+    private func postWorkspaceDisplayMetadataDidChange() {
+        NotificationCenter.default.post(
+            name: .workspaceDisplayMetadataDidChange,
+            object: self,
+            userInfo: ["workspaceId": id]
+        )
     }
 
     func setCustomDescription(_ description: String?) {
@@ -5275,38 +5293,54 @@ final class Workspace: Identifiable, ObservableObject {
         let state = SidebarGitBranchState(branch: branch, isDirty: isDirty)
         let existing = panelGitBranches[panelId]
         let branchChanged = existing?.branch.normalizedSidebarBranchName != state.branch.normalizedSidebarBranchName
+        var displayMetadataChanged = false
         if existing?.branch != branch || existing?.isDirty != isDirty {
             panelGitBranches[panelId] = state
+            displayMetadataChanged = true
         }
         if branchChanged {
             let nextBranch = state.branch.normalizedSidebarBranchName
             if panelPullRequests[panelId]?.branch?.normalizedSidebarBranchName != nextBranch {
                 panelPullRequests.removeValue(forKey: panelId)
+                displayMetadataChanged = true
             }
             if panelId == focusedPanelId,
                pullRequest?.branch?.normalizedSidebarBranchName != nextBranch {
                 pullRequest = nil
+                displayMetadataChanged = true
             }
         }
         if panelId == focusedPanelId, gitBranch != state {
             gitBranch = state
+            displayMetadataChanged = true
+        }
+        if displayMetadataChanged {
+            postWorkspaceDisplayMetadataDidChange()
         }
     }
 
     func clearPanelGitBranch(panelId: UUID) {
+        var displayMetadataChanged = false
         if panelGitBranches[panelId] != nil {
             panelGitBranches.removeValue(forKey: panelId)
+            displayMetadataChanged = true
         }
         if panelPullRequests[panelId] != nil {
             panelPullRequests.removeValue(forKey: panelId)
+            displayMetadataChanged = true
         }
         if panelId == focusedPanelId {
             if gitBranch != nil {
                 gitBranch = nil
+                displayMetadataChanged = true
             }
             if pullRequest != nil {
                 pullRequest = nil
+                displayMetadataChanged = true
             }
+        }
+        if displayMetadataChanged {
+            postWorkspaceDisplayMetadataDidChange()
         }
     }
 
@@ -5348,47 +5382,82 @@ final class Workspace: Identifiable, ObservableObject {
             branch: resolvedBranch,
             isStale: isStale
         )
+        var displayMetadataChanged = false
         if existing != state {
             sidebarMetadata.updatePanelPullRequest(state, panelId: panelId, source: source)
+            displayMetadataChanged = true
         } else {
             sidebarMetadata.updatePanelPullRequestSource(panelId: panelId, source: source)
         }
         if panelId == focusedPanelId, pullRequest != state {
             sidebarMetadata.updatePullRequest(state, source: source)
+            displayMetadataChanged = true
         } else if panelId == focusedPanelId {
             sidebarMetadata.updatePullRequestSource(source)
+        }
+        if displayMetadataChanged {
+            postWorkspaceDisplayMetadataDidChange()
         }
     }
 
     func clearPanelPullRequest(panelId: UUID) {
+        var displayMetadataChanged = false
         if panelPullRequests[panelId] != nil {
             panelPullRequests.removeValue(forKey: panelId)
+            displayMetadataChanged = true
         }
         if panelId == focusedPanelId, pullRequest != nil {
             pullRequest = nil
+            displayMetadataChanged = true
+        }
+        if displayMetadataChanged {
+            postWorkspaceDisplayMetadataDidChange()
         }
     }
 
     func clearSidebarPullRequestMetadata() {
+        var displayMetadataChanged = false
         if !panelPullRequests.isEmpty {
             panelPullRequests.removeAll()
+            displayMetadataChanged = true
         }
         if pullRequest != nil {
             pullRequest = nil
+            displayMetadataChanged = true
+        }
+        if displayMetadataChanged {
+            postWorkspaceDisplayMetadataDidChange()
         }
     }
 
     func clearSidebarGitMetadata() {
+        var displayMetadataChanged = false
         if !panelGitBranches.isEmpty {
             panelGitBranches.removeAll()
+            displayMetadataChanged = true
         }
-        clearSidebarPullRequestMetadata()
+        if !panelPullRequests.isEmpty {
+            panelPullRequests.removeAll()
+            displayMetadataChanged = true
+        }
+        if pullRequest != nil {
+            pullRequest = nil
+            displayMetadataChanged = true
+        }
         if gitBranch != nil {
             gitBranch = nil
+            displayMetadataChanged = true
+        }
+        if displayMetadataChanged {
+            postWorkspaceDisplayMetadataDidChange()
         }
     }
 
     func resetSidebarContext(reason: String = "unspecified") {
+        let hadDisplayMetadata = gitBranch != nil
+            || !panelGitBranches.isEmpty
+            || pullRequest != nil
+            || !panelPullRequests.isEmpty
         statusEntries.removeAll()
         clearAllAgentPIDs(refreshPorts: false)
         clearAllAgentLifecycleStates()
@@ -5406,6 +5475,9 @@ final class Workspace: Identifiable, ObservableObject {
         listeningPorts.removeAll()
         metadataBlocks.removeAll()
         resetBrowserPanelsForContextChange(reason: reason)
+        if hadDisplayMetadata {
+            postWorkspaceDisplayMetadataDidChange()
+        }
     }
 
     func resetBrowserPanelsForContextChange(reason: String) {

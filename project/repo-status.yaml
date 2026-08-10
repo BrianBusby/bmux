@@ -19,6 +19,9 @@ execution_telemetry:
   claude_lifecycle_telemetry: implemented
   automatic_checkpoint_scheduler: not_implemented
 
+local_capabilities:
+  workspace_display_projection: implemented
+
 release:
   latest_tag: null
   release_status: untagged

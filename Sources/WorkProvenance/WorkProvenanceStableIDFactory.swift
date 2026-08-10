@@ -23,6 +23,16 @@ struct WorkProvenanceStableIDFactory: Sendable {
         id(prefix: "changeset", value: "\(worktreeID)\n\(fingerprint)")
     }
 
+    /// Stable workspace-display identifier for a restart-stable workspace id.
+    func workspaceDisplayID(stableWorkspaceID: UUID) -> String {
+        "workspace-display-\(stableWorkspaceID.uuidString.lowercased())"
+    }
+
+    /// Stable event identifier for a workspace-display observation.
+    func workspaceDisplayEventID(stableWorkspaceID: UUID, fingerprint: String) -> String {
+        id(prefix: "event", value: "workspace-display\n\(stableWorkspaceID.uuidString.lowercased())\n\(fingerprint)")
+    }
+
     /// Fingerprint for the Git state represented by a snapshot.
     func fingerprint(for snapshot: WorkProvenanceGitSnapshot) -> String {
         let fileLines = snapshot.statusEntries
@@ -38,6 +48,39 @@ struct WorkProvenanceStableIDFactory: Sendable {
             fileLines
         ].joined(separator: "\n")
         return "git-status-\(digest(payload))"
+    }
+
+    /// Fingerprint for workspace display metadata that PE should project as current state.
+    func workspaceDisplayFingerprint(
+        stableWorkspaceID: UUID,
+        title: String,
+        titleSource: String?,
+        currentDirectory: String,
+        branch: String?,
+        pullRequestNumber: Int?,
+        pullRequestURL: String?,
+        pullRequestStatus: String?,
+        pullRequestBranch: String?,
+        pullRequestIsStale: Bool,
+        gitSnapshot: WorkProvenanceGitSnapshot?,
+        ticketIDs: [String]
+    ) -> String {
+        let payload = [
+            stableWorkspaceID.uuidString.lowercased(),
+            title,
+            titleSource ?? "",
+            currentDirectory,
+            gitSnapshot.map { normalizedPath($0.repositoryRoot) } ?? "",
+            gitSnapshot?.remoteSlug ?? "",
+            branch ?? gitSnapshot?.branch ?? "",
+            pullRequestNumber.map { "\($0)" } ?? "",
+            pullRequestURL ?? "",
+            pullRequestStatus ?? "",
+            pullRequestBranch ?? "",
+            pullRequestIsStale ? "stale" : "fresh",
+            ticketIDs.joined(separator: ",")
+        ].joined(separator: "\n")
+        return "workspace-display-\(digest(payload))"
     }
 
     func id(prefix: String, value: String) -> String {

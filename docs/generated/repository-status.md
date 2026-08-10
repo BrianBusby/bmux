@@ -24,6 +24,12 @@ Repository: `BrianBusby/bmux`
 - Latest tag: None
 - Release status: untagged
 
+## Local Capabilities
+
+| Capability | State |
+| --- | --- |
+| Workspace Display Projection | implemented |
+
 ## Execution Telemetry
 
 | Capability | State |
