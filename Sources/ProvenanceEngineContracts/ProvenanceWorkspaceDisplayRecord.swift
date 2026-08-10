@@ -62,6 +62,29 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
     /// Last projection update time.
     public let updatedAt: Date
 
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case workspaceID
+        case repositoryID
+        case worktreeID
+        case currentDirectory
+        case title
+        case titleSource
+        case branch
+        case pullRequestNumber
+        case pullRequestURL
+        case pullRequestStatus
+        case pullRequestBranch
+        case pullRequestIsStale
+        case isDirty
+        case ticketIDs
+        case ticketLinks
+        case latestEventID
+        case latestEventSequence
+        case observedAt
+        case updatedAt
+    }
+
     /// Creates a workspace display projection record.
     public init(
         id: String,
@@ -105,5 +128,33 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.latestEventSequence = latestEventSequence
         self.observedAt = observedAt
         self.updatedAt = updatedAt
+    }
+
+    /// Creates a workspace display projection record from stored JSON.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.workspaceID = try container.decode(String.self, forKey: .workspaceID)
+        self.repositoryID = try container.decodeIfPresent(String.self, forKey: .repositoryID)
+        self.worktreeID = try container.decodeIfPresent(String.self, forKey: .worktreeID)
+        self.currentDirectory = try container.decodeIfPresent(String.self, forKey: .currentDirectory)
+        self.title = try container.decodeIfPresent(String.self, forKey: .title)
+        self.titleSource = try container.decodeIfPresent(String.self, forKey: .titleSource)
+        self.branch = try container.decodeIfPresent(String.self, forKey: .branch)
+        self.pullRequestNumber = try container.decodeIfPresent(Int.self, forKey: .pullRequestNumber)
+        self.pullRequestURL = try container.decodeIfPresent(String.self, forKey: .pullRequestURL)
+        self.pullRequestStatus = try container.decodeIfPresent(String.self, forKey: .pullRequestStatus)
+        self.pullRequestBranch = try container.decodeIfPresent(String.self, forKey: .pullRequestBranch)
+        self.pullRequestIsStale = try container.decode(Bool.self, forKey: .pullRequestIsStale)
+        self.isDirty = try container.decodeIfPresent(Bool.self, forKey: .isDirty)
+        self.ticketIDs = try container.decodeIfPresent([String].self, forKey: .ticketIDs) ?? []
+        self.ticketLinks = try container.decodeIfPresent(
+            [ProvenanceWorkspaceDisplayTicketLinkRecord].self,
+            forKey: .ticketLinks
+        ) ?? []
+        self.latestEventID = try container.decodeIfPresent(String.self, forKey: .latestEventID)
+        self.latestEventSequence = try container.decodeIfPresent(Int.self, forKey: .latestEventSequence)
+        self.observedAt = try container.decode(Date.self, forKey: .observedAt)
+        self.updatedAt = try container.decode(Date.self, forKey: .updatedAt)
     }
 }
