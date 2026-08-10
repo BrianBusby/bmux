@@ -39,6 +39,9 @@ surface_context_terminal_to_right_pattern='guard let newPanel = newTerminalSurfa
 pane_swap_placeholder_surface_creation_pattern='workspace\.newTerminalSurface\('
 canvas_surface_creation_pattern='newTerminalSurface\(inPane: focusedPaneId'
 session_drop_surface_creation_pattern='let panel = newTerminalSurface\('
+fork_new_tab_surface_creation_pattern='let forkedPanel = newTerminalSurface\('
+split_tab_bar_self_surface_creation_pattern='self\.newTerminalSurface\('
+split_tab_bar_new_terminal_pattern='newTerminalSurface\(inPane: pane,'
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -109,6 +112,21 @@ while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   violations+=("$line")
 done < <(rg -n -P "$session_drop_surface_creation_pattern" "Sources/Workspace.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$fork_new_tab_surface_creation_pattern" "Sources/Workspace.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$split_tab_bar_self_surface_creation_pattern" "Sources/Workspace.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$split_tab_bar_new_terminal_pattern" "Sources/Workspace.swift" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {

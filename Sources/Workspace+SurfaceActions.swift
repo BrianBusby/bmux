@@ -20,6 +20,9 @@ extension Workspace {
         restoredSurfaceId: UUID? = nil,
         inheritWorkingDirectoryFallback: Bool = false,
         workingDirectoryFallbackSourcePanelId: UUID? = nil,
+        terminalConfigPreferredPanelId: UUID? = nil,
+        terminalConfigFallbackPaneId: PaneID? = nil,
+        lifecyclePublication: TerminalPanelCreationPublication = .surfaceCreated(origin: "terminal_tab"),
         allowTextBoxFocusDefault: Bool = true
     ) -> TerminalPanelCreationOutcome {
         newTerminalSurfaceOutcome(
@@ -38,6 +41,9 @@ extension Workspace {
             restoredSurfaceId: restoredSurfaceId,
             inheritWorkingDirectoryFallback: inheritWorkingDirectoryFallback,
             workingDirectoryFallbackSourcePanelId: workingDirectoryFallbackSourcePanelId,
+            terminalConfigPreferredPanelId: terminalConfigPreferredPanelId,
+            terminalConfigFallbackPaneId: terminalConfigFallbackPaneId,
+            lifecyclePublication: lifecyclePublication,
             allowTextBoxFocusDefault: allowTextBoxFocusDefault
         )
     }

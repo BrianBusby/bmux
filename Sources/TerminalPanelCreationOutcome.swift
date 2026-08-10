@@ -1,4 +1,10 @@
 import Foundation
+import Bonsplit
+
+enum TerminalPanelCreationPublication {
+    case surfaceCreated(origin: String)
+    case splitCreated(sourcePaneId: PaneID, orientation: SplitOrientation, origin: String)
+}
 
 /// Outcome of a terminal split/surface creation request in a workspace that may
 /// route the mutation to a remote tmux mirror instead of mutating locally.
