@@ -8389,7 +8389,16 @@ class TerminalController {
                 || (mode == "toggle" && !target.panel.isBrowserFocusModeActive)
             if willActivate, target.panel.searchState == nil, ws.focusedPanelId != target.surfaceId {
                 ws.clearSplitZoom()
-                ws.focusPanel(target.surfaceId)
+                switch tabManager.focusWorkspaceSurfaceForAction(workspaceId: ws.id, surfaceId: target.surfaceId) {
+                case .focused:
+                    break
+                case .workspaceNotFound:
+                    result = .err(code: "not_found", message: "Workspace not found", data: nil)
+                    return
+                case .surfaceNotFound:
+                    result = .err(code: "not_found", message: "Browser surface not found", data: nil)
+                    return
+                }
             }
             let handled: Bool
             if enterAliases.contains(mode) {
@@ -9889,7 +9898,16 @@ class TerminalController {
                 return
             }
 
-            ws.focusPanel(targetId)
+            switch tabManager.focusWorkspaceSurfaceForAction(workspaceId: ws.id, surfaceId: targetId) {
+            case .focused:
+                break
+            case .workspaceNotFound:
+                result = .err(code: "not_found", message: "Workspace not found", data: nil)
+                return
+            case .surfaceNotFound:
+                result = .err(code: "not_found", message: "Browser tab not found", data: nil)
+                return
+            }
             result = .ok([
                 "workspace_id": ws.id.uuidString,
                 "workspace_ref": v2Ref(kind: .workspace, uuid: ws.id),

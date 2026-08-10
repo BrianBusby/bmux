@@ -46,6 +46,48 @@ struct BrowserOpenSplitSocketTests {
         #expect(secondResult["placement_strategy"] as? String == "reuse_right_sibling")
     }
 
+    @Test func browserTabSwitchUsesCanonicalWorkspaceSurfaceFocusPath() throws {
+        let defaults = UserDefaults.standard
+        let previousBrowserDisabled = defaults.object(forKey: BrowserAvailabilitySettings.disabledKey)
+        BrowserAvailabilitySettings.setDisabled(false)
+        defer {
+            if let previousBrowserDisabled {
+                defaults.set(previousBrowserDisabled, forKey: BrowserAvailabilitySettings.disabledKey)
+            } else {
+                defaults.removeObject(forKey: BrowserAvailabilitySettings.disabledKey)
+            }
+            TerminalController.shared.setActiveTabManager(nil)
+        }
+
+        let manager = TabManager()
+        let originalWorkspace = try #require(manager.selectedWorkspace)
+        let targetWorkspace = manager.addWorkspace(select: false, placementOverride: .end)
+        let paneId = try #require(targetWorkspace.bonsplitController.focusedPaneId)
+        let firstBrowser = try #require(targetWorkspace.newBrowserSurface(
+            inPane: paneId,
+            url: URL(string: "https://example.com"),
+            focus: false
+        ))
+        let secondBrowser = try #require(targetWorkspace.newBrowserSurface(
+            inPane: paneId,
+            url: URL(string: "https://example.test"),
+            focus: false
+        ))
+        targetWorkspace.focusPanel(firstBrowser.id)
+        #expect(manager.selectedTabId == originalWorkspace.id)
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let switchResult = try result(method: "browser.tab.switch", params: [
+            "workspace_id": targetWorkspace.id.uuidString,
+            "target_surface_id": secondBrowser.id.uuidString
+        ])
+
+        #expect(switchResult["workspace_id"] as? String == targetWorkspace.id.uuidString)
+        #expect(switchResult["surface_id"] as? String == secondBrowser.id.uuidString)
+        #expect(manager.selectedTabId == targetWorkspace.id)
+        #expect(targetWorkspace.focusedPanelId == secondBrowser.id)
+    }
+
     private func result(method: String, params: [String: Any]) throws -> [String: Any] {
         let envelope = try response(method: method, params: params)
         #expect(envelope["ok"] as? Bool == true, "Unexpected JSON-RPC response: \(envelope)")
