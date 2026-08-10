@@ -168,7 +168,7 @@ private struct CanvasRootRepresentable: NSViewRepresentable {
                     workspace.focusPanel(panelId)
                 },
                 onClosePanel: { [weak workspace] panelId in
-                    _ = workspace?.closePanel(panelId)
+                    _ = workspace?.closeSurfaceForAction(surfaceId: panelId, force: false)
                 },
                 onLayoutChanged: { [weak workspace] in
                     guard let workspace else { return }

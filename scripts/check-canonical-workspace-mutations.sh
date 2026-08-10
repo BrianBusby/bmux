@@ -48,6 +48,8 @@ session_restore_anchor_surface_pattern='anchorPanelId = newTerminalSurface\(inPa
 session_restore_split_surface_pattern='let newSplitPanel = newTerminalSplit\('
 session_restore_terminal_surface_pattern='guard let terminalPanel = newTerminalSurface\('
 debug_terminal_creation_pattern='\.newTerminal(Surface|Split)\('
+canvas_surface_close_pattern='workspace\?\.closePanel\(panelId\)'
+tab_manager_close_surface_pattern='^[[:space:]]*tab\.closePanel\(surfaceId\)[[:space:]]*$'
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -163,6 +165,16 @@ while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   violations+=("$line")
 done < <(rg -n -P "$debug_terminal_creation_pattern" "Sources/TabManager.swift" "Sources/AppDelegate.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$canvas_surface_close_pattern" "Sources/Canvas/WorkspaceCanvasHostView.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$tab_manager_close_surface_pattern" "Sources/TabManager.swift" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {
