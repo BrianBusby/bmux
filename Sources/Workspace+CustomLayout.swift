@@ -77,16 +77,16 @@ extension Workspace {
                 .first
 
             if anchorPanelId == nil {
-                anchorPanelId = newTerminalSurface(inPane: paneId, focus: false)?.id
+                anchorPanelId = createTerminalSurfaceForAction(inPane: paneId, focus: false).panel?.id
             }
 
             guard let anchorPanelId,
-                  let newSplitPanel = newTerminalSplit(
+                  let newSplitPanel = createTerminalSplitForAction(
                       from: anchorPanelId,
                       orientation: split.splitOrientation,
                       insertFirst: false,
                       focus: false
-                  ),
+                  ).panel,
                   let secondPaneId = self.paneId(forPanelId: newSplitPanel.id) else {
                 leaves.append((paneId: paneId, surfaces: []))
                 return
@@ -163,12 +163,12 @@ extension Workspace {
         case .terminal where surface.cwd != nil || surface.env != nil:
             // Placeholder can't change cwd/env — replace it
             let resolvedCwd = BmuxConfigStore.resolveCwd(surface.cwd, relativeTo: baseCwd)
-            if let panel = newTerminalSurface(
+            if let panel = createTerminalSurfaceForAction(
                 inPane: paneId,
                 focus: false,
                 workingDirectory: resolvedCwd,
                 startupEnvironment: surface.env ?? [:]
-            ) {
+            ).panel {
                 _ = closePanel(panelId, force: true)
                 if let name = surface.name { setPanelCustomTitle(panelId: panel.id, title: name) }
                 if surface.focus == true { focusPanelId = panel.id }
@@ -221,12 +221,12 @@ extension Workspace {
         switch surface.type {
         case .terminal:
             let resolvedCwd = BmuxConfigStore.resolveCwd(surface.cwd, relativeTo: baseCwd)
-            if let panel = newTerminalSurface(
+            if let panel = createTerminalSurfaceForAction(
                 inPane: paneId,
                 focus: false,
                 workingDirectory: resolvedCwd,
                 startupEnvironment: surface.env ?? [:]
-            ) {
+            ).panel {
                 if let name = surface.name { setPanelCustomTitle(panelId: panel.id, title: name) }
                 if surface.focus == true { focusPanelId = panel.id }
                 if let input = Self.dequeueInitialTerminalInput(pendingSetup: &pendingSetup, command: surface.command) {
