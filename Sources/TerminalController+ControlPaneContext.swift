@@ -577,21 +577,21 @@ extension TerminalController: ControlPaneContext {
         var sourcePlaceholder: UUID?
         var targetPlaceholder: UUID?
         if workspace.bonsplitController.tabs(inPane: sourcePane).count <= 1 {
-            sourcePlaceholder = workspace.newTerminalSurface(
+            sourcePlaceholder = workspace.createTerminalSurfaceForAction(
                 inPane: sourcePane,
                 focus: false,
                 allowTextBoxFocusDefault: false
-            )?.id
+            ).panel?.id
             if sourcePlaceholder == nil {
                 return .sourcePlaceholderFailed
             }
         }
         if workspace.bonsplitController.tabs(inPane: targetPane).count <= 1 {
-            targetPlaceholder = workspace.newTerminalSurface(
+            targetPlaceholder = workspace.createTerminalSurfaceForAction(
                 inPane: targetPane,
                 focus: false,
                 allowTextBoxFocusDefault: false
-            )?.id
+            ).panel?.id
             if targetPlaceholder == nil {
                 return .targetPlaceholderFailed
             }

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import AppKit
 import BmuxControlSocket
 import BmuxTerminal
 
@@ -12,6 +13,17 @@ import BmuxTerminal
 @MainActor
 @Suite(.serialized)
 struct TerminalControllerSurfaceActionSocketTests {
+    private func makeMainWindow(id: UUID) -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 500, height: 320),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.identifier = NSUserInterfaceItemIdentifier("bmux.main.\(id.uuidString)")
+        return window
+    }
+
     @Test func controlSidebarNewSurfaceCreatesTerminalWithoutStealingFocus() throws {
         defer { TerminalController.shared.setActiveTabManager(nil) }
         let manager = TabManager()
@@ -97,6 +109,67 @@ struct TerminalControllerSurfaceActionSocketTests {
         let anchorIndex = try #require(paneTabIds.firstIndex(of: originalSurfaceId))
         #expect(anchorIndex + 1 < paneTabIds.count)
         #expect(workspace.surfaceIdFromPanelId(panelId) == paneTabIds[anchorIndex + 1])
+    }
+
+    @Test func controlPaneSwapUsesActionPathForSingleSurfacePlaceholders() throws {
+        let previousAppDelegate = AppDelegate.shared
+        let app = AppDelegate()
+        AppDelegate.shared = app
+        defer { AppDelegate.shared = previousAppDelegate }
+
+        let manager = TabManager()
+        let windowId = UUID()
+        let window = makeMainWindow(id: windowId)
+        app.registerMainWindow(
+            window,
+            windowId: windowId,
+            tabManager: manager,
+            sidebarState: SidebarState(),
+            sidebarSelectionState: SidebarSelectionState(),
+            fileExplorerState: FileExplorerState()
+        )
+        defer {
+            TerminalController.shared.setActiveTabManager(nil)
+            app.unregisterMainWindowContextForTesting(windowId: windowId)
+            window.orderOut(nil)
+        }
+        let workspace = try #require(manager.selectedWorkspace)
+        let sourcePanelId = try #require(workspace.focusedPanelId)
+        let sourcePaneId = try #require(workspace.paneId(forPanelId: sourcePanelId))
+        let splitOutcome = workspace.createTerminalSplitForAction(
+            from: sourcePanelId,
+            orientation: .horizontal,
+            focus: false
+        )
+        let targetPanelId = try #require(splitOutcome.panel?.id)
+        let targetPaneId = try #require(workspace.paneId(forPanelId: targetPanelId))
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let result = TerminalController.shared.controlPaneSwap(
+            sourcePaneID: sourcePaneId.id,
+            targetPaneID: targetPaneId.id,
+            requestedFocus: false
+        )
+
+        guard case .swapped(
+            windowID: _,
+            workspaceID: let swappedWorkspaceId,
+            sourcePaneID: let swappedSourcePaneId,
+            targetPaneID: let swappedTargetPaneId,
+            sourceSurfaceID: let swappedSourceSurfaceId,
+            targetSurfaceID: let swappedTargetSurfaceId
+        ) = result else {
+            Issue.record("Expected pane swap to succeed through the terminal action path, got \(String(describing: result))")
+            return
+        }
+        #expect(swappedWorkspaceId == workspace.id)
+        #expect(swappedSourcePaneId == sourcePaneId.id)
+        #expect(swappedTargetPaneId == targetPaneId.id)
+        #expect(swappedSourceSurfaceId == sourcePanelId)
+        #expect(swappedTargetSurfaceId == targetPanelId)
+        #expect(workspace.paneId(forPanelId: sourcePanelId) == targetPaneId)
+        #expect(workspace.paneId(forPanelId: targetPanelId) == sourcePaneId)
+        #expect(workspace.panels.keys.sorted { $0.uuidString < $1.uuidString } == [sourcePanelId, targetPanelId].sorted { $0.uuidString < $1.uuidString })
     }
 
     @Test func v2TabRenameAndClearUseUserTitlePolicy() throws {
