@@ -8,6 +8,7 @@ migrated_files=(
   "Sources/BmuxConfigExecutor+WorkspaceLaunch.swift"
   "Sources/Mobile/AgentChat/AgentChatTranscriptService.swift"
   "Sources/AppDelegate.swift"
+  "Sources/RemoteTmuxController.swift"
   "Sources/ContentView.swift"
   "Sources/TerminalController.swift"
   "Sources/bmuxApp.swift"

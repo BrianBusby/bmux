@@ -413,7 +413,11 @@ final class RemoteTmuxController {
            manager.tabs.count > 1,
            let bootstrap = manager.tabs.first(where: { $0.id == bootstrapWorkspaceId }),
            !bootstrap.isRemoteTmuxMirror {
-            manager.closeWorkspace(bootstrap, recordHistory: false)
+            _ = manager.closeWorkspaceForAction(
+                tabId: bootstrap.id,
+                allowPinned: true,
+                recordHistory: false
+            )
         }
         return .mirrored(windowId: windowId)
     }
@@ -983,7 +987,10 @@ final class RemoteTmuxController {
                 if manager.tabs.count == 1 {
                     _ = manager.addWorkspace(inheritWorkingDirectory: false, select: false)
                 }
-                manager.closeWorkspace(workspace)
+                _ = manager.closeWorkspaceForAction(
+                    tabId: workspace.id,
+                    allowPinned: true
+                )
             }
         }
     }
