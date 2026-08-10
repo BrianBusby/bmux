@@ -27,6 +27,9 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
     /// Queries the current bounded provenance context for a worktree.
     case queryCurrentContext = "query_current_context"
 
+    /// Queries current display metadata for a workspace.
+    case queryWorkspaceDisplay = "query_workspace_display"
+
     /// All currently advertised engine capabilities.
     public static let allCases: [ProvenanceEngineCapability] = [
         .appendEvent,
@@ -35,5 +38,6 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
         .queryFileExplanation,
         .queryWorktrees,
         .queryCurrentContext,
+        .queryWorkspaceDisplay,
     ]
 }

@@ -31,6 +31,7 @@ Repository: `BrianBusby/provenance-engine`
 | Producer Neutral Lifecycle Recording | implemented |
 | Public In Process Sdk | implemented |
 | Schema Identity Validation | implemented |
+| Workspace Display Current State | implemented |
 
 ## Local Caveats
 

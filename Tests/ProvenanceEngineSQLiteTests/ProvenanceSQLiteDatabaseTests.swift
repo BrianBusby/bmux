@@ -424,7 +424,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 10)
+        #expect(try await repository.schemaVersion() == 11)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
@@ -439,9 +439,10 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_change_sets", in: database))
         #expect(try Self.tableExists("provenance_file_changes", in: database))
         #expect(try Self.tableExists("provenance_validation_runs", in: database))
+        #expect(try Self.tableExists("provenance_workspace_display", in: database))
         #expect(try Self.tableExists("provenance_storage_repair_attempts", in: database))
         #expect(try Self.tableExists("provenance_schema_migrations", in: database))
-        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [10, 9, 8])
+        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [11, 10, 9, 8])
     }
 
     @Test
@@ -501,7 +502,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
 
-        #expect(try await repository.schemaVersion() == 10)
+        #expect(try await repository.schemaVersion() == 11)
         #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
     }
 
@@ -767,7 +768,7 @@ struct ProvenanceSQLiteDatabaseTests {
         let summary = try await repository.storageSummary()
 
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 10,
+            schemaVersion: 11,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,
@@ -780,7 +781,8 @@ struct ProvenanceSQLiteDatabaseTests {
             checkpointCount: 0,
             changeSetCount: 0,
             fileChangeCount: 0,
-            validationRunCount: 0
+            validationRunCount: 0,
+            workspaceDisplayCount: 0
         ))
     }
 
@@ -2755,6 +2757,70 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(response.worktrees == [
             ProvenanceWorktreeListEntry(worktree: orphanedWorktree, repository: nil),
         ])
+    }
+
+    @Test
+    func repositoryStoresWorkspaceDisplayProjectionWithPullRequestAndTickets() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let display = ProvenanceWorkspaceDisplayRecord(
+            id: "workspace-display-1",
+            workspaceID: "workspace-1",
+            repositoryID: "repository-1",
+            worktreeID: "worktree-1",
+            title: "Canonical domain mutation paths",
+            titleSource: "user",
+            branch: "canonical-domain-mutation-paths",
+            pullRequestNumber: 42,
+            pullRequestURL: "https://github.com/BrianBusby/bmux/pull/42",
+            pullRequestStatus: "open",
+            pullRequestBranch: "canonical-domain-mutation-paths",
+            pullRequestIsStale: false,
+            ticketIDs: ["STE-1964", "BMUX-42"],
+            observedAt: timestamp,
+            updatedAt: timestamp
+        )
+        let repository = try ProvenanceSQLiteRepository(url: url)
+
+        try await repository.appendEvent(
+            ProvenanceEvent(
+                id: "event-workspace-display",
+                eventType: .workspaceDisplayObserved,
+                timestamp: timestamp,
+                repositoryID: display.repositoryID,
+                worktreeID: display.worktreeID,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(workspaceDisplay: display)
+            )
+        )
+
+        #expect(try await repository.workspaceDisplay(
+            ProvenanceWorkspaceDisplayRequest(workspaceID: display.workspaceID)
+        ) == ProvenanceWorkspaceDisplayResponse(
+            found: true,
+            workspaceID: display.workspaceID,
+            display: display
+        ))
+        #expect(try await repository.workspaceDisplay(
+            ProvenanceWorkspaceDisplayRequest(workspaceID: "missing-workspace")
+        ) == ProvenanceWorkspaceDisplayResponse(
+            found: false,
+            reason: "no_workspace_display",
+            workspaceID: "missing-workspace",
+            display: nil
+        ))
+        #expect(try await repository.storageSummary().workspaceDisplayCount == 1)
+
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute("DELETE FROM provenance_workspace_display")
+
+        #expect(try await repository.storageSummary().workspaceDisplayCount == 0)
+        #expect(try await repository.rebuildProjectionsFromEventLedger() == 1)
+        #expect(try await repository.workspaceDisplay(
+            ProvenanceWorkspaceDisplayRequest(workspaceID: display.workspaceID)
+        ).display == display)
     }
 
     @Test

@@ -45,6 +45,14 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     /// - Throws: An implementation-defined error when the query fails.
     func currentContext(_ request: ProvenanceCurrentContextRequest) async throws
         -> ProvenanceCurrentContextResponse
+
+    /// Returns current display metadata for one workspace.
+    ///
+    /// - Parameter request: Query parameters for the workspace display projection.
+    /// - Returns: A domain response containing the current workspace display projection.
+    /// - Throws: An implementation-defined error when the query fails.
+    func workspaceDisplay(_ request: ProvenanceWorkspaceDisplayRequest) async throws
+        -> ProvenanceWorkspaceDisplayResponse
 }
 
 public extension ProvenanceEngineClient {

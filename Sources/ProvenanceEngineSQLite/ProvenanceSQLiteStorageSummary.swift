@@ -41,4 +41,7 @@ struct ProvenanceSQLiteStorageSummary: Equatable, Sendable {
 
     /// Number of validation-run projection rows.
     var validationRunCount: Int
+
+    /// Number of workspace display projection rows.
+    var workspaceDisplayCount: Int
 }

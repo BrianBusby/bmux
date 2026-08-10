@@ -238,6 +238,7 @@ struct ProvenanceSQLiteMigrator: Sendable {
             (7, ["provenance_storage_repair_attempts"]),
             (8, ["provenance_schema_migrations"]),
             (10, ["provenance_metadata"]),
+            (11, ["provenance_workspace_display"]),
         ].flatMap { migrationVersion, tableNames in
             migrationVersion <= version ? tableNames : []
         }

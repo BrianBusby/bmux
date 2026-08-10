@@ -49,6 +49,9 @@ public struct ProvenanceEventType: Codable, Equatable, Hashable, Sendable, RawRe
     /// A client observed worktree metadata.
     public static let worktreeObserved = Self(rawValue: "worktree_observed")
 
+    /// A client observed workspace display metadata.
+    public static let workspaceDisplayObserved = Self(rawValue: "workspace_display_observed")
+
     /// A client observed session metadata.
     public static let sessionObserved = Self(rawValue: "session_observed")
 
