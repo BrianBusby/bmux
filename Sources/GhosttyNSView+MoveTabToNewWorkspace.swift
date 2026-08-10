@@ -87,7 +87,7 @@ extension GhosttyNSView {
         guard let item = sender as? NSMenuItem,
               let workspaceId = item.representedObject as? UUID,
               let surfaceId = terminalSurface?.id,
-              AppDelegate.shared?.moveSurface(
+              AppDelegate.shared?.moveSurfaceForAction(
                 panelId: surfaceId,
                 toWorkspace: workspaceId,
                 focus: true,

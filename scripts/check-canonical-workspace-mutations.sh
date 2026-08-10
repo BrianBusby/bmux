@@ -75,6 +75,7 @@ browser_self_close_direct_pattern='self\.closePanel\(browserPanel\.id'
 temporary_placeholder_direct_close_pattern='closePanel\((sourcePlaceholder|targetPlaceholder|placeholderPanel\.id)'
 pane_swap_direct_move_surface_pattern='workspace\.moveSurface\(panelId: (sourceSurfaceId|targetSurfaceId)'
 remote_tmux_mirror_direct_close_pattern='workspace\.closePanel\(panelId, force: true\)'
+app_delegate_surface_move_direct_pattern='(AppDelegate\.shared\?\.moveSurface\(|\bapp\.moveSurface\()'
 browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 browser_split_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSplit\('
 
@@ -361,6 +362,16 @@ while IFS= read -r line; do
   violations+=("$line")
 done < <(rg -n -P "$remote_tmux_mirror_direct_close_pattern" \
   "Sources/RemoteTmuxSessionMirror.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$app_delegate_surface_move_direct_pattern" \
+  "Sources/GhosttyNSView+MoveTabToNewWorkspace.swift" \
+  "Sources/TerminalController.swift" \
+  "Sources/TerminalController+ControlSidebarContext3.swift" \
+  "Sources/TerminalController+MoveTabToNewWorkspace.swift" \
+  "Sources/Workspace.swift" || true)
 
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue
