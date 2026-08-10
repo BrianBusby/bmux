@@ -131,6 +131,37 @@ struct ProvenanceEngineHealthTests {
     }
 
     @Test
+    func olderWorkspaceDisplayPayloadWithoutTicketLinksDecodesWithEmptyLinks() throws {
+        let json = """
+        {
+          "workspaceDisplay": {
+            "id": "workspace-display-1",
+            "workspaceID": "workspace-1",
+            "repositoryID": "repo-1",
+            "worktreeID": "worktree-1",
+            "title": "Canonical domain mutation paths",
+            "titleSource": "user",
+            "branch": "canonical-domain-mutation-paths",
+            "pullRequestNumber": 42,
+            "pullRequestURL": "https://github.com/BrianBusby/bmux/pull/42",
+            "pullRequestStatus": "open",
+            "pullRequestBranch": "canonical-domain-mutation-paths",
+            "pullRequestIsStale": false,
+            "ticketIDs": ["STE-1964"],
+            "observedAt": 1,
+            "updatedAt": 1
+          }
+        }
+        """
+        let data = try #require(json.data(using: .utf8))
+
+        let payload = try JSONDecoder().decode(ProvenanceEventPayload.self, from: data)
+
+        #expect(payload.workspaceDisplay?.ticketIDs == ["STE-1964"])
+        #expect(payload.workspaceDisplay?.ticketLinks.isEmpty == true)
+    }
+
+    @Test
     func engineClientProtocolSupportsInProcessImplementations() async throws {
         let client = StaticProvenanceEngineClient()
 
@@ -224,6 +255,13 @@ struct ProvenanceEngineHealthTests {
         pullRequestBranch: "canonical-domain-mutation-paths",
         pullRequestIsStale: false,
         ticketIDs: ["STE-1964"],
+        ticketLinks: [
+            ProvenanceWorkspaceDisplayTicketLinkRecord(
+                id: "STE-1964",
+                system: "linear",
+                url: "https://linear.app/manaflow/issue/STE-1964"
+            ),
+        ],
         observedAt: timestamp,
         updatedAt: timestamp
     )
