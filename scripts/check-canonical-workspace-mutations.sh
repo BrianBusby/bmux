@@ -46,6 +46,7 @@ custom_layout_terminal_creation_pattern='newTerminal(Surface|Split)\('
 closed_panel_restore_placeholder_pattern='placeholderPanel = newTerminalSplit\('
 session_restore_anchor_surface_pattern='anchorPanelId = newTerminalSurface\(inPane: paneId'
 session_restore_split_surface_pattern='let newSplitPanel = newTerminalSplit\('
+debug_terminal_creation_pattern='\.newTerminal(Surface|Split)\('
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -151,6 +152,11 @@ while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   violations+=("$line")
 done < <(rg -n -P "$session_restore_split_surface_pattern" "Sources/Workspace.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$debug_terminal_creation_pattern" "Sources/TabManager.swift" "Sources/AppDelegate.swift" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {

@@ -10488,27 +10488,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         guard let topLeftPanelId = workspace.focusedTerminalPanel?.id ?? workspace.focusedPanelId else {
             return false
         }
-        guard let topRight = workspace.newTerminalSplit(
+        guard let topRight = workspace.createTerminalSplitForAction(
             from: topLeftPanelId,
             orientation: .horizontal,
             focus: false
-        ) else {
+        ).panel else {
             return false
         }
         await Task.yield()
-        guard workspace.newTerminalSplit(
+        guard workspace.createTerminalSplitForAction(
             from: topLeftPanelId,
             orientation: .vertical,
             focus: false
-        ) != nil else {
+        ).panel != nil else {
             return false
         }
         await Task.yield()
-        guard workspace.newTerminalSplit(
+        guard workspace.createTerminalSplitForAction(
             from: topRight.id,
             orientation: .vertical,
             focus: false
-        ) != nil else {
+        ).panel != nil else {
             return false
         }
         await Task.yield()
@@ -10520,7 +10520,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         if additionalTabsPerPane > 0 {
             for (paneIndex, paneId) in paneIds.enumerated() {
                 for tabOffset in 0..<additionalTabsPerPane {
-                    guard workspace.newTerminalSurface(inPane: paneId, focus: false) != nil else {
+                    guard workspace.createTerminalSurfaceForAction(inPane: paneId, focus: false).panel != nil else {
                         return false
                     }
                     if ((tabOffset + 1) % debugStressYieldInterval) == 0 {

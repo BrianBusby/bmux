@@ -4589,16 +4589,16 @@ class TabManager: ObservableObject {
 
                 // Layout goal: 2x2 grid (2 top, 2 bottom), then close both right panels.
                 // Order matters: split down first, then split right in each row (matches UI shortcut repro).
-                guard let bottomLeft = tab.newTerminalSplit(from: topLeftPanelId, orientation: .vertical) else {
+                guard let bottomLeft = tab.createTerminalSplitForAction(from: topLeftPanelId, orientation: .vertical).panel else {
                     self.writeSplitCloseRightTestData(["setupError": "Failed to create bottom-left split"], at: path)
                     return
                 }
-                guard let bottomRight = tab.newTerminalSplit(from: bottomLeft.id, orientation: .horizontal) else {
+                guard let bottomRight = tab.createTerminalSplitForAction(from: bottomLeft.id, orientation: .horizontal).panel else {
                     self.writeSplitCloseRightTestData(["setupError": "Failed to create bottom-right split"], at: path)
                     return
                 }
                 tab.focusPanel(topLeftPanelId)
-                guard let topRight = tab.newTerminalSplit(from: topLeftPanelId, orientation: .horizontal) else {
+                guard let topRight = tab.createTerminalSplitForAction(from: topLeftPanelId, orientation: .horizontal).panel else {
                     self.writeSplitCloseRightTestData(["setupError": "Failed to create top-right split"], at: path)
                     return
                 }
@@ -4756,22 +4756,22 @@ class TabManager: ObservableObject {
 
             switch pattern {
             case "close_right_single":
-                guard let tr = tab.newTerminalSplit(from: topLeftId, orientation: .horizontal) else {
+                guard let tr = tab.createTerminalSplitForAction(from: topLeftId, orientation: .horizontal).panel else {
                     writeSplitCloseRightTestData(["setupError": "Failed to split right from top-left (iteration \(i))"], at: path)
                     return
                 }
                 topRight = tr
             case "close_right_lrtd", "close_right_lrtd_bottom_first", "close_right_bottom_first", "close_right_lrtd_unfocused":
                 // User repro: split left/right first, then split top/down in each column.
-                guard let tr = tab.newTerminalSplit(from: topLeftId, orientation: .horizontal) else {
+                guard let tr = tab.createTerminalSplitForAction(from: topLeftId, orientation: .horizontal).panel else {
                     writeSplitCloseRightTestData(["setupError": "Failed to split right from top-left (iteration \(i))"], at: path)
                     return
                 }
-                guard let bl = tab.newTerminalSplit(from: topLeftId, orientation: .vertical) else {
+                guard let bl = tab.createTerminalSplitForAction(from: topLeftId, orientation: .vertical).panel else {
                     writeSplitCloseRightTestData(["setupError": "Failed to split down from left (iteration \(i))"], at: path)
                     return
                 }
-                guard let br = tab.newTerminalSplit(from: tr.id, orientation: .vertical) else {
+                guard let br = tab.createTerminalSplitForAction(from: tr.id, orientation: .vertical).panel else {
                     writeSplitCloseRightTestData(["setupError": "Failed to split down from right (iteration \(i))"], at: path)
                     return
                 }
@@ -4780,15 +4780,15 @@ class TabManager: ObservableObject {
                 bottomRight = br
             default:
                 // Default: split top/down first, then split left/right in each row.
-                guard let bl = tab.newTerminalSplit(from: topLeftId, orientation: .vertical) else {
+                guard let bl = tab.createTerminalSplitForAction(from: topLeftId, orientation: .vertical).panel else {
                     writeSplitCloseRightTestData(["setupError": "Failed to split down from top-left (iteration \(i))"], at: path)
                     return
                 }
-                guard let br = tab.newTerminalSplit(from: bl.id, orientation: .horizontal) else {
+                guard let br = tab.createTerminalSplitForAction(from: bl.id, orientation: .horizontal).panel else {
                     writeSplitCloseRightTestData(["setupError": "Failed to split right from bottom-left (iteration \(i))"], at: path)
                     return
                 }
-                guard let tr = tab.newTerminalSplit(from: topLeftId, orientation: .horizontal) else {
+                guard let tr = tab.createTerminalSplitForAction(from: topLeftId, orientation: .horizontal).panel else {
                     writeSplitCloseRightTestData(["setupError": "Failed to split right from top-left (iteration \(i))"], at: path)
                     return
                 }
@@ -5096,7 +5096,7 @@ class TabManager: ObservableObject {
                     }
                 }
 
-                guard let rightPanel = tab.newTerminalSplit(from: leftPanelId, orientation: .horizontal) else {
+                guard let rightPanel = tab.createTerminalSplitForAction(from: leftPanelId, orientation: .horizontal).panel else {
                     write(["setupError": "Failed to create right split at iteration \(i)", "done": "1"])
                     return
                 }
@@ -5226,7 +5226,7 @@ class TabManager: ObservableObject {
                 write(["setupError": "Missing initial focused panel", "done": "1"])
                 return
             }
-            guard let rightPanel = tab.newTerminalSplit(from: leftPanelId, orientation: .horizontal) else {
+            guard let rightPanel = tab.createTerminalSplitForAction(from: leftPanelId, orientation: .horizontal).panel else {
                 write(["setupError": "Failed to create right split", "done": "1"])
                 return
             }
@@ -5237,17 +5237,17 @@ class TabManager: ObservableObject {
             var exitPanelId = rightPanel.id
 
             if layout == "lr_left_vertical" {
-                guard let bottomLeft = tab.newTerminalSplit(from: leftPanelId, orientation: .vertical) else {
+                guard let bottomLeft = tab.createTerminalSplitForAction(from: leftPanelId, orientation: .vertical).panel else {
                     write(["setupError": "Failed to create bottom-left split", "done": "1"])
                     return
                 }
                 bottomLeftPanelId = bottomLeft.id.uuidString
             } else if layout == "lrtd_close_right_then_exit_top_left" {
-                guard let bottomLeft = tab.newTerminalSplit(from: leftPanelId, orientation: .vertical) else {
+                guard let bottomLeft = tab.createTerminalSplitForAction(from: leftPanelId, orientation: .vertical).panel else {
                     write(["setupError": "Failed to create bottom-left split", "done": "1"])
                     return
                 }
-                guard let bottomRight = tab.newTerminalSplit(from: rightPanel.id, orientation: .vertical) else {
+                guard let bottomRight = tab.createTerminalSplitForAction(from: rightPanel.id, orientation: .vertical).panel else {
                     write(["setupError": "Failed to create bottom-right split", "done": "1"])
                     return
                 }
@@ -5281,15 +5281,15 @@ class TabManager: ObservableObject {
                 // 2) split left/right for each row (2x2)
                 // 3) close both bottom panes
                 // 4) trigger Ctrl+D in top-left
-                guard let bottomLeft = tab.newTerminalSplit(from: leftPanelId, orientation: .vertical) else {
+                guard let bottomLeft = tab.createTerminalSplitForAction(from: leftPanelId, orientation: .vertical).panel else {
                     write(["setupError": "Failed to create bottom-left split", "done": "1"])
                     return
                 }
-                guard let topRight = tab.newTerminalSplit(from: leftPanelId, orientation: .horizontal) else {
+                guard let topRight = tab.createTerminalSplitForAction(from: leftPanelId, orientation: .horizontal).panel else {
                     write(["setupError": "Failed to create top-right split", "done": "1"])
                     return
                 }
-                guard let bottomRight = tab.newTerminalSplit(from: bottomLeft.id, orientation: .horizontal) else {
+                guard let bottomRight = tab.createTerminalSplitForAction(from: bottomLeft.id, orientation: .horizontal).panel else {
                     write(["setupError": "Failed to create bottom-right split", "done": "1"])
                     return
                 }
