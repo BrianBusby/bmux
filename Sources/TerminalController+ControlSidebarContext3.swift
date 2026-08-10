@@ -156,16 +156,21 @@ extension TerminalController {
         }
 
         guard let panelId = controlSidebarResolveSurfaceId(from: surfaceArg, tab: tab),
-              let bonsplitTabId = tab.surfaceIdFromPanelId(panelId) else {
+              tab.surfaceIdFromPanelId(panelId) != nil,
+              let sourcePane = tab.paneId(forPanelId: panelId) else {
             return .surfaceNotFound
         }
 
         let orientation: SplitOrientation = orientationIsHorizontal ? .horizontal : .vertical
-        guard let newPaneId = tab.bonsplitController.splitPane(
-            orientation: orientation,
-            movingTab: bonsplitTabId,
-            insertFirst: insertFirst
-        ) else {
+        guard AppDelegate.shared?.moveSurface(
+            panelId: panelId,
+            toWorkspace: tab.id,
+            targetPane: sourcePane,
+            splitTarget: (orientation: orientation, insertFirst: insertFirst),
+            focus: true,
+            focusWindow: false
+        ) == true,
+              let newPaneId = tab.paneId(forPanelId: panelId) else {
             return .splitFailed
         }
 
@@ -295,16 +300,16 @@ extension TerminalController {
             return .surfaceNotFound
         }
 
-        // Don't close if it's the only surface
-        if tab.panels.count <= 1 {
+        switch tab.closeSurfaceForAction(surfaceId: targetSurfaceId, force: true) {
+        case .closed:
+            return .closed
+        case .surfaceNotFound:
+            return .surfaceNotFound
+        case .lastSurface:
             return .lastSurface
-        }
-
-        // Socket commands must be non-interactive: bypass close-confirmation gating.
-        guard controlSidebarCloseSurfaceRecordingHistory(in: tab, surfaceId: targetSurfaceId, force: true) else {
+        case .failed:
             return .closeFailed
         }
-        return .closed
     }
 
     /// The byte-faithful twin of the file-private `resolveSurfaceId(from:tab:)`
@@ -321,24 +326,6 @@ extension TerminalController {
         }
 
         return nil
-    }
-
-    /// The byte-faithful twin of the file-private `closeSurfaceRecordingHistory`
-    /// (which stays in `TerminalController.swift` for the v2 surface paths).
-    private func controlSidebarCloseSurfaceRecordingHistory(
-        in workspace: Workspace,
-        surfaceId: UUID,
-        force: Bool
-    ) -> Bool {
-        if let tabId = workspace.surfaceIdFromPanelId(surfaceId) {
-            if force {
-                return workspace.requestNonInteractiveCloseTabRecordingHistory(tabId)
-            }
-            return workspace.requestCloseTabRecordingHistory(tabId, force: force)
-        }
-
-        workspace.markCloseHistoryEligible(panelId: surfaceId)
-        return workspace.closePanel(surfaceId, force: force)
     }
 
     // MARK: - Misc ops

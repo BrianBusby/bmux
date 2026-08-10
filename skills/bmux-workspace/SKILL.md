@@ -180,6 +180,13 @@ bmux clear-progress --workspace "${BMUX_WORKSPACE_ID:-}"
 
 For bmux app/runtime changes in a bmux source checkout, use tagged reloads from the active worktree. A tagged reload creates an isolated app name, bundle ID, debug socket, and DerivedData path.
 
+Use this cadence:
+
+- While designing or fixing a slice, iterate with focused tests first.
+- Before pushing a PR update that changes production app/runtime behavior, run focused tests plus `./scripts/reload.sh --tag <branch-slug>`.
+- Before dogfood or handoff of runtime behavior, run a tagged reload, then targeted CLI/socket dogfood against that tag when relevant.
+- For test-only stabilization, do not run a tagged reload unless production code changed.
+
 ```bash
 ./scripts/reload.sh --tag <short-tag>
 ```
@@ -222,4 +229,4 @@ bmux ping
 - If a CLI command rejects a valid surface or pane ref, report it to the user. Do not work around by focusing.
 - Do not close, focus, move, or send input to another workspace unless the user names that target.
 - Use short refs for chat and command examples. Use UUIDs only for logs, persistence, or debugging.
-- For app/runtime changes in a bmux source checkout, reload with `./scripts/reload.sh --tag <tag>` from the worktree before dogfood handoff.
+- For app/runtime dogfood handoff in a bmux source checkout, reload with `./scripts/reload.sh --tag <tag>` from the worktree, then use tag-specific CLI/socket dogfood when relevant.

@@ -73,7 +73,7 @@ extension TabItemView {
                     ForEach(groups) { group in
                         Button(group.name) {
                             for id in eligibleTargetIds {
-                                tabManager.addWorkspaceToGroup(workspaceId: id, groupId: group.id)
+                                tabManager.addWorkspaceToGroupForAction(workspaceId: id, groupId: group.id)
                             }
                         }
                         .disabled(allTargetsInSameGroup == group.id)
@@ -92,7 +92,7 @@ extension TabItemView {
                     )
                 ) {
                     for id in eligibleTargetIds {
-                        tabManager.removeWorkspaceFromGroup(workspaceId: id)
+                        tabManager.removeWorkspaceFromGroupForAction(workspaceId: id)
                     }
                 }
             }

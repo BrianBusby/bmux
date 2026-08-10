@@ -55,11 +55,19 @@ extension AppDelegate {
     }
 
     func storeMarkRead(forTabId tabId: UUID) {
-        notificationStore?.markRead(forTabId: tabId)
+        focusedNotificationTabManager(forTabId: tabId)?.setWorkspaceUnreadForAction(
+            tabId: tabId,
+            unread: false,
+            notificationStore: notificationStore
+        )
     }
 
     func storeMarkUnread(forTabId tabId: UUID) {
-        notificationStore?.markUnread(forTabId: tabId)
+        focusedNotificationTabManager(forTabId: tabId)?.setWorkspaceUnreadForAction(
+            tabId: tabId,
+            unread: true,
+            notificationStore: notificationStore
+        )
     }
 
     func storeClearManualUnread(forTabId tabId: UUID) {
@@ -67,14 +75,25 @@ extension AppDelegate {
     }
 
     func markPanelRead(_ panel: FocusedPanel) {
-        workspaceFor(tabId: panel.tabId)?.markPanelRead(panel.panelId)
+        workspaceFor(tabId: panel.tabId)?.setSurfaceUnreadForAction(surfaceId: panel.panelId, unread: false)
     }
 
     func markPanelUnread(_ panel: FocusedPanel) {
-        workspaceFor(tabId: panel.tabId)?.markPanelUnread(panel.panelId)
+        workspaceFor(tabId: panel.tabId)?.setSurfaceUnreadForAction(surfaceId: panel.panelId, unread: true)
     }
 
     func markLatestNotificationAsOldestUnread(forTabId tabId: UUID, surfaceId: UUID?) -> UUID? {
         notificationStore?.markLatestNotificationAsOldestUnread(forTabId: tabId, surfaceId: surfaceId)
+    }
+
+    private func focusedNotificationTabManager(forTabId tabId: UUID) -> TabManager? {
+        if let manager = tabManagerFor(tabId: tabId) {
+            return manager
+        }
+        if let activeManager = tabManager,
+           activeManager.tabs.contains(where: { $0.id == tabId }) {
+            return activeManager
+        }
+        return nil
     }
 }

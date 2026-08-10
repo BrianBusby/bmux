@@ -8,6 +8,7 @@ actor WorkProvenanceObservationService {
     private let stableIDFactory: WorkProvenanceStableIDFactory
     private let dateProvider: @Sendable () -> Date
     private var latestFingerprintByWorkspaceID: [UUID: String] = [:]
+    private var latestDisplayFingerprintByWorkspaceID: [UUID: String] = [:]
 
     /// Last persistence or Git-observation error, retained for diagnostics.
     private(set) var lastErrorDescription: String?
@@ -54,12 +55,21 @@ actor WorkProvenanceObservationService {
         StartupBreadcrumbLog.append("workProvenance.observe.begin", fields: ["workspace": workspace.workspaceID.uuidString, "directory": directory])
         guard !directory.isEmpty else { return }
         guard let gitSnapshot = await gitInspector.snapshot(for: directory) else {
+            try await appendWorkspaceDisplayObservationIfChanged(
+                for: workspace,
+                gitSnapshot: nil
+            )
             let description = "no Git snapshot for workspace directory: \(directory)"
             lastErrorDescription = description
             NSLog("bmux provenance worktree observation skipped: %@", description)
             StartupBreadcrumbLog.append("workProvenance.observe.noGitSnapshot", fields: ["workspace": workspace.workspaceID.uuidString, "directory": directory])
             return
         }
+
+        try await appendWorkspaceDisplayObservationIfChanged(
+            for: workspace,
+            gitSnapshot: gitSnapshot
+        )
 
         let fingerprint = stableIDFactory.fingerprint(for: gitSnapshot)
         guard latestFingerprintByWorkspaceID[workspace.workspaceID] != fingerprint else {
@@ -134,9 +144,101 @@ actor WorkProvenanceObservationService {
         StartupBreadcrumbLog.append("workProvenance.observe.appended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
     }
 
+    private func appendWorkspaceDisplayObservationIfChanged(
+        for workspace: WorkProvenanceWorkspaceSnapshot,
+        gitSnapshot: WorkProvenanceGitSnapshot?
+    ) async throws {
+        let ticketIDs = Self.ticketIDs(
+            branchNames: [
+                workspace.branch,
+                gitSnapshot?.branch,
+                workspace.pullRequest?.branch
+            ].compactMap { $0 }
+        )
+        let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
+            stableWorkspaceID: workspace.stableWorkspaceID,
+            title: workspace.title,
+            titleSource: workspace.titleSource,
+            currentDirectory: workspace.currentDirectory,
+            branch: workspace.branch,
+            pullRequestNumber: workspace.pullRequest?.number,
+            pullRequestURL: workspace.pullRequest?.url,
+            pullRequestStatus: workspace.pullRequest?.status,
+            pullRequestBranch: workspace.pullRequest?.branch,
+            pullRequestIsStale: workspace.pullRequest?.isStale ?? false,
+            gitSnapshot: gitSnapshot,
+            ticketIDs: ticketIDs
+        )
+        guard latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] != fingerprint else {
+            return
+        }
+        latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] = fingerprint
+
+        let now = dateProvider()
+        let repositoryID = gitSnapshot.map { stableIDFactory.repositoryID(repositoryRoot: $0.repositoryRoot) }
+        let worktreeID = gitSnapshot.map { stableIDFactory.worktreeID(repositoryRoot: $0.repositoryRoot) }
+        let pullRequest = workspace.pullRequest
+        let display = ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRecord(
+            id: stableIDFactory.workspaceDisplayID(stableWorkspaceID: workspace.stableWorkspaceID),
+            workspaceID: workspace.stableWorkspaceID.uuidString,
+            repositoryID: repositoryID,
+            worktreeID: worktreeID,
+            title: workspace.title,
+            titleSource: workspace.titleSource,
+            branch: workspace.branch ?? gitSnapshot?.branch,
+            pullRequestNumber: pullRequest?.number,
+            pullRequestURL: pullRequest?.url,
+            pullRequestStatus: pullRequest?.status,
+            pullRequestBranch: pullRequest?.branch,
+            pullRequestIsStale: pullRequest?.isStale ?? false,
+            ticketIDs: ticketIDs,
+            observedAt: now,
+            updatedAt: now
+        )
+        let event = ProvenanceEngineContracts.ProvenanceEvent(
+            id: stableIDFactory.workspaceDisplayEventID(
+                stableWorkspaceID: workspace.stableWorkspaceID,
+                fingerprint: fingerprint
+            ),
+            eventType: .workspaceDisplayObserved,
+            timestamp: now,
+            repositoryID: repositoryID,
+            worktreeID: worktreeID,
+            source: ProvenanceEngineContracts.ProvenanceSource.observed,
+            evidenceOrigin: ProvenanceEngineContracts.ProvenanceEvidenceOrigin(rawValue: "bmux-work-provenance-observation"),
+            evidenceScope: ProvenanceEngineContracts.ProvenanceEvidenceScope(level: .personal, id: "bmux-local"),
+            confidence: ProvenanceEngineContracts.ProvenanceConfidence.high,
+            payload: ProvenanceEngineContracts.ProvenanceEventPayload(
+                workspaceDisplay: display
+            )
+        )
+
+        let response = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
+        StartupBreadcrumbLog.append("workProvenance.observe.workspaceDisplayAppended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
+    }
+
     private static func summary(fileCount: Int, isDirty: Bool) -> String {
         guard isDirty else { return "Observed clean worktree" }
         if fileCount == 1 { return "Observed 1 dirty file" }
         return "Observed \(fileCount) dirty files"
+    }
+
+    private static func ticketIDs(branchNames: [String]) -> [String] {
+        let pattern = #"[A-Z][A-Z0-9]+-[0-9]+"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        var seen = Set<String>()
+        var ticketIDs: [String] = []
+        for branchName in branchNames {
+            let normalized = branchName.uppercased()
+            let range = NSRange(normalized.startIndex..<normalized.endIndex, in: normalized)
+            for match in regex.matches(in: normalized, range: range) {
+                guard let matchRange = Range(match.range, in: normalized) else { continue }
+                let ticketID = String(normalized[matchRange])
+                if seen.insert(ticketID).inserted {
+                    ticketIDs.append(ticketID)
+                }
+            }
+        }
+        return ticketIDs
     }
 }

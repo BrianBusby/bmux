@@ -116,7 +116,7 @@ extension BmuxConfigExecutor {
             case .new:
                 break
             case .ignore:
-                tabManager.selectWorkspace(existing)
+                tabManager.selectWorkspaceIdForAction(existing.id)
                 return true
             case .recreate:
                 existingWorkspaceToClose = existing
@@ -140,7 +140,7 @@ extension BmuxConfigExecutor {
                     defaultValue: "Cancel"
                 ))
                 guard alert.runModal() == .alertFirstButtonReturn else {
-                    tabManager.selectWorkspace(existing)
+                    tabManager.selectWorkspaceIdForAction(existing.id)
                     return false
                 }
                 existingWorkspaceToClose = existing
@@ -158,7 +158,10 @@ extension BmuxConfigExecutor {
         }
 
         if let existingWorkspaceToClose, existingWorkspaceToClose.id != newWorkspace.id {
-            tabManager.closeWorkspace(existingWorkspaceToClose)
+            _ = tabManager.closeWorkspaceForAction(
+                tabId: existingWorkspaceToClose.id,
+                allowPinned: true
+            )
         }
 
         if let layout = wsDef.layout {

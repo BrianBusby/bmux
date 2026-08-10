@@ -47,12 +47,18 @@ struct WorkProvenanceObserverTests {
 
         let reader = try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
         let context = try await reader.currentContext(ProvenanceCurrentContextRequest(repositoryPath: repositoryRoot))
+        let display = try await reader.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
+            workspaceID: workspace.stableWorkspaceID.uuidString
+        ))
 
         #expect(FileManager.default.fileExists(atPath: location.databaseURL.path))
         #expect(!FileManager.default.fileExists(atPath: location.legacyDatabaseURL.path))
         #expect(context.found)
         #expect(context.worktree?.path == repositoryRoot)
         #expect(context.dirtyFiles.map(\.fileChange.path) == ["Sources/DefaultStore.swift"])
+        #expect(display.found)
+        #expect(display.display?.title == "Default Store")
+        #expect(display.display?.branch == "slice-e-provenance-v1-adoption")
     }
 
     @Test
@@ -126,7 +132,86 @@ struct WorkProvenanceObserverTests {
         await service.observeWorkspaceSnapshot(workspace)
 
         let context = try await client.currentContext(ProvenanceCurrentContextRequest(repositoryPath: "/tmp/not-a-repo"))
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
+            workspaceID: workspace.stableWorkspaceID.uuidString
+        ))
         #expect(context.found == false)
+        #expect(display.found)
+        #expect(display.display?.title == "No Repo")
+    }
+
+    @Test
+    func observeWorkspaceDisplayPersistsTitlePullRequestAndTicketChangesWhenGitIsUnchanged() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let repositoryRoot = "/tmp/bmux-display-observed-repo"
+        let snapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "/tmp/bmux-display-observed-repo/.git",
+            remoteSlug: "manaflow-ai/bmux",
+            branch: "ste-1964-canonical-domain-mutation-paths",
+            headCommit: "fedcbafedcbafedcbafedcbafedcbafedcbafedc",
+            isDirty: false,
+            statusEntries: []
+        )
+        let service = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            dateProvider: { Date(timeIntervalSince1970: 500) }
+        )
+        let workspaceID = UUID(uuidString: "77777777-7777-7777-7777-777777777777")!
+        let stableWorkspaceID = UUID(uuidString: "88888888-8888-8888-8888-888888888888")!
+        let firstWorkspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: workspaceID,
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Initial Display",
+            titleSource: "auto_prompt",
+            currentDirectory: repositoryRoot,
+            branch: "ste-1964-canonical-domain-mutation-paths",
+            pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
+                number: 41,
+                url: "https://github.com/manaflow-ai/bmux/pull/41",
+                status: "open",
+                branch: "ste-1964-canonical-domain-mutation-paths",
+                isStale: false
+            )
+        )
+        let secondWorkspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: workspaceID,
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Merged Display",
+            titleSource: "user",
+            currentDirectory: repositoryRoot,
+            branch: "ste-1964-canonical-domain-mutation-paths",
+            pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
+                number: 42,
+                url: "https://github.com/manaflow-ai/bmux/pull/42",
+                status: "merged",
+                branch: "ste-1964-canonical-domain-mutation-paths",
+                isStale: true
+            )
+        )
+
+        await service.observeWorkspaceSnapshot(firstWorkspace)
+        await service.observeWorkspaceSnapshot(secondWorkspace)
+
+        let worktrees = try await client.worktrees(ProvenanceWorktreeListRequest())
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
+            workspaceID: stableWorkspaceID.uuidString
+        ))
+
+        #expect(worktrees.worktrees.count == 1)
+        #expect(display.found)
+        #expect(display.display?.title == "Merged Display")
+        #expect(display.display?.titleSource == "user")
+        #expect(display.display?.branch == "ste-1964-canonical-domain-mutation-paths")
+        #expect(display.display?.pullRequestNumber == 42)
+        #expect(display.display?.pullRequestURL == "https://github.com/manaflow-ai/bmux/pull/42")
+        #expect(display.display?.pullRequestStatus == "merged")
+        #expect(display.display?.pullRequestBranch == "ste-1964-canonical-domain-mutation-paths")
+        #expect(display.display?.pullRequestIsStale == true)
+        #expect(display.display?.ticketIDs == ["STE-1964"])
     }
 
     private struct FakeGitInspector: WorkProvenanceGitInspecting {

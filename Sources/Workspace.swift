@@ -3123,12 +3123,12 @@ final class Workspace: Identifiable, ObservableObject {
         bonsplitController.onTabZoomToggleRequest = { [weak self] tabId, _ in
             guard let self,
                   let panelId = self.panelIdFromSurfaceId(tabId) else { return false }
-            return self.toggleSplitZoom(panelId: panelId)
+            return self.toggleSurfaceSplitZoomForAction(surfaceId: panelId)
         }
         bonsplitController.onTabFullWidthToggleRequest = { [weak self] tabId, _ in
             guard let self,
                   let panelId = self.panelIdFromSurfaceId(tabId) else { return false }
-            return self.toggleFullWidthTabMode(panelId: panelId)
+            return self.toggleSurfaceFullWidthTabForAction(surfaceId: panelId) != nil
         }
 
         // Set ourselves as delegate
@@ -3971,6 +3971,10 @@ final class Workspace: Identifiable, ObservableObject {
         AppDelegate.shared?.notificationStore?.hasUnreadNotification(forTabId: id, surfaceId: panelId) ?? false
     }
 
+    func hasUnreadNotificationForSurfaceAction(panelId: UUID) -> Bool {
+        hasUnreadNotification(panelId: panelId)
+    }
+
     private func attentionPersistentState() -> WorkspaceAttentionPersistentState {
         let notificationStore = AppDelegate.shared?.notificationStore
         let unreadPanelIDs = Set(
@@ -4476,6 +4480,7 @@ final class Workspace: Identifiable, ObservableObject {
         )
 #endif
         self.title = sanitizedTitle
+        postWorkspaceDisplayMetadataDidChange()
     }
 
     func setCustomColor(_ hex: String?) {
@@ -4523,6 +4528,8 @@ final class Workspace: Identifiable, ObservableObject {
                 return .rejected(existingSource == .user ? .userOwned : .lowerPriority)
             }
         }
+        let previousTitle = customTitle ?? self.title
+        let previousSource = effectiveCustomTitleSource
         if trimmed.isEmpty {
             customTitle = nil
             customTitleSource = nil
@@ -4531,6 +4538,9 @@ final class Workspace: Identifiable, ObservableObject {
             customTitle = trimmed
             customTitleSource = source
             self.title = trimmed
+        }
+        if previousTitle != (customTitle ?? self.title) || previousSource != effectiveCustomTitleSource {
+            postWorkspaceDisplayMetadataDidChange()
         }
         return .success
     }
@@ -5135,143 +5145,6 @@ final class Workspace: Identifiable, ObservableObject {
         agentSessionActiveWorkPublisher.send(next)
     }
 
-    func updatePanelGitBranch(panelId: UUID, branch: String, isDirty: Bool) {
-        let state = SidebarGitBranchState(branch: branch, isDirty: isDirty)
-        let existing = panelGitBranches[panelId]
-        let branchChanged = existing?.branch.normalizedSidebarBranchName != state.branch.normalizedSidebarBranchName
-        if existing?.branch != branch || existing?.isDirty != isDirty {
-            panelGitBranches[panelId] = state
-        }
-        if branchChanged {
-            let nextBranch = state.branch.normalizedSidebarBranchName
-            if panelPullRequests[panelId]?.branch?.normalizedSidebarBranchName != nextBranch {
-                panelPullRequests.removeValue(forKey: panelId)
-            }
-            if panelId == focusedPanelId,
-               pullRequest?.branch?.normalizedSidebarBranchName != nextBranch {
-                pullRequest = nil
-            }
-        }
-        if panelId == focusedPanelId, gitBranch != state {
-            gitBranch = state
-        }
-    }
-
-    func clearPanelGitBranch(panelId: UUID) {
-        if panelGitBranches[panelId] != nil {
-            panelGitBranches.removeValue(forKey: panelId)
-        }
-        if panelPullRequests[panelId] != nil {
-            panelPullRequests.removeValue(forKey: panelId)
-        }
-        if panelId == focusedPanelId {
-            if gitBranch != nil {
-                gitBranch = nil
-            }
-            if pullRequest != nil {
-                pullRequest = nil
-            }
-        }
-    }
-
-    func updatePanelPullRequest(
-        panelId: UUID,
-        number: Int,
-        label: String,
-        url: URL,
-        status: SidebarPullRequestStatus,
-        branch: String? = nil,
-        isStale: Bool = false,
-        bindToCurrentBranch: Bool = true,
-        source: WorkspaceWorkContextSource = .sidebarMetadata
-    ) {
-        let existing = panelPullRequests[panelId]
-        let normalizedBranch = branch?.normalizedSidebarBranchName
-        let currentPanelBranch = panelGitBranches[panelId]?.branch.normalizedSidebarBranchName
-        let resolvedBranch: String? = {
-            if let normalizedBranch {
-                return normalizedBranch
-            }
-            if bindToCurrentBranch, let currentPanelBranch {
-                return currentPanelBranch
-            }
-            guard let existing,
-                  existing.number == number,
-                  existing.label == label,
-                  existing.url == url,
-                  existing.status == status else {
-                return nil
-            }
-            return existing.branch
-        }()
-        let state = SidebarPullRequestState(
-            number: number,
-            label: label,
-            url: url,
-            status: status,
-            branch: resolvedBranch,
-            isStale: isStale
-        )
-        if existing != state {
-            sidebarMetadata.updatePanelPullRequest(state, panelId: panelId, source: source)
-        } else {
-            sidebarMetadata.updatePanelPullRequestSource(panelId: panelId, source: source)
-        }
-        if panelId == focusedPanelId, pullRequest != state {
-            sidebarMetadata.updatePullRequest(state, source: source)
-        } else if panelId == focusedPanelId {
-            sidebarMetadata.updatePullRequestSource(source)
-        }
-    }
-
-    func clearPanelPullRequest(panelId: UUID) {
-        if panelPullRequests[panelId] != nil {
-            panelPullRequests.removeValue(forKey: panelId)
-        }
-        if panelId == focusedPanelId, pullRequest != nil {
-            pullRequest = nil
-        }
-    }
-
-    func clearSidebarPullRequestMetadata() {
-        if !panelPullRequests.isEmpty {
-            panelPullRequests.removeAll()
-        }
-        if pullRequest != nil {
-            pullRequest = nil
-        }
-    }
-
-    func clearSidebarGitMetadata() {
-        if !panelGitBranches.isEmpty {
-            panelGitBranches.removeAll()
-        }
-        clearSidebarPullRequestMetadata()
-        if gitBranch != nil {
-            gitBranch = nil
-        }
-    }
-
-    func resetSidebarContext(reason: String = "unspecified") {
-        statusEntries.removeAll()
-        clearAllAgentPIDs(refreshPorts: false)
-        clearAllAgentLifecycleStates()
-        agentListeningPorts.removeAll()
-        latestConversationMessage = nil
-        latestSubmittedMessage = nil
-        latestSubmittedAt = nil
-        logEntries.removeAll()
-        progress = nil
-        gitBranch = nil
-        panelGitBranches.removeAll()
-        pullRequest = nil
-        panelPullRequests.removeAll()
-        surfaceListeningPorts.removeAll()
-        listeningPorts.removeAll()
-        metadataBlocks.removeAll()
-        resetBrowserPanelsForContextChange(reason: reason)
-    }
-
     func resetBrowserPanelsForContextChange(reason: String) {
         let browserPanels = panels.values.compactMap { $0 as? BrowserPanel }
         guard !browserPanels.isEmpty else { return }
@@ -5522,6 +5395,12 @@ final class Workspace: Identifiable, ObservableObject {
         latestSubmittedAt = Date()
         _ = recordConversationMessage(preview)
         return true
+    }
+
+    func clearRecordedPromptMessages() {
+        latestConversationMessage = nil
+        latestSubmittedMessage = nil
+        latestSubmittedAt = nil
     }
 
     var isRemoteWorkspace: Bool {
@@ -11465,7 +11344,7 @@ final class Workspace: Identifiable, ObservableObject {
         }
         let response = alert.runModal()
         guard response == .alertFirstButtonReturn else { return }
-        setPanelCustomTitle(panelId: panelId, title: input.stringValue)
+        commitSurfaceTitleEditForAction(surfaceId: panelId, title: input.stringValue)
     }
 
     private static let bonsplitMoveNewWorkspaceDestinationId = "new-workspace"
@@ -12816,7 +12695,15 @@ extension Workspace: BonsplitDelegate {
             if remoteTmuxWorkspaceCloseButton != nil {
                 detachRemoteTmuxMirrorKeptOpenLocallyIfNeeded()
                 let manager = owningTabManager ?? AppDelegate.shared?.tabManagerFor(tabId: id) ?? AppDelegate.shared?.tabManager
-                if let manager, manager.tabs.count > 1 { manager.closeWorkspace(self, recordHistory: false); scheduleTerminalGeometryReconcile(); return }
+                if let manager, manager.tabs.count > 1 {
+                    _ = manager.closeWorkspaceForAction(
+                        tabId: id,
+                        allowPinned: true,
+                        recordHistory: false
+                    )
+                    scheduleTerminalGeometryReconcile()
+                    return
+                }
                 if let manager, let appDelegate = AppDelegate.shared, appDelegate.mainWindowContexts.count > 1,
                    let windowId = appDelegate.windowId(for: manager) { appDelegate.discardMainWindowWithoutClosedHistory(windowId: windowId); scheduleTerminalGeometryReconcile(); return }
             }
@@ -13393,7 +13280,7 @@ extension Workspace: BonsplitDelegate {
             promptRenamePanel(tabId: tab.id)
         case .clearName:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
-            setPanelCustomTitle(panelId: panelId, title: nil)
+            clearSurfaceTitleForAction(surfaceId: panelId)
         case .copyIdentifiers:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
             copyIdentifiersToPasteboard(surfaceId: panelId)
@@ -13436,20 +13323,19 @@ extension Workspace: BonsplitDelegate {
             _ = duplicateBrowserToRight(panelId: panelId)
         case .togglePin:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
-            let shouldPin = !pinnedPanelIds.contains(panelId)
-            setPanelPinned(panelId: panelId, pinned: shouldPin)
+            toggleSurfacePinnedForAction(surfaceId: panelId)
         case .markAsRead:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
-            markPanelRead(panelId)
+            setSurfaceUnreadForAction(surfaceId: panelId, unread: false)
         case .markAsUnread:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
-            markPanelUnread(panelId)
+            setSurfaceUnreadForAction(surfaceId: panelId, unread: true)
         case .toggleZoom:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
-            toggleSplitZoom(panelId: panelId)
+            toggleSurfaceSplitZoomForAction(surfaceId: panelId)
         case .toggleFullWidthTab:
             guard let panelId = panelIdFromSurfaceId(tab.id) else { return }
-            toggleFullWidthTabMode(panelId: panelId)
+            toggleSurfaceFullWidthTabForAction(surfaceId: panelId)
         case .forkConversation,
              .forkConversationRight,
              .forkConversationLeft,

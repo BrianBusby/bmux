@@ -1,0 +1,165 @@
+import Foundation
+import Testing
+import BmuxTerminal
+
+#if canImport(bmux_DEV)
+@testable import bmux_DEV
+#elseif canImport(bmux)
+@testable import bmux
+#endif
+
+@MainActor
+struct TerminalControllerSurfaceActionSocketTests {
+    @Test func v2TabRenameAndClearUseUserTitlePolicy() throws {
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panel = try #require(workspace.newTerminalSurface(inPane: pane, focus: true))
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let renameResponse = try handleV2Request(method: "tab.action", params: [
+            "workspace_id": workspace.id.uuidString,
+            "surface_id": panel.id.uuidString,
+            "action": "rename",
+            "title": "  Socket Tab  "
+        ])
+        #expect(renameResponse["ok"] as? Bool == true)
+        let renameResult = try #require(renameResponse["result"] as? [String: Any])
+        #expect(renameResult["title"] as? String == "Socket Tab")
+        #expect(workspace.panelCustomTitles[panel.id] == "Socket Tab")
+        #expect(workspace.panelCustomTitleSources[panel.id] == .user)
+
+        let invalidRename = try handleV2Request(method: "tab.action", params: [
+            "workspace_id": workspace.id.uuidString,
+            "surface_id": panel.id.uuidString,
+            "action": "rename",
+            "title": "   "
+        ])
+        #expect(invalidRename["ok"] as? Bool == false)
+        let invalidError = try #require(invalidRename["error"] as? [String: Any])
+        #expect(invalidError["code"] as? String == "invalid_params")
+        #expect(workspace.panelCustomTitles[panel.id] == "Socket Tab")
+
+        let clearResponse = try handleV2Request(method: "tab.action", params: [
+            "workspace_id": workspace.id.uuidString,
+            "surface_id": panel.id.uuidString,
+            "action": "clear_name"
+        ])
+        #expect(clearResponse["ok"] as? Bool == true)
+        #expect(workspace.panelCustomTitles[panel.id] == nil)
+        #expect(workspace.panelCustomTitleSources[panel.id] == nil)
+    }
+
+    @Test func v2TabPinAndUnpinUseWorkspaceSurfacePinPolicy() throws {
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panel = try #require(workspace.newTerminalSurface(inPane: pane, focus: true))
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let pinResponse = try handleV2Request(method: "tab.action", params: [
+            "workspace_id": workspace.id.uuidString,
+            "surface_id": panel.id.uuidString,
+            "action": "pin"
+        ])
+        #expect(pinResponse["ok"] as? Bool == true)
+        let pinResult = try #require(pinResponse["result"] as? [String: Any])
+        #expect(pinResult["pinned"] as? Bool == true)
+        #expect(workspace.isPanelPinned(panel.id))
+
+        let unpinResponse = try handleV2Request(method: "tab.action", params: [
+            "workspace_id": workspace.id.uuidString,
+            "surface_id": panel.id.uuidString,
+            "action": "unpin"
+        ])
+        #expect(unpinResponse["ok"] as? Bool == true)
+        let unpinResult = try #require(unpinResponse["result"] as? [String: Any])
+        #expect(unpinResult["pinned"] as? Bool == false)
+        #expect(!workspace.isPanelPinned(panel.id))
+    }
+
+    @Test func v2TabReadAndUnreadUseWorkspaceSurfaceUnreadPolicy() throws {
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panel = try #require(workspace.newTerminalSurface(inPane: pane, focus: true))
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let unreadResponse = try handleV2Request(method: "tab.action", params: [
+            "workspace_id": workspace.id.uuidString,
+            "surface_id": panel.id.uuidString,
+            "action": "mark_unread"
+        ])
+        #expect(unreadResponse["ok"] as? Bool == true)
+        #expect(workspace.manualUnreadPanelIds.contains(panel.id))
+
+        let readResponse = try handleV2Request(method: "tab.action", params: [
+            "workspace_id": workspace.id.uuidString,
+            "surface_id": panel.id.uuidString,
+            "action": "mark_read"
+        ])
+        #expect(readResponse["ok"] as? Bool == true)
+        #expect(!workspace.manualUnreadPanelIds.contains(panel.id))
+    }
+
+    @Test func v2TabFullWidthToggleUsesWorkspaceSurfaceLayoutPolicy() throws {
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panel = try #require(workspace.newTerminalSurface(inPane: pane, focus: true))
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let enabledResponse = try handleV2Request(method: "tab.action", params: [
+            "workspace_id": workspace.id.uuidString,
+            "surface_id": panel.id.uuidString,
+            "action": "toggle_full_width_tab"
+        ])
+        #expect(enabledResponse["ok"] as? Bool == true)
+        let enabledResult = try #require(enabledResponse["result"] as? [String: Any])
+        #expect(enabledResult["full_width_tab_mode"] as? Bool == true)
+        #expect(workspace.bonsplitController.isFullWidthTabMode(inPane: pane))
+
+        let disabledResponse = try handleV2Request(method: "tab.action", params: [
+            "workspace_id": workspace.id.uuidString,
+            "surface_id": panel.id.uuidString,
+            "action": "toggle_full_width_tab"
+        ])
+        #expect(disabledResponse["ok"] as? Bool == true)
+        let disabledResult = try #require(disabledResponse["result"] as? [String: Any])
+        #expect(disabledResult["full_width_tab_mode"] as? Bool == false)
+        #expect(!workspace.bonsplitController.isFullWidthTabMode(inPane: pane))
+    }
+
+
+    @Test func workspaceCloseRejectsLastWorkspace() throws {
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let response = try handleV2Request(
+            method: "workspace.close",
+            params: ["workspace_id": workspace.id.uuidString]
+        )
+        #expect(response["ok"] as? Bool == false)
+        let error = try #require(response["error"] as? [String: Any])
+        #expect(error["code"] as? String == "protected")
+
+        let data = try #require(error["data"] as? [String: Any])
+        #expect(data["workspace_id"] as? String == workspace.id.uuidString)
+        #expect(data["pinned"] as? Bool == false)
+        #expect(manager.tabs.map(\.id) == [workspace.id])
+    }
+
+    private func handleV2Request(method: String, params: [String: Any]) throws -> [String: Any] {
+        let payload: [String: Any] = ["jsonrpc": "2.0", "id": 1, "method": method, "params": params]
+        let data = try JSONSerialization.data(withJSONObject: payload)
+        let response = TerminalController.shared.handleSocketLine(String(decoding: data, as: UTF8.self))
+        let responseData = try #require(response.data(using: .utf8))
+        return try #require(try JSONSerialization.jsonObject(with: responseData) as? [String: Any])
+    }
+}

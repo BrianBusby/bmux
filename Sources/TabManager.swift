@@ -2307,10 +2307,7 @@ class TabManager: ObservableObject {
     }
 
     func selectWorkspace(_ workspace: Workspace) {
-#if DEBUG
-        debugPrimeWorkspaceSwitchTrigger("select", to: workspace.id)
-#endif
-        selectWorkspaceId(workspace.id, notificationDismissalContext: .explicitWorkspaceResume)
+        selectWorkspaceIdForAction(workspace.id)
     }
 
     // Keep selectTab as convenience alias
@@ -2451,7 +2448,7 @@ class TabManager: ObservableObject {
         )
     }
 
-    private func orderedClosableWorkspaces(_ workspaceIds: [UUID], allowPinned: Bool) -> [Workspace] {
+    func orderedClosableWorkspaces(_ workspaceIds: [UUID], allowPinned: Bool) -> [Workspace] {
         let targetIds = Set(workspaceIds)
         return tabs.compactMap { workspace in
             guard targetIds.contains(workspace.id) else { return nil }
@@ -3229,7 +3226,7 @@ class TabManager: ObservableObject {
     // TabManager hosts its seam (TabManager+NotificationDismissalHosting)
     // and forwards the legacy entry points below.
 
-    private func selectWorkspaceId(
+    func selectWorkspaceId(
         _ tabId: UUID,
         notificationDismissalContext: NotificationDismissalContext?
     ) {
@@ -3857,7 +3854,7 @@ class TabManager: ObservableObject {
     /// Toggle zoom on a panel.
     func toggleSplitZoom(tabId: UUID, surfaceId: UUID) -> Bool {
         guard let tab = tabs.first(where: { $0.id == tabId }) else { return false }
-        return tab.toggleSplitZoom(panelId: surfaceId)
+        return tab.toggleSurfaceSplitZoomForAction(surfaceId: surfaceId)
     }
 
     /// Toggle zoom for the currently focused panel in the selected workspace.
@@ -3865,7 +3862,7 @@ class TabManager: ObservableObject {
     func toggleFocusedSplitZoom() -> Bool {
         guard let tab = selectedWorkspace,
               let focusedPanelId = tab.focusedPanelId else { return false }
-        return tab.toggleSplitZoom(panelId: focusedPanelId)
+        return tab.toggleSurfaceSplitZoomForAction(surfaceId: focusedPanelId)
     }
 
     /// Toggle full-width-tab mode for the currently focused panel in the selected workspace.
@@ -3873,7 +3870,7 @@ class TabManager: ObservableObject {
     func toggleFocusedFullWidthTab() -> Bool {
         guard let tab = selectedWorkspace,
               let focusedPanelId = tab.focusedPanelId else { return false }
-        return tab.toggleFullWidthTabMode(panelId: focusedPanelId)
+        return tab.toggleSurfaceFullWidthTabForAction(surfaceId: focusedPanelId) != nil
     }
 
     /// Close a surface/panel

@@ -107,11 +107,10 @@ extension TerminalController {
         let shouldAutoRefreshMetadata = v2Bool(params, "auto_refresh_metadata") ?? true
         if let groupId {
             let validation = v2MainSync {
-                let groupExists = tabManager.workspaceGroups.contains(where: { $0.id == groupId })
-                let referenceIsMember = groupReferenceWorkspaceId.map { referenceWorkspaceId in
-                    tabManager.tabs.contains { $0.id == referenceWorkspaceId && $0.groupId == groupId }
-                } ?? true
-                return (groupExists: groupExists, referenceIsMember: referenceIsMember)
+                tabManager.workspaceGroupReferenceValidationForAction(
+                    groupId: groupId,
+                    referenceWorkspaceId: groupReferenceWorkspaceId
+                )
             }
             guard validation.groupExists else {
                 return .err(
@@ -144,7 +143,7 @@ extension TerminalController {
                 ws.applyCustomLayout(layoutNode, baseCwd: cwd ?? ws.currentDirectory)
             }
             if let groupId {
-                tabManager.addWorkspaceToGroup(
+                tabManager.addWorkspaceToGroupForAction(
                     workspaceId: ws.id,
                     groupId: groupId,
                     placement: groupPlacement ?? .top,

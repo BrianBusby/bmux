@@ -14,13 +14,21 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: observation
+- Active slice: Domain-specific canonical mutation paths (`canonical_domain_mutation_paths`)
+- Slice state: draft
+- Owner: Codex
+- Repository state: active
 
 ## Release
 
 - Latest tag: None
 - Release status: untagged
+
+## Local Capabilities
+
+| Capability | State |
+| --- | --- |
+| Workspace Display Projection | implemented |
 
 ## Execution Telemetry
 

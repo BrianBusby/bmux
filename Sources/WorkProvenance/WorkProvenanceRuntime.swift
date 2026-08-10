@@ -9,6 +9,8 @@ final class WorkProvenanceRuntime {
     private let observationService: WorkProvenanceObservationService?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
     private var directoryObservationTask: Task<Void, Never>?
+    private var titleObservationTask: Task<Void, Never>?
+    private var displayMetadataObservationTask: Task<Void, Never>?
     private var executionTelemetryProjectionService: ExecutionTelemetryProvenanceProjectionService?
 
     /// Effective V1 database path when the runtime starts successfully.
@@ -36,6 +38,8 @@ final class WorkProvenanceRuntime {
 
     deinit {
         directoryObservationTask?.cancel()
+        titleObservationTask?.cancel()
+        displayMetadataObservationTask?.cancel()
     }
 
     /// Creates the standard runtime backed by the per-user bmux state directory.
@@ -77,6 +81,7 @@ final class WorkProvenanceRuntime {
         }
         observeWorkspaces(tabManager.tabs)
         startDirectoryObservationIfNeeded()
+        startDisplayObservationIfNeeded()
     }
 
     /// Starts projecting eligible live execution telemetry facts into provenance.
@@ -132,8 +137,37 @@ final class WorkProvenanceRuntime {
         }
     }
 
+    private func startDisplayObservationIfNeeded() {
+        if titleObservationTask == nil {
+            titleObservationTask = Task { @MainActor [weak self] in
+                let notifications = NotificationCenter.default.notifications(
+                    named: .workspaceTitleDidChange
+                )
+                for await notification in notifications {
+                    self?.observeWorkspace(from: notification)
+                }
+            }
+        }
+        if displayMetadataObservationTask == nil {
+            displayMetadataObservationTask = Task { @MainActor [weak self] in
+                let notifications = NotificationCenter.default.notifications(
+                    named: .workspaceDisplayMetadataDidChange
+                )
+                for await notification in notifications {
+                    self?.observeWorkspace(from: notification)
+                }
+            }
+        }
+    }
+
     private func handleCurrentDirectoryNotification(_ notification: Notification) {
-        guard let workspaceID = notification.userInfo?["workspaceId"] as? UUID,
+        observeWorkspace(from: notification)
+    }
+
+    private func observeWorkspace(from notification: Notification) {
+        let workspaceID = (notification.userInfo?["workspaceId"] as? UUID)
+            ?? (notification.userInfo?[GhosttyNotificationKey.tabId] as? UUID)
+        guard let workspaceID,
               let workspace = tabManager?.tabs.first(where: { $0.id == workspaceID }) else {
             return
         }

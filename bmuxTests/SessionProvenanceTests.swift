@@ -286,6 +286,11 @@ private actor CapturingProvenanceEngineClient: ProvenanceEngineContracts.Provena
         throw TestError.unimplemented
     }
 
+    func workspaceDisplay(_ request: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest) async throws
+        -> ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse {
+        throw TestError.unimplemented
+    }
+
     private enum TestError: Error {
         case unimplemented
     }

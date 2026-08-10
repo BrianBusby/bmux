@@ -164,7 +164,7 @@ extension TerminalController {
                 ])
                 return
             }
-            guard let bonsplitTabId = ws.surfaceIdFromPanelId(surfaceId) else {
+            guard ws.surfaceIdFromPanelId(surfaceId) != nil else {
                 result = .err(code: "not_found", message: SurfaceSplitOffMessage.surfaceNotFound, data: ["surface_id": surfaceId.uuidString])
                 return
             }
@@ -180,11 +180,18 @@ extension TerminalController {
                 return
             }
             let previousFocusedPanelId = ws.focusedPanelId
-            guard let newPaneId = ws.bonsplitController.splitPane(
-                orientation: orientation,
-                movingTab: bonsplitTabId,
-                insertFirst: insertFirst
+            guard app.moveSurface(
+                panelId: surfaceId,
+                toWorkspace: ws.id,
+                targetPane: sourcePane,
+                splitTarget: (orientation: orientation, insertFirst: insertFirst),
+                focus: focus,
+                focusWindow: false
             ) else {
+                result = .err(code: "internal_error", message: SurfaceSplitOffMessage.splitPaneFailed, data: nil)
+                return
+            }
+            guard let newPaneId = ws.paneId(forPanelId: surfaceId) else {
                 result = .err(code: "internal_error", message: SurfaceSplitOffMessage.splitPaneFailed, data: nil)
                 return
             }

@@ -38,7 +38,7 @@ func presentSidebarWorkspaceGroupRenamePrompt(
 
     let response = runBmuxModalAlert(alert)
     guard response == .alertFirstButtonReturn else { return }
-    tabManager.renameWorkspaceGroup(groupId: groupId, name: input.stringValue)
+    tabManager.renameWorkspaceGroupForAction(groupId: groupId, name: input.stringValue)
 }
 
 /// Confirmation dialog for destructive group deletion.

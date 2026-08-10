@@ -353,6 +353,8 @@ struct BmuxConfigWorkspaceActionTests {
         let manager = TabManager()
         let existingWorkspace = manager.tabs[0]
         existingWorkspace.setCustomTitle("Dev Setup")
+        let initiallySelectedWorkspace = manager.addWorkspace()
+        #expect(manager.selectedWorkspace?.id == initiallySelectedWorkspace.id)
 
         let action = try #require(BmuxResolvedConfigAction.fromDefinition(
             id: "dev-setup",
@@ -372,7 +374,39 @@ struct BmuxConfigWorkspaceActionTests {
             globalConfigPath: "/tmp/bmux-test-global-config.json"
         ))
 
-        #expect(manager.tabs.map(\.id) == [existingWorkspace.id])
+        #expect(Set(manager.tabs.map(\.id)) == Set([existingWorkspace.id, initiallySelectedWorkspace.id]))
+        #expect(manager.tabs.count == 2)
         #expect(manager.selectedWorkspace?.id == existingWorkspace.id)
+    }
+
+    @MainActor
+    @Test func inlineWorkspaceActionRecreatesPinnedWorkspace() throws {
+        let manager = TabManager()
+        let existingWorkspace = manager.tabs[0]
+        existingWorkspace.setCustomTitle("Dev Setup")
+        _ = manager.setWorkspacePinnedForAction(tabId: existingWorkspace.id, pinned: true)
+
+        let action = try #require(BmuxResolvedConfigAction.fromDefinition(
+            id: "dev-setup",
+            definition: BmuxConfigActionDefinition(
+                action: .workspace(BmuxWorkspaceDefinition(name: "Dev Setup"), restart: .recreate),
+                title: "Dev Setup"
+            ),
+            sourcePath: nil
+        ))
+
+        #expect(BmuxConfigExecutor.execute(
+            action: action,
+            commands: [],
+            commandSourcePaths: [:],
+            tabManager: manager,
+            baseCwd: NSTemporaryDirectory(),
+            globalConfigPath: "/tmp/bmux-test-global-config.json"
+        ))
+
+        let recreated = try #require(manager.tabs.first { $0.customTitle == "Dev Setup" })
+        #expect(manager.tabs.count == 1)
+        #expect(recreated.id != existingWorkspace.id)
+        #expect(manager.selectedWorkspace?.id == recreated.id)
     }
 }

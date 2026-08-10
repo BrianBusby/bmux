@@ -8,8 +8,8 @@ internal import Foundation
 /// The notification / workspace-group domains use the same pattern. Each field
 /// carries the exact `String(localized:)` result the legacy body produced.
 public struct ControlWorkspaceStrings: Sendable, Equatable {
-    /// `workspace.closeProtected.message` — the `workspace.close` protected-pin
-    /// error.
+    /// `workspace.closeProtected.message` — the `workspace.close`
+    /// protected-close error.
     public let closeProtected: String
     /// `socket.workspace.reorderMany.missingOrder`.
     public let reorderManyMissingOrder: String
@@ -25,7 +25,7 @@ public struct ControlWorkspaceStrings: Sendable, Equatable {
     /// Creates the localized workspace strings.
     ///
     /// - Parameters:
-    ///   - closeProtected: The `workspace.close` protected-pin message.
+    ///   - closeProtected: The `workspace.close` protected-close message.
     ///   - reorderManyMissingOrder: The missing-order message.
     ///   - reorderManyDuplicateWorkspace: The duplicate-workspace message.
     ///   - reorderManyWorkspaceNotFound: The workspace-not-found message.

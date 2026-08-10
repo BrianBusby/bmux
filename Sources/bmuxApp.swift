@@ -1239,22 +1239,19 @@ struct bmuxApp: App {
 
     private func clearSelectedWorkspaceCustomName(in manager: TabManager) {
         guard let workspace = manager.selectedWorkspace else { return }
-        manager.clearCustomTitle(tabId: workspace.id)
+        manager.clearWorkspaceTitleForAction(tabId: workspace.id)
     }
 
     private func moveSelectedWorkspace(in manager: TabManager, by delta: Int) {
         guard let workspace = manager.selectedWorkspace,
-              let currentIndex = selectedWorkspaceIndex(in: manager, workspaceId: workspace.id) else { return }
-        let targetIndex = currentIndex + delta
-        guard targetIndex >= 0, targetIndex < manager.tabs.count else { return }
-        _ = manager.reorderWorkspace(tabId: workspace.id, toIndex: targetIndex)
-        manager.selectWorkspace(workspace)
+              manager.moveWorkspaceForAction(tabId: workspace.id, by: delta) != nil else { return }
+        manager.selectWorkspaceIdForAction(workspace.id)
     }
 
     private func moveSelectedWorkspaceToTop(in manager: TabManager) {
         guard let workspace = manager.selectedWorkspace else { return }
-        manager.moveTabsToTop([workspace.id])
-        manager.selectWorkspace(workspace)
+        guard manager.moveWorkspaceToTopForAction(tabId: workspace.id) != nil else { return }
+        manager.selectWorkspaceIdForAction(workspace.id)
     }
 
     private func moveSelectedWorkspace(in manager: TabManager, toWindow windowId: UUID) {
@@ -1267,32 +1264,19 @@ struct bmuxApp: App {
         _ = AppDelegate.shared?.moveWorkspaceToNewWindow(workspaceId: workspace.id, focus: true)
     }
 
-    private func closeWorkspaceIds(
-        _ workspaceIds: [UUID],
-        in manager: TabManager,
-        allowPinned: Bool
-    ) {
-        manager.closeWorkspacesWithConfirmation(workspaceIds, allowPinned: allowPinned)
-    }
-
     private func closeOtherSelectedWorkspacePeers(in manager: TabManager) {
         guard let workspace = manager.selectedWorkspace else { return }
-        let workspaceIds = manager.tabs.compactMap { $0.id == workspace.id ? nil : $0.id }
-        closeWorkspaceIds(workspaceIds, in: manager, allowPinned: true)
+        manager.closeWorkspacesWithConfirmation(.others(keeping: [workspace.id]), allowPinned: true)
     }
 
     private func closeSelectedWorkspacesBelow(in manager: TabManager) {
-        guard let workspace = manager.selectedWorkspace,
-              let anchorIndex = selectedWorkspaceIndex(in: manager, workspaceId: workspace.id) else { return }
-        let workspaceIds = manager.tabs.suffix(from: anchorIndex + 1).map(\.id)
-        closeWorkspaceIds(workspaceIds, in: manager, allowPinned: true)
+        guard let workspace = manager.selectedWorkspace else { return }
+        manager.closeWorkspacesWithConfirmation(.below(anchor: workspace.id), allowPinned: true)
     }
 
     private func closeSelectedWorkspacesAbove(in manager: TabManager) {
-        guard let workspace = manager.selectedWorkspace,
-              let anchorIndex = selectedWorkspaceIndex(in: manager, workspaceId: workspace.id) else { return }
-        let workspaceIds = manager.tabs.prefix(upTo: anchorIndex).map(\.id)
-        closeWorkspaceIds(workspaceIds, in: manager, allowPinned: true)
+        guard let workspace = manager.selectedWorkspace else { return }
+        manager.closeWorkspacesWithConfirmation(.above(anchor: workspace.id), allowPinned: true)
     }
 
     private func selectedWorkspaceCanMarkRead(in manager: TabManager) -> Bool {
@@ -1307,12 +1291,20 @@ struct bmuxApp: App {
 
     private func markSelectedWorkspaceRead(in manager: TabManager) {
         guard let workspaceId = manager.selectedWorkspace?.id else { return }
-        notificationStore.markRead(forTabId: workspaceId)
+        manager.setWorkspaceUnreadForAction(
+            tabId: workspaceId,
+            unread: false,
+            notificationStore: notificationStore
+        )
     }
 
     private func markSelectedWorkspaceUnread(in manager: TabManager) {
         guard let workspaceId = manager.selectedWorkspace?.id else { return }
-        notificationStore.markUnread(forTabId: workspaceId)
+        manager.setWorkspaceUnreadForAction(
+            tabId: workspaceId,
+            unread: true,
+            notificationStore: notificationStore
+        )
     }
 
     @ViewBuilder

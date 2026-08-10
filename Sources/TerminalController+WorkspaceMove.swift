@@ -110,12 +110,12 @@ extension TerminalController {
 
             if workspace.groupId != targetGroupID {
                 if let targetGroupID {
-                    tabManager.addWorkspaceToGroup(
+                    let membership = tabManager.addWorkspaceToGroupForAction(
                         workspaceId: workspaceID,
                         groupId: targetGroupID,
                         placement: .end
                     )
-                    guard tabManager.tabs.first(where: { $0.id == workspaceID })?.groupId == targetGroupID else {
+                    guard membership.joinedGroup else {
                         mutationError = .err(
                             code: "invalid_request",
                             message: controlWorkspaceGroupStrings().workspaceIsOtherGroupAnchor,
@@ -124,26 +124,32 @@ extension TerminalController {
                         return
                     }
                 } else {
-                    tabManager.removeWorkspaceFromGroup(workspaceId: workspaceID)
+                    tabManager.removeWorkspaceFromGroupForAction(workspaceId: workspaceID)
                 }
             }
 
             if let beforeWorkspaceID {
-                _ = tabManager.reorderWorkspace(tabId: workspaceID, before: beforeWorkspaceID)
+                _ = tabManager.reorderWorkspaceForAction(
+                    tabId: workspaceID,
+                    target: .before(beforeWorkspaceID)
+                )
             } else if let targetIndex {
-                _ = tabManager.reorderWorkspace(tabId: workspaceID, toIndex: targetIndex)
+                _ = tabManager.reorderWorkspaceForAction(
+                    tabId: workspaceID,
+                    target: .index(targetIndex)
+                )
             } else if let targetGroupID {
                 let lastMemberIndex = tabManager.tabs.lastIndex {
                     $0.id != workspaceID && $0.groupId == targetGroupID
                 }
                 if let lastMemberIndex {
-                    _ = tabManager.reorderWorkspace(
+                    _ = tabManager.reorderWorkspaceForAction(
                         tabId: workspaceID,
-                        toIndex: tabManager.tabs.index(after: lastMemberIndex)
+                        target: .index(tabManager.tabs.index(after: lastMemberIndex))
                     )
                 }
             } else {
-                _ = tabManager.reorderWorkspace(tabId: workspaceID, toIndex: tabManager.tabs.endIndex)
+                _ = tabManager.reorderWorkspaceForAction(tabId: workspaceID, target: .end)
             }
         }
         if let mutationError {

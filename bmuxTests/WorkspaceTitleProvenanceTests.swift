@@ -133,6 +133,95 @@ import Testing
         #expect(workspace.title == "Personal (Codex)")
     }
 
+    @Test func workspaceRenameTitleRejectsEmptyInputWithoutClearingExistingTitle() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+
+        let applied = manager.renameWorkspaceTitle(tabId: workspace.id, title: "  My Project  ")
+        #expect(applied.applied)
+        #expect(workspace.customTitle == "My Project")
+        #expect(workspace.effectiveCustomTitleSource == .user)
+
+        let rejected = manager.renameWorkspaceTitle(tabId: workspace.id, title: "   ")
+        #expect(!rejected.applied)
+        #expect(rejected.rejectionReason == .emptyTitle)
+        #expect(workspace.customTitle == "My Project")
+        #expect(workspace.title == "My Project")
+    }
+
+    @Test func workspaceTitleEditCanTreatEmptyInputAsClear() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        workspace.applyProcessTitle("zsh")
+        manager.renameWorkspaceTitle(tabId: workspace.id, title: "  My Project  ")
+
+        let cleared = manager.commitWorkspaceTitleEdit(tabId: workspace.id, title: "   ")
+
+        #expect(cleared.applied)
+        #expect(workspace.customTitle == nil)
+        #expect(workspace.effectiveCustomTitleSource == nil)
+        #expect(workspace.title == "zsh")
+    }
+
+    @Test func workspaceClearTitleForActionUsesSharedUserTitlePolicy() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        workspace.applyProcessTitle("zsh")
+        manager.renameWorkspaceTitle(tabId: workspace.id, title: "  My Project  ")
+
+        let cleared = manager.clearWorkspaceTitleForAction(tabId: workspace.id)
+
+        #expect(cleared.applied)
+        #expect(workspace.customTitle == nil)
+        #expect(workspace.effectiveCustomTitleSource == nil)
+        #expect(workspace.title == "zsh")
+    }
+
+    @Test func workspaceTitleEditRejectsMissingWorkspaceWithoutMutatingExistingTitles() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        manager.renameWorkspaceTitle(tabId: workspace.id, title: "Stable")
+
+        let rejected = manager.commitWorkspaceTitleEdit(tabId: UUID(), title: "Other")
+
+        #expect(!rejected.applied)
+        #expect(rejected.rejectionReason == .targetMissing)
+        #expect(workspace.customTitle == "Stable")
+    }
+
+    @Test func workspaceClearTitleForActionRejectsMissingWorkspaceWithoutMutatingExistingTitles() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        manager.renameWorkspaceTitle(tabId: workspace.id, title: "Stable")
+
+        let rejected = manager.clearWorkspaceTitleForAction(tabId: UUID())
+
+        #expect(!rejected.applied)
+        #expect(rejected.rejectionReason == .targetMissing)
+        #expect(workspace.customTitle == "Stable")
+    }
+
+    @Test func workspaceTitleEditPostsNotificationForAppliedDisplayTitleChange() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        var notifications: [Notification] = []
+        let observer = NotificationCenter.default.addObserver(
+            forName: .workspaceTitleDidChange,
+            object: manager,
+            queue: nil
+        ) { notification in
+            notifications.append(notification)
+        }
+        defer { NotificationCenter.default.removeObserver(observer) }
+
+        let applied = manager.commitWorkspaceTitleEdit(tabId: workspace.id, title: "  Shared Path  ")
+
+        #expect(applied.applied)
+        #expect(workspace.customTitle == "Shared Path")
+        #expect(notifications.count == 1)
+        #expect(notifications.first?.userInfo?[GhosttyNotificationKey.tabId] as? UUID == workspace.id)
+    }
+
     // MARK: - Panel titles
 
     @Test func panelProvenanceMirrorsWorkspaceRules() throws {
@@ -173,6 +262,84 @@ import Testing
         workspace.panelCustomTitles[panelId] = "Carried Tab"
         #expect(!workspace.setPanelCustomTitle(panelId: panelId, title: "Other", source: .autoPrompt))
         #expect(workspace.panelCustomTitles[panelId] == "Carried Tab")
+    }
+
+    @Test func surfaceTitleActionTrimsRenameAndRejectsEmptyInput() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panelId = try #require(workspace.newTerminalSurface(inPane: pane, focus: true)?.id)
+        let surfaceId = try #require(workspace.surfaceIdFromPanelId(panelId)?.uuid)
+
+        let applied = workspace.renameSurfaceTitleForAction(
+            surfaceId: surfaceId,
+            title: "  Build Pane  "
+        )
+
+        #expect(applied.applied)
+        #expect(workspace.panelCustomTitles[panelId] == "Build Pane")
+        #expect(workspace.panelCustomTitleSources[panelId] == .user)
+
+        let rejected = workspace.renameSurfaceTitleForAction(surfaceId: surfaceId, title: "   ")
+        #expect(!rejected.applied)
+        #expect(rejected.rejectionReason == .emptyTitle)
+        #expect(workspace.panelCustomTitles[panelId] == "Build Pane")
+    }
+
+    @Test func surfaceTitleEditCanTreatEmptyInputAsClear() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panelId = try #require(workspace.newTerminalSurface(inPane: pane, focus: true)?.id)
+
+        workspace.renameSurfaceTitleForAction(surfaceId: panelId, title: "Review")
+        let cleared = workspace.commitSurfaceTitleEditForAction(surfaceId: panelId, title: "   ")
+
+        #expect(cleared.applied)
+        #expect(workspace.panelCustomTitles[panelId] == nil)
+        #expect(workspace.panelCustomTitleSources[panelId] == nil)
+    }
+
+    @Test func surfaceClearTitleForActionUsesSharedUserTitlePolicy() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panelId = try #require(workspace.newTerminalSurface(inPane: pane, focus: true)?.id)
+        workspace.renameSurfaceTitleForAction(surfaceId: panelId, title: "Review")
+
+        let cleared = workspace.clearSurfaceTitleForAction(surfaceId: panelId)
+
+        #expect(cleared.applied)
+        #expect(workspace.panelCustomTitles[panelId] == nil)
+        #expect(workspace.panelCustomTitleSources[panelId] == nil)
+    }
+
+    @Test func surfaceTitleActionRejectsMissingSurfaceWithoutMutatingExistingTitles() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panelId = try #require(workspace.newTerminalSurface(inPane: pane, focus: true)?.id)
+        workspace.renameSurfaceTitleForAction(surfaceId: panelId, title: "Stable")
+
+        let rejected = workspace.commitSurfaceTitleEditForAction(surfaceId: UUID(), title: "Other")
+
+        #expect(!rejected.applied)
+        #expect(rejected.rejectionReason == .targetMissing)
+        #expect(workspace.panelCustomTitles[panelId] == "Stable")
+    }
+
+    @Test func surfaceClearTitleForActionRejectsMissingSurfaceWithoutMutatingExistingTitles() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.allPaneIds.first)
+        let panelId = try #require(workspace.newTerminalSurface(inPane: pane, focus: true)?.id)
+        workspace.renameSurfaceTitleForAction(surfaceId: panelId, title: "Stable")
+
+        let rejected = workspace.clearSurfaceTitleForAction(surfaceId: UUID())
+
+        #expect(!rejected.applied)
+        #expect(rejected.rejectionReason == .targetMissing)
+        #expect(workspace.panelCustomTitles[panelId] == "Stable")
     }
 
     // MARK: - Snapshot round-trip

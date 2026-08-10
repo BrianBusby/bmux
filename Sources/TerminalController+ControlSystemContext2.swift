@@ -108,37 +108,52 @@ extension TerminalController {
                 return .invalidTitle
             }
             let trimmedTitle = titleRaw.trimmingCharacters(in: .whitespacesAndNewlines)
-            workspace.setPanelCustomTitle(panelId: surfaceId, title: trimmedTitle)
-            return finish(.title(trimmedTitle))
+            let titleOutcome = workspace.renameSurfaceTitleForAction(surfaceId: surfaceId, title: titleRaw)
+            guard titleOutcome.applied else {
+                return .invalidTitle
+            }
+            return finish(.title(workspace.panelCustomTitles[surfaceId] ?? trimmedTitle))
 
         case "clear_name":
-            workspace.setPanelCustomTitle(panelId: surfaceId, title: nil)
+            let titleOutcome = workspace.clearSurfaceTitleForAction(surfaceId: surfaceId)
+            guard titleOutcome.applied else {
+                return .tabNotFound(surfaceID: surfaceId)
+            }
             return finish(.none)
 
         case "pin":
-            workspace.setPanelPinned(panelId: surfaceId, pinned: true)
+            guard workspace.setSurfacePinnedForAction(surfaceId: surfaceId, pinned: true) else {
+                return .tabNotFound(surfaceID: surfaceId)
+            }
             return finish(.pinned(true))
 
         case "unpin":
-            workspace.setPanelPinned(panelId: surfaceId, pinned: false)
+            guard workspace.setSurfacePinnedForAction(surfaceId: surfaceId, pinned: false) else {
+                return .tabNotFound(surfaceID: surfaceId)
+            }
             return finish(.pinned(false))
 
         case "mark_read":
-            workspace.markPanelRead(surfaceId)
+            guard workspace.setSurfaceUnreadForAction(surfaceId: surfaceId, unread: false) else {
+                return .tabNotFound(surfaceID: surfaceId)
+            }
             return finish(.none)
 
         case "mark_unread", "mark_as_unread":
-            workspace.markPanelUnread(surfaceId)
+            guard workspace.setSurfaceUnreadForAction(surfaceId: surfaceId, unread: true) else {
+                return .tabNotFound(surfaceID: surfaceId)
+            }
             return finish(.none)
 
         case "toggle_full_width_tab", "toggle_full_width", "toggle_full_width_tab_mode":
-            guard let paneId = workspace.paneId(forPanelId: surfaceId) else {
+            guard workspace.panels[surfaceId] != nil,
+                  workspace.paneId(forPanelId: surfaceId) != nil else {
                 return .tabPaneNotFound
             }
-            guard workspace.toggleFullWidthTabMode(panelId: surfaceId) else {
+            guard let isFullWidthTabMode = workspace.toggleSurfaceFullWidthTabForAction(surfaceId: surfaceId) else {
                 return .fullWidthTabToggleFailed
             }
-            return finish(.fullWidthTabMode(workspace.bonsplitController.isFullWidthTabMode(inPane: paneId)))
+            return finish(.fullWidthTabMode(isFullWidthTabMode))
 
         case "move_to_new_workspace", "detach_to_workspace", "detach_to_new_workspace":
             // The move-to-new-workspace family stays app-side (it re-homes

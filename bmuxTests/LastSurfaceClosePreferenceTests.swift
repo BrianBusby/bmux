@@ -274,6 +274,7 @@ struct LastSurfaceClosePreferenceTests {
             }
 
             secondWorkspace.isRemoteTmuxMirror = true
+            #expect(manager.setWorkspacePinnedForAction(tabId: secondWorkspace.id, pinned: true))
             #expect(secondWorkspace.markRemoteTmuxWorkspaceCloseAfterWindowCloseIfNeeded(
                 surfaceId: secondSurfaceId,
                 tabStripClose: true,

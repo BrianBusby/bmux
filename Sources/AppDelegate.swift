@@ -120,7 +120,7 @@ final class ConfiguredGroupActionAsyncWorkspaceObserver {
             return
         }
         for tab in tabs where !knownIds.contains(tab.id) {
-            tabManager.addWorkspaceToGroup(
+            tabManager.addWorkspaceToGroupForAction(
                 workspaceId: tab.id,
                 groupId: groupId,
                 placement: placement,
@@ -136,7 +136,7 @@ final class ConfiguredGroupActionAsyncWorkspaceObserver {
         guard let workspaceId, let tabManager else { return }
         guard tabManager.workspaceGroups.contains(where: { $0.id == groupId }) else { return }
         guard tabManager.tabs.contains(where: { $0.id == workspaceId }) else { return }
-        tabManager.addWorkspaceToGroup(
+        tabManager.addWorkspaceToGroupForAction(
             workspaceId: workspaceId,
             groupId: groupId,
             placement: placement,
@@ -1178,7 +1178,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let eventWindowNumber = event?.window?.windowNumber ?? -1
         let eventNumber = event?.windowNumber ?? -1
         let eventChars = safeShortcutCharactersIgnoringModifiers(for: event)
-        let eventKeyCode = event.map { String($0.keyCode) } ?? "nil"
+        let eventKeyCode = event.flatMap { [.keyDown, .keyUp, .flagsChanged].contains($0.type) ? String($0.keyCode) : nil } ?? "nil"
         let keyWindowNumber = NSApp.keyWindow?.windowNumber ?? -1
         let mainWindowNumber = NSApp.mainWindow?.windowNumber ?? -1
         let ws = workspaceId.map { String($0.uuidString.prefix(8)) } ?? "nil"
@@ -4831,7 +4831,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
            bootstrapWorkspaceId != workspaceId,
            let bootstrapWorkspace = destinationManager.tabs.first(where: { $0.id == bootstrapWorkspaceId }),
            destinationManager.tabs.count > 1 {
-            destinationManager.closeWorkspace(bootstrapWorkspace, recordHistory: false)
+            _ = destinationManager.closeWorkspaceAllowingPinnedForAction(tabId: bootstrapWorkspace.id, recordHistory: false)
         }
         return windowId
     }
@@ -5855,9 +5855,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     ) {
         guard sourceWorkspace.panels.isEmpty else { return }
         guard sourceManager.tabs.contains(where: { $0.id == sourceWorkspace.id }) else { return }
-
         if sourceManager.tabs.count > 1 {
-            sourceManager.closeWorkspace(sourceWorkspace, recordHistory: false)
+            _ = sourceManager.closeWorkspaceAllowingPinnedForAction(tabId: sourceWorkspace.id, recordHistory: false)
         } else {
             _ = closeMainWindow(windowId: sourceWindowId, recordHistory: false)
         }
@@ -7349,7 +7348,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         guard focusWindowForAppActivation(window, reason: .workspaceCreation) else {
             return false
         }
-        context.tabManager.selectedTabId = workspace.id
+        context.tabManager.selectWorkspaceIdForAction(workspace.id)
         guard let browserPanel = workspace.focusedSurfaceId.flatMap({ workspace.browserPanel(for: $0) })
             ?? workspace.panels.values.compactMap({ $0 as? BrowserPanel }).first else {
             return false
@@ -7428,7 +7427,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                         initialWorkspaceId: initialWorkspace?.id,
                         in: context
                     )
-                    context.tabManager.setPinned(workspace, pinned: true)
+                    context.tabManager.setWorkspacePinnedForAction(tabId: workspace.id, pinned: true)
                 }
             }
             return true
@@ -7461,7 +7460,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         }
 
         if let context, let workspaceGroupTarget {
-            guard let workspace = context.tabManager.createWorkspaceInGroup(
+            guard let workspace = context.tabManager.createWorkspaceInGroupForAction(
                 groupId: workspaceGroupTarget.groupId,
                 placement: workspaceGroupTarget.placement,
                 referenceWorkspaceId: workspaceGroupTarget.referenceWorkspaceId,
@@ -7581,8 +7580,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let workspace: Workspace
         if let existingWorkspace {
             workspace = existingWorkspace
-            context.tabManager.selectedTabId = workspace.id
-            context.tabManager.setPinned(workspace, pinned: true)
+            context.tabManager.selectWorkspaceIdForAction(workspace.id)
+            context.tabManager.setWorkspacePinnedForAction(tabId: workspace.id, pinned: true)
             if let loadingPanel = workspace.panels.values.first(where: { $0.panelType == .cloudVMLoading }) as? CloudVMLoadingPanel {
                 if !loadingPanel.hasFailed {
                     onCompletion?(CloudVMActionLauncher.Completion(terminationStatus: 0, output: "", workspaceId: workspace.id))
@@ -7600,7 +7599,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 select: true,
                 autoWelcomeIfNeeded: false
             )
-            context.tabManager.setPinned(workspace, pinned: true)
+            context.tabManager.setWorkspacePinnedForAction(tabId: workspace.id, pinned: true)
         }
         if let loadingPanel = workspace.panels.values.first(where: { $0.panelType == .cloudVMLoading }) as? CloudVMLoadingPanel {
             loadingPanel.resetLoading()
@@ -7829,7 +7828,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let initialWorkspaceId = initialWorkspace?.id
         if let workspaceGroupTarget,
            case .builtIn(.newWorkspace) = action.action {
-            return context.tabManager.createWorkspaceInGroup(
+            return context.tabManager.createWorkspaceInGroupForAction(
                 groupId: workspaceGroupTarget.groupId,
                 placement: workspaceGroupTarget.placement,
                 referenceWorkspaceId: workspaceGroupTarget.referenceWorkspaceId
@@ -7848,7 +7847,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 let afterIds = context.tabManager.tabs.map(\.id)
                 var newlyCreatedId: UUID?
                 for id in afterIds where !beforeIds.contains(id) {
-                    context.tabManager.addWorkspaceToGroup(
+                    context.tabManager.addWorkspaceToGroupForAction(
                         workspaceId: id,
                         groupId: workspaceGroupTarget.groupId,
                         placement: workspaceGroupTarget.placement,
@@ -7920,7 +7919,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
               context.tabManager.selectedWorkspace?.id != initialWorkspaceId else {
             return
         }
-        context.tabManager.closeWorkspace(initialWorkspace, recordHistory: false)
+        _ = context.tabManager.closeWorkspaceAllowingPinnedForAction(tabId: initialWorkspace.id, recordHistory: false)
     }
 
     @discardableResult
@@ -10372,7 +10371,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 targetTab = tabManager.addTab()
             }
             tabManager.setCustomTitle(tabId: targetTab.id, title: title)
-            tabManager.setTabColor(tabId: targetTab.id, color: entry.hex)
+            tabManager.setWorkspaceColorForAction(tabId: targetTab.id, colorInput: entry.hex)
         }
     }
 
@@ -10449,7 +10448,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 * self.debugStressTabsPerPane
             if let originalSelectedWorkspaceId,
                tabManager.tabs.contains(where: { $0.id == originalSelectedWorkspaceId }) {
-                tabManager.selectedTabId = originalSelectedWorkspaceId
+                tabManager.selectWorkspaceIdForAction(originalSelectedWorkspaceId, notificationDismissalContext: nil)
             }
 
             bmuxDebugLog(
@@ -13386,7 +13385,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         let response = alert.runModal()
         guard response == .alertFirstButtonReturn else { return true }
-        tabManager.setCustomTitle(tabId: tab.id, title: input.stringValue)
+        tabManager.commitWorkspaceTitleEdit(tabId: tab.id, title: input.stringValue)
         return true
     }
 
@@ -15436,8 +15435,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             // shortcut's fall-through policy).
             return false
         }
-        tabManager.toggleWorkspaceGroupCollapsed(groupId: groupId)
-        return true
+        return tabManager.toggleWorkspaceGroupCollapsedForAction(groupId: groupId)
     }
 
     @discardableResult
@@ -15871,7 +15869,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // the bare `+` button. The generic executor below uses addWorkspace()
         // which skips both behaviors.
         if case .builtIn(.newWorkspace) = action.action {
-            return tabManager.createWorkspaceInGroup(
+            return tabManager.createWorkspaceInGroupForAction(
                 groupId: groupId,
                 placement: groupPlacement,
                 referenceWorkspaceId: anchorId
@@ -15896,7 +15894,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let previousSelectedId = tabManager.selectedTabId
         if let anchorId, anchorId != previousSelectedId,
            tabManager.tabs.contains(where: { $0.id == anchorId }) {
-            tabManager.selectedTabId = anchorId
+            tabManager.selectWorkspaceIdForAction(anchorId, notificationDismissalContext: nil)
         }
         var asyncObserverId: UUID?
         let onExecuted: () -> Void = { [weak tabManager, groupId, beforeIds, previousSelectedId, anchorId, groupPlacement, action] in
@@ -15904,7 +15902,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             let afterIds = tabManager.tabs.map(\.id)
             var newlyCreatedId: UUID?
             for id in afterIds where !beforeIds.contains(id) {
-                tabManager.addWorkspaceToGroup(
+                tabManager.addWorkspaceToGroupForAction(
                     workspaceId: id,
                     groupId: groupId,
                     placement: groupPlacement,
@@ -15936,7 +15934,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                let previousSelectedId,
                previousSelectedId != tabManager.selectedTabId,
                tabManager.tabs.contains(where: { $0.id == previousSelectedId }) {
-                tabManager.selectedTabId = previousSelectedId
+                tabManager.selectWorkspaceIdForAction(previousSelectedId, notificationDismissalContext: nil)
             }
         }
         let onCloudVMCompletion: (CloudVMActionLauncher.Completion) -> Void = { [weak tabManager] completion in
@@ -15965,7 +15963,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
            let previousSelectedId,
            previousSelectedId != tabManager.selectedTabId,
            tabManager.tabs.contains(where: { $0.id == previousSelectedId }) {
-            tabManager.selectedTabId = previousSelectedId
+            tabManager.selectWorkspaceIdForAction(previousSelectedId, notificationDismissalContext: nil)
         }
         return didRun
     }

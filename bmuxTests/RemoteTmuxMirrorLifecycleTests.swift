@@ -42,6 +42,7 @@ struct RemoteTmuxMirrorLifecycleTests {
 
         let mirrorWorkspace = try #require(manager.tabs.first { $0.title == "dev" && $0.isRemoteTmuxMirror })
         #expect(manager.tabs.contains { $0.id == mirrorWorkspace.id })
+        #expect(manager.setWorkspacePinnedForAction(tabId: mirrorWorkspace.id, pinned: true))
 
         controller.detach(host: host, sessionName: "dev")
 

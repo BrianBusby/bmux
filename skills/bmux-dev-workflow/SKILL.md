@@ -7,7 +7,14 @@ description: "Contributor workflow rules for bmux setup, Xcode project normaliza
 
 ## Tagged local dev
 
-After making code changes, always run the reload script with a tag to build the Debug app:
+Use this cadence for bmux app/runtime work:
+
+- While designing or fixing a slice, iterate with focused tests first.
+- Before pushing a PR update that changes production app/runtime behavior, run focused tests plus `./scripts/reload.sh --tag <branch-slug>`.
+- Before dogfood or handoff of runtime behavior, run a tagged reload, then targeted CLI/socket dogfood against that tag when relevant.
+- For test-only stabilization, do not run a tagged reload unless production code changed.
+
+When app/runtime verification needs a local Debug app, run the reload script with a tag:
 
 ```bash
 ./scripts/reload.sh --tag <short-tag>

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import BmuxControlSocket
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -7,7 +8,7 @@ import Testing
 @testable import bmux
 #endif
 
-@Suite("Workspace group move-to menu state")
+@Suite("Workspace group move-to menu state", .serialized)
 @MainActor
 struct WorkspaceGroupMoveToMenuStateTests {
     @Test func isDisabledWhenThereAreNoGroups() {
@@ -67,7 +68,7 @@ struct WorkspaceGroupMoveToMenuStateTests {
             originalIds[2],
         ]))
         let group = try #require(manager.workspaceGroups.first { $0.id == groupId })
-        let memberID = originalIds[2]
+        let memberIDs = [originalIds[1], originalIds[2]]
 
         let previousManager = TerminalController.shared.activeTabManagerForCallerNotification()
         TerminalController.shared.setActiveTabManager(manager)
@@ -84,9 +85,34 @@ struct WorkspaceGroupMoveToMenuStateTests {
         #expect(manager.workspaceGroups.contains { $0.id == groupId })
         #expect(manager.tabs.filter { $0.groupId == groupId }.map(\.id) == [
             group.anchorWorkspaceId,
-            memberID,
+        ] + memberIDs)
+        #expect(manager.tabs.suffix(3).map(\.id) == [group.anchorWorkspaceId] + memberIDs)
+    }
+
+    @Test func mobileWorkspaceMoveCanJoinWorkspaceToGroup() throws {
+        let manager = TabManager()
+        manager.addWorkspace(autoWelcomeIfNeeded: false)
+        manager.addWorkspace(autoWelcomeIfNeeded: false)
+        let originalIds = manager.tabs.map(\.id)
+        let groupId = try #require(manager.createWorkspaceGroup(name: "G", childWorkspaceIds: [
+            originalIds[1],
+        ]))
+        let movingWorkspaceID = originalIds[2]
+        #expect(manager.tabs.first { $0.id == movingWorkspaceID }?.groupId == nil)
+
+        let previousManager = TerminalController.shared.activeTabManagerForCallerNotification()
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(previousManager) }
+
+        let result = TerminalController.shared.v2MobileWorkspaceMove(params: [
+            "workspace_id": movingWorkspaceID.uuidString,
+            "group_id": groupId.uuidString,
         ])
-        #expect(manager.tabs.suffix(2).map(\.id) == [group.anchorWorkspaceId, memberID])
+
+        guard case .ok = result else {
+            return #expect(Bool(false), "mobile move should join an ungrouped workspace to a live group")
+        }
+        #expect(manager.tabs.first { $0.id == movingWorkspaceID }?.groupId == groupId)
     }
 
     @Test func mobileWorkspaceGroupDeleteRejectsGroupContainingEveryWorkspace() throws {
@@ -111,5 +137,169 @@ struct WorkspaceGroupMoveToMenuStateTests {
         #expect(code == "invalid_request")
         #expect(manager.workspaceGroups.contains { $0.id == groupId })
         #expect(manager.tabs.filter { $0.groupId == groupId }.count == originalIds.count + 1)
+    }
+
+    @Test func mobileWorkspaceGroupActionMutatesLiveGroupState() throws {
+        let manager = TabManager()
+        manager.addWorkspace(autoWelcomeIfNeeded: false)
+        let childId = manager.tabs[1].id
+        let groupId = try #require(manager.createWorkspaceGroup(name: "G", childWorkspaceIds: [childId]))
+
+        let previousManager = TerminalController.shared.activeTabManagerForCallerNotification()
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(previousManager) }
+
+        let pinResult = TerminalController.shared.v2MobileWorkspaceGroupAction(params: [
+            "group_id": groupId.uuidString,
+            "action": "pin",
+        ])
+        guard case .ok = pinResult else {
+            return #expect(Bool(false), "pin should be accepted for a live group")
+        }
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.isPinned == true)
+
+        let renameResult = TerminalController.shared.v2MobileWorkspaceGroupAction(params: [
+            "group_id": groupId.uuidString,
+            "action": "rename",
+            "title": "Renamed",
+        ])
+        guard case .ok = renameResult else {
+            return #expect(Bool(false), "rename should be accepted for a live group")
+        }
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.name == "Renamed")
+
+        let ungroupResult = TerminalController.shared.v2MobileWorkspaceGroupAction(params: [
+            "group_id": groupId.uuidString,
+            "action": "ungroup",
+        ])
+        guard case .ok = ungroupResult else {
+            return #expect(Bool(false), "ungroup should be accepted for a live group")
+        }
+        #expect(!manager.workspaceGroups.contains { $0.id == groupId })
+        #expect(manager.tabs.first { $0.id == childId }?.groupId == nil)
+    }
+
+    @Test func controlWorkspaceGroupActionsMutateLiveGroupState() throws {
+        let manager = TabManager()
+        manager.addWorkspace(autoWelcomeIfNeeded: false)
+        let childId = manager.tabs[1].id
+        let groupId = try #require(manager.createWorkspaceGroup(name: "G", childWorkspaceIds: [childId]))
+        let routing = ControlRoutingSelectors(
+            hasWindowIDParam: false,
+            windowID: nil,
+            groupID: groupId,
+            workspaceID: nil,
+            surfaceID: nil,
+            paneID: nil
+        )
+
+        let previousManager = TerminalController.shared.activeTabManagerForCallerNotification()
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(previousManager) }
+
+        #expect(TerminalController.shared.controlSetWorkspaceGroupPinned(
+            routing: routing,
+            groupID: groupId,
+            isPinned: true
+        ) == true)
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.isPinned == true)
+
+        #expect(TerminalController.shared.controlRenameWorkspaceGroup(
+            routing: routing,
+            groupID: groupId,
+            name: "Renamed"
+        ) == true)
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.name == "Renamed")
+
+        #expect(TerminalController.shared.controlSetWorkspaceGroupCollapsed(
+            routing: routing,
+            groupID: groupId,
+            isCollapsed: true
+        ) == true)
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.isCollapsed == true)
+
+        let icon = TerminalController.shared.controlSetWorkspaceGroupIcon(
+            routing: routing,
+            groupID: groupId,
+            symbol: "  leaf.fill  "
+        )
+        #expect(icon?.found == true)
+        #expect(icon?.storedSymbol == "leaf.fill")
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.iconSymbol == "leaf.fill")
+
+        let ungrouped = manager.addWorkspace(autoWelcomeIfNeeded: false)
+        #expect(TerminalController.shared.controlAddWorkspaceToGroup(
+            routing: routing,
+            groupID: groupId,
+            workspaceID: ungrouped.id,
+            placement: .end,
+            referenceWorkspaceID: nil
+        ) == .added)
+        #expect(manager.tabs.first { $0.id == ungrouped.id }?.groupId == groupId)
+
+        #expect(TerminalController.shared.controlRemoveWorkspaceFromGroup(
+            routing: routing,
+            workspaceID: ungrouped.id
+        ) == true)
+        #expect(manager.tabs.first { $0.id == ungrouped.id }?.groupId == nil)
+
+        let created = TerminalController.shared.controlCreateWorkspaceInGroup(
+            routing: routing,
+            groupID: groupId,
+            placementRaw: "end"
+        )
+        guard case .created(let createdWorkspaceID) = created else {
+            return #expect(Bool(false), "create in group should be accepted for a live group")
+        }
+        #expect(manager.tabs.first { $0.id == createdWorkspaceID }?.groupId == groupId)
+
+        #expect(TerminalController.shared.controlUngroupWorkspaceGroup(
+            routing: routing,
+            groupID: groupId
+        ) == true)
+        #expect(!manager.workspaceGroups.contains { $0.id == groupId })
+        #expect(manager.tabs.first { $0.id == childId }?.groupId == nil)
+    }
+
+    @Test func mobileWorkspaceCloseUsesWorkspaceCloseActionPolicy() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+
+        let previousManager = TerminalController.shared.activeTabManagerForCallerNotification()
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(previousManager) }
+
+        let lastWorkspaceResult = TerminalController.shared.v2MobileWorkspaceClose(params: [
+            "workspace_id": workspace.id.uuidString,
+        ])
+
+        guard case .err(let lastWorkspaceCode, _, _) = lastWorkspaceResult else {
+            return #expect(Bool(false), "mobile close should reject the last workspace")
+        }
+        #expect(lastWorkspaceCode == "protected")
+        #expect(manager.tabs.map(\.id) == [workspace.id])
+
+        let second = manager.addWorkspace(autoWelcomeIfNeeded: false)
+        #expect(manager.setWorkspacePinnedForAction(tabId: second.id, pinned: true))
+
+        let pinnedResult = TerminalController.shared.v2MobileWorkspaceClose(params: [
+            "workspace_id": second.id.uuidString,
+        ])
+
+        guard case .err(let pinnedCode, _, _) = pinnedResult else {
+            return #expect(Bool(false), "mobile close should reject pinned workspaces")
+        }
+        #expect(pinnedCode == "protected")
+        #expect(manager.tabs.map(\.id) == [second.id, workspace.id])
+
+        #expect(manager.setWorkspacePinnedForAction(tabId: second.id, pinned: false))
+        let acceptedResult = TerminalController.shared.v2MobileWorkspaceClose(params: [
+            "workspace_id": second.id.uuidString,
+        ])
+
+        guard case .ok = acceptedResult else {
+            return #expect(Bool(false), "mobile close should accept an unpinned non-last workspace")
+        }
+        #expect(manager.tabs.map(\.id) == [workspace.id])
     }
 }
