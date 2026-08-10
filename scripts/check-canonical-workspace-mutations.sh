@@ -72,6 +72,7 @@ main_window_focus_controller_direct_focus_pattern='workspace\.focusPanel\((panel
 dock_adapter_direct_close_pattern='(windowDock|dock)\.closePanel\('
 workspace_dock_direct_close_pattern='(_dockSplit\?\.closePanel\(|self\.closePanel\(panel\.id)'
 browser_self_close_direct_pattern='self\.closePanel\(browserPanel\.id'
+temporary_placeholder_direct_close_pattern='closePanel\((sourcePlaceholder|targetPlaceholder|placeholderPanel\.id)'
 browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 browser_split_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSplit\('
 
@@ -339,6 +340,13 @@ while IFS= read -r line; do
   violations+=("$line")
 done < <(rg -n -P "$browser_self_close_direct_pattern" \
   "Sources/Workspace.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$temporary_placeholder_direct_close_pattern" \
+  "Sources/Workspace.swift" \
+  "Sources/TerminalController+ControlPaneContext.swift" || true)
 
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue

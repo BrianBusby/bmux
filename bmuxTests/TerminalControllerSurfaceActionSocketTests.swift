@@ -112,6 +112,9 @@ struct TerminalControllerSurfaceActionSocketTests {
     }
 
     @Test func controlPaneSwapUsesActionPathForSingleSurfacePlaceholders() throws {
+        ClosedItemHistoryStore.shared.removeAll()
+        defer { ClosedItemHistoryStore.shared.removeAll() }
+
         let previousAppDelegate = AppDelegate.shared
         let app = AppDelegate()
         AppDelegate.shared = app
@@ -170,6 +173,7 @@ struct TerminalControllerSurfaceActionSocketTests {
         #expect(workspace.paneId(forPanelId: sourcePanelId) == targetPaneId)
         #expect(workspace.paneId(forPanelId: targetPanelId) == sourcePaneId)
         #expect(workspace.panels.keys.sorted { $0.uuidString < $1.uuidString } == [sourcePanelId, targetPanelId].sorted { $0.uuidString < $1.uuidString })
+        #expect(ClosedItemHistoryStore.shared.canReopen == false)
     }
 
     @Test func v2TabRenameAndClearUseUserTitlePolicy() throws {

@@ -605,10 +605,10 @@ extension TerminalController: ControlPaneContext {
         }
 
         if let sourcePlaceholder {
-            _ = workspace.closePanel(sourcePlaceholder, force: true)
+            _ = workspace.discardTemporarySurfaceForAction(surfaceId: sourcePlaceholder)
         }
         if let targetPlaceholder {
-            _ = workspace.closePanel(targetPlaceholder, force: true)
+            _ = workspace.discardTemporarySurfaceForAction(surfaceId: targetPlaceholder)
         }
 
         if focus {

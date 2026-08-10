@@ -850,7 +850,7 @@ extension Workspace {
             return nil
         }
         guard let pane = paneId(forPanelId: placeholderPanel.id) else {
-            _ = closePanel(placeholderPanel.id, force: true)
+            _ = discardTemporarySurfaceForAction(surfaceId: placeholderPanel.id)
             return nil
         }
 
@@ -860,11 +860,11 @@ extension Workspace {
             snapshotWorkspaceId: nil,
             shouldRestoreSingleDefaultCloudTerminal: false
         ) else {
-            _ = closePanel(placeholderPanel.id, force: true)
+            _ = discardTemporarySurfaceForAction(surfaceId: placeholderPanel.id)
             return nil
         }
 
-        _ = closePanel(placeholderPanel.id, force: true)
+        _ = discardTemporarySurfaceForAction(surfaceId: placeholderPanel.id)
         guard panels[panelId] != nil else {
             return nil
         }
