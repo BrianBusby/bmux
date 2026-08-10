@@ -86,6 +86,15 @@
       "type": "string",
       "pattern": "^[0-9a-f]{40}$"
     },
+    "pullRequestOwner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["login", "profile_url"],
+      "properties": {
+        "login": { "type": "string", "minLength": 1 },
+        "profile_url": { "type": "string", "pattern": "^https://github\\.com/.+" }
+      }
+    },
     "evidence": {
       "type": "object",
       "additionalProperties": false,
@@ -111,7 +120,8 @@
             "required": ["repository", "number"],
             "properties": {
               "repository": { "$ref": "#/$defs/repositorySlug" },
-              "number": { "type": "integer", "minimum": 1 }
+              "number": { "type": "integer", "minimum": 1 },
+              "owner": { "$ref": "#/$defs/pullRequestOwner" }
             }
           }
         }
