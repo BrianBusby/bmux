@@ -78,6 +78,42 @@ struct WorkspaceActionSocketTests {
         #expect(workspace.customDescription == "Existing")
     }
 
+    @Test func workspaceActionClearNameUsesCanonicalWorkspaceTitlePath() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        workspace.applyProcessTitle("zsh")
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+
+        let renameResponse = try handleV2Request(
+            method: "workspace.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "action": "rename",
+                "title": "  Socket Workspace  "
+            ]
+        )
+
+        #expect(renameResponse["ok"] as? Bool == true)
+        #expect(workspace.customTitle == "Socket Workspace")
+        #expect(workspace.effectiveCustomTitleSource == .user)
+
+        let clearResponse = try handleV2Request(
+            method: "workspace.action",
+            params: [
+                "workspace_id": workspace.id.uuidString,
+                "action": "clear_name"
+            ]
+        )
+
+        #expect(clearResponse["ok"] as? Bool == true)
+        let result = try #require(clearResponse["result"] as? [String: Any])
+        #expect(result["title"] as? String == "zsh")
+        #expect(workspace.customTitle == nil)
+        #expect(workspace.effectiveCustomTitleSource == nil)
+        #expect(workspace.title == "zsh")
+    }
+
     @Test func workspaceActionMarkReadAndUnreadUseCanonicalWorkspaceUnreadPath() throws {
         let manager = TabManager()
         let workspace = try #require(manager.selectedWorkspace)

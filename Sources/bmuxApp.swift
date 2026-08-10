@@ -1239,7 +1239,7 @@ struct bmuxApp: App {
 
     private func clearSelectedWorkspaceCustomName(in manager: TabManager) {
         guard let workspace = manager.selectedWorkspace else { return }
-        manager.clearCustomTitle(tabId: workspace.id)
+        manager.clearWorkspaceTitleForAction(tabId: workspace.id)
     }
 
     private func moveSelectedWorkspace(in manager: TabManager, by delta: Int) {

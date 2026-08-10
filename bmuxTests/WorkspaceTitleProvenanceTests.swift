@@ -163,12 +163,38 @@ import Testing
         #expect(workspace.title == "zsh")
     }
 
+    @Test func workspaceClearTitleForActionUsesSharedUserTitlePolicy() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        workspace.applyProcessTitle("zsh")
+        manager.renameWorkspaceTitle(tabId: workspace.id, title: "  My Project  ")
+
+        let cleared = manager.clearWorkspaceTitleForAction(tabId: workspace.id)
+
+        #expect(cleared.applied)
+        #expect(workspace.customTitle == nil)
+        #expect(workspace.effectiveCustomTitleSource == nil)
+        #expect(workspace.title == "zsh")
+    }
+
     @Test func workspaceTitleEditRejectsMissingWorkspaceWithoutMutatingExistingTitles() throws {
         let manager = TabManager()
         let workspace = try #require(manager.selectedWorkspace)
         manager.renameWorkspaceTitle(tabId: workspace.id, title: "Stable")
 
         let rejected = manager.commitWorkspaceTitleEdit(tabId: UUID(), title: "Other")
+
+        #expect(!rejected.applied)
+        #expect(rejected.rejectionReason == .targetMissing)
+        #expect(workspace.customTitle == "Stable")
+    }
+
+    @Test func workspaceClearTitleForActionRejectsMissingWorkspaceWithoutMutatingExistingTitles() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        manager.renameWorkspaceTitle(tabId: workspace.id, title: "Stable")
+
+        let rejected = manager.clearWorkspaceTitleForAction(tabId: UUID())
 
         #expect(!rejected.applied)
         #expect(rejected.rejectionReason == .targetMissing)

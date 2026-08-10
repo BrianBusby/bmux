@@ -7816,7 +7816,10 @@ struct ContentView: View {
                 NSSound.beep()
                 return
             }
-            tabManager.clearCustomTitle(tabId: workspace.id)
+            let outcome = tabManager.clearWorkspaceTitleForAction(tabId: workspace.id)
+            if !outcome.applied {
+                NSSound.beep()
+            }
         }
         registry.register(commandId: "palette.clearWorkspaceDescription") {
             guard let workspace = tabManager.selectedWorkspace else {
@@ -14482,7 +14485,10 @@ struct TabItemView: View, Equatable {
 
         if tab.hasCustomTitle {
             Button(String(localized: "contextMenu.removeCustomWorkspaceName", defaultValue: "Remove Custom Workspace Name")) {
-                tabManager.clearCustomTitle(tabId: tab.id)
+                let outcome = tabManager.clearWorkspaceTitleForAction(tabId: tab.id)
+                if !outcome.applied {
+                    NSSound.beep()
+                }
             }
         }
 
