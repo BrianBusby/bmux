@@ -3,8 +3,8 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: workspace_display_ticket_link_facts
-    title: PE-owned ticket link facts and first deterministic producer
+    id: workspace_display_tab_projection
+    title: PE-backed workspace tab display projection
     state: implemented
     owner: Codex
   state: active
@@ -23,6 +23,7 @@ local_capabilities:
   workspace_display_projection: implemented
   workspace_display_current_state_diagnostic: implemented
   workspace_display_ticket_link_facts: implemented
+  workspace_display_tab_projection: implemented
 
 release:
   latest_tag: null

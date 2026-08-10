@@ -159,6 +159,7 @@ import Testing
         listeningPorts: [Int] = [],
         finderDirectoryPath: String? = nil,
         repoBadgeAppearance: WorkspaceRepoBadgeAppearance? = nil,
+        ticketRows: [SidebarWorkspaceSnapshotBuilder.TicketDisplay] = [],
         mediaActivity: BrowserMediaActivity = BrowserMediaActivity(),
         hasActiveAIWork: Bool = false
     ) -> SidebarWorkspaceSnapshotBuilder.Snapshot {
@@ -185,6 +186,7 @@ import Testing
             branchDirectoryLines: [],
             branchLinesContainBranch: false,
             pullRequestRows: pullRequestRows,
+            ticketRows: ticketRows,
             listeningPorts: listeningPorts,
             finderDirectoryPath: finderDirectoryPath,
             repoBadgeAppearance: repoBadgeAppearance,
@@ -205,14 +207,16 @@ import Testing
             showsBranchDirectory: true,
             showsPullRequests: true,
             showsPorts: true
-        )
+        ),
+        provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot? = nil
     ) -> SidebarWorkspaceSnapshotBuilder.PresentationKey {
         SidebarWorkspaceSnapshotBuilder.PresentationKey(
             showsWorkspaceDescription: showsWorkspaceDescription,
             usesVerticalBranchLayout: usesVerticalBranchLayout,
             showsGitBranch: showsGitBranch,
             usesViewportAwarePath: usesViewportAwarePath,
-            visibleAuxiliaryDetails: visibleAuxiliaryDetails
+            visibleAuxiliaryDetails: visibleAuxiliaryDetails,
+            provenanceDisplaySnapshot: provenanceDisplaySnapshot
         )
     }
 

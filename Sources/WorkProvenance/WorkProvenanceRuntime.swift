@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
@@ -7,10 +8,12 @@ import ProvenanceEngineSDK
 final class WorkProvenanceRuntime {
     private weak var tabManager: TabManager?
     private let observationService: WorkProvenanceObservationService?
+    private let workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
     private var directoryObservationTask: Task<Void, Never>?
     private var titleObservationTask: Task<Void, Never>?
     private var displayMetadataObservationTask: Task<Void, Never>?
+    private var activationObservationTask: Task<Void, Never>?
     private var executionTelemetryProjectionService: ExecutionTelemetryProvenanceProjectionService?
 
     /// Effective V1 database path when the runtime starts successfully.
@@ -25,11 +28,13 @@ final class WorkProvenanceRuntime {
     /// Creates a provenance runtime.
     init(
         observationService: WorkProvenanceObservationService?,
+        workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore? = nil,
         sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil,
         effectiveDatabaseURL: URL? = nil,
         startupErrorDescription: String? = nil
     ) {
         self.observationService = observationService
+        self.workspaceDisplayCurrentStateStore = workspaceDisplayCurrentStateStore
         self.sessionLifecycleRecorder = sessionLifecycleRecorder
         self.effectiveDatabaseURL = effectiveDatabaseURL
         self.startupErrorDescription = startupErrorDescription
@@ -40,6 +45,7 @@ final class WorkProvenanceRuntime {
         directoryObservationTask?.cancel()
         titleObservationTask?.cancel()
         displayMetadataObservationTask?.cancel()
+        activationObservationTask?.cancel()
     }
 
     /// Creates the standard runtime backed by the per-user bmux state directory.
@@ -56,6 +62,7 @@ final class WorkProvenanceRuntime {
                     client: client,
                     gitInspector: WorkProvenanceGitInspector()
                 ),
+                workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore(client: client),
                 sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder(
                     client: client
                 ),
@@ -82,6 +89,7 @@ final class WorkProvenanceRuntime {
         observeWorkspaces(tabManager.tabs)
         startDirectoryObservationIfNeeded()
         startDisplayObservationIfNeeded()
+        startActivationObservationIfNeeded()
     }
 
     /// Starts projecting eligible live execution telemetry facts into provenance.
@@ -112,9 +120,23 @@ final class WorkProvenanceRuntime {
         ])
         guard let observationService else { return }
         let snapshots = workspaces.map(WorkProvenanceWorkspaceSnapshot.init(workspace:))
+        let stableWorkspaceIDs = snapshots.map(\.stableWorkspaceID)
         Task {
             await observationService.observeWorkspaceSnapshots(snapshots)
+            await MainActor.run {
+                self.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: stableWorkspaceIDs)
+            }
         }
+    }
+
+    /// Reads the latest PE-owned workspace display state cached for a workspace.
+    func workspaceDisplayCurrentStateSnapshot(for workspace: Workspace) -> WorkspaceDisplayCurrentStateSnapshot? {
+        workspaceDisplayCurrentStateStore?.snapshot(for: workspace)
+    }
+
+    /// Refreshes one workspace display projection from PE for tab/sidebar rendering.
+    func refreshWorkspaceDisplayCurrentState(for workspace: Workspace) {
+        refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [workspace.stableId])
     }
 
     /// Persists an observed agent session lifecycle change.
@@ -160,6 +182,18 @@ final class WorkProvenanceRuntime {
         }
     }
 
+    private func startActivationObservationIfNeeded() {
+        guard activationObservationTask == nil else { return }
+        activationObservationTask = Task { @MainActor [weak self] in
+            let notifications = NotificationCenter.default.notifications(
+                named: NSApplication.didBecomeActiveNotification
+            )
+            for await _ in notifications {
+                self?.refreshAllWorkspaceDisplayCurrentState()
+            }
+        }
+    }
+
     private func handleCurrentDirectoryNotification(_ notification: Notification) {
         observeWorkspace(from: notification)
     }
@@ -172,6 +206,28 @@ final class WorkProvenanceRuntime {
             return
         }
         observeWorkspaces([workspace])
+    }
+
+    private func refreshAllWorkspaceDisplayCurrentState() {
+        refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: tabManager?.tabs.map(\.stableId) ?? [])
+    }
+
+    private func refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [UUID]) {
+        workspaceDisplayCurrentStateStore?.refresh(
+            stableWorkspaceIDs: stableWorkspaceIDs,
+            notify: { [weak self] stableWorkspaceID in
+                self?.workspaceDisplayCurrentStateDidChange(stableWorkspaceID: stableWorkspaceID)
+            }
+        )
+    }
+
+    private func workspaceDisplayCurrentStateDidChange(stableWorkspaceID: UUID) {
+        guard let tabManager,
+              let workspace = tabManager.tabs.first(where: { $0.stableId == stableWorkspaceID }) else {
+            return
+        }
+        tabManager.objectWillChange.send()
+        workspace.sidebarImmediateObservationChangeSubject.send(())
     }
 
     private static var isRunningUnderXCTest: Bool {

@@ -14,7 +14,7 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: PE-owned ticket link facts and first deterministic producer (`workspace_display_ticket_link_facts`)
+- Active slice: PE-backed workspace tab display projection (`workspace_display_tab_projection`)
 - Slice state: implemented
 - Owner: Codex
 - Repository state: active
@@ -30,6 +30,7 @@ Repository: `BrianBusby/bmux`
 | --- | --- |
 | Workspace Display Current State Diagnostic | implemented |
 | Workspace Display Projection | implemented |
+| Workspace Display Tab Projection | implemented |
 | Workspace Display Ticket Link Facts | implemented |
 
 ## Execution Telemetry

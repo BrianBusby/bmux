@@ -60,18 +60,25 @@ bmux still owns command parsing, Git path normalization, output compatibility, f
 
 ## Workspace Display State
 
-Current truth: workspace tab titles, sidebar titles, branch labels, PR numbers,
-PR state, stale PR clearing, and custom sidebar workspace display fields are not
-yet implemented as a PE-backed display source. They remain bmux-local/live
-display state until a dedicated Workspace Display Current State Projection slice
-is selected and implemented.
+Current truth: bmux observes deterministic workspace display facts, writes
+accepted evidence to Provenance Engine, and reads PE Workspace Display Current
+State for the built-in workspace tab row. The PE-backed row projection covers
+workspace title, current directory as branch/directory context when that detail
+is enabled, branch, accepted dirty state, PR number/status/url/branch/staleness,
+ticket id/url facts, and latest projection event id/sequence for freshness.
 
-Desired truth: bmux observes deterministic display facts, writes accepted
-evidence to Provenance Engine, and reads PE Current State for display metadata.
-The display projection should cover workspace title and title source, repository
-and worktree identity, branch, accepted dirty state if already part of worktree
-observation, PR number/status/url/branch/staleness, and projection
-revision/cursor/timestamp.
+bmux remains the local observer/producer for facts it can directly observe or
+fetch from APIs. The tab row does not independently infer current PR/status/
+ticket state from live workspace session data once PE has a value; live bmux
+sidebar metadata remains only a transitional fallback before PE has populated a
+workspace display projection.
+
+Refresh triggers for the first app-owned read-side projection are intentionally
+bounded to local bmux events: runtime startup and workspace-list observation,
+workspace current-directory/title/display-metadata notifications after local
+observer writes, app activation, and workspace row appearance. There is no
+external producer/process invalidation or polling loop yet because bmux is the
+only current producer for these facts.
 
 Observed facts should include workspace created/selected/renamed events, tab
 renames, worktree branch changes, repository HEAD changes, PR metadata
