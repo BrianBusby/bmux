@@ -226,8 +226,8 @@ final class TabManagerChildExitCloseTests: XCTestCase {
     func testChildExitOnLastPanelClosesSelectedWorkspaceAndKeepsIndexStable() {
         let manager = TabManager()
         let first = manager.tabs[0]
-        let second = manager.addWorkspace()
-        let third = manager.addWorkspace()
+        let second = manager.addWorkspace(placementOverride: .end)
+        let third = manager.addWorkspace(placementOverride: .end)
 
         manager.selectWorkspace(second)
         XCTAssertEqual(manager.selectedTabId, second.id)
@@ -1769,7 +1769,7 @@ final class TabManagerCloseCurrentPanelTests: XCTestCase {
     func testCloseCurrentPanelClosesWorkspaceWhenItOwnsTheLastSurface() {
         let manager = TabManager()
         let firstWorkspace = manager.tabs[0]
-        let secondWorkspace = manager.addWorkspace()
+        let secondWorkspace = manager.addWorkspace(placementOverride: .end)
         manager.selectWorkspace(secondWorkspace)
 
         guard let secondPanelId = secondWorkspace.focusedPanelId else {
@@ -1895,7 +1895,7 @@ final class TabManagerCloseCurrentPanelTests: XCTestCase {
     func testClosePanelButtonClosesWorkspaceWhenItOwnsTheLastSurface() {
         let manager = TabManager()
         let firstWorkspace = manager.tabs[0]
-        let secondWorkspace = manager.addWorkspace()
+        let secondWorkspace = manager.addWorkspace(placementOverride: .end)
         manager.selectWorkspace(secondWorkspace)
 
         guard let secondPanelId = secondWorkspace.focusedPanelId else {
@@ -1987,7 +1987,7 @@ final class TabManagerCloseCurrentPanelTests: XCTestCase {
     func testCloseCurrentPanelIgnoresStaleSurfaceId() {
         let manager = TabManager()
         let firstWorkspace = manager.tabs[0]
-        let secondWorkspace = manager.addWorkspace()
+        let secondWorkspace = manager.addWorkspace(placementOverride: .end)
 
         manager.closePanelWithConfirmation(tabId: secondWorkspace.id, surfaceId: UUID())
 

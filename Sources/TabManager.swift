@@ -2163,8 +2163,7 @@ class TabManager: ObservableObject {
         }
 
         for panelId in plan.panelIds {
-            plan.workspace.markCloseHistoryEligible(panelId: panelId)
-            _ = plan.workspace.closePanel(panelId, force: true)
+            _ = plan.workspace.closeSurfaceForAction(surfaceId: panelId, force: true)
         }
     }
 
@@ -2703,8 +2702,11 @@ class TabManager: ObservableObject {
            let surfaceId = tab.surfaceIdFromPanelId(panelId) {
             tab.markExplicitClose(surfaceId: surfaceId)
         }
-        tab.markCloseHistoryEligible(panelId: panelId)
-        let closed = tab.closePanel(panelId)
+        let closed = tab.closeSurfaceForAction(
+            surfaceId: panelId,
+            force: false,
+            allowLastSurface: true
+        ) == .closed
 #if DEBUG
         bmuxDebugLog(
             "surface.close.shortcut tab=\(tab.id.uuidString.prefix(5)) " +
@@ -2766,7 +2768,11 @@ class TabManager: ObservableObject {
             ) else { return }
         }
 
-        _ = tab.closePanel(surfaceId, force: true)
+        _ = tab.closeSurfaceForAction(
+            surfaceId: surfaceId,
+            force: true,
+            allowLastSurface: true
+        )
         AppDelegate.shared?.notificationStore?.clearNotifications(forTabId: tab.id, surfaceId: surfaceId)
     }
 
@@ -2787,7 +2793,11 @@ class TabManager: ObservableObject {
         // If split reparenting caused a temporary model/view mismatch, fallback close logic in
         // Workspace.closePanel uses focused selection to resolve the correct tab deterministically.
         reconcileFocusedPanelFromFirstResponderForKeyboard()
-        let closed = tab.closePanel(surfaceId, force: true)
+        let closed = tab.closeSurfaceForAction(
+            surfaceId: surfaceId,
+            force: true,
+            allowLastSurface: true
+        ) == .closed
 #if DEBUG
         bmuxDebugLog(
             "surface.close.runtime.done tab=\(tabId.uuidString.prefix(5)) " +

@@ -51,6 +51,7 @@ debug_terminal_creation_pattern='\.newTerminal(Surface|Split)\('
 canvas_surface_close_pattern='workspace\?\.closePanel\(panelId\)'
 tab_manager_close_surface_pattern='^[[:space:]]*tab\.closePanel\(surfaceId\)[[:space:]]*$'
 socket_surface_reorder_pattern='\.reorderSurface\(panelId:'
+tab_manager_close_adapter_pattern='(plan\.workspace\.closePanel|let closed = tab\.closePanel|_ = tab\.closePanel\(surfaceId)'
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -176,6 +177,11 @@ while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   violations+=("$line")
 done < <(rg -n -P "$tab_manager_close_surface_pattern" "Sources/TabManager.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$tab_manager_close_adapter_pattern" "Sources/TabManager.swift" || true)
 
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue
