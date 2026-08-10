@@ -67,6 +67,7 @@ workspace_dock_surface_direct_focus_pattern='ws\.dockSplit\.focusPanel\(surfaceI
 dock_panel_view_direct_focus_pattern='store\.focusPanel\(panel\.id\)'
 focus_history_host_direct_focus_pattern='tabs\.first\(where: \{ \$0\.id == workspaceId \}\)\?\.focusPanel\(panelId\)'
 surface_split_off_direct_focus_pattern='ws\.focusPanel\(previousFocusedPanelId\)'
+detached_workspace_creation_direct_focus_pattern='newWorkspace\.focusPanel\(detached\.panelId'
 main_window_focus_controller_direct_focus_pattern='workspace\.focusPanel\((panelId|terminalPanel\.id)\)'
 browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 browser_split_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSplit\('
@@ -302,6 +303,12 @@ while IFS= read -r line; do
   violations+=("$line")
 done < <(rg -n -P "$surface_split_off_direct_focus_pattern" \
   "Sources/TerminalController+MoveTabToNewWorkspace.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$detached_workspace_creation_direct_focus_pattern" \
+  "Sources/TabManager+DetachedWorkspace.swift" || true)
 
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue

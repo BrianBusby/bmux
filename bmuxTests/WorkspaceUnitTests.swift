@@ -3116,6 +3116,21 @@ final class WorkspaceCreationWorkingDirectoryInheritanceTests: XCTestCase {
         }
     }
 
+    func testDetachedWorkspaceSelectionFocusesTransferredPanelThroughWorkspaceAction() throws {
+        let manager = TabManager(autoWelcomeIfNeeded: false)
+        let source = try XCTUnwrap(manager.selectedWorkspace)
+        let detached = makeDetachedWorkspaceTestTransfer(sourceWorkspaceId: source.id)
+
+        let inserted = try XCTUnwrap(manager.addWorkspace(
+            fromDetachedSurface: detached,
+            select: true
+        ))
+
+        XCTAssertEqual(manager.selectedTabId, inserted.id)
+        XCTAssertEqual(inserted.focusedPanelId, detached.panelId)
+        XCTAssertNotNil(inserted.paneId(forPanelId: detached.panelId))
+    }
+
     func testDetachedWorkspaceDoesNotPersistProcessDetectedResumeBinding() throws {
         let manager = TabManager(
             initialWorkingDirectory: "/tmp/bmux-source-\(UUID().uuidString)",
