@@ -16,6 +16,13 @@ extension Workspace {
         case failed
     }
 
+    enum SurfaceMoveActionResult: Equatable {
+        case moved(paneId: PaneID)
+        case surfaceNotFound
+        case targetPaneNotFound
+        case failed
+    }
+
     @discardableResult
     func createTerminalSurfaceForAction(
         inPane paneId: PaneID,
@@ -191,6 +198,26 @@ extension Workspace {
             return .failed
         }
         return .reordered(paneId: sourcePane)
+    }
+
+    @discardableResult
+    func moveSurfaceForAction(
+        panelId: UUID,
+        toPane paneId: PaneID,
+        atIndex index: Int? = nil,
+        focus: Bool = true
+    ) -> SurfaceMoveActionResult {
+        guard panels[panelId] != nil,
+              surfaceIdFromPanelId(panelId) != nil else {
+            return .surfaceNotFound
+        }
+        guard bonsplitController.allPaneIds.contains(paneId) else {
+            return .targetPaneNotFound
+        }
+        guard moveSurface(panelId: panelId, toPane: paneId, atIndex: index, focus: focus) else {
+            return .failed
+        }
+        return .moved(paneId: paneId)
     }
 
     @discardableResult

@@ -597,10 +597,10 @@ extension TerminalController: ControlPaneContext {
             }
         }
 
-        guard workspace.moveSurface(panelId: sourceSurfaceId, toPane: targetPane, focus: false) else {
+        guard case .moved = workspace.moveSurfaceForAction(panelId: sourceSurfaceId, toPane: targetPane, focus: false) else {
             return .moveSourceFailed
         }
-        guard workspace.moveSurface(panelId: targetSurfaceId, toPane: sourcePane, focus: false) else {
+        guard case .moved = workspace.moveSurfaceForAction(panelId: targetSurfaceId, toPane: sourcePane, focus: false) else {
             return .moveTargetFailed
         }
 
