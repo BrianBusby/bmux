@@ -162,7 +162,7 @@ extension TerminalController {
         }
 
         let orientation: SplitOrientation = orientationIsHorizontal ? .horizontal : .vertical
-        guard AppDelegate.shared?.moveSurface(
+        guard AppDelegate.shared?.moveSurfaceForAction(
             panelId: panelId,
             toWorkspace: tab.id,
             targetPane: sourcePane,

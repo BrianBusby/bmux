@@ -4800,7 +4800,7 @@ class TerminalController {
                 return
             }
 
-            guard app.moveSurface(
+            guard app.moveSurfaceForAction(
                 panelId: surfaceId,
                 toWorkspace: targetWorkspace.id,
                 targetPane: destinationPane,

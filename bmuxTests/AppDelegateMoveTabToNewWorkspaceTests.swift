@@ -253,7 +253,7 @@ struct AppDelegateMoveTabToNewWorkspaceTests {
         let destinationWorkspace = manager.addWorkspace(title: "Operations", select: false)
         let destinationOriginalPanelId = try #require(destinationWorkspace.focusedTerminalPanel?.id)
 
-        #expect(app.moveSurface(
+        #expect(app.moveSurfaceForAction(
             panelId: movedPanelId,
             toWorkspace: destinationWorkspace.id,
             focus: true,

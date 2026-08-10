@@ -11438,7 +11438,7 @@ final class Workspace: Identifiable, ObservableObject {
         } else if destinationId.hasPrefix(Self.bonsplitMoveExistingWorkspacePrefix) {
             let rawWorkspaceId = destinationId.dropFirst(Self.bonsplitMoveExistingWorkspacePrefix.count)
             guard let workspaceId = UUID(uuidString: String(rawWorkspaceId)) else { return false }
-            moved = app.moveSurface(
+            moved = app.moveSurfaceForAction(
                 panelId: panelId,
                 toWorkspace: workspaceId,
                 focus: true,

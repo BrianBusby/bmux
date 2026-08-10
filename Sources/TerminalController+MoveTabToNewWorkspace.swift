@@ -179,7 +179,7 @@ extension TerminalController {
                 ])
                 return
             }
-            guard app.moveSurface(
+            guard app.moveSurfaceForAction(
                 panelId: surfaceId,
                 toWorkspace: ws.id,
                 targetPane: sourcePane,

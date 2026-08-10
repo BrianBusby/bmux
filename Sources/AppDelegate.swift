@@ -4857,7 +4857,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     @discardableResult
-    func moveSurface(
+    func moveSurfaceForAction(
+        panelId: UUID,
+        toWorkspace targetWorkspaceId: UUID,
+        targetPane: PaneID? = nil,
+        targetIndex: Int? = nil,
+        splitTarget: (orientation: SplitOrientation, insertFirst: Bool)? = nil,
+        focus: Bool = true,
+        focusWindow: Bool = true
+    ) -> Bool {
+        moveSurface(
+            panelId: panelId,
+            toWorkspace: targetWorkspaceId,
+            targetPane: targetPane,
+            targetIndex: targetIndex,
+            splitTarget: splitTarget,
+            focus: focus,
+            focusWindow: focusWindow
+        )
+    }
+
+    @discardableResult
+    private func moveSurface(
         panelId: UUID,
         toWorkspace targetWorkspaceId: UUID,
         targetPane: PaneID? = nil,
