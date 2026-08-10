@@ -7889,22 +7889,14 @@ struct ContentView: View {
                 NSSound.beep()
                 return
             }
-            tabManager.setWorkspaceUnreadForAction(
-                tabId: workspaceId,
-                unread: false,
-                notificationStore: notificationStore
-            )
+            tabManager.setWorkspaceUnreadForAction(tabId: workspaceId, unread: false, notificationStore: notificationStore)
         }
         registry.register(commandId: "palette.markWorkspaceUnread") {
             guard let workspaceId = tabManager.selectedWorkspace?.id else {
                 NSSound.beep()
                 return
             }
-            tabManager.setWorkspaceUnreadForAction(
-                tabId: workspaceId,
-                unread: true,
-                notificationStore: notificationStore
-            )
+            tabManager.setWorkspaceUnreadForAction(tabId: workspaceId, unread: true, notificationStore: notificationStore)
         }
         registerIdentifierCopyCommandHandlers(&registry)
 
@@ -9240,11 +9232,6 @@ struct ContentView: View {
         )
     }
 
-    private func selectedWorkspaceIndex() -> Int? {
-        guard let workspace = tabManager.selectedWorkspace else { return nil }
-        return tabManager.tabs.firstIndex { $0.id == workspace.id }
-    }
-
     private func moveSelectedWorkspace(by delta: Int) {
         guard let workspace = tabManager.selectedWorkspace,
               tabManager.moveWorkspaceForAction(tabId: workspace.id, by: delta) != nil else { return }
@@ -9392,11 +9379,7 @@ struct ContentView: View {
 
         switch target.kind {
         case .workspace(let workspaceId):
-            tabManager.applyWorkspaceTitleEdit(
-                tabId: workspaceId,
-                title: normalizedName,
-                emptyTitleClears: true
-            )
+            tabManager.applyWorkspaceTitleEdit(tabId: workspaceId, title: normalizedName, emptyTitleClears: true)
         case .tab(let workspaceId, let panelId):
             guard let workspace = tabManager.tabs.first(where: { $0.id == workspaceId }) else {
                 NSSound.beep()
