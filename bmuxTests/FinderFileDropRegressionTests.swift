@@ -426,9 +426,16 @@ final class FinderFileDropRegressionTests: XCTestCase {
     }
 
     func testSuccessfulPanelTextDropFocusesDestinationPanel() {
-        let workspace = Workspace(title: "Tests")
+        let manager = TabManager()
+        guard let workspace = manager.tabs.first else {
+            XCTFail("Expected workspace")
+            return
+        }
         guard let terminalId = workspace.focusedPanelId,
-              let browserPanel = workspace.newBrowserSplit(from: terminalId, orientation: .horizontal) else {
+              let browserPanel = workspace.createBrowserSplitForAction(
+                from: terminalId,
+                orientation: .horizontal
+              ) else {
             XCTFail("Expected workspace with terminal and browser split")
             return
         }
@@ -472,9 +479,16 @@ final class FinderFileDropRegressionTests: XCTestCase {
     }
 
     func testFailedPanelTextDropDoesNotChangeFocusedPanel() {
-        let workspace = Workspace(title: "Tests")
+        let manager = TabManager()
+        guard let workspace = manager.tabs.first else {
+            XCTFail("Expected workspace")
+            return
+        }
         guard let terminalId = workspace.focusedPanelId,
-              let browserPanel = workspace.newBrowserSplit(from: terminalId, orientation: .horizontal) else {
+              let browserPanel = workspace.createBrowserSplitForAction(
+                from: terminalId,
+                orientation: .horizontal
+              ) else {
             XCTFail("Expected workspace with terminal and browser split")
             return
         }

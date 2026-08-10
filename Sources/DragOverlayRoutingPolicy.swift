@@ -183,7 +183,15 @@ enum FileDropTextDropController {
             panelId: panelId,
             in: window
         )
-        workspace.focusPanel(panelId, focusIntent: focusIntent)
+        guard let tabManager = workspace.owningTabManager
+            ?? AppDelegate.shared?.tabManagerFor(tabId: workspace.id),
+              case .focused = tabManager.focusWorkspaceSurfaceForAction(
+                workspaceId: workspace.id,
+                surfaceId: panelId,
+                focusIntent: focusIntent
+              ) else {
+            return
+        }
         _ = workspace.panels[panelId]?.restoreFocusIntent(focusIntent)
     }
 }
