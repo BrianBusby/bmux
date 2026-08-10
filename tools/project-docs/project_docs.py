@@ -82,6 +82,8 @@ class PullRequestEvidence:
     state: str
     draft: bool
     merged: bool
+    owner_login: str | None = None
+    owner_url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -166,10 +168,13 @@ class GitHubRestEvidenceProvider:
         data = self._get(f"/repos/{quote_slug(repository)}/pulls/{number}")
         if data is None:
             return None
+        user = data.get("user", {}) if isinstance(data, dict) else {}
         return PullRequestEvidence(
             state=str(data.get("state", "")),
             draft=bool(data.get("draft")),
             merged=bool(data.get("merged_at")),
+            owner_login=str(user.get("login")) if user.get("login") else None,
+            owner_url=str(user.get("html_url")) if user.get("html_url") else None,
         )
 
     def issue(self, repository: str, number: int) -> IssueEvidence | None:
@@ -500,6 +505,12 @@ def github_evidence_issues(
                 add("pr_draft_state_mismatch", path, "milestone declares draft delivery but pull request is not an open draft PR")
             elif delivery == "closed" and (state.state != "closed" or state.merged):
                 add("pr_closed_state_mismatch", path, "milestone declares closed delivery but pull request is merged or still open")
+            declared_owner = pr.get("owner")
+            if declared_owner:
+                if state.owner_login != declared_owner.get("login"):
+                    add("pr_owner_login_mismatch", path, "declared pull request owner login does not match GitHub")
+                if state.owner_url != declared_owner.get("profile_url"):
+                    add("pr_owner_url_mismatch", path, "declared pull request owner profile URL does not match GitHub")
 
     for caveat_index, caveat in enumerate(shared.get("caveats", [])):
         issue = caveat.get("issue")
@@ -561,7 +572,11 @@ def evidence_text(evidence: dict[str, Any]) -> str:
     for commit in evidence.get("commits", []):
         parts.append(f"{commit['repository']}@{commit['sha'][:12]}")
     for pr in evidence.get("pull_requests", []):
-        parts.append(f"{pr['repository']}#{pr['number']}")
+        owner = pr.get("owner")
+        suffix = ""
+        if owner:
+            suffix = f" by [{owner['login']}]({owner['profile_url']})"
+        parts.append(f"{pr['repository']}#{pr['number']}{suffix}")
     return ", ".join(parts) if parts else "None recorded"
 
 

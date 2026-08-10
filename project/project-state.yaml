@@ -62,6 +62,9 @@ milestones:
       pull_requests:
         - repository: BrianBusby/bmux
           number: 12
+          owner:
+            login: BrianBusby
+            profile_url: https://github.com/BrianBusby
 
   - id: claude_lifecycle_telemetry
     title: Claude lifecycle telemetry migration
@@ -77,6 +80,9 @@ milestones:
       pull_requests:
         - repository: BrianBusby/bmux
           number: 13
+          owner:
+            login: BrianBusby
+            profile_url: https://github.com/BrianBusby
     completed_at: 2026-07-31
 
 ownership:

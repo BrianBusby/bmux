@@ -102,6 +102,20 @@ class ProjectDocsTests(unittest.TestCase):
         with self.assertRaises(project_docs.ProjectDocsError):
             project_docs.validate_schema(shared, ROOT / "project/schema/project-state.schema.json", SHARED)
 
+    def test_invalid_pr_owner_profile_url_fails_schema(self):
+        shared, _ = self.load_valid()
+        shared["milestones"][2]["evidence"]["pull_requests"][0]["owner"]["profile_url"] = "https://example.com/octocat"
+        with self.assertRaises(project_docs.ProjectDocsError):
+            project_docs.validate_schema(shared, ROOT / "project/schema/project-state.schema.json", SHARED)
+
+    def test_bot_pr_owner_profile_url_passes_schema(self):
+        shared, _ = self.load_valid()
+        shared["milestones"][2]["evidence"]["pull_requests"][0]["owner"] = {
+            "login": "dependabot[bot]",
+            "profile_url": "https://github.com/apps/dependabot",
+        }
+        project_docs.validate_schema(shared, ROOT / "project/schema/project-state.schema.json", SHARED)
+
     def test_invalid_commit_sha_fails_schema(self):
         shared, _ = self.load_valid()
         shared["milestones"][0]["evidence"]["commits"][0]["sha"] = "abc123"
@@ -175,10 +189,13 @@ class ProjectDocsTests(unittest.TestCase):
             for commit in milestone["evidence"]["commits"]:
                 provider.commits.add((commit["repository"], commit["sha"]))
             for pr in milestone["evidence"]["pull_requests"]:
+                owner = pr.get("owner", {})
                 provider.pull_requests[(pr["repository"], pr["number"])] = project_docs.PullRequestEvidence(
                     state="closed",
                     draft=False,
                     merged=milestone["delivery_status"] == "merged",
+                    owner_login=owner.get("login"),
+                    owner_url=owner.get("profile_url"),
                 )
         for caveat in shared["caveats"]:
             issue = caveat.get("issue")
@@ -230,6 +247,21 @@ class ProjectDocsTests(unittest.TestCase):
         )
         issues = project_docs.github_evidence_issues(shared, [local], provider)
         self.assertTrue(any(issue.name == "pr_merged_state_mismatch" for issue in issues))
+
+    def test_pr_owner_mismatch_fails_github_verification(self):
+        shared, local = self.load_valid()
+        provider = self.fake_provider_for_current_manifests()
+        pr = shared["milestones"][2]["evidence"]["pull_requests"][0]
+        provider.pull_requests[(pr["repository"], pr["number"])] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="octocat",
+            owner_url="https://github.com/octocat",
+        )
+        issues = project_docs.github_evidence_issues(shared, [local], provider)
+        self.assertTrue(any(issue.name == "pr_owner_login_mismatch" for issue in issues))
+        self.assertTrue(any(issue.name == "pr_owner_url_mismatch" for issue in issues))
 
     def test_draft_open_and_closed_pr_mismatches_are_distinct(self):
         shared, local = self.load_valid()
