@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import Bonsplit
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -385,6 +386,78 @@ import Testing
         #expect(ClosedItemHistoryStore.shared.menuSnapshot().items.map(\.title) == ["Adapter Close Terminal"])
     }
 
+    @Test func workspaceSurfaceReorderActionResolvesTargetsInsidePane() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+        let firstPanelId = try #require(workspace.focusedPanelId)
+        let secondPanel = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: pane, focus: false).panel
+        )
+        let thirdPanel = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: pane, focus: false).panel
+        )
+
+        #expect(
+            workspace.reorderSurfaceForAction(
+                panelId: thirdPanel.id,
+                target: .before(secondPanel.id),
+                focus: false
+            ) == .reordered(paneId: pane)
+        )
+        #expect(panelOrder(in: workspace, pane: pane) == [firstPanelId, thirdPanel.id, secondPanel.id])
+
+        #expect(
+            workspace.reorderSurfaceForAction(
+                panelId: firstPanelId,
+                target: .after(secondPanel.id),
+                focus: false
+            ) == .reordered(paneId: pane)
+        )
+        #expect(panelOrder(in: workspace, pane: pane) == [thirdPanel.id, secondPanel.id, firstPanelId])
+
+        #expect(
+            workspace.reorderSurfaceForAction(
+                panelId: firstPanelId,
+                target: .index(0),
+                focus: false
+            ) == .reordered(paneId: pane)
+        )
+        #expect(panelOrder(in: workspace, pane: pane) == [firstPanelId, thirdPanel.id, secondPanel.id])
+    }
+
+    @Test func workspaceSurfaceReorderActionRejectsInvalidTargets() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+        let firstPanelId = try #require(workspace.focusedPanelId)
+        let secondPanel = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: pane, focus: false).panel
+        )
+        let splitPanel = try #require(
+            workspace.createTerminalSplitForAction(
+                from: firstPanelId,
+                orientation: .horizontal,
+                focus: false
+            ).panel
+        )
+
+        #expect(
+            workspace.reorderSurfaceForAction(
+                panelId: UUID(),
+                target: .index(0),
+                focus: false
+            ) == .surfaceNotFound
+        )
+        #expect(
+            workspace.reorderSurfaceForAction(
+                panelId: secondPanel.id,
+                target: .before(splitPanel.id),
+                focus: false
+            ) == .anchorNotInSamePane
+        )
+    }
+
     @Test func workspaceSurfacePinActionRejectsMissingAndTogglesPinnedState() throws {
         let manager = TabManager()
         let workspace = try #require(manager.tabs.first)
@@ -600,5 +673,11 @@ import Testing
             ) == .workspaceNotFound
         )
         #expect(manager.selectedTabId == targetWorkspace.id)
+    }
+
+    private func panelOrder(in workspace: Workspace, pane: PaneID) -> [UUID] {
+        workspace.bonsplitController.tabs(inPane: pane).compactMap {
+            workspace.panelIdFromSurfaceId($0.id)
+        }
     }
 }

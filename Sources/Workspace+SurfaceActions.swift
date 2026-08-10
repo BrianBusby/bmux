@@ -3,6 +3,19 @@ import BmuxTerminal
 import Bonsplit
 
 extension Workspace {
+    enum SurfaceReorderActionTarget: Equatable {
+        case index(Int)
+        case before(UUID)
+        case after(UUID)
+    }
+
+    enum SurfaceReorderActionResult: Equatable {
+        case reordered(paneId: PaneID)
+        case surfaceNotFound
+        case anchorNotInSamePane
+        case failed
+    }
+
     @discardableResult
     func createTerminalSurfaceForAction(
         inPane paneId: PaneID,
@@ -81,6 +94,43 @@ extension Workspace {
             inheritWorkingDirectoryFallback: inheritWorkingDirectoryFallback,
             allowTextBoxFocusDefault: allowTextBoxFocusDefault
         )
+    }
+
+    @discardableResult
+    func reorderSurfaceForAction(
+        panelId: UUID,
+        target: SurfaceReorderActionTarget,
+        focus: Bool = true
+    ) -> SurfaceReorderActionResult {
+        guard panels[panelId] != nil,
+              let sourcePane = paneId(forPanelId: panelId) else {
+            return .surfaceNotFound
+        }
+
+        let targetIndex: Int
+        switch target {
+        case .index(let index):
+            targetIndex = index
+        case .before(let anchorPanelId):
+            guard let anchorPane = paneId(forPanelId: anchorPanelId),
+                  anchorPane == sourcePane,
+                  let anchorIndex = indexInPane(forPanelId: anchorPanelId) else {
+                return .anchorNotInSamePane
+            }
+            targetIndex = anchorIndex
+        case .after(let anchorPanelId):
+            guard let anchorPane = paneId(forPanelId: anchorPanelId),
+                  anchorPane == sourcePane,
+                  let anchorIndex = indexInPane(forPanelId: anchorPanelId) else {
+                return .anchorNotInSamePane
+            }
+            targetIndex = anchorIndex + 1
+        }
+
+        guard reorderSurface(panelId: panelId, toIndex: targetIndex, focus: focus) else {
+            return .failed
+        }
+        return .reordered(paneId: sourcePane)
     }
 
     @discardableResult

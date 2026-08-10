@@ -215,7 +215,11 @@ extension TerminalController {
                 allowTextBoxFocusDefault: false
             ) {
             case .created(let newPanel):
-                _ = workspace.reorderSurface(panelId: newPanel.id, toIndex: targetIndex, focus: focus)
+                _ = workspace.reorderSurfaceForAction(
+                    panelId: newPanel.id,
+                    target: .index(targetIndex),
+                    focus: focus
+                )
                 return finish(.created(newPanel.id))
             case .routedToRemote:
                 // Routed to the remote tmux mirror as `new-window`; the tab arrives
@@ -252,7 +256,11 @@ extension TerminalController {
             ) else {
                 return .createFailed
             }
-            _ = workspace.reorderSurface(panelId: newPanel.id, toIndex: targetIndex, focus: focus)
+            _ = workspace.reorderSurfaceForAction(
+                panelId: newPanel.id,
+                target: .index(targetIndex),
+                focus: focus
+            )
             return finish(.created(newPanel.id))
 
         case "close_left", "close_to_left":

@@ -35,42 +35,37 @@ extension TerminalController {
         let focus = v2FocusAllowed(requested: requestedFocus)
         guard let app = AppDelegate.shared,
               let located = app.locateSurface(surfaceId: surfaceID),
-              let ws = located.tabManager.tabs.first(where: { $0.id == located.workspaceId }),
-              let sourcePane = ws.paneId(forPanelId: surfaceID) else {
+              let ws = located.tabManager.tabs.first(where: { $0.id == located.workspaceId }) else {
             return .surfaceNotFound(surfaceID)
         }
 
-        let targetIndex: Int
+        let target: Workspace.SurfaceReorderActionTarget
         if let index = inputs.index {
-            targetIndex = index
+            target = .index(index)
         } else if let beforeSurfaceID = inputs.beforeSurfaceID {
-            guard let anchorPane = ws.paneId(forPanelId: beforeSurfaceID),
-                  anchorPane == sourcePane,
-                  let anchorIndex = ws.indexInPane(forPanelId: beforeSurfaceID) else {
-                return .anchorNotInSamePane
-            }
-            targetIndex = anchorIndex
+            target = .before(beforeSurfaceID)
         } else if let afterSurfaceID = inputs.afterSurfaceID {
-            guard let anchorPane = ws.paneId(forPanelId: afterSurfaceID),
-                  anchorPane == sourcePane,
-                  let anchorIndex = ws.indexInPane(forPanelId: afterSurfaceID) else {
-                return .anchorNotInSamePane
-            }
-            targetIndex = anchorIndex + 1
+            target = .after(afterSurfaceID)
         } else {
             // Unreachable: the coordinator enforces exactly-one-target.
             return .reorderFailed
         }
 
-        guard ws.reorderSurface(panelId: surfaceID, toIndex: targetIndex, focus: focus) else {
+        switch ws.reorderSurfaceForAction(panelId: surfaceID, target: target, focus: focus) {
+        case .reordered(let paneId):
+            return .reordered(
+                windowID: located.windowId,
+                workspaceID: ws.id,
+                paneID: paneId.id,
+                surfaceID: surfaceID
+            )
+        case .surfaceNotFound:
+            return .surfaceNotFound(surfaceID)
+        case .anchorNotInSamePane:
+            return .anchorNotInSamePane
+        case .failed:
             return .reorderFailed
         }
-        return .reordered(
-            windowID: located.windowId,
-            workspaceID: ws.id,
-            paneID: sourcePane.id,
-            surfaceID: surfaceID
-        )
     }
 
     // MARK: - refresh
