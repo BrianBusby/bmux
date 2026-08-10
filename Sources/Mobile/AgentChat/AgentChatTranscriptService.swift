@@ -27,6 +27,7 @@ final class AgentChatTranscriptService {
     private let hasEventSubscribers: @MainActor () -> Bool
     private let emitEventPayload: @MainActor ([String: Any]) -> Void
     private var recordSessionLifecycle: @MainActor (AgentSessionLifecycleChange, Date) -> Void
+    private let recordTaskWorkspaceDirectory: @MainActor (AgentChatSessionRecord, String) -> Void
     private let now: () -> Date
     /// Drives the live agent-prose streaming preview.
     private var proseStreamer: AgentChatProseStreamer!
@@ -67,6 +68,8 @@ final class AgentChatTranscriptService {
             MobileHostService.emitEvent(topic: AgentChatTranscriptService.eventTopic, payload: payload)
         },
         recordSessionLifecycle: @escaping @MainActor (AgentSessionLifecycleChange, Date) -> Void = { _, _ in },
+        recordTaskWorkspaceDirectory: @escaping @MainActor (AgentChatSessionRecord, String) -> Void =
+            AgentChatTranscriptService.defaultRecordTaskWorkspaceDirectory,
         now: @escaping () -> Date = { Date() }
     ) {
         self.registry = registry
@@ -76,6 +79,7 @@ final class AgentChatTranscriptService {
         self.hasEventSubscribers = hasEventSubscribers
         self.emitEventPayload = emitEventPayload
         self.recordSessionLifecycle = recordSessionLifecycle
+        self.recordTaskWorkspaceDirectory = recordTaskWorkspaceDirectory
         self.now = now
         registry.onRecordChanged = { [weak self] record, previous in
             self?.handleRecordChange(record, previous: previous)
@@ -101,6 +105,19 @@ final class AgentChatTranscriptService {
             return nil
         }
         return surface.mobileRenderGridFrame(stateSeq: 0, full: true)?.rows
+    }
+
+    private static func defaultRecordTaskWorkspaceDirectory(record: AgentChatSessionRecord, directory: String) {
+        guard let workspaceID = record.workspaceID.flatMap(UUID.init(uuidString:)),
+              let surfaceID = record.surfaceID.flatMap(UUID.init(uuidString:)),
+              let tabManager = AppDelegate.shared?.tabManagerFor(tabId: workspaceID) else {
+            return
+        }
+        tabManager.updateReportedSurfaceDirectory(
+            tabId: workspaceID,
+            surfaceId: surfaceID,
+            directory: directory
+        )
     }
 
     /// A `(session, surface)` resume re-bind bmux authored during session
@@ -189,6 +206,7 @@ final class AgentChatTranscriptService {
     /// - Parameter event: The hook event.
     func noteHookEvent(_ event: WorkstreamEvent) {
         let record = registry.noteHookEvent(event)
+        recordTaskWorkspaceDirectoryIfPresent(event, record: record)
         // A session (re)starting or receiving a prompt is the bounded
         // retry point for a transcript that didn't exist at first sight.
         switch event.hookEventName {
@@ -224,6 +242,14 @@ final class AgentChatTranscriptService {
         default:
             break
         }
+    }
+
+    private func recordTaskWorkspaceDirectoryIfPresent(_ event: WorkstreamEvent, record: AgentChatSessionRecord) {
+        guard let directory = event.cwd?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !directory.isEmpty else {
+            return
+        }
+        recordTaskWorkspaceDirectory(record, directory)
     }
 
     /// Lists chat-capable sessions.
