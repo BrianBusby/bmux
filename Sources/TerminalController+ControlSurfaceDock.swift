@@ -310,6 +310,21 @@ extension TerminalController {
         return owningTabManager
     }
 
+    @discardableResult
+    func focusWindowDockSurfaceForAction(
+        surfaceID: UUID,
+        in dock: DockSplitStore,
+        fallback tabManager: TabManager,
+        reveal: Bool
+    ) -> Bool {
+        guard dock.containsPanel(surfaceID) else { return false }
+        if reveal {
+            focusAndRevealWindowDock(for: dock, fallback: tabManager)
+        }
+        dock.focusPanel(surfaceID)
+        return true
+    }
+
     /// The window-Dock branch of `controlSurfaceClose`: closes the routed
     /// Dock's resolved surface and reports the Dock's owning window. Returns
     /// `nil` when the routing does not target a window Dock (the caller falls

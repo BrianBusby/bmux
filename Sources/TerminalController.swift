@@ -8362,7 +8362,12 @@ class TerminalController {
                    context.browserPanel.searchState == nil,
                    let windowDock = windowDockContainingPanel(context.surfaceId),
                    windowDock.focusedPanelId != context.surfaceId {
-                    windowDock.focusPanel(context.surfaceId)
+                    focusWindowDockSurfaceForAction(
+                        surfaceID: context.surfaceId,
+                        in: windowDock,
+                        fallback: tabManager,
+                        reveal: false
+                    )
                 }
                 let handled: Bool
                 if enterAliases.contains(mode) {
@@ -8516,8 +8521,12 @@ class TerminalController {
             let browserPanel = context.browserPanel
 
             if let windowDock = windowDockContainingPanel(surfaceId) {
-                _ = focusAndRevealWindowDock(for: windowDock, fallback: tabManager)
-                windowDock.focusPanel(surfaceId)
+                focusWindowDockSurfaceForAction(
+                    surfaceID: surfaceId,
+                    in: windowDock,
+                    fallback: tabManager,
+                    reveal: true
+                )
             } else {
                 if let windowId = v2ResolveWindowId(tabManager: tabManager) {
                     _ = AppDelegate.shared?.focusMainWindow(windowId: windowId)
@@ -9864,7 +9873,12 @@ class TerminalController {
                     return
                 }
 
-                dock.focusPanel(targetId)
+                focusWindowDockSurfaceForAction(
+                    surfaceID: targetId,
+                    in: dock,
+                    fallback: tabManager,
+                    reveal: false
+                )
                 result = .ok([
                     "workspace_id": dock.workspaceId.uuidString,
                     "workspace_ref": v2Ref(kind: .workspace, uuid: dock.workspaceId),

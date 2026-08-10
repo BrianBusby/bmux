@@ -279,8 +279,12 @@ extension TerminalController: ControlSurfaceContext {
             if windowDockMismatchesExplicitSelectors(routing, dock: windowDock, aliasTabManager: tabManager) {
                 return .surfaceNotFound(surfaceID)
             }
-            focusAndRevealWindowDock(for: windowDock, fallback: tabManager)
-            windowDock.focusPanel(surfaceID)
+            focusWindowDockSurfaceForAction(
+                surfaceID: surfaceID,
+                in: windowDock,
+                fallback: tabManager,
+                reveal: true
+            )
             return .focused(
                 windowID: windowDock.workspaceId,
                 workspaceID: windowDock.workspaceId,
