@@ -74,6 +74,17 @@ extension Workspace {
         return didClose ? .closed : .failed
     }
 
+    @discardableResult
+    func closeBrowserSurfaceFromWebViewForAction(surfaceId: UUID) -> SurfaceCloseActionResult {
+        guard panels[surfaceId] is BrowserPanel else {
+            return .surfaceNotFound
+        }
+        guard panels.count > 1 else {
+            return .lastSurface
+        }
+        return closePanel(surfaceId, force: true) ? .closed : .failed
+    }
+
     func closeTabsFromContextMenu(_ tabIds: [TabID], skipPinned: Bool = true) {
         let confirmationManager = owningTabManager
             ?? AppDelegate.shared?.tabManagerFor(tabId: id)

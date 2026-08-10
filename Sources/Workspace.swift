@@ -3608,7 +3608,7 @@ final class Workspace: Identifiable, ObservableObject {
                 "panel=\(browserPanel.id.uuidString.prefix(5))"
             )
 #endif
-            _ = self.closePanel(browserPanel.id, force: true)
+            _ = self.closeBrowserSurfaceFromWebViewForAction(surfaceId: browserPanel.id)
         }
     }
 

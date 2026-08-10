@@ -371,6 +371,27 @@ import Bonsplit
         #expect(ClosedItemHistoryStore.shared.menuSnapshot().items.map(\.title) == ["Surface Action Terminal"])
     }
 
+    @Test func browserWebViewCloseActionPreservesLegacyBrowserRestorePolicy() throws {
+        ClosedItemHistoryStore.shared.removeAll()
+        defer { ClosedItemHistoryStore.shared.removeAll() }
+
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let terminalSurfaceId = try #require(workspace.focusedPanelId)
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+        let browser = try #require(workspace.newBrowserSurface(
+            inPane: pane,
+            url: URL(string: "https://example.com/self-close-action"),
+            focus: true
+        ))
+
+        #expect(workspace.closeBrowserSurfaceFromWebViewForAction(surfaceId: UUID()) == .surfaceNotFound)
+        #expect(workspace.closeBrowserSurfaceFromWebViewForAction(surfaceId: terminalSurfaceId) == .surfaceNotFound)
+        #expect(workspace.closeBrowserSurfaceFromWebViewForAction(surfaceId: browser.id) == .closed)
+        #expect(workspace.panels[browser.id] == nil)
+        #expect(ClosedItemHistoryStore.shared.canReopen == false)
+    }
+
     @Test func tabManagerCloseSurfaceAdapterUsesSurfaceCloseActionPath() throws {
         ClosedItemHistoryStore.shared.removeAll()
         defer { ClosedItemHistoryStore.shared.removeAll() }
