@@ -119,7 +119,10 @@ struct WorkspaceCanvasHostView: View {
             windowAppearance: windowAppearance,
             customSidebarTabManager: workspace?.owningTabManager,
             onRequestPanelFocus: { [weak workspace] in
-                workspace?.focusPanel(panel.id)
+                workspace?.requestPanelFocusForAction(
+                    panelId: panel.id,
+                    in: NSApp.keyWindow ?? NSApp.mainWindow
+                )
             }
         )
         let hosted = NSHostingView(rootView: AnyView(
@@ -160,12 +163,10 @@ private struct CanvasRootRepresentable: NSViewRepresentable {
             callbacks: CanvasHostCallbacks(
                 onFocusPanel: { [weak workspace] panelId in
                     guard let workspace else { return }
-                    AppDelegate.shared?.noteMainPanelKeyboardFocusIntent(
-                        workspaceId: workspace.id,
+                    workspace.requestPanelFocusForAction(
                         panelId: panelId,
                         in: NSApp.keyWindow ?? NSApp.mainWindow
                     )
-                    workspace.focusPanel(panelId)
                 },
                 onClosePanel: { [weak workspace] panelId in
                     _ = workspace?.closeSurfaceForAction(surfaceId: panelId, force: false)

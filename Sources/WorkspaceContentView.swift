@@ -254,12 +254,10 @@ struct WorkspaceContentView: View {
                         onRequestPanelFocus: {
                             guard isWorkspaceInputActive else { return }
                             guard workspace.panels[panel.id] != nil else { return }
-                            AppDelegate.shared?.noteMainPanelKeyboardFocusIntent(
-                                workspaceId: workspace.id,
+                            workspace.requestPanelFocusForAction(
                                 panelId: panel.id,
                                 in: NSApp.keyWindow ?? NSApp.mainWindow
                             )
-                            workspace.focusPanel(panel.id)
                         },
                         onResumeAgentHibernation: {
                             guard isWorkspaceInputActive else { return }

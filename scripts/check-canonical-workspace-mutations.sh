@@ -59,6 +59,9 @@ canvas_socket_focus_pattern='ws\.focusPanel\(surfaceID\)'
 browser_address_bar_direct_focus_pattern='workspace\.focusPanel\((panel|browserPanel)\.id\)'
 app_delegate_external_terminal_paste_direct_focus_pattern='workspace\.focusPanel\(terminalPanel\.id\)'
 drag_drop_text_direct_focus_pattern='workspace\.focusPanel\(panelId, focusIntent: focusIntent\)'
+workspace_content_panel_request_direct_focus_pattern='workspace\.focusPanel\(panel\.id\)'
+canvas_host_panel_request_direct_focus_pattern='workspace\?\.focusPanel\(panel\.id\)'
+canvas_host_panel_callback_direct_focus_pattern='workspace\.focusPanel\(panelId\)'
 browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 browser_split_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSplit\('
 
@@ -244,6 +247,24 @@ while IFS= read -r line; do
   violations+=("$line")
 done < <(rg -n -P "$drag_drop_text_direct_focus_pattern" \
   "Sources/DragOverlayRoutingPolicy.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$workspace_content_panel_request_direct_focus_pattern" \
+  "Sources/WorkspaceContentView.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$canvas_host_panel_request_direct_focus_pattern" \
+  "Sources/Canvas/WorkspaceCanvasHostView.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$canvas_host_panel_callback_direct_focus_pattern" \
+  "Sources/Canvas/WorkspaceCanvasHostView.swift" || true)
 
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue

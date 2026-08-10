@@ -1,3 +1,4 @@
+import AppKit
 import BmuxPanes
 import BmuxNotifications
 import BmuxSettings
@@ -33,6 +34,27 @@ enum WorkspaceReorderActionTarget: Equatable {
 enum WorkspaceReorderActionResult: Equatable {
     case resolved(WorkspaceReorderPlanItem)
     case notFound
+}
+
+extension Workspace {
+    @discardableResult
+    func requestPanelFocusForAction(
+        panelId: UUID,
+        in window: NSWindow?
+    ) -> WorkspaceSurfaceFocusActionResult {
+        guard let manager = owningTabManager ?? AppDelegate.shared?.tabManagerFor(tabId: id) else {
+            return panels[panelId] == nil ? .surfaceNotFound : .workspaceNotFound
+        }
+        let result = manager.focusWorkspaceSurfaceForAction(workspaceId: id, surfaceId: panelId)
+        if case .focused = result {
+            AppDelegate.shared?.noteMainPanelKeyboardFocusIntent(
+                workspaceId: id,
+                panelId: panelId,
+                in: window
+            )
+        }
+        return result
+    }
 }
 
 extension TabManager {

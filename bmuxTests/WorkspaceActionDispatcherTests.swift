@@ -692,6 +692,32 @@ import Bonsplit
         #expect(manager.selectedTabId == targetWorkspace.id)
     }
 
+    @Test func workspacePanelFocusRequestRoutesThroughOwningManagerActionPath() throws {
+        let manager = TabManager()
+        let originalWorkspace = try #require(manager.tabs.first)
+        let targetWorkspace = manager.addWorkspace(select: false)
+        let targetSurfaceId = try #require(targetWorkspace.focusedPanelId)
+
+        #expect(manager.selectedTabId == originalWorkspace.id)
+        #expect(
+            targetWorkspace.requestPanelFocusForAction(
+                panelId: targetSurfaceId,
+                in: nil
+            ) == .focused(workspaceId: targetWorkspace.id, surfaceId: targetSurfaceId)
+        )
+        #expect(manager.selectedTabId == targetWorkspace.id)
+        #expect(targetWorkspace.focusedPanelId == targetSurfaceId)
+
+        let missingSurface = UUID()
+        #expect(
+            targetWorkspace.requestPanelFocusForAction(
+                panelId: missingSurface,
+                in: nil
+            ) == .surfaceNotFound
+        )
+        #expect(manager.selectedTabId == targetWorkspace.id)
+    }
+
     private func panelOrder(in workspace: Workspace, pane: PaneID) -> [UUID] {
         workspace.bonsplitController.tabs(inPane: pane).compactMap {
             workspace.panelIdFromSurfaceId($0.id)
