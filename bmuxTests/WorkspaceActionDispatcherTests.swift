@@ -479,6 +479,61 @@ import Bonsplit
         )
     }
 
+    @Test func workspaceSurfaceMoveActionMovesBetweenPanes() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let sourcePane = try #require(workspace.bonsplitController.focusedPaneId)
+        let firstPanelId = try #require(workspace.focusedPanelId)
+        let movedPanel = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: sourcePane, focus: false).panel
+        )
+        let targetPanel = try #require(
+            workspace.createTerminalSplitForAction(
+                from: firstPanelId,
+                orientation: .horizontal,
+                focus: false
+            ).panel
+        )
+        let targetPane = try #require(workspace.paneId(forPanelId: targetPanel.id))
+
+        #expect(
+            workspace.moveSurfaceForAction(
+                panelId: movedPanel.id,
+                toPane: targetPane,
+                atIndex: 0,
+                focus: false
+            ) == .moved(paneId: targetPane)
+        )
+        #expect(workspace.paneId(forPanelId: movedPanel.id) == targetPane)
+        #expect(panelOrder(in: workspace, pane: targetPane) == [movedPanel.id, targetPanel.id])
+        #expect(panelOrder(in: workspace, pane: sourcePane) == [firstPanelId])
+    }
+
+    @Test func workspaceSurfaceMoveActionRejectsInvalidTargets() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+        let panel = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: pane, focus: false).panel
+        )
+
+        #expect(
+            workspace.moveSurfaceForAction(
+                panelId: UUID(),
+                toPane: pane,
+                focus: false
+            ) == .surfaceNotFound
+        )
+        #expect(
+            workspace.moveSurfaceForAction(
+                panelId: panel.id,
+                toPane: PaneID(id: UUID()),
+                focus: false
+            ) == .targetPaneNotFound
+        )
+        #expect(workspace.paneId(forPanelId: panel.id) == pane)
+    }
+
     @Test func workspaceSurfacePinActionRejectsMissingAndTogglesPinnedState() throws {
         let manager = TabManager()
         let workspace = try #require(manager.tabs.first)
