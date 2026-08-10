@@ -14366,14 +14366,15 @@ class TerminalController {
         guard let paneId = workspace.bonsplitController.focusedPaneId ?? workspace.bonsplitController.allPaneIds.first else {
             return .err(code: "not_found", message: "Pane not found", data: nil)
         }
-        guard let terminal = workspace.newTerminalSurface(
+        let outcome = workspace.createTerminalSurfaceForAction(
             inPane: paneId,
             focus: false,
             autoRefreshMetadata: false,
             preserveFocusWhenUnfocused: false,
             inheritWorkingDirectoryFallback: true,
             allowTextBoxFocusDefault: false
-        ) else {
+        )
+        guard let terminal = outcome.panel else {
             return .err(code: "internal_error", message: "Failed to create terminal", data: nil)
         }
         // workspace.updated emit is handled by MobileWorkspaceListObserver.

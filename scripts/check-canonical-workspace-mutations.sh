@@ -33,6 +33,9 @@ creation_mutation_pattern='\.addWorkspace\('
 surface_creation_mutation_pattern='\.newTerminal(Surface|Split)Outcome\('
 ui_surface_creation_mutation_pattern='workspace\.newTerminalSurface\(inPane: paneId'
 tab_manager_split_creation_mutation_pattern='return tab\.newTerminalSplit\('
+session_resume_surface_creation_pattern='workspace\.newTerminalSurface\('
+mobile_terminal_surface_creation_pattern='workspace\.newTerminalSurface\('
+surface_context_terminal_to_right_pattern='guard let newPanel = newTerminalSurface\('
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -73,6 +76,21 @@ while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   violations+=("$line")
 done < <(rg -n -P "$tab_manager_split_creation_mutation_pattern" "Sources/TabManager.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$session_resume_surface_creation_pattern" "Sources/SessionIndexView.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$mobile_terminal_surface_creation_pattern" "Sources/TerminalController.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$surface_context_terminal_to_right_pattern" "Sources/Workspace.swift" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {

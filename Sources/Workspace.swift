@@ -11281,12 +11281,13 @@ final class Workspace: Identifiable, ObservableObject {
 
     private func createTerminalToRight(of anchorTabId: TabID, inPane paneId: PaneID) {
         let sourcePanelId = panelIdFromSurfaceId(anchorTabId)
-        guard let newPanel = newTerminalSurface(
+        let outcome = createTerminalSurfaceForAction(
             inPane: paneId,
             focus: true,
             inheritWorkingDirectoryFallback: true,
             workingDirectoryFallbackSourcePanelId: sourcePanelId
-        ) else { return }
+        )
+        guard let newPanel = outcome.panel else { return }
         let targetIndex = insertionIndexToRight(of: anchorTabId, inPane: paneId)
         _ = reorderSurface(panelId: newPanel.id, toIndex: targetIndex)
     }
