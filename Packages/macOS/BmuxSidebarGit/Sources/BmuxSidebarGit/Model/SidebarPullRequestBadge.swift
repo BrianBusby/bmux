@@ -15,6 +15,10 @@ public struct SidebarPullRequestBadge: Equatable, Sendable {
     public let label: String
     /// Link to the pull request page.
     public let url: URL
+    /// The PR author's GitHub login, if known.
+    public let ownerLogin: String?
+    /// The PR author's GitHub profile URL, if known.
+    public let ownerURL: URL?
     /// Open/merged/closed state.
     public let status: PullRequestStatus
     /// The branch the badge was resolved for, when known.
@@ -28,6 +32,8 @@ public struct SidebarPullRequestBadge: Equatable, Sendable {
         number: Int,
         label: String,
         url: URL,
+        ownerLogin: String? = nil,
+        ownerURL: URL? = nil,
         status: PullRequestStatus,
         branch: String? = nil,
         isStale: Bool = false
@@ -35,6 +41,9 @@ public struct SidebarPullRequestBadge: Equatable, Sendable {
         self.number = number
         self.label = label
         self.url = url
+        let normalizedOwnerLogin = ownerLogin?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        self.ownerLogin = normalizedOwnerLogin.isEmpty ? nil : normalizedOwnerLogin
+        self.ownerURL = ownerURL
         self.status = status
         self.branch = branch
         self.isStale = isStale

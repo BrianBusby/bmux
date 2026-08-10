@@ -79,4 +79,35 @@ struct RemoteTmuxMirrorLifecycleTests {
         #expect(alpha.exited)
         #expect(!beta.exited)
     }
+
+    @Test func remoteWindowCloseRemovesMirrorSurfaceWithoutClosedHistory() throws {
+        ClosedItemHistoryStore.shared.removeAll()
+        defer { ClosedItemHistoryStore.shared.removeAll() }
+
+        let controller = RemoteTmuxController()
+        let manager = TabManager()
+        let host = RemoteTmuxHost(destination: "user@host")
+        let connection = try mirror(
+            controller: controller,
+            manager: manager,
+            host: host,
+            sessionName: "dev"
+        )
+        let mirrorWorkspace = try #require(manager.tabs.first { $0.title == "dev" && $0.isRemoteTmuxMirror })
+
+        connection.handleMessageForTesting(.layoutChange(windowId: 1, layout: "f92f,80x24,0,0,4"))
+        let firstWindowPanels = Set(mirrorWorkspace.panels.keys)
+        #expect(firstWindowPanels.count == 1)
+
+        connection.handleMessageForTesting(.layoutChange(windowId: 2, layout: "abcd,80x24,0,0,5"))
+        let twoWindowPanels = Set(mirrorWorkspace.panels.keys)
+        #expect(twoWindowPanels.count == 2)
+        let secondWindowPanels = twoWindowPanels.subtracting(firstWindowPanels)
+        #expect(secondWindowPanels.count == 1)
+
+        connection.handleMessageForTesting(.windowClose(windowId: 1))
+
+        #expect(Set(mirrorWorkspace.panels.keys) == secondWindowPanels)
+        #expect(ClosedItemHistoryStore.shared.canReopen == false)
+    }
 }

@@ -12,6 +12,7 @@ public struct BmuxSidebarWorkspace: Codable, Equatable, Identifiable, Sendable {
     public var latestNotification: String?
     public var listeningPorts: [Int]
     public var pullRequestURLs: [String]
+    public var pullRequests: [BmuxSidebarPullRequest]
     public var surfaces: [BmuxSidebarSurface]
 
     public init(
@@ -26,6 +27,7 @@ public struct BmuxSidebarWorkspace: Codable, Equatable, Identifiable, Sendable {
         latestNotification: String? = nil,
         listeningPorts: [Int] = [],
         pullRequestURLs: [String] = [],
+        pullRequests: [BmuxSidebarPullRequest] = [],
         surfaces: [BmuxSidebarSurface] = []
     ) {
         self.id = id
@@ -38,7 +40,8 @@ public struct BmuxSidebarWorkspace: Codable, Equatable, Identifiable, Sendable {
         self.unreadCount = unreadCount
         self.latestNotification = latestNotification
         self.listeningPorts = listeningPorts
-        self.pullRequestURLs = pullRequestURLs
+        self.pullRequestURLs = pullRequestURLs.isEmpty ? pullRequests.map(\.url) : pullRequestURLs
+        self.pullRequests = pullRequests
         self.surfaces = surfaces
     }
 
@@ -54,7 +57,8 @@ public struct BmuxSidebarWorkspace: Codable, Equatable, Identifiable, Sendable {
         unreadCount = try container.decode(Int.self, forKey: .unreadCount)
         latestNotification = try container.decodeIfPresent(String.self, forKey: .latestNotification)
         listeningPorts = try container.decode([Int].self, forKey: .listeningPorts)
-        pullRequestURLs = try container.decode([String].self, forKey: .pullRequestURLs)
+        pullRequests = try container.decodeIfPresent([BmuxSidebarPullRequest].self, forKey: .pullRequests) ?? []
+        pullRequestURLs = try container.decodeIfPresent([String].self, forKey: .pullRequestURLs) ?? pullRequests.map(\.url)
         surfaces = try container.decodeIfPresent([BmuxSidebarSurface].self, forKey: .surfaces) ?? []
     }
 
@@ -73,6 +77,7 @@ public struct BmuxSidebarWorkspace: Codable, Equatable, Identifiable, Sendable {
             latestNotification: scopeSet.contains(.notifications) ? latestNotification : nil,
             listeningPorts: scopeSet.contains(.networkPorts) ? listeningPorts : [],
             pullRequestURLs: scopeSet.contains(.pullRequests) ? pullRequestURLs : [],
+            pullRequests: scopeSet.contains(.pullRequests) ? pullRequests : [],
             surfaces: scopeSet.contains(.surfaceMetadata) ? surfaces.map { $0.filtered(for: scopeSet) } : []
         )
     }

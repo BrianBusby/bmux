@@ -139,6 +139,8 @@ extension ControlSidebarContext {
         number: Int,
         label: String,
         url: URL,
+        ownerLogin: String?,
+        ownerURL: URL?,
         statusRawValue: String,
         branch: String?
     ) {}

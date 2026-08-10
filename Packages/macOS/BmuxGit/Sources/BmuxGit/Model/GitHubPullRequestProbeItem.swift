@@ -12,6 +12,10 @@ public struct GitHubPullRequestProbeItem: Decodable, Equatable, Sendable {
     public let state: String
     /// The PR's html URL string.
     public let url: String
+    /// The PR author's GitHub login, if known.
+    public let ownerLogin: String?
+    /// The PR author's GitHub profile URL string, if known.
+    public let ownerURLString: String?
     /// ISO-8601 `updatedAt` timestamp, if known.
     public let updatedAt: String?
     /// ISO-8601 `mergedAt` timestamp, if the PR merged.
@@ -26,6 +30,8 @@ public struct GitHubPullRequestProbeItem: Decodable, Equatable, Sendable {
         number: Int,
         state: String,
         url: String,
+        ownerLogin: String? = nil,
+        ownerURLString: String? = nil,
         updatedAt: String?,
         mergedAt: String? = nil,
         headRefName: String? = nil,
@@ -34,6 +40,8 @@ public struct GitHubPullRequestProbeItem: Decodable, Equatable, Sendable {
         self.number = number
         self.state = state
         self.url = url
+        self.ownerLogin = ownerLogin
+        self.ownerURLString = ownerURLString
         self.updatedAt = updatedAt
         self.mergedAt = mergedAt
         self.headRefName = headRefName

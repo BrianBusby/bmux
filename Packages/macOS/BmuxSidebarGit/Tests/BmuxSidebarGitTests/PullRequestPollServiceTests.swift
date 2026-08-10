@@ -21,11 +21,19 @@ import BmuxGit
         return service
     }
 
-    private func badge(number: Int, status: PullRequestStatus, branch: String? = "feature/x") -> SidebarPullRequestBadge {
+    private func badge(
+        number: Int,
+        status: PullRequestStatus,
+        branch: String? = "feature/x",
+        ownerLogin: String? = nil,
+        ownerURL: URL? = nil
+    ) -> SidebarPullRequestBadge {
         SidebarPullRequestBadge(
             number: number,
             label: "PR",
             url: URL(string: "https://github.com/o/r/pull/\(number)")!,
+            ownerLogin: ownerLogin,
+            ownerURL: ownerURL,
             status: status,
             branch: branch
         )
@@ -75,7 +83,12 @@ import BmuxGit
         let host = RecordingSidebarGitHost()
         host.pollingEnabled = true
         let (workspaceId, panelId) = host.addWorkspace(panelDirectory: nil)
-        host.workspaces[0].state.panels[panelId]?.badge = badge(number: 42, status: .open)
+        host.workspaces[0].state.panels[panelId]?.badge = badge(
+            number: 42,
+            status: .open,
+            ownerLogin: "octocat",
+            ownerURL: URL(string: "https://github.com/octocat")!
+        )
         let service = makeService(host: host, clock: ManualGitPollClock())
 
         service.handleWorkspacePullRequestCommandHint(
@@ -86,6 +99,8 @@ import BmuxGit
         )
 
         #expect(host.workspaces[0].state.panels[panelId]?.badge?.status == .merged)
+        #expect(host.workspaces[0].state.panels[panelId]?.badge?.ownerLogin == "octocat")
+        #expect(host.workspaces[0].state.panels[panelId]?.badge?.ownerURL?.absoluteString == "https://github.com/octocat")
         #expect(host.workspaces[0].state.panels[panelId]?.badge?.isStale == false)
     }
 
@@ -242,6 +257,8 @@ import BmuxGit
                     resolution: .resolved(WorkspacePullRequestResolvedItem(
                         number: 99,
                         urlString: "https://github.com/o/r/pull/99",
+                        ownerLogin: "octocat",
+                        ownerURLString: "https://github.com/octocat",
                         statusRawValue: PullRequestStatus.open.rawValue,
                         branch: "feature/x"
                     )),
@@ -298,6 +315,45 @@ import BmuxGit
             return false
         })
         #expect(service.workspacePullRequestTrackedPanelIds(workspaceId: workspaceId).isEmpty)
+    }
+
+
+    @Test func resolvedRefreshPropagatesPullRequestOwner() throws {
+        let host = RecordingSidebarGitHost()
+        host.pollingEnabled = true
+        let (workspaceId, panelId) = host.addWorkspace(panelDirectory: nil)
+        host.workspaces[0].state.panels[panelId]?.branch = SidebarPanelGitBranch(branch: "feature/x", isDirty: false)
+        let service = makeService(host: host, clock: ManualGitPollClock())
+        let key = WorkspaceGitProbeKey(workspaceId: workspaceId, panelId: panelId)
+        service.workspacePullRequestProbeStateByKey[key] = .inFlight(rerunPending: false)
+        service.workspacePullRequestNextPollAtByKey[key] = .distantPast
+
+        service.applyWorkspacePullRequestRefreshResults(
+            [
+                WorkspacePullRequestRefreshResult(
+                    workspaceId: workspaceId,
+                    panelId: panelId,
+                    resolution: .resolved(WorkspacePullRequestResolvedItem(
+                        number: 99,
+                        urlString: "https://github.com/o/r/pull/99",
+                        ownerLogin: "octocat",
+                        ownerURLString: "https://github.com/octocat",
+                        statusRawValue: PullRequestStatus.open.rawValue,
+                        branch: "feature/x"
+                    )),
+                    usedCachedRepoData: false
+                ),
+            ],
+            repoResults: [:],
+            requestedKeys: [key],
+            now: Date(),
+            reason: "test"
+        )
+
+        let badge = host.workspaces[0].state.panels[panelId]?.badge
+        #expect(badge?.number == 99)
+        #expect(badge?.ownerLogin == "octocat")
+        #expect(badge?.ownerURL?.absoluteString == "https://github.com/octocat")
     }
 
     /// Disabling polling resets all tracking and clears every badge.

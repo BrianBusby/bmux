@@ -121,6 +121,8 @@ extension PullRequestPollService {
                         number: resolvedPullRequest.number,
                         label: "PR",
                         url: url,
+                        ownerLogin: resolvedPullRequest.ownerLogin,
+                        ownerURL: resolvedPullRequest.ownerURLString.flatMap { URL(string: $0) },
                         status: status,
                         branch: resolvedPullRequest.branch,
                         isStale: false
@@ -153,6 +155,8 @@ extension PullRequestPollService {
                             number: currentPullRequest.number,
                             label: currentPullRequest.label,
                             url: currentPullRequest.url,
+                            ownerLogin: currentPullRequest.ownerLogin,
+                            ownerURL: currentPullRequest.ownerURL,
                             status: currentPullRequest.status,
                             branch: currentPullRequest.branch,
                             isStale: true

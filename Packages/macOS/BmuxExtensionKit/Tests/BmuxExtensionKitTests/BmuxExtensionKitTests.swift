@@ -25,7 +25,17 @@ struct BMUXExtensionKitTests {
                     unreadCount: 2,
                     latestNotification: "Tests passed",
                     listeningPorts: [3000],
-                    pullRequestURLs: ["https://github.com/manaflow-ai/bmux/pull/1"]
+                    pullRequestURLs: ["https://github.com/manaflow-ai/bmux/pull/1"],
+                    pullRequests: [
+                        BmuxSidebarPullRequest(
+                            number: 1,
+                            label: "PR",
+                            url: "https://github.com/manaflow-ai/bmux/pull/1",
+                            status: "open",
+                            ownerLogin: "octocat",
+                            ownerURL: "https://github.com/octocat"
+                        ),
+                    ]
                 ),
             ]
         )
@@ -37,6 +47,8 @@ struct BMUXExtensionKitTests {
         #expect(decoded.apiVersion == BmuxExtensionAPIVersion.sidebarV2)
         #expect(decoded.grantedReadScopes.contains(.workspaceMetadata))
         #expect(decoded.grantedActionScopes == [.selectWorkspace])
+        #expect(decoded.workspaces.first?.pullRequests.first?.ownerLogin == "octocat")
+        #expect(decoded.workspaces.first?.pullRequests.first?.ownerURL == "https://github.com/octocat")
     }
 
     @Test
@@ -99,7 +111,17 @@ struct BMUXExtensionKitTests {
                     unreadCount: 2,
                     latestNotification: "Private notification",
                     listeningPorts: [3000, 5173],
-                    pullRequestURLs: ["https://github.com/manaflow-ai/bmux/pull/4994"]
+                    pullRequestURLs: ["https://github.com/manaflow-ai/bmux/pull/4994"],
+                    pullRequests: [
+                        BmuxSidebarPullRequest(
+                            number: 4994,
+                            label: "PR",
+                            url: "https://github.com/manaflow-ai/bmux/pull/4994",
+                            status: "open",
+                            ownerLogin: "octocat",
+                            ownerURL: "https://github.com/octocat"
+                        ),
+                    ]
                 ),
             ]
         )
@@ -119,6 +141,12 @@ struct BMUXExtensionKitTests {
         #expect(workspace.latestNotification == nil)
         #expect(workspace.listeningPorts.isEmpty)
         #expect(workspace.pullRequestURLs.isEmpty)
+        #expect(workspace.pullRequests.isEmpty)
+        let pullFiltered = snapshot.filtered(for: [BmuxExtensionScope.workspaceMetadata, .pullRequests])
+        let pullWorkspace = try #require(pullFiltered.workspaces.first)
+        #expect(pullWorkspace.pullRequestURLs == ["https://github.com/manaflow-ai/bmux/pull/4994"])
+        #expect(pullWorkspace.pullRequests.first?.ownerLogin == "octocat")
+        #expect(pullWorkspace.pullRequests.first?.ownerURL == "https://github.com/octocat")
     }
 
     @Test

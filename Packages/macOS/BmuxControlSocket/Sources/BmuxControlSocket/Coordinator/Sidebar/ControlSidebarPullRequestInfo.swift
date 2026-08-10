@@ -8,6 +8,10 @@ public struct ControlSidebarPullRequestInfo: Sendable, Equatable {
     public let statusRawValue: String
     /// The PR URL absolute string.
     public let urlAbsoluteString: String
+    /// The PR author's GitHub login, if known.
+    public let ownerLogin: String?
+    /// The PR author's GitHub profile URL absolute string, if known.
+    public let ownerURLAbsoluteString: String?
     /// The PR label.
     public let label: String
 
@@ -17,11 +21,22 @@ public struct ControlSidebarPullRequestInfo: Sendable, Equatable {
     ///   - number: The PR number.
     ///   - statusRawValue: The PR status raw value.
     ///   - urlAbsoluteString: The PR URL absolute string.
+    ///   - ownerLogin: The PR author's GitHub login, if known.
+    ///   - ownerURLAbsoluteString: The PR author's GitHub profile URL absolute string, if known.
     ///   - label: The PR label.
-    public init(number: Int, statusRawValue: String, urlAbsoluteString: String, label: String) {
+    public init(
+        number: Int,
+        statusRawValue: String,
+        urlAbsoluteString: String,
+        ownerLogin: String? = nil,
+        ownerURLAbsoluteString: String? = nil,
+        label: String
+    ) {
         self.number = number
         self.statusRawValue = statusRawValue
         self.urlAbsoluteString = urlAbsoluteString
+        self.ownerLogin = ownerLogin
+        self.ownerURLAbsoluteString = ownerURLAbsoluteString
         self.label = label
     }
 }

@@ -252,7 +252,7 @@ final class RemoteTmuxSessionMirror {
                 mirror.teardown()
                 windowMirrorByWindowId[windowId] = nil
             }
-            _ = workspace.closePanel(panelId, force: true)
+            _ = workspace.closeRemoteTmuxMirrorSurfaceForAction(surfaceId: panelId)
             panelIdByWindow[windowId] = nil
             panelIdByPane = panelIdByPane.filter { $0.value != panelId }
         }
@@ -358,7 +358,7 @@ final class RemoteTmuxSessionMirror {
     private func closeDefaultTabsIfNeeded() {
         guard !defaultClosed, !panelIdByWindow.isEmpty, let workspace else { return }
         for panelId in defaultPanelIds where workspace.panels[panelId] != nil {
-            _ = workspace.closePanel(panelId, force: true)
+            _ = workspace.closeRemoteTmuxMirrorSurfaceForAction(surfaceId: panelId)
         }
         defaultClosed = true
     }

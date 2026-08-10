@@ -56,6 +56,8 @@ public struct WorkspaceWorkContext: Equatable, Sendable {
                     number: $0.number,
                     label: $0.label,
                     url: $0.url,
+                    ownerLogin: $0.ownerLogin,
+                    ownerURL: $0.ownerURL,
                     status: $0.status,
                     branch: $0.branch,
                     source: pullRequestSource,
