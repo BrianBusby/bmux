@@ -87,6 +87,8 @@ extension PullRequestPollService {
                 number: currentPullRequest.number,
                 label: currentPullRequest.label,
                 url: currentPullRequest.url,
+                ownerLogin: currentPullRequest.ownerLogin,
+                ownerURL: currentPullRequest.ownerURL,
                 status: nextStatus,
                 branch: currentPullRequest.branch,
                 isStale: false

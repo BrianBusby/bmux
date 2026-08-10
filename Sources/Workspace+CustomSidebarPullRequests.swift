@@ -17,6 +17,8 @@ extension Workspace {
                 "status": .string(pullRequest.status.rawValue),
                 "stale": .bool(pullRequest.isStale),
             ]
+            if let ownerLogin = pullRequest.ownerLogin { fields["owner"] = .string(ownerLogin) }
+            if let ownerURL = pullRequest.ownerURL { fields["owner_url"] = .string(ownerURL.absoluteString) }
             if let branch = pullRequest.branch { fields["branch"] = .string(branch) }
             return .object(fields)
         }

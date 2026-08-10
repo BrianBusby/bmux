@@ -10992,7 +10992,19 @@ struct VerticalTabsSidebar: View {
             windowID: snapshot.windowId,
             selectedWorkspaceID: snapshot.selectedWorkspaceId,
             workspaces: snapshot.workspaces.map { workspace in
-                BmuxSidebarWorkspace(
+                let pullRequests = workspace.pullRequests.map {
+                    BmuxSidebarPullRequest(
+                        number: $0.number,
+                        label: $0.label,
+                        url: $0.url,
+                        status: $0.status,
+                        ownerLogin: $0.ownerLogin,
+                        ownerURL: $0.ownerURL,
+                        branch: $0.branch,
+                        isStale: $0.isStale
+                    )
+                }
+                return BmuxSidebarWorkspace(
                     id: workspace.id,
                     title: workspace.title,
                     detail: workspace.customDescription,
@@ -11004,6 +11016,7 @@ struct VerticalTabsSidebar: View {
 	                    latestNotification: workspace.latestNotificationText,
 	                    listeningPorts: workspace.listeningPorts,
 	                    pullRequestURLs: workspace.pullRequestURLs,
+	                    pullRequests: pullRequests,
 	                    surfaces: bmuxSidebarSurfaces(for: workspace)
 	                )
 	            }
@@ -11236,6 +11249,7 @@ struct VerticalTabsSidebar: View {
 
     private func extensionWorkspaceSnapshot(for workspace: Workspace) -> BmuxSidebarProviderWorkspace {
         let rootPath = extensionSidebarRootPath(for: workspace)
+        let pullRequests = workspace.sidebarPullRequestsInDisplayOrder()
         return BmuxSidebarProviderWorkspace(
             id: workspace.id,
             title: workspace.title,
@@ -11251,7 +11265,19 @@ struct VerticalTabsSidebar: View {
             latestSubmittedMessage: workspace.latestSubmittedMessage,
             latestSubmittedAt: workspace.latestSubmittedAt,
             listeningPorts: workspace.listeningPorts,
-            pullRequestURLs: workspace.sidebarPullRequestsInDisplayOrder().map { $0.url.absoluteString },
+            pullRequestURLs: pullRequests.map { $0.url.absoluteString },
+            pullRequests: pullRequests.map {
+                BmuxSidebarProviderPullRequest(
+                    number: $0.number,
+                    label: $0.label,
+                    url: $0.url.absoluteString,
+                    status: $0.status.rawValue,
+                    ownerLogin: $0.ownerLogin,
+                    ownerURL: $0.ownerURL?.absoluteString,
+                    branch: $0.branch,
+                    isStale: $0.isStale
+                )
+            },
             panelDirectories: workspace.sidebarFilesystemDirectoriesInDisplayOrder(),
             gitBranches: workspace.sidebarGitBranchesInDisplayOrder().map {
                 BmuxSidebarProviderGitBranch(branch: $0.branch, isDirty: $0.isDirty)

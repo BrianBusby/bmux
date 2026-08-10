@@ -10,6 +10,8 @@ import Testing
         number: Int,
         state: String,
         url: String = "https://github.com/manaflow-ai/bmux/pull/1",
+        ownerLogin: String? = nil,
+        ownerURLString: String? = nil,
         updatedAt: String?,
         mergedAt: String? = nil,
         headRefName: String? = nil,
@@ -19,6 +21,8 @@ import Testing
             number: number,
             state: state,
             url: url,
+            ownerLogin: ownerLogin,
+            ownerURLString: ownerURLString,
             updatedAt: updatedAt,
             mergedAt: mergedAt,
             headRefName: headRefName,
@@ -123,6 +127,7 @@ import Testing
             "html_url": "https://github.com/manaflow-ai/bmux/pull/5277",
             "updated_at": "2026-06-03T10:00:00Z",
             "merged_at": "2026-06-03T10:00:00Z",
+            "user": {"login": "BrianBusby", "html_url": "https://github.com/BrianBusby"},
             "head": {"ref": "feat-bmux-git"},
             "base": {"ref": "main"}
           },
@@ -132,6 +137,7 @@ import Testing
             "html_url": "https://github.com/manaflow-ai/bmux/pull/5293",
             "updated_at": "2026-06-03T11:00:00Z",
             "merged_at": null,
+            "user": {"login": "octocat", "html_url": "https://github.com/octocat"},
             "head": {"ref": "feat-packages-tools-62"},
             "base": null
           }
@@ -147,6 +153,8 @@ import Testing
         #expect(PullRequestStatus(githubState: items[0].state) == .merged)
         #expect(items[0].headRefName == "feat-bmux-git")
         #expect(items[0].baseRefName == "main")
+        #expect(items[0].ownerLogin == "BrianBusby")
+        #expect(items[0].ownerURLString == "https://github.com/BrianBusby")
 
         #expect(items[1].state == "open")
         #expect(PullRequestStatus(githubState: items[1].state) == .open)
@@ -168,7 +176,15 @@ import Testing
 
     @Test func resolveRefreshResultsMatchesPrefersAndPropagatesFailures() {
         let wsA = UUID(), wsB = UUID(), wsC = UUID(), panel = UUID()
-        let pr = item(number: 7, state: "OPEN", url: "https://github.com/o/r/pull/7", updatedAt: "2026-06-01T00:00:00Z", headRefName: "feat/x")
+        let pr = item(
+            number: 7,
+            state: "OPEN",
+            url: "https://github.com/o/r/pull/7",
+            ownerLogin: "octocat",
+            ownerURLString: "https://github.com/octocat",
+            updatedAt: "2026-06-01T00:00:00Z",
+            headRefName: "feat/x"
+        )
         let entry = WorkspacePullRequestRepoCacheEntry(
             fetchedAt: Date(),
             pullRequestsByBranch: ["feat/x": pr]
@@ -189,6 +205,8 @@ import Testing
         }
         #expect(resolved.number == 7)
         #expect(resolved.statusRawValue == PullRequestStatus.open.rawValue)
+        #expect(resolved.ownerLogin == "octocat")
+        #expect(resolved.ownerURLString == "https://github.com/octocat")
 
         guard case .transientFailure = results[1].resolution else {
             Issue.record("expected transientFailure for branch with transient lookup")

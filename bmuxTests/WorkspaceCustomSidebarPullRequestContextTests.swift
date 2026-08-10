@@ -166,6 +166,40 @@ final class WorkspaceCustomSidebarPullRequestContextTests: XCTestCase {
     }
 
     @MainActor
+    func testPanelPullRequestUpdatePreservesOwnerWhenSamePullRequestOmitsOwner() throws {
+        let workspace = Workspace(
+            title: "Tests",
+            workingDirectory: FileManager.default.currentDirectoryPath,
+            portOrdinal: 0
+        )
+        let panelId = try XCTUnwrap(workspace.focusedPanelId)
+        let pullRequestURL = try XCTUnwrap(URL(string: "https://github.com/manaflow-ai/bmux/pull/5314"))
+        let ownerURL = try XCTUnwrap(URL(string: "https://github.com/octocat"))
+
+        workspace.updatePanelPullRequest(
+            panelId: panelId,
+            number: 5314,
+            label: "PR",
+            url: pullRequestURL,
+            ownerLogin: "octocat",
+            ownerURL: ownerURL,
+            status: .open
+        )
+        workspace.updatePanelPullRequest(
+            panelId: panelId,
+            number: 5314,
+            label: "MR",
+            url: pullRequestURL,
+            status: .open
+        )
+
+        let state = try XCTUnwrap(workspace.panelPullRequests[panelId])
+        XCTAssertEqual(state.label, "MR")
+        XCTAssertEqual(state.ownerLogin, "octocat")
+        XCTAssertEqual(state.ownerURL, ownerURL)
+    }
+
+    @MainActor
     func testValuesIncludePanelPullRequestWhenFocusedPanelMirrorIsNil() throws {
         let workspace = Workspace(
             title: "Tests",
@@ -178,6 +212,8 @@ final class WorkspaceCustomSidebarPullRequestContextTests: XCTestCase {
             number: 5314,
             label: "PR",
             url: URL(string: "https://github.com/manaflow-ai/bmux/pull/5314")!,
+            ownerLogin: "octocat",
+            ownerURL: URL(string: "https://github.com/octocat")!,
             status: .open
         )
         // The focused-panel `pullRequest` mirror only refreshes while its panel
@@ -195,6 +231,8 @@ final class WorkspaceCustomSidebarPullRequestContextTests: XCTestCase {
         XCTAssertEqual(fields["number"], .int(5314))
         XCTAssertEqual(fields["status"], .string("open"))
         XCTAssertEqual(fields["url"], .string("https://github.com/manaflow-ai/bmux/pull/5314"))
+        XCTAssertEqual(fields["owner"], .string("octocat"))
+        XCTAssertEqual(fields["owner_url"], .string("https://github.com/octocat"))
         XCTAssertEqual(fields["stale"], .bool(false))
     }
 

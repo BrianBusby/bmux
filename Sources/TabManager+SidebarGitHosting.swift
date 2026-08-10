@@ -139,6 +139,8 @@ extension TabManager: SidebarGitHosting {
             number: badge.number,
             label: badge.label,
             url: badge.url,
+            ownerLogin: badge.ownerLogin,
+            ownerURL: badge.ownerURL,
             // Raw values are shared between the app and package status enums.
             status: SidebarPullRequestStatus(rawValue: badge.status.rawValue) ?? .open,
             branch: badge.branch,
@@ -189,6 +191,8 @@ extension SidebarPullRequestState {
             number: number,
             label: label,
             url: url,
+            ownerLogin: ownerLogin,
+            ownerURL: ownerURL,
             status: PullRequestStatus(rawValue: status.rawValue) ?? .open,
             branch: branch,
             isStale: isStale

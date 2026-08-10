@@ -22,8 +22,8 @@ Regenerate with: ./scripts/project-docs generate
 | --- | --- | --- | --- | --- |
 | Provenance Engine V1 package (`provenance_engine_v1`) | Provenance Engine | merged | accepted | BrianBusby/provenance-engine@18f5511a7c83, BrianBusby/provenance-engine@0ed9f68b6612 |
 | Bmux Provenance Engine Slice E adoption (`bmux_slice_e_adoption`) | Bmux | merged | accepted | BrianBusby/bmux@3cbacd150176, BrianBusby/provenance-engine@0ed9f68b6612 |
-| Provider-neutral execution telemetry foundation (`execution_telemetry_foundation`) | Bmux | merged | implemented | BrianBusby/bmux@c32ed93989c8, BrianBusby/bmux@9d7fefacbb40, BrianBusby/bmux#12 |
-| Claude lifecycle telemetry migration (`claude_lifecycle_telemetry`) | Bmux | merged | implemented | BrianBusby/bmux@5a4a463f17e0, BrianBusby/bmux@3f49c5d5abbe, BrianBusby/bmux#13 |
+| Provider-neutral execution telemetry foundation (`execution_telemetry_foundation`) | Bmux | merged | implemented | BrianBusby/bmux@c32ed93989c8, BrianBusby/bmux@9d7fefacbb40, BrianBusby/bmux#12 by [BrianBusby](https://github.com/BrianBusby) |
+| Claude lifecycle telemetry migration (`claude_lifecycle_telemetry`) | Bmux | merged | implemented | BrianBusby/bmux@5a4a463f17e0, BrianBusby/bmux@3f49c5d5abbe, BrianBusby/bmux#13 by [BrianBusby](https://github.com/BrianBusby) |
 
 ## Open Shared Caveats
 

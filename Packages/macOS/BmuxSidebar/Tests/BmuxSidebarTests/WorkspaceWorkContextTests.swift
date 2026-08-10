@@ -30,6 +30,8 @@ private struct WorkContextFixedLogLimitProvider: SidebarLogEntryLimitProviding {
                 number: 25095,
                 label: "manaflow-ai/bmux",
                 url: pullRequestURL,
+                ownerLogin: "octocat",
+                ownerURL: URL(string: "https://github.com/octocat")!,
                 status: .open,
                 branch: "ste-25095-work-context",
                 source: .pullRequestLookup,
@@ -46,6 +48,8 @@ private struct WorkContextFixedLogLimitProvider: SidebarLogEntryLimitProviding {
         #expect(context.branch?.name == "ste-25095-work-context")
         #expect(context.repositoryRemote?.slug == "manaflow-ai/bmux")
         #expect(context.pullRequest?.number == 25095)
+        #expect(context.pullRequest?.ownerLogin == "octocat")
+        #expect(context.pullRequest?.ownerURL?.absoluteString == "https://github.com/octocat")
         #expect(context.pullRequest?.isStale == true)
         #expect(context.ticket?.key == "STE-25095")
         #expect(context.ticket?.number == 25095)
@@ -59,6 +63,8 @@ private struct WorkContextFixedLogLimitProvider: SidebarLogEntryLimitProviding {
                 number: 25095,
                 label: "manaflow-ai/bmux",
                 url: pullRequestURL,
+                ownerLogin: "octocat",
+                ownerURL: URL(string: "https://github.com/octocat")!,
                 status: .open,
                 branch: " ste-25095-work-context ",
                 isStale: true
@@ -69,6 +75,8 @@ private struct WorkContextFixedLogLimitProvider: SidebarLogEntryLimitProviding {
         #expect(context.branch?.source == .sidebarMetadata)
         #expect(context.pullRequest?.number == 25095)
         #expect(context.pullRequest?.url == pullRequestURL)
+        #expect(context.pullRequest?.ownerLogin == "octocat")
+        #expect(context.pullRequest?.ownerURL?.absoluteString == "https://github.com/octocat")
         #expect(context.pullRequest?.branch == "ste-25095-work-context")
         #expect(context.pullRequest?.source == .sidebarMetadata)
         #expect(context.pullRequest?.isStale == true)

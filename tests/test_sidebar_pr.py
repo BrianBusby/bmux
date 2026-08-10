@@ -57,6 +57,8 @@ def main() -> int:
 
     pr_number = 123
     pr_url = f"https://github.com/manaflow-ai/bmux/pull/{pr_number}"
+    owner = "octocat"
+    owner_url = "https://github.com/octocat"
 
     try:
         with bmux() as client:
@@ -70,21 +72,29 @@ def main() -> int:
                 raise AssertionError("No surfaces found in selected workspace")
             panel_id = surfaces[0][1]
 
-            client.report_pr(pr_number, pr_url, state="open", tab=tab_id, panel=panel_id)
+            client.report_pr(pr_number, pr_url, state="open", owner=owner, owner_url=owner_url, tab=tab_id, panel=panel_id)
             _wait_for_state_field(client, "pr", f"#{pr_number} open {pr_url}")
             _wait_for_state_field(client, "pr_label", "PR")
+            _wait_for_state_field(client, "pr_owner", owner)
+            _wait_for_state_field(client, "pr_owner_url", owner_url)
 
             client.report_review(pr_number, pr_url, label="MR", state="open", tab=tab_id, panel=panel_id)
             _wait_for_state_field(client, "pr", f"#{pr_number} open {pr_url}")
             _wait_for_state_field(client, "pr_label", "MR")
+            _wait_for_state_field(client, "pr_owner", owner)
+            _wait_for_state_field(client, "pr_owner_url", owner_url)
 
-            client.report_pr(pr_number, pr_url, state="merged", tab=tab_id, panel=panel_id)
+            client.report_pr(pr_number, pr_url, state="merged", owner=owner, tab=tab_id, panel=panel_id)
             _wait_for_state_field(client, "pr", f"#{pr_number} merged {pr_url}")
             _wait_for_state_field(client, "pr_label", "PR")
+            _wait_for_state_field(client, "pr_owner", owner)
+            _wait_for_state_field(client, "pr_owner_url", owner_url)
 
             client.clear_pr(tab=tab_id, panel=panel_id)
             _wait_for_state_field(client, "pr", "none")
             _wait_for_state_field(client, "pr_label", "none")
+            _wait_for_state_field(client, "pr_owner", "none")
+            _wait_for_state_field(client, "pr_owner_url", "none")
 
             try:
                 client.close_tab(new_tab_id)

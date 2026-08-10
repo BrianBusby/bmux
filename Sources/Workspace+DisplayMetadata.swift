@@ -74,6 +74,8 @@ extension Workspace {
         number: Int,
         label: String,
         url: URL,
+        ownerLogin: String? = nil,
+        ownerURL: URL? = nil,
         status: SidebarPullRequestStatus,
         branch: String? = nil,
         isStale: Bool = false,
@@ -83,6 +85,9 @@ extension Workspace {
         let existing = panelPullRequests[panelId]
         let normalizedBranch = branch?.normalizedSidebarBranchName
         let currentPanelBranch = panelGitBranches[panelId]?.branch.normalizedSidebarBranchName
+        let isSameExistingPullRequest = existing?.number == number && existing?.url == url
+        let resolvedOwnerLogin = ownerLogin ?? (isSameExistingPullRequest ? existing?.ownerLogin : nil)
+        let resolvedOwnerURL = ownerURL ?? (isSameExistingPullRequest ? existing?.ownerURL : nil)
         let resolvedBranch: String? = {
             if let normalizedBranch {
                 return normalizedBranch
@@ -103,6 +108,8 @@ extension Workspace {
             number: number,
             label: label,
             url: url,
+            ownerLogin: resolvedOwnerLogin,
+            ownerURL: resolvedOwnerURL,
             status: status,
             branch: resolvedBranch,
             isStale: isStale

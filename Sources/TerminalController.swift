@@ -618,11 +618,16 @@ class TerminalController {
         number: Int,
         label: String,
         url: URL,
+        ownerLogin: String?,
+        ownerURL: URL?,
         status: SidebarPullRequestStatus,
         branch: String?
     ) -> Bool {
         guard let current else { return true }
         let normalizedBranch = branch?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isSamePullRequest = current.number == number && current.url == url
+        let effectiveOwnerLogin = ownerLogin ?? (isSamePullRequest ? current.ownerLogin : nil)
+        let effectiveOwnerURL = ownerURL ?? (isSamePullRequest ? current.ownerURL : nil)
         let effectiveBranch: String? = {
             if let normalizedBranch, !normalizedBranch.isEmpty {
                 return normalizedBranch
@@ -638,6 +643,8 @@ class TerminalController {
         return current.number != number
             || current.label != label
             || current.url != url
+            || current.ownerLogin != effectiveOwnerLogin
+            || current.ownerURL != effectiveOwnerURL
             || current.status != status
             || current.branch != effectiveBranch
             || current.isStale
@@ -10866,8 +10873,8 @@ class TerminalController {
           clear_progress [--tab=X] - Clear progress bar
           report_git_branch <branch> [--status=dirty|clean|unknown] [--tab=X] [--panel=Y] - Report git branch
           clear_git_branch [--tab=X] [--panel=Y] - Clear git branch
-          report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--branch=<name>] [--tab=X] [--panel=Y] - Report pull request / review item
-          report_review <number> <url> [--label=MR] [--state=open|merged|closed] [--tab=X] [--panel=Y] - Alias for provider-specific review item
+          report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--owner=<login>] [--owner-url=<url>] [--branch=<name>] [--tab=X] [--panel=Y] - Report pull request / review item
+          report_review <number> <url> [--label=MR] [--state=open|merged|closed] [--owner=<login>] [--owner-url=<url>] [--tab=X] [--panel=Y] - Alias for provider-specific review item
           clear_pr [--tab=X] [--panel=Y] - Clear pull request
           report_ports <port1> [port2...] [--tab=X] [--panel=Y] - Report listening ports
           report_tty <tty_name> [--tab=X] [--panel=Y] - Register TTY for batched port scanning

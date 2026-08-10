@@ -7,11 +7,22 @@ struct WorkspacePullRequestRESTItem: Decodable, Sendable {
         let ref: String
     }
 
+    struct User: Decodable, Sendable {
+        let login: String?
+        let htmlURL: String?
+
+        enum CodingKeys: String, CodingKey {
+            case login
+            case htmlURL = "html_url"
+        }
+    }
+
     let number: Int
     let state: String
     let htmlURL: String
     let updatedAt: String?
     let mergedAt: String?
+    let user: User?
     let head: Ref
     let base: Ref?
 
@@ -21,6 +32,7 @@ struct WorkspacePullRequestRESTItem: Decodable, Sendable {
         case htmlURL = "html_url"
         case updatedAt = "updated_at"
         case mergedAt = "merged_at"
+        case user
         case head
         case base
     }

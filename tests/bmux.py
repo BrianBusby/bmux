@@ -743,6 +743,8 @@ class bmux:
         url: str,
         label: str = None,
         state: str = None,
+        owner: str = None,
+        owner_url: str = None,
         tab: str = None,
         panel: str = None,
     ) -> None:
@@ -752,6 +754,10 @@ class bmux:
             cmd += f" --label={_quote_option_value(label)}"
         if state:
             cmd += f" --state={state}"
+        if owner:
+            cmd += f" --owner={_quote_option_value(owner)}"
+        if owner_url:
+            cmd += f" --owner-url={_quote_option_value(owner_url)}"
         if tab:
             cmd += f" --tab={tab}"
         if panel:
@@ -766,6 +772,8 @@ class bmux:
         url: str,
         label: str = None,
         state: str = None,
+        owner: str = None,
+        owner_url: str = None,
         tab: str = None,
         panel: str = None,
     ) -> None:
@@ -775,6 +783,10 @@ class bmux:
             cmd += f" --label={_quote_option_value(label)}"
         if state:
             cmd += f" --state={state}"
+        if owner:
+            cmd += f" --owner={_quote_option_value(owner)}"
+        if owner_url:
+            cmd += f" --owner-url={_quote_option_value(owner_url)}"
         if tab:
             cmd += f" --tab={tab}"
         if panel:

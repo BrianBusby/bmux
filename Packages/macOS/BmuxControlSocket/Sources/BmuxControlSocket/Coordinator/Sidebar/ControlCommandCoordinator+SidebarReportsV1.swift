@@ -80,7 +80,7 @@ extension ControlCommandCoordinator {
     nonisolated func sidebarReportPullRequest(_ args: String, context: (any ControlCommandContext)?) -> String {
         let parsed = sidebarParseOptions(args)
         guard parsed.positional.count >= 2 else {
-            return "ERROR: Missing pull request number or URL — usage: report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--branch=<name>] [--tab=X] [--panel=Y]"
+            return "ERROR: Missing pull request number or URL — usage: report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--owner=<login>] [--owner-url=<url>] [--branch=<name>] [--tab=X] [--panel=Y]"
         }
 
         let rawNumber = parsed.positional[0].trimmingCharacters(in: .whitespacesAndNewlines)
@@ -104,10 +104,30 @@ extension ControlCommandCoordinator {
         if sidebarNormalizedOptionValue(parsed.options["checks"]) != nil {
             return "ERROR: Unsupported option '--checks' — pull request checks are no longer tracked"
         }
+        let ownerLogin = sidebarNormalizedOptionValue(parsed.options["owner"])
+            ?? sidebarNormalizedOptionValue(parsed.options["author"])
+        let ownerURL: URL?
+        if let rawOwnerURL = sidebarNormalizedOptionValue(parsed.options["owner-url"])
+            ?? sidebarNormalizedOptionValue(parsed.options["owner_url"])
+            ?? sidebarNormalizedOptionValue(parsed.options["author-url"])
+            ?? sidebarNormalizedOptionValue(parsed.options["author_url"]) {
+            guard let parsedOwnerURL = URL(string: rawOwnerURL),
+                  let scheme = parsedOwnerURL.scheme?.lowercased(),
+                  scheme == "http" || scheme == "https" else {
+                return "ERROR: Invalid pull request owner URL '\(rawOwnerURL)'"
+            }
+            ownerURL = parsedOwnerURL
+        } else {
+            var ownerPathAllowed = CharacterSet.urlPathAllowed
+            ownerPathAllowed.remove(charactersIn: "/")
+            ownerURL = ownerLogin
+                .flatMap { $0.addingPercentEncoding(withAllowedCharacters: ownerPathAllowed) }
+                .flatMap { URL(string: "https://github.com/\($0)") }
+        }
 
         let labelRaw = sidebarNormalizedOptionValue(parsed.options["label"]) ?? "PR"
         guard !labelRaw.isEmpty else {
-            return "ERROR: Invalid review label — usage: report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--branch=<name>] [--tab=X] [--panel=Y]"
+            return "ERROR: Invalid review label — usage: report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--owner=<login>] [--owner-url=<url>] [--branch=<name>] [--tab=X] [--panel=Y]"
         }
         let label = String(labelRaw.prefix(16))
 
@@ -115,7 +135,7 @@ extension ControlCommandCoordinator {
         // Keep this telemetry path off-main so SwiftUI render passes can't deadlock the socket handler.
         let resolution = sidebarPanelMutationTarget(
             options: parsed.options,
-            missingPanelUsage: "report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--branch=<name>] [--tab=X] [--panel=Y]"
+            missingPanelUsage: "report_pr <number> <url> [--label=PR] [--state=open|merged|closed] [--owner=<login>] [--owner-url=<url>] [--branch=<name>] [--tab=X] [--panel=Y]"
         )
         guard let target = resolution.target else {
             return resolution.error ?? "ERROR: Tab not found"
@@ -125,6 +145,8 @@ extension ControlCommandCoordinator {
             number: number,
             label: label,
             url: url,
+            ownerLogin: ownerLogin,
+            ownerURL: ownerURL,
             statusRawValue: statusRaw,
             branch: branch
         )
@@ -446,9 +468,13 @@ extension ControlCommandCoordinator {
         if let pr = snapshot.firstPullRequest {
             lines.append("pr=#\(pr.number) \(pr.statusRawValue) \(pr.urlAbsoluteString)")
             lines.append("pr_label=\(pr.label)")
+            lines.append("pr_owner=\(pr.ownerLogin ?? "none")")
+            lines.append("pr_owner_url=\(pr.ownerURLAbsoluteString ?? "none")")
         } else {
             lines.append("pr=none")
             lines.append("pr_label=none")
+            lines.append("pr_owner=none")
+            lines.append("pr_owner_url=none")
         }
 
         if snapshot.listeningPorts.isEmpty {

@@ -172,6 +172,8 @@ public struct PullRequestProbeService: Sendable {
                     WorkspacePullRequestResolvedItem(
                         number: matchedPullRequest.number,
                         urlString: matchedPullRequest.url,
+                        ownerLogin: matchedPullRequest.ownerLogin,
+                        ownerURLString: matchedPullRequest.ownerURLString,
                         statusRawValue: status.rawValue,
                         branch: candidate.branch
                     )

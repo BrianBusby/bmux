@@ -115,6 +115,8 @@ extension TerminalController {
         number: Int,
         label: String,
         url: URL,
+        ownerLogin: String?,
+        ownerURL: URL?,
         statusRawValue: String,
         branch: String?
     ) {
@@ -133,6 +135,8 @@ extension TerminalController {
                 number: number,
                 label: label,
                 url: url,
+                ownerLogin: ownerLogin,
+                ownerURL: ownerURL,
                 status: status,
                 branch: branch
             ) else {
@@ -144,6 +148,8 @@ extension TerminalController {
                 number: number,
                 label: label,
                 url: url,
+                ownerLogin: ownerLogin,
+                ownerURL: ownerURL,
                 status: status,
                 branch: branch
             )
@@ -388,6 +394,8 @@ extension TerminalController {
                 number: $0.number,
                 statusRawValue: $0.status.rawValue,
                 urlAbsoluteString: $0.url.absoluteString,
+                ownerLogin: $0.ownerLogin,
+                ownerURLAbsoluteString: $0.ownerURL?.absoluteString,
                 label: $0.label
             )
         }

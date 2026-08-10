@@ -9,7 +9,7 @@ Version 1 only supports sidebar extensions. The API exposes a stable workspace s
 - create, select, navigate, split, zoom, and close surfaces
 - ask BMUX to open a URL
 
-The snapshot includes workspace identity, title, detail text, paths, git branch, unread state, listening ports, pull request URLs, and shared surface metadata. It does not expose terminal buffers, shell history, environment variables, secrets, or arbitrary filesystem access.
+The snapshot includes workspace identity, title, detail text, paths, git branch, unread state, listening ports, pull request metadata, and shared surface metadata. It does not expose terminal buffers, shell history, environment variables, secrets, or arbitrary filesystem access.
 
 Host-side lifecycle, discovery, and display belong in `Packages/macOS/BMUXExtensionHostSupport`.
 Internal bmux-owned sidebar provider/render models live in `Packages/macOS/BmuxSidebarProviderKit`.
@@ -118,7 +118,7 @@ snapshot and rejects actions that have not been granted:
 - `workspacePaths`: local workspace and project paths
 - `notifications`: latest workspace notifications
 - `networkPorts`: listening ports for each workspace
-- `pullRequests`: pull request links associated with workspaces
+- `pullRequests`: pull request links and metadata associated with workspaces, including PR owner profile links when known
 - `createWorkspace`: create workspaces
 - `selectWorkspace`: select a workspace from your UI
 - `closeWorkspace`: close workspaces from your UI

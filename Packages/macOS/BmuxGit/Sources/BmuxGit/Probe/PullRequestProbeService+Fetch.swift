@@ -338,6 +338,8 @@ extension PullRequestProbeService {
             number: pullRequest.number,
             state: rawState,
             url: pullRequest.htmlURL,
+            ownerLogin: pullRequest.user?.login,
+            ownerURLString: pullRequest.user?.htmlURL,
             updatedAt: pullRequest.updatedAt,
             mergedAt: pullRequest.mergedAt,
             headRefName: pullRequest.head.ref,
