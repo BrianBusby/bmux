@@ -158,7 +158,10 @@ extension BmuxConfigExecutor {
         }
 
         if let existingWorkspaceToClose, existingWorkspaceToClose.id != newWorkspace.id {
-            tabManager.closeWorkspace(existingWorkspaceToClose)
+            _ = tabManager.closeWorkspaceForAction(
+                tabId: existingWorkspaceToClose.id,
+                allowPinned: true
+            )
         }
 
         if let layout = wsDef.layout {

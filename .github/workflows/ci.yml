@@ -198,6 +198,9 @@ jobs:
       - name: Validate canonical workspace selection guard
         run: ./scripts/check-canonical-workspace-selection.sh
 
+      - name: Validate canonical workspace mutation guard
+        run: ./scripts/check-canonical-workspace-mutations.sh
+
       - name: Validate pbxproj test-wiring lint
         run: ./tests/test_ci_pbxproj_test_wiring.sh
 
