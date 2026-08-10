@@ -29,6 +29,11 @@ enum WorkspaceOrderChangeNotificationKey {
     static let movedWorkspaceIds = "movedWorkspaceIds"
 }
 
+enum WorkspaceAdjacentSelectionDirection: Equatable {
+    case next
+    case previous
+}
+
 #if DEBUG
 // Sample the actual IOSurface-backed terminal layer at vsync cadence so UI tests can reliably
 // catch a single compositor-frame blank flash and any transient compositor scaling (stretched text).
@@ -3443,40 +3448,43 @@ class TabManager: ObservableObject {
         return workspace.panelIdFromSurfaceId(TabID(uuid: surfaceOrPanelId))
     }
 
-    func selectNextTab() {
+    @discardableResult
+    func selectAdjacentWorkspaceForAction(_ direction: WorkspaceAdjacentSelectionDirection) -> UUID? {
         guard let currentId = selectedTabId,
-              let currentIndex = tabs.firstIndex(where: { $0.id == currentId }) else { return }
-        let nextIndex = (currentIndex + 1) % tabs.count
+              let currentIndex = tabs.firstIndex(where: { $0.id == currentId }) else { return nil }
+        let targetIndex: Int
+        let trigger: String
+        switch direction {
+        case .next:
+            targetIndex = (currentIndex + 1) % tabs.count
+            trigger = "next"
+        case .previous:
+            targetIndex = (currentIndex - 1 + tabs.count) % tabs.count
+            trigger = "prev"
+        }
 #if DEBUG
-        let nextId = tabs[nextIndex].id
-        debugPrepareWorkspaceSwitch("next", from: currentId, to: nextId)
+        let targetId = tabs[targetIndex].id
+        debugPrepareWorkspaceSwitch(trigger, from: currentId, to: targetId)
 #endif
         activateWorkspaceCycleHotWindow()
         selectWorkspaceId(
-            tabs[nextIndex].id,
+            tabs[targetIndex].id,
             notificationDismissalContext: .explicitWorkspaceResume
         )
         // Keyboard nav is an explicit "focus one workspace" gesture, so drop
         // any stale sidebar multi-selection (Shift-click range) so subsequent
         // batch actions don't operate on workspaces the user thought they
         // had unselected by moving on.
-        clearSidebarMultiSelection(except: tabs[nextIndex].id)
+        clearSidebarMultiSelection(except: tabs[targetIndex].id)
+        return tabs[targetIndex].id
+    }
+
+    func selectNextTab() {
+        selectAdjacentWorkspaceForAction(.next)
     }
 
     func selectPreviousTab() {
-        guard let currentId = selectedTabId,
-              let currentIndex = tabs.firstIndex(where: { $0.id == currentId }) else { return }
-        let prevIndex = (currentIndex - 1 + tabs.count) % tabs.count
-#if DEBUG
-        let prevId = tabs[prevIndex].id
-        debugPrepareWorkspaceSwitch("prev", from: currentId, to: prevId)
-#endif
-        activateWorkspaceCycleHotWindow()
-        selectWorkspaceId(
-            tabs[prevIndex].id,
-            notificationDismissalContext: .explicitWorkspaceResume
-        )
-        clearSidebarMultiSelection(except: tabs[prevIndex].id)
+        selectAdjacentWorkspaceForAction(.previous)
     }
 
     /// Reduce sidebar multi-selection to a single workspace (or clear if

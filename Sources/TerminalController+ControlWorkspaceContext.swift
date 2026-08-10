@@ -341,7 +341,7 @@ extension TerminalController: ControlWorkspaceContext {
             _ = AppDelegate.shared?.focusMainWindow(windowId: windowId)
             setActiveTabManager(tabManager)
         }
-        tabManager.selectNextTab()
+        tabManager.selectAdjacentWorkspaceForAction(.next)
         guard let workspaceId = tabManager.selectedTabId else { return .notFound }
         let windowId = AppDelegate.shared?.windowId(for: tabManager)
         return .resolved(workspaceID: workspaceId, windowID: windowId)
@@ -356,7 +356,7 @@ extension TerminalController: ControlWorkspaceContext {
             _ = AppDelegate.shared?.focusMainWindow(windowId: windowId)
             setActiveTabManager(tabManager)
         }
-        tabManager.selectPreviousTab()
+        tabManager.selectAdjacentWorkspaceForAction(.previous)
         guard let workspaceId = tabManager.selectedTabId else { return .notFound }
         let windowId = AppDelegate.shared?.windowId(for: tabManager)
         return .resolved(workspaceID: workspaceId, windowID: windowId)

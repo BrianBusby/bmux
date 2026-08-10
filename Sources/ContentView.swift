@@ -7856,10 +7856,10 @@ struct ContentView: View {
             }
         }
         registry.register(commandId: "palette.nextWorkspace") {
-            tabManager.selectNextTab()
+            tabManager.selectAdjacentWorkspaceForAction(.next)
         }
         registry.register(commandId: "palette.previousWorkspace") {
-            tabManager.selectPreviousTab()
+            tabManager.selectAdjacentWorkspaceForAction(.previous)
         }
         registry.register(commandId: "palette.moveWorkspaceUp") {
             moveSelectedWorkspace(by: -1)
@@ -11082,11 +11082,11 @@ struct VerticalTabsSidebar: View {
             return .accepted
 
         case .selectNextWorkspace:
-            tabManager.selectNextTab()
+            tabManager.selectAdjacentWorkspaceForAction(.next)
             return .accepted
 
         case .selectPreviousWorkspace:
-            tabManager.selectPreviousTab()
+            tabManager.selectAdjacentWorkspaceForAction(.previous)
             return .accepted
 
         case .createTerminalSurface(let workspaceId):

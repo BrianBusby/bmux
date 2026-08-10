@@ -14189,7 +14189,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 "ws.shortcut dir=next repeat=\(event.isARepeat ? 1 : 0) keyCode=\(event.keyCode) selected=\(selected)"
             )
 #endif
-            tabManager?.selectNextTab()
+            tabManager?.selectAdjacentWorkspaceForAction(.next)
             return true
         }
 
@@ -14200,7 +14200,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 "ws.shortcut dir=prev repeat=\(event.isARepeat ? 1 : 0) keyCode=\(event.keyCode) selected=\(selected)"
             )
 #endif
-            tabManager?.selectPreviousTab()
+            tabManager?.selectAdjacentWorkspaceForAction(.previous)
             return true
         }
 

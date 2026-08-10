@@ -53,6 +53,7 @@ tab_manager_close_surface_pattern='^[[:space:]]*tab\.closePanel\(surfaceId\)[[:s
 socket_surface_reorder_pattern='\.reorderSurface\(panelId:'
 tab_manager_close_adapter_pattern='(plan\.workspace\.closePanel|let closed = tab\.closePanel|_ = tab\.closePanel\(surfaceId)'
 socket_close_adapter_pattern='requestNonInteractiveCloseTabRecordingHistory\(tabId\)'
+workspace_adjacent_selection_pattern='\.(selectNextTab|selectPreviousTab)\('
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -197,6 +198,15 @@ while IFS= read -r line; do
   violations+=("$line")
 done < <(rg -n -P "$socket_close_adapter_pattern" \
   "Sources/TerminalController+ControlSystemContext2.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$workspace_adjacent_selection_pattern" \
+  "Sources" \
+  --glob "*.swift" \
+  --glob "!TabManager.swift" \
+  --glob "!Workspace+SurfaceNavigation.swift" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {

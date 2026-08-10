@@ -591,6 +591,23 @@ import Bonsplit
         #expect(manager.selectedTabId == targetWorkspace.id)
     }
 
+    @Test func adjacentWorkspaceSelectionActionCyclesAndCollapsesSidebarSelection() throws {
+        let manager = TabManager()
+        let firstWorkspace = try #require(manager.tabs.first)
+        let secondWorkspace = manager.addWorkspace(select: false, placementOverride: .end)
+        let thirdWorkspace = manager.addWorkspace(select: false, placementOverride: .end)
+        manager.sidebarMultiSelection.replaceSelection(with: [firstWorkspace.id, thirdWorkspace.id])
+
+        #expect(manager.selectWorkspaceIdForAction(firstWorkspace.id))
+        #expect(manager.selectAdjacentWorkspaceForAction(.next) == secondWorkspace.id)
+        #expect(manager.selectedTabId == secondWorkspace.id)
+        #expect(manager.sidebarSelectedWorkspaceIds == [secondWorkspace.id])
+
+        #expect(manager.selectAdjacentWorkspaceForAction(.previous) == firstWorkspace.id)
+        #expect(manager.selectedTabId == firstWorkspace.id)
+        #expect(manager.sidebarSelectedWorkspaceIds == [firstWorkspace.id])
+    }
+
     @Test func workspaceCreationActionCreatesThroughWorkspaceModelPolicy() throws {
         let manager = TabManager()
         let originalWorkspace = try #require(manager.tabs.first)
