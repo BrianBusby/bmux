@@ -87,7 +87,11 @@ actor ProvenanceSQLiteRepository {
         try database.execute("BEGIN IMMEDIATE TRANSACTION")
         do {
             try insertEvent(event)
-            try applyProjectionUpdates(from: event.payload)
+            try applyProjectionUpdates(
+                from: event.payload,
+                latestEventID: event.id,
+                latestEventSequence: eventSequence(id: event.id)
+            )
             try database.execute("COMMIT")
         } catch {
             try? database.execute("ROLLBACK")
@@ -578,7 +582,11 @@ actor ProvenanceSQLiteRepository {
                 guard !entries.isEmpty else { break }
 
                 for entry in entries {
-                    try applyProjectionUpdates(from: entry.event.payload)
+                    try applyProjectionUpdates(
+                        from: entry.event.payload,
+                        latestEventID: entry.event.id,
+                        latestEventSequence: entry.sequence
+                    )
                     afterSequence = entry.sequence
                     replayedCount += 1
                 }
@@ -1012,6 +1020,14 @@ actor ProvenanceSQLiteRepository {
         return (query.int(at: 0), latestSequence)
     }
 
+    private func eventSequence(id: String) throws -> Int? {
+        let query = try database.prepare("SELECT sequence FROM provenance_events WHERE id = ?")
+        defer { query.finalize() }
+        try query.bind(id, at: 1)
+        guard try query.step() else { return nil }
+        return query.int(at: 0)
+    }
+
     private func projectionCounts(from payloads: [ProvenanceEventPayload]) -> [String: Int] {
         var repositories = Set<String>()
         var worktrees = Set<String>()
@@ -1365,7 +1381,11 @@ actor ProvenanceSQLiteRepository {
                 pull_request_status,
                 pull_request_branch,
                 pull_request_is_stale,
+                current_directory,
+                is_dirty,
                 ticket_ids_json,
+                latest_event_id,
+                latest_event_sequence,
                 observed_at_seconds,
                 updated_at_seconds
             FROM provenance_workspace_display
@@ -1384,7 +1404,7 @@ actor ProvenanceSQLiteRepository {
     private func workspaceDisplay(from query: ProvenanceSQLiteStatement) throws -> ProvenanceWorkspaceDisplayRecord? {
         guard let id = query.string(at: 0),
               let workspaceID = query.string(at: 1),
-              let ticketIDsJSON = query.string(at: 12),
+              let ticketIDsJSON = query.string(at: 14),
               let ticketIDsData = ticketIDsJSON.data(using: .utf8) else {
             return nil
         }
@@ -1395,6 +1415,7 @@ actor ProvenanceSQLiteRepository {
             workspaceID: workspaceID,
             repositoryID: query.string(at: 2),
             worktreeID: query.string(at: 3),
+            currentDirectory: query.string(at: 12),
             title: query.string(at: 4),
             titleSource: query.string(at: 5),
             branch: query.string(at: 6),
@@ -1403,9 +1424,12 @@ actor ProvenanceSQLiteRepository {
             pullRequestStatus: query.string(at: 9),
             pullRequestBranch: query.string(at: 10),
             pullRequestIsStale: query.int(at: 11) != 0,
+            isDirty: query.double(at: 13).map { Int($0) != 0 },
             ticketIDs: ticketIDs,
-            observedAt: Date(timeIntervalSince1970: query.double(at: 13) ?? 0),
-            updatedAt: Date(timeIntervalSince1970: query.double(at: 14) ?? 0)
+            latestEventID: query.string(at: 15),
+            latestEventSequence: query.double(at: 16).map(Int.init),
+            observedAt: Date(timeIntervalSince1970: query.double(at: 17) ?? 0),
+            updatedAt: Date(timeIntervalSince1970: query.double(at: 18) ?? 0)
         )
     }
 
@@ -2330,7 +2354,11 @@ actor ProvenanceSQLiteRepository {
         _ = try insert.step()
     }
 
-    private func applyProjectionUpdates(from payload: ProvenanceEventPayload) throws {
+    private func applyProjectionUpdates(
+        from payload: ProvenanceEventPayload,
+        latestEventID: String? = nil,
+        latestEventSequence: Int? = nil
+    ) throws {
         if let repository = payload.repository {
             try upsertRepository(repository)
         }
@@ -2365,7 +2393,11 @@ actor ProvenanceSQLiteRepository {
             try upsertValidationRun(validationRun)
         }
         if let workspaceDisplay = payload.workspaceDisplay {
-            try upsertWorkspaceDisplay(workspaceDisplay)
+            try upsertWorkspaceDisplay(
+                workspaceDisplay,
+                latestEventID: latestEventID,
+                latestEventSequence: latestEventSequence
+            )
         }
     }
 
@@ -2814,7 +2846,11 @@ actor ProvenanceSQLiteRepository {
         _ = try upsert.step()
     }
 
-    private func upsertWorkspaceDisplay(_ display: ProvenanceWorkspaceDisplayRecord) throws {
+    private func upsertWorkspaceDisplay(
+        _ display: ProvenanceWorkspaceDisplayRecord,
+        latestEventID: String? = nil,
+        latestEventSequence: Int? = nil
+    ) throws {
         let ticketIDsData = try payloadEncoder.encode(display.ticketIDs)
         guard let ticketIDsJSON = String(data: ticketIDsData, encoding: .utf8) else {
             throw ProvenanceSQLiteError.sqlite(message: "failed to encode workspace display ticket IDs")
@@ -2835,10 +2871,14 @@ actor ProvenanceSQLiteRepository {
                 pull_request_status,
                 pull_request_branch,
                 pull_request_is_stale,
+                current_directory,
+                is_dirty,
                 ticket_ids_json,
+                latest_event_id,
+                latest_event_sequence,
                 observed_at_seconds,
                 updated_at_seconds
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 workspace_id = excluded.workspace_id,
                 repository_id = excluded.repository_id,
@@ -2851,7 +2891,11 @@ actor ProvenanceSQLiteRepository {
                 pull_request_status = excluded.pull_request_status,
                 pull_request_branch = excluded.pull_request_branch,
                 pull_request_is_stale = excluded.pull_request_is_stale,
+                current_directory = excluded.current_directory,
+                is_dirty = excluded.is_dirty,
                 ticket_ids_json = excluded.ticket_ids_json,
+                latest_event_id = excluded.latest_event_id,
+                latest_event_sequence = excluded.latest_event_sequence,
                 observed_at_seconds = excluded.observed_at_seconds,
                 updated_at_seconds = excluded.updated_at_seconds
             """
@@ -2874,9 +2918,21 @@ actor ProvenanceSQLiteRepository {
         try upsert.bind(display.pullRequestStatus, at: 10)
         try upsert.bind(display.pullRequestBranch, at: 11)
         try upsert.bind(display.pullRequestIsStale ? 1 : 0, at: 12)
-        try upsert.bind(ticketIDsJSON, at: 13)
-        try upsert.bind(display.observedAt.timeIntervalSince1970, at: 14)
-        try upsert.bind(display.updatedAt.timeIntervalSince1970, at: 15)
+        try upsert.bind(display.currentDirectory, at: 13)
+        if let isDirty = display.isDirty {
+            try upsert.bind(isDirty ? 1 : 0, at: 14)
+        } else {
+            try upsert.bind(nil as String?, at: 14)
+        }
+        try upsert.bind(ticketIDsJSON, at: 15)
+        try upsert.bind(display.latestEventID ?? latestEventID, at: 16)
+        if let latestEventSequence = display.latestEventSequence ?? latestEventSequence {
+            try upsert.bind(latestEventSequence, at: 17)
+        } else {
+            try upsert.bind(nil as String?, at: 17)
+        }
+        try upsert.bind(display.observedAt.timeIntervalSince1970, at: 18)
+        try upsert.bind(display.updatedAt.timeIntervalSince1970, at: 19)
 
         _ = try upsert.step()
     }
@@ -3348,6 +3404,20 @@ actor ProvenanceSQLiteRepository {
                 """
                 UPDATE provenance_metadata
                 SET value = '11'
+                WHERE key = 'schema_version'
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 12,
+            statements: [
+                "ALTER TABLE provenance_workspace_display ADD COLUMN current_directory TEXT",
+                "ALTER TABLE provenance_workspace_display ADD COLUMN is_dirty INTEGER",
+                "ALTER TABLE provenance_workspace_display ADD COLUMN latest_event_id TEXT",
+                "ALTER TABLE provenance_workspace_display ADD COLUMN latest_event_sequence INTEGER",
+                """
+                UPDATE provenance_metadata
+                SET value = '12'
                 WHERE key = 'schema_version'
                 """,
             ]

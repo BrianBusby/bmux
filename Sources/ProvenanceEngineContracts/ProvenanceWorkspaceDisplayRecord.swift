@@ -14,6 +14,9 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
     /// Linked worktree identifier, when known.
     public let worktreeID: String?
 
+    /// Current workspace directory, when accepted from deterministic observation.
+    public let currentDirectory: String?
+
     /// Current display title, when explicitly observed.
     public let title: String?
 
@@ -38,8 +41,17 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
     /// Whether pull request metadata is known to be stale.
     public let pullRequestIsStale: Bool
 
+    /// Accepted dirty/clean state for the workspace worktree, when known.
+    public let isDirty: Bool?
+
     /// External ticket identifiers linked to the workspace, such as Linear or Jira keys.
     public let ticketIDs: [String]
+
+    /// Durable event ID whose payload last updated this projection.
+    public let latestEventID: String?
+
+    /// Append-order ledger sequence whose payload last updated this projection.
+    public let latestEventSequence: Int?
 
     /// Time the display facts were observed.
     public let observedAt: Date
@@ -53,6 +65,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         workspaceID: String,
         repositoryID: String? = nil,
         worktreeID: String? = nil,
+        currentDirectory: String? = nil,
         title: String? = nil,
         titleSource: String? = nil,
         branch: String? = nil,
@@ -61,7 +74,10 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         pullRequestStatus: String? = nil,
         pullRequestBranch: String? = nil,
         pullRequestIsStale: Bool = false,
+        isDirty: Bool? = nil,
         ticketIDs: [String] = [],
+        latestEventID: String? = nil,
+        latestEventSequence: Int? = nil,
         observedAt: Date,
         updatedAt: Date
     ) {
@@ -69,6 +85,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.workspaceID = workspaceID
         self.repositoryID = repositoryID
         self.worktreeID = worktreeID
+        self.currentDirectory = currentDirectory
         self.title = title
         self.titleSource = titleSource
         self.branch = branch
@@ -77,7 +94,10 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.pullRequestStatus = pullRequestStatus
         self.pullRequestBranch = pullRequestBranch
         self.pullRequestIsStale = pullRequestIsStale
+        self.isDirty = isDirty
         self.ticketIDs = ticketIDs
+        self.latestEventID = latestEventID
+        self.latestEventSequence = latestEventSequence
         self.observedAt = observedAt
         self.updatedAt = updatedAt
     }

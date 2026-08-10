@@ -424,7 +424,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 11)
+        #expect(try await repository.schemaVersion() == 12)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
@@ -442,7 +442,7 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_workspace_display", in: database))
         #expect(try Self.tableExists("provenance_storage_repair_attempts", in: database))
         #expect(try Self.tableExists("provenance_schema_migrations", in: database))
-        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [11, 10, 9, 8])
+        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [12, 11, 10, 9, 8])
     }
 
     @Test
@@ -502,7 +502,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
 
-        #expect(try await repository.schemaVersion() == 11)
+        #expect(try await repository.schemaVersion() == 12)
         #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
     }
 
@@ -768,7 +768,7 @@ struct ProvenanceSQLiteDatabaseTests {
         let summary = try await repository.storageSummary()
 
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 11,
+            schemaVersion: 12,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,
@@ -2769,6 +2769,7 @@ struct ProvenanceSQLiteDatabaseTests {
             workspaceID: "workspace-1",
             repositoryID: "repository-1",
             worktreeID: "worktree-1",
+            currentDirectory: "/tmp/bmux",
             title: "Canonical domain mutation paths",
             titleSource: "user",
             branch: "canonical-domain-mutation-paths",
@@ -2777,7 +2778,29 @@ struct ProvenanceSQLiteDatabaseTests {
             pullRequestStatus: "open",
             pullRequestBranch: "canonical-domain-mutation-paths",
             pullRequestIsStale: false,
+            isDirty: true,
             ticketIDs: ["STE-1964", "BMUX-42"],
+            observedAt: timestamp,
+            updatedAt: timestamp
+        )
+        let expectedDisplay = ProvenanceWorkspaceDisplayRecord(
+            id: "workspace-display-1",
+            workspaceID: "workspace-1",
+            repositoryID: "repository-1",
+            worktreeID: "worktree-1",
+            currentDirectory: "/tmp/bmux",
+            title: "Canonical domain mutation paths",
+            titleSource: "user",
+            branch: "canonical-domain-mutation-paths",
+            pullRequestNumber: 42,
+            pullRequestURL: "https://github.com/BrianBusby/bmux/pull/42",
+            pullRequestStatus: "open",
+            pullRequestBranch: "canonical-domain-mutation-paths",
+            pullRequestIsStale: false,
+            isDirty: true,
+            ticketIDs: ["STE-1964", "BMUX-42"],
+            latestEventID: "event-workspace-display",
+            latestEventSequence: 1,
             observedAt: timestamp,
             updatedAt: timestamp
         )
@@ -2801,7 +2824,7 @@ struct ProvenanceSQLiteDatabaseTests {
         ) == ProvenanceWorkspaceDisplayResponse(
             found: true,
             workspaceID: display.workspaceID,
-            display: display
+            display: expectedDisplay
         ))
         #expect(try await repository.workspaceDisplay(
             ProvenanceWorkspaceDisplayRequest(workspaceID: "missing-workspace")
@@ -2820,7 +2843,7 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try await repository.rebuildProjectionsFromEventLedger() == 1)
         #expect(try await repository.workspaceDisplay(
             ProvenanceWorkspaceDisplayRequest(workspaceID: display.workspaceID)
-        ).display == display)
+        ).display == expectedDisplay)
     }
 
     @Test
