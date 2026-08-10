@@ -4,7 +4,13 @@ import ProvenanceEngineContracts
 import ProvenanceEngineSDK
 
 extension BMUXCLI {
-    func runProvenanceCommand(commandArgs: [String], jsonOutput: Bool) async throws {
+    func runProvenanceCommand(
+        commandArgs: [String],
+        jsonOutput: Bool,
+        explicitSocketPath: String? = nil,
+        processEnv: [String: String] = ProcessInfo.processInfo.environment,
+        cliBundleIdentifier: String? = CLISocketPathResolver.currentAppBundleIdentifier()
+    ) async throws {
         let subcommand = commandArgs.first?.lowercased()
         switch subcommand {
         case "explain":
@@ -35,7 +41,10 @@ extension BMUXCLI {
         case "diagnostics":
             try await runProvenanceDiagnostics(
                 commandArgs: Array(commandArgs.dropFirst()),
-                jsonOutput: jsonOutput
+                jsonOutput: jsonOutput,
+                explicitSocketPath: explicitSocketPath,
+                processEnv: processEnv,
+                cliBundleIdentifier: cliBundleIdentifier
             )
         case "help", "--help", "-h", nil:
             print(provenanceUsage())
@@ -250,7 +259,13 @@ extension BMUXCLI {
         printProvenanceSessionTree(tree, jsonOutput: jsonOutput)
     }
 
-    private func runProvenanceDiagnostics(commandArgs: [String], jsonOutput: Bool) async throws {
+    private func runProvenanceDiagnostics(
+        commandArgs: [String],
+        jsonOutput: Bool,
+        explicitSocketPath: String? = nil,
+        processEnv: [String: String] = ProcessInfo.processInfo.environment,
+        cliBundleIdentifier: String? = CLISocketPathResolver.currentAppBundleIdentifier()
+    ) async throws {
         let commandName = "provenance diagnostics"
         let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
         var remaining = remainingAfterDatabase
@@ -283,6 +298,7 @@ extension BMUXCLI {
 
             let response: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse
             let databaseURL: URL
+            var resolvedWorkspaceID: String?
             if let overrideURL = provenanceDatabaseOverrideURL(databasePath: databasePath),
                !FileManager.default.fileExists(atPath: overrideURL.path) {
                 databaseURL = overrideURL
@@ -295,13 +311,33 @@ extension BMUXCLI {
             } else {
                 let resolved = try provenanceEngineClient(databasePath: databasePath)
                 databaseURL = resolved.databaseURL
-                response = try await resolved.client.workspaceDisplay(ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest(
+                let directResponse = try await resolved.client.workspaceDisplay(ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest(
                     workspaceID: workspaceID
                 ))
+                if directResponse.found {
+                    response = directResponse
+                } else if let stableWorkspaceID = provenanceStableWorkspaceIDForRuntimeWorkspace(
+                    workspaceID,
+                    explicitSocketPath: explicitSocketPath,
+                    processEnv: processEnv,
+                    cliBundleIdentifier: cliBundleIdentifier
+                ),
+                    stableWorkspaceID != workspaceID {
+                    let stableResponse = try await resolved.client.workspaceDisplay(
+                        ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest(
+                            workspaceID: stableWorkspaceID
+                        )
+                    )
+                    response = stableResponse
+                    resolvedWorkspaceID = stableWorkspaceID
+                } else {
+                    response = directResponse
+                }
             }
 
             let payload = provenanceWorkspaceDisplayDiagnosticPayload(
                 workspaceID: workspaceID,
+                resolvedWorkspaceID: resolvedWorkspaceID,
                 databaseURL: databaseURL,
                 response: response
             )
@@ -1189,6 +1225,7 @@ extension BMUXCLI {
 
     func provenanceWorkspaceDisplayDiagnosticPayload(
         workspaceID: String,
+        resolvedWorkspaceID: String? = nil,
         databaseURL: URL,
         response: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse
     ) -> [String: Any] {
@@ -1199,6 +1236,10 @@ extension BMUXCLI {
             "found": response.found,
             "status": response.found ? "found" : "missing"
         ]
+        if let resolvedWorkspaceID {
+            payload["resolved_workspace_id"] = resolvedWorkspaceID
+            payload["workspace_id_source"] = "runtime_workspace_list"
+        }
         if let reason = response.reason {
             payload["reason"] = reason
         }
@@ -1210,6 +1251,80 @@ extension BMUXCLI {
             "event_sequence": display.latestEventSequence
         ])
         return payload
+    }
+
+    private func provenanceStableWorkspaceIDForRuntimeWorkspace(
+        _ workspaceID: String,
+        explicitSocketPath: String?,
+        processEnv: [String: String],
+        cliBundleIdentifier: String?
+    ) -> String? {
+        let requestedSocketPath: String
+        let socketPathSource: CLISocketPathSource
+        do {
+            if let explicitSocketPath {
+                requestedSocketPath = explicitSocketPath
+                socketPathSource = .explicitFlag
+            } else if let envSocketPath = try CLISocketEnvironment.socketPath(in: processEnv) {
+                requestedSocketPath = envSocketPath
+                socketPathSource = CLISocketPathResolver.isImplicitDefaultPath(
+                    envSocketPath,
+                    bundleIdentifier: cliBundleIdentifier,
+                    environment: processEnv
+                ) ? .implicitDefault : .environment
+            } else {
+                requestedSocketPath = CLISocketPathResolver.defaultSocketPath(
+                    bundleIdentifier: cliBundleIdentifier,
+                    environment: processEnv
+                )
+                socketPathSource = .implicitDefault
+            }
+        } catch {
+            return nil
+        }
+
+        let socketPath = CLISocketPathResolver.resolve(
+            requestedPath: requestedSocketPath,
+            source: socketPathSource,
+            environment: processEnv,
+            bundleIdentifier: cliBundleIdentifier
+        )
+        let client = SocketClient(path: socketPath)
+        guard let payload = try? client.sendV2(method: "workspace.list") else {
+            return nil
+        }
+        return provenanceStableWorkspaceID(
+            fromWorkspaceListPayload: payload,
+            matching: workspaceID
+        )
+    }
+
+    private func provenanceStableWorkspaceID(
+        fromWorkspaceListPayload payload: [String: Any],
+        matching workspaceID: String
+    ) -> String? {
+        let requested = workspaceID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !requested.isEmpty,
+              let workspaces = payload["workspaces"] as? [[String: Any]] else {
+            return nil
+        }
+        for workspace in workspaces {
+            let candidates = [
+                workspace["id"] as? String,
+                workspace["ref"] as? String,
+                workspace["stable_workspace_id"] as? String,
+            ]
+            guard candidates.contains(where: { candidate in
+                guard let candidate else { return false }
+                return candidate.compare(requested, options: [.caseInsensitive]) == .orderedSame
+            }) else {
+                continue
+            }
+            let stableWorkspaceID = (workspace["stable_workspace_id"] as? String)?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            return stableWorkspaceID?.isEmpty == false ? stableWorkspaceID : nil
+        }
+        return nil
     }
 
     private func provenanceWorkspaceDisplayCurrentStatePayload(
