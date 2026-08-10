@@ -552,6 +552,28 @@ struct AgentChatSessionRegistryLifecycleTests {
         #expect(service.hasBoundedReadableTranscript(record))
     }
 
+    @MainActor
+    @Test func hookCwdUpdatesReportedTaskWorkspaceDirectoryAndIgnoresBlankCwd() {
+        var recordedDirectories: [String] = []
+        let service = AgentChatTranscriptService(
+            registry: AgentChatSessionRegistry(),
+            recordTaskWorkspaceDirectory: { _, directory in recordedDirectories.append(directory) }
+        )
+        let workspaceID = UUID().uuidString
+        let surfaceID = UUID().uuidString
+        for (sessionID, cwd) in [
+            ("24ec0052-450c-4914-b1dd-2ee80d4bc84b", "  /private/tmp/bmux-pr-worktree  "),
+            ("34ec0052-450c-4914-b1dd-2ee80d4bc84b", " \n "),
+        ] {
+            service.noteHookEvent(WorkstreamEvent(
+                sessionId: sessionID, hookEventName: .preToolUse, source: "codex",
+                workspaceId: workspaceID, surfaceId: surfaceID, cwd: cwd
+            ))
+        }
+
+        #expect(recordedDirectories == ["/private/tmp/bmux-pr-worktree"])
+    }
+
     private func temporaryHomeDirectory() throws -> URL {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-agent-chat-\(UUID().uuidString)", isDirectory: true)
