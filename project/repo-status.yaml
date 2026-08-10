@@ -3,9 +3,9 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: canonical_domain_mutation_paths
-    title: Domain-specific canonical mutation paths
-    state: draft
+    id: workspace_display_current_state_diagnostics
+    title: Workspace display Current State diagnostics
+    state: implemented
     owner: Codex
   state: active
 
@@ -21,6 +21,7 @@ execution_telemetry:
 
 local_capabilities:
   workspace_display_projection: implemented
+  workspace_display_current_state_diagnostic: implemented
 
 release:
   latest_tag: null

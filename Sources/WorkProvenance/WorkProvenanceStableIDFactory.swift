@@ -68,6 +68,7 @@ struct WorkProvenanceStableIDFactory: Sendable {
         let repositoryRoot = gitSnapshot.map { normalizedPath($0.repositoryRoot) } ?? ""
         let remoteSlug = gitSnapshot?.remoteSlug ?? ""
         let effectiveBranch = branch ?? gitSnapshot?.branch ?? ""
+        let dirtyState = gitSnapshot.map { $0.isDirty ? "dirty" : "clean" } ?? ""
         let pullRequestNumberValue = pullRequestNumber.map(String.init) ?? ""
         let pullRequestStaleness = pullRequestIsStale ? "stale" : "fresh"
         let ticketIDList = ticketIDs.joined(separator: ",")
@@ -79,6 +80,7 @@ struct WorkProvenanceStableIDFactory: Sendable {
             repositoryRoot,
             remoteSlug,
             effectiveBranch,
+            dirtyState,
             pullRequestNumberValue,
             pullRequestURL ?? "",
             pullRequestStatus ?? "",

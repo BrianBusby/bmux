@@ -14,8 +14,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Domain-specific canonical mutation paths (`canonical_domain_mutation_paths`)
-- Slice state: draft
+- Active slice: Workspace display Current State diagnostics (`workspace_display_current_state_diagnostics`)
+- Slice state: implemented
 - Owner: Codex
 - Repository state: active
 
@@ -28,6 +28,7 @@ Repository: `BrianBusby/bmux`
 
 | Capability | State |
 | --- | --- |
+| Workspace Display Current State Diagnostic | implemented |
 | Workspace Display Projection | implemented |
 
 ## Execution Telemetry

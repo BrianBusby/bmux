@@ -59,6 +59,10 @@ struct WorkProvenanceObserverTests {
         #expect(display.found)
         #expect(display.display?.title == "Default Store")
         #expect(display.display?.branch == "slice-e-provenance-v1-adoption")
+        #expect(display.display?.currentDirectory == repositoryRoot)
+        #expect(display.display?.isDirty == true)
+        #expect(display.display?.latestEventID != nil)
+        #expect(display.display?.latestEventSequence == 1)
     }
 
     @Test
@@ -138,6 +142,8 @@ struct WorkProvenanceObserverTests {
         #expect(context.found == false)
         #expect(display.found)
         #expect(display.display?.title == "No Repo")
+        #expect(display.display?.currentDirectory == "/tmp/not-a-repo")
+        #expect(display.display?.isDirty == nil)
     }
 
     @Test
@@ -211,6 +217,10 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.pullRequestStatus == "merged")
         #expect(display.display?.pullRequestBranch == "ste-1964-canonical-domain-mutation-paths")
         #expect(display.display?.pullRequestIsStale == true)
+        #expect(display.display?.currentDirectory == repositoryRoot)
+        #expect(display.display?.isDirty == false)
+        #expect(display.display?.latestEventID != nil)
+        #expect(display.display?.latestEventSequence == 3)
         #expect(display.display?.ticketIDs == ["STE-1964"])
     }
 

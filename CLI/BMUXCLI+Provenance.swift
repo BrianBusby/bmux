@@ -251,25 +251,80 @@ extension BMUXCLI {
     }
 
     private func runProvenanceDiagnostics(commandArgs: [String], jsonOutput: Bool) async throws {
-        let commandName = "provenance diagnostics execution-telemetry-live"
+        let commandName = "provenance diagnostics"
         let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
+        var remaining = remainingAfterDatabase
+        try rejectProvenanceUnknownFlags(Array(remaining.prefix(1)), commandName: commandName)
+        guard let diagnosticName = remaining.first?.lowercased() else {
+            throw CLIError(message: String(
+                localized: "cli.provenance.diagnostics.usage",
+                defaultValue: "Usage: bmux provenance diagnostics <workspace-display|execution-telemetry-live> [...]"
+            ))
+        }
+        remaining.removeFirst()
+
+        if diagnosticName == "workspace-display" {
+            let (workspaceIDText, remainingAfterWorkspace) = parseOption(
+                remaining,
+                name: "--workspace"
+            )
+            remaining = remainingAfterWorkspace
+            try rejectProvenanceUnknownFlags(remaining, commandName: "provenance diagnostics workspace-display")
+            guard let workspaceID = workspaceIDText?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !workspaceID.isEmpty else {
+                throw CLIError(message: String(
+                    localized: "cli.provenance.diagnostics.workspaceDisplay.usage",
+                    defaultValue: "Usage: bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]"
+                ))
+            }
+            guard remaining.isEmpty else {
+                throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
+            }
+
+            let response: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse
+            let databaseURL: URL
+            if let overrideURL = provenanceDatabaseOverrideURL(databasePath: databasePath),
+               !FileManager.default.fileExists(atPath: overrideURL.path) {
+                databaseURL = overrideURL
+                response = ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse(
+                    found: false,
+                    reason: "no_database",
+                    workspaceID: workspaceID,
+                    display: nil
+                )
+            } else {
+                let resolved = try provenanceEngineClient(databasePath: databasePath)
+                databaseURL = resolved.databaseURL
+                response = try await resolved.client.workspaceDisplay(ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest(
+                    workspaceID: workspaceID
+                ))
+            }
+
+            let payload = provenanceWorkspaceDisplayDiagnosticPayload(
+                workspaceID: workspaceID,
+                databaseURL: databaseURL,
+                response: response
+            )
+            printProvenanceWorkspaceDisplayDiagnostic(payload, jsonOutput: jsonOutput)
+            return
+        }
+
+        guard diagnosticName == "execution-telemetry-live" else {
+            throw CLIError(message: String(
+                localized: "cli.provenance.diagnostics.usage",
+                defaultValue: "Usage: bmux provenance diagnostics <workspace-display|execution-telemetry-live> [...]"
+            ))
+        }
         let (agentChatURLText, remainingAfterAgentChatURL) = parseOption(
-            remainingAfterDatabase,
+            remaining,
             name: "--agent-chat-url"
         )
         let (repositoryPath, remainingAfterRepository) = parseOption(
             remainingAfterAgentChatURL,
             name: "--repository"
         )
-        var remaining = remainingAfterRepository
-        try rejectProvenanceUnknownFlags(remaining, commandName: commandName)
-        guard remaining.first?.lowercased() == "execution-telemetry-live" else {
-            throw CLIError(message: String(
-                localized: "cli.provenance.diagnostics.executionTelemetry.usage",
-                defaultValue: "Usage: bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]"
-            ))
-        }
-        remaining.removeFirst()
+        remaining = remainingAfterRepository
+        try rejectProvenanceUnknownFlags(remaining, commandName: "provenance diagnostics execution-telemetry-live")
         guard let sessionID = remaining.first?.trimmingCharacters(in: .whitespacesAndNewlines),
               !sessionID.isEmpty else {
             throw CLIError(message: String(
@@ -564,6 +619,17 @@ extension BMUXCLI {
             return
         }
         print(renderProvenanceExecutionTelemetryObservationDiagnostic(payload))
+    }
+
+    private func printProvenanceWorkspaceDisplayDiagnostic(
+        _ payload: [String: Any],
+        jsonOutput: Bool
+    ) {
+        if jsonOutput {
+            print(jsonString(payload))
+            return
+        }
+        print(renderProvenanceWorkspaceDisplayDiagnostic(payload))
     }
 
     private func renderProvenanceExplanation(_ explanation: CLIProvenanceExplanation) -> String {
@@ -896,6 +962,101 @@ extension BMUXCLI {
         return lines.joined(separator: "\n")
     }
 
+    private func renderProvenanceWorkspaceDisplayDiagnostic(_ payload: [String: Any]) -> String {
+        let workspaceID = payload["workspace_id"] as? String ?? "?"
+        guard payload["found"] as? Bool == true,
+              let currentState = payload["current_state"] as? [String: Any] else {
+            let reason = payload["reason"] as? String
+                ?? String(
+                    localized: "cli.provenance.diagnostics.workspaceDisplay.output.missingReason",
+                    defaultValue: "missing"
+                )
+            return [
+                String.localizedStringWithFormat(
+                    String(
+                        localized: "cli.provenance.diagnostics.workspaceDisplay.output.missing",
+                        defaultValue: "No workspace display Current State for %@."
+                    ),
+                    workspaceID
+                ),
+                String.localizedStringWithFormat(
+                    String(localized: "cli.provenance.output.reason", defaultValue: "Reason: %@"),
+                    reason
+                )
+            ].joined(separator: "\n")
+        }
+
+        var lines = [
+            String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.diagnostics.workspaceDisplay.output.header",
+                    defaultValue: "Workspace display Current State for %@"
+                ),
+                workspaceID
+            )
+        ]
+        if let title = currentState["title"] as? String {
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.diagnostics.workspaceDisplay.output.title", defaultValue: "Title: %@"),
+                title
+            ))
+        }
+        if let branch = currentState["branch"] as? String {
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.diagnostics.workspaceDisplay.output.branch", defaultValue: "Branch: %@"),
+                branch
+            ))
+        }
+        if let isDirty = currentState["is_dirty"] as? Bool {
+            let dirtyState = isDirty
+                ? String(localized: "cli.provenance.diagnostics.workspaceDisplay.output.dirty", defaultValue: "dirty")
+                : String(localized: "cli.provenance.diagnostics.workspaceDisplay.output.clean", defaultValue: "clean")
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.diagnostics.workspaceDisplay.output.dirtyState", defaultValue: "Dirty state: %@"),
+                dirtyState
+            ))
+        }
+        if let pullRequest = currentState["pull_request"] as? [String: Any],
+           let number = pullRequest["number"] as? Int {
+            let status = pullRequest["status"] as? String
+                ?? String(
+                    localized: "cli.provenance.diagnostics.workspaceDisplay.output.unknown",
+                    defaultValue: "unknown"
+                )
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.diagnostics.workspaceDisplay.output.pullRequest", defaultValue: "Pull request: #%d · %@"),
+                number,
+                status
+            ))
+        }
+        if let tickets = currentState["ticket_ids"] as? [String], !tickets.isEmpty {
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.diagnostics.workspaceDisplay.output.tickets", defaultValue: "Tickets: %@"),
+                tickets.joined(separator: ", ")
+            ))
+        }
+        if let currentDirectory = currentState["current_directory"] as? String {
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.diagnostics.workspaceDisplay.output.currentDirectory", defaultValue: "Current directory: %@"),
+                currentDirectory
+            ))
+        }
+        if let latestEvidence = payload["latest_evidence"] as? [String: Any] {
+            let unknown = String(
+                localized: "cli.provenance.diagnostics.workspaceDisplay.output.unknown",
+                defaultValue: "unknown"
+            )
+            let eventID = latestEvidence["event_id"] as? String ?? unknown
+            let sequence = latestEvidence["event_sequence"].map { "\($0)" } ?? unknown
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.diagnostics.workspaceDisplay.output.latestEvidence", defaultValue: "Latest evidence: %@ · sequence %@"),
+                eventID,
+                sequence
+            ))
+        }
+        return lines.joined(separator: "\n")
+    }
+
     private func provenanceExecutionTelemetryMismatchDescription(_ code: String) -> String {
         switch code {
         case "live_snapshot_missing":
@@ -1017,11 +1178,84 @@ extension BMUXCLI {
               bmux provenance worktrees list [--json]
               bmux provenance sessions tree <session-id> [--json]
               bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]
+              bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]
               bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]
 
             Inspect bmux work provenance without requiring a live app socket.
             """
         )
+    }
+
+    func provenanceWorkspaceDisplayDiagnosticPayload(
+        workspaceID: String,
+        databaseURL: URL,
+        response: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse
+    ) -> [String: Any] {
+        var payload: [String: Any] = [
+            "diagnostic": "workspace_display_current_state",
+            "workspace_id": workspaceID,
+            "database": databaseURL.path,
+            "found": response.found,
+            "status": response.found ? "found" : "missing"
+        ]
+        if let reason = response.reason {
+            payload["reason"] = reason
+        }
+        guard let display = response.display else { return payload }
+
+        payload["current_state"] = provenanceWorkspaceDisplayCurrentStatePayload(display)
+        payload["latest_evidence"] = provenanceCompactPayload([
+            "event_id": display.latestEventID,
+            "event_sequence": display.latestEventSequence
+        ])
+        return payload
+    }
+
+    private func provenanceWorkspaceDisplayCurrentStatePayload(
+        _ display: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRecord
+    ) -> [String: Any] {
+        provenanceCompactPayload([
+            "id": display.id,
+            "workspace_id": display.workspaceID,
+            "repository_id": display.repositoryID,
+            "worktree_id": display.worktreeID,
+            "current_directory": display.currentDirectory,
+            "title": display.title,
+            "title_source": display.titleSource,
+            "branch": display.branch,
+            "pull_request": provenanceWorkspaceDisplayPullRequestPayload(display),
+            "is_dirty": display.isDirty,
+            "ticket_ids": display.ticketIDs,
+            "observed_at": formattedProvenanceDate(display.observedAt.timeIntervalSince1970),
+            "updated_at": formattedProvenanceDate(display.updatedAt.timeIntervalSince1970)
+        ])
+    }
+
+    private func provenanceWorkspaceDisplayPullRequestPayload(
+        _ display: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRecord
+    ) -> [String: Any]? {
+        guard display.pullRequestNumber != nil
+              || display.pullRequestURL != nil
+              || display.pullRequestStatus != nil
+              || display.pullRequestBranch != nil else {
+            return nil
+        }
+        let payload = provenanceCompactPayload([
+            "number": display.pullRequestNumber,
+            "url": display.pullRequestURL,
+            "status": display.pullRequestStatus,
+            "branch": display.pullRequestBranch,
+            "is_stale": display.pullRequestIsStale
+        ])
+        return payload.isEmpty ? nil : payload
+    }
+
+    private func provenanceCompactPayload(_ values: [String: Any?]) -> [String: Any] {
+        values.reduce(into: [String: Any]()) { partial, item in
+            if let value = item.value {
+                partial[item.key] = value
+            }
+        }
     }
 
     func provenanceExecutionTelemetryObservationDiagnosticPayload(

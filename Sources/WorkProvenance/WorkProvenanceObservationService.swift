@@ -183,6 +183,7 @@ actor WorkProvenanceObservationService {
             workspaceID: workspace.stableWorkspaceID.uuidString,
             repositoryID: repositoryID,
             worktreeID: worktreeID,
+            currentDirectory: workspace.currentDirectory,
             title: workspace.title,
             titleSource: workspace.titleSource,
             branch: workspace.branch ?? gitSnapshot?.branch,
@@ -191,6 +192,7 @@ actor WorkProvenanceObservationService {
             pullRequestStatus: pullRequest?.status,
             pullRequestBranch: pullRequest?.branch,
             pullRequestIsStale: pullRequest?.isStale ?? false,
+            isDirty: gitSnapshot?.isDirty,
             ticketIDs: ticketIDs,
             observedAt: now,
             updatedAt: now
