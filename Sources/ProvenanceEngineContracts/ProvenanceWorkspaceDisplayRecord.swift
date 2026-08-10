@@ -47,6 +47,9 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
     /// External ticket identifiers linked to the workspace, such as Linear or Jira keys.
     public let ticketIDs: [String]
 
+    /// External ticket links linked to the workspace.
+    public let ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord]
+
     /// Durable event ID whose payload last updated this projection.
     public let latestEventID: String?
 
@@ -76,6 +79,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         pullRequestIsStale: Bool = false,
         isDirty: Bool? = nil,
         ticketIDs: [String] = [],
+        ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord] = [],
         latestEventID: String? = nil,
         latestEventSequence: Int? = nil,
         observedAt: Date,
@@ -96,6 +100,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.pullRequestIsStale = pullRequestIsStale
         self.isDirty = isDirty
         self.ticketIDs = ticketIDs
+        self.ticketLinks = ticketLinks
         self.latestEventID = latestEventID
         self.latestEventSequence = latestEventSequence
         self.observedAt = observedAt

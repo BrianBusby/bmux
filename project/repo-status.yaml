@@ -3,8 +3,8 @@ repository: BrianBusby/provenance-engine
 
 current_work:
   active_slice:
-    id: workspace_display_projection_cursors
-    title: Workspace display projection evidence cursors
+    id: workspace_display_ticket_link_facts
+    title: PE-owned ticket link facts and first deterministic producer
     state: implemented
     owner: Codex
   state: active
@@ -20,6 +20,7 @@ local_capabilities:
   deterministic_current_state: implemented
   workspace_display_current_state: implemented
   workspace_display_projection_cursors: implemented
+  workspace_display_ticket_link_facts: implemented
   schema_identity_validation: implemented
   producer_neutral_lifecycle_recording: implemented
 

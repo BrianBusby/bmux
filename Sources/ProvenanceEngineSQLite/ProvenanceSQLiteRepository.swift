@@ -1384,6 +1384,7 @@ actor ProvenanceSQLiteRepository {
                 current_directory,
                 is_dirty,
                 ticket_ids_json,
+                ticket_links_json,
                 latest_event_id,
                 latest_event_sequence,
                 observed_at_seconds,
@@ -1405,11 +1406,17 @@ actor ProvenanceSQLiteRepository {
         guard let id = query.string(at: 0),
               let workspaceID = query.string(at: 1),
               let ticketIDsJSON = query.string(at: 14),
-              let ticketIDsData = ticketIDsJSON.data(using: .utf8) else {
+              let ticketIDsData = ticketIDsJSON.data(using: .utf8),
+              let ticketLinksJSON = query.string(at: 15),
+              let ticketLinksData = ticketLinksJSON.data(using: .utf8) else {
             return nil
         }
 
         let ticketIDs = (try? payloadDecoder.decode([String].self, from: ticketIDsData)) ?? []
+        let ticketLinks = (try? payloadDecoder.decode(
+            [ProvenanceWorkspaceDisplayTicketLinkRecord].self,
+            from: ticketLinksData
+        )) ?? []
         return ProvenanceWorkspaceDisplayRecord(
             id: id,
             workspaceID: workspaceID,
@@ -1426,10 +1433,11 @@ actor ProvenanceSQLiteRepository {
             pullRequestIsStale: query.int(at: 11) != 0,
             isDirty: query.double(at: 13).map { Int($0) != 0 },
             ticketIDs: ticketIDs,
-            latestEventID: query.string(at: 15),
-            latestEventSequence: query.double(at: 16).map(Int.init),
-            observedAt: Date(timeIntervalSince1970: query.double(at: 17) ?? 0),
-            updatedAt: Date(timeIntervalSince1970: query.double(at: 18) ?? 0)
+            ticketLinks: ticketLinks,
+            latestEventID: query.string(at: 16),
+            latestEventSequence: query.double(at: 17).map(Int.init),
+            observedAt: Date(timeIntervalSince1970: query.double(at: 18) ?? 0),
+            updatedAt: Date(timeIntervalSince1970: query.double(at: 19) ?? 0)
         )
     }
 
@@ -2855,6 +2863,10 @@ actor ProvenanceSQLiteRepository {
         guard let ticketIDsJSON = String(data: ticketIDsData, encoding: .utf8) else {
             throw ProvenanceSQLiteError.sqlite(message: "failed to encode workspace display ticket IDs")
         }
+        let ticketLinksData = try payloadEncoder.encode(display.ticketLinks)
+        guard let ticketLinksJSON = String(data: ticketLinksData, encoding: .utf8) else {
+            throw ProvenanceSQLiteError.sqlite(message: "failed to encode workspace display ticket links")
+        }
 
         let upsert = try database.prepare(
             """
@@ -2874,11 +2886,12 @@ actor ProvenanceSQLiteRepository {
                 current_directory,
                 is_dirty,
                 ticket_ids_json,
+                ticket_links_json,
                 latest_event_id,
                 latest_event_sequence,
                 observed_at_seconds,
                 updated_at_seconds
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 workspace_id = excluded.workspace_id,
                 repository_id = excluded.repository_id,
@@ -2894,6 +2907,7 @@ actor ProvenanceSQLiteRepository {
                 current_directory = excluded.current_directory,
                 is_dirty = excluded.is_dirty,
                 ticket_ids_json = excluded.ticket_ids_json,
+                ticket_links_json = excluded.ticket_links_json,
                 latest_event_id = excluded.latest_event_id,
                 latest_event_sequence = excluded.latest_event_sequence,
                 observed_at_seconds = excluded.observed_at_seconds,
@@ -2925,14 +2939,15 @@ actor ProvenanceSQLiteRepository {
             try upsert.bind(nil as String?, at: 14)
         }
         try upsert.bind(ticketIDsJSON, at: 15)
-        try upsert.bind(display.latestEventID ?? latestEventID, at: 16)
+        try upsert.bind(ticketLinksJSON, at: 16)
+        try upsert.bind(display.latestEventID ?? latestEventID, at: 17)
         if let latestEventSequence = display.latestEventSequence ?? latestEventSequence {
-            try upsert.bind(latestEventSequence, at: 17)
+            try upsert.bind(latestEventSequence, at: 18)
         } else {
-            try upsert.bind(nil as String?, at: 17)
+            try upsert.bind(nil as String?, at: 18)
         }
-        try upsert.bind(display.observedAt.timeIntervalSince1970, at: 18)
-        try upsert.bind(display.updatedAt.timeIntervalSince1970, at: 19)
+        try upsert.bind(display.observedAt.timeIntervalSince1970, at: 19)
+        try upsert.bind(display.updatedAt.timeIntervalSince1970, at: 20)
 
         _ = try upsert.step()
     }
@@ -3418,6 +3433,17 @@ actor ProvenanceSQLiteRepository {
                 """
                 UPDATE provenance_metadata
                 SET value = '12'
+                WHERE key = 'schema_version'
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 13,
+            statements: [
+                "ALTER TABLE provenance_workspace_display ADD COLUMN ticket_links_json TEXT NOT NULL DEFAULT '[]'",
+                """
+                UPDATE provenance_metadata
+                SET value = '13'
                 WHERE key = 'schema_version'
                 """,
             ]

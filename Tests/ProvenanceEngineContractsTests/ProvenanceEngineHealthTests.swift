@@ -224,6 +224,13 @@ struct ProvenanceEngineHealthTests {
         pullRequestBranch: "canonical-domain-mutation-paths",
         pullRequestIsStale: false,
         ticketIDs: ["STE-1964"],
+        ticketLinks: [
+            ProvenanceWorkspaceDisplayTicketLinkRecord(
+                id: "STE-1964",
+                system: "linear",
+                url: "https://linear.app/manaflow/issue/STE-1964"
+            ),
+        ],
         observedAt: timestamp,
         updatedAt: timestamp
     )
