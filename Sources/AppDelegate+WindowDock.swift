@@ -137,9 +137,7 @@ extension AppDelegate {
     @discardableResult
     func closeWindowDockRuntimeSurface(surfaceId: UUID, force: Bool) -> Bool {
         guard let dock = windowDockContainingPanel(surfaceId) else { return false }
-        if dock.closePanel(surfaceId, force: force) {
-            notificationStore?.clearNotifications(forTabId: dock.workspaceId, surfaceId: surfaceId)
-        }
+        _ = dock.closePanelForAction(panelId: surfaceId, force: force)
         return true
     }
 

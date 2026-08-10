@@ -31,7 +31,7 @@ private final class DurableDeepLinkDockTestPanel: Panel, ObservableObject {
 @MainActor
 @Suite("Durable deep link restore")
 struct BmuxDurableDeepLinkRestoreTests {
-    private let scheme = "bmux"
+    private let scheme = AuthEnvironment.callbackScheme
 
     private func parsedTarget(_ link: String) throws -> BmuxNavigationURLRequest.Target {
         let url = try #require(URL(string: link))

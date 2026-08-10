@@ -179,7 +179,6 @@ extension TerminalController {
                 ])
                 return
             }
-            let previousFocusedPanelId = ws.focusedPanelId
             guard app.moveSurface(
                 panelId: surfaceId,
                 toWorkspace: ws.id,
@@ -199,8 +198,6 @@ extension TerminalController {
                 _ = app.focusMainWindow(windowId: located.windowId)
                 setActiveTabManager(located.tabManager)
                 located.tabManager.focusTab(ws.id, surfaceId: surfaceId, suppressFlash: true)
-            } else if let previousFocusedPanelId, ws.panels[previousFocusedPanelId] != nil {
-                ws.focusPanel(previousFocusedPanelId)
             }
             let windowId = located.windowId
             result = .ok([

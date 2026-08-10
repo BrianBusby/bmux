@@ -117,8 +117,8 @@ final class TabManagerSessionSnapshotTests: XCTestCase {
         let firstPanelId = try XCTUnwrap(workspace.focusedPanelId)
         let secondPanelId = try XCTUnwrap(workspace.newTerminalSurface(inPane: pane, focus: true)?.id)
 
-        workspace.focusPanel(firstPanelId)
-        workspace.focusPanel(secondPanelId)
+        manager.focusWorkspaceSurfaceForAction(workspaceId: workspace.id, surfaceId: firstPanelId)
+        manager.focusWorkspaceSurfaceForAction(workspaceId: workspace.id, surfaceId: secondPanelId)
 
         XCTAssertTrue(manager.canNavigateBack)
 

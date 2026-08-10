@@ -361,7 +361,7 @@ extension TerminalController: ControlPaneContext {
         let newPanelId: UUID?
         let focus = v2FocusAllowed(requested: inputs.requestedFocus)
         if panelType == .browser {
-            newPanelId = ws.newBrowserSplit(
+            newPanelId = ws.createBrowserSplitForAction(
                 from: sourcePanelId,
                 orientation: orientation,
                 insertFirst: insertFirst,
@@ -371,7 +371,7 @@ extension TerminalController: ControlPaneContext {
                 initialDividerPosition: initialDividerPosition.map { CGFloat($0) }
             )?.id
         } else {
-            switch ws.newTerminalSplitOutcome(
+            switch ws.createTerminalSplitForAction(
                 from: sourcePanelId,
                 orientation: orientation,
                 insertFirst: insertFirst,
@@ -577,21 +577,21 @@ extension TerminalController: ControlPaneContext {
         var sourcePlaceholder: UUID?
         var targetPlaceholder: UUID?
         if workspace.bonsplitController.tabs(inPane: sourcePane).count <= 1 {
-            sourcePlaceholder = workspace.newTerminalSurface(
+            sourcePlaceholder = workspace.createTerminalSurfaceForAction(
                 inPane: sourcePane,
                 focus: false,
                 allowTextBoxFocusDefault: false
-            )?.id
+            ).panel?.id
             if sourcePlaceholder == nil {
                 return .sourcePlaceholderFailed
             }
         }
         if workspace.bonsplitController.tabs(inPane: targetPane).count <= 1 {
-            targetPlaceholder = workspace.newTerminalSurface(
+            targetPlaceholder = workspace.createTerminalSurfaceForAction(
                 inPane: targetPane,
                 focus: false,
                 allowTextBoxFocusDefault: false
-            )?.id
+            ).panel?.id
             if targetPlaceholder == nil {
                 return .targetPlaceholderFailed
             }
@@ -605,10 +605,10 @@ extension TerminalController: ControlPaneContext {
         }
 
         if let sourcePlaceholder {
-            _ = workspace.closePanel(sourcePlaceholder, force: true)
+            _ = workspace.discardTemporarySurfaceForAction(surfaceId: sourcePlaceholder)
         }
         if let targetPlaceholder {
-            _ = workspace.closePanel(targetPlaceholder, force: true)
+            _ = workspace.discardTemporarySurfaceForAction(surfaceId: targetPlaceholder)
         }
 
         if focus {

@@ -243,12 +243,12 @@ extension Workspace {
         let newPanelId: UUID
         switch type {
         case .terminal:
-            guard let panel = newTerminalSurface(inPane: focusedPaneId, focus: focus) else {
+            guard let panel = createTerminalSurfaceForAction(inPane: focusedPaneId, focus: focus).panel else {
                 return nil
             }
             newPanelId = panel.id
         case .browser:
-            guard let panel = newBrowserSurface(inPane: focusedPaneId, focus: focus) else {
+            guard let panel = createBrowserSurfaceForAction(inPane: focusedPaneId, focus: focus) else {
                 return nil
             }
             newPanelId = panel.id

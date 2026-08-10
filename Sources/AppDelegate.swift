@@ -4930,6 +4930,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         if destinationWorkspace.id == sourceWorkspace.id {
             if let splitTarget {
+                let previousFocusedPanelId = sourceWorkspace.focusedPanelId
+                let previousHostedView = sourceWorkspace.focusedTerminalPanel?.hostedView
                 guard let sourceTabId = sourceWorkspace.surfaceIdFromPanelId(panelId),
                       sourceWorkspace.bonsplitController.splitPane(
                         resolvedTargetPane,
@@ -4948,6 +4950,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 }
                 if focus {
                     source.tabManager.focusTab(sourceWorkspace.id, surfaceId: panelId, suppressFlash: true)
+                } else {
+                    sourceWorkspace.preserveFocusAfterNonFocusSplit(
+                        preferredPanelId: previousFocusedPanelId,
+                        splitPanelId: panelId,
+                        previousHostedView: previousHostedView
+                    )
                 }
 #if DEBUG
                 bmuxDebugLog(
@@ -5184,7 +5192,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             setActiveMainWindow(window)
             bringToFront(window)
         }
-        let workspace = state.tabManager.addWorkspace(
+        let workspace = state.tabManager.createWorkspaceForAction(
             workingDirectory: workingDirectory,
             select: shouldBringToFront
         )
@@ -7353,7 +7361,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             ?? workspace.panels.values.compactMap({ $0 as? BrowserPanel }).first else {
             return false
         }
-        workspace.focusPanel(browserPanel.id)
+        guard focusBrowserPanelForAction(
+            workspace: workspace,
+            browserPanel: browserPanel,
+            focusIntent: .webView
+        ) else {
+            return false
+        }
         browserPanel.navigate(to: url)
         browserPanel.requestExplicitWebViewFocus()
         context.tabManager.rememberFocusedSurface(tabId: workspace.id, surfaceId: browserPanel.id)
@@ -7544,7 +7558,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             ?? workspace.panels.values.compactMap({ $0 as? BrowserPanel }).first else {
             return
         }
-        workspace.focusPanel(browserPanel.id)
+        guard focusBrowserPanelForAction(
+            workspace: workspace,
+            browserPanel: browserPanel,
+            focusIntent: .addressBar
+        ) else {
+            return
+        }
         focusBrowserAddressBar(in: browserPanel)
     }
 
@@ -7553,7 +7573,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             ?? workspace.panels.values.compactMap({ $0 as? BrowserPanel }).first else {
             return
         }
-        workspace.focusPanel(browserPanel.id)
+        guard focusBrowserPanelForAction(
+            workspace: workspace,
+            browserPanel: browserPanel,
+            focusIntent: .webView
+        ) else {
+            return
+        }
         browserPanel.requestExplicitWebViewFocus()
         workspace.owningTabManager?.rememberFocusedSurface(tabId: workspace.id, surfaceId: browserPanel.id)
     }
@@ -8679,7 +8705,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         bmuxDebugLog("textURL.paste source=\(debugSource) workspace=\(workspace.id.uuidString.prefix(8)) surface=\(terminalPanel.id.uuidString.prefix(8)) chars=\(text.count)")
 #endif
         if shouldBringToFront {
-            workspace.focusPanel(terminalPanel.id)
+            _ = context.tabManager.focusWorkspaceSurfaceForAction(
+                workspaceId: workspace.id,
+                surfaceId: terminalPanel.id,
+                focusIntent: .terminal(.surface)
+            )
         }
         sendTextWhenReady(
             text,
@@ -10488,27 +10518,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         guard let topLeftPanelId = workspace.focusedTerminalPanel?.id ?? workspace.focusedPanelId else {
             return false
         }
-        guard let topRight = workspace.newTerminalSplit(
+        guard let topRight = workspace.createTerminalSplitForAction(
             from: topLeftPanelId,
             orientation: .horizontal,
             focus: false
-        ) else {
+        ).panel else {
             return false
         }
         await Task.yield()
-        guard workspace.newTerminalSplit(
+        guard workspace.createTerminalSplitForAction(
             from: topLeftPanelId,
             orientation: .vertical,
             focus: false
-        ) != nil else {
+        ).panel != nil else {
             return false
         }
         await Task.yield()
-        guard workspace.newTerminalSplit(
+        guard workspace.createTerminalSplitForAction(
             from: topRight.id,
             orientation: .vertical,
             focus: false
-        ) != nil else {
+        ).panel != nil else {
             return false
         }
         await Task.yield()
@@ -10520,7 +10550,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         if additionalTabsPerPane > 0 {
             for (paneIndex, paneId) in paneIds.enumerated() {
                 for tabOffset in 0..<additionalTabsPerPane {
-                    guard workspace.newTerminalSurface(inPane: paneId, focus: false) != nil else {
+                    guard workspace.createTerminalSurfaceForAction(inPane: paneId, focus: false).panel != nil else {
                         return false
                     }
                     if ((tabOffset + 1) % debugStressYieldInterval) == 0 {
@@ -10973,7 +11003,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                         "expectedSurfaceId": targetPanelId.uuidString
                     ])
 
-                    tabManager.selectTab(at: initialIndex)
+                    tabManager.selectWorkspaceIndexForAction(initialIndex)
                 }
             }
         }
@@ -11120,7 +11150,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 self.writeGotoSplitTestData(["setupError": "Invalid browser URL"])
                 return
             }
-            guard let browserPanelId = tabManager.newBrowserSplit(
+            guard let browserPanelId = tabManager.createBrowserSplitForAction(
                 tabId: tab.id,
                 fromPanelId: initialPanelId,
                 orientation: .horizontal,
@@ -12606,7 +12636,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
             _ = self.focusMainWindow(windowId: windowId)
             if let tab = tabManager.tabs.first(where: { $0.id == tabId }) {
-                tabManager.selectTab(tab)
+                tabManager.selectWorkspaceIdForAction(tab.id)
                 tabManager.focusSurface(tabId: tabId, surfaceId: surfaceId)
             }
         }
@@ -14189,7 +14219,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 "ws.shortcut dir=next repeat=\(event.isARepeat ? 1 : 0) keyCode=\(event.keyCode) selected=\(selected)"
             )
 #endif
-            tabManager?.selectNextTab()
+            tabManager?.selectAdjacentWorkspaceForAction(.next)
             return true
         }
 
@@ -14200,7 +14230,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 "ws.shortcut dir=prev repeat=\(event.isARepeat ? 1 : 0) keyCode=\(event.keyCode) selected=\(selected)"
             )
 #endif
-            tabManager?.selectPreviousTab()
+            tabManager?.selectAdjacentWorkspaceForAction(.previous)
             return true
         }
 
@@ -14338,7 +14368,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                     "shortcut.action name=workspaceDigit digit=\(digit) targetIndex=\(targetIndex) manager=\(debugManagerToken(manager)) \(debugShortcutRouteSnapshot(event: event))"
                 )
 #endif
-                manager.selectTab(at: targetIndex)
+                manager.selectWorkspaceIndexForAction(targetIndex)
             }
             return true
         }
@@ -14810,10 +14840,54 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 #endif
 
     @discardableResult
+    private func focusBrowserPanelForAction(
+        workspace: Workspace,
+        browserPanel: BrowserPanel,
+        focusIntent: BrowserPanelFocusIntent
+    ) -> Bool {
+        guard let tabManager = workspace.owningTabManager
+            ?? tabManagerFor(tabId: workspace.id)
+            ?? tabManager else {
+            return false
+        }
+        if let context = mainWindowContexts.values.first(where: { $0.tabManager === tabManager }) {
+            activateMainWindowContext(context)
+        }
+        guard case .focused = tabManager.focusWorkspaceSurfaceForAction(
+            workspaceId: workspace.id,
+            surfaceId: browserPanel.id,
+            focusIntent: .browser(focusIntent)
+        ) else {
+            return false
+        }
+        return true
+    }
+
+    @discardableResult
     func focusBrowserAddressBar(panelId: UUID) -> Bool {
-        guard let tabManager,
-              let workspace = tabManager.selectedWorkspace,
-              let panel = workspace.browserPanel(for: panelId) else {
+        var visitedManagers = Set<ObjectIdentifier>()
+        var candidateManagers: [TabManager] = []
+        func appendCandidateManager(_ manager: TabManager?) {
+            guard let manager else { return }
+            let id = ObjectIdentifier(manager)
+            guard !visitedManagers.contains(id) else { return }
+            visitedManagers.insert(id)
+            candidateManagers.append(manager)
+        }
+
+        appendCandidateManager(synchronizeActiveMainWindowContext())
+        appendCandidateManager(tabManager)
+        for context in mainWindowContexts.values {
+            appendCandidateManager(context.tabManager)
+        }
+
+        guard let target = candidateManagers.lazy.compactMap({ manager -> (TabManager, Workspace, BrowserPanel)? in
+            guard let workspace = manager.tabs.first(where: { $0.browserPanel(for: panelId) != nil }),
+                  let panel = workspace.browserPanel(for: panelId) else {
+                return nil
+            }
+            return (manager, workspace, panel)
+        }).first else {
 #if DEBUG
             bmuxDebugLog(
                 "browser.focus.addressBar.route panel=\(panelId.uuidString.prefix(5)) " +
@@ -14822,13 +14896,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 #endif
             return false
         }
+        let (_, workspace, panel) = target
 #if DEBUG
         bmuxDebugLog(
             "browser.focus.addressBar.route panel=\(panel.id.uuidString.prefix(5)) " +
             "workspace=\(workspace.id.uuidString.prefix(5)) result=hit \(browserFocusStateSnapshot())"
         )
 #endif
-        workspace.focusPanel(panel.id)
+        guard focusBrowserPanelForAction(
+            workspace: workspace,
+            browserPanel: panel,
+            focusIntent: .addressBar
+        ) else {
+#if DEBUG
+            bmuxDebugLog(
+                "browser.focus.addressBar.route panel=\(panel.id.uuidString.prefix(5)) " +
+                "workspace=\(workspace.id.uuidString.prefix(5)) result=focus_failed \(browserFocusStateSnapshot())"
+            )
+#endif
+            return false
+        }
 #if DEBUG
         let focusedAfter = workspace.focusedPanelId.map { String($0.uuidString.prefix(5)) } ?? "nil"
         bmuxDebugLog(

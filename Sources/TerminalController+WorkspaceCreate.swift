@@ -128,7 +128,7 @@ extension TerminalController {
             }
         }
         v2MainSync {
-            let ws = tabManager.addWorkspace(
+            let ws = tabManager.createWorkspaceForAction(
                 title: title,
                 workingDirectory: cwd,
                 initialTerminalCommand: layoutNode == nil ? initialCommand : nil,

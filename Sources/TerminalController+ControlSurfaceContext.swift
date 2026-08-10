@@ -279,8 +279,12 @@ extension TerminalController: ControlSurfaceContext {
             if windowDockMismatchesExplicitSelectors(routing, dock: windowDock, aliasTabManager: tabManager) {
                 return .surfaceNotFound(surfaceID)
             }
-            focusAndRevealWindowDock(for: windowDock, fallback: tabManager)
-            windowDock.focusPanel(surfaceID)
+            focusWindowDockSurfaceForAction(
+                surfaceID: surfaceID,
+                in: windowDock,
+                fallback: tabManager,
+                reveal: true
+            )
             return .focused(
                 windowID: windowDock.workspaceId,
                 workspaceID: windowDock.workspaceId,
@@ -304,8 +308,11 @@ extension TerminalController: ControlSurfaceContext {
                 return .surfaceNotFound(surfaceID)
             }
         } else if ws.containsDockPanel(surfaceID) {
-            revealDockForFocus(tabManager: tabManager)
-            ws.dockSplit.focusPanel(surfaceID)
+            focusWorkspaceDockSurfaceForAction(
+                surfaceID: surfaceID,
+                in: ws,
+                tabManager: tabManager
+            )
         } else {
             return .surfaceNotFound(surfaceID)
         }

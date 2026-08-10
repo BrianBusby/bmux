@@ -267,7 +267,7 @@ final class MainWindowFocusController {
             _ = window.makeFirstResponder(nil)
         }
         publishFeedFocusSnapshot()
-        workspace.focusPanel(panelId)
+        focusMainWorkspaceSurfaceForAction(workspaceId: workspace.id, surfaceId: panelId)
         return panel.restoreFocusIntent(panel.preferredFocusIntentForActivation())
     }
 
@@ -333,7 +333,7 @@ final class MainWindowFocusController {
         rightSidebarFocusState = .inactive
         intent = .mainPanel(workspaceId: workspace.id, panelId: panelId)
         publishFeedFocusSnapshot()
-        workspace.focusPanel(panelId)
+        focusMainWorkspaceSurfaceForAction(workspaceId: workspace.id, surfaceId: panelId)
         return panel.restoreFocusIntent(panel.preferredFocusIntentForActivation())
     }
 
@@ -575,13 +575,25 @@ final class MainWindowFocusController {
         rightSidebarFocusState = .inactive
         intent = .mainPanel(workspaceId: workspace.id, panelId: terminalPanel.id)
         publishFeedFocusSnapshot()
-        workspace.focusPanel(terminalPanel.id)
+        focusMainWorkspaceSurfaceForAction(workspaceId: workspace.id, surfaceId: terminalPanel.id)
         terminalPanel.hostedView.ensureFocus(
             for: workspace.id,
             surfaceId: terminalPanel.id,
             respectForeignFirstResponder: false
         )
         return terminalPanel.hostedView.isSurfaceViewFirstResponder()
+    }
+
+    @discardableResult
+    private func focusMainWorkspaceSurfaceForAction(workspaceId: UUID, surfaceId: UUID) -> Bool {
+        guard let tabManager else { return false }
+        guard case .focused = tabManager.focusWorkspaceSurfaceForAction(
+            workspaceId: workspaceId,
+            surfaceId: surfaceId
+        ) else {
+            return false
+        }
+        return true
     }
 
     private func findShortcutTarget(forRightSidebarMode mode: RightSidebarMode) -> MainWindowFindShortcutTarget {

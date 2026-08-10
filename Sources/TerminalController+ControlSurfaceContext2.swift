@@ -159,7 +159,7 @@ extension TerminalController {
         let useLocalContext = surfaceRemoteContextWantsLocal(inputs.remoteContextRaw)
         let newId: UUID?
         if panelType == .browser {
-            newId = ws.newBrowserSplit(
+            newId = ws.createBrowserSplitForAction(
                 from: targetSurfaceId,
                 orientation: orientation,
                 insertFirst: insertFirst,
@@ -170,7 +170,7 @@ extension TerminalController {
                 initialDividerPosition: dividerPosition
             )?.id
         } else {
-            switch ws.newTerminalSplitOutcome(
+            switch ws.createTerminalSplitForAction(
                 from: targetSurfaceId,
                 orientation: orientation,
                 insertFirst: insertFirst,
@@ -374,7 +374,7 @@ extension TerminalController {
         let useLocalContext = surfaceRemoteContextWantsLocal(inputs.remoteContextRaw)
         let newPanelId: UUID?
         if panelType == .browser {
-            newPanelId = ws.newBrowserSurface(
+            newPanelId = ws.createBrowserSurfaceForAction(
                 inPane: paneId,
                 url: url,
                 focus: focus,
@@ -390,7 +390,7 @@ extension TerminalController {
                 focus: focus
             )?.id
         } else {
-            switch ws.newTerminalSurfaceOutcome(
+            switch ws.createTerminalSurfaceForAction(
                 inPane: paneId,
                 focus: focus,
                 workingDirectory: inputs.workingDirectory,
@@ -453,13 +453,9 @@ extension TerminalController {
             if windowDockMismatchesExplicitWindow(routing, dock: windowDock) {
                 return .surfaceNotFound(surfaceId)
             }
-            guard windowDock.closePanel(surfaceId, force: true) else {
+            guard windowDock.closePanelForAction(panelId: surfaceId, force: true) else {
                 return .closeFailed(surfaceId)
             }
-            AppDelegate.shared?.notificationStore?.clearNotifications(
-                forTabId: windowDock.workspaceId,
-                surfaceId: surfaceId
-            )
             return .closed(
                 windowID: dockResultWindowId(for: windowDock, tabManager: tabManager),
                 workspaceID: windowDock.workspaceId,

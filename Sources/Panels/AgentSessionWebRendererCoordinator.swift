@@ -753,7 +753,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             return
         }
 
-        _ = location.workspace.newBrowserSurface(
+        _ = location.workspace.createBrowserSurfaceForAction(
             inPane: paneId,
             url: url,
             focus: true

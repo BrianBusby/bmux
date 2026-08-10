@@ -8362,7 +8362,12 @@ class TerminalController {
                    context.browserPanel.searchState == nil,
                    let windowDock = windowDockContainingPanel(context.surfaceId),
                    windowDock.focusedPanelId != context.surfaceId {
-                    windowDock.focusPanel(context.surfaceId)
+                    focusWindowDockSurfaceForAction(
+                        surfaceID: context.surfaceId,
+                        in: windowDock,
+                        fallback: tabManager,
+                        reveal: false
+                    )
                 }
                 let handled: Bool
                 if enterAliases.contains(mode) {
@@ -8389,7 +8394,16 @@ class TerminalController {
                 || (mode == "toggle" && !target.panel.isBrowserFocusModeActive)
             if willActivate, target.panel.searchState == nil, ws.focusedPanelId != target.surfaceId {
                 ws.clearSplitZoom()
-                ws.focusPanel(target.surfaceId)
+                switch tabManager.focusWorkspaceSurfaceForAction(workspaceId: ws.id, surfaceId: target.surfaceId) {
+                case .focused:
+                    break
+                case .workspaceNotFound:
+                    result = .err(code: "not_found", message: "Workspace not found", data: nil)
+                    return
+                case .surfaceNotFound:
+                    result = .err(code: "not_found", message: "Browser surface not found", data: nil)
+                    return
+                }
             }
             let handled: Bool
             if enterAliases.contains(mode) {
@@ -8507,8 +8521,12 @@ class TerminalController {
             let browserPanel = context.browserPanel
 
             if let windowDock = windowDockContainingPanel(surfaceId) {
-                _ = focusAndRevealWindowDock(for: windowDock, fallback: tabManager)
-                windowDock.focusPanel(surfaceId)
+                focusWindowDockSurfaceForAction(
+                    surfaceID: surfaceId,
+                    in: windowDock,
+                    fallback: tabManager,
+                    reveal: true
+                )
             } else {
                 if let windowId = v2ResolveWindowId(tabManager: tabManager) {
                     _ = AppDelegate.shared?.focusMainWindow(windowId: windowId)
@@ -9802,7 +9820,7 @@ class TerminalController {
                 return
             }
 
-            guard let panel = ws.newBrowserSurface(
+            guard let panel = ws.createBrowserSurfaceForAction(
                 inPane: pane,
                 url: url,
                 focus: true,
@@ -9855,7 +9873,12 @@ class TerminalController {
                     return
                 }
 
-                dock.focusPanel(targetId)
+                focusWindowDockSurfaceForAction(
+                    surfaceID: targetId,
+                    in: dock,
+                    fallback: tabManager,
+                    reveal: false
+                )
                 result = .ok([
                     "workspace_id": dock.workspaceId.uuidString,
                     "workspace_ref": v2Ref(kind: .workspace, uuid: dock.workspaceId),
@@ -9889,7 +9912,16 @@ class TerminalController {
                 return
             }
 
-            ws.focusPanel(targetId)
+            switch tabManager.focusWorkspaceSurfaceForAction(workspaceId: ws.id, surfaceId: targetId) {
+            case .focused:
+                break
+            case .workspaceNotFound:
+                result = .err(code: "not_found", message: "Workspace not found", data: nil)
+                return
+            case .surfaceNotFound:
+                result = .err(code: "not_found", message: "Browser tab not found", data: nil)
+                return
+            }
             result = .ok([
                 "workspace_id": ws.id.uuidString,
                 "workspace_ref": v2Ref(kind: .workspace, uuid: ws.id),
@@ -11943,7 +11975,7 @@ class TerminalController {
         var newTabId: UUID?
         let focus = socketCommandAllowsInAppFocusMutations()
         v2MainSync {
-            let workspace = tabManager.addWorkspace(
+            let workspace = tabManager.createWorkspaceForAction(
                 title: title,
                 select: focus,
                 eagerLoadTerminal: !focus,
@@ -12007,7 +12039,7 @@ class TerminalController {
                 return
             }
 
-            switch tab.newTerminalSplitOutcome(
+            switch tab.createTerminalSplitForAction(
                 from: targetSurface,
                 orientation: direction.orientation,
                 insertFirst: direction.insertFirst,
@@ -14366,14 +14398,15 @@ class TerminalController {
         guard let paneId = workspace.bonsplitController.focusedPaneId ?? workspace.bonsplitController.allPaneIds.first else {
             return .err(code: "not_found", message: "Pane not found", data: nil)
         }
-        guard let terminal = workspace.newTerminalSurface(
+        let outcome = workspace.createTerminalSurfaceForAction(
             inPane: paneId,
             focus: false,
             autoRefreshMetadata: false,
             preserveFocusWhenUnfocused: false,
             inheritWorkingDirectoryFallback: true,
             allowTextBoxFocusDefault: false
-        ) else {
+        )
+        guard let terminal = outcome.panel else {
             return .err(code: "internal_error", message: "Failed to create terminal", data: nil)
         }
         // workspace.updated emit is handled by MobileWorkspaceListObserver.

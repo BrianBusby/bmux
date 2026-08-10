@@ -193,7 +193,7 @@ extension TerminalController {
 
         let orientation: SplitOrientation = orientationIsHorizontal ? .horizontal : .vertical
         if isBrowser {
-            guard let id = tab.newBrowserSplit(
+            guard let id = tab.createBrowserSplitForAction(
                 from: focusedPanelId,
                 orientation: orientation,
                 insertFirst: insertFirst,
@@ -210,7 +210,7 @@ extension TerminalController {
             // pane; reject before mutating the remote session.
             return .mirrorInsertFirstRejected
         }
-        switch tab.newTerminalSplitOutcome(
+        switch tab.createTerminalSplitForAction(
             from: focusedPanelId,
             orientation: orientation,
             insertFirst: insertFirst,
@@ -256,7 +256,7 @@ extension TerminalController {
         }
 
         if isBrowser {
-            guard let id = tab.newBrowserSurface(
+            guard let id = tab.createBrowserSurfaceForAction(
                 inPane: targetPaneId,
                 url: url,
                 focus: focus,
@@ -266,7 +266,7 @@ extension TerminalController {
             }
             return .created(id)
         }
-        switch tab.newTerminalSurfaceOutcome(
+        switch tab.createTerminalSurfaceForAction(
             inPane: targetPaneId,
             focus: focus,
             inheritWorkingDirectoryFallback: true,

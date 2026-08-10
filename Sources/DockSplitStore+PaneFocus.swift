@@ -6,6 +6,24 @@ extension DockSplitStore {
         AppDelegate.shared?.noteRightSidebarKeyboardFocusIntent(mode: .dock, in: window)
     }
 
+    @discardableResult
+    func requestPanelFocusForAction(panelId: UUID, window: NSWindow?) -> Bool {
+        guard containsPanel(panelId) else { return false }
+        noteKeyboardFocusIntent(window: window)
+        focusPanel(panelId)
+        return true
+    }
+
+    @discardableResult
+    func closePanelForAction(panelId: UUID, force: Bool = false) -> Bool {
+        guard closePanel(panelId, force: force) else { return false }
+        AppDelegate.shared?.notificationStore?.clearNotifications(
+            forTabId: workspaceId,
+            surfaceId: panelId
+        )
+        return true
+    }
+
     func focusedDockPaneSelection() -> (pane: PaneID?, tab: TabID?) {
         let pane = bonsplitController.focusedPaneId
         return (pane, pane.flatMap { bonsplitController.selectedTab(inPane: $0)?.id })

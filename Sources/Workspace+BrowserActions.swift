@@ -17,7 +17,7 @@ extension Workspace {
         guard panels[sourcePanelId] != nil else { return nil }
 
         if let targetPane = preferredRightSideTargetPane(fromPanelId: sourcePanelId),
-           let panel = newBrowserSurface(
+           let panel = createBrowserSurfaceForAction(
                inPane: targetPane,
                url: url,
                focus: focus,
@@ -30,7 +30,7 @@ extension Workspace {
             return (panel, false, "reuse_right_sibling")
         }
 
-        guard let panel = newBrowserSplit(
+        guard let panel = createBrowserSplitForAction(
             from: sourcePanelId,
             orientation: .horizontal,
             url: url,

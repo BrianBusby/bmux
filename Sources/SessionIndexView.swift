@@ -32,7 +32,7 @@ enum SessionEntryResumeCoordinator {
         if pwdMatches,
            let workspace = selected,
            let paneId = workspace.bonsplitController.focusedPaneId {
-            workspace.newTerminalSurface(
+            workspace.createTerminalSurfaceForAction(
                 inPane: paneId,
                 focus: true,
                 workingDirectory: targetCwd,

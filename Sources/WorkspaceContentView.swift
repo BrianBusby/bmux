@@ -254,12 +254,10 @@ struct WorkspaceContentView: View {
                         onRequestPanelFocus: {
                             guard isWorkspaceInputActive else { return }
                             guard workspace.panels[panel.id] != nil else { return }
-                            AppDelegate.shared?.noteMainPanelKeyboardFocusIntent(
-                                workspaceId: workspace.id,
+                            workspace.requestPanelFocusForAction(
                                 panelId: panel.id,
                                 in: NSApp.keyWindow ?? NSApp.mainWindow
                             )
-                            workspace.focusPanel(panel.id)
                         },
                         onResumeAgentHibernation: {
                             guard isWorkspaceInputActive else { return }
@@ -729,7 +727,7 @@ struct EmptyPanelView: View {
         bmuxDebugLog("emptyPane.newTerminal pane=\(paneId.id.uuidString.prefix(5))")
         #endif
         focusPane()
-        _ = workspace.newTerminalSurface(inPane: paneId, inheritWorkingDirectoryFallback: true)
+        _ = workspace.createTerminalSurfaceForAction(inPane: paneId, inheritWorkingDirectoryFallback: true)
     }
 
     private func createBrowser() {
@@ -737,7 +735,7 @@ struct EmptyPanelView: View {
         bmuxDebugLog("emptyPane.newBrowser pane=\(paneId.id.uuidString.prefix(5))")
         #endif
         focusPane()
-        _ = workspace.newBrowserSurface(inPane: paneId)
+        _ = workspace.createBrowserSurfaceForAction(inPane: paneId)
     }
 
     private var newSurfaceShortcut: StoredShortcut {

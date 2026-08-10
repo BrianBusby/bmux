@@ -94,7 +94,11 @@ extension TabManager {
                     object: nil,
                     userInfo: [GhosttyNotificationKey.tabId: newWorkspace.id]
                 )
-                newWorkspace.focusPanel(detached.panelId, focusIntent: focusIntent)
+                _ = focusWorkspaceSurfaceForAction(
+                    workspaceId: newWorkspace.id,
+                    surfaceId: detached.panelId,
+                    focusIntent: focusIntent
+                )
             }
 #if DEBUG
             UITestRecorder.incrementInt("addTabInvocations")

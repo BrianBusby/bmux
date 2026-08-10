@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import Bonsplit
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -370,6 +371,114 @@ import Testing
         #expect(ClosedItemHistoryStore.shared.menuSnapshot().items.map(\.title) == ["Surface Action Terminal"])
     }
 
+    @Test func browserWebViewCloseActionPreservesLegacyBrowserRestorePolicy() throws {
+        ClosedItemHistoryStore.shared.removeAll()
+        defer { ClosedItemHistoryStore.shared.removeAll() }
+
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let terminalSurfaceId = try #require(workspace.focusedPanelId)
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+        let browser = try #require(workspace.newBrowserSurface(
+            inPane: pane,
+            url: URL(string: "https://example.com/self-close-action"),
+            focus: true
+        ))
+
+        #expect(workspace.closeBrowserSurfaceFromWebViewForAction(surfaceId: UUID()) == .surfaceNotFound)
+        #expect(workspace.closeBrowserSurfaceFromWebViewForAction(surfaceId: terminalSurfaceId) == .surfaceNotFound)
+        #expect(workspace.closeBrowserSurfaceFromWebViewForAction(surfaceId: browser.id) == .closed)
+        #expect(workspace.panels[browser.id] == nil)
+        #expect(ClosedItemHistoryStore.shared.canReopen == false)
+    }
+
+    @Test func tabManagerCloseSurfaceAdapterUsesSurfaceCloseActionPath() throws {
+        ClosedItemHistoryStore.shared.removeAll()
+        defer { ClosedItemHistoryStore.shared.removeAll() }
+
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+        let panel = try #require(workspace.newTerminalSurface(inPane: pane, focus: true))
+        workspace.setPanelCustomTitle(panelId: panel.id, title: "Adapter Close Terminal")
+
+        #expect(manager.closeSurface(tabId: workspace.id, surfaceId: panel.id))
+        #expect(workspace.panels[panel.id] == nil)
+        #expect(ClosedItemHistoryStore.shared.menuSnapshot().items.map(\.title) == ["Adapter Close Terminal"])
+    }
+
+    @Test func workspaceSurfaceReorderActionResolvesTargetsInsidePane() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+        let firstPanelId = try #require(workspace.focusedPanelId)
+        let secondPanel = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: pane, focus: false).panel
+        )
+        let thirdPanel = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: pane, focus: false).panel
+        )
+
+        #expect(
+            workspace.reorderSurfaceForAction(
+                panelId: thirdPanel.id,
+                target: .before(secondPanel.id),
+                focus: false
+            ) == .reordered(paneId: pane)
+        )
+        #expect(panelOrder(in: workspace, pane: pane) == [firstPanelId, thirdPanel.id, secondPanel.id])
+
+        #expect(
+            workspace.reorderSurfaceForAction(
+                panelId: firstPanelId,
+                target: .after(secondPanel.id),
+                focus: false
+            ) == .reordered(paneId: pane)
+        )
+        #expect(panelOrder(in: workspace, pane: pane) == [thirdPanel.id, secondPanel.id, firstPanelId])
+
+        #expect(
+            workspace.reorderSurfaceForAction(
+                panelId: firstPanelId,
+                target: .index(0),
+                focus: false
+            ) == .reordered(paneId: pane)
+        )
+        #expect(panelOrder(in: workspace, pane: pane) == [firstPanelId, thirdPanel.id, secondPanel.id])
+    }
+
+    @Test func workspaceSurfaceReorderActionRejectsInvalidTargets() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+        let firstPanelId = try #require(workspace.focusedPanelId)
+        let secondPanel = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: pane, focus: false).panel
+        )
+        let splitPanel = try #require(
+            workspace.createTerminalSplitForAction(
+                from: firstPanelId,
+                orientation: .horizontal,
+                focus: false
+            ).panel
+        )
+
+        #expect(
+            workspace.reorderSurfaceForAction(
+                panelId: UUID(),
+                target: .index(0),
+                focus: false
+            ) == .surfaceNotFound
+        )
+        #expect(
+            workspace.reorderSurfaceForAction(
+                panelId: secondPanel.id,
+                target: .before(splitPanel.id),
+                focus: false
+            ) == .anchorNotInSamePane
+        )
+    }
+
     @Test func workspaceSurfacePinActionRejectsMissingAndTogglesPinnedState() throws {
         let manager = TabManager()
         let workspace = try #require(manager.tabs.first)
@@ -426,6 +535,58 @@ import Testing
         #expect(!workspace.bonsplitController.isFullWidthTabMode(inPane: pane))
     }
 
+    @Test func workspaceTerminalSurfaceCreationActionCreatesInPaneWithoutStealingFocus() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let originalPanelId = try #require(workspace.focusedPanelId)
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+
+        let result = workspace.createTerminalSurfaceForAction(
+            inPane: pane,
+            focus: false,
+            initialInput: "echo action surface\n",
+            autoRefreshMetadata: false,
+            allowTextBoxFocusDefault: false
+        )
+
+        guard case .created(let panel) = result else {
+            Issue.record("Expected terminal surface action to create a panel")
+            return
+        }
+        #expect(panel.id != originalPanelId)
+        #expect(workspace.panels[panel.id] != nil)
+        #expect(workspace.focusedPanelId == originalPanelId)
+        #expect(workspace.bonsplitController.selectedTab(inPane: pane)?.id == workspace.surfaceIdFromPanelId(originalPanelId))
+    }
+
+    @Test func workspaceTerminalSplitCreationActionCreatesSplitWithoutStealingFocus() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let originalPanelId = try #require(workspace.focusedPanelId)
+        let originalPane = try #require(workspace.paneId(forPanelId: originalPanelId))
+
+        let result = workspace.createTerminalSplitForAction(
+            from: originalPanelId,
+            orientation: .horizontal,
+            focus: false,
+            initialInput: "echo action split\n",
+            startupEnvironment: ["BMUX_AGENT_MANAGED_SUBAGENT": "1"],
+            allowTextBoxFocusDefault: false
+        )
+
+        guard case .created(let panel) = result else {
+            Issue.record("Expected terminal split action to create a panel")
+            return
+        }
+        let splitPane = try #require(workspace.paneId(forPanelId: panel.id))
+
+        #expect(panel.id != originalPanelId)
+        #expect(panel.surface.initialInput == "echo action split\n")
+        #expect(panel.surface.startupEnvironmentValue("BMUX_AGENT_MANAGED_SUBAGENT") == "1")
+        #expect(splitPane != originalPane)
+        #expect(workspace.focusedPanelId == originalPanelId)
+    }
+
     @Test func workspaceSelectionActionRejectsMissingWorkspaceWithoutChangingSelection() throws {
         let manager = TabManager()
         _ = manager.addWorkspace()
@@ -436,6 +597,87 @@ import Testing
 
         #expect(!manager.selectWorkspaceIdForAction(UUID()))
         #expect(manager.selectedTabId == targetWorkspace.id)
+    }
+
+    @Test func workspaceSelectionIndexActionRejectsInvalidIndexWithoutChangingSelection() throws {
+        let manager = TabManager()
+        _ = manager.addWorkspace()
+        let targetWorkspace = try #require(manager.tabs.last)
+
+        #expect(manager.selectWorkspaceIndexForAction(1))
+        #expect(manager.selectedTabId == targetWorkspace.id)
+
+        #expect(!manager.selectWorkspaceIndexForAction(-1))
+        #expect(!manager.selectWorkspaceIndexForAction(manager.tabs.count))
+        #expect(manager.selectedTabId == targetWorkspace.id)
+    }
+
+    @Test func adjacentWorkspaceSelectionActionCyclesAndCollapsesSidebarSelection() throws {
+        let manager = TabManager()
+        let firstWorkspace = try #require(manager.tabs.first)
+        let secondWorkspace = manager.addWorkspace(select: false, placementOverride: .end)
+        let thirdWorkspace = manager.addWorkspace(select: false, placementOverride: .end)
+        manager.sidebarMultiSelection.replaceSelection(with: [firstWorkspace.id, thirdWorkspace.id])
+
+        #expect(manager.selectWorkspaceIdForAction(firstWorkspace.id))
+        #expect(manager.selectAdjacentWorkspaceForAction(.next) == secondWorkspace.id)
+        #expect(manager.selectedTabId == secondWorkspace.id)
+        #expect(manager.sidebarSelectedWorkspaceIds == [secondWorkspace.id])
+
+        #expect(manager.selectAdjacentWorkspaceForAction(.previous) == firstWorkspace.id)
+        #expect(manager.selectedTabId == firstWorkspace.id)
+        #expect(manager.sidebarSelectedWorkspaceIds == [firstWorkspace.id])
+    }
+
+    @Test func workspaceCreationActionCreatesThroughWorkspaceModelPolicy() throws {
+        let manager = TabManager()
+        let originalWorkspace = try #require(manager.tabs.first)
+        let browserURL = try #require(URL(string: "https://example.com/action-created"))
+
+        let createdWorkspace = manager.createWorkspaceForAction(
+            title: "Action Created",
+            initialSurface: .browser,
+            initialBrowserURL: browserURL,
+            select: false,
+            placementOverride: .end,
+            autoRefreshMetadata: false
+        )
+
+        #expect(createdWorkspace.title == "Action Created")
+        #expect(manager.tabs.map(\.id) == [originalWorkspace.id, createdWorkspace.id])
+        #expect(manager.selectedTabId == originalWorkspace.id)
+        let focusedPanelId = try #require(createdWorkspace.focusedPanelId)
+        #expect(createdWorkspace.panels[focusedPanelId]?.panelType == .browser)
+    }
+
+    @Test func workspaceCreateSocketPathCreatesWithoutStealingSelectionWhenFocusIsFalse() throws {
+        let manager = TabManager()
+        let originalWorkspace = try #require(manager.tabs.first)
+
+        let result = TerminalController.shared.v2WorkspaceCreate(
+            params: [
+                "title": "  Socket Created  ",
+                "focus": false,
+                "eager_load_terminal": true,
+                "auto_refresh_metadata": false
+            ],
+            tabManager: manager
+        )
+
+        guard case .ok(let rawPayload) = result,
+              let payload = rawPayload as? [String: Any],
+              let workspaceIdString = payload["workspace_id"] as? String,
+              let workspaceId = UUID(uuidString: workspaceIdString) else {
+            Issue.record("Expected workspace.create to return created workspace payload")
+            return
+        }
+        let createdWorkspace = try #require(manager.tabs.first { $0.id == workspaceId })
+
+        #expect(createdWorkspace.title == "Socket Created")
+        #expect(manager.tabs.count == 2)
+        #expect(manager.selectedTabId == originalWorkspace.id)
+        #expect(payload["workspace_ref"] as? String != nil)
+        #expect(payload["surface_id"] as? String == createdWorkspace.focusedPanelId?.uuidString)
     }
 
     @Test func workspaceSurfaceFocusActionSelectsWorkspaceAndRejectsInvalidTargets() throws {
@@ -469,5 +711,37 @@ import Testing
             ) == .workspaceNotFound
         )
         #expect(manager.selectedTabId == targetWorkspace.id)
+    }
+
+    @Test func workspacePanelFocusRequestRoutesThroughOwningManagerActionPath() throws {
+        let manager = TabManager()
+        let originalWorkspace = try #require(manager.tabs.first)
+        let targetWorkspace = manager.addWorkspace(select: false)
+        let targetSurfaceId = try #require(targetWorkspace.focusedPanelId)
+
+        #expect(manager.selectedTabId == originalWorkspace.id)
+        #expect(
+            targetWorkspace.requestPanelFocusForAction(
+                panelId: targetSurfaceId,
+                in: nil
+            ) == .focused(workspaceId: targetWorkspace.id, surfaceId: targetSurfaceId)
+        )
+        #expect(manager.selectedTabId == targetWorkspace.id)
+        #expect(targetWorkspace.focusedPanelId == targetSurfaceId)
+
+        let missingSurface = UUID()
+        #expect(
+            targetWorkspace.requestPanelFocusForAction(
+                panelId: missingSurface,
+                in: nil
+            ) == .surfaceNotFound
+        )
+        #expect(manager.selectedTabId == targetWorkspace.id)
+    }
+
+    private func panelOrder(in workspace: Workspace, pane: PaneID) -> [UUID] {
+        workspace.bonsplitController.tabs(inPane: pane).compactMap {
+            workspace.panelIdFromSurfaceId($0.id)
+        }
     }
 }

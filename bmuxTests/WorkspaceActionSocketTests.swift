@@ -56,6 +56,32 @@ struct WorkspaceActionSocketTests {
         #expect(manager.selectedTabId == group.anchorWorkspaceId)
     }
 
+    @Test func workspaceNextAndPreviousUseCanonicalAdjacentSelectionPath() throws {
+        let manager = TabManager()
+        let firstWorkspace = try #require(manager.tabs.first)
+        let secondWorkspace = manager.addWorkspace(select: false, placementOverride: .end)
+        let thirdWorkspace = manager.addWorkspace(select: false, placementOverride: .end)
+        manager.sidebarMultiSelection.replaceSelection(with: [firstWorkspace.id, thirdWorkspace.id])
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(nil) }
+
+        let nextResponse = try handleV2Request(method: "workspace.next", params: [:])
+
+        #expect(nextResponse["ok"] as? Bool == true)
+        let nextResult = try #require(nextResponse["result"] as? [String: Any])
+        #expect(nextResult["workspace_id"] as? String == secondWorkspace.id.uuidString)
+        #expect(manager.selectedTabId == secondWorkspace.id)
+        #expect(manager.sidebarSelectedWorkspaceIds == [secondWorkspace.id])
+
+        let previousResponse = try handleV2Request(method: "workspace.previous", params: [:])
+
+        #expect(previousResponse["ok"] as? Bool == true)
+        let previousResult = try #require(previousResponse["result"] as? [String: Any])
+        #expect(previousResult["workspace_id"] as? String == firstWorkspace.id.uuidString)
+        #expect(manager.selectedTabId == firstWorkspace.id)
+        #expect(manager.sidebarSelectedWorkspaceIds == [firstWorkspace.id])
+    }
+
     @Test func setDescriptionRejectsWhitespaceOnlyDescription() throws {
         let manager = TabManager()
         let workspace = try #require(manager.selectedWorkspace)

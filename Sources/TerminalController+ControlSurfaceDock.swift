@@ -310,6 +310,39 @@ extension TerminalController {
         return owningTabManager
     }
 
+    @discardableResult
+    func focusWindowDockSurfaceForAction(
+        surfaceID: UUID,
+        in dock: DockSplitStore,
+        fallback tabManager: TabManager,
+        reveal: Bool
+    ) -> Bool {
+        guard dock.containsPanel(surfaceID) else { return false }
+        if reveal {
+            focusAndRevealWindowDock(for: dock, fallback: tabManager)
+        }
+        dock.requestPanelFocusForAction(
+            panelId: surfaceID,
+            window: reveal ? (NSApp.keyWindow ?? NSApp.mainWindow) : nil
+        )
+        return true
+    }
+
+    @discardableResult
+    func focusWorkspaceDockSurfaceForAction(
+        surfaceID: UUID,
+        in workspace: Workspace,
+        tabManager: TabManager
+    ) -> Bool {
+        guard workspace.containsDockPanel(surfaceID) else { return false }
+        revealDockForFocus(tabManager: tabManager)
+        workspace.dockSplit.requestPanelFocusForAction(
+            panelId: surfaceID,
+            window: NSApp.keyWindow ?? NSApp.mainWindow
+        )
+        return true
+    }
+
     /// The window-Dock branch of `controlSurfaceClose`: closes the routed
     /// Dock's resolved surface and reports the Dock's owning window. Returns
     /// `nil` when the routing does not target a window Dock (the caller falls
@@ -332,13 +365,9 @@ extension TerminalController {
         guard windowDock.containsPanel(surfaceId) else {
             return .closeFailed(surfaceId)
         }
-        guard windowDock.closePanel(surfaceId, force: true) else {
+        guard windowDock.closePanelForAction(panelId: surfaceId, force: true) else {
             return .closeFailed(surfaceId)
         }
-        AppDelegate.shared?.notificationStore?.clearNotifications(
-            forTabId: windowDock.workspaceId,
-            surfaceId: surfaceId
-        )
         return .closed(
             windowID: dockResultWindowId(for: windowDock, tabManager: tabManager),
             workspaceID: windowDock.workspaceId,

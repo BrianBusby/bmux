@@ -91,11 +91,13 @@ extension TerminalController {
                     skippedPinned += 1
                     continue
                 }
-                if workspace.panels.count <= 1 {
-                    break
-                }
-                if workspace.requestNonInteractiveCloseTabRecordingHistory(tabId) {
+                switch workspace.closeSurfaceForAction(surfaceId: panelId, force: true) {
+                case .closed:
                     closed += 1
+                case .lastSurface:
+                    return (closed, skippedPinned)
+                case .surfaceNotFound, .failed:
+                    continue
                 }
             }
             return (closed, skippedPinned)
@@ -207,7 +209,7 @@ extension TerminalController {
             }
 
             let targetIndex = insertionIndexToRight(anchorTabId: anchorTabId, inPane: paneId)
-            switch workspace.newTerminalSurfaceOutcome(
+            switch workspace.createTerminalSurfaceForAction(
                 inPane: paneId,
                 focus: focus,
                 inheritWorkingDirectoryFallback: true,
@@ -215,7 +217,11 @@ extension TerminalController {
                 allowTextBoxFocusDefault: false
             ) {
             case .created(let newPanel):
-                _ = workspace.reorderSurface(panelId: newPanel.id, toIndex: targetIndex, focus: focus)
+                _ = workspace.reorderSurfaceForAction(
+                    panelId: newPanel.id,
+                    target: .index(targetIndex),
+                    focus: focus
+                )
                 return finish(.created(newPanel.id))
             case .routedToRemote:
                 // Routed to the remote tmux mirror as `new-window`; the tab arrives
@@ -244,7 +250,7 @@ extension TerminalController {
             }
 
             let targetIndex = insertionIndexToRight(anchorTabId: anchorTabId, inPane: paneId)
-            guard let newPanel = workspace.newBrowserSurface(
+            guard let newPanel = workspace.createBrowserSurfaceForAction(
                 inPane: paneId,
                 url: url,
                 focus: focus,
@@ -252,7 +258,11 @@ extension TerminalController {
             ) else {
                 return .createFailed
             }
-            _ = workspace.reorderSurface(panelId: newPanel.id, toIndex: targetIndex, focus: focus)
+            _ = workspace.reorderSurfaceForAction(
+                panelId: newPanel.id,
+                target: .index(targetIndex),
+                focus: focus
+            )
             return finish(.created(newPanel.id))
 
         case "close_left", "close_to_left":

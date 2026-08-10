@@ -1,7 +1,9 @@
+import AppKit
 import BmuxPanes
 import BmuxNotifications
 import BmuxSettings
 import BmuxWorkspaces
+import Bonsplit
 import Foundation
 
 enum WorkspaceRelativeCloseScope: Equatable {
@@ -34,7 +36,71 @@ enum WorkspaceReorderActionResult: Equatable {
     case notFound
 }
 
+extension Workspace {
+    @discardableResult
+    func requestPanelFocusForAction(
+        panelId: UUID,
+        in window: NSWindow?
+    ) -> WorkspaceSurfaceFocusActionResult {
+        guard let manager = owningTabManager ?? AppDelegate.shared?.tabManagerFor(tabId: id) else {
+            return panels[panelId] == nil ? .surfaceNotFound : .workspaceNotFound
+        }
+        let result = manager.focusWorkspaceSurfaceForAction(workspaceId: id, surfaceId: panelId)
+        if case .focused = result {
+            AppDelegate.shared?.noteMainPanelKeyboardFocusIntent(
+                workspaceId: id,
+                panelId: panelId,
+                in: window
+            )
+        }
+        return result
+    }
+}
+
 extension TabManager {
+    @discardableResult
+    func createWorkspaceForAction(
+        title: String? = nil,
+        workingDirectory: String? = nil,
+        initialSurface: NewWorkspaceInitialSurface = .terminal,
+        initialTerminalCommand: String? = nil,
+        initialTerminalInput: String? = nil,
+        initialTerminalEnvironment: [String: String] = [:],
+        initialBrowserURL: URL? = nil,
+        initialBrowserOmnibarVisible: Bool = true,
+        initialBrowserTransparentBackground: Bool = false,
+        workspaceEnvironment: [String: String] = [:],
+        inheritWorkingDirectory: Bool = true,
+        select: Bool = true,
+        eagerLoadTerminal: Bool = false,
+        placementOverride: WorkspacePlacement? = nil,
+        autoWelcomeIfNeeded: Bool = true,
+        autoRefreshMetadata: Bool = true,
+        normalizeWorkspaceGroupsAfterInsert: Bool = true,
+        allowTextBoxFocusDefault: Bool = true
+    ) -> Workspace {
+        addWorkspace(
+            title: title,
+            workingDirectory: workingDirectory,
+            initialSurface: initialSurface,
+            initialTerminalCommand: initialTerminalCommand,
+            initialTerminalInput: initialTerminalInput,
+            initialTerminalEnvironment: initialTerminalEnvironment,
+            initialBrowserURL: initialBrowserURL,
+            initialBrowserOmnibarVisible: initialBrowserOmnibarVisible,
+            initialBrowserTransparentBackground: initialBrowserTransparentBackground,
+            workspaceEnvironment: workspaceEnvironment,
+            inheritWorkingDirectory: inheritWorkingDirectory,
+            select: select,
+            eagerLoadTerminal: eagerLoadTerminal,
+            placementOverride: placementOverride,
+            autoWelcomeIfNeeded: autoWelcomeIfNeeded,
+            autoRefreshMetadata: autoRefreshMetadata,
+            normalizeWorkspaceGroupsAfterInsert: normalizeWorkspaceGroupsAfterInsert,
+            allowTextBoxFocusDefault: allowTextBoxFocusDefault
+        )
+    }
+
     func reorderWorkspaceForAction(
         tabId: UUID,
         target: WorkspaceReorderActionTarget,
@@ -289,6 +355,22 @@ extension TabManager {
     }
 
     @discardableResult
+    func selectWorkspaceIndexForAction(
+        _ index: Int,
+        notificationDismissalContext: NotificationDismissalContext? = .explicitWorkspaceResume
+    ) -> Bool {
+        guard index >= 0 && index < tabs.count else {
+            return false
+        }
+        let workspaceId = tabs[index].id
+#if DEBUG
+        debugPrimeWorkspaceSwitchTrigger("select_index", to: workspaceId)
+#endif
+        selectWorkspaceId(workspaceId, notificationDismissalContext: notificationDismissalContext)
+        return true
+    }
+
+    @discardableResult
     func focusWorkspaceSurfaceForAction(
         workspaceId: UUID,
         surfaceId: UUID,
@@ -304,7 +386,36 @@ extension TabManager {
             selectWorkspaceIdForAction(workspace.id)
         }
         workspace.focusPanel(surfaceId, focusIntent: focusIntent)
+        focusHistoryNavigation.recordFocusInHistory(
+            workspaceId: workspace.id,
+            panelId: surfaceId,
+            preservingForwardBranch: false
+        )
         return .focused(workspaceId: workspace.id, surfaceId: surfaceId)
+    }
+
+    @discardableResult
+    func createBrowserSplitForAction(
+        tabId: UUID,
+        fromPanelId: UUID,
+        orientation: SplitOrientation,
+        insertFirst: Bool = false,
+        url: URL? = nil,
+        preferredProfileID: UUID? = nil,
+        focus: Bool = true,
+        initialDividerPosition: CGFloat? = nil
+    ) -> UUID? {
+        guard BrowserAvailabilitySettings.isEnabled() else { return nil }
+        guard let workspace = tabs.first(where: { $0.id == tabId }) else { return nil }
+        return workspace.createBrowserSplitForAction(
+            from: fromPanelId,
+            orientation: orientation,
+            insertFirst: insertFirst,
+            url: url,
+            preferredProfileID: preferredProfileID,
+            focus: focus,
+            initialDividerPosition: initialDividerPosition
+        )?.id
     }
 
     private func workspacesForRelativeClose(

@@ -1026,11 +1026,11 @@ struct bmuxApp: App {
             }
 
             splitCommandButton(title: String(localized: "menu.view.nextWorkspace", defaultValue: "Next Workspace"), shortcut: menuShortcut(for: .nextSidebarTab)) {
-                activeTabManager.selectNextTab()
+                activeTabManager.selectAdjacentWorkspaceForAction(.next)
             }
 
             splitCommandButton(title: String(localized: "menu.view.previousWorkspace", defaultValue: "Previous Workspace"), shortcut: menuShortcut(for: .prevSidebarTab)) {
-                activeTabManager.selectPreviousTab()
+                activeTabManager.selectAdjacentWorkspaceForAction(.previous)
             }
 
             splitCommandButton(title: String(localized: "menu.view.renameWorkspace", defaultValue: "Rename Workspace…"), shortcut: menuShortcut(for: .renameWorkspace)) {
@@ -1095,14 +1095,14 @@ struct bmuxApp: App {
                     Button(String(localized: "menu.view.workspace", defaultValue: "Workspace \(number)")) {
                         let manager = activeTabManager
                         if let targetIndex = WorkspaceShortcutMapper.workspaceIndex(forDigit: number, workspaceCount: manager.tabs.count) {
-                            manager.selectTab(at: targetIndex)
+                            manager.selectWorkspaceIndexForAction(targetIndex)
                         }
                     }
                 } else {
                     Button(String(localized: "menu.view.workspace", defaultValue: "Workspace \(number)")) {
                         let manager = activeTabManager
                         if let targetIndex = WorkspaceShortcutMapper.workspaceIndex(forDigit: number, workspaceCount: manager.tabs.count) {
-                            manager.selectTab(at: targetIndex)
+                            manager.selectWorkspaceIndexForAction(targetIndex)
                         }
                     }
                     .keyboardShortcut(

@@ -7856,10 +7856,10 @@ struct ContentView: View {
             }
         }
         registry.register(commandId: "palette.nextWorkspace") {
-            tabManager.selectNextTab()
+            tabManager.selectAdjacentWorkspaceForAction(.next)
         }
         registry.register(commandId: "palette.previousWorkspace") {
-            tabManager.selectPreviousTab()
+            tabManager.selectAdjacentWorkspaceForAction(.previous)
         }
         registry.register(commandId: "palette.moveWorkspaceUp") {
             moveSelectedWorkspace(by: -1)
@@ -11082,11 +11082,11 @@ struct VerticalTabsSidebar: View {
             return .accepted
 
         case .selectNextWorkspace:
-            tabManager.selectNextTab()
+            tabManager.selectAdjacentWorkspaceForAction(.next)
             return .accepted
 
         case .selectPreviousWorkspace:
-            tabManager.selectPreviousTab()
+            tabManager.selectAdjacentWorkspaceForAction(.previous)
             return .accepted
 
         case .createTerminalSurface(let workspaceId):
@@ -14619,7 +14619,7 @@ struct TabItemView: View, Equatable {
         guard tabManager.moveWorkspaceForAction(tabId: tab.id, by: delta) != nil else { return }
         selectedTabIds = [tab.id]
         lastSidebarSelectionIndex = tabManager.tabs.firstIndex { $0.id == tab.id }
-        tabManager.selectTab(tab)
+        tabManager.selectWorkspaceIdForAction(tab.id)
         setSelectionToTabs()
     }
 
@@ -14691,7 +14691,7 @@ struct TabItemView: View, Equatable {
             resolvedShiftAnchorIndex: shiftAnchorIndex,
             clickedIndex: index
         )
-        tabManager.selectTab(tab)
+        tabManager.selectWorkspaceIdForAction(tab.id)
         if wasSelected, !isCommand, !isShift {
             tabManager.dismissNotificationOnDirectInteraction(
                 tabId: tab.id,
@@ -15387,7 +15387,7 @@ struct TabItemView: View, Equatable {
     private func beginWorkspaceDescriptionEditFromContextMenu() {
         selectedTabIds = [tab.id]
         lastSidebarSelectionIndex = index
-        tabManager.selectTab(tab)
+        tabManager.selectWorkspaceIdForAction(tab.id)
         setSelectionToTabs()
         _ = AppDelegate.shared?.requestEditWorkspaceDescriptionViaCommandPalette()
     }

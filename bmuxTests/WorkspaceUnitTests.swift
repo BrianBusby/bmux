@@ -3116,6 +3116,21 @@ final class WorkspaceCreationWorkingDirectoryInheritanceTests: XCTestCase {
         }
     }
 
+    func testDetachedWorkspaceSelectionFocusesTransferredPanelThroughWorkspaceAction() throws {
+        let manager = TabManager(autoWelcomeIfNeeded: false)
+        let source = try XCTUnwrap(manager.selectedWorkspace)
+        let detached = makeDetachedWorkspaceTestTransfer(sourceWorkspaceId: source.id)
+
+        let inserted = try XCTUnwrap(manager.addWorkspace(
+            fromDetachedSurface: detached,
+            select: true
+        ))
+
+        XCTAssertEqual(manager.selectedTabId, inserted.id)
+        XCTAssertEqual(inserted.focusedPanelId, detached.panelId)
+        XCTAssertNotNil(inserted.paneId(forPanelId: detached.panelId))
+    }
+
     func testDetachedWorkspaceDoesNotPersistProcessDetectedResumeBinding() throws {
         let manager = TabManager(
             initialWorkingDirectory: "/tmp/bmux-source-\(UUID().uuidString)",
@@ -4203,6 +4218,46 @@ final class WorkspaceReorderTests: XCTestCase {
         )
         XCTAssertEqual(payload["moved_workspace_ids"] as? [String], [second.id.uuidString])
         XCTAssertEqual(payload["pinned_workspace_ids"] as? [String], [second.id.uuidString])
+    }
+
+    @MainActor
+    func testInteractiveTerminalSplitPublishesUISplitEventsThroughCreationPath() throws {
+        BmuxEventBus.shared.resetForTesting()
+        defer { BmuxEventBus.shared.resetForTesting() }
+
+        let workspace = Workspace()
+        let sourcePanelId = try XCTUnwrap(workspace.focusedPanelId)
+        let sourcePaneId = try XCTUnwrap(workspace.paneId(forPanelId: sourcePanelId))
+        BmuxEventBus.shared.resetForTesting()
+
+        let newPaneId = try XCTUnwrap(
+            workspace.bonsplitController.splitPane(sourcePaneId, orientation: .horizontal)
+        )
+        let createdPanelId = try XCTUnwrap(workspace.focusedPanelId)
+
+        XCTAssertNotEqual(createdPanelId, sourcePanelId)
+        XCTAssertEqual(workspace.paneId(forPanelId: createdPanelId), newPaneId)
+        XCTAssertNotNil(workspace.terminalPanel(for: createdPanelId))
+
+        let events = BmuxEventBus.shared.retainedSnapshot()
+        let paneEvent = try XCTUnwrap(events.first { $0["name"] as? String == "pane.created" })
+        XCTAssertEqual(paneEvent["workspace_id"] as? String, workspace.id.uuidString)
+        XCTAssertEqual(paneEvent["pane_id"] as? String, newPaneId.id.uuidString)
+        XCTAssertEqual(paneEvent["surface_id"] as? String, createdPanelId.uuidString)
+        let panePayload = try XCTUnwrap(paneEvent["payload"] as? [String: Any])
+        XCTAssertEqual(panePayload["source_pane_id"] as? String, sourcePaneId.id.uuidString)
+        XCTAssertEqual(panePayload["orientation"] as? String, SplitOrientation.horizontal.rawValue)
+        XCTAssertEqual(panePayload["origin"] as? String, "ui_split")
+
+        let surfaceEvent = try XCTUnwrap(events.first { event in
+            event["name"] as? String == "surface.created" &&
+                event["surface_id"] as? String == createdPanelId.uuidString
+        })
+        XCTAssertEqual(surfaceEvent["pane_id"] as? String, newPaneId.id.uuidString)
+        let surfacePayload = try XCTUnwrap(surfaceEvent["payload"] as? [String: Any])
+        XCTAssertEqual(surfacePayload["kind"] as? String, "terminal")
+        XCTAssertEqual(surfacePayload["origin"] as? String, "ui_split")
+        XCTAssertEqual(surfacePayload["focused"] as? Bool, true)
     }
 
     @MainActor

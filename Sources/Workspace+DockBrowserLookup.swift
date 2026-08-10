@@ -28,14 +28,12 @@ extension Workspace {
 
     @discardableResult
     func closeDockPanel(_ panelId: UUID, force: Bool = false) -> Bool {
-        _dockSplit?.closePanel(panelId, force: force) ?? false
+        _dockSplit?.closePanelForAction(panelId: panelId, force: force) ?? false
     }
 
     @discardableResult
     func closeDockPanelAndClearNotifications(_ panelId: UUID, force: Bool = false) -> Bool {
-        guard closeDockPanel(panelId, force: force) else { return false }
-        AppDelegate.shared?.notificationStore?.clearNotifications(forTabId: id, surfaceId: panelId)
-        return true
+        closeDockPanel(panelId, force: force)
     }
 
     func openDockBrowserLinkInNewTab(panel: BrowserPanel, seed: BrowserNewTabNavigationSeed) -> Bool {
@@ -79,9 +77,7 @@ extension AppDelegate {
         guard context.keyboardFocusCoordinator.activeRightSidebarMode == .dock else { return false }
         if let windowDock = existingWindowDock(forWindowId: context.windowId) {
             guard let panelId = windowDock.focusedPanelId else { return true }
-            if windowDock.closePanel(panelId, force: false) {
-                notificationStore?.clearNotifications(forTabId: windowDock.workspaceId, surfaceId: panelId)
-            }
+            _ = windowDock.closePanelForAction(panelId: panelId, force: false)
             return true
         }
         guard let workspace = context.tabManager.selectedWorkspace,
@@ -121,7 +117,7 @@ extension DockSplitStore {
                 "panel=\(panel.id.uuidString.prefix(5))"
             )
 #endif
-            _ = self.closePanel(panel.id, force: true)
+            _ = self.closePanelForAction(panelId: panel.id, force: true)
         }
         return panel
     }

@@ -1794,7 +1794,9 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
         }
 
         _ = firstManager.addTab(select: true)
-        _ = secondManager.addTab(select: true)
+        let secondAddedTab = secondManager.addTab(select: true)
+        _ = secondManager.reorderWorkspaceForAction(tabId: secondAddedTab.id, target: .end)
+        XCTAssertEqual(secondManager.tabs.last?.id, secondAddedTab.id)
 
         guard let firstSelectedBefore = firstManager.selectedTabId,
               let secondSelectedBefore = secondManager.selectedTabId else {

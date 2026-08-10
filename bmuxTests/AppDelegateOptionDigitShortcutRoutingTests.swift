@@ -37,7 +37,9 @@ struct AppDelegateOptionDigitShortcutRoutingTests {
             let manager = try #require(appDelegate.tabManagerFor(windowId: windowId))
 
             let secondWorkspace = manager.addTab(select: false)
-            manager.selectTab(at: 0)
+            _ = manager.reorderWorkspaceForAction(tabId: secondWorkspace.id, target: .end)
+            #expect(manager.tabs.last?.id == secondWorkspace.id)
+            #expect(manager.selectWorkspaceIndexForAction(0))
 
             let optionWorkspaceNumber = optionDigitWorkspaceShortcut()
 
@@ -70,7 +72,9 @@ struct AppDelegateOptionDigitShortcutRoutingTests {
             let terminalPanel = try #require(workspace.terminalPanel(for: panelId))
 
             let secondWorkspace = manager.addTab(select: false)
-            manager.selectTab(at: 0)
+            _ = manager.reorderWorkspaceForAction(tabId: secondWorkspace.id, target: .end)
+            #expect(manager.tabs.last?.id == secondWorkspace.id)
+            #expect(manager.selectWorkspaceIndexForAction(0))
             terminalPanel.hostedView.setVisibleInUI(true)
             terminalPanel.hostedView.setActive(true)
             terminalPanel.hostedView.moveFocus()
