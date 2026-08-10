@@ -55,6 +55,7 @@ tab_manager_close_adapter_pattern='(plan\.workspace\.closePanel|let closed = tab
 socket_close_adapter_pattern='requestNonInteractiveCloseTabRecordingHistory\(tabId\)'
 workspace_adjacent_selection_pattern='\.(selectNextTab|selectPreviousTab)\('
 browser_socket_focus_pattern='ws\.focusPanel\((target\.surfaceId|targetId)\)'
+canvas_socket_focus_pattern='ws\.focusPanel\(surfaceID\)'
 browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 browser_split_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSplit\('
 
@@ -216,6 +217,12 @@ while IFS= read -r line; do
   violations+=("$line")
 done < <(rg -n -P "$browser_socket_focus_pattern" \
   "Sources/TerminalController.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$canvas_socket_focus_pattern" \
+  "Sources/TerminalController+ControlCanvasContext.swift" || true)
 
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue

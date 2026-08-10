@@ -121,6 +121,29 @@ struct BrowserOpenSplitSocketTests {
         #expect(workspace.focusedPanelId == surfaceId)
     }
 
+    @Test func canvasSelectTabUsesCanonicalWorkspaceSurfaceFocusPath() throws {
+        defer {
+            TerminalController.shared.setActiveTabManager(nil)
+        }
+
+        let manager = TabManager()
+        let originalWorkspace = try #require(manager.selectedWorkspace)
+        let targetWorkspace = manager.addWorkspace(select: false, placementOverride: .end)
+        targetWorkspace.setLayoutMode(.canvas)
+        let targetSurfaceId = try #require(targetWorkspace.openNewCanvasPane(type: .terminal, focus: true))
+        #expect(manager.selectedTabId == originalWorkspace.id)
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let selectResult = try result(method: "canvas.select_tab", params: [
+            "workspace_id": targetWorkspace.id.uuidString,
+            "surface_id": targetSurfaceId.uuidString
+        ])
+
+        #expect(selectResult["mode"] as? String == "canvas")
+        #expect(manager.selectedTabId == targetWorkspace.id)
+        #expect(targetWorkspace.focusedPanelId == targetSurfaceId)
+    }
+
     private func result(method: String, params: [String: Any]) throws -> [String: Any] {
         let envelope = try response(method: method, params: params)
         #expect(envelope["ok"] as? Bool == true, "Unexpected JSON-RPC response: \(envelope)")

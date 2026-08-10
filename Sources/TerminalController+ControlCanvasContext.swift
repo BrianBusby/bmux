@@ -169,7 +169,10 @@ extension TerminalController: ControlCanvasContext {
         guard ws.canvasModel.frame(of: targetSurfaceID) != nil else { return .paneNotFound(targetSurfaceID) }
         if ws.canvasModel.joinPanel(surfaceID, withPaneContaining: targetSurfaceID) {
             ws.canvasModel.viewport?.modelDidChangeExternally(animated: true)
-            ws.focusPanel(surfaceID)
+            let focusResult = focusCanvasSurfaceForAction(routing: routing, workspace: ws, surfaceID: surfaceID)
+            if case .ok = focusResult {} else {
+                return focusResult
+            }
         }
         return .ok(mode: ws.layoutMode.rawValue)
     }
@@ -185,7 +188,10 @@ extension TerminalController: ControlCanvasContext {
         guard ws.canvasModel.frame(of: surfaceID) != nil else { return .paneNotFound(surfaceID) }
         if ws.canvasModel.breakOutPanel(surfaceID) {
             ws.canvasModel.viewport?.modelDidChangeExternally(animated: true)
-            ws.focusPanel(surfaceID)
+            let focusResult = focusCanvasSurfaceForAction(routing: routing, workspace: ws, surfaceID: surfaceID)
+            if case .ok = focusResult {} else {
+                return focusResult
+            }
             ws.canvasModel.viewport?.revealPane(surfaceID, animated: true)
         }
         return .ok(mode: ws.layoutMode.rawValue)
@@ -200,8 +206,10 @@ extension TerminalController: ControlCanvasContext {
         }
         guard ws.layoutMode == .canvas else { return .notCanvasMode }
         guard ws.canvasModel.frame(of: surfaceID) != nil else { return .paneNotFound(surfaceID) }
-        // focusPanel selects the tab in canvas mode and moves keyboard focus.
-        ws.focusPanel(surfaceID)
+        let focusResult = focusCanvasSurfaceForAction(routing: routing, workspace: ws, surfaceID: surfaceID)
+        if case .ok = focusResult {} else {
+            return focusResult
+        }
         ws.canvasModel.viewport?.modelDidChangeExternally(animated: false)
         return .ok(mode: ws.layoutMode.rawValue)
     }
@@ -236,6 +244,26 @@ extension TerminalController: ControlCanvasContext {
             return .tabManagerUnavailable
         }
         return .created(mode: ws.layoutMode.rawValue, surfaceID: surfaceID)
+    }
+}
+
+private extension TerminalController {
+    func focusCanvasSurfaceForAction(
+        routing: ControlRoutingSelectors,
+        workspace: Workspace,
+        surfaceID: UUID
+    ) -> ControlCanvasActionResolution {
+        guard let tabManager = resolveTabManager(routing: routing) else {
+            return .tabManagerUnavailable
+        }
+        switch tabManager.focusWorkspaceSurfaceForAction(workspaceId: workspace.id, surfaceId: surfaceID) {
+        case .focused:
+            return .ok(mode: workspace.layoutMode.rawValue)
+        case .workspaceNotFound:
+            return .workspaceNotFound
+        case .surfaceNotFound:
+            return .paneNotFound(surfaceID)
+        }
     }
 }
 
