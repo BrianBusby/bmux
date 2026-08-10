@@ -93,7 +93,7 @@ enum ProUpgradePresenter {
         // First fallback: use the previous browser split behavior.
         if let workspace = AppDelegate.shared?.tabManager?.selectedWorkspace,
            let sourcePanelId = workspace.focusedPanelId,
-           workspace.newBrowserSplit(
+           workspace.createBrowserSplitForAction(
                from: sourcePanelId,
                orientation: .horizontal,
                url: url,

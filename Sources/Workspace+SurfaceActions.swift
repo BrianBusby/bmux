@@ -128,6 +128,35 @@ extension Workspace {
     }
 
     @discardableResult
+    func createBrowserSplitForAction(
+        from panelId: UUID,
+        orientation: SplitOrientation,
+        insertFirst: Bool = false,
+        url: URL? = nil,
+        preferredProfileID: UUID? = nil,
+        focus: Bool = true,
+        creationPolicy: BrowserPanelCreationPolicy = .userInitiated,
+        omnibarVisible: Bool = true,
+        transparentBackground: Bool = false,
+        bypassRemoteProxy: Bool = false,
+        initialDividerPosition: CGFloat? = nil
+    ) -> BrowserPanel? {
+        newBrowserSplit(
+            from: panelId,
+            orientation: orientation,
+            insertFirst: insertFirst,
+            url: url,
+            preferredProfileID: preferredProfileID,
+            focus: focus,
+            creationPolicy: creationPolicy,
+            omnibarVisible: omnibarVisible,
+            transparentBackground: transparentBackground,
+            bypassRemoteProxy: bypassRemoteProxy,
+            initialDividerPosition: initialDividerPosition
+        )
+    }
+
+    @discardableResult
     func reorderSurfaceForAction(
         panelId: UUID,
         target: SurfaceReorderActionTarget,

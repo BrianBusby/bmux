@@ -11120,7 +11120,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 self.writeGotoSplitTestData(["setupError": "Invalid browser URL"])
                 return
             }
-            guard let browserPanelId = tabManager.newBrowserSplit(
+            guard let browserPanelId = tabManager.createBrowserSplitForAction(
                 tabId: tab.id,
                 fromPanelId: initialPanelId,
                 orientation: .horizontal,

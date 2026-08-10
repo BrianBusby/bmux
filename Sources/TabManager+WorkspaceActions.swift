@@ -2,6 +2,7 @@ import BmuxPanes
 import BmuxNotifications
 import BmuxSettings
 import BmuxWorkspaces
+import Bonsplit
 import Foundation
 
 enum WorkspaceRelativeCloseScope: Equatable {
@@ -364,6 +365,30 @@ extension TabManager {
         }
         workspace.focusPanel(surfaceId, focusIntent: focusIntent)
         return .focused(workspaceId: workspace.id, surfaceId: surfaceId)
+    }
+
+    @discardableResult
+    func createBrowserSplitForAction(
+        tabId: UUID,
+        fromPanelId: UUID,
+        orientation: SplitOrientation,
+        insertFirst: Bool = false,
+        url: URL? = nil,
+        preferredProfileID: UUID? = nil,
+        focus: Bool = true,
+        initialDividerPosition: CGFloat? = nil
+    ) -> UUID? {
+        guard BrowserAvailabilitySettings.isEnabled() else { return nil }
+        guard let workspace = tabs.first(where: { $0.id == tabId }) else { return nil }
+        return workspace.createBrowserSplitForAction(
+            from: fromPanelId,
+            orientation: orientation,
+            insertFirst: insertFirst,
+            url: url,
+            preferredProfileID: preferredProfileID,
+            focus: focus,
+            initialDividerPosition: initialDividerPosition
+        )?.id
     }
 
     private func workspacesForRelativeClose(

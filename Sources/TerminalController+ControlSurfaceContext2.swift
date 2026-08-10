@@ -159,7 +159,7 @@ extension TerminalController {
         let useLocalContext = surfaceRemoteContextWantsLocal(inputs.remoteContextRaw)
         let newId: UUID?
         if panelType == .browser {
-            newId = ws.newBrowserSplit(
+            newId = ws.createBrowserSplitForAction(
                 from: targetSurfaceId,
                 orientation: orientation,
                 insertFirst: insertFirst,

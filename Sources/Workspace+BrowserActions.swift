@@ -30,7 +30,7 @@ extension Workspace {
             return (panel, false, "reuse_right_sibling")
         }
 
-        guard let panel = newBrowserSplit(
+        guard let panel = createBrowserSplitForAction(
             from: sourcePanelId,
             orientation: .horizontal,
             url: url,

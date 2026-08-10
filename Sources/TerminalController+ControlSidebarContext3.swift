@@ -193,7 +193,7 @@ extension TerminalController {
 
         let orientation: SplitOrientation = orientationIsHorizontal ? .horizontal : .vertical
         if isBrowser {
-            guard let id = tab.newBrowserSplit(
+            guard let id = tab.createBrowserSplitForAction(
                 from: focusedPanelId,
                 orientation: orientation,
                 insertFirst: insertFirst,
