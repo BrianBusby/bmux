@@ -13,8 +13,10 @@ Repository: `BrianBusby/provenance-engine`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: observation
+- Active slice: Workspace display projection evidence cursors (`workspace_display_projection_cursors`)
+- Slice state: implemented
+- Owner: Codex
+- Repository state: active
 
 ## Release
 
@@ -32,6 +34,7 @@ Repository: `BrianBusby/provenance-engine`
 | Public In Process Sdk | implemented |
 | Schema Identity Validation | implemented |
 | Workspace Display Current State | implemented |
+| Workspace Display Projection Cursors | implemented |
 
 ## Local Caveats
 

@@ -2,8 +2,12 @@ schema_version: 1
 repository: BrianBusby/provenance-engine
 
 current_work:
-  active_slice: null
-  state: observation
+  active_slice:
+    id: workspace_display_projection_cursors
+    title: Workspace display projection evidence cursors
+    state: implemented
+    owner: Codex
+  state: active
 
 release:
   latest_tag: "0.1.0"
@@ -15,6 +19,7 @@ local_capabilities:
   immutable_ledger: implemented
   deterministic_current_state: implemented
   workspace_display_current_state: implemented
+  workspace_display_projection_cursors: implemented
   schema_identity_validation: implemented
   producer_neutral_lifecycle_recording: implemented
 
