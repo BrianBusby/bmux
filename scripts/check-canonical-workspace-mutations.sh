@@ -43,6 +43,9 @@ fork_new_tab_surface_creation_pattern='let forkedPanel = newTerminalSurface\('
 split_tab_bar_self_surface_creation_pattern='self\.newTerminalSurface\('
 split_tab_bar_new_terminal_pattern='newTerminalSurface\(inPane: pane,'
 custom_layout_terminal_creation_pattern='newTerminal(Surface|Split)\('
+closed_panel_restore_placeholder_pattern='placeholderPanel = newTerminalSplit\('
+session_restore_anchor_surface_pattern='anchorPanelId = newTerminalSurface\(inPane: paneId'
+session_restore_split_surface_pattern='let newSplitPanel = newTerminalSplit\('
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -133,6 +136,21 @@ while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   violations+=("$line")
 done < <(rg -n -P "$custom_layout_terminal_creation_pattern" "Sources/Workspace+CustomLayout.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$closed_panel_restore_placeholder_pattern" "Sources/Workspace.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$session_restore_anchor_surface_pattern" "Sources/Workspace.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$session_restore_split_surface_pattern" "Sources/Workspace.swift" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {

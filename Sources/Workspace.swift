@@ -841,12 +841,12 @@ extension Workspace {
             return nil
         }
 
-        guard let placeholderPanel = newTerminalSplit(
+        guard let placeholderPanel = createTerminalSplitForAction(
             from: anchorPanelId,
             orientation: placement.orientation,
             insertFirst: placement.insertFirst,
             focus: false
-        ) else {
+        ).panel else {
             return nil
         }
         guard let pane = paneId(forPanelId: placeholderPanel.id) else {
@@ -1118,16 +1118,16 @@ extension Workspace {
                 .first
 
             if anchorPanelId == nil {
-                anchorPanelId = newTerminalSurface(inPane: paneId, focus: false)?.id
+                anchorPanelId = createTerminalSurfaceForAction(inPane: paneId, focus: false).panel?.id
             }
 
             guard let anchorPanelId,
-                  let newSplitPanel = newTerminalSplit(
+                  let newSplitPanel = createTerminalSplitForAction(
                     from: anchorPanelId,
                     orientation: split.orientation.splitOrientation,
                     insertFirst: false,
                     focus: false
-                  ),
+                  ).panel,
                   let secondPaneId = self.paneId(forPanelId: newSplitPanel.id) else {
                 leaves.append(
                     SessionPaneRestoreEntry(
