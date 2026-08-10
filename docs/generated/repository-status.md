@@ -14,10 +14,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: PE-backed workspace tab display projection (`workspace_display_tab_projection`)
-- Slice state: implemented
-- Owner: Codex
-- Repository state: active
+- Active slice: none selected
+- Repository state: observation
 
 ## Release
 

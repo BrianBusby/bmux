@@ -2,12 +2,8 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice:
-    id: workspace_display_tab_projection
-    title: PE-backed workspace tab display projection
-    state: implemented
-    owner: Codex
-  state: active
+  active_slice: null
+  state: observation
 
 execution_telemetry:
   provider_neutral_contract: implemented
