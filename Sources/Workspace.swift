@@ -1457,7 +1457,7 @@ extension Workspace {
             // handle it, exactly as before.
             let reusableSurfaceId: UUID? =
                 GhosttyApp.terminalSurfaceRegistry.surface(id: snapshot.id) == nil ? snapshot.id : nil
-            guard let terminalPanel = newTerminalSurface(
+            guard let terminalPanel = createTerminalSurfaceForAction(
                 inPane: paneId,
                 focus: false,
                 workingDirectory: requestedWorkingDirectory,
@@ -1469,7 +1469,7 @@ extension Workspace {
                 remotePTYSessionID: restoredRemotePTYSessionID,
                 suppressWorkspaceRemoteStartupCommand: suppressWorkspaceRemoteStartupCommand,
                 restoredSurfaceId: reusableSurfaceId
-            ) else {
+            ).panel else {
                 return nil
             }
             // Re-bind the resumed agent session from bmux's own authority, keyed
