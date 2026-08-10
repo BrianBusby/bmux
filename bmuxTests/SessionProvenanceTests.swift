@@ -1,4 +1,5 @@
 import Foundation
+import BmuxAgentChat
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
 import XCTest
@@ -137,11 +138,101 @@ final class SessionProvenanceTests: XCTestCase {
         XCTAssertEqual(lastErrorDescription, "database unavailable")
     }
 
+    @MainActor
+    func testExecutionTelemetryProjectionReportsUnavailableSidecar() async throws {
+        let agentChatURL = URL(string: "http://127.0.0.1:7739")!
+        let sessionListClient = AgentChatSessionListClient(
+            baseURL: agentChatURL,
+            loader: FixtureAgentChatHTTPLoader(result: .failure(URLError(.cannotConnectToHost)))
+        )
+        let lifecycleRecorder = WorkProvenanceSessionLifecycleRecorder(
+            client: CapturingProvenanceEngineClient()
+        )
+        var statuses: [ExecutionTelemetryProjectionSidecarStatus] = []
+        let service = ExecutionTelemetryProvenanceProjectionService(
+            agentChatURL: agentChatURL,
+            lifecycleRecorder: lifecycleRecorder,
+            sessionListClient: sessionListClient,
+            sidecarStatusHandler: { statuses.append($0) }
+        )
+
+        await service.projectKnownSessions()
+
+        XCTAssertEqual(statuses.count, 1)
+        guard case .unavailable(let reportedURL, let errorDescription) = statuses[0] else {
+            return XCTFail("Expected unavailable status")
+        }
+        XCTAssertEqual(reportedURL, agentChatURL)
+        XCTAssertTrue(errorDescription.contains("cannot connect") || errorDescription.contains("URLError"))
+    }
+
+    @MainActor
+    func testExecutionTelemetryProjectionReportsAvailableSidecarAfterSessionListSucceeds() async throws {
+        let agentChatURL = URL(string: "http://127.0.0.1:7739")!
+        let sessionsData = Data("""
+        [
+          {
+            "id": "session-sidecar",
+            "provider": "codex",
+            "cwd": "/repo",
+            "status": "idle",
+            "createdAt": 1725000000000
+          }
+        ]
+        """.utf8)
+        let liveProjectionData = Data("""
+        {
+          "sessionId": "session-sidecar",
+          "snapshot": null
+        }
+        """.utf8)
+        let sessionListClient = AgentChatSessionListClient(
+            baseURL: agentChatURL,
+            loader: FixtureAgentChatHTTPLoader(
+                result: .success(AgentChatHTTPResponse(data: sessionsData, statusCode: 200))
+            )
+        )
+        let liveProjectionClient = ExecutionTelemetryLiveProjectionClient(
+            baseURL: agentChatURL,
+            loader: FixtureAgentChatHTTPLoader(
+                result: .success(AgentChatHTTPResponse(data: liveProjectionData, statusCode: 200))
+            )
+        )
+        let lifecycleRecorder = WorkProvenanceSessionLifecycleRecorder(
+            client: CapturingProvenanceEngineClient()
+        )
+        var statuses: [ExecutionTelemetryProjectionSidecarStatus] = []
+        let service = ExecutionTelemetryProvenanceProjectionService(
+            agentChatURL: agentChatURL,
+            lifecycleRecorder: lifecycleRecorder,
+            sessionListClient: sessionListClient,
+            liveProjectionClient: liveProjectionClient,
+            sidecarStatusHandler: { statuses.append($0) }
+        )
+
+        await service.projectKnownSessions()
+
+        XCTAssertEqual(statuses, [.available(agentChatURL: agentChatURL)])
+    }
+
     private struct FakeGitInspector: WorkProvenanceGitInspecting {
         let snapshotsByDirectory: [String: WorkProvenanceGitSnapshot]
 
         func snapshot(for directory: String) async -> WorkProvenanceGitSnapshot? {
             snapshotsByDirectory[directory]
+        }
+    }
+}
+
+private struct FixtureAgentChatHTTPLoader: AgentChatHTTPLoading {
+    let result: Result<AgentChatHTTPResponse, Error>
+
+    func load(_ request: URLRequest) async throws -> AgentChatHTTPResponse {
+        switch result {
+        case .success(let response):
+            return response
+        case .failure(let error):
+            throw error
         }
     }
 }
