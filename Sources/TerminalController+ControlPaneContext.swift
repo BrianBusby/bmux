@@ -371,7 +371,7 @@ extension TerminalController: ControlPaneContext {
                 initialDividerPosition: initialDividerPosition.map { CGFloat($0) }
             )?.id
         } else {
-            switch ws.newTerminalSplitOutcome(
+            switch ws.createTerminalSplitForAction(
                 from: sourcePanelId,
                 orientation: orientation,
                 insertFirst: insertFirst,

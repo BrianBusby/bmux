@@ -426,6 +426,56 @@ import Testing
         #expect(!workspace.bonsplitController.isFullWidthTabMode(inPane: pane))
     }
 
+    @Test func workspaceTerminalSurfaceCreationActionCreatesInPaneWithoutStealingFocus() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let originalPanelId = try #require(workspace.focusedPanelId)
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+
+        let result = workspace.createTerminalSurfaceForAction(
+            inPane: pane,
+            focus: false,
+            initialInput: "echo action surface\n",
+            autoRefreshMetadata: false,
+            allowTextBoxFocusDefault: false
+        )
+
+        guard case .created(let panel) = result else {
+            Issue.record("Expected terminal surface action to create a panel")
+            return
+        }
+        #expect(panel.id != originalPanelId)
+        #expect(workspace.panels[panel.id] != nil)
+        #expect(workspace.focusedPanelId == originalPanelId)
+        #expect(workspace.bonsplitController.selectedTab(inPane: pane)?.id == workspace.surfaceIdFromPanelId(originalPanelId))
+    }
+
+    @Test func workspaceTerminalSplitCreationActionCreatesSplitWithoutStealingFocus() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.tabs.first)
+        let originalPanelId = try #require(workspace.focusedPanelId)
+        let originalPane = try #require(workspace.paneId(forPanelId: originalPanelId))
+
+        let result = workspace.createTerminalSplitForAction(
+            from: originalPanelId,
+            orientation: .horizontal,
+            focus: false,
+            startupEnvironment: ["BMUX_AGENT_MANAGED_SUBAGENT": "1"],
+            allowTextBoxFocusDefault: false
+        )
+
+        guard case .created(let panel) = result else {
+            Issue.record("Expected terminal split action to create a panel")
+            return
+        }
+        let splitPane = try #require(workspace.paneId(forPanelId: panel.id))
+
+        #expect(panel.id != originalPanelId)
+        #expect(panel.surface.startupEnvironmentValue("BMUX_AGENT_MANAGED_SUBAGENT") == "1")
+        #expect(splitPane != originalPane)
+        #expect(workspace.focusedPanelId == originalPanelId)
+    }
+
     @Test func workspaceSelectionActionRejectsMissingWorkspaceWithoutChangingSelection() throws {
         let manager = TabManager()
         _ = manager.addWorkspace()

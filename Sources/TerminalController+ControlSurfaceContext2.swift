@@ -170,7 +170,7 @@ extension TerminalController {
                 initialDividerPosition: dividerPosition
             )?.id
         } else {
-            switch ws.newTerminalSplitOutcome(
+            switch ws.createTerminalSplitForAction(
                 from: targetSurfaceId,
                 orientation: orientation,
                 insertFirst: insertFirst,
@@ -390,7 +390,7 @@ extension TerminalController {
                 focus: focus
             )?.id
         } else {
-            switch ws.newTerminalSurfaceOutcome(
+            switch ws.createTerminalSurfaceForAction(
                 inPane: paneId,
                 focus: focus,
                 workingDirectory: inputs.workingDirectory,

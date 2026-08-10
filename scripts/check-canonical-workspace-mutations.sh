@@ -20,8 +20,14 @@ workspace_creation_migrated_files=(
   "Sources/TerminalController+WorkspaceCreate.swift"
 )
 
+surface_creation_migrated_files=(
+  "Sources/TerminalController+ControlPaneContext.swift"
+  "Sources/TerminalController+ControlSurfaceContext2.swift"
+)
+
 mutation_pattern='\.((closeWorkspace|reorderWorkspace|clearCustomDescription|setCustomDescription|setTabColor|moveTabToTop|moveTabsToTop)\(|selectTab\(at:)'
 creation_mutation_pattern='\.addWorkspace\('
+surface_creation_mutation_pattern='\.newTerminal(Surface|Split)Outcome\('
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -47,6 +53,11 @@ while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   violations+=("$line")
 done < <(rg -n -P "$creation_mutation_pattern" "${workspace_creation_migrated_files[@]}" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$surface_creation_mutation_pattern" "${surface_creation_migrated_files[@]}" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {

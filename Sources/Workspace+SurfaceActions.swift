@@ -1,7 +1,78 @@
 import Foundation
+import BmuxTerminal
 import Bonsplit
 
 extension Workspace {
+    @discardableResult
+    func createTerminalSurfaceForAction(
+        inPane paneId: PaneID,
+        focus: Bool? = nil,
+        workingDirectory: String? = nil,
+        initialCommand: String? = nil,
+        tmuxStartCommand: String? = nil,
+        initialInput: String? = nil,
+        startupEnvironment: [String: String] = [:],
+        runtimeSpawnPolicy: TerminalSurfaceRuntimeSpawnPolicy = .immediate,
+        autoRefreshMetadata: Bool = true,
+        preserveFocusWhenUnfocused: Bool = true,
+        remotePTYSessionID: String? = nil,
+        suppressWorkspaceRemoteStartupCommand: Bool = false,
+        restoredSurfaceId: UUID? = nil,
+        inheritWorkingDirectoryFallback: Bool = false,
+        workingDirectoryFallbackSourcePanelId: UUID? = nil,
+        allowTextBoxFocusDefault: Bool = true
+    ) -> TerminalPanelCreationOutcome {
+        newTerminalSurfaceOutcome(
+            inPane: paneId,
+            focus: focus,
+            workingDirectory: workingDirectory,
+            initialCommand: initialCommand,
+            tmuxStartCommand: tmuxStartCommand,
+            initialInput: initialInput,
+            startupEnvironment: startupEnvironment,
+            runtimeSpawnPolicy: runtimeSpawnPolicy,
+            autoRefreshMetadata: autoRefreshMetadata,
+            preserveFocusWhenUnfocused: preserveFocusWhenUnfocused,
+            remotePTYSessionID: remotePTYSessionID,
+            suppressWorkspaceRemoteStartupCommand: suppressWorkspaceRemoteStartupCommand,
+            restoredSurfaceId: restoredSurfaceId,
+            inheritWorkingDirectoryFallback: inheritWorkingDirectoryFallback,
+            workingDirectoryFallbackSourcePanelId: workingDirectoryFallbackSourcePanelId,
+            allowTextBoxFocusDefault: allowTextBoxFocusDefault
+        )
+    }
+
+    @discardableResult
+    func createTerminalSplitForAction(
+        from panelId: UUID,
+        orientation: SplitOrientation,
+        insertFirst: Bool = false,
+        focus: Bool = true,
+        workingDirectory: String? = nil,
+        initialCommand: String? = nil,
+        tmuxStartCommand: String? = nil,
+        startupEnvironment: [String: String] = [:],
+        initialDividerPosition: CGFloat? = nil,
+        remotePTYSessionID: String? = nil,
+        suppressWorkspaceRemoteStartupCommand: Bool = false,
+        allowTextBoxFocusDefault: Bool = true
+    ) -> TerminalPanelCreationOutcome {
+        newTerminalSplitOutcome(
+            from: panelId,
+            orientation: orientation,
+            insertFirst: insertFirst,
+            focus: focus,
+            workingDirectory: workingDirectory,
+            initialCommand: initialCommand,
+            tmuxStartCommand: tmuxStartCommand,
+            startupEnvironment: startupEnvironment,
+            initialDividerPosition: initialDividerPosition,
+            remotePTYSessionID: remotePTYSessionID,
+            suppressWorkspaceRemoteStartupCommand: suppressWorkspaceRemoteStartupCommand,
+            allowTextBoxFocusDefault: allowTextBoxFocusDefault
+        )
+    }
+
     @discardableResult
     func renameSurfaceTitleForAction(
         surfaceId: UUID,
