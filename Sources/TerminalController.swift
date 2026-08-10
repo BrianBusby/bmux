@@ -4522,7 +4522,11 @@ class TerminalController {
                 finish(["title": workspace.customTitle ?? workspace.title])
 
             case "clear_name":
-                tabManager.clearCustomTitle(tabId: workspace.id)
+                let titleOutcome = tabManager.clearWorkspaceTitleForAction(tabId: workspace.id)
+                guard titleOutcome.applied else {
+                    result = .err(code: "invalid_params", message: "Missing or invalid title", data: nil)
+                    return
+                }
                 finish(["title": workspace.title])
 
             case "set_description":

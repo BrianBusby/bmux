@@ -33,6 +33,20 @@ extension TabManager {
         )
     }
 
+    /// Clears a user-facing workspace title through the shared action path.
+    @discardableResult
+    func clearWorkspaceTitleForAction(
+        tabId: UUID,
+        propagateToRemoteTmux: Bool = true
+    ) -> Workspace.CustomTitleApplyOutcome {
+        applyWorkspaceTitleEdit(
+            tabId: tabId,
+            title: nil,
+            emptyTitleClears: true,
+            propagateToRemoteTmux: propagateToRemoteTmux
+        )
+    }
+
     /// Shared user-input path for workspace title mutation. Entry points choose
     /// whether an empty draft clears or rejects, but normalization, mutation,
     /// event emission, and remote tmux propagation stay here.
@@ -120,7 +134,7 @@ extension TabManager {
     }
 
     func clearCustomTitle(tabId: UUID) {
-        applyWorkspaceTitleEdit(tabId: tabId, title: nil, emptyTitleClears: true)
+        clearWorkspaceTitleForAction(tabId: tabId)
     }
 
     /// Whether a `.workspaceTitleDidChange` notification should refresh cached

@@ -115,7 +115,10 @@ extension TerminalController {
             return finish(.title(workspace.panelCustomTitles[surfaceId] ?? trimmedTitle))
 
         case "clear_name":
-            workspace.clearSurfaceTitleForAction(surfaceId: surfaceId)
+            let titleOutcome = workspace.clearSurfaceTitleForAction(surfaceId: surfaceId)
+            guard titleOutcome.applied else {
+                return .tabNotFound(surfaceID: surfaceId)
+            }
             return finish(.none)
 
         case "pin":
