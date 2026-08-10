@@ -5184,7 +5184,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             setActiveMainWindow(window)
             bringToFront(window)
         }
-        let workspace = state.tabManager.addWorkspace(
+        let workspace = state.tabManager.createWorkspaceForAction(
             workingDirectory: workingDirectory,
             select: shouldBringToFront
         )

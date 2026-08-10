@@ -451,6 +451,57 @@ import Testing
         #expect(manager.selectedTabId == targetWorkspace.id)
     }
 
+    @Test func workspaceCreationActionCreatesThroughWorkspaceModelPolicy() throws {
+        let manager = TabManager()
+        let originalWorkspace = try #require(manager.tabs.first)
+        let browserURL = try #require(URL(string: "https://example.com/action-created"))
+
+        let createdWorkspace = manager.createWorkspaceForAction(
+            title: "Action Created",
+            initialSurface: .browser,
+            initialBrowserURL: browserURL,
+            select: false,
+            placementOverride: .end,
+            autoRefreshMetadata: false
+        )
+
+        #expect(createdWorkspace.title == "Action Created")
+        #expect(manager.tabs.map(\.id) == [originalWorkspace.id, createdWorkspace.id])
+        #expect(manager.selectedTabId == originalWorkspace.id)
+        let focusedPanelId = try #require(createdWorkspace.focusedPanelId)
+        #expect(createdWorkspace.panels[focusedPanelId]?.panelType == .browser)
+    }
+
+    @Test func workspaceCreateSocketPathCreatesWithoutStealingSelectionWhenFocusIsFalse() throws {
+        let manager = TabManager()
+        let originalWorkspace = try #require(manager.tabs.first)
+
+        let result = TerminalController.shared.v2WorkspaceCreate(
+            params: [
+                "title": "  Socket Created  ",
+                "focus": false,
+                "eager_load_terminal": true,
+                "auto_refresh_metadata": false
+            ],
+            tabManager: manager
+        )
+
+        guard case .ok(let rawPayload) = result,
+              let payload = rawPayload as? [String: Any],
+              let workspaceIdString = payload["workspace_id"] as? String,
+              let workspaceId = UUID(uuidString: workspaceIdString) else {
+            Issue.record("Expected workspace.create to return created workspace payload")
+            return
+        }
+        let createdWorkspace = try #require(manager.tabs.first { $0.id == workspaceId })
+
+        #expect(createdWorkspace.title == "Socket Created")
+        #expect(manager.tabs.count == 2)
+        #expect(manager.selectedTabId == originalWorkspace.id)
+        #expect(payload["workspace_ref"] as? String != nil)
+        #expect(payload["surface_id"] as? String == createdWorkspace.focusedPanelId?.uuidString)
+    }
+
     @Test func workspaceSurfaceFocusActionSelectsWorkspaceAndRejectsInvalidTargets() throws {
         let manager = TabManager()
         let originalWorkspace = try #require(manager.tabs.first)

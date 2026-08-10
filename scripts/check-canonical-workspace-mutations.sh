@@ -15,7 +15,13 @@ migrated_files=(
   "Sources/bmuxApp.swift"
 )
 
+workspace_creation_migrated_files=(
+  "Sources/TerminalController.swift"
+  "Sources/TerminalController+WorkspaceCreate.swift"
+)
+
 mutation_pattern='\.((closeWorkspace|reorderWorkspace|clearCustomDescription|setCustomDescription|setTabColor|moveTabToTop|moveTabsToTop)\(|selectTab\(at:)'
+creation_mutation_pattern='\.addWorkspace\('
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -36,6 +42,11 @@ else
     done < <(grep -nE '\.(closeWorkspace|reorderWorkspace|clearCustomDescription|setCustomDescription|setTabColor|moveTabToTop|moveTabsToTop)\(' "$file" || true)
   done < <(printf '%s\n' "${migrated_files[@]}")
 fi
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$creation_mutation_pattern" "${workspace_creation_migrated_files[@]}" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {

@@ -11943,7 +11943,7 @@ class TerminalController {
         var newTabId: UUID?
         let focus = socketCommandAllowsInAppFocusMutations()
         v2MainSync {
-            let workspace = tabManager.addWorkspace(
+            let workspace = tabManager.createWorkspaceForAction(
                 title: title,
                 select: focus,
                 eagerLoadTerminal: !focus,
