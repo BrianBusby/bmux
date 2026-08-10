@@ -11,6 +11,60 @@ import Testing
 
 struct AgentChatSessionRegistryLifecycleReviewRegressionTests {
     @MainActor
+    @Test func transcriptServicePlacesAndRemovesSubsessionWorkspaceThroughWorkspaceActions() throws {
+        let previousShared = AppDelegate.shared
+        let appDelegate = AppDelegate()
+        AppDelegate.shared = appDelegate
+        defer { AppDelegate.shared = previousShared }
+
+        let manager = TabManager()
+        let parentWorkspace = try #require(manager.selectedWorkspace)
+        _ = manager.addWorkspace(title: "Trailing", select: false)
+        let windowId = appDelegate.registerMainWindowContextForTesting(tabManager: manager)
+        defer { appDelegate.unregisterMainWindowContextForTesting(windowId: windowId) }
+
+        let service = AgentChatTranscriptService(
+            registry: AgentChatSessionRegistry(),
+            resolver: AgentChatTranscriptResolver(homeDirectory: try temporaryHomeDirectory(), environment: [:]),
+            now: { Date(timeIntervalSince1970: 300) }
+        )
+        let sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b"
+        let surfaceID = UUID().uuidString
+
+        service.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .subagentStart,
+            source: "codex",
+            workspaceId: parentWorkspace.id.uuidString,
+            surfaceId: surfaceID,
+            cwd: "/Users/example/project",
+            requestId: "subagent-request-1",
+            receivedAt: Date(timeIntervalSince1970: 301),
+            extraFieldsJSON: #"{"subagent_id":"subagent-1","name":"Reviewer"}"#
+        ))
+
+        let subsessionWorkspace = try #require(manager.tabs.first { $0.isEphemeralAgentSubsessionWorkspace })
+        let parentIndex = try #require(manager.tabs.firstIndex(where: { $0.id == parentWorkspace.id }))
+        let subsessionIndex = try #require(manager.tabs.firstIndex(where: { $0.id == subsessionWorkspace.id }))
+        #expect(subsessionIndex == parentIndex + 1)
+        #expect(subsessionWorkspace.title == "Subagent: Reviewer")
+
+        service.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .subagentStop,
+            source: "codex",
+            workspaceId: parentWorkspace.id.uuidString,
+            surfaceId: surfaceID,
+            cwd: "/Users/example/project",
+            requestId: "subagent-request-1",
+            receivedAt: Date(timeIntervalSince1970: 302),
+            extraFieldsJSON: #"{"subagent_id":"subagent-1","name":"Reviewer"}"#
+        ))
+
+        #expect(!manager.tabs.contains(where: { $0.id == subsessionWorkspace.id }))
+    }
+
+    @MainActor
     @Test func endedSessionListabilityRetriesTransientMissingTranscriptAfterRetryWindow() throws {
         let home = try temporaryHomeDirectory()
         var now = Date(timeIntervalSince1970: 260)
