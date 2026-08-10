@@ -453,13 +453,9 @@ extension TerminalController {
             if windowDockMismatchesExplicitWindow(routing, dock: windowDock) {
                 return .surfaceNotFound(surfaceId)
             }
-            guard windowDock.closePanel(surfaceId, force: true) else {
+            guard windowDock.closePanelForAction(panelId: surfaceId, force: true) else {
                 return .closeFailed(surfaceId)
             }
-            AppDelegate.shared?.notificationStore?.clearNotifications(
-                forTabId: windowDock.workspaceId,
-                surfaceId: surfaceId
-            )
             return .closed(
                 windowID: dockResultWindowId(for: windowDock, tabManager: tabManager),
                 workspaceID: windowDock.workspaceId,

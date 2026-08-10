@@ -409,10 +409,35 @@ struct DockSocketLifecycleTests {
                 )
                 let dockSurfaceIdRaw = try #require(createResult["dock_surface_id"] as? String)
                 let dockSurfaceId = try #require(UUID(uuidString: dockSurfaceIdRaw))
-                let windowDock = try #require(AppDelegate.shared?.existingWindowDock(forWindowId: windowId))
+                let appDelegate = try #require(AppDelegate.shared)
+                let windowDock = try #require(appDelegate.existingWindowDock(forWindowId: windowId))
+                let notificationStore = TerminalNotificationStore.shared
+                notificationStore.replaceNotificationsForTesting([])
+                let previousNotificationStore = appDelegate.notificationStore
+                appDelegate.notificationStore = notificationStore
+                defer {
+                    notificationStore.replaceNotificationsForTesting([])
+                    appDelegate.notificationStore = previousNotificationStore
+                }
+                notificationStore.replaceNotificationsForTesting([
+                    TerminalNotification(
+                        id: UUID(),
+                        tabId: windowDock.workspaceId,
+                        surfaceId: dockSurfaceId,
+                        title: "Dock",
+                        subtitle: "",
+                        body: "Unread",
+                        createdAt: Date(),
+                        isRead: false
+                    ),
+                ])
                 #expect(createResult["workspace_id"] as? String == windowId.uuidString)
                 #expect(windowDock.containsPanel(dockSurfaceId))
                 #expect(workspace._dockSplit?.containsPanel(dockSurfaceId) != true)
+                #expect(notificationStore.hasUnreadNotification(
+                    forTabId: windowDock.workspaceId,
+                    surfaceId: dockSurfaceId
+                ))
 
                 let closeResult = try v2Result(
                     method: "surface.close",
@@ -426,6 +451,10 @@ struct DockSocketLifecycleTests {
                 #expect(closeResult["surface_id"] as? String == dockSurfaceId.uuidString)
                 #expect(!windowDock.containsPanel(dockSurfaceId))
                 #expect(Set(workspace.panels.keys) == mainPanelIds)
+                #expect(!notificationStore.hasUnreadNotification(
+                    forTabId: windowDock.workspaceId,
+                    surfaceId: dockSurfaceId
+                ))
             }
         }
     }

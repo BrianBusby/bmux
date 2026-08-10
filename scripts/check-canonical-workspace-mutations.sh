@@ -69,6 +69,8 @@ focus_history_host_direct_focus_pattern='tabs\.first\(where: \{ \$0\.id == works
 surface_split_off_direct_focus_pattern='ws\.focusPanel\(previousFocusedPanelId\)'
 detached_workspace_creation_direct_focus_pattern='newWorkspace\.focusPanel\(detached\.panelId'
 main_window_focus_controller_direct_focus_pattern='workspace\.focusPanel\((panelId|terminalPanel\.id)\)'
+dock_adapter_direct_close_pattern='(windowDock|dock)\.closePanel\('
+workspace_dock_direct_close_pattern='(_dockSplit\?\.closePanel\(|self\.closePanel\(panel\.id)'
 browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 browser_split_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSplit\('
 
@@ -315,6 +317,21 @@ while IFS= read -r line; do
   violations+=("$line")
 done < <(rg -n -P "$main_window_focus_controller_direct_focus_pattern" \
   "Sources/MainWindowFocusController.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$dock_adapter_direct_close_pattern" \
+  "Sources/AppDelegate+WindowDock.swift" \
+  "Sources/TerminalController+ControlSurfaceDock.swift" \
+  "Sources/TerminalController+ControlSurfaceContext2.swift" \
+  "Sources/Workspace+DockBrowserLookup.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$workspace_dock_direct_close_pattern" \
+  "Sources/Workspace+DockBrowserLookup.swift" || true)
 
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue
