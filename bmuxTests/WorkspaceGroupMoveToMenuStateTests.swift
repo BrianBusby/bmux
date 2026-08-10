@@ -89,6 +89,32 @@ struct WorkspaceGroupMoveToMenuStateTests {
         #expect(manager.tabs.suffix(3).map(\.id) == [group.anchorWorkspaceId] + memberIDs)
     }
 
+    @Test func mobileWorkspaceMoveCanJoinWorkspaceToGroup() throws {
+        let manager = TabManager()
+        manager.addWorkspace(autoWelcomeIfNeeded: false)
+        manager.addWorkspace(autoWelcomeIfNeeded: false)
+        let originalIds = manager.tabs.map(\.id)
+        let groupId = try #require(manager.createWorkspaceGroup(name: "G", childWorkspaceIds: [
+            originalIds[1],
+        ]))
+        let movingWorkspaceID = originalIds[2]
+        #expect(manager.tabs.first { $0.id == movingWorkspaceID }?.groupId == nil)
+
+        let previousManager = TerminalController.shared.activeTabManagerForCallerNotification()
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(previousManager) }
+
+        let result = TerminalController.shared.v2MobileWorkspaceMove(params: [
+            "workspace_id": movingWorkspaceID.uuidString,
+            "group_id": groupId.uuidString,
+        ])
+
+        guard case .ok = result else {
+            return #expect(Bool(false), "mobile move should join an ungrouped workspace to a live group")
+        }
+        #expect(manager.tabs.first { $0.id == movingWorkspaceID }?.groupId == groupId)
+    }
+
     @Test func mobileWorkspaceGroupDeleteRejectsGroupContainingEveryWorkspace() throws {
         let manager = TabManager()
         manager.addWorkspace(autoWelcomeIfNeeded: false)
@@ -200,6 +226,32 @@ struct WorkspaceGroupMoveToMenuStateTests {
         #expect(icon?.found == true)
         #expect(icon?.storedSymbol == "leaf.fill")
         #expect(manager.workspaceGroups.first { $0.id == groupId }?.iconSymbol == "leaf.fill")
+
+        let ungrouped = manager.addWorkspace(autoWelcomeIfNeeded: false)
+        #expect(TerminalController.shared.controlAddWorkspaceToGroup(
+            routing: routing,
+            groupID: groupId,
+            workspaceID: ungrouped.id,
+            placement: .end,
+            referenceWorkspaceID: nil
+        ) == .added)
+        #expect(manager.tabs.first { $0.id == ungrouped.id }?.groupId == groupId)
+
+        #expect(TerminalController.shared.controlRemoveWorkspaceFromGroup(
+            routing: routing,
+            workspaceID: ungrouped.id
+        ) == true)
+        #expect(manager.tabs.first { $0.id == ungrouped.id }?.groupId == nil)
+
+        let created = TerminalController.shared.controlCreateWorkspaceInGroup(
+            routing: routing,
+            groupID: groupId,
+            placementRaw: "end"
+        )
+        guard case .created(let createdWorkspaceID) = created else {
+            return #expect(Bool(false), "create in group should be accepted for a live group")
+        }
+        #expect(manager.tabs.first { $0.id == createdWorkspaceID }?.groupId == groupId)
 
         #expect(TerminalController.shared.controlUngroupWorkspaceGroup(
             routing: routing,

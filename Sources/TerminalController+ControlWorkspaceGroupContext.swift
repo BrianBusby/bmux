@@ -191,26 +191,22 @@ extension TerminalController: ControlWorkspaceGroupContext {
         guard let tabManager = resolveTabManager(routing: routing) else {
             return .tabManagerUnavailable
         }
-        let hasGroup = tabManager.workspaceGroups.contains(where: { $0.id == groupID })
-        guard let tab = tabManager.tabs.first(where: { $0.id == workspaceID }), hasGroup else {
-            return .notFound
-        }
-        if let referenceWorkspaceID,
-           !tabManager.tabs.contains(where: { $0.id == referenceWorkspaceID && $0.groupId == groupID }) {
-            return .invalidReferenceWorkspace
-        }
-        // addWorkspaceToGroup silently no-ops for anchors of other groups.
-        // Confirm membership actually changed before reporting success.
-        tabManager.addWorkspaceToGroup(
+        let result = tabManager.addWorkspaceToGroupForAction(
             workspaceId: workspaceID,
             groupId: groupID,
             placement: placement,
             referenceWorkspaceId: referenceWorkspaceID
         )
-        if tab.groupId == groupID {
+        guard result.workspaceExists, result.groupExists else {
+            return .notFound
+        }
+        guard result.referenceIsMember else {
+            return .invalidReferenceWorkspace
+        }
+        if result.joinedGroup {
             return .added
         }
-        if tabManager.workspaceGroups.contains(where: { $0.id != groupID && $0.anchorWorkspaceId == workspaceID }) {
+        if result.workspaceIsOtherGroupAnchor {
             return .workspaceIsOtherGroupAnchor
         }
         return .notFound
@@ -221,11 +217,7 @@ extension TerminalController: ControlWorkspaceGroupContext {
         workspaceID: UUID
     ) -> Bool? {
         guard let tabManager = resolveTabManager(routing: routing) else { return nil }
-        if let tab = tabManager.tabs.first(where: { $0.id == workspaceID }), tab.groupId != nil {
-            tabManager.removeWorkspaceFromGroup(workspaceId: workspaceID)
-            return true
-        }
-        return false
+        return tabManager.removeWorkspaceFromGroupForAction(workspaceId: workspaceID)
     }
 
     func controlSetWorkspaceGroupAnchor(
@@ -262,7 +254,7 @@ extension TerminalController: ControlWorkspaceGroupContext {
         let placement = explicitPlacement
             ?? configured
             ?? UserDefaultsSettingsClient(defaults: .standard).value(for: SettingCatalog().workspaceGroups.newWorkspacePlacement)
-        guard let newWs = tabManager.createWorkspaceInGroup(
+        guard let newWs = tabManager.createWorkspaceInGroupForAction(
             groupId: groupID,
             placement: placement,
             select: false

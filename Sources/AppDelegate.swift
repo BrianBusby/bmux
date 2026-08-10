@@ -120,7 +120,7 @@ final class ConfiguredGroupActionAsyncWorkspaceObserver {
             return
         }
         for tab in tabs where !knownIds.contains(tab.id) {
-            tabManager.addWorkspaceToGroup(
+            tabManager.addWorkspaceToGroupForAction(
                 workspaceId: tab.id,
                 groupId: groupId,
                 placement: placement,
@@ -136,7 +136,7 @@ final class ConfiguredGroupActionAsyncWorkspaceObserver {
         guard let workspaceId, let tabManager else { return }
         guard tabManager.workspaceGroups.contains(where: { $0.id == groupId }) else { return }
         guard tabManager.tabs.contains(where: { $0.id == workspaceId }) else { return }
-        tabManager.addWorkspaceToGroup(
+        tabManager.addWorkspaceToGroupForAction(
             workspaceId: workspaceId,
             groupId: groupId,
             placement: placement,
@@ -7464,7 +7464,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         }
 
         if let context, let workspaceGroupTarget {
-            guard let workspace = context.tabManager.createWorkspaceInGroup(
+            guard let workspace = context.tabManager.createWorkspaceInGroupForAction(
                 groupId: workspaceGroupTarget.groupId,
                 placement: workspaceGroupTarget.placement,
                 referenceWorkspaceId: workspaceGroupTarget.referenceWorkspaceId,
@@ -7832,7 +7832,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let initialWorkspaceId = initialWorkspace?.id
         if let workspaceGroupTarget,
            case .builtIn(.newWorkspace) = action.action {
-            return context.tabManager.createWorkspaceInGroup(
+            return context.tabManager.createWorkspaceInGroupForAction(
                 groupId: workspaceGroupTarget.groupId,
                 placement: workspaceGroupTarget.placement,
                 referenceWorkspaceId: workspaceGroupTarget.referenceWorkspaceId
@@ -7851,7 +7851,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 let afterIds = context.tabManager.tabs.map(\.id)
                 var newlyCreatedId: UUID?
                 for id in afterIds where !beforeIds.contains(id) {
-                    context.tabManager.addWorkspaceToGroup(
+                    context.tabManager.addWorkspaceToGroupForAction(
                         workspaceId: id,
                         groupId: workspaceGroupTarget.groupId,
                         placement: workspaceGroupTarget.placement,
@@ -15871,7 +15871,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // the bare `+` button. The generic executor below uses addWorkspace()
         // which skips both behaviors.
         if case .builtIn(.newWorkspace) = action.action {
-            return tabManager.createWorkspaceInGroup(
+            return tabManager.createWorkspaceInGroupForAction(
                 groupId: groupId,
                 placement: groupPlacement,
                 referenceWorkspaceId: anchorId
@@ -15904,7 +15904,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             let afterIds = tabManager.tabs.map(\.id)
             var newlyCreatedId: UUID?
             for id in afterIds where !beforeIds.contains(id) {
-                tabManager.addWorkspaceToGroup(
+                tabManager.addWorkspaceToGroupForAction(
                     workspaceId: id,
                     groupId: groupId,
                     placement: groupPlacement,

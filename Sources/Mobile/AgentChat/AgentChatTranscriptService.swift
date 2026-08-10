@@ -567,7 +567,7 @@ final class AgentChatTranscriptService {
         )
         workspace.isEphemeralAgentSubsessionWorkspace = true
         if let groupId = parentWorkspace.groupId {
-            tabManager.addWorkspaceToGroup(
+            tabManager.addWorkspaceToGroupForAction(
                 workspaceId: workspace.id,
                 groupId: groupId,
                 placement: .afterCurrent,

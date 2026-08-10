@@ -1788,6 +1788,47 @@ class TabManager: ObservableObject {
         )
     }
 
+    func workspaceGroupReferenceValidationForAction(
+        groupId: UUID,
+        referenceWorkspaceId: UUID?
+    ) -> (groupExists: Bool, referenceIsMember: Bool) {
+        let groupExists = workspaceGroups.contains(where: { $0.id == groupId })
+        let referenceIsMember = referenceWorkspaceId.map { referenceId in
+            tabs.contains { $0.id == referenceId && $0.groupId == groupId }
+        } ?? true
+        return (groupExists, referenceIsMember)
+    }
+
+    @discardableResult
+    func createWorkspaceInGroupForAction(
+        groupId: UUID,
+        placement explicitPlacement: WorkspaceGroupNewPlacement? = nil,
+        referenceWorkspaceId: UUID? = nil,
+        select: Bool = true,
+        initialSurface: NewWorkspaceInitialSurface = .terminal,
+        title: String? = nil,
+        initialBrowserURL: URL? = nil,
+        initialBrowserOmnibarVisible: Bool = true,
+        initialBrowserTransparentBackground: Bool = false
+    ) -> Workspace? {
+        let validation = workspaceGroupReferenceValidationForAction(
+            groupId: groupId,
+            referenceWorkspaceId: referenceWorkspaceId
+        )
+        guard validation.groupExists, validation.referenceIsMember else { return nil }
+        return workspaceGrouping.createWorkspaceInGroup(
+            groupId: groupId,
+            placement: explicitPlacement,
+            referenceWorkspaceId: referenceWorkspaceId,
+            select: select,
+            initialSurface: initialSurface,
+            title: title,
+            initialBrowserURL: initialBrowserURL,
+            initialBrowserOmnibarVisible: initialBrowserOmnibarVisible,
+            initialBrowserTransparentBackground: initialBrowserTransparentBackground
+        )
+    }
+
     func addWorkspaceToGroup(
         workspaceId: UUID,
         groupId: UUID,
@@ -1802,8 +1843,64 @@ class TabManager: ObservableObject {
         )
     }
 
+    @discardableResult
+    func addWorkspaceToGroupForAction(
+        workspaceId: UUID,
+        groupId: UUID,
+        placement: WorkspaceGroupNewPlacement? = nil,
+        referenceWorkspaceId: UUID? = nil
+    ) -> (
+        workspaceExists: Bool,
+        groupExists: Bool,
+        referenceIsMember: Bool,
+        joinedGroup: Bool,
+        workspaceIsOtherGroupAnchor: Bool
+    ) {
+        let workspaceExists = tabs.contains(where: { $0.id == workspaceId })
+        let validation = workspaceGroupReferenceValidationForAction(
+            groupId: groupId,
+            referenceWorkspaceId: referenceWorkspaceId
+        )
+        guard workspaceExists, validation.groupExists, validation.referenceIsMember else {
+            return (
+                workspaceExists,
+                validation.groupExists,
+                validation.referenceIsMember,
+                false,
+                false
+            )
+        }
+        workspaceGrouping.addWorkspaceToGroup(
+            workspaceId: workspaceId,
+            groupId: groupId,
+            placement: placement,
+            referenceWorkspaceId: referenceWorkspaceId
+        )
+        let joinedGroup = tabs.first(where: { $0.id == workspaceId })?.groupId == groupId
+        let workspaceIsOtherGroupAnchor = workspaceGroups.contains {
+            $0.id != groupId && $0.anchorWorkspaceId == workspaceId
+        }
+        return (
+            workspaceExists,
+            validation.groupExists,
+            validation.referenceIsMember,
+            joinedGroup,
+            workspaceIsOtherGroupAnchor
+        )
+    }
+
     func removeWorkspaceFromGroup(workspaceId: UUID) {
         workspaceGrouping.removeWorkspaceFromGroup(workspaceId: workspaceId)
+    }
+
+    @discardableResult
+    func removeWorkspaceFromGroupForAction(workspaceId: UUID) -> Bool {
+        guard let tab = tabs.first(where: { $0.id == workspaceId }),
+              tab.groupId != nil else {
+            return false
+        }
+        workspaceGrouping.removeWorkspaceFromGroup(workspaceId: workspaceId)
+        return true
     }
 
     func ungroupWorkspaceGroup(groupId: UUID) {

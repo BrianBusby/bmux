@@ -1068,6 +1068,18 @@ struct WorkspaceGroupTests {
         #expect(!manager.ungroupWorkspaceGroupForAction(groupId: missingGroupId))
         #expect(manager.deleteWorkspaceGroupForAction(groupId: missingGroupId) == nil)
         #expect(manager.workspaceGroupDeletionConfirmationForAction(groupId: missingGroupId) == nil)
+
+        let addMissing = manager.addWorkspaceToGroupForAction(
+            workspaceId: missingWorkspaceId,
+            groupId: missingGroupId
+        )
+        #expect(!addMissing.workspaceExists)
+        #expect(!addMissing.groupExists)
+        #expect(addMissing.referenceIsMember)
+        #expect(!addMissing.joinedGroup)
+        #expect(!addMissing.workspaceIsOtherGroupAnchor)
+        #expect(manager.createWorkspaceInGroupForAction(groupId: missingGroupId) == nil)
+        #expect(!manager.removeWorkspaceFromGroupForAction(workspaceId: missingWorkspaceId))
     }
 
     @Test func workspaceGroupActionHelpersMutateLiveGroups() throws {
@@ -1075,6 +1087,7 @@ struct WorkspaceGroupTests {
         manager.addWorkspace(autoWelcomeIfNeeded: false)
         manager.addWorkspace(autoWelcomeIfNeeded: false)
         let childId = manager.tabs[1].id
+        let existingUngroupedId = manager.tabs[2].id
         let groupId = try #require(manager.createWorkspaceGroup(name: "Group", childWorkspaceIds: [childId]))
         let secondGroupId = try #require(manager.createWorkspaceGroup(name: "Other"))
 
@@ -1101,6 +1114,39 @@ struct WorkspaceGroupTests {
 
         #expect(manager.setWorkspaceGroupAnchorForAction(groupId: groupId, workspaceId: childId))
         #expect(manager.workspaceGroups.first { $0.id == groupId }?.anchorWorkspaceId == childId)
+
+        let invalidReference = manager.addWorkspaceToGroupForAction(
+            workspaceId: existingUngroupedId,
+            groupId: groupId,
+            referenceWorkspaceId: UUID()
+        )
+        #expect(invalidReference.workspaceExists)
+        #expect(invalidReference.groupExists)
+        #expect(!invalidReference.referenceIsMember)
+        #expect(!invalidReference.joinedGroup)
+
+        let addResult = manager.addWorkspaceToGroupForAction(
+            workspaceId: existingUngroupedId,
+            groupId: groupId,
+            placement: .end
+        )
+        #expect(addResult.workspaceExists)
+        #expect(addResult.groupExists)
+        #expect(addResult.referenceIsMember)
+        #expect(addResult.joinedGroup)
+        #expect(!addResult.workspaceIsOtherGroupAnchor)
+        #expect(manager.tabs.first { $0.id == existingUngroupedId }?.groupId == groupId)
+
+        #expect(manager.removeWorkspaceFromGroupForAction(workspaceId: existingUngroupedId))
+        #expect(manager.tabs.first { $0.id == existingUngroupedId }?.groupId == nil)
+
+        let createdInGroup = try #require(manager.createWorkspaceInGroupForAction(
+            groupId: groupId,
+            placement: .end,
+            referenceWorkspaceId: childId,
+            select: false
+        ))
+        #expect(manager.tabs.first { $0.id == createdInGroup.id }?.groupId == groupId)
 
         #expect(manager.moveWorkspaceGroupForAction(groupId: secondGroupId, toIndex: 0))
         #expect(manager.workspaceGroups.first?.id == secondGroupId)

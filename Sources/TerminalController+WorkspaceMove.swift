@@ -110,12 +110,12 @@ extension TerminalController {
 
             if workspace.groupId != targetGroupID {
                 if let targetGroupID {
-                    tabManager.addWorkspaceToGroup(
+                    let membership = tabManager.addWorkspaceToGroupForAction(
                         workspaceId: workspaceID,
                         groupId: targetGroupID,
                         placement: .end
                     )
-                    guard tabManager.tabs.first(where: { $0.id == workspaceID })?.groupId == targetGroupID else {
+                    guard membership.joinedGroup else {
                         mutationError = .err(
                             code: "invalid_request",
                             message: controlWorkspaceGroupStrings().workspaceIsOtherGroupAnchor,
@@ -124,7 +124,7 @@ extension TerminalController {
                         return
                     }
                 } else {
-                    tabManager.removeWorkspaceFromGroup(workspaceId: workspaceID)
+                    tabManager.removeWorkspaceFromGroupForAction(workspaceId: workspaceID)
                 }
             }
 
