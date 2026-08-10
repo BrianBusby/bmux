@@ -206,7 +206,10 @@ final class AgentChatTranscriptService {
     /// - Parameter event: The hook event.
     func noteHookEvent(_ event: WorkstreamEvent) {
         let record = registry.noteHookEvent(event)
-        recordTaskWorkspaceDirectoryIfPresent(event, record: record)
+        if let directory = event.cwd?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !directory.isEmpty {
+            recordTaskWorkspaceDirectory(record, directory)
+        }
         // A session (re)starting or receiving a prompt is the bounded
         // retry point for a transcript that didn't exist at first sight.
         switch event.hookEventName {
@@ -242,14 +245,6 @@ final class AgentChatTranscriptService {
         default:
             break
         }
-    }
-
-    private func recordTaskWorkspaceDirectoryIfPresent(_ event: WorkstreamEvent, record: AgentChatSessionRecord) {
-        guard let directory = event.cwd?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !directory.isEmpty else {
-            return
-        }
-        recordTaskWorkspaceDirectory(record, directory)
     }
 
     /// Lists chat-capable sessions.

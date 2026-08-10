@@ -553,56 +553,25 @@ struct AgentChatSessionRegistryLifecycleTests {
     }
 
     @MainActor
-    @Test func hookCwdUpdatesReportedTaskWorkspaceDirectory() {
-        let workspaceID = UUID().uuidString
-        let surfaceID = UUID().uuidString
-        var recordedDirectories: [(workspaceID: String?, surfaceID: String?, directory: String)] = []
-        let service = AgentChatTranscriptService(
-            registry: AgentChatSessionRegistry(),
-            recordTaskWorkspaceDirectory: { record, directory in
-                recordedDirectories.append((
-                    workspaceID: record.workspaceID,
-                    surfaceID: record.surfaceID,
-                    directory: directory
-                ))
-            }
-        )
-
-        service.noteHookEvent(WorkstreamEvent(
-            sessionId: "24ec0052-450c-4914-b1dd-2ee80d4bc84b",
-            hookEventName: .preToolUse,
-            source: "codex",
-            workspaceId: workspaceID,
-            surfaceId: surfaceID,
-            cwd: "  /private/tmp/bmux-pr-worktree  "
-        ))
-
-        #expect(recordedDirectories.count == 1)
-        #expect(recordedDirectories.first?.workspaceID == workspaceID)
-        #expect(recordedDirectories.first?.surfaceID == surfaceID)
-        #expect(recordedDirectories.first?.directory == "/private/tmp/bmux-pr-worktree")
-    }
-
-    @MainActor
-    @Test func blankHookCwdDoesNotUpdateReportedTaskWorkspaceDirectory() {
+    @Test func hookCwdUpdatesReportedTaskWorkspaceDirectoryAndIgnoresBlankCwd() {
         var recordedDirectories: [String] = []
         let service = AgentChatTranscriptService(
             registry: AgentChatSessionRegistry(),
-            recordTaskWorkspaceDirectory: { _, directory in
-                recordedDirectories.append(directory)
-            }
+            recordTaskWorkspaceDirectory: { _, directory in recordedDirectories.append(directory) }
         )
+        let workspaceID = UUID().uuidString
+        let surfaceID = UUID().uuidString
+        for (sessionID, cwd) in [
+            ("24ec0052-450c-4914-b1dd-2ee80d4bc84b", "  /private/tmp/bmux-pr-worktree  "),
+            ("34ec0052-450c-4914-b1dd-2ee80d4bc84b", " \n "),
+        ] {
+            service.noteHookEvent(WorkstreamEvent(
+                sessionId: sessionID, hookEventName: .preToolUse, source: "codex",
+                workspaceId: workspaceID, surfaceId: surfaceID, cwd: cwd
+            ))
+        }
 
-        service.noteHookEvent(WorkstreamEvent(
-            sessionId: "24ec0052-450c-4914-b1dd-2ee80d4bc84b",
-            hookEventName: .preToolUse,
-            source: "codex",
-            workspaceId: UUID().uuidString,
-            surfaceId: UUID().uuidString,
-            cwd: " \n "
-        ))
-
-        #expect(recordedDirectories.isEmpty)
+        #expect(recordedDirectories == ["/private/tmp/bmux-pr-worktree"])
     }
 
     private func temporaryHomeDirectory() throws -> URL {
