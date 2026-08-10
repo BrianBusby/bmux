@@ -38,6 +38,7 @@ mobile_terminal_surface_creation_pattern='workspace\.newTerminalSurface\('
 surface_context_terminal_to_right_pattern='guard let newPanel = newTerminalSurface\('
 pane_swap_placeholder_surface_creation_pattern='workspace\.newTerminalSurface\('
 canvas_surface_creation_pattern='newTerminalSurface\(inPane: focusedPaneId'
+session_drop_surface_creation_pattern='let panel = newTerminalSurface\('
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -103,6 +104,11 @@ while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   violations+=("$line")
 done < <(rg -n -P "$canvas_surface_creation_pattern" "Sources/Canvas/Workspace+CanvasLayout.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$session_drop_surface_creation_pattern" "Sources/Workspace.swift" || true)
 
 if (( ${#violations[@]} > 0 )); then
   {

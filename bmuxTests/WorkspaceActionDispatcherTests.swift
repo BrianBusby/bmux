@@ -460,6 +460,7 @@ import Testing
             from: originalPanelId,
             orientation: .horizontal,
             focus: false,
+            initialInput: "echo action split\n",
             startupEnvironment: ["BMUX_AGENT_MANAGED_SUBAGENT": "1"],
             allowTextBoxFocusDefault: false
         )
@@ -471,6 +472,7 @@ import Testing
         let splitPane = try #require(workspace.paneId(forPanelId: panel.id))
 
         #expect(panel.id != originalPanelId)
+        #expect(panel.surface.initialInput == "echo action split\n")
         #expect(panel.surface.startupEnvironmentValue("BMUX_AGENT_MANAGED_SUBAGENT") == "1")
         #expect(splitPane != originalPane)
         #expect(workspace.focusedPanelId == originalPanelId)

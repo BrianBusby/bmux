@@ -51,10 +51,12 @@ extension Workspace {
         workingDirectory: String? = nil,
         initialCommand: String? = nil,
         tmuxStartCommand: String? = nil,
+        initialInput: String? = nil,
         startupEnvironment: [String: String] = [:],
         initialDividerPosition: CGFloat? = nil,
         remotePTYSessionID: String? = nil,
         suppressWorkspaceRemoteStartupCommand: Bool = false,
+        inheritWorkingDirectoryFallback: Bool = true,
         allowTextBoxFocusDefault: Bool = true
     ) -> TerminalPanelCreationOutcome {
         newTerminalSplitOutcome(
@@ -65,10 +67,12 @@ extension Workspace {
             workingDirectory: workingDirectory,
             initialCommand: initialCommand,
             tmuxStartCommand: tmuxStartCommand,
+            initialInput: initialInput,
             startupEnvironment: startupEnvironment,
             initialDividerPosition: initialDividerPosition,
             remotePTYSessionID: remotePTYSessionID,
             suppressWorkspaceRemoteStartupCommand: suppressWorkspaceRemoteStartupCommand,
+            inheritWorkingDirectoryFallback: inheritWorkingDirectoryFallback,
             allowTextBoxFocusDefault: allowTextBoxFocusDefault
         )
     }

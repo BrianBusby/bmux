@@ -7384,10 +7384,12 @@ final class Workspace: Identifiable, ObservableObject {
         workingDirectory: String? = nil,
         initialCommand: String? = nil,
         tmuxStartCommand: String? = nil,
+        initialInput: String? = nil,
         startupEnvironment: [String: String] = [:],
         initialDividerPosition: CGFloat? = nil,
         remotePTYSessionID: String? = nil,
         suppressWorkspaceRemoteStartupCommand: Bool = false,
+        inheritWorkingDirectoryFallback: Bool = true,
         allowTextBoxFocusDefault: Bool = true
     ) -> TerminalPanel? {
         return newTerminalSplitOutcome(
@@ -7398,10 +7400,12 @@ final class Workspace: Identifiable, ObservableObject {
             workingDirectory: workingDirectory,
             initialCommand: initialCommand,
             tmuxStartCommand: tmuxStartCommand,
+            initialInput: initialInput,
             startupEnvironment: startupEnvironment,
             initialDividerPosition: initialDividerPosition,
             remotePTYSessionID: remotePTYSessionID,
             suppressWorkspaceRemoteStartupCommand: suppressWorkspaceRemoteStartupCommand,
+            inheritWorkingDirectoryFallback: inheritWorkingDirectoryFallback,
             allowTextBoxFocusDefault: allowTextBoxFocusDefault
         ).panel
     }
@@ -7418,10 +7422,12 @@ final class Workspace: Identifiable, ObservableObject {
         workingDirectory: String? = nil,
         initialCommand: String? = nil,
         tmuxStartCommand: String? = nil,
+        initialInput: String? = nil,
         startupEnvironment: [String: String] = [:],
         initialDividerPosition: CGFloat? = nil,
         remotePTYSessionID: String? = nil,
         suppressWorkspaceRemoteStartupCommand: Bool = false,
+        inheritWorkingDirectoryFallback: Bool = true,
         allowTextBoxFocusDefault: Bool = true
     ) -> TerminalPanelCreationOutcome {
         // In a remote tmux mirror workspace a split means "split the mirrored
@@ -7450,10 +7456,12 @@ final class Workspace: Identifiable, ObservableObject {
             workingDirectory: workingDirectory,
             initialCommand: initialCommand,
             tmuxStartCommand: tmuxStartCommand,
+            initialInput: initialInput,
             startupEnvironment: startupEnvironment,
             initialDividerPosition: initialDividerPosition,
             remotePTYSessionID: remotePTYSessionID,
             suppressWorkspaceRemoteStartupCommand: suppressWorkspaceRemoteStartupCommand,
+            inheritWorkingDirectoryFallback: inheritWorkingDirectoryFallback,
             allowTextBoxFocusDefault: allowTextBoxFocusDefault
         ) else { return .failed }
         return .created(panel)
@@ -7467,10 +7475,12 @@ final class Workspace: Identifiable, ObservableObject {
         workingDirectory: String?,
         initialCommand: String?,
         tmuxStartCommand: String?,
+        initialInput: String?,
         startupEnvironment: [String: String],
         initialDividerPosition: CGFloat?,
         remotePTYSessionID: String?,
         suppressWorkspaceRemoteStartupCommand: Bool,
+        inheritWorkingDirectoryFallback: Bool,
         allowTextBoxFocusDefault: Bool
     ) -> TerminalPanel? {
 #if DEBUG
@@ -7533,10 +7543,12 @@ final class Workspace: Identifiable, ObservableObject {
 
         // Resolve cwd as explicit request, source reported cwd, source requested
         // startup cwd, then workspace currentDirectory.
-        let splitWorkingDirectory = resolvedTerminalStartupWorkingDirectory(
-            requestedWorkingDirectory: workingDirectory,
-            sourcePanelId: panelId
-        )
+        let splitWorkingDirectory = inheritWorkingDirectoryFallback
+            ? resolvedTerminalStartupWorkingDirectory(
+                requestedWorkingDirectory: workingDirectory,
+                sourcePanelId: panelId
+            )
+            : workingDirectory
 #if DEBUG
         bmuxDebugLog(
             "split.cwd panelId=\(panelId.uuidString.prefix(5)) panelDir=\(panelDirectories[panelId] ?? "nil") requestedDir=\(terminalPanel(for: panelId)?.requestedWorkingDirectory ?? "nil") currentDir=\(currentDirectory) resolved=\(splitWorkingDirectory ?? "nil")"
@@ -7553,6 +7565,7 @@ final class Workspace: Identifiable, ObservableObject {
             portOrdinal: portOrdinal,
             initialCommand: startupCommand,
             tmuxStartCommand: tmuxStartCommand,
+            initialInput: initialInput,
             additionalEnvironment: effectiveStartupEnvironment
         )
         configureNewTerminalPanel(
@@ -11421,12 +11434,12 @@ final class Workspace: Identifiable, ObservableObject {
         let inputWithReturn = resumeCommand + "\n"
         switch destination {
         case .insert(let paneId, _):
-            let panel = newTerminalSurface(
+            let panel = createTerminalSurfaceForAction(
                 inPane: paneId,
                 focus: true,
                 workingDirectory: entry.resumeWorkingDirectory,
                 initialInput: inputWithReturn
-            )
+            ).panel
             return panel != nil
         case .split(let paneId, let orientation, let insertFirst):
             let panel = splitPaneWithNewTerminal(
@@ -11538,63 +11551,35 @@ final class Workspace: Identifiable, ObservableObject {
         initialInput: String?,
         remoteStartupCommand: String? = nil
     ) -> TerminalPanel? {
-        var inheritedConfig = inheritedTerminalConfig(inPane: paneId)
-        let requestedRemoteStartupCommand = remoteStartupCommand?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let startupCommand = requestedRemoteStartupCommand?.isEmpty == false ? requestedRemoteStartupCommand : nil
-        let effectiveStartupEnvironment = terminalStartupEnvironment(
-            base: startupEnvironmentMergingWorkspaceEnvironment([:]),
-            remoteStartupCommand: startupCommand
-        )
-        if startupCommand != nil {
-            var template = inheritedConfig ?? BmuxSurfaceConfigTemplate()
-            template.waitAfterCommand = true
-            inheritedConfig = template
-        }
-
-        let newPanel = TerminalPanel(
-            workspaceId: id,
-            context: GHOSTTY_SURFACE_CONTEXT_SPLIT,
-            configTemplate: inheritedConfig,
-            workingDirectory: workingDirectory,
-            portOrdinal: portOrdinal,
-            initialCommand: startupCommand,
-            initialInput: initialInput,
-            additionalEnvironment: effectiveStartupEnvironment
-        )
-        configureNewTerminalPanel(newPanel)
-        panels[newPanel.id] = newPanel
-        panelTitles[newPanel.id] = newPanel.displayTitle
-        if startupCommand != nil {
-            trackRemoteTerminalSurface(newPanel.id)
-        }
-        seedTerminalInheritanceFontPoints(panelId: newPanel.id, configTemplate: inheritedConfig)
-
-        let newTab = Bonsplit.Tab(
-            title: newPanel.displayTitle,
-            icon: newPanel.displayIcon,
-            kind: SurfaceKind.terminal.rawValue,
-            isDirty: newPanel.isDirty,
-            isPinned: false
-        )
-        bindSurface(newTab.id, toPanelId: newPanel.id)
-
-        isProgrammaticSplit = true
-        defer { isProgrammaticSplit = false }
-        guard let newPaneId = bonsplitController.splitPane(paneId, orientation: orientation, withTab: newTab, insertFirst: insertFirst) else {
-            panels.removeValue(forKey: newPanel.id)
-            panelTitles.removeValue(forKey: newPanel.id)
-            removeSurfaceMapping(forSurfaceId: newTab.id)
-            if startupCommand != nil {
-                untrackRemoteTerminalSurface(newPanel.id)
-            }
-            terminalInheritanceFontPointsByPanelId.removeValue(forKey: newPanel.id)
+        guard let anchorPanelId = selectedTerminalPanelId(inPane: paneId)
+            ?? bonsplitController.tabs(inPane: paneId)
+                .compactMap({ panelIdFromSurfaceId($0.id) })
+                .first else {
             return nil
         }
-        publishBmuxSplitCreated(newPaneId, sourcePaneId: paneId, orientation: orientation, surfaceId: newPanel.id, kind: "terminal", origin: "terminal_split", focused: true)
-
-        bonsplitController.selectTab(newTab.id)
-        newPanel.focus()
-        return newPanel
+        let requestedRemoteStartupCommand = remoteStartupCommand?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let startupCommand = requestedRemoteStartupCommand?.isEmpty == false ? requestedRemoteStartupCommand : nil
+        let remoteStartupEnvironment = startupCommand == nil
+            ? [:]
+            : (remoteConfiguration?.sshTerminalStartupEnvironment ?? [:])
+        guard let panel = createTerminalSplitForAction(
+            from: anchorPanelId,
+            orientation: orientation,
+            insertFirst: insertFirst,
+            focus: true,
+            workingDirectory: workingDirectory,
+            initialCommand: startupCommand,
+            initialInput: initialInput,
+            startupEnvironment: remoteStartupEnvironment,
+            suppressWorkspaceRemoteStartupCommand: true,
+            inheritWorkingDirectoryFallback: false
+        ).panel else {
+            return nil
+        }
+        if startupCommand != nil {
+            trackRemoteTerminalSurface(panel.id)
+        }
+        return panel
     }
 
     struct AgentConversationForkWorkspaceLaunch: Equatable {
@@ -11676,7 +11661,7 @@ final class Workspace: Identifiable, ObservableObject {
         if let forkedPanel,
            remoteStartupCommand != nil,
            let workingDirectory {
-            updatePanelDirectory(panelId: forkedPanel.id, directory: workingDirectory)
+            updateRemotePanelDirectory(panelId: forkedPanel.id, directory: workingDirectory)
         }
         if forkedPanel == nil, let zoomedPaneId {
             _ = bonsplitController.togglePaneZoom(inPane: zoomedPaneId)
@@ -11756,7 +11741,7 @@ final class Workspace: Identifiable, ObservableObject {
         if let forkedPanel {
             _ = reorderSurface(panelId: forkedPanel.id, toIndex: targetIndex)
             if remoteStartupCommand != nil, let workingDirectory {
-                updatePanelDirectory(panelId: forkedPanel.id, directory: workingDirectory)
+                updateRemotePanelDirectory(panelId: forkedPanel.id, directory: workingDirectory)
             }
         } else if let zoomedPaneId {
             _ = bonsplitController.togglePaneZoom(inPane: zoomedPaneId)
