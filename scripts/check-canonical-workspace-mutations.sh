@@ -56,7 +56,7 @@ socket_close_adapter_pattern='requestNonInteractiveCloseTabRecordingHistory\(tab
 workspace_adjacent_selection_pattern='\.(selectNextTab|selectPreviousTab)\('
 browser_socket_focus_pattern='ws\.focusPanel\((target\.surfaceId|targetId)\)'
 canvas_socket_focus_pattern='ws\.focusPanel\(surfaceID\)'
-browser_address_bar_direct_focus_pattern='workspace\.focusPanel\(panel\.id\)'
+browser_address_bar_direct_focus_pattern='workspace\.focusPanel\((panel|browserPanel)\.id\)'
 browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 browser_split_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSplit\('
 

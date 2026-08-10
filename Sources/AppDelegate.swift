@@ -7353,7 +7353,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             ?? workspace.panels.values.compactMap({ $0 as? BrowserPanel }).first else {
             return false
         }
-        workspace.focusPanel(browserPanel.id)
+        guard focusBrowserPanelForAction(
+            workspace: workspace,
+            browserPanel: browserPanel,
+            focusIntent: .webView
+        ) else {
+            return false
+        }
         browserPanel.navigate(to: url)
         browserPanel.requestExplicitWebViewFocus()
         context.tabManager.rememberFocusedSurface(tabId: workspace.id, surfaceId: browserPanel.id)
@@ -7544,7 +7550,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             ?? workspace.panels.values.compactMap({ $0 as? BrowserPanel }).first else {
             return
         }
-        workspace.focusPanel(browserPanel.id)
+        guard focusBrowserPanelForAction(
+            workspace: workspace,
+            browserPanel: browserPanel,
+            focusIntent: .addressBar
+        ) else {
+            return
+        }
         focusBrowserAddressBar(in: browserPanel)
     }
 
@@ -7553,7 +7565,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             ?? workspace.panels.values.compactMap({ $0 as? BrowserPanel }).first else {
             return
         }
-        workspace.focusPanel(browserPanel.id)
+        guard focusBrowserPanelForAction(
+            workspace: workspace,
+            browserPanel: browserPanel,
+            focusIntent: .webView
+        ) else {
+            return
+        }
         browserPanel.requestExplicitWebViewFocus()
         workspace.owningTabManager?.rememberFocusedSurface(tabId: workspace.id, surfaceId: browserPanel.id)
     }
@@ -14810,6 +14828,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 #endif
 
     @discardableResult
+    private func focusBrowserPanelForAction(
+        workspace: Workspace,
+        browserPanel: BrowserPanel,
+        focusIntent: BrowserPanelFocusIntent
+    ) -> Bool {
+        guard let tabManager = workspace.owningTabManager
+            ?? tabManagerFor(tabId: workspace.id)
+            ?? tabManager else {
+            return false
+        }
+        if let context = mainWindowContexts.values.first(where: { $0.tabManager === tabManager }) {
+            activateMainWindowContext(context)
+        }
+        guard case .focused = tabManager.focusWorkspaceSurfaceForAction(
+            workspaceId: workspace.id,
+            surfaceId: browserPanel.id,
+            focusIntent: .browser(focusIntent)
+        ) else {
+            return false
+        }
+        return true
+    }
+
+    @discardableResult
     func focusBrowserAddressBar(panelId: UUID) -> Bool {
         var visitedManagers = Set<ObjectIdentifier>()
         var candidateManagers: [TabManager] = []
@@ -14842,20 +14884,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 #endif
             return false
         }
-        let (tabManager, workspace, panel) = target
+        let (_, workspace, panel) = target
 #if DEBUG
         bmuxDebugLog(
             "browser.focus.addressBar.route panel=\(panel.id.uuidString.prefix(5)) " +
             "workspace=\(workspace.id.uuidString.prefix(5)) result=hit \(browserFocusStateSnapshot())"
         )
 #endif
-        if let context = mainWindowContexts.values.first(where: { $0.tabManager === tabManager }) {
-            activateMainWindowContext(context)
-        }
-        guard case .focused = tabManager.focusWorkspaceSurfaceForAction(
-            workspaceId: workspace.id,
-            surfaceId: panel.id,
-            focusIntent: .browser(.addressBar)
+        guard focusBrowserPanelForAction(
+            workspace: workspace,
+            browserPanel: panel,
+            focusIntent: .addressBar
         ) else {
 #if DEBUG
             bmuxDebugLog(
