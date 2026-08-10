@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import BmuxControlSocket
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -110,6 +111,102 @@ struct WorkspaceGroupMoveToMenuStateTests {
         #expect(code == "invalid_request")
         #expect(manager.workspaceGroups.contains { $0.id == groupId })
         #expect(manager.tabs.filter { $0.groupId == groupId }.count == originalIds.count + 1)
+    }
+
+    @Test func mobileWorkspaceGroupActionMutatesLiveGroupState() throws {
+        let manager = TabManager()
+        manager.addWorkspace(autoWelcomeIfNeeded: false)
+        let childId = manager.tabs[1].id
+        let groupId = try #require(manager.createWorkspaceGroup(name: "G", childWorkspaceIds: [childId]))
+
+        let previousManager = TerminalController.shared.activeTabManagerForCallerNotification()
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(previousManager) }
+
+        let pinResult = TerminalController.shared.v2MobileWorkspaceGroupAction(params: [
+            "group_id": groupId.uuidString,
+            "action": "pin",
+        ])
+        guard case .ok = pinResult else {
+            return #expect(Bool(false), "pin should be accepted for a live group")
+        }
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.isPinned == true)
+
+        let renameResult = TerminalController.shared.v2MobileWorkspaceGroupAction(params: [
+            "group_id": groupId.uuidString,
+            "action": "rename",
+            "title": "Renamed",
+        ])
+        guard case .ok = renameResult else {
+            return #expect(Bool(false), "rename should be accepted for a live group")
+        }
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.name == "Renamed")
+
+        let ungroupResult = TerminalController.shared.v2MobileWorkspaceGroupAction(params: [
+            "group_id": groupId.uuidString,
+            "action": "ungroup",
+        ])
+        guard case .ok = ungroupResult else {
+            return #expect(Bool(false), "ungroup should be accepted for a live group")
+        }
+        #expect(!manager.workspaceGroups.contains { $0.id == groupId })
+        #expect(manager.tabs.first { $0.id == childId }?.groupId == nil)
+    }
+
+    @Test func controlWorkspaceGroupActionsMutateLiveGroupState() throws {
+        let manager = TabManager()
+        manager.addWorkspace(autoWelcomeIfNeeded: false)
+        let childId = manager.tabs[1].id
+        let groupId = try #require(manager.createWorkspaceGroup(name: "G", childWorkspaceIds: [childId]))
+        let routing = ControlRoutingSelectors(
+            hasWindowIDParam: false,
+            windowID: nil,
+            groupID: groupId,
+            workspaceID: nil,
+            surfaceID: nil,
+            paneID: nil
+        )
+
+        let previousManager = TerminalController.shared.activeTabManagerForCallerNotification()
+        TerminalController.shared.setActiveTabManager(manager)
+        defer { TerminalController.shared.setActiveTabManager(previousManager) }
+
+        #expect(TerminalController.shared.controlSetWorkspaceGroupPinned(
+            routing: routing,
+            groupID: groupId,
+            isPinned: true
+        ) == true)
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.isPinned == true)
+
+        #expect(TerminalController.shared.controlRenameWorkspaceGroup(
+            routing: routing,
+            groupID: groupId,
+            name: "Renamed"
+        ) == true)
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.name == "Renamed")
+
+        #expect(TerminalController.shared.controlSetWorkspaceGroupCollapsed(
+            routing: routing,
+            groupID: groupId,
+            isCollapsed: true
+        ) == true)
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.isCollapsed == true)
+
+        let icon = TerminalController.shared.controlSetWorkspaceGroupIcon(
+            routing: routing,
+            groupID: groupId,
+            symbol: "  leaf.fill  "
+        )
+        #expect(icon?.found == true)
+        #expect(icon?.storedSymbol == "leaf.fill")
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.iconSymbol == "leaf.fill")
+
+        #expect(TerminalController.shared.controlUngroupWorkspaceGroup(
+            routing: routing,
+            groupID: groupId
+        ) == true)
+        #expect(!manager.workspaceGroups.contains { $0.id == groupId })
+        #expect(manager.tabs.first { $0.id == childId }?.groupId == nil)
     }
 
     @Test func mobileWorkspaceCloseUsesWorkspaceCloseActionPolicy() throws {

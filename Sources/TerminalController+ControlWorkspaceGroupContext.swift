@@ -143,11 +143,7 @@ extension TerminalController: ControlWorkspaceGroupContext {
         groupID: UUID
     ) -> Bool? {
         guard let tabManager = resolveTabManager(routing: routing) else { return nil }
-        let found = tabManager.workspaceGroups.contains(where: { $0.id == groupID })
-        if found {
-            tabManager.ungroupWorkspaceGroup(groupId: groupID)
-        }
-        return found
+        return tabManager.ungroupWorkspaceGroupForAction(groupId: groupID)
     }
 
     func controlDeleteWorkspaceGroup(
@@ -155,8 +151,7 @@ extension TerminalController: ControlWorkspaceGroupContext {
         groupID: UUID
     ) -> Int? {
         guard let tabManager = resolveTabManager(routing: routing) else { return nil }
-        guard tabManager.workspaceGroups.contains(where: { $0.id == groupID }) else { return -1 }
-        return tabManager.deleteWorkspaceGroup(groupId: groupID)
+        return tabManager.deleteWorkspaceGroupForAction(groupId: groupID) ?? -1
     }
 
     func controlRenameWorkspaceGroup(
@@ -165,9 +160,7 @@ extension TerminalController: ControlWorkspaceGroupContext {
         name: String
     ) -> Bool? {
         guard let tabManager = resolveTabManager(routing: routing) else { return nil }
-        let ok = tabManager.workspaceGroups.contains(where: { $0.id == groupID })
-        if ok { tabManager.renameWorkspaceGroup(groupId: groupID, name: name) }
-        return ok
+        return tabManager.renameWorkspaceGroupForAction(groupId: groupID, name: name)
     }
 
     func controlSetWorkspaceGroupCollapsed(
@@ -176,9 +169,7 @@ extension TerminalController: ControlWorkspaceGroupContext {
         isCollapsed: Bool
     ) -> Bool? {
         guard let tabManager = resolveTabManager(routing: routing) else { return nil }
-        let ok = tabManager.workspaceGroups.contains(where: { $0.id == groupID })
-        if ok { tabManager.setWorkspaceGroupCollapsed(groupId: groupID, isCollapsed: isCollapsed) }
-        return ok
+        return tabManager.setWorkspaceGroupCollapsedForAction(groupId: groupID, isCollapsed: isCollapsed)
     }
 
     func controlSetWorkspaceGroupPinned(
@@ -187,9 +178,7 @@ extension TerminalController: ControlWorkspaceGroupContext {
         isPinned: Bool
     ) -> Bool? {
         guard let tabManager = resolveTabManager(routing: routing) else { return nil }
-        let ok = tabManager.workspaceGroups.contains(where: { $0.id == groupID })
-        if ok { tabManager.setWorkspaceGroupPinned(groupId: groupID, isPinned: isPinned) }
-        return ok
+        return tabManager.setWorkspaceGroupPinnedForAction(groupId: groupID, isPinned: isPinned)
     }
 
     func controlAddWorkspaceToGroup(
@@ -245,13 +234,7 @@ extension TerminalController: ControlWorkspaceGroupContext {
         workspaceID: UUID
     ) -> Bool? {
         guard let tabManager = resolveTabManager(routing: routing) else { return nil }
-        let hasGroup = tabManager.workspaceGroups.contains(where: { $0.id == groupID })
-        let hasWs = tabManager.tabs.contains(where: { $0.id == workspaceID && $0.groupId == groupID })
-        if hasGroup && hasWs {
-            tabManager.setWorkspaceGroupAnchor(groupId: groupID, workspaceId: workspaceID)
-            return true
-        }
-        return false
+        return tabManager.setWorkspaceGroupAnchorForAction(groupId: groupID, workspaceId: workspaceID)
     }
 
     func controlCreateWorkspaceInGroup(
@@ -295,9 +278,7 @@ extension TerminalController: ControlWorkspaceGroupContext {
         hex: String?
     ) -> Bool? {
         guard let tabManager = resolveTabManager(routing: routing) else { return nil }
-        let ok = tabManager.workspaceGroups.contains(where: { $0.id == groupID })
-        if ok { tabManager.setWorkspaceGroupColor(groupId: groupID, hex: hex) }
-        return ok
+        return tabManager.setWorkspaceGroupColorForAction(groupId: groupID, hex: hex)
     }
 
     func controlSetWorkspaceGroupIcon(
@@ -306,12 +287,7 @@ extension TerminalController: ControlWorkspaceGroupContext {
         symbol: String?
     ) -> (found: Bool, storedSymbol: String?)? {
         guard let tabManager = resolveTabManager(routing: routing) else { return nil }
-        let found = tabManager.workspaceGroups.contains(where: { $0.id == groupID })
-        var storedIconSymbol: String?
-        if found {
-            storedIconSymbol = tabManager.setWorkspaceGroupIcon(groupId: groupID, symbol: symbol)
-        }
-        return (found, storedIconSymbol)
+        return tabManager.setWorkspaceGroupIconForAction(groupId: groupID, symbol: symbol)
     }
 
     func controlMoveWorkspaceGroup(
@@ -345,8 +321,7 @@ extension TerminalController: ControlWorkspaceGroupContext {
             return nil
         }()
         guard let target else { return false }
-        tabManager.moveWorkspaceGroup(groupId: groupID, toIndex: target)
-        return true
+        return tabManager.moveWorkspaceGroupForAction(groupId: groupID, toIndex: target)
     }
 
     func controlFocusWorkspaceGroup(

@@ -15437,8 +15437,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             // shortcut's fall-through policy).
             return false
         }
-        tabManager.toggleWorkspaceGroupCollapsed(groupId: groupId)
-        return true
+        return tabManager.toggleWorkspaceGroupCollapsedForAction(groupId: groupId)
     }
 
     @discardableResult

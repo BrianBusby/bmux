@@ -23,29 +23,44 @@ extension TerminalController {
 
         var mutationError: V2CallResult?
         v2MainSync {
-            guard tabManager.workspaceGroups.contains(where: { $0.id == groupID }) else {
+            func recordGroupNotFound() {
                 mutationError = .err(
                     code: "not_found",
                     message: "Group not found",
                     data: ["group_id": groupID.uuidString]
                 )
-                return
             }
             switch action {
             case .pin:
-                tabManager.setWorkspaceGroupPinned(groupId: groupID, isPinned: true)
+                guard tabManager.setWorkspaceGroupPinnedForAction(groupId: groupID, isPinned: true) else {
+                    recordGroupNotFound()
+                    return
+                }
             case .unpin:
-                tabManager.setWorkspaceGroupPinned(groupId: groupID, isPinned: false)
+                guard tabManager.setWorkspaceGroupPinnedForAction(groupId: groupID, isPinned: false) else {
+                    recordGroupNotFound()
+                    return
+                }
             case .rename:
                 guard let title else {
                     mutationError = .err(code: "invalid_params", message: "Missing or invalid title", data: nil)
                     return
                 }
-                tabManager.renameWorkspaceGroup(groupId: groupID, name: title)
+                guard tabManager.renameWorkspaceGroupForAction(groupId: groupID, name: title) else {
+                    recordGroupNotFound()
+                    return
+                }
             case .ungroup:
-                tabManager.ungroupWorkspaceGroup(groupId: groupID)
+                guard tabManager.ungroupWorkspaceGroupForAction(groupId: groupID) else {
+                    recordGroupNotFound()
+                    return
+                }
             case .delete:
-                let memberCount = tabManager.tabs.filter { $0.groupId == groupID }.count
+                guard let confirmation = tabManager.workspaceGroupDeletionConfirmationForAction(groupId: groupID) else {
+                    recordGroupNotFound()
+                    return
+                }
+                let memberCount = confirmation.memberCount
                 guard memberCount > 0 else {
                     mutationError = .err(
                         code: "invalid_request",
@@ -65,7 +80,7 @@ extension TerminalController {
                     )
                     return
                 }
-                let closed = tabManager.deleteWorkspaceGroup(groupId: groupID)
+                let closed = tabManager.deleteWorkspaceGroupForAction(confirmed: confirmation)
                 guard closed == memberCount else {
                     mutationError = .err(
                         code: "invalid_request",

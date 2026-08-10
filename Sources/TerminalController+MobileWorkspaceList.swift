@@ -14,7 +14,7 @@ extension TerminalController {
     /// toggle a section open/closed, but cannot create, rename, or restructure
     /// groups. This requires an explicit, resolvable `group_id` (it must never
     /// fall back to the Mac's selected group) and mutates through the same
-    /// `TabManager.setWorkspaceGroupCollapsed` the CLI and sidebar use, so the
+    /// `TabManager.setWorkspaceGroupCollapsedForAction` the CLI and sidebar use, so the
     /// mutation path stays shared. `v2ResolveTabManager` routes by `group_id` to
     /// the owning window even in the multi-window case.
     func v2MobileWorkspaceGroupSetCollapsed(params: [String: Any], isCollapsed: Bool) -> V2CallResult {
@@ -26,8 +26,7 @@ extension TerminalController {
         }
         var ok = false
         v2MainSync {
-            ok = tabManager.workspaceGroups.contains(where: { $0.id == gid })
-            if ok { tabManager.setWorkspaceGroupCollapsed(groupId: gid, isCollapsed: isCollapsed) }
+            ok = tabManager.setWorkspaceGroupCollapsedForAction(groupId: gid, isCollapsed: isCollapsed)
         }
         return ok
             ? .ok(["group_id": gid.uuidString, "is_collapsed": isCollapsed])

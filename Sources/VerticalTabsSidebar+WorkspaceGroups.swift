@@ -100,7 +100,7 @@ extension VerticalTabsSidebar {
             bottomDropIndicatorVisible: bottomDropIndicatorVisible,
             onDragStart: onDragStart,
             onToggleCollapsed: { [weak tabManager, groupId = group.id] in
-                tabManager?.toggleWorkspaceGroupCollapsed(groupId: groupId)
+                tabManager?.toggleWorkspaceGroupCollapsedForAction(groupId: groupId)
             },
             onFocusAnchor: { [weak tabManager, anchorId = group.anchorWorkspaceId, selectedTabIds = $selectedTabIds, lastSidebarSelectionIndex = $lastSidebarSelectionIndex] in
                 guard let tabManager else { return }
@@ -135,7 +135,7 @@ extension VerticalTabsSidebar {
                 )
             },
             onTogglePinned: { [weak tabManager, groupId = group.id] in
-                tabManager?.toggleWorkspaceGroupPinned(groupId: groupId)
+                tabManager?.toggleWorkspaceGroupPinnedForAction(groupId: groupId)
             },
             onMarkRead: { [weak tabManager, weak notificationStore, anchorId = group.anchorWorkspaceId] in
                 tabManager?.setWorkspaceUnreadForAction(
@@ -176,11 +176,11 @@ extension VerticalTabsSidebar {
                 )
             },
             onUngroup: { [weak tabManager, groupId = group.id] in
-                tabManager?.ungroupWorkspaceGroup(groupId: groupId)
+                tabManager?.ungroupWorkspaceGroupForAction(groupId: groupId)
             },
             onDelete: { [weak tabManager, groupId = group.id] in
                 guard let tabManager,
-                      let confirmation = tabManager.workspaceGrouping.deletionConfirmation(
+                      let confirmation = tabManager.workspaceGroupDeletionConfirmationForAction(
                         groupId: groupId,
                         fallbackGroupName: group.name,
                         fallbackAnchorWorkspaceId: group.anchorWorkspaceId
@@ -191,7 +191,7 @@ extension VerticalTabsSidebar {
                         memberCount: confirmation.containedWorkspaceCount
                     ) else { return }
                 }
-                tabManager.workspaceGrouping.deleteWorkspaceGroup(confirmed: confirmation)
+                tabManager.deleteWorkspaceGroupForAction(confirmed: confirmation)
             },
             onEditConfig: {
                 SidebarWorkspaceGroupConfigOpener.openBmuxConfigInEditor()

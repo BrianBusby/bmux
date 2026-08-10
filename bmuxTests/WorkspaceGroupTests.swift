@@ -1046,4 +1046,71 @@ struct WorkspaceGroupTests {
 
         #expect(manager.resolvedWorkspaceDisplayTitle(for: member) == memberTitle)
     }
+
+    @Test func workspaceGroupActionHelpersRejectMissingGroups() {
+        let manager = makeTabManager()
+        let missingGroupId = UUID()
+        let missingWorkspaceId = UUID()
+
+        #expect(!manager.renameWorkspaceGroupForAction(groupId: missingGroupId, name: "Renamed"))
+        #expect(!manager.setWorkspaceGroupCollapsedForAction(groupId: missingGroupId, isCollapsed: true))
+        #expect(!manager.toggleWorkspaceGroupCollapsedForAction(groupId: missingGroupId))
+        #expect(!manager.setWorkspaceGroupPinnedForAction(groupId: missingGroupId, isPinned: true))
+        #expect(!manager.toggleWorkspaceGroupPinnedForAction(groupId: missingGroupId))
+        #expect(!manager.setWorkspaceGroupColorForAction(groupId: missingGroupId, hex: "#123456"))
+
+        let iconResult = manager.setWorkspaceGroupIconForAction(groupId: missingGroupId, symbol: "leaf.fill")
+        #expect(!iconResult.found)
+        #expect(iconResult.storedSymbol == nil)
+
+        #expect(!manager.setWorkspaceGroupAnchorForAction(groupId: missingGroupId, workspaceId: missingWorkspaceId))
+        #expect(!manager.moveWorkspaceGroupForAction(groupId: missingGroupId, toIndex: 0))
+        #expect(!manager.ungroupWorkspaceGroupForAction(groupId: missingGroupId))
+        #expect(manager.deleteWorkspaceGroupForAction(groupId: missingGroupId) == nil)
+        #expect(manager.workspaceGroupDeletionConfirmationForAction(groupId: missingGroupId) == nil)
+    }
+
+    @Test func workspaceGroupActionHelpersMutateLiveGroups() throws {
+        let manager = makeTabManager()
+        manager.addWorkspace(autoWelcomeIfNeeded: false)
+        manager.addWorkspace(autoWelcomeIfNeeded: false)
+        let childId = manager.tabs[1].id
+        let groupId = try #require(manager.createWorkspaceGroup(name: "Group", childWorkspaceIds: [childId]))
+        let secondGroupId = try #require(manager.createWorkspaceGroup(name: "Other"))
+
+        #expect(manager.renameWorkspaceGroupForAction(groupId: groupId, name: "Renamed"))
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.name == "Renamed")
+
+        #expect(manager.setWorkspaceGroupCollapsedForAction(groupId: groupId, isCollapsed: true))
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.isCollapsed == true)
+        #expect(manager.toggleWorkspaceGroupCollapsedForAction(groupId: groupId))
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.isCollapsed == false)
+
+        #expect(manager.setWorkspaceGroupPinnedForAction(groupId: groupId, isPinned: true))
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.isPinned == true)
+        #expect(manager.toggleWorkspaceGroupPinnedForAction(groupId: groupId))
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.isPinned == false)
+
+        #expect(manager.setWorkspaceGroupColorForAction(groupId: groupId, hex: "#123456"))
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.customColor == "#123456")
+
+        let iconResult = manager.setWorkspaceGroupIconForAction(groupId: groupId, symbol: "  leaf.fill  ")
+        #expect(iconResult.found)
+        #expect(iconResult.storedSymbol == "leaf.fill")
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.iconSymbol == "leaf.fill")
+
+        #expect(manager.setWorkspaceGroupAnchorForAction(groupId: groupId, workspaceId: childId))
+        #expect(manager.workspaceGroups.first { $0.id == groupId }?.anchorWorkspaceId == childId)
+
+        #expect(manager.moveWorkspaceGroupForAction(groupId: secondGroupId, toIndex: 0))
+        #expect(manager.workspaceGroups.first?.id == secondGroupId)
+
+        #expect(manager.ungroupWorkspaceGroupForAction(groupId: secondGroupId))
+        #expect(!manager.workspaceGroups.contains { $0.id == secondGroupId })
+
+        let confirmation = try #require(manager.workspaceGroupDeletionConfirmationForAction(groupId: groupId))
+        let closed = manager.deleteWorkspaceGroupForAction(confirmed: confirmation)
+        #expect(closed == confirmation.memberCount)
+        #expect(!manager.workspaceGroups.contains { $0.id == groupId })
+    }
 }

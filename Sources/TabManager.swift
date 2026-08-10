@@ -1811,28 +1811,99 @@ class TabManager: ObservableObject {
     }
 
     @discardableResult
+    func ungroupWorkspaceGroupForAction(groupId: UUID) -> Bool {
+        guard workspaceGroups.contains(where: { $0.id == groupId }) else { return false }
+        workspaceGrouping.ungroupWorkspaceGroup(groupId: groupId)
+        return true
+    }
+
+    @discardableResult
     func deleteWorkspaceGroup(groupId: UUID, recordHistory: Bool = true) -> Int {
         workspaceGrouping.deleteWorkspaceGroup(groupId: groupId, recordHistory: recordHistory)
+    }
+
+    func workspaceGroupDeletionConfirmationForAction(
+        groupId: UUID,
+        fallbackGroupName: String? = nil,
+        fallbackAnchorWorkspaceId: UUID? = nil
+    ) -> WorkspaceGroupDeletionConfirmation? {
+        if let fallbackGroupName, let fallbackAnchorWorkspaceId {
+            return workspaceGrouping.deletionConfirmation(
+                groupId: groupId,
+                fallbackGroupName: fallbackGroupName,
+                fallbackAnchorWorkspaceId: fallbackAnchorWorkspaceId
+            )
+        }
+        return workspaceGrouping.deletionConfirmation(groupId: groupId)
+    }
+
+    @discardableResult
+    func deleteWorkspaceGroupForAction(groupId: UUID, recordHistory: Bool = true) -> Int? {
+        guard workspaceGroups.contains(where: { $0.id == groupId }) else { return nil }
+        return workspaceGrouping.deleteWorkspaceGroup(groupId: groupId, recordHistory: recordHistory)
+    }
+
+    @discardableResult
+    func deleteWorkspaceGroupForAction(
+        confirmed confirmation: WorkspaceGroupDeletionConfirmation,
+        recordHistory: Bool = true
+    ) -> Int {
+        workspaceGrouping.deleteWorkspaceGroup(confirmed: confirmation, recordHistory: recordHistory)
     }
 
     func renameWorkspaceGroup(groupId: UUID, name: String) {
         workspaceGrouping.renameWorkspaceGroup(groupId: groupId, name: name)
     }
 
+    @discardableResult
+    func renameWorkspaceGroupForAction(groupId: UUID, name: String) -> Bool {
+        guard workspaceGroups.contains(where: { $0.id == groupId }) else { return false }
+        workspaceGrouping.renameWorkspaceGroup(groupId: groupId, name: name)
+        return true
+    }
+
     func toggleWorkspaceGroupCollapsed(groupId: UUID) {
         workspaceGrouping.toggleWorkspaceGroupCollapsed(groupId: groupId)
+    }
+
+    @discardableResult
+    func toggleWorkspaceGroupCollapsedForAction(groupId: UUID) -> Bool {
+        guard workspaceGroups.contains(where: { $0.id == groupId }) else { return false }
+        workspaceGrouping.toggleWorkspaceGroupCollapsed(groupId: groupId)
+        return true
     }
 
     func setWorkspaceGroupCollapsed(groupId: UUID, isCollapsed: Bool) {
         workspaceGrouping.setWorkspaceGroupCollapsed(groupId: groupId, isCollapsed: isCollapsed)
     }
 
+    @discardableResult
+    func setWorkspaceGroupCollapsedForAction(groupId: UUID, isCollapsed: Bool) -> Bool {
+        guard workspaceGroups.contains(where: { $0.id == groupId }) else { return false }
+        workspaceGrouping.setWorkspaceGroupCollapsed(groupId: groupId, isCollapsed: isCollapsed)
+        return true
+    }
+
     func toggleWorkspaceGroupPinned(groupId: UUID) {
         workspaceGrouping.toggleWorkspaceGroupPinned(groupId: groupId)
     }
 
+    @discardableResult
+    func toggleWorkspaceGroupPinnedForAction(groupId: UUID) -> Bool {
+        guard workspaceGroups.contains(where: { $0.id == groupId }) else { return false }
+        workspaceGrouping.toggleWorkspaceGroupPinned(groupId: groupId)
+        return true
+    }
+
     func setWorkspaceGroupPinned(groupId: UUID, isPinned: Bool) {
         workspaceGrouping.setWorkspaceGroupPinned(groupId: groupId, isPinned: isPinned)
+    }
+
+    @discardableResult
+    func setWorkspaceGroupPinnedForAction(groupId: UUID, isPinned: Bool) -> Bool {
+        guard workspaceGroups.contains(where: { $0.id == groupId }) else { return false }
+        workspaceGrouping.setWorkspaceGroupPinned(groupId: groupId, isPinned: isPinned)
+        return true
     }
 
     func setWorkspaceGroupColor(groupId: UUID, hex: String?) {
@@ -1840,16 +1911,48 @@ class TabManager: ObservableObject {
     }
 
     @discardableResult
+    func setWorkspaceGroupColorForAction(groupId: UUID, hex: String?) -> Bool {
+        guard workspaceGroups.contains(where: { $0.id == groupId }) else { return false }
+        workspaceGrouping.setWorkspaceGroupColor(groupId: groupId, hex: hex)
+        return true
+    }
+
+    @discardableResult
     func setWorkspaceGroupIcon(groupId: UUID, symbol: String?) -> String? {
         workspaceGrouping.setWorkspaceGroupIcon(groupId: groupId, symbol: symbol)
+    }
+
+    @discardableResult
+    func setWorkspaceGroupIconForAction(groupId: UUID, symbol: String?) -> (found: Bool, storedSymbol: String?) {
+        guard workspaceGroups.contains(where: { $0.id == groupId }) else {
+            return (false, nil)
+        }
+        return (true, workspaceGrouping.setWorkspaceGroupIcon(groupId: groupId, symbol: symbol))
     }
 
     func setWorkspaceGroupAnchor(groupId: UUID, workspaceId: UUID) {
         workspaceGrouping.setWorkspaceGroupAnchor(groupId: groupId, workspaceId: workspaceId)
     }
 
+    @discardableResult
+    func setWorkspaceGroupAnchorForAction(groupId: UUID, workspaceId: UUID) -> Bool {
+        guard workspaceGroups.contains(where: { $0.id == groupId }),
+              tabs.contains(where: { $0.id == workspaceId && $0.groupId == groupId }) else {
+            return false
+        }
+        workspaceGrouping.setWorkspaceGroupAnchor(groupId: groupId, workspaceId: workspaceId)
+        return true
+    }
+
     func moveWorkspaceGroup(groupId: UUID, toIndex targetIndex: Int) {
         workspaceGrouping.moveWorkspaceGroup(groupId: groupId, toIndex: targetIndex)
+    }
+
+    @discardableResult
+    func moveWorkspaceGroupForAction(groupId: UUID, toIndex targetIndex: Int) -> Bool {
+        guard workspaceGroups.contains(where: { $0.id == groupId }) else { return false }
+        workspaceGrouping.moveWorkspaceGroup(groupId: groupId, toIndex: targetIndex)
+        return true
     }
 
     /// Compatibility shim. With anchor-bound group lifecycle, "empty" groups
