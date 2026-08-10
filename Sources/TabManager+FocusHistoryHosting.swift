@@ -46,7 +46,7 @@ extension TabManager: FocusHistoryHosting {
     }
 
     func focusPanel(workspaceId: UUID, panelId: UUID) {
-        tabs.first(where: { $0.id == workspaceId })?.focusPanel(panelId)
+        focusWorkspaceSurfaceForAction(workspaceId: workspaceId, surfaceId: panelId)
     }
 
     func triggerFocusFlash(workspaceId: UUID, panelId: UUID) {

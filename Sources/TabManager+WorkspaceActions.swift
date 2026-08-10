@@ -386,6 +386,11 @@ extension TabManager {
             selectWorkspaceIdForAction(workspace.id)
         }
         workspace.focusPanel(surfaceId, focusIntent: focusIntent)
+        focusHistoryNavigation.recordFocusInHistory(
+            workspaceId: workspace.id,
+            panelId: surfaceId,
+            preservingForwardBranch: false
+        )
         return .focused(workspaceId: workspace.id, surfaceId: surfaceId)
     }
 
