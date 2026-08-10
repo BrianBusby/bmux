@@ -14,7 +14,7 @@ Repository: `BrianBusby/provenance-engine`
 ## Current Work
 
 - Active slice: Workspace display projection evidence cursors (`workspace_display_projection_cursors`)
-- Slice state: draft
+- Slice state: implemented
 - Owner: Codex
 - Repository state: active
 

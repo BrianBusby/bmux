@@ -5,7 +5,7 @@ current_work:
   active_slice:
     id: workspace_display_projection_cursors
     title: Workspace display projection evidence cursors
-    state: draft
+    state: implemented
     owner: Codex
   state: active
 
