@@ -384,6 +384,24 @@ struct TerminalControllerSurfaceActionSocketTests {
         #expect(store.focusedPanelId == secondPanelId)
     }
 
+    @Test func dockPanelFocusActionValidatesAndSelectsSurface() throws {
+        let store = DockSplitStore(
+            workspaceId: UUID(),
+            baseDirectoryProvider: { nil }
+        )
+        defer { store.closeAllPanels() }
+        let rootPane = try #require(store.bonsplitController.allPaneIds.first)
+        let firstPanelId = try #require(store.newSurface(kind: .terminal, inPane: rootPane, focus: true))
+        let secondPanelId = try #require(store.newSurface(kind: .terminal, inPane: rootPane, focus: false))
+        #expect(store.focusedPanelId == firstPanelId)
+
+        #expect(!store.requestPanelFocusForAction(panelId: UUID(), window: nil))
+        #expect(store.focusedPanelId == firstPanelId)
+
+        #expect(store.requestPanelFocusForAction(panelId: secondPanelId, window: nil))
+        #expect(store.focusedPanelId == secondPanelId)
+    }
+
     private func handleV2Request(method: String, params: [String: Any]) throws -> [String: Any] {
         let payload: [String: Any] = ["jsonrpc": "2.0", "id": 1, "method": method, "params": params]
         let data = try JSONSerialization.data(withJSONObject: payload)

@@ -321,7 +321,10 @@ extension TerminalController {
         if reveal {
             focusAndRevealWindowDock(for: dock, fallback: tabManager)
         }
-        dock.focusPanel(surfaceID)
+        dock.requestPanelFocusForAction(
+            panelId: surfaceID,
+            window: reveal ? (NSApp.keyWindow ?? NSApp.mainWindow) : nil
+        )
         return true
     }
 
@@ -333,7 +336,10 @@ extension TerminalController {
     ) -> Bool {
         guard workspace.containsDockPanel(surfaceID) else { return false }
         revealDockForFocus(tabManager: tabManager)
-        workspace.dockSplit.focusPanel(surfaceID)
+        workspace.dockSplit.requestPanelFocusForAction(
+            panelId: surfaceID,
+            window: NSApp.keyWindow ?? NSApp.mainWindow
+        )
         return true
     }
 

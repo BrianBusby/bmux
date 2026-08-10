@@ -137,8 +137,10 @@ private struct DockSplitContentView: View {
                     store.noteKeyboardFocusIntent(window: NSApp.keyWindow ?? NSApp.mainWindow)
                 },
                 onRequestPanelFocus: {
-                    store.noteKeyboardFocusIntent(window: NSApp.keyWindow ?? NSApp.mainWindow)
-                    store.focusPanel(panel.id)
+                    store.requestPanelFocusForAction(
+                        panelId: panel.id,
+                        window: NSApp.keyWindow ?? NSApp.mainWindow
+                    )
                 },
                 onResumeAgentHibernation: {},
                 onAutoResumeAgentHibernation: {},
