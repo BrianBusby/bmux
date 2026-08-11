@@ -77,6 +77,8 @@ pane_swap_direct_move_surface_pattern='workspace\.moveSurface\(panelId: (sourceS
 remote_tmux_mirror_direct_close_pattern='workspace\.closePanel\(panelId, force: true\)'
 app_delegate_surface_move_direct_pattern='(AppDelegate\.shared\?\.moveSurface\(|\bapp\.moveSurface\()'
 surface_selection_adapter_pattern='(selectNextSurface|selectPreviousSurface|selectSurface\(at:|selectLastSurface)\('
+workspace_title_adapter_bypass_pattern='\.((setCustomTitle|applyCustomTitle)\()'
+surface_title_adapter_bypass_pattern='\.(setPanelCustomTitle|applyPanelCustomTitle)\('
 browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 browser_split_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSplit\('
 
@@ -381,6 +383,23 @@ done < <(rg -n -P "$surface_selection_adapter_pattern" \
   "Sources/bmuxApp.swift" \
   "Sources/ContentView.swift" \
   "Sources/AppDelegate.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$workspace_title_adapter_bypass_pattern" \
+  "Sources/bmuxApp.swift" \
+  "Sources/ContentView.swift" \
+  "Sources/TerminalController+ControlWorkspaceContext.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$surface_title_adapter_bypass_pattern" \
+  "Sources/ContentView.swift" \
+  "Sources/TerminalController+ControlSystemContext2.swift" \
+  "Sources/TerminalController+ControlSurfaceContext2.swift" \
+  "Sources/TerminalController+ControlSurfaceContext3.swift" || true)
 
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue
