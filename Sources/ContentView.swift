@@ -11255,8 +11255,7 @@ struct VerticalTabsSidebar: View {
         let provenanceDisplaySnapshot = tabManager.workProvenanceRuntime?
             .workspaceDisplayCurrentStateSnapshot(for: workspace)
         let rootPath = provenanceDisplaySnapshot?.currentDirectory ?? extensionSidebarRootPath(for: workspace)
-        let pullRequests = providerPullRequests(
-            workspace: workspace,
+        let pullRequests = workspace.sidebarProviderPullRequests(
             provenanceDisplaySnapshot: provenanceDisplaySnapshot
         )
         return BmuxSidebarProviderWorkspace(
@@ -11281,36 +11280,6 @@ struct VerticalTabsSidebar: View {
                 BmuxSidebarProviderGitBranch(branch: $0.branch, isDirty: $0.isDirty)
             }
         )
-    }
-
-    private func providerPullRequests(
-        workspace: Workspace,
-        provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot?
-    ) -> [BmuxSidebarProviderPullRequest] {
-        if let pullRequest = provenanceDisplaySnapshot?.pullRequest {
-            return [BmuxSidebarProviderPullRequest(
-                number: pullRequest.number,
-                label: String(localized: "sidebar.pullRequest.label", defaultValue: "PR"),
-                url: pullRequest.url?.absoluteString ?? "",
-                status: pullRequest.status ?? SidebarPullRequestStatus.open.rawValue,
-                ownerLogin: pullRequest.ownerLogin,
-                ownerURL: pullRequest.ownerURL?.absoluteString,
-                branch: pullRequest.branch,
-                isStale: pullRequest.isStale
-            )]
-        }
-        return workspace.sidebarPullRequestsInDisplayOrder().map {
-            BmuxSidebarProviderPullRequest(
-                number: $0.number,
-                label: $0.label,
-                url: $0.url.absoluteString,
-                status: $0.status.rawValue,
-                ownerLogin: $0.ownerLogin,
-                ownerURL: $0.ownerURL?.absoluteString,
-                branch: $0.branch,
-                isStale: $0.isStale
-            )
-        }
     }
 
     private func extensionSidebarRootPath(for workspace: Workspace) -> String? {
@@ -15171,6 +15140,7 @@ struct TabItemView: View, Equatable {
                 number: pullRequest.number,
                 label: pullRequest.label,
                 url: pullRequest.url,
+                ownerLogin: pullRequest.ownerLogin,
                 status: pullRequest.status,
                 isStale: pullRequest.isStale
             )
@@ -15185,6 +15155,7 @@ struct TabItemView: View, Equatable {
             number: pullRequest.number,
             label: label,
             url: pullRequest.url,
+            ownerLogin: pullRequest.ownerLogin,
             status: pullRequest.status.flatMap(SidebarPullRequestStatus.init(rawValue:)) ?? .open,
             isStale: pullRequest.isStale
         )
@@ -15200,8 +15171,7 @@ struct TabItemView: View, Equatable {
     private func pullRequestRowsView(_ rows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay]) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             ForEach(rows) { pullRequest in
-                let pullRequestNumber = String(pullRequest.number)
-                let pullRequestTitle = "\(pullRequest.label) #\(pullRequestNumber)"
+                let pullRequestTitle = "\(pullRequest.label) #\(pullRequest.number)"
                 let rowContent = HStack(spacing: 4) {
                     PullRequestStatusIcon(
                         status: pullRequest.status,
@@ -15209,6 +15179,7 @@ struct TabItemView: View, Equatable {
                         fontScale: fontScale
                     )
                     Text(pullRequestTitle).underline(settings.makesPullRequestsClickable && pullRequest.url != nil).lineLimit(1).truncationMode(.tail)
+                    if let ownerLogin = pullRequest.ownerLogin { Text(ownerLogin).lineLimit(1).truncationMode(.middle) }
                     Text(pullRequestStatusLabel(pullRequest.status)).lineLimit(1)
                     Spacer(minLength: 0)
                 }
