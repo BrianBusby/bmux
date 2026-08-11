@@ -40,7 +40,7 @@ This roadmap defines bmux product direction and sequencing. It must not
 independently maintain active gates, milestone state, evidence commits, current
 implementation slices, release state, or open caveat status.
 
-Still out of scope until a new slice is explicitly selected: daemon transport, UI work, observability API expansion, GitHub ingestion, Knowledge Compiler implementation, semantic retrieval, broad legacy data migration, and lifecycle policy automation.
+Still out of scope until a new slice is explicitly selected: daemon transport, UI work, observability API expansion, GitHub ingestion, Knowledge Compiler implementation, semantic retrieval, broad legacy data migration, lifecycle policy automation, automatic agent context injection, shared PE deployment, and mobile PE networking.
 
 ## Near-Term Planned Work
 
@@ -57,6 +57,10 @@ Still out of scope until a new slice is explicitly selected: daemon transport, U
 ## Longer-Term Direction
 
 - Provenance-powered bmux context assembly and task handoff features after durable evidence queries are proven.
+- Future PE-backed agent context should follow the shared sequence: local
+  provenance, early local Knowledge Compiler validation, shared evidence
+  validation/design, shared compiler maturation, retrieval, measured
+  agent-context validation, then service, multi-user, and product integration.
 - Session awareness across related workspaces and subsessions.
 - User-facing reports that explain current session, task, and artifact state without exposing engine internals.
 - Mobile and remote-session workflows that preserve bmux orchestration and UI ownership.
@@ -69,7 +73,11 @@ Still out of scope until a new slice is explicitly selected: daemon transport, U
 - Daemon or service transport for provenance-engine.
 - Storage ownership migration out of bmux-local provenance SQLite.
 - Evidence-backed retrieval adoption from shared project or organization evidence.
-- GitHub ingestion and Knowledge Compiler features.
+- Initial local Knowledge Compiler validation after PE captures enough real
+  local evidence, without broad retrieval or automatic context injection.
+- GitHub ingestion and shared/multi-source Knowledge Compiler features.
+- Measured agent-context effectiveness experiments before bmux automatically
+  supplies PE context to Codex or other agents.
 - Broad lifecycle policy automation, warnings, or automatic context mutation.
 - Broad workspace UI rewrite or automatic workspace naming redesign beyond the
   deterministic display-fact projection slice.

@@ -58,6 +58,38 @@ Adopted CLI reads:
 
 bmux still owns command parsing, Git path normalization, output compatibility, fallback text, JSON/text rendering, and UI presentation. The engine owns evidence, deterministic Current State, provenance interpretation, and bounded provenance queries.
 
+## Future Context Architecture
+
+The long-term sequence is local provenance, early local Knowledge Compiler
+validation, shared evidence validation/design, shared compiler maturation,
+retrieval, measured agent-context validation, then service, multi-user, and
+product integration. This document does not activate those slices.
+
+Provenance Engine owns immutable durable engineering evidence, evidence
+identity/origin/scope/relationships/lineage, deterministic Current State, local
+and shared evidence-store semantics, authorization/filtering semantics,
+Knowledge Compiler framework and artifacts, evidence-aware retrieval, bounded
+context packages with evidence references, and compatibility/versioning for PE
+service contracts.
+
+bmux owns observation/capture adapters in the developer environment,
+Codex/Claude/agent orchestration, live PTYs and terminal/session transport,
+remote attachment/control, desktop and mobile UX, notifications, approvals,
+prompt/context assembly policy, temporary UI state, and product fallback
+behavior.
+
+The first future Knowledge Compiler work should be a small local validation
+slice after PE stores enough real evidence to derive a useful higher-level
+signal, such as an `ImplementationOutcome`. Later shared/multi-source compiler
+validation can use artifacts such as `PRDecisionSummary`. Every durable
+compiled artifact must keep supporting evidence references and compiler/version
+lineage so it can be regenerated or invalidated.
+
+bmux should not reconstruct provenance knowledge from raw shared storage. PE
+should not become a live terminal streaming service. Hot PTY bytes, terminal
+snapshots, input, approvals, reconnect, and session control remain bmux
+transport responsibilities.
+
 ## Workspace Display State
 
 Current truth: workspace tab titles, sidebar titles, branch labels, PR numbers,

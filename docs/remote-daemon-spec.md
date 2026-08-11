@@ -21,6 +21,11 @@ This is a **living implementation spec** (also called an **execution spec**): a 
 2. browser traffic that egresses from the remote host via proxying
 3. tmux-style PTY resize semantics (`smallest screen wins`)
 
+This spec covers live bmux session transport. It is separate from Provenance
+Engine evidence, Current State, compiled knowledge, and retrieval. Do not route
+hot PTY bytes, terminal snapshots, input, approvals, reconnect, or live session
+control through the PE evidence service.
+
 ## 3. Current State (Implemented)
 
 ### 3.1 Remote Workspace + Reconnect UX

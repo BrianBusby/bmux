@@ -14,6 +14,11 @@ slice for the bmux and Provenance Engine integration effort.
 - Generated files must not be edited manually.
 - The continuing project state remains the Engineering Observation Period;
   do not select a new product implementation slice from this handoff alone.
+- Future planning now follows local provenance, early local Knowledge Compiler
+  validation, shared evidence validation/design, shared compiler maturation,
+  retrieval, measured agent-context validation, then service, multi-user, and
+  product integration. This is future direction only and does not activate
+  Knowledge Compiler, shared-store, retrieval, service, or mobile work.
 
 ## Commands
 
@@ -50,3 +55,9 @@ display correctness plus latency for branch/PR/title updates. Do not broaden
 that slice into GitHub ingestion, Knowledge Compiler work, transcript storage,
 raw execution telemetry persistence, automatic workspace naming redesign, or a
 broad UI rewrite.
+
+The only Knowledge Compiler work made eligible by the revised roadmap is a
+small local validation slice after PE stores enough real evidence to compile a
+useful, inspectable artifact. Shared/multi-source compiler validation,
+evidence-aware retrieval, automatic bmux context injection, service transport,
+and mobile PE networking remain later gated milestones.

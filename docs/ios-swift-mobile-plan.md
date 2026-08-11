@@ -18,6 +18,13 @@ Goal: ship the iOS path from current bmux main with Swift-owned app, session, tr
 - Tailscale ships first as a Swift `Network` transport over the tailnet host and port.
 - Iroh is added as another `CmxByteTransport` implementation. The shell and terminal session do not change. A minimal Rust edge is acceptable for the Iroh endpoint/dialer if the Swift code keeps owning route selection, attach-ticket decoding, framing, auth, and app state.
 - Rivet can store workspace/device presence and issue attach tickets. It should not carry hot PTY bytes in the first production design.
+- Future Provenance Engine context/state is a separate channel from live
+  terminal transport. iOS may eventually read shared PE directly and optionally
+  reach private/local PE through the user's Mac or another accepted personal
+  service path.
+- Live bmux session transport remains responsible for terminal snapshots, PTY
+  bytes, input, approvals, session control, and reconnect. Do not route hot PTY
+  bytes through the PE evidence service.
 
 ## Iroh Experiment
 
@@ -31,7 +38,7 @@ The Swift peer endpoint schema now carries `direct_addrs` and `relay_url` hints 
 
 ## Storage
 
-Central workspace storage should keep durable records for workspace id, display name, owning Mac device, recent terminal ids, route hints, and update time. iOS keeps a local cache and reconnects through fresh attach tickets so long-lived credentials never live in QR/deeplink payloads.
+Central workspace storage should keep durable records for workspace id, display name, owning Mac device, recent terminal ids, route hints, and update time. iOS keeps a local cache and reconnects through fresh attach tickets so long-lived credentials never live in QR/deeplink payloads. Future PE context caches should distinguish shared context that remains useful when the Mac is offline from private/local context that accurately reports Mac unavailability.
 
 ## Milestones
 
