@@ -25,12 +25,14 @@ extension Workspace {
         }
         if branchChanged {
             let nextBranch = state.branch.normalizedSidebarBranchName
-            if panelPullRequests[panelId]?.branch?.normalizedSidebarBranchName != nextBranch {
+            if let pullRequestBranch = panelPullRequests[panelId]?.branch?.normalizedSidebarBranchName,
+               pullRequestBranch != nextBranch {
                 panelPullRequests.removeValue(forKey: panelId)
                 displayMetadataChanged = true
             }
             if panelId == focusedPanelId,
-               pullRequest?.branch?.normalizedSidebarBranchName != nextBranch {
+               let focusedPullRequestBranch = pullRequest?.branch?.normalizedSidebarBranchName,
+               focusedPullRequestBranch != nextBranch {
                 pullRequest = nil
                 displayMetadataChanged = true
             }

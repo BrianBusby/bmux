@@ -1,6 +1,7 @@
 import XCTest
 import BmuxWorkspaces
 import BmuxSwiftRender
+import ProvenanceEngineContracts
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -234,6 +235,54 @@ final class WorkspaceCustomSidebarPullRequestContextTests: XCTestCase {
         XCTAssertEqual(fields["owner"], .string("octocat"))
         XCTAssertEqual(fields["owner_url"], .string("https://github.com/octocat"))
         XCTAssertEqual(fields["stale"], .bool(false))
+    }
+
+    @MainActor
+    func testValuesPreferProvenanceDisplayPullRequest() throws {
+        let workspace = Workspace(
+            title: "Tests",
+            workingDirectory: FileManager.default.currentDirectoryPath,
+            portOrdinal: 0
+        )
+        let panelId = try XCTUnwrap(workspace.focusedPanelId)
+        workspace.updatePanelPullRequest(
+            panelId: panelId,
+            number: 1,
+            label: "PR",
+            url: URL(string: "https://github.com/manaflow-ai/bmux/pull/1")!,
+            ownerLogin: "live-owner",
+            ownerURL: URL(string: "https://github.com/live-owner")!,
+            status: .open
+        )
+
+        let record = ProvenanceWorkspaceDisplayRecord(
+            id: "workspace-display:\(workspace.id.uuidString)",
+            workspaceID: workspace.id.uuidString,
+            pullRequestNumber: 57,
+            pullRequestURL: "https://github.com/manaflow-ai/bmux/pull/57",
+            pullRequestOwnerLogin: "pe-owner",
+            pullRequestOwnerURL: "https://github.com/pe-owner",
+            pullRequestStatus: "merged",
+            pullRequestBranch: "workspace-display-current-state-projection",
+            pullRequestIsStale: true,
+            observedAt: Date(timeIntervalSince1970: 1_000),
+            updatedAt: Date(timeIntervalSince1970: 1_001)
+        )
+        let snapshot = try XCTUnwrap(WorkspaceDisplayCurrentStateSnapshot(record))
+
+        let values = workspace.customSidebarPullRequestValues(provenanceDisplaySnapshot: snapshot)
+        XCTAssertEqual(values.count, 1)
+        guard case .object(let fields)? = values.first else {
+            XCTFail("Expected object pull-request value, got \(String(describing: values.first))")
+            return
+        }
+        XCTAssertEqual(fields["number"], .int(57))
+        XCTAssertEqual(fields["url"], .string("https://github.com/manaflow-ai/bmux/pull/57"))
+        XCTAssertEqual(fields["owner"], .string("pe-owner"))
+        XCTAssertEqual(fields["owner_url"], .string("https://github.com/pe-owner"))
+        XCTAssertEqual(fields["status"], .string("merged"))
+        XCTAssertEqual(fields["branch"], .string("workspace-display-current-state-projection"))
+        XCTAssertEqual(fields["stale"], .bool(true))
     }
 
     @MainActor

@@ -6,7 +6,8 @@ extension Workspace {
     func customSidebarWorkspaceSnapshot(
         index: Int,
         selectedId: UUID?,
-        unreadCount: Int
+        unreadCount: Int,
+        provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot? = nil
     ) -> CustomSidebarWorkspaceSnapshot {
         let focusedPanelId = focusedPanelId
         let firstBranch = sidebarGitBranchesInDisplayOrder().first
@@ -22,11 +23,11 @@ extension Workspace {
         }
         return CustomSidebarWorkspaceSnapshot(
             id: id,
-            title: customTitle ?? title,
+            title: provenanceDisplaySnapshot?.title ?? customTitle ?? title,
             isSelected: id == selectedId,
             isPinned: isPinned,
             index: index,
-            directory: presentedCurrentDirectory ?? "",
+            directory: provenanceDisplaySnapshot?.currentDirectory ?? presentedCurrentDirectory ?? "",
             listeningPorts: listeningPorts,
             unreadCount: unreadCount,
             surfaces: customSidebarSurfaceSnapshots(focusedPanelId: focusedPanelId),
@@ -35,9 +36,11 @@ extension Workspace {
             },
             customDescription: customDescription,
             customColor: customColor,
-            gitBranch: firstBranch?.branch,
-            gitIsDirty: firstBranch?.isDirty ?? false,
-            pullRequestValues: customSidebarPullRequestValues(),
+            gitBranch: provenanceDisplaySnapshot?.branch ?? firstBranch?.branch,
+            gitIsDirty: provenanceDisplaySnapshot?.isDirty ?? firstBranch?.isDirty ?? false,
+            pullRequestValues: customSidebarPullRequestValues(
+                provenanceDisplaySnapshot: provenanceDisplaySnapshot
+            ),
             progress: progress,
             latestConversationMessage: latestConversationMessage,
             latestSubmittedMessage: latestSubmittedMessage,
