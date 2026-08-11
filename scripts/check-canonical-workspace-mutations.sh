@@ -82,6 +82,7 @@ surface_title_adapter_bypass_pattern='\.(setPanelCustomTitle|applyPanelCustomTit
 terminal_split_adapter_bypass_pattern='\.(createSplit|newSplit)\('
 browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 browser_split_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSplit\('
+dock_creation_adapter_pattern='\.(newSurface|newSplit)\('
 
 violations=()
 if command -v rg >/dev/null 2>&1; then
@@ -437,10 +438,22 @@ done < <(rg -n -P "$browser_split_creation_pattern" \
   --glob "!Workspace.swift" \
   --glob "!Workspace+SurfaceActions.swift" || true)
 
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$dock_creation_adapter_pattern" \
+  "Sources/AppDelegate+DockShortcutRouting.swift" \
+  "Sources/DockPanelView.swift" \
+  "Sources/DockSplitStore+CloseConfirmation.swift" \
+  "Sources/TerminalController+ControlPaneDock.swift" \
+  "Sources/TerminalController+ControlSurfaceDock.swift" \
+  "Sources/TerminalController.swift" \
+  "Sources/Workspace+DockBrowserLookup.swift" || true)
+
 if (( ${#violations[@]} > 0 )); then
   {
     echo "check-canonical-workspace-mutations: migrated workspace entrypoints must route through domain action helpers."
-    echo "Use TabManager workspace ForAction helpers, or extend the domain path when a new mutation policy is needed."
+    echo "Use TabManager/Workspace/Dock domain ForAction helpers, or extend the domain path when a new mutation policy is needed."
     printf '  %s\n' "${violations[@]}"
   } >&2
   exit 1

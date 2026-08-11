@@ -310,6 +310,52 @@ struct DockSocketLifecycleTests {
         }
     }
 
+    @Test("Dock creation actions preserve focus and split semantics")
+    @MainActor
+    func dockCreationActionsPreserveFocusAndSplitSemantics() throws {
+        let manager = TabManager(autoWelcomeIfNeeded: false)
+        defer { manager.tabs.forEach { $0.teardownAllPanels() } }
+        let workspace = try #require(manager.tabs.first)
+        let store = workspace.dockSplit
+        let rootPane = try #require(store.resolvePane(requestedPaneID: nil))
+
+        let firstPanelId = try #require(store.createSurfaceForAction(
+            kind: .terminal,
+            inPane: rootPane,
+            focus: true
+        ))
+        #expect(store.focusedPanelId == firstPanelId)
+        #expect(store.paneId(forPanelId: firstPanelId) == rootPane)
+
+        let secondPanelId = try #require(store.createSurfaceForAction(
+            kind: .terminal,
+            inPane: rootPane,
+            focus: false
+        ))
+        #expect(store.containsPanel(secondPanelId))
+        #expect(store.focusedPanelId == firstPanelId)
+
+        let splitPanelId = try #require(store.createSplitForAction(
+            kind: .terminal,
+            orientation: .horizontal,
+            insertFirst: false,
+            sourcePanelId: firstPanelId,
+            focus: false
+        ))
+        let splitPane = try #require(store.paneId(forPanelId: splitPanelId))
+        #expect(splitPane != rootPane)
+        #expect(store.focusedPanelId == firstPanelId)
+
+        let focusedSplitPanelId = try #require(store.createSplitForAction(
+            kind: .terminal,
+            orientation: .vertical,
+            insertFirst: false,
+            sourcePanelId: firstPanelId,
+            focus: true
+        ))
+        #expect(store.focusedPanelId == focusedSplitPanelId)
+    }
+
     @Test("Dock placement is rejected when Dock mode is disabled")
     @MainActor
     func dockPlacementRejectedWhenDockModeDisabled() throws {
@@ -890,7 +936,7 @@ struct DockSocketLifecycleTests {
                     try withDockShortcutHarness { appDelegate, _, mainWorkspace, windowDock, fileExplorerState, window in
                         // Seed one Dock terminal so there is a focused Dock pane/panel.
                         let rootPane = try #require(windowDock.resolvePane(requestedPaneID: nil))
-                        _ = try #require(windowDock.newSurface(kind: .terminal, inPane: rootPane, focus: true))
+                        _ = try #require(windowDock.createSurfaceForAction(kind: .terminal, inPane: rootPane, focus: true))
 
                         // Make the Dock the active right-sidebar area.
                         fileExplorerState.setVisible(true)
@@ -941,7 +987,7 @@ struct DockSocketLifecycleTests {
                 try withDockShortcutHarness { appDelegate, _, mainWorkspace, windowDock, fileExplorerState, window in
                     // Dock has content but is NOT the focused area; the main panel is.
                     let rootPane = try #require(windowDock.resolvePane(requestedPaneID: nil))
-                    _ = try #require(windowDock.newSurface(kind: .terminal, inPane: rootPane, focus: true))
+                    _ = try #require(windowDock.createSurfaceForAction(kind: .terminal, inPane: rootPane, focus: true))
                     fileExplorerState.mode = .files
                     let mainPanelId = try #require(mainWorkspace.focusedPanelId)
                     appDelegate.noteMainPanelKeyboardFocusIntent(workspaceId: mainWorkspace.id, panelId: mainPanelId, in: window)

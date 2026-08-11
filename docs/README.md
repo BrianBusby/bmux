@@ -21,6 +21,7 @@ duplicate volatile facts.
 - [execution-telemetry/README.md](execution-telemetry/README.md)
 - [execution-telemetry/architecture.md](execution-telemetry/architecture.md)
 - [execution-telemetry/persistence-policy.md](execution-telemetry/persistence-policy.md)
+- [canonical-mutation-paths.md](canonical-mutation-paths.md)
 
 ## Decisions
 

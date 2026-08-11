@@ -9790,7 +9790,7 @@ class TerminalController {
                     return
                 }
 
-                guard let panelId = dock.newSurface(
+                guard let panelId = dock.createSurfaceForAction(
                     kind: .browser,
                     inPane: pane,
                     url: url,

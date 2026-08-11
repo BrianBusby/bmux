@@ -108,7 +108,7 @@ extension TerminalController {
         if focus {
             focusAndRevealWindowDock(for: dock, fallback: tabManager)
         }
-        let newPanelId = dock.newSurface(
+        let newPanelId = dock.createSurfaceForAction(
             kind: kind,
             inPane: paneId,
             url: kind == .browser ? url : nil,
