@@ -9,18 +9,9 @@ import BmuxCore
 @testable import bmux
 #endif
 
-/// Covers the mobile workspace-list fidelity fixes: terminals are serialized in
-/// the on-screen bonsplit spatial order, a terminal rename re-emits to the phone,
-/// and a pure drag-reorder is detected even though it changes no panel-set state.
-///
-/// `.serialized` because these exercise process-global surface registries via the
-/// real `Workspace`/`TabManager`/bonsplit model, which must not run concurrently.
 @MainActor
 @Suite(.serialized)
 struct MobileWorkspaceListFidelityTests {
-    /// Builds a workspace with `count` terminals as tabs in a single pane so that
-    /// a within-pane `reorderTab` genuinely changes their on-screen order. Returns
-    /// the workspace and panel ids in spatial (tab) order.
     private func makeWorkspaceWithTabTerminals(count: Int) throws -> (Workspace, [UUID]) {
         precondition(count >= 1)
         let manager = TabManager()
@@ -33,9 +24,6 @@ struct MobileWorkspaceListFidelityTests {
         return (workspace, orderedIds)
     }
 
-    /// Builds a workspace with `count` terminals laid out left-to-right via
-    /// horizontal splits (each in its own pane), returning the workspace and panel
-    /// ids in spatial order.
     private func makeWorkspaceWithSplitTerminals(count: Int) throws -> (Workspace, [UUID]) {
         precondition(count >= 1)
         let manager = TabManager()
@@ -448,48 +436,28 @@ struct MobileWorkspaceListFidelityTests {
     /// newlines collapsed, whitespace runs joined, length capped with an ellipsis,
     /// and whitespace-only input dropped entirely.
     @Test func mobilePreviewSanitizeFlattensAndCaps() throws {
-        // ANSI SGR + OSC sequences are stripped without leaking payload bytes.
         #expect(
             TerminalController.mobilePreviewSanitize("\u{001B}[31mbuild\u{001B}[0m \u{001B}]0;title\u{0007}done") ==
                 "build done"
         )
-        // Newlines, tabs, and runs of spaces collapse to single spaces.
         #expect(TerminalController.mobilePreviewSanitize("line one\n\n  line\ttwo   ") == "line one line two")
-        // Whitespace-only input yields nil so the row shows no preview.
         #expect(TerminalController.mobilePreviewSanitize(" \n\t ") == nil)
-        // Long input is capped with a trailing ellipsis at the documented limit.
         let long = String(repeating: "a", count: 500)
         let capped = try #require(TerminalController.mobilePreviewSanitize(long))
         #expect(capped.count == TerminalController.mobilePreviewMaxLength)
         #expect(capped.hasSuffix("\u{2026}"))
-        // Input past the processing cap is never scanned (bounded main-actor
-        // work); a huge body still yields the documented capped preview.
         let huge = String(repeating: "b", count: TerminalController.mobilePreviewInputCap * 64)
         let boundedHuge = try #require(TerminalController.mobilePreviewSanitize(huge))
         #expect(boundedHuge.count == TerminalController.mobilePreviewMaxLength)
         #expect(boundedHuge.hasSuffix("\u{2026}"))
-        // A short visible head followed by over-cap filler keeps the head and
-        // signals the truncation with an ellipsis instead of dropping it.
         let headThenFiller = "ok" + String(repeating: " ", count: TerminalController.mobilePreviewInputCap) + "tail"
         #expect(TerminalController.mobilePreviewSanitize(headThenFiller) == "ok\u{2026}")
-        // An OSC sequence left unterminated (e.g. cut by the input cap) is
-        // stripped wholly rather than leaking its payload bytes.
         #expect(TerminalController.mobilePreviewSanitize("\u{001B}]0;unterminated title") == nil)
-        // CSI parameter bytes are the full ECMA-48 0x30-0x3F range, not just
-        // digits/;/?. Modern 24-bit color uses colon-separated SGR parameters
-        // (ESC[38:2::255:0:0m); stripping must consume the whole sequence
-        // instead of leaving ":2::255:0:0m" visible in the preview.
         #expect(
             TerminalController.mobilePreviewSanitize("\u{001B}[38:2::255:0:0mred\u{001B}[0m text") ==
                 "red text"
         )
-        // Same range covers the private-use <=> parameter bytes.
         #expect(TerminalController.mobilePreviewSanitize("\u{001B}[>4;2mok") == "ok")
-        // The input bound must hold in unicode scalars, not Characters: a single
-        // crafted grapheme cluster carrying a huge run of combining marks is one
-        // Character, so a Character-counted cap never truncates it and the whole
-        // cluster leaks into the preview (and gets fully scanned on the
-        // main-actor list path). The sanitized output must stay scalar-bounded.
         let combiningBomb = "a" + String(
             repeating: "\u{0301}",
             count: TerminalController.mobilePreviewInputCap * 8
