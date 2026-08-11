@@ -352,10 +352,12 @@ struct AppDelegateSurfaceShortcutRoutingTests {
         #expect(panelIds.count == 10)
 
         workspace.focusPanel(panelIds[0])
-        workspace.selectSurface(at: 8)
+        let ninthPaneId = try #require(workspace.bonsplitPaneId(forPanelId: panelIds[8]))
+        #expect(workspace.selectSurfaceForAction(at: 8) == .selected(surfaceId: panelIds[8], paneId: ninthPaneId))
         #expect(workspace.focusedPanelId == panelIds[8])
 
-        workspace.selectLastSurface()
+        let lastPaneId = try #require(workspace.bonsplitPaneId(forPanelId: panelIds[9]))
+        #expect(workspace.selectLastSurfaceForAction() == .selected(surfaceId: panelIds[9], paneId: lastPaneId))
         #expect(workspace.focusedPanelId == panelIds[9])
     }
 

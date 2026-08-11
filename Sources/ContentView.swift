@@ -7935,10 +7935,10 @@ struct ContentView: View {
             }
         }
         registry.register(commandId: "palette.nextTabInPane") {
-            tabManager.selectNextSurface()
+            tabManager.selectNextSurfaceForAction()
         }
         registry.register(commandId: "palette.previousTabInPane") {
-            tabManager.selectPreviousSurface()
+            tabManager.selectPreviousSurfaceForAction()
         }
         registry.register(commandId: "palette.openWorkspacePullRequests") {
             DispatchQueue.main.async {
@@ -11136,11 +11136,11 @@ struct VerticalTabsSidebar: View {
             }
 
         case .selectNextSurface:
-            tabManager.selectNextSurface()
+            tabManager.selectNextSurfaceForAction()
             return .accepted
 
         case .selectPreviousSurface:
-            tabManager.selectPreviousSurface()
+            tabManager.selectPreviousSurfaceForAction()
             return .accepted
 
         case .closeSurface(let workspaceId, let surfaceId):
