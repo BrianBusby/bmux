@@ -174,6 +174,19 @@ def test_workflow_changes_run_everything() -> None:
     )
 
 
+def test_non_ci_workflow_changes_skip_expensive_main_ci_areas() -> None:
+    # The workflow-guard-tests job still validates workflow structure, but
+    # editing the iOS workflow should not force unrelated macOS/web/go lanes in
+    # the main CI workflow.
+    assert_areas(
+        [".github/workflows/test-ios.yml"],
+        macos=False,
+        web=False,
+        go=False,
+        agent_session_web=False,
+    )
+
+
 def detect_step_script(workflow_path: Path = CI_WORKFLOW) -> str:
     lines = workflow_path.read_text(encoding="utf-8").splitlines()
     for index, line in enumerate(lines):

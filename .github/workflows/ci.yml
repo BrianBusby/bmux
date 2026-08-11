@@ -139,6 +139,9 @@ jobs:
       - name: Validate external TestFlight group assignment helper
         run: python3 tests/test_ios_testflight_external_distribution.py
 
+      - name: Validate iOS workflow routing
+        run: python3 tests/test_ios_workflow_routing.py
+
       - name: Validate bmux scheme test configuration
         run: ./tests/test_ci_scheme_testaction_debug.sh
 
@@ -418,9 +421,13 @@ jobs:
       BMUX_CI_XCODE_APP: ${{ vars.BMUX_CI_XCODE_APP_MACOS_15 }}
       BMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
       BMUX_SKIP_ZIG_BUILD: "1"
-      # Keep one-off focused gates on the lightest measured shard so shard 1 no
-      # longer carries the full shard plus every extra regression guard.
-      BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD: "4"
+      # Spread one-off focused gates across the otherwise evenly weighted
+      # bmuxTests shards so a single shard does not become the long pole.
+      BMUX_APP_HOST_SPLIT_THEME_REGRESSION_SHARD: "3"
+      BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD: "1"
+      BMUX_APP_HOST_OPTION_ALT_REGRESSION_SHARD: "2"
+      BMUX_APP_HOST_THEME_PICKER_REGRESSION_SHARD: "4"
+      BMUX_APP_HOST_CLI_NO_SOCKET_REGRESSION_SHARD: "4"
       # XCTest app-host crashes can leave xcodebuild waiting in Swift's crash
       # backtracer until the job timeout. Keep crash handling non-interactive
       # and cheap so xcodebuild can restart/finish the suite.
@@ -521,7 +528,7 @@ jobs:
           done
 
       - name: Run Ghostty split-theme appearance regression
-        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_SPLIT_THEME_REGRESSION_SHARD) }}
         run: |
           set -euo pipefail
           DERIVED_DATA_PATH="${RUNNER_TEMP:-/tmp}/bmux-terminal-core-split-theme"
@@ -550,7 +557,7 @@ jobs:
           fi
 
       - name: Run browser system proxy mirror regression
-        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD) }}
         run: |
           # Focused gate for https://github.com/manaflow-ai/bmux/issues/5888.
           # The full "Run unit tests" step tolerates app-host crashes by
@@ -572,7 +579,7 @@ jobs:
             test
 
       - name: Run Option/Alt sided-modifier regression
-        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_OPTION_ALT_REGRESSION_SHARD) }}
         run: |
           set -euo pipefail
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
@@ -672,14 +679,14 @@ jobs:
           fi
 
       - name: Run bundled Ghostty theme picker helper regression
-        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_THEME_PICKER_REGRESSION_SHARD) }}
         run: |
           set -euo pipefail
           BMUX_SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages" \
             ./tests/test_bundled_ghostty_theme_picker_helper.sh
 
       - name: Run CLI no-socket regressions
-        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD) }}
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_CLI_NO_SOCKET_REGRESSION_SHARD) }}
         run: |
           set -euo pipefail
 
@@ -1216,6 +1223,9 @@ jobs:
         with:
           path: ${{ runner.temp }}/bmux-deriveddata-tests-build-and-lag
           key: deriveddata-build-${{ hashFiles('bmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('bmux.xcodeproj/project.pbxproj') }}-${{ steps.ghostty-revision.outputs.sha }}
+          restore-keys: |
+            deriveddata-build-${{ hashFiles('bmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-
+            deriveddata-build-
 
       - name: Cache Swift packages
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
