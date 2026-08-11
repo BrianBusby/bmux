@@ -186,6 +186,9 @@ final class MobileWorkspaceListObserver {
                 workspace.$groupId.map { _ in () }.eraseToAnyPublisher(),
                 workspace.$currentDirectory.map { _ in () }.eraseToAnyPublisher(),
                 workspace.$panelDirectories.map { _ in () }.eraseToAnyPublisher(),
+                workspace.$latestConversationMessage.map { _ in () }.eraseToAnyPublisher(),
+                workspace.$latestSubmittedMessage.map { _ in () }.eraseToAnyPublisher(),
+                workspace.$latestSubmittedAt.map { _ in () }.eraseToAnyPublisher(),
                 workspace.currentDirectoryChangeRevisionPublisher()
                     .map { _ in () }
                     .eraseToAnyPublisher(),
@@ -267,6 +270,9 @@ final class MobileWorkspaceListObserver {
             hasher.combine(workspace.id)
             hasher.combine(workspace.title)
             hasher.combine(workspace.isPinned)
+            hasher.combine(workspace.latestConversationMessage)
+            hasher.combine(workspace.latestSubmittedMessage)
+            hasher.combine(workspace.latestSubmittedAt)
             // Group membership is iOS-facing (the phone nests members under the
             // group header), and a pure move-into/out-of-group need not change the
             // panel set or title, so hash it here.

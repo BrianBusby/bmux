@@ -96,6 +96,7 @@ extension TerminalSurface {
         if let bundledCLIURL = Bundle.main.resourceURL?.appendingPathComponent("bin/bmux"),
            runtimeFilesystem.isExecutableFile(bundledCLIURL.path) {
             setManagedEnvironmentValue("BMUX_BUNDLED_CLI_PATH", bundledCLIURL.path)
+            setManagedEnvironmentValue("CMUX_BUNDLED_CLI_PATH", bundledCLIURL.path)
         }
         if let bundleId = Bundle.main.bundleIdentifier, !bundleId.isEmpty {
             setManagedEnvironmentValue("BMUX_BUNDLE_ID", bundleId)
@@ -120,6 +121,7 @@ extension TerminalSurface {
         // the Claude toggle.
         if !spawnPolicy.codexHooksEnabled {
             setManagedEnvironmentValue("BMUX_CODEX_HOOKS_DISABLED", "1")
+            setManagedEnvironmentValue("CMUX_CODEX_HOOKS_DISABLED", "1")
         }
         if let customClaudePath = spawnPolicy.customClaudePath {
             setManagedEnvironmentValue("BMUX_CUSTOM_CLAUDE_PATH", customClaudePath)

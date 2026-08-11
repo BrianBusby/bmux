@@ -202,6 +202,26 @@ struct MobileWorkspaceListFidelityTests {
         #expect(after != changed, "a newer notification must change the mobile summary hash")
     }
 
+    @Test func promptPreviewChangeChangesObserverHash() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+
+        let before = MobileWorkspaceListObserver.summaryHashForTesting(
+            tabs: manager.tabs,
+            groups: manager.workspaceGroups,
+            selectedTabID: manager.selectedTabId
+        )
+
+        #expect(workspace.recordSubmittedMessage("update the workspace row"))
+
+        let after = MobileWorkspaceListObserver.summaryHashForTesting(
+            tabs: manager.tabs,
+            groups: manager.workspaceGroups,
+            selectedTabID: manager.selectedTabId
+        )
+        #expect(before != after, "a prompt preview change must refresh the mobile workspace list")
+    }
+
     @Test func remoteDirectoryTrustChangesObserverHashAndPayload() throws {
         let localDirectory = "/Users/alice/development"
         let remoteDirectory = "/home/seepine/workspace"
