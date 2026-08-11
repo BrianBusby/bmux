@@ -79,6 +79,7 @@ app_delegate_surface_move_direct_pattern='(AppDelegate\.shared\?\.moveSurface\(|
 surface_selection_adapter_pattern='(selectNextSurface|selectPreviousSurface|selectSurface\(at:|selectLastSurface)\('
 workspace_title_adapter_bypass_pattern='\.((setCustomTitle|applyCustomTitle)\()'
 surface_title_adapter_bypass_pattern='\.(setPanelCustomTitle|applyPanelCustomTitle)\('
+terminal_split_adapter_bypass_pattern='\.(createSplit|newSplit)\('
 browser_surface_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSurface\('
 browser_split_creation_pattern='(^|[^A-Za-z0-9_])newBrowserSplit\('
 
@@ -400,6 +401,17 @@ done < <(rg -n -P "$surface_title_adapter_bypass_pattern" \
   "Sources/TerminalController+ControlSystemContext2.swift" \
   "Sources/TerminalController+ControlSurfaceContext2.swift" \
   "Sources/TerminalController+ControlSurfaceContext3.swift" || true)
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  violations+=("$line")
+done < <(rg -n -P "$terminal_split_adapter_bypass_pattern" \
+  "Sources/AppDelegate.swift" \
+  "Sources/AppleScriptSupport.swift" \
+  "Sources/bmuxApp.swift" \
+  "Sources/ContentView.swift" \
+  "Sources/GhosttyTerminalView.swift" \
+  "Sources/TerminalController.swift" || true)
 
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue

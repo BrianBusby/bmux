@@ -12039,10 +12039,10 @@ class TerminalController {
                 return
             }
 
-            switch tab.createTerminalSplitForAction(
-                from: targetSurface,
-                orientation: direction.orientation,
-                insertFirst: direction.insertFirst,
+            switch tabManager.createTerminalSplitForAction(
+                tabId: tab.id,
+                surfaceId: targetSurface,
+                direction: direction,
                 allowTextBoxFocusDefault: false
             ) {
             case .created(let panel):
