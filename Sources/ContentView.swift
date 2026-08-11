@@ -7935,10 +7935,10 @@ struct ContentView: View {
             }
         }
         registry.register(commandId: "palette.nextTabInPane") {
-            tabManager.selectNextSurface()
+            tabManager.selectNextSurfaceForAction()
         }
         registry.register(commandId: "palette.previousTabInPane") {
-            tabManager.selectPreviousSurface()
+            tabManager.selectPreviousSurfaceForAction()
         }
         registry.register(commandId: "palette.openWorkspacePullRequests") {
             DispatchQueue.main.async {
@@ -8108,7 +8108,7 @@ struct ContentView: View {
         }
         registry.register(commandId: "palette.terminalSplitRight") {
             if !executeConfiguredAction(id: BmuxSurfaceTabBarBuiltInAction.splitRight.configID) {
-                tabManager.createSplit(direction: .right)
+                tabManager.createTerminalSplitForAction(direction: .right)
             }
         }
         registry.register(commandId: "palette.forkAgentConversationRight") {
@@ -8131,7 +8131,7 @@ struct ContentView: View {
         }
         registry.register(commandId: "palette.terminalSplitDown") {
             if !executeConfiguredAction(id: BmuxSurfaceTabBarBuiltInAction.splitDown.configID) {
-                tabManager.createSplit(direction: .down)
+                tabManager.createTerminalSplitForAction(direction: .down)
             }
         }
         registry.register(commandId: "palette.terminalSplitBrowserRight") {
@@ -11149,13 +11149,11 @@ struct VerticalTabsSidebar: View {
             }
 
         case .selectNextSurface:
-            tabManager.selectNextSurface()
+            tabManager.selectNextSurfaceForAction()
             return .accepted
-
         case .selectPreviousSurface:
-            tabManager.selectPreviousSurface()
+            tabManager.selectPreviousSurfaceForAction()
             return .accepted
-
         case .closeSurface(let workspaceId, let surfaceId):
             guard let workspace = tabManager.tabs.first(where: { $0.id == workspaceId }) else {
                 return .rejected(String(localized: "sidebar.extensions.action.workspaceNotFound", defaultValue: "Workspace not found"))
@@ -11165,14 +11163,16 @@ struct VerticalTabsSidebar: View {
             }
             tabManager.closePanelWithConfirmation(tabId: workspaceId, surfaceId: surfaceId)
             return .accepted
-
         case .splitTerminal(let workspaceId, let surfaceId, let direction):
-            guard let splitDirection = splitDirection(from: direction),
-                  let panelId = tabManager.createSplit(tabId: workspaceId, surfaceId: surfaceId, direction: splitDirection) else {
+            guard let splitDirection = splitDirection(from: direction) else {
                 return .rejected(String(localized: "sidebar.extensions.action.surfaceCreateRejected", defaultValue: "Surface could not be created"))
             }
-            return BmuxSidebarActionResult(accepted: true, message: panelId.uuidString)
-
+            let outcome = tabManager.createTerminalSplitForAction(tabId: workspaceId, surfaceId: surfaceId, direction: splitDirection)
+            if let panel = outcome.panel {
+                return BmuxSidebarActionResult(accepted: true, message: panel.id.uuidString)
+            }
+            let routedMessage = String(localized: "sidebar.extensions.action.remoteTmuxWindowRequested", defaultValue: "Remote tmux window requested")
+            return outcome.wasCreatedOrRouted ? BmuxSidebarActionResult(accepted: true, message: routedMessage) : .rejected(String(localized: "sidebar.extensions.action.surfaceCreateRejected", defaultValue: "Surface could not be created"))
         case .splitBrowser(let workspaceId, let surfaceId, let direction, let urlString):
             let validatedURL = bmuxSidebarExtensionOptionalHTTPURL(from: urlString)
             guard validatedURL.accepted else {

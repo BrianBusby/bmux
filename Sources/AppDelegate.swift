@@ -4857,7 +4857,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     @discardableResult
-    func moveSurface(
+    func moveSurfaceForAction(
         panelId: UUID,
         toWorkspace targetWorkspaceId: UUID,
         targetPane: PaneID? = nil,
@@ -5154,7 +5154,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             "sourceWs=\(located.workspaceId.uuidString.prefix(5)) sourceWin=\(located.windowId.uuidString.prefix(5))"
         )
 #endif
-        let moved = moveSurface(
+        let moved = moveSurfaceForAction(
             panelId: located.panelId,
             toWorkspace: targetWorkspaceId,
             targetPane: targetPane,
@@ -10977,7 +10977,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                     let tab = tabManager.addTab()
                     guard let initialPanelId = tab.focusedPanelId else { return }
 
-                    _ = tabManager.newSplit(tabId: tab.id, surfaceId: initialPanelId, direction: .right)
+                    tabManager.createTerminalSplitForAction(tabId: tab.id, surfaceId: initialPanelId, direction: .right)
                     guard let targetPanelId = tab.focusedPanelId else { return }
                     // Find another panel that's not the currently focused one
                     let otherPanelId = tab.panels.keys.first(where: { $0 != targetPanelId })
@@ -14152,11 +14152,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         // Surface navigation: Cmd+Shift+] / Cmd+Shift+[
         if matchConfiguredShortcut(event: event, action: .nextSurface) {
-            (preferredMainWindowContextForShortcutRouting(event: event)?.tabManager ?? tabManager)?.selectNextSurface()
+            (preferredMainWindowContextForShortcutRouting(event: event)?.tabManager ?? tabManager)?.selectNextSurfaceForAction()
             return true
         }
         if matchConfiguredShortcut(event: event, action: .prevSurface) {
-            (preferredMainWindowContextForShortcutRouting(event: event)?.tabManager ?? tabManager)?.selectPreviousSurface()
+            (preferredMainWindowContextForShortcutRouting(event: event)?.tabManager ?? tabManager)?.selectPreviousSurfaceForAction()
             return true
         }
 
@@ -14378,9 +14378,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         if let digit = routableNumberedConfiguredShortcutDigit(event: event, action: .selectSurfaceByNumber) {
             let manager = tabManagerForNumberedShortcut(event: event)
             if digit == 9 {
-                manager?.selectLastSurface()
+                manager?.selectLastSurfaceForAction()
             } else {
-                manager?.selectSurface(at: digit - 1)
+                manager?.selectSurfaceForAction(at: digit - 1)
             }
             return true
         }
@@ -14528,11 +14528,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         // Surface navigation (legacy Ctrl+Tab support)
         if matchTabShortcut(event: event, shortcut: StoredShortcut(key: "\t", command: false, shift: false, option: false, control: true)) {
-            (preferredMainWindowContextForShortcutRouting(event: event)?.tabManager ?? tabManager)?.selectNextSurface()
+            (preferredMainWindowContextForShortcutRouting(event: event)?.tabManager ?? tabManager)?.selectNextSurfaceForAction()
             return true
         }
         if matchTabShortcut(event: event, shortcut: StoredShortcut(key: "\t", command: false, shift: true, option: false, control: true)) {
-            (preferredMainWindowContextForShortcutRouting(event: event)?.tabManager ?? tabManager)?.selectPreviousSurface()
+            (preferredMainWindowContextForShortcutRouting(event: event)?.tabManager ?? tabManager)?.selectPreviousSurfaceForAction()
             return true
         }
 
@@ -15411,11 +15411,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                         direction: direction.canvasDirection
                     ) != nil
                 }
-                return terminalContext.tabManager.createSplit(
+                return terminalContext.tabManager.createTerminalSplitForAction(
                     tabId: terminalContext.workspaceId,
                     surfaceId: terminalContext.panelId,
                     direction: direction
-                ) != nil
+                ).wasCreatedOrRouted
             }
             if let workspace = tabManager?.selectedWorkspace,
                workspace.layoutMode == .canvas {
@@ -15425,7 +15425,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                     direction: direction.canvasDirection
                 ) != nil
             }
-            return tabManager?.createSplit(direction: direction) != nil
+            return tabManager?.createTerminalSplitForAction(direction: direction).wasCreatedOrRouted ?? false
         }()
 #if DEBUG
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in

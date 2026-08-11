@@ -14,6 +14,10 @@ slice for the bmux and Provenance Engine integration effort.
 - Generated files must not be edited manually.
 - The continuing project state remains the Engineering Observation Period;
   do not select a new product implementation slice from this handoff alone.
+- Domain-specific canonical mutation paths are tracked as a bounded
+  architectural/refactor workstream in
+  [`docs/canonical-mutation-paths.md`](../canonical-mutation-paths.md). That
+  workstream is not the repository's active generated project gate.
 
 ## Commands
 

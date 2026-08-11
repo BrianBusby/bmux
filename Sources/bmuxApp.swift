@@ -956,10 +956,10 @@ struct bmuxApp: App {
             }
             Divider()
             splitCommandButton(title: String(localized: "menu.view.nextSurface", defaultValue: "Next Surface"), shortcut: menuShortcut(for: .nextSurface)) {
-                activeTabManager.selectNextSurface()
+                activeTabManager.selectNextSurfaceForAction()
             }
             splitCommandButton(title: String(localized: "menu.view.previousSurface", defaultValue: "Previous Surface"), shortcut: menuShortcut(for: .prevSurface)) {
-                activeTabManager.selectPreviousSurface()
+                activeTabManager.selectPreviousSurfaceForAction()
             }
 
             splitCommandButton(title: String(localized: "menu.view.back", defaultValue: "Back"), shortcut: menuShortcut(for: .browserBack)) {
@@ -1212,7 +1212,7 @@ struct bmuxApp: App {
         if AppDelegate.shared?.performSplitShortcut(direction: direction) == true {
             return
         }
-        tabManager.createSplit(direction: direction)
+        tabManager.createTerminalSplitForAction(direction: direction)
     }
 
     private func performBrowserSplitFromMenu(direction: SplitDirection) {

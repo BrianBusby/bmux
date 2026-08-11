@@ -890,7 +890,7 @@ struct DockSocketLifecycleTests {
                     try withDockShortcutHarness { appDelegate, _, mainWorkspace, windowDock, fileExplorerState, window in
                         // Seed one Dock terminal so there is a focused Dock pane/panel.
                         let rootPane = try #require(windowDock.resolvePane(requestedPaneID: nil))
-                        _ = try #require(windowDock.newSurface(kind: .terminal, inPane: rootPane, focus: true))
+                        _ = try #require(windowDock.createSurfaceForAction(kind: .terminal, inPane: rootPane, focus: true))
 
                         // Make the Dock the active right-sidebar area.
                         fileExplorerState.setVisible(true)
@@ -941,7 +941,7 @@ struct DockSocketLifecycleTests {
                 try withDockShortcutHarness { appDelegate, _, mainWorkspace, windowDock, fileExplorerState, window in
                     // Dock has content but is NOT the focused area; the main panel is.
                     let rootPane = try #require(windowDock.resolvePane(requestedPaneID: nil))
-                    _ = try #require(windowDock.newSurface(kind: .terminal, inPane: rootPane, focus: true))
+                    _ = try #require(windowDock.createSurfaceForAction(kind: .terminal, inPane: rootPane, focus: true))
                     fileExplorerState.mode = .files
                     let mainPanelId = try #require(mainWorkspace.focusedPanelId)
                     appDelegate.noteMainPanelKeyboardFocusIntent(workspaceId: mainWorkspace.id, panelId: mainPanelId, in: window)

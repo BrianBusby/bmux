@@ -3634,24 +3634,20 @@ class TabManager: ObservableObject {
     // MARK: - Surface Navigation
 
     /// Select the next surface in the currently focused pane of the selected workspace
-    func selectNextSurface() {
-        selectedWorkspace?.selectNextSurface()
-    }
+    @discardableResult
+    func selectNextSurfaceForAction() -> Workspace.SurfaceSelectionActionResult { selectedWorkspace?.selectNextSurfaceForAction() ?? .notFound }
 
     /// Select the previous surface in the currently focused pane of the selected workspace
-    func selectPreviousSurface() {
-        selectedWorkspace?.selectPreviousSurface()
-    }
+    @discardableResult
+    func selectPreviousSurfaceForAction() -> Workspace.SurfaceSelectionActionResult { selectedWorkspace?.selectPreviousSurfaceForAction() ?? .notFound }
 
     /// Select a surface by index in the currently focused pane of the selected workspace
-    func selectSurface(at index: Int) {
-        selectedWorkspace?.selectSurface(at: index)
-    }
+    @discardableResult
+    func selectSurfaceForAction(at index: Int) -> Workspace.SurfaceSelectionActionResult { selectedWorkspace?.selectSurfaceForAction(at: index) ?? .notFound }
 
     /// Select the last surface in the currently focused pane of the selected workspace
-    func selectLastSurface() {
-        selectedWorkspace?.selectLastSurface()
-    }
+    @discardableResult
+    func selectLastSurfaceForAction() -> Workspace.SurfaceSelectionActionResult { selectedWorkspace?.selectLastSurfaceForAction() ?? .notFound }
 
     /// Create a new terminal surface in the focused pane of the selected workspace
     func newSurface() {
@@ -3670,20 +3666,18 @@ class TabManager: ObservableObject {
     /// Create a new split in the current tab
     @discardableResult
     func createSplit(direction: SplitDirection) -> UUID? {
-        guard let selectedTabId,
-              let tab = tabs.first(where: { $0.id == selectedTabId }),
-              let focusedPanelId = tab.focusedPanelId else { return nil }
-        return createSplit(tabId: selectedTabId, surfaceId: focusedPanelId, direction: direction)
+        createTerminalSplitForAction(direction: direction).panel?.id
     }
 
     /// Create a new split from an explicit source panel.
     @discardableResult
     func createSplit(tabId: UUID, surfaceId: UUID, direction: SplitDirection, focus: Bool = true) -> UUID? {
-        guard let tab = tabs.first(where: { $0.id == tabId }),
-              tab.panels[surfaceId] != nil else { return nil }
-        tab.clearSplitZoom()
-        sentryBreadcrumb("split.create", data: ["direction": String(describing: direction)])
-        return newSplit(tabId: tabId, surfaceId: surfaceId, direction: direction, focus: focus)
+        createTerminalSplitForAction(
+            tabId: tabId,
+            surfaceId: surfaceId,
+            direction: direction,
+            focus: focus
+        ).panel?.id
     }
 
     /// Create a new browser split from the currently focused panel.
@@ -3823,11 +3817,10 @@ class TabManager: ObservableObject {
         initialDividerPosition: CGFloat? = nil,
         remotePTYSessionID: String? = nil
     ) -> UUID? {
-        guard let tab = tabs.first(where: { $0.id == tabId }) else { return nil }
-        return tab.createTerminalSplitForAction(
-            from: surfaceId,
-            orientation: direction.orientation,
-            insertFirst: direction.insertFirst,
+        createTerminalSplitForAction(
+            tabId: tabId,
+            surfaceId: surfaceId,
+            direction: direction,
             focus: focus,
             workingDirectory: workingDirectory,
             initialCommand: initialCommand,

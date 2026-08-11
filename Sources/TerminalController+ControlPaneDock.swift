@@ -36,7 +36,7 @@ extension TerminalController {
         if focus {
             focusAndRevealWindowDock(for: dock, fallback: tabManager)
         }
-        let newPanelId = dock.newSplit(
+        let newPanelId = dock.createSplitForAction(
             kind: kind,
             orientation: orientation,
             insertFirst: insertFirst,

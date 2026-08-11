@@ -38,7 +38,7 @@ extension Workspace {
 
     func openDockBrowserLinkInNewTab(panel: BrowserPanel, seed: BrowserNewTabNavigationSeed) -> Bool {
         guard let dock = _dockSplit, let paneId = dock.paneId(forPanelId: panel.id) else { return false }
-        return dock.newSurface(
+        return dock.createSurfaceForAction(
             kind: .browser,
             inPane: paneId,
             url: seed.url,
@@ -54,7 +54,7 @@ extension Workspace {
         if let dock = app.windowDockContainingPanel(panel.id),
            dock.browserPanel(for: panel.id) === panel,
            let paneId = dock.paneId(forPanelId: panel.id) {
-            return dock.newSurface(
+            return dock.createSurfaceForAction(
                 kind: .browser,
                 inPane: paneId,
                 url: seed.url,

@@ -82,8 +82,6 @@ extension TerminalController {
         String(localized: "dock.error.conflictingRoutingSelectors", defaultValue: "Conflicting Dock routing selectors")
     }
 
-    /// Creates a surface (tab) in the routed window's right-sidebar Dock. The
-    /// Dock hosts terminal and browser surfaces only; agent-session is unsupported.
     func dockSurfaceCreate(
         routing: ControlRoutingSelectors,
         tabManager: TabManager,
@@ -108,7 +106,7 @@ extension TerminalController {
         if focus {
             focusAndRevealWindowDock(for: dock, fallback: tabManager)
         }
-        let newPanelId = dock.newSurface(
+        let newPanelId = dock.createSurfaceForAction(
             kind: kind,
             inPane: paneId,
             url: kind == .browser ? url : nil,
@@ -149,11 +147,6 @@ extension TerminalController {
         AppDelegate.shared?.windowDockContainingPane(paneId)
     }
 
-    /// Routes commands to a window Dock by alias, owner id, surface id, or pane id.
-    /// Explicit window/owner/surface/pane selectors must agree. A registered
-    /// owner whose Dock has not been created fails closed instead of falling
-    /// through to another Dock's surface/pane; non-Dock workspace ids remain
-    /// compatible with CLI-injected caller context.
     func windowDockForRouting(_ routing: ControlRoutingSelectors, tabManager: TabManager) -> DockSplitStore? {
         guard let app = AppDelegate.shared else { return nil }
         func matches(_ dock: DockSplitStore) -> Bool {
@@ -181,14 +174,6 @@ extension TerminalController {
         return nil
     }
 
-    /// The window Dock owner targeted by a Dock create request. Explicit Dock-owner
-    /// selectors (including the legacy alias pinned to the caller window) still
-    /// choose the owner first, but a non-Dock `workspace_id` can be an injected
-    /// caller context; in that case an explicit Dock surface/pane selector is
-    /// more specific and chooses its containing window Dock before fallback.
-    ///
-    /// This intentionally returns an id, not a store: invalid contradictory
-    /// create requests must be rejected without lazily materializing a Dock.
     func windowDockOwnerIdForCreateRouting(_ routing: ControlRoutingSelectors, tabManager: TabManager) -> UUID? {
         guard let app = AppDelegate.shared else { return nil }
         if let workspaceID = routing.workspaceID {
@@ -210,17 +195,11 @@ extension TerminalController {
         return app.windowId(for: tabManager)
     }
 
-    /// Whether an explicit `window_id` contradicts `dock`'s owning window (a
-    /// window Dock's owner id IS its window id). Contradictions fail closed.
     func windowDockMismatchesExplicitWindow(_ routing: ControlRoutingSelectors, dock: DockSplitStore) -> Bool {
         guard routing.hasWindowIDParam, let requestedWindowID = routing.windowID else { return false }
         return dock.workspaceId != requestedWindowID
     }
 
-    /// Whether a routed surface or pane explicitly belongs to another window
-    /// Dock. Non-Dock surface/pane ids are not conflicts here: the CLI can
-    /// inject a main-workspace `workspace_id` beside a globally unique Dock
-    /// surface id, and the surface/pane id remains the more specific selector.
     func windowDockMismatchesExplicitDockSurfaceOrPane(_ routing: ControlRoutingSelectors, dock: DockSplitStore) -> Bool {
         if let surfaceID = routing.surfaceID,
            let containingDock = windowDockContainingPanel(surfaceID),
@@ -235,10 +214,6 @@ extension TerminalController {
         return false
     }
 
-    /// Whether the routing explicitly names a DIFFERENT window Dock than
-    /// `dock` — via `window_id` or a Dock-owner `workspace_id`. Used by the
-    /// surface-containment paths that bypass `windowDockForRouting`; a
-    /// non-Dock `workspace_id` never conflicts (see `windowDockForRouting`).
     func windowDockMismatchesExplicitSelectors(
         _ routing: ControlRoutingSelectors,
         dock: DockSplitStore,

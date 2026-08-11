@@ -587,14 +587,17 @@ final class ScriptTerminal: NSObject {
             return nil
         }
 
-        guard let newPanelId = state.tabManager.newSplit(tabId: workspaceId, surfaceId: terminalId, direction: direction),
-              workspace.terminalPanel(for: newPanelId) != nil else {
+        guard case .created(let panel) = state.tabManager.createTerminalSplitForAction(
+            tabId: workspaceId,
+            surfaceId: terminalId,
+            direction: direction
+        ), workspace.terminalPanel(for: panel.id) != nil else {
             command.scriptErrorNumber = errAEEventFailed
             command.scriptErrorString = AppleScriptStrings.failedToCreateSplit
             return nil
         }
 
-        return ScriptTerminal(workspaceId: workspaceId, terminalId: newPanelId)
+        return ScriptTerminal(workspaceId: workspaceId, terminalId: panel.id)
     }
 
     @objc(handleFocusCommand:)

@@ -24,6 +24,64 @@ extension DockSplitStore {
         return true
     }
 
+    @discardableResult
+    func createSurfaceForAction(
+        kind: DockSurfaceKind,
+        inPane paneId: PaneID,
+        url: URL? = nil,
+        initialRequest: URLRequest? = nil,
+        command: String? = nil,
+        workingDirectory: String? = nil,
+        environment: [String: String] = [:],
+        tmuxStartCommand: String? = nil,
+        focus: Bool = true,
+        preferredProfileID: UUID? = nil,
+        bypassInsecureHTTPHostOnce: String? = nil
+    ) -> UUID? {
+        newSurface(
+            kind: kind,
+            inPane: paneId,
+            url: url,
+            initialRequest: initialRequest,
+            command: command,
+            workingDirectory: workingDirectory,
+            environment: environment,
+            tmuxStartCommand: tmuxStartCommand,
+            focus: focus,
+            preferredProfileID: preferredProfileID,
+            bypassInsecureHTTPHostOnce: bypassInsecureHTTPHostOnce
+        )
+    }
+
+    @discardableResult
+    func createSplitForAction(
+        kind: DockSurfaceKind,
+        orientation: SplitOrientation,
+        insertFirst: Bool,
+        sourcePanelId: UUID?,
+        url: URL? = nil,
+        command: String? = nil,
+        workingDirectory: String? = nil,
+        environment: [String: String] = [:],
+        tmuxStartCommand: String? = nil,
+        initialDividerPosition: CGFloat? = nil,
+        focus: Bool = true
+    ) -> UUID? {
+        newSplit(
+            kind: kind,
+            orientation: orientation,
+            insertFirst: insertFirst,
+            sourcePanelId: sourcePanelId,
+            url: url,
+            command: command,
+            workingDirectory: workingDirectory,
+            environment: environment,
+            tmuxStartCommand: tmuxStartCommand,
+            initialDividerPosition: initialDividerPosition,
+            focus: focus
+        )
+    }
+
     func focusedDockPaneSelection() -> (pane: PaneID?, tab: TabID?) {
         let pane = bonsplitController.focusedPaneId
         return (pane, pane.flatMap { bonsplitController.selectedTab(inPane: $0)?.id })
@@ -43,7 +101,7 @@ extension DockSplitStore {
     func newInFocusedPane(kind: DockSurfaceKind) {
         ensureLoaded()
         guard let paneId = bonsplitController.focusedPaneId ?? bonsplitController.allPaneIds.first else { return }
-        _ = newSurface(kind: kind, inPane: paneId, focus: true)
+        _ = createSurfaceForAction(kind: kind, inPane: paneId, focus: true)
     }
 
     func collapseToSingleEmptyPane() {
@@ -168,7 +226,7 @@ extension DockSplitStore {
 
         // Split button: the new pane is empty. Seed a terminal in it, matching
         // the main area (which always seeds a terminal on a UI split).
-        _ = newSurface(kind: .terminal, inPane: newPane, focus: true)
+        _ = createSurfaceForAction(kind: .terminal, inPane: newPane, focus: true)
     }
 
     /// Mirrors `Workspace.splitTabBar(_:didMoveTab:…)`: keep the moved panel

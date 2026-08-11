@@ -712,6 +712,8 @@ public struct XcodeProjectAdapter: ProjectAdapter, Sendable {
             case let .group(group):
                 let nested = collectProjectURLs(from: group.children, workspaceDir: workspaceDir)
                 out.append(contentsOf: nested)
+            @unknown default:
+                break
             }
         }
         return out

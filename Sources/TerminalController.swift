@@ -4807,7 +4807,7 @@ class TerminalController {
                 return
             }
 
-            guard app.moveSurface(
+            guard app.moveSurfaceForAction(
                 panelId: surfaceId,
                 toWorkspace: targetWorkspace.id,
                 targetPane: destinationPane,
@@ -9790,7 +9790,7 @@ class TerminalController {
                     return
                 }
 
-                guard let panelId = dock.newSurface(
+                guard let panelId = dock.createSurfaceForAction(
                     kind: .browser,
                     inPane: pane,
                     url: url,
@@ -12046,10 +12046,10 @@ class TerminalController {
                 return
             }
 
-            switch tab.createTerminalSplitForAction(
-                from: targetSurface,
-                orientation: direction.orientation,
-                insertFirst: direction.insertFirst,
+            switch tabManager.createTerminalSplitForAction(
+                tabId: tab.id,
+                surfaceId: targetSurface,
+                direction: direction,
                 allowTextBoxFocusDefault: false
             ) {
             case .created(let panel):

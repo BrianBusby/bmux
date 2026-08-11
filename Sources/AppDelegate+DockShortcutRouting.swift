@@ -42,7 +42,7 @@ extension AppDelegate {
         }
         guard let store = focusedDockStoreForShortcut(preferredWindow: preferredWindow),
               let pane = store.resolvePane(requestedPaneID: nil),
-              let panelId = store.newSurface(kind: kind, inPane: pane, focus: true) else {
+              let panelId = store.createSurfaceForAction(kind: kind, inPane: pane, focus: true) else {
             return nil
         }
         if focusAddressBar, kind == .browser, let browser = store.browserPanel(for: panelId) {
@@ -67,7 +67,7 @@ extension AppDelegate {
         guard let store = focusedDockStoreForShortcut(preferredWindow: preferredWindow) else {
             return false
         }
-        return store.newSplit(
+        return store.createSplitForAction(
             kind: kind,
             orientation: direction.orientation,
             insertFirst: direction.insertFirst,

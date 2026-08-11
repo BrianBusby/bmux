@@ -52,7 +52,12 @@ extension TerminalSurface {
             "BMUX_WORKSPACE_ID": context.workspaceId.uuidString,
             "BMUX_PANEL_ID": context.surfaceId.uuidString,
             "BMUX_TAB_ID": context.workspaceId.uuidString,
-            "BMUX_SOCKET_PATH": context.socketPath
+            "BMUX_SOCKET_PATH": context.socketPath,
+            "CMUX_SURFACE_ID": context.surfaceId.uuidString,
+            "CMUX_WORKSPACE_ID": context.workspaceId.uuidString,
+            "CMUX_PANEL_ID": context.surfaceId.uuidString,
+            "CMUX_TAB_ID": context.workspaceId.uuidString,
+            "CMUX_SOCKET_PATH": context.socketPath
         ]
 
         for (key, value) in values {

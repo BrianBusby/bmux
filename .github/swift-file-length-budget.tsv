@@ -126,6 +126,7 @@
 841	Packages/iOS/BmuxMobileShell/Tests/BmuxMobileShellTests/TerminalOutputDeliveryQueueTests.swift
 834	Sources/MainWindowFocusController.swift
 830	Sources/TaskManagerTypes.swift
+827	bmuxTests/WorkspaceActionDispatcherTests.swift
 825	Packages/iOS/BmuxMobileShellUI/Sources/BmuxMobileShellUI/TerminalComposerView.swift
 822	Sources/WorkspaceContentView.swift
 811	bmuxTests/WorkProvenanceStoreTests.swift

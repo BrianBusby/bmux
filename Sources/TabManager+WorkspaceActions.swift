@@ -59,6 +59,47 @@ extension Workspace {
 
 extension TabManager {
     @discardableResult
+    func createTerminalSplitForAction(direction: SplitDirection) -> TerminalPanelCreationOutcome {
+        guard let selectedTabId,
+              let tab = tabs.first(where: { $0.id == selectedTabId }),
+              let focusedPanelId = tab.focusedPanelId else { return .failed }
+        return createTerminalSplitForAction(tabId: selectedTabId, surfaceId: focusedPanelId, direction: direction)
+    }
+
+    @discardableResult
+    func createTerminalSplitForAction(
+        tabId: UUID,
+        surfaceId: UUID,
+        direction: SplitDirection,
+        focus: Bool = true,
+        workingDirectory: String? = nil,
+        initialCommand: String? = nil,
+        tmuxStartCommand: String? = nil,
+        startupEnvironment: [String: String] = [:],
+        initialDividerPosition: CGFloat? = nil,
+        remotePTYSessionID: String? = nil,
+        allowTextBoxFocusDefault: Bool = true
+    ) -> TerminalPanelCreationOutcome {
+        guard let tab = tabs.first(where: { $0.id == tabId }),
+              tab.panels[surfaceId] != nil else { return .failed }
+        tab.clearSplitZoom()
+        sentryBreadcrumb("split.create", data: ["direction": String(describing: direction)])
+        return tab.createTerminalSplitForAction(
+            from: surfaceId,
+            orientation: direction.orientation,
+            insertFirst: direction.insertFirst,
+            focus: focus,
+            workingDirectory: workingDirectory,
+            initialCommand: initialCommand,
+            tmuxStartCommand: tmuxStartCommand,
+            startupEnvironment: startupEnvironment,
+            initialDividerPosition: initialDividerPosition,
+            remotePTYSessionID: remotePTYSessionID,
+            allowTextBoxFocusDefault: allowTextBoxFocusDefault
+        )
+    }
+
+    @discardableResult
     func createWorkspaceForAction(
         title: String? = nil,
         workingDirectory: String? = nil,
