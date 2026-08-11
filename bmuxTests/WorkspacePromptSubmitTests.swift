@@ -320,6 +320,16 @@ struct WorkspacePromptSubmitTests {
         #expect(workspace.sidebarPullRequestsInDisplayOrder().map(\.number) == [5314])
     }
 
+    @Test func testPullRequestMentionParserCanMatchSpecificPullRequestNumber() throws {
+        let mention = try #require(Workspace.submittedPromptPullRequestMention(
+            from: "compare https://github.com/manaflow-ai/bmux/pull/5314 with https://github.com/CompanyCam/Company-Cam-API/pull/26117",
+            matchingNumber: 26117
+        ))
+
+        #expect(mention.number == 26117)
+        #expect(mention.url.absoluteString == "https://github.com/CompanyCam/Company-Cam-API/pull/26117")
+    }
+
     @Test func testAssistantFinalMessageReplacesStalePullRequestMentionWhenIMessageModeDisabled() throws {
         let manager = TabManager()
         let workspace = manager.tabs[0]

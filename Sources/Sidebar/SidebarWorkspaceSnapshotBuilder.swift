@@ -27,6 +27,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         let url: URL?
         let status: SidebarPullRequestStatus
         let isStale: Bool
+        let isFromProvenance: Bool
     }
 
     struct TicketDisplay: Identifiable, Equatable {

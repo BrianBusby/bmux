@@ -15144,7 +15144,8 @@ struct TabItemView: View, Equatable {
                 label: pullRequest.label,
                 url: pullRequest.url,
                 status: pullRequest.status,
-                isStale: pullRequest.isStale
+                isStale: pullRequest.isStale,
+                isFromProvenance: false
             )
         }
     }
@@ -15152,14 +15153,31 @@ struct TabItemView: View, Equatable {
     private var provenancePullRequestDisplay: SidebarWorkspaceSnapshotBuilder.PullRequestDisplay? {
         guard let pullRequest = provenanceDisplaySnapshot?.pullRequest else { return nil }
         let label = String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
+        let url = pullRequest.url ?? provenancePullRequestURL(number: pullRequest.number)
         return SidebarWorkspaceSnapshotBuilder.PullRequestDisplay(
-            id: "\(label.lowercased())#\(pullRequest.number)|\(pullRequest.url?.absoluteString ?? "")",
+            id: "\(label.lowercased())#\(pullRequest.number)|\(url?.absoluteString ?? "")",
             number: pullRequest.number,
             label: label,
-            url: pullRequest.url,
+            url: url,
             status: pullRequest.status.flatMap(SidebarPullRequestStatus.init(rawValue:)) ?? .open,
-            isStale: pullRequest.isStale
+            isStale: pullRequest.isStale,
+            isFromProvenance: true
         )
+    }
+
+    private func provenancePullRequestURL(number: Int) -> URL? {
+        let livePullRequest = tab.sidebarPullRequestsInDisplayOrder().first { $0.number == number }
+        if let url = livePullRequest?.url {
+            return url
+        }
+
+        for message in [tab.latestSubmittedMessage, tab.latestConversationMessage] {
+            guard let mention = Workspace.submittedPromptPullRequestMention(from: message, matchingNumber: number) else {
+                continue
+            }
+            return mention.url
+        }
+        return nil
     }
 
     private var provenanceTicketDisplays: [SidebarWorkspaceSnapshotBuilder.TicketDisplay] {
@@ -15180,17 +15198,15 @@ struct TabItemView: View, Equatable {
                         color: pullRequestForegroundColor,
                         fontScale: fontScale
                     )
-                    Text(pullRequestTitle).underline(settings.makesPullRequestsClickable && pullRequest.url != nil).lineLimit(1).truncationMode(.tail)
-                    Text(pullRequestStatusLabel(pullRequest.status)).lineLimit(1)
-                    Spacer(minLength: 0)
-                }
-                .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
-                .foregroundColor(pullRequestForegroundColor)
-                .opacity(pullRequest.isStale ? 0.5 : 1)
-                if settings.makesPullRequestsClickable, let url = pullRequest.url {
-                    Button(action: { openPullRequestLink(url) }) { rowContent }
+                    if let url = pullRequest.url {
+                        Button(action: { openPullRequestLink(url) }) {
+                            Text(pullRequestTitle)
+                                .underline()
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                        }
                         .buttonStyle(.plain)
-                        .tint(pullRequestForegroundColor)
+                        .foregroundColor(pullRequestLinkColor)
                         .safeHelp(String(
                             format: String(
                                 localized: "sidebar.pullRequest.openTooltip",
@@ -15200,10 +15216,22 @@ struct TabItemView: View, Equatable {
                             pullRequest.label,
                             pullRequest.number
                         ))
-                        .accessibilityIdentifier("SidebarPullRequestRow")
-                } else {
-                    rowContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarPullRequestRow")
+                    } else {
+                        Text(pullRequestTitle)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                    Spacer(minLength: 0)
+                    Text(pullRequestStatusLabel(pullRequest.status))
+                        .foregroundColor(pullRequest.isFromProvenance ? activeSecondaryColor(0.78) : pullRequestForegroundColor)
+                        .lineLimit(1)
                 }
+                .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
+                .foregroundColor(pullRequestForegroundColor)
+                .opacity(pullRequest.isStale ? 0.5 : 1)
+                rowContent
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("SidebarPullRequestRow")
             }
         }
     }
@@ -15247,8 +15275,13 @@ struct TabItemView: View, Equatable {
         colorScheme == .dark ? .white : .black
     }
 
+    private var pullRequestLinkColor: Color {
+        Color(nsColor: .linkColor)
+    }
+
     private func openPullRequestLink(_ url: URL) {
-        openWorkspaceExternalLink(url)
+        updateSelection()
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     private func openTicketLink(_ url: URL) {
