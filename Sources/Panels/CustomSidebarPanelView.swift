@@ -87,7 +87,8 @@ struct CustomSidebarPanelView: View {
         CustomSidebarPaneDataContextCache.shared.dataContext(
             now: now,
             tabManager: tabManager,
-            sidebarUnread: sidebarUnread
+            sidebarUnread: sidebarUnread,
+            workspaceDisplayRevisionKey: workspaceDisplayRevisionKey
         ) {
             buildCustomSidebarDataContext(now: now)
         }
@@ -99,18 +100,37 @@ struct CustomSidebarPanelView: View {
             workspace.customSidebarWorkspaceSnapshot(
                 index: index,
                 selectedId: selectedId,
-                unreadCount: sidebarUnread.unreadCount(forWorkspaceId: workspace.id)
+                unreadCount: sidebarUnread.unreadCount(forWorkspaceId: workspace.id),
+                provenanceDisplaySnapshot: tabManager.workProvenanceRuntime?
+                    .workspaceDisplayCurrentStateSnapshot(for: workspace)
             )
         }
         let selectedWorkspace = tabManager.tabs.first { $0.id == selectedId }
         let snapshot = CustomSidebarContextSnapshot(
             workspaces: workspaces,
             selectedWorkspaceId: selectedId,
-            selectedWorkspaceTitle: selectedWorkspace?.customTitle ?? selectedWorkspace?.title ?? "",
+            selectedWorkspaceTitle: selectedWorkspace.flatMap {
+                tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: $0)?.title
+            } ?? selectedWorkspace?.customTitle ?? selectedWorkspace?.title ?? "",
             totalUnreadCount: sidebarUnread.totalUnreadCount,
             now: now
         )
         return CustomSidebarDataContextBuilder().dataContext(for: snapshot)
+    }
+
+    private var workspaceDisplayRevisionKey: String {
+        tabManager.tabs.compactMap { workspace in
+            guard let snapshot = tabManager.workProvenanceRuntime?
+                .workspaceDisplayCurrentStateSnapshot(for: workspace) else {
+                return nil
+            }
+            return [
+                workspace.id.uuidString,
+                snapshot.latestEventSequence.map(String.init) ?? "",
+                snapshot.latestEventID ?? "",
+                snapshot.updatedAt.timeIntervalSince1970.description
+            ].joined(separator: ":")
+        }.joined(separator: ",")
     }
 
     private func requestPanelFocusIfNeeded() {

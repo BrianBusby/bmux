@@ -20,6 +20,9 @@ local_capabilities:
   workspace_display_current_state_diagnostic: implemented
   workspace_display_ticket_link_facts: implemented
   workspace_display_tab_projection: implemented
+  workspace_display_owner_facts: implemented
+  workspace_display_sidebar_projection: implemented
+  workspace_display_custom_sidebar_projection: implemented
 
 release:
   latest_tag: null

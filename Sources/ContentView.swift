@@ -10136,14 +10136,18 @@ struct VerticalTabsSidebar: View {
             workspace.customSidebarWorkspaceSnapshot(
                 index: index,
                 selectedId: selectedId,
-                unreadCount: sidebarUnread.unreadCount(forWorkspaceId: workspace.id)
+                unreadCount: sidebarUnread.unreadCount(forWorkspaceId: workspace.id),
+                provenanceDisplaySnapshot: tabManager.workProvenanceRuntime?
+                    .workspaceDisplayCurrentStateSnapshot(for: workspace)
             )
         }
         let selectedWorkspace = tabManager.tabs.first { $0.id == selectedId }
         let snapshot = CustomSidebarContextSnapshot(
             workspaces: workspaces,
             selectedWorkspaceId: selectedId,
-            selectedWorkspaceTitle: selectedWorkspace?.customTitle ?? selectedWorkspace?.title ?? "",
+            selectedWorkspaceTitle: selectedWorkspace.flatMap {
+                tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: $0)?.title
+            } ?? selectedWorkspace?.customTitle ?? selectedWorkspace?.title ?? "",
             totalUnreadCount: sidebarUnread.totalUnreadCount,
             now: now
         )
@@ -11248,16 +11252,21 @@ struct VerticalTabsSidebar: View {
     }
 
     private func extensionWorkspaceSnapshot(for workspace: Workspace) -> BmuxSidebarProviderWorkspace {
-        let rootPath = extensionSidebarRootPath(for: workspace)
-        let pullRequests = workspace.sidebarPullRequestsInDisplayOrder()
+        let provenanceDisplaySnapshot = tabManager.workProvenanceRuntime?
+            .workspaceDisplayCurrentStateSnapshot(for: workspace)
+        let rootPath = provenanceDisplaySnapshot?.currentDirectory ?? extensionSidebarRootPath(for: workspace)
+        let pullRequests = providerPullRequests(
+            workspace: workspace,
+            provenanceDisplaySnapshot: provenanceDisplaySnapshot
+        )
         return BmuxSidebarProviderWorkspace(
             id: workspace.id,
-            title: workspace.title,
+            title: provenanceDisplaySnapshot?.title ?? workspace.title,
             customDescription: workspace.customDescription,
             isPinned: workspace.isPinned,
             rootPath: rootPath,
             projectRootPath: workspace.extensionSidebarProjectRootPath,
-            branchSummary: workspace.sidebarGitBranchesInDisplayOrder().first?.branch,
+            branchSummary: provenanceDisplaySnapshot?.branch ?? workspace.sidebarGitBranchesInDisplayOrder().first?.branch,
             remoteDisplayTarget: workspace.remoteDisplayTarget,
             remoteConnectionState: workspace.remoteConnectionState.rawValue,
             unreadCount: sidebarUnread.unreadCount(forWorkspaceId: workspace.id),
@@ -11265,24 +11274,43 @@ struct VerticalTabsSidebar: View {
             latestSubmittedMessage: workspace.latestSubmittedMessage,
             latestSubmittedAt: workspace.latestSubmittedAt,
             listeningPorts: workspace.listeningPorts,
-            pullRequestURLs: pullRequests.map { $0.url.absoluteString },
-            pullRequests: pullRequests.map {
-                BmuxSidebarProviderPullRequest(
-                    number: $0.number,
-                    label: $0.label,
-                    url: $0.url.absoluteString,
-                    status: $0.status.rawValue,
-                    ownerLogin: $0.ownerLogin,
-                    ownerURL: $0.ownerURL?.absoluteString,
-                    branch: $0.branch,
-                    isStale: $0.isStale
-                )
-            },
+            pullRequestURLs: pullRequests.map(\.url),
+            pullRequests: pullRequests,
             panelDirectories: workspace.sidebarFilesystemDirectoriesInDisplayOrder(),
             gitBranches: workspace.sidebarGitBranchesInDisplayOrder().map {
                 BmuxSidebarProviderGitBranch(branch: $0.branch, isDirty: $0.isDirty)
             }
         )
+    }
+
+    private func providerPullRequests(
+        workspace: Workspace,
+        provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot?
+    ) -> [BmuxSidebarProviderPullRequest] {
+        if let pullRequest = provenanceDisplaySnapshot?.pullRequest {
+            return [BmuxSidebarProviderPullRequest(
+                number: pullRequest.number,
+                label: String(localized: "sidebar.pullRequest.label", defaultValue: "PR"),
+                url: pullRequest.url?.absoluteString ?? "",
+                status: pullRequest.status ?? SidebarPullRequestStatus.open.rawValue,
+                ownerLogin: pullRequest.ownerLogin,
+                ownerURL: pullRequest.ownerURL?.absoluteString,
+                branch: pullRequest.branch,
+                isStale: pullRequest.isStale
+            )]
+        }
+        return workspace.sidebarPullRequestsInDisplayOrder().map {
+            BmuxSidebarProviderPullRequest(
+                number: $0.number,
+                label: $0.label,
+                url: $0.url.absoluteString,
+                status: $0.status.rawValue,
+                ownerLogin: $0.ownerLogin,
+                ownerURL: $0.ownerURL?.absoluteString,
+                branch: $0.branch,
+                isStale: $0.isStale
+            )
+        }
     }
 
     private func extensionSidebarRootPath(for workspace: Workspace) -> String? {

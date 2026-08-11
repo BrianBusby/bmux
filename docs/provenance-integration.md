@@ -62,10 +62,12 @@ bmux still owns command parsing, Git path normalization, output compatibility, f
 
 Current truth: bmux observes deterministic workspace display facts, writes
 accepted evidence to Provenance Engine, and reads PE Workspace Display Current
-State for the built-in workspace tab row. The PE-backed row projection covers
-workspace title, current directory as branch/directory context when that detail
-is enabled, branch, accepted dirty state, PR number/status/url/branch/staleness,
-ticket id/url facts, and latest projection event id/sequence for freshness.
+State for the built-in workspace tab row, extension-sidebar workspace
+snapshots, and custom sidebar interpreter workspace contexts. The PE-backed
+projection covers workspace title, current directory as branch/directory context
+when that detail is enabled, branch, accepted dirty state, PR
+number/status/url/owner/branch/staleness, ticket id/url facts, and latest
+projection event id/sequence for freshness.
 
 bmux remains the local observer/producer for facts it can directly observe or
 fetch from APIs. The tab row does not independently infer current PR/status/

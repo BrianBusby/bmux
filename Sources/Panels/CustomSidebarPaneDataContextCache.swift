@@ -13,6 +13,7 @@ final class CustomSidebarPaneDataContextCache {
         now: Date,
         tabManager: TabManager,
         sidebarUnread: SidebarUnreadModel,
+        workspaceDisplayRevisionKey: String = "",
         build: () -> [String: SwiftValue]
     ) -> [String: SwiftValue] {
         let key = [
@@ -20,7 +21,8 @@ final class CustomSidebarPaneDataContextCache {
             ObjectIdentifier(tabManager).debugDescription,
             tabManager.selectedTabId?.uuidString ?? "",
             tabManager.tabs.map { $0.id.uuidString }.joined(separator: ","),
-            String(sidebarUnread.totalUnreadCount)
+            String(sidebarUnread.totalUnreadCount),
+            workspaceDisplayRevisionKey
         ].joined(separator: "|")
         if key == cachedKey, let cachedContext {
             return cachedContext

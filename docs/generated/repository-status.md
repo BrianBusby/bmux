@@ -27,7 +27,10 @@ Repository: `BrianBusby/bmux`
 | Capability | State |
 | --- | --- |
 | Workspace Display Current State Diagnostic | implemented |
+| Workspace Display Custom Sidebar Projection | implemented |
+| Workspace Display Owner Facts | implemented |
 | Workspace Display Projection | implemented |
+| Workspace Display Sidebar Projection | implemented |
 | Workspace Display Tab Projection | implemented |
 | Workspace Display Ticket Link Facts | implemented |
 
