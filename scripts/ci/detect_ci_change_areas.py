@@ -52,7 +52,7 @@ def forces_all_areas(path: str) -> bool:
     is_direct_ci_python = path.startswith(ci_script_prefix) and path.endswith(".py")
     if is_direct_ci_python:
         is_direct_ci_python = "/" not in path[len(ci_script_prefix) :]
-    return is_workflow(path) or is_direct_ci_python or path == "tests/test_ci_change_areas.py"
+    return path == ".github/workflows/ci.yml" or is_direct_ci_python or path == "tests/test_ci_change_areas.py"
 
 
 def is_web_change(path: str) -> bool:
@@ -108,7 +108,18 @@ def is_macos_neutral(path: str) -> bool:
     # `mux/` is the standalone bmux-mux Rust project, gated by its own `mux`
     # workflow; it never affects the macOS app build or app-host tests.
     if path.startswith(
-        ("docs/", "design/", "plans/", "ios/", "web/", "webviews/", "daemon/remote/", "mux/", "project/")
+        (
+            ".github/workflows/",
+            "docs/",
+            "design/",
+            "plans/",
+            "ios/",
+            "web/",
+            "webviews/",
+            "daemon/remote/",
+            "mux/",
+            "project/",
+        )
     ):
         return True
     return path in {

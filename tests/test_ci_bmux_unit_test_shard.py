@@ -82,6 +82,7 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory() as tmp:
         output = Path(tmp) / "repo-shard.args"
+        focused_shards: dict[str, int] = {}
         for shard in range(1, 5):
             result = subprocess.run(
                 [
@@ -113,8 +114,14 @@ def main() -> int:
                 if focused_selector in shard_selectors:
                     print(f"FAIL: focused gate selector should not be folded into shard: {focused_selector}")
                     return 1
+            first_line = result.stdout.splitlines()[0]
+            focused_shards[f"shard-{shard}"] = int(first_line.split("weight ", 1)[1].split(",", 1)[0])
 
-    print("PASS: bmuxTests sharding covers extension methods and leaves focused gates explicit")
+    if max(focused_shards.values()) - min(focused_shards.values()) > 1:
+        print(f"FAIL: shard weights drifted out of balance: {focused_shards}")
+        return 1
+
+    print("PASS: bmuxTests sharding covers extension methods, balances weights, and leaves focused gates explicit")
     return 0
 
 

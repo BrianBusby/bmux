@@ -77,19 +77,48 @@ check_build_lag_deriveddata_cache_path() {
     in_job && /- name: Cache DerivedData/ { in_cache=1; after_cache=1; next }
     in_cache && /^[[:space:]]*- name:/ { in_cache=0 }
     in_cache && /path:[[:space:]]*\$\{\{ runner\.temp \}\}\/bmux-deriveddata-tests-build-and-lag/ { saw_cache_path=1 }
+    in_cache && /restore-keys:/ { saw_restore_keys=1 }
+    in_cache && /deriveddata-build-\$\{\{ hashFiles\('\''bmux\.xcodeproj\/project\.xcworkspace\/xcshareddata\/swiftpm\/Package\.resolved'\''\) \}\}-/ { saw_package_restore_key=1 }
+    in_cache && /deriveddata-build-/ { saw_general_restore_key=1 }
     in_cache && /Library\/Developer\/Xcode\/DerivedData/ { saw_home_cache_path=1 }
 
     in_job && after_cache && /rm -rf "\$BMUX_DERIVED_DATA_PATH"/ { saw_post_cache_delete=1 }
 
     END {
-      exit !(saw_prepare_path && saw_cache_path && !saw_dynamic_prepare_path && !saw_home_cache_path && !saw_post_cache_delete)
+      exit !(saw_prepare_path && saw_cache_path && saw_restore_keys && saw_package_restore_key && saw_general_restore_key && !saw_dynamic_prepare_path && !saw_home_cache_path && !saw_post_cache_delete)
     }
   ' "$CI_FILE"; then
-    echo "FAIL: tests-build-and-lag DerivedData cache must restore into the stable RUNNER_TEMP path xcodebuild uses, and must not delete that path after restore"
+    echo "FAIL: tests-build-and-lag DerivedData cache must restore into the stable RUNNER_TEMP path xcodebuild uses, use fallback restore keys, and must not delete that path after restore"
     exit 1
   fi
 
-  echo "PASS: tests-build-and-lag DerivedData cache path matches xcodebuild path"
+  echo "PASS: tests-build-and-lag DerivedData cache path and fallback restore keys match xcodebuild path"
+}
+
+check_app_host_focused_gate_distribution() {
+  if ! awk '
+    /^  app-host-unit-tests:/ { in_job=1; next }
+    in_job && /^  [^[:space:]#][^:]*:[[:space:]]*(#.*)?$/ { in_job=0 }
+    in_job && /BMUX_APP_HOST_FOCUSED_REGRESSION_SHARD/ { saw_old_single_shard=1 }
+    in_job && /BMUX_APP_HOST_SPLIT_THEME_REGRESSION_SHARD:[[:space:]]*"3"/ { saw_split=1 }
+    in_job && /BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD:[[:space:]]*"1"/ { saw_browser=1 }
+    in_job && /BMUX_APP_HOST_OPTION_ALT_REGRESSION_SHARD:[[:space:]]*"2"/ { saw_option=1 }
+    in_job && /BMUX_APP_HOST_THEME_PICKER_REGRESSION_SHARD:[[:space:]]*"4"/ { saw_theme=1 }
+    in_job && /BMUX_APP_HOST_CLI_NO_SOCKET_REGRESSION_SHARD:[[:space:]]*"4"/ { saw_cli=1 }
+    in_job && /fromJSON\(env\.BMUX_APP_HOST_SPLIT_THEME_REGRESSION_SHARD\)/ { saw_split_if=1 }
+    in_job && /fromJSON\(env\.BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD\)/ { saw_browser_if=1 }
+    in_job && /fromJSON\(env\.BMUX_APP_HOST_OPTION_ALT_REGRESSION_SHARD\)/ { saw_option_if=1 }
+    in_job && /fromJSON\(env\.BMUX_APP_HOST_THEME_PICKER_REGRESSION_SHARD\)/ { saw_theme_if=1 }
+    in_job && /fromJSON\(env\.BMUX_APP_HOST_CLI_NO_SOCKET_REGRESSION_SHARD\)/ { saw_cli_if=1 }
+    END {
+      exit !(saw_split && saw_browser && saw_option && saw_theme && saw_cli && saw_split_if && saw_browser_if && saw_option_if && saw_theme_if && saw_cli_if && !saw_old_single_shard)
+    }
+  ' "$CI_FILE"; then
+    echo "FAIL: app-host focused regressions must be distributed across shard-specific gates, not concentrated on one shard"
+    exit 1
+  fi
+
+  echo "PASS: app-host focused regressions are distributed across shards"
 }
 
 check_e2e_runner_fallbacks() {
@@ -871,6 +900,7 @@ check_macos_runner "$CI_FILE" "release-build"
 check_release_build_runner_disk_capacity
 check_display_runner_identity_guard "$CI_FILE" "tests-build-and-lag"
 check_build_lag_deriveddata_cache_path
+check_app_host_focused_gate_distribution
 
 # build-ghosttykit.yml
 check_macos_runner "$GHOSTTYKIT_FILE" "build-ghosttykit"

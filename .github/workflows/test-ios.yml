@@ -10,7 +10,7 @@ on:
       - "vendor/stack-auth-swift-sdk-prerelease/**"
       # The namespace-type convention rule scans every package, so any package
       # change must run the conventions lint job (heavier iOS jobs still gate
-      # on iOS-owned paths via should_run).
+      # on iOS-owned paths via the detector outputs).
       - "Packages/**"
       - "scripts/lint-ios-package-conventions.sh"
       - "scripts/lint-namespace-types-baseline.txt"
@@ -38,12 +38,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && (inputs.ref || github.ref) || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   detect-ios-changes:
     runs-on: ${{ vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
     timeout-minutes: 5
     outputs:
-      should_run: ${{ steps.detect.outputs.should_run }}
+      should_run_mobile_package: ${{ steps.detect.outputs.should_run_mobile_package }}
+      should_run_simulator: ${{ steps.detect.outputs.should_run_simulator }}
       should_lint: ${{ steps.detect.outputs.should_lint }}
     steps:
       - name: Checkout
@@ -62,17 +67,24 @@ jobs:
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" != "pull_request" ]; then
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "should_run_mobile_package=true" >> "$GITHUB_OUTPUT"
+            echo "should_run_simulator=true" >> "$GITHUB_OUTPUT"
             echo "should_lint=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           BASE_MERGE_BASE="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
           git diff --name-only "$BASE_MERGE_BASE" "$HEAD_SHA" > /tmp/changed-files.txt
-          if grep -Eq '^(ios/|Packages/Shared/|Packages/iOS/|Sources/Mobile/|vendor/stack-auth-swift-sdk-prerelease/|scripts/lint-ios-package-conventions\.sh$)' /tmp/changed-files.txt; then
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          if grep -Eq '^(ios/|Packages/Shared/|Packages/iOS/|Sources/Mobile/|vendor/stack-auth-swift-sdk-prerelease/)' /tmp/changed-files.txt; then
+            echo "should_run_mobile_package=true" >> "$GITHUB_OUTPUT"
           else
-            echo "No iOS-owned files changed; skipping iOS tests."
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "No iOS package/model files changed; skipping mobile package tests."
+            echo "should_run_mobile_package=false" >> "$GITHUB_OUTPUT"
+          fi
+          if grep -Eq '^(ios/|Packages/iOS/|vendor/stack-auth-swift-sdk-prerelease/|\.github/workflows/test-ios\.yml$)' /tmp/changed-files.txt; then
+            echo "should_run_simulator=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No iOS app/simulator-owned files changed; skipping iOS simulator tests."
+            echo "should_run_simulator=false" >> "$GITHUB_OUTPUT"
           fi
           # The conventions lint (free-function ban, namespace-type rule, ...)
           # covers every package, so it runs for any Packages/ change too.
@@ -109,7 +121,7 @@ jobs:
 
   mobile-core-package:
     needs: detect-ios-changes
-    if: ${{ needs.detect-ios-changes.outputs.should_run == 'true' }}
+    if: ${{ needs.detect-ios-changes.outputs.should_run_mobile_package == 'true' }}
     runs-on: ${{ vars.MACOS_RUNNER_IOS || 'blacksmith-6vcpu-macos-26' }}
     timeout-minutes: 10
     steps:
@@ -156,7 +168,7 @@ jobs:
 
   ios-simulator:
     needs: detect-ios-changes
-    if: ${{ needs.detect-ios-changes.outputs.should_run == 'true' }}
+    if: ${{ needs.detect-ios-changes.outputs.should_run_simulator == 'true' }}
     # Blacksmith, not the bare `macos-26` label (which our self-hosted fleet
     # carries). iOS simulator XCTest runs inside the Simulator, not as a
     # foregrounded Mac app, so the Blacksmith macOS foreground limitation that
@@ -405,14 +417,31 @@ jobs:
 
           needs = json.loads(os.environ["IOS_NEEDS"])
 
-          # The routing job must succeed for its should_run/should_lint outputs to
-          # be trustworthy; the suites below run or skip based on those outputs.
-          if needs["detect-ios-changes"]["result"] != "success":
-              print(f"detect-ios-changes: {needs['detect-ios-changes']['result']}", file=sys.stderr)
+          routing = needs["detect-ios-changes"]
+
+          # The routing job must succeed for its outputs to be trustworthy; the
+          # suites below run or skip based on those outputs.
+          if routing["result"] != "success":
+              print(f"detect-ios-changes: {routing['result']}", file=sys.stderr)
               sys.exit(1)
 
-          # A suite that opted out via the routing filter reports "skipped", which
-          # is fine; a suite that actually ran and failed must block the merge.
+          outputs = routing.get("outputs", {})
+          required_outputs = {
+              "package-conventions-lint": "should_lint",
+              "mobile-core-package": "should_run_mobile_package",
+              "ios-simulator": "should_run_simulator",
+          }
+
+          for job_name, output_name in required_outputs.items():
+              if outputs.get(output_name) == "true" and needs[job_name]["result"] != "success":
+                  print(
+                      f"{job_name} was required by {output_name}=true but result was {needs[job_name]['result']}",
+                      file=sys.stderr,
+                  )
+                  sys.exit(1)
+
+          # A suite that opted out via the routing filter reports "skipped",
+          # which is fine; a suite that actually ran and failed must block.
           allowed = {"success", "skipped"}
           bad = {
               name: data["result"]
