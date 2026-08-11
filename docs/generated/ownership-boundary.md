@@ -12,27 +12,14 @@ Regenerate with: ./scripts/project-docs generate
 
 | Responsibility | Owner |
 | --- | --- |
-| Agent Orchestration | Bmux |
-| Authorization Filtering Semantics | Provenance Engine |
-| Bounded Context Packages | Provenance Engine |
 | Bounded provenance queries | Provenance Engine |
-| Capture Adapters | Bmux |
 | Capture policy | Bmux |
-| Compiled Knowledge Artifacts | Provenance Engine |
-| Desktop And Mobile Ux | Bmux |
 | Deterministic Current State | Provenance Engine |
 | Durable evidence | Provenance Engine |
-| Evidence Aware Retrieval | Provenance Engine |
 | Execution telemetry | Bmux |
-| Knowledge Compiler Framework | Provenance Engine |
-| Live Terminal Session Transport | Bmux |
-| Local And Shared Evidence Store Semantics | Provenance Engine |
 | Presentation | Bmux |
-| Prompt Context Assembly Policy | Bmux |
 | Runtime orchestration | Bmux |
 | Schema compatibility | Provenance Engine |
-| Service Contract Compatibility | Provenance Engine |
-| Temporary Ui State | Bmux |
 | User interface | Bmux |
 | Workflow observation | Bmux |
 

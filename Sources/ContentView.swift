@@ -11151,11 +11151,9 @@ struct VerticalTabsSidebar: View {
         case .selectNextSurface:
             tabManager.selectNextSurfaceForAction()
             return .accepted
-
         case .selectPreviousSurface:
             tabManager.selectPreviousSurfaceForAction()
             return .accepted
-
         case .closeSurface(let workspaceId, let surfaceId):
             guard let workspace = tabManager.tabs.first(where: { $0.id == workspaceId }) else {
                 return .rejected(String(localized: "sidebar.extensions.action.workspaceNotFound", defaultValue: "Workspace not found"))
@@ -11165,23 +11163,16 @@ struct VerticalTabsSidebar: View {
             }
             tabManager.closePanelWithConfirmation(tabId: workspaceId, surfaceId: surfaceId)
             return .accepted
-
         case .splitTerminal(let workspaceId, let surfaceId, let direction):
             guard let splitDirection = splitDirection(from: direction) else {
                 return .rejected(String(localized: "sidebar.extensions.action.surfaceCreateRejected", defaultValue: "Surface could not be created"))
             }
-            switch tabManager.createTerminalSplitForAction(tabId: workspaceId, surfaceId: surfaceId, direction: splitDirection) {
-            case .created(let panel):
+            let outcome = tabManager.createTerminalSplitForAction(tabId: workspaceId, surfaceId: surfaceId, direction: splitDirection)
+            if let panel = outcome.panel {
                 return BmuxSidebarActionResult(accepted: true, message: panel.id.uuidString)
-            case .routedToRemote:
-                return BmuxSidebarActionResult(
-                    accepted: true,
-                    message: String(localized: "sidebar.extensions.action.remoteTmuxWindowRequested", defaultValue: "Remote tmux window requested")
-                )
-            case .failed:
-                return .rejected(String(localized: "sidebar.extensions.action.surfaceCreateRejected", defaultValue: "Surface could not be created"))
             }
-
+            let routedMessage = String(localized: "sidebar.extensions.action.remoteTmuxWindowRequested", defaultValue: "Remote tmux window requested")
+            return outcome.wasCreatedOrRouted ? BmuxSidebarActionResult(accepted: true, message: routedMessage) : .rejected(String(localized: "sidebar.extensions.action.surfaceCreateRejected", defaultValue: "Surface could not be created"))
         case .splitBrowser(let workspaceId, let surfaceId, let direction, let urlString):
             let validatedURL = bmuxSidebarExtensionOptionalHTTPURL(from: urlString)
             guard validatedURL.accepted else {

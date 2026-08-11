@@ -3635,27 +3635,19 @@ class TabManager: ObservableObject {
 
     /// Select the next surface in the currently focused pane of the selected workspace
     @discardableResult
-    func selectNextSurfaceForAction() -> Workspace.SurfaceSelectionActionResult {
-        selectedWorkspace?.selectNextSurfaceForAction() ?? .notFound
-    }
+    func selectNextSurfaceForAction() -> Workspace.SurfaceSelectionActionResult { selectedWorkspace?.selectNextSurfaceForAction() ?? .notFound }
 
     /// Select the previous surface in the currently focused pane of the selected workspace
     @discardableResult
-    func selectPreviousSurfaceForAction() -> Workspace.SurfaceSelectionActionResult {
-        selectedWorkspace?.selectPreviousSurfaceForAction() ?? .notFound
-    }
+    func selectPreviousSurfaceForAction() -> Workspace.SurfaceSelectionActionResult { selectedWorkspace?.selectPreviousSurfaceForAction() ?? .notFound }
 
     /// Select a surface by index in the currently focused pane of the selected workspace
     @discardableResult
-    func selectSurfaceForAction(at index: Int) -> Workspace.SurfaceSelectionActionResult {
-        selectedWorkspace?.selectSurfaceForAction(at: index) ?? .notFound
-    }
+    func selectSurfaceForAction(at index: Int) -> Workspace.SurfaceSelectionActionResult { selectedWorkspace?.selectSurfaceForAction(at: index) ?? .notFound }
 
     /// Select the last surface in the currently focused pane of the selected workspace
     @discardableResult
-    func selectLastSurfaceForAction() -> Workspace.SurfaceSelectionActionResult {
-        selectedWorkspace?.selectLastSurfaceForAction() ?? .notFound
-    }
+    func selectLastSurfaceForAction() -> Workspace.SurfaceSelectionActionResult { selectedWorkspace?.selectLastSurfaceForAction() ?? .notFound }
 
     /// Create a new terminal surface in the focused pane of the selected workspace
     func newSurface() {

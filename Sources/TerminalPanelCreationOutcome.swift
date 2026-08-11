@@ -31,4 +31,9 @@ enum TerminalPanelCreationOutcome {
         if case .created(let p) = self { return p }
         return nil
     }
+
+    var wasCreatedOrRouted: Bool {
+        if case .failed = self { return false }
+        return true
+    }
 }

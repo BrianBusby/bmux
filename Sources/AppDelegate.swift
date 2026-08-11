@@ -4866,27 +4866,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         focus: Bool = true,
         focusWindow: Bool = true
     ) -> Bool {
-        moveSurface(
-            panelId: panelId,
-            toWorkspace: targetWorkspaceId,
-            targetPane: targetPane,
-            targetIndex: targetIndex,
-            splitTarget: splitTarget,
-            focus: focus,
-            focusWindow: focusWindow
-        )
-    }
-
-    @discardableResult
-    private func moveSurface(
-        panelId: UUID,
-        toWorkspace targetWorkspaceId: UUID,
-        targetPane: PaneID? = nil,
-        targetIndex: Int? = nil,
-        splitTarget: (orientation: SplitOrientation, insertFirst: Bool)? = nil,
-        focus: Bool = true,
-        focusWindow: Bool = true
-    ) -> Bool {
 #if DEBUG
         let moveStart = ProcessInfo.processInfo.systemUptime
         let splitLabel = splitTarget.map { split in
@@ -5175,7 +5154,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             "sourceWs=\(located.workspaceId.uuidString.prefix(5)) sourceWin=\(located.windowId.uuidString.prefix(5))"
         )
 #endif
-        let moved = moveSurface(
+        let moved = moveSurfaceForAction(
             panelId: located.panelId,
             toWorkspace: targetWorkspaceId,
             targetPane: targetPane,
@@ -15432,16 +15411,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                         direction: direction.canvasDirection
                     ) != nil
                 }
-                switch terminalContext.tabManager.createTerminalSplitForAction(
+                return terminalContext.tabManager.createTerminalSplitForAction(
                     tabId: terminalContext.workspaceId,
                     surfaceId: terminalContext.panelId,
                     direction: direction
-                ) {
-                case .created, .routedToRemote:
-                    return true
-                case .failed:
-                    return false
-                }
+                ).wasCreatedOrRouted
             }
             if let workspace = tabManager?.selectedWorkspace,
                workspace.layoutMode == .canvas {
@@ -15451,12 +15425,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                     direction: direction.canvasDirection
                 ) != nil
             }
-            switch tabManager?.createTerminalSplitForAction(direction: direction) {
-            case .some(.created), .some(.routedToRemote):
-                return true
-            case .some(.failed), nil:
-                return false
-            }
+            return tabManager?.createTerminalSplitForAction(direction: direction).wasCreatedOrRouted ?? false
         }()
 #if DEBUG
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in

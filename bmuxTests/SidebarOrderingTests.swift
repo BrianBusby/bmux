@@ -1179,10 +1179,8 @@ final class TerminalControllerSidebarDedupeTests: XCTestCase {
                 number: 42,
                 label: "PR",
                 url: url,
-                ownerLogin: nil,
-                ownerURL: nil,
-                status: .open,
-                branch: "feature/work"
+                ownerLogin: nil, ownerURL: nil,
+                status: .open, branch: "feature/work"
             )
         )
     }
