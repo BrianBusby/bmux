@@ -50,10 +50,10 @@ final class WorkspaceDisplayCurrentStateStore {
                 return
             }
             await MainActor.run {
-                guard snapshot.isNewerThan(snapshotsByStableWorkspaceID[stableWorkspaceID]) else {
+                guard snapshot.isNewerThan(self.snapshotsByStableWorkspaceID[stableWorkspaceID]) else {
                     return
                 }
-                snapshotsByStableWorkspaceID[stableWorkspaceID] = snapshot
+                self.snapshotsByStableWorkspaceID[stableWorkspaceID] = snapshot
                 notify(stableWorkspaceID)
             }
         }
