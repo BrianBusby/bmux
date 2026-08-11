@@ -10998,7 +10998,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                     let tab = tabManager.addTab()
                     guard let initialPanelId = tab.focusedPanelId else { return }
 
-                    _ = tabManager.newSplit(tabId: tab.id, surfaceId: initialPanelId, direction: .right)
+                    tabManager.createTerminalSplitForAction(tabId: tab.id, surfaceId: initialPanelId, direction: .right)
                     guard let targetPanelId = tab.focusedPanelId else { return }
                     // Find another panel that's not the currently focused one
                     let otherPanelId = tab.panels.keys.first(where: { $0 != targetPanelId })
@@ -15432,11 +15432,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                         direction: direction.canvasDirection
                     ) != nil
                 }
-                return terminalContext.tabManager.createSplit(
+                switch terminalContext.tabManager.createTerminalSplitForAction(
                     tabId: terminalContext.workspaceId,
                     surfaceId: terminalContext.panelId,
                     direction: direction
-                ) != nil
+                ) {
+                case .created, .routedToRemote:
+                    return true
+                case .failed:
+                    return false
+                }
             }
             if let workspace = tabManager?.selectedWorkspace,
                workspace.layoutMode == .canvas {
@@ -15446,7 +15451,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                     direction: direction.canvasDirection
                 ) != nil
             }
-            return tabManager?.createSplit(direction: direction) != nil
+            switch tabManager?.createTerminalSplitForAction(direction: direction) {
+            case .some(.created), .some(.routedToRemote):
+                return true
+            case .some(.failed), nil:
+                return false
+            }
         }()
 #if DEBUG
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in

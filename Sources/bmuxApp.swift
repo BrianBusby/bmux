@@ -1212,7 +1212,7 @@ struct bmuxApp: App {
         if AppDelegate.shared?.performSplitShortcut(direction: direction) == true {
             return
         }
-        tabManager.createSplit(direction: direction)
+        tabManager.createTerminalSplitForAction(direction: direction)
     }
 
     private func performBrowserSplitFromMenu(direction: SplitDirection) {

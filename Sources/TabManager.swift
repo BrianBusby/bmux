@@ -3674,20 +3674,18 @@ class TabManager: ObservableObject {
     /// Create a new split in the current tab
     @discardableResult
     func createSplit(direction: SplitDirection) -> UUID? {
-        guard let selectedTabId,
-              let tab = tabs.first(where: { $0.id == selectedTabId }),
-              let focusedPanelId = tab.focusedPanelId else { return nil }
-        return createSplit(tabId: selectedTabId, surfaceId: focusedPanelId, direction: direction)
+        createTerminalSplitForAction(direction: direction).panel?.id
     }
 
     /// Create a new split from an explicit source panel.
     @discardableResult
     func createSplit(tabId: UUID, surfaceId: UUID, direction: SplitDirection, focus: Bool = true) -> UUID? {
-        guard let tab = tabs.first(where: { $0.id == tabId }),
-              tab.panels[surfaceId] != nil else { return nil }
-        tab.clearSplitZoom()
-        sentryBreadcrumb("split.create", data: ["direction": String(describing: direction)])
-        return newSplit(tabId: tabId, surfaceId: surfaceId, direction: direction, focus: focus)
+        createTerminalSplitForAction(
+            tabId: tabId,
+            surfaceId: surfaceId,
+            direction: direction,
+            focus: focus
+        ).panel?.id
     }
 
     /// Create a new browser split from the currently focused panel.
@@ -3827,11 +3825,10 @@ class TabManager: ObservableObject {
         initialDividerPosition: CGFloat? = nil,
         remotePTYSessionID: String? = nil
     ) -> UUID? {
-        guard let tab = tabs.first(where: { $0.id == tabId }) else { return nil }
-        return tab.createTerminalSplitForAction(
-            from: surfaceId,
-            orientation: direction.orientation,
-            insertFirst: direction.insertFirst,
+        createTerminalSplitForAction(
+            tabId: tabId,
+            surfaceId: surfaceId,
+            direction: direction,
             focus: focus,
             workingDirectory: workingDirectory,
             initialCommand: initialCommand,

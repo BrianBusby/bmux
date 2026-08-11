@@ -2772,7 +2772,12 @@ class GhosttyApp {
                       let tabManager = app.tabManagerFor(tabId: tabId) ?? app.tabManager else {
                     return false
                 }
-                return tabManager.createSplit(tabId: tabId, surfaceId: surfaceId, direction: direction) != nil
+                switch tabManager.createTerminalSplitForAction(tabId: tabId, surfaceId: surfaceId, direction: direction) {
+                case .created, .routedToRemote:
+                    return true
+                case .failed:
+                    return false
+                }
             }
         case GHOSTTY_ACTION_RING_BELL:
             performOnMain {
@@ -7365,7 +7370,12 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
               let manager = app.tabManagerFor(tabId: tabId) ?? app.tabManager else {
             return false
         }
-        return manager.createSplit(tabId: tabId, surfaceId: surfaceId, direction: direction) != nil
+        switch manager.createTerminalSplitForAction(tabId: tabId, surfaceId: surfaceId, direction: direction) {
+        case .created, .routedToRemote:
+            return true
+        case .failed:
+            return false
+        }
     }
 
     @objc private func triggerFlash(_ sender: Any?) {

@@ -8108,7 +8108,7 @@ struct ContentView: View {
         }
         registry.register(commandId: "palette.terminalSplitRight") {
             if !executeConfiguredAction(id: BmuxSurfaceTabBarBuiltInAction.splitRight.configID) {
-                tabManager.createSplit(direction: .right)
+                tabManager.createTerminalSplitForAction(direction: .right)
             }
         }
         registry.register(commandId: "palette.forkAgentConversationRight") {
@@ -8131,7 +8131,7 @@ struct ContentView: View {
         }
         registry.register(commandId: "palette.terminalSplitDown") {
             if !executeConfiguredAction(id: BmuxSurfaceTabBarBuiltInAction.splitDown.configID) {
-                tabManager.createSplit(direction: .down)
+                tabManager.createTerminalSplitForAction(direction: .down)
             }
         }
         registry.register(commandId: "palette.terminalSplitBrowserRight") {
@@ -11167,11 +11167,20 @@ struct VerticalTabsSidebar: View {
             return .accepted
 
         case .splitTerminal(let workspaceId, let surfaceId, let direction):
-            guard let splitDirection = splitDirection(from: direction),
-                  let panelId = tabManager.createSplit(tabId: workspaceId, surfaceId: surfaceId, direction: splitDirection) else {
+            guard let splitDirection = splitDirection(from: direction) else {
                 return .rejected(String(localized: "sidebar.extensions.action.surfaceCreateRejected", defaultValue: "Surface could not be created"))
             }
-            return BmuxSidebarActionResult(accepted: true, message: panelId.uuidString)
+            switch tabManager.createTerminalSplitForAction(tabId: workspaceId, surfaceId: surfaceId, direction: splitDirection) {
+            case .created(let panel):
+                return BmuxSidebarActionResult(accepted: true, message: panel.id.uuidString)
+            case .routedToRemote:
+                return BmuxSidebarActionResult(
+                    accepted: true,
+                    message: String(localized: "sidebar.extensions.action.remoteTmuxWindowRequested", defaultValue: "Remote tmux window requested")
+                )
+            case .failed:
+                return .rejected(String(localized: "sidebar.extensions.action.surfaceCreateRejected", defaultValue: "Surface could not be created"))
+            }
 
         case .splitBrowser(let workspaceId, let surfaceId, let direction, let urlString):
             let validatedURL = bmuxSidebarExtensionOptionalHTTPURL(from: urlString)
