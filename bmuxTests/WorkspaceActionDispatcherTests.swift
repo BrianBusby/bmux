@@ -684,6 +684,98 @@ import Bonsplit
         #expect(manager.sidebarSelectedWorkspaceIds == [firstWorkspace.id])
     }
 
+    @Test func surfaceSelectionActionsSelectWithinFocusedSplitPane() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let pane = try #require(workspace.bonsplitController.focusedPaneId)
+        let firstSurfaceId = try #require(workspace.focusedPanelId)
+        _ = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: pane, focus: false).panel
+        )
+        _ = try #require(
+            workspace.createTerminalSurfaceForAction(inPane: pane, focus: false).panel
+        )
+        let orderedSurfaceIds = panelOrder(in: workspace, pane: pane)
+        guard orderedSurfaceIds.count == 3 else {
+            Issue.record("Expected three surfaces in the focused pane")
+            return
+        }
+
+        #expect(workspace.focusedPanelId == firstSurfaceId)
+        #expect(
+            manager.selectNextSurfaceForAction() == .selected(
+                surfaceId: orderedSurfaceIds[1],
+                paneId: pane
+            )
+        )
+        #expect(workspace.focusedPanelId == orderedSurfaceIds[1])
+        #expect(
+            manager.selectPreviousSurfaceForAction() == .selected(
+                surfaceId: firstSurfaceId,
+                paneId: pane
+            )
+        )
+        #expect(workspace.focusedPanelId == firstSurfaceId)
+        #expect(
+            manager.selectSurfaceForAction(at: 2) == .selected(
+                surfaceId: orderedSurfaceIds[2],
+                paneId: pane
+            )
+        )
+        #expect(workspace.focusedPanelId == orderedSurfaceIds[2])
+        #expect(
+            manager.selectLastSurfaceForAction() == .selected(
+                surfaceId: orderedSurfaceIds[2],
+                paneId: pane
+            )
+        )
+        #expect(workspace.selectSurfaceForAction(at: 99) == .notFound)
+        #expect(workspace.focusedPanelId == orderedSurfaceIds[2])
+    }
+
+    @Test func canvasSurfaceSelectionActionsUseWorkspaceSurfaceOrder() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let firstSurfaceId = try #require(workspace.focusedPanelId)
+        workspace.setLayoutMode(.canvas)
+
+        let secondSurfaceId = try #require(workspace.openNewCanvasPane(type: .terminal, focus: true))
+        let thirdSurfaceId = try #require(workspace.openNewCanvasPane(type: .terminal, focus: true))
+        let firstPane = try #require(workspace.bonsplitPaneId(forPanelId: firstSurfaceId))
+        let secondPane = try #require(workspace.bonsplitPaneId(forPanelId: secondSurfaceId))
+        let thirdPane = try #require(workspace.bonsplitPaneId(forPanelId: thirdSurfaceId))
+
+        #expect(
+            manager.selectSurfaceForAction(at: 0) == .selected(
+                surfaceId: firstSurfaceId,
+                paneId: firstPane
+            )
+        )
+        #expect(workspace.focusedPanelId == firstSurfaceId)
+        #expect(
+            manager.selectNextSurfaceForAction() == .selected(
+                surfaceId: secondSurfaceId,
+                paneId: secondPane
+            )
+        )
+        #expect(workspace.focusedPanelId == secondSurfaceId)
+        #expect(
+            manager.selectLastSurfaceForAction() == .selected(
+                surfaceId: thirdSurfaceId,
+                paneId: thirdPane
+            )
+        )
+        #expect(workspace.focusedPanelId == thirdSurfaceId)
+        #expect(
+            manager.selectNextSurfaceForAction() == .selected(
+                surfaceId: firstSurfaceId,
+                paneId: firstPane
+            )
+        )
+        #expect(manager.selectSurfaceForAction(at: 99) == .notFound)
+        #expect(workspace.focusedPanelId == firstSurfaceId)
+    }
+
     @Test func workspaceCreationActionCreatesThroughWorkspaceModelPolicy() throws {
         let manager = TabManager()
         let originalWorkspace = try #require(manager.tabs.first)

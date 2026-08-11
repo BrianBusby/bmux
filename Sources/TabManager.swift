@@ -3634,23 +3634,27 @@ class TabManager: ObservableObject {
     // MARK: - Surface Navigation
 
     /// Select the next surface in the currently focused pane of the selected workspace
-    func selectNextSurface() {
-        selectedWorkspace?.selectNextSurface()
+    @discardableResult
+    func selectNextSurfaceForAction() -> Workspace.SurfaceSelectionActionResult {
+        selectedWorkspace?.selectNextSurfaceForAction() ?? .notFound
     }
 
     /// Select the previous surface in the currently focused pane of the selected workspace
-    func selectPreviousSurface() {
-        selectedWorkspace?.selectPreviousSurface()
+    @discardableResult
+    func selectPreviousSurfaceForAction() -> Workspace.SurfaceSelectionActionResult {
+        selectedWorkspace?.selectPreviousSurfaceForAction() ?? .notFound
     }
 
     /// Select a surface by index in the currently focused pane of the selected workspace
-    func selectSurface(at index: Int) {
-        selectedWorkspace?.selectSurface(at: index)
+    @discardableResult
+    func selectSurfaceForAction(at index: Int) -> Workspace.SurfaceSelectionActionResult {
+        selectedWorkspace?.selectSurfaceForAction(at: index) ?? .notFound
     }
 
     /// Select the last surface in the currently focused pane of the selected workspace
-    func selectLastSurface() {
-        selectedWorkspace?.selectLastSurface()
+    @discardableResult
+    func selectLastSurfaceForAction() -> Workspace.SurfaceSelectionActionResult {
+        selectedWorkspace?.selectLastSurfaceForAction() ?? .notFound
     }
 
     /// Create a new terminal surface in the focused pane of the selected workspace
