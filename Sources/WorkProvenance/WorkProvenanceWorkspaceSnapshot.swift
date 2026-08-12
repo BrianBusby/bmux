@@ -5,12 +5,33 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
     /// Sendable pull-request display metadata captured from workspace state.
     struct PullRequest: Equatable, Sendable {
         let number: Int
+        let title: String?
         let url: String
         let ownerLogin: String?
         let ownerURL: String?
         let status: String
         let branch: String?
         let isStale: Bool
+
+        init(
+            number: Int,
+            title: String? = nil,
+            url: String,
+            ownerLogin: String?,
+            ownerURL: String?,
+            status: String,
+            branch: String?,
+            isStale: Bool
+        ) {
+            self.number = number
+            self.title = title
+            self.url = url
+            self.ownerLogin = ownerLogin
+            self.ownerURL = ownerURL
+            self.status = status
+            self.branch = branch
+            self.isStale = isStale
+        }
     }
 
     /// Runtime workspace identifier.
@@ -72,6 +93,7 @@ extension WorkProvenanceWorkspaceSnapshot.PullRequest {
     func replacingOwner(login: String?, url: String?) -> Self {
         Self(
             number: number,
+            title: title,
             url: self.url,
             ownerLogin: login,
             ownerURL: url,
