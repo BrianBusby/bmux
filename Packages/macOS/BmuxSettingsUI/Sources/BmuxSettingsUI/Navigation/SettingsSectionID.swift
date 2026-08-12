@@ -22,6 +22,7 @@ public enum SettingsSectionID: String, CaseIterable, Identifiable, Sendable, Has
     /// User/agent-authored custom sidebars: enable gate and renderer choice.
     case customSidebars
     case betaFeatures
+    case integrations
     case automation
     case browser
     case browserImport
@@ -45,6 +46,7 @@ public enum SettingsSectionID: String, CaseIterable, Identifiable, Sendable, Has
         case .sidebarAppearance: return "Sidebar"
         case .customSidebars: return String(localized: "settings.section.customSidebars", defaultValue: "Custom Sidebars")
         case .betaFeatures: return "Beta Features"
+        case .integrations: return String(localized: "settings.section.integrations", defaultValue: "Integrations")
         case .automation: return "Automation"
         case .browser: return "Browser"
         case .browserImport: return "Import Browser Data"
@@ -68,6 +70,7 @@ public enum SettingsSectionID: String, CaseIterable, Identifiable, Sendable, Has
         case .sidebarAppearance: return "sidebar.left"
         case .customSidebars: return "sidebar.squares.left"
         case .betaFeatures: return "exclamationmark.triangle"
+        case .integrations: return "point.3.connected.trianglepath.dotted"
         case .automation: return "wand.and.sparkles"
         case .browser: return "globe"
         case .browserImport: return "square.and.arrow.down"
@@ -93,6 +96,7 @@ public enum SettingsSectionID: String, CaseIterable, Identifiable, Sendable, Has
         case .sidebarAppearance: return "sidebar details branches material terminal background"
         case .customSidebars: return "custom sidebars vibe swift json interpreted renderer in-process remote worker isolated"
         case .betaFeatures: return "beta experimental unstable feed dock right sidebar"
+        case .integrations: return "linear github providers credentials api key token oauth external services issue tickets titles"
         case .automation: return "socket integrations hooks ports claude cursor gemini naming auto naming workspace tabs"
         case .browser: return "search engine links history theme"
         case .browserImport: return "browser import bookmarks history cookies"

@@ -153,6 +153,7 @@ struct SettingsRowAnchorResolutionTests {
         "setting:browser:http-allowlist",
         "setting:workspaceColors:palette",
         "setting:browser:enable-browser",
+        "setting:integrations:linear-api-key",
         "setting:browserImport:import-data",
         "setting:browserImport:import-hint",
         "setting:globalHotkey:enable-hotkey",

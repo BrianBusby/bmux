@@ -1495,10 +1495,12 @@
 		CE0D10080000000000000001 /* WorkProvenanceChangeSetRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */; };
 		740D49C5400756EF2E733E31 /* WorkProvenanceCheckpointRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */; };
 		CE0D10090000000000000001 /* WorkProvenanceCheckpointRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */; };
+		CE0E03070000000000000001 /* WorkProvenanceCompositeLinearAuthorizationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03070000000000000002 /* WorkProvenanceCompositeLinearAuthorizationProvider.swift */; };
 		CE0D100A0000000000000001 /* WorkProvenanceConfidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C26C989BEBFA4B46E0200B /* WorkProvenanceConfidence.swift */; };
 		DC4C271089CB9AD62EDB2011 /* WorkProvenanceConfidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C26C989BEBFA4B46E0200B /* WorkProvenanceConfidence.swift */; };
 		A7922EC65BA23500B8A1701D /* WorkProvenanceContributionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6F5C92F6635A34AEA3316E3 /* WorkProvenanceContributionRecord.swift */; };
 		CE0D100B0000000000000001 /* WorkProvenanceContributionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6F5C92F6635A34AEA3316E3 /* WorkProvenanceContributionRecord.swift */; };
+		CE0E03080000000000000001 /* WorkProvenanceEnvironmentLinearAuthorizationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03080000000000000002 /* WorkProvenanceEnvironmentLinearAuthorizationProvider.swift */; };
 		9C781FD93B69A794C73400D4 /* WorkProvenanceEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E5CD1397A128BCADC627D7C /* WorkProvenanceEvent.swift */; };
 		CE0D100C0000000000000001 /* WorkProvenanceEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E5CD1397A128BCADC627D7C /* WorkProvenanceEvent.swift */; };
 		3B011F688FB9988D8E79FDB4 /* WorkProvenanceEventPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A6C539CBB75A24F62E16605 /* WorkProvenanceEventPayload.swift */; };
@@ -1518,6 +1520,7 @@
 		D98713E6CE24785E075BF87F /* WorkProvenanceGitSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */; };
 		B53E0C6CEEEEFBE91CE39E0F /* WorkProvenanceGitStatusEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */; };
 		CE0D10250000000000000001 /* WorkProvenanceGitStatusEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */; };
+		CE0E03090000000000000001 /* WorkProvenanceLinearAuthorizationProviding.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03090000000000000002 /* WorkProvenanceLinearAuthorizationProviding.swift */; };
 		CE0E03050000000000000001 /* WorkProvenanceLinearTicketLinkResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03050000000000000002 /* WorkProvenanceLinearTicketLinkResolver.swift */; };
 		CE0E03020000000000000001 /* WorkProvenanceNoopPullRequestOwnerResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03020000000000000002 /* WorkProvenanceNoopPullRequestOwnerResolver.swift */; };
 		36915A74F7AA3930F34DF634 /* WorkProvenanceObservationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */; };
@@ -1537,6 +1540,7 @@
 		CE0D10180000000000000001 /* WorkProvenanceSessionRelationshipRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00020000000000000002 /* WorkProvenanceSessionRelationshipRecord.swift */; };
 		CE0B00030000000000000001 /* WorkProvenanceSessionTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00030000000000000002 /* WorkProvenanceSessionTree.swift */; };
 		CE0D10190000000000000001 /* WorkProvenanceSessionTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00030000000000000002 /* WorkProvenanceSessionTree.swift */; };
+		CE0E03100000000000000001 /* WorkProvenanceSettingsLinearAuthorizationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03100000000000000002 /* WorkProvenanceSettingsLinearAuthorizationProvider.swift */; };
 		85F5448A921FB8E003C27C30 /* WorkProvenanceSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398559F2CDF3DE88E7D65BDE /* WorkProvenanceSource.swift */; };
 		CE0D101A0000000000000001 /* WorkProvenanceSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398559F2CDF3DE88E7D65BDE /* WorkProvenanceSource.swift */; };
 		64D01BCF87DD42A09D0D2649 /* WorkProvenanceSQLiteDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F450598D29975B2FD348489 /* WorkProvenanceSQLiteDatabase.swift */; };
@@ -3131,8 +3135,10 @@
 		A5001219 /* WindowToolbarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowToolbarController.swift; sourceTree = "<group>"; };
 		11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceChangeSetRecord.swift; sourceTree = "<group>"; };
 		0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceCheckpointRecord.swift; sourceTree = "<group>"; };
+		CE0E03070000000000000002 /* WorkProvenanceCompositeLinearAuthorizationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceCompositeLinearAuthorizationProvider.swift; sourceTree = "<group>"; };
 		20C26C989BEBFA4B46E0200B /* WorkProvenanceConfidence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceConfidence.swift; sourceTree = "<group>"; };
 		D6F5C92F6635A34AEA3316E3 /* WorkProvenanceContributionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceContributionRecord.swift; sourceTree = "<group>"; };
+		CE0E03080000000000000002 /* WorkProvenanceEnvironmentLinearAuthorizationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceEnvironmentLinearAuthorizationProvider.swift; sourceTree = "<group>"; };
 		9E5CD1397A128BCADC627D7C /* WorkProvenanceEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceEvent.swift; sourceTree = "<group>"; };
 		5A6C539CBB75A24F62E16605 /* WorkProvenanceEventPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceEventPayload.swift; sourceTree = "<group>"; };
 		1EEBFF20EC9F40CE41A44411 /* WorkProvenanceEventType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceEventType.swift; sourceTree = "<group>"; };
@@ -3145,6 +3151,7 @@
 		95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitInspector.swift; sourceTree = "<group>"; };
 		3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitSnapshot.swift; sourceTree = "<group>"; };
 		BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitStatusEntry.swift; sourceTree = "<group>"; };
+		CE0E03090000000000000002 /* WorkProvenanceLinearAuthorizationProviding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceLinearAuthorizationProviding.swift; sourceTree = "<group>"; };
 		CE0E03050000000000000002 /* WorkProvenanceLinearTicketLinkResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceLinearTicketLinkResolver.swift; sourceTree = "<group>"; };
 		CE0E03020000000000000002 /* WorkProvenanceNoopPullRequestOwnerResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceNoopPullRequestOwnerResolver.swift; sourceTree = "<group>"; };
 		3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceObservationService.swift; sourceTree = "<group>"; };
@@ -3159,6 +3166,7 @@
 		447E35CF777CC9B4432D5BFA /* WorkProvenanceSessionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionRecord.swift; sourceTree = "<group>"; };
 		CE0B00020000000000000002 /* WorkProvenanceSessionRelationshipRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionRelationshipRecord.swift; sourceTree = "<group>"; };
 		CE0B00030000000000000002 /* WorkProvenanceSessionTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionTree.swift; sourceTree = "<group>"; };
+		CE0E03100000000000000002 /* WorkProvenanceSettingsLinearAuthorizationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSettingsLinearAuthorizationProvider.swift; sourceTree = "<group>"; };
 		398559F2CDF3DE88E7D65BDE /* WorkProvenanceSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSource.swift; sourceTree = "<group>"; };
 		2F450598D29975B2FD348489 /* WorkProvenanceSQLiteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSQLiteDatabase.swift; sourceTree = "<group>"; };
 		6AD4D726F26DF9FED2713BE6 /* WorkProvenanceSQLiteStatement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSQLiteStatement.swift; sourceTree = "<group>"; };
@@ -5003,6 +5011,9 @@
 				CE0E03010000000000000002 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift */,
 				2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */,
 				95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */,
+				CE0E03070000000000000002 /* WorkProvenanceCompositeLinearAuthorizationProvider.swift */,
+				CE0E03080000000000000002 /* WorkProvenanceEnvironmentLinearAuthorizationProvider.swift */,
+				CE0E03090000000000000002 /* WorkProvenanceLinearAuthorizationProviding.swift */,
 				CE0E03050000000000000002 /* WorkProvenanceLinearTicketLinkResolver.swift */,
 				3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */,
 				BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */,
@@ -5015,6 +5026,7 @@
 				C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */,
 				CE0E00010000000000000002 /* ExecutionTelemetryProvenanceProjectionService.swift */,
 				B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */,
+				CE0E03100000000000000002 /* WorkProvenanceSettingsLinearAuthorizationProvider.swift */,
 				CE0E01050000000000000002 /* WorkspaceDisplayCurrentStateFileWatcher.swift */,
 				CE0E01010000000000000002 /* WorkspaceDisplayCurrentStatePullRequestSnapshot.swift */,
 				CE0E01020000000000000002 /* WorkspaceDisplayCurrentStateSnapshot.swift */,
@@ -6367,8 +6379,10 @@
 				A5001209 /* WindowToolbarController.swift in Sources */,
 				70F48B3441FC810F8676C94F /* WorkProvenanceChangeSetRecord.swift in Sources */,
 				740D49C5400756EF2E733E31 /* WorkProvenanceCheckpointRecord.swift in Sources */,
+				CE0E03070000000000000001 /* WorkProvenanceCompositeLinearAuthorizationProvider.swift in Sources */,
 				DC4C271089CB9AD62EDB2011 /* WorkProvenanceConfidence.swift in Sources */,
 				A7922EC65BA23500B8A1701D /* WorkProvenanceContributionRecord.swift in Sources */,
+				CE0E03080000000000000001 /* WorkProvenanceEnvironmentLinearAuthorizationProvider.swift in Sources */,
 				9C781FD93B69A794C73400D4 /* WorkProvenanceEvent.swift in Sources */,
 				3B011F688FB9988D8E79FDB4 /* WorkProvenanceEventPayload.swift in Sources */,
 				4388F7BA10B93A7B912383BE /* WorkProvenanceEventType.swift in Sources */,
@@ -6381,6 +6395,7 @@
 				918962BA99BFA9005D41242F /* WorkProvenanceGitInspector.swift in Sources */,
 				D98713E6CE24785E075BF87F /* WorkProvenanceGitSnapshot.swift in Sources */,
 				B53E0C6CEEEEFBE91CE39E0F /* WorkProvenanceGitStatusEntry.swift in Sources */,
+				CE0E03090000000000000001 /* WorkProvenanceLinearAuthorizationProviding.swift in Sources */,
 				CE0E03050000000000000001 /* WorkProvenanceLinearTicketLinkResolver.swift in Sources */,
 				CE0E03020000000000000001 /* WorkProvenanceNoopPullRequestOwnerResolver.swift in Sources */,
 				36915A74F7AA3930F34DF634 /* WorkProvenanceObservationService.swift in Sources */,
@@ -6394,6 +6409,7 @@
 				A801809D8020AD996B4C0997 /* WorkProvenanceSessionRecord.swift in Sources */,
 				CE0B00020000000000000001 /* WorkProvenanceSessionRelationshipRecord.swift in Sources */,
 				CE0B00030000000000000001 /* WorkProvenanceSessionTree.swift in Sources */,
+				CE0E03100000000000000001 /* WorkProvenanceSettingsLinearAuthorizationProvider.swift in Sources */,
 				85F5448A921FB8E003C27C30 /* WorkProvenanceSource.swift in Sources */,
 				64D01BCF87DD42A09D0D2649 /* WorkProvenanceSQLiteDatabase.swift in Sources */,
 				796C1363040412DD2768987A /* WorkProvenanceSQLiteStatement.swift in Sources */,

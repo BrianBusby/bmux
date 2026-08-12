@@ -82,6 +82,7 @@ struct bmuxApp: App {
         // it owns localized search-index text for the process lifetime.
         let settingsCatalog = SettingCatalog()
         let configFileURL = BmuxConfigLocation().userConfigFile
+        let jsonConfigStore = JSONConfigStore(fileURL: configFileURL)
         // Relocate a pre-existing socket password out of the legacy
         // Application Support directory before any store reads it. The CLI reads
         // this file on every agent hook, and a cross-identity reach into
@@ -100,6 +101,9 @@ struct bmuxApp: App {
             .deletingLastPathComponent()
             ?? BmuxStateDirectory.url(homeDirectory: FileManager.default.homeDirectoryForCurrentUser)
         let secretStore = SecretFileStore(baseDirectory: secretBaseDirectory)
+        let keychainStore = KeychainSecretStore(
+            service: KeychainSecretStore.serviceName(bundleIdentifier: Bundle.main.bundleIdentifier)
+        )
 
         // Lift any plaintext socket-control password out of `bmux.json` into the
         // secure store, then scrub it from the config. This runs here, in the App
@@ -173,8 +177,9 @@ struct bmuxApp: App {
                 defaults: .standard,
                 migrating: settingsCatalog.all
             ),
-            jsonStore: JSONConfigStore(fileURL: configFileURL),
+            jsonStore: jsonConfigStore,
             secretStore: secretStore,
+            keychainStore: keychainStore,
             errorLog: SettingsErrorLog(),
             accountFlow: HostAccountFlow(
                 coordinator: authComposition.coordinator,
@@ -194,7 +199,17 @@ struct bmuxApp: App {
         )
         KeyboardShortcutSettings.settingsFileStore.applyDeferredManagedDefaultSideEffects()
         StartupBreadcrumbLog.append("app.init.keyboardShortcuts.sideEffectsApplied")
-        let workProvenanceRuntime = WorkProvenanceRuntime.live()
+        let linearAuthorizationProvider = WorkProvenanceCompositeLinearAuthorizationProvider([
+            WorkProvenanceEnvironmentLinearAuthorizationProvider(),
+            WorkProvenanceSettingsLinearAuthorizationProvider(
+                keychainStore: keychainStore,
+                jsonStore: jsonConfigStore,
+                catalog: settingsCatalog
+            ),
+        ])
+        let workProvenanceRuntime = WorkProvenanceRuntime.live(
+            linearAuthorizationProvider: linearAuthorizationProvider
+        )
         self.workProvenanceRuntime = workProvenanceRuntime
         var provenanceFields = [
             "enabled": workProvenanceRuntime.isEnabled ? "1" : "0"

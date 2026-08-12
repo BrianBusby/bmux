@@ -10,6 +10,7 @@ import SwiftUI
 public struct ResetSection: View {
     private let defaultsStore: UserDefaultsSettingsStore
     private let jsonStore: JSONConfigStore
+    private let keychainStore: KeychainSecretStore
     private let catalog: SettingCatalog
     private let hostActions: SettingsHostActions
 
@@ -18,16 +19,19 @@ public struct ResetSection: View {
     /// - Parameters:
     ///   - defaultsStore: Store that clears UserDefaults-backed settings.
     ///   - jsonStore: Store that clears JSON-backed settings.
+    ///   - keychainStore: Store that clears Keychain-backed settings secrets.
     ///   - catalog: Catalog containing every setting the reset action covers.
     ///   - hostActions: Host callbacks for app-owned live-refresh side effects.
     public init(
         defaultsStore: UserDefaultsSettingsStore,
         jsonStore: JSONConfigStore,
+        keychainStore: KeychainSecretStore,
         catalog: SettingCatalog,
         hostActions: SettingsHostActions
     ) {
         self.defaultsStore = defaultsStore
         self.jsonStore = jsonStore
+        self.keychainStore = keychainStore
         self.catalog = catalog
         self.hostActions = hostActions
     }
@@ -56,6 +60,7 @@ public struct ResetSection: View {
         await defaultsStore.resetAll(catalog.all)
         for key in catalog.all {
             await key.resetInJSON(jsonStore)
+            await key.resetInKeychain(keychainStore)
         }
         NotificationCenter.default.post(name: GlobalFontMagnification.didChangeNotification, object: nil)
         hostActions.resetAllSettingsSideEffects()
