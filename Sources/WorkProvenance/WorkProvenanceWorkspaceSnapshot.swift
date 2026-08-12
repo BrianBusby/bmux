@@ -1,3 +1,4 @@
+import BmuxSidebar
 import Foundation
 
 /// Sendable workspace state needed by work provenance observation.
@@ -69,31 +70,56 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
 }
 
 extension WorkProvenanceWorkspaceSnapshot.PullRequest {
-    func replacingOwner(login: String?, url: String?) -> Self {
+    func replacingOwner(login: String?, url: String?, headBranch: String? = nil) -> Self {
         Self(
             number: number,
             url: self.url,
             ownerLogin: login,
             ownerURL: url,
             status: status,
-            branch: branch,
+            branch: Self.normalizedNonEmpty(headBranch) ?? branch,
             isStale: isStale
         )
+    }
+
+    private static func normalizedNonEmpty(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
     }
 }
 
 private extension Workspace {
     func provenancePullRequestSnapshot() -> WorkProvenanceWorkspaceSnapshot.PullRequest? {
         let state = pullRequest ?? sidebarPullRequestsInDisplayOrder().first
-        guard let state else { return nil }
-        return WorkProvenanceWorkspaceSnapshot.PullRequest(
-            number: state.number,
-            url: state.url.absoluteString,
-            ownerLogin: state.ownerLogin,
-            ownerURL: state.ownerURL?.absoluteString,
-            status: state.status.rawValue,
-            branch: state.branch,
-            isStale: state.isStale
-        )
+        if let state {
+            return WorkProvenanceWorkspaceSnapshot.PullRequest(
+                number: state.number,
+                url: state.url.absoluteString,
+                ownerLogin: state.ownerLogin,
+                ownerURL: state.ownerURL?.absoluteString,
+                status: state.status.rawValue,
+                branch: state.branch,
+                isStale: state.isStale
+            )
+        }
+
+        for message in [latestSubmittedMessage, latestConversationMessage] {
+            guard let mention = Self.submittedPromptPullRequestMention(from: message) else {
+                continue
+            }
+            return WorkProvenanceWorkspaceSnapshot.PullRequest(
+                number: mention.number,
+                url: mention.url.absoluteString,
+                ownerLogin: nil,
+                ownerURL: nil,
+                status: SidebarPullRequestStatus.open.rawValue,
+                branch: nil,
+                isStale: false
+            )
+        }
+        return nil
     }
 }

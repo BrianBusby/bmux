@@ -14909,12 +14909,12 @@ struct TabItemView: View, Equatable {
             return verticalBranchDirectoryLines(orderedPanelIds: orderedPanelIds)
         }()
         let branchLinesContainBranch = sidebarShowGitBranch && branchDirectoryLines.contains { $0.branch != nil }
-        let pullRequestRows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay] = {
-            if let provenancePullRequestDisplay {
-                return [provenancePullRequestDisplay]
-            }
-            return []
-        }()
+        let pullRequestRows = SidebarWorkspaceSnapshotBuilder.pullRequestRows(
+            whenVisible: detailVisibility.showsPullRequests,
+            provenance: provenancePullRequestDisplay,
+            live: tab.sidebarPullRequestsInDisplayOrder(orderedPanelIds: orderedPanelIds),
+            promptMessages: [tab.latestSubmittedMessage, tab.latestConversationMessage]
+        )
         let displayedPullRequestNumbers = Set(pullRequestRows.map(\.number))
         let ticketRows = provenanceTicketDisplays
         return SidebarWorkspaceSnapshotBuilder.Snapshot(

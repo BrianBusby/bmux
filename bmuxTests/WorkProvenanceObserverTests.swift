@@ -166,7 +166,8 @@ struct WorkProvenanceObserverTests {
             pullRequestOwnerResolver: FakePullRequestOwnerResolver(ownersByURL: [
                 "https://github.com/manaflow-ai/bmux/pull/42": WorkProvenancePullRequestOwner(
                     login: "brianbusby",
-                    url: "https://github.com/brianbusby"
+                    url: "https://github.com/brianbusby",
+                    headBranch: "ste-1964-canonical-domain-mutation-paths"
                 )
             ]),
             dateProvider: { Date(timeIntervalSince1970: 500) }
@@ -230,58 +231,61 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.isDirty == false)
         #expect(display.display?.latestEventID != nil)
         #expect(display.display?.latestEventSequence == 3)
-        #expect(display.display?.ticketIDs == [])
+        #expect(display.display?.ticketIDs == ["STE-1964"])
         #expect(display.display?.ticketLinks == [])
     }
 
+    @MainActor
     @Test
-    func promptLinkedPullRequestDoesNotInheritAmbientBranchTicket() async throws {
-        let fixture = try StoreFixture()
-        defer { fixture.remove() }
-        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
-        let repositoryRoot = "/tmp/bmux-prompt-linked-pr-repo"
-        let snapshot = WorkProvenanceGitSnapshot(
-            repositoryRoot: repositoryRoot,
-            commonDirectory: "/tmp/bmux-prompt-linked-pr-repo/.git",
-            remoteSlug: "CompanyCam/Company-Cam-API",
-            branch: "ste-1967-send-company-industry-key-to-amplitude-pr26096",
-            headCommit: "1111111111111111111111111111111111111111",
-            isDirty: false,
-            statusEntries: []
-        )
-        let service = WorkProvenanceObservationService(
-            client: client,
-            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
-            dateProvider: { Date(timeIntervalSince1970: 550) }
-        )
-        let stableWorkspaceID = UUID(uuidString: "99999999-9999-9999-9999-999999999999")!
-        let workspace = WorkProvenanceWorkspaceSnapshot(
-            workspaceID: UUID(uuidString: "77777777-7777-7777-7777-777777777777")!,
-            stableWorkspaceID: stableWorkspaceID,
-            title: "Here s comment docs ai-guidelines pull-requests md",
-            currentDirectory: repositoryRoot,
-            branch: "ste-1967-send-company-industry-key-to-amplitude-pr26096",
-            pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
-                number: 26117,
-                url: "https://github.com/CompanyCam/Company-Cam-API/pull/26117",
-                ownerLogin: nil,
-                ownerURL: nil,
-                status: "open",
-                branch: nil,
-                isStale: false
+    func promptLinkedPullRequestTicketsFollowResolvedPRBranchOnly() async throws {
+        let ambientBranch = "ste-1967-send-company-industry-key-to-amplitude-pr26096"
+        let pullRequestURL = "https://github.com/CompanyCam/Company-Cam-API/pull/26117"
+        let cases: [(String, String?, [String])] = [
+            ("unresolved", nil, []),
+            ("resolved", "ste-26117-clean-up-starter-template", ["STE-26117"])
+        ]
+        for (suffix, resolvedBranch, expectedTickets) in cases {
+            let fixture = try StoreFixture()
+            defer { fixture.remove() }
+            let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+            let repositoryRoot = "/tmp/bmux-prompt-linked-pr-\(suffix)-repo"
+            let gitSnapshot = WorkProvenanceGitSnapshot(
+                repositoryRoot: repositoryRoot,
+                commonDirectory: "\(repositoryRoot)/.git",
+                remoteSlug: "CompanyCam/Company-Cam-API",
+                branch: ambientBranch,
+                headCommit: "1111111111111111111111111111111111111111",
+                isDirty: false,
+                statusEntries: []
             )
-        )
+            let service = WorkProvenanceObservationService(
+                client: client,
+                gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: gitSnapshot]),
+                pullRequestOwnerResolver: FakePullRequestOwnerResolver(ownersByURL: resolvedBranch.map {
+                    [pullRequestURL: WorkProvenancePullRequestOwner(login: "reviewer", url: "https://github.com/reviewer", headBranch: $0)]
+                } ?? [:]),
+                dateProvider: { Date(timeIntervalSince1970: 550) }
+            )
+            let manager = TabManager()
+            let liveWorkspace = manager.tabs[0]
+            let panelId = try #require(liveWorkspace.focusedPanelId)
+            liveWorkspace.currentDirectory = repositoryRoot
+            liveWorkspace.updatePanelGitBranch(panelId: panelId, branch: ambientBranch, isDirty: false)
+            _ = try #require(manager.handlePromptSubmit(workspaceId: liveWorkspace.id, message: "review \(pullRequestURL)", surfaceId: panelId, iMessageModeEnabled: false))
+            liveWorkspace.clearSidebarPullRequestMetadata()
 
-        await service.observeWorkspaceSnapshot(workspace)
+            await service.observeWorkspaceSnapshot(WorkProvenanceWorkspaceSnapshot(workspace: liveWorkspace))
+            let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: liveWorkspace.stableId.uuidString))
 
-        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
-
-        #expect(display.found)
-        #expect(display.display?.branch == "ste-1967-send-company-industry-key-to-amplitude-pr26096")
-        #expect(display.display?.pullRequestNumber == 26117)
-        #expect(display.display?.pullRequestURL == "https://github.com/CompanyCam/Company-Cam-API/pull/26117")
-        #expect(display.display?.pullRequestBranch == nil)
-        #expect(display.display?.ticketIDs == [] && display.display?.ticketLinks == [])
+            #expect(liveWorkspace.sidebarPullRequestsInDisplayOrder().isEmpty)
+            #expect(display.found)
+            #expect(display.display?.branch == ambientBranch)
+            #expect(display.display?.pullRequestNumber == 26117)
+            #expect(display.display?.pullRequestURL == pullRequestURL)
+            #expect(display.display?.pullRequestBranch == resolvedBranch)
+            #expect(display.display?.ticketIDs == expectedTickets)
+            #expect(display.display?.ticketLinks == [])
+        }
     }
 
     @Test

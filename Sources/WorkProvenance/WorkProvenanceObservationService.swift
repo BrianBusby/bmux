@@ -152,10 +152,11 @@ actor WorkProvenanceObservationService {
         for workspace: WorkProvenanceWorkspaceSnapshot,
         gitSnapshot: WorkProvenanceGitSnapshot?
     ) async throws {
-        // Ticket/work-item association is PE-owned. bmux only writes raw display evidence here.
-        let ticketIDs: [String] = []
-        let ticketLinks: [ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord] = []
         let pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest)
+        // Keep ticket association tied to explicit PR evidence. Branch-only
+        // workspaces must not inherit ambient ticket keys from the current repo.
+        let ticketIDs = Self.ticketIDs(branchNames: [pullRequest?.branch].compactMap { $0 })
+        let ticketLinks: [ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord] = []
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
             title: workspace.title,
@@ -229,26 +230,35 @@ actor WorkProvenanceObservationService {
         _ pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest?
     ) async -> WorkProvenanceWorkspaceSnapshot.PullRequest? {
         guard let pullRequest else { return nil }
-        if let ownerLogin = Self.normalizedNonEmpty(pullRequest.ownerLogin) {
+        let existingOwnerLogin = Self.normalizedNonEmpty(pullRequest.ownerLogin)
+        let existingOwnerURL = existingOwnerLogin.map {
+            Self.normalizedOwnerURL(pullRequest.ownerURL, login: $0)
+        } ?? nil
+        if let ownerLogin = existingOwnerLogin,
+           Self.normalizedNonEmpty(pullRequest.branch) != nil {
             return pullRequest.replacingOwner(
                 login: ownerLogin,
-                url: Self.normalizedOwnerURL(pullRequest.ownerURL, login: ownerLogin)
+                url: existingOwnerURL
             )
         }
         if let cachedOwner = resolvedPullRequestOwnersByURL[pullRequest.url] {
+            let ownerLogin = existingOwnerLogin ?? cachedOwner.login
             return pullRequest.replacingOwner(
-                login: cachedOwner.login,
-                url: Self.normalizedOwnerURL(cachedOwner.url, login: cachedOwner.login)
+                login: ownerLogin,
+                url: Self.normalizedOwnerURL(existingOwnerURL ?? cachedOwner.url, login: ownerLogin),
+                headBranch: cachedOwner.headBranch
             )
         }
-        guard let owner = await pullRequestOwnerResolver.owner(for: pullRequest.url),
-              let ownerLogin = Self.normalizedNonEmpty(owner.login) else {
+        guard let owner = await pullRequestOwnerResolver.owner(for: pullRequest.url) else {
             return pullRequest
         }
+        let ownerLogin = existingOwnerLogin ?? Self.normalizedNonEmpty(owner.login)
+        guard let ownerLogin else { return pullRequest }
         resolvedPullRequestOwnersByURL[pullRequest.url] = owner
         return pullRequest.replacingOwner(
             login: ownerLogin,
-            url: Self.normalizedOwnerURL(owner.url, login: ownerLogin)
+            url: Self.normalizedOwnerURL(existingOwnerURL ?? owner.url, login: ownerLogin),
+            headBranch: owner.headBranch
         )
     }
 
@@ -265,6 +275,24 @@ actor WorkProvenanceObservationService {
             return nil
         }
         return trimmed
+    }
+
+    private static func ticketIDs(branchNames: [String]) -> [String] {
+        let pattern = #"[A-Z][A-Z0-9]+-[0-9]+"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
+        var seen = Set<String>()
+        var ticketIDs: [String] = []
+        for branchName in branchNames {
+            let range = NSRange(branchName.startIndex..<branchName.endIndex, in: branchName)
+            for match in regex.matches(in: branchName, range: range) {
+                guard let matchRange = Range(match.range, in: branchName) else { continue }
+                let ticketID = String(branchName[matchRange]).uppercased()
+                if seen.insert(ticketID).inserted {
+                    ticketIDs.append(ticketID)
+                }
+            }
+        }
+        return ticketIDs
     }
 
     private static func summary(fileCount: Int, isDirty: Bool) -> String {
