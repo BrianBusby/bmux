@@ -8,7 +8,6 @@ import Testing
 #elseif canImport(bmux)
 @testable import bmux
 #endif
-
 @Suite
 struct WorkProvenanceObserverTests {
     @Test
@@ -283,59 +282,30 @@ struct WorkProvenanceObserverTests {
 
         await service.observeWorkspaceSnapshot(workspace)
 
-        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
-            workspaceID: stableWorkspaceID.uuidString
-        ))
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
 
         #expect(display.found)
         #expect(display.display?.branch == "ste-1967-send-company-industry-key-to-amplitude-pr26096")
         #expect(display.display?.pullRequestNumber == 26117)
         #expect(display.display?.pullRequestURL == "https://github.com/CompanyCam/Company-Cam-API/pull/26117")
         #expect(display.display?.pullRequestBranch == nil)
-        #expect(display.display?.ticketIDs == [])
-        #expect(display.display?.ticketLinks == [])
+        #expect(display.display?.ticketIDs == [] && display.display?.ticketLinks == [])
     }
 
-    @Test
-    func ambientBranchTicketDoesNotPopulateBranchOnlyWorkspaceDisplay() async throws {
+    @Test func ambientBranchTicketDoesNotPopulateBranchOnlyWorkspaceDisplay() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
         let repositoryRoot = "/tmp/bmux-ambient-branch-ticket-repo"
-        let snapshot = WorkProvenanceGitSnapshot(
-            repositoryRoot: repositoryRoot,
-            commonDirectory: "/tmp/bmux-ambient-branch-ticket-repo/.git",
-            remoteSlug: "CompanyCam/Company-Cam-API",
-            branch: "ste-1967-send-company-industry-key-to-amplitude-pr26096",
-            headCommit: "2222222222222222222222222222222222222222",
-            isDirty: false,
-            statusEntries: []
-        )
-        let service = WorkProvenanceObservationService(
-            client: client,
-            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
-            dateProvider: { Date(timeIntervalSince1970: 560) }
-        )
+        let branch = "ste-1967-send-company-industry-key-to-amplitude-pr26096"
+        let service = WorkProvenanceObservationService(client: client, gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: WorkProvenanceGitSnapshot(repositoryRoot: repositoryRoot, commonDirectory: "\(repositoryRoot)/.git", remoteSlug: "CompanyCam/Company-Cam-API", branch: branch, headCommit: "2222222222222222222222222222222222222222", isDirty: false, statusEntries: [])]), dateProvider: { Date(timeIntervalSince1970: 560) })
         let stableWorkspaceID = UUID(uuidString: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")!
-        let workspace = WorkProvenanceWorkspaceSnapshot(
-            workspaceID: UUID(uuidString: "ffffffff-eeee-dddd-cccc-bbbbbbbbbbbb")!,
-            stableWorkspaceID: stableWorkspaceID,
-            title: "Company-Cam-API",
-            currentDirectory: repositoryRoot,
-            branch: "ste-1967-send-company-industry-key-to-amplitude-pr26096"
-        )
-
-        await service.observeWorkspaceSnapshot(workspace)
-
-        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
-            workspaceID: stableWorkspaceID.uuidString
-        ))
-
+        await service.observeWorkspaceSnapshot(WorkProvenanceWorkspaceSnapshot(workspaceID: UUID(uuidString: "ffffffff-eeee-dddd-cccc-bbbbbbbbbbbb")!, stableWorkspaceID: stableWorkspaceID, title: "Company-Cam-API", currentDirectory: repositoryRoot, branch: branch))
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
         #expect(display.found)
-        #expect(display.display?.branch == "ste-1967-send-company-industry-key-to-amplitude-pr26096")
+        #expect(display.display?.branch == branch)
         #expect(display.display?.pullRequestNumber == nil)
-        #expect(display.display?.ticketIDs == [])
-        #expect(display.display?.ticketLinks == [])
+        #expect(display.display?.ticketIDs == [] && display.display?.ticketLinks == [])
     }
 
     @Test
@@ -515,22 +485,11 @@ struct WorkProvenanceObserverTests {
         ProvenanceWorkspaceDisplayRecord(
             id: "workspace-display-\(sequence)",
             workspaceID: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-            repositoryID: nil,
-            worktreeID: nil,
-            currentDirectory: nil,
-            title: nil,
-            titleSource: nil,
+            repositoryID: nil, worktreeID: nil, currentDirectory: nil, title: nil, titleSource: nil,
             branch: branch,
-            pullRequestNumber: nil,
-            pullRequestURL: nil,
-            pullRequestOwnerLogin: nil,
-            pullRequestOwnerURL: nil,
-            pullRequestStatus: nil,
-            pullRequestBranch: nil,
+            pullRequestNumber: nil, pullRequestURL: nil, pullRequestOwnerLogin: nil, pullRequestOwnerURL: nil, pullRequestStatus: nil, pullRequestBranch: nil,
             pullRequestIsStale: false,
-            isDirty: nil,
-            ticketIDs: [],
-            ticketLinks: [],
+            isDirty: nil, ticketIDs: [], ticketLinks: [],
             latestEventID: "event-\(sequence)",
             latestEventSequence: sequence,
             observedAt: updatedAt,
