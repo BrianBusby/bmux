@@ -146,7 +146,7 @@ struct WorkProvenanceObserverTests {
     }
 
     @Test
-    func observeWorkspaceDisplayPersistsTitlePullRequestAndTicketChangesWhenGitIsUnchanged() async throws {
+    func observeWorkspaceDisplayPersistsTitlePullRequestAndRawEvidenceWhenGitIsUnchanged() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
@@ -168,9 +168,6 @@ struct WorkProvenanceObserverTests {
                     login: "brianbusby",
                     url: "https://github.com/brianbusby"
                 )
-            ]),
-            ticketTitleResolver: FakeTicketTitleResolver(titlesByID: [
-                "STE-1964": "Actual Linear ticket title"
             ]),
             dateProvider: { Date(timeIntervalSince1970: 500) }
         )
@@ -233,13 +230,8 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.isDirty == false)
         #expect(display.display?.latestEventID != nil)
         #expect(display.display?.latestEventSequence == 3)
-        #expect(display.display?.ticketIDs == ["STE-1964"])
-        #expect(display.display?.ticketLinks == [
-            ProvenanceWorkspaceDisplayTicketLinkRecord(
-                id: "STE-1964",
-                title: "Actual Linear ticket title"
-            )
-        ])
+        #expect(display.display?.ticketIDs == [])
+        #expect(display.display?.ticketLinks == [])
     }
 
     @Test
@@ -292,47 +284,44 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.ticketIDs == [] && display.display?.ticketLinks == [])
     }
 
-    @Test func ambientBranchTicketDoesNotPopulateBranchOnlyWorkspaceDisplay() async throws {
+    @Test
+    func ambientBranchTicketDoesNotPopulateBranchOnlyWorkspaceDisplay() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
         let repositoryRoot = "/tmp/bmux-ambient-branch-ticket-repo"
         let branch = "ste-1967-send-company-industry-key-to-amplitude-pr26096"
-        let service = WorkProvenanceObservationService(client: client, gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: WorkProvenanceGitSnapshot(repositoryRoot: repositoryRoot, commonDirectory: "\(repositoryRoot)/.git", remoteSlug: "CompanyCam/Company-Cam-API", branch: branch, headCommit: "2222222222222222222222222222222222222222", isDirty: false, statusEntries: [])]), dateProvider: { Date(timeIntervalSince1970: 560) })
+        let snapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "\(repositoryRoot)/.git",
+            remoteSlug: "CompanyCam/Company-Cam-API",
+            branch: branch,
+            headCommit: "2222222222222222222222222222222222222222",
+            isDirty: false,
+            statusEntries: []
+        )
+        let service = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            dateProvider: { Date(timeIntervalSince1970: 560) }
+        )
         let stableWorkspaceID = UUID(uuidString: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")!
-        await service.observeWorkspaceSnapshot(WorkProvenanceWorkspaceSnapshot(workspaceID: UUID(uuidString: "ffffffff-eeee-dddd-cccc-bbbbbbbbbbbb")!, stableWorkspaceID: stableWorkspaceID, title: "Company-Cam-API", currentDirectory: repositoryRoot, branch: branch))
+        let workspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: UUID(uuidString: "ffffffff-eeee-dddd-cccc-bbbbbbbbbbbb")!,
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Company-Cam-API",
+            currentDirectory: repositoryRoot,
+            branch: branch
+        )
+
+        await service.observeWorkspaceSnapshot(workspace)
+
         let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
         #expect(display.found)
         #expect(display.display?.branch == branch)
         #expect(display.display?.pullRequestNumber == nil)
-        #expect(display.display?.ticketIDs == [] && display.display?.ticketLinks == [])
-    }
-
-    @Test
-    func linearTicketTitleResolverQueriesLinearIssueTitle() async throws {
-        let loader = FakeLinearGraphQLLoader(responseBody: """
-        {"data":{"issue":{"title":"Actual Linear ticket title"}}}
-        """)
-        let resolver = WorkProvenanceLinearTicketTitleResolver(
-            apiKeyProvider: { "linear-api-key" },
-            load: { request in
-                await loader.load(request)
-            }
-        )
-
-        let titles = await resolver.titles(for: ["ste-1964", "STE-1964", "not-a-ticket"])
-        let requests = await loader.requests
-        let request = try #require(requests.first)
-        let body = try #require(request.httpBody)
-        let payload = try #require(String(data: body, encoding: .utf8))
-
-        #expect(titles == ["STE-1964": "Actual Linear ticket title"])
-        #expect(requests.count == 1)
-        #expect(request.url == URL(string: "https://api.linear.app/graphql"))
-        #expect(request.httpMethod == "POST")
-        #expect(request.value(forHTTPHeaderField: "Authorization") == "linear-api-key")
-        #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
-        #expect(payload.contains(#""id":"STE-1964""#))
+        #expect(display.display?.ticketIDs == [])
+        #expect(display.display?.ticketLinks == [])
     }
 
     @Test
@@ -425,36 +414,6 @@ struct WorkProvenanceObserverTests {
 
         func owner(for pullRequestURL: String) async -> WorkProvenancePullRequestOwner? {
             ownersByURL[pullRequestURL]
-        }
-    }
-
-    private struct FakeTicketTitleResolver: WorkProvenanceTicketTitleResolving {
-        let titlesByID: [String: String]
-
-        func titles(for ticketIDs: [String]) async -> [String: String] {
-            titlesByID.filter { ticketIDs.contains($0.key) }
-        }
-    }
-
-    private actor FakeLinearGraphQLLoader {
-        private(set) var requests: [URLRequest] = []
-        let responseBody: String
-        let statusCode: Int
-
-        init(responseBody: String, statusCode: Int = 200) {
-            self.responseBody = responseBody
-            self.statusCode = statusCode
-        }
-
-        func load(_ request: URLRequest) -> (Data, URLResponse) {
-            requests.append(request)
-            let response = HTTPURLResponse(
-                url: request.url ?? URL(string: "https://api.linear.app/graphql")!,
-                statusCode: statusCode,
-                httpVersion: nil,
-                headerFields: nil
-            )!
-            return (Data(responseBody.utf8), response)
         }
     }
 

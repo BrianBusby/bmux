@@ -29,7 +29,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Display Current State Diagnostic | implemented |
 | Workspace Display Projection | implemented |
 | Workspace Display Tab Projection | implemented |
-| Workspace Display Ticket Link Facts | implemented |
+| Workspace Display Ticket Link Facts | deprecated |
 | Workspace Display Ticket Title Sidebar | implemented |
 
 ## Execution Telemetry

@@ -6,7 +6,6 @@ actor WorkProvenanceObservationService {
     private let client: any ProvenanceEngineContracts.ProvenanceEngineClient
     private let gitInspector: any WorkProvenanceGitInspecting
     private let pullRequestOwnerResolver: any WorkProvenancePullRequestOwnerResolving
-    private let ticketTitleResolver: any WorkProvenanceTicketTitleResolving
     private let stableIDFactory: WorkProvenanceStableIDFactory
     private let dateProvider: @Sendable () -> Date
     private var latestFingerprintByWorkspaceID: [UUID: String] = [:]
@@ -21,14 +20,12 @@ actor WorkProvenanceObservationService {
         client: any ProvenanceEngineContracts.ProvenanceEngineClient,
         gitInspector: any WorkProvenanceGitInspecting,
         pullRequestOwnerResolver: any WorkProvenancePullRequestOwnerResolving = WorkProvenanceGitHubCLIPullRequestOwnerResolver(),
-        ticketTitleResolver: any WorkProvenanceTicketTitleResolving = WorkProvenanceNoopTicketTitleResolver(),
         stableIDFactory: WorkProvenanceStableIDFactory = WorkProvenanceStableIDFactory(),
         dateProvider: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.client = client
         self.gitInspector = gitInspector
         self.pullRequestOwnerResolver = pullRequestOwnerResolver
-        self.ticketTitleResolver = ticketTitleResolver
         self.stableIDFactory = stableIDFactory
         self.dateProvider = dateProvider
     }
@@ -155,12 +152,9 @@ actor WorkProvenanceObservationService {
         for workspace: WorkProvenanceWorkspaceSnapshot,
         gitSnapshot: WorkProvenanceGitSnapshot?
     ) async throws {
-        let ticketIDs = Self.ticketIDs(
-            branchNames: Self.ticketSourceBranchNames(
-                workspace: workspace
-            )
-        )
-        let ticketLinks = await ticketLinks(ticketIDs: ticketIDs)
+        // Ticket/work-item association is PE-owned. bmux only writes raw display evidence here.
+        let ticketIDs: [String] = []
+        let ticketLinks: [ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord] = []
         let pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest)
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
@@ -277,44 +271,5 @@ actor WorkProvenanceObservationService {
         guard isDirty else { return "Observed clean worktree" }
         if fileCount == 1 { return "Observed 1 dirty file" }
         return "Observed \(fileCount) dirty files"
-    }
-
-    private static func ticketSourceBranchNames(
-        workspace: WorkProvenanceWorkspaceSnapshot
-    ) -> [String] {
-        if let pullRequest = workspace.pullRequest {
-            return [pullRequest.branch].compactMap { $0 }
-        }
-        return []
-    }
-
-    private static func ticketIDs(branchNames: [String]) -> [String] {
-        let pattern = #"[A-Z][A-Z0-9]+-[0-9]+"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
-        var seen = Set<String>()
-        var ticketIDs: [String] = []
-        for branchName in branchNames {
-            let range = NSRange(branchName.startIndex..<branchName.endIndex, in: branchName)
-            for match in regex.matches(in: branchName, range: range) {
-                guard let matchRange = Range(match.range, in: branchName) else { continue }
-                let ticketID = String(branchName[matchRange]).uppercased()
-                if seen.insert(ticketID).inserted {
-                    ticketIDs.append(ticketID)
-                }
-            }
-        }
-        return ticketIDs
-    }
-
-    private func ticketLinks(
-        ticketIDs: [String]
-    ) async -> [ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord] {
-        let titlesByID = await ticketTitleResolver.titles(for: ticketIDs)
-        return ticketIDs.map { ticketID in
-            ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord(
-                id: ticketID,
-                title: Self.normalizedNonEmpty(titlesByID[ticketID])
-            )
-        }
     }
 }
