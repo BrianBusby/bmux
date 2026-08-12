@@ -14,10 +14,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Workspace sidebar ticket title presentation (`workspace_display_ticket_title_sidebar`)
-- Slice state: implemented
-- Owner: Codex
-- Repository state: active
+- Active slice: none selected
+- Repository state: observation
 
 ## Release
 
