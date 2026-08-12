@@ -13,7 +13,7 @@ Repository: `BrianBusby/provenance-engine`
 
 ## Current Work
 
-- Active slice: PE-owned ticket link facts and first deterministic producer (`workspace_display_ticket_link_facts`)
+- Active slice: PE-owned ticket title facts in workspace display state (`workspace_display_ticket_title_facts`)
 - Slice state: implemented
 - Owner: Codex
 - Repository state: active
@@ -36,6 +36,7 @@ Repository: `BrianBusby/provenance-engine`
 | Workspace Display Current State | implemented |
 | Workspace Display Projection Cursors | implemented |
 | Workspace Display Ticket Link Facts | implemented |
+| Workspace Display Ticket Title Facts | implemented |
 
 ## Local Caveats
 

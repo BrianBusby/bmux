@@ -8,6 +8,9 @@ public struct ProvenanceWorkspaceDisplayTicketLinkRecord: Codable, Equatable, Se
     /// External system that owns the ticket, such as `linear`, `jira`, or `github`.
     public let system: String?
 
+    /// Human-readable ticket title accepted from deterministic evidence, when known.
+    public let title: String?
+
     /// Canonical ticket URL accepted from deterministic evidence, when known.
     public let url: String?
 
@@ -15,10 +18,12 @@ public struct ProvenanceWorkspaceDisplayTicketLinkRecord: Codable, Equatable, Se
     public init(
         id: String,
         system: String? = nil,
+        title: String? = nil,
         url: String? = nil
     ) {
         self.id = id
         self.system = system
+        self.title = title
         self.url = url
     }
 }
