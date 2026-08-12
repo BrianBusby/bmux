@@ -336,6 +336,7 @@ extension PullRequestProbeService {
         let rawState = pullRequest.mergedAt?.isEmpty == false ? "MERGED" : pullRequest.state
         return GitHubPullRequestProbeItem(
             number: pullRequest.number,
+            title: pullRequest.title,
             state: rawState,
             url: pullRequest.htmlURL,
             ownerLogin: pullRequest.user?.login,

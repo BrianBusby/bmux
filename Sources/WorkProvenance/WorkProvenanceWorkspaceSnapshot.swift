@@ -110,6 +110,7 @@ private extension Workspace {
         guard let state else { return nil }
         return WorkProvenanceWorkspaceSnapshot.PullRequest(
             number: state.number,
+            title: state.title,
             url: state.url.absoluteString,
             ownerLogin: state.ownerLogin,
             ownerURL: state.ownerURL?.absoluteString,

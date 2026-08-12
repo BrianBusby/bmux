@@ -74,6 +74,7 @@ extension Workspace {
     func updatePanelPullRequest(
         panelId: UUID,
         number: Int,
+        title: String? = nil,
         label: String,
         url: URL,
         ownerLogin: String? = nil,
@@ -88,6 +89,7 @@ extension Workspace {
         let normalizedBranch = branch?.normalizedSidebarBranchName
         let currentPanelBranch = panelGitBranches[panelId]?.branch.normalizedSidebarBranchName
         let isSameExistingPullRequest = existing?.number == number && existing?.url == url
+        let resolvedTitle = title ?? (isSameExistingPullRequest ? existing?.title : nil)
         let resolvedOwnerLogin = ownerLogin ?? (isSameExistingPullRequest ? existing?.ownerLogin : nil)
         let resolvedOwnerURL = ownerURL ?? (isSameExistingPullRequest ? existing?.ownerURL : nil)
         let resolvedBranch: String? = {
@@ -108,6 +110,7 @@ extension Workspace {
         }()
         let state = SidebarPullRequestState(
             number: number,
+            title: resolvedTitle,
             label: label,
             url: url,
             ownerLogin: resolvedOwnerLogin,

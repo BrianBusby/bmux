@@ -54,6 +54,7 @@ public struct WorkspaceWorkContext: Equatable, Sendable {
             pullRequest: sidebarPullRequest.map {
                 WorkspaceWorkContextPullRequest(
                     number: $0.number,
+                    title: $0.title,
                     label: $0.label,
                     url: $0.url,
                     ownerLogin: $0.ownerLogin,

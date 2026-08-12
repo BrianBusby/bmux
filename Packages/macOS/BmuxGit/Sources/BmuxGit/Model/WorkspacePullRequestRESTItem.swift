@@ -18,6 +18,7 @@ struct WorkspacePullRequestRESTItem: Decodable, Sendable {
     }
 
     let number: Int
+    let title: String?
     let state: String
     let htmlURL: String
     let updatedAt: String?
@@ -28,6 +29,7 @@ struct WorkspacePullRequestRESTItem: Decodable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case number
+        case title
         case state
         case htmlURL = "html_url"
         case updatedAt = "updated_at"

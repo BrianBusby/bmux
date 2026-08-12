@@ -5,6 +5,9 @@ public struct WorkspaceWorkContextPullRequest: Equatable, Sendable {
     /// The pull-request number.
     public let number: Int
 
+    /// The pull-request title, if known.
+    public let title: String?
+
     /// The repository label or display label associated with the pull request.
     public let label: String
 
@@ -32,6 +35,7 @@ public struct WorkspaceWorkContextPullRequest: Equatable, Sendable {
     /// Creates a pull-request context.
     /// - Parameters:
     ///   - number: The pull-request number.
+    ///   - title: The pull-request title, if known.
     ///   - label: The repository or display label.
     ///   - url: The pull-request URL.
     ///   - ownerLogin: The PR author's GitHub login, if known.
@@ -42,6 +46,7 @@ public struct WorkspaceWorkContextPullRequest: Equatable, Sendable {
     ///   - isStale: Whether the value may no longer match the active work.
     public init(
         number: Int,
+        title: String? = nil,
         label: String,
         url: URL,
         ownerLogin: String? = nil,
@@ -52,6 +57,8 @@ public struct WorkspaceWorkContextPullRequest: Equatable, Sendable {
         isStale: Bool = false
     ) {
         self.number = number
+        let normalizedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        self.title = normalizedTitle.isEmpty ? nil : normalizedTitle
         self.label = label
         self.url = url
         let normalizedOwnerLogin = ownerLogin?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
