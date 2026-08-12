@@ -1372,8 +1372,7 @@ extension BMUXCLI {
     ) -> [[String: Any]] {
         ticketLinks.map { ticketLink in
             provenanceCompactPayload([
-                "id": ticketLink.id,
-                "system": ticketLink.system,
+                "id": ticketLink.id, "system": ticketLink.system,
                 "title": ticketLink.title,
                 "url": ticketLink.url
             ])
