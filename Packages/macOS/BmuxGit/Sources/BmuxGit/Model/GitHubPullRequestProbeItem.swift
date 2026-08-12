@@ -8,6 +8,8 @@ import Foundation
 public struct GitHubPullRequestProbeItem: Decodable, Equatable, Sendable {
     /// The pull request number.
     public let number: Int
+    /// The pull request title, if known.
+    public let title: String?
     /// Raw GitHub state string (`"OPEN"`/`"MERGED"`/`"CLOSED"`, any case).
     public let state: String
     /// The PR's html URL string.
@@ -28,6 +30,7 @@ public struct GitHubPullRequestProbeItem: Decodable, Equatable, Sendable {
     /// Creates a probe item.
     public init(
         number: Int,
+        title: String? = nil,
         state: String,
         url: String,
         ownerLogin: String? = nil,
@@ -38,6 +41,7 @@ public struct GitHubPullRequestProbeItem: Decodable, Equatable, Sendable {
         baseRefName: String? = nil
     ) {
         self.number = number
+        self.title = title
         self.state = state
         self.url = url
         self.ownerLogin = ownerLogin

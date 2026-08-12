@@ -85,6 +85,7 @@ extension PullRequestPollService {
             panelId: panelId,
             badge: SidebarPullRequestBadge(
                 number: currentPullRequest.number,
+                title: currentPullRequest.title,
                 label: currentPullRequest.label,
                 url: currentPullRequest.url,
                 ownerLogin: currentPullRequest.ownerLogin,

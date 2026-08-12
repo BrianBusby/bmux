@@ -119,6 +119,7 @@ extension PullRequestPollService {
                     panelId: result.panelId,
                     badge: SidebarPullRequestBadge(
                         number: resolvedPullRequest.number,
+                        title: resolvedPullRequest.title,
                         label: "PR",
                         url: url,
                         ownerLogin: resolvedPullRequest.ownerLogin,
@@ -153,6 +154,7 @@ extension PullRequestPollService {
                         panelId: result.panelId,
                         badge: SidebarPullRequestBadge(
                             number: currentPullRequest.number,
+                            title: currentPullRequest.title,
                             label: currentPullRequest.label,
                             url: currentPullRequest.url,
                             ownerLogin: currentPullRequest.ownerLogin,

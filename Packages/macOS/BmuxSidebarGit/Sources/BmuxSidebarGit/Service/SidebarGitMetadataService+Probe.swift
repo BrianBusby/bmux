@@ -392,6 +392,7 @@ extension SidebarGitMetadataService {
             if shouldTrackPullRequests {
                 let nextBadge = SidebarPullRequestBadge(
                     number: pullRequest.number,
+                    title: pullRequest.title,
                     label: pullRequest.label,
                     url: pullRequest.url,
                     status: pullRequest.status,

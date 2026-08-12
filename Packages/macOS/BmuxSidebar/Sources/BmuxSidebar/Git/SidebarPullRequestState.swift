@@ -4,6 +4,8 @@ public import Foundation
 public struct SidebarPullRequestState: Equatable, Sendable {
     /// The PR number.
     public let number: Int
+    /// The PR title, if known.
+    public let title: String?
     /// The repository label (e.g. `owner/repo`).
     public let label: String
     /// The PR URL.
@@ -22,6 +24,7 @@ public struct SidebarPullRequestState: Equatable, Sendable {
     /// Creates a pull-request row (defaults mirror the legacy initializer).
     public init(
         number: Int,
+        title: String? = nil,
         label: String,
         url: URL,
         ownerLogin: String? = nil,
@@ -31,6 +34,8 @@ public struct SidebarPullRequestState: Equatable, Sendable {
         isStale: Bool = false
     ) {
         self.number = number
+        let normalizedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        self.title = normalizedTitle.isEmpty ? nil : normalizedTitle
         self.label = label
         self.url = url
         let normalizedOwnerLogin = ownerLogin?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
