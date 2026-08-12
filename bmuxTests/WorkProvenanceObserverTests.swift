@@ -151,6 +151,7 @@ struct WorkProvenanceObserverTests {
         defer { fixture.remove() }
         let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
         let repositoryRoot = "/tmp/bmux-display-observed-repo"
+        let linearServer = FakeLinearGraphQLServer()
         let snapshot = WorkProvenanceGitSnapshot(
             repositoryRoot: repositoryRoot,
             commonDirectory: "/tmp/bmux-display-observed-repo/.git",
@@ -169,6 +170,11 @@ struct WorkProvenanceObserverTests {
                     url: "https://github.com/brianbusby"
                 )
             ]),
+            ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
+                authorizationHeader: "linear-api-key",
+                usesEnvironmentAuthorization: false,
+                dataProvider: { request in try await linearServer.response(for: request) }
+            ),
             dateProvider: { Date(timeIntervalSince1970: 500) }
         )
         let workspaceID = UUID(uuidString: "77777777-7777-7777-7777-777777777777")!
@@ -230,8 +236,18 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.isDirty == false)
         #expect(display.display?.latestEventID != nil)
         #expect(display.display?.latestEventSequence == 3)
-        #expect(display.display?.ticketIDs == [])
-        #expect(display.display?.ticketLinks == [])
+        #expect(display.display?.ticketIDs == ["STE-1964"])
+        #expect(display.display?.ticketLinks == [
+            ProvenanceWorkspaceDisplayTicketLinkRecord(
+                id: "STE-1964",
+                system: "linear",
+                title: "Canonical domain mutation paths",
+                url: "https://linear.app/company/issue/STE-1964"
+            )
+        ])
+        #expect(await linearServer.requests == [
+            FakeLinearGraphQLServer.Request(authorization: "linear-api-key", ticketID: "STE-1964")
+        ])
     }
 
     @Test
@@ -282,6 +298,78 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.pullRequestURL == "https://github.com/CompanyCam/Company-Cam-API/pull/26117")
         #expect(display.display?.pullRequestBranch == nil)
         #expect(display.display?.ticketIDs == [] && display.display?.ticketLinks == [])
+    }
+
+    @Test
+    func laterPromptDisplayObservationPreservesExistingTicketLinksWhenNoNewTicketEvidenceExists() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let repositoryRoot = "/tmp/bmux-ticket-link-preserve-repo"
+        let branch = "ste-1964-canonical-domain-mutation-paths"
+        let linearServer = FakeLinearGraphQLServer()
+        let snapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "\(repositoryRoot)/.git",
+            remoteSlug: "manaflow-ai/bmux",
+            branch: branch,
+            headCommit: "3333333333333333333333333333333333333333",
+            isDirty: false,
+            statusEntries: []
+        )
+        let service = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
+                authorizationHeader: "linear-api-key",
+                usesEnvironmentAuthorization: false,
+                dataProvider: { request in try await linearServer.response(for: request) }
+            ),
+            dateProvider: { Date(timeIntervalSince1970: 570) }
+        )
+        let workspaceID = UUID(uuidString: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")!
+        let stableWorkspaceID = UUID(uuidString: "cccccccc-cccc-cccc-cccc-cccccccccccc")!
+        let initialWorkspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: workspaceID,
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Initial prompt",
+            currentDirectory: repositoryRoot,
+            branch: branch,
+            pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
+                number: 42,
+                url: "https://github.com/manaflow-ai/bmux/pull/42",
+                ownerLogin: nil,
+                ownerURL: nil,
+                status: "open",
+                branch: branch,
+                isStale: false
+            )
+        )
+        let laterPromptWorkspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: workspaceID,
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Later prompt without ticket evidence",
+            currentDirectory: repositoryRoot,
+            branch: branch
+        )
+
+        await service.observeWorkspaceSnapshot(initialWorkspace)
+        await service.observeWorkspaceSnapshot(laterPromptWorkspace)
+
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
+
+        #expect(display.found)
+        #expect(display.display?.title == "Later prompt without ticket evidence")
+        #expect(display.display?.pullRequestNumber == nil)
+        #expect(display.display?.ticketIDs == ["STE-1964"])
+        #expect(display.display?.ticketLinks == [
+            ProvenanceWorkspaceDisplayTicketLinkRecord(
+                id: "STE-1964",
+                system: "linear",
+                title: "Canonical domain mutation paths",
+                url: "https://linear.app/company/issue/STE-1964"
+            )
+        ])
     }
 
     @Test
@@ -414,6 +502,29 @@ struct WorkProvenanceObserverTests {
 
         func owner(for pullRequestURL: String) async -> WorkProvenancePullRequestOwner? {
             ownersByURL[pullRequestURL]
+        }
+    }
+
+    private actor FakeLinearGraphQLServer {
+        struct Request: Equatable, Sendable { let authorization: String?; let ticketID: String? }
+
+        private(set) var requests: [Request] = []
+
+        func response(for request: URLRequest) throws -> (Data, Int) {
+            let ticketID = try Self.ticketID(from: request.httpBody)
+            requests.append(Request(authorization: request.value(forHTTPHeaderField: "Authorization"), ticketID: ticketID))
+            let payload = #"{"data":{"issue":{"title":"Canonical domain mutation paths"}}}"#
+            return (Data(payload.utf8), 200)
+        }
+
+        private static func ticketID(from data: Data?) throws -> String? {
+            guard let data else { return nil }
+            let json = try JSONSerialization.jsonObject(with: data)
+            guard let object = json as? [String: Any],
+                  let variables = object["variables"] as? [String: Any] else {
+                return nil
+            }
+            return variables["id"] as? String
         }
     }
 
