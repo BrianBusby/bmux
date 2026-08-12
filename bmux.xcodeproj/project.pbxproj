@@ -157,6 +157,7 @@
 		A5001001 /* bmuxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001011 /* bmuxApp.swift */; };
 		C9A2B00000000000000000B3 /* BmuxAppKitSupportUI in Frameworks */ = {isa = PBXBuildFile; productRef = C9A2B00000000000000000B2 /* BmuxAppKitSupportUI */; };
 		C9A2B00000000000000000C3 /* BmuxAppKitSupportUI in Frameworks */ = {isa = PBXBuildFile; productRef = C9A2B00000000000000000C2 /* BmuxAppKitSupportUI */; };
+		CE0E03110000000000000001 /* BmuxAppRuntimeComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03110000000000000002 /* BmuxAppRuntimeComposition.swift */; };
 		5EDB6027B346C46521A93C74 /* BMUXAuthCore in Frameworks */ = {isa = PBXBuildFile; productRef = 29813FE5A6CBC1019289A251 /* BMUXAuthCore */; };
 		53750003A0B1C2D3E4F50003 /* BmuxAuthRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 53750002A0B1C2D3E4F50002 /* BmuxAuthRuntime */; };
 		D7032A060000000000000001 /* BmuxBrowser in Frameworks */ = {isa = PBXBuildFile; productRef = D7032A060000000000000002 /* BmuxBrowser */; };
@@ -1884,6 +1885,7 @@
 		E3309A08 /* bmuxApp+EqualizeSplitsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "bmuxApp+EqualizeSplitsMenu.swift"; sourceTree = "<group>"; };
 		C4160A010000000000000002 /* bmuxApp+HistoryMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "bmuxApp+HistoryMenu.swift"; sourceTree = "<group>"; };
 		A5001011 /* bmuxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bmuxApp.swift; sourceTree = "<group>"; };
+		CE0E03110000000000000002 /* BmuxAppRuntimeComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxAppRuntimeComposition.swift; sourceTree = "<group>"; };
 		61AD48A9E6C3F1BE2B547FFE /* BMUXCLI+AgentHookCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookCatalog.swift"; sourceTree = "<group>"; };
 		B9000062A1B2C3D4E5F60719 /* BMUXCLI+AgentHookDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookDefinitions.swift"; sourceTree = "<group>"; };
 		5257257034CA4729B1211170 /* BMUXCLI+AgentHookPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookPayload.swift"; sourceTree = "<group>"; };
@@ -3578,6 +3580,7 @@
 				D7C6F5010000000000000001 /* GhosttyTitleChangeSubscription.swift */,
 				A11EAD000000000000000001 /* WorkspaceAppearanceResolution.swift */,
 				A5001011 /* bmuxApp.swift */,
+				CE0E03110000000000000002 /* BmuxAppRuntimeComposition.swift */,
 				CA5CADF00000000000000001 /* CanvasDebugMenuButtons.swift */,
 				C46790000000000000000004 /* CLIForwardingLaunchRouter.swift */,
 				C46790000000000000000006 /* RosettaNativeRelaunch.swift */,
@@ -5571,6 +5574,7 @@
 				E3309A07 /* bmuxApp+EqualizeSplitsMenu.swift in Sources */,
 				C4160A010000000000000001 /* bmuxApp+HistoryMenu.swift in Sources */,
 				A5001001 /* bmuxApp.swift in Sources */,
+				CE0E03110000000000000001 /* BmuxAppRuntimeComposition.swift in Sources */,
 				A72C9F4179B54DF38E99A021 /* BmuxCLIPathInstaller.swift in Sources */,
 				A5001650 /* BmuxConfig.swift in Sources */,
 				A5FB1209 /* BmuxConfigActionDefinition.swift in Sources */,

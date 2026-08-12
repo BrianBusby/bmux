@@ -189,6 +189,7 @@
 642	bmuxTests/RemoteTmuxControlParserTests.swift
 641	bmuxTests/CommandPaletteNucleoFFITests.swift
 637	Packages/iOS/BmuxMobileShell/Tests/BmuxMobileShellTests/MobileShellRenderGridLivenessTestSupport.swift
+636	bmuxTests/WorkProvenanceObserverTests.swift
 635	bmuxUITests/RightSidebarChromeHeightUITests.swift
 630	Packages/macOS/BmuxSettings/Sources/BmuxSettings/Values/ShortcutWhenClause.swift
 624	bmuxTests/SidebarWidthPolicyTests.swift
