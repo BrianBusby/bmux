@@ -13,13 +13,13 @@ struct WorkspaceDisplayCurrentStateTicketLinkSnapshot: Equatable, Sendable, Iden
         guard !trimmedID.isEmpty else { return nil }
         self.id = trimmedID
         self.system = link.system?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
-        self.url = link.url.flatMap(URL.init(string:))
+        self.url = link.url.flatMap(URL.init(string:)) ?? Self.linearURL(for: trimmedID)
     }
 
     init(id: String) {
         self.id = id
-        self.system = nil
-        self.url = nil
+        self.system = Self.linearURL(for: id) == nil ? nil : "linear"
+        self.url = Self.linearURL(for: id)
     }
 
     static func links(
@@ -41,5 +41,12 @@ struct WorkspaceDisplayCurrentStateTicketLinkSnapshot: Equatable, Sendable, Iden
             snapshots.append(WorkspaceDisplayCurrentStateTicketLinkSnapshot(id: trimmedID))
         }
         return snapshots
+    }
+
+    private static func linearURL(for ticketID: String) -> URL? {
+        guard ticketID.range(of: #"^[A-Z][A-Z0-9]+-[0-9]+$"#, options: .regularExpression) != nil else {
+            return nil
+        }
+        return URL(string: "https://linear.app/company/issue/\(ticketID)")
     }
 }

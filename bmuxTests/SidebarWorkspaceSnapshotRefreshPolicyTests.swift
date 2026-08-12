@@ -230,6 +230,8 @@ import Testing
             label: "PR",
             url: URL(string: "https://github.com/manaflow-ai/bmux/pull/\(number)")!,
             status: .open,
+            ownerLogin: nil,
+            ownerURL: nil,
             isStale: isStale,
             isFromProvenance: false
         )

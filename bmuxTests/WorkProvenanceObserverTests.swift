@@ -274,6 +274,8 @@ struct WorkProvenanceObserverTests {
         #expect(snapshot.ticketLinks.map(\.id) == ["STE-1964", "GH-57"])
         #expect(snapshot.ticketLinks.first?.system == "linear")
         #expect(snapshot.ticketLinks.first?.url == URL(string: "https://linear.app/company/issue/STE-1964"))
+        #expect(snapshot.ticketLinks.last?.system == "linear")
+        #expect(snapshot.ticketLinks.last?.url == URL(string: "https://linear.app/company/issue/GH-57"))
         #expect(snapshot.latestEventID == "event-1")
         #expect(snapshot.latestEventSequence == 12)
     }
