@@ -157,8 +157,7 @@ actor WorkProvenanceObservationService {
     ) async throws {
         let ticketIDs = Self.ticketIDs(
             branchNames: Self.ticketSourceBranchNames(
-                workspace: workspace,
-                gitSnapshot: gitSnapshot
+                workspace: workspace
             )
         )
         let ticketLinks = await ticketLinks(ticketIDs: ticketIDs)
@@ -281,16 +280,12 @@ actor WorkProvenanceObservationService {
     }
 
     private static func ticketSourceBranchNames(
-        workspace: WorkProvenanceWorkspaceSnapshot,
-        gitSnapshot: WorkProvenanceGitSnapshot?
+        workspace: WorkProvenanceWorkspaceSnapshot
     ) -> [String] {
         if let pullRequest = workspace.pullRequest {
             return [pullRequest.branch].compactMap { $0 }
         }
-        return [
-            workspace.branch,
-            gitSnapshot?.branch
-        ].compactMap { $0 }
+        return []
     }
 
     private static func ticketIDs(branchNames: [String]) -> [String] {
