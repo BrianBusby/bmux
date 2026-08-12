@@ -14910,10 +14910,15 @@ struct TabItemView: View, Equatable {
         }()
         let branchLinesContainBranch = sidebarShowGitBranch && branchDirectoryLines.contains { $0.branch != nil }
         let pullRequestRows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay] = {
+            guard detailVisibility.showsPullRequests else { return [] }
             if let provenancePullRequestDisplay {
                 return [provenancePullRequestDisplay]
             }
-            return []
+            let liveDisplays = livePullRequestDisplays(orderedPanelIds: orderedPanelIds)
+            if !liveDisplays.isEmpty {
+                return liveDisplays
+            }
+            return promptPullRequestDisplay.map { [$0] } ?? []
         }()
         let displayedPullRequestNumbers = Set(pullRequestRows.map(\.number))
         let ticketRows = provenanceTicketDisplays
@@ -15146,6 +15151,22 @@ struct TabItemView: View, Equatable {
         return result
     }
 
+    private func livePullRequestDisplays(orderedPanelIds: [UUID]) -> [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay] {
+        tab.sidebarPullRequestsInDisplayOrder(orderedPanelIds: orderedPanelIds).map { pullRequest in
+            SidebarWorkspaceSnapshotBuilder.PullRequestDisplay(
+                id: "\(pullRequest.label.lowercased())#\(pullRequest.number)|\(pullRequest.url.absoluteString)",
+                number: pullRequest.number,
+                label: pullRequest.label,
+                url: pullRequest.url,
+                status: pullRequest.status,
+                ownerLogin: pullRequest.ownerLogin,
+                ownerURL: pullRequest.ownerURL,
+                isStale: pullRequest.isStale,
+                isFromProvenance: false
+            )
+        }
+    }
+
     private var provenancePullRequestDisplay: SidebarWorkspaceSnapshotBuilder.PullRequestDisplay? {
         guard let pullRequest = provenanceDisplaySnapshot?.pullRequest else { return nil }
         let label = String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
@@ -15192,6 +15213,27 @@ struct TabItemView: View, Equatable {
             return nil
         }
         return URL(string: "https://github.com/\(login)")
+    }
+
+    private var promptPullRequestDisplay: SidebarWorkspaceSnapshotBuilder.PullRequestDisplay? {
+        for message in [tab.latestSubmittedMessage, tab.latestConversationMessage] {
+            guard let mention = Workspace.submittedPromptPullRequestMention(from: message) else {
+                continue
+            }
+            let label = String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
+            return SidebarWorkspaceSnapshotBuilder.PullRequestDisplay(
+                id: "\(label.lowercased())#\(mention.number)|\(mention.url.absoluteString)",
+                number: mention.number,
+                label: label,
+                url: mention.url,
+                status: .open,
+                ownerLogin: nil,
+                ownerURL: nil,
+                isStale: false,
+                isFromProvenance: false
+            )
+        }
+        return nil
     }
 
     private var provenanceTicketDisplays: [SidebarWorkspaceSnapshotBuilder.TicketDisplay] {

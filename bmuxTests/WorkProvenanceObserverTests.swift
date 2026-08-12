@@ -10,6 +10,31 @@ import Testing
 #endif
 @Suite
 struct WorkProvenanceObserverTests {
+    @MainActor
+    @Test
+    func workspaceSnapshotFallsBackToSubmittedPullRequestMention() throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        let panelId = try #require(workspace.focusedPanelId)
+
+        _ = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: "Do a review of https://github.com/CompanyCam/Company-Cam-API/pull/26127",
+                surfaceId: panelId,
+                iMessageModeEnabled: false
+            )
+        )
+        workspace.clearSidebarPullRequestMetadata()
+
+        let snapshot = WorkProvenanceWorkspaceSnapshot(workspace: workspace)
+
+        #expect(workspace.sidebarPullRequestsInDisplayOrder().isEmpty)
+        #expect(snapshot.pullRequest?.number == 26127)
+        #expect(snapshot.pullRequest?.url == "https://github.com/CompanyCam/Company-Cam-API/pull/26127")
+        #expect(snapshot.pullRequest?.branch == nil)
+    }
+
     @Test
     func defaultRuntimeStoreObservationCanBeReadThroughPublicCurrentContext() async throws {
         let homeDirectory = FileManager.default.temporaryDirectory
@@ -166,7 +191,8 @@ struct WorkProvenanceObserverTests {
             pullRequestOwnerResolver: FakePullRequestOwnerResolver(ownersByURL: [
                 "https://github.com/manaflow-ai/bmux/pull/42": WorkProvenancePullRequestOwner(
                     login: "brianbusby",
-                    url: "https://github.com/brianbusby"
+                    url: "https://github.com/brianbusby",
+                    headBranch: "ste-1964-canonical-domain-mutation-paths"
                 )
             ]),
             dateProvider: { Date(timeIntervalSince1970: 500) }
@@ -230,7 +256,7 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.isDirty == false)
         #expect(display.display?.latestEventID != nil)
         #expect(display.display?.latestEventSequence == 3)
-        #expect(display.display?.ticketIDs == [])
+        #expect(display.display?.ticketIDs == ["STE-1964"])
         #expect(display.display?.ticketLinks == [])
     }
 
@@ -252,6 +278,7 @@ struct WorkProvenanceObserverTests {
         let service = WorkProvenanceObservationService(
             client: client,
             gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            pullRequestOwnerResolver: FakePullRequestOwnerResolver(ownersByURL: [:]),
             dateProvider: { Date(timeIntervalSince1970: 550) }
         )
         let stableWorkspaceID = UUID(uuidString: "99999999-9999-9999-9999-999999999999")!
@@ -282,6 +309,63 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.pullRequestURL == "https://github.com/CompanyCam/Company-Cam-API/pull/26117")
         #expect(display.display?.pullRequestBranch == nil)
         #expect(display.display?.ticketIDs == [] && display.display?.ticketLinks == [])
+    }
+
+    @Test
+    func promptLinkedPullRequestResolvedBranchPopulatesTicketWithoutAmbientBranch() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let repositoryRoot = "/tmp/bmux-prompt-linked-pr-resolved-branch-repo"
+        let snapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "/tmp/bmux-prompt-linked-pr-resolved-branch-repo/.git",
+            remoteSlug: "CompanyCam/Company-Cam-API",
+            branch: "ste-1967-send-company-industry-key-to-amplitude-pr26096",
+            headCommit: "1111111111111111111111111111111111111111",
+            isDirty: false,
+            statusEntries: []
+        )
+        let service = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            pullRequestOwnerResolver: FakePullRequestOwnerResolver(ownersByURL: [
+                "https://github.com/CompanyCam/Company-Cam-API/pull/26117": WorkProvenancePullRequestOwner(
+                    login: "reviewer",
+                    url: "https://github.com/reviewer",
+                    headBranch: "ste-26117-clean-up-starter-template"
+                )
+            ]),
+            dateProvider: { Date(timeIntervalSince1970: 555) }
+        )
+        let stableWorkspaceID = UUID(uuidString: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")!
+        let workspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: UUID(uuidString: "cccccccc-cccc-cccc-cccc-cccccccccccc")!,
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Here s comment docs ai-guidelines pull-requests md",
+            currentDirectory: repositoryRoot,
+            branch: "ste-1967-send-company-industry-key-to-amplitude-pr26096",
+            pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
+                number: 26117,
+                url: "https://github.com/CompanyCam/Company-Cam-API/pull/26117",
+                ownerLogin: nil,
+                ownerURL: nil,
+                status: "open",
+                branch: nil,
+                isStale: false
+            )
+        )
+
+        await service.observeWorkspaceSnapshot(workspace)
+
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
+
+        #expect(display.found)
+        #expect(display.display?.branch == "ste-1967-send-company-industry-key-to-amplitude-pr26096")
+        #expect(display.display?.pullRequestNumber == 26117)
+        #expect(display.display?.pullRequestBranch == "ste-26117-clean-up-starter-template")
+        #expect(display.display?.ticketIDs == ["STE-26117"])
+        #expect(display.display?.ticketLinks == [])
     }
 
     @Test
