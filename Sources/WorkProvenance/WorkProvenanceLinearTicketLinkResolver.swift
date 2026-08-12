@@ -37,7 +37,7 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
     func ticketLinks(for ticketIDs: [String]) async -> [ProvenanceWorkspaceDisplayTicketLinkRecord] {
         var links: [ProvenanceWorkspaceDisplayTicketLinkRecord] = []
         for ticketID in Self.normalizedTicketIDs(ticketIDs) {
-            if let cached = cache[ticketID] {
+            if let cached = cache[ticketID], cached.title != nil {
                 links.append(cached)
                 continue
             }
@@ -49,7 +49,11 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
                 title: title,
                 url: Self.linearURL(for: ticketID)
             )
-            cache[ticketID] = link
+            if title != nil {
+                cache[ticketID] = link
+            } else {
+                cache.removeValue(forKey: ticketID)
+            }
             links.append(link)
         }
         return links
