@@ -156,11 +156,10 @@ actor WorkProvenanceObservationService {
         gitSnapshot: WorkProvenanceGitSnapshot?
     ) async throws {
         let ticketIDs = Self.ticketIDs(
-            branchNames: [
-                workspace.branch,
-                gitSnapshot?.branch,
-                workspace.pullRequest?.branch
-            ].compactMap { $0 }
+            branchNames: Self.ticketSourceBranchNames(
+                workspace: workspace,
+                gitSnapshot: gitSnapshot
+            )
         )
         let ticketLinks = await ticketLinks(ticketIDs: ticketIDs)
         let pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest)
@@ -279,6 +278,19 @@ actor WorkProvenanceObservationService {
         guard isDirty else { return "Observed clean worktree" }
         if fileCount == 1 { return "Observed 1 dirty file" }
         return "Observed \(fileCount) dirty files"
+    }
+
+    private static func ticketSourceBranchNames(
+        workspace: WorkProvenanceWorkspaceSnapshot,
+        gitSnapshot: WorkProvenanceGitSnapshot?
+    ) -> [String] {
+        if let pullRequest = workspace.pullRequest {
+            return [pullRequest.branch].compactMap { $0 }
+        }
+        return [
+            workspace.branch,
+            gitSnapshot?.branch
+        ].compactMap { $0 }
     }
 
     private static func ticketIDs(branchNames: [String]) -> [String] {

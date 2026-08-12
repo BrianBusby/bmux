@@ -216,9 +216,7 @@ struct WorkProvenanceObserverTests {
         await service.observeWorkspaceSnapshot(secondWorkspace)
 
         let worktrees = try await client.worktrees(ProvenanceWorktreeListRequest())
-        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
-            workspaceID: stableWorkspaceID.uuidString
-        ))
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
 
         #expect(worktrees.worktrees.count == 1)
         #expect(display.found)
@@ -243,6 +241,59 @@ struct WorkProvenanceObserverTests {
                 title: "Actual Linear ticket title"
             )
         ])
+    }
+
+    @Test
+    func promptLinkedPullRequestDoesNotInheritAmbientBranchTicket() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let repositoryRoot = "/tmp/bmux-prompt-linked-pr-repo"
+        let snapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "/tmp/bmux-prompt-linked-pr-repo/.git",
+            remoteSlug: "CompanyCam/Company-Cam-API",
+            branch: "ste-1967-send-company-industry-key-to-amplitude-pr26096",
+            headCommit: "1111111111111111111111111111111111111111",
+            isDirty: false,
+            statusEntries: []
+        )
+        let service = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            dateProvider: { Date(timeIntervalSince1970: 550) }
+        )
+        let stableWorkspaceID = UUID(uuidString: "99999999-9999-9999-9999-999999999999")!
+        let workspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: UUID(uuidString: "77777777-7777-7777-7777-777777777777")!,
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Here s comment docs ai-guidelines pull-requests md",
+            currentDirectory: repositoryRoot,
+            branch: "ste-1967-send-company-industry-key-to-amplitude-pr26096",
+            pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
+                number: 26117,
+                url: "https://github.com/CompanyCam/Company-Cam-API/pull/26117",
+                ownerLogin: nil,
+                ownerURL: nil,
+                status: "open",
+                branch: nil,
+                isStale: false
+            )
+        )
+
+        await service.observeWorkspaceSnapshot(workspace)
+
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
+            workspaceID: stableWorkspaceID.uuidString
+        ))
+
+        #expect(display.found)
+        #expect(display.display?.branch == "ste-1967-send-company-industry-key-to-amplitude-pr26096")
+        #expect(display.display?.pullRequestNumber == 26117)
+        #expect(display.display?.pullRequestURL == "https://github.com/CompanyCam/Company-Cam-API/pull/26117")
+        #expect(display.display?.pullRequestBranch == nil)
+        #expect(display.display?.ticketIDs == [])
+        #expect(display.display?.ticketLinks == [])
     }
 
     @Test
