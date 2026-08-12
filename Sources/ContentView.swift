@@ -13650,7 +13650,8 @@ struct TabItemView: View, Equatable {
             latestSubmittedMessage: workspaceSnapshot.latestSubmittedMessage,
             latestConversationMessage: workspaceSnapshot.latestConversationMessage,
             hidesAllDetails: settings.hidesAllDetails,
-            iMessageModeEnabled: settings.iMessageModeEnabled
+            iMessageModeEnabled: settings.iMessageModeEnabled,
+            hiddenPullRequestNumbers: Set(workspaceSnapshot.pullRequestRows.map(\.number))
         )
         let subtitle = SidebarWorkspaceRowLineLimitPolicy.subtitle(
             notificationText: latestNotificationText,
@@ -13994,6 +13995,10 @@ struct TabItemView: View, Equatable {
             // Ticket rows
             if !workspaceSnapshot.ticketRows.isEmpty {
                 ticketRowsView(workspaceSnapshot.ticketRows)
+            }
+
+            if !workspaceSnapshot.pullRequestRows.isEmpty {
+                pullRequestOwnerRowsView(workspaceSnapshot.pullRequestRows)
             }
 
             // Ports row
@@ -14909,15 +14914,15 @@ struct TabItemView: View, Equatable {
             if let provenancePullRequestDisplay {
                 return [provenancePullRequestDisplay]
             }
-            guard !orderedPanelIds.isEmpty else { return [] }
-            return pullRequestDisplays(orderedPanelIds: orderedPanelIds)
+            return []
         }()
+        let displayedPullRequestNumbers = Set(pullRequestRows.map(\.number))
         let ticketRows = provenanceTicketDisplays
 
         return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: workspaceSnapshotPresentationKey,
             title: provenanceDisplaySnapshot?.title ?? tab.title,
-            customDescription: settings.showsWorkspaceDescription ? sidebarVisibleCustomDescription : nil,
+            customDescription: settings.showsWorkspaceDescription ? sidebarVisibleCustomDescription(hiddenPullRequestNumbers: displayedPullRequestNumbers) : nil,
             isPinned: tab.isPinned,
             customColorHex: tab.customColor,
             remoteWorkspaceSidebarText: remoteWorkspaceSidebarText,
@@ -14949,10 +14954,16 @@ struct TabItemView: View, Equatable {
         )
     }
 
-    private var sidebarVisibleCustomDescription: String? {
+    private func sidebarVisibleCustomDescription(hiddenPullRequestNumbers: Set<Int>) -> String? {
         guard let description = tab.customDescription else { return nil }
         if tab.title.hasPrefix("vm:"),
            description.trimmingCharacters(in: .whitespacesAndNewlines) == Self.legacyVMWebSocketDescription {
+            return nil
+        }
+        if SidebarWorkspaceRowLineLimitPolicy.containsPullRequestMention(
+            description,
+            matchingAny: hiddenPullRequestNumbers
+        ) {
             return nil
         }
         return description
@@ -15136,30 +15147,52 @@ struct TabItemView: View, Equatable {
         return result
     }
 
-    private func pullRequestDisplays(orderedPanelIds: [UUID]) -> [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay] {
-        tab.sidebarPullRequestsInDisplayOrder(orderedPanelIds: orderedPanelIds).map { pullRequest in
-            SidebarWorkspaceSnapshotBuilder.PullRequestDisplay(
-                id: "\(pullRequest.label.lowercased())#\(pullRequest.number)|\(pullRequest.url.absoluteString)",
-                number: pullRequest.number,
-                label: pullRequest.label,
-                url: pullRequest.url,
-                status: pullRequest.status,
-                isStale: pullRequest.isStale
-            )
-        }
-    }
-
     private var provenancePullRequestDisplay: SidebarWorkspaceSnapshotBuilder.PullRequestDisplay? {
         guard let pullRequest = provenanceDisplaySnapshot?.pullRequest else { return nil }
         let label = String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
+        let url = pullRequest.url ?? provenancePullRequestURL(number: pullRequest.number)
         return SidebarWorkspaceSnapshotBuilder.PullRequestDisplay(
-            id: "\(label.lowercased())#\(pullRequest.number)|\(pullRequest.url?.absoluteString ?? "")",
+            id: "\(label.lowercased())#\(pullRequest.number)|\(url?.absoluteString ?? "")",
             number: pullRequest.number,
             label: label,
-            url: pullRequest.url,
+            url: url,
             status: pullRequest.status.flatMap(SidebarPullRequestStatus.init(rawValue:)) ?? .open,
-            isStale: pullRequest.isStale
+            ownerLogin: pullRequest.ownerLogin,
+            ownerURL: pullRequestOwnerURL(
+                login: pullRequest.ownerLogin,
+                url: pullRequest.ownerURL
+            ),
+            isStale: pullRequest.isStale,
+            isFromProvenance: true
         )
+    }
+
+    private func provenancePullRequestURL(number: Int) -> URL? {
+        let livePullRequest = matchingLivePullRequest(number: number)
+        if let url = livePullRequest?.url {
+            return url
+        }
+
+        for message in [tab.latestSubmittedMessage, tab.latestConversationMessage] {
+            guard let mention = Workspace.submittedPromptPullRequestMention(from: message, matchingNumber: number) else {
+                continue
+            }
+            return mention.url
+        }
+        return nil
+    }
+
+    private func matchingLivePullRequest(number: Int) -> SidebarPullRequestState? {
+        tab.sidebarPullRequestsInDisplayOrder().first { $0.number == number }
+    }
+
+    private func pullRequestOwnerURL(login: String?, url: URL?) -> URL? {
+        if let url { return url }
+        guard let login = login?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !login.isEmpty else {
+            return nil
+        }
+        return URL(string: "https://github.com/\(login)")
     }
 
     private var provenanceTicketDisplays: [SidebarWorkspaceSnapshotBuilder.TicketDisplay] {
@@ -15173,24 +15206,26 @@ struct TabItemView: View, Equatable {
         VStack(alignment: .leading, spacing: 1) {
             ForEach(rows) { pullRequest in
                 let pullRequestNumber = String(pullRequest.number)
-                let pullRequestTitle = "\(pullRequest.label) #\(pullRequestNumber)"
+                let pullRequestTitle = "\(pullRequest.label) #\(pullRequestNumber) \(pullRequestStatusLabel(pullRequest.status))"
                 let rowContent = HStack(spacing: 4) {
                     PullRequestStatusIcon(
                         status: pullRequest.status,
                         color: pullRequestForegroundColor,
                         fontScale: fontScale
                     )
-                    Text(pullRequestTitle).underline(settings.makesPullRequestsClickable && pullRequest.url != nil).lineLimit(1).truncationMode(.tail)
-                    Text(pullRequestStatusLabel(pullRequest.status)).lineLimit(1)
+                    Text(pullRequestTitle)
+                        .underline(pullRequest.url != nil)
+                        .foregroundColor(pullRequest.url == nil ? pullRequestForegroundColor : pullRequestLinkColor)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                     Spacer(minLength: 0)
                 }
                 .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
                 .foregroundColor(pullRequestForegroundColor)
                 .opacity(pullRequest.isStale ? 0.5 : 1)
-                if settings.makesPullRequestsClickable, let url = pullRequest.url {
+                if let url = pullRequest.url {
                     Button(action: { openPullRequestLink(url) }) { rowContent }
                         .buttonStyle(.plain)
-                        .tint(pullRequestForegroundColor)
                         .safeHelp(String(
                             format: String(
                                 localized: "sidebar.pullRequest.openTooltip",
@@ -15202,7 +15237,47 @@ struct TabItemView: View, Equatable {
                         ))
                         .accessibilityIdentifier("SidebarPullRequestRow")
                 } else {
-                    rowContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarPullRequestRow")
+                    rowContent
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("SidebarPullRequestRow")
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func pullRequestOwnerRowsView(_ rows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay]) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            ForEach(rows.filter { $0.ownerLogin != nil }, id: \.id) { pullRequest in
+                let login = pullRequest.ownerLogin ?? ""
+                let rowContent = HStack(spacing: 4) {
+                    BmuxSystemSymbolImage(magnified: "person.crop.circle", pointSize: scaledFontSize(9), weight: .medium)
+                        .foregroundColor(activeSecondaryColor(0.72))
+                    Text(login)
+                        .underline(pullRequest.ownerURL != nil)
+                        .foregroundColor(pullRequest.ownerURL == nil ? activeSecondaryColor(0.75) : pullRequestLinkColor)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Spacer(minLength: 0)
+                }
+                .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
+                .foregroundColor(activeSecondaryColor(0.75))
+                if let url = pullRequest.ownerURL {
+                    Button(action: { openPullRequestOwnerLink(url) }) { rowContent }
+                        .buttonStyle(.plain)
+                        .safeHelp(String(
+                            format: String(
+                                localized: "sidebar.pullRequest.owner.openTooltip",
+                                defaultValue: "Open %@ on GitHub"
+                            ),
+                            locale: .current,
+                            login
+                        ))
+                        .accessibilityIdentifier("SidebarPullRequestOwnerRow")
+                } else {
+                    rowContent
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("SidebarPullRequestOwnerRow")
                 }
             }
         }
@@ -15217,6 +15292,7 @@ struct TabItemView: View, Equatable {
                         .foregroundColor(activeSecondaryColor(0.72))
                     Text(ticket.id)
                         .underline(ticket.url != nil)
+                        .foregroundColor(ticket.url == nil ? activeSecondaryColor(0.75) : pullRequestLinkColor)
                         .lineLimit(1)
                         .truncationMode(.tail)
                     Spacer(minLength: 0)
@@ -15247,12 +15323,23 @@ struct TabItemView: View, Equatable {
         colorScheme == .dark ? .white : .black
     }
 
+    private var pullRequestLinkColor: Color {
+        Color(nsColor: .linkColor)
+    }
+
     private func openPullRequestLink(_ url: URL) {
-        openWorkspaceExternalLink(url)
+        updateSelection()
+        BrowserExternalLinkOpener().openWebLink(url)
+    }
+
+    private func openPullRequestOwnerLink(_ url: URL) {
+        updateSelection()
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     private func openTicketLink(_ url: URL) {
-        openWorkspaceExternalLink(url)
+        updateSelection()
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     private func openWorkspaceExternalLink(_ url: URL) {

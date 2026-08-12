@@ -164,6 +164,12 @@ struct WorkProvenanceObserverTests {
         let service = WorkProvenanceObservationService(
             client: client,
             gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            pullRequestOwnerResolver: FakePullRequestOwnerResolver(ownersByURL: [
+                "https://github.com/manaflow-ai/bmux/pull/42": WorkProvenancePullRequestOwner(
+                    login: "brianbusby",
+                    url: "https://github.com/brianbusby"
+                )
+            ]),
             dateProvider: { Date(timeIntervalSince1970: 500) }
         )
         let workspaceID = UUID(uuidString: "77777777-7777-7777-7777-777777777777")!
@@ -178,6 +184,8 @@ struct WorkProvenanceObserverTests {
             pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
                 number: 41,
                 url: "https://github.com/manaflow-ai/bmux/pull/41",
+                ownerLogin: "octocat",
+                ownerURL: "https://github.com/octocat",
                 status: "open",
                 branch: "ste-1964-canonical-domain-mutation-paths",
                 isStale: false
@@ -193,6 +201,8 @@ struct WorkProvenanceObserverTests {
             pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
                 number: 42,
                 url: "https://github.com/manaflow-ai/bmux/pull/42",
+                ownerLogin: nil,
+                ownerURL: nil,
                 status: "merged",
                 branch: "ste-1964-canonical-domain-mutation-paths",
                 isStale: true
@@ -214,6 +224,8 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.branch == "ste-1964-canonical-domain-mutation-paths")
         #expect(display.display?.pullRequestNumber == 42)
         #expect(display.display?.pullRequestURL == "https://github.com/manaflow-ai/bmux/pull/42")
+        #expect(display.display?.pullRequestOwnerLogin == "brianbusby")
+        #expect(display.display?.pullRequestOwnerURL == "https://github.com/brianbusby")
         #expect(display.display?.pullRequestStatus == "merged")
         #expect(display.display?.pullRequestBranch == "ste-1964-canonical-domain-mutation-paths")
         #expect(display.display?.pullRequestIsStale == true)
@@ -241,6 +253,8 @@ struct WorkProvenanceObserverTests {
             branch: " pe-workspace-display-tab-projection ",
             pullRequestNumber: 57,
             pullRequestURL: "https://github.com/manaflow-ai/bmux/pull/57",
+            pullRequestOwnerLogin: " octocat ",
+            pullRequestOwnerURL: " https://github.com/octocat ",
             pullRequestStatus: "merged",
             pullRequestBranch: "pe-workspace-display-tab-projection",
             pullRequestIsStale: true,
@@ -267,6 +281,8 @@ struct WorkProvenanceObserverTests {
         #expect(snapshot.branch == "pe-workspace-display-tab-projection")
         #expect(snapshot.pullRequest?.number == 57)
         #expect(snapshot.pullRequest?.url == URL(string: "https://github.com/manaflow-ai/bmux/pull/57"))
+        #expect(snapshot.pullRequest?.ownerLogin == "octocat")
+        #expect(snapshot.pullRequest?.ownerURL == URL(string: "https://github.com/octocat"))
         #expect(snapshot.pullRequest?.status == "merged")
         #expect(snapshot.pullRequest?.branch == "pe-workspace-display-tab-projection")
         #expect(snapshot.pullRequest?.isStale == true)
@@ -274,6 +290,8 @@ struct WorkProvenanceObserverTests {
         #expect(snapshot.ticketLinks.map(\.id) == ["STE-1964", "GH-57"])
         #expect(snapshot.ticketLinks.first?.system == "linear")
         #expect(snapshot.ticketLinks.first?.url == URL(string: "https://linear.app/company/issue/STE-1964"))
+        #expect(snapshot.ticketLinks.last?.system == "linear")
+        #expect(snapshot.ticketLinks.last?.url == URL(string: "https://linear.app/company/issue/GH-57"))
         #expect(snapshot.latestEventID == "event-1")
         #expect(snapshot.latestEventSequence == 12)
     }
@@ -300,6 +318,14 @@ struct WorkProvenanceObserverTests {
 
         func snapshot(for directory: String) async -> WorkProvenanceGitSnapshot? {
             snapshotsByDirectory[directory]
+        }
+    }
+
+    private struct FakePullRequestOwnerResolver: WorkProvenancePullRequestOwnerResolving {
+        let ownersByURL: [String: WorkProvenancePullRequestOwner]
+
+        func owner(for pullRequestURL: String) async -> WorkProvenancePullRequestOwner? {
+            ownersByURL[pullRequestURL]
         }
     }
 
@@ -338,6 +364,8 @@ struct WorkProvenanceObserverTests {
             branch: branch,
             pullRequestNumber: nil,
             pullRequestURL: nil,
+            pullRequestOwnerLogin: nil,
+            pullRequestOwnerURL: nil,
             pullRequestStatus: nil,
             pullRequestBranch: nil,
             pullRequestIsStale: false,

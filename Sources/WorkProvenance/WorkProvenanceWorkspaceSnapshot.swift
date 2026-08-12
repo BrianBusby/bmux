@@ -6,6 +6,8 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
     struct PullRequest: Equatable, Sendable {
         let number: Int
         let url: String
+        let ownerLogin: String?
+        let ownerURL: String?
         let status: String
         let branch: String?
         let isStale: Bool
@@ -66,6 +68,20 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
     }
 }
 
+extension WorkProvenanceWorkspaceSnapshot.PullRequest {
+    func replacingOwner(login: String?, url: String?) -> Self {
+        Self(
+            number: number,
+            url: self.url,
+            ownerLogin: login,
+            ownerURL: url,
+            status: status,
+            branch: branch,
+            isStale: isStale
+        )
+    }
+}
+
 private extension Workspace {
     func provenancePullRequestSnapshot() -> WorkProvenanceWorkspaceSnapshot.PullRequest? {
         let state = pullRequest ?? sidebarPullRequestsInDisplayOrder().first
@@ -73,6 +89,8 @@ private extension Workspace {
         return WorkProvenanceWorkspaceSnapshot.PullRequest(
             number: state.number,
             url: state.url.absoluteString,
+            ownerLogin: state.ownerLogin,
+            ownerURL: state.ownerURL?.absoluteString,
             status: state.status.rawValue,
             branch: state.branch,
             isStale: state.isStale

@@ -230,7 +230,10 @@ import Testing
             label: "PR",
             url: URL(string: "https://github.com/manaflow-ai/bmux/pull/\(number)")!,
             status: .open,
-            isStale: isStale
+            ownerLogin: nil,
+            ownerURL: nil,
+            isStale: isStale,
+            isFromProvenance: false
         )
     }
 }
@@ -277,6 +280,30 @@ import Testing
         )
 
         #expect(subtitle == "last prompt I submitted")
+    }
+
+    @Test func conversationSubtitleHidesDisplayedPullRequestPrompt() {
+        let subtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
+            latestSubmittedMessage: "do an adversarial review of this pr: https://github.com/CompanyCam/Company-Cam-API/pull/25964",
+            latestConversationMessage: nil,
+            hidesAllDetails: false,
+            iMessageModeEnabled: true,
+            hiddenPullRequestNumbers: [25964]
+        )
+
+        #expect(subtitle == nil)
+    }
+
+    @Test func conversationSubtitleKeepsDifferentPullRequestPrompt() {
+        let subtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
+            latestSubmittedMessage: "do an adversarial review of this pr: https://github.com/CompanyCam/Company-Cam-API/pull/25964",
+            latestConversationMessage: nil,
+            hidesAllDetails: false,
+            iMessageModeEnabled: true,
+            hiddenPullRequestNumbers: [12345]
+        )
+
+        #expect(subtitle != nil)
     }
 
     @Test func conversationSubtitleDoesNotFallBackToAssistantReply() {

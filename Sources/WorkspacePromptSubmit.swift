@@ -278,7 +278,10 @@ extension Workspace {
         return panelIdFromSurfaceId(TabID(uuid: surfaceId))
     }
 
-    static func submittedPromptPullRequestMention(from message: String?) -> (number: Int, url: URL)? {
+    static func submittedPromptPullRequestMention(
+        from message: String?,
+        matchingNumber expectedNumber: Int? = nil
+    ) -> (number: Int, url: URL)? {
         guard let message else { return nil }
         let pattern = #"https?://github\.com/([^/\s"'<>]+)/([^/\s"'<>]+)/pull/([0-9]+)"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
@@ -286,16 +289,19 @@ extension Workspace {
         }
         let nsMessage = message as NSString
         let range = NSRange(location: 0, length: nsMessage.length)
-        guard let match = regex.firstMatch(in: message, range: range),
-              match.numberOfRanges == 4,
-              let number = Int(nsMessage.substring(with: match.range(at: 3))) else {
-            return nil
+        for match in regex.matches(in: message, range: range) {
+            guard match.numberOfRanges == 4,
+                  let number = Int(nsMessage.substring(with: match.range(at: 3))),
+                  expectedNumber == nil || expectedNumber == number else {
+                continue
+            }
+            let owner = nsMessage.substring(with: match.range(at: 1))
+            let repo = nsMessage.substring(with: match.range(at: 2))
+            guard let url = URL(string: "https://github.com/\(owner)/\(repo)/pull/\(number)") else {
+                continue
+            }
+            return (number, url)
         }
-        let owner = nsMessage.substring(with: match.range(at: 1))
-        let repo = nsMessage.substring(with: match.range(at: 2))
-        guard let url = URL(string: "https://github.com/\(owner)/\(repo)/pull/\(number)") else {
-            return nil
-        }
-        return (number, url)
+        return nil
     }
 }
