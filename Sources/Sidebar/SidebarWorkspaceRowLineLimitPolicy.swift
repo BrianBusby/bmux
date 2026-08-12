@@ -28,7 +28,7 @@ struct SidebarWorkspaceRowLineLimitPolicy {
             .nilIfEmpty else {
             return nil
         }
-        guard !containsHiddenPullRequestMention(message, hiddenPullRequestNumbers: hiddenPullRequestNumbers) else {
+        guard !containsPullRequestMention(message, matchingAny: hiddenPullRequestNumbers) else {
             return nil
         }
         return message
@@ -46,11 +46,11 @@ struct SidebarWorkspaceRowLineLimitPolicy {
         return Subtitle(text: conversationMessage, lineLimit: conversationSubtitleLines)
     }
 
-    private static func containsHiddenPullRequestMention(
+    static func containsPullRequestMention(
         _ message: String,
-        hiddenPullRequestNumbers: Set<Int>
+        matchingAny pullRequestNumbers: Set<Int>
     ) -> Bool {
-        guard !hiddenPullRequestNumbers.isEmpty else { return false }
+        guard !pullRequestNumbers.isEmpty else { return false }
         let pattern = #"https?://github\.com/[^/\s"'<>]+/[^/\s"'<>]+/pull/([0-9]+)"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
             return false
@@ -62,7 +62,7 @@ struct SidebarWorkspaceRowLineLimitPolicy {
                   let number = Int(nsMessage.substring(with: match.range(at: 1))) else {
                 return false
             }
-            return hiddenPullRequestNumbers.contains(number)
+            return pullRequestNumbers.contains(number)
         }
     }
 }

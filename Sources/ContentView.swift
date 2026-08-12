@@ -14912,12 +14912,13 @@ struct TabItemView: View, Equatable {
             }
             return []
         }()
+        let displayedPullRequestNumbers = Set(pullRequestRows.map(\.number))
         let ticketRows = provenanceTicketDisplays
 
         return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: workspaceSnapshotPresentationKey,
             title: provenanceDisplaySnapshot?.title ?? tab.title,
-            customDescription: settings.showsWorkspaceDescription ? sidebarVisibleCustomDescription : nil,
+            customDescription: settings.showsWorkspaceDescription ? sidebarVisibleCustomDescription(hiddenPullRequestNumbers: displayedPullRequestNumbers) : nil,
             isPinned: tab.isPinned,
             customColorHex: tab.customColor,
             remoteWorkspaceSidebarText: remoteWorkspaceSidebarText,
@@ -14949,10 +14950,16 @@ struct TabItemView: View, Equatable {
         )
     }
 
-    private var sidebarVisibleCustomDescription: String? {
+    private func sidebarVisibleCustomDescription(hiddenPullRequestNumbers: Set<Int>) -> String? {
         guard let description = tab.customDescription else { return nil }
         if tab.title.hasPrefix("vm:"),
            description.trimmingCharacters(in: .whitespacesAndNewlines) == Self.legacyVMWebSocketDescription {
+            return nil
+        }
+        if SidebarWorkspaceRowLineLimitPolicy.containsPullRequestMention(
+            description,
+            matchingAny: hiddenPullRequestNumbers
+        ) {
             return nil
         }
         return description
