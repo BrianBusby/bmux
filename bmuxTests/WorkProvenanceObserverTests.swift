@@ -400,6 +400,41 @@ struct WorkProvenanceObserverTests {
         #expect(!older.isNewerThan(newer))
     }
 
+    @MainActor
+    @Test
+    func workspaceDisplayCurrentStateSubscriptionRefreshesCurrentWorkspaceIDsWhenPEChanges() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let stableWorkspaceID = UUID(uuidString: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")!
+        let scheduler = ManualCoalescerScheduler()
+        let stream = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        let subscription = WorkspaceDisplayCurrentStateSubscription(
+            databaseURL: fixture.databaseURL,
+            changeStream: { stream.stream },
+            coalescer: NotificationBurstCoalescer(
+                delay: 0.05,
+                schedule: scheduler.schedule(delay:action:)
+            )
+        )
+        var refreshes: [[UUID]] = []
+
+        subscription.start(
+            stableWorkspaceIDs: { [stableWorkspaceID] },
+            refresh: { refreshes.append($0) }
+        )
+        stream.continuation.yield(())
+        await Task.yield()
+
+        #expect(scheduler.delays == [0.05])
+        #expect(refreshes.isEmpty)
+
+        scheduler.fire(at: 0)
+        #expect(refreshes == [[stableWorkspaceID]])
+
+        subscription.stop()
+        stream.continuation.finish()
+    }
+
     private struct FakeGitInspector: WorkProvenanceGitInspecting {
         let snapshotsByDirectory: [String: WorkProvenanceGitSnapshot]
 
@@ -462,6 +497,35 @@ struct WorkProvenanceObserverTests {
 
         func remove() {
             try? FileManager.default.removeItem(at: directoryURL)
+        }
+    }
+
+    private final class ManualCoalescerScheduler {
+        private struct PendingFlush {
+            var isCancelled = false
+            let action: @MainActor () -> Void
+        }
+
+        private var pendingFlushes: [PendingFlush] = []
+        private(set) var delays: [TimeInterval] = []
+
+        @MainActor
+        func schedule(
+            delay: TimeInterval,
+            action: @escaping @MainActor () -> Void
+        ) -> NotificationBurstCoalescer.Cancellation {
+            let index = pendingFlushes.count
+            delays.append(delay)
+            pendingFlushes.append(PendingFlush(action: action))
+            return { [weak self] in
+                self?.pendingFlushes[index].isCancelled = true
+            }
+        }
+
+        @MainActor
+        func fire(at index: Int) {
+            guard pendingFlushes.indices.contains(index), !pendingFlushes[index].isCancelled else { return }
+            pendingFlushes[index].action()
         }
     }
 
