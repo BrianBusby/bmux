@@ -446,6 +446,31 @@ struct ProvenanceSQLiteDatabaseTests {
     }
 
     @Test
+    func repositoryMigratesExistingVersion13WorkspaceDisplaySchemaToOwnerColumns() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+
+        _ = try ProvenanceSQLiteRepository(
+            url: url,
+            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast())
+        )
+
+        let olderDatabase = try ProvenanceSQLiteDatabase(url: url)
+        #expect(try olderDatabase.userVersion == 13)
+        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: olderDatabase) == "13")
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_login", in: olderDatabase) == false)
+
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
+
+        #expect(try await repository.schemaVersion() == 14)
+        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: migratedDatabase) == "14")
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_login", in: migratedDatabase))
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_url", in: migratedDatabase))
+        #expect(try await repository.schemaMigrationRecords(limit: 1).map(\.version) == [14])
+    }
+
+    @Test
     func repositoryReadsSchemaMigrationRecordsNewestFirstWithLimit() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
@@ -3293,6 +3318,21 @@ struct ProvenanceSQLiteDatabaseTests {
         defer { query.finalize() }
         try query.bind(tableName, at: 1)
         return try query.step()
+    }
+
+    private static func tableHasColumn(
+        _ tableName: String,
+        _ columnName: String,
+        in database: ProvenanceSQLiteDatabase
+    ) throws -> Bool {
+        let query = try database.prepare("PRAGMA table_info(\(tableName))")
+        defer { query.finalize() }
+        while try query.step() {
+            if query.string(at: 1) == columnName {
+                return true
+            }
+        }
+        return false
     }
 
     private static func firstString(_ sql: String, in database: ProvenanceSQLiteDatabase) throws -> String? {

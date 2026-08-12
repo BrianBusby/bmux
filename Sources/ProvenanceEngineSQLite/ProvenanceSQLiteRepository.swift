@@ -3043,7 +3043,7 @@ actor ProvenanceSQLiteRepository {
         return String(trimmed.prefix(512))
     }
 
-    private static let migrations = [
+    static let migrations = [
         ProvenanceSQLiteMigration(
             version: 1,
             statements: [
