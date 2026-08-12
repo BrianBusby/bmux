@@ -2811,11 +2811,13 @@ struct ProvenanceSQLiteDatabaseTests {
                 ProvenanceWorkspaceDisplayTicketLinkRecord(
                     id: "STE-1964",
                     system: "linear",
+                    title: "Canonical domain mutation paths",
                     url: "https://linear.app/manaflow/issue/STE-1964"
                 ),
                 ProvenanceWorkspaceDisplayTicketLinkRecord(
                     id: "BMUX-42",
                     system: "jira",
+                    title: "Workspace display title projection",
                     url: "https://manaflow.atlassian.net/browse/BMUX-42"
                 ),
             ],
@@ -2844,11 +2846,13 @@ struct ProvenanceSQLiteDatabaseTests {
                 ProvenanceWorkspaceDisplayTicketLinkRecord(
                     id: "STE-1964",
                     system: "linear",
+                    title: "Canonical domain mutation paths",
                     url: "https://linear.app/manaflow/issue/STE-1964"
                 ),
                 ProvenanceWorkspaceDisplayTicketLinkRecord(
                     id: "BMUX-42",
                     system: "jira",
+                    title: "Workspace display title projection",
                     url: "https://manaflow.atlassian.net/browse/BMUX-42"
                 ),
             ],

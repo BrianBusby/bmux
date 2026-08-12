@@ -162,6 +162,25 @@ struct ProvenanceEngineHealthTests {
     }
 
     @Test
+    func olderWorkspaceDisplayTicketLinkPayloadWithoutTitleDecodesWithNilTitle() throws {
+        let json = """
+        {
+          "id": "STE-1964",
+          "system": "linear",
+          "url": "https://linear.app/manaflow/issue/STE-1964"
+        }
+        """
+        let data = try #require(json.data(using: .utf8))
+
+        let link = try JSONDecoder().decode(ProvenanceWorkspaceDisplayTicketLinkRecord.self, from: data)
+
+        #expect(link.id == "STE-1964")
+        #expect(link.system == "linear")
+        #expect(link.title == nil)
+        #expect(link.url == "https://linear.app/manaflow/issue/STE-1964")
+    }
+
+    @Test
     func engineClientProtocolSupportsInProcessImplementations() async throws {
         let client = StaticProvenanceEngineClient()
 
@@ -261,6 +280,7 @@ struct ProvenanceEngineHealthTests {
             ProvenanceWorkspaceDisplayTicketLinkRecord(
                 id: "STE-1964",
                 system: "linear",
+                title: "Canonical domain mutation paths",
                 url: "https://linear.app/manaflow/issue/STE-1964"
             ),
         ],
