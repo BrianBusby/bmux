@@ -13650,7 +13650,8 @@ struct TabItemView: View, Equatable {
             latestSubmittedMessage: workspaceSnapshot.latestSubmittedMessage,
             latestConversationMessage: workspaceSnapshot.latestConversationMessage,
             hidesAllDetails: settings.hidesAllDetails,
-            iMessageModeEnabled: settings.iMessageModeEnabled
+            iMessageModeEnabled: settings.iMessageModeEnabled,
+            hiddenPullRequestNumbers: Set(workspaceSnapshot.pullRequestRows.map(\.number))
         )
         let subtitle = SidebarWorkspaceRowLineLimitPolicy.subtitle(
             notificationText: latestNotificationText,
@@ -15183,15 +15184,22 @@ struct TabItemView: View, Equatable {
                         color: pullRequestForegroundColor,
                         fontScale: fontScale
                     )
-                    if let url = pullRequest.url {
-                        Button(action: { openPullRequestLink(url) }) {
-                            Text(pullRequestTitle)
-                                .underline()
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                        }
+                    Text(pullRequestTitle)
+                        .underline(pullRequest.url != nil)
+                        .foregroundColor(pullRequest.url == nil ? pullRequestForegroundColor : pullRequestLinkColor)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Spacer(minLength: 0)
+                    Text(pullRequestStatusLabel(pullRequest.status))
+                        .foregroundColor(pullRequest.isFromProvenance ? activeSecondaryColor(0.78) : pullRequestForegroundColor)
+                        .lineLimit(1)
+                }
+                .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
+                .foregroundColor(pullRequestForegroundColor)
+                .opacity(pullRequest.isStale ? 0.5 : 1)
+                if let url = pullRequest.url {
+                    Button(action: { openPullRequestLink(url) }) { rowContent }
                         .buttonStyle(.plain)
-                        .foregroundColor(pullRequestLinkColor)
                         .safeHelp(String(
                             format: String(
                                 localized: "sidebar.pullRequest.openTooltip",
@@ -15201,22 +15209,12 @@ struct TabItemView: View, Equatable {
                             pullRequest.label,
                             pullRequest.number
                         ))
-                    } else {
-                        Text(pullRequestTitle)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                    }
-                    Spacer(minLength: 0)
-                    Text(pullRequestStatusLabel(pullRequest.status))
-                        .foregroundColor(pullRequest.isFromProvenance ? activeSecondaryColor(0.78) : pullRequestForegroundColor)
-                        .lineLimit(1)
+                        .accessibilityIdentifier("SidebarPullRequestRow")
+                } else {
+                    rowContent
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("SidebarPullRequestRow")
                 }
-                .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
-                .foregroundColor(pullRequestForegroundColor)
-                .opacity(pullRequest.isStale ? 0.5 : 1)
-                rowContent
-                    .accessibilityElement(children: .combine)
-                    .accessibilityIdentifier("SidebarPullRequestRow")
             }
         }
     }
