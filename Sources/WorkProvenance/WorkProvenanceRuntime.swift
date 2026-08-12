@@ -9,6 +9,7 @@ final class WorkProvenanceRuntime {
     private weak var tabManager: TabManager?
     private let observationService: WorkProvenanceObservationService?
     private let workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore?
+    private let workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
     private var directoryObservationTask: Task<Void, Never>?
     private var titleObservationTask: Task<Void, Never>?
@@ -29,12 +30,14 @@ final class WorkProvenanceRuntime {
     init(
         observationService: WorkProvenanceObservationService?,
         workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore? = nil,
+        workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription? = nil,
         sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil,
         effectiveDatabaseURL: URL? = nil,
         startupErrorDescription: String? = nil
     ) {
         self.observationService = observationService
         self.workspaceDisplayCurrentStateStore = workspaceDisplayCurrentStateStore
+        self.workspaceDisplayCurrentStateSubscription = workspaceDisplayCurrentStateSubscription
         self.sessionLifecycleRecorder = sessionLifecycleRecorder
         self.effectiveDatabaseURL = effectiveDatabaseURL
         self.startupErrorDescription = startupErrorDescription
@@ -63,6 +66,9 @@ final class WorkProvenanceRuntime {
                     gitInspector: WorkProvenanceGitInspector()
                 ),
                 workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore(client: client),
+                workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription(
+                    databaseURL: location.databaseURL
+                ),
                 sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder(
                     client: client
                 ),
@@ -90,6 +96,7 @@ final class WorkProvenanceRuntime {
         startDirectoryObservationIfNeeded()
         startDisplayObservationIfNeeded()
         startActivationObservationIfNeeded()
+        startWorkspaceDisplayCurrentStateSubscriptionIfNeeded()
     }
 
     /// Starts projecting eligible live execution telemetry facts into provenance.
@@ -192,6 +199,17 @@ final class WorkProvenanceRuntime {
                 self?.refreshAllWorkspaceDisplayCurrentState()
             }
         }
+    }
+
+    private func startWorkspaceDisplayCurrentStateSubscriptionIfNeeded() {
+        workspaceDisplayCurrentStateSubscription?.start(
+            stableWorkspaceIDs: { [weak self] in
+                self?.tabManager?.tabs.map(\.stableId) ?? []
+            },
+            refresh: { [weak self] stableWorkspaceIDs in
+                self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: stableWorkspaceIDs)
+            }
+        )
     }
 
     private func handleCurrentDirectoryNotification(_ notification: Notification) {
