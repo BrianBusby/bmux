@@ -77,7 +77,7 @@ struct WorkProvenanceStableIDFactory: Sendable {
         let pullRequestStaleness = pullRequestIsStale ? "stale" : "fresh"
         let ticketIDList = ticketIDs.joined(separator: ",")
         let ticketLinkList = ticketLinks
-            .map { "\($0.id)|\($0.system ?? "")|\($0.url ?? "")" }
+            .map { "\($0.id)|\($0.system ?? "")|\($0.title ?? "")|\($0.url ?? "")" }
             .joined(separator: ",")
         let payloadParts: [String] = [
             stableWorkspaceID.uuidString.lowercased(),

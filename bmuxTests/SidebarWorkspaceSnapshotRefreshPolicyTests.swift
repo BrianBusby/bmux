@@ -148,6 +148,7 @@ import Testing
 
     private static func snapshot(
         presentationKey: SidebarWorkspaceSnapshotBuilder.PresentationKey? = nil,
+        ticketTitle: String? = nil,
         title: String = "workspace",
         customDescription: String? = nil,
         isPinned: Bool = false,
@@ -165,6 +166,7 @@ import Testing
     ) -> SidebarWorkspaceSnapshotBuilder.Snapshot {
         SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: presentationKey ?? Self.presentationKey(),
+            ticketTitle: ticketTitle,
             title: title,
             customDescription: customDescription,
             isPinned: isPinned,

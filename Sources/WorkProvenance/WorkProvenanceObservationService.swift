@@ -152,14 +152,15 @@ actor WorkProvenanceObservationService {
         for workspace: WorkProvenanceWorkspaceSnapshot,
         gitSnapshot: WorkProvenanceGitSnapshot?
     ) async throws {
-        let ticketIDs = Self.ticketIDs(
+        let ticketObservations = Self.ticketObservations(
             branchNames: [
                 workspace.branch,
                 gitSnapshot?.branch,
                 workspace.pullRequest?.branch
             ].compactMap { $0 }
         )
-        let ticketLinks = Self.ticketLinks(ticketIDs: ticketIDs)
+        let ticketIDs = ticketObservations.map { $0.id }
+        let ticketLinks = Self.ticketLinks(ticketObservations: ticketObservations)
         let pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest)
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
@@ -278,30 +279,65 @@ actor WorkProvenanceObservationService {
         return "Observed \(fileCount) dirty files"
     }
 
-    private static func ticketIDs(branchNames: [String]) -> [String] {
+    private static func ticketObservations(branchNames: [String]) -> [(id: String, title: String?)] {
         let pattern = #"[A-Z][A-Z0-9]+-[0-9]+"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
         var seen = Set<String>()
         var ticketIDs: [String] = []
+        var ticketTitlesByID: [String: String] = [:]
         for branchName in branchNames {
-            let normalized = branchName.uppercased()
-            let range = NSRange(normalized.startIndex..<normalized.endIndex, in: normalized)
-            for match in regex.matches(in: normalized, range: range) {
-                guard let matchRange = Range(match.range, in: normalized) else { continue }
-                let ticketID = String(normalized[matchRange])
+            let range = NSRange(branchName.startIndex..<branchName.endIndex, in: branchName)
+            for match in regex.matches(in: branchName, range: range) {
+                guard let matchRange = Range(match.range, in: branchName) else { continue }
+                let ticketID = String(branchName[matchRange]).uppercased()
                 if seen.insert(ticketID).inserted {
                     ticketIDs.append(ticketID)
                 }
+                if ticketTitlesByID[ticketID] == nil,
+                   let title = ticketTitle(branchName: branchName, matchRange: match.range) {
+                    ticketTitlesByID[ticketID] = title
+                }
             }
         }
-        return ticketIDs
+        return ticketIDs.map { ticketID in
+            (id: ticketID, title: ticketTitlesByID[ticketID])
+        }
     }
 
     private static func ticketLinks(
-        ticketIDs: [String]
+        ticketObservations: [(id: String, title: String?)]
     ) -> [ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord] {
-        ticketIDs.map { ticketID in
-            ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord(id: ticketID)
+        ticketObservations.map { ticket in
+            ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord(
+                id: ticket.id,
+                title: ticket.title
+            )
         }
+    }
+
+    private static func ticketTitle(branchName: String, matchRange: NSRange) -> String? {
+        guard let ticketRange = Range(matchRange, in: branchName) else { return nil }
+        let suffix = String(branchName[ticketRange.upperBound...])
+            .trimmingCharacters(in: CharacterSet(charactersIn: "-_/. "))
+        let words = suffix
+            .split { character in
+                character.unicodeScalars.allSatisfy { !CharacterSet.alphanumerics.contains($0) }
+            }
+            .map(String.init)
+        guard words.contains(where: { $0.rangeOfCharacter(from: .letters) != nil }) else {
+            return nil
+        }
+        let normalizedWords = words.enumerated().map { index, word in
+            if word != word.lowercased(), word != word.uppercased() {
+                return word
+            }
+            let lowercased = word.lowercased()
+            guard index == 0, let first = lowercased.first else {
+                return lowercased
+            }
+            return first.uppercased() + String(lowercased.dropFirst())
+        }
+        let title = normalizedWords.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+        return title.isEmpty ? nil : title
     }
 }

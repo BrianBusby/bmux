@@ -6,6 +6,7 @@ import ProvenanceEngineContracts
 struct WorkspaceDisplayCurrentStateTicketLinkSnapshot: Equatable, Sendable, Identifiable {
     let id: String
     let system: String?
+    let title: String?
     let url: URL?
 
     init?(_ link: ProvenanceWorkspaceDisplayTicketLinkRecord) {
@@ -13,12 +14,14 @@ struct WorkspaceDisplayCurrentStateTicketLinkSnapshot: Equatable, Sendable, Iden
         guard !trimmedID.isEmpty else { return nil }
         self.id = trimmedID
         self.system = link.system?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        self.title = link.title?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.url = link.url.flatMap(URL.init(string:)) ?? Self.linearURL(for: trimmedID)
     }
 
     init(id: String) {
         self.id = id
         self.system = Self.linearURL(for: id) == nil ? nil : "linear"
+        self.title = nil
         self.url = Self.linearURL(for: id)
     }
 

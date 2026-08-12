@@ -2,8 +2,12 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice: null
-  state: observation
+  active_slice:
+    id: workspace_display_ticket_title_sidebar
+    title: Workspace sidebar ticket title presentation
+    state: implemented
+    owner: Codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented
@@ -20,6 +24,7 @@ local_capabilities:
   workspace_display_current_state_diagnostic: implemented
   workspace_display_ticket_link_facts: implemented
   workspace_display_tab_projection: implemented
+  workspace_display_ticket_title_sidebar: implemented
 
 release:
   latest_tag: null

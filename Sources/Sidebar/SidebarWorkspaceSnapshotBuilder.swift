@@ -34,11 +34,13 @@ struct SidebarWorkspaceSnapshotBuilder {
 
     struct TicketDisplay: Identifiable, Equatable {
         let id: String
+        let title: String?
         let url: URL?
     }
 
     struct Snapshot: Equatable {
         let presentationKey: PresentationKey
+        let ticketTitle: String?
         let title: String
         let customDescription: String?
         let isPinned: Bool

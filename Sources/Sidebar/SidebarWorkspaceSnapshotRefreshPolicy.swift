@@ -1,5 +1,6 @@
 extension SidebarWorkspaceSnapshotBuilder.Snapshot {
     struct ContextMenuImmediateFields: Equatable {
+        let ticketTitle: String?
         let title: String
         let customDescription: String?
         let isPinned: Bool
@@ -14,6 +15,7 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
 
     var contextMenuImmediateFields: ContextMenuImmediateFields {
         ContextMenuImmediateFields(
+            ticketTitle: ticketTitle,
             title: title,
             customDescription: customDescription,
             isPinned: isPinned,
@@ -31,6 +33,7 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
         guard contextMenuImmediateFields != snapshot.contextMenuImmediateFields else { return self }
         return Self(
             presentationKey: snapshot.presentationKey,
+            ticketTitle: snapshot.ticketTitle,
             title: snapshot.title,
             customDescription: snapshot.customDescription,
             isPinned: snapshot.isPinned,

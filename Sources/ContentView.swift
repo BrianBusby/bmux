@@ -13661,6 +13661,8 @@ struct TabItemView: View, Equatable {
         let titleLineLimit = SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(
             wrapsWorkspaceTitles: settings.wrapsWorkspaceTitles
         )
+        let ticketTitleLineLimit = settings.wrapsWorkspaceTitles ? 2 : 1
+        let displayedTicketTitle = workspaceSnapshot.ticketTitle
         let displayedTitle = workspaceSnapshot.title
         let scaledUnreadBadgeSize = 16 * fontScale
         let scaledLoadingIndicatorSize = TronLoadingIndicatorMotion.workspaceTabSize(
@@ -13766,6 +13768,16 @@ struct TabItemView: View, Equatable {
                     .layoutPriority(1)
                 } else {
                     VStack(alignment: .leading, spacing: 1) {
+                        if let displayedTicketTitle {
+                            Text(displayedTicketTitle)
+                                .font(magnifiedFont(scaledFontSize(13.5), weight: .bold))
+                                .foregroundColor(activePrimaryTextColor)
+                                .lineLimit(ticketTitleLineLimit)
+                                .truncationMode(.tail)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .multilineTextAlignment(.leading)
+                        }
+
                         Text(displayedTitle)
                             .font(magnifiedFont(scaledFontSize(12.5), weight: titleFontWeight))
                             .foregroundColor(activePrimaryTextColor)
@@ -14918,9 +14930,11 @@ struct TabItemView: View, Equatable {
         }()
         let displayedPullRequestNumbers = Set(pullRequestRows.map(\.number))
         let ticketRows = provenanceTicketDisplays
+        let ticketTitle = ticketRows.compactMap(\.title).first
 
         return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: workspaceSnapshotPresentationKey,
+            ticketTitle: ticketTitle,
             title: provenanceDisplaySnapshot?.title ?? tab.title,
             customDescription: settings.showsWorkspaceDescription ? sidebarVisibleCustomDescription(hiddenPullRequestNumbers: displayedPullRequestNumbers) : nil,
             isPinned: tab.isPinned,
@@ -15197,7 +15211,7 @@ struct TabItemView: View, Equatable {
 
     private var provenanceTicketDisplays: [SidebarWorkspaceSnapshotBuilder.TicketDisplay] {
         provenanceDisplaySnapshot?.ticketLinks.map {
-            SidebarWorkspaceSnapshotBuilder.TicketDisplay(id: $0.id, url: $0.url)
+            SidebarWorkspaceSnapshotBuilder.TicketDisplay(id: $0.id, title: $0.title, url: $0.url)
         } ?? []
     }
 
