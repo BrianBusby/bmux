@@ -170,6 +170,9 @@ struct WorkProvenanceObserverTests {
                     url: "https://github.com/brianbusby"
                 )
             ]),
+            ticketTitleResolver: FakeTicketTitleResolver(titlesByID: [
+                "STE-1964": "Actual Linear ticket title"
+            ]),
             dateProvider: { Date(timeIntervalSince1970: 500) }
         )
         let workspaceID = UUID(uuidString: "77777777-7777-7777-7777-777777777777")!
@@ -237,9 +240,36 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.ticketLinks == [
             ProvenanceWorkspaceDisplayTicketLinkRecord(
                 id: "STE-1964",
-                title: "Canonical domain mutation paths"
+                title: "Actual Linear ticket title"
             )
         ])
+    }
+
+    @Test
+    func linearTicketTitleResolverQueriesLinearIssueTitle() async throws {
+        let loader = FakeLinearGraphQLLoader(responseBody: """
+        {"data":{"issue":{"title":"Actual Linear ticket title"}}}
+        """)
+        let resolver = WorkProvenanceLinearTicketTitleResolver(
+            apiKeyProvider: { "linear-api-key" },
+            load: { request in
+                await loader.load(request)
+            }
+        )
+
+        let titles = await resolver.titles(for: ["ste-1964", "STE-1964", "not-a-ticket"])
+        let requests = await loader.requests
+        let request = try #require(requests.first)
+        let body = try #require(request.httpBody)
+        let payload = try #require(String(data: body, encoding: .utf8))
+
+        #expect(titles == ["STE-1964": "Actual Linear ticket title"])
+        #expect(requests.count == 1)
+        #expect(request.url == URL(string: "https://api.linear.app/graphql"))
+        #expect(request.httpMethod == "POST")
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "linear-api-key")
+        #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
+        #expect(payload.contains(#""id":"STE-1964""#))
     }
 
     @Test
@@ -332,6 +362,36 @@ struct WorkProvenanceObserverTests {
 
         func owner(for pullRequestURL: String) async -> WorkProvenancePullRequestOwner? {
             ownersByURL[pullRequestURL]
+        }
+    }
+
+    private struct FakeTicketTitleResolver: WorkProvenanceTicketTitleResolving {
+        let titlesByID: [String: String]
+
+        func titles(for ticketIDs: [String]) async -> [String: String] {
+            titlesByID.filter { ticketIDs.contains($0.key) }
+        }
+    }
+
+    private actor FakeLinearGraphQLLoader {
+        private(set) var requests: [URLRequest] = []
+        let responseBody: String
+        let statusCode: Int
+
+        init(responseBody: String, statusCode: Int = 200) {
+            self.responseBody = responseBody
+            self.statusCode = statusCode
+        }
+
+        func load(_ request: URLRequest) -> (Data, URLResponse) {
+            requests.append(request)
+            let response = HTTPURLResponse(
+                url: request.url ?? URL(string: "https://api.linear.app/graphql")!,
+                statusCode: statusCode,
+                httpVersion: nil,
+                headerFields: nil
+            )!
+            return (Data(responseBody.utf8), response)
         }
     }
 

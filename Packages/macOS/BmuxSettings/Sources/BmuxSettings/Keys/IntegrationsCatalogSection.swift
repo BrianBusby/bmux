@@ -65,6 +65,12 @@ public struct IntegrationsCatalogSection: SettingCatalogSection {
         userDefaultsKey: "ripgrepCustomBinaryPath"
     )
 
+    /// Personal Linear API key used for resolving issue titles into provenance facts.
+    public let linearAPIKey = SecretFileKey(
+        id: "integrations.linear.apiKey",
+        fileName: "linear-api-key"
+    )
+
     public let suppressSubagentNotifications = DefaultsKey<Bool>(
         id: "integrations.suppressSubagentNotifications",
         defaultValue: true,

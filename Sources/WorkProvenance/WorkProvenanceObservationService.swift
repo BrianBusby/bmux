@@ -6,6 +6,7 @@ actor WorkProvenanceObservationService {
     private let client: any ProvenanceEngineContracts.ProvenanceEngineClient
     private let gitInspector: any WorkProvenanceGitInspecting
     private let pullRequestOwnerResolver: any WorkProvenancePullRequestOwnerResolving
+    private let ticketTitleResolver: any WorkProvenanceTicketTitleResolving
     private let stableIDFactory: WorkProvenanceStableIDFactory
     private let dateProvider: @Sendable () -> Date
     private var latestFingerprintByWorkspaceID: [UUID: String] = [:]
@@ -20,12 +21,14 @@ actor WorkProvenanceObservationService {
         client: any ProvenanceEngineContracts.ProvenanceEngineClient,
         gitInspector: any WorkProvenanceGitInspecting,
         pullRequestOwnerResolver: any WorkProvenancePullRequestOwnerResolving = WorkProvenanceGitHubCLIPullRequestOwnerResolver(),
+        ticketTitleResolver: any WorkProvenanceTicketTitleResolving = WorkProvenanceNoopTicketTitleResolver(),
         stableIDFactory: WorkProvenanceStableIDFactory = WorkProvenanceStableIDFactory(),
         dateProvider: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.client = client
         self.gitInspector = gitInspector
         self.pullRequestOwnerResolver = pullRequestOwnerResolver
+        self.ticketTitleResolver = ticketTitleResolver
         self.stableIDFactory = stableIDFactory
         self.dateProvider = dateProvider
     }
@@ -152,15 +155,14 @@ actor WorkProvenanceObservationService {
         for workspace: WorkProvenanceWorkspaceSnapshot,
         gitSnapshot: WorkProvenanceGitSnapshot?
     ) async throws {
-        let ticketObservations = Self.ticketObservations(
+        let ticketIDs = Self.ticketIDs(
             branchNames: [
                 workspace.branch,
                 gitSnapshot?.branch,
                 workspace.pullRequest?.branch
             ].compactMap { $0 }
         )
-        let ticketIDs = ticketObservations.map { $0.id }
-        let ticketLinks = Self.ticketLinks(ticketObservations: ticketObservations)
+        let ticketLinks = await ticketLinks(ticketIDs: ticketIDs)
         let pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest)
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
@@ -279,12 +281,11 @@ actor WorkProvenanceObservationService {
         return "Observed \(fileCount) dirty files"
     }
 
-    private static func ticketObservations(branchNames: [String]) -> [(id: String, title: String?)] {
+    private static func ticketIDs(branchNames: [String]) -> [String] {
         let pattern = #"[A-Z][A-Z0-9]+-[0-9]+"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
         var seen = Set<String>()
         var ticketIDs: [String] = []
-        var ticketTitlesByID: [String: String] = [:]
         for branchName in branchNames {
             let range = NSRange(branchName.startIndex..<branchName.endIndex, in: branchName)
             for match in regex.matches(in: branchName, range: range) {
@@ -293,51 +294,20 @@ actor WorkProvenanceObservationService {
                 if seen.insert(ticketID).inserted {
                     ticketIDs.append(ticketID)
                 }
-                if ticketTitlesByID[ticketID] == nil,
-                   let title = ticketTitle(branchName: branchName, matchRange: match.range) {
-                    ticketTitlesByID[ticketID] = title
-                }
             }
         }
-        return ticketIDs.map { ticketID in
-            (id: ticketID, title: ticketTitlesByID[ticketID])
-        }
+        return ticketIDs
     }
 
-    private static func ticketLinks(
-        ticketObservations: [(id: String, title: String?)]
-    ) -> [ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord] {
-        ticketObservations.map { ticket in
+    private func ticketLinks(
+        ticketIDs: [String]
+    ) async -> [ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord] {
+        let titlesByID = await ticketTitleResolver.titles(for: ticketIDs)
+        return ticketIDs.map { ticketID in
             ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord(
-                id: ticket.id,
-                title: ticket.title
+                id: ticketID,
+                title: Self.normalizedNonEmpty(titlesByID[ticketID])
             )
         }
-    }
-
-    private static func ticketTitle(branchName: String, matchRange: NSRange) -> String? {
-        guard let ticketRange = Range(matchRange, in: branchName) else { return nil }
-        let suffix = String(branchName[ticketRange.upperBound...])
-            .trimmingCharacters(in: CharacterSet(charactersIn: "-_/. "))
-        let words = suffix
-            .split { character in
-                character.unicodeScalars.allSatisfy { !CharacterSet.alphanumerics.contains($0) }
-            }
-            .map(String.init)
-        guard words.contains(where: { $0.rangeOfCharacter(from: .letters) != nil }) else {
-            return nil
-        }
-        let normalizedWords = words.enumerated().map { index, word in
-            if word != word.lowercased(), word != word.uppercased() {
-                return word
-            }
-            let lowercased = word.lowercased()
-            guard index == 0, let first = lowercased.first else {
-                return lowercased
-            }
-            return first.uppercased() + String(lowercased.dropFirst())
-        }
-        let title = normalizedWords.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
-        return title.isEmpty ? nil : title
     }
 }

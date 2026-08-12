@@ -194,7 +194,7 @@ struct bmuxApp: App {
         )
         KeyboardShortcutSettings.settingsFileStore.applyDeferredManagedDefaultSideEffects()
         StartupBreadcrumbLog.append("app.init.keyboardShortcuts.sideEffectsApplied")
-        let workProvenanceRuntime = WorkProvenanceRuntime.live()
+        let workProvenanceRuntime = WorkProvenanceRuntime.live(secretStore: secretStore)
         self.workProvenanceRuntime = workProvenanceRuntime
         var provenanceFields = [
             "enabled": workProvenanceRuntime.isEnabled ? "1" : "0"

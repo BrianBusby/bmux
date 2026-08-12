@@ -1,4 +1,5 @@
 import AppKit
+import BmuxSettings
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
@@ -50,7 +51,8 @@ final class WorkProvenanceRuntime {
 
     /// Creates the standard runtime backed by the per-user bmux state directory.
     static func live(
-        homeDirectory: URL = WorkProvenanceStorageLocation.defaultHomeDirectory()
+        homeDirectory: URL = WorkProvenanceStorageLocation.defaultHomeDirectory(),
+        secretStore: SecretFileStore? = nil
     ) -> WorkProvenanceRuntime {
         let location = WorkProvenanceStorageLocation(homeDirectory: homeDirectory)
         do {
@@ -60,7 +62,10 @@ final class WorkProvenanceRuntime {
             return WorkProvenanceRuntime(
                 observationService: WorkProvenanceObservationService(
                     client: client,
-                    gitInspector: WorkProvenanceGitInspector()
+                    gitInspector: WorkProvenanceGitInspector(),
+                    ticketTitleResolver: WorkProvenanceLinearTicketTitleResolver(
+                        apiKeyProvider: linearAPIKeyProvider(secretStore: secretStore)
+                    )
                 ),
                 workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore(client: client),
                 sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder(
@@ -77,6 +82,39 @@ final class WorkProvenanceRuntime {
                 startupErrorDescription: description
             )
         }
+    }
+
+    private static func linearAPIKeyProvider(
+        secretStore: SecretFileStore?,
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> @Sendable () async -> String? {
+        { [secretStore] in
+            if let secretStore,
+               let apiKey = try? await secretStore.value(for: SettingCatalog().integrations.linearAPIKey),
+               let normalized = normalizedNonEmpty(apiKey) {
+                return normalized
+            }
+            for key in ["BMUX_LINEAR_API_KEY", "LINEAR_API_KEY", "LINEAR_API_TOKEN", "LINEAR_TOKEN"] {
+                if let normalized = normalizedNonEmpty(environment[key]) {
+                    return normalized
+                }
+            }
+            if let accessToken = normalizedNonEmpty(environment["LINEAR_ACCESS_TOKEN"]) {
+                if accessToken.hasPrefix("Bearer ") {
+                    return accessToken
+                }
+                return "Bearer \(accessToken)"
+            }
+            return nil
+        }
+    }
+
+    nonisolated private static func normalizedNonEmpty(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
     }
 
     /// Starts observing workspace list and current-directory changes.
