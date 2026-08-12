@@ -19,6 +19,7 @@ struct BmuxAppRuntimeComposition {
         )
     }
 
+    @MainActor
     func makeSettingsRuntime(
         catalog: SettingCatalog,
         authComposition: MacAuthComposition,
