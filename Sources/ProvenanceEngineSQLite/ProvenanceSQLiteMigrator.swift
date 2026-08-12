@@ -117,7 +117,7 @@ struct ProvenanceSQLiteMigrator: Sendable {
         currentVersion: Int32
     ) throws {
         if try metadataTableExists(in: database) {
-            try validateMetadata(in: database)
+            try validateMetadata(in: database, expectedSchemaVersion: currentVersion)
             return
         }
 
@@ -147,10 +147,13 @@ struct ProvenanceSQLiteMigrator: Sendable {
         guard try metadataTableExists(in: database) else {
             throw incompatibleDatabase(database, "current schema is missing provenance_metadata")
         }
-        try validateMetadata(in: database)
+        try validateMetadata(in: database, expectedSchemaVersion: targetVersion)
     }
 
-    private func validateMetadata(in database: ProvenanceSQLiteDatabase) throws {
+    private func validateMetadata(
+        in database: ProvenanceSQLiteDatabase,
+        expectedSchemaVersion: Int32
+    ) throws {
         let metadata = try metadataValues(in: database)
         guard metadata[Self.schemaFamilyKey] == Self.schemaFamilyValue else {
             throw incompatibleDatabase(
@@ -164,10 +167,10 @@ struct ProvenanceSQLiteMigrator: Sendable {
                 "metadata key \(Self.schemaIdentityVersionKey) is not supported"
             )
         }
-        guard metadata[Self.schemaVersionKey] == "\(targetVersion)" else {
+        guard metadata[Self.schemaVersionKey] == "\(expectedSchemaVersion)" else {
             throw incompatibleDatabase(
                 database,
-                "metadata key \(Self.schemaVersionKey) does not match schema version \(targetVersion)"
+                "metadata key \(Self.schemaVersionKey) does not match schema version \(expectedSchemaVersion)"
             )
         }
     }

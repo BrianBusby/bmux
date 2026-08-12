@@ -204,7 +204,7 @@ struct ProvenanceEngineClientFactoryTests {
         #expect(try Self.metadata(in: expectedDatabaseURL) == [
             "schema_family": "provenance-engine",
             "schema_identity_version": "1",
-            "schema_version": "13",
+            "schema_version": "14",
         ])
 
         let reader = try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
@@ -221,7 +221,7 @@ struct ProvenanceEngineClientFactoryTests {
         let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
         _ = try await client.health()
 
-        #expect(try Self.userVersion(in: url) == 13)
+        #expect(try Self.userVersion(in: url) == 14)
         #expect(try Self.metadata(in: url)["schema_family"] == "provenance-engine")
         #expect(try Self.tableNames(in: url).contains("provenance_metadata"))
     }

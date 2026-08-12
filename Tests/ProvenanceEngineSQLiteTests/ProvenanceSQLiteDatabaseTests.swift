@@ -424,7 +424,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 13)
+        #expect(try await repository.schemaVersion() == 14)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
@@ -442,7 +442,32 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_workspace_display", in: database))
         #expect(try Self.tableExists("provenance_storage_repair_attempts", in: database))
         #expect(try Self.tableExists("provenance_schema_migrations", in: database))
-        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [13, 12, 11, 10, 9, 8])
+        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [14, 13, 12, 11, 10, 9, 8])
+    }
+
+    @Test
+    func repositoryMigratesExistingVersion13WorkspaceDisplaySchemaToOwnerColumns() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+
+        _ = try ProvenanceSQLiteRepository(
+            url: url,
+            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast())
+        )
+
+        let olderDatabase = try ProvenanceSQLiteDatabase(url: url)
+        #expect(try olderDatabase.userVersion == 13)
+        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: olderDatabase) == "13")
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_login", in: olderDatabase) == false)
+
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
+
+        #expect(try await repository.schemaVersion() == 14)
+        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: migratedDatabase) == "14")
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_login", in: migratedDatabase))
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_url", in: migratedDatabase))
+        #expect(try await repository.schemaMigrationRecords(limit: 1).map(\.version) == [14])
     }
 
     @Test
@@ -502,7 +527,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
 
-        #expect(try await repository.schemaVersion() == 13)
+        #expect(try await repository.schemaVersion() == 14)
         #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
     }
 
@@ -768,7 +793,7 @@ struct ProvenanceSQLiteDatabaseTests {
         let summary = try await repository.storageSummary()
 
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 13,
+            schemaVersion: 14,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,
@@ -2775,6 +2800,8 @@ struct ProvenanceSQLiteDatabaseTests {
             branch: "canonical-domain-mutation-paths",
             pullRequestNumber: 42,
             pullRequestURL: "https://github.com/BrianBusby/bmux/pull/42",
+            pullRequestOwnerLogin: "BrianBusby",
+            pullRequestOwnerURL: "https://github.com/BrianBusby",
             pullRequestStatus: "open",
             pullRequestBranch: "canonical-domain-mutation-paths",
             pullRequestIsStale: false,
@@ -2806,6 +2833,8 @@ struct ProvenanceSQLiteDatabaseTests {
             branch: "canonical-domain-mutation-paths",
             pullRequestNumber: 42,
             pullRequestURL: "https://github.com/BrianBusby/bmux/pull/42",
+            pullRequestOwnerLogin: "BrianBusby",
+            pullRequestOwnerURL: "https://github.com/BrianBusby",
             pullRequestStatus: "open",
             pullRequestBranch: "canonical-domain-mutation-paths",
             pullRequestIsStale: false,
@@ -3289,6 +3318,21 @@ struct ProvenanceSQLiteDatabaseTests {
         defer { query.finalize() }
         try query.bind(tableName, at: 1)
         return try query.step()
+    }
+
+    private static func tableHasColumn(
+        _ tableName: String,
+        _ columnName: String,
+        in database: ProvenanceSQLiteDatabase
+    ) throws -> Bool {
+        let query = try database.prepare("PRAGMA table_info(\(tableName))")
+        defer { query.finalize() }
+        while try query.step() {
+            if query.string(at: 1) == columnName {
+                return true
+            }
+        }
+        return false
     }
 
     private static func firstString(_ sql: String, in database: ProvenanceSQLiteDatabase) throws -> String? {

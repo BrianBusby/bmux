@@ -251,6 +251,8 @@ struct ProvenanceEngineHealthTests {
         branch: "canonical-domain-mutation-paths",
         pullRequestNumber: 42,
         pullRequestURL: "https://github.com/BrianBusby/bmux/pull/42",
+        pullRequestOwnerLogin: "BrianBusby",
+        pullRequestOwnerURL: "https://github.com/BrianBusby",
         pullRequestStatus: "open",
         pullRequestBranch: "canonical-domain-mutation-paths",
         pullRequestIsStale: false,
