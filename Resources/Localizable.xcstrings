@@ -198423,6 +198423,30 @@
         "zh-Hant": { "stringUnit": { "state": "translated", "value": "開啟 %@" } }
       }
     },
+    "sidebar.pullRequest.owner.openTooltip": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": { "stringUnit": { "state": "translated", "value": "فتح %@ على GitHub" } },
+        "bs": { "stringUnit": { "state": "translated", "value": "Otvori %@ na GitHubu" } },
+        "da": { "stringUnit": { "state": "translated", "value": "Åbn %@ på GitHub" } },
+        "de": { "stringUnit": { "state": "translated", "value": "%@ auf GitHub öffnen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Open %@ on GitHub" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Abrir %@ en GitHub" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir %@ sur GitHub" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Apri %@ su GitHub" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "GitHubで%@を開く" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "GitHub에서 %@ 열기" } },
+        "nb": { "stringUnit": { "state": "translated", "value": "Åpne %@ på GitHub" } },
+        "pl": { "stringUnit": { "state": "translated", "value": "Otwórz %@ w GitHub" } },
+        "pt-BR": { "stringUnit": { "state": "translated", "value": "Abrir %@ no GitHub" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Открыть %@ на GitHub" } },
+        "th": { "stringUnit": { "state": "translated", "value": "เปิด %@ บน GitHub" } },
+        "tr": { "stringUnit": { "state": "translated", "value": "%@ adlı kullanıcıyı GitHub'da aç" } },
+        "uk": { "stringUnit": { "state": "translated", "value": "Відкрити %@ на GitHub" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "在 GitHub 上打开 %@" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "在 GitHub 上開啟 %@" } }
+      }
+    },
     "sidebar.pullRequest.statusClosed": {
       "extractionState": "manual",
       "localizations": {

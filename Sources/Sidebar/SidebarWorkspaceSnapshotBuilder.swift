@@ -26,6 +26,8 @@ struct SidebarWorkspaceSnapshotBuilder {
         let label: String
         let url: URL?
         let status: SidebarPullRequestStatus
+        let ownerLogin: String?
+        let ownerURL: URL?
         let isStale: Bool
         let isFromProvenance: Bool
     }
