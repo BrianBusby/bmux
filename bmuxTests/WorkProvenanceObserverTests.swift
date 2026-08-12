@@ -423,7 +423,7 @@ struct WorkProvenanceObserverTests {
             refresh: { refreshes.append($0) }
         )
         stream.continuation.yield(())
-        await Task.yield()
+        await scheduler.waitForPendingFlushCount(1)
 
         #expect(scheduler.delays == [0.05])
         #expect(refreshes.isEmpty)
@@ -526,6 +526,16 @@ struct WorkProvenanceObserverTests {
         func fire(at index: Int) {
             guard pendingFlushes.indices.contains(index), !pendingFlushes[index].isCancelled else { return }
             pendingFlushes[index].action()
+        }
+
+        @MainActor
+        func waitForPendingFlushCount(_ count: Int) async {
+            for _ in 0..<50 {
+                if pendingFlushes.count >= count {
+                    return
+                }
+                await Task.yield()
+            }
         }
     }
 
