@@ -169,6 +169,9 @@ struct WorkProvenanceObserverTests {
                     url: "https://github.com/brianbusby"
                 )
             ]),
+            ticketLinkResolver: FakeTicketLinkResolver(titlesByID: [
+                "STE-1964": "Canonical domain mutation paths"
+            ]),
             dateProvider: { Date(timeIntervalSince1970: 500) }
         )
         let workspaceID = UUID(uuidString: "77777777-7777-7777-7777-777777777777")!
@@ -230,8 +233,15 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.isDirty == false)
         #expect(display.display?.latestEventID != nil)
         #expect(display.display?.latestEventSequence == 3)
-        #expect(display.display?.ticketIDs == [])
-        #expect(display.display?.ticketLinks == [])
+        #expect(display.display?.ticketIDs == ["STE-1964"])
+        #expect(display.display?.ticketLinks == [
+            ProvenanceWorkspaceDisplayTicketLinkRecord(
+                id: "STE-1964",
+                system: "linear",
+                title: "Canonical domain mutation paths",
+                url: "https://linear.app/company/issue/STE-1964"
+            )
+        ])
     }
 
     @Test
@@ -325,6 +335,64 @@ struct WorkProvenanceObserverTests {
     }
 
     @Test
+    func linearTicketLinkResolverFetchesTitleAndCachesByTicketID() async throws {
+        let server = FakeLinearGraphQLServer(titlesByID: [
+            "STE-1964": "Canonical domain mutation paths"
+        ])
+        let resolver = WorkProvenanceLinearTicketLinkResolver(
+            authorizationHeader: "linear-api-key",
+            usesEnvironmentAuthorization: false,
+            endpointURL: URL(string: "https://linear.example/graphql")!,
+            dataProvider: { request in
+                try await server.response(for: request)
+            }
+        )
+        let expectedLink = ProvenanceWorkspaceDisplayTicketLinkRecord(
+            id: "STE-1964",
+            system: "linear",
+            title: "Canonical domain mutation paths",
+            url: "https://linear.app/company/issue/STE-1964"
+        )
+
+        let firstLinks = await resolver.ticketLinks(for: [" ste-1964 ", "STE-1964"])
+        let secondLinks = await resolver.ticketLinks(for: ["STE-1964"])
+
+        #expect(firstLinks == [expectedLink])
+        #expect(secondLinks == [expectedLink])
+        #expect(await server.requests == [
+            FakeLinearGraphQLServer.CapturedRequest(
+                method: "POST",
+                contentType: "application/json",
+                authorization: "linear-api-key",
+                ticketID: "STE-1964"
+            )
+        ])
+    }
+
+    @Test
+    func linearTicketLinkResolverPersistsLinkWithoutTitleWhenUnauthenticated() async {
+        let resolver = WorkProvenanceLinearTicketLinkResolver(
+            authorizationHeader: nil,
+            usesEnvironmentAuthorization: false,
+            dataProvider: { _ in
+                Issue.record("Unauthenticated resolver should not call Linear")
+                return (Data(), 500)
+            }
+        )
+
+        let links = await resolver.ticketLinks(for: ["ste-1964"])
+
+        #expect(links == [
+            ProvenanceWorkspaceDisplayTicketLinkRecord(
+                id: "STE-1964",
+                system: "linear",
+                title: nil,
+                url: "https://linear.app/company/issue/STE-1964"
+            )
+        ])
+    }
+
+    @Test
     func workspaceDisplayCurrentStateSnapshotNormalizesDisplayFacts() throws {
         let updatedAt = Date(timeIntervalSince1970: 700)
         let record = ProvenanceWorkspaceDisplayRecord(
@@ -414,6 +482,61 @@ struct WorkProvenanceObserverTests {
 
         func owner(for pullRequestURL: String) async -> WorkProvenancePullRequestOwner? {
             ownersByURL[pullRequestURL]
+        }
+    }
+
+    private struct FakeTicketLinkResolver: WorkProvenanceTicketLinkResolving {
+        let titlesByID: [String: String]
+
+        func ticketLinks(for ticketIDs: [String]) async -> [ProvenanceWorkspaceDisplayTicketLinkRecord] {
+            ticketIDs.map { ticketID in
+                let normalizedID = ticketID.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+                return ProvenanceWorkspaceDisplayTicketLinkRecord(
+                    id: normalizedID,
+                    system: "linear",
+                    title: titlesByID[normalizedID],
+                    url: "https://linear.app/company/issue/\(normalizedID)"
+                )
+            }
+        }
+    }
+
+    private actor FakeLinearGraphQLServer {
+        struct CapturedRequest: Equatable, Sendable {
+            let method: String?
+            let contentType: String?
+            let authorization: String?
+            let ticketID: String?
+        }
+
+        let titlesByID: [String: String]
+        private(set) var requests: [CapturedRequest] = []
+
+        init(titlesByID: [String: String]) {
+            self.titlesByID = titlesByID
+        }
+
+        func response(for request: URLRequest) throws -> (Data, Int) {
+            let ticketID = try Self.ticketID(from: request.httpBody)
+            requests.append(CapturedRequest(
+                method: request.httpMethod,
+                contentType: request.value(forHTTPHeaderField: "Content-Type"),
+                authorization: request.value(forHTTPHeaderField: "Authorization"),
+                ticketID: ticketID
+            ))
+            let title = ticketID.flatMap { titlesByID[$0] } ?? ""
+            let payload = #"{"data":{"issue":{"title":"\#(title)"}}}"#
+            return (Data(payload.utf8), 200)
+        }
+
+        private static func ticketID(from data: Data?) throws -> String? {
+            guard let data else { return nil }
+            let json = try JSONSerialization.jsonObject(with: data)
+            guard let object = json as? [String: Any],
+                  let variables = object["variables"] as? [String: Any] else {
+                return nil
+            }
+            return variables["id"] as? String
         }
     }
 

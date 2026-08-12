@@ -6,6 +6,7 @@ actor WorkProvenanceObservationService {
     private let client: any ProvenanceEngineContracts.ProvenanceEngineClient
     private let gitInspector: any WorkProvenanceGitInspecting
     private let pullRequestOwnerResolver: any WorkProvenancePullRequestOwnerResolving
+    private let ticketLinkResolver: any WorkProvenanceTicketLinkResolving
     private let stableIDFactory: WorkProvenanceStableIDFactory
     private let dateProvider: @Sendable () -> Date
     private var latestFingerprintByWorkspaceID: [UUID: String] = [:]
@@ -20,12 +21,14 @@ actor WorkProvenanceObservationService {
         client: any ProvenanceEngineContracts.ProvenanceEngineClient,
         gitInspector: any WorkProvenanceGitInspecting,
         pullRequestOwnerResolver: any WorkProvenancePullRequestOwnerResolving = WorkProvenanceGitHubCLIPullRequestOwnerResolver(),
+        ticketLinkResolver: any WorkProvenanceTicketLinkResolving = WorkProvenanceLinearTicketLinkResolver(),
         stableIDFactory: WorkProvenanceStableIDFactory = WorkProvenanceStableIDFactory(),
         dateProvider: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.client = client
         self.gitInspector = gitInspector
         self.pullRequestOwnerResolver = pullRequestOwnerResolver
+        self.ticketLinkResolver = ticketLinkResolver
         self.stableIDFactory = stableIDFactory
         self.dateProvider = dateProvider
     }
@@ -152,10 +155,11 @@ actor WorkProvenanceObservationService {
         for workspace: WorkProvenanceWorkspaceSnapshot,
         gitSnapshot: WorkProvenanceGitSnapshot?
     ) async throws {
-        // Ticket/work-item association is PE-owned. bmux only writes raw display evidence here.
-        let ticketIDs: [String] = []
-        let ticketLinks: [ProvenanceEngineContracts.ProvenanceWorkspaceDisplayTicketLinkRecord] = []
         let pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest)
+        // Keep ticket association tied to explicit PR evidence. Branch-only
+        // workspaces must not inherit ambient ticket keys from the current repo.
+        let ticketIDs = Self.ticketIDs(branchNames: [pullRequest?.branch].compactMap { $0 })
+        let ticketLinks = await ticketLinkResolver.ticketLinks(for: ticketIDs)
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
             title: workspace.title,
@@ -265,6 +269,24 @@ actor WorkProvenanceObservationService {
             return nil
         }
         return trimmed
+    }
+
+    private static func ticketIDs(branchNames: [String]) -> [String] {
+        let pattern = #"[A-Z][A-Z0-9]+-[0-9]+"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
+        var seen = Set<String>()
+        var ticketIDs: [String] = []
+        for branchName in branchNames {
+            let range = NSRange(branchName.startIndex..<branchName.endIndex, in: branchName)
+            for match in regex.matches(in: branchName, range: range) {
+                guard let matchRange = Range(match.range, in: branchName) else { continue }
+                let ticketID = String(branchName[matchRange]).uppercased()
+                if seen.insert(ticketID).inserted {
+                    ticketIDs.append(ticketID)
+                }
+            }
+        }
+        return ticketIDs
     }
 
     private static func summary(fileCount: Int, isDirty: Bool) -> String {

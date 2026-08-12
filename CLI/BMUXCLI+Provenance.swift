@@ -1374,6 +1374,7 @@ extension BMUXCLI {
             provenanceCompactPayload([
                 "id": ticketLink.id,
                 "system": ticketLink.system,
+                "title": ticketLink.title,
                 "url": ticketLink.url
             ])
         }
