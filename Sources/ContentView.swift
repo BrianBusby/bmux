@@ -14909,8 +14909,7 @@ struct TabItemView: View, Equatable {
             if let provenancePullRequestDisplay {
                 return [provenancePullRequestDisplay]
             }
-            guard !orderedPanelIds.isEmpty else { return [] }
-            return pullRequestDisplays(orderedPanelIds: orderedPanelIds)
+            return []
         }()
         let ticketRows = provenanceTicketDisplays
 
@@ -15134,20 +15133,6 @@ struct TabItemView: View, Equatable {
             indices[bumpIdx] += 1
         }
         return result
-    }
-
-    private func pullRequestDisplays(orderedPanelIds: [UUID]) -> [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay] {
-        tab.sidebarPullRequestsInDisplayOrder(orderedPanelIds: orderedPanelIds).map { pullRequest in
-            SidebarWorkspaceSnapshotBuilder.PullRequestDisplay(
-                id: "\(pullRequest.label.lowercased())#\(pullRequest.number)|\(pullRequest.url.absoluteString)",
-                number: pullRequest.number,
-                label: pullRequest.label,
-                url: pullRequest.url,
-                status: pullRequest.status,
-                isStale: pullRequest.isStale,
-                isFromProvenance: false
-            )
-        }
     }
 
     private var provenancePullRequestDisplay: SidebarWorkspaceSnapshotBuilder.PullRequestDisplay? {
