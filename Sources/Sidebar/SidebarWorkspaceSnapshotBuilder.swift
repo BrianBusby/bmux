@@ -70,3 +70,55 @@ struct SidebarWorkspaceSnapshotBuilder {
         let hasActiveAIWork: Bool
     }
 }
+
+extension SidebarWorkspaceSnapshotBuilder {
+    @MainActor
+    static func pullRequestRows(
+        whenVisible isVisible: Bool,
+        provenance: PullRequestDisplay?,
+        live: [SidebarPullRequestState],
+        promptMessages: [String?]
+    ) -> [PullRequestDisplay] {
+        guard isVisible else { return [] }
+        if let provenance { return [provenance] }
+        let liveDisplays = live.map(PullRequestDisplay.init)
+        if !liveDisplays.isEmpty { return liveDisplays }
+        return PullRequestDisplay.promptFallback(from: promptMessages).map { [$0] } ?? []
+    }
+}
+
+extension SidebarWorkspaceSnapshotBuilder.PullRequestDisplay {
+    init(_ pullRequest: SidebarPullRequestState) {
+        self.init(
+            id: "\(pullRequest.label.lowercased())#\(pullRequest.number)|\(pullRequest.url.absoluteString)",
+            number: pullRequest.number,
+            label: pullRequest.label,
+            url: pullRequest.url,
+            status: pullRequest.status,
+            ownerLogin: pullRequest.ownerLogin,
+            ownerURL: pullRequest.ownerURL,
+            isStale: pullRequest.isStale,
+            isFromProvenance: false
+        )
+    }
+
+    @MainActor
+    static func promptFallback(from messages: [String?]) -> Self? {
+        for message in messages {
+            guard let mention = Workspace.submittedPromptPullRequestMention(from: message) else { continue }
+            let label = String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
+            return Self(
+                id: "\(label.lowercased())#\(mention.number)|\(mention.url.absoluteString)",
+                number: mention.number,
+                label: label,
+                url: mention.url,
+                status: .open,
+                ownerLogin: nil,
+                ownerURL: nil,
+                isStale: false,
+                isFromProvenance: false
+            )
+        }
+        return nil
+    }
+}
