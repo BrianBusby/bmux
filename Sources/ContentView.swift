@@ -13658,16 +13658,9 @@ struct TabItemView: View, Equatable {
             conversationMessage: conversationMessageSubtitle
         )
         let detailVisibility = visibleAuxiliaryDetails
-        let titleLineLimit = SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(
-            wrapsWorkspaceTitles: settings.wrapsWorkspaceTitles
-        )
-        let ticketTitleLineLimit = settings.wrapsWorkspaceTitles ? 2 : 1
-        let displayedTicketTitle = workspaceSnapshot.ticketTitle
-        let displayedTitle = workspaceSnapshot.title
+        let titleLineLimit = SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: settings.wrapsWorkspaceTitles)
         let scaledUnreadBadgeSize = 16 * fontScale
-        let scaledLoadingIndicatorSize = TronLoadingIndicatorMotion.workspaceTabSize(
-            forBadgeSize: scaledUnreadBadgeSize
-        )
+        let scaledLoadingIndicatorSize = TronLoadingIndicatorMotion.workspaceTabSize(forBadgeSize: scaledUnreadBadgeSize)
         let scaledCloseButtonHitSize = max(16, 16 * fontScale)
         let scaledCloseButtonWidth = max(
             SidebarTrailingAccessoryWidthPolicy().closeButtonWidth,
@@ -13768,17 +13761,11 @@ struct TabItemView: View, Equatable {
                     .layoutPriority(1)
                 } else {
                     VStack(alignment: .leading, spacing: 1) {
-                        if let displayedTicketTitle {
-                            Text(displayedTicketTitle)
-                                .font(magnifiedFont(scaledFontSize(13.5), weight: .bold))
-                                .foregroundColor(activePrimaryTextColor)
-                                .lineLimit(ticketTitleLineLimit)
-                                .truncationMode(.tail)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .multilineTextAlignment(.leading)
+                        if let ticketTitle = workspaceSnapshot.ticketTitle {
+                            SidebarWorkspaceTicketTitleText(title: ticketTitle, font: magnifiedFont(scaledFontSize(13.5), weight: .bold), color: activePrimaryTextColor, lineLimit: settings.wrapsWorkspaceTitles ? 2 : 1)
                         }
 
-                        Text(displayedTitle)
+                        Text(workspaceSnapshot.title)
                             .font(magnifiedFont(scaledFontSize(12.5), weight: titleFontWeight))
                             .foregroundColor(activePrimaryTextColor)
                             .lineLimit(titleLineLimit)
@@ -14930,11 +14917,9 @@ struct TabItemView: View, Equatable {
         }()
         let displayedPullRequestNumbers = Set(pullRequestRows.map(\.number))
         let ticketRows = provenanceTicketDisplays
-        let ticketTitle = ticketRows.compactMap(\.title).first
-
         return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: workspaceSnapshotPresentationKey,
-            ticketTitle: ticketTitle,
+            ticketTitle: ticketRows.compactMap(\.title).first,
             title: provenanceDisplaySnapshot?.title ?? tab.title,
             customDescription: settings.showsWorkspaceDescription ? sidebarVisibleCustomDescription(hiddenPullRequestNumbers: displayedPullRequestNumbers) : nil,
             isPinned: tab.isPinned,

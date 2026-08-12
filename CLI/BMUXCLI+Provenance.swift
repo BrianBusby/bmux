@@ -1374,7 +1374,6 @@ extension BMUXCLI {
             provenanceCompactPayload([
                 "id": ticketLink.id,
                 "system": ticketLink.system,
-                "title": ticketLink.title,
                 "url": ticketLink.url
             ])
         }
@@ -1384,16 +1383,8 @@ extension BMUXCLI {
         let ticketLinks = currentState["ticket_links"] as? [[String: Any]] ?? []
         let linkedLabels = ticketLinks.compactMap { ticketLink -> String? in
             guard let id = ticketLink["id"] as? String else { return nil }
-            let trimmedTitle = (ticketLink["title"] as? String)?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            let base: String
-            if let trimmedTitle, !trimmedTitle.isEmpty {
-                base = "\(id) \(trimmedTitle)"
-            } else {
-                base = id
-            }
-            guard let url = ticketLink["url"] as? String, !url.isEmpty else { return base }
-            return "\(base) <\(url)>"
+            guard let url = ticketLink["url"] as? String, !url.isEmpty else { return id }
+            return "\(id) <\(url)>"
         }
         if !linkedLabels.isEmpty {
             return linkedLabels
