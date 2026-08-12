@@ -158,8 +158,13 @@ actor WorkProvenanceObservationService {
         let pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest)
         // Keep ticket association tied to explicit PR evidence. Branch-only
         // workspaces must not inherit ambient ticket keys from the current repo.
-        let ticketIDs = Self.ticketIDs(branchNames: [pullRequest?.branch].compactMap { $0 })
-        let ticketLinks = await ticketLinkResolver.ticketLinks(for: ticketIDs)
+        let explicitTicketIDs = Self.ticketIDs(branchNames: [pullRequest?.branch].compactMap { $0 })
+        let ticketFacts = try await workspaceDisplayTicketFacts(
+            stableWorkspaceID: workspace.stableWorkspaceID,
+            explicitTicketIDs: explicitTicketIDs
+        )
+        let ticketIDs = ticketFacts.ids
+        let ticketLinks = ticketFacts.links
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
             title: workspace.title,
@@ -229,6 +234,32 @@ actor WorkProvenanceObservationService {
         StartupBreadcrumbLog.append("workProvenance.observe.workspaceDisplayAppended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
     }
 
+    private func workspaceDisplayTicketFacts(
+        stableWorkspaceID: UUID,
+        explicitTicketIDs: [String]
+    ) async throws -> (
+        ids: [String],
+        links: [ProvenanceWorkspaceDisplayTicketLinkRecord]
+    ) {
+        guard explicitTicketIDs.isEmpty else {
+            return (
+                ids: explicitTicketIDs,
+                links: await ticketLinkResolver.ticketLinks(for: explicitTicketIDs)
+            )
+        }
+
+        let response = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
+            workspaceID: stableWorkspaceID.uuidString
+        ))
+        guard let display = response.display else {
+            return (ids: [], links: [])
+        }
+        return Self.normalizedTicketFacts(
+            ticketIDs: display.ticketIDs,
+            ticketLinks: display.ticketLinks
+        )
+    }
+
     private func pullRequestWithResolvedOwner(
         _ pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest?
     ) async -> WorkProvenanceWorkspaceSnapshot.PullRequest? {
@@ -271,6 +302,40 @@ actor WorkProvenanceObservationService {
         return trimmed
     }
 
+    private static func normalizedTicketFacts(
+        ticketIDs: [String],
+        ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord]
+    ) -> (
+        ids: [String],
+        links: [ProvenanceWorkspaceDisplayTicketLinkRecord]
+    ) {
+        var seenLinkIDs = Set<String>()
+        let links = ticketLinks.compactMap { link -> ProvenanceWorkspaceDisplayTicketLinkRecord? in
+            guard let id = normalizedTicketID(link.id),
+                  seenLinkIDs.insert(id).inserted else {
+                return nil
+            }
+            return ProvenanceWorkspaceDisplayTicketLinkRecord(
+                id: id,
+                system: normalizedNonEmpty(link.system),
+                title: normalizedNonEmpty(link.title),
+                url: normalizedNonEmpty(link.url)
+            )
+        }
+        var seenTicketIDs = Set<String>()
+        let ids = ticketIDs.compactMap { ticketID -> String? in
+            guard let id = normalizedTicketID(ticketID),
+                  seenTicketIDs.insert(id).inserted else {
+                return nil
+            }
+            return id
+        }
+        return (
+            ids: ids.isEmpty ? links.map(\.id) : ids,
+            links: links
+        )
+    }
+
     private static func ticketIDs(branchNames: [String]) -> [String] {
         let pattern = #"[A-Z][A-Z0-9]+-[0-9]+"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
@@ -287,6 +352,10 @@ actor WorkProvenanceObservationService {
             }
         }
         return ticketIDs
+    }
+
+    private static func normalizedTicketID(_ value: String?) -> String? {
+        normalizedNonEmpty(value)?.uppercased()
     }
 
     private static func summary(fileCount: Int, isDirty: Bool) -> String {
