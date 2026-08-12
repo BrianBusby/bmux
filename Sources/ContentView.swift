@@ -15150,7 +15150,6 @@ struct TabItemView: View, Equatable {
     private var provenancePullRequestDisplay: SidebarWorkspaceSnapshotBuilder.PullRequestDisplay? {
         guard let pullRequest = provenanceDisplaySnapshot?.pullRequest else { return nil }
         let label = String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
-        let livePullRequest = matchingLivePullRequest(number: pullRequest.number)
         let url = pullRequest.url ?? provenancePullRequestURL(number: pullRequest.number)
         return SidebarWorkspaceSnapshotBuilder.PullRequestDisplay(
             id: "\(label.lowercased())#\(pullRequest.number)|\(url?.absoluteString ?? "")",
@@ -15158,10 +15157,10 @@ struct TabItemView: View, Equatable {
             label: label,
             url: url,
             status: pullRequest.status.flatMap(SidebarPullRequestStatus.init(rawValue:)) ?? .open,
-            ownerLogin: livePullRequest?.ownerLogin,
+            ownerLogin: pullRequest.ownerLogin,
             ownerURL: pullRequestOwnerURL(
-                login: livePullRequest?.ownerLogin,
-                url: livePullRequest?.ownerURL
+                login: pullRequest.ownerLogin,
+                url: pullRequest.ownerURL
             ),
             isStale: pullRequest.isStale,
             isFromProvenance: true
