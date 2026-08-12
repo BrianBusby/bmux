@@ -164,6 +164,12 @@ struct WorkProvenanceObserverTests {
         let service = WorkProvenanceObservationService(
             client: client,
             gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            pullRequestOwnerResolver: FakePullRequestOwnerResolver(ownersByURL: [
+                "https://github.com/manaflow-ai/bmux/pull/42": WorkProvenancePullRequestOwner(
+                    login: "brianbusby",
+                    url: "https://github.com/brianbusby"
+                )
+            ]),
             dateProvider: { Date(timeIntervalSince1970: 500) }
         )
         let workspaceID = UUID(uuidString: "77777777-7777-7777-7777-777777777777")!
@@ -195,8 +201,8 @@ struct WorkProvenanceObserverTests {
             pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
                 number: 42,
                 url: "https://github.com/manaflow-ai/bmux/pull/42",
-                ownerLogin: "brianbusby",
-                ownerURL: "https://github.com/brianbusby",
+                ownerLogin: nil,
+                ownerURL: nil,
                 status: "merged",
                 branch: "ste-1964-canonical-domain-mutation-paths",
                 isStale: true
@@ -312,6 +318,14 @@ struct WorkProvenanceObserverTests {
 
         func snapshot(for directory: String) async -> WorkProvenanceGitSnapshot? {
             snapshotsByDirectory[directory]
+        }
+    }
+
+    private struct FakePullRequestOwnerResolver: WorkProvenancePullRequestOwnerResolving {
+        let ownersByURL: [String: WorkProvenancePullRequestOwner]
+
+        func owner(for pullRequestURL: String) async -> WorkProvenancePullRequestOwner? {
+            ownersByURL[pullRequestURL]
         }
     }
 

@@ -5,10 +5,12 @@ import ProvenanceEngineContracts
 actor WorkProvenanceObservationService {
     private let client: any ProvenanceEngineContracts.ProvenanceEngineClient
     private let gitInspector: any WorkProvenanceGitInspecting
+    private let pullRequestOwnerResolver: any WorkProvenancePullRequestOwnerResolving
     private let stableIDFactory: WorkProvenanceStableIDFactory
     private let dateProvider: @Sendable () -> Date
     private var latestFingerprintByWorkspaceID: [UUID: String] = [:]
     private var latestDisplayFingerprintByWorkspaceID: [UUID: String] = [:]
+    private var resolvedPullRequestOwnersByURL: [String: WorkProvenancePullRequestOwner] = [:]
 
     /// Last persistence or Git-observation error, retained for diagnostics.
     private(set) var lastErrorDescription: String?
@@ -17,11 +19,13 @@ actor WorkProvenanceObservationService {
     init(
         client: any ProvenanceEngineContracts.ProvenanceEngineClient,
         gitInspector: any WorkProvenanceGitInspecting,
+        pullRequestOwnerResolver: any WorkProvenancePullRequestOwnerResolving = WorkProvenanceGitHubCLIPullRequestOwnerResolver(),
         stableIDFactory: WorkProvenanceStableIDFactory = WorkProvenanceStableIDFactory(),
         dateProvider: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.client = client
         self.gitInspector = gitInspector
+        self.pullRequestOwnerResolver = pullRequestOwnerResolver
         self.stableIDFactory = stableIDFactory
         self.dateProvider = dateProvider
     }
@@ -156,19 +160,20 @@ actor WorkProvenanceObservationService {
             ].compactMap { $0 }
         )
         let ticketLinks = Self.ticketLinks(ticketIDs: ticketIDs)
+        let pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest)
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
             title: workspace.title,
             titleSource: workspace.titleSource,
             currentDirectory: workspace.currentDirectory,
             branch: workspace.branch,
-            pullRequestNumber: workspace.pullRequest?.number,
-            pullRequestURL: workspace.pullRequest?.url,
-            pullRequestOwnerLogin: workspace.pullRequest?.ownerLogin,
-            pullRequestOwnerURL: workspace.pullRequest?.ownerURL,
-            pullRequestStatus: workspace.pullRequest?.status,
-            pullRequestBranch: workspace.pullRequest?.branch,
-            pullRequestIsStale: workspace.pullRequest?.isStale ?? false,
+            pullRequestNumber: pullRequest?.number,
+            pullRequestURL: pullRequest?.url,
+            pullRequestOwnerLogin: pullRequest?.ownerLogin,
+            pullRequestOwnerURL: pullRequest?.ownerURL,
+            pullRequestStatus: pullRequest?.status,
+            pullRequestBranch: pullRequest?.branch,
+            pullRequestIsStale: pullRequest?.isStale ?? false,
             gitSnapshot: gitSnapshot,
             ticketIDs: ticketIDs,
             ticketLinks: ticketLinks
@@ -181,7 +186,6 @@ actor WorkProvenanceObservationService {
         let now = dateProvider()
         let repositoryID = gitSnapshot.map { stableIDFactory.repositoryID(repositoryRoot: $0.repositoryRoot) }
         let worktreeID = gitSnapshot.map { stableIDFactory.worktreeID(repositoryRoot: $0.repositoryRoot) }
-        let pullRequest = workspace.pullRequest
         let display = ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRecord(
             id: stableIDFactory.workspaceDisplayID(stableWorkspaceID: workspace.stableWorkspaceID),
             workspaceID: workspace.stableWorkspaceID.uuidString,
@@ -224,6 +228,48 @@ actor WorkProvenanceObservationService {
 
         let response = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
         StartupBreadcrumbLog.append("workProvenance.observe.workspaceDisplayAppended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
+    }
+
+    private func pullRequestWithResolvedOwner(
+        _ pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest?
+    ) async -> WorkProvenanceWorkspaceSnapshot.PullRequest? {
+        guard let pullRequest else { return nil }
+        if let ownerLogin = Self.normalizedNonEmpty(pullRequest.ownerLogin) {
+            return pullRequest.replacingOwner(
+                login: ownerLogin,
+                url: Self.normalizedOwnerURL(pullRequest.ownerURL, login: ownerLogin)
+            )
+        }
+        if let cachedOwner = resolvedPullRequestOwnersByURL[pullRequest.url] {
+            return pullRequest.replacingOwner(
+                login: cachedOwner.login,
+                url: Self.normalizedOwnerURL(cachedOwner.url, login: cachedOwner.login)
+            )
+        }
+        guard let owner = await pullRequestOwnerResolver.owner(for: pullRequest.url),
+              let ownerLogin = Self.normalizedNonEmpty(owner.login) else {
+            return pullRequest
+        }
+        resolvedPullRequestOwnersByURL[pullRequest.url] = owner
+        return pullRequest.replacingOwner(
+            login: ownerLogin,
+            url: Self.normalizedOwnerURL(owner.url, login: ownerLogin)
+        )
+    }
+
+    private static func normalizedOwnerURL(_ url: String?, login: String) -> String? {
+        if let url = normalizedNonEmpty(url) {
+            return url
+        }
+        return "https://github.com/\(login)"
+    }
+
+    private static func normalizedNonEmpty(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
     }
 
     private static func summary(fileCount: Int, isDirty: Bool) -> String {

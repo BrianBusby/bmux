@@ -1510,17 +1510,21 @@
 		CE0D10100000000000000001 /* WorkProvenanceFileChangeRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 551E43CA9A0612FD95C9FFC1 /* WorkProvenanceFileChangeRecord.swift */; };
 		8F8D42DC292DA91C0414BAE4 /* WorkProvenanceGitCommandResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0249B2F5626865AD48C6631 /* WorkProvenanceGitCommandResult.swift */; };
 		D89012A6791CAB63645BC4BC /* WorkProvenanceGitCommandRunning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B359CAAF748DEC78DF85972 /* WorkProvenanceGitCommandRunning.swift */; };
+		CE0E03010000000000000001 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03010000000000000002 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift */; };
 		1E5E54C50421C308F5CC6FA6 /* WorkProvenanceGitInspecting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */; };
 		918962BA99BFA9005D41242F /* WorkProvenanceGitInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */; };
 		CE0D10240000000000000001 /* WorkProvenanceGitSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */; };
 		D98713E6CE24785E075BF87F /* WorkProvenanceGitSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */; };
 		B53E0C6CEEEEFBE91CE39E0F /* WorkProvenanceGitStatusEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */; };
 		CE0D10250000000000000001 /* WorkProvenanceGitStatusEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */; };
+		CE0E03020000000000000001 /* WorkProvenanceNoopPullRequestOwnerResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03020000000000000002 /* WorkProvenanceNoopPullRequestOwnerResolver.swift */; };
 		36915A74F7AA3930F34DF634 /* WorkProvenanceObservationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */; };
 		8DCF06522BB39B4A966FFC83 /* WorkProvenanceObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */; };
 		0B11704B4770CA402725B958 /* WorkProvenanceProcessGitCommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC5AF6B03C2A9B1ADE669E4 /* WorkProvenanceProcessGitCommandRunner.swift */; };
 		C0DE70110000000000000001 /* WorkProvenancePruneResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */; };
 		CE0D10120000000000000001 /* WorkProvenancePruneResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */; };
+		CE0E03030000000000000001 /* WorkProvenancePullRequestOwner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03030000000000000002 /* WorkProvenancePullRequestOwner.swift */; };
+		CE0E03040000000000000001 /* WorkProvenancePullRequestOwnerResolving.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03040000000000000002 /* WorkProvenancePullRequestOwnerResolving.swift */; };
 		C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
 		CE0D10140000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
 		756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */; };
@@ -3129,14 +3133,18 @@
 		551E43CA9A0612FD95C9FFC1 /* WorkProvenanceFileChangeRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceFileChangeRecord.swift; sourceTree = "<group>"; };
 		F0249B2F5626865AD48C6631 /* WorkProvenanceGitCommandResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitCommandResult.swift; sourceTree = "<group>"; };
 		1B359CAAF748DEC78DF85972 /* WorkProvenanceGitCommandRunning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitCommandRunning.swift; sourceTree = "<group>"; };
+		CE0E03010000000000000002 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift; sourceTree = "<group>"; };
 		2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitInspecting.swift; sourceTree = "<group>"; };
 		95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitInspector.swift; sourceTree = "<group>"; };
 		3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitSnapshot.swift; sourceTree = "<group>"; };
 		BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitStatusEntry.swift; sourceTree = "<group>"; };
+		CE0E03020000000000000002 /* WorkProvenanceNoopPullRequestOwnerResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceNoopPullRequestOwnerResolver.swift; sourceTree = "<group>"; };
 		3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceObservationService.swift; sourceTree = "<group>"; };
 		642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceObserverTests.swift; sourceTree = "<group>"; };
 		ABC5AF6B03C2A9B1ADE669E4 /* WorkProvenanceProcessGitCommandRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceProcessGitCommandRunner.swift; sourceTree = "<group>"; };
 		C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePruneResult.swift; sourceTree = "<group>"; };
+		CE0E03030000000000000002 /* WorkProvenancePullRequestOwner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwner.swift; sourceTree = "<group>"; };
+		CE0E03040000000000000002 /* WorkProvenancePullRequestOwnerResolving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwnerResolving.swift; sourceTree = "<group>"; };
 		C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRetentionPolicy.swift; sourceTree = "<group>"; };
 		B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRuntime.swift; sourceTree = "<group>"; };
 		CE0B00040000000000000002 /* WorkProvenanceSessionLifecycleRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionLifecycleRecorder.swift; sourceTree = "<group>"; };
@@ -4978,12 +4986,16 @@
 				551E43CA9A0612FD95C9FFC1 /* WorkProvenanceFileChangeRecord.swift */,
 				F0249B2F5626865AD48C6631 /* WorkProvenanceGitCommandResult.swift */,
 				1B359CAAF748DEC78DF85972 /* WorkProvenanceGitCommandRunning.swift */,
+				CE0E03010000000000000002 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift */,
 				2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */,
 				95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */,
 				3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */,
 				BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */,
+				CE0E03020000000000000002 /* WorkProvenanceNoopPullRequestOwnerResolver.swift */,
 				3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */,
 				ABC5AF6B03C2A9B1ADE669E4 /* WorkProvenanceProcessGitCommandRunner.swift */,
+				CE0E03030000000000000002 /* WorkProvenancePullRequestOwner.swift */,
+				CE0E03040000000000000002 /* WorkProvenancePullRequestOwnerResolving.swift */,
 				C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */,
 				C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */,
 				CE0E00010000000000000002 /* ExecutionTelemetryProvenanceProjectionService.swift */,
@@ -6345,13 +6357,17 @@
 				159BDE59D7EF1EF6F6957714 /* WorkProvenanceFileChangeRecord.swift in Sources */,
 				8F8D42DC292DA91C0414BAE4 /* WorkProvenanceGitCommandResult.swift in Sources */,
 				D89012A6791CAB63645BC4BC /* WorkProvenanceGitCommandRunning.swift in Sources */,
+				CE0E03010000000000000001 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift in Sources */,
 				1E5E54C50421C308F5CC6FA6 /* WorkProvenanceGitInspecting.swift in Sources */,
 				918962BA99BFA9005D41242F /* WorkProvenanceGitInspector.swift in Sources */,
 				D98713E6CE24785E075BF87F /* WorkProvenanceGitSnapshot.swift in Sources */,
 				B53E0C6CEEEEFBE91CE39E0F /* WorkProvenanceGitStatusEntry.swift in Sources */,
+				CE0E03020000000000000001 /* WorkProvenanceNoopPullRequestOwnerResolver.swift in Sources */,
 				36915A74F7AA3930F34DF634 /* WorkProvenanceObservationService.swift in Sources */,
 				0B11704B4770CA402725B958 /* WorkProvenanceProcessGitCommandRunner.swift in Sources */,
 				C0DE70110000000000000001 /* WorkProvenancePruneResult.swift in Sources */,
+				CE0E03030000000000000001 /* WorkProvenancePullRequestOwner.swift in Sources */,
+				CE0E03040000000000000001 /* WorkProvenancePullRequestOwnerResolving.swift in Sources */,
 				C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */,
 				756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */,
 				CE0B00040000000000000001 /* WorkProvenanceSessionLifecycleRecorder.swift in Sources */,

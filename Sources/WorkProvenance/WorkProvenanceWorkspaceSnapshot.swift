@@ -68,6 +68,20 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
     }
 }
 
+extension WorkProvenanceWorkspaceSnapshot.PullRequest {
+    func replacingOwner(login: String?, url: String?) -> Self {
+        Self(
+            number: number,
+            url: self.url,
+            ownerLogin: login,
+            ownerURL: url,
+            status: status,
+            branch: branch,
+            isStale: isStale
+        )
+    }
+}
+
 private extension Workspace {
     func provenancePullRequestSnapshot() -> WorkProvenanceWorkspaceSnapshot.PullRequest? {
         let state = pullRequest ?? sidebarPullRequestsInDisplayOrder().first

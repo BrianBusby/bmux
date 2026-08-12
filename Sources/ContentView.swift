@@ -15206,7 +15206,7 @@ struct TabItemView: View, Equatable {
         VStack(alignment: .leading, spacing: 1) {
             ForEach(rows) { pullRequest in
                 let pullRequestNumber = String(pullRequest.number)
-                let pullRequestTitle = "\(pullRequest.label) #\(pullRequestNumber)"
+                let pullRequestTitle = "\(pullRequest.label) #\(pullRequestNumber) \(pullRequestStatusLabel(pullRequest.status))"
                 let rowContent = HStack(spacing: 4) {
                     PullRequestStatusIcon(
                         status: pullRequest.status,
@@ -15219,9 +15219,6 @@ struct TabItemView: View, Equatable {
                         .lineLimit(1)
                         .truncationMode(.tail)
                     Spacer(minLength: 0)
-                    Text(pullRequestStatusLabel(pullRequest.status))
-                        .foregroundColor(pullRequest.isFromProvenance ? activeSecondaryColor(0.78) : pullRequestForegroundColor)
-                        .lineLimit(1)
                 }
                 .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
                 .foregroundColor(pullRequestForegroundColor)
