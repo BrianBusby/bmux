@@ -39,12 +39,12 @@ final class WorkspaceDisplayCurrentStateSubscription {
         refresh: @escaping Refresh
     ) {
         guard subscriptionTask == nil else { return }
-        subscriptionTask = Task { @MainActor [weak self] in
-            guard let self else { return }
+        let changeStream = changeStream
+        let coalescer = coalescer
+        subscriptionTask = Task { @MainActor in
             for await _ in changeStream() {
                 guard !Task.isCancelled else { return }
-                coalescer.signal { [weak self] in
-                    guard self != nil else { return }
+                coalescer.signal {
                     let ids = stableWorkspaceIDs()
                     guard !ids.isEmpty else { return }
                     refresh(ids)

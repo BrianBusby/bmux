@@ -1606,6 +1606,7 @@
 		CE0E01020000000000000001 /* WorkspaceDisplayCurrentStateSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01020000000000000002 /* WorkspaceDisplayCurrentStateSnapshot.swift */; };
 		CE0E01030000000000000001 /* WorkspaceDisplayCurrentStateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01030000000000000002 /* WorkspaceDisplayCurrentStateStore.swift */; };
 		CE0E01060000000000000001 /* WorkspaceDisplayCurrentStateSubscription.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01060000000000000002 /* WorkspaceDisplayCurrentStateSubscription.swift */; };
+		CE0E01070000000000000001 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01070000000000000002 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift */; };
 		CE0E01040000000000000001 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01040000000000000002 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift */; };
 		72DB1838A0F1B710BFB45DC1 /* WorkspaceEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B561A95C6DC21BA9C4B2BCDD /* WorkspaceEnvironmentTests.swift */; };
 		C0DE36230000000000000001 /* WorkspaceFinderDirectoryResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE36230000000000000002 /* WorkspaceFinderDirectoryResolver.swift */; };
@@ -3218,6 +3219,7 @@
 		CE0E01020000000000000002 /* WorkspaceDisplayCurrentStateSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateSnapshot.swift; sourceTree = "<group>"; };
 		CE0E01030000000000000002 /* WorkspaceDisplayCurrentStateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateStore.swift; sourceTree = "<group>"; };
 		CE0E01060000000000000002 /* WorkspaceDisplayCurrentStateSubscription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateSubscription.swift; sourceTree = "<group>"; };
+		CE0E01070000000000000002 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateSubscriptionTests.swift; sourceTree = "<group>"; };
 		CE0E01040000000000000002 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift; sourceTree = "<group>"; };
 		B561A95C6DC21BA9C4B2BCDD /* WorkspaceEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceEnvironmentTests.swift; sourceTree = "<group>"; };
 		C0DE36230000000000000002 /* WorkspaceFinderDirectoryResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceFinderDirectoryResolver.swift; sourceTree = "<group>"; };
@@ -4947,6 +4949,7 @@
 
 				642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
 				1211A332D826E19C7A6463C8 /* WorkProvenanceStoreTests.swift */,
+				CE0E01070000000000000002 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift */,
 			);
 			path = bmuxTests;
 			sourceTree = "<group>";
@@ -7037,6 +7040,7 @@
 				D7AB3605C10DEF0000000001 /* WorkspaceCloseTabsContextMenuTests.swift in Sources */,
 				F7000000A1B2C3D4E5F60718 /* WorkspaceContentViewVisibilityTests.swift in Sources */,
 				281F3AEA52379AF45C5C1189 /* WorkspaceCustomSidebarPullRequestContextTests.swift in Sources */,
+				CE0E01070000000000000001 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift in Sources */,
 				72DB1838A0F1B710BFB45DC1 /* WorkspaceEnvironmentTests.swift in Sources */,
 				F0ACC0DE0000000000000005 /* WorkspaceForkConversationContextMenuTests.swift in Sources */,
 				C1AC71070000000000000001 /* WorkspaceGroupActionTests.swift in Sources */,
