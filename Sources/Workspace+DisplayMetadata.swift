@@ -206,13 +206,15 @@ extension Workspace {
             || !panelGitBranches.isEmpty
             || pullRequest != nil
             || !panelPullRequests.isEmpty
+            || progress != nil
+            || latestSubmittedMessage != nil
         statusEntries.removeAll()
         clearAllAgentPIDs(refreshPorts: false)
         clearAllAgentLifecycleStates()
         agentListeningPorts.removeAll()
         clearRecordedPromptMessages()
         logEntries.removeAll()
-        progress = nil
+        sidebarMetadata.progress = nil
         markWorkspaceDisplayFieldsExplicitlyCleared([
             "current_work_summary",
             "last_submitted_prompt",

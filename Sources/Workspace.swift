@@ -2299,7 +2299,17 @@ final class Workspace: Identifiable, ObservableObject {
     }
     var progress: SidebarProgressState? {
         get { sidebarMetadata.progress }
-        set { sidebarMetadata.progress = newValue }
+        set {
+            let oldValue = sidebarMetadata.progress
+            sidebarMetadata.progress = newValue
+            guard oldValue != newValue else { return }
+            if Self.normalizedCustomDescription(newValue?.label) != nil {
+                markWorkspaceDisplayFieldsKnown(["current_work_summary"])
+            } else {
+                markWorkspaceDisplayFieldsExplicitlyCleared(["current_work_summary"])
+            }
+            postWorkspaceDisplayMetadataDidChange()
+        }
     }
     var gitBranch: SidebarGitBranchState? {
         get { sidebarMetadata.gitBranch }
@@ -5404,6 +5414,8 @@ final class Workspace: Identifiable, ObservableObject {
         latestSubmittedMessage = preview
         latestSubmittedAt = Date()
         _ = recordConversationMessage(preview)
+        markWorkspaceDisplayFieldsKnown(["last_submitted_prompt"])
+        postWorkspaceDisplayMetadataDidChange()
         return true
     }
 

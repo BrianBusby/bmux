@@ -130,6 +130,32 @@ struct WorkspacePromptSubmitTests {
         #expect(terminalPanel.promptNavigationCanMoveForward)
     }
 
+    @Test func testPromptSubmitPostsWorkspaceDisplayMetadataNotification() throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        var notificationCount = 0
+        let observer = NotificationCenter.default.addObserver(
+            forName: .workspaceDisplayMetadataDidChange,
+            object: workspace,
+            queue: nil
+        ) { _ in
+            notificationCount += 1
+        }
+        defer { NotificationCenter.default.removeObserver(observer) }
+
+        let outcome = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: "preserve this prompt in workspace display",
+                iMessageModeEnabled: false
+            )
+        )
+
+        #expect(outcome.messageRecorded)
+        #expect(notificationCount == 1)
+        #expect(!workspace.workspaceDisplayExplicitClearedFields.contains("last_submitted_prompt"))
+    }
+
     @Test func testAssistantFinalMessageRecordsMessageAndMovesWorkspaceToTopWhenIMessageModeEnabled() throws {
         let manager = TabManager()
         let pinned = manager.tabs[0]
