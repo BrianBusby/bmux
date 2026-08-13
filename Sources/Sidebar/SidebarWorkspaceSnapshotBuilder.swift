@@ -75,6 +75,8 @@ struct SidebarWorkspaceSnapshotBuilder {
     static func pullRequestDisplays(
         livePullRequests: [SidebarPullRequestState],
         provenancePullRequest: WorkspaceDisplayCurrentStatePullRequestSnapshot?,
+        provenanceCurrentDirectory: String? = nil,
+        provenanceBranch: String? = nil,
         latestSubmittedMessage: String?,
         latestConversationMessage: String?,
         label: String
@@ -94,7 +96,15 @@ struct SidebarWorkspaceSnapshotBuilder {
             return promptMention.map { [promptPullRequestDisplay($0, label: label)] } ?? []
         }
         let mentionedNumbers = pullRequestNumbers(messages: messages)
-        guard mentionedNumbers.isEmpty || mentionedNumbers.contains(pullRequest.number) else {
+        let hasMatchingPromptNumber = mentionedNumbers.contains(pullRequest.number)
+        let hasPromptContradiction = !mentionedNumbers.isEmpty && !hasMatchingPromptNumber
+        guard !hasPromptContradiction else {
+            return []
+        }
+        guard hasMatchingPromptNumber || Workspace.looksLikePullRequestScopedWorktree(
+            number: pullRequest.number,
+            candidates: [provenanceCurrentDirectory, provenanceBranch, pullRequest.branch]
+        ) else {
             return []
         }
 

@@ -27,6 +27,22 @@ private extension WorkspaceWorkContextSource {
         guard let existingSource else { return self }
         return existingSource.pullRequestEvidenceRank > pullRequestEvidenceRank ? existingSource : self
     }
+
+    var isBranchDerivedPullRequestEvidence: Bool {
+        switch self {
+        case .pullRequestLookup, .gitBranchReport, .branchName:
+            return true
+        case .manual, .promptMention, .sidebarMetadata, .unknown:
+            return false
+        }
+    }
+}
+
+private extension Set where Element == String {
+    func containsBranchIntent(_ branch: String?) -> Bool {
+        guard let branch else { return false }
+        return contains(branch.normalizedSidebarBranchName)
+    }
 }
 
 extension Workspace {
@@ -155,19 +171,25 @@ extension Workspace {
         let currentPanelBranch = panelGitBranches[panelId]?.branch.normalizedSidebarBranchName
         let isSameExistingPullRequest = existing?.number == number && existing?.url == url
         let isSameWorkspacePullRequest = pullRequest?.number == number && pullRequest?.url == url
+        if source.isBranchDerivedPullRequestEvidence,
+           !allowsBranchDerivedPullRequest(panelId: panelId, number: number, branch: normalizedBranch ?? currentPanelBranch) {
+            return
+        }
+        let effectiveSource = source.isBranchDerivedPullRequestEvidence
+            && workspacePromptPullRequestIntentNumbers.contains(number) ? .promptMention : source
         if existing != nil,
            !isSameExistingPullRequest,
-           !source.canReplacePullRequest(from: existingSource) {
+           !effectiveSource.canReplacePullRequest(from: existingSource) {
             return
         }
         if panelId == focusedPanelId,
            pullRequest != nil,
            !isSameWorkspacePullRequest,
-           !source.canReplacePullRequest(from: existingWorkspaceSource) {
+           !effectiveSource.canReplacePullRequest(from: existingWorkspaceSource) {
             return
         }
-        let resolvedPanelSource = source.preferredPullRequestSource(over: existingSource)
-        let resolvedWorkspaceSource = source.preferredPullRequestSource(over: existingWorkspaceSource)
+        let resolvedPanelSource = effectiveSource.preferredPullRequestSource(over: existingSource)
+        let resolvedWorkspaceSource = effectiveSource.preferredPullRequestSource(over: existingWorkspaceSource)
         let resolvedTitle = title ?? (isSameExistingPullRequest ? existing?.title : nil)
         let resolvedOwnerLogin = ownerLogin ?? (isSameExistingPullRequest ? existing?.ownerLogin : nil)
         let resolvedOwnerURL = ownerURL ?? (isSameExistingPullRequest ? existing?.ownerURL : nil)
@@ -238,6 +260,48 @@ extension Workspace {
         if displayMetadataChanged {
             postWorkspaceDisplayMetadataDidChange()
         }
+    }
+
+    private func allowsBranchDerivedPullRequest(panelId: UUID, number: Int, branch: String?) -> Bool {
+        if workspacePromptPullRequestIntentNumbers.contains(number) {
+            return true
+        }
+        if workspacePromptBranchIntentNames.containsBranchIntent(branch) {
+            return true
+        }
+        if workspacePromptBranchIntentNames.containsBranchIntent(panelGitBranches[panelId]?.branch) {
+            return true
+        }
+        if workspacePromptBranchIntentNames.containsBranchIntent(gitBranch?.branch) {
+            return true
+        }
+        return Self.looksLikePullRequestScopedWorktree(
+            number: number,
+            candidates: [
+                branch,
+                panelGitBranches[panelId]?.branch,
+                gitBranch?.branch,
+                panelDirectories[panelId],
+                terminalPanel(for: panelId)?.requestedWorkingDirectory,
+                currentDirectory,
+            ]
+        )
+    }
+
+    static func looksLikePullRequestScopedWorktree(number: Int, candidates: [String?]) -> Bool {
+        let numberString = String(number)
+        let pattern = #"(?i)(^|[^a-z0-9])(?:pr|pull)[-_/# ]?#?"# + numberString + #"([^a-z0-9]|$)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return false
+        }
+        for candidate in candidates {
+            guard let candidate else { continue }
+            let range = NSRange(location: 0, length: (candidate as NSString).length)
+            if regex.firstMatch(in: candidate, range: range) != nil {
+                return true
+            }
+        }
+        return false
     }
 
     func clearSidebarPullRequestMetadata(source: WorkspaceWorkContextSource = .manual) {

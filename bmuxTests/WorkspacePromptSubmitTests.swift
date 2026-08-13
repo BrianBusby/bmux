@@ -390,6 +390,36 @@ struct WorkspacePromptSubmitTests {
 
         #expect(workspace.panelPullRequests[panelId]?.number == 26201)
         #expect(workspace.pullRequest?.number == 26201)
+        #expect(workspace.sidebarMetadata.workContext(panelId: panelId).pullRequest?.source == .promptMention)
+        #expect(workspace.sidebarPullRequestsInDisplayOrder().map(\.number) == [26201])
+    }
+
+    @Test func testPromptBranchIntentAllowsLaterBranchDerivedPullRequest() throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        let panelId = try #require(workspace.focusedPanelId)
+
+        _ = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: "work on branch codeowners-report-approved-status",
+                surfaceId: panelId,
+                iMessageModeEnabled: false
+            )
+        )
+        workspace.updatePanelGitBranch(panelId: panelId, branch: "codeowners-report-approved-status", isDirty: false)
+        workspace.updatePanelPullRequest(
+            panelId: panelId,
+            number: 26201,
+            label: "PR",
+            url: try #require(URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/26201")),
+            status: .open,
+            branch: "codeowners-report-approved-status",
+            source: .pullRequestLookup
+        )
+
+        #expect(workspace.panelPullRequests[panelId]?.number == 26201)
+        #expect(workspace.pullRequest?.number == 26201)
         #expect(workspace.sidebarPullRequestsInDisplayOrder().map(\.number) == [26201])
     }
 
@@ -448,6 +478,15 @@ struct WorkspacePromptSubmitTests {
         let workspace = manager.tabs[0]
         let panelId = try #require(workspace.focusedPanelId)
 
+        _ = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: "keep going on pull 26201",
+                surfaceId: panelId,
+                iMessageModeEnabled: false
+            )
+        )
+
         workspace.updatePanelPullRequest(
             panelId: panelId,
             number: 26201,
@@ -456,15 +495,6 @@ struct WorkspacePromptSubmitTests {
             status: .open,
             branch: "codeowners-report-approved-status",
             source: .pullRequestLookup
-        )
-
-        _ = try #require(
-            manager.handlePromptSubmit(
-                workspaceId: workspace.id,
-                message: "keep going on pull 26201",
-                surfaceId: panelId,
-                iMessageModeEnabled: false
-            )
         )
 
         #expect(workspace.sidebarMetadata.workContext(panelId: panelId).pullRequest?.source == .promptMention)
