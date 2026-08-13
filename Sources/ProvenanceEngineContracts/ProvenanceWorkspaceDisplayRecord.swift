@@ -56,6 +56,24 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
     /// External ticket links linked to the workspace.
     public let ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord]
 
+    /// Durable summary of the current work for workspace display, when accepted.
+    public let currentWorkSummary: String?
+
+    /// Bounded display text for the last submitted user prompt, when accepted.
+    public let lastSubmittedPrompt: String?
+
+    /// Time the last submitted prompt was accepted by the producer, when known.
+    public let lastSubmittedPromptSubmittedAt: Date?
+
+    /// Agent session associated with the last submitted prompt, when known.
+    public let lastSubmittedPromptSessionID: String?
+
+    /// Field names whose current state was explicitly cleared by accepted evidence.
+    public let clearedFields: [String]
+
+    /// Field-level provenance and freshness metadata keyed by stable field name.
+    public let fieldMetadata: [String: ProvenanceWorkspaceDisplayFieldMetadataRecord]
+
     /// Durable event ID whose payload last updated this projection.
     public let latestEventID: String?
 
@@ -87,6 +105,12 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         case isDirty
         case ticketIDs
         case ticketLinks
+        case currentWorkSummary
+        case lastSubmittedPrompt
+        case lastSubmittedPromptSubmittedAt
+        case lastSubmittedPromptSessionID
+        case clearedFields
+        case fieldMetadata
         case latestEventID
         case latestEventSequence
         case observedAt
@@ -113,6 +137,12 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         isDirty: Bool? = nil,
         ticketIDs: [String] = [],
         ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord] = [],
+        currentWorkSummary: String? = nil,
+        lastSubmittedPrompt: String? = nil,
+        lastSubmittedPromptSubmittedAt: Date? = nil,
+        lastSubmittedPromptSessionID: String? = nil,
+        clearedFields: [String] = [],
+        fieldMetadata: [String: ProvenanceWorkspaceDisplayFieldMetadataRecord] = [:],
         latestEventID: String? = nil,
         latestEventSequence: Int? = nil,
         observedAt: Date,
@@ -136,6 +166,12 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.isDirty = isDirty
         self.ticketIDs = ticketIDs
         self.ticketLinks = ticketLinks
+        self.currentWorkSummary = currentWorkSummary
+        self.lastSubmittedPrompt = lastSubmittedPrompt
+        self.lastSubmittedPromptSubmittedAt = lastSubmittedPromptSubmittedAt
+        self.lastSubmittedPromptSessionID = lastSubmittedPromptSessionID
+        self.clearedFields = clearedFields
+        self.fieldMetadata = fieldMetadata
         self.latestEventID = latestEventID
         self.latestEventSequence = latestEventSequence
         self.observedAt = observedAt
@@ -166,6 +202,18 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
             [ProvenanceWorkspaceDisplayTicketLinkRecord].self,
             forKey: .ticketLinks
         ) ?? []
+        self.currentWorkSummary = try container.decodeIfPresent(String.self, forKey: .currentWorkSummary)
+        self.lastSubmittedPrompt = try container.decodeIfPresent(String.self, forKey: .lastSubmittedPrompt)
+        self.lastSubmittedPromptSubmittedAt = try container.decodeIfPresent(
+            Date.self,
+            forKey: .lastSubmittedPromptSubmittedAt
+        )
+        self.lastSubmittedPromptSessionID = try container.decodeIfPresent(String.self, forKey: .lastSubmittedPromptSessionID)
+        self.clearedFields = try container.decodeIfPresent([String].self, forKey: .clearedFields) ?? []
+        self.fieldMetadata = try container.decodeIfPresent(
+            [String: ProvenanceWorkspaceDisplayFieldMetadataRecord].self,
+            forKey: .fieldMetadata
+        ) ?? [:]
         self.latestEventID = try container.decodeIfPresent(String.self, forKey: .latestEventID)
         self.latestEventSequence = try container.decodeIfPresent(Int.self, forKey: .latestEventSequence)
         self.observedAt = try container.decode(Date.self, forKey: .observedAt)

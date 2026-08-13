@@ -14,16 +14,26 @@ public struct ProvenanceWorkspaceDisplayTicketLinkRecord: Codable, Equatable, Se
     /// Canonical ticket URL accepted from deterministic evidence, when known.
     public let url: String?
 
+    /// Ticket owner or assignee display name accepted from deterministic evidence, when known.
+    public let ownerName: String?
+
+    /// Ticket owner or assignee URL accepted from deterministic evidence, when known.
+    public let ownerURL: String?
+
     /// Creates a workspace-display ticket link fact.
     public init(
         id: String,
         system: String? = nil,
         title: String? = nil,
-        url: String? = nil
+        url: String? = nil,
+        ownerName: String? = nil,
+        ownerURL: String? = nil
     ) {
         self.id = id
         self.system = system
         self.title = title
         self.url = url
+        self.ownerName = ownerName
+        self.ownerURL = ownerURL
     }
 }
