@@ -131,6 +131,30 @@ import Testing
         #expect(!decision.hasDeferredWorkspaceObservationInvalidation)
     }
 
+    @Test func ticketDisplayLinkTextIncludesLinearTitle() {
+        let ticket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
+            id: "STE-1964",
+            title: " Canonical domain mutation paths ",
+            url: URL(string: "https://linear.app/company/issue/STE-1964"),
+            ownerName: nil,
+            ownerURL: nil
+        )
+
+        #expect(ticket.linkText == "STE-1964: Canonical domain mutation paths")
+    }
+
+    @Test func ticketDisplayLinkTextFallsBackToTicketIDWithoutTitle() {
+        let ticket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
+            id: "STE-1964",
+            title: " ",
+            url: URL(string: "https://linear.app/company/issue/STE-1964"),
+            ownerName: nil,
+            ownerURL: nil
+        )
+
+        #expect(ticket.linkText == "STE-1964")
+    }
+
     @Test func livePullRequestRowsOverrideStaleProvenancePullRequest() throws {
         let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
             livePullRequests: [try Self.livePullRequest(number: 26196)],

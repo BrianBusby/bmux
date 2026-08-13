@@ -38,6 +38,15 @@ struct SidebarWorkspaceSnapshotBuilder {
         let url: URL?
         let ownerName: String?
         let ownerURL: URL?
+
+        var linkText: String {
+            let trimmedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !trimmedTitle.isEmpty,
+                  trimmedTitle.caseInsensitiveCompare(id) != .orderedSame else {
+                return id
+            }
+            return "\(id): \(trimmedTitle)"
+        }
     }
 
     struct Snapshot: Equatable {
