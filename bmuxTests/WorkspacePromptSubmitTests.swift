@@ -344,6 +344,76 @@ struct WorkspacePromptSubmitTests {
         #expect(workspace.sidebarPullRequestsInDisplayOrder().map(\.number) == [5314])
     }
 
+    @Test func testBranchDerivedPullRequestIsSuppressedWithoutExplicitWorkspaceIntent() throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        let panelId = try #require(workspace.focusedPanelId)
+
+        workspace.updatePanelGitBranch(panelId: panelId, branch: "codeowners-report-approved-status", isDirty: false)
+        workspace.updatePanelPullRequest(
+            panelId: panelId,
+            number: 26201,
+            label: "PR",
+            url: try #require(URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/26201")),
+            status: .open,
+            branch: "codeowners-report-approved-status",
+            source: .pullRequestLookup
+        )
+
+        #expect(workspace.panelPullRequests[panelId] == nil)
+        #expect(workspace.pullRequest == nil)
+        #expect(workspace.sidebarPullRequestsInDisplayOrder().isEmpty)
+    }
+
+    @Test func testShortPromptPullRequestIntentAllowsLaterBranchDerivedPullRequest() throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        let panelId = try #require(workspace.focusedPanelId)
+
+        _ = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: "keep going on pull 26201",
+                surfaceId: panelId,
+                iMessageModeEnabled: false
+            )
+        )
+        workspace.updatePanelPullRequest(
+            panelId: panelId,
+            number: 26201,
+            label: "PR",
+            url: try #require(URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/26201")),
+            status: .open,
+            branch: "codeowners-report-approved-status",
+            source: .pullRequestLookup
+        )
+
+        #expect(workspace.panelPullRequests[panelId]?.number == 26201)
+        #expect(workspace.pullRequest?.number == 26201)
+        #expect(workspace.sidebarPullRequestsInDisplayOrder().map(\.number) == [26201])
+    }
+
+    @Test func testPullRequestScopedWorktreeAllowsBranchDerivedPullRequestWithoutPromptIntent() throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        let panelId = try #require(workspace.focusedPanelId)
+        workspace.currentDirectory = "/private/tmp/companycam-pr-26201"
+
+        workspace.updatePanelPullRequest(
+            panelId: panelId,
+            number: 26201,
+            label: "PR",
+            url: try #require(URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/26201")),
+            status: .open,
+            branch: "starter-template-auto-slugs",
+            source: .pullRequestLookup
+        )
+
+        #expect(workspace.panelPullRequests[panelId]?.number == 26201)
+        #expect(workspace.pullRequest?.number == 26201)
+        #expect(workspace.sidebarPullRequestsInDisplayOrder().map(\.number) == [26201])
+    }
+
     @Test func testPromptPullRequestURLSurvivesConflictingBranchDerivedPullRequest() throws {
         let manager = TabManager()
         let workspace = manager.tabs[0]
