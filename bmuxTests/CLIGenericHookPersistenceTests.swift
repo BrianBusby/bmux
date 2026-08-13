@@ -1061,6 +1061,96 @@ extension CLINotifyProcessIntegrationRegressionTests {
         XCTAssertEqual(feedEvents.first?["hook_event_name"] as? String, "PermissionRequest")
         XCTAssertEqual(feedEvents.first?["_source"] as? String, "kiro")
         XCTAssertEqual(feedEvents.first?["_ppid"] as? Int, 525252)
+        let codexSocketPath = makeSocketPath("codex-late-pr-prompt")
+        let codexListenerFD = try bindUnixSocket(at: codexSocketPath)
+        let codexState = MockSocketServerState()
+        let codexRoot = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-codex-late-pr-prompt-\(UUID().uuidString)", isDirectory: true)
+        let pullRequestURL = "https://github.com/CompanyCam/Company-Cam-API/pull/26096"
+
+        try FileManager.default.createDirectory(at: codexRoot, withIntermediateDirectories: true)
+        defer {
+            Darwin.close(codexListenerFD)
+            unlink(codexSocketPath)
+            try? FileManager.default.removeItem(at: codexRoot)
+        }
+        let codexFeedHandled = startMockServer(
+            listenerFD: codexListenerFD,
+            state: codexState,
+            connectionCount: 80,
+            fulfillWhen: { $0.contains(#""method":"feed.push""#) }
+        ) { line in
+            guard let payload = self.jsonObject(line) else {
+                return "OK"
+            }
+            guard let method = payload["method"] as? String else {
+                return self.malformedRequestResponse(id: payload["id"] as? String, raw: line)
+            }
+            guard let id = payload["id"] as? String else {
+                return "OK"
+            }
+            switch method {
+            case "surface.list":
+                return self.surfaceListResponse(id: id, surfaceId: surfaceId)
+            case "feed.push":
+                return self.v2Response(id: id, ok: true, result: [:])
+            default:
+                return self.v2Response(
+                    id: id,
+                    ok: false,
+                    error: ["code": "unrecognized_method", "message": "unexpected method: \(method)"]
+                )
+            }
+        }
+        let codexPrefix = String(repeating: "review comment context ", count: 16)
+        XCTAssertGreaterThan(codexPrefix.count, 240)
+        let codexPrompt = "\(codexPrefix)on this pr: \(pullRequestURL)"
+        let codexInputData = try JSONSerialization.data(withJSONObject: [
+            "session_id": "codex-late-pr-session",
+            "cwd": codexRoot.path,
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": codexPrompt,
+        ])
+        let codexInput = try XCTUnwrap(String(data: codexInputData, encoding: .utf8))
+
+        let codexResult = runProcess(
+            executablePath: cliPath,
+            arguments: ["hooks", "codex", "prompt-submit"],
+            environment: [
+                "HOME": codexRoot.path,
+                "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+                "PWD": codexRoot.path,
+                "BMUX_SOCKET_PATH": codexSocketPath,
+                "BMUX_WORKSPACE_ID": workspaceId,
+                "BMUX_SURFACE_ID": surfaceId,
+                "BMUX_AGENT_HOOK_STATE_DIR": codexRoot.path,
+                "BMUX_CODEX_PID": "626262",
+                "BMUX_CLI_SENTRY_DISABLED": "1",
+            ],
+            standardInput: codexInput,
+            timeout: 5
+        )
+        wait(for: [codexFeedHandled], timeout: 5)
+        XCTAssertFalse(codexResult.timedOut, codexResult.stderr)
+        XCTAssertEqual(codexResult.status, 0, codexResult.stderr)
+        XCTAssertEqual(codexResult.stdout, "{}\n")
+
+        let codexFeedEvent = try XCTUnwrap(codexState.commands.compactMap { command -> [String: Any]? in
+            guard let payload = self.jsonObject(command),
+                  payload["method"] as? String == "feed.push",
+                  let params = payload["params"] as? [String: Any],
+                  let event = params["event"] as? [String: Any],
+                  event["hook_event_name"] as? String == "UserPromptSubmit" else {
+                return nil
+            }
+            return event
+        }.last, "Expected a UserPromptSubmit Feed event, saw \(codexState.commands)")
+        let codexToolInput = try XCTUnwrap(codexFeedEvent["tool_input"] as? [String: Any])
+        let codexToolPrompt = try XCTUnwrap(codexToolInput["prompt"] as? String)
+        XCTAssertTrue(codexToolPrompt.contains(pullRequestURL), codexToolPrompt)
+        let codexContext = try XCTUnwrap(codexFeedEvent["context"] as? [String: Any])
+        let codexLastUserMessage = try XCTUnwrap(codexContext["lastUserMessage"] as? String)
+        XCTAssertTrue(codexLastUserMessage.contains(pullRequestURL), codexLastUserMessage)
     }
 
     /// The Feed permission modes that allow a tool (`once` / `always` / `all`
