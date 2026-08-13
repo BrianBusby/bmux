@@ -323,11 +323,11 @@ extension Workspace {
         guard let branch = Self.submittedPromptBranchMention(from: message) else {
             return false
         }
-        workspacePromptBranchIntentNames.insert(branch.normalizedSidebarBranchName)
+        workspacePromptBranchIntentNames.insert(branch)
         return true
     }
 
-    static func submittedPromptPullRequestMention(
+    nonisolated static func submittedPromptPullRequestMention(
         from message: String?,
         matchingNumber expectedNumber: Int? = nil
     ) -> (number: Int, url: URL)? {
@@ -354,7 +354,7 @@ extension Workspace {
         return nil
     }
 
-    static func submittedPromptPullRequestNumber(
+    nonisolated static func submittedPromptPullRequestNumber(
         from message: String?,
         matchingNumber expectedNumber: Int? = nil
     ) -> Int? {
@@ -376,7 +376,7 @@ extension Workspace {
         return nil
     }
 
-    static func submittedPromptBranchMention(from message: String?) -> String? {
+    nonisolated static func submittedPromptBranchMention(from message: String?) -> String? {
         guard let message else { return nil }
         let pattern = #"(?i)\bbranch\s+([A-Za-z0-9][A-Za-z0-9._/\-]*)"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else {
@@ -386,8 +386,9 @@ extension Workspace {
         let range = NSRange(location: 0, length: nsMessage.length)
         for match in regex.matches(in: message, range: range) {
             guard match.numberOfRanges == 2 else { continue }
-            let branch = nsMessage.substring(with: match.range(at: 1)).normalizedSidebarBranchName
-            guard !branch.isEmpty else { continue }
+            guard let branch = nsMessage.substring(with: match.range(at: 1)).normalizedSidebarBranchName else {
+                continue
+            }
             return branch
         }
         return nil

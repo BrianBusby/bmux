@@ -41,7 +41,8 @@ private extension WorkspaceWorkContextSource {
 private extension Set where Element == String {
     func containsBranchIntent(_ branch: String?) -> Bool {
         guard let branch else { return false }
-        return contains(branch.normalizedSidebarBranchName)
+        guard let normalizedBranch = branch.normalizedSidebarBranchName else { return false }
+        return contains(normalizedBranch)
     }
 }
 
@@ -288,7 +289,7 @@ extension Workspace {
         )
     }
 
-    static func looksLikePullRequestScopedWorktree(number: Int, candidates: [String?]) -> Bool {
+    nonisolated static func looksLikePullRequestScopedWorktree(number: Int, candidates: [String?]) -> Bool {
         let numberString = String(number)
         let pattern = #"(?i)(^|[^a-z0-9])(?:pr|pull)[-_/# ]?#?"# + numberString + #"([^a-z0-9]|$)"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else {
