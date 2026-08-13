@@ -8,6 +8,8 @@ struct WorkspaceDisplayCurrentStateTicketLinkSnapshot: Equatable, Sendable, Iden
     let system: String?
     let title: String?
     let url: URL?
+    let ownerName: String?
+    let ownerURL: URL?
 
     init?(_ link: ProvenanceWorkspaceDisplayTicketLinkRecord) {
         let trimmedID = link.id.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -16,6 +18,9 @@ struct WorkspaceDisplayCurrentStateTicketLinkSnapshot: Equatable, Sendable, Iden
         self.system = link.system?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.title = link.title?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.url = link.url.flatMap(URL.init(string:)) ?? Self.linearURL(for: trimmedID)
+        self.ownerName = link.ownerName?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        let ownerURL = link.ownerURL?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        self.ownerURL = ownerURL.flatMap(URL.init(string:))
     }
 
     init(id: String) {
@@ -23,6 +28,8 @@ struct WorkspaceDisplayCurrentStateTicketLinkSnapshot: Equatable, Sendable, Iden
         self.system = Self.linearURL(for: id) == nil ? nil : "linear"
         self.title = nil
         self.url = Self.linearURL(for: id)
+        self.ownerName = nil
+        self.ownerURL = nil
     }
 
     static func links(

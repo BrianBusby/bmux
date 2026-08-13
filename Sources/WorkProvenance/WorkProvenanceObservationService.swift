@@ -168,6 +168,11 @@ actor WorkProvenanceObservationService {
         )
         let ticketIDs = ticketFacts.ids
         let ticketLinks = ticketFacts.links
+        let currentWorkSummary = Self.normalizedNonEmpty(workspace.currentWorkSummary)
+        let lastSubmittedPrompt = Self.normalizedNonEmpty(workspace.lastSubmittedPrompt)
+        let lastSubmittedPromptSubmittedAt = lastSubmittedPrompt == nil
+            ? nil
+            : workspace.lastSubmittedPromptSubmittedAt
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
             title: workspace.title,
@@ -183,7 +188,11 @@ actor WorkProvenanceObservationService {
             pullRequestIsStale: pullRequest?.isStale ?? false,
             gitSnapshot: gitSnapshot,
             ticketIDs: ticketIDs,
-            ticketLinks: ticketLinks
+            ticketLinks: ticketLinks,
+            currentWorkSummary: currentWorkSummary,
+            lastSubmittedPrompt: lastSubmittedPrompt,
+            lastSubmittedPromptSubmittedAt: lastSubmittedPromptSubmittedAt,
+            explicitlyClearedFields: workspace.explicitlyClearedFields
         )
         guard latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] != fingerprint else {
             return
@@ -212,6 +221,10 @@ actor WorkProvenanceObservationService {
             isDirty: gitSnapshot?.isDirty,
             ticketIDs: ticketIDs,
             ticketLinks: ticketLinks,
+            currentWorkSummary: currentWorkSummary,
+            lastSubmittedPrompt: lastSubmittedPrompt,
+            lastSubmittedPromptSubmittedAt: lastSubmittedPromptSubmittedAt,
+            clearedFields: workspace.explicitlyClearedFields,
             observedAt: now,
             updatedAt: now
         )
@@ -245,9 +258,17 @@ actor WorkProvenanceObservationService {
         links: [ProvenanceWorkspaceDisplayTicketLinkRecord]
     ) {
         guard explicitTicketIDs.isEmpty else {
+            let resolvedLinks = await ticketLinkResolver.ticketLinks(for: explicitTicketIDs)
+            let existingDisplay = try? await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
+                workspaceID: stableWorkspaceID.uuidString
+            ))
             return (
                 ids: explicitTicketIDs,
-                links: await ticketLinkResolver.ticketLinks(for: explicitTicketIDs)
+                links: Self.mergedTicketLinks(
+                    ticketIDs: explicitTicketIDs,
+                    incomingLinks: resolvedLinks,
+                    existingLinks: existingDisplay?.display?.ticketLinks ?? []
+                )
             )
         }
 
@@ -322,7 +343,9 @@ actor WorkProvenanceObservationService {
                 id: id,
                 system: normalizedNonEmpty(link.system),
                 title: normalizedNonEmpty(link.title),
-                url: normalizedNonEmpty(link.url)
+                url: normalizedNonEmpty(link.url),
+                ownerName: normalizedNonEmpty(link.ownerName),
+                ownerURL: normalizedNonEmpty(link.ownerURL)
             )
         }
         var seenTicketIDs = Set<String>()
@@ -337,6 +360,38 @@ actor WorkProvenanceObservationService {
             ids: ids.isEmpty ? links.map(\.id) : ids,
             links: links
         )
+    }
+
+    private static func mergedTicketLinks(
+        ticketIDs: [String],
+        incomingLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord],
+        existingLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord]
+    ) -> [ProvenanceWorkspaceDisplayTicketLinkRecord] {
+        let normalizedTicketIDs = normalizedTicketFacts(ticketIDs: ticketIDs, ticketLinks: []).ids
+        let incomingByID = ticketLinksByID(incomingLinks)
+        let existingByID = ticketLinksByID(existingLinks)
+        return normalizedTicketIDs.compactMap { id in
+            let incoming = incomingByID[id]
+            let existing = existingByID[id]
+            guard incoming != nil || existing != nil else { return nil }
+            return ProvenanceWorkspaceDisplayTicketLinkRecord(
+                id: id,
+                system: normalizedNonEmpty(incoming?.system) ?? normalizedNonEmpty(existing?.system),
+                title: normalizedNonEmpty(incoming?.title) ?? normalizedNonEmpty(existing?.title),
+                url: normalizedNonEmpty(incoming?.url) ?? normalizedNonEmpty(existing?.url),
+                ownerName: normalizedNonEmpty(incoming?.ownerName) ?? normalizedNonEmpty(existing?.ownerName),
+                ownerURL: normalizedNonEmpty(incoming?.ownerURL) ?? normalizedNonEmpty(existing?.ownerURL)
+            )
+        }
+    }
+
+    private static func ticketLinksByID(
+        _ links: [ProvenanceWorkspaceDisplayTicketLinkRecord]
+    ) -> [String: ProvenanceWorkspaceDisplayTicketLinkRecord] {
+        links.reduce(into: [:]) { result, link in
+            guard let id = normalizedTicketID(link.id) else { return }
+            result[id] = link
+        }
     }
 
     private static func ticketIDs(evidenceStrings: [String]) -> [String] {

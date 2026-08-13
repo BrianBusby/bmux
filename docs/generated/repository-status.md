@@ -14,8 +14,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: observation
+- Active slice: Workspace Display Durable Context and Reconciliation (`workspace_display_durable_context`)
+- Slice state: implemented
+- Owner: Codex
+- Repository state: active
 
 ## Release
 
@@ -27,6 +29,7 @@ Repository: `BrianBusby/bmux`
 | Capability | State |
 | --- | --- |
 | Workspace Display Current State Diagnostic | implemented |
+| Workspace Display Durable Context | implemented |
 | Workspace Display Projection | implemented |
 | Workspace Display Tab Projection | implemented |
 | Workspace Display Ticket Link Facts | implemented |

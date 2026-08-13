@@ -55,6 +55,18 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
     /// Pull request displayed for the workspace, when known.
     let pullRequest: PullRequest?
 
+    /// Durable current-work summary displayed for the workspace, when known.
+    let currentWorkSummary: String?
+
+    /// Durable submitted prompt display text for the workspace, when known.
+    let lastSubmittedPrompt: String?
+
+    /// Submission timestamp for `lastSubmittedPrompt`, when known.
+    let lastSubmittedPromptSubmittedAt: Date?
+
+    /// PE field names that were explicitly cleared by a workspace metadata mutation.
+    let explicitlyClearedFields: [String]
+
     /// Creates a workspace snapshot.
     init(
         workspaceID: UUID,
@@ -63,7 +75,11 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
         titleSource: String? = nil,
         currentDirectory: String,
         branch: String? = nil,
-        pullRequest: PullRequest? = nil
+        pullRequest: PullRequest? = nil,
+        currentWorkSummary: String? = nil,
+        lastSubmittedPrompt: String? = nil,
+        lastSubmittedPromptSubmittedAt: Date? = nil,
+        explicitlyClearedFields: [String] = []
     ) {
         self.workspaceID = workspaceID
         self.stableWorkspaceID = stableWorkspaceID
@@ -72,19 +88,50 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
         self.currentDirectory = currentDirectory
         self.branch = branch
         self.pullRequest = pullRequest
+        self.currentWorkSummary = currentWorkSummary
+        self.lastSubmittedPrompt = lastSubmittedPrompt
+        self.lastSubmittedPromptSubmittedAt = lastSubmittedPromptSubmittedAt
+        self.explicitlyClearedFields = explicitlyClearedFields
     }
 
     /// Creates a workspace snapshot from the live workspace model.
     @MainActor
     init(workspace: Workspace) {
+        let branch = workspace.gitBranch?.branch
+        let pullRequest = workspace.provenancePullRequestSnapshot()
+        let currentWorkSummary = workspace.progress?.label
+        let lastSubmittedPrompt = workspace.latestSubmittedMessage
+        var explicitlyClearedFields = Set(workspace.workspaceDisplayExplicitClearedFields)
+        var knownFields: [String] = []
+        if branch != nil {
+            explicitlyClearedFields.remove("branch")
+            knownFields.append("branch")
+        }
+        if pullRequest != nil {
+            explicitlyClearedFields.remove("pull_request")
+            knownFields.append("pull_request")
+        }
+        if currentWorkSummary != nil {
+            explicitlyClearedFields.remove("current_work_summary")
+            knownFields.append("current_work_summary")
+        }
+        if lastSubmittedPrompt != nil {
+            explicitlyClearedFields.remove("last_submitted_prompt")
+            knownFields.append("last_submitted_prompt")
+        }
+        workspace.markWorkspaceDisplayFieldsKnown(knownFields)
         self.init(
             workspaceID: workspace.id,
             stableWorkspaceID: workspace.stableId,
             title: workspace.customTitle ?? workspace.title,
             titleSource: workspace.effectiveCustomTitleSource?.rawValue,
             currentDirectory: workspace.currentDirectory,
-            branch: workspace.gitBranch?.branch,
-            pullRequest: workspace.provenancePullRequestSnapshot()
+            branch: branch,
+            pullRequest: pullRequest,
+            currentWorkSummary: currentWorkSummary,
+            lastSubmittedPrompt: lastSubmittedPrompt,
+            lastSubmittedPromptSubmittedAt: workspace.latestSubmittedAt,
+            explicitlyClearedFields: explicitlyClearedFields.sorted()
         )
     }
 }

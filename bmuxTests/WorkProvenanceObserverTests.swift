@@ -120,7 +120,8 @@ struct WorkProvenanceObserverTests {
     func nonRepositoryWorkspaceDoesNotAppendAnEvent() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
-        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let backingClient: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let client = RecordingProvenanceEngineClient(backing: backingClient)
         let service = WorkProvenanceObservationService(
             client: client,
             gitInspector: FakeGitInspector(snapshotsByDirectory: [:])
@@ -194,7 +195,10 @@ struct WorkProvenanceObserverTests {
                 status: "open",
                 branch: "ste-1964-canonical-domain-mutation-paths",
                 isStale: false
-            )
+            ),
+            currentWorkSummary: "Preparing initial display state",
+            lastSubmittedPrompt: "Open PR 41 for the workspace",
+            lastSubmittedPromptSubmittedAt: Date(timeIntervalSince1970: 490)
         )
         let secondWorkspace = WorkProvenanceWorkspaceSnapshot(
             workspaceID: workspaceID,
@@ -211,7 +215,10 @@ struct WorkProvenanceObserverTests {
                 status: "merged",
                 branch: "ste-1964-canonical-domain-mutation-paths",
                 isStale: true
-            )
+            ),
+            currentWorkSummary: "Reviewing durable workspace display",
+            lastSubmittedPrompt: "Update the workspace details panel",
+            lastSubmittedPromptSubmittedAt: Date(timeIntervalSince1970: 501)
         )
 
         await service.observeWorkspaceSnapshot(firstWorkspace)
@@ -234,16 +241,14 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.pullRequestIsStale == true)
         #expect(display.display?.currentDirectory == repositoryRoot)
         #expect(display.display?.isDirty == false)
+        #expect(display.display?.currentWorkSummary == "Reviewing durable workspace display")
+        #expect(display.display?.lastSubmittedPrompt == "Update the workspace details panel")
+        #expect(display.display?.lastSubmittedPromptSubmittedAt == Date(timeIntervalSince1970: 501))
         #expect(display.display?.latestEventID != nil)
         #expect(display.display?.latestEventSequence == 3)
         #expect(display.display?.ticketIDs == ["STE-1964"])
         #expect(display.display?.ticketLinks == [
-            ProvenanceWorkspaceDisplayTicketLinkRecord(
-                id: "STE-1964",
-                system: "linear",
-                title: "Canonical domain mutation paths",
-                url: "https://linear.app/company/issue/STE-1964"
-            )
+            Self.linearTicketLink()
         ])
         #expect(await linearServer.requests == [
             FakeLinearGraphQLServer.Request(authorization: "linear-api-key", ticketID: "STE-1964")
@@ -355,12 +360,7 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.pullRequestBranch == branch)
         #expect(display.display?.ticketIDs == ["STE-1964"])
         #expect(display.display?.ticketLinks == [
-            ProvenanceWorkspaceDisplayTicketLinkRecord(
-                id: "STE-1964",
-                system: "linear",
-                title: "Canonical domain mutation paths",
-                url: "https://linear.app/company/issue/STE-1964"
-            )
+            Self.linearTicketLink()
         ])
         #expect(await linearServer.requests == [
             FakeLinearGraphQLServer.Request(authorization: "linear-api-key", ticketID: "STE-1964")
@@ -417,7 +417,9 @@ struct WorkProvenanceObserverTests {
             stableWorkspaceID: stableWorkspaceID,
             title: "Later prompt without ticket evidence",
             currentDirectory: repositoryRoot,
-            branch: branch
+            branch: branch,
+            lastSubmittedPrompt: "Continue without new ticket evidence",
+            lastSubmittedPromptSubmittedAt: Date(timeIntervalSince1970: 571)
         )
 
         await service.observeWorkspaceSnapshot(initialWorkspace)
@@ -427,15 +429,86 @@ struct WorkProvenanceObserverTests {
 
         #expect(display.found)
         #expect(display.display?.title == "Later prompt without ticket evidence")
-        #expect(display.display?.pullRequestNumber == nil)
+        #expect(display.display?.pullRequestNumber == 42)
+        #expect(display.display?.pullRequestURL == "https://github.com/manaflow-ai/bmux/pull/42")
+        #expect(display.display?.lastSubmittedPrompt == "Continue without new ticket evidence")
+        #expect(display.display?.lastSubmittedPromptSubmittedAt == Date(timeIntervalSince1970: 571))
         #expect(display.display?.ticketIDs == ["STE-1964"])
         #expect(display.display?.ticketLinks == [
-            ProvenanceWorkspaceDisplayTicketLinkRecord(
-                id: "STE-1964",
-                system: "linear",
-                title: "Canonical domain mutation paths",
-                url: "https://linear.app/company/issue/STE-1964"
+            Self.linearTicketLink()
+        ])
+    }
+
+    @Test
+    func laterTicketLookupFailurePreservesExistingTicketTitleAndOwner() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let repositoryRoot = "/tmp/bmux-ticket-link-lookup-failure-repo"
+        let branch = "durable-ticket-link-preserve"
+        let linearServer = FakeLinearGraphQLServer()
+        let snapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "\(repositoryRoot)/.git",
+            remoteSlug: "manaflow-ai/bmux",
+            branch: branch,
+            headCommit: "5555555555555555555555555555555555555555",
+            isDirty: false,
+            statusEntries: []
+        )
+        let stableWorkspaceID = UUID(uuidString: "dddddddd-eeee-ffff-aaaa-bbbbbbbbbbbb")!
+        let workspaceID = UUID(uuidString: "eeeeeeee-ffff-aaaa-bbbb-cccccccccccc")!
+        let initialService = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
+                authorizationHeader: "linear-api-key",
+                usesEnvironmentAuthorization: false,
+                dataProvider: { request in try await linearServer.response(for: request) }
+            ),
+            dateProvider: { Date(timeIntervalSince1970: 580) }
+        )
+        let retryService = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
+                authorizationHeader: nil,
+                usesEnvironmentAuthorization: false
+            ),
+            dateProvider: { Date(timeIntervalSince1970: 581) }
+        )
+        let workspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: workspaceID,
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Retry Linear lookup",
+            currentDirectory: repositoryRoot,
+            branch: branch,
+            pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
+                number: 43,
+                title: "STE-1964 Retry Linear lookup",
+                url: "https://github.com/manaflow-ai/bmux/pull/43",
+                ownerLogin: nil,
+                ownerURL: nil,
+                status: "open",
+                branch: branch,
+                isStale: false
             )
+        )
+
+        await initialService.observeWorkspaceSnapshot(workspace)
+        await retryService.observeWorkspaceSnapshot(workspace)
+
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
+        let latestEvent = try #require(await client.appendedEvents().last?.payload.workspaceDisplay)
+
+        #expect(display.found)
+        #expect(display.display?.ticketIDs == ["STE-1964"])
+        #expect(display.display?.ticketLinks == [
+            Self.linearTicketLink()
+        ])
+        #expect(latestEvent.ticketIDs == ["STE-1964"])
+        #expect(latestEvent.ticketLinks == [
+            Self.linearTicketLink()
         ])
     }
 
@@ -505,9 +578,15 @@ struct WorkProvenanceObserverTests {
                     id: "STE-1964",
                     system: "linear",
                     title: " Canonical domain mutation paths ",
-                    url: "https://linear.app/company/issue/STE-1964"
+                    url: "https://linear.app/company/issue/STE-1964",
+                    ownerName: " Brian Busby ",
+                    ownerURL: " https://linear.app/company/user/brian "
                 )
             ],
+            currentWorkSummary: " Durable context reconciliation ",
+            lastSubmittedPrompt: " Keep these facts visible ",
+            lastSubmittedPromptSubmittedAt: Date(timeIntervalSince1970: 701),
+            lastSubmittedPromptSessionID: " session-1 ",
             latestEventID: " event-1 ",
             latestEventSequence: 12,
             observedAt: updatedAt,
@@ -532,9 +611,15 @@ struct WorkProvenanceObserverTests {
         #expect(snapshot.ticketLinks.first?.system == "linear")
         #expect(snapshot.ticketLinks.first?.title == "Canonical domain mutation paths")
         #expect(snapshot.ticketLinks.first?.url == URL(string: "https://linear.app/company/issue/STE-1964"))
+        #expect(snapshot.ticketLinks.first?.ownerName == "Brian Busby")
+        #expect(snapshot.ticketLinks.first?.ownerURL == URL(string: "https://linear.app/company/user/brian"))
         #expect(snapshot.ticketLinks.last?.system == "linear")
         #expect(snapshot.ticketLinks.last?.title == nil)
         #expect(snapshot.ticketLinks.last?.url == URL(string: "https://linear.app/company/issue/GH-57"))
+        #expect(snapshot.currentWorkSummary == "Durable context reconciliation")
+        #expect(snapshot.lastSubmittedPrompt == "Keep these facts visible")
+        #expect(snapshot.lastSubmittedPromptSubmittedAt == Date(timeIntervalSince1970: 701))
+        #expect(snapshot.lastSubmittedPromptSessionID == "session-1")
         #expect(snapshot.latestEventID == "event-1")
         #expect(snapshot.latestEventSequence == 12)
     }
@@ -572,6 +657,76 @@ struct WorkProvenanceObserverTests {
         }
     }
 
+    private actor RecordingProvenanceEngineClient: ProvenanceEngineContracts.ProvenanceEngineClient {
+        private let backing: any ProvenanceEngineContracts.ProvenanceEngineClient
+        private var events: [ProvenanceEngineContracts.ProvenanceEvent] = []
+
+        init(backing: any ProvenanceEngineContracts.ProvenanceEngineClient) {
+            self.backing = backing
+        }
+
+        func appendedEvents() -> [ProvenanceEngineContracts.ProvenanceEvent] {
+            events
+        }
+
+        func health() async throws -> ProvenanceEngineContracts.ProvenanceEngineHealth {
+            try await backing.health()
+        }
+
+        func appendEvent(
+            _ request: ProvenanceEngineContracts.ProvenanceAppendEventRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceAppendEventResponse {
+            events.append(request.event)
+            return try await backing.appendEvent(request)
+        }
+
+        func recordSessionLifecycle(
+            _ request: ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest
+        ) async -> ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse {
+            await backing.recordSessionLifecycle(request)
+        }
+
+        func sessionTree(
+            _ request: ProvenanceEngineContracts.ProvenanceSessionTreeRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceSessionTreeResponse {
+            try await backing.sessionTree(request)
+        }
+
+        func fileExplanation(
+            _ request: ProvenanceEngineContracts.ProvenanceFileExplanationRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceFileExplanationResponse {
+            try await backing.fileExplanation(request)
+        }
+
+        func worktrees(
+            _ request: ProvenanceEngineContracts.ProvenanceWorktreeListRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceWorktreeListResponse {
+            try await backing.worktrees(request)
+        }
+
+        func currentContext(
+            _ request: ProvenanceEngineContracts.ProvenanceCurrentContextRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceCurrentContextResponse {
+            try await backing.currentContext(request)
+        }
+
+        func workspaceDisplay(
+            _ request: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse {
+            try await backing.workspaceDisplay(request)
+        }
+    }
+
+    private static func linearTicketLink() -> ProvenanceWorkspaceDisplayTicketLinkRecord {
+        ProvenanceWorkspaceDisplayTicketLinkRecord(
+            id: "STE-1964",
+            system: "linear",
+            title: "Canonical domain mutation paths",
+            url: "https://linear.app/company/issue/STE-1964",
+            ownerName: "Brian Busby"
+        )
+    }
+
     private actor FakeLinearGraphQLServer {
         struct Request: Equatable, Sendable { let authorization: String?; let ticketID: String? }
 
@@ -580,7 +735,7 @@ struct WorkProvenanceObserverTests {
         func response(for request: URLRequest) throws -> (Data, Int) {
             let ticketID = try Self.ticketID(from: request.httpBody)
             requests.append(Request(authorization: request.value(forHTTPHeaderField: "Authorization"), ticketID: ticketID))
-            let payload = #"{"data":{"issue":{"title":"Canonical domain mutation paths"}}}"#
+            let payload = #"{"data":{"issue":{"title":"Canonical domain mutation paths","assignee":{"name":"Brian Busby"}}}}"#
             return (Data(payload.utf8), 200)
         }
 

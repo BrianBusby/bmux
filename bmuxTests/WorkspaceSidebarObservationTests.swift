@@ -177,6 +177,29 @@ struct WorkspaceSidebarObservationTests {
         )
     }
 
+    @Test func progressMutationsPostWorkspaceDisplayMetadataNotificationsWithoutClearingCurrentWork() {
+        let workspace = Workspace()
+        var notificationCount = 0
+        let observer = NotificationCenter.default.addObserver(
+            forName: .workspaceDisplayMetadataDidChange,
+            object: workspace,
+            queue: nil
+        ) { _ in
+            notificationCount += 1
+        }
+        defer { NotificationCenter.default.removeObserver(observer) }
+
+        workspace.progress = SidebarProgressState(value: 0.4, label: "Indexing durable context")
+
+        #expect(notificationCount == 1)
+        #expect(!workspace.workspaceDisplayExplicitClearedFields.contains("current_work_summary"))
+
+        workspace.progress = nil
+
+        #expect(notificationCount == 2)
+        #expect(!workspace.workspaceDisplayExplicitClearedFields.contains("current_work_summary"))
+    }
+
     @Test func sidebarImmediateObservationPublisherCoalescesTitleBursts() {
         let workspace = Workspace()
 

@@ -1,6 +1,7 @@
 import AppKit
 import BmuxSidebar
 import BmuxWorkspaces
+import ProvenanceEngineContracts
 import SwiftUI
 import Testing
 
@@ -130,6 +131,59 @@ import Testing
         #expect(!decision.hasDeferredWorkspaceObservationInvalidation)
     }
 
+    @Test func livePullRequestRowsOverrideStaleProvenancePullRequest() throws {
+        let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: [try Self.livePullRequest(number: 26196)],
+            provenancePullRequest: try Self.provenancePullRequest(number: 26201),
+            latestSubmittedMessage: nil,
+            latestConversationMessage: nil,
+            label: "PR"
+        )
+
+        #expect(rows.map(\.number) == [26196])
+        #expect(rows.first?.url == URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/26196"))
+        #expect(rows.first?.isFromProvenance == false)
+    }
+
+    @Test func latestPromptPullRequestURLOverridesStaleProvenancePullRequestWhenLiveStateIsMissing() throws {
+        let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: [],
+            provenancePullRequest: try Self.provenancePullRequest(number: 26201),
+            latestSubmittedMessage: "seeing this on https://github.com/CompanyCam/Company-Cam-API/pull/26196",
+            latestConversationMessage: nil,
+            label: "PR"
+        )
+
+        #expect(rows.map(\.number) == [26196])
+        #expect(rows.first?.url == URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/26196"))
+        #expect(rows.first?.isFromProvenance == false)
+    }
+
+    @Test func barePromptPullRequestNumberSuppressesConflictingProvenancePullRequest() throws {
+        let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: [],
+            provenancePullRequest: try Self.provenancePullRequest(number: 26201),
+            latestSubmittedMessage: "PR #26196 now has a single signed commit",
+            latestConversationMessage: nil,
+            label: "PR"
+        )
+
+        #expect(rows.isEmpty)
+    }
+
+    @Test func provenancePullRequestRendersWhenNoNewerLiveEvidenceContradictsIt() throws {
+        let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: [],
+            provenancePullRequest: try Self.provenancePullRequest(number: 26201),
+            latestSubmittedMessage: "continue checking the blocked merge",
+            latestConversationMessage: nil,
+            label: "PR"
+        )
+
+        #expect(rows.map(\.number) == [26201])
+        #expect(rows.first?.isFromProvenance == true)
+    }
+
     @Test func closedContextMenuStoresNextAndClearsPending() {
         let current = Self.snapshot(title: "old", isPinned: false)
         let next = Self.snapshot(title: "new", isPinned: true)
@@ -237,6 +291,47 @@ import Testing
             isStale: isStale,
             isFromProvenance: false
         )
+    }
+
+    private static func livePullRequest(number: Int) throws -> SidebarPullRequestState {
+        SidebarPullRequestState(
+            number: number,
+            label: "PR",
+            url: try #require(URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/\(number)")),
+            status: .open
+        )
+    }
+
+    private static func provenancePullRequest(
+        number: Int,
+        status: String = "open"
+    ) throws -> WorkspaceDisplayCurrentStatePullRequestSnapshot {
+        let updatedAt = Date(timeIntervalSince1970: 900)
+        let record = ProvenanceWorkspaceDisplayRecord(
+            id: "workspace-display-\(number)",
+            workspaceID: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            repositoryID: nil,
+            worktreeID: nil,
+            currentDirectory: nil,
+            title: nil,
+            titleSource: nil,
+            branch: nil,
+            pullRequestNumber: number,
+            pullRequestURL: "https://github.com/CompanyCam/Company-Cam-API/pull/\(number)",
+            pullRequestOwnerLogin: nil,
+            pullRequestOwnerURL: nil,
+            pullRequestStatus: status,
+            pullRequestBranch: nil,
+            pullRequestIsStale: false,
+            isDirty: nil,
+            ticketIDs: [],
+            ticketLinks: [],
+            latestEventID: "event-\(number)",
+            latestEventSequence: number,
+            observedAt: updatedAt,
+            updatedAt: updatedAt
+        )
+        return try #require(WorkspaceDisplayCurrentStateSnapshot(record)?.pullRequest)
     }
 }
 

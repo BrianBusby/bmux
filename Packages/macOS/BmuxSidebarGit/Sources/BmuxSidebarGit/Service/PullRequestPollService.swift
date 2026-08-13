@@ -359,6 +359,9 @@ public final class PullRequestPollService: PullRequestProbing {
         if reason.hasPrefix("commandHint:") {
             return true
         }
+        if reason == "localGitProbe" {
+            return true
+        }
         return isWorkspacePullRequestRefreshActivated(for: key, currentPullRequest: currentPullRequest)
     }
 

@@ -198593,6 +198593,30 @@
         "zh-Hant": { "stringUnit": { "state": "translated", "value": "開啟 %@" } }
       }
     },
+    "sidebar.ticket.owner.openTooltip": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": { "stringUnit": { "state": "translated", "value": "فتح %@" } },
+        "bs": { "stringUnit": { "state": "translated", "value": "Otvori %@" } },
+        "da": { "stringUnit": { "state": "translated", "value": "Åbn %@" } },
+        "de": { "stringUnit": { "state": "translated", "value": "%@ öffnen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Open %@" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Abrir %@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir %@" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Apri %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@を開く" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "%@ 열기" } },
+        "nb": { "stringUnit": { "state": "translated", "value": "Åpne %@" } },
+        "pl": { "stringUnit": { "state": "translated", "value": "Otwórz %@" } },
+        "pt-BR": { "stringUnit": { "state": "translated", "value": "Abrir %@" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Открыть %@" } },
+        "th": { "stringUnit": { "state": "translated", "value": "เปิด %@" } },
+        "tr": { "stringUnit": { "state": "translated", "value": "%@ Aç" } },
+        "uk": { "stringUnit": { "state": "translated", "value": "Відкрити %@" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "打开 %@" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "開啟 %@" } }
+      }
+    },
     "sidebar.pullRequest.owner.openTooltip": {
       "extractionState": "manual",
       "localizations": {

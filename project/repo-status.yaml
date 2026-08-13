@@ -2,8 +2,12 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice: null
-  state: observation
+  active_slice:
+    id: workspace_display_durable_context
+    title: Workspace Display Durable Context and Reconciliation
+    state: implemented
+    owner: Codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented
@@ -21,6 +25,7 @@ local_capabilities:
   workspace_display_ticket_link_facts: implemented
   workspace_display_tab_projection: implemented
   workspace_display_ticket_title_sidebar: implemented
+  workspace_display_durable_context: implemented
 
 release:
   latest_tag: null
