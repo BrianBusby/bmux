@@ -37,19 +37,21 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
     func ticketLinks(for ticketIDs: [String]) async -> [ProvenanceWorkspaceDisplayTicketLinkRecord] {
         var links: [ProvenanceWorkspaceDisplayTicketLinkRecord] = []
         for ticketID in Self.normalizedTicketIDs(ticketIDs) {
-            if let cached = cache[ticketID], cached.title != nil {
+            if let cached = cache[ticketID],
+               cached.title != nil || cached.ownerName != nil {
                 links.append(cached)
                 continue
             }
 
-            let title = await title(for: ticketID)
+            let issueFacts = await issueFacts(for: ticketID)
             let link = ProvenanceWorkspaceDisplayTicketLinkRecord(
                 id: ticketID,
                 system: "linear",
-                title: title,
-                url: Self.linearURL(for: ticketID)
+                title: issueFacts.title,
+                url: Self.linearURL(for: ticketID),
+                ownerName: issueFacts.assigneeName
             )
-            if title != nil {
+            if issueFacts.title != nil || issueFacts.assigneeName != nil {
                 cache[ticketID] = link
             } else {
                 cache.removeValue(forKey: ticketID)
@@ -59,32 +61,40 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
         return links
     }
 
-    private func title(for ticketID: String) async -> String? {
-        guard let authorizationHeader = await authorizationProvider.authorizationHeader() else { return nil }
+    private func issueFacts(for ticketID: String) async -> (title: String?, assigneeName: String?) {
+        guard let authorizationHeader = await authorizationProvider.authorizationHeader() else {
+            return (title: nil, assigneeName: nil)
+        }
         var request = URLRequest(url: endpointURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(authorizationHeader, forHTTPHeaderField: "Authorization")
         request.httpBody = try? JSONEncoder().encode(LinearGraphQLRequest(
             query: """
-            query BmuxLinearIssueTitle($id: String!) {
+            query BmuxLinearIssueDetails($id: String!) {
               issue(id: $id) {
                 title
+                assignee {
+                  name
+                }
               }
             }
             """,
             variables: ["id": ticketID]
         ))
-        guard request.httpBody != nil else { return nil }
+        guard request.httpBody != nil else { return (title: nil, assigneeName: nil) }
 
         do {
             let (data, statusCode) = try await dataProvider(request)
-            guard (200..<300).contains(statusCode) else { return nil }
+            guard (200..<300).contains(statusCode) else { return (title: nil, assigneeName: nil) }
             let response = try JSONDecoder().decode(LinearGraphQLResponse.self, from: data)
-            guard response.errors?.isEmpty ?? true else { return nil }
-            return Self.normalizedNonEmpty(response.data?.issue?.title)
+            guard response.errors?.isEmpty ?? true else { return (title: nil, assigneeName: nil) }
+            return (
+                title: Self.normalizedNonEmpty(response.data?.issue?.title),
+                assigneeName: Self.normalizedNonEmpty(response.data?.issue?.assignee?.name)
+            )
         } catch {
-            return nil
+            return (title: nil, assigneeName: nil)
         }
     }
 
@@ -132,6 +142,11 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
 
     private struct LinearIssue: Decodable {
         let title: String?
+        let assignee: LinearAssignee?
+    }
+
+    private struct LinearAssignee: Decodable {
+        let name: String?
     }
 
     private struct LinearGraphQLError: Decodable {

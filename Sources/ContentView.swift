@@ -14917,6 +14917,9 @@ struct TabItemView: View, Equatable {
         }()
         let displayedPullRequestNumbers = Set(pullRequestRows.map(\.number))
         let ticketRows = provenanceTicketDisplays
+        let provenanceProgress = provenanceDisplaySnapshot?.currentWorkSummary.map {
+            SidebarProgressState(value: tab.progress?.value ?? 0, label: $0)
+        }
         return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: workspaceSnapshotPresentationKey,
             ticketTitle: ticketRows.compactMap(\.title).first,
@@ -14931,11 +14934,11 @@ struct TabItemView: View, Equatable {
                 && (tab.remoteConnectionState == .suspended || tab.remoteConnectionState == .disconnected),
             copyableSidebarSSHError: copyableSidebarSSHError,
             latestConversationMessage: tab.latestConversationMessage,
-            latestSubmittedMessage: tab.latestSubmittedMessage,
+            latestSubmittedMessage: provenanceDisplaySnapshot?.lastSubmittedPrompt ?? tab.latestSubmittedMessage,
             metadataEntries: detailVisibility.showsMetadata ? tab.sidebarStatusEntriesInDisplayOrder() : [],
             metadataBlocks: detailVisibility.showsMetadata ? tab.sidebarMetadataBlocksInDisplayOrder() : [],
             latestLog: detailVisibility.showsLog ? tab.logEntries.last : nil,
-            progress: detailVisibility.showsProgress ? tab.progress : nil,
+            progress: detailVisibility.showsProgress ? (provenanceProgress ?? tab.progress) : nil,
             compactGitBranchSummaryText: compactGitBranchSummaryText,
             compactDirectoryCandidates: compactDirectoryCandidates,
             compactBranchDirectoryCandidates: compactBranchDirectoryCandidates,
@@ -15196,7 +15199,13 @@ struct TabItemView: View, Equatable {
 
     private var provenanceTicketDisplays: [SidebarWorkspaceSnapshotBuilder.TicketDisplay] {
         provenanceDisplaySnapshot?.ticketLinks.map {
-            SidebarWorkspaceSnapshotBuilder.TicketDisplay(id: $0.id, title: $0.title, url: $0.url)
+            SidebarWorkspaceSnapshotBuilder.TicketDisplay(
+                id: $0.id,
+                title: $0.title,
+                url: $0.url,
+                ownerName: $0.ownerName,
+                ownerURL: $0.ownerURL
+            )
         } ?? []
     }
 
@@ -15313,6 +15322,36 @@ struct TabItemView: View, Equatable {
                         .accessibilityIdentifier("SidebarTicketRow")
                 } else {
                     rowContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarTicketRow")
+                }
+                if let ownerName = ticket.ownerName {
+                    let ownerContent = HStack(spacing: 4) {
+                        BmuxSystemSymbolImage(magnified: "person.crop.circle", pointSize: scaledFontSize(9), weight: .medium)
+                            .foregroundColor(activeSecondaryColor(0.72))
+                        Text(ownerName)
+                            .underline(ticket.ownerURL != nil)
+                            .foregroundColor(ticket.ownerURL == nil ? activeSecondaryColor(0.75) : pullRequestLinkColor)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        Spacer(minLength: 0)
+                    }
+                    .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
+                    .foregroundColor(activeSecondaryColor(0.75))
+                    if let ownerURL = ticket.ownerURL {
+                        Button(action: { openTicketLink(ownerURL) }) { ownerContent }
+                            .buttonStyle(.plain)
+                            .tint(activeSecondaryColor(0.75))
+                            .safeHelp(String(
+                                format: String(
+                                    localized: "sidebar.ticket.owner.openTooltip",
+                                    defaultValue: "Open %@"
+                                ),
+                                locale: .current,
+                                ownerName
+                            ))
+                            .accessibilityIdentifier("SidebarTicketOwnerRow")
+                    } else {
+                        ownerContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarTicketOwnerRow")
+                    }
                 }
             }
         }

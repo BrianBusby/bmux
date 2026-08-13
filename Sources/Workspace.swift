@@ -2317,6 +2317,16 @@ final class Workspace: Identifiable, ObservableObject {
         get { sidebarMetadata.panelPullRequests }
         set { sidebarMetadata.panelPullRequests = newValue }
     }
+    private var pendingWorkspaceDisplayClearedFields: Set<String> = []
+    var workspaceDisplayExplicitClearedFields: [String] {
+        pendingWorkspaceDisplayClearedFields.sorted()
+    }
+    func markWorkspaceDisplayFieldsExplicitlyCleared(_ fields: [String]) {
+        pendingWorkspaceDisplayClearedFields.formUnion(fields)
+    }
+    func markWorkspaceDisplayFieldsKnown(_ fields: [String]) {
+        pendingWorkspaceDisplayClearedFields.subtract(fields)
+    }
     @Published var surfaceListeningPorts: [UUID: [Int]] = [:]
     var agentListeningPorts: [Int] = []
     @Published var remoteConfiguration: WorkspaceRemoteConfiguration?

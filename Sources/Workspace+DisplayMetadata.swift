@@ -21,6 +21,7 @@ extension Workspace {
         var displayMetadataChanged = false
         if existing?.branch != branch || existing?.isDirty != isDirty {
             panelGitBranches[panelId] = state
+            markWorkspaceDisplayFieldsKnown(["branch"])
             displayMetadataChanged = true
         }
         if branchChanged {
@@ -28,12 +29,14 @@ extension Workspace {
             if let pullRequestBranch = panelPullRequests[panelId]?.branch?.normalizedSidebarBranchName,
                pullRequestBranch != nextBranch {
                 panelPullRequests.removeValue(forKey: panelId)
+                markWorkspaceDisplayFieldsExplicitlyCleared(["pull_request"])
                 displayMetadataChanged = true
             }
             if panelId == focusedPanelId,
                let focusedPullRequestBranch = pullRequest?.branch?.normalizedSidebarBranchName,
                focusedPullRequestBranch != nextBranch {
                 pullRequest = nil
+                markWorkspaceDisplayFieldsExplicitlyCleared(["pull_request"])
                 displayMetadataChanged = true
             }
         }
@@ -59,10 +62,12 @@ extension Workspace {
         if panelId == focusedPanelId {
             if gitBranch != nil {
                 gitBranch = nil
+                markWorkspaceDisplayFieldsExplicitlyCleared(["branch"])
                 displayMetadataChanged = true
             }
             if pullRequest != nil {
                 pullRequest = nil
+                markWorkspaceDisplayFieldsExplicitlyCleared(["pull_request"])
                 displayMetadataChanged = true
             }
         }
@@ -118,6 +123,7 @@ extension Workspace {
         )
         var displayMetadataChanged = false
         if existing != state {
+            markWorkspaceDisplayFieldsKnown(["pull_request"])
             sidebarMetadata.updatePanelPullRequest(state, panelId: panelId, source: source)
             displayMetadataChanged = true
         } else {
@@ -138,10 +144,12 @@ extension Workspace {
         var displayMetadataChanged = false
         if panelPullRequests[panelId] != nil {
             panelPullRequests.removeValue(forKey: panelId)
+            markWorkspaceDisplayFieldsExplicitlyCleared(["pull_request"])
             displayMetadataChanged = true
         }
         if panelId == focusedPanelId, pullRequest != nil {
             pullRequest = nil
+            markWorkspaceDisplayFieldsExplicitlyCleared(["pull_request"])
             displayMetadataChanged = true
         }
         if displayMetadataChanged {
@@ -153,10 +161,12 @@ extension Workspace {
         var displayMetadataChanged = false
         if !panelPullRequests.isEmpty {
             panelPullRequests.removeAll()
+            markWorkspaceDisplayFieldsExplicitlyCleared(["pull_request"])
             displayMetadataChanged = true
         }
         if pullRequest != nil {
             pullRequest = nil
+            markWorkspaceDisplayFieldsExplicitlyCleared(["pull_request"])
             displayMetadataChanged = true
         }
         if displayMetadataChanged {
@@ -168,18 +178,22 @@ extension Workspace {
         var displayMetadataChanged = false
         if !panelGitBranches.isEmpty {
             panelGitBranches.removeAll()
+            markWorkspaceDisplayFieldsExplicitlyCleared(["branch"])
             displayMetadataChanged = true
         }
         if !panelPullRequests.isEmpty {
             panelPullRequests.removeAll()
+            markWorkspaceDisplayFieldsExplicitlyCleared(["pull_request"])
             displayMetadataChanged = true
         }
         if pullRequest != nil {
             pullRequest = nil
+            markWorkspaceDisplayFieldsExplicitlyCleared(["pull_request"])
             displayMetadataChanged = true
         }
         if gitBranch != nil {
             gitBranch = nil
+            markWorkspaceDisplayFieldsExplicitlyCleared(["branch"])
             displayMetadataChanged = true
         }
         if displayMetadataChanged {
@@ -199,6 +213,10 @@ extension Workspace {
         clearRecordedPromptMessages()
         logEntries.removeAll()
         progress = nil
+        markWorkspaceDisplayFieldsExplicitlyCleared([
+            "current_work_summary",
+            "last_submitted_prompt",
+        ])
         gitBranch = nil
         panelGitBranches.removeAll()
         pullRequest = nil

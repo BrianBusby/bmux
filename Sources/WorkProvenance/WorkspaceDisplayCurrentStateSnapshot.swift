@@ -11,6 +11,12 @@ struct WorkspaceDisplayCurrentStateSnapshot: Equatable, Sendable {
     let pullRequest: WorkspaceDisplayCurrentStatePullRequestSnapshot?
     let isDirty: Bool?
     let ticketLinks: [WorkspaceDisplayCurrentStateTicketLinkSnapshot]
+    let currentWorkSummary: String?
+    let lastSubmittedPrompt: String?
+    let lastSubmittedPromptSubmittedAt: Date?
+    let lastSubmittedPromptSessionID: String?
+    let clearedFields: [String]
+    let fieldMetadata: [String: ProvenanceWorkspaceDisplayFieldMetadataRecord]
     let latestEventID: String?
     let latestEventSequence: Int?
     let updatedAt: Date
@@ -29,6 +35,12 @@ struct WorkspaceDisplayCurrentStateSnapshot: Equatable, Sendable {
             ticketIDs: display.ticketIDs,
             ticketLinks: display.ticketLinks
         )
+        self.currentWorkSummary = display.currentWorkSummary?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        self.lastSubmittedPrompt = display.lastSubmittedPrompt?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        self.lastSubmittedPromptSubmittedAt = display.lastSubmittedPromptSubmittedAt
+        self.lastSubmittedPromptSessionID = display.lastSubmittedPromptSessionID?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        self.clearedFields = display.clearedFields
+        self.fieldMetadata = display.fieldMetadata
         self.latestEventID = display.latestEventID?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.latestEventSequence = display.latestEventSequence
         self.updatedAt = display.updatedAt

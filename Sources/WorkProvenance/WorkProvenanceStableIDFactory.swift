@@ -67,7 +67,11 @@ struct WorkProvenanceStableIDFactory: Sendable {
         pullRequestIsStale: Bool,
         gitSnapshot: WorkProvenanceGitSnapshot?,
         ticketIDs: [String],
-        ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord]
+        ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord],
+        currentWorkSummary: String?,
+        lastSubmittedPrompt: String?,
+        lastSubmittedPromptSubmittedAt: Date?,
+        explicitlyClearedFields: [String]
     ) -> String {
         let repositoryRoot = gitSnapshot.map { normalizedPath($0.repositoryRoot) } ?? ""
         let remoteSlug = gitSnapshot?.remoteSlug ?? ""
@@ -77,8 +81,10 @@ struct WorkProvenanceStableIDFactory: Sendable {
         let pullRequestStaleness = pullRequestIsStale ? "stale" : "fresh"
         let ticketIDList = ticketIDs.joined(separator: ",")
         let ticketLinkList = ticketLinks
-            .map { "\($0.id)|\($0.system ?? "")|\($0.title ?? "")|\($0.url ?? "")" }
+            .map { "\($0.id)|\($0.system ?? "")|\($0.title ?? "")|\($0.url ?? "")|\($0.ownerName ?? "")|\($0.ownerURL ?? "")" }
             .joined(separator: ",")
+        let promptSubmittedAt = lastSubmittedPromptSubmittedAt.map { String($0.timeIntervalSince1970) } ?? ""
+        let clearList = explicitlyClearedFields.joined(separator: ",")
         let payloadParts: [String] = [
             stableWorkspaceID.uuidString.lowercased(),
             title,
@@ -96,7 +102,11 @@ struct WorkProvenanceStableIDFactory: Sendable {
             pullRequestBranch ?? "",
             pullRequestStaleness,
             ticketIDList,
-            ticketLinkList
+            ticketLinkList,
+            currentWorkSummary ?? "",
+            lastSubmittedPrompt ?? "",
+            promptSubmittedAt,
+            clearList
         ]
         let payload = payloadParts.joined(separator: "\n")
         return "workspace-display-\(digest(payload))"

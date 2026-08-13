@@ -36,6 +36,8 @@ struct SidebarWorkspaceSnapshotBuilder {
         let id: String
         let title: String?
         let url: URL?
+        let ownerName: String?
+        let ownerURL: URL?
     }
 
     struct Snapshot: Equatable {

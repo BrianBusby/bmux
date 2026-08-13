@@ -64,8 +64,36 @@ Current truth: bmux observes deterministic workspace display facts, writes
 accepted evidence to Provenance Engine, and reads PE Workspace Display Current
 State for the built-in workspace tab row. The PE-backed row projection covers
 workspace title, current directory as branch/directory context when that detail
-is enabled, branch, accepted dirty state, PR number/status/url/branch/staleness,
-ticket id/url facts, and latest projection event id/sequence for freshness.
+is enabled, branch, accepted dirty state, PR number/status/url/owner/branch/
+staleness, ticket id/title/url/owner facts, current-work summary, the last
+submitted prompt display text, and latest projection event id/sequence for
+freshness.
+
+Workspace Display Current State is field-reconciled, not an atomic latest-event
+blob. Missing observations do not clear known Current State. A later observation
+that includes only a branch must preserve previously accepted ticket, PR,
+current-work, and prompt facts. Provider lookup failures must preserve the last
+accepted value and update freshness/error diagnostics instead of projecting an
+empty value.
+
+Fields disappear only when affirmative evidence marks them no longer pertinent,
+such as an explicit PR clear, successful provider evidence that a branch has no
+PR, ticket replacement/removal, repository/worktree switch, or a session-context
+policy clear for session-scoped fields. Explicit clears are represented in PE
+workspace display evidence through `clearedFields`; bmux does not infer clears
+from incomplete payloads, observer reconnect, app activation, API timeout,
+telemetry events that omit fields, compaction, or live session disappearance.
+
+Workspace display facts have separate lifecycles:
+
+- Workspace/repository facts: repository/worktree/current directory/branch and
+  dirty state. These follow the active workspace/worktree.
+- Work-item facts: ticket id/title/url/owner and PR number/title/url/owner/state.
+  These normally survive session transitions while the workspace/worktree remains
+  associated with the same work.
+- Session/work facts: current-work summary, last submitted prompt display text,
+  and active session context. These are durable facts but follow the active/root
+  session policy for the workspace.
 
 bmux remains the local observer/producer for facts it can directly observe or
 fetch from APIs. The tab row does not independently infer current PR/status/
@@ -73,18 +101,26 @@ ticket state from live workspace session data once PE has a value; live bmux
 sidebar metadata remains only a transitional fallback before PE has populated a
 workspace display projection.
 
-Refresh triggers for the first app-owned read-side projection are intentionally
-bounded to local bmux events: runtime startup and workspace-list observation,
-workspace current-directory/title/display-metadata notifications after local
-observer writes, app activation, and workspace row appearance. There is no
-external producer/process invalidation or polling loop yet because bmux is the
-only current producer for these facts.
+Refresh triggers are intentionally separate from rendering. The row renders from
+the cached PE Workspace Display Current State snapshot. bmux observation updates
+PE from local events: runtime startup and workspace-list observation, workspace
+current-directory/title/display-metadata notifications after local observer
+writes, app activation, and workspace row appearance. GitHub/Linear/Git lookups
+belong to bmux observers and must not run synchronously during row rendering.
 
 Observed facts should include workspace created/selected/renamed events, tab
 renames, worktree branch changes, repository HEAD changes, PR metadata
 found/changed/cleared events, PR state transitions (`open`, `merged`, `closed`),
-and auto-name applied/suppressed/cleared events. Live session data must not be
-the durable or steady-state display source of truth for these fields.
+ticket enrichment, current-work summary changes, submitted prompt changes, and
+auto-name applied/suppressed/cleared events. Live session data must not be the
+durable or steady-state display source of truth for these fields after PE has
+accepted the corresponding fact.
+
+The last submitted prompt fact is a bounded workspace-display text fact, not
+general transcript persistence. bmux currently supplies the same submitted
+prompt preview used by the sidebar row; PE persists/projects that accepted
+display value. Expanding this into raw prompt or transcript storage requires a
+separate privacy/capture-policy slice.
 
 bmux may use optimistic UI only as temporary pending state, such as immediately
 reflecting a user rename while writing to PE. The pending value must reconcile
@@ -119,10 +155,13 @@ supported.
 
 Diagnostics should record workspace id; tab or surface id when applicable;
 repository root; branch before/after; PR before/after; PR status before/after;
-evidence accepted timestamp; PE Current State projection timestamp, revision,
-or cursor; display observed timestamp; expected and observed display values;
-latency in milliseconds; pass/fail; and stale/cleared-state correctness. Rename
-diagnostics should additionally record old title, new title or a
+ticket before/after; current-work before/after; prompt before/after; displayed
+value; PE projected value; latest accepted evidence value/event/source/origin;
+field-level observed timestamp; PE Current State projection timestamp, revision,
+or cursor; display observed timestamp; freshness; explicit-clear state; last
+refresh attempt/failure when available; latency in milliseconds; pass/fail; and
+stale/cleared-state correctness. Rename diagnostics should additionally record
+old title, new title or a
 privacy-preserving hash, title source, whether the name is user-set, whether
 auto-name was suppressed, request timestamp, rollback/error state if the write
 failed, and later overwrite or revert detection.

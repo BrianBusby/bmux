@@ -165,6 +165,11 @@ actor WorkProvenanceObservationService {
         )
         let ticketIDs = ticketFacts.ids
         let ticketLinks = ticketFacts.links
+        let currentWorkSummary = Self.normalizedNonEmpty(workspace.currentWorkSummary)
+        let lastSubmittedPrompt = Self.normalizedNonEmpty(workspace.lastSubmittedPrompt)
+        let lastSubmittedPromptSubmittedAt = lastSubmittedPrompt == nil
+            ? nil
+            : workspace.lastSubmittedPromptSubmittedAt
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
             title: workspace.title,
@@ -180,7 +185,11 @@ actor WorkProvenanceObservationService {
             pullRequestIsStale: pullRequest?.isStale ?? false,
             gitSnapshot: gitSnapshot,
             ticketIDs: ticketIDs,
-            ticketLinks: ticketLinks
+            ticketLinks: ticketLinks,
+            currentWorkSummary: currentWorkSummary,
+            lastSubmittedPrompt: lastSubmittedPrompt,
+            lastSubmittedPromptSubmittedAt: lastSubmittedPromptSubmittedAt,
+            explicitlyClearedFields: workspace.explicitlyClearedFields
         )
         guard latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] != fingerprint else {
             return
@@ -209,6 +218,10 @@ actor WorkProvenanceObservationService {
             isDirty: gitSnapshot?.isDirty,
             ticketIDs: ticketIDs,
             ticketLinks: ticketLinks,
+            currentWorkSummary: currentWorkSummary,
+            lastSubmittedPrompt: lastSubmittedPrompt,
+            lastSubmittedPromptSubmittedAt: lastSubmittedPromptSubmittedAt,
+            clearedFields: workspace.explicitlyClearedFields,
             observedAt: now,
             updatedAt: now
         )
@@ -319,7 +332,9 @@ actor WorkProvenanceObservationService {
                 id: id,
                 system: normalizedNonEmpty(link.system),
                 title: normalizedNonEmpty(link.title),
-                url: normalizedNonEmpty(link.url)
+                url: normalizedNonEmpty(link.url),
+                ownerName: normalizedNonEmpty(link.ownerName),
+                ownerURL: normalizedNonEmpty(link.ownerURL)
             )
         }
         var seenTicketIDs = Set<String>()
