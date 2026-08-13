@@ -11,6 +11,8 @@ public import BmuxGit
 public struct SidebarPullRequestBadge: Equatable, Sendable {
     /// The pull request number.
     public let number: Int
+    /// The pull request title, if known.
+    public let title: String?
     /// The short badge label (currently always "PR").
     public let label: String
     /// Link to the pull request page.
@@ -30,6 +32,7 @@ public struct SidebarPullRequestBadge: Equatable, Sendable {
     /// Creates a badge value.
     public init(
         number: Int,
+        title: String? = nil,
         label: String,
         url: URL,
         ownerLogin: String? = nil,
@@ -39,6 +42,7 @@ public struct SidebarPullRequestBadge: Equatable, Sendable {
         isStale: Bool = false
     ) {
         self.number = number
+        self.title = title
         self.label = label
         self.url = url
         let normalizedOwnerLogin = ownerLogin?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""

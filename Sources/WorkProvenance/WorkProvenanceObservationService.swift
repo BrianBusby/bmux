@@ -158,7 +158,10 @@ actor WorkProvenanceObservationService {
         let pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest)
         // Keep ticket association tied to explicit PR evidence. Branch-only
         // workspaces must not inherit ambient ticket keys from the current repo.
-        let explicitTicketIDs = Self.ticketIDs(branchNames: [pullRequest?.branch].compactMap { $0 })
+        let explicitTicketIDs = Self.ticketIDs(evidenceStrings: [
+            pullRequest?.title,
+            pullRequest?.branch
+        ].compactMap { $0 })
         let ticketFacts = try await workspaceDisplayTicketFacts(
             stableWorkspaceID: workspace.stableWorkspaceID,
             explicitTicketIDs: explicitTicketIDs
@@ -351,16 +354,16 @@ actor WorkProvenanceObservationService {
         )
     }
 
-    private static func ticketIDs(branchNames: [String]) -> [String] {
+    private static func ticketIDs(evidenceStrings: [String]) -> [String] {
         let pattern = #"[A-Z][A-Z0-9]+-[0-9]+"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
         var seen = Set<String>()
         var ticketIDs: [String] = []
-        for branchName in branchNames {
-            let range = NSRange(branchName.startIndex..<branchName.endIndex, in: branchName)
-            for match in regex.matches(in: branchName, range: range) {
-                guard let matchRange = Range(match.range, in: branchName) else { continue }
-                let ticketID = String(branchName[matchRange]).uppercased()
+        for evidenceString in evidenceStrings {
+            let range = NSRange(evidenceString.startIndex..<evidenceString.endIndex, in: evidenceString)
+            for match in regex.matches(in: evidenceString, range: range) {
+                guard let matchRange = Range(match.range, in: evidenceString) else { continue }
+                let ticketID = String(evidenceString[matchRange]).uppercased()
                 if seen.insert(ticketID).inserted {
                     ticketIDs.append(ticketID)
                 }

@@ -311,6 +311,73 @@ struct WorkProvenanceObserverTests {
     }
 
     @Test
+    func pullRequestTitleTicketEvidencePopulatesTicketLinksWhenBranchHasNoTicketKey() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let repositoryRoot = "/tmp/bmux-pr-title-ticket-repo"
+        let branch = "canonical-domain-mutation-paths"
+        let linearServer = FakeLinearGraphQLServer()
+        let snapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "\(repositoryRoot)/.git",
+            remoteSlug: "manaflow-ai/bmux",
+            branch: branch,
+            headCommit: "4444444444444444444444444444444444444444",
+            isDirty: false,
+            statusEntries: []
+        )
+        let service = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
+                authorizationHeader: "linear-api-key",
+                usesEnvironmentAuthorization: false,
+                dataProvider: { request in try await linearServer.response(for: request) }
+            ),
+            dateProvider: { Date(timeIntervalSince1970: 565) }
+        )
+        let stableWorkspaceID = UUID(uuidString: "dddddddd-dddd-dddd-dddd-dddddddddddd")!
+        let workspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: UUID(uuidString: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee")!,
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Persist Linear ticket titles in provenance",
+            currentDirectory: repositoryRoot,
+            branch: branch,
+            pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
+                number: 38,
+                title: "STE-1964 Persist Linear ticket titles in provenance",
+                url: "https://github.com/manaflow-ai/bmux/pull/38",
+                ownerLogin: nil,
+                ownerURL: nil,
+                status: "open",
+                branch: branch,
+                isStale: false
+            )
+        )
+
+        await service.observeWorkspaceSnapshot(workspace)
+
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
+
+        #expect(display.found)
+        #expect(display.display?.branch == branch)
+        #expect(display.display?.pullRequestBranch == branch)
+        #expect(display.display?.ticketIDs == ["STE-1964"])
+        #expect(display.display?.ticketLinks == [
+            ProvenanceWorkspaceDisplayTicketLinkRecord(
+                id: "STE-1964",
+                system: "linear",
+                title: "Canonical domain mutation paths",
+                url: "https://linear.app/company/issue/STE-1964"
+            )
+        ])
+        #expect(await linearServer.requests == [
+            FakeLinearGraphQLServer.Request(authorization: "linear-api-key", ticketID: "STE-1964")
+        ])
+    }
+
+    @Test
     func laterPromptDisplayObservationPreservesExistingTicketLinksWhenNoNewTicketEvidenceExists() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }

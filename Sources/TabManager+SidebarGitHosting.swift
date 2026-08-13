@@ -137,6 +137,7 @@ extension TabManager: SidebarGitHosting {
         tabs.first(where: { $0.id == workspaceId })?.updatePanelPullRequest(
             panelId: panelId,
             number: badge.number,
+            title: badge.title,
             label: badge.label,
             url: badge.url,
             ownerLogin: badge.ownerLogin,
@@ -189,6 +190,7 @@ extension SidebarPullRequestState {
     var sidebarPullRequestBadge: SidebarPullRequestBadge {
         SidebarPullRequestBadge(
             number: number,
+            title: title,
             label: label,
             url: url,
             ownerLogin: ownerLogin,

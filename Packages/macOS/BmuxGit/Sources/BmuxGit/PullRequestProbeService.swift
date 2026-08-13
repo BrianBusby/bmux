@@ -171,6 +171,7 @@ public struct PullRequestProbeService: Sendable {
                 resolution = .resolved(
                     WorkspacePullRequestResolvedItem(
                         number: matchedPullRequest.number,
+                        title: matchedPullRequest.title,
                         urlString: matchedPullRequest.url,
                         ownerLogin: matchedPullRequest.ownerLogin,
                         ownerURLString: matchedPullRequest.ownerURLString,

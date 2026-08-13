@@ -5,6 +5,8 @@ import Foundation
 public struct WorkspacePullRequestResolvedItem: Sendable {
     /// The pull request number.
     public let number: Int
+    /// The pull request title, if known.
+    public let title: String?
     /// The PR's html URL string.
     public let urlString: String
     /// The PR author's GitHub login, if known.
@@ -20,6 +22,7 @@ public struct WorkspacePullRequestResolvedItem: Sendable {
     /// Creates a resolved item.
     public init(
         number: Int,
+        title: String? = nil,
         urlString: String,
         ownerLogin: String? = nil,
         ownerURLString: String? = nil,
@@ -27,6 +30,7 @@ public struct WorkspacePullRequestResolvedItem: Sendable {
         branch: String
     ) {
         self.number = number
+        self.title = title
         self.urlString = urlString
         self.ownerLogin = ownerLogin
         self.ownerURLString = ownerURLString
