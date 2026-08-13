@@ -16,7 +16,7 @@ This document describes the architecture currently implemented in this repositor
 
 The SQLite backend stores an immutable event ledger and rebuildable current-state projections. Projection reads are bounded by request limits and are ordered by the engine's query implementation.
 
-Current accepted projections include repositories, worktrees, sessions, session relationships, file explanations, and current context records.
+Current accepted projections include repositories, worktrees, sessions, session relationships, file explanations, current context records, and workspace-display Current State.
 
 ## Evidence Model
 
@@ -52,4 +52,12 @@ GitHub ingestion and Knowledge Compiler implementation are also frozen until aft
 
 Current State is a first-class V1 subsystem, not a storage-detail synonym for projection tables. It is the canonical deterministic interpretation of accepted engineering evidence for present-tense provenance questions.
 
-The SQLite target implements Current State with rebuildable projection tables, but those tables are not the public contract. The public contract is the bounded domain behavior exposed through worktrees, session trees, file explanations, and current context. Producers append evidence; the engine derives Current State; consumers present the returned domain records.
+The SQLite target implements Current State with rebuildable projection tables, but those tables are not the public contract. The public contract is the bounded domain behavior exposed through worktrees, session trees, file explanations, current context, and workspace display. Producers append evidence; the engine derives Current State; consumers present the returned domain records.
+
+Workspace-display Current State is reduced field by field from accepted evidence.
+A missing value in a newer observation preserves the previously known field; it
+does not clear state. Fields clear only through explicit clear evidence recorded
+on the workspace-display DTO, such as `pull_request`, `tickets`, `branch`,
+`current_work_summary`, or `last_submitted_prompt`. The reducer records
+field-level metadata so diagnostics can trace displayed values back to their
+source event, observed time, source/origin, freshness, and explicit-clear state.

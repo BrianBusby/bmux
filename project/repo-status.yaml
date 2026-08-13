@@ -3,8 +3,8 @@ repository: BrianBusby/provenance-engine
 
 current_work:
   active_slice:
-    id: workspace_display_ticket_title_facts
-    title: PE-owned ticket title facts in workspace display state
+    id: workspace_display_durable_context
+    title: Workspace Display Durable Context and Reconciliation
     state: implemented
     owner: Codex
   state: active
@@ -22,6 +22,7 @@ local_capabilities:
   workspace_display_projection_cursors: implemented
   workspace_display_ticket_link_facts: implemented
   workspace_display_ticket_title_facts: implemented
+  workspace_display_durable_context: implemented
   schema_identity_validation: implemented
   producer_neutral_lifecycle_recording: implemented
 
