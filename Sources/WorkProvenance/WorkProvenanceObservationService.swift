@@ -258,9 +258,17 @@ actor WorkProvenanceObservationService {
         links: [ProvenanceWorkspaceDisplayTicketLinkRecord]
     ) {
         guard explicitTicketIDs.isEmpty else {
+            let resolvedLinks = await ticketLinkResolver.ticketLinks(for: explicitTicketIDs)
+            let existingDisplay = try? await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
+                workspaceID: stableWorkspaceID.uuidString
+            ))
             return (
                 ids: explicitTicketIDs,
-                links: await ticketLinkResolver.ticketLinks(for: explicitTicketIDs)
+                links: Self.mergedTicketLinks(
+                    ticketIDs: explicitTicketIDs,
+                    incomingLinks: resolvedLinks,
+                    existingLinks: existingDisplay?.display?.ticketLinks ?? []
+                )
             )
         }
 
@@ -352,6 +360,38 @@ actor WorkProvenanceObservationService {
             ids: ids.isEmpty ? links.map(\.id) : ids,
             links: links
         )
+    }
+
+    private static func mergedTicketLinks(
+        ticketIDs: [String],
+        incomingLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord],
+        existingLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord]
+    ) -> [ProvenanceWorkspaceDisplayTicketLinkRecord] {
+        let normalizedTicketIDs = normalizedTicketFacts(ticketIDs: ticketIDs, ticketLinks: []).ids
+        let incomingByID = ticketLinksByID(incomingLinks)
+        let existingByID = ticketLinksByID(existingLinks)
+        return normalizedTicketIDs.compactMap { id in
+            let incoming = incomingByID[id]
+            let existing = existingByID[id]
+            guard incoming != nil || existing != nil else { return nil }
+            return ProvenanceWorkspaceDisplayTicketLinkRecord(
+                id: id,
+                system: normalizedNonEmpty(incoming?.system) ?? normalizedNonEmpty(existing?.system),
+                title: normalizedNonEmpty(incoming?.title) ?? normalizedNonEmpty(existing?.title),
+                url: normalizedNonEmpty(incoming?.url) ?? normalizedNonEmpty(existing?.url),
+                ownerName: normalizedNonEmpty(incoming?.ownerName) ?? normalizedNonEmpty(existing?.ownerName),
+                ownerURL: normalizedNonEmpty(incoming?.ownerURL) ?? normalizedNonEmpty(existing?.ownerURL)
+            )
+        }
+    }
+
+    private static func ticketLinksByID(
+        _ links: [ProvenanceWorkspaceDisplayTicketLinkRecord]
+    ) -> [String: ProvenanceWorkspaceDisplayTicketLinkRecord] {
+        links.reduce(into: [:]) { result, link in
+            guard let id = normalizedTicketID(link.id) else { return }
+            result[id] = link
+        }
     }
 
     private static func ticketIDs(evidenceStrings: [String]) -> [String] {

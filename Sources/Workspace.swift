@@ -2299,17 +2299,7 @@ final class Workspace: Identifiable, ObservableObject {
     }
     var progress: SidebarProgressState? {
         get { sidebarMetadata.progress }
-        set {
-            let oldValue = sidebarMetadata.progress
-            sidebarMetadata.progress = newValue
-            guard oldValue != newValue else { return }
-            if Self.normalizedCustomDescription(newValue?.label) != nil {
-                markWorkspaceDisplayFieldsKnown(["current_work_summary"])
-            } else {
-                markWorkspaceDisplayFieldsExplicitlyCleared(["current_work_summary"])
-            }
-            postWorkspaceDisplayMetadataDidChange()
-        }
+        set { updateProgressForWorkspaceDisplay(newValue) }
     }
     var gitBranch: SidebarGitBranchState? {
         get { sidebarMetadata.gitBranch }
@@ -2328,15 +2318,9 @@ final class Workspace: Identifiable, ObservableObject {
         set { sidebarMetadata.panelPullRequests = newValue }
     }
     private var pendingWorkspaceDisplayClearedFields: Set<String> = []
-    var workspaceDisplayExplicitClearedFields: [String] {
-        pendingWorkspaceDisplayClearedFields.sorted()
-    }
-    func markWorkspaceDisplayFieldsExplicitlyCleared(_ fields: [String]) {
-        pendingWorkspaceDisplayClearedFields.formUnion(fields)
-    }
-    func markWorkspaceDisplayFieldsKnown(_ fields: [String]) {
-        pendingWorkspaceDisplayClearedFields.subtract(fields)
-    }
+    var workspaceDisplayExplicitClearedFields: [String] { pendingWorkspaceDisplayClearedFields.sorted() }
+    func markWorkspaceDisplayFieldsExplicitlyCleared(_ fields: [String]) { pendingWorkspaceDisplayClearedFields.formUnion(fields) }
+    func markWorkspaceDisplayFieldsKnown(_ fields: [String]) { pendingWorkspaceDisplayClearedFields.subtract(fields) }
     @Published var surfaceListeningPorts: [UUID: [Int]] = [:]
     var agentListeningPorts: [Int] = []
     @Published var remoteConfiguration: WorkspaceRemoteConfiguration?
@@ -4520,7 +4504,7 @@ final class Workspace: Identifiable, ObservableObject {
         )
     }
 
-    private static func normalizedCustomDescription(_ description: String?) -> String? {
+    static func normalizedCustomDescription(_ description: String?) -> String? {
         let normalizedLineEndings = description?
             .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
@@ -5388,18 +5372,6 @@ final class Workspace: Identifiable, ObservableObject {
         sidebarPullRequestsInDisplayOrder(orderedPanelIds: sidebarOrderedPanelIds())
     }
 
-    func sidebarStatusEntriesInDisplayOrder() -> [SidebarStatusEntry] {
-        sidebarStatusEntriesVisibleForDisplay().sorted { lhs, rhs in
-            if lhs.priority != rhs.priority { return lhs.priority > rhs.priority }
-            if lhs.timestamp != rhs.timestamp { return lhs.timestamp > rhs.timestamp }
-            return lhs.key < rhs.key
-        }
-    }
-
-    func sidebarMetadataBlocksInDisplayOrder() -> [SidebarMetadataBlock] {
-        sidebarMetadata.metadataBlocksInDisplayOrder()
-    }
-
     @discardableResult
     func recordConversationMessage(_ message: String?) -> Bool {
         guard let preview = Self.conversationMessagePreview(from: message) else { return false }
@@ -5414,8 +5386,7 @@ final class Workspace: Identifiable, ObservableObject {
         latestSubmittedMessage = preview
         latestSubmittedAt = Date()
         _ = recordConversationMessage(preview)
-        markWorkspaceDisplayFieldsKnown(["last_submitted_prompt"])
-        postWorkspaceDisplayMetadataDidChange()
+        markWorkspaceDisplayFieldsKnown(["last_submitted_prompt"]); postWorkspaceDisplayMetadataDidChange()
         return true
     }
 

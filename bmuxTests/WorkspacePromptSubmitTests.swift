@@ -143,13 +143,11 @@ struct WorkspacePromptSubmitTests {
         }
         defer { NotificationCenter.default.removeObserver(observer) }
 
-        let outcome = try #require(
-            manager.handlePromptSubmit(
-                workspaceId: workspace.id,
-                message: "preserve this prompt in workspace display",
-                iMessageModeEnabled: false
-            )
-        )
+        let outcome = try #require(manager.handlePromptSubmit(
+            workspaceId: workspace.id,
+            message: "preserve this prompt in workspace display",
+            iMessageModeEnabled: false
+        ))
 
         #expect(outcome.messageRecorded)
         #expect(notificationCount == 1)

@@ -14,6 +14,28 @@ extension Workspace {
         )
     }
 
+    func updateProgressForWorkspaceDisplay(_ newValue: SidebarProgressState?) {
+        let oldValue = sidebarMetadata.progress
+        sidebarMetadata.progress = newValue
+        guard oldValue != newValue else { return }
+        if Self.normalizedCustomDescription(newValue?.label) != nil {
+            markWorkspaceDisplayFieldsKnown(["current_work_summary"])
+        }
+        postWorkspaceDisplayMetadataDidChange()
+    }
+
+    func sidebarStatusEntriesInDisplayOrder() -> [SidebarStatusEntry] {
+        sidebarStatusEntriesVisibleForDisplay().sorted { lhs, rhs in
+            if lhs.priority != rhs.priority { return lhs.priority > rhs.priority }
+            if lhs.timestamp != rhs.timestamp { return lhs.timestamp > rhs.timestamp }
+            return lhs.key < rhs.key
+        }
+    }
+
+    func sidebarMetadataBlocksInDisplayOrder() -> [SidebarMetadataBlock] {
+        sidebarMetadata.metadataBlocksInDisplayOrder()
+    }
+
     func updatePanelGitBranch(panelId: UUID, branch: String, isDirty: Bool) {
         let state = SidebarGitBranchState(branch: branch, isDirty: isDirty)
         let existing = panelGitBranches[panelId]

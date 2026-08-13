@@ -13388,7 +13388,7 @@ struct TabItemView: View, Equatable {
         settings.sidebarFontScale
     }
 
-    private func scaledFontSize(_ baseSize: CGFloat) -> CGFloat {
+    func scaledFontSize(_ baseSize: CGFloat) -> CGFloat {
         baseSize * fontScale
     }
 
@@ -13399,7 +13399,7 @@ struct TabItemView: View, Equatable {
     /// (`globalFontMagnificationPercent`) and applies a primitive `.font(...)`,
     /// removing ~20 redundant modifier bodies per row from the sidebar render
     /// pass (issue #6612).
-    private func magnifiedFont(
+    func magnifiedFont(
         _ baseSize: CGFloat,
         weight: Font.Weight = .regular,
         design: Font.Design = .default,
@@ -13448,7 +13448,7 @@ struct TabItemView: View, Equatable {
             : .primary
     }
 
-    private func activeSecondaryColor(_ opacity: Double = 0.75) -> Color {
+    func activeSecondaryColor(_ opacity: Double = 0.75) -> Color {
         usesInvertedActiveForeground
             ? Color(nsColor: selectedWorkspaceForegroundNSColor(opacity: CGFloat(opacity)))
             : .secondary
@@ -15291,77 +15291,11 @@ struct TabItemView: View, Equatable {
         }
     }
 
-    @ViewBuilder
-    private func ticketRowsView(_ rows: [SidebarWorkspaceSnapshotBuilder.TicketDisplay]) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            ForEach(rows) { ticket in
-                let rowContent = HStack(spacing: 4) {
-                    BmuxSystemSymbolImage(magnified: "ticket", pointSize: scaledFontSize(9), weight: .medium)
-                        .foregroundColor(activeSecondaryColor(0.72))
-                    Text(ticket.id)
-                        .underline(ticket.url != nil)
-                        .foregroundColor(ticket.url == nil ? activeSecondaryColor(0.75) : pullRequestLinkColor)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                    Spacer(minLength: 0)
-                }
-                .font(magnifiedFont(scaledFontSize(10), weight: .semibold, design: .monospaced))
-                .foregroundColor(activeSecondaryColor(0.75))
-                if let url = ticket.url {
-                    Button(action: { openTicketLink(url) }) { rowContent }
-                        .buttonStyle(.plain)
-                        .tint(activeSecondaryColor(0.75))
-                        .safeHelp(String(
-                            format: String(
-                                localized: "sidebar.ticket.openTooltip",
-                                defaultValue: "Open %@"
-                            ),
-                            locale: .current,
-                            ticket.id
-                        ))
-                        .accessibilityIdentifier("SidebarTicketRow")
-                } else {
-                    rowContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarTicketRow")
-                }
-                if let ownerName = ticket.ownerName {
-                    let ownerContent = HStack(spacing: 4) {
-                        BmuxSystemSymbolImage(magnified: "person.crop.circle", pointSize: scaledFontSize(9), weight: .medium)
-                            .foregroundColor(activeSecondaryColor(0.72))
-                        Text(ownerName)
-                            .underline(ticket.ownerURL != nil)
-                            .foregroundColor(ticket.ownerURL == nil ? activeSecondaryColor(0.75) : pullRequestLinkColor)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                        Spacer(minLength: 0)
-                    }
-                    .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
-                    .foregroundColor(activeSecondaryColor(0.75))
-                    if let ownerURL = ticket.ownerURL {
-                        Button(action: { openTicketLink(ownerURL) }) { ownerContent }
-                            .buttonStyle(.plain)
-                            .tint(activeSecondaryColor(0.75))
-                            .safeHelp(String(
-                                format: String(
-                                    localized: "sidebar.ticket.owner.openTooltip",
-                                    defaultValue: "Open %@"
-                                ),
-                                locale: .current,
-                                ownerName
-                            ))
-                            .accessibilityIdentifier("SidebarTicketOwnerRow")
-                    } else {
-                        ownerContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarTicketOwnerRow")
-                    }
-                }
-            }
-        }
-    }
-
     private var pullRequestForegroundColor: Color {
         colorScheme == .dark ? .white : .black
     }
 
-    private var pullRequestLinkColor: Color {
+    var pullRequestLinkColor: Color {
         Color(nsColor: .linkColor)
     }
 
@@ -15375,7 +15309,7 @@ struct TabItemView: View, Equatable {
         BrowserExternalLinkOpener().openWebLink(url)
     }
 
-    private func openTicketLink(_ url: URL) {
+    func openTicketLink(_ url: URL) {
         updateSelection()
         BrowserExternalLinkOpener().openWebLink(url)
     }
