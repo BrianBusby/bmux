@@ -238,16 +238,40 @@ extension Workspace {
 
     @discardableResult
     func recordSubmittedPullRequestMention(_ message: String?, surfaceId: UUID?) -> Bool {
-        guard let mention = Self.submittedPromptPullRequestMention(from: message),
-              let panelId = promptMentionPanelId(from: surfaceId) ?? focusedPanelId else {
+        guard let panelId = promptMentionPanelId(from: surfaceId) ?? focusedPanelId else {
             return false
+        }
+        let recordedBranchIntent = recordSubmittedBranchIntent(message)
+        if let mention = Self.submittedPromptPullRequestMention(from: message) {
+            recordSubmittedPullRequestIntent(number: mention.number)
+            updatePanelPullRequest(
+                panelId: panelId,
+                number: mention.number,
+                label: "PR",
+                url: mention.url,
+                status: .open,
+                bindToCurrentBranch: false,
+                source: .promptMention
+            )
+            return true
+        }
+        guard let number = Self.submittedPromptPullRequestNumber(from: message) else {
+            return recordedBranchIntent
+        }
+        recordSubmittedPullRequestIntent(number: number)
+        guard let existing = existingPullRequestForPromptMention(number: number, panelId: panelId) else {
+            return true
         }
         updatePanelPullRequest(
             panelId: panelId,
-            number: mention.number,
-            label: "PR",
-            url: mention.url,
-            status: .open,
+            number: existing.number,
+            title: existing.title,
+            label: existing.label,
+            url: existing.url,
+            ownerLogin: existing.ownerLogin,
+            ownerURL: existing.ownerURL,
+            status: existing.status,
+            isStale: false,
             bindToCurrentBranch: false,
             source: .promptMention
         )
@@ -278,6 +302,31 @@ extension Workspace {
         return panelIdFromSurfaceId(TabID(uuid: surfaceId))
     }
 
+    private func existingPullRequestForPromptMention(number: Int, panelId: UUID) -> SidebarPullRequestState? {
+        if let panelPullRequest = panelPullRequests[panelId],
+           panelPullRequest.number == number {
+            return panelPullRequest
+        }
+        if let pullRequest,
+           pullRequest.number == number {
+            return pullRequest
+        }
+        return sidebarPullRequestsInDisplayOrder().first { $0.number == number }
+    }
+
+    private func recordSubmittedPullRequestIntent(number: Int) {
+        workspacePromptPullRequestIntentNumbers.insert(number)
+    }
+
+    @discardableResult
+    private func recordSubmittedBranchIntent(_ message: String?) -> Bool {
+        guard let branch = Self.submittedPromptBranchMention(from: message) else {
+            return false
+        }
+        workspacePromptBranchIntentNames.insert(branch.normalizedSidebarBranchName)
+        return true
+    }
+
     static func submittedPromptPullRequestMention(
         from message: String?,
         matchingNumber expectedNumber: Int? = nil
@@ -301,6 +350,45 @@ extension Workspace {
                 continue
             }
             return (number, url)
+        }
+        return nil
+    }
+
+    static func submittedPromptPullRequestNumber(
+        from message: String?,
+        matchingNumber expectedNumber: Int? = nil
+    ) -> Int? {
+        guard let message else { return nil }
+        let pattern = #"(?i)(?:https?://github\.com/[^/\s"'<>]+/[^/\s"'<>]+/pull/|(?:\bPR\b|\bpull request\b|\bpull\b)\s*#?\s*)([0-9]+)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return nil
+        }
+        let nsMessage = message as NSString
+        let range = NSRange(location: 0, length: nsMessage.length)
+        for match in regex.matches(in: message, range: range) {
+            guard match.numberOfRanges == 2,
+                  let number = Int(nsMessage.substring(with: match.range(at: 1))),
+                  expectedNumber == nil || expectedNumber == number else {
+                continue
+            }
+            return number
+        }
+        return nil
+    }
+
+    static func submittedPromptBranchMention(from message: String?) -> String? {
+        guard let message else { return nil }
+        let pattern = #"(?i)\bbranch\s+([A-Za-z0-9][A-Za-z0-9._/\-]*)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return nil
+        }
+        let nsMessage = message as NSString
+        let range = NSRange(location: 0, length: nsMessage.length)
+        for match in regex.matches(in: message, range: range) {
+            guard match.numberOfRanges == 2 else { continue }
+            let branch = nsMessage.substring(with: match.range(at: 1)).normalizedSidebarBranchName
+            guard !branch.isEmpty else { continue }
+            return branch
         }
         return nil
     }

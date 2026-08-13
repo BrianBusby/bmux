@@ -14912,7 +14912,9 @@ struct TabItemView: View, Equatable {
         let pullRequestRows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
             livePullRequests: tab.sidebarPullRequestsInDisplayOrder(orderedPanelIds: orderedPanelIds),
             provenancePullRequest: provenanceDisplaySnapshot?.pullRequest,
-            latestSubmittedMessage: tab.latestSubmittedMessage,
+            provenanceCurrentDirectory: provenanceDisplaySnapshot?.currentDirectory,
+            provenanceBranch: provenanceDisplaySnapshot?.branch,
+            latestSubmittedMessage: provenanceDisplaySnapshot?.lastSubmittedPrompt ?? tab.latestSubmittedMessage,
             latestConversationMessage: tab.latestConversationMessage,
             label: String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
         )

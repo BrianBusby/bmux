@@ -171,10 +171,36 @@ import Testing
         #expect(rows.isEmpty)
     }
 
-    @Test func provenancePullRequestRendersWhenNoNewerLiveEvidenceContradictsIt() throws {
+    @Test func provenancePullRequestIsSuppressedWithoutExplicitIntent() throws {
         let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
             livePullRequests: [],
             provenancePullRequest: try Self.provenancePullRequest(number: 26201),
+            latestSubmittedMessage: "continue checking the blocked merge",
+            latestConversationMessage: nil,
+            label: "PR"
+        )
+
+        #expect(rows.isEmpty)
+    }
+
+    @Test func provenancePullRequestRendersWhenPromptMentionsSameNumber() throws {
+        let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: [],
+            provenancePullRequest: try Self.provenancePullRequest(number: 26201),
+            latestSubmittedMessage: "continue checking pull 26201",
+            latestConversationMessage: nil,
+            label: "PR"
+        )
+
+        #expect(rows.map(\.number) == [26201])
+        #expect(rows.first?.isFromProvenance == true)
+    }
+
+    @Test func provenancePullRequestRendersForPullRequestScopedWorktree() throws {
+        let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: [],
+            provenancePullRequest: try Self.provenancePullRequest(number: 26201),
+            provenanceCurrentDirectory: "/private/tmp/companycam-pr-26201",
             latestSubmittedMessage: "continue checking the blocked merge",
             latestConversationMessage: nil,
             label: "PR"

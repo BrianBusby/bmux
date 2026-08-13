@@ -2321,6 +2321,8 @@ final class Workspace: Identifiable, ObservableObject {
     var workspaceDisplayExplicitClearedFields: [String] { pendingWorkspaceDisplayClearedFields.sorted() }
     func markWorkspaceDisplayFieldsExplicitlyCleared(_ fields: [String]) { pendingWorkspaceDisplayClearedFields.formUnion(fields) }
     func markWorkspaceDisplayFieldsKnown(_ fields: [String]) { pendingWorkspaceDisplayClearedFields.subtract(fields) }
+    var workspacePromptPullRequestIntentNumbers: Set<Int> = []
+    var workspacePromptBranchIntentNames: Set<String> = []
     @Published var surfaceListeningPorts: [UUID: [Int]] = [:]
     var agentListeningPorts: [Int] = []
     @Published var remoteConfiguration: WorkspaceRemoteConfiguration?
@@ -5394,6 +5396,8 @@ final class Workspace: Identifiable, ObservableObject {
         latestConversationMessage = nil
         latestSubmittedMessage = nil
         latestSubmittedAt = nil
+        workspacePromptPullRequestIntentNumbers.removeAll()
+        workspacePromptBranchIntentNames.removeAll()
     }
 
     var isRemoteWorkspace: Bool {
