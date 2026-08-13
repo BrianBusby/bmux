@@ -131,28 +131,20 @@ import Testing
         #expect(!decision.hasDeferredWorkspaceObservationInvalidation)
     }
 
-    @Test func ticketDisplayLinkTextIncludesLinearTitle() {
+    @Test(arguments: [
+        (" Canonical domain mutation paths ", "STE-1964: Canonical domain mutation paths"),
+        (" ", "STE-1964"),
+        ("ste-1964", "STE-1964"),
+    ]) func ticketDisplayLinkText(title: String, expected: String) {
         let ticket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
             id: "STE-1964",
-            title: " Canonical domain mutation paths ",
-            url: URL(string: "https://linear.app/company/issue/STE-1964"),
+            title: title,
+            url: nil,
             ownerName: nil,
             ownerURL: nil
         )
 
-        #expect(ticket.linkText == "STE-1964: Canonical domain mutation paths")
-    }
-
-    @Test func ticketDisplayLinkTextFallsBackToTicketIDWithoutTitle() {
-        let ticket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
-            id: "STE-1964",
-            title: " ",
-            url: URL(string: "https://linear.app/company/issue/STE-1964"),
-            ownerName: nil,
-            ownerURL: nil
-        )
-
-        #expect(ticket.linkText == "STE-1964")
+        #expect(ticket.linkText == expected)
     }
 
     @Test func livePullRequestRowsOverrideStaleProvenancePullRequest() throws {
@@ -731,13 +723,7 @@ import Testing
         #expect(didEndTracking)
         state.setPointerHovering(true)
 
-        #expect(
-            state.shouldShowCloseButton(
-                canCloseWorkspace: true,
-                shortcutHintModeActive: false
-            ),
-            "AppKit menu tracking ending must clear stale SwiftUI context-menu visibility so later hover can reveal row affordances."
-        )
+        #expect(state.shouldShowCloseButton(canCloseWorkspace: true, shortcutHintModeActive: false))
     }
 
     @Test func appKitMenuTrackingEndUsesReconciledPointerExit() {
@@ -749,13 +735,7 @@ import Testing
         let didEndTracking = state.contextMenuTrackingDidEnd(pointerInsideRow: false)
         #expect(didEndTracking)
 
-        #expect(
-            !state.shouldShowCloseButton(
-                canCloseWorkspace: true,
-                shortcutHintModeActive: false
-            ),
-            "If the pointer leaves through the context menu, AppKit menu tracking reconciliation must keep the row affordance hidden."
-        )
+        #expect(!state.shouldShowCloseButton(canCloseWorkspace: true, shortcutHintModeActive: false))
     }
 
     @Test @MainActor func menuTrackingReconcilerIgnoresSubmenuEndNotifications() {
@@ -776,23 +756,11 @@ import Testing
         state.contextMenuDidAppear()
         state.setPointerHovering(true)
 
-        #expect(
-            !state.shouldShowCloseButton(
-                canCloseWorkspace: true,
-                shortcutHintModeActive: false
-            ),
-            "Pointer hover updates observed during the context-menu lifecycle must not reveal the close affordance under the menu."
-        )
+        #expect(!state.shouldShowCloseButton(canCloseWorkspace: true, shortcutHintModeActive: false))
 
         state.contextMenuDidDisappear()
 
-        #expect(
-            state.shouldShowCloseButton(
-                canCloseWorkspace: true,
-                shortcutHintModeActive: false
-            ),
-            "Once the context menu dismisses, the last observed pointer position may reveal the close affordance."
-        )
+        #expect(state.shouldShowCloseButton(canCloseWorkspace: true, shortcutHintModeActive: false))
     }
 
     @Test func contextMenuDismissalRestoresHoverWithoutPointerMovement() {
@@ -802,13 +770,7 @@ import Testing
         state.contextMenuDidAppear()
         state.contextMenuDidDisappear()
 
-        #expect(
-            state.shouldShowCloseButton(
-                canCloseWorkspace: true,
-                shortcutHintModeActive: false
-            ),
-            "Closing a context menu without moving the pointer must restore the row hover affordance."
-        )
+        #expect(state.shouldShowCloseButton(canCloseWorkspace: true, shortcutHintModeActive: false))
     }
 
     @Test func pointerExitWhileContextMenuIsVisibleStaysHiddenAfterDismissal() {
@@ -820,13 +782,7 @@ import Testing
         state.setPointerHovering(false)
         state.contextMenuDidDisappear()
 
-        #expect(
-            !state.shouldShowCloseButton(
-                canCloseWorkspace: true,
-                shortcutHintModeActive: false
-            ),
-            "Pointer exit remains authoritative even when it is observed during the context-menu lifecycle."
-        )
+        #expect(!state.shouldShowCloseButton(canCloseWorkspace: true, shortcutHintModeActive: false))
     }
 
     @Test func swiftUIOnlyFastContextMenuDismissalKeepsInitialHoverFallback() {
@@ -837,13 +793,7 @@ import Testing
         state.setPointerHovering(false)
         state.contextMenuDidDisappear()
 
-        #expect(
-            state.shouldShowCloseButton(
-                canCloseWorkspace: true,
-                shortcutHintModeActive: false
-            ),
-            "A SwiftUI hover-exit caused by the menu taking focus must not erase the initial hover fallback before the AppKit reconciler mounts."
-        )
+        #expect(state.shouldShowCloseButton(canCloseWorkspace: true, shortcutHintModeActive: false))
     }
 
     @Test func noHoverDoesNotRevealCloseButtonWhileContextMenuIsVisible() {
@@ -852,13 +802,7 @@ import Testing
         state.contextMenuDidAppear()
         state.setPointerHovering(false)
 
-        #expect(
-            !state.shouldShowCloseButton(
-                canCloseWorkspace: true,
-                shortcutHintModeActive: false
-            ),
-            "A visible context menu must not make the close affordance visible when the pointer is not hovering."
-        )
+        #expect(!state.shouldShowCloseButton(canCloseWorkspace: true, shortcutHintModeActive: false))
     }
 
     @Test @MainActor func hoverReconcilerRestoresCloseButtonAfterLifecycleHoverReset() {
@@ -876,13 +820,7 @@ import Testing
 
         view.reconcilePointerLocation(pointInView: NSPoint(x: 60, y: 14))
 
-        #expect(
-            state.shouldShowCloseButton(
-                canCloseWorkspace: true,
-                shortcutHintModeActive: false
-            ),
-            "When sidebar updates or row reuse clear SwiftUI hover state while the pointer is still inside the row, the AppKit hover reconciler must restore the close affordance without waiting for another mouse move."
-        )
+        #expect(state.shouldShowCloseButton(canCloseWorkspace: true, shortcutHintModeActive: false))
     }
 
     @Test func contextMenuAppearanceHidesExistingCloseButtonUntilPointerIsReconciled() {
@@ -893,13 +831,7 @@ import Testing
 
         state.contextMenuDidAppear()
 
-        #expect(
-            !state.shouldShowCloseButton(
-                canCloseWorkspace: true,
-                shortcutHintModeActive: false
-            ),
-            "Opening a context menu must clear the row close affordance until tracking reports the pointer is still inside."
-        )
+        #expect(!state.shouldShowCloseButton(canCloseWorkspace: true, shortcutHintModeActive: false))
     }
 
     @Test func contextMenuDismissalCanRevealAfterPointerReconciliation() {
@@ -910,13 +842,7 @@ import Testing
         state.contextMenuDidDisappear()
         state.setPointerHovering(true)
 
-        #expect(
-            state.shouldShowCloseButton(
-                canCloseWorkspace: true,
-                shortcutHintModeActive: false
-            ),
-            "Closing the context menu may reveal the close affordance again only after pointer tracking reconciles inside the row."
-        )
+        #expect(state.shouldShowCloseButton(canCloseWorkspace: true, shortcutHintModeActive: false))
     }
 
     @Test func closeButtonHiddenWhenWorkspaceCannotBeClosed() {
