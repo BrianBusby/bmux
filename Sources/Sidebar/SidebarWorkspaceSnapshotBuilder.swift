@@ -79,12 +79,26 @@ struct SidebarWorkspaceSnapshotBuilder {
         latestConversationMessage: String?,
         label: String
     ) -> [PullRequestDisplay] {
-        guard let pullRequest = provenancePullRequest else { return [] }
-        let url = pullRequest.url ?? provenancePullRequestURL(
-            number: pullRequest.number,
-            livePullRequests: livePullRequests,
-            messages: [latestSubmittedMessage, latestConversationMessage]
-        )
+        if !livePullRequests.isEmpty {
+            return livePullRequests.map { livePullRequestDisplay($0) }
+        }
+
+        let messages = [latestSubmittedMessage, latestConversationMessage]
+        let promptMention = firstPromptPullRequestMention(messages: messages)
+        if let promptMention,
+           promptMention.number != provenancePullRequest?.number {
+            return [promptPullRequestDisplay(promptMention, label: label)]
+        }
+
+        guard let pullRequest = provenancePullRequest else {
+            return promptMention.map { [promptPullRequestDisplay($0, label: label)] } ?? []
+        }
+        let mentionedNumbers = pullRequestNumbers(messages: messages)
+        guard mentionedNumbers.isEmpty || mentionedNumbers.contains(pullRequest.number) else {
+            return []
+        }
+
+        let url = pullRequest.url ?? promptMention?.url
         return [PullRequestDisplay(
             id: "\(label.lowercased())#\(pullRequest.number)|\(url?.absoluteString ?? "")",
             number: pullRequest.number,
@@ -101,22 +115,69 @@ struct SidebarWorkspaceSnapshotBuilder {
         )]
     }
 
-    private static func provenancePullRequestURL(
-        number: Int,
-        livePullRequests: [SidebarPullRequestState],
-        messages: [String?]
-    ) -> URL? {
-        if let livePullRequest = livePullRequests.first(where: { $0.number == number }) {
-            return livePullRequest.url
-        }
+    private static func livePullRequestDisplay(_ pullRequest: SidebarPullRequestState) -> PullRequestDisplay {
+        PullRequestDisplay(
+            id: "\(pullRequest.label.lowercased())#\(pullRequest.number)|\(pullRequest.url.absoluteString)",
+            number: pullRequest.number,
+            label: pullRequest.label,
+            url: pullRequest.url,
+            status: pullRequest.status,
+            ownerLogin: pullRequest.ownerLogin,
+            ownerURL: pullRequest.ownerURL,
+            isStale: pullRequest.isStale,
+            isFromProvenance: false
+        )
+    }
 
+    private static func promptPullRequestDisplay(
+        _ mention: (number: Int, url: URL),
+        label: String
+    ) -> PullRequestDisplay {
+        PullRequestDisplay(
+            id: "\(label.lowercased())#\(mention.number)|\(mention.url.absoluteString)",
+            number: mention.number,
+            label: label,
+            url: mention.url,
+            status: .open,
+            ownerLogin: nil,
+            ownerURL: nil,
+            isStale: false,
+            isFromProvenance: false
+        )
+    }
+
+    private static func firstPromptPullRequestMention(
+        messages: [String?]
+    ) -> (number: Int, url: URL)? {
         for message in messages {
-            guard let mention = Workspace.submittedPromptPullRequestMention(from: message, matchingNumber: number) else {
+            guard let mention = Workspace.submittedPromptPullRequestMention(from: message) else {
                 continue
             }
-            return mention.url
+            return mention
         }
         return nil
+    }
+
+    private static func pullRequestNumbers(messages: [String?]) -> Set<Int> {
+        var numbers = Set<Int>()
+        for message in messages {
+            for number in pullRequestNumbers(message: message) {
+                numbers.insert(number)
+            }
+        }
+        return numbers
+    }
+
+    private static func pullRequestNumbers(message: String?) -> [Int] {
+        guard let message else { return [] }
+        let pattern = #"(?i)(?:https?://github\.com/[^/\s"'<>]+/[^/\s"'<>]+/pull/|(?:\bPR\b|\bpull request\b)\s*#?\s*)([0-9]+)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let nsMessage = message as NSString
+        let range = NSRange(location: 0, length: nsMessage.length)
+        return regex.matches(in: message, range: range).compactMap { match in
+            guard match.numberOfRanges == 2 else { return nil }
+            return Int(nsMessage.substring(with: match.range(at: 1)))
+        }
     }
 
     private static func pullRequestOwnerURL(login: String?, url: URL?) -> URL? {
