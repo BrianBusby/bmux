@@ -369,7 +369,8 @@ struct WorkProvenanceObserverTests {
                 id: "STE-1964",
                 system: "linear",
                 title: "Canonical domain mutation paths",
-                url: "https://linear.app/company/issue/STE-1964"
+                url: "https://linear.app/company/issue/STE-1964",
+                ownerName: "Brian Busby"
             )
         ])
         #expect(await linearServer.requests == [
