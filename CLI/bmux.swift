@@ -32148,8 +32148,11 @@ export default BMUXSessionRestore;
         let hookEventName = Self.feedEventName(forClaudeSubcommand: subcommand)
         guard !hookEventName.isEmpty else { return }
         let promptText = hookEventName == "UserPromptSubmit"
-            ? (feedPromptText(from: parsedInput.object) ?? parsedInput.rawFallback)
+            ? feedPromptSubmitText(from: parsedInput)
             : nil
+        let contextSourceObject = hookEventName == "UserPromptSubmit"
+            ? (parsedInput.rawObject ?? parsedInput.object)
+            : parsedInput.object
         let fallbackObject = parsedInput.rawObject ?? parsedInput.object ?? [:]
         let agentPid = agentPidForFeedSource(source)
         let sessionId = parsedInput.sessionId ?? stableFallbackFeedSessionId(
@@ -32185,7 +32188,7 @@ export default BMUXSessionRestore;
             hookEventName: hookEventName,
             toolName: toolName,
             toolInput: event["tool_input"],
-            rawObject: parsedInput.object,
+            rawObject: contextSourceObject,
             transcriptPath: parsedInput.transcriptPath
         ) {
             event["context"] = context
@@ -32292,6 +32295,43 @@ export default BMUXSessionRestore;
             }
         }
         return nil
+    }
+
+    private func feedPromptSubmitText(from parsedInput: ClaudeHookParsedInput) -> String? {
+        let rawPrompt = feedPromptText(from: parsedInput.rawObject)
+            ?? feedPromptText(from: parsedInput.object)
+            ?? parsedInput.rawFallback
+        return boundedFeedPromptText(rawPrompt)
+    }
+
+    private func boundedFeedPromptText(_ value: String?, maxLength: Int = 4_000) -> String? {
+        guard let value else { return nil }
+        let normalized = normalizedSingleLine(value)
+        guard !normalized.isEmpty else { return nil }
+        guard normalized.count > maxLength else { return normalized }
+        guard let pullRequestURL = firstGitHubPullRequestURL(in: normalized),
+              !String(normalized.prefix(maxLength)).contains(pullRequestURL) else {
+            return truncate(normalized, maxLength: maxLength)
+        }
+        let suffix = " \(pullRequestURL)"
+        guard suffix.count < maxLength else {
+            return truncate(pullRequestURL, maxLength: maxLength)
+        }
+        let prefixLength = max(0, maxLength - suffix.count - 1)
+        return String(normalized.prefix(prefixLength)) + "…" + suffix
+    }
+
+    private func firstGitHubPullRequestURL(in value: String) -> String? {
+        let pattern = #"https?://github\.com/[^/\s"'<>]+/[^/\s"'<>]+/pull/[0-9]+"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return nil
+        }
+        let nsValue = value as NSString
+        let range = NSRange(location: 0, length: nsValue.length)
+        guard let match = regex.firstMatch(in: value, range: range) else {
+            return nil
+        }
+        return nsValue.substring(with: match.range)
     }
 
     private func feedWorkspaceId(rawObject: [String: Any]?, fallback: String?) -> String? {
