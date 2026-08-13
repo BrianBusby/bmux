@@ -13,10 +13,8 @@ Repository: `BrianBusby/provenance-engine`
 
 ## Current Work
 
-- Active slice: Workspace Display Durable Context and Reconciliation (`workspace_display_durable_context`)
-- Slice state: implemented
-- Owner: Codex
-- Repository state: active
+- Active slice: none selected
+- Repository state: observation
 
 ## Release
 

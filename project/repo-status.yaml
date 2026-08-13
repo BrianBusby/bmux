@@ -2,12 +2,8 @@ schema_version: 1
 repository: BrianBusby/provenance-engine
 
 current_work:
-  active_slice:
-    id: workspace_display_durable_context
-    title: Workspace Display Durable Context and Reconciliation
-    state: implemented
-    owner: Codex
-  state: active
+  active_slice: null
+  state: observation
 
 release:
   latest_tag: "0.1.0"
