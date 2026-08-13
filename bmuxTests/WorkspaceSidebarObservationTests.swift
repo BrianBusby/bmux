@@ -177,7 +177,7 @@ struct WorkspaceSidebarObservationTests {
         )
     }
 
-    @Test func progressMutationsPostWorkspaceDisplayMetadataNotifications() {
+    @Test func progressMutationsPostWorkspaceDisplayMetadataNotificationsWithoutClearingCurrentWork() {
         let workspace = Workspace()
         var notificationCount = 0
         let observer = NotificationCenter.default.addObserver(
@@ -197,7 +197,7 @@ struct WorkspaceSidebarObservationTests {
         workspace.progress = nil
 
         #expect(notificationCount == 2)
-        #expect(workspace.workspaceDisplayExplicitClearedFields.contains("current_work_summary"))
+        #expect(!workspace.workspaceDisplayExplicitClearedFields.contains("current_work_summary"))
     }
 
     @Test func sidebarImmediateObservationPublisherCoalescesTitleBursts() {

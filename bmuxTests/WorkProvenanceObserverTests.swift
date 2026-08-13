@@ -120,7 +120,8 @@ struct WorkProvenanceObserverTests {
     func nonRepositoryWorkspaceDoesNotAppendAnEvent() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
-        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let backingClient: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let client = RecordingProvenanceEngineClient(backing: backingClient)
         let service = WorkProvenanceObservationService(
             client: client,
             gitInspector: FakeGitInspector(snapshotsByDirectory: [:])
@@ -247,13 +248,7 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.latestEventSequence == 3)
         #expect(display.display?.ticketIDs == ["STE-1964"])
         #expect(display.display?.ticketLinks == [
-            ProvenanceWorkspaceDisplayTicketLinkRecord(
-                id: "STE-1964",
-                system: "linear",
-                title: "Canonical domain mutation paths",
-                url: "https://linear.app/company/issue/STE-1964",
-                ownerName: "Brian Busby"
-            )
+            Self.linearTicketLink()
         ])
         #expect(await linearServer.requests == [
             FakeLinearGraphQLServer.Request(authorization: "linear-api-key", ticketID: "STE-1964")
@@ -365,13 +360,7 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.pullRequestBranch == branch)
         #expect(display.display?.ticketIDs == ["STE-1964"])
         #expect(display.display?.ticketLinks == [
-            ProvenanceWorkspaceDisplayTicketLinkRecord(
-                id: "STE-1964",
-                system: "linear",
-                title: "Canonical domain mutation paths",
-                url: "https://linear.app/company/issue/STE-1964",
-                ownerName: "Brian Busby"
-            )
+            Self.linearTicketLink()
         ])
         #expect(await linearServer.requests == [
             FakeLinearGraphQLServer.Request(authorization: "linear-api-key", ticketID: "STE-1964")
@@ -446,13 +435,80 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.lastSubmittedPromptSubmittedAt == Date(timeIntervalSince1970: 571))
         #expect(display.display?.ticketIDs == ["STE-1964"])
         #expect(display.display?.ticketLinks == [
-            ProvenanceWorkspaceDisplayTicketLinkRecord(
-                id: "STE-1964",
-                system: "linear",
-                title: "Canonical domain mutation paths",
-                url: "https://linear.app/company/issue/STE-1964",
-                ownerName: "Brian Busby"
+            Self.linearTicketLink()
+        ])
+    }
+
+    @Test
+    func laterTicketLookupFailurePreservesExistingTicketTitleAndOwner() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let repositoryRoot = "/tmp/bmux-ticket-link-lookup-failure-repo"
+        let branch = "durable-ticket-link-preserve"
+        let linearServer = FakeLinearGraphQLServer()
+        let snapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "\(repositoryRoot)/.git",
+            remoteSlug: "manaflow-ai/bmux",
+            branch: branch,
+            headCommit: "5555555555555555555555555555555555555555",
+            isDirty: false,
+            statusEntries: []
+        )
+        let stableWorkspaceID = UUID(uuidString: "dddddddd-eeee-ffff-aaaa-bbbbbbbbbbbb")!
+        let workspaceID = UUID(uuidString: "eeeeeeee-ffff-aaaa-bbbb-cccccccccccc")!
+        let initialService = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
+                authorizationHeader: "linear-api-key",
+                usesEnvironmentAuthorization: false,
+                dataProvider: { request in try await linearServer.response(for: request) }
+            ),
+            dateProvider: { Date(timeIntervalSince1970: 580) }
+        )
+        let retryService = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
+                authorizationHeader: nil,
+                usesEnvironmentAuthorization: false
+            ),
+            dateProvider: { Date(timeIntervalSince1970: 581) }
+        )
+        let workspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: workspaceID,
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Retry Linear lookup",
+            currentDirectory: repositoryRoot,
+            branch: branch,
+            pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
+                number: 43,
+                title: "STE-1964 Retry Linear lookup",
+                url: "https://github.com/manaflow-ai/bmux/pull/43",
+                ownerLogin: nil,
+                ownerURL: nil,
+                status: "open",
+                branch: branch,
+                isStale: false
             )
+        )
+
+        await initialService.observeWorkspaceSnapshot(workspace)
+        await retryService.observeWorkspaceSnapshot(workspace)
+
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
+        let latestEvent = try #require(await client.appendedEvents().last?.payload.workspaceDisplay)
+
+        #expect(display.found)
+        #expect(display.display?.ticketIDs == ["STE-1964"])
+        #expect(display.display?.ticketLinks == [
+            Self.linearTicketLink()
+        ])
+        #expect(latestEvent.ticketIDs == ["STE-1964"])
+        #expect(latestEvent.ticketLinks == [
+            Self.linearTicketLink()
         ])
     }
 
@@ -599,6 +655,76 @@ struct WorkProvenanceObserverTests {
         func owner(for pullRequestURL: String) async -> WorkProvenancePullRequestOwner? {
             ownersByURL[pullRequestURL]
         }
+    }
+
+    private actor RecordingProvenanceEngineClient: ProvenanceEngineContracts.ProvenanceEngineClient {
+        private let backing: any ProvenanceEngineContracts.ProvenanceEngineClient
+        private var events: [ProvenanceEngineContracts.ProvenanceEvent] = []
+
+        init(backing: any ProvenanceEngineContracts.ProvenanceEngineClient) {
+            self.backing = backing
+        }
+
+        func appendedEvents() -> [ProvenanceEngineContracts.ProvenanceEvent] {
+            events
+        }
+
+        func health() async throws -> ProvenanceEngineContracts.ProvenanceEngineHealth {
+            try await backing.health()
+        }
+
+        func appendEvent(
+            _ request: ProvenanceEngineContracts.ProvenanceAppendEventRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceAppendEventResponse {
+            events.append(request.event)
+            return try await backing.appendEvent(request)
+        }
+
+        func recordSessionLifecycle(
+            _ request: ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest
+        ) async -> ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse {
+            await backing.recordSessionLifecycle(request)
+        }
+
+        func sessionTree(
+            _ request: ProvenanceEngineContracts.ProvenanceSessionTreeRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceSessionTreeResponse {
+            try await backing.sessionTree(request)
+        }
+
+        func fileExplanation(
+            _ request: ProvenanceEngineContracts.ProvenanceFileExplanationRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceFileExplanationResponse {
+            try await backing.fileExplanation(request)
+        }
+
+        func worktrees(
+            _ request: ProvenanceEngineContracts.ProvenanceWorktreeListRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceWorktreeListResponse {
+            try await backing.worktrees(request)
+        }
+
+        func currentContext(
+            _ request: ProvenanceEngineContracts.ProvenanceCurrentContextRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceCurrentContextResponse {
+            try await backing.currentContext(request)
+        }
+
+        func workspaceDisplay(
+            _ request: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse {
+            try await backing.workspaceDisplay(request)
+        }
+    }
+
+    private static func linearTicketLink() -> ProvenanceWorkspaceDisplayTicketLinkRecord {
+        ProvenanceWorkspaceDisplayTicketLinkRecord(
+            id: "STE-1964",
+            system: "linear",
+            title: "Canonical domain mutation paths",
+            url: "https://linear.app/company/issue/STE-1964",
+            ownerName: "Brian Busby"
+        )
     }
 
     private actor FakeLinearGraphQLServer {

@@ -104,8 +104,9 @@ import BmuxGit
         #expect(host.workspaces[0].state.panels[panelId]?.badge?.isStale == false)
     }
 
-    /// Plain branch updates do not activate PR polling; the user has to do PR
-    /// work in this panel first.
+    /// Plain branch updates do not activate PR polling; the git metadata
+    /// service's `localGitProbe` handoff is the branch-discovery entrypoint
+    /// that activates first-run lookup.
     @Test func branchChangeScheduleDoesNotActivatePollingWithoutPullRequestContext() async throws {
         let host = RecordingSidebarGitHost()
         host.pollingEnabled = true
@@ -122,6 +123,25 @@ import BmuxGit
 
         #expect(service.workspacePullRequestTrackedPanelIds(workspaceId: workspaceId).isEmpty)
         #expect(await clock.recordedDurations.isEmpty)
+    }
+
+    /// A local git probe that finds a branch should activate PR polling even
+    /// when no badge exists yet, so fresh workspaces can discover an open PR.
+    @Test func localGitProbeActivatesPollingWithoutExistingBadge() async throws {
+        let host = RecordingSidebarGitHost()
+        host.pollingEnabled = true
+        let (workspaceId, panelId) = host.addWorkspace(panelDirectory: nil)
+        host.workspaces[0].state.panels[panelId]?.branch = SidebarPanelGitBranch(branch: "feature/x", isDirty: false)
+        let clock = ManualGitPollClock()
+        let service = makeService(host: host, clock: clock)
+
+        service.scheduleWorkspacePullRequestRefresh(
+            workspaceId: workspaceId,
+            panelId: panelId,
+            reason: "localGitProbe"
+        )
+
+        #expect(service.workspacePullRequestTrackedPanelIds(workspaceId: workspaceId) == [panelId])
     }
 
     /// Explicit PR commands activate polling for that panel even before a badge
