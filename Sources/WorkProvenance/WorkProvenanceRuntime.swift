@@ -53,7 +53,8 @@ final class WorkProvenanceRuntime {
 
     /// Creates the standard runtime backed by the per-user bmux state directory.
     static func live(
-        homeDirectory: URL = WorkProvenanceStorageLocation.defaultHomeDirectory()
+        homeDirectory: URL = WorkProvenanceStorageLocation.defaultHomeDirectory(),
+        linearAuthorizationProvider: (any WorkProvenanceLinearAuthorizationProviding)? = nil
     ) -> WorkProvenanceRuntime {
         let location = WorkProvenanceStorageLocation(homeDirectory: homeDirectory)
         do {
@@ -63,7 +64,10 @@ final class WorkProvenanceRuntime {
             return WorkProvenanceRuntime(
                 observationService: WorkProvenanceObservationService(
                     client: client,
-                    gitInspector: WorkProvenanceGitInspector()
+                    gitInspector: WorkProvenanceGitInspector(),
+                    ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
+                        authorizationProvider: linearAuthorizationProvider
+                    )
                 ),
                 workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore(client: client),
                 workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription(

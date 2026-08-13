@@ -36,6 +36,9 @@ struct SettingsSearchIndexTests {
             secretStore: SecretFileStore(
                 baseDirectory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
             ),
+            keychainStore: KeychainSecretStore(
+                service: "SettingsSearchIndexTests.\(UUID().uuidString)"
+            ),
             errorLog: SettingsErrorLog(),
             searchIndex: searchIndex
         )

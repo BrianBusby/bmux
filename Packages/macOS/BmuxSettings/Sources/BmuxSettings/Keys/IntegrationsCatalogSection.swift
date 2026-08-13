@@ -71,5 +71,21 @@ public struct IntegrationsCatalogSection: SettingCatalogSection {
         userDefaultsKey: "suppressSubagentNotifications"
     )
 
+    /// Linear API key stored in Keychain for workspace ticket-title lookups.
+    public let linearAPIKey = KeychainSecretKey(
+        id: "integrations.linear.apiKey",
+        account: "linear-api-key"
+    )
+
+    /// Optional headless fallback Authorization header for Linear GraphQL.
+    ///
+    /// Prefer ``linearAPIKey`` for interactive use so credentials stay in
+    /// Keychain. This JSON-backed key exists for managed or non-GUI setups that
+    /// already provision `bmux.json`.
+    public let linearAuthorizationHeader = JSONKey<String>(
+        id: "integrations.linear.authorizationHeader",
+        defaultValue: ""
+    )
+
     public init() {}
 }

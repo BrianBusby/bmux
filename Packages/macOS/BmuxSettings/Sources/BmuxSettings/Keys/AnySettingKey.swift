@@ -1,6 +1,7 @@
 import Foundation
 
-/// Type-erased view onto a ``DefaultsKey``, ``JSONKey``, or ``SecretFileKey``.
+/// Type-erased view onto a ``DefaultsKey``, ``JSONKey``, ``SecretFileKey``, or
+/// ``KeychainSecretKey``.
 ///
 /// Used to enumerate every catalog entry uniformly — for example when running
 /// legacy-key migrations at app startup, building schema docs, or driving the
@@ -32,6 +33,12 @@ public struct AnySettingKey: Sendable {
         /// - Parameter fileName: The secret's file name under the secret
         ///   store's base directory.
         case secretFile(fileName: String)
+
+        /// The key persists in the macOS Keychain through
+        /// ``KeychainSecretStore``.
+        ///
+        /// - Parameter account: The Keychain generic-password account name.
+        case keychainSecret(account: String)
     }
 
     /// The dotted identifier from the underlying key.
@@ -56,6 +63,9 @@ public struct AnySettingKey: Sendable {
     /// surface them separately or treat them as best-effort.
     public let resetInJSON: @Sendable (JSONConfigStore) async -> Void
 
+    /// Removes this key from the Keychain store, if it is a Keychain-backed key.
+    public let resetInKeychain: @Sendable (KeychainSecretStore) async -> Void
+
     /// The UserDefaults fallback value, type-erased for batch reset bookkeeping.
     public let userDefaultsDefaultValue: (any Sendable)?
 
@@ -71,6 +81,7 @@ public struct AnySettingKey: Sendable {
             AnySettingKey.migrateLegacyDefaultsKey(key, defaults: defaults)
         }
         self.resetInJSON = { _ in }
+        self.resetInKeychain = { _ in }
         self.userDefaultsDefaultValue = key.defaultValue
     }
 
@@ -82,6 +93,7 @@ public struct AnySettingKey: Sendable {
         self.resetInJSON = { store in
             try? await store.reset(key)
         }
+        self.resetInKeychain = { _ in }
         self.userDefaultsDefaultValue = nil
     }
 
@@ -93,6 +105,20 @@ public struct AnySettingKey: Sendable {
         self.kind = .secretFile(fileName: key.fileName)
         self.migrateUserDefaultsLegacyKeys = { _ in }
         self.resetInJSON = { _ in }
+        self.resetInKeychain = { _ in }
+        self.userDefaultsDefaultValue = nil
+    }
+
+    /// Wraps a Keychain-backed key. Keychain secrets are reset through
+    /// ``KeychainSecretStore`` rather than ``JSONConfigStore``.
+    public init(_ key: KeychainSecretKey) {
+        self.id = key.id
+        self.kind = .keychainSecret(account: key.account)
+        self.migrateUserDefaultsLegacyKeys = { _ in }
+        self.resetInJSON = { _ in }
+        self.resetInKeychain = { store in
+            try? await store.reset(key)
+        }
         self.userDefaultsDefaultValue = nil
     }
 
@@ -146,5 +172,9 @@ extension JSONKey: AnySettingKeyConvertible {
 }
 
 extension SecretFileKey: AnySettingKeyConvertible {
+    var asAnySettingKey: AnySettingKey { AnySettingKey(self) }
+}
+
+extension KeychainSecretKey: AnySettingKeyConvertible {
     var asAnySettingKey: AnySettingKey { AnySettingKey(self) }
 }

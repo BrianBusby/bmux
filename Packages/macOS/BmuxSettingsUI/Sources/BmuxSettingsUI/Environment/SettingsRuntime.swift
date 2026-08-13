@@ -22,6 +22,8 @@ public struct SettingsRuntime: @unchecked Sendable {
     public let jsonStore: JSONConfigStore
     /// Secret-file-backed settings store.
     public let secretStore: SecretFileStore
+    /// Keychain-backed settings secret store.
+    public let keychainStore: KeychainSecretStore
     /// Rolling settings error log displayed as alerts.
     public let errorLog: SettingsErrorLog
     /// Optional host-owned account flow actions.
@@ -36,6 +38,7 @@ public struct SettingsRuntime: @unchecked Sendable {
     ///   - userDefaultsStore: UserDefaults-backed settings store.
     ///   - jsonStore: bmux.json-backed settings store.
     ///   - secretStore: Secret-file-backed settings store.
+    ///   - keychainStore: Keychain-backed settings secret store.
     ///   - errorLog: Rolling settings error log displayed as alerts.
     ///   - accountFlow: Optional host-owned account flow actions.
     ///   - hostActions: Host callbacks for actions the package cannot perform itself.
@@ -47,6 +50,7 @@ public struct SettingsRuntime: @unchecked Sendable {
         userDefaultsStore: UserDefaultsSettingsStore,
         jsonStore: JSONConfigStore,
         secretStore: SecretFileStore,
+        keychainStore: KeychainSecretStore,
         errorLog: SettingsErrorLog,
         accountFlow: AccountFlow? = nil,
         hostActions: SettingsHostActions = NoopSettingsHostActions(),
@@ -57,6 +61,7 @@ public struct SettingsRuntime: @unchecked Sendable {
         self.userDefaultsStore = userDefaultsStore
         self.jsonStore = jsonStore
         self.secretStore = secretStore
+        self.keychainStore = keychainStore
         self.errorLog = errorLog
         self.accountFlow = accountFlow
         self.hostActions = hostActions

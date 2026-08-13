@@ -1274,6 +1274,30 @@
         }
       }
     },
+    "integrations": {
+      "title": "integrations",
+      "description": "External provider credentials and integration settings from Settings > Integrations.",
+      "descriptionKey": "schemaDescriptions.integrations.description",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "linear": {
+          "title": "linear",
+          "description": "Linear integration settings.",
+          "descriptionKey": "schemaDescriptions.integrations.linear.description",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "authorizationHeader": {
+              "type": "string",
+              "default": "",
+              "description": "Optional Linear GraphQL Authorization header for headless or managed setups. Prefer the Settings UI Keychain field for interactive use.",
+              "descriptionKey": "schemaDescriptions.integrations.linear.authorizationHeader"
+            }
+          }
+        }
+      }
+    },
     "browser": {
       "title": "browser",
       "description": "Embedded browser settings from Settings > Browser.",

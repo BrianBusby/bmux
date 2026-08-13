@@ -84,6 +84,7 @@ public struct SettingsWindowRoot: View {
     private var defaultsStore: UserDefaultsSettingsStore { runtime.userDefaultsStore }
     private var jsonStore: JSONConfigStore { runtime.jsonStore }
     private var secretStore: SecretFileStore { runtime.secretStore }
+    private var keychainStore: KeychainSecretStore { runtime.keychainStore }
     private var catalog: SettingCatalog { runtime.catalog }
     private var hostActions: SettingsHostActions { runtime.hostActions }
     private var accountFlow: AccountFlow? { runtime.accountFlow }
@@ -427,7 +428,7 @@ public struct SettingsWindowRoot: View {
     private var sectionStack: some View {
         // Order matches the legacy in-app SettingsView scroll order:
         // Account, App, Terminal, TextBox, Mobile, Sidebar, Beta Features,
-        // Automation, Browser (with embedded Import), Global Hotkey,
+        // Integrations, Automation, Browser (with embedded Import), Global Hotkey,
         // Keyboard Shortcuts, Workspace Colors, bmux.json, Reset.
         AccountSection(
             defaultsStore: defaultsStore,
@@ -473,6 +474,13 @@ public struct SettingsWindowRoot: View {
 
         BetaFeaturesSection(defaultsStore: defaultsStore, catalog: catalog)
             .id(anchorID(for: .betaFeatures))
+
+        IntegrationsSection(
+            keychainStore: keychainStore,
+            catalog: catalog,
+            errorLog: runtime.errorLog
+        )
+        .id(anchorID(for: .integrations))
 
         AutomationSection(
             defaultsStore: defaultsStore,
@@ -521,6 +529,7 @@ public struct SettingsWindowRoot: View {
         ResetSection(
             defaultsStore: defaultsStore,
             jsonStore: jsonStore,
+            keychainStore: keychainStore,
             catalog: catalog,
             hostActions: hostActions
         )

@@ -5,7 +5,7 @@ import ProvenanceEngineContracts
 actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving {
     typealias DataProvider = @Sendable (URLRequest) async throws -> (Data, Int)
 
-    private let authorizationHeader: String?
+    private let authorizationProvider: any WorkProvenanceLinearAuthorizationProviding
     private let endpointURL: URL
     private let dataProvider: DataProvider
     private var cache: [String: ProvenanceWorkspaceDisplayTicketLinkRecord] = [:]
@@ -14,14 +14,22 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
         authorizationHeader: String? = nil,
         usesEnvironmentAuthorization: Bool = true,
         endpointURL: URL = URL(string: "https://api.linear.app/graphql")!,
+        authorizationProvider: (any WorkProvenanceLinearAuthorizationProviding)? = nil,
         dataProvider: @escaping DataProvider = { request in
             let (data, response) = try await URLSession.shared.data(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
             return (data, statusCode)
         }
     ) {
-        self.authorizationHeader = Self.normalizedNonEmpty(authorizationHeader)
-            ?? (usesEnvironmentAuthorization ? Self.defaultAuthorizationHeader() : nil)
+        if let authorizationHeader = Self.normalizedNonEmpty(authorizationHeader) {
+            self.authorizationProvider = StaticLinearAuthorizationProvider(authorizationHeader)
+        } else if let authorizationProvider {
+            self.authorizationProvider = authorizationProvider
+        } else if usesEnvironmentAuthorization {
+            self.authorizationProvider = WorkProvenanceEnvironmentLinearAuthorizationProvider()
+        } else {
+            self.authorizationProvider = StaticLinearAuthorizationProvider(nil)
+        }
         self.endpointURL = endpointURL
         self.dataProvider = dataProvider
     }
@@ -29,7 +37,7 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
     func ticketLinks(for ticketIDs: [String]) async -> [ProvenanceWorkspaceDisplayTicketLinkRecord] {
         var links: [ProvenanceWorkspaceDisplayTicketLinkRecord] = []
         for ticketID in Self.normalizedTicketIDs(ticketIDs) {
-            if let cached = cache[ticketID] {
+            if let cached = cache[ticketID], cached.title != nil {
                 links.append(cached)
                 continue
             }
@@ -41,14 +49,18 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
                 title: title,
                 url: Self.linearURL(for: ticketID)
             )
-            cache[ticketID] = link
+            if title != nil {
+                cache[ticketID] = link
+            } else {
+                cache.removeValue(forKey: ticketID)
+            }
             links.append(link)
         }
         return links
     }
 
     private func title(for ticketID: String) async -> String? {
-        guard let authorizationHeader else { return nil }
+        guard let authorizationHeader = await authorizationProvider.authorizationHeader() else { return nil }
         var request = URLRequest(url: endpointURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -74,27 +86,6 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
         } catch {
             return nil
         }
-    }
-
-    private static func defaultAuthorizationHeader(
-        environment: [String: String] = ProcessInfo.processInfo.environment
-    ) -> String? {
-        for key in ["BMUX_LINEAR_AUTHORIZATION", "LINEAR_AUTHORIZATION"] {
-            if let value = normalizedNonEmpty(environment[key]) {
-                return value
-            }
-        }
-        for key in ["BMUX_LINEAR_API_KEY", "LINEAR_API_KEY", "LINEAR_API_TOKEN"] {
-            if let value = normalizedNonEmpty(environment[key]) {
-                return value
-            }
-        }
-        for key in ["BMUX_LINEAR_ACCESS_TOKEN", "LINEAR_ACCESS_TOKEN"] {
-            if let value = normalizedNonEmpty(environment[key]) {
-                return "Bearer \(value)"
-            }
-        }
-        return nil
     }
 
     private static func normalizedTicketIDs(_ ticketIDs: [String]) -> [String] {
@@ -145,5 +136,17 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
 
     private struct LinearGraphQLError: Decodable {
         let message: String?
+    }
+
+    private struct StaticLinearAuthorizationProvider: WorkProvenanceLinearAuthorizationProviding {
+        let header: String?
+
+        init(_ header: String?) {
+            self.header = header
+        }
+
+        func authorizationHeader() async -> String? {
+            header
+        }
     }
 }

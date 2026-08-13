@@ -26,6 +26,14 @@ extension Array where Element == CuratedSettingEntry {
             .init(section: .automation, id: "subagent-notifications", title: "Suppress Subagent Notifications", synonyms: "automation.suppressSubagentNotifications subagent nested child agent codex claude hooks notifications"),
             .init(section: .automation, id: "cursor", title: "Cursor Integration", synonyms: "automation.cursorIntegration cursor ide agent hooks notifications"),
             .init(section: .automation, id: "gemini", title: "Gemini CLI Integration", synonyms: "automation.geminiIntegration gemini cli google agent hooks notifications"),
+            .init(
+                section: .integrations,
+                id: "linear-api-key",
+                title: String(localized: "settings.integrations.linear.apiKey", defaultValue: "Linear API Key"),
+                detailText: String(localized: "settings.integrations.linear.apiKey.searchDetail", defaultValue: "Used to fetch Linear ticket titles for workspace provenance."),
+                paths: ["integrations.linear.authorizationHeader"],
+                synonyms: "integrations.linear.apiKey linear api key token credential authorization issue ticket title provenance workspace sidebar"
+            ),
 
             // App
             .init(section: .app, id: "language", title: "Language", synonyms: "app.language locale l10n localization translation japanese english ja en nihongo restart"),
