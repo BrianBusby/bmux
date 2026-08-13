@@ -14909,12 +14909,13 @@ struct TabItemView: View, Equatable {
             return verticalBranchDirectoryLines(orderedPanelIds: orderedPanelIds)
         }()
         let branchLinesContainBranch = sidebarShowGitBranch && branchDirectoryLines.contains { $0.branch != nil }
-        let pullRequestRows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay] = {
-            if let provenancePullRequestDisplay {
-                return [provenancePullRequestDisplay]
-            }
-            return []
-        }()
+        let pullRequestRows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: tab.sidebarPullRequestsInDisplayOrder(orderedPanelIds: orderedPanelIds),
+            provenancePullRequest: provenanceDisplaySnapshot?.pullRequest,
+            latestSubmittedMessage: tab.latestSubmittedMessage,
+            latestConversationMessage: tab.latestConversationMessage,
+            label: String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
+        )
         let displayedPullRequestNumbers = Set(pullRequestRows.map(\.number))
         let ticketRows = provenanceTicketDisplays
         let provenanceProgress = provenanceDisplaySnapshot?.currentWorkSummary.map {
@@ -15147,54 +15148,6 @@ struct TabItemView: View, Equatable {
             indices[bumpIdx] += 1
         }
         return result
-    }
-
-    private var provenancePullRequestDisplay: SidebarWorkspaceSnapshotBuilder.PullRequestDisplay? {
-        guard let pullRequest = provenanceDisplaySnapshot?.pullRequest else { return nil }
-        let label = String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
-        let url = pullRequest.url ?? provenancePullRequestURL(number: pullRequest.number)
-        return SidebarWorkspaceSnapshotBuilder.PullRequestDisplay(
-            id: "\(label.lowercased())#\(pullRequest.number)|\(url?.absoluteString ?? "")",
-            number: pullRequest.number,
-            label: label,
-            url: url,
-            status: pullRequest.status.flatMap(SidebarPullRequestStatus.init(rawValue:)) ?? .open,
-            ownerLogin: pullRequest.ownerLogin,
-            ownerURL: pullRequestOwnerURL(
-                login: pullRequest.ownerLogin,
-                url: pullRequest.ownerURL
-            ),
-            isStale: pullRequest.isStale,
-            isFromProvenance: true
-        )
-    }
-
-    private func provenancePullRequestURL(number: Int) -> URL? {
-        let livePullRequest = matchingLivePullRequest(number: number)
-        if let url = livePullRequest?.url {
-            return url
-        }
-
-        for message in [tab.latestSubmittedMessage, tab.latestConversationMessage] {
-            guard let mention = Workspace.submittedPromptPullRequestMention(from: message, matchingNumber: number) else {
-                continue
-            }
-            return mention.url
-        }
-        return nil
-    }
-
-    private func matchingLivePullRequest(number: Int) -> SidebarPullRequestState? {
-        tab.sidebarPullRequestsInDisplayOrder().first { $0.number == number }
-    }
-
-    private func pullRequestOwnerURL(login: String?, url: URL?) -> URL? {
-        if let url { return url }
-        guard let login = login?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !login.isEmpty else {
-            return nil
-        }
-        return URL(string: "https://github.com/\(login)")
     }
 
     private var provenanceTicketDisplays: [SidebarWorkspaceSnapshotBuilder.TicketDisplay] {

@@ -71,4 +71,60 @@ struct SidebarWorkspaceSnapshotBuilder {
         let mediaActivity: BrowserMediaActivity
         let hasActiveAIWork: Bool
     }
+
+    static func pullRequestDisplays(
+        livePullRequests: [SidebarPullRequestState],
+        provenancePullRequest: WorkspaceDisplayCurrentStatePullRequestSnapshot?,
+        latestSubmittedMessage: String?,
+        latestConversationMessage: String?,
+        label: String
+    ) -> [PullRequestDisplay] {
+        guard let pullRequest = provenancePullRequest else { return [] }
+        let url = pullRequest.url ?? provenancePullRequestURL(
+            number: pullRequest.number,
+            livePullRequests: livePullRequests,
+            messages: [latestSubmittedMessage, latestConversationMessage]
+        )
+        return [PullRequestDisplay(
+            id: "\(label.lowercased())#\(pullRequest.number)|\(url?.absoluteString ?? "")",
+            number: pullRequest.number,
+            label: label,
+            url: url,
+            status: pullRequest.status.flatMap(SidebarPullRequestStatus.init(rawValue:)) ?? .open,
+            ownerLogin: pullRequest.ownerLogin,
+            ownerURL: pullRequestOwnerURL(
+                login: pullRequest.ownerLogin,
+                url: pullRequest.ownerURL
+            ),
+            isStale: pullRequest.isStale,
+            isFromProvenance: true
+        )]
+    }
+
+    private static func provenancePullRequestURL(
+        number: Int,
+        livePullRequests: [SidebarPullRequestState],
+        messages: [String?]
+    ) -> URL? {
+        if let livePullRequest = livePullRequests.first(where: { $0.number == number }) {
+            return livePullRequest.url
+        }
+
+        for message in messages {
+            guard let mention = Workspace.submittedPromptPullRequestMention(from: message, matchingNumber: number) else {
+                continue
+            }
+            return mention.url
+        }
+        return nil
+    }
+
+    private static func pullRequestOwnerURL(login: String?, url: URL?) -> URL? {
+        if let url { return url }
+        guard let login = login?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !login.isEmpty else {
+            return nil
+        }
+        return URL(string: "https://github.com/\(login)")
+    }
 }
