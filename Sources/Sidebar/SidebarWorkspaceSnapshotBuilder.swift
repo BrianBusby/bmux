@@ -170,7 +170,7 @@ struct SidebarWorkspaceSnapshotBuilder {
 
     private static func pullRequestNumbers(message: String?) -> [Int] {
         guard let message else { return [] }
-        let pattern = #"(?i)(?:https?://github\.com/[^/\s"'<>]+/[^/\s"'<>]+/pull/|(?:\bPR\b|\bpull request\b)\s*#?\s*)([0-9]+)"#
+        let pattern = #"(?i)(?:https?://github\.com/[^/\s"'<>]+/[^/\s"'<>]+/pull/|(?:\bPR\b|\bpull request\b|\bpull\b)\s*#?\s*)([0-9]+)"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
         let nsMessage = message as NSString
         let range = NSRange(location: 0, length: nsMessage.length)

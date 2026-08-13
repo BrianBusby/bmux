@@ -126,11 +126,11 @@ extension TabManager: SidebarGitHosting {
 
     func updatePanelGitBranch(workspaceId: UUID, panelId: UUID, branch: String, isDirty: Bool) {
         tabs.first(where: { $0.id == workspaceId })?
-            .updatePanelGitBranch(panelId: panelId, branch: branch, isDirty: isDirty)
+            .updatePanelGitBranch(panelId: panelId, branch: branch, isDirty: isDirty, source: .gitBranchReport)
     }
 
     func clearPanelGitBranch(workspaceId: UUID, panelId: UUID) {
-        tabs.first(where: { $0.id == workspaceId })?.clearPanelGitBranch(panelId: panelId)
+        tabs.first(where: { $0.id == workspaceId })?.clearPanelGitBranch(panelId: panelId, source: .gitBranchReport)
     }
 
     func updatePanelPullRequest(workspaceId: UUID, panelId: UUID, badge: SidebarPullRequestBadge) {
@@ -145,23 +145,24 @@ extension TabManager: SidebarGitHosting {
             // Raw values are shared between the app and package status enums.
             status: SidebarPullRequestStatus(rawValue: badge.status.rawValue) ?? .open,
             branch: badge.branch,
-            isStale: badge.isStale
+            isStale: badge.isStale,
+            source: .pullRequestLookup
         )
     }
 
     func clearPanelPullRequest(workspaceId: UUID, panelId: UUID) {
-        tabs.first(where: { $0.id == workspaceId })?.clearPanelPullRequest(panelId: panelId)
+        tabs.first(where: { $0.id == workspaceId })?.clearPanelPullRequest(panelId: panelId, source: .pullRequestLookup)
     }
 
     func clearAllSidebarGitMetadata() {
         for workspace in tabs {
-            workspace.clearSidebarGitMetadata()
+            workspace.clearSidebarGitMetadata(source: .gitBranchReport)
         }
     }
 
     func clearAllSidebarPullRequestMetadata() {
         for workspace in tabs {
-            workspace.clearSidebarPullRequestMetadata()
+            workspace.clearSidebarPullRequestMetadata(source: .pullRequestLookup)
         }
     }
 
