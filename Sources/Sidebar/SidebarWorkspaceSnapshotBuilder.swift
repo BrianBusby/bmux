@@ -82,7 +82,15 @@ struct SidebarWorkspaceSnapshotBuilder {
         label: String
     ) -> [PullRequestDisplay] {
         if !livePullRequests.isEmpty {
-            return livePullRequests.map { livePullRequestDisplay($0) }
+            return livePullRequests.map {
+                livePullRequestDisplay(
+                    $0,
+                    provenancePullRequest: matchingProvenancePullRequest(
+                        for: $0,
+                        provenancePullRequest: provenancePullRequest
+                    )
+                )
+            }
         }
 
         let messages = [latestSubmittedMessage, latestConversationMessage]
@@ -125,18 +133,40 @@ struct SidebarWorkspaceSnapshotBuilder {
         )]
     }
 
-    private static func livePullRequestDisplay(_ pullRequest: SidebarPullRequestState) -> PullRequestDisplay {
-        PullRequestDisplay(
+    private static func livePullRequestDisplay(
+        _ pullRequest: SidebarPullRequestState,
+        provenancePullRequest: WorkspaceDisplayCurrentStatePullRequestSnapshot? = nil
+    ) -> PullRequestDisplay {
+        let ownerLogin = pullRequest.ownerLogin ?? provenancePullRequest?.ownerLogin
+        let ownerURL = pullRequestOwnerURL(
+            login: ownerLogin,
+            url: pullRequest.ownerURL ?? provenancePullRequest?.ownerURL
+        )
+        return PullRequestDisplay(
             id: "\(pullRequest.label.lowercased())#\(pullRequest.number)|\(pullRequest.url.absoluteString)",
             number: pullRequest.number,
             label: pullRequest.label,
             url: pullRequest.url,
             status: pullRequest.status,
-            ownerLogin: pullRequest.ownerLogin,
-            ownerURL: pullRequest.ownerURL,
+            ownerLogin: ownerLogin,
+            ownerURL: ownerURL,
             isStale: pullRequest.isStale,
             isFromProvenance: false
         )
+    }
+
+    private static func matchingProvenancePullRequest(
+        for pullRequest: SidebarPullRequestState,
+        provenancePullRequest: WorkspaceDisplayCurrentStatePullRequestSnapshot?
+    ) -> WorkspaceDisplayCurrentStatePullRequestSnapshot? {
+        guard let provenancePullRequest,
+              provenancePullRequest.number == pullRequest.number else {
+            return nil
+        }
+        guard let provenanceURL = provenancePullRequest.url else {
+            return provenancePullRequest
+        }
+        return provenanceURL == pullRequest.url ? provenancePullRequest : nil
     }
 
     private static func promptPullRequestDisplay(

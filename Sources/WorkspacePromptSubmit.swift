@@ -1,4 +1,5 @@
 import BMUXAgentLaunch
+import BmuxAgentChat
 import BmuxSidebar
 import Bonsplit
 import Foundation
@@ -82,6 +83,23 @@ extension WorkstreamEvent {
             ?? Self.messageText(fromJSON: toolInputJSON, keys: Self.assistantMessageKeys)
     }
 
+    func assistantFinalMessageForWorkspaceSidebar() -> String? {
+        let directMessage = assistantFinalMessage
+        if Workspace.workstreamContainsPullRequestMention(directMessage) {
+            return directMessage
+        }
+        guard let transcriptMessage = Workspace.latestWorkstreamAssistantTranscriptMessage(
+            transcriptPath: transcriptPath,
+            source: source
+        ) else {
+            return directMessage
+        }
+        if directMessage == nil || Workspace.workstreamContainsPullRequestMention(transcriptMessage) {
+            return transcriptMessage
+        }
+        return directMessage
+    }
+
     private static let promptMessageKeys = ["prompt", "text", "message", "body"]
     private static let assistantMessageKeys = [
         "last_assistant_message",
@@ -136,6 +154,7 @@ extension WorkstreamEvent {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return normalized.isEmpty ? nil : normalized
     }
+
 }
 
 extension TabManager {
@@ -392,5 +411,89 @@ extension Workspace {
             return branch
         }
         return nil
+    }
+
+    nonisolated private static var transcriptFallbackMaxBytes: Int {
+        4 * 1024 * 1024
+    }
+
+    nonisolated private static var transcriptFallbackMaxLines: Int {
+        600
+    }
+
+    nonisolated static func workstreamContainsPullRequestMention(_ message: String?) -> Bool {
+        submittedPromptPullRequestNumber(from: message) != nil
+    }
+
+    nonisolated static func latestWorkstreamAssistantTranscriptMessage(
+        transcriptPath: String?,
+        source: String
+    ) -> String? {
+        guard let transcriptPath = transcriptPath?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !transcriptPath.isEmpty else {
+            return nil
+        }
+        guard let tail = transcriptTailLines(path: transcriptPath) else {
+            return nil
+        }
+        let agentKind = ChatAgentKind(source: source)
+        let result: ChatTranscriptParseResult
+        switch agentKind {
+        case .codex:
+            result = CodexTranscriptParser().parse(lines: tail, startingSeq: 0)
+        case .claude, .other:
+            result = ClaudeTranscriptParser().parse(lines: tail, startingSeq: 0)
+        }
+        return latestAgentProse(in: result.messages)
+    }
+
+    nonisolated private static func transcriptTailLines(path: String) -> [String]? {
+        guard let handle = FileHandle(forReadingAtPath: path) else {
+            return nil
+        }
+        defer { try? handle.close() }
+        guard let fileSize = try? handle.seekToEnd(), fileSize > 0 else {
+            return nil
+        }
+        let readLength = min(UInt64(transcriptFallbackMaxBytes), fileSize)
+        let startOffset = fileSize - readLength
+        do {
+            try handle.seek(toOffset: startOffset)
+        } catch {
+            return nil
+        }
+        guard var data = try? handle.readToEnd(), !data.isEmpty else {
+            return nil
+        }
+        if startOffset > 0,
+           let firstNewlineIndex = data.firstIndex(of: 0x0A) {
+            data.removeSubrange(data.startIndex...firstNewlineIndex)
+        }
+        let text = String(decoding: data, as: UTF8.self)
+        let lines = text
+            .split(separator: "\n", omittingEmptySubsequences: true)
+            .map(String.init)
+        guard !lines.isEmpty else {
+            return nil
+        }
+        return Array(lines.suffix(transcriptFallbackMaxLines))
+    }
+
+    nonisolated private static func latestAgentProse(in messages: [ChatMessage]) -> String? {
+        for message in messages.reversed() where message.role == .agent {
+            guard case .prose(let prose) = message.kind else {
+                continue
+            }
+            return normalizedTranscriptMessageText(prose.text)
+        }
+        return nil
+    }
+
+    nonisolated private static func normalizedTranscriptMessageText(_ value: String) -> String? {
+        let normalized = value
+            .split(whereSeparator: { $0.isWhitespace })
+            .joined(separator: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return normalized.isEmpty ? nil : normalized
     }
 }

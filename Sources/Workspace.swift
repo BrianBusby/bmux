@@ -5358,7 +5358,16 @@ final class Workspace: Identifiable, ObservableObject {
             if usesRemoteDirectoryProvenance, effectivePanelDirectory(panelId: panelId) == nil {
                 return false
             }
+            if sidebarMetadata.workContext(panelId: panelId).pullRequest?.source == .promptMention {
+                return true
+            }
+            let scopedDirectory = currentDirectory.lowercased()
+            let matchesScopedWorktree = scopedDirectory.contains("pr-\(state.number)")
+                || scopedDirectory.contains("pull-\(state.number)")
             guard let pullRequestBranch = state.branch?.normalizedSidebarBranchName else {
+                return true
+            }
+            if matchesScopedWorktree {
                 return true
             }
             return reportedPanelGitBranch(panelId: panelId)?.branch.normalizedSidebarBranchName == pullRequestBranch

@@ -145,6 +145,26 @@ import Testing
         #expect(rows.first?.isFromProvenance == false)
     }
 
+    @Test func livePullRequestRowsUseMatchingProvenanceOwnerDetails() throws {
+        let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: [try Self.livePullRequest(number: 26171)],
+            provenancePullRequest: try Self.provenancePullRequest(
+                number: 26171,
+                ownerLogin: "BrianBusby",
+                ownerURL: "https://github.com/BrianBusby"
+            ),
+            latestSubmittedMessage: nil,
+            latestConversationMessage: nil,
+            label: "PR"
+        )
+
+        let row = try #require(rows.first)
+        #expect(row.number == 26171)
+        #expect(row.ownerLogin == "BrianBusby")
+        #expect(row.ownerURL == URL(string: "https://github.com/BrianBusby"))
+        #expect(row.isFromProvenance == false)
+    }
+
     @Test func latestPromptPullRequestURLOverridesStaleProvenancePullRequestWhenLiveStateIsMissing() throws {
         let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
             livePullRequests: [],
@@ -330,7 +350,9 @@ import Testing
 
     private static func provenancePullRequest(
         number: Int,
-        status: String = "open"
+        status: String = "open",
+        ownerLogin: String? = nil,
+        ownerURL: String? = nil
     ) throws -> WorkspaceDisplayCurrentStatePullRequestSnapshot {
         let updatedAt = Date(timeIntervalSince1970: 900)
         let record = ProvenanceWorkspaceDisplayRecord(
@@ -344,8 +366,8 @@ import Testing
             branch: nil,
             pullRequestNumber: number,
             pullRequestURL: "https://github.com/CompanyCam/Company-Cam-API/pull/\(number)",
-            pullRequestOwnerLogin: nil,
-            pullRequestOwnerURL: nil,
+            pullRequestOwnerLogin: ownerLogin,
+            pullRequestOwnerURL: ownerURL,
             pullRequestStatus: status,
             pullRequestBranch: nil,
             pullRequestIsStale: false,

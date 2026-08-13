@@ -667,4 +667,72 @@ struct WorkspacePromptSubmitTests {
         defaults.set(true, forKey: IMessageModeSettings.key)
         #expect(IMessageModeSettings.isEnabled(defaults: defaults))
     }
+
+    @Test func assistantFinalMessageUsesCodexTranscriptPullRequestMentionWhenHookMessageOmitsIt() throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        let panelId = try #require(workspace.focusedPanelId)
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-codex-pr-transcript-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+        let transcriptURL = tempDir.appendingPathComponent("rollout-session.jsonl")
+        let transcript = try Self.codexTranscriptMessageLine(
+            role: "assistant",
+            text: "I reviewed https://github.com/CompanyCam/companycam-mobile/pull/10379 and found the failing tab update path."
+        ) + "\n"
+        try transcript.write(to: transcriptURL, atomically: true, encoding: .utf8)
+        let event = WorkstreamEvent(
+            sessionId: "codex-session",
+            hookEventName: .stop,
+            source: "codex",
+            workspaceId: workspace.id.uuidString,
+            surfaceId: panelId.uuidString,
+            transcriptPath: transcriptURL.path,
+            context: WorkstreamContext(assistantPreamble: "I reviewed the PR and found the issue.")
+        )
+
+        let outcome = try #require(
+            manager.handleAssistantFinalMessage(
+                workspaceId: workspace.id,
+                message: event.assistantFinalMessageForWorkspaceSidebar(),
+                surfaceId: panelId,
+                iMessageModeEnabled: false
+            )
+        )
+
+        #expect(!outcome.messageRecorded)
+        #expect(!outcome.reordered)
+        let pullRequest = try #require(workspace.panelPullRequests[panelId])
+        #expect(pullRequest.number == 10379)
+        #expect(pullRequest.url.absoluteString == "https://github.com/CompanyCam/companycam-mobile/pull/10379")
+        #expect(workspace.sidebarPullRequestsInDisplayOrder().map(\.number) == [10379])
+    }
+
+    private static func codexTranscriptMessageLine(role: String, text: String) throws -> String {
+        let blockType = role == "assistant" ? "output_text" : "input_text"
+        return try codexTranscriptLine(
+            type: "response_item",
+            payload: [
+                "type": "message",
+                "role": role,
+                "content": [
+                    ["type": blockType, "text": text],
+                ],
+            ]
+        )
+    }
+
+    private static func codexTranscriptLine(
+        type: String,
+        payload: [String: Any],
+        timestamp: String = "2026-06-11T21:38:05.381Z"
+    ) throws -> String {
+        let data = try JSONSerialization.data(withJSONObject: [
+            "timestamp": timestamp,
+            "type": type,
+            "payload": payload,
+        ])
+        return String(decoding: data, as: UTF8.self)
+    }
 }

@@ -137,15 +137,20 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
 }
 
 extension WorkProvenanceWorkspaceSnapshot.PullRequest {
-    func replacingOwner(login: String?, url: String?) -> Self {
+    func replacingResolvedMetadata(
+        login: String?,
+        url: String?,
+        title: String?,
+        branch: String?
+    ) -> Self {
         Self(
             number: number,
-            title: title,
+            title: title ?? self.title,
             url: self.url,
             ownerLogin: login,
             ownerURL: url,
             status: status,
-            branch: branch,
+            branch: branch ?? self.branch,
             isStale: isStale
         )
     }

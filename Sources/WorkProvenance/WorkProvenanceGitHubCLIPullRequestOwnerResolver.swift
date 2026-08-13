@@ -25,7 +25,7 @@ struct WorkProvenanceGitHubCLIPullRequestOwnerResolver: WorkProvenancePullReques
             "api",
             "repos/\(pullRequest.owner)/\(pullRequest.repository)/pulls/\(pullRequest.number)",
             "--jq",
-            "[.user.login, .user.html_url] | @tsv",
+            "[.user.login, .user.html_url, .title, .head.ref] | @tsv",
         ]
         process.environment = environment.merging([
             "GH_NO_UPDATE_NOTIFIER": "1",
@@ -68,7 +68,14 @@ struct WorkProvenanceGitHubCLIPullRequestOwnerResolver: WorkProvenancePullReques
             return nil
         }
         let url = normalizedNonEmpty(fields.dropFirst().first.map(String.init))
-        return WorkProvenancePullRequestOwner(login: login, url: url)
+        let title = fields.count > 2 ? normalizedNonEmpty(String(fields[2])) : nil
+        let branch = fields.count > 3 ? normalizedNonEmpty(String(fields[3])) : nil
+        return WorkProvenancePullRequestOwner(
+            login: login,
+            url: url,
+            title: title,
+            branch: branch
+        )
     }
 
     private static func defaultExecutableURL(

@@ -273,6 +273,7 @@ struct WorkProvenanceObserverTests {
         let service = WorkProvenanceObservationService(
             client: client,
             gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            pullRequestOwnerResolver: FakePullRequestOwnerResolver(ownersByURL: [:]),
             dateProvider: { Date(timeIntervalSince1970: 550) }
         )
         let stableWorkspaceID = UUID(uuidString: "99999999-9999-9999-9999-999999999999")!
@@ -303,6 +304,77 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.pullRequestURL == "https://github.com/CompanyCam/Company-Cam-API/pull/26117")
         #expect(display.display?.pullRequestBranch == nil)
         #expect(display.display?.ticketIDs == [] && display.display?.ticketLinks == [])
+    }
+
+    @Test
+    func promptLinkedPullRequestResolvedDetailsPopulateOwnerAndTicketLinks() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let repositoryRoot = "/tmp/bmux-prompt-linked-pr-details-repo"
+        let snapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "\(repositoryRoot)/.git",
+            remoteSlug: "CompanyCam/Company-Cam-API",
+            branch: "codeowners-report-approved-status",
+            headCommit: "6666666666666666666666666666666666666666",
+            isDirty: false,
+            statusEntries: []
+        )
+        let linearServer = FakeLinearGraphQLServer()
+        let service = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            pullRequestOwnerResolver: FakePullRequestOwnerResolver(ownersByURL: [
+                "https://github.com/CompanyCam/Company-Cam-API/pull/26171": WorkProvenancePullRequestOwner(
+                    login: "BrianBusby",
+                    url: "https://github.com/BrianBusby",
+                    title: "INP-2122 Promote/Edit starter template Dash form cleanup",
+                    branch: "inp-2122-edit-starter-template-dash-form-cleanup"
+                )
+            ]),
+            ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
+                authorizationHeader: "linear-api-key",
+                usesEnvironmentAuthorization: false,
+                dataProvider: { request in try await linearServer.response(for: request) }
+            ),
+            dateProvider: { Date(timeIntervalSince1970: 555) }
+        )
+        let stableWorkspaceID = UUID(uuidString: "12121212-3434-5656-7878-909090909090")!
+        let workspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: UUID(uuidString: "abababab-cdcd-efef-1212-343434343434")!,
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Addressing Claude comments",
+            currentDirectory: repositoryRoot,
+            branch: "codeowners-report-approved-status",
+            pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest(
+                number: 26171,
+                url: "https://github.com/CompanyCam/Company-Cam-API/pull/26171",
+                ownerLogin: nil,
+                ownerURL: nil,
+                status: "open",
+                branch: nil,
+                isStale: false
+            )
+        )
+
+        await service.observeWorkspaceSnapshot(workspace)
+
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
+
+        #expect(display.found)
+        #expect(display.display?.pullRequestNumber == 26171)
+        #expect(display.display?.pullRequestURL == "https://github.com/CompanyCam/Company-Cam-API/pull/26171")
+        #expect(display.display?.pullRequestOwnerLogin == "BrianBusby")
+        #expect(display.display?.pullRequestOwnerURL == "https://github.com/BrianBusby")
+        #expect(display.display?.pullRequestBranch == "inp-2122-edit-starter-template-dash-form-cleanup")
+        #expect(display.display?.ticketIDs == ["INP-2122"])
+        #expect(display.display?.ticketLinks == [
+            Self.linearTicketLink(id: "INP-2122")
+        ])
+        #expect(await linearServer.requests == [
+            FakeLinearGraphQLServer.Request(authorization: "linear-api-key", ticketID: "INP-2122")
+        ])
     }
 
     @Test
@@ -443,7 +515,8 @@ struct WorkProvenanceObserverTests {
     func laterTicketLookupFailurePreservesExistingTicketTitleAndOwner() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
-        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let backingClient: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let client = RecordingProvenanceEngineClient(backing: backingClient)
         let repositoryRoot = "/tmp/bmux-ticket-link-lookup-failure-repo"
         let branch = "durable-ticket-link-preserve"
         let linearServer = FakeLinearGraphQLServer()
@@ -717,12 +790,12 @@ struct WorkProvenanceObserverTests {
         }
     }
 
-    private static func linearTicketLink() -> ProvenanceWorkspaceDisplayTicketLinkRecord {
+    private static func linearTicketLink(id: String = "STE-1964") -> ProvenanceWorkspaceDisplayTicketLinkRecord {
         ProvenanceWorkspaceDisplayTicketLinkRecord(
-            id: "STE-1964",
+            id: id,
             system: "linear",
             title: "Canonical domain mutation paths",
-            url: "https://linear.app/company/issue/STE-1964",
+            url: "https://linear.app/company/issue/\(id)",
             ownerName: "Brian Busby"
         )
     }

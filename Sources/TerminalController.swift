@@ -5700,18 +5700,21 @@ class TerminalController {
             }
         case .stop:
             let rawSurfaceId = event.surfaceId
-            let assistantFinalMessage = event.assistantFinalMessage
-            Task { @MainActor [weak self, rawWorkspaceId, rawSurfaceId, assistantFinalMessage, iMessageModeEnabled] in
-                guard let self,
-                      let workspaceId = self.v2UUIDAny(rawWorkspaceId) else { return }
-                let surfaceId = rawSurfaceId.flatMap { self.v2UUIDAny($0) }
-                guard let tabManager = AppDelegate.shared?.tabManagerFor(tabId: workspaceId) else { return }
-                _ = tabManager.handleAssistantFinalMessage(
-                    workspaceId: workspaceId,
-                    message: assistantFinalMessage,
-                    surfaceId: surfaceId,
-                    iMessageModeEnabled: iMessageModeEnabled
-                )
+            Task.detached(priority: .utility) { [event, rawWorkspaceId, rawSurfaceId, iMessageModeEnabled] in
+                let assistantFinalMessage = event.assistantFinalMessageForWorkspaceSidebar()
+                guard let workspaceId = UUID(uuidString: rawWorkspaceId) else { return }
+                let surfaceId = rawSurfaceId
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .flatMap(UUID.init(uuidString:))
+                await MainActor.run {
+                    guard let tabManager = AppDelegate.shared?.tabManagerFor(tabId: workspaceId) else { return }
+                    _ = tabManager.handleAssistantFinalMessage(
+                        workspaceId: workspaceId,
+                        message: assistantFinalMessage,
+                        surfaceId: surfaceId,
+                        iMessageModeEnabled: iMessageModeEnabled
+                    )
+                }
             }
         default:
             break

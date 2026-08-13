@@ -288,26 +288,39 @@ actor WorkProvenanceObservationService {
         _ pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest?
     ) async -> WorkProvenanceWorkspaceSnapshot.PullRequest? {
         guard let pullRequest else { return nil }
-        if let ownerLogin = Self.normalizedNonEmpty(pullRequest.ownerLogin) {
-            return pullRequest.replacingOwner(
-                login: ownerLogin,
-                url: Self.normalizedOwnerURL(pullRequest.ownerURL, login: ownerLogin)
-            )
+        let existingOwnerLogin = Self.normalizedNonEmpty(pullRequest.ownerLogin)
+        let existingTitle = Self.normalizedNonEmpty(pullRequest.title)
+        let existingBranch = Self.normalizedNonEmpty(pullRequest.branch)
+        let existingOwnerURL = existingOwnerLogin.flatMap {
+            Self.normalizedOwnerURL(pullRequest.ownerURL, login: $0)
         }
-        if let cachedOwner = resolvedPullRequestOwnersByURL[pullRequest.url] {
-            return pullRequest.replacingOwner(
-                login: cachedOwner.login,
-                url: Self.normalizedOwnerURL(cachedOwner.url, login: cachedOwner.login)
-            )
+
+        let resolvedMetadata = resolvedPullRequestOwnersByURL[pullRequest.url]
+        let shouldFetchMetadata =
+            (existingOwnerLogin == nil && Self.normalizedNonEmpty(resolvedMetadata?.login) == nil) ||
+            (existingTitle == nil && Self.normalizedNonEmpty(resolvedMetadata?.title) == nil) ||
+            (existingBranch == nil && Self.normalizedNonEmpty(resolvedMetadata?.branch) == nil)
+        let fetchedMetadata: WorkProvenancePullRequestOwner?
+        if shouldFetchMetadata {
+            fetchedMetadata = await pullRequestOwnerResolver.owner(for: pullRequest.url)
+        } else {
+            fetchedMetadata = nil
         }
-        guard let owner = await pullRequestOwnerResolver.owner(for: pullRequest.url),
-              let ownerLogin = Self.normalizedNonEmpty(owner.login) else {
-            return pullRequest
+        if let fetchedMetadata {
+            resolvedPullRequestOwnersByURL[pullRequest.url] = fetchedMetadata
         }
-        resolvedPullRequestOwnersByURL[pullRequest.url] = owner
-        return pullRequest.replacingOwner(
+        let metadata = resolvedMetadata ?? fetchedMetadata
+        let ownerLogin = existingOwnerLogin ?? Self.normalizedNonEmpty(metadata?.login)
+        let ownerURL = ownerLogin.flatMap {
+            Self.normalizedOwnerURL(existingOwnerURL ?? metadata?.url, login: $0)
+        }
+        let title = existingTitle ?? Self.normalizedNonEmpty(metadata?.title)
+        let branch = existingBranch ?? Self.normalizedNonEmpty(metadata?.branch)
+        return pullRequest.replacingResolvedMetadata(
             login: ownerLogin,
-            url: Self.normalizedOwnerURL(owner.url, login: ownerLogin)
+            url: ownerURL,
+            title: title,
+            branch: branch
         )
     }
 
