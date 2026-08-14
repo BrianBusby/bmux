@@ -11,6 +11,20 @@ import Testing
 @Suite
 struct WorkProvenanceObserverTests {
     @Test
+    func linearWebLinkBuilderBuildsCompanyCamIssueAndProjectURLs() {
+        let builder = LinearWebLinkBuilder()
+
+        #expect(builder.issueURLString(for: " inp-2122 ") == "https://linear.app/companycam/issue/INP-2122")
+        #expect(builder.issueURLString(
+            apiURL: " https://linear.app/companycam/issue/INP-2122 ",
+            ticketID: "STE-1964"
+        ) == "https://linear.app/companycam/issue/INP-2122")
+        #expect(builder.projectURLString(
+            forProjectSlug: " starter-template-rollout "
+        ) == "https://linear.app/companycam/project/starter-template-rollout")
+    }
+
+    @Test
     func defaultRuntimeStoreObservationCanBeReadThroughPublicCurrentContext() async throws {
         let homeDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-work-provenance-default-home-\(UUID().uuidString)", isDirectory: true)
@@ -373,8 +387,8 @@ struct WorkProvenanceObserverTests {
             Self.linearTicketLink(id: "INP-2122")
         ])
         let displayRecord = try #require(display.display)
-        let snapshot = try #require(WorkspaceDisplayCurrentStateSnapshot(displayRecord))
-        let ticketLink = try #require(snapshot.ticketLinks.first)
+        let displaySnapshot = try #require(WorkspaceDisplayCurrentStateSnapshot(displayRecord))
+        let ticketLink = try #require(displaySnapshot.ticketLinks.first)
         let sidebarTicket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
             id: ticketLink.id,
             title: ticketLink.title,
@@ -813,25 +827,46 @@ struct WorkProvenanceObserverTests {
     }
 
     private actor FakeLinearGraphQLServer {
-        struct Request: Equatable, Sendable { let authorization: String?; let ticketID: String? }
+        struct Request: Equatable, Sendable {
+            let authorization: String?
+            let ticketID: String?
+            let requestedURL: Bool
+
+            init(authorization: String?, ticketID: String?, requestedURL: Bool = true) {
+                self.authorization = authorization
+                self.ticketID = ticketID
+                self.requestedURL = requestedURL
+            }
+        }
 
         private(set) var requests: [Request] = []
 
         func response(for request: URLRequest) throws -> (Data, Int) {
-            let ticketID = try Self.ticketID(from: request.httpBody)
-            requests.append(Request(authorization: request.value(forHTTPHeaderField: "Authorization"), ticketID: ticketID))
-            let payload = #"{"data":{"issue":{"title":"Canonical domain mutation paths","assignee":{"name":"Brian Busby"}}}}"#
+            let issueRequest = try Self.issueRequest(from: request.httpBody)
+            requests.append(Request(
+                authorization: request.value(forHTTPHeaderField: "Authorization"),
+                ticketID: issueRequest.ticketID,
+                requestedURL: issueRequest.requestedURL
+            ))
+            let fallbackTicketID = issueRequest.ticketID ?? "STE-1964"
+            let payload = """
+            {"data":{"issue":{"title":"Canonical domain mutation paths","url":"https://linear.app/companycam/issue/\(fallbackTicketID)","assignee":{"name":"Brian Busby"}}}}
+            """
             return (Data(payload.utf8), 200)
         }
 
-        private static func ticketID(from data: Data?) throws -> String? {
-            guard let data else { return nil }
+        private static func issueRequest(from data: Data?) throws -> (ticketID: String?, requestedURL: Bool) {
+            guard let data else { return (ticketID: nil, requestedURL: false) }
             let json = try JSONSerialization.jsonObject(with: data)
             guard let object = json as? [String: Any],
                   let variables = object["variables"] as? [String: Any] else {
-                return nil
+                return (ticketID: nil, requestedURL: false)
             }
-            return variables["id"] as? String
+            let query = object["query"] as? String
+            return (
+                ticketID: variables["id"] as? String,
+                requestedURL: query?.contains("url") ?? false
+            )
         }
     }
 

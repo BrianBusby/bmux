@@ -54,9 +54,6 @@ struct WorkspaceDisplayCurrentStateTicketLinkSnapshot: Equatable, Sendable, Iden
     }
 
     private static func linearURL(for ticketID: String) -> URL? {
-        guard ticketID.range(of: #"^[A-Z][A-Z0-9]+-[0-9]+$"#, options: .regularExpression) != nil else {
-            return nil
-        }
-        return URL(string: "https://linear.app/company/issue/\(ticketID)")
+        LinearWebLinkBuilder().issueURL(for: ticketID)
     }
 }
