@@ -5,10 +5,11 @@ extension TabItemView {
     func ticketRowsView(_ rows: [SidebarWorkspaceSnapshotBuilder.TicketDisplay]) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             ForEach(rows) { ticket in
+                let linkText = ticket.linkText
                 let rowContent = HStack(spacing: 4) {
                     BmuxSystemSymbolImage(magnified: "ticket", pointSize: scaledFontSize(9), weight: .medium)
                         .foregroundColor(activeSecondaryColor(0.72))
-                    Text(ticket.id)
+                    Text(linkText)
                         .underline(ticket.url != nil)
                         .foregroundColor(ticket.url == nil ? activeSecondaryColor(0.75) : pullRequestLinkColor)
                         .lineLimit(1)
@@ -27,7 +28,7 @@ extension TabItemView {
                                 defaultValue: "Open %@"
                             ),
                             locale: .current,
-                            ticket.id
+                            linkText
                         ))
                         .accessibilityIdentifier("SidebarTicketRow")
                 } else {

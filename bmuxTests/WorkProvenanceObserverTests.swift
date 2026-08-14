@@ -11,6 +11,20 @@ import Testing
 @Suite
 struct WorkProvenanceObserverTests {
     @Test
+    func linearWebLinkBuilderBuildsCompanyCamIssueAndProjectURLs() {
+        let builder = LinearWebLinkBuilder()
+
+        #expect(builder.issueURLString(for: " inp-2122 ") == "https://linear.app/companycam/issue/INP-2122")
+        #expect(builder.issueURLString(
+            apiURL: " https://linear.app/companycam/issue/INP-2122 ",
+            ticketID: "STE-1964"
+        ) == "https://linear.app/companycam/issue/INP-2122")
+        #expect(builder.projectURLString(
+            forProjectSlug: " starter-template-rollout "
+        ) == "https://linear.app/companycam/project/starter-template-rollout")
+    }
+
+    @Test
     func defaultRuntimeStoreObservationCanBeReadThroughPublicCurrentContext() async throws {
         let homeDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-work-provenance-default-home-\(UUID().uuidString)", isDirectory: true)
@@ -372,6 +386,18 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.ticketLinks == [
             Self.linearTicketLink(id: "INP-2122")
         ])
+        let displayRecord = try #require(display.display)
+        let displaySnapshot = try #require(WorkspaceDisplayCurrentStateSnapshot(displayRecord))
+        let ticketLink = try #require(displaySnapshot.ticketLinks.first)
+        let sidebarTicket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
+            id: ticketLink.id,
+            title: ticketLink.title,
+            url: ticketLink.url,
+            ownerName: ticketLink.ownerName,
+            ownerURL: ticketLink.ownerURL
+        )
+        #expect(ticketLink.url == URL(string: "https://linear.app/companycam/issue/INP-2122"))
+        #expect(sidebarTicket.linkText == "INP-2122: Canonical domain mutation paths")
         #expect(await linearServer.requests == [
             FakeLinearGraphQLServer.Request(authorization: "linear-api-key", ticketID: "INP-2122")
         ])
@@ -651,9 +677,9 @@ struct WorkProvenanceObserverTests {
                     id: "STE-1964",
                     system: "linear",
                     title: " Canonical domain mutation paths ",
-                    url: "https://linear.app/company/issue/STE-1964",
+                    url: "https://linear.app/companycam/issue/STE-1964",
                     ownerName: " Brian Busby ",
-                    ownerURL: " https://linear.app/company/user/brian "
+                    ownerURL: " https://linear.app/companycam/user/brian "
                 )
             ],
             currentWorkSummary: " Durable context reconciliation ",
@@ -683,12 +709,12 @@ struct WorkProvenanceObserverTests {
         #expect(snapshot.ticketLinks.map(\.id) == ["STE-1964", "GH-57"])
         #expect(snapshot.ticketLinks.first?.system == "linear")
         #expect(snapshot.ticketLinks.first?.title == "Canonical domain mutation paths")
-        #expect(snapshot.ticketLinks.first?.url == URL(string: "https://linear.app/company/issue/STE-1964"))
+        #expect(snapshot.ticketLinks.first?.url == URL(string: "https://linear.app/companycam/issue/STE-1964"))
         #expect(snapshot.ticketLinks.first?.ownerName == "Brian Busby")
-        #expect(snapshot.ticketLinks.first?.ownerURL == URL(string: "https://linear.app/company/user/brian"))
+        #expect(snapshot.ticketLinks.first?.ownerURL == URL(string: "https://linear.app/companycam/user/brian"))
         #expect(snapshot.ticketLinks.last?.system == "linear")
         #expect(snapshot.ticketLinks.last?.title == nil)
-        #expect(snapshot.ticketLinks.last?.url == URL(string: "https://linear.app/company/issue/GH-57"))
+        #expect(snapshot.ticketLinks.last?.url == URL(string: "https://linear.app/companycam/issue/GH-57"))
         #expect(snapshot.currentWorkSummary == "Durable context reconciliation")
         #expect(snapshot.lastSubmittedPrompt == "Keep these facts visible")
         #expect(snapshot.lastSubmittedPromptSubmittedAt == Date(timeIntervalSince1970: 701))
@@ -795,31 +821,52 @@ struct WorkProvenanceObserverTests {
             id: id,
             system: "linear",
             title: "Canonical domain mutation paths",
-            url: "https://linear.app/company/issue/\(id)",
+            url: "https://linear.app/companycam/issue/\(id)",
             ownerName: "Brian Busby"
         )
     }
 
     private actor FakeLinearGraphQLServer {
-        struct Request: Equatable, Sendable { let authorization: String?; let ticketID: String? }
+        struct Request: Equatable, Sendable {
+            let authorization: String?
+            let ticketID: String?
+            let requestedURL: Bool
+
+            init(authorization: String?, ticketID: String?, requestedURL: Bool = true) {
+                self.authorization = authorization
+                self.ticketID = ticketID
+                self.requestedURL = requestedURL
+            }
+        }
 
         private(set) var requests: [Request] = []
 
         func response(for request: URLRequest) throws -> (Data, Int) {
-            let ticketID = try Self.ticketID(from: request.httpBody)
-            requests.append(Request(authorization: request.value(forHTTPHeaderField: "Authorization"), ticketID: ticketID))
-            let payload = #"{"data":{"issue":{"title":"Canonical domain mutation paths","assignee":{"name":"Brian Busby"}}}}"#
+            let issueRequest = try Self.issueRequest(from: request.httpBody)
+            requests.append(Request(
+                authorization: request.value(forHTTPHeaderField: "Authorization"),
+                ticketID: issueRequest.ticketID,
+                requestedURL: issueRequest.requestedURL
+            ))
+            let fallbackTicketID = issueRequest.ticketID ?? "STE-1964"
+            let payload = """
+            {"data":{"issue":{"title":"Canonical domain mutation paths","url":"https://linear.app/companycam/issue/\(fallbackTicketID)","assignee":{"name":"Brian Busby"}}}}
+            """
             return (Data(payload.utf8), 200)
         }
 
-        private static func ticketID(from data: Data?) throws -> String? {
-            guard let data else { return nil }
+        private static func issueRequest(from data: Data?) throws -> (ticketID: String?, requestedURL: Bool) {
+            guard let data else { return (ticketID: nil, requestedURL: false) }
             let json = try JSONSerialization.jsonObject(with: data)
             guard let object = json as? [String: Any],
                   let variables = object["variables"] as? [String: Any] else {
-                return nil
+                return (ticketID: nil, requestedURL: false)
             }
-            return variables["id"] as? String
+            let query = object["query"] as? String
+            return (
+                ticketID: variables["id"] as? String,
+                requestedURL: query?.contains("url") ?? false
+            )
         }
     }
 

@@ -8,6 +8,7 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
     private let authorizationProvider: any WorkProvenanceLinearAuthorizationProviding
     private let endpointURL: URL
     private let dataProvider: DataProvider
+    private let webLinkBuilder: LinearWebLinkBuilder
     private var cache: [String: ProvenanceWorkspaceDisplayTicketLinkRecord] = [:]
 
     init(
@@ -15,6 +16,7 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
         usesEnvironmentAuthorization: Bool = true,
         endpointURL: URL = URL(string: "https://api.linear.app/graphql")!,
         authorizationProvider: (any WorkProvenanceLinearAuthorizationProviding)? = nil,
+        webLinkBuilder: LinearWebLinkBuilder = LinearWebLinkBuilder(),
         dataProvider: @escaping DataProvider = { request in
             let (data, response) = try await URLSession.shared.data(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
@@ -31,6 +33,7 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
             self.authorizationProvider = StaticLinearAuthorizationProvider(nil)
         }
         self.endpointURL = endpointURL
+        self.webLinkBuilder = webLinkBuilder
         self.dataProvider = dataProvider
     }
 
@@ -48,7 +51,7 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
                 id: ticketID,
                 system: "linear",
                 title: issueFacts.title,
-                url: Self.linearURL(for: ticketID),
+                url: webLinkBuilder.issueURLString(apiURL: issueFacts.url, ticketID: ticketID),
                 ownerName: issueFacts.assigneeName
             )
             if issueFacts.title != nil || issueFacts.assigneeName != nil {
@@ -61,9 +64,9 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
         return links
     }
 
-    private func issueFacts(for ticketID: String) async -> (title: String?, assigneeName: String?) {
+    private func issueFacts(for ticketID: String) async -> (title: String?, url: String?, assigneeName: String?) {
         guard let authorizationHeader = await authorizationProvider.authorizationHeader() else {
-            return (title: nil, assigneeName: nil)
+            return (title: nil, url: nil, assigneeName: nil)
         }
         var request = URLRequest(url: endpointURL)
         request.httpMethod = "POST"
@@ -74,6 +77,7 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
             query BmuxLinearIssueDetails($id: String!) {
               issue(id: $id) {
                 title
+                url
                 assignee {
                   name
                 }
@@ -82,19 +86,20 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
             """,
             variables: ["id": ticketID]
         ))
-        guard request.httpBody != nil else { return (title: nil, assigneeName: nil) }
+        guard request.httpBody != nil else { return (title: nil, url: nil, assigneeName: nil) }
 
         do {
             let (data, statusCode) = try await dataProvider(request)
-            guard (200..<300).contains(statusCode) else { return (title: nil, assigneeName: nil) }
+            guard (200..<300).contains(statusCode) else { return (title: nil, url: nil, assigneeName: nil) }
             let response = try JSONDecoder().decode(LinearGraphQLResponse.self, from: data)
-            guard response.errors?.isEmpty ?? true else { return (title: nil, assigneeName: nil) }
+            guard response.errors?.isEmpty ?? true else { return (title: nil, url: nil, assigneeName: nil) }
             return (
                 title: Self.normalizedNonEmpty(response.data?.issue?.title),
+                url: Self.normalizedNonEmpty(response.data?.issue?.url),
                 assigneeName: Self.normalizedNonEmpty(response.data?.issue?.assignee?.name)
             )
         } catch {
-            return (title: nil, assigneeName: nil)
+            return (title: nil, url: nil, assigneeName: nil)
         }
     }
 
@@ -109,13 +114,6 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
             normalized.append(value)
         }
         return normalized
-    }
-
-    private static func linearURL(for ticketID: String) -> String? {
-        guard ticketID.range(of: #"^[A-Z][A-Z0-9]+-[0-9]+$"#, options: .regularExpression) != nil else {
-            return nil
-        }
-        return "https://linear.app/company/issue/\(ticketID)"
     }
 
     private static func normalizedNonEmpty(_ value: String?) -> String? {
@@ -142,6 +140,7 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
 
     private struct LinearIssue: Decodable {
         let title: String?
+        let url: String?
         let assignee: LinearAssignee?
     }
 
