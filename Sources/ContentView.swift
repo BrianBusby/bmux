@@ -15159,28 +15159,6 @@ struct TabItemView: View, Equatable {
         return result
     }
 
-    private var provenanceTicketDisplays: [SidebarWorkspaceSnapshotBuilder.TicketDisplay] {
-        provenanceDisplaySnapshot?.ticketLinks.map {
-            SidebarWorkspaceSnapshotBuilder.TicketDisplay(
-                id: $0.id,
-                title: $0.title,
-                url: $0.url,
-                ownerName: $0.ownerName,
-                ownerURL: $0.ownerURL
-            )
-        } ?? []
-    }
-
-    private var provenanceProjectDisplays: [SidebarWorkspaceSnapshotBuilder.ProjectDisplay] {
-        provenanceDisplaySnapshot?.projectLinks.map {
-            SidebarWorkspaceSnapshotBuilder.ProjectDisplay(
-                id: $0.id,
-                title: $0.title,
-                url: $0.url
-            )
-        } ?? []
-    }
-
     @ViewBuilder
     private func pullRequestRowsView(_ rows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay]) -> some View {
         VStack(alignment: .leading, spacing: 1) {
@@ -15282,11 +15260,6 @@ struct TabItemView: View, Equatable {
     }
 
     func openTicketLink(_ url: URL) {
-        updateSelection()
-        BrowserExternalLinkOpener().openWebLink(url)
-    }
-
-    func openProjectLink(_ url: URL) {
         updateSelection()
         BrowserExternalLinkOpener().openWebLink(url)
     }
