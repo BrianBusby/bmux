@@ -372,6 +372,18 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.ticketLinks == [
             Self.linearTicketLink(id: "INP-2122")
         ])
+        let displayRecord = try #require(display.display)
+        let snapshot = try #require(WorkspaceDisplayCurrentStateSnapshot(displayRecord))
+        let ticketLink = try #require(snapshot.ticketLinks.first)
+        let sidebarTicket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
+            id: ticketLink.id,
+            title: ticketLink.title,
+            url: ticketLink.url,
+            ownerName: ticketLink.ownerName,
+            ownerURL: ticketLink.ownerURL
+        )
+        #expect(ticketLink.url == URL(string: "https://linear.app/companycam/issue/INP-2122"))
+        #expect(sidebarTicket.linkText == "INP-2122: Canonical domain mutation paths")
         #expect(await linearServer.requests == [
             FakeLinearGraphQLServer.Request(authorization: "linear-api-key", ticketID: "INP-2122")
         ])
@@ -651,9 +663,9 @@ struct WorkProvenanceObserverTests {
                     id: "STE-1964",
                     system: "linear",
                     title: " Canonical domain mutation paths ",
-                    url: "https://linear.app/company/issue/STE-1964",
+                    url: "https://linear.app/companycam/issue/STE-1964",
                     ownerName: " Brian Busby ",
-                    ownerURL: " https://linear.app/company/user/brian "
+                    ownerURL: " https://linear.app/companycam/user/brian "
                 )
             ],
             currentWorkSummary: " Durable context reconciliation ",
@@ -683,12 +695,12 @@ struct WorkProvenanceObserverTests {
         #expect(snapshot.ticketLinks.map(\.id) == ["STE-1964", "GH-57"])
         #expect(snapshot.ticketLinks.first?.system == "linear")
         #expect(snapshot.ticketLinks.first?.title == "Canonical domain mutation paths")
-        #expect(snapshot.ticketLinks.first?.url == URL(string: "https://linear.app/company/issue/STE-1964"))
+        #expect(snapshot.ticketLinks.first?.url == URL(string: "https://linear.app/companycam/issue/STE-1964"))
         #expect(snapshot.ticketLinks.first?.ownerName == "Brian Busby")
-        #expect(snapshot.ticketLinks.first?.ownerURL == URL(string: "https://linear.app/company/user/brian"))
+        #expect(snapshot.ticketLinks.first?.ownerURL == URL(string: "https://linear.app/companycam/user/brian"))
         #expect(snapshot.ticketLinks.last?.system == "linear")
         #expect(snapshot.ticketLinks.last?.title == nil)
-        #expect(snapshot.ticketLinks.last?.url == URL(string: "https://linear.app/company/issue/GH-57"))
+        #expect(snapshot.ticketLinks.last?.url == URL(string: "https://linear.app/companycam/issue/GH-57"))
         #expect(snapshot.currentWorkSummary == "Durable context reconciliation")
         #expect(snapshot.lastSubmittedPrompt == "Keep these facts visible")
         #expect(snapshot.lastSubmittedPromptSubmittedAt == Date(timeIntervalSince1970: 701))
@@ -795,7 +807,7 @@ struct WorkProvenanceObserverTests {
             id: id,
             system: "linear",
             title: "Canonical domain mutation paths",
-            url: "https://linear.app/company/issue/\(id)",
+            url: "https://linear.app/companycam/issue/\(id)",
             ownerName: "Brian Busby"
         )
     }
