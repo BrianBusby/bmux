@@ -13991,6 +13991,11 @@ struct TabItemView: View, Equatable {
                 pullRequestRowsView(workspaceSnapshot.pullRequestRows)
             }
 
+            // Project rows
+            if !workspaceSnapshot.projectRows.isEmpty {
+                projectRowsView(workspaceSnapshot.projectRows)
+            }
+
             // Ticket rows
             if !workspaceSnapshot.ticketRows.isEmpty {
                 ticketRowsView(workspaceSnapshot.ticketRows)
@@ -14919,6 +14924,7 @@ struct TabItemView: View, Equatable {
             label: String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
         )
         let displayedPullRequestNumbers = Set(pullRequestRows.map(\.number))
+        let projectRows = provenanceProjectDisplays
         let ticketRows = provenanceTicketDisplays
         let provenanceProgress = provenanceDisplaySnapshot?.currentWorkSummary.map {
             SidebarProgressState(value: tab.progress?.value ?? 0, label: $0)
@@ -14948,6 +14954,7 @@ struct TabItemView: View, Equatable {
             branchDirectoryLines: branchDirectoryLines,
             branchLinesContainBranch: branchLinesContainBranch,
             pullRequestRows: pullRequestRows,
+            projectRows: projectRows,
             ticketRows: ticketRows,
             listeningPorts: detailVisibility.showsPorts ? tab.listeningPorts : [],
             finderDirectoryPath: WorkspaceFinderDirectoryResolver.path(for: tab),
@@ -15164,6 +15171,16 @@ struct TabItemView: View, Equatable {
         } ?? []
     }
 
+    private var provenanceProjectDisplays: [SidebarWorkspaceSnapshotBuilder.ProjectDisplay] {
+        provenanceDisplaySnapshot?.projectLinks.map {
+            SidebarWorkspaceSnapshotBuilder.ProjectDisplay(
+                id: $0.id,
+                title: $0.title,
+                url: $0.url
+            )
+        } ?? []
+    }
+
     @ViewBuilder
     private func pullRequestRowsView(_ rows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay]) -> some View {
         VStack(alignment: .leading, spacing: 1) {
@@ -15265,6 +15282,11 @@ struct TabItemView: View, Equatable {
     }
 
     func openTicketLink(_ url: URL) {
+        updateSelection()
+        BrowserExternalLinkOpener().openWebLink(url)
+    }
+
+    func openProjectLink(_ url: URL) {
         updateSelection()
         BrowserExternalLinkOpener().openWebLink(url)
     }

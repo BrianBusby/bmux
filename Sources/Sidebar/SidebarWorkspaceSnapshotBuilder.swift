@@ -49,6 +49,17 @@ struct SidebarWorkspaceSnapshotBuilder {
         }
     }
 
+    struct ProjectDisplay: Identifiable, Equatable {
+        let id: String
+        let title: String?
+        let url: URL?
+
+        var linkText: String {
+            let trimmedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return trimmedTitle.isEmpty ? id : trimmedTitle
+        }
+    }
+
     struct Snapshot: Equatable {
         let presentationKey: PresentationKey
         let ticketTitle: String?
@@ -73,6 +84,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         let branchDirectoryLines: [VerticalBranchDirectoryLine]
         let branchLinesContainBranch: Bool
         let pullRequestRows: [PullRequestDisplay]
+        let projectRows: [ProjectDisplay]
         let ticketRows: [TicketDisplay]
         let listeningPorts: [Int]
         let finderDirectoryPath: String?

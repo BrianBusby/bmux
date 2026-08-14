@@ -68,6 +68,7 @@ struct WorkProvenanceStableIDFactory: Sendable {
         gitSnapshot: WorkProvenanceGitSnapshot?,
         ticketIDs: [String],
         ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord],
+        projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord],
         currentWorkSummary: String?,
         lastSubmittedPrompt: String?,
         lastSubmittedPromptSubmittedAt: Date?,
@@ -82,6 +83,9 @@ struct WorkProvenanceStableIDFactory: Sendable {
         let ticketIDList = ticketIDs.joined(separator: ",")
         let ticketLinkList = ticketLinks
             .map { "\($0.id)|\($0.system ?? "")|\($0.title ?? "")|\($0.url ?? "")|\($0.ownerName ?? "")|\($0.ownerURL ?? "")" }
+            .joined(separator: ",")
+        let projectLinkList = projectLinks
+            .map { "\($0.id)|\($0.system ?? "")|\($0.title ?? "")|\($0.url ?? "")" }
             .joined(separator: ",")
         let promptSubmittedAt = lastSubmittedPromptSubmittedAt.map { String($0.timeIntervalSince1970) } ?? ""
         let clearList = explicitlyClearedFields.joined(separator: ",")
@@ -103,6 +107,7 @@ struct WorkProvenanceStableIDFactory: Sendable {
             pullRequestStaleness,
             ticketIDList,
             ticketLinkList,
+            projectLinkList,
             currentWorkSummary ?? "",
             lastSubmittedPrompt ?? "",
             promptSubmittedAt,

@@ -1,5 +1,5 @@
 {
-  "originHash" : "cb050d766909c02eb9bd10935a42f5d7406634ead779c80eeb8fb8ae29d1436c",
+  "originHash" : "7dad3d5d6641bcd0ba07dbe6f52439d1bed86c27e27626fc31709c9e7276b104",
   "pins" : [
     {
       "identity" : "aexml",
@@ -42,7 +42,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/BrianBusby/provenance-engine.git",
       "state" : {
-        "revision" : "2749a027d98fc6054ee92fec8f87e48466ef3c48"
+        "revision" : "aa160b7fb545328a7aa8713562574e30974e3b2b"
       }
     },
     {

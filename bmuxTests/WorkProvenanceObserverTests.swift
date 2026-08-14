@@ -22,6 +22,10 @@ struct WorkProvenanceObserverTests {
         #expect(builder.projectURLString(
             forProjectSlug: " starter-template-rollout "
         ) == "https://linear.app/companycam/project/starter-template-rollout")
+        #expect(builder.projectURLString(
+            apiURL: " https://linear.app/companycam/project/starter-template-rollout ",
+            projectSlug: "fallback-project"
+        ) == "https://linear.app/companycam/project/starter-template-rollout")
     }
 
     @Test
@@ -264,6 +268,9 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.ticketLinks == [
             Self.linearTicketLink()
         ])
+        #expect(display.display?.projectLinks == [
+            Self.linearProjectLink()
+        ])
         #expect(await linearServer.requests == [
             FakeLinearGraphQLServer.Request(authorization: "linear-api-key", ticketID: "STE-1964")
         ])
@@ -386,9 +393,13 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.ticketLinks == [
             Self.linearTicketLink(id: "INP-2122")
         ])
+        #expect(display.display?.projectLinks == [
+            Self.linearProjectLink()
+        ])
         let displayRecord = try #require(display.display)
         let displaySnapshot = try #require(WorkspaceDisplayCurrentStateSnapshot(displayRecord))
         let ticketLink = try #require(displaySnapshot.ticketLinks.first)
+        let projectLink = try #require(displaySnapshot.projectLinks.first)
         let sidebarTicket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
             id: ticketLink.id,
             title: ticketLink.title,
@@ -396,8 +407,15 @@ struct WorkProvenanceObserverTests {
             ownerName: ticketLink.ownerName,
             ownerURL: ticketLink.ownerURL
         )
+        let sidebarProject = SidebarWorkspaceSnapshotBuilder.ProjectDisplay(
+            id: projectLink.id,
+            title: projectLink.title,
+            url: projectLink.url
+        )
         #expect(ticketLink.url == URL(string: "https://linear.app/companycam/issue/INP-2122"))
         #expect(sidebarTicket.linkText == "INP-2122: Canonical domain mutation paths")
+        #expect(projectLink.url == URL(string: "https://linear.app/companycam/project/context-efficiency-c1b9a"))
+        #expect(sidebarProject.linkText == "Context Efficiency")
         #expect(await linearServer.requests == [
             FakeLinearGraphQLServer.Request(authorization: "linear-api-key", ticketID: "INP-2122")
         ])
@@ -459,6 +477,9 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.ticketIDs == ["STE-1964"])
         #expect(display.display?.ticketLinks == [
             Self.linearTicketLink()
+        ])
+        #expect(display.display?.projectLinks == [
+            Self.linearProjectLink()
         ])
         #expect(await linearServer.requests == [
             FakeLinearGraphQLServer.Request(authorization: "linear-api-key", ticketID: "STE-1964")
@@ -535,6 +556,9 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.ticketLinks == [
             Self.linearTicketLink()
         ])
+        #expect(display.display?.projectLinks == [
+            Self.linearProjectLink()
+        ])
     }
 
     @Test
@@ -605,9 +629,15 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.ticketLinks == [
             Self.linearTicketLink()
         ])
+        #expect(display.display?.projectLinks == [
+            Self.linearProjectLink()
+        ])
         #expect(latestEvent.ticketIDs == ["STE-1964"])
         #expect(latestEvent.ticketLinks == [
             Self.linearTicketLink()
+        ])
+        #expect(latestEvent.projectLinks == [
+            Self.linearProjectLink()
         ])
     }
 
@@ -649,6 +679,7 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.pullRequestNumber == nil)
         #expect(display.display?.ticketIDs == [])
         #expect(display.display?.ticketLinks == [])
+        #expect(display.display?.projectLinks == [])
     }
 
     @Test
@@ -680,6 +711,14 @@ struct WorkProvenanceObserverTests {
                     url: "https://linear.app/companycam/issue/STE-1964",
                     ownerName: " Brian Busby ",
                     ownerURL: " https://linear.app/companycam/user/brian "
+                )
+            ],
+            projectLinks: [
+                ProvenanceWorkspaceDisplayProjectLinkRecord(
+                    id: " context-efficiency-c1b9a ",
+                    system: " linear ",
+                    title: " Context Efficiency ",
+                    url: " https://linear.app/companycam/project/context-efficiency-c1b9a "
                 )
             ],
             currentWorkSummary: " Durable context reconciliation ",
@@ -715,6 +754,10 @@ struct WorkProvenanceObserverTests {
         #expect(snapshot.ticketLinks.last?.system == "linear")
         #expect(snapshot.ticketLinks.last?.title == nil)
         #expect(snapshot.ticketLinks.last?.url == URL(string: "https://linear.app/companycam/issue/GH-57"))
+        #expect(snapshot.projectLinks.first?.id == "context-efficiency-c1b9a")
+        #expect(snapshot.projectLinks.first?.system == "linear")
+        #expect(snapshot.projectLinks.first?.title == "Context Efficiency")
+        #expect(snapshot.projectLinks.first?.url == URL(string: "https://linear.app/companycam/project/context-efficiency-c1b9a"))
         #expect(snapshot.currentWorkSummary == "Durable context reconciliation")
         #expect(snapshot.lastSubmittedPrompt == "Keep these facts visible")
         #expect(snapshot.lastSubmittedPromptSubmittedAt == Date(timeIntervalSince1970: 701))
@@ -826,6 +869,15 @@ struct WorkProvenanceObserverTests {
         )
     }
 
+    private static func linearProjectLink() -> ProvenanceWorkspaceDisplayProjectLinkRecord {
+        ProvenanceWorkspaceDisplayProjectLinkRecord(
+            id: "context-efficiency-c1b9a",
+            system: "linear",
+            title: "Context Efficiency",
+            url: "https://linear.app/companycam/project/context-efficiency-c1b9a"
+        )
+    }
+
     private actor FakeLinearGraphQLServer {
         struct Request: Equatable, Sendable {
             let authorization: String?
@@ -850,7 +902,7 @@ struct WorkProvenanceObserverTests {
             ))
             let fallbackTicketID = issueRequest.ticketID ?? "STE-1964"
             let payload = """
-            {"data":{"issue":{"title":"Canonical domain mutation paths","url":"https://linear.app/companycam/issue/\(fallbackTicketID)","assignee":{"name":"Brian Busby"}}}}
+            {"data":{"issue":{"title":"Canonical domain mutation paths","url":"https://linear.app/companycam/issue/\(fallbackTicketID)","assignee":{"name":"Brian Busby"},"project":{"id":"linear-project-1","name":"Context Efficiency","url":"https://linear.app/companycam/project/context-efficiency-c1b9a","slugId":"context-efficiency-c1b9a"}}}}
             """
             return (Data(payload.utf8), 200)
         }
@@ -901,7 +953,7 @@ struct WorkProvenanceObserverTests {
             branch: branch,
             pullRequestNumber: nil, pullRequestURL: nil, pullRequestOwnerLogin: nil, pullRequestOwnerURL: nil, pullRequestStatus: nil, pullRequestBranch: nil,
             pullRequestIsStale: false,
-            isDirty: nil, ticketIDs: [], ticketLinks: [],
+            isDirty: nil, ticketIDs: [], ticketLinks: [], projectLinks: [],
             latestEventID: "event-\(sequence)",
             latestEventSequence: sequence,
             observedAt: updatedAt,

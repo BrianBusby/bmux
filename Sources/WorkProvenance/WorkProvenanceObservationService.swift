@@ -162,12 +162,13 @@ actor WorkProvenanceObservationService {
             pullRequest?.title,
             pullRequest?.branch
         ].compactMap { $0 })
-        let ticketFacts = try await workspaceDisplayTicketFacts(
+        let linkFacts = try await workspaceDisplayLinkFacts(
             stableWorkspaceID: workspace.stableWorkspaceID,
             explicitTicketIDs: explicitTicketIDs
         )
-        let ticketIDs = ticketFacts.ids
-        let ticketLinks = ticketFacts.links
+        let ticketIDs = linkFacts.ticketIDs
+        let ticketLinks = linkFacts.ticketLinks
+        let projectLinks = linkFacts.projectLinks
         let currentWorkSummary = Self.normalizedNonEmpty(workspace.currentWorkSummary)
         let lastSubmittedPrompt = Self.normalizedNonEmpty(workspace.lastSubmittedPrompt)
         let lastSubmittedPromptSubmittedAt = lastSubmittedPrompt == nil
@@ -189,6 +190,7 @@ actor WorkProvenanceObservationService {
             gitSnapshot: gitSnapshot,
             ticketIDs: ticketIDs,
             ticketLinks: ticketLinks,
+            projectLinks: projectLinks,
             currentWorkSummary: currentWorkSummary,
             lastSubmittedPrompt: lastSubmittedPrompt,
             lastSubmittedPromptSubmittedAt: lastSubmittedPromptSubmittedAt,
@@ -221,6 +223,7 @@ actor WorkProvenanceObservationService {
             isDirty: gitSnapshot?.isDirty,
             ticketIDs: ticketIDs,
             ticketLinks: ticketLinks,
+            projectLinks: projectLinks,
             currentWorkSummary: currentWorkSummary,
             lastSubmittedPrompt: lastSubmittedPrompt,
             lastSubmittedPromptSubmittedAt: lastSubmittedPromptSubmittedAt,
@@ -250,24 +253,29 @@ actor WorkProvenanceObservationService {
         StartupBreadcrumbLog.append("workProvenance.observe.workspaceDisplayAppended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
     }
 
-    private func workspaceDisplayTicketFacts(
+    private func workspaceDisplayLinkFacts(
         stableWorkspaceID: UUID,
         explicitTicketIDs: [String]
     ) async throws -> (
-        ids: [String],
-        links: [ProvenanceWorkspaceDisplayTicketLinkRecord]
+        ticketIDs: [String],
+        ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord],
+        projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord]
     ) {
         guard explicitTicketIDs.isEmpty else {
-            let resolvedLinks = await ticketLinkResolver.ticketLinks(for: explicitTicketIDs)
+            let resolvedLinks = await ticketLinkResolver.workspaceLinks(for: explicitTicketIDs)
             let existingDisplay = try? await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
                 workspaceID: stableWorkspaceID.uuidString
             ))
             return (
-                ids: explicitTicketIDs,
-                links: Self.mergedTicketLinks(
+                ticketIDs: explicitTicketIDs,
+                ticketLinks: Self.mergedTicketLinks(
                     ticketIDs: explicitTicketIDs,
-                    incomingLinks: resolvedLinks,
+                    incomingLinks: resolvedLinks.ticketLinks,
                     existingLinks: existingDisplay?.display?.ticketLinks ?? []
+                ),
+                projectLinks: Self.mergedProjectLinks(
+                    incomingLinks: resolvedLinks.projectLinks,
+                    existingLinks: existingDisplay?.display?.projectLinks ?? []
                 )
             )
         }
@@ -276,11 +284,16 @@ actor WorkProvenanceObservationService {
             workspaceID: stableWorkspaceID.uuidString
         ))
         guard let display = response.display else {
-            return (ids: [], links: [])
+            return (ticketIDs: [], ticketLinks: [], projectLinks: [])
         }
-        return Self.normalizedTicketFacts(
+        let ticketFacts = Self.normalizedTicketFacts(
             ticketIDs: display.ticketIDs,
             ticketLinks: display.ticketLinks
+        )
+        return (
+            ticketIDs: ticketFacts.ids,
+            ticketLinks: ticketFacts.links,
+            projectLinks: Self.normalizedProjectLinks(display.projectLinks)
         )
     }
 
@@ -373,6 +386,52 @@ actor WorkProvenanceObservationService {
             ids: ids.isEmpty ? links.map(\.id) : ids,
             links: links
         )
+    }
+
+    private static func normalizedProjectLinks(
+        _ projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord]
+    ) -> [ProvenanceWorkspaceDisplayProjectLinkRecord] {
+        var seen = Set<String>()
+        return projectLinks.compactMap { link -> ProvenanceWorkspaceDisplayProjectLinkRecord? in
+            guard let id = normalizedNonEmpty(link.id),
+                  seen.insert(id).inserted else {
+                return nil
+            }
+            return ProvenanceWorkspaceDisplayProjectLinkRecord(
+                id: id,
+                system: normalizedNonEmpty(link.system),
+                title: normalizedNonEmpty(link.title),
+                url: normalizedNonEmpty(link.url)
+            )
+        }
+    }
+
+    private static func mergedProjectLinks(
+        incomingLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord],
+        existingLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord]
+    ) -> [ProvenanceWorkspaceDisplayProjectLinkRecord] {
+        let incomingLinks = normalizedProjectLinks(incomingLinks)
+        let existingLinks = normalizedProjectLinks(existingLinks)
+        guard !incomingLinks.isEmpty else { return existingLinks }
+        let existingByID = projectLinksByID(existingLinks)
+        return incomingLinks.map { incoming in
+            let existing = existingByID[incoming.id]
+            return ProvenanceWorkspaceDisplayProjectLinkRecord(
+                id: incoming.id,
+                system: normalizedNonEmpty(incoming.system) ?? normalizedNonEmpty(existing?.system),
+                title: normalizedNonEmpty(incoming.title) ?? normalizedNonEmpty(existing?.title),
+                url: normalizedNonEmpty(incoming.url) ?? normalizedNonEmpty(existing?.url)
+            )
+        }
+    }
+
+    private static func projectLinksByID(
+        _ links: [ProvenanceWorkspaceDisplayProjectLinkRecord]
+    ) -> [String: ProvenanceWorkspaceDisplayProjectLinkRecord] {
+        links.reduce(into: [:]) { result, link in
+            guard let id = normalizedNonEmpty(link.id) else { return }
+            result[id] = link
+        }
     }
 
     private static func mergedTicketLinks(

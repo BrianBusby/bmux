@@ -8,6 +8,7 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
         let finderDirectoryPath: String?
         let repoBadgeAppearance: WorkspaceRepoBadgeAppearance?
         let pullRequestRows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay]
+        let projectRows: [SidebarWorkspaceSnapshotBuilder.ProjectDisplay]
         let ticketRows: [SidebarWorkspaceSnapshotBuilder.TicketDisplay]
         let mediaActivity: BrowserMediaActivity
         let hasActiveAIWork: Bool
@@ -23,6 +24,7 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
             finderDirectoryPath: finderDirectoryPath,
             repoBadgeAppearance: repoBadgeAppearance,
             pullRequestRows: pullRequestRows,
+            projectRows: projectRows,
             ticketRows: ticketRows,
             mediaActivity: mediaActivity,
             hasActiveAIWork: hasActiveAIWork
@@ -55,6 +57,7 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
             branchDirectoryLines: branchDirectoryLines,
             branchLinesContainBranch: branchLinesContainBranch,
             pullRequestRows: snapshot.pullRequestRows,
+            projectRows: snapshot.projectRows,
             ticketRows: snapshot.ticketRows,
             listeningPorts: listeningPorts,
             finderDirectoryPath: snapshot.finderDirectoryPath,

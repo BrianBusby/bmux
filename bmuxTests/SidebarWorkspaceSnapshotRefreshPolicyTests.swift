@@ -147,6 +147,19 @@ import Testing
         #expect(ticket.linkText == expected)
     }
 
+    @Test(arguments: [
+        (" Context Efficiency ", "Context Efficiency"),
+        (" ", "context-efficiency-c1b9a"),
+    ]) func projectDisplayLinkText(title: String, expected: String) {
+        let project = SidebarWorkspaceSnapshotBuilder.ProjectDisplay(
+            id: "context-efficiency-c1b9a",
+            title: title,
+            url: nil
+        )
+
+        #expect(project.linkText == expected)
+    }
+
     @Test func livePullRequestRowsOverrideStaleProvenancePullRequest() throws {
         let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
             livePullRequests: [try Self.livePullRequest(number: 26196)],
@@ -273,6 +286,7 @@ import Testing
         latestConversationMessage: String? = nil,
         latestSubmittedMessage: String? = nil,
         pullRequestRows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay] = [],
+        projectRows: [SidebarWorkspaceSnapshotBuilder.ProjectDisplay] = [],
         listeningPorts: [Int] = [],
         finderDirectoryPath: String? = nil,
         repoBadgeAppearance: WorkspaceRepoBadgeAppearance? = nil,
@@ -304,6 +318,7 @@ import Testing
             branchDirectoryLines: [],
             branchLinesContainBranch: false,
             pullRequestRows: pullRequestRows,
+            projectRows: projectRows,
             ticketRows: ticketRows,
             listeningPorts: listeningPorts,
             finderDirectoryPath: finderDirectoryPath,

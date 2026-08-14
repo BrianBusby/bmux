@@ -11,6 +11,7 @@ struct WorkspaceDisplayCurrentStateSnapshot: Equatable, Sendable {
     let pullRequest: WorkspaceDisplayCurrentStatePullRequestSnapshot?
     let isDirty: Bool?
     let ticketLinks: [WorkspaceDisplayCurrentStateTicketLinkSnapshot]
+    let projectLinks: [WorkspaceDisplayCurrentStateProjectLinkSnapshot]
     let currentWorkSummary: String?
     let lastSubmittedPrompt: String?
     let lastSubmittedPromptSubmittedAt: Date?
@@ -35,6 +36,7 @@ struct WorkspaceDisplayCurrentStateSnapshot: Equatable, Sendable {
             ticketIDs: display.ticketIDs,
             ticketLinks: display.ticketLinks
         )
+        self.projectLinks = display.projectLinks.compactMap(WorkspaceDisplayCurrentStateProjectLinkSnapshot.init)
         self.currentWorkSummary = display.currentWorkSummary?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.lastSubmittedPrompt = display.lastSubmittedPrompt?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.lastSubmittedPromptSubmittedAt = display.lastSubmittedPromptSubmittedAt

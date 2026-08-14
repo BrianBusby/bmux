@@ -9,7 +9,7 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
     private let endpointURL: URL
     private let dataProvider: DataProvider
     private let webLinkBuilder: LinearWebLinkBuilder
-    private var cache: [String: ProvenanceWorkspaceDisplayTicketLinkRecord] = [:]
+    private var cache: [String: WorkProvenanceWorkspaceLinkFacts] = [:]
 
     init(
         authorizationHeader: String? = nil,
@@ -37,36 +37,56 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
         self.dataProvider = dataProvider
     }
 
-    func ticketLinks(for ticketIDs: [String]) async -> [ProvenanceWorkspaceDisplayTicketLinkRecord] {
-        var links: [ProvenanceWorkspaceDisplayTicketLinkRecord] = []
+    func workspaceLinks(for ticketIDs: [String]) async -> WorkProvenanceWorkspaceLinkFacts {
+        var ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord] = []
+        var projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord] = []
+        var seenProjectIDs = Set<String>()
         for ticketID in Self.normalizedTicketIDs(ticketIDs) {
             if let cached = cache[ticketID],
-               cached.title != nil || cached.ownerName != nil {
-                links.append(cached)
+               cached.hasEnrichedFacts {
+                ticketLinks.append(contentsOf: cached.ticketLinks)
+                for projectLink in cached.projectLinks where seenProjectIDs.insert(projectLink.id).inserted {
+                    projectLinks.append(projectLink)
+                }
                 continue
             }
 
             let issueFacts = await issueFacts(for: ticketID)
-            let link = ProvenanceWorkspaceDisplayTicketLinkRecord(
+            let ticketLink = ProvenanceWorkspaceDisplayTicketLinkRecord(
                 id: ticketID,
                 system: "linear",
                 title: issueFacts.title,
                 url: webLinkBuilder.issueURLString(apiURL: issueFacts.url, ticketID: ticketID),
                 ownerName: issueFacts.assigneeName
             )
-            if issueFacts.title != nil || issueFacts.assigneeName != nil {
-                cache[ticketID] = link
+            let resolvedProjectLinks = issueFacts.projectLink.map { [$0] } ?? []
+            let facts = WorkProvenanceWorkspaceLinkFacts(
+                ticketLinks: [ticketLink],
+                projectLinks: resolvedProjectLinks
+            )
+            if facts.hasEnrichedFacts {
+                cache[ticketID] = facts
             } else {
                 cache.removeValue(forKey: ticketID)
             }
-            links.append(link)
+            ticketLinks.append(ticketLink)
+            for projectLink in resolvedProjectLinks where seenProjectIDs.insert(projectLink.id).inserted {
+                projectLinks.append(projectLink)
+            }
         }
-        return links
+        return WorkProvenanceWorkspaceLinkFacts(ticketLinks: ticketLinks, projectLinks: projectLinks)
     }
 
-    private func issueFacts(for ticketID: String) async -> (title: String?, url: String?, assigneeName: String?) {
+    private func issueFacts(
+        for ticketID: String
+    ) async -> (
+        title: String?,
+        url: String?,
+        assigneeName: String?,
+        projectLink: ProvenanceWorkspaceDisplayProjectLinkRecord?
+    ) {
         guard let authorizationHeader = await authorizationProvider.authorizationHeader() else {
-            return (title: nil, url: nil, assigneeName: nil)
+            return (title: nil, url: nil, assigneeName: nil, projectLink: nil)
         }
         var request = URLRequest(url: endpointURL)
         request.httpMethod = "POST"
@@ -81,26 +101,46 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
                 assignee {
                   name
                 }
+                project {
+                  id
+                  name
+                  url
+                  slugId
+                }
               }
             }
             """,
             variables: ["id": ticketID]
         ))
-        guard request.httpBody != nil else { return (title: nil, url: nil, assigneeName: nil) }
+        guard request.httpBody != nil else { return (title: nil, url: nil, assigneeName: nil, projectLink: nil) }
 
         do {
             let (data, statusCode) = try await dataProvider(request)
-            guard (200..<300).contains(statusCode) else { return (title: nil, url: nil, assigneeName: nil) }
+            guard (200..<300).contains(statusCode) else { return (title: nil, url: nil, assigneeName: nil, projectLink: nil) }
             let response = try JSONDecoder().decode(LinearGraphQLResponse.self, from: data)
-            guard response.errors?.isEmpty ?? true else { return (title: nil, url: nil, assigneeName: nil) }
+            guard response.errors?.isEmpty ?? true else { return (title: nil, url: nil, assigneeName: nil, projectLink: nil) }
             return (
                 title: Self.normalizedNonEmpty(response.data?.issue?.title),
                 url: Self.normalizedNonEmpty(response.data?.issue?.url),
-                assigneeName: Self.normalizedNonEmpty(response.data?.issue?.assignee?.name)
+                assigneeName: Self.normalizedNonEmpty(response.data?.issue?.assignee?.name),
+                projectLink: projectLink(from: response.data?.issue?.project)
             )
         } catch {
-            return (title: nil, url: nil, assigneeName: nil)
+            return (title: nil, url: nil, assigneeName: nil, projectLink: nil)
         }
+    }
+
+    private func projectLink(from project: LinearProject?) -> ProvenanceWorkspaceDisplayProjectLinkRecord? {
+        guard let project else { return nil }
+        let slugID = Self.normalizedNonEmpty(project.slugId)
+        let id = slugID ?? Self.normalizedNonEmpty(project.id)
+        guard let id else { return nil }
+        return ProvenanceWorkspaceDisplayProjectLinkRecord(
+            id: id,
+            system: "linear",
+            title: Self.normalizedNonEmpty(project.name),
+            url: webLinkBuilder.projectURLString(apiURL: project.url, projectSlug: slugID)
+        )
     }
 
     private static func normalizedTicketIDs(_ ticketIDs: [String]) -> [String] {
@@ -142,10 +182,18 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
         let title: String?
         let url: String?
         let assignee: LinearAssignee?
+        let project: LinearProject?
     }
 
     private struct LinearAssignee: Decodable {
         let name: String?
+    }
+
+    private struct LinearProject: Decodable {
+        let id: String?
+        let name: String?
+        let url: String?
+        let slugId: String?
     }
 
     private struct LinearGraphQLError: Decodable {

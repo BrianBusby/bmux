@@ -39,6 +39,10 @@ struct LinearWebLinkBuilder: Equatable, Sendable {
         return "https://linear.app/\(workspaceSlug)/project/\(normalizedProjectSlug)"
     }
 
+    func projectURLString(apiURL: String?, projectSlug: String?) -> String? {
+        normalizedURLString(apiURL) ?? projectSlug.flatMap { projectURLString(forProjectSlug: $0) }
+    }
+
     func projectURL(forProjectSlug projectSlug: String) -> URL? {
         projectURLString(forProjectSlug: projectSlug).flatMap(URL.init(string:))
     }

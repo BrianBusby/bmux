@@ -1295,6 +1295,7 @@
 		A5001303 /* SurfaceSearchOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001301 /* SurfaceSearchOverlay.swift */; };
 		C7B0FACE000000000000000C /* SystemCommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B0FACE000000000000000D /* SystemCommandRunner.swift */; };
 		FBE660ABA1854983B84368C6 /* SystemWideHotkeyShortcutPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65154DD251384EE0A2C8923A /* SystemWideHotkeyShortcutPolicyTests.swift */; };
+		CE0E02090000000000000001 /* TabItemView+ProjectRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E02090000000000000002 /* TabItemView+ProjectRows.swift */; };
 		CE0E02080000000000000001 /* TabItemView+TicketRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E02080000000000000002 /* TabItemView+TicketRows.swift */; };
 		C9A5720BC9A5720BC9A5720B /* TabItemView+WorkspaceGroups.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A5720CC9A5720CC9A5720C /* TabItemView+WorkspaceGroups.swift */; };
 		A5F100000000000000000005 /* TabItemView+WorkspaceNotificationsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F100000000000000000006 /* TabItemView+WorkspaceNotificationsMenu.swift */; };
@@ -1608,6 +1609,7 @@
 		281F3AEA52379AF45C5C1189 /* WorkspaceCustomSidebarPullRequestContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE74DFAC5946F9C2EEDBE577 /* WorkspaceCustomSidebarPullRequestContextTests.swift */; };
 		E6FA9084A1B2C3D4E5F60718 /* WorkspaceDescriptionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6FA9085A1B2C3D4E5F60718 /* WorkspaceDescriptionUITests.swift */; };
 		CE0E01050000000000000001 /* WorkspaceDisplayCurrentStateFileWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01050000000000000002 /* WorkspaceDisplayCurrentStateFileWatcher.swift */; };
+		CE0E01080000000000000001 /* WorkspaceDisplayCurrentStateProjectLinkSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01080000000000000002 /* WorkspaceDisplayCurrentStateProjectLinkSnapshot.swift */; };
 		CE0E01010000000000000001 /* WorkspaceDisplayCurrentStatePullRequestSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01010000000000000002 /* WorkspaceDisplayCurrentStatePullRequestSnapshot.swift */; };
 		CE0E01020000000000000001 /* WorkspaceDisplayCurrentStateSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01020000000000000002 /* WorkspaceDisplayCurrentStateSnapshot.swift */; };
 		CE0E01030000000000000001 /* WorkspaceDisplayCurrentStateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01030000000000000002 /* WorkspaceDisplayCurrentStateStore.swift */; };
@@ -2939,6 +2941,7 @@
 		A5001301 /* SurfaceSearchOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Find/SurfaceSearchOverlay.swift; sourceTree = "<group>"; };
 		C7B0FACE000000000000000D /* SystemCommandRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemCommandRunner.swift; sourceTree = "<group>"; };
 		65154DD251384EE0A2C8923A /* SystemWideHotkeyShortcutPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWideHotkeyShortcutPolicyTests.swift; sourceTree = "<group>"; };
+		CE0E02090000000000000002 /* TabItemView+ProjectRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sidebar/TabItemView+ProjectRows.swift"; sourceTree = "<group>"; };
 		CE0E02080000000000000002 /* TabItemView+TicketRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sidebar/TabItemView+TicketRows.swift"; sourceTree = "<group>"; };
 		C9A5720CC9A5720CC9A5720C /* TabItemView+WorkspaceGroups.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TabItemView+WorkspaceGroups.swift"; sourceTree = "<group>"; };
 		A5F100000000000000000006 /* TabItemView+WorkspaceNotificationsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TabItemView+WorkspaceNotificationsMenu.swift"; sourceTree = "<group>"; };
@@ -3227,6 +3230,7 @@
 		CE74DFAC5946F9C2EEDBE577 /* WorkspaceCustomSidebarPullRequestContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceCustomSidebarPullRequestContextTests.swift; sourceTree = "<group>"; };
 		E6FA9085A1B2C3D4E5F60718 /* WorkspaceDescriptionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDescriptionUITests.swift; sourceTree = "<group>"; };
 		CE0E01050000000000000002 /* WorkspaceDisplayCurrentStateFileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateFileWatcher.swift; sourceTree = "<group>"; };
+		CE0E01080000000000000002 /* WorkspaceDisplayCurrentStateProjectLinkSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateProjectLinkSnapshot.swift; sourceTree = "<group>"; };
 		CE0E01010000000000000002 /* WorkspaceDisplayCurrentStatePullRequestSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStatePullRequestSnapshot.swift; sourceTree = "<group>"; };
 		CE0E01020000000000000002 /* WorkspaceDisplayCurrentStateSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateSnapshot.swift; sourceTree = "<group>"; };
 		CE0E01030000000000000002 /* WorkspaceDisplayCurrentStateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateStore.swift; sourceTree = "<group>"; };
@@ -3611,6 +3615,7 @@
 					D36090020000000000000002 /* NSWindow+BmuxPeerWindow.swift */,
 					C0DE35860000000000000002 /* BackgroundWorkspacePrimeCoordinator.swift */,
 					A5001012 /* ContentView.swift */,
+					CE0E02090000000000000002 /* TabItemView+ProjectRows.swift */,
 					CE0E02080000000000000002 /* TabItemView+TicketRows.swift */,
 					A5F100000000000000000006 /* TabItemView+WorkspaceNotificationsMenu.swift */,
 					D75280040000000000000002 /* DynamicTracingSignpostInterval.swift */,
@@ -5042,6 +5047,7 @@
 				CE0E01030000000000000002 /* WorkspaceDisplayCurrentStateStore.swift */,
 				CE0E01060000000000000002 /* WorkspaceDisplayCurrentStateSubscription.swift */,
 				CE0E01040000000000000002 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift */,
+				CE0E01080000000000000002 /* WorkspaceDisplayCurrentStateProjectLinkSnapshot.swift */,
 					CE0B00040000000000000002 /* WorkProvenanceSessionLifecycleRecorder.swift */,
 				2F450598D29975B2FD348489 /* WorkProvenanceSQLiteDatabase.swift */,
 				6AD4D726F26DF9FED2713BE6 /* WorkProvenanceSQLiteStatement.swift */,
@@ -6236,6 +6242,7 @@
 				F6572000A1B2C3D4E5F60718 /* SurfaceResumeCommandCanonicalizer+PortableAgentExecutable.swift in Sources */,
 				A5001303 /* SurfaceSearchOverlay.swift in Sources */,
 				C7B0FACE000000000000000C /* SystemCommandRunner.swift in Sources */,
+				CE0E02090000000000000001 /* TabItemView+ProjectRows.swift in Sources */,
 				CE0E02080000000000000001 /* TabItemView+TicketRows.swift in Sources */,
 				C9A5720BC9A5720BC9A5720B /* TabItemView+WorkspaceGroups.swift in Sources */,
 				A5F100000000000000000005 /* TabItemView+WorkspaceNotificationsMenu.swift in Sources */,
@@ -6466,6 +6473,7 @@
 				5732A0045732A0045732A004 /* WorkspaceContentMinimalModeSafeAreaModifier.swift in Sources */,
 				A5001407 /* WorkspaceContentView.swift in Sources */,
 				CE0E01050000000000000001 /* WorkspaceDisplayCurrentStateFileWatcher.swift in Sources */,
+				CE0E01080000000000000001 /* WorkspaceDisplayCurrentStateProjectLinkSnapshot.swift in Sources */,
 				CE0E01010000000000000001 /* WorkspaceDisplayCurrentStatePullRequestSnapshot.swift in Sources */,
 				CE0E01020000000000000001 /* WorkspaceDisplayCurrentStateSnapshot.swift in Sources */,
 				CE0E01030000000000000001 /* WorkspaceDisplayCurrentStateStore.swift in Sources */,
@@ -7692,7 +7700,7 @@
 			repositoryURL = "https://github.com/BrianBusby/provenance-engine.git";
 			requirement = {
 				kind = revision;
-				revision = 2749a027d98fc6054ee92fec8f87e48466ef3c48;
+				revision = aa160b7fb545328a7aa8713562574e30974e3b2b;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
