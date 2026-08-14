@@ -774,6 +774,7 @@
 		A17110000000000000000001 /* KeyboardShortcutSpaceKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A17110000000000000000002 /* KeyboardShortcutSpaceKeyTests.swift */; };
 		C34670040000000000000001 /* KeyboardShortcutTestSettingsIsolation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C34670040000000000000002 /* KeyboardShortcutTestSettingsIsolation.swift */; };
 		87C609D63F03597AC12C8B0A /* LastSurfaceClosePreferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2EE0C080FF0FCCE8A8CA930 /* LastSurfaceClosePreferenceTests.swift */; };
+		CE0E03130000000000000001 /* LinearTicketIdentifierAliasMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03130000000000000002 /* LinearTicketIdentifierAliasMap.swift */; };
 		CE0E03120000000000000001 /* LinearWebLinkBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03120000000000000002 /* LinearWebLinkBuilder.swift */; };
 		DA7A10CA710E000000000003 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA7A10CA710E000000000001 /* Localizable.xcstrings */; };
 		53750022A0B1C2D3E4F50022 /* MacAuthComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53750023A0B1C2D3E4F50023 /* MacAuthComposition.swift */; };
@@ -1526,6 +1527,7 @@
 		CE0D10250000000000000001 /* WorkProvenanceGitStatusEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */; };
 		CE0E03090000000000000001 /* WorkProvenanceLinearAuthorizationProviding.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03090000000000000002 /* WorkProvenanceLinearAuthorizationProviding.swift */; };
 		CE0E03050000000000000001 /* WorkProvenanceLinearTicketLinkResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03050000000000000002 /* WorkProvenanceLinearTicketLinkResolver.swift */; };
+		CE0E03140000000000000001 /* WorkProvenanceLinearTicketLinkResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */; };
 		CE0E03020000000000000001 /* WorkProvenanceNoopPullRequestOwnerResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03020000000000000002 /* WorkProvenanceNoopPullRequestOwnerResolver.swift */; };
 		36915A74F7AA3930F34DF634 /* WorkProvenanceObservationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */; };
 			8DCF06522BB39B4A966FFC83 /* WorkProvenanceObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */; };
@@ -2452,6 +2454,7 @@
 		A17110000000000000000002 /* KeyboardShortcutSpaceKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutSpaceKeyTests.swift; sourceTree = "<group>"; };
 		C34670040000000000000002 /* KeyboardShortcutTestSettingsIsolation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutTestSettingsIsolation.swift; sourceTree = "<group>"; };
 		F2EE0C080FF0FCCE8A8CA930 /* LastSurfaceClosePreferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LastSurfaceClosePreferenceTests.swift; sourceTree = "<group>"; };
+		CE0E03130000000000000002 /* LinearTicketIdentifierAliasMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearTicketIdentifierAliasMap.swift; sourceTree = "<group>"; };
 		CE0E03120000000000000002 /* LinearWebLinkBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearWebLinkBuilder.swift; sourceTree = "<group>"; };
 		DA7A10CA710E000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		53750023A0B1C2D3E4F50023 /* MacAuthComposition.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MacAuthComposition.swift; sourceTree = "<group>"; };
@@ -3163,6 +3166,7 @@
 		BAA5FC775862C1A3F8FB17CF /* WorkProvenanceGitStatusEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitStatusEntry.swift; sourceTree = "<group>"; };
 		CE0E03090000000000000002 /* WorkProvenanceLinearAuthorizationProviding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceLinearAuthorizationProviding.swift; sourceTree = "<group>"; };
 		CE0E03050000000000000002 /* WorkProvenanceLinearTicketLinkResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceLinearTicketLinkResolver.swift; sourceTree = "<group>"; };
+			CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceLinearTicketLinkResolverTests.swift; sourceTree = "<group>"; };
 		CE0E03020000000000000002 /* WorkProvenanceNoopPullRequestOwnerResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceNoopPullRequestOwnerResolver.swift; sourceTree = "<group>"; };
 		3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceObservationService.swift; sourceTree = "<group>"; };
 			642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceObserverTests.swift; sourceTree = "<group>"; };
@@ -4969,6 +4973,7 @@
 				5E2701030000000000000002 /* SentryEventScrubberTests.swift */,
 
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
+					CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */,
 					CE0E04010000000000000002 /* WorkspaceDisplayCurrentStateSnapshotTests.swift */,
 					1211A332D826E19C7A6463C8 /* WorkProvenanceStoreTests.swift */,
 					CE0E01070000000000000002 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift */,
@@ -5030,6 +5035,7 @@
 				CE0E03070000000000000002 /* WorkProvenanceCompositeLinearAuthorizationProvider.swift */,
 				CE0E03080000000000000002 /* WorkProvenanceEnvironmentLinearAuthorizationProvider.swift */,
 				CE0E03090000000000000002 /* WorkProvenanceLinearAuthorizationProviding.swift */,
+				CE0E03130000000000000002 /* LinearTicketIdentifierAliasMap.swift */,
 				CE0E03120000000000000002 /* LinearWebLinkBuilder.swift */,
 				CE0E03050000000000000002 /* WorkProvenanceLinearTicketLinkResolver.swift */,
 				3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */,
@@ -5904,6 +5910,7 @@
 				D5671301D5671301D5671301 /* KeyboardShortcutSettingsFileStore+TerminalScrollSpeed.swift in Sources */,
 				A5F10011A1B2C3D4E5F60719 /* KeyboardShortcutSettingsFileStore.swift in Sources */,
 				C1713004C1713004C1713004 /* KeyboardShortcutSettingsLookup.swift in Sources */,
+				CE0E03130000000000000001 /* LinearTicketIdentifierAliasMap.swift in Sources */,
 				CE0E03120000000000000001 /* LinearWebLinkBuilder.swift in Sources */,
 				53750022A0B1C2D3E4F50022 /* MacAuthComposition.swift in Sources */,
 				D1F0A00600000000000000C1 /* MacPairedMacBackupBody.swift in Sources */,
@@ -7065,6 +7072,7 @@
 				8770D0F2D2BB45359D6BE5E3 /* WindowKeyDownReplayGuardTests.swift in Sources */,
 				606600010000000000000001 /* WindowTerminalHostViewTitlebarHitTests.swift in Sources */,
 				604500100000000000000003 /* WindowTitleTemplateTests.swift in Sources */,
+					CE0E03140000000000000001 /* WorkProvenanceLinearTicketLinkResolverTests.swift in Sources */,
 					8DCF06522BB39B4A966FFC83 /* WorkProvenanceObserverTests.swift in Sources */,
 					B1581966C6355C46BC3ABE62 /* WorkProvenanceStoreTests.swift in Sources */,
 					7F0A0E04A8CADC84BB4F1DF7 /* WorkspaceActionDispatcherTests.swift in Sources */,
