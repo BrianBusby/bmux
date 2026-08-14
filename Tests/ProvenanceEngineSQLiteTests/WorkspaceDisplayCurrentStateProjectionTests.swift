@@ -32,6 +32,14 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
                         url: "https://linear.app/company/issue/CC-1842"
                     )
                 ],
+                projectLinks: [
+                    ProvenanceWorkspaceDisplayProjectLinkRecord(
+                        id: "upload-reliability-20a24",
+                        system: "linear",
+                        title: "Upload Reliability",
+                        url: "https://linear.app/company/project/upload-reliability-20a24"
+                    )
+                ],
                 observedAt: baseTime
             ),
             into: repository
@@ -61,6 +69,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
         #expect(display.pullRequestBranch == "feature/cc-1842-upload-retries")
         #expect(display.ticketIDs == ["CC-1842"])
         #expect(display.ticketLinks.first?.title == "Fix upload retry behavior")
+        #expect(display.projectLinks.first?.title == "Upload Reliability")
         #expect(display.latestEventID == "event-workspace-display-branch-only")
     }
 
@@ -243,6 +252,54 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
     }
 
     @Test
+    func projectEnrichmentAccumulatesTitleAndURL() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let baseTime = Date(timeIntervalSince1970: 1_810_000_450)
+
+        try await Self.appendWorkspaceDisplay(
+            eventID: "event-workspace-display-project-title",
+            timestamp: baseTime,
+            display: Self.workspaceDisplay(
+                projectLinks: [
+                    ProvenanceWorkspaceDisplayProjectLinkRecord(
+                        id: "upload-reliability-20a24",
+                        system: "linear",
+                        title: "Upload Reliability"
+                    )
+                ],
+                observedAt: baseTime
+            ),
+            into: repository
+        )
+        try await Self.appendWorkspaceDisplay(
+            eventID: "event-workspace-display-project-url",
+            timestamp: baseTime.addingTimeInterval(1),
+            display: Self.workspaceDisplay(
+                projectLinks: [
+                    ProvenanceWorkspaceDisplayProjectLinkRecord(
+                        id: "upload-reliability-20a24",
+                        url: "https://linear.app/company/project/upload-reliability-20a24"
+                    )
+                ],
+                observedAt: baseTime.addingTimeInterval(1)
+            ),
+            into: repository
+        )
+
+        let display = try #require(try await repository.workspaceDisplay(
+            ProvenanceWorkspaceDisplayRequest(workspaceID: Self.workspaceID)
+        ).display)
+        let project = try #require(display.projectLinks.first)
+        #expect(project.id == "upload-reliability-20a24")
+        #expect(project.system == "linear")
+        #expect(project.title == "Upload Reliability")
+        #expect(project.url == "https://linear.app/company/project/upload-reliability-20a24")
+        #expect(display.fieldMetadata["project_links"]?.evidenceEventID == "event-workspace-display-project-url")
+    }
+
+    @Test
     func promptSequenceKeepsLastSubmittedPromptUntilNewPromptArrives() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
@@ -357,6 +414,12 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
                         ownerName: "Brian"
                     )
                 ],
+                projectLinks: [
+                    ProvenanceWorkspaceDisplayProjectLinkRecord(
+                        id: "upload-reliability-20a24",
+                        title: "Upload Reliability"
+                    )
+                ],
                 currentWorkSummary: "summary before restart",
                 lastSubmittedPrompt: "prompt before restart",
                 lastSubmittedPromptSubmittedAt: baseTime,
@@ -379,6 +442,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
         #expect(display.pullRequestNumber == 77)
         #expect(display.pullRequestStatus == "merged")
         #expect(display.ticketLinks.first?.ownerName == "Brian")
+        #expect(display.projectLinks.first?.title == "Upload Reliability")
         #expect(display.currentWorkSummary == "summary before restart")
         #expect(display.lastSubmittedPrompt == "prompt before restart")
     }
@@ -418,6 +482,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
         pullRequestIsStale: Bool = false,
         ticketIDs: [String] = [],
         ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord] = [],
+        projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord] = [],
         currentWorkSummary: String? = nil,
         lastSubmittedPrompt: String? = nil,
         lastSubmittedPromptSubmittedAt: Date? = nil,
@@ -444,6 +509,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             isDirty: false,
             ticketIDs: ticketIDs,
             ticketLinks: ticketLinks,
+            projectLinks: projectLinks,
             currentWorkSummary: currentWorkSummary,
             lastSubmittedPrompt: lastSubmittedPrompt,
             lastSubmittedPromptSubmittedAt: lastSubmittedPromptSubmittedAt,

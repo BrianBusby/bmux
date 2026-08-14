@@ -108,19 +108,21 @@ The accepted workspace-display Current State contract is:
 - Read response: `ProvenanceWorkspaceDisplayResponse`.
 - Display DTO: `ProvenanceWorkspaceDisplayRecord`.
 - Ticket DTO: `ProvenanceWorkspaceDisplayTicketLinkRecord`.
+- Project DTO: `ProvenanceWorkspaceDisplayProjectLinkRecord`.
 - Field provenance DTO: `ProvenanceWorkspaceDisplayFieldMetadataRecord`.
 
 Workspace-display Current State is field-reconciled. It is not rebuilt as the
 latest event payload. Absence of a field in a later accepted observation is not
-evidence that the previously known field is false. Missing branch, ticket, PR,
-current-work, or prompt values preserve prior accepted values until newer
+evidence that the previously known field is false. Missing branch, ticket,
+project, PR, current-work, or prompt values preserve prior accepted values until newer
 evidence replaces them or an explicit clear establishes that they are no longer
 pertinent.
 
 Explicit clearing is represented by `ProvenanceWorkspaceDisplayRecord.clearedFields`.
 Supported field clears include individual field names such as `branch`,
 `current_work_summary`, and `last_submitted_prompt`, plus grouped work-item
-clears such as `pull_request`, `tickets`, `ticket_ids`, and `ticket_links`.
+clears such as `pull_request`, `tickets`, `ticket_ids`, `ticket_links`,
+`projects`, and `project_links`.
 Provider timeouts, lookup failures, incomplete producer payloads, app activation,
 observer reconnect, telemetry events lacking a workspace-display field, session
 compaction, and live session disappearance are not clear evidence.

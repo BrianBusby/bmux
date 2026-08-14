@@ -18,6 +18,7 @@ local_capabilities:
   workspace_display_projection_cursors: implemented
   workspace_display_ticket_link_facts: implemented
   workspace_display_ticket_title_facts: implemented
+  workspace_display_project_link_facts: implemented
   workspace_display_durable_context: implemented
   schema_identity_validation: implemented
   producer_neutral_lifecycle_recording: implemented
