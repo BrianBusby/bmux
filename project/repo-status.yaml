@@ -2,12 +2,8 @@ schema_version: 1
 repository: BrianBusby/provenance-engine
 
 current_work:
-  active_slice:
-    id: workspace_display_ticket_title_facts
-    title: PE-owned ticket title facts in workspace display state
-    state: implemented
-    owner: Codex
-  state: active
+  active_slice: null
+  state: observation
 
 release:
   latest_tag: "0.1.0"
@@ -22,6 +18,7 @@ local_capabilities:
   workspace_display_projection_cursors: implemented
   workspace_display_ticket_link_facts: implemented
   workspace_display_ticket_title_facts: implemented
+  workspace_display_durable_context: implemented
   schema_identity_validation: implemented
   producer_neutral_lifecycle_recording: implemented
 

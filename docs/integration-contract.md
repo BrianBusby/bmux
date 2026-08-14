@@ -101,6 +101,41 @@ Each request limit is an independent engine row budget for its matching response
 
 Response guarantees: `schemaVersion == 1` for the current V1 shape; arrays are always present; linked records are optional where producers may have appended partial or unattributed evidence; no SQLite table names, row identifiers, SQL predicates, terminal rendering, JSON payload compatibility, fallback strings, or CLI errors are part of the public contract. Consumers must not read `provenance_worktrees`, `provenance_repositories`, `provenance_sessions`, `provenance_work_contributions`, `provenance_work_items`, `provenance_file_changes`, `provenance_change_sets`, `provenance_checkpoints`, or `provenance_validation_runs` directly for current context.
 
+The accepted workspace-display Current State contract is:
+
+- Write evidence: append a `ProvenanceEvent` with `eventType == .workspaceDisplayObserved` and `payload.workspaceDisplay`.
+- Read request: `ProvenanceWorkspaceDisplayRequest(workspaceID:)`.
+- Read response: `ProvenanceWorkspaceDisplayResponse`.
+- Display DTO: `ProvenanceWorkspaceDisplayRecord`.
+- Ticket DTO: `ProvenanceWorkspaceDisplayTicketLinkRecord`.
+- Field provenance DTO: `ProvenanceWorkspaceDisplayFieldMetadataRecord`.
+
+Workspace-display Current State is field-reconciled. It is not rebuilt as the
+latest event payload. Absence of a field in a later accepted observation is not
+evidence that the previously known field is false. Missing branch, ticket, PR,
+current-work, or prompt values preserve prior accepted values until newer
+evidence replaces them or an explicit clear establishes that they are no longer
+pertinent.
+
+Explicit clearing is represented by `ProvenanceWorkspaceDisplayRecord.clearedFields`.
+Supported field clears include individual field names such as `branch`,
+`current_work_summary`, and `last_submitted_prompt`, plus grouped work-item
+clears such as `pull_request`, `tickets`, `ticket_ids`, and `ticket_links`.
+Provider timeouts, lookup failures, incomplete producer payloads, app activation,
+observer reconnect, telemetry events lacking a workspace-display field, session
+compaction, and live session disappearance are not clear evidence.
+
+The projection stores field-level provenance metadata for diagnostics and refresh
+policy: field name, observed timestamp, source, evidence origin, evidence event
+ID, evidence sequence, freshness, and explicit-clear state. Consumers are not
+required to display that metadata, but diagnostics should use it to distinguish
+current, stale, failed-refresh, explicitly-cleared, and unknown states.
+
+`lastSubmittedPrompt` is a bounded workspace-display text fact supplied by the
+consumer. It is not general transcript persistence. A consumer that needs raw
+prompt or transcript storage must introduce a separate capture-policy contract
+instead of expanding workspace-display state silently.
+
 Rollback should be a scoped Git revert in the adopter repository that removes the package dependency and restores the previous local read path.
 
 Appender note: set `ProvenanceEvent.evidenceOrigin` and `ProvenanceEvent.evidenceScope` when the producing system or ownership boundary is known. Existing V1 adopters may leave both fields unset. `ProvenanceSource` remains the claim classification, not the origin system.

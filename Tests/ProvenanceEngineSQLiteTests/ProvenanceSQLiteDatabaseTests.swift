@@ -424,7 +424,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 14)
+        #expect(try await repository.schemaVersion() == 15)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
@@ -442,17 +442,17 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_workspace_display", in: database))
         #expect(try Self.tableExists("provenance_storage_repair_attempts", in: database))
         #expect(try Self.tableExists("provenance_schema_migrations", in: database))
-        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [14, 13, 12, 11, 10, 9, 8])
+        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [15, 14, 13, 12, 11, 10, 9, 8])
     }
 
     @Test
-    func repositoryMigratesExistingVersion13WorkspaceDisplaySchemaToOwnerColumns() async throws {
+    func repositoryMigratesExistingVersion13WorkspaceDisplaySchemaToOwnerAndDurabilityColumns() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
 
         _ = try ProvenanceSQLiteRepository(
             url: url,
-            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast())
+            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast(2))
         )
 
         let olderDatabase = try ProvenanceSQLiteDatabase(url: url)
@@ -463,11 +463,17 @@ struct ProvenanceSQLiteDatabaseTests {
         let repository = try ProvenanceSQLiteRepository(url: url)
         let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
 
-        #expect(try await repository.schemaVersion() == 14)
-        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: migratedDatabase) == "14")
+        #expect(try await repository.schemaVersion() == 15)
+        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: migratedDatabase) == "15")
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_login", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_url", in: migratedDatabase))
-        #expect(try await repository.schemaMigrationRecords(limit: 1).map(\.version) == [14])
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "current_work_summary", in: migratedDatabase))
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "last_submitted_prompt", in: migratedDatabase))
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "last_submitted_prompt_submitted_at_seconds", in: migratedDatabase))
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "last_submitted_prompt_session_id", in: migratedDatabase))
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "cleared_fields_json", in: migratedDatabase))
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "field_metadata_json", in: migratedDatabase))
+        #expect(try await repository.schemaMigrationRecords(limit: 2).map(\.version) == [15, 14])
     }
 
     @Test
@@ -527,7 +533,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
 
-        #expect(try await repository.schemaVersion() == 14)
+        #expect(try await repository.schemaVersion() == 15)
         #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
     }
 
@@ -793,7 +799,7 @@ struct ProvenanceSQLiteDatabaseTests {
         let summary = try await repository.storageSummary()
 
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 14,
+            schemaVersion: 15,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,
@@ -2876,13 +2882,36 @@ struct ProvenanceSQLiteDatabaseTests {
             )
         )
 
-        #expect(try await repository.workspaceDisplay(
+        let response = try await repository.workspaceDisplay(
             ProvenanceWorkspaceDisplayRequest(workspaceID: display.workspaceID)
-        ) == ProvenanceWorkspaceDisplayResponse(
-            found: true,
-            workspaceID: display.workspaceID,
-            display: expectedDisplay
-        ))
+        )
+        #expect(response.found)
+        #expect(response.workspaceID == display.workspaceID)
+        let actualDisplay = try #require(response.display)
+        #expect(actualDisplay.id == expectedDisplay.id)
+        #expect(actualDisplay.workspaceID == expectedDisplay.workspaceID)
+        #expect(actualDisplay.repositoryID == expectedDisplay.repositoryID)
+        #expect(actualDisplay.worktreeID == expectedDisplay.worktreeID)
+        #expect(actualDisplay.currentDirectory == expectedDisplay.currentDirectory)
+        #expect(actualDisplay.title == expectedDisplay.title)
+        #expect(actualDisplay.titleSource == expectedDisplay.titleSource)
+        #expect(actualDisplay.branch == expectedDisplay.branch)
+        #expect(actualDisplay.pullRequestNumber == expectedDisplay.pullRequestNumber)
+        #expect(actualDisplay.pullRequestURL == expectedDisplay.pullRequestURL)
+        #expect(actualDisplay.pullRequestOwnerLogin == expectedDisplay.pullRequestOwnerLogin)
+        #expect(actualDisplay.pullRequestOwnerURL == expectedDisplay.pullRequestOwnerURL)
+        #expect(actualDisplay.pullRequestStatus == expectedDisplay.pullRequestStatus)
+        #expect(actualDisplay.pullRequestBranch == expectedDisplay.pullRequestBranch)
+        #expect(actualDisplay.pullRequestIsStale == expectedDisplay.pullRequestIsStale)
+        #expect(actualDisplay.isDirty == expectedDisplay.isDirty)
+        #expect(actualDisplay.ticketIDs == expectedDisplay.ticketIDs)
+        #expect(actualDisplay.ticketLinks == expectedDisplay.ticketLinks)
+        #expect(actualDisplay.latestEventID == expectedDisplay.latestEventID)
+        #expect(actualDisplay.latestEventSequence == expectedDisplay.latestEventSequence)
+        #expect(actualDisplay.observedAt == expectedDisplay.observedAt)
+        #expect(actualDisplay.updatedAt == expectedDisplay.updatedAt)
+        #expect(actualDisplay.fieldMetadata["pull_request_number"]?.evidenceEventID == "event-workspace-display")
+        #expect(actualDisplay.fieldMetadata["ticket_links"]?.evidenceEventSequence == 1)
         #expect(try await repository.workspaceDisplay(
             ProvenanceWorkspaceDisplayRequest(workspaceID: "missing-workspace")
         ) == ProvenanceWorkspaceDisplayResponse(
@@ -2898,9 +2927,10 @@ struct ProvenanceSQLiteDatabaseTests {
 
         #expect(try await repository.storageSummary().workspaceDisplayCount == 0)
         #expect(try await repository.rebuildProjectionsFromEventLedger() == 1)
-        #expect(try await repository.workspaceDisplay(
+        let rebuiltResponse = try await repository.workspaceDisplay(
             ProvenanceWorkspaceDisplayRequest(workspaceID: display.workspaceID)
-        ).display == expectedDisplay)
+        )
+        #expect(rebuiltResponse.display == actualDisplay)
     }
 
     @Test

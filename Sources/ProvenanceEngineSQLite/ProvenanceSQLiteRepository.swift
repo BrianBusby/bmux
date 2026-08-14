@@ -88,8 +88,7 @@ actor ProvenanceSQLiteRepository {
         do {
             try insertEvent(event)
             try applyProjectionUpdates(
-                from: event.payload,
-                latestEventID: event.id,
+                from: event,
                 latestEventSequence: eventSequence(id: event.id)
             )
             try database.execute("COMMIT")
@@ -583,8 +582,7 @@ actor ProvenanceSQLiteRepository {
 
                 for entry in entries {
                     try applyProjectionUpdates(
-                        from: entry.event.payload,
-                        latestEventID: entry.event.id,
+                        from: entry.event,
                         latestEventSequence: entry.sequence
                     )
                     afterSequence = entry.sequence
@@ -1387,6 +1385,12 @@ actor ProvenanceSQLiteRepository {
                 is_dirty,
                 ticket_ids_json,
                 ticket_links_json,
+                current_work_summary,
+                last_submitted_prompt,
+                last_submitted_prompt_submitted_at_seconds,
+                last_submitted_prompt_session_id,
+                cleared_fields_json,
+                field_metadata_json,
                 latest_event_id,
                 latest_event_sequence,
                 observed_at_seconds,
@@ -1410,7 +1414,11 @@ actor ProvenanceSQLiteRepository {
               let ticketIDsJSON = query.string(at: 16),
               let ticketIDsData = ticketIDsJSON.data(using: .utf8),
               let ticketLinksJSON = query.string(at: 17),
-              let ticketLinksData = ticketLinksJSON.data(using: .utf8) else {
+              let ticketLinksData = ticketLinksJSON.data(using: .utf8),
+              let clearedFieldsJSON = query.string(at: 22),
+              let clearedFieldsData = clearedFieldsJSON.data(using: .utf8),
+              let fieldMetadataJSON = query.string(at: 23),
+              let fieldMetadataData = fieldMetadataJSON.data(using: .utf8) else {
             return nil
         }
 
@@ -1419,6 +1427,11 @@ actor ProvenanceSQLiteRepository {
             [ProvenanceWorkspaceDisplayTicketLinkRecord].self,
             from: ticketLinksData
         )) ?? []
+        let clearedFields = (try? payloadDecoder.decode([String].self, from: clearedFieldsData)) ?? []
+        let fieldMetadata = (try? payloadDecoder.decode(
+            [String: ProvenanceWorkspaceDisplayFieldMetadataRecord].self,
+            from: fieldMetadataData
+        )) ?? [:]
         return ProvenanceWorkspaceDisplayRecord(
             id: id,
             workspaceID: workspaceID,
@@ -1438,10 +1451,16 @@ actor ProvenanceSQLiteRepository {
             isDirty: query.double(at: 15).map { Int($0) != 0 },
             ticketIDs: ticketIDs,
             ticketLinks: ticketLinks,
-            latestEventID: query.string(at: 18),
-            latestEventSequence: query.double(at: 19).map(Int.init),
-            observedAt: Date(timeIntervalSince1970: query.double(at: 20) ?? 0),
-            updatedAt: Date(timeIntervalSince1970: query.double(at: 21) ?? 0)
+            currentWorkSummary: query.string(at: 18),
+            lastSubmittedPrompt: query.string(at: 19),
+            lastSubmittedPromptSubmittedAt: query.double(at: 20).map { Date(timeIntervalSince1970: $0) },
+            lastSubmittedPromptSessionID: query.string(at: 21),
+            clearedFields: clearedFields,
+            fieldMetadata: fieldMetadata,
+            latestEventID: query.string(at: 24),
+            latestEventSequence: query.double(at: 25).map(Int.init),
+            observedAt: Date(timeIntervalSince1970: query.double(at: 26) ?? 0),
+            updatedAt: Date(timeIntervalSince1970: query.double(at: 27) ?? 0)
         )
     }
 
@@ -2367,10 +2386,10 @@ actor ProvenanceSQLiteRepository {
     }
 
     private func applyProjectionUpdates(
-        from payload: ProvenanceEventPayload,
-        latestEventID: String? = nil,
+        from event: ProvenanceEvent,
         latestEventSequence: Int? = nil
     ) throws {
+        let payload = event.payload
         if let repository = payload.repository {
             try upsertRepository(repository)
         }
@@ -2407,7 +2426,7 @@ actor ProvenanceSQLiteRepository {
         if let workspaceDisplay = payload.workspaceDisplay {
             try upsertWorkspaceDisplay(
                 workspaceDisplay,
-                latestEventID: latestEventID,
+                event: event,
                 latestEventSequence: latestEventSequence
             )
         }
@@ -2860,17 +2879,30 @@ actor ProvenanceSQLiteRepository {
 
     private func upsertWorkspaceDisplay(
         _ display: ProvenanceWorkspaceDisplayRecord,
-        latestEventID: String? = nil,
+        event: ProvenanceEvent,
         latestEventSequence: Int? = nil
     ) throws {
-        let ticketIDsData = try payloadEncoder.encode(display.ticketIDs)
-        guard let ticketIDsJSON = String(data: ticketIDsData, encoding: .utf8) else {
-            throw ProvenanceSQLiteError.sqlite(message: "failed to encode workspace display ticket IDs")
-        }
-        let ticketLinksData = try payloadEncoder.encode(display.ticketLinks)
-        guard let ticketLinksJSON = String(data: ticketLinksData, encoding: .utf8) else {
-            throw ProvenanceSQLiteError.sqlite(message: "failed to encode workspace display ticket links")
-        }
+        let merged = try mergedWorkspaceDisplay(
+            display,
+            event: event,
+            latestEventSequence: latestEventSequence
+        )
+        let ticketIDsJSON = try encodedWorkspaceDisplayJSON(
+            merged.ticketIDs,
+            failureMessage: "failed to encode workspace display ticket IDs"
+        )
+        let ticketLinksJSON = try encodedWorkspaceDisplayJSON(
+            merged.ticketLinks,
+            failureMessage: "failed to encode workspace display ticket links"
+        )
+        let clearedFieldsJSON = try encodedWorkspaceDisplayJSON(
+            merged.clearedFields,
+            failureMessage: "failed to encode workspace display cleared fields"
+        )
+        let fieldMetadataJSON = try encodedWorkspaceDisplayJSON(
+            merged.fieldMetadata,
+            failureMessage: "failed to encode workspace display field metadata"
+        )
 
         let upsert = try database.prepare(
             """
@@ -2893,11 +2925,17 @@ actor ProvenanceSQLiteRepository {
                 is_dirty,
                 ticket_ids_json,
                 ticket_links_json,
+                current_work_summary,
+                last_submitted_prompt,
+                last_submitted_prompt_submitted_at_seconds,
+                last_submitted_prompt_session_id,
+                cleared_fields_json,
+                field_metadata_json,
                 latest_event_id,
                 latest_event_sequence,
                 observed_at_seconds,
                 updated_at_seconds
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 workspace_id = excluded.workspace_id,
                 repository_id = excluded.repository_id,
@@ -2916,6 +2954,12 @@ actor ProvenanceSQLiteRepository {
                 is_dirty = excluded.is_dirty,
                 ticket_ids_json = excluded.ticket_ids_json,
                 ticket_links_json = excluded.ticket_links_json,
+                current_work_summary = excluded.current_work_summary,
+                last_submitted_prompt = excluded.last_submitted_prompt,
+                last_submitted_prompt_submitted_at_seconds = excluded.last_submitted_prompt_submitted_at_seconds,
+                last_submitted_prompt_session_id = excluded.last_submitted_prompt_session_id,
+                cleared_fields_json = excluded.cleared_fields_json,
+                field_metadata_json = excluded.field_metadata_json,
                 latest_event_id = excluded.latest_event_id,
                 latest_event_sequence = excluded.latest_event_sequence,
                 observed_at_seconds = excluded.observed_at_seconds,
@@ -2924,42 +2968,361 @@ actor ProvenanceSQLiteRepository {
         )
         defer { upsert.finalize() }
 
-        try upsert.bind(display.id, at: 1)
-        try upsert.bind(display.workspaceID, at: 2)
-        try upsert.bind(display.repositoryID, at: 3)
-        try upsert.bind(display.worktreeID, at: 4)
-        try upsert.bind(display.title, at: 5)
-        try upsert.bind(display.titleSource, at: 6)
-        try upsert.bind(display.branch, at: 7)
-        if let pullRequestNumber = display.pullRequestNumber {
+        try upsert.bind(merged.id, at: 1)
+        try upsert.bind(merged.workspaceID, at: 2)
+        try upsert.bind(merged.repositoryID, at: 3)
+        try upsert.bind(merged.worktreeID, at: 4)
+        try upsert.bind(merged.title, at: 5)
+        try upsert.bind(merged.titleSource, at: 6)
+        try upsert.bind(merged.branch, at: 7)
+        if let pullRequestNumber = merged.pullRequestNumber {
             try upsert.bind(pullRequestNumber, at: 8)
         } else {
             try upsert.bind(nil as String?, at: 8)
         }
-        try upsert.bind(display.pullRequestURL, at: 9)
-        try upsert.bind(display.pullRequestOwnerLogin, at: 10)
-        try upsert.bind(display.pullRequestOwnerURL, at: 11)
-        try upsert.bind(display.pullRequestStatus, at: 12)
-        try upsert.bind(display.pullRequestBranch, at: 13)
-        try upsert.bind(display.pullRequestIsStale ? 1 : 0, at: 14)
-        try upsert.bind(display.currentDirectory, at: 15)
-        if let isDirty = display.isDirty {
+        try upsert.bind(merged.pullRequestURL, at: 9)
+        try upsert.bind(merged.pullRequestOwnerLogin, at: 10)
+        try upsert.bind(merged.pullRequestOwnerURL, at: 11)
+        try upsert.bind(merged.pullRequestStatus, at: 12)
+        try upsert.bind(merged.pullRequestBranch, at: 13)
+        try upsert.bind(merged.pullRequestIsStale ? 1 : 0, at: 14)
+        try upsert.bind(merged.currentDirectory, at: 15)
+        if let isDirty = merged.isDirty {
             try upsert.bind(isDirty ? 1 : 0, at: 16)
         } else {
             try upsert.bind(nil as String?, at: 16)
         }
         try upsert.bind(ticketIDsJSON, at: 17)
         try upsert.bind(ticketLinksJSON, at: 18)
-        try upsert.bind(display.latestEventID ?? latestEventID, at: 19)
-        if let latestEventSequence = display.latestEventSequence ?? latestEventSequence {
-            try upsert.bind(latestEventSequence, at: 20)
+        try upsert.bind(merged.currentWorkSummary, at: 19)
+        try upsert.bind(merged.lastSubmittedPrompt, at: 20)
+        try upsert.bind(merged.lastSubmittedPromptSubmittedAt?.timeIntervalSince1970, at: 21)
+        try upsert.bind(merged.lastSubmittedPromptSessionID, at: 22)
+        try upsert.bind(clearedFieldsJSON, at: 23)
+        try upsert.bind(fieldMetadataJSON, at: 24)
+        try upsert.bind(merged.latestEventID, at: 25)
+        if let latestEventSequence = merged.latestEventSequence {
+            try upsert.bind(latestEventSequence, at: 26)
         } else {
-            try upsert.bind(nil as String?, at: 20)
+            try upsert.bind(nil as String?, at: 26)
         }
-        try upsert.bind(display.observedAt.timeIntervalSince1970, at: 21)
-        try upsert.bind(display.updatedAt.timeIntervalSince1970, at: 22)
+        try upsert.bind(merged.observedAt.timeIntervalSince1970, at: 27)
+        try upsert.bind(merged.updatedAt.timeIntervalSince1970, at: 28)
 
         _ = try upsert.step()
+    }
+
+    private func mergedWorkspaceDisplay(
+        _ incoming: ProvenanceWorkspaceDisplayRecord,
+        event: ProvenanceEvent,
+        latestEventSequence: Int?
+    ) throws -> ProvenanceWorkspaceDisplayRecord {
+        let existing = try workspaceDisplay(workspaceID: incoming.workspaceID)
+        let requestedClears = Set(incoming.clearedFields)
+        var clearedFields = Set(existing?.clearedFields ?? [])
+        var fieldMetadata = existing?.fieldMetadata ?? incoming.fieldMetadata
+
+        func metadata(fieldName: String, explicitlyCleared: Bool) -> ProvenanceWorkspaceDisplayFieldMetadataRecord {
+            ProvenanceWorkspaceDisplayFieldMetadataRecord(
+                fieldName: fieldName,
+                observedAt: incoming.observedAt,
+                source: event.source,
+                evidenceOrigin: event.evidenceOrigin,
+                evidenceEventID: event.id,
+                evidenceEventSequence: latestEventSequence,
+                freshness: explicitlyCleared ? "explicitly_cleared" : "current",
+                isExplicitlyCleared: explicitlyCleared
+            )
+        }
+
+        func markUpdated(_ fieldName: String) {
+            clearedFields.remove(fieldName)
+            fieldMetadata[fieldName] = metadata(fieldName: fieldName, explicitlyCleared: false)
+        }
+
+        func markCleared(_ fieldName: String) {
+            clearedFields.insert(fieldName)
+            fieldMetadata[fieldName] = metadata(fieldName: fieldName, explicitlyCleared: true)
+        }
+
+        func stringField(_ fieldName: String, incomingValue: String?, existingValue: String?) -> String? {
+            if requestedClears.contains(fieldName) {
+                markCleared(fieldName)
+                return nil
+            }
+            guard let incomingValue else { return existingValue }
+            markUpdated(fieldName)
+            return incomingValue
+        }
+
+        func intField(_ fieldName: String, incomingValue: Int?, existingValue: Int?) -> Int? {
+            if requestedClears.contains(fieldName) {
+                markCleared(fieldName)
+                return nil
+            }
+            guard let incomingValue else { return existingValue }
+            markUpdated(fieldName)
+            return incomingValue
+        }
+
+        func boolField(_ fieldName: String, incomingValue: Bool?, existingValue: Bool?) -> Bool? {
+            if requestedClears.contains(fieldName) {
+                markCleared(fieldName)
+                return nil
+            }
+            guard let incomingValue else { return existingValue }
+            markUpdated(fieldName)
+            return incomingValue
+        }
+
+        let clearsPullRequest = requestedClears.contains("pull_request")
+        let pullRequestNumber: Int?
+        let pullRequestURL: String?
+        let pullRequestOwnerLogin: String?
+        let pullRequestOwnerURL: String?
+        let pullRequestStatus: String?
+        let pullRequestBranch: String?
+        let pullRequestIsStale: Bool
+        if clearsPullRequest {
+            for fieldName in [
+                "pull_request",
+                "pull_request_number",
+                "pull_request_url",
+                "pull_request_owner_login",
+                "pull_request_owner_url",
+                "pull_request_status",
+                "pull_request_branch",
+                "pull_request_is_stale",
+            ] {
+                markCleared(fieldName)
+            }
+            pullRequestNumber = nil
+            pullRequestURL = nil
+            pullRequestOwnerLogin = nil
+            pullRequestOwnerURL = nil
+            pullRequestStatus = nil
+            pullRequestBranch = nil
+            pullRequestIsStale = false
+        } else {
+            pullRequestNumber = intField(
+                "pull_request_number",
+                incomingValue: incoming.pullRequestNumber,
+                existingValue: existing?.pullRequestNumber
+            )
+            pullRequestURL = stringField(
+                "pull_request_url",
+                incomingValue: incoming.pullRequestURL,
+                existingValue: existing?.pullRequestURL
+            )
+            pullRequestOwnerLogin = stringField(
+                "pull_request_owner_login",
+                incomingValue: incoming.pullRequestOwnerLogin,
+                existingValue: existing?.pullRequestOwnerLogin
+            )
+            pullRequestOwnerURL = stringField(
+                "pull_request_owner_url",
+                incomingValue: incoming.pullRequestOwnerURL,
+                existingValue: existing?.pullRequestOwnerURL
+            )
+            pullRequestStatus = stringField(
+                "pull_request_status",
+                incomingValue: incoming.pullRequestStatus,
+                existingValue: existing?.pullRequestStatus
+            )
+            pullRequestBranch = stringField(
+                "pull_request_branch",
+                incomingValue: incoming.pullRequestBranch,
+                existingValue: existing?.pullRequestBranch
+            )
+            let incomingTouchesPullRequest = incoming.pullRequestNumber != nil
+                || incoming.pullRequestURL != nil
+                || incoming.pullRequestOwnerLogin != nil
+                || incoming.pullRequestOwnerURL != nil
+                || incoming.pullRequestStatus != nil
+                || incoming.pullRequestBranch != nil
+                || incoming.pullRequestIsStale
+            if incomingTouchesPullRequest {
+                markUpdated("pull_request_is_stale")
+                pullRequestIsStale = incoming.pullRequestIsStale
+            } else {
+                pullRequestIsStale = existing?.pullRequestIsStale ?? incoming.pullRequestIsStale
+            }
+        }
+
+        let ticketFacts: (ids: [String], links: [ProvenanceWorkspaceDisplayTicketLinkRecord])
+        if requestedClears.contains("tickets")
+            || requestedClears.contains("ticket_ids")
+            || requestedClears.contains("ticket_links") {
+            markCleared("ticket_ids")
+            markCleared("ticket_links")
+            ticketFacts = ([], [])
+        } else if !incoming.ticketIDs.isEmpty || !incoming.ticketLinks.isEmpty {
+            if !incoming.ticketIDs.isEmpty { markUpdated("ticket_ids") }
+            if !incoming.ticketLinks.isEmpty { markUpdated("ticket_links") }
+            ticketFacts = mergedTicketFacts(
+                existingIDs: existing?.ticketIDs ?? [],
+                incomingIDs: incoming.ticketIDs,
+                existingLinks: existing?.ticketLinks ?? [],
+                incomingLinks: incoming.ticketLinks
+            )
+        } else {
+            ticketFacts = (existing?.ticketIDs ?? incoming.ticketIDs, existing?.ticketLinks ?? incoming.ticketLinks)
+        }
+
+        let lastSubmittedPrompt: String?
+        let lastSubmittedPromptSubmittedAt: Date?
+        let lastSubmittedPromptSessionID: String?
+        if requestedClears.contains("last_submitted_prompt") {
+            markCleared("last_submitted_prompt")
+            markCleared("last_submitted_prompt_submitted_at")
+            markCleared("last_submitted_prompt_session_id")
+            lastSubmittedPrompt = nil
+            lastSubmittedPromptSubmittedAt = nil
+            lastSubmittedPromptSessionID = nil
+        } else if let incomingPrompt = incoming.lastSubmittedPrompt {
+            markUpdated("last_submitted_prompt")
+            markUpdated("last_submitted_prompt_submitted_at")
+            if incoming.lastSubmittedPromptSessionID != nil {
+                markUpdated("last_submitted_prompt_session_id")
+            }
+            lastSubmittedPrompt = incomingPrompt
+            lastSubmittedPromptSubmittedAt = incoming.lastSubmittedPromptSubmittedAt ?? incoming.observedAt
+            lastSubmittedPromptSessionID = incoming.lastSubmittedPromptSessionID
+                ?? existing?.lastSubmittedPromptSessionID
+        } else {
+            lastSubmittedPrompt = existing?.lastSubmittedPrompt
+            lastSubmittedPromptSubmittedAt = existing?.lastSubmittedPromptSubmittedAt
+            lastSubmittedPromptSessionID = existing?.lastSubmittedPromptSessionID
+        }
+
+        return ProvenanceWorkspaceDisplayRecord(
+            id: incoming.id,
+            workspaceID: incoming.workspaceID,
+            repositoryID: stringField(
+                "repository_id",
+                incomingValue: incoming.repositoryID,
+                existingValue: existing?.repositoryID
+            ),
+            worktreeID: stringField(
+                "worktree_id",
+                incomingValue: incoming.worktreeID,
+                existingValue: existing?.worktreeID
+            ),
+            currentDirectory: stringField(
+                "current_directory",
+                incomingValue: incoming.currentDirectory,
+                existingValue: existing?.currentDirectory
+            ),
+            title: stringField("title", incomingValue: incoming.title, existingValue: existing?.title),
+            titleSource: stringField(
+                "title_source",
+                incomingValue: incoming.titleSource,
+                existingValue: existing?.titleSource
+            ),
+            branch: stringField("branch", incomingValue: incoming.branch, existingValue: existing?.branch),
+            pullRequestNumber: pullRequestNumber,
+            pullRequestURL: pullRequestURL,
+            pullRequestOwnerLogin: pullRequestOwnerLogin,
+            pullRequestOwnerURL: pullRequestOwnerURL,
+            pullRequestStatus: pullRequestStatus,
+            pullRequestBranch: pullRequestBranch,
+            pullRequestIsStale: pullRequestIsStale,
+            isDirty: boolField("is_dirty", incomingValue: incoming.isDirty, existingValue: existing?.isDirty),
+            ticketIDs: ticketFacts.ids,
+            ticketLinks: ticketFacts.links,
+            currentWorkSummary: stringField(
+                "current_work_summary",
+                incomingValue: incoming.currentWorkSummary,
+                existingValue: existing?.currentWorkSummary
+            ),
+            lastSubmittedPrompt: lastSubmittedPrompt,
+            lastSubmittedPromptSubmittedAt: lastSubmittedPromptSubmittedAt,
+            lastSubmittedPromptSessionID: lastSubmittedPromptSessionID,
+            clearedFields: clearedFields.sorted(),
+            fieldMetadata: fieldMetadata,
+            latestEventID: incoming.latestEventID ?? event.id,
+            latestEventSequence: incoming.latestEventSequence ?? latestEventSequence,
+            observedAt: incoming.observedAt,
+            updatedAt: incoming.updatedAt
+        )
+    }
+
+    private func mergedTicketFacts(
+        existingIDs: [String],
+        incomingIDs: [String],
+        existingLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord],
+        incomingLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord]
+    ) -> (ids: [String], links: [ProvenanceWorkspaceDisplayTicketLinkRecord]) {
+        let normalizedIncomingIDs = uniqueWorkspaceDisplayIDs(incomingIDs)
+        let normalizedExistingIDs = uniqueWorkspaceDisplayIDs(existingIDs)
+        let incomingLinkIDs = uniqueWorkspaceDisplayIDs(incomingLinks.map(\.id))
+        let ids: [String]
+        if !normalizedIncomingIDs.isEmpty {
+            ids = normalizedIncomingIDs
+        } else if !normalizedExistingIDs.isEmpty {
+            ids = normalizedExistingIDs
+        } else {
+            ids = incomingLinkIDs
+        }
+
+        var linkOrder = ids
+        let targetIDs = Set(ids)
+        for link in existingLinks + incomingLinks {
+            let trimmedID = link.id.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedID.isEmpty else { continue }
+            guard normalizedIncomingIDs.isEmpty || targetIDs.contains(trimmedID) else { continue }
+            if !linkOrder.contains(trimmedID) {
+                linkOrder.append(trimmedID)
+            }
+        }
+
+        let existingByID = workspaceDisplayTicketLinksByID(existingLinks)
+        let incomingByID = workspaceDisplayTicketLinksByID(incomingLinks)
+        let links = linkOrder.compactMap { id -> ProvenanceWorkspaceDisplayTicketLinkRecord? in
+            guard let existing = existingByID[id] ?? incomingByID[id] else { return nil }
+            let incoming = incomingByID[id]
+            return ProvenanceWorkspaceDisplayTicketLinkRecord(
+                id: id,
+                system: incoming?.system ?? existing.system,
+                title: incoming?.title ?? existing.title,
+                url: incoming?.url ?? existing.url,
+                ownerName: incoming?.ownerName ?? existing.ownerName,
+                ownerURL: incoming?.ownerURL ?? existing.ownerURL
+            )
+        }
+        return (ids, links)
+    }
+
+    private func workspaceDisplayTicketLinksByID(
+        _ links: [ProvenanceWorkspaceDisplayTicketLinkRecord]
+    ) -> [String: ProvenanceWorkspaceDisplayTicketLinkRecord] {
+        links.reduce(into: [:]) { result, link in
+            let trimmedID = link.id.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedID.isEmpty else { return }
+            result[trimmedID] = link
+        }
+    }
+
+    private func uniqueWorkspaceDisplayIDs(_ ids: [String]) -> [String] {
+        var seen = Set<String>()
+        var result: [String] = []
+        for id in ids {
+            let trimmedID = id.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedID.isEmpty, seen.insert(trimmedID).inserted else { continue }
+            result.append(trimmedID)
+        }
+        return result
+    }
+
+    private func encodedWorkspaceDisplayJSON<T: Encodable>(
+        _ value: T,
+        failureMessage: String
+    ) throws -> String {
+        let data = try payloadEncoder.encode(value)
+        guard let json = String(data: data, encoding: .utf8) else {
+            throw ProvenanceSQLiteError.sqlite(message: failureMessage)
+        }
+        return json
     }
 
     private func insertStorageRepairAttempt(
@@ -3466,6 +3829,22 @@ actor ProvenanceSQLiteRepository {
                 """
                 UPDATE provenance_metadata
                 SET value = '14'
+                WHERE key = 'schema_version'
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 15,
+            statements: [
+                "ALTER TABLE provenance_workspace_display ADD COLUMN current_work_summary TEXT",
+                "ALTER TABLE provenance_workspace_display ADD COLUMN last_submitted_prompt TEXT",
+                "ALTER TABLE provenance_workspace_display ADD COLUMN last_submitted_prompt_submitted_at_seconds REAL",
+                "ALTER TABLE provenance_workspace_display ADD COLUMN last_submitted_prompt_session_id TEXT",
+                "ALTER TABLE provenance_workspace_display ADD COLUMN cleared_fields_json TEXT NOT NULL DEFAULT '[]'",
+                "ALTER TABLE provenance_workspace_display ADD COLUMN field_metadata_json TEXT NOT NULL DEFAULT '{}'",
+                """
+                UPDATE provenance_metadata
+                SET value = '15'
                 WHERE key = 'schema_version'
                 """,
             ]

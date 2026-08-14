@@ -85,6 +85,20 @@ milestones:
             profile_url: https://github.com/BrianBusby
     completed_at: 2026-07-31
 
+  - id: workspace_display_durable_context
+    title: Workspace Display Durable Context and Reconciliation
+    owner: bmux
+    delivery_status: open
+    acceptance_status: implemented
+    evidence:
+      commits:
+        - repository: BrianBusby/provenance-engine
+          sha: bdf81ae0454f274ff3e3f11df287b88320f1b272
+        - repository: BrianBusby/bmux
+          sha: 54316195468987c47512eb4f16d4fca2b3c2f8ed
+      pull_requests: []
+    completed_at: 2026-08-13
+
 ownership:
   durable_evidence: provenance_engine
   deterministic_current_state: provenance_engine
