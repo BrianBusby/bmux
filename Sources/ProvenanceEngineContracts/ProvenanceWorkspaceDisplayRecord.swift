@@ -56,6 +56,9 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
     /// External ticket links linked to the workspace.
     public let ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord]
 
+    /// External project links linked to the workspace.
+    public let projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord]
+
     /// Durable summary of the current work for workspace display, when accepted.
     public let currentWorkSummary: String?
 
@@ -105,6 +108,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         case isDirty
         case ticketIDs
         case ticketLinks
+        case projectLinks
         case currentWorkSummary
         case lastSubmittedPrompt
         case lastSubmittedPromptSubmittedAt
@@ -137,6 +141,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         isDirty: Bool? = nil,
         ticketIDs: [String] = [],
         ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord] = [],
+        projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord] = [],
         currentWorkSummary: String? = nil,
         lastSubmittedPrompt: String? = nil,
         lastSubmittedPromptSubmittedAt: Date? = nil,
@@ -166,6 +171,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.isDirty = isDirty
         self.ticketIDs = ticketIDs
         self.ticketLinks = ticketLinks
+        self.projectLinks = projectLinks
         self.currentWorkSummary = currentWorkSummary
         self.lastSubmittedPrompt = lastSubmittedPrompt
         self.lastSubmittedPromptSubmittedAt = lastSubmittedPromptSubmittedAt
@@ -201,6 +207,10 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.ticketLinks = try container.decodeIfPresent(
             [ProvenanceWorkspaceDisplayTicketLinkRecord].self,
             forKey: .ticketLinks
+        ) ?? []
+        self.projectLinks = try container.decodeIfPresent(
+            [ProvenanceWorkspaceDisplayProjectLinkRecord].self,
+            forKey: .projectLinks
         ) ?? []
         self.currentWorkSummary = try container.decodeIfPresent(String.self, forKey: .currentWorkSummary)
         self.lastSubmittedPrompt = try container.decodeIfPresent(String.self, forKey: .lastSubmittedPrompt)

@@ -1385,6 +1385,7 @@ actor ProvenanceSQLiteRepository {
                 is_dirty,
                 ticket_ids_json,
                 ticket_links_json,
+                project_links_json,
                 current_work_summary,
                 last_submitted_prompt,
                 last_submitted_prompt_submitted_at_seconds,
@@ -1415,9 +1416,11 @@ actor ProvenanceSQLiteRepository {
               let ticketIDsData = ticketIDsJSON.data(using: .utf8),
               let ticketLinksJSON = query.string(at: 17),
               let ticketLinksData = ticketLinksJSON.data(using: .utf8),
-              let clearedFieldsJSON = query.string(at: 22),
+              let projectLinksJSON = query.string(at: 18),
+              let projectLinksData = projectLinksJSON.data(using: .utf8),
+              let clearedFieldsJSON = query.string(at: 23),
               let clearedFieldsData = clearedFieldsJSON.data(using: .utf8),
-              let fieldMetadataJSON = query.string(at: 23),
+              let fieldMetadataJSON = query.string(at: 24),
               let fieldMetadataData = fieldMetadataJSON.data(using: .utf8) else {
             return nil
         }
@@ -1426,6 +1429,10 @@ actor ProvenanceSQLiteRepository {
         let ticketLinks = (try? payloadDecoder.decode(
             [ProvenanceWorkspaceDisplayTicketLinkRecord].self,
             from: ticketLinksData
+        )) ?? []
+        let projectLinks = (try? payloadDecoder.decode(
+            [ProvenanceWorkspaceDisplayProjectLinkRecord].self,
+            from: projectLinksData
         )) ?? []
         let clearedFields = (try? payloadDecoder.decode([String].self, from: clearedFieldsData)) ?? []
         let fieldMetadata = (try? payloadDecoder.decode(
@@ -1451,16 +1458,17 @@ actor ProvenanceSQLiteRepository {
             isDirty: query.double(at: 15).map { Int($0) != 0 },
             ticketIDs: ticketIDs,
             ticketLinks: ticketLinks,
-            currentWorkSummary: query.string(at: 18),
-            lastSubmittedPrompt: query.string(at: 19),
-            lastSubmittedPromptSubmittedAt: query.double(at: 20).map { Date(timeIntervalSince1970: $0) },
-            lastSubmittedPromptSessionID: query.string(at: 21),
+            projectLinks: projectLinks,
+            currentWorkSummary: query.string(at: 19),
+            lastSubmittedPrompt: query.string(at: 20),
+            lastSubmittedPromptSubmittedAt: query.double(at: 21).map { Date(timeIntervalSince1970: $0) },
+            lastSubmittedPromptSessionID: query.string(at: 22),
             clearedFields: clearedFields,
             fieldMetadata: fieldMetadata,
-            latestEventID: query.string(at: 24),
-            latestEventSequence: query.double(at: 25).map(Int.init),
-            observedAt: Date(timeIntervalSince1970: query.double(at: 26) ?? 0),
-            updatedAt: Date(timeIntervalSince1970: query.double(at: 27) ?? 0)
+            latestEventID: query.string(at: 25),
+            latestEventSequence: query.double(at: 26).map(Int.init),
+            observedAt: Date(timeIntervalSince1970: query.double(at: 27) ?? 0),
+            updatedAt: Date(timeIntervalSince1970: query.double(at: 28) ?? 0)
         )
     }
 
@@ -2895,6 +2903,10 @@ actor ProvenanceSQLiteRepository {
             merged.ticketLinks,
             failureMessage: "failed to encode workspace display ticket links"
         )
+        let projectLinksJSON = try encodedWorkspaceDisplayJSON(
+            merged.projectLinks,
+            failureMessage: "failed to encode workspace display project links"
+        )
         let clearedFieldsJSON = try encodedWorkspaceDisplayJSON(
             merged.clearedFields,
             failureMessage: "failed to encode workspace display cleared fields"
@@ -2925,6 +2937,7 @@ actor ProvenanceSQLiteRepository {
                 is_dirty,
                 ticket_ids_json,
                 ticket_links_json,
+                project_links_json,
                 current_work_summary,
                 last_submitted_prompt,
                 last_submitted_prompt_submitted_at_seconds,
@@ -2935,7 +2948,7 @@ actor ProvenanceSQLiteRepository {
                 latest_event_sequence,
                 observed_at_seconds,
                 updated_at_seconds
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 workspace_id = excluded.workspace_id,
                 repository_id = excluded.repository_id,
@@ -2954,6 +2967,7 @@ actor ProvenanceSQLiteRepository {
                 is_dirty = excluded.is_dirty,
                 ticket_ids_json = excluded.ticket_ids_json,
                 ticket_links_json = excluded.ticket_links_json,
+                project_links_json = excluded.project_links_json,
                 current_work_summary = excluded.current_work_summary,
                 last_submitted_prompt = excluded.last_submitted_prompt,
                 last_submitted_prompt_submitted_at_seconds = excluded.last_submitted_prompt_submitted_at_seconds,
@@ -2994,20 +3008,21 @@ actor ProvenanceSQLiteRepository {
         }
         try upsert.bind(ticketIDsJSON, at: 17)
         try upsert.bind(ticketLinksJSON, at: 18)
-        try upsert.bind(merged.currentWorkSummary, at: 19)
-        try upsert.bind(merged.lastSubmittedPrompt, at: 20)
-        try upsert.bind(merged.lastSubmittedPromptSubmittedAt?.timeIntervalSince1970, at: 21)
-        try upsert.bind(merged.lastSubmittedPromptSessionID, at: 22)
-        try upsert.bind(clearedFieldsJSON, at: 23)
-        try upsert.bind(fieldMetadataJSON, at: 24)
-        try upsert.bind(merged.latestEventID, at: 25)
+        try upsert.bind(projectLinksJSON, at: 19)
+        try upsert.bind(merged.currentWorkSummary, at: 20)
+        try upsert.bind(merged.lastSubmittedPrompt, at: 21)
+        try upsert.bind(merged.lastSubmittedPromptSubmittedAt?.timeIntervalSince1970, at: 22)
+        try upsert.bind(merged.lastSubmittedPromptSessionID, at: 23)
+        try upsert.bind(clearedFieldsJSON, at: 24)
+        try upsert.bind(fieldMetadataJSON, at: 25)
+        try upsert.bind(merged.latestEventID, at: 26)
         if let latestEventSequence = merged.latestEventSequence {
-            try upsert.bind(latestEventSequence, at: 26)
+            try upsert.bind(latestEventSequence, at: 27)
         } else {
-            try upsert.bind(nil as String?, at: 26)
+            try upsert.bind(nil as String?, at: 27)
         }
-        try upsert.bind(merged.observedAt.timeIntervalSince1970, at: 27)
-        try upsert.bind(merged.updatedAt.timeIntervalSince1970, at: 28)
+        try upsert.bind(merged.observedAt.timeIntervalSince1970, at: 28)
+        try upsert.bind(merged.updatedAt.timeIntervalSince1970, at: 29)
 
         _ = try upsert.step()
     }
@@ -3169,6 +3184,21 @@ actor ProvenanceSQLiteRepository {
             ticketFacts = (existing?.ticketIDs ?? incoming.ticketIDs, existing?.ticketLinks ?? incoming.ticketLinks)
         }
 
+        let projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord]
+        if requestedClears.contains("projects")
+            || requestedClears.contains("project_links") {
+            markCleared("project_links")
+            projectLinks = []
+        } else if !incoming.projectLinks.isEmpty {
+            markUpdated("project_links")
+            projectLinks = mergedProjectLinks(
+                existingLinks: existing?.projectLinks ?? [],
+                incomingLinks: incoming.projectLinks
+            )
+        } else {
+            projectLinks = existing?.projectLinks ?? incoming.projectLinks
+        }
+
         let lastSubmittedPrompt: String?
         let lastSubmittedPromptSubmittedAt: Date?
         let lastSubmittedPromptSessionID: String?
@@ -3230,6 +3260,7 @@ actor ProvenanceSQLiteRepository {
             isDirty: boolField("is_dirty", incomingValue: incoming.isDirty, existingValue: existing?.isDirty),
             ticketIDs: ticketFacts.ids,
             ticketLinks: ticketFacts.links,
+            projectLinks: projectLinks,
             currentWorkSummary: stringField(
                 "current_work_summary",
                 incomingValue: incoming.currentWorkSummary,
@@ -3245,6 +3276,35 @@ actor ProvenanceSQLiteRepository {
             observedAt: incoming.observedAt,
             updatedAt: incoming.updatedAt
         )
+    }
+
+    private func mergedProjectLinks(
+        existingLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord],
+        incomingLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord]
+    ) -> [ProvenanceWorkspaceDisplayProjectLinkRecord] {
+        let existingByID = workspaceDisplayProjectLinksByID(existingLinks)
+        let incomingByID = workspaceDisplayProjectLinksByID(incomingLinks)
+        let ids = uniqueWorkspaceDisplayIDs((existingLinks + incomingLinks).map(\.id))
+        return ids.compactMap { id -> ProvenanceWorkspaceDisplayProjectLinkRecord? in
+            guard let existing = existingByID[id] ?? incomingByID[id] else { return nil }
+            let incoming = incomingByID[id]
+            return ProvenanceWorkspaceDisplayProjectLinkRecord(
+                id: id,
+                system: incoming?.system ?? existing.system,
+                title: incoming?.title ?? existing.title,
+                url: incoming?.url ?? existing.url
+            )
+        }
+    }
+
+    private func workspaceDisplayProjectLinksByID(
+        _ links: [ProvenanceWorkspaceDisplayProjectLinkRecord]
+    ) -> [String: ProvenanceWorkspaceDisplayProjectLinkRecord] {
+        links.reduce(into: [:]) { result, link in
+            let trimmedID = link.id.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedID.isEmpty else { return }
+            result[trimmedID] = link
+        }
     }
 
     private func mergedTicketFacts(
@@ -3845,6 +3905,17 @@ actor ProvenanceSQLiteRepository {
                 """
                 UPDATE provenance_metadata
                 SET value = '15'
+                WHERE key = 'schema_version'
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 16,
+            statements: [
+                "ALTER TABLE provenance_workspace_display ADD COLUMN project_links_json TEXT NOT NULL DEFAULT '[]'",
+                """
+                UPDATE provenance_metadata
+                SET value = '16'
                 WHERE key = 'schema_version'
                 """,
             ]

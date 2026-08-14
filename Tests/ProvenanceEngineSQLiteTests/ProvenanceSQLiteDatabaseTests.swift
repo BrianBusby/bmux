@@ -424,7 +424,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 15)
+        #expect(try await repository.schemaVersion() == 16)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
@@ -442,7 +442,7 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_workspace_display", in: database))
         #expect(try Self.tableExists("provenance_storage_repair_attempts", in: database))
         #expect(try Self.tableExists("provenance_schema_migrations", in: database))
-        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [15, 14, 13, 12, 11, 10, 9, 8])
+        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [16, 15, 14, 13, 12, 11, 10, 9, 8])
     }
 
     @Test
@@ -452,7 +452,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         _ = try ProvenanceSQLiteRepository(
             url: url,
-            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast(2))
+            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast(3))
         )
 
         let olderDatabase = try ProvenanceSQLiteDatabase(url: url)
@@ -463,8 +463,8 @@ struct ProvenanceSQLiteDatabaseTests {
         let repository = try ProvenanceSQLiteRepository(url: url)
         let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
 
-        #expect(try await repository.schemaVersion() == 15)
-        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: migratedDatabase) == "15")
+        #expect(try await repository.schemaVersion() == 16)
+        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: migratedDatabase) == "16")
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_login", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_url", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "current_work_summary", in: migratedDatabase))
@@ -473,7 +473,8 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableHasColumn("provenance_workspace_display", "last_submitted_prompt_session_id", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "cleared_fields_json", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "field_metadata_json", in: migratedDatabase))
-        #expect(try await repository.schemaMigrationRecords(limit: 2).map(\.version) == [15, 14])
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "project_links_json", in: migratedDatabase))
+        #expect(try await repository.schemaMigrationRecords(limit: 3).map(\.version) == [16, 15, 14])
     }
 
     @Test
@@ -533,7 +534,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
 
-        #expect(try await repository.schemaVersion() == 15)
+        #expect(try await repository.schemaVersion() == 16)
         #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
     }
 
@@ -799,7 +800,7 @@ struct ProvenanceSQLiteDatabaseTests {
         let summary = try await repository.storageSummary()
 
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 15,
+            schemaVersion: 16,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,
@@ -2827,6 +2828,14 @@ struct ProvenanceSQLiteDatabaseTests {
                     url: "https://manaflow.atlassian.net/browse/BMUX-42"
                 ),
             ],
+            projectLinks: [
+                ProvenanceWorkspaceDisplayProjectLinkRecord(
+                    id: "context-efficiency-c1b9a",
+                    system: "linear",
+                    title: "Context Efficiency",
+                    url: "https://linear.app/manaflow/project/context-efficiency-c1b9a"
+                ),
+            ],
             observedAt: timestamp,
             updatedAt: timestamp
         )
@@ -2860,6 +2869,14 @@ struct ProvenanceSQLiteDatabaseTests {
                     system: "jira",
                     title: "Workspace display title projection",
                     url: "https://manaflow.atlassian.net/browse/BMUX-42"
+                ),
+            ],
+            projectLinks: [
+                ProvenanceWorkspaceDisplayProjectLinkRecord(
+                    id: "context-efficiency-c1b9a",
+                    system: "linear",
+                    title: "Context Efficiency",
+                    url: "https://linear.app/manaflow/project/context-efficiency-c1b9a"
                 ),
             ],
             latestEventID: "event-workspace-display",
@@ -2906,12 +2923,14 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(actualDisplay.isDirty == expectedDisplay.isDirty)
         #expect(actualDisplay.ticketIDs == expectedDisplay.ticketIDs)
         #expect(actualDisplay.ticketLinks == expectedDisplay.ticketLinks)
+        #expect(actualDisplay.projectLinks == expectedDisplay.projectLinks)
         #expect(actualDisplay.latestEventID == expectedDisplay.latestEventID)
         #expect(actualDisplay.latestEventSequence == expectedDisplay.latestEventSequence)
         #expect(actualDisplay.observedAt == expectedDisplay.observedAt)
         #expect(actualDisplay.updatedAt == expectedDisplay.updatedAt)
         #expect(actualDisplay.fieldMetadata["pull_request_number"]?.evidenceEventID == "event-workspace-display")
         #expect(actualDisplay.fieldMetadata["ticket_links"]?.evidenceEventSequence == 1)
+        #expect(actualDisplay.fieldMetadata["project_links"]?.evidenceEventSequence == 1)
         #expect(try await repository.workspaceDisplay(
             ProvenanceWorkspaceDisplayRequest(workspaceID: "missing-workspace")
         ) == ProvenanceWorkspaceDisplayResponse(

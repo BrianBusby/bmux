@@ -33,6 +33,7 @@ Repository: `BrianBusby/provenance-engine`
 | Schema Identity Validation | implemented |
 | Workspace Display Current State | implemented |
 | Workspace Display Durable Context | implemented |
+| Workspace Display Project Link Facts | implemented |
 | Workspace Display Projection Cursors | implemented |
 | Workspace Display Ticket Link Facts | implemented |
 | Workspace Display Ticket Title Facts | implemented |

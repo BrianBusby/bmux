@@ -284,6 +284,14 @@ struct ProvenanceEngineHealthTests {
                 url: "https://linear.app/manaflow/issue/STE-1964"
             ),
         ],
+        projectLinks: [
+            ProvenanceWorkspaceDisplayProjectLinkRecord(
+                id: "context-efficiency-c1b9a",
+                system: "linear",
+                title: "Context Efficiency",
+                url: "https://linear.app/manaflow/project/context-efficiency-c1b9a"
+            ),
+        ],
         observedAt: timestamp,
         updatedAt: timestamp
     )
