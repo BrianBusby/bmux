@@ -4,6 +4,37 @@ import Testing
 
 @Suite("SettingCatalog")
 struct SettingCatalogTests {
+    @Test func keychainSecretServiceNameUsesStableChannelServicesForTaggedBuilds() {
+        #expect(KeychainSecretStore.serviceName(bundleIdentifier: nil) == "com.bmuxterm.app.settings-secrets")
+        #expect(KeychainSecretStore.serviceName(bundleIdentifier: "") == "com.bmuxterm.app.settings-secrets")
+        #expect(KeychainSecretStore.serviceName(bundleIdentifier: "   ") == "com.bmuxterm.app.settings-secrets")
+
+        #expect(KeychainSecretStore.serviceName(bundleIdentifier: "com.bmuxterm.app") == "com.bmuxterm.app.settings-secrets")
+
+        #expect(
+            KeychainSecretStore.serviceName(bundleIdentifier: "com.bmuxterm.app.debug")
+                == "com.bmuxterm.app.debug.settings-secrets"
+        )
+        #expect(
+            KeychainSecretStore.serviceName(bundleIdentifier: "com.bmuxterm.app.debug.linear.title.fresh")
+                == "com.bmuxterm.app.debug.settings-secrets"
+        )
+
+        #expect(
+            KeychainSecretStore.serviceName(bundleIdentifier: "com.bmuxterm.app.staging.some-tag")
+                == "com.bmuxterm.app.staging.settings-secrets"
+        )
+        #expect(
+            KeychainSecretStore.serviceName(bundleIdentifier: "com.bmuxterm.app.nightly.some-tag")
+                == "com.bmuxterm.app.nightly.settings-secrets"
+        )
+
+        #expect(
+            KeychainSecretStore.serviceName(bundleIdentifier: "com.example.bmux.experimental")
+                == "com.example.bmux.experimental.settings-secrets"
+        )
+    }
+
     @Test func eachKeyHasUniqueId() {
         let ids = SettingCatalog().all.map(\.id)
         #expect(ids.count == Set(ids).count)

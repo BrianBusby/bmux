@@ -4,8 +4,8 @@ public import Foundation
 ///
 /// The store is an `actor`; reads, writes, and resets are async. It accepts
 /// only ``KeychainSecretKey`` values. Each key is stored as a generic-password
-/// item under this store's Keychain service, so the app can namespace secrets
-/// by bundle identifier and keep tagged development builds isolated.
+/// item under this store's Keychain service, so the app can share settings
+/// secrets across tagged builds in the same release channel.
 ///
 /// ```swift
 /// let store = KeychainSecretStore(
@@ -37,14 +37,27 @@ public actor KeychainSecretStore {
     }
 
     /// The standard Keychain service name for bmux settings secrets.
-    /// - Parameter bundleIdentifier: The app bundle identifier; tagged builds get their own service.
+    /// - Parameter bundleIdentifier: The app bundle identifier.
     /// - Returns: A stable service string for settings secrets.
     public static func serviceName(bundleIdentifier: String?) -> String {
-        guard let bundleIdentifier,
-              !bundleIdentifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return "com.bmuxterm.app.settings-secrets"
+        "\(settingsSecretBundleIdentifier(bundleIdentifier)).settings-secrets"
+    }
+
+    private static func settingsSecretBundleIdentifier(_ bundleIdentifier: String?) -> String {
+        guard let identifier = bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !identifier.isEmpty else {
+            return "com.bmuxterm.app"
         }
-        return "\(bundleIdentifier).settings-secrets"
+        for channelIdentifier in [
+            "com.bmuxterm.app.debug",
+            "com.bmuxterm.app.staging",
+            "com.bmuxterm.app.nightly",
+        ] {
+            if identifier == channelIdentifier || identifier.hasPrefix("\(channelIdentifier).") {
+                return channelIdentifier
+            }
+        }
+        return identifier
     }
 
     /// Reads the current secret for `key`.
