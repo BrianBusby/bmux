@@ -51,9 +51,8 @@ Still gated as planning topics until selected through the project manifest:
 - A public observability trace API, if observation proves one is needed.
 - Workspace-display follow-up diagnostics or compatibility work beyond the
   accepted durable-context projection.
-- Richer coding-agent evidence ingestion for completed or meaningful thread,
-  turn, plan, command, file-change, approval, validation, error, and compaction
-  units.
+- Additional richer coding-agent evidence ingestion beyond the accepted
+  foundation, such as approval, validation, error, and compaction units.
 - A first `SessionWorkModel` projection contract for one coding-agent session,
   preserving field-level basis/provenance and keeping semantic inference out of
   deterministic Current State.
@@ -80,21 +79,28 @@ with PE Current State and latest accepted evidence.
 
 ## Richer Coding-Agent Evidence And SessionWorkModel
 
-Status: planned and gated.
+Status: evidence foundation implemented; `SessionWorkModel`, semantic
+inference, milestone synthesis, and architecture projection remain planned and
+gated.
 
 This phase addresses the main gap found after the execution-telemetry and
 workspace-display slices: bmux can observe richer structured coding-agent data
 than Provenance Engine currently receives.
 
-The first implementation sequence should be:
+The implementation sequence is:
 
 1. Define explicit evidence contracts for completed or meaningful coding-agent
-   units rather than provider transport deltas.
+   units rather than provider transport deltas. Implemented for thread, turn,
+   prompt, plan update, completed command, visible reasoning summary, and
+   file-change attribution evidence.
 2. Capture structured Codex thread, turn, plan, reasoning-summary, command,
-   file-change/diff, approval, validation, error, and compaction evidence where
-   available and policy-approved.
+   and file-change evidence where available and policy-approved. Approval,
+   validation, error, and compaction capture remain unimplemented.
 3. Relate that evidence to existing session, worktree, contribution,
-   change-set, file-change, and validation records.
+   change-set, file-change, and validation records. Implemented for session,
+   repository, worktree, change-set, and file-change relationships where
+   producers can establish them; contribution and validation relationships
+   remain future work.
 4. Add deterministic factual session projections for live state only.
 5. Introduce the first `SessionWorkModel` projection contract as a coherent
    consumer model above lower-level APIs.

@@ -160,6 +160,41 @@ Migration or cleanup: remove legacy bmux-local durable provenance storage after 
 Status: Operational default cutover accepted in Slice E. Broad legacy data
 migration and cleanup remain gated by explicit design and observation evidence.
 
+## Milestone: Richer Session Evidence Foundation
+
+Capability owner: provenance-engine. Adopter: bmux.
+
+Required contract: `ProvenanceEngineClient.appendEvent(...)` with typed
+coding-agent thread, turn, prompt, plan, command, visible reasoning-summary,
+and file-change attribution payloads.
+
+Provenance-engine work: preserve immutable evidence storage, public append
+contracts, deterministic projection rebuild, duplicate append rejection, and
+provider-neutral coding-agent evidence records.
+
+bmux work: keep Codex App Server acquisition, live streaming state, approvals,
+process control, provider-specific normalization, and runtime delivery policy in
+bmux. Forward only completed or meaningful provider-neutral evidence units to
+PE.
+
+Dependencies: provider-neutral execution telemetry foundation and engine-owned
+default storage are available.
+
+Acceptance criteria: raw provider streams, stdout/stderr deltas, raw reasoning
+deltas, hidden chain-of-thought, unrestricted transcripts, and live projection
+state are not persisted by default. Thread and turn identities are explicit and
+plan updates, completed commands, visible reasoning summaries, and file-change
+attribution can be related to the correct PE session/turn when bmux observes the
+source identities.
+
+Compatibility expectations: no high-level `SessionWorkModel` read contract is
+introduced by this milestone. Existing V1 reads remain compatible.
+
+Rollback strategy: scoped bmux revert disabling the producer path. PE schema
+remains append-compatible and can retain already accepted immutable evidence.
+
+Status: Implemented as the first below-semantic-layer foundation slice.
+
 ## Milestone: Daemon or Service Transport
 
 Capability owner: provenance-engine. Adopter: bmux.

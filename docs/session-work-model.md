@@ -1,6 +1,8 @@
 # SessionWorkModel Target Design
 
-Status: accepted target direction, not implemented.
+Status: accepted target direction. The lower-level richer-session evidence
+foundation is implemented; the public `SessionWorkModel` projection, semantic
+inference, milestone synthesis, and architecture projection are not implemented.
 
 This document defines the planned high-level Provenance Engine projection for
 live coding-agent work. It records product and architecture direction for the
@@ -117,6 +119,35 @@ plan updates, reasoning summaries, command execution, file changes and diffs,
 turn-level diff updates, tool calls, approval state, errors, and compaction
 events. The first contracts should preserve these source identities where
 available rather than flattening everything into generic text records.
+
+## Implemented Evidence Foundation
+
+The first narrow implementation slice records selected observable coding-agent
+facts below the semantic layer. Producers append these facts through
+`ProvenanceEngineClient.appendEvent(...)`; Provenance Engine stores them in the
+immutable ledger and rebuilds deterministic projection tables from that ledger.
+
+Implemented durable evidence records:
+
+- `ProvenanceCodingAgentThreadRecord`
+- `ProvenanceCodingAgentTurnRecord`
+- `ProvenanceCodingAgentPromptRecord`
+- `ProvenanceCodingAgentPlanUpdateRecord`
+- `ProvenanceCodingAgentCommandRecord`
+- `ProvenanceCodingAgentReasoningSummaryRecord`
+- `ProvenanceCodingAgentFileChangeAttributionRecord`
+
+The records preserve provider identity (`provider`, provider thread id, provider
+turn id, operation/item ids where available) and relate evidence to PE session,
+repository, worktree, change-set, and file-change records when the producer can
+establish those relationships. Unknown relationships remain absent rather than
+guessed.
+
+This slice does not persist raw stdout/stderr deltas, raw reasoning deltas,
+hidden chain-of-thought, unrestricted transcripts, token-by-token provider
+envelopes, or bmux live projection state. Command output summaries are part of
+the contract shape but bmux does not populate them yet; that remains a
+retention/privacy decision.
 
 ## Conceptual Shape
 

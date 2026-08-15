@@ -44,4 +44,73 @@ struct ProvenanceSQLiteStorageSummary: Equatable, Sendable {
 
     /// Number of workspace display projection rows.
     var workspaceDisplayCount: Int
+
+    /// Number of coding-agent thread projection rows.
+    var codingAgentThreadCount: Int
+
+    /// Number of coding-agent turn projection rows.
+    var codingAgentTurnCount: Int
+
+    /// Number of coding-agent prompt projection rows.
+    var codingAgentPromptCount: Int
+
+    /// Number of coding-agent plan update projection rows.
+    var codingAgentPlanUpdateCount: Int
+
+    /// Number of coding-agent command projection rows.
+    var codingAgentCommandCount: Int
+
+    /// Number of coding-agent reasoning-summary projection rows.
+    var codingAgentReasoningSummaryCount: Int
+
+    /// Number of coding-agent file-change attribution projection rows.
+    var codingAgentFileChangeAttributionCount: Int
+
+    init(
+        schemaVersion: Int32,
+        eventCount: Int,
+        latestEventSequence: Int? = nil,
+        repositoryCount: Int,
+        worktreeCount: Int,
+        sessionCount: Int,
+        sessionRelationshipCount: Int,
+        externalIdentityCount: Int,
+        workItemCount: Int,
+        contributionCount: Int,
+        checkpointCount: Int,
+        changeSetCount: Int,
+        fileChangeCount: Int,
+        validationRunCount: Int,
+        workspaceDisplayCount: Int,
+        codingAgentThreadCount: Int = 0,
+        codingAgentTurnCount: Int = 0,
+        codingAgentPromptCount: Int = 0,
+        codingAgentPlanUpdateCount: Int = 0,
+        codingAgentCommandCount: Int = 0,
+        codingAgentReasoningSummaryCount: Int = 0,
+        codingAgentFileChangeAttributionCount: Int = 0
+    ) {
+        self.schemaVersion = schemaVersion
+        self.eventCount = eventCount
+        self.latestEventSequence = latestEventSequence
+        self.repositoryCount = repositoryCount
+        self.worktreeCount = worktreeCount
+        self.sessionCount = sessionCount
+        self.sessionRelationshipCount = sessionRelationshipCount
+        self.externalIdentityCount = externalIdentityCount
+        self.workItemCount = workItemCount
+        self.contributionCount = contributionCount
+        self.checkpointCount = checkpointCount
+        self.changeSetCount = changeSetCount
+        self.fileChangeCount = fileChangeCount
+        self.validationRunCount = validationRunCount
+        self.workspaceDisplayCount = workspaceDisplayCount
+        self.codingAgentThreadCount = codingAgentThreadCount
+        self.codingAgentTurnCount = codingAgentTurnCount
+        self.codingAgentPromptCount = codingAgentPromptCount
+        self.codingAgentPlanUpdateCount = codingAgentPlanUpdateCount
+        self.codingAgentCommandCount = codingAgentCommandCount
+        self.codingAgentReasoningSummaryCount = codingAgentReasoningSummaryCount
+        self.codingAgentFileChangeAttributionCount = codingAgentFileChangeAttributionCount
+    }
 }

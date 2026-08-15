@@ -51,6 +51,86 @@ struct ProjectionRebuildValidationTests {
         ) == beforeSessionTree)
     }
 
+    @Test
+    func rebuildPreservesStructuredCodingAgentEvidence() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let fixture = CodingAgentEvidenceFixture()
+
+        try await Self.seedCodingAgentEvidence(fixture, into: repository)
+
+        let beforeThread = try #require(try await repository.codingAgentThread(id: fixture.thread.id))
+        let beforeTurn = try #require(try await repository.codingAgentTurn(id: fixture.firstTurnStarted.id))
+        let beforePrompt = try #require(try await repository.codingAgentPrompt(id: fixture.prompt.id))
+        let beforePlan = try #require(try await repository.codingAgentPlanUpdate(id: fixture.firstPlanUpdate.id))
+        let beforeCommand = try #require(try await repository.codingAgentCommand(id: fixture.command.id))
+        let beforeSummary = try #require(
+            try await repository.codingAgentReasoningSummary(id: fixture.reasoningSummary.id)
+        )
+        let beforeAttribution = try #require(
+            try await repository.codingAgentFileChangeAttribution(id: fixture.fileChangeAttribution.id)
+        )
+
+        #expect(beforeThread.sessionID == fixture.session.id)
+        #expect(beforeThread.providerThreadID == "codex-thread-42")
+        #expect(beforeTurn.sessionID == fixture.session.id)
+        #expect(beforeTurn.threadID == fixture.thread.id)
+        #expect(beforeTurn.providerTurnID == "codex-turn-1")
+        #expect(beforeTurn.status == "completed")
+        #expect(beforeTurn.startedAt == fixture.firstTurnStarted.startedAt)
+        #expect(beforeTurn.completedAt == fixture.firstTurnCompleted.completedAt)
+        #expect(try await repository.codingAgentTurn(id: fixture.secondTurn.id)?.providerTurnID == "codex-turn-2")
+        #expect(beforePrompt.turnID == fixture.firstTurnStarted.id)
+        #expect(beforePrompt.text == "Establish the structured Codex evidence path.")
+        #expect(beforePlan.steps.map(\.text) == [
+            "Audit current telemetry path",
+            "Add durable PE evidence",
+        ])
+        #expect(beforePlan.steps.map(\.status) == ["completed", "in_progress"])
+        #expect(beforeCommand.cwd == fixture.repository.path)
+        #expect(beforeCommand.status == "succeeded")
+        #expect(beforeCommand.exitCode == 0)
+        #expect(beforeCommand.outputSummary == nil)
+        #expect(beforeSummary.text == "Identified the provider-neutral telemetry adapter and PE append boundary.")
+        #expect(beforeAttribution.turnID == fixture.firstTurnStarted.id)
+        #expect(beforeAttribution.changeSetID == fixture.changeSet.id)
+        #expect(beforeAttribution.fileChangeIDs == [fixture.fileChange.id])
+        #expect(beforeAttribution.paths == [fixture.fileChange.path])
+
+        let fileExplanation = try await repository.fileExplanation(
+            ProvenanceFileExplanationRequest(worktreeID: fixture.worktree.id, path: fixture.fileChange.path)
+        )
+        #expect(fileExplanation.found)
+        #expect(fileExplanation.explanation?.fileChange == fixture.fileChange)
+        #expect(fileExplanation.explanation?.changeSet == fixture.changeSet)
+
+        var duplicateFailed = false
+        do {
+            try await Self.append(event: fixture.threadEvent, into: repository)
+        } catch {
+            duplicateFailed = true
+        }
+        #expect(duplicateFailed)
+        #expect(try await repository.storageSummary().codingAgentThreadCount == 1)
+
+        try Self.deleteCodingAgentProjectionRows(databaseURL: url)
+        #expect(try await repository.codingAgentThread(id: fixture.thread.id) == nil)
+
+        #expect(try await repository.rebuildProjectionsFromEventLedger(batchSize: 2) == fixture.events.count)
+        #expect(try await repository.codingAgentThread(id: fixture.thread.id) == beforeThread)
+        #expect(try await repository.codingAgentTurn(id: fixture.firstTurnStarted.id) == beforeTurn)
+        #expect(try await repository.codingAgentPrompt(id: fixture.prompt.id) == beforePrompt)
+        #expect(try await repository.codingAgentPlanUpdate(id: fixture.firstPlanUpdate.id) == beforePlan)
+        #expect(try await repository.codingAgentCommand(id: fixture.command.id) == beforeCommand)
+        #expect(try await repository.codingAgentReasoningSummary(id: fixture.reasoningSummary.id) == beforeSummary)
+        #expect(
+            try await repository.codingAgentFileChangeAttribution(id: fixture.fileChangeAttribution.id)
+                == beforeAttribution
+        )
+        #expect(try await repository.validateProjectionKeys(limit: 20).mismatches.isEmpty)
+    }
+
     private static func seed(
         _ fixture: ProjectionRebuildFixture,
         into repository: ProvenanceSQLiteRepository
@@ -120,6 +200,22 @@ struct ProjectionRebuildValidationTests {
         )
     }
 
+    private static func seedCodingAgentEvidence(
+        _ fixture: CodingAgentEvidenceFixture,
+        into repository: ProvenanceSQLiteRepository
+    ) async throws {
+        for event in fixture.events {
+            try await append(event: event, into: repository)
+        }
+    }
+
+    private static func append(
+        event: ProvenanceEvent,
+        into repository: ProvenanceSQLiteRepository
+    ) async throws {
+        try await repository.appendEvent(event)
+    }
+
     private static func append(
         eventID: String,
         eventType: ProvenanceEventType,
@@ -164,6 +260,27 @@ struct ProjectionRebuildValidationTests {
             DELETE FROM provenance_change_sets;
             DELETE FROM provenance_file_changes;
             DELETE FROM provenance_validation_runs;
+            """
+        )
+    }
+
+    private static func deleteCodingAgentProjectionRows(databaseURL: URL) throws {
+        let database = try ProvenanceSQLiteDatabase(url: databaseURL)
+        try database.execute(
+            """
+            DELETE FROM provenance_coding_agent_file_change_attributions;
+            DELETE FROM provenance_coding_agent_reasoning_summaries;
+            DELETE FROM provenance_coding_agent_commands;
+            DELETE FROM provenance_coding_agent_plan_updates;
+            DELETE FROM provenance_coding_agent_prompts;
+            DELETE FROM provenance_coding_agent_turns;
+            DELETE FROM provenance_coding_agent_threads;
+            DELETE FROM provenance_file_changes;
+            DELETE FROM provenance_change_sets;
+            DELETE FROM provenance_sessions;
+            DELETE FROM provenance_worktrees;
+            DELETE FROM provenance_repositories;
+            DELETE FROM provenance_session_external_identities;
             """
         )
     }
@@ -293,5 +410,380 @@ private struct ProjectionRebuildFixture {
         self.changeSet = changeSet
         self.fileChange = fileChange
         self.validationRun = validationRun
+    }
+}
+
+private struct CodingAgentEvidenceFixture {
+    let timestamp = Date(timeIntervalSince1970: 1_820_000_000)
+    let repository: ProvenanceRepositoryRecord
+    let worktree: ProvenanceWorktreeRecord
+    let session: ProvenanceSessionRecord
+    let thread: ProvenanceCodingAgentThreadRecord
+    let firstTurnStarted: ProvenanceCodingAgentTurnRecord
+    let firstTurnCompleted: ProvenanceCodingAgentTurnRecord
+    let secondTurn: ProvenanceCodingAgentTurnRecord
+    let prompt: ProvenanceCodingAgentPromptRecord
+    let firstPlanUpdate: ProvenanceCodingAgentPlanUpdateRecord
+    let finalPlanUpdate: ProvenanceCodingAgentPlanUpdateRecord
+    let reasoningSummary: ProvenanceCodingAgentReasoningSummaryRecord
+    let command: ProvenanceCodingAgentCommandRecord
+    let changeSet: ProvenanceChangeSetRecord
+    let fileChange: ProvenanceFileChangeRecord
+    let fileChangeAttribution: ProvenanceCodingAgentFileChangeAttributionRecord
+    let threadEvent: ProvenanceEvent
+    let events: [ProvenanceEvent]
+
+    init() {
+        let timestamp = Date(timeIntervalSince1970: 1_820_000_000)
+        let repository = ProvenanceRepositoryRecord(
+            id: "repository-codex-evidence",
+            path: "/repos/richer-session-evidence",
+            remoteSlug: "BrianBusby/richer-session-evidence",
+            createdAt: timestamp,
+            updatedAt: timestamp
+        )
+        let worktree = ProvenanceWorktreeRecord(
+            id: "worktree-codex-evidence",
+            repositoryID: repository.id,
+            path: repository.path,
+            branch: "richer-session-evidence-foundation",
+            currentHEAD: "head-codex-evidence",
+            isDirty: true,
+            status: "active",
+            lastReconciledAt: timestamp,
+            updatedAt: timestamp
+        )
+        let session = ProvenanceSessionRecord(
+            id: "pe-session-codex-evidence",
+            agentKind: "codex",
+            workspaceID: "bmux-workspace-1",
+            surfaceID: "bmux-surface-1",
+            worktreeID: worktree.id,
+            cwd: repository.path,
+            status: "active",
+            startedAt: timestamp.addingTimeInterval(1),
+            updatedAt: timestamp.addingTimeInterval(1)
+        )
+        let thread = ProvenanceCodingAgentThreadRecord(
+            id: "coding-agent-thread-codex-42",
+            sessionID: session.id,
+            provider: "codex",
+            providerThreadID: "codex-thread-42",
+            worktreeID: worktree.id,
+            source: .observed,
+            confidence: .high,
+            firstObservedAt: timestamp.addingTimeInterval(2),
+            updatedAt: timestamp.addingTimeInterval(2)
+        )
+        let firstTurnStarted = ProvenanceCodingAgentTurnRecord(
+            id: "coding-agent-turn-codex-1",
+            sessionID: session.id,
+            threadID: thread.id,
+            provider: "codex",
+            providerTurnID: "codex-turn-1",
+            status: "started",
+            model: "gpt-5-codex",
+            effort: "medium",
+            startedAt: timestamp.addingTimeInterval(3),
+            updatedAt: timestamp.addingTimeInterval(3),
+            source: .observed,
+            confidence: .high
+        )
+        let firstTurnCompleted = ProvenanceCodingAgentTurnRecord(
+            id: firstTurnStarted.id,
+            sessionID: session.id,
+            threadID: thread.id,
+            provider: "codex",
+            providerTurnID: "codex-turn-1",
+            status: "completed",
+            completedAt: timestamp.addingTimeInterval(11),
+            updatedAt: timestamp.addingTimeInterval(11),
+            source: .observed,
+            confidence: .high
+        )
+        let secondTurn = ProvenanceCodingAgentTurnRecord(
+            id: "coding-agent-turn-codex-2",
+            sessionID: session.id,
+            threadID: thread.id,
+            provider: "codex",
+            providerTurnID: "codex-turn-2",
+            status: "started",
+            startedAt: timestamp.addingTimeInterval(12),
+            updatedAt: timestamp.addingTimeInterval(12),
+            source: .observed,
+            confidence: .high
+        )
+        let prompt = ProvenanceCodingAgentPromptRecord(
+            id: "coding-agent-prompt-codex-1",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: firstTurnStarted.id,
+            provider: "codex",
+            text: "Establish the structured Codex evidence path.",
+            submittedAt: timestamp.addingTimeInterval(4),
+            source: .observed,
+            confidence: .high
+        )
+        let firstPlanUpdate = ProvenanceCodingAgentPlanUpdateRecord(
+            id: "coding-agent-plan-codex-1-a",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: firstTurnStarted.id,
+            provider: "codex",
+            explanation: "First implementation slice below semantic inference.",
+            steps: [
+                ProvenanceCodingAgentPlanStepRecord(
+                    id: "coding-agent-plan-codex-1-a-step-0",
+                    order: 0,
+                    text: "Audit current telemetry path",
+                    status: "completed"
+                ),
+                ProvenanceCodingAgentPlanStepRecord(
+                    id: "coding-agent-plan-codex-1-a-step-1",
+                    order: 1,
+                    text: "Add durable PE evidence",
+                    status: "in_progress"
+                ),
+            ],
+            observedAt: timestamp.addingTimeInterval(5),
+            source: .observed,
+            confidence: .high
+        )
+        let reasoningSummary = ProvenanceCodingAgentReasoningSummaryRecord(
+            id: "coding-agent-reasoning-summary-codex-1",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: firstTurnStarted.id,
+            provider: "codex",
+            itemID: "reasoning-summary-item-1",
+            text: "Identified the provider-neutral telemetry adapter and PE append boundary.",
+            completedAt: timestamp.addingTimeInterval(6),
+            source: .observed,
+            confidence: .high
+        )
+        let toolRun = ProvenanceCodingAgentCommandRecord(
+            id: "coding-agent-command-codex-1",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: firstTurnStarted.id,
+            provider: "codex",
+            operationID: "tool-call-1",
+            toolText: "build",
+            cwd: repository.path,
+            status: "succeeded",
+            exitCode: 0,
+            completedAt: timestamp.addingTimeInterval(7),
+            source: .observed,
+            confidence: .high
+        )
+        let changeSet = ProvenanceChangeSetRecord(
+            id: "change-set-codex-evidence",
+            worktreeID: worktree.id,
+            summary: "Add coding-agent evidence records",
+            diffFingerprint: "diff-codex-evidence",
+            createdAt: timestamp.addingTimeInterval(8)
+        )
+        let fileChange = ProvenanceFileChangeRecord(
+            id: "file-change-codex-evidence",
+            changeSetID: changeSet.id,
+            repositoryID: repository.id,
+            worktreeID: worktree.id,
+            path: "Sources/ProvenanceEngineContracts/ProvenanceCodingAgentThreadRecord.swift",
+            status: "added",
+            attributionSource: .observed,
+            attributionConfidence: .high,
+            updatedAt: timestamp.addingTimeInterval(8)
+        )
+        let fileChangeAttribution = ProvenanceCodingAgentFileChangeAttributionRecord(
+            id: "coding-agent-file-change-codex-1",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: firstTurnStarted.id,
+            provider: "codex",
+            operationID: "file-change-item-1",
+            changeSetID: changeSet.id,
+            fileChangeIDs: [fileChange.id],
+            paths: [fileChange.path],
+            summary: "One contract file added during the turn.",
+            observedAt: timestamp.addingTimeInterval(8),
+            source: .observed,
+            confidence: .high
+        )
+        let finalPlanUpdate = ProvenanceCodingAgentPlanUpdateRecord(
+            id: "coding-agent-plan-codex-1-b",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: firstTurnStarted.id,
+            provider: "codex",
+            steps: [
+                ProvenanceCodingAgentPlanStepRecord(
+                    id: "coding-agent-plan-codex-1-b-step-0",
+                    order: 0,
+                    text: "Audit current telemetry path",
+                    status: "completed"
+                ),
+                ProvenanceCodingAgentPlanStepRecord(
+                    id: "coding-agent-plan-codex-1-b-step-1",
+                    order: 1,
+                    text: "Add durable PE evidence",
+                    status: "completed"
+                ),
+            ],
+            observedAt: timestamp.addingTimeInterval(9),
+            source: .observed,
+            confidence: .high
+        )
+        let sessionIdentity = ProvenanceExternalIdentityRecord(
+            id: "external-identity-codex-session",
+            sessionID: session.id,
+            system: "bmux",
+            kind: "agent_session",
+            externalID: "bmux-agent-session-1",
+            source: .observed,
+            confidence: .high,
+            createdAt: timestamp.addingTimeInterval(1),
+            updatedAt: timestamp.addingTimeInterval(1)
+        )
+        let threadIdentity = ProvenanceExternalIdentityRecord(
+            id: "external-identity-codex-thread",
+            sessionID: session.id,
+            system: "codex",
+            kind: "thread",
+            externalID: thread.providerThreadID,
+            source: .observed,
+            confidence: .high,
+            createdAt: thread.firstObservedAt,
+            updatedAt: thread.updatedAt
+        )
+
+        let baseEvent = Self.eventBuilder(
+            repositoryID: repository.id,
+            worktreeID: worktree.id,
+            sessionID: session.id
+        )
+        let threadEvent = baseEvent(
+            "event-codex-thread",
+            .codingAgentThreadObserved,
+            thread.firstObservedAt,
+            ProvenanceEventPayload(externalIdentities: [threadIdentity], codingAgentThread: thread)
+        )
+
+        self.repository = repository
+        self.worktree = worktree
+        self.session = session
+        self.thread = thread
+        self.firstTurnStarted = firstTurnStarted
+        self.firstTurnCompleted = firstTurnCompleted
+        self.secondTurn = secondTurn
+        self.prompt = prompt
+        self.firstPlanUpdate = firstPlanUpdate
+        self.finalPlanUpdate = finalPlanUpdate
+        self.reasoningSummary = reasoningSummary
+        self.command = toolRun
+        self.changeSet = changeSet
+        self.fileChange = fileChange
+        self.fileChangeAttribution = fileChangeAttribution
+        self.threadEvent = threadEvent
+        self.events = [
+            baseEvent(
+                "event-codex-worktree",
+                .worktreeObserved,
+                timestamp,
+                ProvenanceEventPayload(repository: repository, worktree: worktree)
+            ),
+            baseEvent(
+                "event-codex-session",
+                .sessionObserved,
+                session.updatedAt,
+                ProvenanceEventPayload(session: session, externalIdentities: [sessionIdentity])
+            ),
+            threadEvent,
+            baseEvent(
+                "event-codex-turn-1-started",
+                .codingAgentTurnObserved,
+                firstTurnStarted.updatedAt,
+                ProvenanceEventPayload(codingAgentTurn: firstTurnStarted)
+            ),
+            baseEvent(
+                "event-codex-prompt-1",
+                .codingAgentPromptSubmitted,
+                prompt.submittedAt,
+                ProvenanceEventPayload(codingAgentPrompt: prompt)
+            ),
+            baseEvent(
+                "event-codex-plan-1-a",
+                .codingAgentPlanUpdated,
+                firstPlanUpdate.observedAt,
+                ProvenanceEventPayload(codingAgentPlanUpdate: firstPlanUpdate)
+            ),
+            baseEvent(
+                "event-codex-reasoning-summary-1",
+                .codingAgentReasoningSummaryCompleted,
+                reasoningSummary.completedAt,
+                ProvenanceEventPayload(codingAgentReasoningSummary: reasoningSummary)
+            ),
+            baseEvent(
+                "event-codex-tool-run-1",
+                .codingAgentCommandCompleted,
+                toolRun.completedAt,
+                ProvenanceEventPayload(codingAgentCommand: toolRun)
+            ),
+            baseEvent(
+                "event-codex-file-change-1",
+                .codingAgentFileChangeAttributed,
+                fileChangeAttribution.observedAt,
+                ProvenanceEventPayload(
+                    changeSet: changeSet,
+                    fileChanges: [fileChange],
+                    codingAgentFileChangeAttribution: fileChangeAttribution
+                )
+            ),
+            baseEvent(
+                "event-codex-plan-1-b",
+                .codingAgentPlanUpdated,
+                finalPlanUpdate.observedAt,
+                ProvenanceEventPayload(codingAgentPlanUpdate: finalPlanUpdate)
+            ),
+            baseEvent(
+                "event-codex-turn-1-completed",
+                .codingAgentTurnObserved,
+                firstTurnCompleted.updatedAt,
+                ProvenanceEventPayload(codingAgentTurn: firstTurnCompleted)
+            ),
+            baseEvent(
+                "event-codex-turn-2-started",
+                .codingAgentTurnObserved,
+                secondTurn.updatedAt,
+                ProvenanceEventPayload(codingAgentTurn: secondTurn)
+            ),
+            baseEvent(
+                "event-codex-session-still-active",
+                .sessionObserved,
+                timestamp.addingTimeInterval(13),
+                ProvenanceEventPayload(session: session)
+            ),
+        ]
+    }
+
+    private static func eventBuilder(
+        repositoryID: String,
+        worktreeID: String,
+        sessionID: String
+    ) -> (String, ProvenanceEventType, Date, ProvenanceEventPayload) -> ProvenanceEvent {
+        { id, eventType, timestamp, payload in
+            ProvenanceEvent(
+                id: id,
+                eventType: eventType,
+                timestamp: timestamp,
+                repositoryID: repositoryID,
+                worktreeID: worktreeID,
+                sessionID: sessionID,
+                source: .observed,
+                evidenceOrigin: .codexSession,
+                evidenceScope: ProvenanceEvidenceScope(level: .personal, id: "local-codex-session"),
+                confidence: .high,
+                payload: payload
+            )
+        }
     }
 }
