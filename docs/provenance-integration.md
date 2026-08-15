@@ -17,6 +17,10 @@ generated from the project manifests:
 - [Ownership boundary](generated/ownership-boundary.md)
 - [Repository status](generated/repository-status.md)
 
+The planned high-level live coding-agent projection is documented in
+provenance-engine as `docs/session-work-model.md`. bmux should treat that as
+target direction, not as implemented behavior.
+
 ## Public SDK Boundary
 
 bmux imports only the public engine products for adopted provenance paths:
@@ -192,9 +196,53 @@ Captured workflows today:
 Not every agent UI action implies a recorded session. Opening an agent-session surface alone creates UI state; durable lifecycle evidence is recorded when supported hooks/feed events reach bmux. Engine durability covers accepted events after they reach the SDK; producer delivery reliability remains bmux-owned.
 
 The engine does not ingest or own the full execution telemetry stream. Raw
-provider envelopes, message text, reasoning, command output, approval payloads,
-token details, changed-file paths, diagnostics scheduling, UI, and analytics
+provider envelopes, streaming deltas, unrestricted message text, unrestricted
+command output, token-update streams, diagnostics scheduling, UI, and analytics
 remain bmux-owned unless a later policy slice explicitly changes that boundary.
+
+The accepted target direction is more precise than the older shorthand that
+"execution telemetry remains bmux-owned." bmux should continue to own provider
+acquisition, live interaction, approvals, ephemeral state, and rendering, but it
+should forward selected completed or meaningful evidence units to Provenance
+Engine once explicit contracts exist. Candidate units include Codex thread
+identity, turn identity/lifecycle, user prompt facts, plan updates, completed
+reasoning summaries when exposed as supported summaries, completed command facts
+with cwd/status/result metadata, completed file-change or diff units, approval
+state when it materially affects risk or write behavior, validation results,
+errors, and compaction events.
+
+Those future durable units must preserve source identity where available and
+relate to existing PE session, worktree, contribution, change-set, file-change,
+and validation models where possible. Streaming deltas must remain live bmux
+state by default, and model-derived milestone, intent, or architecture meaning
+must not be written into deterministic PE Current State.
+
+## Future SessionWorkModel Consumer Direction
+
+The planned PE high-level projection is named `SessionWorkModel`. bmux should
+consume it as a domain model for one coding-agent session, not create a parallel
+bmux-owned semantic model.
+
+Expected bmux responsibilities when that contract exists:
+
+- forward policy-approved completed evidence units through public PE contracts;
+- render a human-readable live coding-agent work view from the authoritative
+  PE snapshot;
+- treat push or delta notifications as hints and re-fetch the revisioned
+  `SessionWorkModel` snapshot for reconciliation;
+- keep live approvals, raw streams, UI interaction, and fallback behavior in
+  bmux;
+- present provenance/confidence on inferred fields instead of flattening them
+  into facts.
+
+Expected PE-owned semantic fields include thread intent, turn intent, session
+phase, current activity, milestone hierarchy and descriptions, blocker/risk
+state, scoped thread/current-turn architecture projections, milestone-to-
+architecture links, and later milestone-to-diff/Git/GitHub attribution.
+
+Current implemented behavior remains the lower-level V1 contract set:
+`currentContext`, `sessionTree`, `fileExplanation`, `workspaceDisplay`,
+lifecycle recording, and selected worktree/display evidence writes.
 
 ## Smoke Test
 

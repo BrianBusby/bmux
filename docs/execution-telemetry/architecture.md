@@ -141,8 +141,8 @@ Important reductions:
 ## Provenance Boundary Today
 
 Execution telemetry remains bmux-owned high-frequency runtime state. The
-agent-chat app-server path does not write canonical telemetry to Provenance
-Engine, and the live projection is not durable.
+agent-chat app-server path does not write canonical telemetry streams to
+Provenance Engine, and the live projection is not durable.
 
 After accepted Provenance Engine Slice E, bmux production provenance defaults
 use the engine-owned store for selected durable evidence, lifecycle writes,
@@ -171,10 +171,21 @@ session/provider/lifecycle facts into Provenance Engine:
   existing provenance boundary;
 - broad lifecycle presence such as active/running versus inactive/idle.
 
-The following remain outside durable provenance by default: message text and
-deltas, private reasoning, tool inputs and outputs, command output, raw provider
-envelopes, raw errors, changed file paths, approval request payloads, and token
-usage details.
+The following remain outside durable provenance by default: provider transport
+deltas, message/reasoning deltas, unrestricted message text, private reasoning,
+tool inputs and outputs, raw command output, raw provider envelopes,
+unrestricted raw errors, token-update streams, and transient status changes.
+
+The accepted target direction is to add explicit future durable projections for
+selected completed or meaningful evidence units, not to persist the canonical
+telemetry stream wholesale. Candidate units include provider thread identity,
+turn identity/lifecycle, user prompt facts, plan updates, completed command
+facts with cwd/status/result metadata, completed reasoning summaries when
+exposed as supported summaries, completed file-change or diff units, approval
+state when it materially affects risk or write behavior, validation results,
+errors, and compaction events. PE owns semantic inference over those accepted
+facts; bmux owns provider acquisition, live interaction, approvals, streaming
+state, and rendering.
 
 ## Target Direction For Later Slices
 
@@ -193,7 +204,7 @@ ExecutionEventEnvelope
         +--> live bmux/native projection
         +--> future bounded telemetry store
         +--> current narrow lifecycle provenance projection
-        +--> future selected durable projections
+        +--> future selected completed-unit durable projections
 ```
 
 The reverse direction should remain prohibited: raw provider event -> AgentEvent/status string -> reconstructed execution telemetry.

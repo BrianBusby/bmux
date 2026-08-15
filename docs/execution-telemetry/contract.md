@@ -54,7 +54,9 @@ parsed back into telemetry.
 - Provenance Engine owns selected durable evidence and deterministic Current
   State. It is not a high-frequency execution telemetry store and does not
   receive the canonical telemetry stream. Selected broad lifecycle facts cross
-  only through explicit durable projection.
+  today only through explicit durable projection. Future completed or meaningful
+  evidence units may cross only through explicit PE contracts and retention
+  policy.
 
 The current durable execution-evidence policy selects no automatic telemetry
 persistence and no broad provenance stream. The implemented durable projection
@@ -181,7 +183,12 @@ Swift/native bridge decoding, React rendering changes, WebSocket `AgentEvent`
 payload changes, broader Claude provider migration, or automatic diagnostic
 checkpoint scheduling.
 
-The durable execution-evidence policy still does not allow message text,
-deltas, private reasoning, tool inputs or outputs, command output, raw provider
-envelopes, raw errors, changed file paths, approval request payloads, or token
-usage details to become durable provenance evidence by default.
+The durable execution-evidence policy still does not allow provider transport
+deltas, message/reasoning deltas, unrestricted message text, private reasoning,
+tool inputs or outputs, raw command output, raw provider envelopes,
+unrestricted raw errors, token-update streams, or transient status changes to
+become durable provenance evidence by default. Later PE contracts may select
+completed command facts, plan updates, completed reasoning summaries, completed
+file-change or diff units, approval state, validation results, errors, and
+compaction events as durable evidence units without changing this raw-stream
+policy.

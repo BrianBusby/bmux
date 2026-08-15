@@ -65,6 +65,17 @@ Do not implement active-work coordination before normalized provenance,
 structured knowledge, semantic processing, retrieval, and context-package
 quality are proven.
 
+Session work model update
+
+The next accepted cross-repository direction is PE-owned richer coding-agent
+evidence and a high-level `SessionWorkModel` projection for one live
+coding-agent session. This supersedes older bmux-owned "work-phase and progress
+model" wording where it would require bmux to infer thread intent, turn intent,
+milestone hierarchy, current activity, scoped architecture, or milestone-code
+relationships. bmux remains the capture, orchestration, and presentation client;
+PE owns durable evidence, deterministic Current State, inference, and the
+coherent session work projection.
+
 Important empirical findings
 
 Use these findings as the initial motivation and calibration data, not as unquestionable universal rules.
