@@ -38,6 +38,27 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
     /// Workspace display projection update.
     public var workspaceDisplay: ProvenanceWorkspaceDisplayRecord?
 
+    /// Coding-agent thread projection update.
+    public var codingAgentThread: ProvenanceCodingAgentThreadRecord?
+
+    /// Coding-agent turn projection update.
+    public var codingAgentTurn: ProvenanceCodingAgentTurnRecord?
+
+    /// Submitted coding-agent prompt projection update.
+    public var codingAgentPrompt: ProvenanceCodingAgentPromptRecord?
+
+    /// Coding-agent plan update projection update.
+    public var codingAgentPlanUpdate: ProvenanceCodingAgentPlanUpdateRecord?
+
+    /// Completed coding-agent command projection update.
+    public var codingAgentCommand: ProvenanceCodingAgentCommandRecord?
+
+    /// Completed visible coding-agent reasoning-summary projection update.
+    public var codingAgentReasoningSummary: ProvenanceCodingAgentReasoningSummaryRecord?
+
+    /// Coding-agent file-change attribution projection update.
+    public var codingAgentFileChangeAttribution: ProvenanceCodingAgentFileChangeAttributionRecord?
+
     private enum CodingKeys: String, CodingKey {
         case repository
         case worktree
@@ -51,6 +72,13 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         case fileChanges
         case validationRun
         case workspaceDisplay
+        case codingAgentThread
+        case codingAgentTurn
+        case codingAgentPrompt
+        case codingAgentPlanUpdate
+        case codingAgentCommand
+        case codingAgentReasoningSummary
+        case codingAgentFileChangeAttribution
     }
 
     /// Creates an event payload.
@@ -66,7 +94,14 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         changeSet: ProvenanceChangeSetRecord? = nil,
         fileChanges: [ProvenanceFileChangeRecord] = [],
         validationRun: ProvenanceValidationRunRecord? = nil,
-        workspaceDisplay: ProvenanceWorkspaceDisplayRecord? = nil
+        workspaceDisplay: ProvenanceWorkspaceDisplayRecord? = nil,
+        codingAgentThread: ProvenanceCodingAgentThreadRecord? = nil,
+        codingAgentTurn: ProvenanceCodingAgentTurnRecord? = nil,
+        codingAgentPrompt: ProvenanceCodingAgentPromptRecord? = nil,
+        codingAgentPlanUpdate: ProvenanceCodingAgentPlanUpdateRecord? = nil,
+        codingAgentCommand: ProvenanceCodingAgentCommandRecord? = nil,
+        codingAgentReasoningSummary: ProvenanceCodingAgentReasoningSummaryRecord? = nil,
+        codingAgentFileChangeAttribution: ProvenanceCodingAgentFileChangeAttributionRecord? = nil
     ) {
         self.repository = repository
         self.worktree = worktree
@@ -80,6 +115,13 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         self.fileChanges = fileChanges
         self.validationRun = validationRun
         self.workspaceDisplay = workspaceDisplay
+        self.codingAgentThread = codingAgentThread
+        self.codingAgentTurn = codingAgentTurn
+        self.codingAgentPrompt = codingAgentPrompt
+        self.codingAgentPlanUpdate = codingAgentPlanUpdate
+        self.codingAgentCommand = codingAgentCommand
+        self.codingAgentReasoningSummary = codingAgentReasoningSummary
+        self.codingAgentFileChangeAttribution = codingAgentFileChangeAttribution
     }
 
     /// Creates an event payload from stored JSON, preserving compatibility with older payload shapes.
@@ -111,6 +153,34 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         self.workspaceDisplay = try container.decodeIfPresent(
             ProvenanceWorkspaceDisplayRecord.self,
             forKey: .workspaceDisplay
+        )
+        self.codingAgentThread = try container.decodeIfPresent(
+            ProvenanceCodingAgentThreadRecord.self,
+            forKey: .codingAgentThread
+        )
+        self.codingAgentTurn = try container.decodeIfPresent(
+            ProvenanceCodingAgentTurnRecord.self,
+            forKey: .codingAgentTurn
+        )
+        self.codingAgentPrompt = try container.decodeIfPresent(
+            ProvenanceCodingAgentPromptRecord.self,
+            forKey: .codingAgentPrompt
+        )
+        self.codingAgentPlanUpdate = try container.decodeIfPresent(
+            ProvenanceCodingAgentPlanUpdateRecord.self,
+            forKey: .codingAgentPlanUpdate
+        )
+        self.codingAgentCommand = try container.decodeIfPresent(
+            ProvenanceCodingAgentCommandRecord.self,
+            forKey: .codingAgentCommand
+        )
+        self.codingAgentReasoningSummary = try container.decodeIfPresent(
+            ProvenanceCodingAgentReasoningSummaryRecord.self,
+            forKey: .codingAgentReasoningSummary
+        )
+        self.codingAgentFileChangeAttribution = try container.decodeIfPresent(
+            ProvenanceCodingAgentFileChangeAttributionRecord.self,
+            forKey: .codingAgentFileChangeAttribution
         )
     }
 }

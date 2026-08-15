@@ -55,6 +55,27 @@ public struct ProvenanceEventType: Codable, Equatable, Hashable, Sendable, RawRe
     /// A client observed session metadata.
     public static let sessionObserved = Self(rawValue: "session_observed")
 
+    /// A client observed a coding-agent provider thread identity.
+    public static let codingAgentThreadObserved = Self(rawValue: "coding_agent_thread_observed")
+
+    /// A client observed a coding-agent provider turn lifecycle fact.
+    public static let codingAgentTurnObserved = Self(rawValue: "coding_agent_turn_observed")
+
+    /// A client observed submitted input for a coding-agent turn.
+    public static let codingAgentPromptSubmitted = Self(rawValue: "coding_agent_prompt_submitted")
+
+    /// A client observed a provider-emitted coding-agent plan update.
+    public static let codingAgentPlanUpdated = Self(rawValue: "coding_agent_plan_updated")
+
+    /// A client observed completion of a coding-agent command execution.
+    public static let codingAgentCommandCompleted = Self(rawValue: "coding_agent_command_completed")
+
+    /// A client observed a provider-supported visible reasoning summary.
+    public static let codingAgentReasoningSummaryCompleted = Self(rawValue: "coding_agent_reasoning_summary_completed")
+
+    /// A client observed file-change activity attributed to a coding-agent turn.
+    public static let codingAgentFileChangeAttributed = Self(rawValue: "coding_agent_file_change_attributed")
+
     /// A producer observed a session start.
     public static let sessionStarted = Self(rawValue: "session_started")
 

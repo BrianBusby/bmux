@@ -75,7 +75,14 @@ actor ProvenanceSQLiteRepository {
             changeSetCount: try countRows(in: "provenance_change_sets"),
             fileChangeCount: try countRows(in: "provenance_file_changes"),
             validationRunCount: try countRows(in: "provenance_validation_runs"),
-            workspaceDisplayCount: try countRows(in: "provenance_workspace_display")
+            workspaceDisplayCount: try countRows(in: "provenance_workspace_display"),
+            codingAgentThreadCount: try countRows(in: "provenance_coding_agent_threads"),
+            codingAgentTurnCount: try countRows(in: "provenance_coding_agent_turns"),
+            codingAgentPromptCount: try countRows(in: "provenance_coding_agent_prompts"),
+            codingAgentPlanUpdateCount: try countRows(in: "provenance_coding_agent_plan_updates"),
+            codingAgentCommandCount: try countRows(in: "provenance_coding_agent_commands"),
+            codingAgentReasoningSummaryCount: try countRows(in: "provenance_coding_agent_reasoning_summaries"),
+            codingAgentFileChangeAttributionCount: try countRows(in: "provenance_coding_agent_file_change_attributions")
         )
     }
 
@@ -795,6 +802,383 @@ actor ProvenanceSQLiteRepository {
         try externalIdentityRecords(sessionID: sessionID)
     }
 
+    /// Reads one current-state coding-agent thread projection by stable ID.
+    ///
+    /// - Parameter id: Stable coding-agent thread identifier.
+    /// - Returns: The persisted thread projection, or `nil` when the ID is unknown.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func codingAgentThread(id: String) throws -> ProvenanceCodingAgentThreadRecord? {
+        let query = try database.prepare(
+            """
+            SELECT
+                session_id,
+                provider,
+                provider_thread_id,
+                worktree_id,
+                source,
+                confidence,
+                first_observed_at_seconds,
+                updated_at_seconds
+            FROM provenance_coding_agent_threads
+            WHERE id = ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(id, at: 1)
+        guard try query.step(),
+              let sessionID = query.string(at: 0),
+              let provider = query.string(at: 1),
+              let providerThreadID = query.string(at: 2),
+              let sourceRawValue = query.string(at: 4),
+              let source = ProvenanceSource(rawValue: sourceRawValue),
+              let confidenceRawValue = query.string(at: 5),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
+            return nil
+        }
+
+        return ProvenanceCodingAgentThreadRecord(
+            id: id,
+            sessionID: sessionID,
+            provider: provider,
+            providerThreadID: providerThreadID,
+            worktreeID: query.string(at: 3),
+            source: source,
+            confidence: confidence,
+            firstObservedAt: Date(timeIntervalSince1970: query.double(at: 6) ?? 0),
+            updatedAt: Date(timeIntervalSince1970: query.double(at: 7) ?? 0)
+        )
+    }
+
+    /// Reads one current-state coding-agent turn projection by stable ID.
+    ///
+    /// - Parameter id: Stable coding-agent turn identifier.
+    /// - Returns: The persisted turn projection, or `nil` when the ID is unknown.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func codingAgentTurn(id: String) throws -> ProvenanceCodingAgentTurnRecord? {
+        let query = try database.prepare(
+            """
+            SELECT
+                session_id,
+                thread_id,
+                provider,
+                provider_turn_id,
+                status,
+                model,
+                effort,
+                started_at_seconds,
+                completed_at_seconds,
+                updated_at_seconds,
+                source,
+                confidence
+            FROM provenance_coding_agent_turns
+            WHERE id = ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(id, at: 1)
+        guard try query.step(),
+              let sessionID = query.string(at: 0),
+              let provider = query.string(at: 2),
+              let providerTurnID = query.string(at: 3),
+              let status = query.string(at: 4),
+              let sourceRawValue = query.string(at: 10),
+              let source = ProvenanceSource(rawValue: sourceRawValue),
+              let confidenceRawValue = query.string(at: 11),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
+            return nil
+        }
+
+        return ProvenanceCodingAgentTurnRecord(
+            id: id,
+            sessionID: sessionID,
+            threadID: query.string(at: 1),
+            provider: provider,
+            providerTurnID: providerTurnID,
+            status: status,
+            model: query.string(at: 5),
+            effort: query.string(at: 6),
+            startedAt: query.double(at: 7).map { Date(timeIntervalSince1970: $0) },
+            completedAt: query.double(at: 8).map { Date(timeIntervalSince1970: $0) },
+            updatedAt: Date(timeIntervalSince1970: query.double(at: 9) ?? 0),
+            source: source,
+            confidence: confidence
+        )
+    }
+
+    /// Reads one current-state coding-agent prompt projection by stable ID.
+    ///
+    /// - Parameter id: Stable coding-agent prompt identifier.
+    /// - Returns: The persisted prompt projection, or `nil` when the ID is unknown.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func codingAgentPrompt(id: String) throws -> ProvenanceCodingAgentPromptRecord? {
+        let query = try database.prepare(
+            """
+            SELECT
+                session_id,
+                thread_id,
+                turn_id,
+                provider,
+                text,
+                submitted_at_seconds,
+                source,
+                confidence
+            FROM provenance_coding_agent_prompts
+            WHERE id = ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(id, at: 1)
+        guard try query.step(),
+              let sessionID = query.string(at: 0),
+              let provider = query.string(at: 3),
+              let text = query.string(at: 4),
+              let sourceRawValue = query.string(at: 6),
+              let source = ProvenanceSource(rawValue: sourceRawValue),
+              let confidenceRawValue = query.string(at: 7),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
+            return nil
+        }
+
+        return ProvenanceCodingAgentPromptRecord(
+            id: id,
+            sessionID: sessionID,
+            threadID: query.string(at: 1),
+            turnID: query.string(at: 2),
+            provider: provider,
+            text: text,
+            submittedAt: Date(timeIntervalSince1970: query.double(at: 5) ?? 0),
+            source: source,
+            confidence: confidence
+        )
+    }
+
+    /// Reads one current-state coding-agent plan update projection by stable ID.
+    ///
+    /// - Parameter id: Stable coding-agent plan update identifier.
+    /// - Returns: The persisted plan update projection, or `nil` when the ID is unknown.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func codingAgentPlanUpdate(id: String) throws -> ProvenanceCodingAgentPlanUpdateRecord? {
+        let query = try database.prepare(
+            """
+            SELECT
+                session_id,
+                thread_id,
+                turn_id,
+                provider,
+                explanation,
+                steps_json,
+                observed_at_seconds,
+                source,
+                confidence
+            FROM provenance_coding_agent_plan_updates
+            WHERE id = ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(id, at: 1)
+        guard try query.step(),
+              let sessionID = query.string(at: 0),
+              let provider = query.string(at: 3),
+              let stepsJSON = query.string(at: 5),
+              let stepsData = stepsJSON.data(using: .utf8),
+              let sourceRawValue = query.string(at: 7),
+              let source = ProvenanceSource(rawValue: sourceRawValue),
+              let confidenceRawValue = query.string(at: 8),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
+            return nil
+        }
+        let steps = try payloadDecoder.decode([ProvenanceCodingAgentPlanStepRecord].self, from: stepsData)
+
+        return ProvenanceCodingAgentPlanUpdateRecord(
+            id: id,
+            sessionID: sessionID,
+            threadID: query.string(at: 1),
+            turnID: query.string(at: 2),
+            provider: provider,
+            explanation: query.string(at: 4),
+            steps: steps,
+            observedAt: Date(timeIntervalSince1970: query.double(at: 6) ?? 0),
+            source: source,
+            confidence: confidence
+        )
+    }
+
+    /// Reads one current-state coding-agent command projection by stable ID.
+    ///
+    /// - Parameter id: Stable coding-agent command identifier.
+    /// - Returns: The persisted command projection, or `nil` when the ID is unknown.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func codingAgentCommand(id: String) throws -> ProvenanceCodingAgentCommandRecord? {
+        let query = try database.prepare(
+            """
+            SELECT
+                session_id,
+                thread_id,
+                turn_id,
+                provider,
+                operation_id,
+                command_text,
+                cwd,
+                status,
+                exit_code,
+                output_summary,
+                started_at_seconds,
+                completed_at_seconds,
+                source,
+                confidence
+            FROM provenance_coding_agent_commands
+            WHERE id = ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(id, at: 1)
+        guard try query.step(),
+              let sessionID = query.string(at: 0),
+              let provider = query.string(at: 3),
+              let commandText = query.string(at: 5),
+              let status = query.string(at: 7),
+              let sourceRawValue = query.string(at: 12),
+              let source = ProvenanceSource(rawValue: sourceRawValue),
+              let confidenceRawValue = query.string(at: 13),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
+            return nil
+        }
+
+        return ProvenanceCodingAgentCommandRecord(
+            id: id,
+            sessionID: sessionID,
+            threadID: query.string(at: 1),
+            turnID: query.string(at: 2),
+            provider: provider,
+            operationID: query.string(at: 4),
+            command: commandText,
+            cwd: query.string(at: 6),
+            status: status,
+            exitCode: query.double(at: 8).map(Int.init),
+            outputSummary: query.string(at: 9),
+            startedAt: query.double(at: 10).map { Date(timeIntervalSince1970: $0) },
+            completedAt: Date(timeIntervalSince1970: query.double(at: 11) ?? 0),
+            source: source,
+            confidence: confidence
+        )
+    }
+
+    /// Reads one current-state visible reasoning-summary projection by stable ID.
+    ///
+    /// - Parameter id: Stable coding-agent reasoning-summary identifier.
+    /// - Returns: The persisted visible summary projection, or `nil` when the ID is unknown.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func codingAgentReasoningSummary(id: String) throws -> ProvenanceCodingAgentReasoningSummaryRecord? {
+        let query = try database.prepare(
+            """
+            SELECT
+                session_id,
+                thread_id,
+                turn_id,
+                provider,
+                item_id,
+                text,
+                completed_at_seconds,
+                source,
+                confidence
+            FROM provenance_coding_agent_reasoning_summaries
+            WHERE id = ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(id, at: 1)
+        guard try query.step(),
+              let sessionID = query.string(at: 0),
+              let provider = query.string(at: 3),
+              let text = query.string(at: 5),
+              let sourceRawValue = query.string(at: 7),
+              let source = ProvenanceSource(rawValue: sourceRawValue),
+              let confidenceRawValue = query.string(at: 8),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
+            return nil
+        }
+
+        return ProvenanceCodingAgentReasoningSummaryRecord(
+            id: id,
+            sessionID: sessionID,
+            threadID: query.string(at: 1),
+            turnID: query.string(at: 2),
+            provider: provider,
+            itemID: query.string(at: 4),
+            text: text,
+            completedAt: Date(timeIntervalSince1970: query.double(at: 6) ?? 0),
+            source: source,
+            confidence: confidence
+        )
+    }
+
+    /// Reads one current-state file-change attribution projection by stable ID.
+    ///
+    /// - Parameter id: Stable coding-agent file-change attribution identifier.
+    /// - Returns: The persisted attribution projection, or `nil` when the ID is unknown.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func codingAgentFileChangeAttribution(id: String) throws -> ProvenanceCodingAgentFileChangeAttributionRecord? {
+        let query = try database.prepare(
+            """
+            SELECT
+                session_id,
+                thread_id,
+                turn_id,
+                provider,
+                operation_id,
+                change_set_id,
+                file_change_ids_json,
+                paths_json,
+                summary,
+                observed_at_seconds,
+                source,
+                confidence
+            FROM provenance_coding_agent_file_change_attributions
+            WHERE id = ?
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(id, at: 1)
+        guard try query.step(),
+              let sessionID = query.string(at: 0),
+              let provider = query.string(at: 3),
+              let fileChangeIDsJSON = query.string(at: 6),
+              let fileChangeIDsData = fileChangeIDsJSON.data(using: .utf8),
+              let pathsJSON = query.string(at: 7),
+              let pathsData = pathsJSON.data(using: .utf8),
+              let sourceRawValue = query.string(at: 10),
+              let source = ProvenanceSource(rawValue: sourceRawValue),
+              let confidenceRawValue = query.string(at: 11),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue) else {
+            return nil
+        }
+        let fileChangeIDs = try payloadDecoder.decode([String].self, from: fileChangeIDsData)
+        let paths = try payloadDecoder.decode([String].self, from: pathsData)
+
+        return ProvenanceCodingAgentFileChangeAttributionRecord(
+            id: id,
+            sessionID: sessionID,
+            threadID: query.string(at: 1),
+            turnID: query.string(at: 2),
+            provider: provider,
+            operationID: query.string(at: 4),
+            changeSetID: query.string(at: 5),
+            fileChangeIDs: fileChangeIDs,
+            paths: paths,
+            summary: query.string(at: 8),
+            observedAt: Date(timeIntervalSince1970: query.double(at: 9) ?? 0),
+            source: source,
+            confidence: confidence
+        )
+    }
+
     /// Reads the bounded current session tree rooted at the requested session.
     ///
     /// - Parameter request: Session-tree query parameters.
@@ -1039,6 +1423,13 @@ actor ProvenanceSQLiteRepository {
         var fileChanges = Set<String>()
         var validationRuns = Set<String>()
         var workspaceDisplays = Set<String>()
+        var codingAgentThreads = Set<String>()
+        var codingAgentTurns = Set<String>()
+        var codingAgentPrompts = Set<String>()
+        var codingAgentPlanUpdates = Set<String>()
+        var codingAgentCommands = Set<String>()
+        var codingAgentReasoningSummaries = Set<String>()
+        var codingAgentFileChangeAttributions = Set<String>()
 
         for payload in payloads {
             if let repository = payload.repository {
@@ -1077,6 +1468,27 @@ actor ProvenanceSQLiteRepository {
             if let workspaceDisplay = payload.workspaceDisplay {
                 workspaceDisplays.insert(workspaceDisplay.id)
             }
+            if let codingAgentThread = payload.codingAgentThread {
+                codingAgentThreads.insert(codingAgentThread.id)
+            }
+            if let codingAgentTurn = payload.codingAgentTurn {
+                codingAgentTurns.insert(codingAgentTurn.id)
+            }
+            if let codingAgentPrompt = payload.codingAgentPrompt {
+                codingAgentPrompts.insert(codingAgentPrompt.id)
+            }
+            if let codingAgentPlanUpdate = payload.codingAgentPlanUpdate {
+                codingAgentPlanUpdates.insert(codingAgentPlanUpdate.id)
+            }
+            if let codingAgentCommand = payload.codingAgentCommand {
+                codingAgentCommands.insert(codingAgentCommand.id)
+            }
+            if let codingAgentReasoningSummary = payload.codingAgentReasoningSummary {
+                codingAgentReasoningSummaries.insert(codingAgentReasoningSummary.id)
+            }
+            if let codingAgentFileChangeAttribution = payload.codingAgentFileChangeAttribution {
+                codingAgentFileChangeAttributions.insert(codingAgentFileChangeAttribution.id)
+            }
         }
 
         return [
@@ -1092,6 +1504,13 @@ actor ProvenanceSQLiteRepository {
             "provenance_file_changes": fileChanges.count,
             "provenance_validation_runs": validationRuns.count,
             "provenance_workspace_display": workspaceDisplays.count,
+            "provenance_coding_agent_threads": codingAgentThreads.count,
+            "provenance_coding_agent_turns": codingAgentTurns.count,
+            "provenance_coding_agent_prompts": codingAgentPrompts.count,
+            "provenance_coding_agent_plan_updates": codingAgentPlanUpdates.count,
+            "provenance_coding_agent_commands": codingAgentCommands.count,
+            "provenance_coding_agent_reasoning_summaries": codingAgentReasoningSummaries.count,
+            "provenance_coding_agent_file_change_attributions": codingAgentFileChangeAttributions.count,
         ]
     }
 
@@ -1108,6 +1527,13 @@ actor ProvenanceSQLiteRepository {
         var fileChanges = Set<String>()
         var validationRuns = Set<String>()
         var workspaceDisplays = Set<String>()
+        var codingAgentThreads = Set<String>()
+        var codingAgentTurns = Set<String>()
+        var codingAgentPrompts = Set<String>()
+        var codingAgentPlanUpdates = Set<String>()
+        var codingAgentCommands = Set<String>()
+        var codingAgentReasoningSummaries = Set<String>()
+        var codingAgentFileChangeAttributions = Set<String>()
 
         for payload in payloads {
             if let repository = payload.repository {
@@ -1146,6 +1572,27 @@ actor ProvenanceSQLiteRepository {
             if let workspaceDisplay = payload.workspaceDisplay {
                 workspaceDisplays.insert(workspaceDisplay.id)
             }
+            if let codingAgentThread = payload.codingAgentThread {
+                codingAgentThreads.insert(codingAgentThread.id)
+            }
+            if let codingAgentTurn = payload.codingAgentTurn {
+                codingAgentTurns.insert(codingAgentTurn.id)
+            }
+            if let codingAgentPrompt = payload.codingAgentPrompt {
+                codingAgentPrompts.insert(codingAgentPrompt.id)
+            }
+            if let codingAgentPlanUpdate = payload.codingAgentPlanUpdate {
+                codingAgentPlanUpdates.insert(codingAgentPlanUpdate.id)
+            }
+            if let codingAgentCommand = payload.codingAgentCommand {
+                codingAgentCommands.insert(codingAgentCommand.id)
+            }
+            if let codingAgentReasoningSummary = payload.codingAgentReasoningSummary {
+                codingAgentReasoningSummaries.insert(codingAgentReasoningSummary.id)
+            }
+            if let codingAgentFileChangeAttribution = payload.codingAgentFileChangeAttribution {
+                codingAgentFileChangeAttributions.insert(codingAgentFileChangeAttribution.id)
+            }
         }
 
         return [
@@ -1161,6 +1608,13 @@ actor ProvenanceSQLiteRepository {
             "provenance_file_changes": fileChanges,
             "provenance_validation_runs": validationRuns,
             "provenance_workspace_display": workspaceDisplays,
+            "provenance_coding_agent_threads": codingAgentThreads,
+            "provenance_coding_agent_turns": codingAgentTurns,
+            "provenance_coding_agent_prompts": codingAgentPrompts,
+            "provenance_coding_agent_plan_updates": codingAgentPlanUpdates,
+            "provenance_coding_agent_commands": codingAgentCommands,
+            "provenance_coding_agent_reasoning_summaries": codingAgentReasoningSummaries,
+            "provenance_coding_agent_file_change_attributions": codingAgentFileChangeAttributions,
         ]
     }
 
@@ -1242,6 +1696,13 @@ actor ProvenanceSQLiteRepository {
             "provenance_file_changes",
             "provenance_validation_runs",
             "provenance_workspace_display",
+            "provenance_coding_agent_threads",
+            "provenance_coding_agent_turns",
+            "provenance_coding_agent_prompts",
+            "provenance_coding_agent_plan_updates",
+            "provenance_coding_agent_commands",
+            "provenance_coding_agent_reasoning_summaries",
+            "provenance_coding_agent_file_change_attributions",
         ]
     }
 
@@ -2438,10 +2899,38 @@ actor ProvenanceSQLiteRepository {
                 latestEventSequence: latestEventSequence
             )
         }
+        if let codingAgentThread = payload.codingAgentThread {
+            try upsertCodingAgentThread(codingAgentThread)
+        }
+        if let codingAgentTurn = payload.codingAgentTurn {
+            try upsertCodingAgentTurn(codingAgentTurn)
+        }
+        if let codingAgentPrompt = payload.codingAgentPrompt {
+            try upsertCodingAgentPrompt(codingAgentPrompt)
+        }
+        if let codingAgentPlanUpdate = payload.codingAgentPlanUpdate {
+            try upsertCodingAgentPlanUpdate(codingAgentPlanUpdate)
+        }
+        if let codingAgentCommand = payload.codingAgentCommand {
+            try upsertCodingAgentCommand(codingAgentCommand)
+        }
+        if let codingAgentReasoningSummary = payload.codingAgentReasoningSummary {
+            try upsertCodingAgentReasoningSummary(codingAgentReasoningSummary)
+        }
+        if let codingAgentFileChangeAttribution = payload.codingAgentFileChangeAttribution {
+            try upsertCodingAgentFileChangeAttribution(codingAgentFileChangeAttribution)
+        }
     }
 
     private func clearProjectionTables() throws {
         for tableName in [
+            "provenance_coding_agent_file_change_attributions",
+            "provenance_coding_agent_reasoning_summaries",
+            "provenance_coding_agent_commands",
+            "provenance_coding_agent_plan_updates",
+            "provenance_coding_agent_prompts",
+            "provenance_coding_agent_turns",
+            "provenance_coding_agent_threads",
             "provenance_workspace_display",
             "provenance_validation_runs",
             "provenance_file_changes",
@@ -3385,6 +3874,353 @@ actor ProvenanceSQLiteRepository {
         return json
     }
 
+    private func upsertCodingAgentThread(_ thread: ProvenanceCodingAgentThreadRecord) throws {
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_coding_agent_threads (
+                id,
+                session_id,
+                provider,
+                provider_thread_id,
+                worktree_id,
+                source,
+                confidence,
+                first_observed_at_seconds,
+                updated_at_seconds
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                session_id = excluded.session_id,
+                provider = excluded.provider,
+                provider_thread_id = excluded.provider_thread_id,
+                worktree_id = excluded.worktree_id,
+                source = excluded.source,
+                confidence = excluded.confidence,
+                updated_at_seconds = excluded.updated_at_seconds
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(thread.id, at: 1)
+        try upsert.bind(thread.sessionID, at: 2)
+        try upsert.bind(thread.provider, at: 3)
+        try upsert.bind(thread.providerThreadID, at: 4)
+        try upsert.bind(thread.worktreeID, at: 5)
+        try upsert.bind(thread.source.rawValue, at: 6)
+        try upsert.bind(thread.confidence.rawValue, at: 7)
+        try upsert.bind(thread.firstObservedAt.timeIntervalSince1970, at: 8)
+        try upsert.bind(thread.updatedAt.timeIntervalSince1970, at: 9)
+
+        _ = try upsert.step()
+    }
+
+    private func upsertCodingAgentTurn(_ turn: ProvenanceCodingAgentTurnRecord) throws {
+        let existing = try codingAgentTurn(id: turn.id)
+        let startedAt = turn.startedAt ?? existing?.startedAt
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_coding_agent_turns (
+                id,
+                session_id,
+                thread_id,
+                provider,
+                provider_turn_id,
+                status,
+                model,
+                effort,
+                started_at_seconds,
+                completed_at_seconds,
+                updated_at_seconds,
+                source,
+                confidence
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                session_id = excluded.session_id,
+                thread_id = excluded.thread_id,
+                provider = excluded.provider,
+                provider_turn_id = excluded.provider_turn_id,
+                status = excluded.status,
+                model = COALESCE(excluded.model, provenance_coding_agent_turns.model),
+                effort = COALESCE(excluded.effort, provenance_coding_agent_turns.effort),
+                started_at_seconds = COALESCE(excluded.started_at_seconds, provenance_coding_agent_turns.started_at_seconds),
+                completed_at_seconds = excluded.completed_at_seconds,
+                updated_at_seconds = excluded.updated_at_seconds,
+                source = excluded.source,
+                confidence = excluded.confidence
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(turn.id, at: 1)
+        try upsert.bind(turn.sessionID, at: 2)
+        try upsert.bind(turn.threadID, at: 3)
+        try upsert.bind(turn.provider, at: 4)
+        try upsert.bind(turn.providerTurnID, at: 5)
+        try upsert.bind(turn.status, at: 6)
+        try upsert.bind(turn.model, at: 7)
+        try upsert.bind(turn.effort, at: 8)
+        try upsert.bind(startedAt?.timeIntervalSince1970, at: 9)
+        try upsert.bind(turn.completedAt?.timeIntervalSince1970, at: 10)
+        try upsert.bind(turn.updatedAt.timeIntervalSince1970, at: 11)
+        try upsert.bind(turn.source.rawValue, at: 12)
+        try upsert.bind(turn.confidence.rawValue, at: 13)
+
+        _ = try upsert.step()
+    }
+
+    private func upsertCodingAgentPrompt(_ prompt: ProvenanceCodingAgentPromptRecord) throws {
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_coding_agent_prompts (
+                id,
+                session_id,
+                thread_id,
+                turn_id,
+                provider,
+                text,
+                submitted_at_seconds,
+                source,
+                confidence
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                session_id = excluded.session_id,
+                thread_id = excluded.thread_id,
+                turn_id = excluded.turn_id,
+                provider = excluded.provider,
+                text = excluded.text,
+                submitted_at_seconds = excluded.submitted_at_seconds,
+                source = excluded.source,
+                confidence = excluded.confidence
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(prompt.id, at: 1)
+        try upsert.bind(prompt.sessionID, at: 2)
+        try upsert.bind(prompt.threadID, at: 3)
+        try upsert.bind(prompt.turnID, at: 4)
+        try upsert.bind(prompt.provider, at: 5)
+        try upsert.bind(prompt.text, at: 6)
+        try upsert.bind(prompt.submittedAt.timeIntervalSince1970, at: 7)
+        try upsert.bind(prompt.source.rawValue, at: 8)
+        try upsert.bind(prompt.confidence.rawValue, at: 9)
+
+        _ = try upsert.step()
+    }
+
+    private func upsertCodingAgentPlanUpdate(_ planUpdate: ProvenanceCodingAgentPlanUpdateRecord) throws {
+        let stepsJSON = try encodedWorkspaceDisplayJSON(
+            planUpdate.steps,
+            failureMessage: "failed to encode coding-agent plan steps"
+        )
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_coding_agent_plan_updates (
+                id,
+                session_id,
+                thread_id,
+                turn_id,
+                provider,
+                explanation,
+                steps_json,
+                observed_at_seconds,
+                source,
+                confidence
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                session_id = excluded.session_id,
+                thread_id = excluded.thread_id,
+                turn_id = excluded.turn_id,
+                provider = excluded.provider,
+                explanation = excluded.explanation,
+                steps_json = excluded.steps_json,
+                observed_at_seconds = excluded.observed_at_seconds,
+                source = excluded.source,
+                confidence = excluded.confidence
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(planUpdate.id, at: 1)
+        try upsert.bind(planUpdate.sessionID, at: 2)
+        try upsert.bind(planUpdate.threadID, at: 3)
+        try upsert.bind(planUpdate.turnID, at: 4)
+        try upsert.bind(planUpdate.provider, at: 5)
+        try upsert.bind(planUpdate.explanation, at: 6)
+        try upsert.bind(stepsJSON, at: 7)
+        try upsert.bind(planUpdate.observedAt.timeIntervalSince1970, at: 8)
+        try upsert.bind(planUpdate.source.rawValue, at: 9)
+        try upsert.bind(planUpdate.confidence.rawValue, at: 10)
+
+        _ = try upsert.step()
+    }
+
+    private func upsertCodingAgentCommand(_ command: ProvenanceCodingAgentCommandRecord) throws {
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_coding_agent_commands (
+                id,
+                session_id,
+                thread_id,
+                turn_id,
+                provider,
+                operation_id,
+                command_text,
+                cwd,
+                status,
+                exit_code,
+                output_summary,
+                started_at_seconds,
+                completed_at_seconds,
+                source,
+                confidence
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                session_id = excluded.session_id,
+                thread_id = excluded.thread_id,
+                turn_id = excluded.turn_id,
+                provider = excluded.provider,
+                operation_id = excluded.operation_id,
+                command_text = excluded.command_text,
+                cwd = excluded.cwd,
+                status = excluded.status,
+                exit_code = excluded.exit_code,
+                output_summary = excluded.output_summary,
+                started_at_seconds = excluded.started_at_seconds,
+                completed_at_seconds = excluded.completed_at_seconds,
+                source = excluded.source,
+                confidence = excluded.confidence
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(command.id, at: 1)
+        try upsert.bind(command.sessionID, at: 2)
+        try upsert.bind(command.threadID, at: 3)
+        try upsert.bind(command.turnID, at: 4)
+        try upsert.bind(command.provider, at: 5)
+        try upsert.bind(command.operationID, at: 6)
+        try upsert.bind(command.command, at: 7)
+        try upsert.bind(command.cwd, at: 8)
+        try upsert.bind(command.status, at: 9)
+        if let exitCode = command.exitCode {
+            try upsert.bind(exitCode, at: 10)
+        } else {
+            try upsert.bind(nil as String?, at: 10)
+        }
+        try upsert.bind(command.outputSummary, at: 11)
+        try upsert.bind(command.startedAt?.timeIntervalSince1970, at: 12)
+        try upsert.bind(command.completedAt.timeIntervalSince1970, at: 13)
+        try upsert.bind(command.source.rawValue, at: 14)
+        try upsert.bind(command.confidence.rawValue, at: 15)
+
+        _ = try upsert.step()
+    }
+
+    private func upsertCodingAgentReasoningSummary(_ summary: ProvenanceCodingAgentReasoningSummaryRecord) throws {
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_coding_agent_reasoning_summaries (
+                id,
+                session_id,
+                thread_id,
+                turn_id,
+                provider,
+                item_id,
+                text,
+                completed_at_seconds,
+                source,
+                confidence
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                session_id = excluded.session_id,
+                thread_id = excluded.thread_id,
+                turn_id = excluded.turn_id,
+                provider = excluded.provider,
+                item_id = excluded.item_id,
+                text = excluded.text,
+                completed_at_seconds = excluded.completed_at_seconds,
+                source = excluded.source,
+                confidence = excluded.confidence
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(summary.id, at: 1)
+        try upsert.bind(summary.sessionID, at: 2)
+        try upsert.bind(summary.threadID, at: 3)
+        try upsert.bind(summary.turnID, at: 4)
+        try upsert.bind(summary.provider, at: 5)
+        try upsert.bind(summary.itemID, at: 6)
+        try upsert.bind(summary.text, at: 7)
+        try upsert.bind(summary.completedAt.timeIntervalSince1970, at: 8)
+        try upsert.bind(summary.source.rawValue, at: 9)
+        try upsert.bind(summary.confidence.rawValue, at: 10)
+
+        _ = try upsert.step()
+    }
+
+    private func upsertCodingAgentFileChangeAttribution(
+        _ attribution: ProvenanceCodingAgentFileChangeAttributionRecord
+    ) throws {
+        let fileChangeIDsJSON = try encodedWorkspaceDisplayJSON(
+            attribution.fileChangeIDs,
+            failureMessage: "failed to encode coding-agent file-change ids"
+        )
+        let pathsJSON = try encodedWorkspaceDisplayJSON(
+            attribution.paths,
+            failureMessage: "failed to encode coding-agent file-change paths"
+        )
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_coding_agent_file_change_attributions (
+                id,
+                session_id,
+                thread_id,
+                turn_id,
+                provider,
+                operation_id,
+                change_set_id,
+                file_change_ids_json,
+                paths_json,
+                summary,
+                observed_at_seconds,
+                source,
+                confidence
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                session_id = excluded.session_id,
+                thread_id = excluded.thread_id,
+                turn_id = excluded.turn_id,
+                provider = excluded.provider,
+                operation_id = excluded.operation_id,
+                change_set_id = excluded.change_set_id,
+                file_change_ids_json = excluded.file_change_ids_json,
+                paths_json = excluded.paths_json,
+                summary = excluded.summary,
+                observed_at_seconds = excluded.observed_at_seconds,
+                source = excluded.source,
+                confidence = excluded.confidence
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(attribution.id, at: 1)
+        try upsert.bind(attribution.sessionID, at: 2)
+        try upsert.bind(attribution.threadID, at: 3)
+        try upsert.bind(attribution.turnID, at: 4)
+        try upsert.bind(attribution.provider, at: 5)
+        try upsert.bind(attribution.operationID, at: 6)
+        try upsert.bind(attribution.changeSetID, at: 7)
+        try upsert.bind(fileChangeIDsJSON, at: 8)
+        try upsert.bind(pathsJSON, at: 9)
+        try upsert.bind(attribution.summary, at: 10)
+        try upsert.bind(attribution.observedAt.timeIntervalSince1970, at: 11)
+        try upsert.bind(attribution.source.rawValue, at: 12)
+        try upsert.bind(attribution.confidence.rawValue, at: 13)
+
+        _ = try upsert.step()
+    }
+
     private func insertStorageRepairAttempt(
         _ report: ProvenanceSQLiteStorageRepairReport,
         attemptedAt: Date
@@ -3916,6 +4752,187 @@ actor ProvenanceSQLiteRepository {
                 """
                 UPDATE provenance_metadata
                 SET value = '16'
+                WHERE key = 'schema_version'
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 17,
+            statements: [
+                """
+                CREATE TABLE provenance_coding_agent_threads (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    session_id TEXT NOT NULL,
+                    provider TEXT NOT NULL,
+                    provider_thread_id TEXT NOT NULL,
+                    worktree_id TEXT,
+                    source TEXT NOT NULL,
+                    confidence TEXT NOT NULL,
+                    first_observed_at_seconds REAL NOT NULL,
+                    updated_at_seconds REAL NOT NULL
+                )
+                """,
+                """
+                CREATE UNIQUE INDEX provenance_coding_agent_threads_provider_index
+                ON provenance_coding_agent_threads (provider, provider_thread_id)
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_threads_session_index
+                ON provenance_coding_agent_threads (session_id, updated_at_seconds)
+                """,
+                """
+                CREATE TABLE provenance_coding_agent_turns (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    session_id TEXT NOT NULL,
+                    thread_id TEXT,
+                    provider TEXT NOT NULL,
+                    provider_turn_id TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    model TEXT,
+                    effort TEXT,
+                    started_at_seconds REAL,
+                    completed_at_seconds REAL,
+                    updated_at_seconds REAL NOT NULL,
+                    source TEXT NOT NULL,
+                    confidence TEXT NOT NULL
+                )
+                """,
+                """
+                CREATE UNIQUE INDEX provenance_coding_agent_turns_provider_index
+                ON provenance_coding_agent_turns (provider, provider_turn_id)
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_turns_session_index
+                ON provenance_coding_agent_turns (session_id, updated_at_seconds)
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_turns_thread_index
+                ON provenance_coding_agent_turns (thread_id, updated_at_seconds)
+                """,
+                """
+                CREATE TABLE provenance_coding_agent_prompts (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    session_id TEXT NOT NULL,
+                    thread_id TEXT,
+                    turn_id TEXT,
+                    provider TEXT NOT NULL,
+                    text TEXT NOT NULL,
+                    submitted_at_seconds REAL NOT NULL,
+                    source TEXT NOT NULL,
+                    confidence TEXT NOT NULL
+                )
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_prompts_session_index
+                ON provenance_coding_agent_prompts (session_id, submitted_at_seconds)
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_prompts_turn_index
+                ON provenance_coding_agent_prompts (turn_id, submitted_at_seconds)
+                """,
+                """
+                CREATE TABLE provenance_coding_agent_plan_updates (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    session_id TEXT NOT NULL,
+                    thread_id TEXT,
+                    turn_id TEXT,
+                    provider TEXT NOT NULL,
+                    explanation TEXT,
+                    steps_json TEXT NOT NULL,
+                    observed_at_seconds REAL NOT NULL,
+                    source TEXT NOT NULL,
+                    confidence TEXT NOT NULL
+                )
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_plan_updates_session_index
+                ON provenance_coding_agent_plan_updates (session_id, observed_at_seconds)
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_plan_updates_turn_index
+                ON provenance_coding_agent_plan_updates (turn_id, observed_at_seconds)
+                """,
+                """
+                CREATE TABLE provenance_coding_agent_commands (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    session_id TEXT NOT NULL,
+                    thread_id TEXT,
+                    turn_id TEXT,
+                    provider TEXT NOT NULL,
+                    operation_id TEXT,
+                    command_text TEXT NOT NULL,
+                    cwd TEXT,
+                    status TEXT NOT NULL,
+                    exit_code INTEGER,
+                    output_summary TEXT,
+                    started_at_seconds REAL,
+                    completed_at_seconds REAL NOT NULL,
+                    source TEXT NOT NULL,
+                    confidence TEXT NOT NULL
+                )
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_commands_session_index
+                ON provenance_coding_agent_commands (session_id, completed_at_seconds)
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_commands_turn_index
+                ON provenance_coding_agent_commands (turn_id, completed_at_seconds)
+                """,
+                """
+                CREATE TABLE provenance_coding_agent_reasoning_summaries (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    session_id TEXT NOT NULL,
+                    thread_id TEXT,
+                    turn_id TEXT,
+                    provider TEXT NOT NULL,
+                    item_id TEXT,
+                    text TEXT NOT NULL,
+                    completed_at_seconds REAL NOT NULL,
+                    source TEXT NOT NULL,
+                    confidence TEXT NOT NULL
+                )
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_reasoning_summaries_session_index
+                ON provenance_coding_agent_reasoning_summaries (session_id, completed_at_seconds)
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_reasoning_summaries_turn_index
+                ON provenance_coding_agent_reasoning_summaries (turn_id, completed_at_seconds)
+                """,
+                """
+                CREATE TABLE provenance_coding_agent_file_change_attributions (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    session_id TEXT NOT NULL,
+                    thread_id TEXT,
+                    turn_id TEXT,
+                    provider TEXT NOT NULL,
+                    operation_id TEXT,
+                    change_set_id TEXT,
+                    file_change_ids_json TEXT NOT NULL,
+                    paths_json TEXT NOT NULL,
+                    summary TEXT,
+                    observed_at_seconds REAL NOT NULL,
+                    source TEXT NOT NULL,
+                    confidence TEXT NOT NULL
+                )
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_file_change_attributions_session_index
+                ON provenance_coding_agent_file_change_attributions (session_id, observed_at_seconds)
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_file_change_attributions_turn_index
+                ON provenance_coding_agent_file_change_attributions (turn_id, observed_at_seconds)
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_file_change_attributions_change_set_index
+                ON provenance_coding_agent_file_change_attributions (change_set_id)
+                """,
+                """
+                UPDATE provenance_metadata
+                SET value = '17'
                 WHERE key = 'schema_version'
                 """,
             ]

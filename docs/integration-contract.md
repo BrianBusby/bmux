@@ -107,6 +107,35 @@ that need current lower-level facts must use the accepted APIs above. A future
 coding-agent session, but it must be added as an explicit versioned request and
 response surface rather than inferred from existing projection tables.
 
+The accepted richer-session evidence write contract is append-only and
+lower-level than `SessionWorkModel`. Producers append `ProvenanceEvent` values
+through `ProvenanceEngineClient.appendEvent(...)` using these event types and
+payload records:
+
+- `.codingAgentThreadObserved` with `ProvenanceCodingAgentThreadRecord`
+- `.codingAgentTurnObserved` with `ProvenanceCodingAgentTurnRecord`
+- `.codingAgentPromptSubmitted` with `ProvenanceCodingAgentPromptRecord`
+- `.codingAgentPlanUpdated` with `ProvenanceCodingAgentPlanUpdateRecord`
+- `.codingAgentCommandCompleted` with `ProvenanceCodingAgentCommandRecord`
+- `.codingAgentReasoningSummaryCompleted` with
+  `ProvenanceCodingAgentReasoningSummaryRecord`
+- `.codingAgentFileChangeAttributed` with
+  `ProvenanceCodingAgentFileChangeAttributionRecord`
+
+These are observable facts and deterministic Current State projections, not
+semantic session models. Provider-native thread and turn identities must be
+preserved in the typed records rather than flattened into generic text. Session,
+repository, worktree, change-set, file-change, contribution, and validation
+relationships should be included only when the producer can establish them
+reliably. Unknown is preferable to guessed.
+
+Raw provider transport streams, stdout/stderr deltas, raw reasoning deltas,
+hidden chain-of-thought, unrestricted transcripts, token-by-token envelopes, and
+bmux live projection state are not part of the durable default contract.
+Reasoning-summary evidence is limited to visible/provider-supported completed
+summary units. Command output summaries are optional and subject to producer
+retention/privacy policy.
+
 The accepted workspace-display Current State contract is:
 
 - Write evidence: append a `ProvenanceEvent` with `eventType == .workspaceDisplayObserved` and `payload.workspaceDisplay`.
