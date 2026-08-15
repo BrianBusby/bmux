@@ -5,6 +5,7 @@ import type {
   TelemetryDiagnosticLevel,
   TelemetryEventEnvelope,
   TelemetryMessageStream,
+  TelemetryPlanStep,
   TelemetryProviderTurnId,
   TelemetryToolKind,
   TelemetryToolStatus,
@@ -130,6 +131,35 @@ export function emitCodexTurnFailed(
     sess.emit({ kind: "done", generation: params.generation } as any),
     undefined
   );
+}
+
+export function emitCodexPlanUpdated(
+  sess: SessionCtx,
+  params: {
+    providerSessionId?: string;
+    turnId?: TelemetryProviderTurnId;
+    method: string;
+    explanation?: string;
+    steps: TelemetryPlanStep[];
+  },
+): TelemetryEventEnvelope | undefined {
+  return sess.emitTelemetry?.({
+    source: "provider",
+    providerSessionId: params.providerSessionId,
+    providerTurnId: params.turnId,
+    providerEvent: {
+      method: params.method,
+      turnId: params.turnId,
+    },
+    event: {
+      type: "plan.updated",
+      explanation: params.explanation ? truncate(params.explanation, 400) : undefined,
+      steps: params.steps.map((step) => ({
+        text: truncate(step.text, 400),
+        status: truncate(step.status, 80),
+      })),
+    },
+  });
 }
 
 export function emitCodexMessageDelta(

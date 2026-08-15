@@ -3,7 +3,8 @@
 Status: Slice 11 provider-neutral contract, sidecar fanout seam, first Codex
 lifecycle migrations, first narrow Claude lifecycle/identity migration, Plan
 Slice 4B live projection sidecar read surface, Plan Slice 4C native read
-client, observation diagnostic, and durable execution-evidence policy.
+client, observation diagnostic, durable execution-evidence policy, and richer
+session evidence foundation.
 
 Canonical bmux roadmap reconciliation note: Provenance Engine Slice E is
 operationally complete on main, and the active product gate is the Engineering
@@ -49,21 +50,20 @@ parsed back into telemetry.
   payloads, plus bounded provider references such as method, request id, item
   id, turn id, and provider session id.
 - React owns only the current `AgentEvent -> Block[]` render projection.
-- Native Swift owns display or notification consumers of bounded telemetry read
-  payloads; it does not own this source of truth.
+- Native Swift owns display, notification, and PE-producer consumers of bounded
+  telemetry read payloads; it does not own this source of truth.
 - Provenance Engine owns selected durable evidence and deterministic Current
   State. It is not a high-frequency execution telemetry store and does not
-  receive the canonical telemetry stream. Selected broad lifecycle facts cross
-  today only through explicit durable projection. Future completed or meaningful
-  evidence units may cross only through explicit PE contracts and retention
-  policy.
+  receive the canonical telemetry stream. Selected broad lifecycle facts and
+  completed meaningful Codex evidence units cross only through explicit durable
+  projection, PE contracts, and retention policy.
 
 The current durable execution-evidence policy selects no automatic telemetry
 persistence and no broad provenance stream. The implemented durable projection
-records only broad session/provider/lifecycle facts: bmux session id, provider
-kind, provider session id when available, repository/worktree association within
-the existing provenance boundary, and broad active/running versus inactive/idle
-lifecycle presence.
+records broad session/provider/lifecycle facts plus selected Codex completed
+units: thread identity, turn lifecycle, submitted prompt, plan updates,
+completed commands, completed visible reasoning summaries, and file-change
+attribution. Raw streams and provider envelopes are not persisted by default.
 
 ## Envelope Rules
 
@@ -133,6 +133,23 @@ errors, command output, transcripts, private reasoning, or changed file paths.
 `Packages/Shared/BmuxAgentChat` consumes this payload through
 `ExecutionTelemetryLiveProjectionClient`. Swift reads this bounded JSON shape
 only; the canonical event union remains in `agent-chat`.
+
+## Bounded Event Read Surface
+
+The sidecar also exposes a bounded per-session envelope history for native
+producers that need completed evidence units:
+
+```text
+GET /api/sessions/:id/execution-telemetry/events?afterSequence=<n>&limit=<n>
+```
+
+It returns `{ sessionId, latestSequence, events }`, where `events` are canonical
+`TelemetryEventEnvelope` values after the exclusive sequence cursor. The history
+is bounded in memory and remains a delivery/retry surface for bmux producers,
+not durable provenance storage. Swift consumes it through
+`ExecutionTelemetryEventClient` and advances its local cursor only after the
+corresponding PE append has been ignored as live-only or accepted as durable
+evidence.
 
 ## Minimal Event Set
 

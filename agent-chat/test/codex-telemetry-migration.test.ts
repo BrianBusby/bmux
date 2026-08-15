@@ -6,6 +6,7 @@ import {
   emitCodexDiagnostic,
   emitCodexMessageCompleted,
   emitCodexMessageDelta,
+  emitCodexPlanUpdated,
   emitCodexPromptSubmitted,
   emitCodexProviderSessionLinked,
   emitCodexToolCompleted,
@@ -172,6 +173,31 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
 
 {
   const { sess, agentEvents, telemetryEvents } = makeCodexSession();
+
+  emitCodexPlanUpdated(sess, {
+    providerSessionId: "thread-plan",
+    turnId: "turn-plan",
+    method: "turn/plan/updated",
+    explanation: "ordered work",
+    steps: [
+      { text: "Audit telemetry", status: "completed" },
+      { text: "Persist evidence", status: "in_progress" },
+    ],
+  });
+
+  assert(agentEvents.length === 0, `plan update should not project React AgentEvents: ${JSON.stringify(agentEvents)}`);
+  assert(telemetryEvents.length === 1, `expected one plan telemetry envelope: ${JSON.stringify(telemetryEvents)}`);
+  assert(telemetryEvents[0].event.type === "plan.updated", "plan update should publish plan.updated telemetry");
+  assert(telemetryEvents[0].providerSessionId === "thread-plan", "plan provider session id changed");
+  assert(telemetryEvents[0].providerTurnId === "turn-plan", "plan provider turn id changed");
+  assert(telemetryEvents[0].providerEvent?.method === "turn/plan/updated", "plan provider method changed");
+  assert(telemetryEvents[0].event.explanation === "ordered work", "plan explanation changed");
+  assert(telemetryEvents[0].event.steps.map((step) => step.text).join("|") === "Audit telemetry|Persist evidence", "plan step text changed");
+  assert(telemetryEvents[0].event.steps.map((step) => step.status).join("|") === "completed|in_progress", "plan step status changed");
+}
+
+{
+  const { sess, agentEvents, telemetryEvents } = makeCodexSession();
   sess.internal.threadId = "thread-usage";
 
   codexHandleServerMessageForTest(sess, {
@@ -258,6 +284,10 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   });
   codexHandleServerMessageForTest(sess, {
     method: "item/completed",
+    params: { threadId: "thread-message", item: { id: "reasoning-summary-1", type: "reasoningSummary", text: "visible summary" } },
+  });
+  codexHandleServerMessageForTest(sess, {
+    method: "item/completed",
     params: { threadId: "thread-message", item: { id: "msg-streamed", type: "agentMessage", text: "hello world" } },
   });
   codexHandleServerMessageForTest(sess, {
@@ -265,13 +295,14 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
     params: { threadId: "thread-message", item: { id: "msg-completed", type: "agentMessage", text: "full answer" } },
   });
 
-  assert(agentEvents.length === 3, `message lifecycle AgentEvent projection changed: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents.length === 4, `message lifecycle AgentEvent projection changed: ${JSON.stringify(agentEvents)}`);
   assert(agentEvents[0].kind === "delta" && agentEvents[0].text === "hello ", "assistant delta projection changed");
   assert(agentEvents[1].kind === "thinking" && agentEvents[1].text === "thinking", "reasoning delta projection changed");
-  assert(agentEvents[2].kind === "assistant" && agentEvents[2].text === "full answer", "completed assistant projection changed");
+  assert(agentEvents[2].kind === "thinking" && agentEvents[2].text === "visible summary", "completed visible summary projection changed");
+  assert(agentEvents[3].kind === "assistant" && agentEvents[3].text === "full answer", "completed assistant projection changed");
 
   const messageEvents = telemetryEvents.filter((event) => event.event.type === "message.delta" || event.event.type === "message.completed");
-  assert(messageEvents.length === 3, `expected three message telemetry envelopes: ${JSON.stringify(telemetryEvents)}`);
+  assert(messageEvents.length === 4, `expected four message telemetry envelopes: ${JSON.stringify(telemetryEvents)}`);
 
   assert(messageEvents[0].event.type === "message.delta", "assistant delta should publish message.delta telemetry");
   assert(messageEvents[0].providerTurnId === "turn-message", "assistant delta provider turn id was not preserved");
@@ -283,10 +314,16 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   assert(messageEvents[1].providerEvent?.method === "item/reasoning/summaryTextDelta", "reasoning delta provider method changed");
   assert(messageEvents[1].event.stream === "reasoning" && messageEvents[1].event.text === "thinking", "reasoning delta telemetry changed");
 
-  assert(messageEvents[2].event.type === "message.completed", "completed assistant should publish message.completed telemetry");
-  assert(messageEvents[2].providerEvent?.method === "item/completed", "completed assistant provider method changed");
-  assert(messageEvents[2].event.itemId === "msg-completed", "completed assistant item id changed");
-  assert(messageEvents[2].event.text === "full answer", "completed assistant text changed");
+  assert(messageEvents[2].event.type === "message.completed", "completed visible summary should publish message.completed telemetry");
+  assert(messageEvents[2].providerEvent?.method === "item/completed", "completed visible summary provider method changed");
+  assert(messageEvents[2].event.stream === "reasoning", "completed visible summary stream changed");
+  assert(messageEvents[2].event.itemId === "reasoning-summary-1", "completed visible summary item id changed");
+  assert(messageEvents[2].event.text === "visible summary", "completed visible summary text changed");
+
+  assert(messageEvents[3].event.type === "message.completed", "completed assistant should publish message.completed telemetry");
+  assert(messageEvents[3].providerEvent?.method === "item/completed", "completed assistant provider method changed");
+  assert(messageEvents[3].event.itemId === "msg-completed", "completed assistant item id changed");
+  assert(messageEvents[3].event.text === "full answer", "completed assistant text changed");
 }
 
 {

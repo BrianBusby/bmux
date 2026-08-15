@@ -8,12 +8,11 @@ Last updated: 2026-07-31
 
 The authoritative current status is generated from project manifests. See `docs/generated/project-status.md`, `docs/generated/ownership-boundary.md`, and `docs/generated/repository-status.md`.
 
-Implementation through `3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9` includes the
-live projection, native read client, read-only diagnostic, durable
-execution-evidence policy, narrow durable lifecycle producer, fork CI baseline
-repair, and Claude lifecycle telemetry migration. Provenance Engine Slice E is
-operationally complete and the active product gate is the Engineering
-Observation Period.
+Implementation now includes the live projection, native read client, read-only
+diagnostic, durable execution-evidence policy, narrow durable lifecycle
+producer, fork CI baseline repair, Claude lifecycle telemetry migration, and the
+richer session evidence foundation. Provenance Engine Slice E is operationally
+complete and the active product gate is the Engineering Observation Period.
 
 Execution telemetry is bmux-owned high-frequency runtime state. Provenance
 Engine owns selected durable evidence and deterministic Current State. The
@@ -30,6 +29,7 @@ Engine Slice E.
 | Durable execution-evidence policy | Completed and merged to `main`. | Dogfooded the diagnostic against a real live Codex sidecar session and recorded the policy that execution telemetry is not durable provenance evidence by default. The implemented durable projection is limited to approved broad session/provider/lifecycle facts and derived worktree association. |
 | Narrow durable lifecycle producer | Completed and merged to `main` at `9d7fefacbb402bc918b22888214021a8223f14ff`. | Adds an app-side producer for broad live sidecar session/provider/lifecycle facts only. The existing diagnostic remains read-only and now matches supported lifecycle-backed live sessions. |
 | First non-Codex provider migration | Implemented and merged to `main` via PR #13 at `3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9`. | Migrates only Claude prompt submission, provider session identity, coarse result lifecycle, and sidecar process-close failure through the existing telemetry fanout. |
+| Richer session evidence foundation | Implemented on `richer-session-evidence-foundation`. | Adds bounded event reads, Codex plan and visible reasoning-summary normalization, file-change attribution telemetry, and an app-side PE producer for thread, turn, prompt, plan, completed command, visible reasoning summary, and file-change attribution evidence. Raw streams, hidden reasoning, unrestricted transcripts, command output summaries, approvals, validation, errors, compaction, SessionWorkModel, and inference remain out of scope. |
 
 ## Historical Active Slice
 
@@ -88,6 +88,13 @@ broad sidecar session/provider/lifecycle facts.
   with Codex and does not migrate Claude message/tool streams, raw stream-json
   envelopes, token usage assumptions, changed files, telemetry persistence,
   provenance writes, WebSocket payloads, or React rendering behavior.
+- Richer session evidence foundation: implemented the first below-semantic-layer
+  PE producer path. The sidecar keeps bounded canonical event history per
+  session and native Swift polls it through `ExecutionTelemetryEventClient`.
+  Completed meaningful Codex units are appended through PE public contracts; raw
+  provider streams, deltas, private reasoning, unrestricted transcripts, command
+  output summaries, approvals, validation, errors, compaction, SessionWorkModel,
+  and semantic inference remain out of scope.
 
 ## Historical Branch
 
