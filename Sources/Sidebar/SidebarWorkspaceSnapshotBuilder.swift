@@ -102,6 +102,25 @@ struct SidebarWorkspaceSnapshotBuilder {
         }
     }
 
+    static func metadataBlocks(
+        _ blocks: [SidebarMetadataBlock],
+        latestNotificationText: String?,
+        latestSubmittedMessage: String?,
+        latestConversationMessage: String?,
+        hidesAllDetails: Bool,
+        iMessageModeEnabled: Bool,
+        hiddenPullRequestNumbers: Set<Int>
+    ) -> [SidebarMetadataBlock] {
+        let displayedPrompt = latestNotificationText == nil ? SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
+            latestSubmittedMessage: latestSubmittedMessage,
+            latestConversationMessage: latestConversationMessage,
+            hidesAllDetails: hidesAllDetails,
+            iMessageModeEnabled: iMessageModeEnabled,
+            hiddenPullRequestNumbers: hiddenPullRequestNumbers
+        ) : nil
+        return metadataBlocks(blocks, excludingDisplayedPrompt: displayedPrompt)
+    }
+
     static func pullRequestDisplays(
         livePullRequests: [SidebarPullRequestState],
         provenancePullRequest: WorkspaceDisplayCurrentStatePullRequestSnapshot?,

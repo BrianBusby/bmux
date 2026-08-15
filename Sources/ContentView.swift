@@ -13986,12 +13986,10 @@ struct TabItemView: View, Equatable {
                 }
             }
 
-            // Pull request rows
             if !workspaceSnapshot.pullRequestRows.isEmpty {
                 pullRequestRowsView(workspaceSnapshot.pullRequestRows)
             }
 
-            // Project rows
             if !workspaceSnapshot.projectRows.isEmpty {
                 projectRowsView(workspaceSnapshot.projectRows)
             }
@@ -14000,7 +13998,6 @@ struct TabItemView: View, Equatable {
                 pullRequestOwnerRowsView(workspaceSnapshot.pullRequestRows)
             }
 
-            // Ports row
             if detailVisibility.showsPorts, !workspaceSnapshot.listeningPorts.isEmpty {
                 HStack(spacing: 4) {
                     ForEach(workspaceSnapshot.listeningPorts, id: \.self) { port in
@@ -14920,13 +14917,6 @@ struct TabItemView: View, Equatable {
             label: String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
         )
         let displayedPullRequestNumbers = Set(pullRequestRows.map(\.number))
-        let displayedPromptMessage = latestNotificationText == nil ? SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
-            latestSubmittedMessage: latestSubmittedMessage,
-            latestConversationMessage: tab.latestConversationMessage,
-            hidesAllDetails: settings.hidesAllDetails,
-            iMessageModeEnabled: settings.iMessageModeEnabled,
-            hiddenPullRequestNumbers: displayedPullRequestNumbers
-        ) : nil
         let projectRows = provenanceProjectDisplays
         let ticketRows = provenanceTicketDisplays
         let provenanceProgress = provenanceDisplaySnapshot?.currentWorkSummary.map {
@@ -14947,12 +14937,15 @@ struct TabItemView: View, Equatable {
             latestConversationMessage: tab.latestConversationMessage,
             latestSubmittedMessage: latestSubmittedMessage,
             metadataEntries: detailVisibility.showsMetadata ? tab.sidebarStatusEntriesInDisplayOrder() : [],
-            metadataBlocks: detailVisibility.showsMetadata
-                ? SidebarWorkspaceSnapshotBuilder.metadataBlocks(
-                    tab.sidebarMetadataBlocksInDisplayOrder(),
-                    excludingDisplayedPrompt: displayedPromptMessage
-                )
-                : [],
+            metadataBlocks: detailVisibility.showsMetadata ? SidebarWorkspaceSnapshotBuilder.metadataBlocks(
+                tab.sidebarMetadataBlocksInDisplayOrder(),
+                latestNotificationText: latestNotificationText,
+                latestSubmittedMessage: latestSubmittedMessage,
+                latestConversationMessage: tab.latestConversationMessage,
+                hidesAllDetails: settings.hidesAllDetails,
+                iMessageModeEnabled: settings.iMessageModeEnabled,
+                hiddenPullRequestNumbers: displayedPullRequestNumbers
+            ) : [],
             latestLog: detailVisibility.showsLog ? tab.logEntries.last : nil,
             progress: detailVisibility.showsProgress ? (provenanceProgress ?? tab.progress) : nil,
             compactGitBranchSummaryText: compactGitBranchSummaryText,
