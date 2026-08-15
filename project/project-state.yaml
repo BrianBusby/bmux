@@ -100,15 +100,19 @@ milestones:
     completed_at: 2026-08-13
 
   - id: richer_session_work_model
-    title: Richer Coding-Agent Evidence and SessionWorkModel
+    title: Richer Coding-Agent Evidence and Factual Session Projection
     owner: provenance_engine
     delivery_status: open
     acceptance_status: implemented
     evidence:
-      commits: []
+      commits:
+        - repository: BrianBusby/provenance-engine
+          sha: 2add52c611e262ab053be47f8d2bd9f59934e00e
+        - repository: BrianBusby/provenance-engine
+          sha: a0f8c1fa2d0e93b6c0fc8593b4a76a9c52dcf0ee
       pull_requests: []
     completed_at: 2026-08-15
-    acceptance_reason: First below-semantic-layer evidence foundation slice implemented; SessionWorkModel and inference remain gated.
+    acceptance_reason: First below-semantic-layer evidence foundation and factual session projection snapshot/read contract implemented; semantic SessionWorkModel inference, milestones, and architecture projection remain gated.
 
 ownership:
   durable_evidence: provenance_engine

@@ -1,12 +1,14 @@
 # SessionWorkModel Target Design
 
 Status: accepted target direction. The lower-level richer-session evidence
-foundation is implemented; the public `SessionWorkModel` projection, semantic
-inference, milestone synthesis, and architecture projection are not implemented.
+foundation and first factual public session-projection read contract are
+implemented; semantic `SessionWorkModel` inference, milestone synthesis, and
+architecture projection are not implemented.
 
 This document defines the planned high-level Provenance Engine projection for
 live coding-agent work. It records product and architecture direction for the
-next richer-session milestone without changing the current V1 public contract.
+next richer-session milestone without treating the implemented factual Current
+State projection as the semantic model.
 
 ## Name
 
@@ -23,8 +25,12 @@ Rationale:
 - It avoids `SessionPresentationModel`, which would make a reusable engine
   contract sound like a bmux UI shape.
 
-The final public Swift type names may still use the normal
-`ProvenanceSessionWorkModel*` prefix if and when this becomes an SDK contract.
+The planning name is reserved for the later semantic projection. The
+implemented factual substrate intentionally uses the
+`ProvenanceFactualSessionProjection*` prefix and
+`ProvenanceEngineClient.factualSessionProjection(...)` so consumers can depend
+on deterministic Current State without assuming intent, milestone, activity,
+risk, or architecture meaning exists.
 
 ## Existing Contracts Stay Useful
 
@@ -34,11 +40,12 @@ The final public Swift type names may still use the normal
 - `sessionTree(...)`
 - `fileExplanation(...)`
 - `workspaceDisplay(...)`
+- `factualSessionProjection(...)`
 
-Those remain lower-level domain and diagnostic contracts. The new projection is
-a coherent consumer view assembled by Provenance Engine so sophisticated clients
-do not have to orchestrate many small queries and then perform semantic merging
-locally.
+Those remain lower-level domain and diagnostic contracts. The future semantic
+projection is a coherent consumer view assembled by Provenance Engine so
+sophisticated clients do not have to orchestrate many small queries and then
+perform semantic merging locally.
 
 ## Epistemic Layers
 
@@ -148,6 +155,30 @@ hidden chain-of-thought, unrestricted transcripts, token-by-token provider
 envelopes, or bmux live projection state. Command output summaries are part of
 the contract shape but bmux does not populate them yet; that remains a
 retention/privacy decision.
+
+## Implemented Factual Session Projection Foundation
+
+The first public read contract is:
+
+- `ProvenanceFactualSessionProjectionRequest`
+- `ProvenanceFactualSessionProjectionResponse`
+- `ProvenanceFactualSessionProjectionSnapshot`
+- `ProvenanceFactualSessionProjectionTurnSnapshot`
+- `ProvenanceEngineClient.factualSessionProjection(...)`
+- `ProvenanceEngineCapability.queryFactualSessionProjection`
+
+It returns one PE session's observed coding-agent evidence grouped into factual
+thread and turn structure. The snapshot includes session identity, provider
+thread identities, observed turns, latest submitted prompt per turn, latest
+plan update per turn, completed commands, visible reasoning summaries, and
+file-change attributions. Its revision is the newest ledger append sequence for
+the requested session.
+
+The implementation is deterministic and rebuildable from the immutable ledger.
+It is deliberately below `SessionWorkModel`: it does not synthesize missing
+turns, infer intent, derive milestones, classify current activity, compute
+risks, infer architecture, ingest GitHub evidence, or compile knowledge
+artifacts. Unknown relationships remain absent rather than guessed.
 
 ## Conceptual Shape
 

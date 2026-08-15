@@ -384,11 +384,12 @@ ephemeral interaction state, and rendering.
 
 Adopter: bmux.
 
-Required contract: new public evidence event/domain contracts for selected
-completed coding-agent evidence units plus a versioned high-level
-`SessionWorkModel` read contract. Existing lower-level contracts
-(`currentContext`, `sessionTree`, `fileExplanation`, and `workspaceDisplay`)
-remain supported.
+Required contract sequence: new public evidence event/domain contracts for
+selected completed coding-agent evidence units, a versioned factual session
+projection, and later a high-level semantic `SessionWorkModel` read contract.
+Existing lower-level contracts (`currentContext`, `sessionTree`,
+`fileExplanation`, `workspaceDisplay`, and `factualSessionProjection`) remain
+supported.
 
 Provenance-engine work:
 
@@ -402,8 +403,8 @@ Provenance-engine work:
 - Add deterministic factual session projections for live state only.
 - Add inference records with supporting evidence ids, producer/inference
   version, confidence, created time, and active/superseded/invalidated status.
-- Add the first `SessionWorkModel` projection with revisioned authoritative
-  snapshot reads.
+- Add the first semantic `SessionWorkModel` projection with revisioned
+  authoritative snapshot reads above the factual projection.
 - Add scoped architecture projections for thread and current-turn scope, with
   touched, affected, and contextual nodes.
 
@@ -424,7 +425,7 @@ selection through the project manifest, and a privacy/retention policy for any
 bounded command summaries, reasoning summaries, diffs, approval payloads, and
 errors selected for durable evidence.
 
-Acceptance criteria for the first vertical slice:
+Acceptance criteria for the first semantic vertical slice:
 
 - One real Codex App Server turn emits durable evidence for thread identity,
   turn identity/lifecycle, user prompt, plan update, completed command facts,

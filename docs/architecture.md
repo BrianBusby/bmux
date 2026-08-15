@@ -16,9 +16,9 @@ This document describes the architecture currently implemented in this repositor
 
 The SQLite backend stores an immutable event ledger and rebuildable current-state projections. Projection reads are bounded by request limits and are ordered by the engine's query implementation.
 
-Current accepted projections include repositories, worktrees, sessions, session relationships, file explanations, current context records, and workspace-display Current State.
+Current accepted projections include repositories, worktrees, sessions, session relationships, file explanations, current context records, workspace-display Current State, and factual session projection snapshots for coding-agent evidence.
 
-No public `SessionWorkModel`, inference record, milestone, or scoped architecture projection contract is implemented yet. Those are accepted target direction, not V1 behavior.
+No public semantic `SessionWorkModel`, inference record, milestone, or scoped architecture projection contract is implemented yet. Those are accepted target direction, not V1 behavior.
 
 ## Evidence Model
 
@@ -40,7 +40,7 @@ The long-term platform includes shared repository evidence, a Knowledge Compiler
 
 They are not implemented in V1. This repository currently preserves the event metadata needed to avoid hard-coding all evidence as personal-only, but GitHub ingestion, shared evidence-store deployment, Knowledge Compiler implementation, and retrieval remain frozen until the current bmux adoption gate is complete.
 
-The next richer-session direction adds one intermediate layer before durable Knowledge Compiler work: evidence-backed inference and a high-level `SessionWorkModel` projection for live coding-agent work. That layer must preserve the basis of every derived field and must not write model-derived milestone, intent, or architecture meaning into deterministic Current State.
+The next richer-session direction adds an intermediate layer before durable Knowledge Compiler work: evidence-backed inference and a high-level semantic `SessionWorkModel` projection for live coding-agent work. That layer must preserve the basis of every derived field and must not write model-derived milestone, intent, or architecture meaning into deterministic Current State.
 
 ## Dependency Direction
 
@@ -52,7 +52,7 @@ Additional daemon, migration, retrieval, semantic, and observability capabilitie
 
 GitHub ingestion and Knowledge Compiler implementation are also frozen until after the current V1 adoption milestone. The accepted V1-compatible change is limited to preserving source-origin and scope metadata on events so later shared evidence does not require reworking the core ledger contract.
 
-Design work for richer coding-agent evidence and `SessionWorkModel` may proceed as planning while preserving the freeze. Runtime implementation requires an explicitly selected milestone and must start with completed or meaningful evidence units, not raw provider transport deltas.
+Design work for richer coding-agent evidence and semantic `SessionWorkModel` may proceed as planning while preserving the freeze. Runtime implementation requires an explicitly selected milestone and must start with completed or meaningful evidence units and deterministic factual projections, not raw provider transport deltas.
 
 ## Current State
 
