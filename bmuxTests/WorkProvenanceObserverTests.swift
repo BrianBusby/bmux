@@ -403,9 +403,7 @@ struct WorkProvenanceObserverTests {
         let sidebarTicket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
             id: ticketLink.id,
             title: ticketLink.title,
-            url: ticketLink.url,
-            ownerName: ticketLink.ownerName,
-            ownerURL: ticketLink.ownerURL
+            url: ticketLink.url
         )
         let sidebarProject = SidebarWorkspaceSnapshotBuilder.ProjectDisplay(
             id: projectLink.id,

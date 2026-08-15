@@ -36,8 +36,6 @@ struct SidebarWorkspaceSnapshotBuilder {
         let id: String
         let title: String?
         let url: URL?
-        let ownerName: String?
-        let ownerURL: URL?
 
         var linkText: String {
             let trimmedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -62,7 +60,6 @@ struct SidebarWorkspaceSnapshotBuilder {
 
     struct Snapshot: Equatable {
         let presentationKey: PresentationKey
-        let ticketTitle: String?
         let title: String
         let customDescription: String?
         let isPinned: Bool
@@ -91,6 +88,18 @@ struct SidebarWorkspaceSnapshotBuilder {
         let repoBadgeAppearance: WorkspaceRepoBadgeAppearance?
         let mediaActivity: BrowserMediaActivity
         let hasActiveAIWork: Bool
+    }
+
+    static func metadataBlocks(
+        _ blocks: [SidebarMetadataBlock],
+        excludingDisplayedPrompt displayedPrompt: String?
+    ) -> [SidebarMetadataBlock] {
+        guard let normalizedPrompt = normalizedMetadataPromptText(displayedPrompt) else {
+            return blocks
+        }
+        return blocks.filter {
+            normalizedMetadataPromptText($0.markdown) != normalizedPrompt
+        }
     }
 
     static func pullRequestDisplays(
@@ -248,5 +257,14 @@ struct SidebarWorkspaceSnapshotBuilder {
             return nil
         }
         return URL(string: "https://github.com/\(login)")
+    }
+
+    private static func normalizedMetadataPromptText(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let normalized = value
+            .split(whereSeparator: { $0.isWhitespace })
+            .joined(separator: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return normalized.isEmpty ? nil : normalized
     }
 }

@@ -139,9 +139,7 @@ import Testing
         let ticket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
             id: "STE-1964",
             title: title,
-            url: nil,
-            ownerName: nil,
-            ownerURL: nil
+            url: nil
         )
 
         #expect(ticket.linkText == expected)
@@ -158,6 +156,31 @@ import Testing
         )
 
         #expect(project.linkText == expected)
+    }
+
+    @Test func metadataBlocksExcludeDisplayedPromptDuplicate() {
+        let displayedPrompt = "ok I see that functionality on this build now"
+        let blocks = [
+            SidebarMetadataBlock(
+                key: "last-prompt",
+                markdown: " ok I see that\nfunctionality on this build now ",
+                priority: 10,
+                timestamp: Date(timeIntervalSince1970: 2)
+            ),
+            SidebarMetadataBlock(
+                key: "notes",
+                markdown: "Keep this note visible",
+                priority: 9,
+                timestamp: Date(timeIntervalSince1970: 1)
+            ),
+        ]
+
+        let filtered = SidebarWorkspaceSnapshotBuilder.metadataBlocks(
+            blocks,
+            excludingDisplayedPrompt: displayedPrompt
+        )
+
+        #expect(filtered.map(\.key) == ["notes"])
     }
 
     @Test func livePullRequestRowsOverrideStaleProvenancePullRequest() throws {
@@ -277,7 +300,6 @@ import Testing
 
     private static func snapshot(
         presentationKey: SidebarWorkspaceSnapshotBuilder.PresentationKey? = nil,
-        ticketTitle: String? = nil,
         title: String = "workspace",
         customDescription: String? = nil,
         isPinned: Bool = false,
@@ -296,7 +318,6 @@ import Testing
     ) -> SidebarWorkspaceSnapshotBuilder.Snapshot {
         SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: presentationKey ?? Self.presentationKey(),
-            ticketTitle: ticketTitle,
             title: title,
             customDescription: customDescription,
             isPinned: isPinned,
