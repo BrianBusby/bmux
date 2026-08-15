@@ -101,6 +101,12 @@ Each request limit is an independent engine row budget for its matching response
 
 Response guarantees: `schemaVersion == 1` for the current V1 shape; arrays are always present; linked records are optional where producers may have appended partial or unattributed evidence; no SQLite table names, row identifiers, SQL predicates, terminal rendering, JSON payload compatibility, fallback strings, or CLI errors are part of the public contract. Consumers must not read `provenance_worktrees`, `provenance_repositories`, `provenance_sessions`, `provenance_work_contributions`, `provenance_work_items`, `provenance_file_changes`, `provenance_change_sets`, `provenance_checkpoints`, or `provenance_validation_runs` directly for current context.
 
+There is no public high-level session work projection contract in V1. Adopters
+that need current lower-level facts must use the accepted APIs above. A future
+`SessionWorkModel` contract is planned as a coherent consumer projection for one
+coding-agent session, but it must be added as an explicit versioned request and
+response surface rather than inferred from existing projection tables.
+
 The accepted workspace-display Current State contract is:
 
 - Write evidence: append a `ProvenanceEvent` with `eventType == .workspaceDisplayObserved` and `payload.workspaceDisplay`.
@@ -137,6 +143,37 @@ current, stale, failed-refresh, explicitly-cleared, and unknown states.
 consumer. It is not general transcript persistence. A consumer that needs raw
 prompt or transcript storage must introduce a separate capture-policy contract
 instead of expanding workspace-display state silently.
+
+## Planned Richer Coding-Agent Evidence Boundary
+
+The current V1 contract records selected durable evidence through
+`appendEvent(...)` and lifecycle helpers. It does not persist raw execution
+telemetry or provider transport streams.
+
+Future richer-session contracts should preserve the same distinction:
+
+- streaming deltas, UI replay, provider transport envelopes, raw command output,
+  unrestricted transcripts, and private reasoning remain consumer/runtime
+  concerns by default;
+- completed or meaningful evidence units may become durable Provenance Engine
+  evidence through explicit contracts, validation, retention policy, and privacy
+  review.
+
+Candidate evidence units include provider thread identity, provider turn
+identity and lifecycle, user prompt facts, plan updates, completed command facts
+with cwd/status/result metadata, completed reasoning summaries when exposed as
+supported provider summaries, completed file-change or diff units, approval
+state, validation results, errors, and compaction events.
+
+Future contracts must preserve source identity where available, relate new
+evidence to existing session, worktree, change-set, file-change, and validation
+records where possible, and keep semantic inference separate from deterministic
+Current State.
+
+The planned high-level projection is named `SessionWorkModel` in the target
+design. It should sit above lower-level contracts such as `currentContext`,
+`sessionTree`, `fileExplanation`, and `workspaceDisplay`; it should not replace
+them wholesale.
 
 Rollback should be a scoped Git revert in the adopter repository that removes the package dependency and restores the previous local read path.
 

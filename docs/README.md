@@ -17,6 +17,7 @@ facts.
 
 - [reference-architecture.md](reference-architecture.md)
 - [architecture.md](architecture.md)
+- [session-work-model.md](session-work-model.md)
 - [integration-contract.md](integration-contract.md)
 - [roadmap.md](roadmap.md)
 - [bmux-integration-roadmap.md](bmux-integration-roadmap.md)

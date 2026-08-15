@@ -336,4 +336,100 @@ Compiler work, semantic or AI interpretation of PRs, raw execution telemetry
 persistence, raw live session event storage, transcript storage, broad UI
 rewrite, automatic workspace naming redesign, or GitHub write synchronization.
 
+Status: Implemented for the accepted Workspace Display Durable Context slice;
+generated project status remains the current milestone authority.
+
+## Milestone: Richer Coding-Agent Evidence And SessionWorkModel
+
+Capability owner: provenance-engine for durable evidence contracts,
+relationships, deterministic factual projections, inference records, scoped
+architecture projections, and the high-level `SessionWorkModel` read contract.
+bmux owns provider acquisition, live process control, approvals, streaming UI,
+ephemeral interaction state, and rendering.
+
+Adopter: bmux.
+
+Required contract: new public evidence event/domain contracts for selected
+completed coding-agent evidence units plus a versioned high-level
+`SessionWorkModel` read contract. Existing lower-level contracts
+(`currentContext`, `sessionTree`, `fileExplanation`, and `workspaceDisplay`)
+remain supported.
+
+Provenance-engine work:
+
+- Define richer coding-agent evidence units for completed or meaningful facts,
+  not provider transport deltas.
+- Persist and relate thread, turn, plan, command, reasoning-summary,
+  file-change/diff, approval, validation, error, and compaction evidence where
+  policy-approved.
+- Reuse existing session, worktree, contribution, change-set, file-change, and
+  validation models where their semantics fit.
+- Add deterministic factual session projections for live state only.
+- Add inference records with supporting evidence ids, producer/inference
+  version, confidence, created time, and active/superseded/invalidated status.
+- Add the first `SessionWorkModel` projection with revisioned authoritative
+  snapshot reads.
+- Add scoped architecture projections for thread and current-turn scope, with
+  touched, affected, and contextual nodes.
+
+bmux work:
+
+- Continue owning the Codex App Server connection, provider normalization,
+  live process/PTy/WebView state, approvals, streaming deltas, and UI.
+- Forward only selected completed evidence units to Provenance Engine through
+  public contracts.
+- Render `SessionWorkModel` as a human-readable coding-agent work view, using
+  push/delta notifications only as hints and re-fetching the authoritative
+  projection for reconciliation.
+- Preserve lower-level diagnostics and fallbacks for live provider failures.
+
+Dependencies: accepted execution-telemetry foundation, accepted lifecycle and
+worktree observation writes, accepted workspace-display Current State, explicit
+selection through the project manifest, and a privacy/retention policy for any
+bounded command summaries, reasoning summaries, diffs, approval payloads, and
+errors selected for durable evidence.
+
+Acceptance criteria for the first vertical slice:
+
+- One real Codex App Server turn emits durable evidence for thread identity,
+  turn identity/lifecycle, user prompt, plan update, completed command facts,
+  completed reasoning summary when available, completed file-change/diff units,
+  approval state when present, validation result when present, errors when
+  present, and compaction when present.
+- Streaming deltas, raw provider envelopes, unrestricted command output,
+  unrestricted transcripts, and private reasoning are not persisted as raw
+  provenance by default.
+- Evidence relates to existing session, worktree, contribution, change-set,
+  file-change, and validation records where those relationships are known.
+- Deterministic projections contain only factual state and remain rebuildable
+  from accepted evidence.
+- A `SessionWorkModel` snapshot exposes revision, subject/project, thread,
+  current turn, current activity, milestone hierarchy, validation/risk state,
+  and provenance metadata.
+- Thread intent, turn intent, session phase, current activity, milestone
+  hierarchy, and milestone descriptions are active inference records with
+  supporting evidence, producer version, confidence, and supersession status.
+- A small turn-scoped architecture projection includes touched, affected, and
+  contextual nodes with evidence-backed relationships.
+- Milestone-to-architecture links exist for the projected nodes.
+- At least one completed milestone links to file-change or diff evidence;
+  commit or pull-request attribution may remain future work.
+- The projection supports authoritative re-fetch by revision. UI correctness
+  does not depend on perfect push delivery.
+- Tests or fixtures prove model-derived milestone, intent, and architecture
+  fields are not written into deterministic Current State.
+
+Compatibility expectations: additive public contracts should be versioned or
+source-compatible. Existing V1 read APIs remain lower-level domain/debug
+contracts and are not replaced wholesale.
+
+Rollback strategy: disable or revert bmux producer/consumer use of the new
+contracts while preserving already accepted immutable evidence. Engine schema or
+contract rollback requires explicit compatibility handling.
+
+Implementation boundary: do not include broad GitHub ingestion, Knowledge
+Compiler implementation, evidence-aware retrieval, organization-scale sharing,
+whole-repository architecture diagrams, raw execution telemetry persistence, or
+bmux-owned semantic inference.
+
 Status: Planned and gated.

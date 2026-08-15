@@ -30,7 +30,11 @@ Repository: `BrianBusby/provenance-engine`
 | Immutable Ledger | implemented |
 | Producer Neutral Lifecycle Recording | implemented |
 | Public In Process Sdk | implemented |
+| Richer Coding Agent Evidence | planned |
 | Schema Identity Validation | implemented |
+| Scoped Architecture Projection | planned |
+| Semantic Inference Framework | planned |
+| Session Work Model Projection | planned |
 | Workspace Display Current State | implemented |
 | Workspace Display Durable Context | implemented |
 | Workspace Display Project Link Facts | implemented |

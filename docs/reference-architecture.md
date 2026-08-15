@@ -39,6 +39,8 @@ Evidence Store
         ->
 Deterministic Current State
         ->
+Inference and Session Work Projections
+        ->
 Knowledge Compiler
         ->
 Knowledge Store
@@ -104,7 +106,7 @@ Increasing project knowledge should improve agent effectiveness rather than incr
 
 ## 2. System Overview
 
-The platform consists of seven major layers.
+The platform consists of eight major layers.
 
 ```text
 +---------------------------------------------------------------+
@@ -128,6 +130,12 @@ The platform consists of seven major layers.
 +---------------------------------------------------------------+
 |                 Deterministic Current State                   |
 | Present context | relationships | derived bounded views          |
++------------------------------+--------------------------------+
+                               |
+                               v
++---------------------------------------------------------------+
+|             Inference and Session Work Projections            |
+| Intent | milestones | current activity | scoped architecture   |
 +------------------------------+--------------------------------+
                                |
                                v
@@ -247,16 +255,24 @@ Examples:
 Potential evidence includes:
 
 - session start and end
+- thread identity
+- turn identity and lifecycle
 - user instructions
+- plan updates
+- completed reasoning summaries when exposed by the provider as supported
+  summaries rather than hidden chain-of-thought
 - task creation
 - agent creation
 - agent relationships
 - tool activity
 - command execution
 - file changes
+- turn-level diff updates
+- approval request and resolution state
 - explicit decisions
 - generated artifacts
 - session summaries
+- compaction events
 - errors and blocked work
 
 AI-session evidence is especially valuable for understanding intent and reasoning that may never appear in Git history.
@@ -616,7 +632,11 @@ Current State is the canonical deterministic interpretation of engineering evide
 
 It is derived only from accepted evidence and deterministic engine rules. It answers present-tense provenance questions such as which sessions are active, which work is current, which files have recent evidence, which checkpoints and validation runs are relevant, and where active contributions may overlap.
 
-Current State is not raw evidence. It is also not the Knowledge Compiler. It must not contain model-generated conclusions, semantic summaries, or AI-authored durable knowledge artifacts. Those belong to later compiler and retrieval layers.
+Current State is not raw evidence. It is also not inference, semantic synthesis,
+or the Knowledge Compiler. It must not contain model-generated conclusions,
+semantic summaries, milestone meaning, thread intent, turn intent, scoped
+architecture conclusions, or AI-authored durable knowledge artifacts. Those
+belong to explicit inference, compiler, and retrieval layers.
 
 Current State is rebuildable from the Evidence Store. If projection state is deleted or drifts from the ledger, the engine should be able to replay accepted evidence and reproduce the same bounded public query results. This makes the Evidence Store the durable system of record and Current State disposable derived state.
 
@@ -634,6 +654,40 @@ Ownership boundaries:
 - Producers own observing activity, assigning stable source/domain identities, emitting observable or declared facts, and retrying failed or unacknowledged delivery where needed.
 - Provenance Engine owns evidence validation, durable evidence storage, deterministic ordering and relationships, Current State derivation, projection rebuild, bounded provenance queries, and evidence attribution.
 - Consumers own presentation, UI, CLI formatting, local fallback policy, live Git probing when explicitly outside persisted provenance, and product-specific interaction behavior.
+
+### 6.8 Inference and Session Work Projections
+
+Inference and semantic synthesis are distinct from deterministic Current State
+and from durable compiled knowledge.
+
+This layer derives evidence-backed interpretations that are useful while work is
+in progress, such as thread intent, turn intent, session phase, current
+activity, milestone hierarchy, blocker state, and scoped architecture
+projections. Some inferences may be deterministic rule outputs. Others may be
+model-derived. Either way, they must carry supporting evidence, producer or
+inference-definition version, confidence, and supersession state.
+
+The planned high-level consumer projection for this layer is
+`SessionWorkModel`, defined in `docs/session-work-model.md`. It should provide a
+coherent view of one coding-agent session's subject, thread, current turn,
+milestones, execution state, scoped architecture, risks, validation state, and
+provenance metadata without requiring clients such as bmux to stitch together
+many lower-level queries.
+
+`SessionWorkModel` sits above and alongside lower-level APIs such as
+`currentContext(...)`, `sessionTree(...)`, `fileExplanation(...)`, and
+`workspaceDisplay(...)`. It must not replace those contracts, and it must not
+blur model-derived milestone or architecture meaning into deterministic Current
+State.
+
+The projection should support authoritative snapshot reads with a monotonic
+revision. Push notifications or deltas may exist later as hints, but consumers
+must be able to re-fetch the authoritative projection for reconciliation.
+
+The first planned vertical slice should validate richer coding-agent evidence
+ingestion, deterministic factual session projections, evidence-backed inference,
+nested milestones, scoped architecture synthesis, provenance/confidence, and
+usefulness to bmux before moving on to durable Knowledge Compiler outputs.
 
 ## 7. Knowledge Compiler
 
@@ -992,6 +1046,9 @@ It may use Provenance Engine for:
 - reading Current State for workspace tab and sidebar metadata such as title,
   branch, and pull request status after the relevant display projection
   contract exists
+- reading a future `SessionWorkModel` projection for a coherent live
+  coding-agent work view after richer session evidence and inference contracts
+  exist
 - displaying session trees
 - current-task context
 - worktree awareness
@@ -1470,11 +1527,12 @@ This section maps the north-star architecture above to the current repository de
 - The repository is an independent Swift package with `ProvenanceEngineContracts`, `ProvenanceEngineSDK`, and internal `ProvenanceEngineSQLite` modules.
 - Public adopters construct clients through `ProvenanceEngineClientFactory` and interact through `any ProvenanceEngineClient`.
 - The SQLite backend owns an append-oriented event ledger, schema migration metadata, validation, storage summaries, repair reports, bounded ledger reads, and rebuildable current-state projections.
-- Current projections include repositories, worktrees, sessions, session relationships, file explanations, and current context records.
-- Public contracts exist for event append, session lifecycle recording, worktree reads, session-tree reads, file explanations, current context, health, and storage summaries.
+- Current projections include repositories, worktrees, sessions, session relationships, file explanations, current context records, and workspace-display Current State.
+- Public contracts exist for event append, session lifecycle recording, worktree reads, session-tree reads, file explanations, current context, workspace-display Current State, health, and storage summaries.
 - New engine-owned local storage defaults to `~/.local/state/provenance-engine/provenance.sqlite`.
 - Events can carry optional `ProvenanceEvidenceOrigin` and `ProvenanceEvidenceScope` metadata so the ledger is not hard-coded as personal-only evidence.
-- The first bmux adoption path, `bmux provenance worktrees list`, has adopted the engine SDK and worktree read contract.
+- bmux adopted the engine SDK for the accepted worktree, session-tree, file-explanation, current-context, lifecycle, worktree-observation, and workspace-display paths described by the integration roadmap.
+- There is no public `SessionWorkModel` contract, inference record contract, milestone contract, or scoped architecture projection contract yet.
 
 ### Partially implemented
 
@@ -1482,12 +1540,20 @@ This section maps the north-star architecture above to the current repository de
 - Evidence scope currently supports the accepted V1 coarse scopes: personal, project, and organization. Finer-grained scopes such as session, workspace, team, repository, and public remain architectural concepts unless added through future contracts.
 - Cross-system relationships are represented for current local session/worktree projections, but Git, GitHub, review, issue, document, and communication relationships are not implemented.
 - Bmux is both a current adopter and a likely evidence producer, but V1 adoption is intentionally limited to one path at a time.
-- Current context and file explanation contracts exist, but evidence-aware retrieval and compiled knowledge retrieval do not exist.
+- Current context, file explanation, and workspace-display contracts exist, but `SessionWorkModel`, evidence-backed semantic inference, evidence-aware retrieval, and compiled knowledge retrieval do not exist.
 - Storage validation, replay, and repair support the current local ledger, but source deletion propagation, raw payload retention policy, and organization-level audit policy are not implemented.
 
 ### Planned after V1
 
 - External evidence model validation beyond the current origin and scope fields.
+- Richer coding-agent evidence ingestion for completed or meaningful thread,
+  turn, plan, command, file-change, approval, validation, error, and compaction
+  units while keeping provider transport deltas live/ephemeral.
+- A first `SessionWorkModel` projection that combines deterministic factual
+  state with evidence-backed inference while preserving each field's basis and
+  provenance.
+- Scoped thread and turn architecture projections, milestone-to-architecture
+  relationships, and milestone-to-diff evidence attribution.
 - Shared evidence-store design for personal, project, and organization evidence.
 - Raw GitHub ingestion of objective evidence such as commits, pull requests, reviews, review threads, merge state, changed files, and commit-to-PR relationships.
 - The first Knowledge Compiler artifact, expected to be Pull Request Decision Summary after the GitHub ingestion spike validates evidence shape.
@@ -1508,11 +1574,22 @@ This section maps the north-star architecture above to the current repository de
 
 ### Conflicts and ambiguities found
 
-No direct conflict was found between this north-star architecture and the current V1 repository decisions.
+The richer live-session direction updates, but does not reverse, the current V1
+repository decisions. The older shorthand that execution telemetry remains
+bmux-owned is still true for raw streams, transport deltas, UI replay, live
+interaction, approvals, and provider-specific acquisition. It is too broad for
+completed meaningful evidence units that should become durable Provenance Engine
+evidence through explicit contracts.
 
 The main ambiguity is ownership of capture adapters over time. Current cross-repository plans keep bmux-owned product capture policy and rollout behavior in bmux, while Provenance Engine owns reusable provenance capabilities, storage, and public data contracts. Future adapter work should make that boundary explicit before moving capture policy into this repository.
 
 The architecture names finer-grained evidence scopes than the current V1 contract exposes. This is not a current conflict, but future scope expansion should be handled as an explicit contract decision rather than inferred from this document alone.
+
+The new `SessionWorkModel` direction also introduces a naming and layering
+choice: semantic milestone, intent, and architecture fields belong in inference
+records and high-level session projections, not in deterministic Current State.
+Compiled knowledge remains a later layer for durable outcomes and decisions
+that may outlive the live session.
 
 ## 20. Open Architectural Decisions
 
@@ -1540,6 +1617,11 @@ The following decisions should be addressed through focused ADRs or design work 
 - shared deployment model
 - human review of compiled knowledge
 - model-provider abstraction
+- SessionWorkModel public selector shape and DTO names
+- richer coding-agent evidence retention policy
+- inference record schema and invalidation orchestration
+- scoped architecture graph representation
+- milestone-to-diff and milestone-to-commit attribution model
 - cost controls
 - evidence and knowledge retention policy
 

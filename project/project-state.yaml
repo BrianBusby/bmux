@@ -99,13 +99,29 @@ milestones:
       pull_requests: []
     completed_at: 2026-08-13
 
+  - id: richer_session_work_model
+    title: Richer Coding-Agent Evidence and SessionWorkModel
+    owner: provenance_engine
+    delivery_status: proposed
+    acceptance_status: proposed
+    evidence:
+      commits: []
+      pull_requests: []
+
 ownership:
   durable_evidence: provenance_engine
   deterministic_current_state: provenance_engine
+  meaningful_execution_evidence: provenance_engine
+  semantic_inference: provenance_engine
+  session_work_model_projection: provenance_engine
+  milestone_semantics: provenance_engine
+  scoped_architecture_projection: provenance_engine
   schema_compatibility: provenance_engine
   bounded_provenance_queries: provenance_engine
   workflow_observation: bmux
   execution_telemetry: bmux
+  streaming_execution_telemetry: bmux
+  provider_specific_acquisition: bmux
   capture_policy: bmux
   runtime_orchestration: bmux
   user_interface: bmux

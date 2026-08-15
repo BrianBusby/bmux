@@ -15,6 +15,7 @@ with `./scripts/project-docs generate`, and verify with
 
 - Platform north star: `docs/reference-architecture.md`
 - Implemented architecture and V1 boundaries: `docs/architecture.md`
+- Planned live coding-agent projection: `docs/session-work-model.md`
 - Product roadmap and sequencing guidance: `docs/roadmap.md`
 - Technical adopter contract: `docs/integration-contract.md`
 - Cross-repository bmux integration roadmap: `docs/bmux-integration-roadmap.md`

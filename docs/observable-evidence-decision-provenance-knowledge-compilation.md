@@ -8,6 +8,7 @@ Related documents:
 
 - `docs/reference-architecture.md`
 - `docs/architecture.md`
+- `docs/session-work-model.md`
 - `docs/bmux-integration-roadmap.md`
 
 ## Introduction
@@ -55,6 +56,11 @@ Examples include:
 - Prompts.
 - Visible planning messages.
 - Visible progress updates.
+- Provider thread and turn lifecycle identifiers.
+- Plan updates.
+- Completed command facts, including cwd, status, exit/result metadata, and
+  bounded summaries when policy allows them.
+- Completed file-change or diff units.
 - Explicit engineering decisions.
 - Tool invocations.
 - Terminal commands.
@@ -68,6 +74,7 @@ Examples include:
 - Validation results.
 - CI run results.
 - Deployment events.
+- Compaction events.
 
 These are facts. They are durable. They can always be replayed.
 
@@ -80,6 +87,50 @@ It should never assume that internal reasoning, hidden planning, latent delibera
 Accordingly, the engine should never model hidden reasoning as provenance.
 
 This architectural boundary should be documented explicitly anywhere Provenance Engine describes evidence-backed knowledge, Knowledge Compiler behavior, or retrieval guarantees.
+
+Completed reasoning summaries are different from hidden chain-of-thought. When a
+provider exposes a bounded supported reasoning summary as part of its structured
+session data, Provenance Engine may treat the completed summary as observable
+evidence of what the provider emitted. That summary still is not privileged
+access to hidden reasoning and should not be presented as proof that the model's
+private deliberation is known.
+
+## Deterministic State, Inference, And Knowledge
+
+The platform now uses four epistemic categories:
+
+1. Observable evidence: directly emitted or observed facts.
+2. Deterministic Current State: rebuildable mechanical interpretation of
+   accepted evidence.
+3. Inference and semantic synthesis: rule-derived or model-derived
+   interpretations with evidence references, producer versions, confidence, and
+   supersession.
+4. Compiled knowledge: durable higher-level artifacts that may outlive the live
+   session.
+
+The future `SessionWorkModel` projection may combine deterministic state and
+active inference for consumers, but every derived field must preserve its basis.
+Model-derived milestone, intent, and architecture meaning must not be written
+into deterministic Current State.
+
+## Completed Evidence Units
+
+Richer coding-agent integrations should not write every execution telemetry
+delta to Provenance Engine.
+
+The intended ingestion policy is completed or meaningful evidence units:
+
+- stdout deltas remain live UI state; completed command facts may become
+  durable evidence.
+- reasoning deltas remain live UI state; completed supported reasoning summaries
+  may become durable evidence.
+- provider transport envelopes remain runtime details; normalized thread, turn,
+  plan, command, file-change, approval, validation, error, and compaction facts
+  may become durable evidence through explicit contracts.
+
+This preserves the privacy and volume boundary while allowing Provenance Engine
+to own the meaning and relationships of evidence that is useful beyond the live
+render stream.
 
 ## Explicit Decisions
 
@@ -214,6 +265,11 @@ Provenance Engine is responsible for:
 - Evidence relationships.
 - Deterministic projections.
 - Current state.
+- Session work projections.
+- Evidence-backed inference.
+- Milestone structure and semantic enrichment.
+- Thread and turn intent inference.
+- Scoped architecture projections.
 - Knowledge compilation.
 - Decision inference.
 - Retrieval.

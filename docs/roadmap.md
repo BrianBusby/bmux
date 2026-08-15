@@ -21,6 +21,11 @@ not speculative engine expansion. After observation produces concrete findings,
 the next selected work should be one explicit slice such as legacy cleanup,
 observability API design, release packaging, or another bounded adoption path.
 
+The accepted next product direction is richer live coding-agent understanding,
+but implementation must still be selected as an explicit slice. The planning
+name for the high-level projection is `SessionWorkModel`; the target design is
+`docs/session-work-model.md`.
+
 Canonical current milestone state and evidence are generated from
 `project/project-state.yaml`. Cross-repository sequencing details live in
 `docs/bmux-integration-roadmap.md`.
@@ -36,6 +41,7 @@ V1 adoption paths validated by the shared roadmap:
 - Current session and task context through `currentContext(...)`.
 - Supported lifecycle recording through `recordSessionLifecycle(...)`.
 - Accepted Git/worktree observation capture through `appendEvent(...)`.
+- Workspace-display Current State through `workspaceDisplay(...)`.
 - Operational production default storage cutover to
   `~/.local/state/provenance-engine/provenance.sqlite`.
 
@@ -43,27 +49,73 @@ Still gated as planning topics until selected through the project manifest:
 
 - Broad legacy bmux-local database migration or deletion.
 - A public observability trace API, if observation proves one is needed.
-- bmux Workspace Display Current State Projection, with diagnostics-first
-  validation for workspace title, branch, PR metadata, PR stale clearing, and
-  display latency.
+- Workspace-display follow-up diagnostics or compatibility work beyond the
+  accepted durable-context projection.
+- Richer coding-agent evidence ingestion for completed or meaningful thread,
+  turn, plan, command, file-change, approval, validation, error, and compaction
+  units.
+- A first `SessionWorkModel` projection contract for one coding-agent session,
+  preserving field-level basis/provenance and keeping semantic inference out of
+  deterministic Current State.
 - A tagged Provenance Engine release to replace revision pins.
 - Daemon/service transport, only if the in-process SDK boundary proves
   insufficient.
 - Shared evidence, GitHub ingestion, retrieval, and Knowledge Compiler work.
 
-Execution-telemetry live state, capture policy, diagnostics, orchestration, UI,
-and analytics remain bmux-owned. Provenance Engine receives only explicitly
-approved durable engineering evidence and broad lifecycle facts through the
-public SDK.
+Execution-telemetry live state, provider acquisition, raw streams, transport
+deltas, capture policy, diagnostics, orchestration, UI, and analytics remain
+bmux-owned. Provenance Engine receives only explicitly approved durable
+engineering evidence through public contracts. The new direction revises the
+approved-evidence boundary so completed meaningful units may cross into PE;
+it does not authorize raw execution-telemetry persistence.
 
-Workspace display Current State is a candidate post-observation slice, not the
-active project slice. If selected, Provenance Engine should own accepted
-workspace-display evidence contracts, deterministic projection semantics, and
-Current State APIs for workspace title, repository/worktree identity, branch,
-and PR metadata. bmux should own observation adapters, UI rendering, custom
-sidebar field compatibility, temporary optimistic rename display, fallback
-behavior, and diagnostics that compare observed display state with PE Current
-State and latest accepted evidence.
+Workspace display Current State is implemented for the accepted durable-context
+projection. Provenance Engine owns accepted workspace-display evidence
+contracts, deterministic projection semantics, and Current State APIs for
+workspace title, repository/worktree identity, branch, PR, ticket, project,
+current-work, and prompt display facts. bmux owns observation adapters, UI
+rendering, custom sidebar field compatibility, temporary optimistic display
+state, fallback behavior, and diagnostics that compare observed display state
+with PE Current State and latest accepted evidence.
+
+## Richer Coding-Agent Evidence And SessionWorkModel
+
+Status: planned and gated.
+
+This phase addresses the main gap found after the execution-telemetry and
+workspace-display slices: bmux can observe richer structured coding-agent data
+than Provenance Engine currently receives.
+
+The first implementation sequence should be:
+
+1. Define explicit evidence contracts for completed or meaningful coding-agent
+   units rather than provider transport deltas.
+2. Capture structured Codex thread, turn, plan, reasoning-summary, command,
+   file-change/diff, approval, validation, error, and compaction evidence where
+   available and policy-approved.
+3. Relate that evidence to existing session, worktree, contribution,
+   change-set, file-change, and validation records.
+4. Add deterministic factual session projections for live state only.
+5. Introduce the first `SessionWorkModel` projection contract as a coherent
+   consumer model above lower-level APIs.
+6. Add an inference framework with evidence references, producer versions,
+   confidence, and supersession.
+7. Implement the first semantic vertical slice: thread intent, turn intent,
+   session phase, current activity, and milestone hierarchy/description.
+8. Add scoped architecture inference/projection for thread and current-turn
+   scopes.
+9. Add milestone-to-architecture relationships.
+10. Add milestone-to-diff, Git, and GitHub attribution.
+11. Use the Knowledge Compiler later for durable implementation outcomes and
+    decisions beyond the live session model.
+
+The first vertical slice is accepted only when one real Codex turn produces a
+refreshable `SessionWorkModel` snapshot with revision, subject, thread, current
+turn, current activity, nested milestones, validation/risk state, a small
+scoped architecture projection, and provenance metadata for every non-observed
+field. Existing lower-level APIs must remain available, and tests or fixtures
+must prove model-derived fields are not written into deterministic Current
+State.
 
 ## External Evidence Model Validation
 
