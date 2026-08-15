@@ -13761,8 +13761,8 @@ struct TabItemView: View, Equatable {
                     .layoutPriority(1)
                 } else {
                     VStack(alignment: .leading, spacing: 1) {
-                        if let ticketTitle = workspaceSnapshot.ticketTitle {
-                            SidebarWorkspaceTicketTitleText(title: ticketTitle, font: magnifiedFont(scaledFontSize(13.5), weight: .bold), color: activePrimaryTextColor, lineLimit: settings.wrapsWorkspaceTitles ? 2 : 1)
+                        if !workspaceSnapshot.ticketRows.isEmpty {
+                            ticketRowsView(workspaceSnapshot.ticketRows, prominent: true)
                         }
 
                         Text(workspaceSnapshot.title)
@@ -13986,26 +13986,18 @@ struct TabItemView: View, Equatable {
                 }
             }
 
-            // Pull request rows
             if !workspaceSnapshot.pullRequestRows.isEmpty {
                 pullRequestRowsView(workspaceSnapshot.pullRequestRows)
             }
 
-            // Project rows
             if !workspaceSnapshot.projectRows.isEmpty {
                 projectRowsView(workspaceSnapshot.projectRows)
-            }
-
-            // Ticket rows
-            if !workspaceSnapshot.ticketRows.isEmpty {
-                ticketRowsView(workspaceSnapshot.ticketRows)
             }
 
             if !workspaceSnapshot.pullRequestRows.isEmpty {
                 pullRequestOwnerRowsView(workspaceSnapshot.pullRequestRows)
             }
 
-            // Ports row
             if detailVisibility.showsPorts, !workspaceSnapshot.listeningPorts.isEmpty {
                 HStack(spacing: 4) {
                     ForEach(workspaceSnapshot.listeningPorts, id: \.self) { port in
@@ -14914,12 +14906,13 @@ struct TabItemView: View, Equatable {
             return verticalBranchDirectoryLines(orderedPanelIds: orderedPanelIds)
         }()
         let branchLinesContainBranch = sidebarShowGitBranch && branchDirectoryLines.contains { $0.branch != nil }
+        let latestSubmittedMessage = provenanceDisplaySnapshot?.lastSubmittedPrompt ?? tab.latestSubmittedMessage
         let pullRequestRows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
             livePullRequests: tab.sidebarPullRequestsInDisplayOrder(orderedPanelIds: orderedPanelIds),
             provenancePullRequest: provenanceDisplaySnapshot?.pullRequest,
             provenanceCurrentDirectory: provenanceDisplaySnapshot?.currentDirectory,
             provenanceBranch: provenanceDisplaySnapshot?.branch,
-            latestSubmittedMessage: provenanceDisplaySnapshot?.lastSubmittedPrompt ?? tab.latestSubmittedMessage,
+            latestSubmittedMessage: latestSubmittedMessage,
             latestConversationMessage: tab.latestConversationMessage,
             label: String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
         )
@@ -14931,7 +14924,6 @@ struct TabItemView: View, Equatable {
         }
         return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: workspaceSnapshotPresentationKey,
-            ticketTitle: ticketRows.compactMap(\.title).first,
             title: provenanceDisplaySnapshot?.title ?? tab.title,
             customDescription: settings.showsWorkspaceDescription ? sidebarVisibleCustomDescription(hiddenPullRequestNumbers: displayedPullRequestNumbers) : nil,
             isPinned: tab.isPinned,
@@ -14943,9 +14935,17 @@ struct TabItemView: View, Equatable {
                 && (tab.remoteConnectionState == .suspended || tab.remoteConnectionState == .disconnected),
             copyableSidebarSSHError: copyableSidebarSSHError,
             latestConversationMessage: tab.latestConversationMessage,
-            latestSubmittedMessage: provenanceDisplaySnapshot?.lastSubmittedPrompt ?? tab.latestSubmittedMessage,
+            latestSubmittedMessage: latestSubmittedMessage,
             metadataEntries: detailVisibility.showsMetadata ? tab.sidebarStatusEntriesInDisplayOrder() : [],
-            metadataBlocks: detailVisibility.showsMetadata ? tab.sidebarMetadataBlocksInDisplayOrder() : [],
+            metadataBlocks: detailVisibility.showsMetadata ? SidebarWorkspaceSnapshotBuilder.metadataBlocks(
+                tab.sidebarMetadataBlocksInDisplayOrder(),
+                latestNotificationText: latestNotificationText,
+                latestSubmittedMessage: latestSubmittedMessage,
+                latestConversationMessage: tab.latestConversationMessage,
+                hidesAllDetails: settings.hidesAllDetails,
+                iMessageModeEnabled: settings.iMessageModeEnabled,
+                hiddenPullRequestNumbers: displayedPullRequestNumbers
+            ) : [],
             latestLog: detailVisibility.showsLog ? tab.logEntries.last : nil,
             progress: detailVisibility.showsProgress ? (provenanceProgress ?? tab.progress) : nil,
             compactGitBranchSummaryText: compactGitBranchSummaryText,

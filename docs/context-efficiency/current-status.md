@@ -37,7 +37,10 @@ slice removes or replaces them.
 
 Execution telemetry remains bmux-owned high-frequency runtime state. Provenance
 Engine receives only explicitly approved durable engineering evidence through
-the public SDK.
+the public SDK. The accepted next direction is more precise: raw provider
+streams and deltas stay live/ephemeral in bmux, while selected completed or
+meaningful evidence units may become durable PE evidence once explicit
+contracts, retention policy, and privacy review exist.
 
 Workspace Display Durable Context and Reconciliation is the latest implemented
 slice. PE workspace-display Current State now reduces accepted evidence field by
@@ -45,6 +48,12 @@ field: missing observations preserve known facts, explicit clears are represente
 as evidence, and field-level metadata records source/origin/event/freshness.
 bmux remains the observer/refresh owner and renders the built-in workspace row
 from PE Current State once the relevant fact is populated.
+
+Next planning target: PE owns the future `SessionWorkModel` projection for one
+coding-agent session. bmux should consume that revisioned authoritative snapshot
+for human-readable live work views and should not build a parallel semantic
+milestone/architecture model. Current implemented behavior remains the lower-
+level V1 PE contract set.
 
 Verification for this slice:
 

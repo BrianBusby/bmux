@@ -100,9 +100,12 @@ Reasonable later work:
 
 Keep telemetry persistence, broad provenance writes, React rendering changes,
 WebSocket payload changes, Swift schema ownership, raw provider envelopes,
-transcripts, tool output, token usage assumptions, changed-file paths, and
-automatic diagnostic checkpoint scheduling out of scope unless a later policy
-slice selects them.
+transcripts, tool output, token usage assumptions, and automatic diagnostic
+checkpoint scheduling out of scope unless a later policy slice selects them.
+The accepted future PE direction is narrower: selected completed evidence units,
+such as completed file-change or diff facts, may be durable only through an
+explicit contract and retention policy; raw telemetry streams and deltas remain
+bmux live state by default.
 
 ## Next Project Truth Slice
 

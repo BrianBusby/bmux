@@ -45,12 +45,12 @@ candidates. Do not build GitHub App synchronization, automatic manifest edits,
 provenance-backed project-state events, telemetry checkpoint automation, or new
 bmux UI work until the observation gate produces a specific follow-up decision.
 
-A newly documented candidate is the Workspace Display Current State Projection
-planning and diagnostics slice. If selected, keep it diagnostics-first: specify
-how bmux observes workspace title, branch, PR metadata, PR state, and stale PR
-clearing facts; writes accepted evidence to Provenance Engine; reads PE Current
-State for workspace tabs, sidebar rows, and custom sidebar fields; and measures
-display correctness plus latency for branch/PR/title updates. Do not broaden
-that slice into GitHub ingestion, Knowledge Compiler work, transcript storage,
-raw execution telemetry persistence, automatic workspace naming redesign, or a
-broad UI rewrite.
+The newly documented planning candidate is richer coding-agent evidence plus a
+PE-owned `SessionWorkModel` projection. If selected, keep it completed-unit
+first: define which Codex thread, turn, plan, command, reasoning-summary,
+file-change/diff, approval, validation, error, and compaction facts cross into
+PE; preserve raw streams and deltas as bmux live state; and require every
+inferred milestone, intent, activity, risk, or architecture field to retain PE
+provenance and confidence. Do not broaden that slice into GitHub ingestion,
+Knowledge Compiler work, transcript storage, raw execution telemetry
+persistence, automatic workspace naming redesign, or a broad UI rewrite.

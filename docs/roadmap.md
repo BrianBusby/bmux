@@ -24,6 +24,9 @@ Local bmux integration notes live in `docs/provenance-integration.md`.
 - Provenance Engine V1 integration through public SDK boundaries for adopted
   provenance read and write paths. Current milestone state is generated in
   `docs/generated/project-status.md`.
+- Workspace Display Durable Context integration that writes accepted display
+  facts to Provenance Engine and renders built-in workspace rows from PE
+  Workspace Display Current State when populated.
 - Transitional legacy boundary clarified as `BmuxLegacyProvenanceClient` for
   remaining bmux-local support paths. New provenance consumer behavior should
   use `ProvenanceEngineContracts` and `ProvenanceEngineSDK`.
@@ -47,16 +50,19 @@ Still out of scope until a new slice is explicitly selected: daemon transport, U
 - Run an observation period against the accepted runtime cutover.
 - Remove or retire legacy WorkProvenance storage and client support after replacement contracts or obsolescence decisions.
 - Decide whether lifecycle observability traces need a public engine API or should remain bmux-local diagnostics.
-- Plan the Workspace Display Current State Projection slice: bmux should
-  observe workspace title, branch, and PR facts, write accepted evidence to
-  Provenance Engine, and render workspace tabs, sidebar rows, and custom sidebar
-  branch/PR/title fields from PE Current State once the projection contract is
-  implemented.
+- Plan the richer coding-agent evidence and `SessionWorkModel` slice with PE:
+  bmux should keep provider acquisition, live interaction, approvals, streaming
+  deltas, and rendering, while forwarding selected completed evidence units to
+  PE once explicit contracts exist.
 - Cut a tagged Provenance Engine release so bmux can depend on a version tag rather than a revision pin.
 
 ## Longer-Term Direction
 
 - Provenance-powered bmux context assembly and task handoff features after durable evidence queries are proven.
+- Human-readable live coding-agent work views powered by PE
+  `SessionWorkModel` snapshots, including thread/turn intent, milestone
+  hierarchy, current activity, scoped architecture, risk/validation state, and
+  provenance for inferred fields.
 - Session awareness across related workspaces and subsessions.
 - User-facing reports that explain current session, task, and artifact state without exposing engine internals.
 - Mobile and remote-session workflows that preserve bmux orchestration and UI ownership.
@@ -70,6 +76,7 @@ Still out of scope until a new slice is explicitly selected: daemon transport, U
 - Storage ownership migration out of bmux-local provenance SQLite.
 - Evidence-backed retrieval adoption from shared project or organization evidence.
 - GitHub ingestion and Knowledge Compiler features.
+- Raw execution-telemetry persistence or whole-stream PE ingestion.
 - Broad lifecycle policy automation, warnings, or automatic context mutation.
 - Broad workspace UI rewrite or automatic workspace naming redesign beyond the
   deterministic display-fact projection slice.

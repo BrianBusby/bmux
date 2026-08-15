@@ -28,6 +28,8 @@ Repository: `BrianBusby/bmux`
 
 | Capability | State |
 | --- | --- |
+| Richer Session Work View | planned |
+| Session Work Model Consumer | planned |
 | Workspace Display Current State Diagnostic | implemented |
 | Workspace Display Durable Context | implemented |
 | Workspace Display Projection | implemented |
@@ -42,6 +44,7 @@ Repository: `BrianBusby/bmux`
 | Automatic Checkpoint Scheduler | not implemented |
 | Claude Lifecycle Telemetry | implemented |
 | Codex Fanout | implemented |
+| Completed Unit Provenance Projection | planned |
 | Diagnostic | implemented |
 | Lifecycle Producer | implemented |
 | Live Projection | implemented |

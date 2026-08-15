@@ -27,6 +27,13 @@ processing, semantic cost telemetry, privacy policy, and task-specific context
 packs first-class Provenance Engine capabilities. It does not expand the current
 Phase 3 storage foundation or Phase 4 bmux adoption scope.
 
+The next accepted live-session direction is canonical in
+`BrianBusby/provenance-engine:docs/session-work-model.md`. It introduces
+PE-owned richer completed evidence ingestion, inference records, milestone
+semantics, scoped architecture projections, and a high-level `SessionWorkModel`
+consumer projection. Older milestone language that suggests bmux owns semantic
+progress modeling should now be read as historical product motivation only.
+
 The cross-session coordination roadmap is recorded in
 `docs/context-efficiency/cross-session-coordination-active-work-awareness.md`.
 It makes active session/task registries, active-work indexing, cross-session

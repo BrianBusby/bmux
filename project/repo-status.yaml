@@ -18,6 +18,7 @@ execution_telemetry:
   lifecycle_producer: implemented
   claude_lifecycle_telemetry: implemented
   automatic_checkpoint_scheduler: not_implemented
+  completed_unit_provenance_projection: planned
 
 local_capabilities:
   workspace_display_projection: implemented
@@ -26,6 +27,8 @@ local_capabilities:
   workspace_display_tab_projection: implemented
   workspace_display_ticket_title_sidebar: implemented
   workspace_display_durable_context: implemented
+  session_work_model_consumer: planned
+  richer_session_work_view: planned
 
 release:
   latest_tag: null
