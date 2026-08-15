@@ -147,12 +147,11 @@ Optional fields are omitted when the workspace doesn't have them, so guard with
 `if let b = w.branch { ... }` or `w.pr != nil ? ... : ...` rather than assuming
 they exist.
 
-Today these workspace display fields are live bmux sidebar state. A planned
-Workspace Display Current State Projection slice should move `title`, `branch`,
-`dirty` when already accepted as worktree observation, `pr`, and `prs` to PE
-Current State as the steady-state source for custom sidebar data. Until that
-slice is implemented, do not assume Provenance Engine backs those custom
-sidebar fields.
+Today these workspace display fields are live bmux sidebar state with PE-backed
+Workspace Display Current State available for the accepted durable display facts
+used by built-in workspace rows. Custom sidebar fields should continue to treat
+bmux snapshots as their compatibility surface until a follow-up slice explicitly
+moves a specific field to PE Current State for custom sidebar consumption.
 
 ## Views
 

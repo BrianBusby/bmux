@@ -4,7 +4,7 @@ This directory tracks the provider-neutral execution telemetry effort.
 
 Execution telemetry is the high-frequency lifecycle record of an agent session: session and turn boundaries, tool activity, approvals, usage observations, provider errors, file-change summaries, and diagnostic checkpoints. It is operational evidence for live state, diagnostics, replay, and analytics.
 
-Provenance is narrower. Provenance records durable engineering facts and evidence, such as a session contributing to a work item, a meaningful file-change attribution, a validation result, a generated artifact, or a selected lifecycle summary. Most execution events should never be written directly to provenance-engine.
+Provenance is narrower. Provenance records durable engineering facts and evidence, such as a session contributing to a work item, a meaningful file-change attribution, a completed command fact, a validation result, a generated artifact, or a selected lifecycle summary. Most execution deltas should never be written directly to provenance-engine, but selected completed or meaningful evidence units are now the accepted target boundary for future PE ingestion.
 
 ## Documents
 

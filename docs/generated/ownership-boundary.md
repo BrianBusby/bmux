@@ -17,9 +17,16 @@ Regenerate with: ./scripts/project-docs generate
 | Deterministic Current State | Provenance Engine |
 | Durable evidence | Provenance Engine |
 | Execution telemetry | Bmux |
+| Meaningful Execution Evidence | Provenance Engine |
+| Milestone Semantics | Provenance Engine |
 | Presentation | Bmux |
+| Provider Specific Acquisition | Bmux |
 | Runtime orchestration | Bmux |
 | Schema compatibility | Provenance Engine |
+| Scoped Architecture Projection | Provenance Engine |
+| Semantic Inference | Provenance Engine |
+| Session Work Model Projection | Provenance Engine |
+| Streaming Execution Telemetry | Bmux |
 | User interface | Bmux |
 | Workflow observation | Bmux |
 

@@ -42,9 +42,18 @@ The accepted durable projection is limited to broad session/provider/lifecycle
 facts and derived worktree association when available. Raw and high-frequency
 telemetry remains bmux-owned runtime state.
 
-Potential future durable projections require a separate policy slice and may
-include parent/child relationships, meaningful file-change evidence,
-validation results, generated artifacts, explicit decisions, and checkpoint
-summaries linked to engineering results.
+The accepted future direction is to forward selected completed or meaningful
+evidence units once explicit PE contracts and retention rules exist. Candidate
+future units include provider thread identity, turn identity/lifecycle, user
+prompt facts, plan updates, completed command facts with cwd/status/result
+metadata, completed reasoning summaries when exposed as supported summaries,
+completed file-change or diff units, approval state when it materially affects
+risk or write behavior, validation results, errors, compaction events,
+generated artifacts, explicit decisions, and checkpoint summaries linked to
+engineering results.
 
-Telemetry-only by default includes every tool start/end, streaming deltas, token updates, transient status changes, repetitive retries, and raw command output.
+Telemetry-only by default includes provider transport deltas, streaming deltas,
+token-update streams, transient status changes, repetitive retries, raw command
+output, unrestricted transcripts, and private reasoning. Model-derived
+milestone, intent, and architecture meaning must remain PE inference data, not
+deterministic Current State.
