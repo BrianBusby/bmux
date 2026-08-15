@@ -1,8 +1,9 @@
 # SessionWorkModel Target Design
 
 Status: accepted target direction. The lower-level richer-session evidence
-foundation is implemented; the public `SessionWorkModel` projection, semantic
-inference, milestone synthesis, and architecture projection are not implemented.
+foundation and first factual public `SessionWorkModel` snapshot/read contract
+are implemented; semantic inference, milestone synthesis, and architecture
+projection are not implemented.
 
 This document defines the planned high-level Provenance Engine projection for
 live coding-agent work. It records product and architecture direction for the
@@ -23,8 +24,10 @@ Rationale:
 - It avoids `SessionPresentationModel`, which would make a reusable engine
   contract sound like a bmux UI shape.
 
-The final public Swift type names may still use the normal
-`ProvenanceSessionWorkModel*` prefix if and when this becomes an SDK contract.
+The first public factual SDK type names use the normal
+`ProvenanceSessionWorkModel*` prefix. Future semantic fields should extend the
+versioned contract deliberately rather than changing the factual meaning of
+existing fields.
 
 ## Existing Contracts Stay Useful
 
@@ -148,6 +151,29 @@ hidden chain-of-thought, unrestricted transcripts, token-by-token provider
 envelopes, or bmux live projection state. Command output summaries are part of
 the contract shape but bmux does not populate them yet; that remains a
 retention/privacy decision.
+
+## Implemented Factual SessionWorkModel Foundation
+
+The first public read contract is:
+
+- `ProvenanceSessionWorkModelRequest`
+- `ProvenanceSessionWorkModelResponse`
+- `ProvenanceSessionWorkModelSnapshot`
+- `ProvenanceSessionWorkModelTurnSnapshot`
+- `ProvenanceEngineClient.sessionWorkModel(...)`
+
+It returns one PE session's observed coding-agent evidence grouped into factual
+thread and turn structure. The snapshot includes session identity, provider
+thread identities, observed turns, latest submitted prompt per turn, latest
+plan update per turn, completed commands, visible reasoning summaries, and
+file-change attributions. Its revision is the newest ledger append sequence for
+the requested session.
+
+The implementation is deterministic and rebuildable from the immutable ledger.
+It does not synthesize missing turns, infer intent, derive milestones, classify
+current activity, compute risks, infer architecture, ingest GitHub evidence, or
+compile knowledge artifacts. Unknown relationships remain absent rather than
+guessed.
 
 ## Conceptual Shape
 

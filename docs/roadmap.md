@@ -53,9 +53,9 @@ Still gated as planning topics until selected through the project manifest:
   accepted durable-context projection.
 - Additional richer coding-agent evidence ingestion beyond the accepted
   foundation, such as approval, validation, error, and compaction units.
-- A first `SessionWorkModel` projection contract for one coding-agent session,
-  preserving field-level basis/provenance and keeping semantic inference out of
-  deterministic Current State.
+- Semantic `SessionWorkModel` enrichment beyond the implemented factual
+  snapshot, preserving field-level basis/provenance and keeping semantic
+  inference out of deterministic Current State.
 - A tagged Provenance Engine release to replace revision pins.
 - Daemon/service transport, only if the in-process SDK boundary proves
   insufficient.
@@ -79,9 +79,9 @@ with PE Current State and latest accepted evidence.
 
 ## Richer Coding-Agent Evidence And SessionWorkModel
 
-Status: evidence foundation implemented; `SessionWorkModel`, semantic
-inference, milestone synthesis, and architecture projection remain planned and
-gated.
+Status: evidence foundation and factual `SessionWorkModel` snapshot/read
+contract implemented; semantic inference, milestone synthesis, and architecture
+projection remain planned and gated.
 
 This phase addresses the main gap found after the execution-telemetry and
 workspace-display slices: bmux can observe richer structured coding-agent data
@@ -102,8 +102,10 @@ The implementation sequence is:
    producers can establish them; contribution and validation relationships
    remain future work.
 4. Add deterministic factual session projections for live state only.
-5. Introduce the first `SessionWorkModel` projection contract as a coherent
-   consumer model above lower-level APIs.
+   Implemented through the first revisioned `sessionWorkModel(...)` read
+   contract for one PE session.
+5. Introduce semantic `SessionWorkModel` enrichment above the factual snapshot
+   and lower-level APIs.
 6. Add an inference framework with evidence references, producer versions,
    confidence, and supersession.
 7. Implement the first semantic vertical slice: thread intent, turn intent,

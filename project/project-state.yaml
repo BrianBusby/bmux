@@ -108,7 +108,7 @@ milestones:
       commits: []
       pull_requests: []
     completed_at: 2026-08-15
-    acceptance_reason: First below-semantic-layer evidence foundation slice implemented; SessionWorkModel and inference remain gated.
+    acceptance_reason: First below-semantic-layer evidence foundation and factual SessionWorkModel snapshot/read contract implemented; semantic inference, milestones, and architecture projection remain gated.
 
 ownership:
   durable_evidence: provenance_engine

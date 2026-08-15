@@ -91,6 +91,56 @@ struct WriteSideProducerSDKTests {
         #expect(try await client.health().status == .available)
     }
 
+    @Test
+    func sqliteClientReadsFactualSessionWorkModelThroughPublicContract() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
+        let fixture = SessionWorkModelSDKFixture()
+
+        for event in fixture.events {
+            _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: event))
+        }
+
+        let response = try await client.sessionWorkModel(
+            ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id)
+        )
+        let snapshot = try #require(response.snapshot)
+        let turn = try #require(snapshot.turns.first)
+
+        #expect(response.found)
+        #expect(response.reason == nil)
+        #expect(response.sessionID == fixture.session.id)
+        #expect(snapshot.revision == fixture.events.count)
+        #expect(snapshot.session == fixture.session)
+        #expect(snapshot.providerThreads == [fixture.thread])
+        #expect(snapshot.turns.count == 1)
+        #expect(turn.turn == fixture.projectedTurn)
+        #expect(turn.submittedPrompt == fixture.prompt)
+        #expect(turn.currentPlan == fixture.currentPlan)
+        #expect(turn.completedCommands == [fixture.command])
+        #expect(turn.visibleReasoningSummaries == [fixture.reasoningSummary])
+        #expect(turn.fileChangeAttributions == [fixture.fileChangeAttribution])
+    }
+
+    @Test
+    func sqliteClientReturnsNoSessionForUnknownSessionWorkModel() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
+
+        let response = try await client.sessionWorkModel(
+            ProvenanceSessionWorkModelRequest(sessionID: "session-missing")
+        )
+
+        #expect(response == ProvenanceSessionWorkModelResponse(
+            found: false,
+            reason: "no_session",
+            sessionID: "session-missing",
+            snapshot: nil
+        ))
+    }
+
     private static func temporaryDatabaseURL() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("provenance-engine-write-side-sdk-tests", isDirectory: true)
@@ -507,5 +557,260 @@ private struct GenericProducerFixture {
         self.fileChange = fileChange
         self.runningValidationRun = runningValidationRun
         self.passedValidationRun = passedValidationRun
+    }
+}
+
+private struct SessionWorkModelSDKFixture {
+    let session: ProvenanceSessionRecord
+    let thread: ProvenanceCodingAgentThreadRecord
+    let projectedTurn: ProvenanceCodingAgentTurnRecord
+    let prompt: ProvenanceCodingAgentPromptRecord
+    let currentPlan: ProvenanceCodingAgentPlanUpdateRecord
+    let command: ProvenanceCodingAgentCommandRecord
+    let reasoningSummary: ProvenanceCodingAgentReasoningSummaryRecord
+    let fileChangeAttribution: ProvenanceCodingAgentFileChangeAttributionRecord
+    let events: [ProvenanceEvent]
+
+    init() {
+        let timestamp = Date(timeIntervalSince1970: 1_830_000_000)
+        let session = ProvenanceSessionRecord(
+            id: "session-work-model",
+            agentKind: "codex",
+            workspaceID: "workspace-work-model",
+            surfaceID: "surface-work-model",
+            cwd: "/repos/work-model",
+            status: "active",
+            startedAt: timestamp,
+            updatedAt: timestamp
+        )
+        let thread = ProvenanceCodingAgentThreadRecord(
+            id: "thread-work-model",
+            sessionID: session.id,
+            provider: "codex",
+            providerThreadID: "codex-thread-work-model",
+            source: .observed,
+            confidence: .high,
+            firstObservedAt: timestamp.addingTimeInterval(1),
+            updatedAt: timestamp.addingTimeInterval(1)
+        )
+        let startedTurn = ProvenanceCodingAgentTurnRecord(
+            id: "turn-work-model-1",
+            sessionID: session.id,
+            threadID: thread.id,
+            provider: "codex",
+            providerTurnID: "codex-turn-work-model-1",
+            status: "started",
+            model: "gpt-5-codex",
+            effort: "medium",
+            startedAt: timestamp.addingTimeInterval(2),
+            updatedAt: timestamp.addingTimeInterval(2),
+            source: .observed,
+            confidence: .high
+        )
+        let completedTurn = ProvenanceCodingAgentTurnRecord(
+            id: startedTurn.id,
+            sessionID: session.id,
+            threadID: thread.id,
+            provider: "codex",
+            providerTurnID: startedTurn.providerTurnID,
+            status: "completed",
+            completedAt: timestamp.addingTimeInterval(8),
+            updatedAt: timestamp.addingTimeInterval(8),
+            source: .observed,
+            confidence: .high
+        )
+        let projectedTurn = ProvenanceCodingAgentTurnRecord(
+            id: startedTurn.id,
+            sessionID: session.id,
+            threadID: thread.id,
+            provider: "codex",
+            providerTurnID: startedTurn.providerTurnID,
+            status: "completed",
+            model: startedTurn.model,
+            effort: startedTurn.effort,
+            startedAt: startedTurn.startedAt,
+            completedAt: completedTurn.completedAt,
+            updatedAt: completedTurn.updatedAt,
+            source: .observed,
+            confidence: .high
+        )
+        let prompt = ProvenanceCodingAgentPromptRecord(
+            id: "prompt-work-model-1",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: startedTurn.id,
+            provider: "codex",
+            text: "Build the factual SessionWorkModel snapshot.",
+            submittedAt: timestamp.addingTimeInterval(3),
+            source: .observed,
+            confidence: .high
+        )
+        let olderPlan = ProvenanceCodingAgentPlanUpdateRecord(
+            id: "plan-work-model-1-a",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: startedTurn.id,
+            provider: "codex",
+            steps: [
+                ProvenanceCodingAgentPlanStepRecord(
+                    id: "plan-work-model-1-a-step-0",
+                    order: 0,
+                    text: "Read evidence projections",
+                    status: "in_progress"
+                ),
+            ],
+            observedAt: timestamp.addingTimeInterval(4),
+            source: .observed,
+            confidence: .high
+        )
+        let currentPlan = ProvenanceCodingAgentPlanUpdateRecord(
+            id: "plan-work-model-1-b",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: startedTurn.id,
+            provider: "codex",
+            steps: [
+                ProvenanceCodingAgentPlanStepRecord(
+                    id: "plan-work-model-1-b-step-0",
+                    order: 0,
+                    text: "Read evidence projections",
+                    status: "completed"
+                ),
+                ProvenanceCodingAgentPlanStepRecord(
+                    id: "plan-work-model-1-b-step-1",
+                    order: 1,
+                    text: "Expose public snapshot",
+                    status: "completed"
+                ),
+            ],
+            observedAt: timestamp.addingTimeInterval(6),
+            source: .observed,
+            confidence: .high
+        )
+        let command = ProvenanceCodingAgentCommandRecord(
+            id: "command-work-model-1",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: startedTurn.id,
+            provider: "codex",
+            toolText: "build",
+            cwd: "/repos/work-model",
+            status: "succeeded",
+            exitCode: 0,
+            completedAt: timestamp.addingTimeInterval(7),
+            source: .observed,
+            confidence: .high
+        )
+        let reasoningSummary = ProvenanceCodingAgentReasoningSummaryRecord(
+            id: "reasoning-work-model-1",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: startedTurn.id,
+            provider: "codex",
+            itemID: "reasoning-item-work-model-1",
+            text: "Grouped factual evidence without adding semantic interpretation.",
+            completedAt: timestamp.addingTimeInterval(6),
+            source: .observed,
+            confidence: .high
+        )
+        let fileChangeAttribution = ProvenanceCodingAgentFileChangeAttributionRecord(
+            id: "file-attribution-work-model-1",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: startedTurn.id,
+            provider: "codex",
+            operationID: "file-change-work-model-1",
+            fileChangeIDs: ["file-change-work-model-1"],
+            paths: ["Sources/ProvenanceEngineContracts/ProvenanceSessionWorkModelSnapshot.swift"],
+            summary: "Added the factual snapshot contract.",
+            observedAt: timestamp.addingTimeInterval(7),
+            source: .observed,
+            confidence: .high
+        )
+        let event = Self.eventBuilder(sessionID: session.id)
+
+        self.session = session
+        self.thread = thread
+        self.projectedTurn = projectedTurn
+        self.prompt = prompt
+        self.currentPlan = currentPlan
+        self.command = command
+        self.reasoningSummary = reasoningSummary
+        self.fileChangeAttribution = fileChangeAttribution
+        self.events = [
+            event("event-work-model-session", .sessionObserved, timestamp, ProvenanceEventPayload(session: session)),
+            event(
+                "event-work-model-thread",
+                .codingAgentThreadObserved,
+                thread.firstObservedAt,
+                ProvenanceEventPayload(codingAgentThread: thread)
+            ),
+            event(
+                "event-work-model-turn-started",
+                .codingAgentTurnObserved,
+                startedTurn.updatedAt,
+                ProvenanceEventPayload(codingAgentTurn: startedTurn)
+            ),
+            event(
+                "event-work-model-prompt",
+                .codingAgentPromptSubmitted,
+                prompt.submittedAt,
+                ProvenanceEventPayload(codingAgentPrompt: prompt)
+            ),
+            event(
+                "event-work-model-plan-older",
+                .codingAgentPlanUpdated,
+                olderPlan.observedAt,
+                ProvenanceEventPayload(codingAgentPlanUpdate: olderPlan)
+            ),
+            event(
+                "event-work-model-reasoning-summary",
+                .codingAgentReasoningSummaryCompleted,
+                reasoningSummary.completedAt,
+                ProvenanceEventPayload(codingAgentReasoningSummary: reasoningSummary)
+            ),
+            event(
+                "event-work-model-plan-current",
+                .codingAgentPlanUpdated,
+                currentPlan.observedAt,
+                ProvenanceEventPayload(codingAgentPlanUpdate: currentPlan)
+            ),
+            event(
+                "event-work-model-command",
+                .codingAgentCommandCompleted,
+                command.completedAt,
+                ProvenanceEventPayload(codingAgentCommand: command)
+            ),
+            event(
+                "event-work-model-file-attribution",
+                .codingAgentFileChangeAttributed,
+                fileChangeAttribution.observedAt,
+                ProvenanceEventPayload(codingAgentFileChangeAttribution: fileChangeAttribution)
+            ),
+            event(
+                "event-work-model-turn-completed",
+                .codingAgentTurnObserved,
+                completedTurn.updatedAt,
+                ProvenanceEventPayload(codingAgentTurn: completedTurn)
+            ),
+        ]
+    }
+
+    private static func eventBuilder(
+        sessionID: String
+    ) -> (String, ProvenanceEventType, Date, ProvenanceEventPayload) -> ProvenanceEvent {
+        { id, eventType, timestamp, payload in
+            ProvenanceEvent(
+                id: id,
+                eventType: eventType,
+                timestamp: timestamp,
+                sessionID: sessionID,
+                source: .observed,
+                evidenceOrigin: .codexSession,
+                evidenceScope: ProvenanceEvidenceScope(level: .personal, id: "local-codex-session"),
+                confidence: .high,
+                payload: payload
+            )
+        }
     }
 }

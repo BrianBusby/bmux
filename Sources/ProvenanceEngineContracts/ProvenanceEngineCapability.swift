@@ -30,6 +30,9 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
     /// Queries current display metadata for a workspace.
     case queryWorkspaceDisplay = "query_workspace_display"
 
+    /// Queries the factual work model snapshot for a coding-agent session.
+    case querySessionWorkModel = "query_session_work_model"
+
     /// All currently advertised engine capabilities.
     public static let allCases: [ProvenanceEngineCapability] = [
         .appendEvent,
@@ -39,5 +42,6 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
         .queryWorktrees,
         .queryCurrentContext,
         .queryWorkspaceDisplay,
+        .querySessionWorkModel,
     ]
 }

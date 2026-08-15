@@ -22,9 +22,10 @@ local_capabilities:
   workspace_display_durable_context: implemented
   schema_identity_validation: implemented
   producer_neutral_lifecycle_recording: implemented
-  richer_coding_agent_evidence: planned
+  richer_coding_agent_evidence: implemented
+  factual_session_work_model_projection: implemented
+  semantic_session_work_model_projection: planned
   semantic_inference_framework: planned
-  session_work_model_projection: planned
   scoped_architecture_projection: planned
 
 local_caveats:

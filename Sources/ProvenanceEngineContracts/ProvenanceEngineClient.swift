@@ -53,6 +53,14 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     /// - Throws: An implementation-defined error when the query fails.
     func workspaceDisplay(_ request: ProvenanceWorkspaceDisplayRequest) async throws
         -> ProvenanceWorkspaceDisplayResponse
+
+    /// Returns the factual work model snapshot for one coding-agent session.
+    ///
+    /// - Parameter request: Query parameters for the session work model projection.
+    /// - Returns: A revisioned response containing observed thread and turn evidence.
+    /// - Throws: An implementation-defined error when the query fails.
+    func sessionWorkModel(_ request: ProvenanceSessionWorkModelRequest) async throws
+        -> ProvenanceSessionWorkModelResponse
 }
 
 public extension ProvenanceEngineClient {

@@ -1372,6 +1372,55 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
+    /// Reads the factual work model snapshot for one coding-agent session.
+    ///
+    /// - Parameter request: Session work model query parameters.
+    /// - Returns: Found response with revisioned factual coding-agent evidence, or `no_session` when absent.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func sessionWorkModel(_ request: ProvenanceSessionWorkModelRequest) throws -> ProvenanceSessionWorkModelResponse {
+        guard let session = try session(id: request.sessionID) else {
+            return ProvenanceSessionWorkModelResponse(
+                found: false,
+                reason: "no_session",
+                sessionID: request.sessionID,
+                snapshot: nil
+            )
+        }
+
+        let providerThreads = try codingAgentThreadIDs(sessionID: request.sessionID).compactMap {
+            try codingAgentThread(id: $0)
+        }
+        let turns = try codingAgentTurnIDs(
+            sessionID: request.sessionID,
+            limit: request.turnLimit
+        ).compactMap { turnID -> ProvenanceSessionWorkModelTurnSnapshot? in
+            guard let turn = try codingAgentTurn(id: turnID) else { return nil }
+            return ProvenanceSessionWorkModelTurnSnapshot(
+                turn: turn,
+                submittedPrompt: try latestCodingAgentPrompt(turnID: turnID),
+                currentPlan: try latestCodingAgentPlanUpdate(turnID: turnID),
+                completedCommands: try codingAgentCommandIDs(turnID: turnID).compactMap { try codingAgentCommand(id: $0) },
+                visibleReasoningSummaries: try codingAgentReasoningSummaryIDs(turnID: turnID).compactMap {
+                    try codingAgentReasoningSummary(id: $0)
+                },
+                fileChangeAttributions: try codingAgentFileChangeAttributionIDs(turnID: turnID).compactMap {
+                    try codingAgentFileChangeAttribution(id: $0)
+                }
+            )
+        }
+
+        return ProvenanceSessionWorkModelResponse(
+            found: true,
+            sessionID: request.sessionID,
+            snapshot: ProvenanceSessionWorkModelSnapshot(
+                revision: try latestEventSequence(sessionID: request.sessionID),
+                session: session,
+                providerThreads: providerThreads,
+                turns: turns
+            )
+        )
+    }
+
     private func worktree(from query: ProvenanceSQLiteStatement) -> ProvenanceWorktreeRecord? {
         guard let id = query.string(at: 0),
               let repositoryID = query.string(at: 1),
@@ -1408,6 +1457,147 @@ actor ProvenanceSQLiteRepository {
         try query.bind(id, at: 1)
         guard try query.step() else { return nil }
         return query.int(at: 0)
+    }
+
+    private func latestEventSequence(sessionID: String) throws -> Int? {
+        let query = try database.prepare("SELECT MAX(sequence) FROM provenance_events WHERE session_id = ?")
+        defer { query.finalize() }
+        try query.bind(sessionID, at: 1)
+        guard try query.step() else { return nil }
+        return query.double(at: 0).map(Int.init)
+    }
+
+    private func codingAgentThreadIDs(sessionID: String) throws -> [String] {
+        let query = try database.prepare(
+            """
+            SELECT id
+            FROM provenance_coding_agent_threads
+            WHERE session_id = ?
+            ORDER BY first_observed_at_seconds ASC, rowid ASC
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(sessionID, at: 1)
+        return try stringIDs(from: query)
+    }
+
+    private func codingAgentTurnIDs(sessionID: String, limit: Int?) throws -> [String] {
+        let rowLimit = limit.map { max(0, $0) }
+        var sql = """
+            SELECT id
+            FROM provenance_coding_agent_turns
+            WHERE session_id = ?
+            ORDER BY COALESCE(started_at_seconds, updated_at_seconds) ASC, rowid ASC
+            """
+        if rowLimit != nil {
+            sql += "\nLIMIT ?"
+        }
+
+        let query = try database.prepare(sql)
+        defer { query.finalize() }
+
+        try query.bind(sessionID, at: 1)
+        if let rowLimit {
+            try query.bind(rowLimit, at: 2)
+        }
+        return try stringIDs(from: query)
+    }
+
+    private func latestCodingAgentPrompt(turnID: String) throws -> ProvenanceCodingAgentPromptRecord? {
+        guard let id = try latestCodingAgentRecordID(
+            tableName: "provenance_coding_agent_prompts",
+            timeColumn: "submitted_at_seconds",
+            turnID: turnID
+        ) else {
+            return nil
+        }
+        return try codingAgentPrompt(id: id)
+    }
+
+    private func latestCodingAgentPlanUpdate(turnID: String) throws -> ProvenanceCodingAgentPlanUpdateRecord? {
+        guard let id = try latestCodingAgentRecordID(
+            tableName: "provenance_coding_agent_plan_updates",
+            timeColumn: "observed_at_seconds",
+            turnID: turnID
+        ) else {
+            return nil
+        }
+        return try codingAgentPlanUpdate(id: id)
+    }
+
+    private func codingAgentCommandIDs(turnID: String) throws -> [String] {
+        try codingAgentRecordIDs(
+            tableName: "provenance_coding_agent_commands",
+            timeColumn: "completed_at_seconds",
+            turnID: turnID
+        )
+    }
+
+    private func codingAgentReasoningSummaryIDs(turnID: String) throws -> [String] {
+        try codingAgentRecordIDs(
+            tableName: "provenance_coding_agent_reasoning_summaries",
+            timeColumn: "completed_at_seconds",
+            turnID: turnID
+        )
+    }
+
+    private func codingAgentFileChangeAttributionIDs(turnID: String) throws -> [String] {
+        try codingAgentRecordIDs(
+            tableName: "provenance_coding_agent_file_change_attributions",
+            timeColumn: "observed_at_seconds",
+            turnID: turnID
+        )
+    }
+
+    private func latestCodingAgentRecordID(
+        tableName: String,
+        timeColumn: String,
+        turnID: String
+    ) throws -> String? {
+        let query = try database.prepare(
+            """
+            SELECT id
+            FROM \(tableName)
+            WHERE turn_id = ?
+            ORDER BY \(timeColumn) DESC, rowid DESC
+            LIMIT 1
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(turnID, at: 1)
+        guard try query.step() else { return nil }
+        return query.string(at: 0)
+    }
+
+    private func codingAgentRecordIDs(
+        tableName: String,
+        timeColumn: String,
+        turnID: String
+    ) throws -> [String] {
+        let query = try database.prepare(
+            """
+            SELECT id
+            FROM \(tableName)
+            WHERE turn_id = ?
+            ORDER BY \(timeColumn) ASC, rowid ASC
+            """
+        )
+        defer { query.finalize() }
+
+        try query.bind(turnID, at: 1)
+        return try stringIDs(from: query)
+    }
+
+    private func stringIDs(from query: ProvenanceSQLiteStatement) throws -> [String] {
+        var ids: [String] = []
+        while try query.step() {
+            if let id = query.string(at: 0) {
+                ids.append(id)
+            }
+        }
+        return ids
     }
 
     private func projectionCounts(from payloads: [ProvenanceEventPayload]) -> [String: Int] {

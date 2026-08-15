@@ -330,7 +330,13 @@ private struct StaticProvenanceEngineClient: ProvenanceEngineClient {
         ProvenanceEngineHealth(
             status: .available,
             version: "0.1.0",
-            capabilities: [.appendEvent, .recordSessionLifecycle, .queryCurrentContext, .queryWorkspaceDisplay]
+            capabilities: [
+                .appendEvent,
+                .recordSessionLifecycle,
+                .queryCurrentContext,
+                .queryWorkspaceDisplay,
+                .querySessionWorkModel,
+            ]
         )
     }
 
@@ -394,6 +400,17 @@ private struct StaticProvenanceEngineClient: ProvenanceEngineClient {
             found: true,
             workspaceID: request.workspaceID,
             display: ProvenanceEngineHealthTests.workspaceDisplay
+        )
+    }
+
+    func sessionWorkModel(
+        _ request: ProvenanceSessionWorkModelRequest
+    ) async throws -> ProvenanceSessionWorkModelResponse {
+        ProvenanceSessionWorkModelResponse(
+            found: false,
+            reason: "not_implemented",
+            sessionID: request.sessionID,
+            snapshot: nil
         )
     }
 }

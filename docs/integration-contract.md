@@ -101,11 +101,26 @@ Each request limit is an independent engine row budget for its matching response
 
 Response guarantees: `schemaVersion == 1` for the current V1 shape; arrays are always present; linked records are optional where producers may have appended partial or unattributed evidence; no SQLite table names, row identifiers, SQL predicates, terminal rendering, JSON payload compatibility, fallback strings, or CLI errors are part of the public contract. Consumers must not read `provenance_worktrees`, `provenance_repositories`, `provenance_sessions`, `provenance_work_contributions`, `provenance_work_items`, `provenance_file_changes`, `provenance_change_sets`, `provenance_checkpoints`, or `provenance_validation_runs` directly for current context.
 
-There is no public high-level session work projection contract in V1. Adopters
-that need current lower-level facts must use the accepted APIs above. A future
-`SessionWorkModel` contract is planned as a coherent consumer projection for one
-coding-agent session, but it must be added as an explicit versioned request and
-response surface rather than inferred from existing projection tables.
+The accepted factual session-work read contract is:
+
+- Request: `ProvenanceSessionWorkModelRequest(sessionID:turnLimit:)`.
+- Response: `ProvenanceSessionWorkModelResponse`.
+- Snapshot DTO: `ProvenanceSessionWorkModelSnapshot`.
+- Turn DTO: `ProvenanceSessionWorkModelTurnSnapshot`.
+
+This first `SessionWorkModel` contract is a revisioned factual snapshot for one
+PE session. It groups observed coding-agent evidence into provider thread and
+turn structure: session identity, provider thread identity, turns, latest
+submitted prompt per turn, latest/current plan per turn, completed commands,
+visible reasoning summaries, and file-change attributions. The snapshot
+revision is derived from the newest accepted ledger sequence for the requested
+session and is intended for consumer reconciliation by re-fetch.
+
+This read remains deterministic Current State over accepted evidence. Unknown
+relationships stay absent rather than guessed. It does not infer thread intent,
+turn intent, milestone hierarchy, current activity, validation/risk state,
+architecture, Knowledge Compiler artifacts, GitHub evidence, or semantic
+meaning from prompts, plans, commands, or file paths.
 
 The accepted richer-session evidence write contract is append-only and
 lower-level than `SessionWorkModel`. Producers append `ProvenanceEvent` values
