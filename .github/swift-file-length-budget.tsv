@@ -148,6 +148,7 @@
 749	bmuxTests/UpdatePillReleaseVisibilityTests.swift
 743	bmuxTests/SidebarWorkspaceSnapshotRefreshPolicyTests.swift
 738	Packages/macOS/BMUXProjectModel/Sources/BMUXProjectModel/XcodeProjectAdapter.swift
+738	bmuxTests/WorkspacePromptSubmitTests.swift
 717	Packages/Shared/BmuxAuthRuntime/Sources/BmuxAuthRuntime/Coordinator/AuthCoordinator.swift
 716	Sources/TaskManagerSnapshot.swift
 714	Sources/AppleScriptSupport.swift

@@ -1500,6 +1500,8 @@
 		CE0D10080000000000000001 /* WorkProvenanceChangeSetRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */; };
 		740D49C5400756EF2E733E31 /* WorkProvenanceCheckpointRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */; };
 		CE0D10090000000000000001 /* WorkProvenanceCheckpointRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */; };
+		CE0E00030000000000000001 /* WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E00030000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift */; };
+		CE0E00040000000000000001 /* WorkProvenanceCodingAgentEvidenceRecorder+Support.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E00040000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Support.swift */; };
 		CE0E00020000000000000001 /* WorkProvenanceCodingAgentEvidenceRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E00020000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder.swift */; };
 		CE0E03070000000000000001 /* WorkProvenanceCompositeLinearAuthorizationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03070000000000000002 /* WorkProvenanceCompositeLinearAuthorizationProvider.swift */; };
 		CE0D100A0000000000000001 /* WorkProvenanceConfidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C26C989BEBFA4B46E0200B /* WorkProvenanceConfidence.swift */; };
@@ -3149,6 +3151,8 @@
 		A5001219 /* WindowToolbarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowToolbarController.swift; sourceTree = "<group>"; };
 		11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceChangeSetRecord.swift; sourceTree = "<group>"; };
 		0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceCheckpointRecord.swift; sourceTree = "<group>"; };
+		CE0E00030000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift"; sourceTree = "<group>"; };
+		CE0E00040000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Support.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceCodingAgentEvidenceRecorder+Support.swift"; sourceTree = "<group>"; };
 		CE0E00020000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceCodingAgentEvidenceRecorder.swift; sourceTree = "<group>"; };
 		CE0E03070000000000000002 /* WorkProvenanceCompositeLinearAuthorizationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceCompositeLinearAuthorizationProvider.swift; sourceTree = "<group>"; };
 		20C26C989BEBFA4B46E0200B /* WorkProvenanceConfidence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceConfidence.swift; sourceTree = "<group>"; };
@@ -5051,6 +5055,8 @@
 				C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */,
 				CE0E00010000000000000002 /* ExecutionTelemetryProvenanceProjectionService.swift */,
 				CE0E00020000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder.swift */,
+				CE0E00030000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift */,
+				CE0E00040000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Support.swift */,
 				B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */,
 				CE0E03100000000000000002 /* WorkProvenanceSettingsLinearAuthorizationProvider.swift */,
 				CE0E01050000000000000002 /* WorkspaceDisplayCurrentStateFileWatcher.swift */,
@@ -6411,6 +6417,8 @@
 				A5001209 /* WindowToolbarController.swift in Sources */,
 				70F48B3441FC810F8676C94F /* WorkProvenanceChangeSetRecord.swift in Sources */,
 				740D49C5400756EF2E733E31 /* WorkProvenanceCheckpointRecord.swift in Sources */,
+				CE0E00030000000000000001 /* WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift in Sources */,
+				CE0E00040000000000000001 /* WorkProvenanceCodingAgentEvidenceRecorder+Support.swift in Sources */,
 				CE0E00020000000000000001 /* WorkProvenanceCodingAgentEvidenceRecorder.swift in Sources */,
 				CE0E03070000000000000001 /* WorkProvenanceCompositeLinearAuthorizationProvider.swift in Sources */,
 				DC4C271089CB9AD62EDB2011 /* WorkProvenanceConfidence.swift in Sources */,
