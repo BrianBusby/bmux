@@ -14,25 +14,33 @@ final class ExecutionTelemetryProvenanceProjectionService {
 
     private let sessionListClient: AgentChatSessionListClient
     private let liveProjectionClient: ExecutionTelemetryLiveProjectionClient
+    private let eventClient: ExecutionTelemetryEventClient
     private let lifecycleRecorder: WorkProvenanceSessionLifecycleRecorder
+    private let codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder?
     private let pollInterval: Duration
     private var sidecarStatusHandler: (ExecutionTelemetryProjectionSidecarStatus) -> Void
     private var projectionTask: Task<Void, Never>?
     private var recordedLifecycleKeys: Set<String> = []
+    private var eventSequenceCursorBySessionID: [String: Int] = [:]
+    private var lastEvidenceErrorDescriptionBySessionID: [String: String] = [:]
 
     /// Creates a durable lifecycle projection service.
     init(
         agentChatURL: URL,
         lifecycleRecorder: WorkProvenanceSessionLifecycleRecorder,
+        codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder? = nil,
         sessionListClient: AgentChatSessionListClient? = nil,
         liveProjectionClient: ExecutionTelemetryLiveProjectionClient? = nil,
+        eventClient: ExecutionTelemetryEventClient? = nil,
         pollInterval: Duration = .seconds(5),
         sidecarStatusHandler: @escaping (ExecutionTelemetryProjectionSidecarStatus) -> Void = { _ in }
     ) {
         self.agentChatURL = agentChatURL
         self.lifecycleRecorder = lifecycleRecorder
+        self.codingAgentEvidenceRecorder = codingAgentEvidenceRecorder
         self.sessionListClient = sessionListClient ?? AgentChatSessionListClient(baseURL: agentChatURL)
         self.liveProjectionClient = liveProjectionClient ?? ExecutionTelemetryLiveProjectionClient(baseURL: agentChatURL)
+        self.eventClient = eventClient ?? ExecutionTelemetryEventClient(baseURL: agentChatURL)
         self.pollInterval = pollInterval
         self.sidecarStatusHandler = sidecarStatusHandler
     }
@@ -91,6 +99,11 @@ final class ExecutionTelemetryProvenanceProjectionService {
     }
 
     private func project(summary: AgentChatSessionSummary) async {
+        await projectLifecycle(summary: summary)
+        await projectEvidenceEvents(summary: summary)
+    }
+
+    private func projectLifecycle(summary: AgentChatSessionSummary) async {
         let payload: ExecutionTelemetryLiveProjectionReadPayload
         do {
             payload = try await liveProjectionClient.read(sessionID: summary.id)
@@ -116,6 +129,33 @@ final class ExecutionTelemetryProvenanceProjectionService {
             timestamp: Self.timestamp(summary: summary, snapshot: snapshot)
         )
         recordedLifecycleKeys.insert(key)
+    }
+
+    private func projectEvidenceEvents(summary: AgentChatSessionSummary) async {
+        guard let codingAgentEvidenceRecorder else { return }
+        let cursor = eventSequenceCursorBySessionID[summary.id] ?? 0
+        let payload: ExecutionTelemetryEventReadPayload
+        do {
+            payload = try await eventClient.read(sessionID: summary.id, afterSequence: cursor, limit: 200)
+        } catch {
+            return
+        }
+        guard payload.sessionID == summary.id else { return }
+        let events = payload.events.sorted { lhs, rhs in lhs.sequence < rhs.sequence }
+        for envelope in events where envelope.sequence > cursor {
+            do {
+                try await codingAgentEvidenceRecorder.record(summary: summary, envelope: envelope)
+                eventSequenceCursorBySessionID[summary.id] = envelope.sequence
+                lastEvidenceErrorDescriptionBySessionID[summary.id] = nil
+            } catch {
+                let description = String(describing: error)
+                if lastEvidenceErrorDescriptionBySessionID[summary.id] != description {
+                    NSLog("bmux provenance execution telemetry evidence recording failed: %@", description)
+                }
+                lastEvidenceErrorDescriptionBySessionID[summary.id] = description
+                return
+            }
+        }
     }
 
     private func lifecycleKey(

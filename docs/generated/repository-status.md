@@ -14,7 +14,7 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Workspace Display Durable Context and Reconciliation (`workspace_display_durable_context`)
+- Active slice: Richer Session Evidence Foundation (`richer_session_evidence_foundation`)
 - Slice state: implemented
 - Owner: Codex
 - Repository state: active
@@ -28,6 +28,7 @@ Repository: `BrianBusby/bmux`
 
 | Capability | State |
 | --- | --- |
+| Richer Session Evidence Foundation | implemented |
 | Richer Session Work View | planned |
 | Session Work Model Consumer | planned |
 | Workspace Display Current State Diagnostic | implemented |
@@ -44,7 +45,7 @@ Repository: `BrianBusby/bmux`
 | Automatic Checkpoint Scheduler | not implemented |
 | Claude Lifecycle Telemetry | implemented |
 | Codex Fanout | implemented |
-| Completed Unit Provenance Projection | planned |
+| Completed Unit Provenance Projection | implemented |
 | Diagnostic | implemented |
 | Lifecycle Producer | implemented |
 | Live Projection | implemented |

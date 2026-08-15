@@ -7,6 +7,7 @@ import {
   emitCodexDiagnostic,
   emitCodexMessageCompleted,
   emitCodexMessageDelta,
+  emitCodexPlanUpdated,
   emitCodexProviderSessionLinked,
   emitCodexToolCompleted,
   emitCodexToolStarted,
@@ -354,6 +355,7 @@ function handleServerMessage(srv: AppServer, msg: any) {
       st.currentTurnId = p.turn?.id;
       st.usageByTurnId.clear();
       resolveTurnWaiters(st, st.currentTurnId ?? null);
+      recordProviderTurnForGeneration(sess, st.activeGeneration, st.currentTurnId);
       emitCodexTurnStarted(sess, {
         providerSessionId: sess.internal.threadId as string | undefined,
         turnId: st.currentTurnId,
@@ -364,6 +366,21 @@ function handleServerMessage(srv: AppServer, msg: any) {
     case "thread/settings/updated":
       applyThreadSettings(sess, p.settings);
       break;
+    case "turn/plan/updated":
+    case "plan/updated":
+    case "item/plan/updated": {
+      const steps = normalizeCodexPlanSteps(p.plan ?? p.steps ?? p.update ?? p);
+      if (steps.length) {
+        emitCodexPlanUpdated(sess, {
+          providerSessionId: sess.internal.threadId as string | undefined,
+          turnId: typeof p.turnId === "string" ? p.turnId : st.currentTurnId,
+          method: msg.method,
+          explanation: codexPlanExplanation(p.plan ?? p.update ?? p),
+          steps,
+        });
+      }
+      break;
+    }
     case "skills/changed":
       refreshCommands(sess).catch(() => {});
       break;
@@ -447,6 +464,20 @@ function handleServerMessage(srv: AppServer, msg: any) {
       break;
     }
   }
+}
+
+function recordProviderTurnForGeneration(
+  sess: SessionCtx,
+  generation: number | undefined,
+  turnId: string | undefined,
+) {
+  if (!generation || !turnId) return;
+  let turnIds = sess.internal.providerTurnIdsByGeneration as Map<number, string> | undefined;
+  if (!turnIds) {
+    turnIds = new Map();
+    sess.internal.providerTurnIdsByGeneration = turnIds;
+  }
+  turnIds.set(generation, turnId);
 }
 
 function handleCodexSendFailure(sess: SessionCtx, err: unknown, method: string | undefined) {
@@ -694,6 +725,20 @@ function itemCompleted(sess: SessionCtx, item: any) {
       seen.delete(item.id);
       break;
     }
+    case "reasoning":
+    case "reasoningSummary": {
+      const text = visibleReasoningSummaryText(item);
+      if (text) {
+        emitCodexMessageCompleted(sess, {
+          providerSessionId: sess.internal.threadId as string | undefined,
+          turnId: st.currentTurnId,
+          itemId: typeof item.id === "string" ? item.id : undefined,
+          stream: "reasoning",
+          text,
+        });
+      }
+      break;
+    }
     case "commandExecution":
       emitCodexToolCompleted(sess, {
         ...common,
@@ -754,6 +799,58 @@ function codexCommandToolStatus(item: any): TelemetryToolStatus {
 
 function codexLegacyOkStatus(ok: boolean): TelemetryToolStatus {
   return ok ? "succeeded" : "failed";
+}
+
+function normalizeCodexPlanSteps(value: unknown): { text: string; status: string }[] {
+  const source = Array.isArray(value)
+    ? value
+    : value && typeof value === "object" && Array.isArray((value as Record<string, unknown>).steps)
+      ? (value as Record<string, unknown>).steps as unknown[]
+      : [];
+  const steps: { text: string; status: string }[] = [];
+  for (const [index, step] of source.entries()) {
+    if (!step || typeof step !== "object") continue;
+    const raw = step as Record<string, unknown>;
+    const text = stringValue(raw.text) ?? stringValue(raw.step) ?? stringValue(raw.description) ?? stringValue(raw.title);
+    if (!text) continue;
+    const status = stringValue(raw.status) ?? stringValue(raw.state) ?? "unknown";
+    steps.push({ text: truncate(text, 400), status: truncate(status || `step-${index}`, 80) });
+  }
+  return steps;
+}
+
+function codexPlanExplanation(value: unknown): string | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const raw = value as Record<string, unknown>;
+  return stringValue(raw.explanation) ?? stringValue(raw.summary) ?? stringValue(raw.note);
+}
+
+function visibleReasoningSummaryText(item: Record<string, unknown>): string | undefined {
+  const direct = stringValue(item.summaryText) ?? stringValue(item.summary);
+  if (direct) return truncate(direct, 4000);
+  const summary = item.summary;
+  if (Array.isArray(summary)) {
+    const text = summary.map(visibleSummaryPartText).filter(Boolean).join("\n").trim();
+    if (text) return truncate(text, 4000);
+  }
+  if (item.type === "reasoningSummary") {
+    const text = stringValue(item.text);
+    if (text) return truncate(text, 4000);
+  }
+  return undefined;
+}
+
+function visibleSummaryPartText(part: unknown): string | undefined {
+  if (typeof part === "string") return part;
+  if (!part || typeof part !== "object") return undefined;
+  const raw = part as Record<string, unknown>;
+  return stringValue(raw.text) ?? stringValue(raw.summaryText) ?? stringValue(raw.summary);
+}
+
+function stringValue(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
 }
 
 function summarizeChanges(item: any): string {

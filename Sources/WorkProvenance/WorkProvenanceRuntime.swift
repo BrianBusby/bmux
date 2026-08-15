@@ -11,6 +11,7 @@ final class WorkProvenanceRuntime {
     private let workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore?
     private let workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
+    private let codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder?
     private var directoryObservationTask: Task<Void, Never>?
     private var titleObservationTask: Task<Void, Never>?
     private var displayMetadataObservationTask: Task<Void, Never>?
@@ -32,6 +33,7 @@ final class WorkProvenanceRuntime {
         workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore? = nil,
         workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription? = nil,
         sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil,
+        codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder? = nil,
         effectiveDatabaseURL: URL? = nil,
         startupErrorDescription: String? = nil
     ) {
@@ -39,6 +41,7 @@ final class WorkProvenanceRuntime {
         self.workspaceDisplayCurrentStateStore = workspaceDisplayCurrentStateStore
         self.workspaceDisplayCurrentStateSubscription = workspaceDisplayCurrentStateSubscription
         self.sessionLifecycleRecorder = sessionLifecycleRecorder
+        self.codingAgentEvidenceRecorder = codingAgentEvidenceRecorder
         self.effectiveDatabaseURL = effectiveDatabaseURL
         self.startupErrorDescription = startupErrorDescription
         self.isEnabled = observationService != nil
@@ -74,6 +77,9 @@ final class WorkProvenanceRuntime {
                     databaseURL: location.databaseURL
                 ),
                 sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder(
+                    client: client
+                ),
+                codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder(
                     client: client
                 ),
                 effectiveDatabaseURL: location.databaseURL
@@ -118,6 +124,7 @@ final class WorkProvenanceRuntime {
         let service = ExecutionTelemetryProvenanceProjectionService(
             agentChatURL: agentChatURL,
             lifecycleRecorder: sessionLifecycleRecorder,
+            codingAgentEvidenceRecorder: codingAgentEvidenceRecorder,
             sidecarStatusHandler: sidecarStatusHandler
         )
         executionTelemetryProjectionService = service

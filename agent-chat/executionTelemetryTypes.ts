@@ -64,6 +64,7 @@ export interface TelemetryPublishProjectionOptions {
   doneGeneration?: number;
   doneStats?: string;
   providerLinkedModel?: string;
+  skipAgentEventProjection?: boolean;
 }
 
 export type TelemetryOptionValue = string | boolean;
@@ -75,6 +76,7 @@ export type TelemetryEvent =
   | TelemetryTurnStarted
   | TelemetryTurnCompleted
   | TelemetryTurnFailed
+  | TelemetryPlanUpdated
   | TelemetryMessageDelta
   | TelemetryMessageCompleted
   | TelemetryToolStarted
@@ -122,6 +124,17 @@ export interface TelemetryTurnFailed {
   turnId?: TelemetryProviderTurnId;
   durationMs?: number;
   error: TelemetryErrorInfo;
+}
+
+export interface TelemetryPlanStep {
+  text: string;
+  status: string;
+}
+
+export interface TelemetryPlanUpdated {
+  type: "plan.updated";
+  explanation?: string;
+  steps: TelemetryPlanStep[];
 }
 
 export type TelemetryMessageStream = "assistant" | "reasoning";

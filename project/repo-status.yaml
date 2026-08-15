@@ -3,8 +3,8 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: workspace_display_durable_context
-    title: Workspace Display Durable Context and Reconciliation
+    id: richer_session_evidence_foundation
+    title: Richer Session Evidence Foundation
     state: implemented
     owner: Codex
   state: active
@@ -18,9 +18,10 @@ execution_telemetry:
   lifecycle_producer: implemented
   claude_lifecycle_telemetry: implemented
   automatic_checkpoint_scheduler: not_implemented
-  completed_unit_provenance_projection: planned
+  completed_unit_provenance_projection: implemented
 
 local_capabilities:
+  richer_session_evidence_foundation: implemented
   workspace_display_projection: implemented
   workspace_display_current_state_diagnostic: implemented
   workspace_display_ticket_link_facts: implemented

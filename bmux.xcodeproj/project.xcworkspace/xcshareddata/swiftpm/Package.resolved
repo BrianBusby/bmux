@@ -42,7 +42,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/BrianBusby/provenance-engine.git",
       "state" : {
-        "revision" : "aa160b7fb545328a7aa8713562574e30974e3b2b"
+        "revision" : "9e69452a2ec22ead8dcbb2ef5d2a3c63f4464096"
       }
     },
     {

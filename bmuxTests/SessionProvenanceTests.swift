@@ -215,6 +215,94 @@ final class SessionProvenanceTests: XCTestCase {
         XCTAssertEqual(statuses, [.available(agentChatURL: agentChatURL)])
     }
 
+    @MainActor
+    func testExecutionTelemetryProjectionRecordsStructuredCodexEvidence() async throws {
+        let agentChatURL = URL(string: "http://127.0.0.1:7739")!
+        let sessionsData = Data("""
+        [
+          {"id":"session-sidecar","provider":"codex","cwd":"/repo","status":"idle","createdAt":1725000000000}
+        ]
+        """.utf8)
+        let liveProjectionData = Data("""
+        {"sessionId":"session-sidecar","snapshot":null}
+        """.utf8)
+        let eventsData = Data("""
+        {
+          "sessionId": "session-sidecar",
+          "latestSequence": 9,
+          "events": [
+            {"schema":"execution.telemetry.v1","eventId":"evt-thread","sessionId":"session-sidecar","sequence":1,"capturedAtMs":1725000000000,"source":"provider","provider":"codex","providerSessionId":"thread-1","providerEvent":{"method":"thread/start"},"event":{"type":"session.provider-linked","providerSessionId":"thread-1"}},
+            {"schema":"execution.telemetry.v1","eventId":"evt-prompt","sessionId":"session-sidecar","sequence":2,"capturedAtMs":1725000001000,"source":"sidecar","provider":"codex","providerSessionId":"thread-1","event":{"type":"prompt.submitted","text":"Implement durable evidence"}},
+            {"schema":"execution.telemetry.v1","eventId":"evt-turn","sessionId":"session-sidecar","sequence":3,"capturedAtMs":1725000002000,"source":"provider","provider":"codex","providerSessionId":"thread-1","providerTurnId":"turn-1","providerEvent":{"method":"turn/started","turnId":"turn-1"},"event":{"type":"turn.started","turnId":"turn-1","model":"gpt-5","effort":"medium"}},
+            {"schema":"execution.telemetry.v1","eventId":"evt-plan","sessionId":"session-sidecar","sequence":4,"capturedAtMs":1725000003000,"source":"provider","provider":"codex","providerSessionId":"thread-1","providerTurnId":"turn-1","event":{"type":"plan.updated","explanation":"Working plan","steps":[{"text":"Audit","status":"completed"},{"text":"Implement","status":"in_progress"}]}},
+            {"schema":"execution.telemetry.v1","eventId":"evt-reason","sessionId":"session-sidecar","sequence":5,"capturedAtMs":1725000004000,"source":"provider","provider":"codex","providerSessionId":"thread-1","providerTurnId":"turn-1","event":{"type":"message.completed","stream":"reasoning","itemId":"reason-1","text":"Visible summary only"}},
+            {"schema":"execution.telemetry.v1","eventId":"evt-tool-start","sessionId":"session-sidecar","sequence":6,"capturedAtMs":1725000005000,"source":"provider","provider":"codex","providerSessionId":"thread-1","providerTurnId":"turn-1","event":{"type":"tool.started","operationId":"tool-1","toolKind":"command","name":"shell","inputSummary":"swift test","cwd":"/repo","startedAtMs":1725000005000}},
+            {"schema":"execution.telemetry.v1","eventId":"evt-tool-end","sessionId":"session-sidecar","sequence":7,"capturedAtMs":1725000006000,"source":"provider","provider":"codex","providerSessionId":"thread-1","providerTurnId":"turn-1","event":{"type":"tool.completed","operationId":"tool-1","toolKind":"command","name":"shell","status":"succeeded","outputSummary":"not persisted","exitCode":0,"completedAtMs":1725000006000}},
+            {"schema":"execution.telemetry.v1","eventId":"evt-files","sessionId":"session-sidecar","sequence":8,"capturedAtMs":1725000007000,"source":"git-observer","provider":"codex","providerSessionId":"thread-1","providerTurnId":"turn-1","event":{"type":"files.changed","source":"git-observer","files":[{"path":"Sources/App.swift","status":"modified","summary":"modified Sources/App.swift"}]}},
+            {"schema":"execution.telemetry.v1","eventId":"evt-turn-done","sessionId":"session-sidecar","sequence":9,"capturedAtMs":1725000008000,"source":"provider","provider":"codex","providerSessionId":"thread-1","providerTurnId":"turn-1","event":{"type":"turn.completed","turnId":"turn-1","durationMs":8000}}
+          ]
+        }
+        """.utf8)
+        let client = CapturingProvenanceEngineClient()
+        let recorder = WorkProvenanceCodingAgentEvidenceRecorder(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [
+                "/repo": WorkProvenanceGitSnapshot(
+                    repositoryRoot: "/repo",
+                    commonDirectory: "/repo/.git",
+                    remoteSlug: "manaflow-ai/bmux",
+                    branch: "richer-session-evidence-foundation",
+                    headCommit: "abc123",
+                    isDirty: true
+                )
+            ])
+        )
+        let service = ExecutionTelemetryProvenanceProjectionService(
+            agentChatURL: agentChatURL,
+            lifecycleRecorder: WorkProvenanceSessionLifecycleRecorder(client: client),
+            codingAgentEvidenceRecorder: recorder,
+            sessionListClient: AgentChatSessionListClient(
+                baseURL: agentChatURL,
+                loader: FixtureAgentChatHTTPLoader(result: .success(AgentChatHTTPResponse(data: sessionsData, statusCode: 200)))
+            ),
+            liveProjectionClient: ExecutionTelemetryLiveProjectionClient(
+                baseURL: agentChatURL,
+                loader: FixtureAgentChatHTTPLoader(result: .success(AgentChatHTTPResponse(data: liveProjectionData, statusCode: 200)))
+            ),
+            eventClient: ExecutionTelemetryEventClient(
+                baseURL: agentChatURL,
+                loader: FixtureAgentChatHTTPLoader(result: .success(AgentChatHTTPResponse(data: eventsData, statusCode: 200)))
+            )
+        )
+
+        await service.projectKnownSessions()
+
+        let requests = await client.appendedEventRequests
+        XCTAssertEqual(requests.map(\.event.eventType), [
+            .codingAgentThreadObserved,
+            .codingAgentTurnObserved,
+            .codingAgentPromptSubmitted,
+            .codingAgentPlanUpdated,
+            .codingAgentReasoningSummaryCompleted,
+            .codingAgentCommandCompleted,
+            .codingAgentFileChangeAttributed,
+            .codingAgentTurnObserved,
+        ])
+        let prompt = try XCTUnwrap(requests.first { $0.event.eventType == .codingAgentPromptSubmitted }?.event.payload.codingAgentPrompt)
+        let plan = try XCTUnwrap(requests.first { $0.event.eventType == .codingAgentPlanUpdated }?.event.payload.codingAgentPlanUpdate)
+        let command = try XCTUnwrap(requests.first { $0.event.eventType == .codingAgentCommandCompleted }?.event.payload.codingAgentCommand)
+        let fileAttribution = try XCTUnwrap(requests.first { $0.event.eventType == .codingAgentFileChangeAttributed }?.event.payload.codingAgentFileChangeAttribution)
+        XCTAssertEqual(prompt.provider, "codex")
+        XCTAssertEqual(prompt.text, "Implement durable evidence")
+        XCTAssertEqual(prompt.turnID, command.turnID)
+        XCTAssertEqual(plan.steps.map(\.status), ["completed", "in_progress"])
+        XCTAssertEqual(command.cwd, "/repo")
+        XCTAssertEqual(command.exitCode, 0)
+        XCTAssertNil(command.outputSummary)
+        XCTAssertEqual(fileAttribution.paths, ["Sources/App.swift"])
+        XCTAssertEqual(fileAttribution.turnID, command.turnID)
+    }
+
     private struct FakeGitInspector: WorkProvenanceGitInspecting {
         let snapshotsByDirectory: [String: WorkProvenanceGitSnapshot]
 
@@ -239,6 +327,7 @@ private struct FixtureAgentChatHTTPLoader: AgentChatHTTPLoading {
 
 private actor CapturingProvenanceEngineClient: ProvenanceEngineContracts.ProvenanceEngineClient {
     private(set) var recordedLifecycleRequests: [ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest] = []
+    private(set) var appendedEventRequests: [ProvenanceEngineContracts.ProvenanceAppendEventRequest] = []
     private let lifecycleResponse: ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse
 
     init(
@@ -258,7 +347,8 @@ private actor CapturingProvenanceEngineClient: ProvenanceEngineContracts.Provena
     }
 
     func appendEvent(_ request: ProvenanceEngineContracts.ProvenanceAppendEventRequest) async throws -> ProvenanceEngineContracts.ProvenanceAppendEventResponse {
-        throw TestError.unimplemented
+        appendedEventRequests.append(request)
+        return ProvenanceEngineContracts.ProvenanceAppendEventResponse(eventID: request.event.id, eventType: request.event.eventType.rawValue)
     }
 
     func recordSessionLifecycle(

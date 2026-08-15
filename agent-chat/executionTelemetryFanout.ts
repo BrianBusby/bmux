@@ -48,7 +48,9 @@ export class ExecutionTelemetryFanout {
   publish(draft: TelemetryEventEnvelopeDraft, projection?: TelemetryPublishProjectionOptions): TelemetryEventEnvelope {
     const envelope = this.assignEnvelope(draft);
     for (const subscriber of this.subscribers) subscriber(envelope);
-    for (const event of projectTelemetryEnvelopeToAgentEvents(envelope, projection)) this.emitAgentEvent(event);
+    if (!projection?.skipAgentEventProjection) {
+      for (const event of projectTelemetryEnvelopeToAgentEvents(envelope, projection)) this.emitAgentEvent(event);
+    }
     return envelope;
   }
 
@@ -93,6 +95,8 @@ export function projectTelemetryEnvelopeToAgentEvents(
         { kind: "error", message: event.error.message },
         withDoneGeneration({ kind: "done", stats: projection?.doneStats }, projection),
       ];
+    case "plan.updated":
+      return [];
     case "message.delta":
       return [{ kind: event.stream === "reasoning" ? "thinking" : "delta", text: event.text }];
     case "message.completed":

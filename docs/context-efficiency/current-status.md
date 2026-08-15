@@ -42,24 +42,27 @@ streams and deltas stay live/ephemeral in bmux, while selected completed or
 meaningful evidence units may become durable PE evidence once explicit
 contracts, retention policy, and privacy review exist.
 
-Workspace Display Durable Context and Reconciliation is the latest implemented
-slice. PE workspace-display Current State now reduces accepted evidence field by
-field: missing observations preserve known facts, explicit clears are represented
-as evidence, and field-level metadata records source/origin/event/freshness.
-bmux remains the observer/refresh owner and renders the built-in workspace row
-from PE Current State once the relevant fact is populated.
+Richer Session Evidence Foundation is the latest implemented slice. bmux now
+forwards selected completed Codex evidence units through the existing
+provider-neutral execution telemetry path to Provenance Engine public append
+contracts. PE records provider thread/turn identity, submitted prompt, plan
+updates, completed command facts, visible reasoning summaries, and file-change
+attribution as durable observable evidence below the semantic layer.
 
 Next planning target: PE owns the future `SessionWorkModel` projection for one
 coding-agent session. bmux should consume that revisioned authoritative snapshot
 for human-readable live work views and should not build a parallel semantic
-milestone/architecture model. Current implemented behavior remains the lower-
-level V1 PE contract set.
+milestone/architecture model. Current implemented behavior remains lower-level
+evidence modeling and deterministic projection; SessionWorkModel, inference,
+milestone synthesis, and architecture projection are not implemented.
 
 Verification for this slice:
 
 - PE: `swift test`
 - PE docs: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
-- bmux focused test: `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -destination 'platform=macOS' -derivedDataPath /tmp/bmux-workspace-display-durable-context-tests -only-testing:bmuxTests/WorkProvenanceObserverTests COMPILER_INDEX_STORE_ENABLE=NO`
+- bmux sidecar test: `cd agent-chat && bun test/codex-telemetry-migration.test.ts`
+- bmux Swift package test: `cd Packages/Shared/BmuxAgentChat && swift test --filter executionTelemetryEventClientReadsBoundedCursorEndpoint`
+- bmux focused test: `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -destination 'platform=macOS,arch=arm64' -derivedDataPath /tmp/bmux-richer-session-evidence-foundation -only-testing:bmuxTests/SessionProvenanceTests`
 - bmux docs: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
 
 Known local quirk: the normal Xcode app build script can fail while building the
@@ -67,6 +70,10 @@ Ghostty CLI helper with Zig unresolved macOS symbols on this machine. The focuse
 test used the repo-supported `BMUX_SKIP_ZIG_BUILD=1` stub path. A production
 tagged reload still needs a successful non-stub helper build or the local Zig
 toolchain issue resolved.
+Additional local quirk: `cd agent-chat && bun x tsc --noEmit` currently fails
+on `adapters/lines.ts` because `ReadableStream<Uint8Array<ArrayBufferLike>>`
+lacks an async iterator in the active TypeScript library environment. The
+focused Codex telemetry test still passes.
 
 ## Current Handoffs
 

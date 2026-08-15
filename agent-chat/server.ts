@@ -13,6 +13,7 @@ import type {
 } from "./types";
 import { ExecutionTelemetryFanout } from "./executionTelemetryFanout";
 import { liveSessionProjectionPayload, LiveSessionProjectionStore } from "./executionTelemetryLiveProjection";
+import type { TelemetryEventEnvelope } from "./executionTelemetryTypes";
 import { claudeAdapter } from "./adapters/claude";
 import { codexAdapter } from "./adapters/codex";
 import { emitCodexPromptSubmitted } from "./adapters/codexTelemetry";
@@ -64,6 +65,8 @@ const FILES_TTL_MS = 30_000;
 const FILES_LIMIT = 5_000;
 const FILE_DIFF_ALLOWLIST_LIMIT = 5_000;
 const MAX_SESSION_EVENTS = 5_000;
+const MAX_SESSION_TELEMETRY_EVENTS = 2_000;
+const MAX_TELEMETRY_EVENT_READ_LIMIT = 500;
 const GIT_TIMEOUT_MS = 10_000;
 const DONE_FILES_TIMEOUT_MS = 2_000;
 const TURN_BASELINE_TIMEOUT_MS = 3_000;
@@ -106,6 +109,7 @@ interface Session extends SessionCtx {
   adapter: Adapter;
   telemetry: ExecutionTelemetryFanout;
   liveProjection: LiveSessionProjectionStore;
+  telemetryEvents: TelemetryEventEnvelope[];
   sockets: Set<Bun.ServerWebSocket<WsData>>;
   createdAt: number;
 }
@@ -232,6 +236,7 @@ function createSession(
     adapter,
     telemetry,
     liveProjection,
+    telemetryEvents: [],
     sockets: new Set(),
     createdAt: Date.now(),
     emit(evt: AgentEvent) {
@@ -263,6 +268,10 @@ function createSession(
       broadcastSessions();
     },
   };
+  telemetry.subscribe((envelope) => {
+    sess.telemetryEvents.push(envelope);
+    capSessionTelemetryEvents(sess);
+  });
   sessions.set(id, sess);
   broadcastSessions();
   return sess;
@@ -304,6 +313,29 @@ function capSessionEvents(sess: Session) {
       generations.unshift(generations[0] ?? 0);
     }
   }
+}
+
+function capSessionTelemetryEvents(sess: Session) {
+  if (sess.telemetryEvents.length <= MAX_SESSION_TELEMETRY_EVENTS) return;
+  sess.telemetryEvents.splice(0, sess.telemetryEvents.length - MAX_SESSION_TELEMETRY_EVENTS);
+}
+
+function telemetryEventsReadPayload(sess: Session, afterSequence: number, limit: number) {
+  const boundedLimit = Math.max(0, Math.min(limit, MAX_TELEMETRY_EVENT_READ_LIMIT));
+  const events = sess.telemetryEvents
+    .filter((event) => event.sequence > afterSequence)
+    .slice(0, boundedLimit);
+  return {
+    sessionId: sess.id,
+    latestSequence: sess.telemetryEvents.at(-1)?.sequence ?? 0,
+    events,
+  };
+}
+
+function positiveIntegerParam(value: string | null, fallback: number): number {
+  if (value === null) return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
 }
 
 function broadcastSessionEvent(sess: Session, evt: AgentEvent) {
@@ -354,6 +386,8 @@ function finishAttributionTurn(sess: Session, generation: number) {
   const generations = activeAttributionGenerations(sess);
   const index = generations.indexOf(generation);
   if (index >= 0) generations.splice(index, 1);
+  const providerTurnIds = sess.internal.providerTurnIdsByGeneration as Map<number, string> | undefined;
+  providerTurnIds?.delete(generation);
   syncActiveAttributionGeneration(sess);
 }
 
@@ -401,6 +435,7 @@ function emitDoneAfterFiles(sess: Session, evt: InternalDoneEvent) {
     });
     finalEvents.push(...fileEvents);
     finalEvents.push(publicEvt);
+    for (const fileEvent of fileEvents) emitFilesChangedTelemetry(sess, fileEvent, generation);
     const oldLength = sess.events.length;
     const result = insertDeferredTurnEvents(sess.events, eventGenerations(sess), generation, finalEvents);
     if (result.dropped) return;
@@ -421,6 +456,32 @@ function emitDoneAfterFiles(sess: Session, evt: InternalDoneEvent) {
     if (sess.internal.pendingDoneGeneration === generation) delete sess.internal.pendingDoneGeneration;
     if (sess.internal.filesAttributionRunning === pending) delete sess.internal.filesAttributionRunning;
   });
+}
+
+function emitFilesChangedTelemetry(sess: Session, evt: AgentEvent, generation: number) {
+  if (evt.kind !== "files-changed") return;
+  const providerTurnIds = sess.internal.providerTurnIdsByGeneration as Map<number, string> | undefined;
+  const providerTurnId = providerTurnIds?.get(generation);
+  const providerSessionId = typeof sess.internal.threadId === "string" ? sess.internal.threadId : undefined;
+  sess.emitTelemetry({
+    source: "git-observer",
+    providerSessionId,
+    providerTurnId,
+    providerEvent: {
+      method: "git/files-changed",
+      turnId: providerTurnId,
+    },
+    event: {
+      type: "files.changed",
+      source: "git-observer",
+      files: evt.files.map((file) => ({
+        path: file.path,
+        status: file.status,
+        additions: file.adds,
+        deletions: file.dels,
+      })),
+    },
+  }, { skipAgentEventProjection: true });
 }
 
 function sendPrompt(sess: Session, prompt: string) {
@@ -1476,6 +1537,16 @@ function startServer() {
       const sess = sessions.get(decodeURIComponent(liveProjectionMatch[1]));
       if (!sess) return Response.json({ error: "no session" }, { status: 404 });
       return Response.json(liveSessionProjectionPayload(sess.id, sess.liveProjection));
+    }
+    const telemetryEventsMatch = url.pathname.match(/^\/api\/sessions\/([^/]+)\/execution-telemetry\/events$/);
+    if (telemetryEventsMatch && req.method === "GET") {
+      const sess = sessions.get(decodeURIComponent(telemetryEventsMatch[1]));
+      if (!sess) return Response.json({ error: "no session" }, { status: 404 });
+      return Response.json(telemetryEventsReadPayload(
+        sess,
+        positiveIntegerParam(url.searchParams.get("afterSequence"), 0),
+        positiveIntegerParam(url.searchParams.get("limit"), 200),
+      ));
     }
     return new Response(renderPage(url), { headers: { "content-type": "text/html; charset=utf-8" } });
     },

@@ -182,6 +182,8 @@ bmux records observable activity through public engine writes:
 
 - Agent lifecycle changes are normalized into `ProvenanceSessionLifecycleRequest` and sent through `client.recordSessionLifecycle(...)`.
 - Git/worktree observations are normalized into immutable `ProvenanceEvent` values and sent through `client.appendEvent(...)`.
+- Selected structured Codex execution-telemetry facts are normalized into typed
+  coding-agent evidence records and sent through `client.appendEvent(...)`.
 
 bmux producer responsibilities are limited to observing engineering activity, assigning stable producer identities when available, recording observable or declared facts, and retaining best-effort error state for diagnostics. bmux must not compute deterministic Current State or reinterpret evidence already owned by the engine.
 
@@ -189,33 +191,34 @@ Captured workflows today:
 
 - Worktree observation records Git repository/worktree/change-set/file-change evidence for bmux workspaces whose current directory is inside a Git repository.
 - Agent lifecycle recording records hook-derived Codex/Claude-style subagent lifecycle through `ProvenanceSessionLifecycleRequest`.
-- Supported live sidecar execution telemetry sessions record only broad
-  session/provider/lifecycle presence through the same public lifecycle
-  recorder, with cwd used only to derive a worktree id when possible.
+- Supported live sidecar execution telemetry sessions record broad
+  session/provider/lifecycle presence through the public lifecycle recorder,
+  with cwd used only to derive a worktree id when possible.
+- Codex sidecar telemetry records provider thread identity, provider turn
+  lifecycle, submitted prompt text, provider plan updates, completed command
+  facts, completed visible reasoning summaries, and file-change attribution
+  through typed PE coding-agent evidence payloads.
 
 Not every agent UI action implies a recorded session. Opening an agent-session surface alone creates UI state; durable lifecycle evidence is recorded when supported hooks/feed events reach bmux. Engine durability covers accepted events after they reach the SDK; producer delivery reliability remains bmux-owned.
 
 The engine does not ingest or own the full execution telemetry stream. Raw
-provider envelopes, streaming deltas, unrestricted message text, unrestricted
-command output, token-update streams, diagnostics scheduling, UI, and analytics
-remain bmux-owned unless a later policy slice explicitly changes that boundary.
+provider envelopes, streaming deltas, unrestricted assistant transcript text,
+raw reasoning deltas, hidden chain-of-thought, unrestricted command output,
+token-update streams, diagnostics scheduling, UI, and analytics remain bmux-
+owned unless a later policy slice explicitly changes that boundary.
 
 The accepted target direction is more precise than the older shorthand that
-"execution telemetry remains bmux-owned." bmux should continue to own provider
-acquisition, live interaction, approvals, ephemeral state, and rendering, but it
-should forward selected completed or meaningful evidence units to Provenance
-Engine once explicit contracts exist. Candidate units include Codex thread
-identity, turn identity/lifecycle, user prompt facts, plan updates, completed
-reasoning summaries when exposed as supported summaries, completed command facts
-with cwd/status/result metadata, completed file-change or diff units, approval
-state when it materially affects risk or write behavior, validation results,
-errors, and compaction events.
+"execution telemetry remains bmux-owned." bmux owns provider acquisition, live
+interaction, approvals, ephemeral state, and rendering. PE owns accepted durable
+evidence and deterministic projections for selected completed or meaningful
+units once explicit contracts exist.
 
-Those future durable units must preserve source identity where available and
-relate to existing PE session, worktree, contribution, change-set, file-change,
-and validation models where possible. Streaming deltas must remain live bmux
-state by default, and model-derived milestone, intent, or architecture meaning
-must not be written into deterministic PE Current State.
+Implemented durable Codex units preserve source identity where available and
+relate to existing PE session, repository, worktree, change-set, and file-change
+models where bmux can establish those relationships. Approval, validation,
+error, and compaction evidence remain unimplemented. Model-derived milestone,
+intent, current-activity, or architecture meaning must not be written into
+deterministic PE Current State.
 
 ## Future SessionWorkModel Consumer Direction
 
