@@ -92,18 +92,18 @@ struct WriteSideProducerSDKTests {
     }
 
     @Test
-    func sqliteClientReadsFactualSessionWorkModelThroughPublicContract() async throws {
+    func sqliteClientReadsFactualSessionProjectionThroughPublicContract() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
         let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
-        let fixture = SessionWorkModelSDKFixture()
+        let fixture = FactualSessionProjectionSDKFixture()
 
         for event in fixture.events {
             _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: event))
         }
 
-        let response = try await client.sessionWorkModel(
-            ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id)
+        let response = try await client.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id)
         )
         let snapshot = try #require(response.snapshot)
         let turn = try #require(snapshot.turns.first)
@@ -124,16 +124,16 @@ struct WriteSideProducerSDKTests {
     }
 
     @Test
-    func sqliteClientReturnsNoSessionForUnknownSessionWorkModel() async throws {
+    func sqliteClientReturnsNoSessionForUnknownFactualSessionProjection() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
         let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
 
-        let response = try await client.sessionWorkModel(
-            ProvenanceSessionWorkModelRequest(sessionID: "session-missing")
+        let response = try await client.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: "session-missing")
         )
 
-        #expect(response == ProvenanceSessionWorkModelResponse(
+        #expect(response == ProvenanceFactualSessionProjectionResponse(
             found: false,
             reason: "no_session",
             sessionID: "session-missing",
@@ -560,7 +560,7 @@ private struct GenericProducerFixture {
     }
 }
 
-private struct SessionWorkModelSDKFixture {
+private struct FactualSessionProjectionSDKFixture {
     let session: ProvenanceSessionRecord
     let thread: ProvenanceCodingAgentThreadRecord
     let projectedTurn: ProvenanceCodingAgentTurnRecord
@@ -640,7 +640,7 @@ private struct SessionWorkModelSDKFixture {
             threadID: thread.id,
             turnID: startedTurn.id,
             provider: "codex",
-            text: "Build the factual SessionWorkModel snapshot.",
+            text: "Build the factual session projection snapshot.",
             submittedAt: timestamp.addingTimeInterval(3),
             source: .observed,
             confidence: .high
@@ -721,7 +721,7 @@ private struct SessionWorkModelSDKFixture {
             provider: "codex",
             operationID: "file-change-work-model-1",
             fileChangeIDs: ["file-change-work-model-1"],
-            paths: ["Sources/ProvenanceEngineContracts/ProvenanceSessionWorkModelSnapshot.swift"],
+            paths: ["Sources/ProvenanceEngineContracts/ProvenanceFactualSessionProjectionSnapshot.swift"],
             summary: "Added the factual snapshot contract.",
             observedAt: timestamp.addingTimeInterval(7),
             source: .observed,

@@ -101,31 +101,34 @@ Each request limit is an independent engine row budget for its matching response
 
 Response guarantees: `schemaVersion == 1` for the current V1 shape; arrays are always present; linked records are optional where producers may have appended partial or unattributed evidence; no SQLite table names, row identifiers, SQL predicates, terminal rendering, JSON payload compatibility, fallback strings, or CLI errors are part of the public contract. Consumers must not read `provenance_worktrees`, `provenance_repositories`, `provenance_sessions`, `provenance_work_contributions`, `provenance_work_items`, `provenance_file_changes`, `provenance_change_sets`, `provenance_checkpoints`, or `provenance_validation_runs` directly for current context.
 
-The accepted factual session-work read contract is:
+The accepted factual session-projection read contract is:
 
-- Request: `ProvenanceSessionWorkModelRequest(sessionID:turnLimit:)`.
-- Response: `ProvenanceSessionWorkModelResponse`.
-- Snapshot DTO: `ProvenanceSessionWorkModelSnapshot`.
-- Turn DTO: `ProvenanceSessionWorkModelTurnSnapshot`.
+- Request: `ProvenanceFactualSessionProjectionRequest(sessionID:turnLimit:)`.
+- Response: `ProvenanceFactualSessionProjectionResponse`.
+- Snapshot DTO: `ProvenanceFactualSessionProjectionSnapshot`.
+- Turn DTO: `ProvenanceFactualSessionProjectionTurnSnapshot`.
+- Client method: `ProvenanceEngineClient.factualSessionProjection(...)`.
+- Capability: `query_factual_session_projection`.
 
-This first `SessionWorkModel` contract is a revisioned factual snapshot for one
-PE session. It groups observed coding-agent evidence into provider thread and
-turn structure: session identity, provider thread identity, turns, latest
-submitted prompt per turn, latest/current plan per turn, completed commands,
-visible reasoning summaries, and file-change attributions. The snapshot
-revision is derived from the newest accepted ledger sequence for the requested
-session and is intended for consumer reconciliation by re-fetch.
+This contract is a revisioned factual Current State snapshot for one PE
+session. It groups observed coding-agent evidence into provider thread and turn
+structure: session identity, provider thread identity, turns, latest submitted
+prompt per turn, latest/current plan per turn, completed commands, visible
+reasoning summaries, and file-change attributions. The snapshot revision is
+derived from the newest accepted ledger sequence for the requested session and
+is intended for consumer reconciliation by re-fetch.
 
-This read remains deterministic Current State over accepted evidence. Unknown
-relationships stay absent rather than guessed. It does not infer thread intent,
-turn intent, milestone hierarchy, current activity, validation/risk state,
-architecture, Knowledge Compiler artifacts, GitHub evidence, or semantic
-meaning from prompts, plans, commands, or file paths.
+This read remains below `SessionWorkModel`: it is deterministic Current State
+over accepted evidence. Unknown relationships stay absent rather than guessed.
+It does not infer thread intent, turn intent, milestone hierarchy, current
+activity, validation/risk state, architecture, Knowledge Compiler artifacts,
+GitHub evidence, or semantic meaning from prompts, plans, commands, or file
+paths.
 
 The accepted richer-session evidence write contract is append-only and
-lower-level than `SessionWorkModel`. Producers append `ProvenanceEvent` values
-through `ProvenanceEngineClient.appendEvent(...)` using these event types and
-payload records:
+lower-level than the factual session projection. Producers append
+`ProvenanceEvent` values through `ProvenanceEngineClient.appendEvent(...)`
+using these event types and payload records:
 
 - `.codingAgentThreadObserved` with `ProvenanceCodingAgentThreadRecord`
 - `.codingAgentTurnObserved` with `ProvenanceCodingAgentTurnRecord`
@@ -214,10 +217,10 @@ evidence to existing session, worktree, change-set, file-change, and validation
 records where possible, and keep semantic inference separate from deterministic
 Current State.
 
-The planned high-level projection is named `SessionWorkModel` in the target
-design. It should sit above lower-level contracts such as `currentContext`,
-`sessionTree`, `fileExplanation`, and `workspaceDisplay`; it should not replace
-them wholesale.
+The planned high-level semantic projection is named `SessionWorkModel` in the
+target design. It should sit above lower-level contracts such as
+`currentContext`, `sessionTree`, `fileExplanation`, `workspaceDisplay`, and
+`factualSessionProjection`; it should not replace them wholesale.
 
 Rollback should be a scoped Git revert in the adopter repository that removes the package dependency and restores the previous local read path.
 

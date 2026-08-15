@@ -335,7 +335,7 @@ private struct StaticProvenanceEngineClient: ProvenanceEngineClient {
                 .recordSessionLifecycle,
                 .queryCurrentContext,
                 .queryWorkspaceDisplay,
-                .querySessionWorkModel,
+                .queryFactualSessionProjection,
             ]
         )
     }
@@ -403,10 +403,10 @@ private struct StaticProvenanceEngineClient: ProvenanceEngineClient {
         )
     }
 
-    func sessionWorkModel(
-        _ request: ProvenanceSessionWorkModelRequest
-    ) async throws -> ProvenanceSessionWorkModelResponse {
-        ProvenanceSessionWorkModelResponse(
+    func factualSessionProjection(
+        _ request: ProvenanceFactualSessionProjectionRequest
+    ) async throws -> ProvenanceFactualSessionProjectionResponse {
+        ProvenanceFactualSessionProjectionResponse(
             found: false,
             reason: "not_implemented",
             sessionID: request.sessionID,

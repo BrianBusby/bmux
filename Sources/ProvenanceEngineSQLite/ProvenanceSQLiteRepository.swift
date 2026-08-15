@@ -1372,14 +1372,14 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
-    /// Reads the factual work model snapshot for one coding-agent session.
+    /// Reads the factual session projection snapshot for one coding-agent session.
     ///
-    /// - Parameter request: Session work model query parameters.
+    /// - Parameter request: Factual session projection query parameters.
     /// - Returns: Found response with revisioned factual coding-agent evidence, or `no_session` when absent.
     /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
-    func sessionWorkModel(_ request: ProvenanceSessionWorkModelRequest) throws -> ProvenanceSessionWorkModelResponse {
+    func factualSessionProjection(_ request: ProvenanceFactualSessionProjectionRequest) throws -> ProvenanceFactualSessionProjectionResponse {
         guard let session = try session(id: request.sessionID) else {
-            return ProvenanceSessionWorkModelResponse(
+            return ProvenanceFactualSessionProjectionResponse(
                 found: false,
                 reason: "no_session",
                 sessionID: request.sessionID,
@@ -1393,9 +1393,9 @@ actor ProvenanceSQLiteRepository {
         let turns = try codingAgentTurnIDs(
             sessionID: request.sessionID,
             limit: request.turnLimit
-        ).compactMap { turnID -> ProvenanceSessionWorkModelTurnSnapshot? in
+        ).compactMap { turnID -> ProvenanceFactualSessionProjectionTurnSnapshot? in
             guard let turn = try codingAgentTurn(id: turnID) else { return nil }
-            return ProvenanceSessionWorkModelTurnSnapshot(
+            return ProvenanceFactualSessionProjectionTurnSnapshot(
                 turn: turn,
                 submittedPrompt: try latestCodingAgentPrompt(turnID: turnID),
                 currentPlan: try latestCodingAgentPlanUpdate(turnID: turnID),
@@ -1409,10 +1409,10 @@ actor ProvenanceSQLiteRepository {
             )
         }
 
-        return ProvenanceSessionWorkModelResponse(
+        return ProvenanceFactualSessionProjectionResponse(
             found: true,
             sessionID: request.sessionID,
-            snapshot: ProvenanceSessionWorkModelSnapshot(
+            snapshot: ProvenanceFactualSessionProjectionSnapshot(
                 revision: try latestEventSequence(sessionID: request.sessionID),
                 session: session,
                 providerThreads: providerThreads,

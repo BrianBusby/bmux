@@ -1,14 +1,14 @@
 import Foundation
 
-/// Query parameters for reading the factual work model for one coding-agent session.
-public struct ProvenanceSessionWorkModelRequest: Codable, Equatable, Sendable {
+/// Query parameters for reading the factual projection for one coding-agent session.
+public struct ProvenanceFactualSessionProjectionRequest: Codable, Equatable, Sendable {
     /// Provenance session identifier to read.
     public let sessionID: String
 
     /// Maximum number of turn snapshots to return.
     public let turnLimit: Int?
 
-    /// Creates a session work model request.
+    /// Creates a factual session projection request.
     ///
     /// - Parameters:
     ///   - sessionID: Provenance session identifier to read.

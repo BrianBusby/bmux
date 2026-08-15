@@ -1,8 +1,8 @@
 import Foundation
 
-/// Factual, deterministic work snapshot for one coding-agent session.
-public struct ProvenanceSessionWorkModelSnapshot: Codable, Equatable, Sendable {
-    /// Monotonically increasing ledger revision current when the snapshot was read.
+/// Factual, deterministic projection snapshot for one coding-agent session.
+public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Sendable {
+    /// Monotonically increasing ledger revision current at read time.
     public let revision: Int?
 
     /// Provenance session identity.
@@ -12,14 +12,14 @@ public struct ProvenanceSessionWorkModelSnapshot: Codable, Equatable, Sendable {
     public let providerThreads: [ProvenanceCodingAgentThreadRecord]
 
     /// Observed turns with only evidence directly linked to each turn.
-    public let turns: [ProvenanceSessionWorkModelTurnSnapshot]
+    public let turns: [ProvenanceFactualSessionProjectionTurnSnapshot]
 
-    /// Creates a factual session work model snapshot.
+    /// Creates a factual session projection snapshot.
     public init(
         revision: Int?,
         session: ProvenanceSessionRecord,
         providerThreads: [ProvenanceCodingAgentThreadRecord],
-        turns: [ProvenanceSessionWorkModelTurnSnapshot]
+        turns: [ProvenanceFactualSessionProjectionTurnSnapshot]
     ) {
         self.revision = revision
         self.session = session

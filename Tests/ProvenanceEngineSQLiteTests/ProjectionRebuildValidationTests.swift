@@ -71,10 +71,10 @@ struct ProjectionRebuildValidationTests {
         let beforeAttribution = try #require(
             try await repository.codingAgentFileChangeAttribution(id: fixture.fileChangeAttribution.id)
         )
-        let beforeWorkModel = try await repository.sessionWorkModel(
-            ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id)
+        let beforeFactualProjection = try await repository.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id)
         )
-        let beforeSnapshot = try #require(beforeWorkModel.snapshot)
+        let beforeSnapshot = try #require(beforeFactualProjection.snapshot)
 
         #expect(beforeThread.sessionID == fixture.session.id)
         #expect(beforeThread.providerThreadID == "codex-thread-42")
@@ -101,7 +101,7 @@ struct ProjectionRebuildValidationTests {
         #expect(beforeAttribution.changeSetID == fixture.changeSet.id)
         #expect(beforeAttribution.fileChangeIDs == [fixture.fileChange.id])
         #expect(beforeAttribution.paths == [fixture.fileChange.path])
-        #expect(beforeWorkModel.found)
+        #expect(beforeFactualProjection.found)
         #expect(beforeSnapshot.revision == fixture.events.count)
         #expect(beforeSnapshot.session == fixture.session)
         #expect(beforeSnapshot.providerThreads == [fixture.thread])
@@ -116,8 +116,8 @@ struct ProjectionRebuildValidationTests {
         #expect(beforeSnapshot.turns.last?.completedCommands.isEmpty == true)
         #expect(beforeSnapshot.turns.last?.visibleReasoningSummaries.isEmpty == true)
         #expect(beforeSnapshot.turns.last?.fileChangeAttributions.isEmpty == true)
-        #expect(try await repository.sessionWorkModel(
-            ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id, turnLimit: 1)
+        #expect(try await repository.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id, turnLimit: 1)
         ).snapshot?.turns.map(\.turn.id) == [beforeTurn.id])
 
         let fileExplanation = try await repository.fileExplanation(
@@ -151,8 +151,8 @@ struct ProjectionRebuildValidationTests {
                 == beforeAttribution
         )
         #expect(
-            try await repository.sessionWorkModel(ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id))
-                == beforeWorkModel
+            try await repository.factualSessionProjection(ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id))
+                == beforeFactualProjection
         )
         #expect(try await repository.validateProjectionKeys(limit: 20).mismatches.isEmpty)
     }

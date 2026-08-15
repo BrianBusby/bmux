@@ -1,7 +1,7 @@
 import Foundation
 
 /// Factual work evidence grouped under one observed coding-agent turn.
-public struct ProvenanceSessionWorkModelTurnSnapshot: Codable, Equatable, Sendable {
+public struct ProvenanceFactualSessionProjectionTurnSnapshot: Codable, Equatable, Sendable {
     /// Observed provider turn lifecycle projection.
     public let turn: ProvenanceCodingAgentTurnRecord
 
@@ -20,7 +20,7 @@ public struct ProvenanceSessionWorkModelTurnSnapshot: Codable, Equatable, Sendab
     /// File-change attributions explicitly linked to this turn.
     public let fileChangeAttributions: [ProvenanceCodingAgentFileChangeAttributionRecord]
 
-    /// Creates a factual turn work snapshot.
+    /// Creates a factual turn projection snapshot.
     public init(
         turn: ProvenanceCodingAgentTurnRecord,
         submittedPrompt: ProvenanceCodingAgentPromptRecord?,

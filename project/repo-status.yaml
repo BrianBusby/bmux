@@ -23,7 +23,7 @@ local_capabilities:
   schema_identity_validation: implemented
   producer_neutral_lifecycle_recording: implemented
   richer_coding_agent_evidence: implemented
-  factual_session_work_model_projection: implemented
+  factual_session_projection: implemented
   semantic_session_work_model_projection: planned
   semantic_inference_framework: planned
   scoped_architecture_projection: planned

@@ -1527,12 +1527,12 @@ This section maps the north-star architecture above to the current repository de
 - The repository is an independent Swift package with `ProvenanceEngineContracts`, `ProvenanceEngineSDK`, and internal `ProvenanceEngineSQLite` modules.
 - Public adopters construct clients through `ProvenanceEngineClientFactory` and interact through `any ProvenanceEngineClient`.
 - The SQLite backend owns an append-oriented event ledger, schema migration metadata, validation, storage summaries, repair reports, bounded ledger reads, and rebuildable current-state projections.
-- Current projections include repositories, worktrees, sessions, session relationships, file explanations, current context records, workspace-display Current State, and the factual SessionWorkModel snapshot for one coding-agent session.
-- Public contracts exist for event append, session lifecycle recording, worktree reads, session-tree reads, file explanations, current context, workspace-display Current State, factual session-work snapshots, health, and storage summaries.
+- Current projections include repositories, worktrees, sessions, session relationships, file explanations, current context records, workspace-display Current State, and the factual session projection for one coding-agent session.
+- Public contracts exist for event append, session lifecycle recording, worktree reads, session-tree reads, file explanations, current context, workspace-display Current State, factual session-projection snapshots, health, and storage summaries.
 - New engine-owned local storage defaults to `~/.local/state/provenance-engine/provenance.sqlite`.
 - Events can carry optional `ProvenanceEvidenceOrigin` and `ProvenanceEvidenceScope` metadata so the ledger is not hard-coded as personal-only evidence.
 - bmux adopted the engine SDK for the accepted worktree, session-tree, file-explanation, current-context, lifecycle, worktree-observation, and workspace-display paths described by the integration roadmap.
-- There is no public semantic inference record contract, milestone contract, or scoped architecture projection contract yet. The current `SessionWorkModel` contract is factual and does not infer semantic meaning.
+- There is no public semantic inference record contract, milestone contract, scoped architecture projection contract, or semantic `SessionWorkModel` contract yet. The current factual session projection does not infer semantic meaning.
 
 ### Partially implemented
 
