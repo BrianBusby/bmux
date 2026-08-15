@@ -64,12 +64,13 @@ Verification for this slice:
 - bmux Swift package test: `cd Packages/Shared/BmuxAgentChat && swift test --filter executionTelemetryEventClientReadsBoundedCursorEndpoint`
 - bmux focused test: `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -destination 'platform=macOS,arch=arm64' -derivedDataPath /tmp/bmux-richer-session-evidence-foundation -only-testing:bmuxTests/SessionProvenanceTests`
 - bmux docs: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
+- bmux tagged reload: `./scripts/reload.sh --tag richer-session-evidence-foundation`
 
 Known local quirk: the normal Xcode app build script can fail while building the
 Ghostty CLI helper with Zig unresolved macOS symbols on this machine. The focused
-test used the repo-supported `BMUX_SKIP_ZIG_BUILD=1` stub path. A production
-tagged reload still needs a successful non-stub helper build or the local Zig
-toolchain issue resolved.
+test used the repo-supported `BMUX_SKIP_ZIG_BUILD=1` stub path. The tagged
+reload succeeded through `reload.sh`, which automatically skipped the local
+Ghostty CLI helper build for this macOS SDK/Zig combination.
 Additional local quirk: `cd agent-chat && bun x tsc --noEmit` currently fails
 on `adapters/lines.ts` because `ReadableStream<Uint8Array<ArrayBufferLike>>`
 lacks an async iterator in the active TypeScript library environment. The
