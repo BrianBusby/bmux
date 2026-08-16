@@ -20,4 +20,14 @@ extension ProvenanceSQLiteRepository: ProvenanceEngineClient {
             eventType: request.event.eventType.rawValue
         )
     }
+
+    func publishSemanticInference(_ request: ProvenanceSemanticInferencePublishRequest) async throws
+        -> ProvenanceSemanticInferencePublishResponse {
+        try publishSemanticInferenceRecord(request)
+    }
+
+    func semanticInferences(_ request: ProvenanceSemanticInferenceQueryRequest) async throws
+        -> ProvenanceSemanticInferenceQueryResponse {
+        try semanticInferenceRecords(request)
+    }
 }

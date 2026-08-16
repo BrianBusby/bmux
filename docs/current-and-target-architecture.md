@@ -137,6 +137,14 @@ milestones, blockers, risks, validation state, and scoped architecture. bmux
 should render that state, expose provenance and explanation, and keep the user
 in control of interaction.
 
+The semantic inference framework boundary sits between deterministic factual
+projections and the later `SessionWorkModel`. It stores versioned inference
+records with evidence references, factual revision, confidence, specificity,
+producer version, and supersession history. Those records are not deterministic
+Current State and are not rebuilt into factual projection tables; a failed
+semantic inference pass leaves factual state and prior valid semantic records
+intact.
+
 In the durable loop, the Knowledge Compiler should run later, after live
 evidence, inference, milestones, architecture projections, and code
 relationships prove useful. It should compile decisions, constraints, outcomes,
