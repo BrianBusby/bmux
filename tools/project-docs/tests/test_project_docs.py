@@ -779,6 +779,8 @@ class ProjectDocsTests(unittest.TestCase):
     def test_project_truth_workflow_runs_canonical_ci_gate(self):
         text = PROJECT_TRUTH_WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("repository: BrianBusby/bmux", text)
+        self.assertIn("Use dependency bmux branch when declared", text)
+        self.assertIn("PEER_REPOSITORY: BrianBusby/bmux", text)
         self.assertIn("contents: read", text)
         self.assertIn("issues: read", text)
         self.assertIn("pull-requests: read", text)
