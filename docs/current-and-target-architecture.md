@@ -145,6 +145,12 @@ Current State and are not rebuilt into factual projection tables; a failed
 semantic inference pass leaves factual state and prior valid semantic records
 intact.
 
+The first concrete semantic inference implementation materializes thread
+intent, turn intent, session phase, and current activity as rule-produced
+semantic records from bounded factual session projections. It deliberately stops
+before milestone semantics, scoped architecture projection, presentation
+wording, feedback learning, GitHub ingestion, and Knowledge Compiler artifacts.
+
 In the durable loop, the Knowledge Compiler should run later, after live
 evidence, inference, milestones, architecture projections, and code
 relationships prove useful. It should compile decisions, constraints, outcomes,

@@ -288,6 +288,22 @@ Turn intent changes more readily than thread intent and should be linked to the
 current prompt, plan updates, tool activity, command/file evidence, and any
 inference records that refined it.
 
+The first implemented semantic inference slice materializes four factual-input,
+rule-produced record kinds above the factual session projection:
+
+- `coding_agent.thread_intent`
+- `coding_agent.turn_intent`
+- `coding_agent.session_phase`
+- `coding_agent.current_activity`
+
+These are stored as normal `ProvenanceSemanticInferenceRecord` values with
+supporting evidence references, supporting factual revision, confidence,
+specificity, producer version, status, and supersession links. Their typed
+payloads carry structured action, subject, target, purpose, phase, activity
+kind, component hints, and explicit unknown reasons where the evidence is too
+thin. They are not deterministic Current State and do not imply milestone or
+architecture semantics.
+
 ## Scoped Architecture Projections
 
 Architecture projections should explain the work at the scope where it is
