@@ -7,6 +7,7 @@ This is the authoritative roadmap for the provenance-engine repository. It defin
 The authoritative generated status is:
 
 - [Project status](generated/project-status.md)
+- [Nested roadmap](generated/nested-roadmap.md)
 - [Ownership boundary](generated/ownership-boundary.md)
 - [Repository status](generated/repository-status.md)
 

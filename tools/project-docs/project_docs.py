@@ -25,6 +25,7 @@ TOOL_ROOT = Path(__file__).resolve().parent
 SCHEMA_ROOT = TOOL_ROOT.parent.parent / "project" / "schema"
 GENERATED_FILES = (
     "project-status.md",
+    "nested-roadmap.md",
     "ownership-boundary.md",
     "repository-status.md",
 )
@@ -42,6 +43,14 @@ ACCEPTANCE_STATUSES = (
     "rejected",
     "superseded",
 )
+ROADMAP_REFERENCE_FIELDS = ("depends_on", "enables", "sequence_after", "sequence_before")
+ROADMAP_PARENT_KINDS = {
+    "project": None,
+    "program": "project",
+    "phase": "program",
+    "milestone": "phase",
+    "slice": "milestone",
+}
 
 REPOSITORY_LABELS = {
     "provenance_engine": "Provenance Engine",
@@ -299,6 +308,51 @@ def semantic_validate(shared: dict[str, Any], repo_status: dict[str, Any], repo_
     raise_issues(issues)
 
 
+def roadmap_nodes(shared: dict[str, Any]) -> list[dict[str, Any]]:
+    return shared.get("roadmap", {}).get("nodes", [])
+
+
+def roadmap_node_path(index: int, node: dict[str, Any]) -> str:
+    return f"project/project-state.yaml:roadmap.nodes[{index}] ({node.get('id')})"
+
+
+def has_evidence_record(evidence: dict[str, Any] | None) -> bool:
+    if not evidence:
+        return False
+    return bool(evidence.get("commits") or evidence.get("pull_requests"))
+
+
+def first_directed_cycle(edges: dict[str, list[str]]) -> list[str] | None:
+    visited: set[str] = set()
+    stack: list[str] = []
+    in_stack: set[str] = set()
+
+    def visit(node: str) -> list[str] | None:
+        if node in in_stack:
+            return stack[stack.index(node):] + [node]
+        if node in visited:
+            return None
+
+        stack.append(node)
+        in_stack.add(node)
+        for child in sorted(edges.get(node, [])):
+            if child not in edges:
+                continue
+            cycle = visit(child)
+            if cycle:
+                return cycle
+        stack.pop()
+        in_stack.remove(node)
+        visited.add(node)
+        return None
+
+    for node in sorted(edges):
+        cycle = visit(node)
+        if cycle:
+            return cycle
+    return None
+
+
 def invariant_issues(
     shared: dict[str, Any],
     repo_statuses: list[dict[str, Any]],
@@ -321,6 +375,93 @@ def invariant_issues(
     duplicate_caveats = sorted({item for item in caveat_ids if caveat_ids.count(item) > 1})
     for caveat_id in duplicate_caveats:
         add("unique_caveat_ids", "project/project-state.yaml:caveats", f"duplicate caveat id '{caveat_id}'")
+
+    nodes = roadmap_nodes(shared)
+    node_ids = [item["id"] for item in nodes]
+    duplicate_nodes = sorted({item for item in node_ids if node_ids.count(item) > 1})
+    for node_id in duplicate_nodes:
+        add("unique_roadmap_node_ids", "project/project-state.yaml:roadmap.nodes", f"duplicate roadmap node id '{node_id}'")
+
+    node_by_id = {node["id"]: node for node in nodes}
+    milestone_id_set = set(milestone_ids)
+    hierarchy_edges: dict[str, list[str]] = {node_id: [] for node_id in node_by_id}
+    ordering_edges: dict[str, list[str]] = {node_id: [] for node_id in node_by_id}
+
+    for index, node in enumerate(nodes):
+        path = roadmap_node_path(index, node)
+        node_id = node["id"]
+        kind = node["kind"]
+        parent = node.get("parent")
+
+        if node["owner"] not in node.get("repositories", []):
+            add("roadmap_owner_in_repositories", path, "roadmap node owner must be listed in repositories")
+
+        expected_parent_kind = ROADMAP_PARENT_KINDS[kind]
+        if expected_parent_kind is None:
+            if parent:
+                add("roadmap_project_has_no_parent", path, "project roadmap node must not have a parent")
+        elif not parent:
+            add("roadmap_parent_required", path, f"{kind} roadmap node must have a parent")
+        elif parent not in node_by_id:
+            add("roadmap_parent_exists", path, f"parent '{parent}' does not exist")
+        else:
+            parent_kind = node_by_id[parent]["kind"]
+            if parent_kind != expected_parent_kind:
+                add("roadmap_parent_kind", path, f"{kind} parent must be {expected_parent_kind}, not {parent_kind}")
+            hierarchy_edges[node_id].append(parent)
+
+        mirrored = node.get("mirrors_milestone")
+        if mirrored and mirrored not in milestone_id_set:
+            add("roadmap_mirrors_existing_milestone", path, f"mirrors_milestone '{mirrored}' does not exist")
+
+        for field in ROADMAP_REFERENCE_FIELDS:
+            for ref_id in node.get(field, []):
+                if ref_id == node_id:
+                    add("roadmap_reference_not_self", path, f"{field} cannot reference the node itself")
+                if ref_id not in node_by_id:
+                    add("roadmap_reference_exists", path, f"{field} reference '{ref_id}' does not exist")
+                    continue
+                if field == "depends_on":
+                    ordering_edges[ref_id].append(node_id)
+                elif field == "enables":
+                    ordering_edges[node_id].append(ref_id)
+                elif field == "sequence_after":
+                    ordering_edges[ref_id].append(node_id)
+                elif field == "sequence_before":
+                    ordering_edges[node_id].append(ref_id)
+
+        for ref_id in node.get("parallelism", {}).get("with", []):
+            if ref_id == node_id:
+                add("roadmap_reference_not_self", path, "parallelism.with cannot reference the node itself")
+            if ref_id not in node_by_id:
+                add("roadmap_reference_exists", path, f"parallelism.with reference '{ref_id}' does not exist")
+
+        if kind == "slice":
+            status = node["status"]
+            delivery_status = node.get("delivery_status")
+            acceptance_status = node.get("acceptance_status")
+            material_statuses = ("implemented", "accepted")
+            is_materialized = status in material_statuses or acceptance_status in material_statuses
+            if is_materialized and not has_evidence_record(node.get("evidence")):
+                add("roadmap_slice_requires_evidence", path, "implemented or accepted roadmap slice must have commit or pull request evidence")
+            if is_materialized and delivery_status in ("proposed", "draft"):
+                add("roadmap_slice_delivery_not_draft", path, f"implemented or accepted roadmap slice cannot have delivery_status {delivery_status}")
+            if status == "accepted" or acceptance_status == "accepted":
+                if not node.get("accepted_at") and not node.get("acceptance_reason"):
+                    add("roadmap_slice_requires_acceptance_evidence", path, "accepted roadmap slice must have accepted_at or acceptance_reason")
+            if status == "planned":
+                if node.get("completed_at") or node.get("accepted_at"):
+                    add("roadmap_planned_slice_not_delivered", path, "planned roadmap slice must not carry completed_at or accepted_at")
+                if delivery_status in ("merged", "closed") or acceptance_status in ("implemented", "accepted"):
+                    add("roadmap_planned_slice_status_conflict", path, "planned roadmap slice cannot declare delivered or accepted status")
+
+    hierarchy_cycle = first_directed_cycle(hierarchy_edges)
+    if hierarchy_cycle:
+        add("roadmap_parent_cycle", "project/project-state.yaml:roadmap.nodes", "roadmap parent cycle: " + " -> ".join(hierarchy_cycle))
+
+    ordering_cycle = first_directed_cycle(ordering_edges)
+    if ordering_cycle:
+        add("roadmap_dependency_cycle", "project/project-state.yaml:roadmap.nodes", "roadmap dependency/sequence cycle: " + " -> ".join(ordering_cycle))
 
     gate = shared.get("cross_repository", {}).get("active_gate")
     if gate and gate.get("status") != "active":
@@ -451,6 +592,10 @@ def collect_evidence_repositories(shared: dict[str, Any], repo_statuses: list[di
         evidence = milestone.get("evidence", {})
         repositories.update(item.get("repository", "") for item in evidence.get("commits", []))
         repositories.update(item.get("repository", "") for item in evidence.get("pull_requests", []))
+    for node in roadmap_nodes(shared):
+        evidence = node.get("evidence", {})
+        repositories.update(item.get("repository", "") for item in evidence.get("commits", []))
+        repositories.update(item.get("repository", "") for item in evidence.get("pull_requests", []))
     for caveat in shared.get("caveats", []):
         issue = caveat.get("issue")
         if issue:
@@ -480,37 +625,46 @@ def github_evidence_issues(
             if exists is False:
                 add("missing_repository", repository, "repository does not exist or is not visible")
 
-    for milestone_index, milestone in enumerate(shared.get("milestones", [])):
-        milestone_path = f"project/project-state.yaml:milestones[{milestone_index}]({milestone.get('id')})"
-        evidence = milestone.get("evidence", {})
+    def check_evidence(base_path: str, evidence: dict[str, Any], delivery: str | None, subject: str) -> None:
         for commit in evidence.get("commits", []):
-            path = f"{milestone_path}.evidence.commits[{commit['repository']}@{commit['sha']}]"
+            path = f"{base_path}.evidence.commits[{commit['repository']}@{commit['sha']}]"
             exists = call("commit", path, lambda commit=commit: provider.commit_exists(commit["repository"], commit["sha"]))
             if exists is False:
                 add("missing_commit", path, "commit does not exist in the declared repository")
         for pr in evidence.get("pull_requests", []):
-            path = f"{milestone_path}.evidence.pull_requests[{pr['repository']}#{pr['number']}]"
+            path = f"{base_path}.evidence.pull_requests[{pr['repository']}#{pr['number']}]"
             state = call("pull request", path, lambda pr=pr: provider.pull_request(pr["repository"], pr["number"]))
             if state is PROVIDER_ERROR:
                 continue
             if state is None:
                 add("missing_pr", path, "pull request does not exist in the declared repository")
                 continue
-            delivery = milestone.get("delivery_status")
             if delivery == "merged" and not state.merged:
-                add("pr_merged_state_mismatch", path, "milestone declares merged delivery but pull request is not merged")
+                add("pr_merged_state_mismatch", path, f"{subject} declares merged delivery but pull request is not merged")
             elif delivery == "open" and (state.state != "open" or state.draft):
-                add("pr_open_state_mismatch", path, "milestone declares open delivery but pull request is not an open non-draft PR")
+                add("pr_open_state_mismatch", path, f"{subject} declares open delivery but pull request is not an open non-draft PR")
             elif delivery == "draft" and (state.state != "open" or not state.draft):
-                add("pr_draft_state_mismatch", path, "milestone declares draft delivery but pull request is not an open draft PR")
+                add("pr_draft_state_mismatch", path, f"{subject} declares draft delivery but pull request is not an open draft PR")
             elif delivery == "closed" and (state.state != "closed" or state.merged):
-                add("pr_closed_state_mismatch", path, "milestone declares closed delivery but pull request is merged or still open")
+                add("pr_closed_state_mismatch", path, f"{subject} declares closed delivery but pull request is merged or still open")
             declared_owner = pr.get("owner")
             if declared_owner:
                 if state.owner_login != declared_owner.get("login"):
                     add("pr_owner_login_mismatch", path, "declared pull request owner login does not match GitHub")
                 if state.owner_url != declared_owner.get("profile_url"):
                     add("pr_owner_url_mismatch", path, "declared pull request owner profile URL does not match GitHub")
+
+    for milestone_index, milestone in enumerate(shared.get("milestones", [])):
+        milestone_path = f"project/project-state.yaml:milestones[{milestone_index}]({milestone.get('id')})"
+        evidence = milestone.get("evidence", {})
+        check_evidence(milestone_path, evidence, milestone.get("delivery_status"), "milestone")
+
+    for node_index, node in enumerate(roadmap_nodes(shared)):
+        evidence = node.get("evidence")
+        if not evidence:
+            continue
+        node_path = f"project/project-state.yaml:roadmap.nodes[{node_index}]({node.get('id')})"
+        check_evidence(node_path, evidence, node.get("delivery_status"), "roadmap node")
 
     for caveat_index, caveat in enumerate(shared.get("caveats", [])):
         issue = caveat.get("issue")
@@ -578,6 +732,16 @@ def evidence_text(evidence: dict[str, Any]) -> str:
             suffix = f" by [{owner['login']}]({owner['profile_url']})"
         parts.append(f"{pr['repository']}#{pr['number']}{suffix}")
     return ", ".join(parts) if parts else "None recorded"
+
+
+def repository_list_text(repositories: list[str]) -> str:
+    return ", ".join(owner_label(repository) for repository in repositories)
+
+
+def reference_list_text(node_ids: list[str] | None) -> str:
+    if not node_ids:
+        return ""
+    return ", ".join(f"`{node_id}`" for node_id in node_ids)
 
 
 def generated_header(context: dict[str, Any]) -> str:
@@ -664,6 +828,110 @@ def render_project_status(context: dict[str, Any]) -> str:
     )
     if checkpoints["status"] == "not_implemented":
         lines.append("- Operational statement: automatic diagnostic checkpoints are not operational.")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_nested_roadmap(context: dict[str, Any]) -> str:
+    shared = context["shared"]
+    nodes = roadmap_nodes(shared)
+    children: dict[str | None, list[dict[str, Any]]] = {}
+    for node in nodes:
+        children.setdefault(node.get("parent"), []).append(node)
+
+    lines = [
+        generated_header(context),
+        "# Nested Roadmap",
+        "",
+        "This view is generated from `project/project-state.yaml` and preserves the roadmap hierarchy, sequencing, and evidence references.",
+        "",
+        "## Roadmap Tree",
+        "",
+    ]
+
+    def append_node(node: dict[str, Any], depth: int) -> None:
+        indent = "  " * depth
+        concept = node["concept_classification"]
+        parts = [
+            node["kind"],
+            f"status: {status_label(node['status'])}",
+            f"owner: {owner_label(node['owner'])}",
+            f"repositories: {repository_list_text(node['repositories'])}",
+            f"concept: {status_label(concept['primary'])}",
+            f"layer: {status_label(concept['architecture_layer'])}",
+            f"execution: {status_label(node['execution']['assignment'])} / {owner_label(node['execution']['assigned_to'])}",
+            f"parallelism: {status_label(node['parallelism']['classification'])}",
+        ]
+        if node.get("delivery_status"):
+            parts.append(f"delivery: {status_label(node['delivery_status'])}")
+        if node.get("acceptance_status"):
+            parts.append(f"acceptance: {status_label(node['acceptance_status'])}")
+        if node.get("mirrors_milestone"):
+            parts.append(f"mirrors: `{node['mirrors_milestone']}`")
+
+        lines.append(f"{indent}- **{node['title']}** (`{node['id']}`) - " + "; ".join(parts))
+
+        detail_lines: list[str] = []
+        for label, key in (
+            ("Depends on", "depends_on"),
+            ("Enables", "enables"),
+            ("Sequence after", "sequence_after"),
+            ("Sequence before", "sequence_before"),
+        ):
+            text = reference_list_text(node.get(key))
+            if text:
+                detail_lines.append(f"{label}: {text}")
+        parallel_with = reference_list_text(node.get("parallelism", {}).get("with"))
+        if parallel_with:
+            detail_lines.append(f"Parallel with: {parallel_with}")
+        if node.get("evidence"):
+            detail_lines.append(f"Evidence: {evidence_text(node['evidence'])}")
+        if node.get("rationale"):
+            detail_lines.append(f"Rationale: {node['rationale']}")
+        if node.get("acceptance_reason"):
+            detail_lines.append(f"Acceptance reason: {node['acceptance_reason']}")
+        criteria = node.get("acceptance", {}).get("criteria", [])
+        if criteria:
+            detail_lines.append("Acceptance criteria: " + "; ".join(criteria))
+
+        for detail in detail_lines:
+            lines.append(f"{indent}  {detail}")
+
+        for child in children.get(node["id"], []):
+            append_node(child, depth + 1)
+
+    roots = children.get(None, []) + children.get("", [])
+    for node in nodes:
+        if node["kind"] == "project" and node["id"] not in [root["id"] for root in roots]:
+            roots.append(node)
+    for root in roots:
+        append_node(root, 0)
+
+    next_nodes = [
+        node
+        for node in nodes
+        if node.get("execution", {}).get("assignment") == "next_eligible"
+    ]
+    lines.extend(["", "## Next Eligible Work", ""])
+    if next_nodes:
+        for node in next_nodes:
+            depends_on = reference_list_text(node.get("depends_on")) or "None"
+            lines.append(f"- {node['title']} (`{node['id']}`) - depends on: {depends_on}")
+    else:
+        lines.append("None.")
+
+    blocked_or_deferred = [
+        node
+        for node in nodes
+        if node["status"] in ("blocked", "deferred") or node.get("execution", {}).get("assignment") == "deferred"
+    ]
+    lines.extend(["", "## Deferred Or Blocked Work", ""])
+    if blocked_or_deferred:
+        for node in blocked_or_deferred:
+            depends_on = reference_list_text(node.get("depends_on")) or "None"
+            lines.append(f"- {node['title']} (`{node['id']}`) - status: {status_label(node['status'])}; depends on: {depends_on}")
+    else:
+        lines.append("None.")
+
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -754,6 +1022,7 @@ def render_repository_status(context: dict[str, Any]) -> str:
 def render_all(context: dict[str, Any]) -> dict[str, str]:
     return {
         "project-status.md": render_project_status(context),
+        "nested-roadmap.md": render_nested_roadmap(context),
         "ownership-boundary.md": render_ownership_boundary(context),
         "repository-status.md": render_repository_status(context),
     }
