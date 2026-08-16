@@ -1445,6 +1445,97 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
+    /// Publishes one semantic inference record and supersedes historical records atomically.
+    ///
+    /// - Parameter request: Semantic inference publish request.
+    /// - Returns: Accepted response with superseded inference IDs.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the write or record JSON cannot be encoded.
+    func publishSemanticInferenceRecord(_ request: ProvenanceSemanticInferencePublishRequest) throws
+        -> ProvenanceSemanticInferencePublishResponse {
+        try database.execute("BEGIN IMMEDIATE TRANSACTION")
+        do {
+            try insertSemanticInference(request.record)
+            for supersededID in request.record.supersedes {
+                try supersedeSemanticInference(id: supersededID, replacement: request.record)
+            }
+            try database.execute("COMMIT")
+        } catch {
+            try? database.execute("ROLLBACK")
+            throw error
+        }
+
+        return ProvenanceSemanticInferencePublishResponse(
+            accepted: true,
+            inferenceID: request.record.id,
+            supersededInferenceIDs: request.record.supersedes
+        )
+    }
+
+    /// Reads semantic inference records for one scope.
+    ///
+    /// - Parameter request: Semantic inference query parameters.
+    /// - Returns: Matching semantic records in newest-first order.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read or stored JSON cannot be decoded.
+    func semanticInferenceRecords(_ request: ProvenanceSemanticInferenceQueryRequest) throws
+        -> ProvenanceSemanticInferenceQueryResponse {
+        let rowLimit = request.limit.map { max(0, $0) }
+        var sql = """
+            SELECT
+                id,
+                schema_version,
+                inference_kind,
+                scope,
+                scope_id,
+                payload_json,
+                supporting_evidence_refs_json,
+                supporting_factual_revision,
+                confidence,
+                specificity,
+                producer_type,
+                producer_id,
+                producer_version,
+                created_at_seconds,
+                supersedes_json,
+                superseded_by,
+                status
+            FROM provenance_semantic_inferences
+            WHERE scope = ?
+              AND scope_id = ?
+            """
+        if request.kind != nil {
+            sql += "\n  AND inference_kind = ?"
+        }
+        if !request.includeInactive {
+            sql += "\n  AND status = 'active'"
+        }
+        sql += "\nORDER BY created_at_seconds DESC, rowid DESC"
+        if rowLimit != nil {
+            sql += "\nLIMIT ?"
+        }
+
+        let query = try database.prepare(sql)
+        defer { query.finalize() }
+
+        var bindIndex: Int32 = 1
+        try query.bind(request.scope.rawValue, at: bindIndex)
+        bindIndex += 1
+        try query.bind(request.scopeID, at: bindIndex)
+        bindIndex += 1
+        if let kind = request.kind {
+            try query.bind(kind, at: bindIndex)
+            bindIndex += 1
+        }
+        if let rowLimit {
+            try query.bind(rowLimit, at: bindIndex)
+        }
+
+        var records: [ProvenanceSemanticInferenceRecord] = []
+        while try query.step() {
+            records.append(try semanticInference(from: query))
+        }
+        return ProvenanceSemanticInferenceQueryResponse(records: records)
+    }
+
     private func worktree(from query: ProvenanceSQLiteStatement) -> ProvenanceWorktreeRecord? {
         guard let id = query.string(at: 0),
               let repositoryID = query.string(at: 1),
@@ -4104,6 +4195,176 @@ actor ProvenanceSQLiteRepository {
         return json
     }
 
+    private func encodedSemanticJSON<T: Encodable>(
+        _ value: T,
+        failureMessage: String
+    ) throws -> String {
+        let data = try payloadEncoder.encode(value)
+        guard let json = String(data: data, encoding: .utf8) else {
+            throw ProvenanceSQLiteError.sqlite(message: failureMessage)
+        }
+        return json
+    }
+
+    private func decodedSemanticJSON<T: Decodable>(
+        _ json: String?,
+        as type: T.Type,
+        failureMessage: String
+    ) throws -> T {
+        guard let json,
+              let data = json.data(using: .utf8) else {
+            throw ProvenanceSQLiteError.sqlite(message: failureMessage)
+        }
+        return try payloadDecoder.decode(type, from: data)
+    }
+
+    private func insertSemanticInference(_ record: ProvenanceSemanticInferenceRecord) throws {
+        let payloadJSON = try encodedSemanticJSON(
+            record.payload,
+            failureMessage: "failed to encode semantic inference payload"
+        )
+        let evidenceRefsJSON = try encodedSemanticJSON(
+            record.supportingEvidenceRefs,
+            failureMessage: "failed to encode semantic inference evidence refs"
+        )
+        let supersedesJSON = try encodedSemanticJSON(
+            record.supersedes,
+            failureMessage: "failed to encode superseded semantic inference ids"
+        )
+        let insert = try database.prepare(
+            """
+            INSERT INTO provenance_semantic_inferences (
+                id,
+                schema_version,
+                inference_kind,
+                scope,
+                scope_id,
+                payload_json,
+                supporting_evidence_refs_json,
+                supporting_factual_revision,
+                confidence,
+                specificity,
+                producer_type,
+                producer_id,
+                producer_version,
+                created_at_seconds,
+                supersedes_json,
+                superseded_by,
+                status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """
+        )
+        defer { insert.finalize() }
+
+        try insert.bind(record.id, at: 1)
+        try insert.bind(record.schemaVersion, at: 2)
+        try insert.bind(record.kind, at: 3)
+        try insert.bind(record.scope.rawValue, at: 4)
+        try insert.bind(record.scopeID, at: 5)
+        try insert.bind(payloadJSON, at: 6)
+        try insert.bind(evidenceRefsJSON, at: 7)
+        try insert.bind(record.supportingFactualRevision.map(Double.init), at: 8)
+        try insert.bind(record.confidence.rawValue, at: 9)
+        try insert.bind(record.specificity.rawValue, at: 10)
+        try insert.bind(record.producerType.rawValue, at: 11)
+        try insert.bind(record.producerID, at: 12)
+        try insert.bind(record.producerVersion, at: 13)
+        try insert.bind(record.createdAt.timeIntervalSince1970, at: 14)
+        try insert.bind(supersedesJSON, at: 15)
+        try insert.bind(record.supersededBy, at: 16)
+        try insert.bind(record.status.rawValue, at: 17)
+
+        _ = try insert.step()
+    }
+
+    private func supersedeSemanticInference(
+        id: String,
+        replacement: ProvenanceSemanticInferenceRecord
+    ) throws {
+        let update = try database.prepare(
+            """
+            UPDATE provenance_semantic_inferences
+            SET status = 'superseded',
+                superseded_by = ?
+            WHERE id = ?
+              AND inference_kind = ?
+              AND scope = ?
+              AND scope_id = ?
+            """
+        )
+        defer { update.finalize() }
+
+        try update.bind(replacement.id, at: 1)
+        try update.bind(id, at: 2)
+        try update.bind(replacement.kind, at: 3)
+        try update.bind(replacement.scope.rawValue, at: 4)
+        try update.bind(replacement.scopeID, at: 5)
+        _ = try update.step()
+        guard database.changes == 1 else {
+            throw ProvenanceSQLiteError.sqlite(
+                message: "semantic inference '\(id)' cannot be superseded because it does not exist in the replacement scope"
+            )
+        }
+    }
+
+    private func semanticInference(
+        from query: ProvenanceSQLiteStatement
+    ) throws -> ProvenanceSemanticInferenceRecord {
+        guard let id = query.string(at: 0),
+              let kind = query.string(at: 2),
+              let scopeRawValue = query.string(at: 3),
+              let scope = ProvenanceSemanticInferenceScope(rawValue: scopeRawValue),
+              let scopeID = query.string(at: 4),
+              let confidenceRawValue = query.string(at: 8),
+              let confidence = ProvenanceConfidence(rawValue: confidenceRawValue),
+              let specificityRawValue = query.string(at: 9),
+              let specificity = ProvenanceSemanticSpecificity(rawValue: specificityRawValue),
+              let producerTypeRawValue = query.string(at: 10),
+              let producerType = ProvenanceSemanticInferenceProducerType(rawValue: producerTypeRawValue),
+              let producerID = query.string(at: 11),
+              let producerVersion = query.string(at: 12),
+              let statusRawValue = query.string(at: 16),
+              let status = ProvenanceSemanticInferenceStatus(rawValue: statusRawValue) else {
+            throw ProvenanceSQLiteError.sqlite(message: "stored semantic inference has invalid scalar fields")
+        }
+
+        let payload = try decodedSemanticJSON(
+            query.string(at: 5),
+            as: ProvenanceSemanticPayloadValue.self,
+            failureMessage: "stored semantic inference has invalid payload"
+        )
+        let evidenceRefs = try decodedSemanticJSON(
+            query.string(at: 6),
+            as: [ProvenanceSemanticEvidenceReference].self,
+            failureMessage: "stored semantic inference has invalid evidence refs"
+        )
+        let supersedes = try decodedSemanticJSON(
+            query.string(at: 14),
+            as: [String].self,
+            failureMessage: "stored semantic inference has invalid supersession ids"
+        )
+
+        return ProvenanceSemanticInferenceRecord(
+            id: id,
+            schemaVersion: query.int(at: 1),
+            kind: kind,
+            scope: scope,
+            scopeID: scopeID,
+            payload: payload,
+            supportingEvidenceRefs: evidenceRefs,
+            supportingFactualRevision: query.double(at: 7).map(Int.init),
+            confidence: confidence,
+            specificity: specificity,
+            producerType: producerType,
+            producerID: producerID,
+            producerVersion: producerVersion,
+            createdAt: Date(timeIntervalSince1970: query.double(at: 13) ?? 0),
+            supersedes: supersedes,
+            supersededBy: query.string(at: 15),
+            status: status
+        )
+    }
+
     private func upsertCodingAgentThread(_ thread: ProvenanceCodingAgentThreadRecord) throws {
         let upsert = try database.prepare(
             """
@@ -5163,6 +5424,45 @@ actor ProvenanceSQLiteRepository {
                 """
                 UPDATE provenance_metadata
                 SET value = '17'
+                WHERE key = 'schema_version'
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 18,
+            statements: [
+                """
+                CREATE TABLE provenance_semantic_inferences (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    schema_version INTEGER NOT NULL,
+                    inference_kind TEXT NOT NULL,
+                    scope TEXT NOT NULL,
+                    scope_id TEXT NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    supporting_evidence_refs_json TEXT NOT NULL,
+                    supporting_factual_revision INTEGER,
+                    confidence TEXT NOT NULL,
+                    specificity TEXT NOT NULL,
+                    producer_type TEXT NOT NULL,
+                    producer_id TEXT NOT NULL,
+                    producer_version TEXT NOT NULL,
+                    created_at_seconds REAL NOT NULL,
+                    supersedes_json TEXT NOT NULL,
+                    superseded_by TEXT,
+                    status TEXT NOT NULL
+                )
+                """,
+                """
+                CREATE INDEX provenance_semantic_inferences_scope_index
+                ON provenance_semantic_inferences (scope, scope_id, inference_kind, status, created_at_seconds)
+                """,
+                """
+                CREATE INDEX provenance_semantic_inferences_superseded_by_index
+                ON provenance_semantic_inferences (superseded_by)
+                """,
+                """
+                UPDATE provenance_metadata
+                SET value = '18'
                 WHERE key = 'schema_version'
                 """,
             ]

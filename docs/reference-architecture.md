@@ -1528,11 +1528,11 @@ This section maps the north-star architecture above to the current repository de
 - Public adopters construct clients through `ProvenanceEngineClientFactory` and interact through `any ProvenanceEngineClient`.
 - The SQLite backend owns an append-oriented event ledger, schema migration metadata, validation, storage summaries, repair reports, bounded ledger reads, and rebuildable current-state projections.
 - Current projections include repositories, worktrees, sessions, session relationships, file explanations, current context records, workspace-display Current State, and the factual session projection for one coding-agent session.
-- Public contracts exist for event append, session lifecycle recording, worktree reads, session-tree reads, file explanations, current context, workspace-display Current State, factual session-projection snapshots, health, and storage summaries.
+- Public contracts exist for event append, session lifecycle recording, worktree reads, session-tree reads, file explanations, current context, workspace-display Current State, factual session-projection snapshots, factual turn-detail reads, semantic inference publish/query records, health, and storage summaries.
 - New engine-owned local storage defaults to `~/.local/state/provenance-engine/provenance.sqlite`.
 - Events can carry optional `ProvenanceEvidenceOrigin` and `ProvenanceEvidenceScope` metadata so the ledger is not hard-coded as personal-only evidence.
 - bmux adopted the engine SDK for the accepted worktree, session-tree, file-explanation, current-context, lifecycle, worktree-observation, and workspace-display paths described by the integration roadmap.
-- There is no public semantic inference record contract, milestone contract, scoped architecture projection contract, or semantic `SessionWorkModel` contract yet. The current factual session projection does not infer semantic meaning.
+- There is no public milestone contract, scoped architecture projection contract, or semantic `SessionWorkModel` contract yet. The current factual session projection does not infer semantic meaning.
 
 ### Partially implemented
 
@@ -1540,7 +1540,7 @@ This section maps the north-star architecture above to the current repository de
 - Evidence scope currently supports the accepted V1 coarse scopes: personal, project, and organization. Finer-grained scopes such as session, workspace, team, repository, and public remain architectural concepts unless added through future contracts.
 - Cross-system relationships are represented for current local session/worktree projections, but Git, GitHub, review, issue, document, and communication relationships are not implemented.
 - Bmux is both a current adopter and a likely evidence producer, but V1 adoption is intentionally limited to one path at a time.
-- Current context, file explanation, and workspace-display contracts exist, but `SessionWorkModel`, evidence-backed semantic inference, evidence-aware retrieval, and compiled knowledge retrieval do not exist.
+- Current context, file explanation, workspace-display, and semantic inference record contracts exist, but first concrete semantic inference kinds, `SessionWorkModel`, evidence-aware retrieval, and compiled knowledge retrieval do not exist.
 - Storage validation, replay, and repair support the current local ledger, but source deletion propagation, raw payload retention policy, and organization-level audit policy are not implemented.
 
 ### Planned after V1

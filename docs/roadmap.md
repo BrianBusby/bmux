@@ -105,17 +105,21 @@ The implementation sequence is:
 4. Add deterministic factual session projections for live state only.
    Implemented through the first revisioned `factualSessionProjection(...)`
    read contract for one PE session.
-5. Introduce semantic `SessionWorkModel` enrichment above the factual projection
+5. Add an inference framework with evidence references, producer versions,
+   confidence, specificity, and supersession. The foundation is implemented as
+   reusable semantic record storage and invalidation/coalescing policy, without
+   defining first semantic concepts.
+6. Introduce semantic `SessionWorkModel` enrichment above the factual projection
    and lower-level APIs.
-6. Add an inference framework with evidence references, producer versions,
-   confidence, and supersession.
 7. Implement the first semantic vertical slice: thread intent, turn intent,
-   session phase, current activity, and milestone hierarchy/description.
-8. Add scoped architecture inference/projection for thread and current-turn
+   session phase, and current activity.
+8. Add milestone hierarchy/description in its own semantic work-understanding
+   slice after the first session inference concepts are stable.
+9. Add scoped architecture inference/projection for thread and current-turn
    scopes.
-9. Add milestone-to-architecture relationships.
-10. Add milestone-to-diff, Git, and GitHub attribution.
-11. Use the Knowledge Compiler later for durable implementation outcomes and
+10. Add milestone-to-architecture relationships.
+11. Add milestone-to-diff, Git, and GitHub attribution.
+12. Use the Knowledge Compiler later for durable implementation outcomes and
     decisions beyond the live session model.
 
 The first vertical slice is accepted only when one real Codex turn produces a

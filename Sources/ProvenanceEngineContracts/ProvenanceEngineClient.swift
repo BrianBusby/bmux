@@ -69,6 +69,22 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     /// - Throws: An implementation-defined error when the query fails.
     func factualSessionTurnDetail(_ request: ProvenanceFactualSessionTurnDetailRequest) async throws
         -> ProvenanceFactualSessionTurnDetailResponse
+
+    /// Publishes one semantic inference record above deterministic Current State.
+    ///
+    /// - Parameter request: Semantic inference record to publish.
+    /// - Returns: Response describing the accepted inference and superseded history.
+    /// - Throws: An implementation-defined error when publishing fails.
+    func publishSemanticInference(_ request: ProvenanceSemanticInferencePublishRequest) async throws
+        -> ProvenanceSemanticInferencePublishResponse
+
+    /// Returns semantic inference records for one scoped subject.
+    ///
+    /// - Parameter request: Query parameters for semantic inference records.
+    /// - Returns: Versioned semantic inference records matching the query.
+    /// - Throws: An implementation-defined error when the query fails.
+    func semanticInferences(_ request: ProvenanceSemanticInferenceQueryRequest) async throws
+        -> ProvenanceSemanticInferenceQueryResponse
 }
 
 public extension ProvenanceEngineClient {
@@ -92,5 +108,21 @@ public extension ProvenanceEngineClient {
             turnID: request.turnID,
             turnDetail: nil
         )
+    }
+
+    /// Default unsupported response for clients that have not adopted semantic inference publishing.
+    func publishSemanticInference(_ request: ProvenanceSemanticInferencePublishRequest) async throws
+        -> ProvenanceSemanticInferencePublishResponse {
+        ProvenanceSemanticInferencePublishResponse(
+            accepted: false,
+            inferenceID: request.record.id,
+            supersededInferenceIDs: []
+        )
+    }
+
+    /// Default empty response for clients that have not adopted semantic inference reads.
+    func semanticInferences(_ request: ProvenanceSemanticInferenceQueryRequest) async throws
+        -> ProvenanceSemanticInferenceQueryResponse {
+        ProvenanceSemanticInferenceQueryResponse(records: [])
     }
 }

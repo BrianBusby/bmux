@@ -368,6 +368,25 @@ Inference records should preserve:
 - created time;
 - active, superseded, or invalidated status.
 
+The reusable framework foundation now exists for these records without defining
+the first semantic concepts. `ProvenanceSemanticInferenceRecord` is the public
+record contract for rule-produced or model-produced semantic claims above the
+factual projection. It preserves structured payloads, supporting evidence
+references, supporting factual revision, confidence, specificity, producer
+identity/version, supersession links, and status. The SQLite implementation
+persists semantic records in a separate table from deterministic Current State;
+publishing a replacement record preserves history by superseding prior records
+rather than rewriting them.
+
+The framework also defines a bounded input packet shape and deterministic dirty
+invalidation/coalescing policy. Model-capable workers receive references and
+bounded summaries for current prompt, latest plan, visible reasoning summaries,
+recent completed commands, recent file-change attribution, lifecycle facts,
+prior semantic state, and relevant factual context. They do not receive or
+persist unrestricted transcripts through this contract. Bursts of prompt, plan,
+reasoning-summary, command-completion, file-change, validation, and lifecycle
+changes can be coalesced into one inference pass plan.
+
 Potential inference definitions:
 
 - `ThreadIntentInference`

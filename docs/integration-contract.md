@@ -147,6 +147,49 @@ activity, validation/risk state, architecture, Knowledge Compiler artifacts,
 GitHub evidence, or semantic meaning from prompts, plans, commands, or file
 paths.
 
+The semantic inference framework foundation is available above deterministic
+Current State through:
+
+- Publish request: `ProvenanceSemanticInferencePublishRequest`.
+- Publish response: `ProvenanceSemanticInferencePublishResponse`.
+- Query request: `ProvenanceSemanticInferenceQueryRequest`.
+- Query response: `ProvenanceSemanticInferenceQueryResponse`.
+- Record DTO: `ProvenanceSemanticInferenceRecord`.
+- Evidence reference DTO: `ProvenanceSemanticEvidenceReference`.
+- Client methods: `ProvenanceEngineClient.publishSemanticInference(...)` and
+  `ProvenanceEngineClient.semanticInferences(...)`.
+- Capabilities: `publish_semantic_inference` and
+  `query_semantic_inferences`.
+
+Semantic inference records are versioned, evidence-backed records with kind,
+scope, structured payload, supporting evidence references, supporting factual
+revision, confidence, specificity, producer type and version, creation time,
+supersession links, and status. They may be produced by deterministic rules or
+model-capable asynchronous workers. Publishing a replacement creates a new
+active record and marks prior records superseded; it does not silently rewrite
+historical semantic meaning.
+
+This framework does not define first semantic concepts yet. Thread intent, turn
+intent, session phase, current activity, milestones, architecture projection,
+Knowledge Compiler output, GitHub ingestion, and bmux UI presentation remain
+later slices. Semantic records are stored separately from deterministic Current
+State and are not part of factual projection rebuild or drift validation.
+
+Model-capable inference input is represented as a bounded packet shape:
+`ProvenanceSemanticInferenceInputPacket` carries references and bounded
+summaries for the current prompt, current/latest plan, visible reasoning
+summaries, recent completed commands, recent file-change attribution,
+lifecycle facts, prior semantic state, and relevant factual context. It is not
+an unrestricted transcript persistence contract.
+
+Invalidation and burst coalescing are represented by
+`ProvenanceSemanticInferenceEvidenceChange`,
+`ProvenanceSemanticInferenceInvalidationRule`, and
+`ProvenanceSemanticInferenceInvalidationPolicy`. The policy maps prompt, plan,
+visible reasoning summary, meaningful command completion, file-change activity,
+validation, and lifecycle changes to dirty inference kinds, and coalesces a
+burst into at most one deterministic inference pass plan.
+
 The accepted richer-session evidence write contract is append-only and
 lower-level than the factual session projection. Producers append
 `ProvenanceEvent` values through `ProvenanceEngineClient.appendEvent(...)`
