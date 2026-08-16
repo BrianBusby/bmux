@@ -51,6 +51,7 @@ ROADMAP_PARENT_KINDS = {
     "milestone": "phase",
     "slice": "milestone",
 }
+PARALLEL_ACTIVE_CLASSIFICATIONS = ("safe", "conditional")
 
 REPOSITORY_LABELS = {
     "provenance_engine": "Provenance Engine",
@@ -93,6 +94,22 @@ class PullRequestEvidence:
     merged: bool
     owner_login: str | None = None
     owner_url: str | None = None
+
+
+@dataclass(frozen=True)
+class ActiveSliceAssignment:
+    node_id: str
+    title: str
+    path: str
+    classification: str
+    worktree_required: bool
+    active_worktree: str | None
+    active_branch: str | None
+    active_agent: str | None
+    active_session: str | None
+    likely_conflict_domains: frozenset[str]
+    contract_dependencies: frozenset[str]
+    conflict_note: str | None
 
 
 @dataclass(frozen=True)
@@ -316,6 +333,48 @@ def roadmap_node_path(index: int, node: dict[str, Any]) -> str:
     return f"project/project-state.yaml:roadmap.nodes[{index}] ({node.get('id')})"
 
 
+def is_active_implementation_slice(node: dict[str, Any]) -> bool:
+    return (
+        node.get("kind") == "slice"
+        and (
+            node.get("status") == "active"
+            or node.get("execution", {}).get("assignment") == "current"
+        )
+    )
+
+
+def metadata_values(node: dict[str, Any], key: str) -> tuple[str, ...]:
+    values = node.get("parallelism", {}).get(key, [])
+    return tuple(str(value) for value in values)
+
+
+def active_slice_assignment(index: int, node: dict[str, Any]) -> ActiveSliceAssignment:
+    parallelism = node.get("parallelism", {})
+    execution = node.get("execution", {})
+    return ActiveSliceAssignment(
+        node_id=node["id"],
+        title=node["title"],
+        path=roadmap_node_path(index, node),
+        classification=str(parallelism.get("classification", "unknown")),
+        worktree_required=bool(parallelism.get("worktree_required", False)),
+        active_worktree=execution.get("active_worktree"),
+        active_branch=execution.get("active_branch"),
+        active_agent=execution.get("active_agent"),
+        active_session=execution.get("active_session"),
+        likely_conflict_domains=frozenset(metadata_values(node, "likely_conflict_domains")),
+        contract_dependencies=frozenset(metadata_values(node, "contract_dependencies")),
+        conflict_note=parallelism.get("conflict_note"),
+    )
+
+
+def active_slice_assignments(nodes: list[dict[str, Any]]) -> list[ActiveSliceAssignment]:
+    return [
+        active_slice_assignment(index, node)
+        for index, node in enumerate(nodes)
+        if is_active_implementation_slice(node)
+    ]
+
+
 def has_evidence_record(evidence: dict[str, Any] | None) -> bool:
     if not evidence:
         return False
@@ -351,6 +410,111 @@ def first_directed_cycle(edges: dict[str, list[str]]) -> list[str] | None:
         if cycle:
             return cycle
     return None
+
+
+def add_active_assignment_issues(
+    nodes: list[dict[str, Any]],
+    add,
+) -> None:
+    active = active_slice_assignments(nodes)
+
+    def assignment_list(assignments: list[ActiveSliceAssignment]) -> str:
+        return ", ".join(f"`{assignment.node_id}`" for assignment in assignments)
+
+    def add_duplicate_assignment_value(
+        attribute: str,
+        issue_name: str,
+        label: str,
+    ) -> None:
+        by_value: dict[str, list[ActiveSliceAssignment]] = {}
+        for assignment in active:
+            value = getattr(assignment, attribute)
+            if value:
+                by_value.setdefault(value, []).append(assignment)
+        for value, assignments in sorted(by_value.items()):
+            if len(assignments) > 1:
+                add(
+                    issue_name,
+                    "project/project-state.yaml:roadmap.nodes",
+                    f"active {label} {value!r} is claimed by {assignment_list(assignments)}",
+                )
+
+    for index, node in enumerate(nodes):
+        execution = node.get("execution", {})
+        has_active_execution_metadata = any(
+            execution.get(key)
+            for key in ("active_worktree", "active_branch", "active_agent", "active_session")
+        )
+        if has_active_execution_metadata and not is_active_implementation_slice(node):
+            add(
+                "inactive_slice_has_active_assignment",
+                roadmap_node_path(index, node),
+                "active execution metadata is only valid on active/current implementation slices",
+            )
+
+    for assignment in active:
+        if assignment.worktree_required:
+            if not assignment.active_worktree:
+                add(
+                    "active_worktree_required",
+                    assignment.path,
+                    "active slice with worktree_required must declare execution.active_worktree",
+                )
+            if not assignment.active_branch:
+                add(
+                    "active_branch_required",
+                    assignment.path,
+                    "active slice with worktree_required must declare execution.active_branch",
+                )
+            if not assignment.active_agent and not assignment.active_session:
+                add(
+                    "active_agent_or_session_required",
+                    assignment.path,
+                    "active slice with worktree_required must declare execution.active_agent or execution.active_session",
+                )
+
+    add_duplicate_assignment_value("active_worktree", "unique_active_worktree", "worktree")
+    add_duplicate_assignment_value("active_branch", "unique_active_branch", "branch")
+
+    if len(active) <= 1:
+        return
+
+    for assignment in active:
+        if assignment.classification == "serial":
+            add(
+                "active_parallelism_serial",
+                assignment.path,
+                "serial roadmap slice cannot be active in parallel with another implementation slice",
+            )
+        elif assignment.classification == "unknown":
+            add(
+                "active_parallelism_unknown",
+                assignment.path,
+                "unknown roadmap parallelism cannot be treated as safe for concurrent active work",
+            )
+        elif assignment.classification not in PARALLEL_ACTIVE_CLASSIFICATIONS:
+            add(
+                "active_parallelism_classification",
+                assignment.path,
+                f"active parallel classification must be one of {', '.join(PARALLEL_ACTIVE_CLASSIFICATIONS)}",
+            )
+
+    for left_index, left in enumerate(active):
+        for right in active[left_index + 1:]:
+            if left.classification != "safe" or right.classification != "safe":
+                continue
+            for attribute, issue_name, label in (
+                ("likely_conflict_domains", "active_safe_conflict_domain_overlap", "likely conflict domains"),
+                ("contract_dependencies", "active_safe_contract_dependency_overlap", "contract dependencies"),
+            ):
+                overlap = sorted(getattr(left, attribute) & getattr(right, attribute))
+                if overlap and not (left.conflict_note or right.conflict_note):
+                    overlap_text = ", ".join(f"`{item}`" for item in overlap)
+                    add(
+                        issue_name,
+                        "project/project-state.yaml:roadmap.nodes",
+                        f"`{left.node_id}` and `{right.node_id}` are both classified safe but share {label}: {overlap_text}; mark one conditional/serial or add conflict_note",
+                    )
 
 
 def invariant_issues(
@@ -455,6 +619,8 @@ def invariant_issues(
                 if delivery_status in ("merged", "closed") or acceptance_status in ("implemented", "accepted"):
                     add("roadmap_planned_slice_status_conflict", path, "planned roadmap slice cannot declare delivered or accepted status")
 
+    add_active_assignment_issues(nodes, add)
+
     hierarchy_cycle = first_directed_cycle(hierarchy_edges)
     if hierarchy_cycle:
         add("roadmap_parent_cycle", "project/project-state.yaml:roadmap.nodes", "roadmap parent cycle: " + " -> ".join(hierarchy_cycle))
@@ -500,7 +666,6 @@ def invariant_issues(
     if checkpoints.get("status") == "not_implemented" and checkpoints.get("selected_for_implementation"):
         add("automatic_checkpoints_unselected", "project/project-state.yaml:policies.automatic_checkpoint_diagnostics", "not_implemented automatic checkpoints cannot be selected")
 
-    active_slices: list[tuple[str, dict[str, Any]]] = []
     for candidate in repo_statuses:
         repository = candidate.get("repository", "<unknown>")
         candidate_path = repo_status_paths.get(repository, Path("project/repo-status.yaml"))
@@ -519,7 +684,6 @@ def invariant_issues(
         if isinstance(active_slice, dict):
             selected = active_slice.get("id") is not None or active_slice.get("state") not in (None, "none_selected")
             if selected:
-                active_slices.append((repository, active_slice))
                 if not active_slice.get("owner"):
                     add("active_slice_has_owner", str(candidate_path), "selected current slice must have owner")
                 if current_state in ("observation", "none_selected"):
@@ -534,10 +698,6 @@ def invariant_issues(
         if telemetry.get("raw_execution_telemetry_persisted") in ("implemented", "under_observation", "accepted"):
             if policies.get("raw_execution_telemetry_persisted") is False:
                 add("raw_telemetry_not_persisted", str(candidate_path), "repo-local capabilities cannot claim durable raw execution telemetry persistence")
-
-    if len(active_slices) > 1:
-        repositories = ", ".join(f"{repo}:{slice_['id']}" for repo, slice_ in active_slices)
-        add("no_conflicting_active_slices", "project/repo-status.yaml", f"multiple active implementation slices are selected: {repositories}")
 
     shared_caveats = {item["id"]: item for item in shared.get("caveats", [])}
     for candidate in repo_statuses:
@@ -744,6 +904,26 @@ def reference_list_text(node_ids: list[str] | None) -> str:
     return ", ".join(f"`{node_id}`" for node_id in node_ids)
 
 
+def metadata_list_text(values: list[str] | tuple[str, ...] | None) -> str:
+    if not values:
+        return ""
+    return ", ".join(f"`{value}`" for value in values)
+
+
+def optional_metadata_text(values: list[str] | tuple[str, ...] | None) -> str:
+    return metadata_list_text(values) or "None"
+
+
+def active_assignment_safety_text(assignment: ActiveSliceAssignment, active_count: int) -> str:
+    if active_count <= 1:
+        return "single active assignment"
+    if assignment.classification == "safe":
+        return "safe if domains stay disjoint"
+    if assignment.classification == "conditional":
+        return "conditional"
+    return "not parallelizable"
+
+
 def generated_header(context: dict[str, Any]) -> str:
     repo_root = context["repo_root"]
     shared_path = context["shared_path"]
@@ -883,6 +1063,32 @@ def render_nested_roadmap(context: dict[str, Any]) -> str:
         parallel_with = reference_list_text(node.get("parallelism", {}).get("with"))
         if parallel_with:
             detail_lines.append(f"Parallel with: {parallel_with}")
+        parallelism = node.get("parallelism", {})
+        for label, key in (
+            ("Expected contract domains", "expected_contract_domains"),
+            ("Expected code areas", "expected_code_areas"),
+            ("Likely conflict domains", "likely_conflict_domains"),
+            ("Contract dependencies", "contract_dependencies"),
+        ):
+            text = metadata_list_text(parallelism.get(key))
+            if text:
+                detail_lines.append(f"{label}: {text}")
+        if parallelism.get("worktree_required") is True:
+            detail_lines.append("Worktree required: true")
+        if parallelism.get("conflict_note"):
+            detail_lines.append(f"Conflict note: {parallelism['conflict_note']}")
+        execution = node.get("execution", {})
+        active_fields = []
+        for label, key in (
+            ("worktree", "active_worktree"),
+            ("branch", "active_branch"),
+            ("agent", "active_agent"),
+            ("session", "active_session"),
+        ):
+            if execution.get(key):
+                active_fields.append(f"{label}: `{execution[key]}`")
+        if active_fields:
+            detail_lines.append("Active assignment: " + "; ".join(active_fields))
         if node.get("evidence"):
             detail_lines.append(f"Evidence: {evidence_text(node['evidence'])}")
         if node.get("rationale"):
@@ -906,11 +1112,67 @@ def render_nested_roadmap(context: dict[str, Any]) -> str:
     for root in roots:
         append_node(root, 0)
 
+    active_assignments = active_slice_assignments(nodes)
+    lines.extend(
+        [
+            "",
+            "## Parallel Worktree Preflight",
+            "",
+            "Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.",
+            "",
+        ]
+    )
+    if active_assignments:
+        lines.extend(
+            [
+                "| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |",
+                "| --- | --- | --- | --- | --- | --- | --- | --- |",
+            ]
+        )
+        for assignment in active_assignments:
+            agent_session = assignment.active_agent or assignment.active_session or "None"
+            lines.append(
+                "| "
+                f"{assignment.title} (`{assignment.node_id}`) | "
+                f"{status_label(assignment.classification)} | "
+                f"{assignment.active_worktree or 'None'} | "
+                f"{assignment.active_branch or 'None'} | "
+                f"{agent_session} | "
+                f"{optional_metadata_text(tuple(sorted(assignment.likely_conflict_domains)))} | "
+                f"{optional_metadata_text(tuple(sorted(assignment.contract_dependencies)))} | "
+                f"{active_assignment_safety_text(assignment, len(active_assignments))} |"
+            )
+    else:
+        lines.append("- Active implementation assignments: none selected.")
+
     next_nodes = [
         node
         for node in nodes
         if node.get("execution", {}).get("assignment") == "next_eligible"
     ]
+    lines.extend(["", "### Next Eligible Preflight", ""])
+    if next_nodes:
+        lines.extend(
+            [
+                "| Slice | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |",
+                "| --- | --- | --- | --- | --- | --- | --- |",
+            ]
+        )
+        for node in next_nodes:
+            parallelism = node.get("parallelism", {})
+            lines.append(
+                "| "
+                f"{node['title']} (`{node['id']}`) | "
+                f"{status_label(parallelism.get('classification'))} | "
+                f"{status_label(parallelism.get('worktree_required', False))} | "
+                f"{optional_metadata_text(parallelism.get('likely_conflict_domains'))} | "
+                f"{optional_metadata_text(parallelism.get('contract_dependencies'))} | "
+                f"{optional_metadata_text(parallelism.get('expected_contract_domains'))} | "
+                f"{optional_metadata_text(parallelism.get('expected_code_areas'))} |"
+            )
+    else:
+        lines.append("None.")
+
     lines.extend(["", "## Next Eligible Work", ""])
     if next_nodes:
         for node in next_nodes:

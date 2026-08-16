@@ -65,6 +65,33 @@ class ProjectDocsTests(unittest.TestCase):
     def roadmap_node(self, shared, node_id: str):
         return next(node for node in shared["roadmap"]["nodes"] if node["id"] == node_id)
 
+    def activate_slice(
+        self,
+        shared,
+        node_id: str,
+        *,
+        classification: str = "safe",
+        worktree: str = "/worktrees/one",
+        branch: str = "slice-one",
+        agent: str = "agent-one",
+        conflict_domains: list[str] | None = None,
+        contract_dependencies: list[str] | None = None,
+    ):
+        node = self.roadmap_node(shared, node_id)
+        node["status"] = "active"
+        node["parallelism"]["classification"] = classification
+        node["parallelism"]["worktree_required"] = True
+        if conflict_domains is not None:
+            node["parallelism"]["likely_conflict_domains"] = conflict_domains
+        if contract_dependencies is not None:
+            node["parallelism"]["contract_dependencies"] = contract_dependencies
+        node["parallelism"].pop("conflict_note", None)
+        node["execution"]["assignment"] = "current"
+        node["execution"]["active_worktree"] = worktree
+        node["execution"]["active_branch"] = branch
+        node["execution"]["active_agent"] = agent
+        return node
+
     def test_valid_shared_manifest(self):
         shared, local = self.load_valid()
         project_docs.semantic_validate(shared, local, LOCAL)
@@ -450,19 +477,139 @@ class ProjectDocsTests(unittest.TestCase):
         issues = project_docs.github_evidence_issues(shared, [local], provider)
         self.assertTrue(any(issue.name == "issue_state_mismatch" for issue in issues))
         self.assertTrue(any(issue.name == "missing_release" for issue in issues))
-
-    def test_conflicting_active_slices_fail(self):
+    def test_duplicate_active_worktree_fails(self):
         shared, local = self.load_valid()
-        peer = copy.deepcopy(local)
-        local["repository"] = "BrianBusby/provenance-engine"
-        peer["repository"] = "BrianBusby/bmux"
-        for status in (local, peer):
-            status["current_work"] = {
-                "state": "active",
-                "active_slice": {"id": "project_truth_ci", "title": "Project Truth CI", "state": "open", "owner": status["repository"]},
-            }
-        issues = project_docs.invariant_issues(shared, [local, peer], {local["repository"]: LOCAL, peer["repository"]: LOCAL})
-        self.assertTrue(any(issue.name == "no_conflicting_active_slices" for issue in issues))
+        self.activate_slice(
+            shared,
+            "human_readable_semantic_messaging",
+            worktree="/worktrees/shared",
+            branch="slice-one",
+            conflict_domains=["semantic-message-contract"],
+            contract_dependencies=["semantic-message-read"],
+        )
+        self.activate_slice(
+            shared,
+            "presentation_language_calibration_corpus",
+            worktree="/worktrees/shared",
+            branch="slice-two",
+            agent="agent-two",
+            conflict_domains=["presentation-language-corpus"],
+            contract_dependencies=["presentation-corpus-write"],
+        )
+        issues = project_docs.invariant_issues(shared, [local], {local["repository"]: LOCAL})
+        self.assertTrue(any(issue.name == "unique_active_worktree" for issue in issues))
+
+    def test_duplicate_active_branch_fails(self):
+        shared, local = self.load_valid()
+        self.activate_slice(
+            shared,
+            "human_readable_semantic_messaging",
+            worktree="/worktrees/one",
+            branch="shared-branch",
+            conflict_domains=["semantic-message-contract"],
+            contract_dependencies=["semantic-message-read"],
+        )
+        self.activate_slice(
+            shared,
+            "presentation_language_calibration_corpus",
+            worktree="/worktrees/two",
+            branch="shared-branch",
+            agent="agent-two",
+            conflict_domains=["presentation-language-corpus"],
+            contract_dependencies=["presentation-corpus-write"],
+        )
+        issues = project_docs.invariant_issues(shared, [local], {local["repository"]: LOCAL})
+        self.assertTrue(any(issue.name == "unique_active_branch" for issue in issues))
+
+    def test_safe_active_slices_with_overlapping_conflict_domains_fail(self):
+        shared, local = self.load_valid()
+        self.activate_slice(
+            shared,
+            "human_readable_semantic_messaging",
+            worktree="/worktrees/one",
+            branch="slice-one",
+            conflict_domains=["docs/generated"],
+            contract_dependencies=["semantic-message-read"],
+        )
+        self.activate_slice(
+            shared,
+            "presentation_language_calibration_corpus",
+            worktree="/worktrees/two",
+            branch="slice-two",
+            agent="agent-two",
+            conflict_domains=["docs/generated"],
+            contract_dependencies=["presentation-corpus-write"],
+        )
+        issues = project_docs.invariant_issues(shared, [local], {local["repository"]: LOCAL})
+        self.assertTrue(any(issue.name == "active_safe_conflict_domain_overlap" for issue in issues))
+
+    def test_unknown_parallelism_is_not_safe_for_parallel_active_work(self):
+        shared, local = self.load_valid()
+        self.activate_slice(
+            shared,
+            "human_readable_semantic_messaging",
+            classification="unknown",
+            worktree="/worktrees/one",
+            branch="slice-one",
+            conflict_domains=["semantic-message-contract"],
+            contract_dependencies=["semantic-message-read"],
+        )
+        self.activate_slice(
+            shared,
+            "presentation_language_calibration_corpus",
+            worktree="/worktrees/two",
+            branch="slice-two",
+            agent="agent-two",
+            conflict_domains=["presentation-language-corpus"],
+            contract_dependencies=["presentation-corpus-write"],
+        )
+        issues = project_docs.invariant_issues(shared, [local], {local["repository"]: LOCAL})
+        self.assertTrue(any(issue.name == "active_parallelism_unknown" for issue in issues))
+
+    def test_serial_slice_is_not_parallelizable(self):
+        shared, local = self.load_valid()
+        self.activate_slice(
+            shared,
+            "milestone_inference",
+            classification="serial",
+            worktree="/worktrees/one",
+            branch="slice-one",
+            conflict_domains=["milestone-semantics"],
+            contract_dependencies=["semantic-session-inference"],
+        )
+        self.activate_slice(
+            shared,
+            "blocker_approach_change_semantics",
+            worktree="/worktrees/two",
+            branch="slice-two",
+            agent="agent-two",
+            conflict_domains=["blocker-semantics"],
+            contract_dependencies=["approach-change-inference"],
+        )
+        issues = project_docs.invariant_issues(shared, [local], {local["repository"]: LOCAL})
+        self.assertTrue(any(issue.name == "active_parallelism_serial" for issue in issues))
+
+    def test_valid_parallel_active_assignments_pass(self):
+        shared, local = self.load_valid()
+        self.activate_slice(
+            shared,
+            "human_readable_semantic_messaging",
+            worktree="/worktrees/one",
+            branch="slice-one",
+            conflict_domains=["semantic-message-contract"],
+            contract_dependencies=["semantic-message-read"],
+        )
+        self.activate_slice(
+            shared,
+            "presentation_language_calibration_corpus",
+            worktree="/worktrees/two",
+            branch="slice-two",
+            agent="agent-two",
+            conflict_domains=["presentation-language-corpus"],
+            contract_dependencies=["presentation-corpus-write"],
+        )
+        issues = project_docs.invariant_issues(shared, [local], {local["repository"]: LOCAL})
+        self.assertFalse(any(issue.name.startswith("active_") or issue.name.startswith("unique_active_") for issue in issues))
 
     def test_delivery_acceptance_confusion_fails(self):
         shared, local = self.load_valid()

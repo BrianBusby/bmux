@@ -173,6 +173,11 @@
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/id" }
     },
+    "roadmapMetadataList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
     "roadmapConceptClassification": {
       "type": "object",
       "additionalProperties": false,
@@ -225,17 +230,12 @@
       "properties": {
         "classification": { "enum": ["safe", "conditional", "serial", "unknown"] },
         "with": { "$ref": "#/$defs/roadmapReferenceList" },
-        "likely_conflict_domains": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": { "type": "string", "minLength": 1 }
-        },
-        "contract_dependencies": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": { "type": "string", "minLength": 1 }
-        },
-        "worktree_required": { "type": "boolean" }
+        "expected_contract_domains": { "$ref": "#/$defs/roadmapMetadataList" },
+        "expected_code_areas": { "$ref": "#/$defs/roadmapMetadataList" },
+        "likely_conflict_domains": { "$ref": "#/$defs/roadmapMetadataList" },
+        "contract_dependencies": { "$ref": "#/$defs/roadmapMetadataList" },
+        "worktree_required": { "type": "boolean" },
+        "conflict_note": { "type": "string", "minLength": 1 }
       }
     },
     "roadmapExecution": {
@@ -245,6 +245,10 @@
       "properties": {
         "assignment": { "enum": ["complete", "current", "next_eligible", "planned", "deferred", "unassigned"] },
         "assigned_to": { "enum": ["provenance_engine", "bmux", "shared", "unassigned"] },
+        "active_worktree": { "type": "string", "minLength": 1 },
+        "active_branch": { "type": "string", "minLength": 1 },
+        "active_agent": { "type": "string", "minLength": 1 },
+        "active_session": { "type": "string", "minLength": 1 },
         "notes": { "type": "string", "minLength": 1 }
       }
     },

@@ -536,6 +536,17 @@ roadmap:
         - read_only_project_truth_ci_gate
       parallelism:
         classification: safe
+        expected_contract_domains:
+          - current_target_architecture_status
+        expected_code_areas:
+          - docs/current-and-target-architecture.md
+          - tools/project-docs
+        likely_conflict_domains:
+          - project/project-state.yaml
+          - docs/generated
+        contract_dependencies:
+          - project_truth_generated_docs
+        worktree_required: true
       execution:
         assignment: complete
         assigned_to: provenance_engine
@@ -713,6 +724,22 @@ roadmap:
         - semantic_inference_framework
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - factual_session_projection
+          - deterministic_current_state
+        expected_code_areas:
+          - Sources/ProvenanceEngineContracts
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+          - bmux factual projection consumers
+        likely_conflict_domains:
+          - factual_session_projection_contract
+          - deterministic_current_state_projection
+          - bmux_consumer_contract_shape
+        contract_dependencies:
+          - factual_session_projection_foundation
+          - deterministic_current_state_api
+        worktree_required: true
       execution:
         assignment: next_eligible
         assigned_to: provenance_engine
@@ -780,6 +807,20 @@ roadmap:
         - blocker_approach_change_semantics
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - semantic_inference_records
+          - session_work_model_semantics
+        expected_code_areas:
+          - Sources/ProvenanceEngineContracts
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - semantic_inference_schema
+          - session_work_model_projection
+        contract_dependencies:
+          - factual_session_projection
+          - evidence_reference_identity
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -809,6 +850,19 @@ roadmap:
         - scoped_architecture_projection
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - semantic_session_inferences
+          - session_work_model_semantics
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - semantic_inference_schema
+          - session_work_model_projection
+        contract_dependencies:
+          - semantic_inference_records
+          - factual_session_projection
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -839,6 +893,20 @@ roadmap:
         classification: safe
         with:
           - presentation_language_calibration_corpus
+        expected_contract_domains:
+          - semantic_message_contract
+          - session_work_model_presentation
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - docs/session-work-model.md
+          - bmux semantic presentation consumers
+        likely_conflict_domains:
+          - semantic_message_contract
+          - session_work_model_projection
+        contract_dependencies:
+          - semantic_session_inferences
+        worktree_required: true
+        conflict_note: Safe with the calibration corpus only when messaging edits stay in presentation contract code and corpus edits stay in example data.
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -861,6 +929,19 @@ roadmap:
         - human_readable_semantic_messaging
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - semantic_explanation_provenance
+          - bmux_semantic_presentation
+        expected_code_areas:
+          - bmux UI semantic explanation surfaces
+          - Sources/ProvenanceEngineContracts
+        likely_conflict_domains:
+          - bmux_semantic_presentation
+          - semantic_message_contract
+        contract_dependencies:
+          - semantic_message_contract
+          - session_work_model_presentation
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: bmux
@@ -884,6 +965,19 @@ roadmap:
         - presentation_language_calibration_corpus
       parallelism:
         classification: safe
+        expected_contract_domains:
+          - presentation_feedback_events
+          - semantic_message_calibration
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - bmux semantic feedback surfaces
+        likely_conflict_domains:
+          - presentation_feedback_events
+          - semantic_message_calibration
+        contract_dependencies:
+          - semantic_explanation_provenance
+          - presentation_language_corpus
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: shared
@@ -908,6 +1002,20 @@ roadmap:
         classification: safe
         with:
           - human_readable_semantic_messaging
+        expected_contract_domains:
+          - presentation_language_corpus
+          - semantic_message_calibration
+        expected_code_areas:
+          - Tests/ProvenanceEngineTests
+          - docs/session-work-model.md
+          - calibration fixtures
+        likely_conflict_domains:
+          - presentation_language_corpus
+          - semantic_message_calibration
+        contract_dependencies:
+          - semantic_session_inferences
+        worktree_required: true
+        conflict_note: Safe with human-readable messaging only when corpus edits do not change the semantic message contract.
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -970,6 +1078,18 @@ roadmap:
         - milestone_to_architecture_relationships
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - milestone_semantics
+          - session_work_model_milestones
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - milestone_semantics
+          - session_work_model_projection
+        contract_dependencies:
+          - semantic_session_inferences
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -993,6 +1113,19 @@ roadmap:
         classification: safe
         with:
           - milestone_inference
+        expected_contract_domains:
+          - blocker_semantics
+          - approach_change_semantics
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - blocker_semantics
+          - approach_change_semantics
+        contract_dependencies:
+          - semantic_inference_records
+        worktree_required: true
+        conflict_note: Safe only if blocker and approach-change records stay independent from milestone hierarchy writes.
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -1016,6 +1149,20 @@ roadmap:
         - richer_coding_agent_evidence_foundation
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - milestone_code_relationships
+          - file_change_attribution
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Sources/ProvenanceEngineContracts
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - milestone_relationships
+          - file_change_attribution
+        contract_dependencies:
+          - milestone_semantics
+          - richer_coding_agent_evidence
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -1077,6 +1224,20 @@ roadmap:
         - milestone_to_architecture_relationships
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - scoped_architecture_projection
+          - architecture_evidence_relationships
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Sources/ProvenanceEngineContracts
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - scoped_architecture_projection
+          - architecture_relationships
+        contract_dependencies:
+          - semantic_session_inferences
+          - file_change_attribution
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -1100,6 +1261,19 @@ roadmap:
         - milestone_inference
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - milestone_architecture_relationships
+          - scoped_architecture_projection
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - milestone_relationships
+          - architecture_relationships
+        contract_dependencies:
+          - scoped_architecture_projection
+          - milestone_semantics
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -1122,6 +1296,21 @@ roadmap:
         - milestone_to_architecture_relationships
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - knowledge_compiler_outputs
+          - retrieval_context_packages
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Sources/ProvenanceEngineContracts
+          - Tests/ProvenanceEngineTests
+          - docs/reference-architecture.md
+        likely_conflict_domains:
+          - knowledge_compiler
+          - retrieval_contracts
+        contract_dependencies:
+          - milestone_code_relationships
+          - milestone_architecture_relationships
+        worktree_required: true
       execution:
         assignment: deferred
         assigned_to: provenance_engine
