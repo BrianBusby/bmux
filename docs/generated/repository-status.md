@@ -25,10 +25,15 @@ Repository: `BrianBusby/provenance-engine`
 
 | Capability | State |
 | --- | --- |
+| Coding Agent Current Activity | implemented |
+| Coding Agent Session Phase | implemented |
+| Coding Agent Thread Intent | implemented |
+| Coding Agent Turn Intent | implemented |
 | Deterministic Current State | implemented |
 | Engine Owned Sqlite Store | implemented |
 | Factual Session Projection | implemented |
 | Factual Session Turn Detail | implemented |
+| First Semantic Session Inferences | implemented |
 | Immutable Ledger | implemented |
 | Producer Neutral Lifecycle Recording | implemented |
 | Public In Process Sdk | implemented |
