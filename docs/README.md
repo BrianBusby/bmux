@@ -16,6 +16,7 @@ direction. They must link to generated status rather than duplicate volatile
 facts.
 
 - [reference-architecture.md](reference-architecture.md)
+- [current-and-target-architecture.md](current-and-target-architecture.md)
 - [architecture.md](architecture.md)
 - [session-work-model.md](session-work-model.md)
 - [integration-contract.md](integration-contract.md)

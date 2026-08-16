@@ -237,6 +237,42 @@ class ProjectDocsTests(unittest.TestCase):
             "before\n<!-- BEGIN GENERATED: project-summary -->\nnew\n<!-- END GENERATED: project-summary -->\nafter\n",
         )
 
+    def test_current_target_architecture_status_block_rendering(self):
+        context = project_docs.load_inputs(ROOT)
+        rendered = project_docs.render_current_target_architecture_status(context)
+        self.assertIn("Active implementation slice:", rendered)
+        self.assertIn("Factual projection consumer shape follow-up", rendered)
+        self.assertIn("SessionWorkModel semantic projection", rendered)
+        self.assertIn("Knowledge Compiler, Knowledge Store, and Retrieval", rendered)
+
+    def test_authored_generated_block_drift_detects_stale_architecture_doc(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            shutil.copytree(ROOT / "project", repo / "project")
+            (repo / "docs").mkdir(parents=True)
+            shutil.copy(
+                ROOT / "docs/current-and-target-architecture.md",
+                repo / "docs/current-and-target-architecture.md",
+            )
+            context = project_docs.load_inputs(repo)
+
+            project_docs.write_authored_generated_blocks(context)
+            self.assertEqual([], project_docs.authored_generated_block_drift_issues(context))
+
+            doc = repo / "docs/current-and-target-architecture.md"
+            doc.write_text(
+                doc.read_text(encoding="utf-8").replace(
+                    "Active implementation slice: none selected",
+                    "Active implementation slice: stale",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            issues = project_docs.authored_generated_block_drift_issues(context)
+            self.assertTrue(any(issue.name == "authored_generated_blocks_fresh" for issue in issues))
+            with self.assertRaisesRegex(project_docs.ProjectDocsError, "Authored generated blocks are stale"):
+                project_docs.check_authored_generated_blocks(context)
+
     def test_bmux_missing_shared_manifest_fails_clearly(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)

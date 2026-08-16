@@ -1100,11 +1100,189 @@ VOLATILE_STATUS_PATTERNS = (
 
 
 AUTHORED_DOCS = (
+    "docs/current-and-target-architecture.md",
     "docs/current-status.md",
     "docs/roadmap.md",
     "docs/handoffs/latest.md",
     "docs/execution-telemetry/implementation-status.md",
     "project/README.md",
+)
+
+AUTHORED_GENERATED_DOCS = (
+    "docs/current-and-target-architecture.md",
+)
+
+ARCHITECTURE_NODE_SUMMARIES = (
+    {
+        "title": "Bmux provider acquisition and runtime observation",
+        "status_node_ids": (
+            "execution_telemetry_foundation",
+            "claude_lifecycle_telemetry",
+        ),
+        "capability_ids": (),
+        "owns": "Provider acquisition, PTY/process/runtime, live streaming state, immediate interaction, normalization, capture policy, and presentation/UI.",
+        "inputs": "Provider runtime events, terminal/process state, user interaction, repository/worktree facts observed by bmux.",
+        "outputs": "Normalized accepted evidence submitted through Provenance Engine public contracts, plus bmux-owned live display state.",
+        "does_not_own": "Durable evidence semantics, deterministic Current State, semantic inference, milestone meaning, or Knowledge Compiler outputs.",
+        "related_slice_ids": (
+            "execution_telemetry_foundation",
+            "claude_lifecycle_telemetry",
+            "workspace_display_durable_context",
+        ),
+    },
+    {
+        "title": "Provenance Engine durable evidence",
+        "status_node_ids": (
+            "provenance_engine_v1",
+            "richer_coding_agent_evidence_foundation",
+        ),
+        "capability_ids": (
+            "public_in_process_sdk",
+            "engine_owned_sqlite_store",
+            "immutable_ledger",
+            "schema_identity_validation",
+            "producer_neutral_lifecycle_recording",
+            "richer_coding_agent_evidence",
+        ),
+        "owns": "Accepted durable engineering evidence, validation, immutable ledger semantics, source/origin/scope metadata, and evidence relationships.",
+        "inputs": "Explicitly accepted events from producers such as bmux; completed or meaningful coding-agent units when policy allows them.",
+        "outputs": "Ledger events and rebuildable evidence relationships for lower projections and later inference.",
+        "does_not_own": "Raw provider streams, hidden reasoning, unrestricted transcripts, live replay state, or capture policy.",
+        "related_slice_ids": (
+            "provenance_engine_v1",
+            "richer_coding_agent_evidence_foundation",
+        ),
+    },
+    {
+        "title": "Deterministic Current State",
+        "status_node_ids": (
+            "workspace_display_durable_context",
+            "factual_session_projection_foundation",
+        ),
+        "capability_ids": (
+            "deterministic_current_state",
+            "workspace_display_current_state",
+            "workspace_display_projection_cursors",
+            "workspace_display_ticket_link_facts",
+            "workspace_display_ticket_title_facts",
+            "workspace_display_project_link_facts",
+            "workspace_display_durable_context",
+        ),
+        "owns": "Mechanical, rebuildable present-tense state derived only from accepted evidence.",
+        "inputs": "Immutable ledger events and deterministic reducer rules.",
+        "outputs": "Workspace display facts, current context, session/worktree/file views, and other factual public reads.",
+        "does_not_own": "Intent, milestones, current activity, risk, architecture meaning, or model-derived conclusions.",
+        "related_slice_ids": (
+            "workspace_display_durable_context",
+            "factual_session_projection_foundation",
+        ),
+    },
+    {
+        "title": "Factual session projection",
+        "status_node_ids": (
+            "factual_session_projection_foundation",
+            "factual_projection_consumer_shape_followup",
+        ),
+        "capability_ids": (
+            "factual_session_projection",
+        ),
+        "owns": "Revisioned factual snapshots of observed coding-agent thread and turn evidence for one PE session.",
+        "inputs": "Coding-agent thread, turn, prompt, plan, completed command, visible reasoning summary, and file-change attribution evidence.",
+        "outputs": "Observed thread/turn grouping with latest prompt, plan, commands, summaries, file changes, and ledger revision.",
+        "does_not_own": "Synthetic turns, inferred intent, milestone hierarchy, session phase, risks, or architecture projection.",
+        "related_slice_ids": (
+            "richer_coding_agent_evidence_foundation",
+            "factual_session_projection_foundation",
+            "factual_projection_consumer_shape_followup",
+        ),
+    },
+    {
+        "title": "Semantic inference framework",
+        "status_node_ids": (
+            "semantic_inference_framework",
+            "first_semantic_session_inferences",
+        ),
+        "capability_ids": (
+            "semantic_inference_framework",
+            "semantic_session_work_model_projection",
+        ),
+        "owns": "Evidence-backed inference records, producer versions, confidence, supersession, and semantic projection updates.",
+        "inputs": "Factual projections, bounded evidence packets, plans, commands, reasoning summaries, file changes, and later validation evidence.",
+        "outputs": "Thread intent, turn intent, session phase, current activity, blocker/approach-change facts, and SessionWorkModel fields.",
+        "does_not_own": "Deterministic Current State or bmux rendering and interaction policy.",
+        "related_slice_ids": (
+            "semantic_inference_framework",
+            "first_semantic_session_inferences",
+            "blocker_approach_change_semantics",
+        ),
+    },
+    {
+        "title": "SessionWorkModel semantic projection",
+        "status_node_ids": (
+            "semantic_session_work_model_projection",
+            "first_semantic_session_inferences",
+        ),
+        "capability_ids": (
+            "semantic_session_work_model_projection",
+        ),
+        "owns": "A coherent semantic view of one live coding-agent session with provenance on every non-observed field.",
+        "inputs": "Deterministic factual session projection plus active inference records.",
+        "outputs": "Subject, thread, current turn, current activity, milestones, validation/risk state, scoped architecture, and provenance metadata.",
+        "does_not_own": "Lower-level public APIs or durable compiled knowledge that outlives the live session.",
+        "related_slice_ids": (
+            "semantic_session_work_model_projection",
+            "first_semantic_session_inferences",
+            "human_readable_semantic_messaging",
+        ),
+    },
+    {
+        "title": "Milestone semantics",
+        "status_node_ids": (
+            "milestone_inference",
+            "milestone_to_code_relationships",
+        ),
+        "capability_ids": (),
+        "owns": "Evidence-backed milestone hierarchy, descriptions, current focus, completion criteria, and relationships to code evidence.",
+        "inputs": "Plans, prompts, command/file-change evidence, validation facts, reasoning summaries, and later Git/GitHub evidence.",
+        "outputs": "Nested live milestones and milestone-to-code relationships for SessionWorkModel and later knowledge compilation.",
+        "does_not_own": "bmux todo rendering or the assumption that commits and PRs are milestone boundaries.",
+        "related_slice_ids": (
+            "milestone_inference",
+            "milestone_to_code_relationships",
+        ),
+    },
+    {
+        "title": "Scoped architecture projection",
+        "status_node_ids": (
+            "scoped_architecture_projection",
+            "milestone_to_architecture_relationships",
+        ),
+        "capability_ids": (
+            "scoped_architecture_projection",
+        ),
+        "owns": "Thread-scoped and current-turn-scoped touched, affected, and contextual architecture subgraphs.",
+        "inputs": "Evidence-backed file/symbol relationships, diffs, docs, plans, reasoning summaries, and inference records.",
+        "outputs": "Small scoped architecture projections and milestone-to-architecture links.",
+        "does_not_own": "Whole-repository diagrams or unsupported architectural claims.",
+        "related_slice_ids": (
+            "scoped_architecture_projection",
+            "milestone_to_architecture_relationships",
+        ),
+    },
+    {
+        "title": "Knowledge Compiler, Knowledge Store, and Retrieval",
+        "status_node_ids": (
+            "knowledge_compiler_outcomes",
+        ),
+        "capability_ids": (),
+        "owns": "Later durable knowledge artifacts, evidence-linked regeneration, scoped storage, retrieval, citation, ranking, and context budgeting.",
+        "inputs": "Evidence, Current State, inference records, milestones, architecture relationships, Git/GitHub/review/document evidence, and accepted human decisions.",
+        "outputs": "Compiled knowledge, knowledge indexes, and bounded context packages for agents, bmux, CLI, IDEs, and organization services.",
+        "does_not_own": "The live session model's immediate interaction loop or consumer-specific UI presentation.",
+        "related_slice_ids": (
+            "knowledge_compiler_outcomes",
+        ),
+    },
 )
 
 
@@ -1127,6 +1305,147 @@ def authored_doc_drift_issues(repo_root: Path) -> list[ValidationIssue]:
     return issues
 
 
+def roadmap_node_map(shared: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    return {node["id"]: node for node in roadmap_nodes(shared)}
+
+
+def roadmap_node_status_text(nodes: dict[str, dict[str, Any]], node_id: str) -> str:
+    node = nodes.get(node_id)
+    if not node:
+        return f"`{node_id}`: missing"
+    parts = [status_label(node["status"])]
+    delivery = node.get("delivery_status")
+    acceptance = node.get("acceptance_status")
+    if delivery:
+        parts.append(f"delivery {status_label(delivery)}")
+    if acceptance:
+        parts.append(f"acceptance {status_label(acceptance)}")
+    return f"{node['title']} (`{node_id}`): " + ", ".join(parts)
+
+
+def capability_status_text(repo_status: dict[str, Any], capability_id: str) -> str:
+    capabilities = repo_status.get("local_capabilities", {})
+    if capability_id not in capabilities:
+        return f"{titleize(capability_id)}: not listed"
+    return f"{titleize(capability_id)}: {status_label(capabilities[capability_id])}"
+
+
+def architecture_node_status_text(
+    shared: dict[str, Any],
+    repo_status: dict[str, Any],
+    entry: dict[str, Any],
+) -> str:
+    nodes = roadmap_node_map(shared)
+    parts: list[str] = []
+    for node_id in entry["status_node_ids"]:
+        parts.append(roadmap_node_status_text(nodes, node_id))
+    for capability_id in entry["capability_ids"]:
+        parts.append(capability_status_text(repo_status, capability_id))
+    return "; ".join(parts) if parts else "None recorded"
+
+
+def related_slices_text(shared: dict[str, Any], slice_ids: tuple[str, ...]) -> str:
+    nodes = roadmap_node_map(shared)
+    parts: list[str] = []
+    for slice_id in slice_ids:
+        node = nodes.get(slice_id)
+        if node:
+            parts.append(f"{node['title']} (`{slice_id}`)")
+        else:
+            parts.append(f"`{slice_id}`")
+    return ", ".join(parts) if parts else "None"
+
+
+def render_current_target_architecture_status(context: dict[str, Any]) -> str:
+    shared = context["shared"]
+    repo_status = context["repo_status"]
+    nodes = roadmap_node_map(shared)
+    gate = shared["cross_repository"]["active_gate"]
+    active_slice = repo_status["current_work"].get("active_slice")
+    current_nodes = [
+        node
+        for node in roadmap_nodes(shared)
+        if node.get("execution", {}).get("assignment") == "current"
+    ]
+    next_nodes = [
+        node
+        for node in roadmap_nodes(shared)
+        if node.get("execution", {}).get("assignment") == "next_eligible"
+    ]
+    open_caveats = [caveat for caveat in shared.get("caveats", []) if caveat["status"] in ("open", "monitoring")]
+
+    lines = [
+        "Generated from `project/project-state.yaml` and `project/repo-status.yaml`. "
+        "For the full generated views, see "
+        "[project status](generated/project-status.md), "
+        "[repository status](generated/repository-status.md), and "
+        "[nested roadmap](generated/nested-roadmap.md).",
+        "",
+        "### Current Active Work",
+        "",
+        f"- Active gate: {gate['title']} (`{gate['id']}`) - {status_label(gate['status'])}",
+    ]
+    if isinstance(active_slice, dict) and active_slice.get("id"):
+        lines.append(
+            f"- Active implementation slice: {active_slice['title']} (`{active_slice['id']}`) - {status_label(active_slice['state'])}"
+        )
+    else:
+        lines.append("- Active implementation slice: none selected")
+    lines.append(f"- Provenance Engine repository state: {status_label(repo_status['current_work'].get('state'))}")
+
+    lines.extend(["", "### Current Roadmap Lanes", ""])
+    if current_nodes:
+        for node in current_nodes:
+            lines.append(
+                f"- {node['title']} (`{node['id']}`) - {node['kind']}; "
+                f"status: {status_label(node['status'])}; owner: {owner_label(node['owner'])}"
+            )
+    else:
+        lines.append("- None.")
+
+    lines.extend(["", "### Major Node Summaries", ""])
+    for entry in ARCHITECTURE_NODE_SUMMARIES:
+        lines.extend(
+            [
+                f"#### {entry['title']}",
+                "",
+                f"- Status: {architecture_node_status_text(shared, repo_status, entry)}",
+                f"- Owns: {entry['owns']}",
+                f"- Inputs: {entry['inputs']}",
+                f"- Outputs: {entry['outputs']}",
+                f"- Does not own: {entry['does_not_own']}",
+                f"- Related slices: {related_slices_text(shared, entry['related_slice_ids'])}",
+                "",
+            ]
+        )
+
+    lines.extend(["### Next Eligible Work", ""])
+    if next_nodes:
+        for node in next_nodes:
+            depends_on = reference_list_text(node.get("depends_on")) or "None"
+            rationale = f" Rationale: {node['rationale']}" if node.get("rationale") else ""
+            lines.append(
+                f"- {node['title']} (`{node['id']}`) - status: {status_label(node['status'])}; "
+                f"owner: {owner_label(node['owner'])}; depends on: {depends_on}.{rationale}"
+            )
+    else:
+        lines.append("- None.")
+
+    lines.extend(["", "### Open Caveats", ""])
+    if open_caveats:
+        for caveat in open_caveats:
+            issue = caveat.get("issue")
+            issue_text = f"; issue: {issue['repository']}#{issue['number']}" if issue else ""
+            lines.append(
+                f"- {caveat['title']} (`{caveat['id']}`) - owner: {owner_label(caveat['owner'])}; "
+                f"status: {status_label(caveat['status'])}{issue_text}"
+            )
+    else:
+        lines.append("- None.")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
 def replace_generated_block(text: str, block_name: str, replacement: str) -> str:
     start = f"<!-- BEGIN GENERATED: {block_name} -->"
     end = f"<!-- END GENERATED: {block_name} -->"
@@ -1139,6 +1458,78 @@ def replace_generated_block(text: str, block_name: str, replacement: str) -> str
         raise ProjectDocsError(f"generated block '{block_name}' not found")
     body = "\n" + replacement.rstrip()
     return pattern.sub(rf"\1{body}\3", text, count=1)
+
+
+def render_authored_generated_blocks(context: dict[str, Any], relative: str, text: str) -> str:
+    if relative == "docs/current-and-target-architecture.md":
+        return replace_generated_block(
+            text,
+            "current-target-architecture-status",
+            render_current_target_architecture_status(context),
+        )
+    raise ProjectDocsError(f"{relative}: no generated-block renderer is registered")
+
+
+def write_authored_generated_blocks(context: dict[str, Any]) -> None:
+    repo_root = context["repo_root"]
+    for relative in AUTHORED_GENERATED_DOCS:
+        path = repo_root / relative
+        if not path.exists():
+            raise ProjectDocsError(f"{relative}: authored generated-block document is missing")
+        text = path.read_text(encoding="utf-8")
+        updated = render_authored_generated_blocks(context, relative, text)
+        if updated != text:
+            path.write_text(updated, encoding="utf-8")
+
+
+def authored_generated_block_drift_issues(context: dict[str, Any]) -> list[ValidationIssue]:
+    repo_root = context["repo_root"]
+    issues: list[ValidationIssue] = []
+    for relative in AUTHORED_GENERATED_DOCS:
+        path = repo_root / relative
+        if not path.exists():
+            issues.append(ValidationIssue("generation", "authored_generated_blocks_fresh", relative, "authored generated-block document is missing"))
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+            updated = render_authored_generated_blocks(context, relative, text)
+        except ProjectDocsError as exc:
+            issues.append(ValidationIssue("generation", "authored_generated_blocks_fresh", relative, str(exc)))
+            continue
+        if updated != text:
+            issues.append(ValidationIssue("generation", "authored_generated_blocks_fresh", relative, "generated block is stale; regenerate with ./scripts/project-docs generate"))
+    return issues
+
+
+def check_authored_generated_blocks(context: dict[str, Any]) -> None:
+    repo_root = context["repo_root"]
+    stale: list[str] = []
+    for relative in AUTHORED_GENERATED_DOCS:
+        path = repo_root / relative
+        if not path.exists():
+            stale.append(relative)
+            continue
+        text = path.read_text(encoding="utf-8")
+        try:
+            updated = render_authored_generated_blocks(context, relative, text)
+        except ProjectDocsError as exc:
+            raise ProjectDocsError(f"{relative}: {exc}") from exc
+        if updated != text:
+            stale.append(relative)
+            diff = difflib.unified_diff(
+                text.splitlines(),
+                updated.splitlines(),
+                fromfile=relative,
+                tofile=f"generated-blocks/{relative}",
+                lineterm="",
+            )
+            sys.stderr.write("\n".join(diff) + "\n")
+    if stale:
+        formatted = "\n".join(f"- {path}" for path in stale)
+        raise ProjectDocsError(
+            "[generation:authored_generated_blocks_fresh] Authored generated blocks are stale:\n"
+            f"{formatted}\nRegenerate with: ./scripts/project-docs generate"
+        )
 
 
 def ensure_generated_warning(repo_root: Path) -> None:
@@ -1159,12 +1550,14 @@ def command_validate(args: argparse.Namespace) -> None:
 def command_generate(args: argparse.Namespace) -> None:
     context = load_inputs(Path(args.repo_root), args.shared_state)
     write_generated(context)
+    write_authored_generated_blocks(context)
 
 
 def command_check(args: argparse.Namespace) -> None:
     context = load_inputs(Path(args.repo_root), args.shared_state)
     ensure_generated_warning(context["repo_root"])
     check_generated(context)
+    check_authored_generated_blocks(context)
 
 
 def load_peer_repo_statuses(peer_roots: list[str]) -> tuple[list[dict[str, Any]], dict[str, Path]]:
@@ -1194,6 +1587,7 @@ def command_ci(args: argparse.Namespace) -> None:
     issues.extend(validate_shared_source_issues(context))
     ensure_generated_warning(context["repo_root"])
     issues.extend(generated_drift_issues(context))
+    issues.extend(authored_generated_block_drift_issues(context))
     issues.extend(authored_doc_drift_issues(context["repo_root"]))
 
     if not args.skip_github:
