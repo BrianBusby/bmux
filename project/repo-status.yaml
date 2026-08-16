@@ -28,6 +28,11 @@ local_capabilities:
   semantic_session_work_model_projection: planned
   semantic_inference_framework: implemented
   semantic_inference_records: implemented
+  first_semantic_session_inferences: implemented
+  coding_agent_thread_intent: implemented
+  coding_agent_turn_intent: implemented
+  coding_agent_session_phase: implemented
+  coding_agent_current_activity: implemented
   scoped_architecture_projection: planned
 
 local_caveats:

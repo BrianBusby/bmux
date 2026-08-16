@@ -969,7 +969,7 @@ roadmap:
       kind: slice
       title: First semantic session inferences
       parent: semantic_session_work_model_projection
-      status: planned
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -998,13 +998,25 @@ roadmap:
           - factual_session_projection
         worktree_required: true
       execution:
-        assignment: next_eligible
+        assignment: complete
         assigned_to: provenance_engine
-      delivery_status: proposed
-      acceptance_status: proposed
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: 50a4fb58a1147feea581eee9d26d45a325b4672d
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 28
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-16
       acceptance:
         criteria:
           - Thread intent, turn intent, session phase, and current activity are evidence-backed.
+      acceptance_reason: First concrete rule-produced semantic records now materialize thread intent, turn intent, session phase, and current activity from factual session projections with structured payloads, evidence references, factual revision, producer metadata, confidence, specificity, and supersession while keeping deterministic Current State factual only.
 
     - id: human_readable_semantic_messaging
       kind: slice
@@ -1042,7 +1054,7 @@ roadmap:
         worktree_required: true
         conflict_note: Safe with the calibration corpus only when messaging edits stay in presentation contract code and corpus edits stay in example data.
       execution:
-        assignment: planned
+        assignment: next_eligible
         assigned_to: provenance_engine
       delivery_status: proposed
       acceptance_status: proposed

@@ -214,7 +214,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 #### Semantic inference framework
 
-- Status: Semantic inference framework (`semantic_inference_framework`): implemented, delivery merged, acceptance implemented; First semantic session inferences (`first_semantic_session_inferences`): planned, delivery proposed, acceptance proposed; Semantic Inference Framework: implemented; Semantic Session Work Model Projection: planned
+- Status: Semantic inference framework (`semantic_inference_framework`): implemented, delivery merged, acceptance implemented; First semantic session inferences (`first_semantic_session_inferences`): implemented, delivery merged, acceptance implemented; Semantic Inference Framework: implemented; Semantic Session Work Model Projection: planned
 - Owns: Evidence-backed inference records, producer versions, confidence, supersession, and semantic projection updates.
 - Inputs: Factual projections, bounded evidence packets, plans, commands, reasoning summaries, file changes, and later validation evidence.
 - Outputs: Thread intent, turn intent, session phase, current activity, blocker/approach-change facts, and SessionWorkModel fields.
@@ -223,7 +223,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 #### SessionWorkModel semantic projection
 
-- Status: Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`): active; First semantic session inferences (`first_semantic_session_inferences`): planned, delivery proposed, acceptance proposed; Semantic Session Work Model Projection: planned
+- Status: Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`): active; First semantic session inferences (`first_semantic_session_inferences`): implemented, delivery merged, acceptance implemented; Semantic Session Work Model Projection: planned
 - Owns: A coherent semantic view of one live coding-agent session with provenance on every non-observed field.
 - Inputs: Deterministic factual session projection plus active inference records.
 - Outputs: Subject, thread, current turn, current activity, milestones, validation/risk state, scoped architecture, and provenance metadata.
@@ -259,7 +259,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Next Eligible Work
 
-- First semantic session inferences (`first_semantic_session_inferences`) - status: planned; owner: Provenance Engine; depends on: `semantic_inference_framework`.
+- Human-readable semantic messaging (`human_readable_semantic_messaging`) - status: planned; owner: Provenance Engine; depends on: `first_semantic_session_inferences`.
 
 ### Open Caveats
 

@@ -126,7 +126,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/provenance-engine@d66e847c5cb7, BrianBusby/provenance-engine#26 by [BrianBusby](https://github.com/BrianBusby)
           Acceptance reason: Versioned semantic inference records, bounded input/invalidation/coalescing contracts, SQLite persistence, transactional supersession, and public query/publish APIs are implemented above deterministic factual projections without adding concrete semantic concepts.
           Acceptance criteria: Inference records carry supporting evidence, producer version, confidence, and supersession state.; Model-derived fields remain out of deterministic Current State.
-        - **First semantic session inferences** (`first_semantic_session_inferences`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine; concept: semantic understanding; layer: inference session work projections; execution: next eligible / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed
+        - **First semantic session inferences** (`first_semantic_session_inferences`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: semantic understanding; layer: inference session work projections; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented
           Depends on: `semantic_inference_framework`
           Enables: `human_readable_semantic_messaging`, `milestone_inference`, `scoped_architecture_projection`
           Expected contract domains: `semantic_session_inferences`, `session_work_model_semantics`
@@ -134,8 +134,10 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `semantic_inference_schema`, `session_work_model_projection`
           Contract dependencies: `semantic_inference_records`, `factual_session_projection`
           Worktree required: true
+          Evidence: BrianBusby/provenance-engine@50a4fb58a114, BrianBusby/provenance-engine#28 by [BrianBusby](https://github.com/BrianBusby)
+          Acceptance reason: First concrete rule-produced semantic records now materialize thread intent, turn intent, session phase, and current activity from factual session projections with structured payloads, evidence references, factual revision, producer metadata, confidence, specificity, and supersession while keeping deterministic Current State factual only.
           Acceptance criteria: Thread intent, turn intent, session phase, and current activity are evidence-backed.
-        - **Human-readable semantic messaging** (`human_readable_semantic_messaging`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: safe; delivery: proposed; acceptance: proposed
+        - **Human-readable semantic messaging** (`human_readable_semantic_messaging`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: next eligible / Provenance Engine; parallelism: safe; delivery: proposed; acceptance: proposed
           Depends on: `first_semantic_session_inferences`
           Enables: `clickable_semantic_explanation_ui`, `presentation_language_calibration_corpus`
           Parallel with: `presentation_language_calibration_corpus`
@@ -235,11 +237,11 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- |
-| First semantic session inferences (`first_semantic_session_inferences`) | serial | true | `semantic_inference_schema`, `session_work_model_projection` | `semantic_inference_records`, `factual_session_projection` | `semantic_session_inferences`, `session_work_model_semantics` | `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests` |
+| Human-readable semantic messaging (`human_readable_semantic_messaging`) | safe | true | `semantic_message_contract`, `session_work_model_projection` | `semantic_session_inferences` | `semantic_message_contract`, `session_work_model_presentation` | `Sources/ProvenanceEngineCore`, `docs/session-work-model.md`, `bmux semantic presentation consumers` |
 
 ## Next Eligible Work
 
-- First semantic session inferences (`first_semantic_session_inferences`) - depends on: `semantic_inference_framework`
+- Human-readable semantic messaging (`human_readable_semantic_messaging`) - depends on: `first_semantic_session_inferences`
 
 ## Deferred Or Blocked Work
 
