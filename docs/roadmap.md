@@ -80,9 +80,12 @@ with PE Current State and latest accepted evidence.
 
 ## Richer Coding-Agent Evidence And SessionWorkModel
 
-Status: evidence foundation and factual session projection read contract
-implemented; semantic `SessionWorkModel` inference, milestone synthesis, and
-architecture projection remain planned and gated.
+Status: evidence foundation, factual session projection read contract, semantic
+inference framework, first coding-agent semantic inferences, and
+human-readable semantic messaging are implemented. Full semantic
+`SessionWorkModel` projection, milestone synthesis, architecture projection,
+bmux UI presentation, calibration, and feedback learning remain planned and
+gated.
 
 This phase addresses the main gap found after the execution-telemetry and
 workspace-display slices: bmux can observe richer structured coding-agent data
@@ -107,21 +110,25 @@ The implementation sequence is:
    read contract for one PE session.
 5. Add an inference framework with evidence references, producer versions,
    confidence, specificity, and supersession. The foundation is implemented as
-   reusable semantic record storage and invalidation/coalescing policy, without
-   defining first semantic concepts.
-6. Introduce semantic `SessionWorkModel` enrichment above the factual projection
-   and lower-level APIs.
-7. Implement the first semantic vertical slice: thread intent, turn intent,
+   reusable semantic record storage and invalidation/coalescing policy.
+6. Implement the first semantic vertical slice: thread intent, turn intent,
    session phase, and current activity. This is the first concrete semantic
    inference layer and still stops before milestone, architecture, presentation,
    and knowledge-compilation work.
-8. Add milestone hierarchy/description in its own semantic work-understanding
+7. Add human-readable semantic messaging above semantic inference truth. This is
+   implemented as semantic message contracts, deterministic first-pass wording,
+   message cache/history persistence, and public query/materialization APIs.
+8. Add bmux clickable semantic explanation UI that renders PE semantic messages
+   without independently inferring meaning.
+9. Introduce semantic `SessionWorkModel` enrichment above the factual projection
+   and lower-level APIs.
+10. Add milestone hierarchy/description in its own semantic work-understanding
    slice after the first session inference concepts are stable.
-9. Add scoped architecture inference/projection for thread and current-turn
+11. Add scoped architecture inference/projection for thread and current-turn
    scopes.
-10. Add milestone-to-architecture relationships.
-11. Add milestone-to-diff, Git, and GitHub attribution.
-12. Use the Knowledge Compiler later for durable implementation outcomes and
+12. Add milestone-to-architecture relationships.
+13. Add milestone-to-diff, Git, and GitHub attribution.
+14. Use the Knowledge Compiler later for durable implementation outcomes and
     decisions beyond the live session model.
 
 The first semantic inference slice is accepted when one coding-agent session can
@@ -130,8 +137,15 @@ activity records with structured payloads, evidence references, factual
 revision, producer version, confidence, specificity, and supersession. Existing
 lower-level APIs must remain available, and tests or fixtures must prove
 semantic fields are not written into deterministic Current State. Milestones,
-architecture, validation/risk synthesis, and full `SessionWorkModel`
-presentation remain later slices.
+architecture, validation/risk synthesis, presentation wording, and full
+`SessionWorkModel` presentation remain later slices.
+
+The first semantic message slice is accepted when semantic inference records can
+be rendered into cached concise and expanded message records that preserve
+structured semantic meaning, provenance, confidence, specificity, producer,
+presentation policy, history, and supersession without making wording the source
+of semantic truth or deterministic Current State. bmux UI presentation,
+presentation language calibration, and feedback learning remain later slices.
 
 ## External Evidence Model Validation
 
