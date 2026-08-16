@@ -62,9 +62,16 @@ class ProjectDocsTests(unittest.TestCase):
         local = project_docs.load_yaml(LOCAL)
         return shared, local
 
+    def roadmap_node(self, shared, node_id: str):
+        return next(node for node in shared["roadmap"]["nodes"] if node["id"] == node_id)
+
     def test_valid_shared_manifest(self):
         shared, local = self.load_valid()
         project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_nested_roadmap_schema_accepts_fixture(self):
+        shared, _ = self.load_valid()
+        project_docs.validate_schema(shared, ROOT / "project/schema/project-state.schema.json", SHARED)
 
     def test_invalid_status_enum_fails_schema(self):
         shared, _ = self.load_valid()
@@ -78,10 +85,58 @@ class ProjectDocsTests(unittest.TestCase):
         with self.assertRaisesRegex(project_docs.ProjectDocsError, "duplicate milestone id"):
             project_docs.semantic_validate(shared, local, LOCAL)
 
+    def test_duplicate_roadmap_node_id_fails(self):
+        shared, local = self.load_valid()
+        shared["roadmap"]["nodes"].append(copy.deepcopy(shared["roadmap"]["nodes"][0]))
+        with self.assertRaisesRegex(project_docs.ProjectDocsError, "duplicate roadmap node id"):
+            project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_roadmap_dependency_id_validation_fails(self):
+        shared, local = self.load_valid()
+        self.roadmap_node(shared, "factual_projection_consumer_shape_followup")["depends_on"] = ["missing_slice"]
+        with self.assertRaisesRegex(project_docs.ProjectDocsError, "reference 'missing_slice' does not exist"):
+            project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_roadmap_parent_validation_fails(self):
+        shared, local = self.load_valid()
+        self.roadmap_node(shared, "semantic_understanding")["parent"] = "missing_program"
+        with self.assertRaisesRegex(project_docs.ProjectDocsError, "parent 'missing_program' does not exist"):
+            project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_roadmap_parent_kind_validation_fails(self):
+        shared, local = self.load_valid()
+        self.roadmap_node(shared, "semantic_inference_framework")["parent"] = "richer_session_understanding"
+        with self.assertRaisesRegex(project_docs.ProjectDocsError, "slice parent must be milestone"):
+            project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_roadmap_dependency_cycle_fails(self):
+        shared, local = self.load_valid()
+        self.roadmap_node(shared, "factual_projection_consumer_shape_followup")["depends_on"] = ["semantic_inference_framework"]
+        with self.assertRaisesRegex(project_docs.ProjectDocsError, "roadmap dependency/sequence cycle"):
+            project_docs.semantic_validate(shared, local, LOCAL)
+
     def test_accepted_milestone_without_evidence_fails(self):
         shared, local = self.load_valid()
         shared["milestones"][0]["evidence"] = {"commits": [], "pull_requests": []}
         with self.assertRaisesRegex(project_docs.ProjectDocsError, "accepted milestone must have"):
+            project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_accepted_roadmap_slice_without_evidence_fails(self):
+        shared, local = self.load_valid()
+        self.roadmap_node(shared, "provenance_engine_v1")["evidence"] = {"commits": [], "pull_requests": []}
+        with self.assertRaisesRegex(project_docs.ProjectDocsError, "implemented or accepted roadmap slice must have"):
+            project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_implemented_roadmap_slice_without_evidence_fails(self):
+        shared, local = self.load_valid()
+        self.roadmap_node(shared, "factual_session_projection_foundation")["evidence"] = {"commits": [], "pull_requests": []}
+        with self.assertRaisesRegex(project_docs.ProjectDocsError, "implemented or accepted roadmap slice must have"):
+            project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_planned_roadmap_slice_cannot_claim_implemented_acceptance(self):
+        shared, local = self.load_valid()
+        self.roadmap_node(shared, "factual_projection_consumer_shape_followup")["acceptance_status"] = "implemented"
+        with self.assertRaisesRegex(project_docs.ProjectDocsError, "planned roadmap slice cannot declare"):
             project_docs.semantic_validate(shared, local, LOCAL)
 
     def test_active_gate_must_be_active(self):
@@ -133,6 +188,22 @@ class ProjectDocsTests(unittest.TestCase):
         first = project_docs.render_all(context)
         second = project_docs.render_all(context)
         self.assertEqual(first, second)
+
+    def test_nested_roadmap_rendering_includes_hierarchy_and_next_work(self):
+        context = project_docs.load_inputs(ROOT)
+        rendered = project_docs.render_nested_roadmap(context)
+        self.assertIn("# Nested Roadmap", rendered)
+        self.assertIn("Richer Session Understanding", rendered)
+        self.assertIn("Semantic SessionWorkModel Projection", rendered)
+        self.assertIn("Knowledge Compiler work later", rendered)
+        self.assertIn(
+            "Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`) - depends on: `factual_session_projection_foundation`",
+            rendered,
+        )
+
+    def test_nested_roadmap_rendering_is_deterministic(self):
+        context = project_docs.load_inputs(ROOT)
+        self.assertEqual(project_docs.render_nested_roadmap(context), project_docs.render_nested_roadmap(context))
 
     def test_identical_output_across_two_generations(self):
         context = project_docs.load_inputs(ROOT)
@@ -197,6 +268,19 @@ class ProjectDocsTests(unittest.TestCase):
                     owner_login=owner.get("login"),
                     owner_url=owner.get("profile_url"),
                 )
+        for node in shared["roadmap"]["nodes"]:
+            evidence = node.get("evidence", {})
+            for commit in evidence.get("commits", []):
+                provider.commits.add((commit["repository"], commit["sha"]))
+            for pr in evidence.get("pull_requests", []):
+                owner = pr.get("owner", {})
+                provider.pull_requests[(pr["repository"], pr["number"])] = project_docs.PullRequestEvidence(
+                    state="closed",
+                    draft=False,
+                    merged=node.get("delivery_status") == "merged",
+                    owner_login=owner.get("login"),
+                    owner_url=owner.get("profile_url"),
+                )
         for caveat in shared["caveats"]:
             issue = caveat.get("issue")
             if issue:
@@ -229,6 +313,14 @@ class ProjectDocsTests(unittest.TestCase):
         provider.commits.add(("BrianBusby/bmux", first_commit["sha"]))
         issues = project_docs.github_evidence_issues(shared, [local], provider)
         self.assertTrue(any(issue.name == "missing_commit" for issue in issues))
+
+    def test_roadmap_evidence_participates_in_github_verification(self):
+        shared, local = self.load_valid()
+        provider = self.fake_provider_for_current_manifests()
+        commit = self.roadmap_node(shared, "canonical_project_truth_manifest")["evidence"]["commits"][0]
+        provider.commits.remove((commit["repository"], commit["sha"]))
+        issues = project_docs.github_evidence_issues(shared, [local], provider)
+        self.assertTrue(any(issue.name == "missing_commit" and "roadmap.nodes" in issue.path for issue in issues))
 
     def test_missing_pr_fails_github_verification(self):
         shared, local = self.load_valid()
