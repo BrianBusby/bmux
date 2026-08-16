@@ -26,7 +26,8 @@ local_capabilities:
   factual_session_projection: implemented
   factual_session_turn_detail: implemented
   semantic_session_work_model_projection: planned
-  semantic_inference_framework: planned
+  semantic_inference_framework: implemented
+  semantic_inference_records: implemented
   scoped_architecture_projection: planned
 
 local_caveats:

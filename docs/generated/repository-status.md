@@ -35,7 +35,8 @@ Repository: `BrianBusby/provenance-engine`
 | Richer Coding Agent Evidence | implemented |
 | Schema Identity Validation | implemented |
 | Scoped Architecture Projection | planned |
-| Semantic Inference Framework | planned |
+| Semantic Inference Framework | implemented |
+| Semantic Inference Records | implemented |
 | Semantic Session Work Model Projection | planned |
 | Workspace Display Current State | implemented |
 | Workspace Display Durable Context | implemented |

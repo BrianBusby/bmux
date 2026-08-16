@@ -1,55 +1,67 @@
 # Provenance Engine Handoff
 
-## Project Truth CI and Read-Only Drift Verification
+## Slice
 
-Project Truth read-only CI validation is the current completed infrastructure
-slice for the bmux and Provenance Engine integration effort.
+- ID: `semantic_inference_framework`
+- Title: Semantic Inference Framework Foundation
+- Repository: `BrianBusby/provenance-engine`
+- Implementation branch: `semantic-inference-framework`
+- Implementation worktree: `/private/tmp/pe-semantic-inference-framework`
+- Implementation PR: [#26](https://github.com/BrianBusby/provenance-engine/pull/26)
+- Implementation commit: `d66e847c5cb71d7a63a3d0b3ecdf3c29b65c1f28`
+- Implementation merge commit: `5c0a82e433fcce809b6d099a9482ae41418e1c08`
 
-- Shared cross-repository facts live in `project/project-state.yaml` in this
-  repository.
-- Provenance Engine local facts live in `project/repo-status.yaml`.
-- Generated current-status pages live under `docs/generated/`, starting with
-  [`docs/generated/project-status.md`](../generated/project-status.md).
-- Generated files must not be edited manually.
-- The continuing project state remains the Engineering Observation Period;
-  do not select a new product implementation slice from this handoff alone.
+## Acceptance
 
-## Commands
+Accepted as implemented. The slice adds public semantic inference contracts,
+bounded inference input and invalidation/coalescing contracts, SQLite schema v18
+persistence, query/publish APIs, and transactional supersession. Semantic
+records remain above deterministic factual projections and do not add concrete
+semantic concepts yet.
+
+## Verification
+
+Run on the implementation branch before merge:
 
 ```bash
+swift test
 ./scripts/project-docs validate
-./scripts/project-docs generate
 ./scripts/project-docs check
 ./scripts/project-docs ci
+git diff --check
 ```
 
-bmux consumes this repository's shared manifest through its
-`project/shared-project-source.yaml` pointer and can override the path locally
-with `PROJECT_TRUTH_SHARED_STATE=/path/to/project-state.yaml`.
+`swift test` passed with 116 tests.
 
-For cross-repository local validation with sibling checkouts:
+## Docs Sync
 
-```bash
-./scripts/project-docs ci --peer-repo-root ../bmux
-```
+- Sync branch: `docs/semantic-inference-framework-sync`
+- Status: updates canonical roadmap/repository status and regenerated docs for
+  PR #26.
+- Generated project status: [docs/generated/project-status.md](../generated/project-status.md)
+- Canonical roadmap: `semantic_inference_framework` is implemented and
+  `first_semantic_session_inferences` is next eligible.
 
-`ci` is deterministic and read-only. It checks schema validity, generated-doc
-freshness, named cross-repository invariants, bmux shared-source semantics when
-run from bmux, bounded authored-doc drift, and GitHub evidence for referenced
-repositories, commits, pull requests, issues, tags, and releases. It uses
-`GITHUB_TOKEN` or `GH_TOKEN` when available. Network, auth, rate-limit, missing
-resource, and contradictory-evidence failures are reported separately.
+## Dependencies
 
-## Next Recommended Slice
+Now satisfied:
 
-Keep the read-only checks under observation as required branch-protection
-candidates. A newly documented candidate is the bmux Workspace Display Current
-State Projection planning and diagnostics slice: specify how workspace title,
-branch, and PR metadata flow from bmux observations through durable PE evidence
-into deterministic Current State, and how bmux verifies tab/sidebar/custom
-sidebar display latency and stale-state correctness.
+- `factual_projection_consumer_shape_followup` -> `semantic_inference_framework`
+- `semantic_inference_framework` -> `first_semantic_session_inferences`
 
-Do not mark that slice active, build GitHub App synchronization, automatic
-manifest edits, provenance-backed project-state events, telemetry checkpoint
-automation, or broad bmux UI migration until the observation gate produces a
-specific follow-up decision.
+Active parallel slices: none.
+
+## Next Eligible Work
+
+Start `first_semantic_session_inferences` after this docs sync branch is merged.
+Keep it below milestone, architecture, messaging, and bmux UI scope. Use a fresh
+implementation branch/worktree and treat blocker/approach-change semantics as a
+later slice unless the canonical roadmap is explicitly changed.
+
+## Caveats
+
+- The semantic framework stores inference records and supporting provenance; it
+  does not infer thread intent, turn intent, phase, current activity, milestones,
+  architecture, or presentation wording.
+- The docs-sync branch should not be combined with the next implementation
+  slice.

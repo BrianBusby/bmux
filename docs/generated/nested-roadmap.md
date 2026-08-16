@@ -115,7 +115,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
     - **Semantic Understanding** (`semantic_understanding`) - phase; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: current / Provenance Engine; parallelism: serial
       Depends on: `factual_projection_consumer_shape_followup`
       - **Semantic SessionWorkModel Projection** (`semantic_session_work_model_projection`) - milestone; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: current / Provenance Engine; parallelism: serial
-        - **Semantic inference framework** (`semantic_inference_framework`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine; concept: semantic understanding; layer: inference session work projections; execution: next eligible / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed
+        - **Semantic inference framework** (`semantic_inference_framework`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: semantic understanding; layer: inference session work projections; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented
           Depends on: `factual_projection_consumer_shape_followup`
           Enables: `first_semantic_session_inferences`, `blocker_approach_change_semantics`
           Expected contract domains: `semantic_inference_records`, `session_work_model_semantics`
@@ -123,8 +123,10 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `semantic_inference_schema`, `session_work_model_projection`
           Contract dependencies: `factual_session_projection`, `evidence_reference_identity`
           Worktree required: true
+          Evidence: BrianBusby/provenance-engine@d66e847c5cb7, BrianBusby/provenance-engine#26 by [BrianBusby](https://github.com/BrianBusby)
+          Acceptance reason: Versioned semantic inference records, bounded input/invalidation/coalescing contracts, SQLite persistence, transactional supersession, and public query/publish APIs are implemented above deterministic factual projections without adding concrete semantic concepts.
           Acceptance criteria: Inference records carry supporting evidence, producer version, confidence, and supersession state.; Model-derived fields remain out of deterministic Current State.
-        - **First semantic session inferences** (`first_semantic_session_inferences`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine; concept: semantic understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed
+        - **First semantic session inferences** (`first_semantic_session_inferences`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine; concept: semantic understanding; layer: inference session work projections; execution: next eligible / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed
           Depends on: `semantic_inference_framework`
           Enables: `human_readable_semantic_messaging`, `milestone_inference`, `scoped_architecture_projection`
           Expected contract domains: `semantic_session_inferences`, `session_work_model_semantics`
@@ -233,11 +235,11 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- |
-| Semantic inference framework (`semantic_inference_framework`) | serial | true | `semantic_inference_schema`, `session_work_model_projection` | `factual_session_projection`, `evidence_reference_identity` | `semantic_inference_records`, `session_work_model_semantics` | `Sources/ProvenanceEngineContracts`, `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests` |
+| First semantic session inferences (`first_semantic_session_inferences`) | serial | true | `semantic_inference_schema`, `session_work_model_projection` | `semantic_inference_records`, `factual_session_projection` | `semantic_session_inferences`, `session_work_model_semantics` | `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests` |
 
 ## Next Eligible Work
 
-- Semantic inference framework (`semantic_inference_framework`) - depends on: `factual_projection_consumer_shape_followup`
+- First semantic session inferences (`first_semantic_session_inferences`) - depends on: `semantic_inference_framework`
 
 ## Deferred Or Blocked Work
 

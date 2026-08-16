@@ -915,7 +915,7 @@ roadmap:
       kind: slice
       title: Semantic inference framework
       parent: semantic_session_work_model_projection
-      status: planned
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -944,14 +944,26 @@ roadmap:
           - evidence_reference_identity
         worktree_required: true
       execution:
-        assignment: next_eligible
+        assignment: complete
         assigned_to: provenance_engine
-      delivery_status: proposed
-      acceptance_status: proposed
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: d66e847c5cb71d7a63a3d0b3ecdf3c29b65c1f28
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 26
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-16
       acceptance:
         criteria:
           - Inference records carry supporting evidence, producer version, confidence, and supersession state.
           - Model-derived fields remain out of deterministic Current State.
+      acceptance_reason: Versioned semantic inference records, bounded input/invalidation/coalescing contracts, SQLite persistence, transactional supersession, and public query/publish APIs are implemented above deterministic factual projections without adding concrete semantic concepts.
 
     - id: first_semantic_session_inferences
       kind: slice
@@ -986,7 +998,7 @@ roadmap:
           - factual_session_projection
         worktree_required: true
       execution:
-        assignment: planned
+        assignment: next_eligible
         assigned_to: provenance_engine
       delivery_status: proposed
       acceptance_status: proposed

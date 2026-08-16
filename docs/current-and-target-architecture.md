@@ -208,7 +208,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 #### Semantic inference framework
 
-- Status: Semantic inference framework (`semantic_inference_framework`): planned, delivery proposed, acceptance proposed; First semantic session inferences (`first_semantic_session_inferences`): planned, delivery proposed, acceptance proposed; Semantic Inference Framework: planned; Semantic Session Work Model Projection: planned
+- Status: Semantic inference framework (`semantic_inference_framework`): implemented, delivery merged, acceptance implemented; First semantic session inferences (`first_semantic_session_inferences`): planned, delivery proposed, acceptance proposed; Semantic Inference Framework: implemented; Semantic Session Work Model Projection: planned
 - Owns: Evidence-backed inference records, producer versions, confidence, supersession, and semantic projection updates.
 - Inputs: Factual projections, bounded evidence packets, plans, commands, reasoning summaries, file changes, and later validation evidence.
 - Outputs: Thread intent, turn intent, session phase, current activity, blocker/approach-change facts, and SessionWorkModel fields.
@@ -253,7 +253,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Next Eligible Work
 
-- Semantic inference framework (`semantic_inference_framework`) - status: planned; owner: Provenance Engine; depends on: `factual_projection_consumer_shape_followup`.
+- First semantic session inferences (`first_semantic_session_inferences`) - status: planned; owner: Provenance Engine; depends on: `semantic_inference_framework`.
 
 ### Open Caveats
 
