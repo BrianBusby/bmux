@@ -61,6 +61,14 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     /// - Throws: An implementation-defined error when the query fails.
     func factualSessionProjection(_ request: ProvenanceFactualSessionProjectionRequest) async throws
         -> ProvenanceFactualSessionProjectionResponse
+
+    /// Returns factual detail for one observed coding-agent turn.
+    ///
+    /// - Parameter request: Query parameters for the factual turn detail.
+    /// - Returns: A revisioned response containing observed evidence linked to the turn.
+    /// - Throws: An implementation-defined error when the query fails.
+    func factualSessionTurnDetail(_ request: ProvenanceFactualSessionTurnDetailRequest) async throws
+        -> ProvenanceFactualSessionTurnDetailResponse
 }
 
 public extension ProvenanceEngineClient {
@@ -73,5 +81,16 @@ public extension ProvenanceEngineClient {
         _ request: ProvenanceSubsessionLifecycleRequest
     ) async -> ProvenanceSubsessionLifecycleResponse {
         await recordSessionLifecycle(request.sessionLifecycleRequest).subsessionLifecycleResponse
+    }
+
+    /// Default unsupported response for clients that have not adopted factual turn-detail reads.
+    func factualSessionTurnDetail(_ request: ProvenanceFactualSessionTurnDetailRequest) async throws
+        -> ProvenanceFactualSessionTurnDetailResponse {
+        ProvenanceFactualSessionTurnDetailResponse(
+            found: false,
+            reason: "unsupported",
+            turnID: request.turnID,
+            turnDetail: nil
+        )
     }
 }

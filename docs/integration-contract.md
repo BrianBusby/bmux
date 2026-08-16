@@ -101,22 +101,44 @@ Each request limit is an independent engine row budget for its matching response
 
 Response guarantees: `schemaVersion == 1` for the current V1 shape; arrays are always present; linked records are optional where producers may have appended partial or unattributed evidence; no SQLite table names, row identifiers, SQL predicates, terminal rendering, JSON payload compatibility, fallback strings, or CLI errors are part of the public contract. Consumers must not read `provenance_worktrees`, `provenance_repositories`, `provenance_sessions`, `provenance_work_contributions`, `provenance_work_items`, `provenance_file_changes`, `provenance_change_sets`, `provenance_checkpoints`, or `provenance_validation_runs` directly for current context.
 
-The accepted factual session-projection read contract is:
+The accepted factual session-projection read contracts are:
 
-- Request: `ProvenanceFactualSessionProjectionRequest(sessionID:turnLimit:)`.
-- Response: `ProvenanceFactualSessionProjectionResponse`.
-- Snapshot DTO: `ProvenanceFactualSessionProjectionSnapshot`.
-- Turn DTO: `ProvenanceFactualSessionProjectionTurnSnapshot`.
-- Client method: `ProvenanceEngineClient.factualSessionProjection(...)`.
-- Capability: `query_factual_session_projection`.
+- Session request: `ProvenanceFactualSessionProjectionRequest(sessionID:turnLimit:)`.
+- Session response: `ProvenanceFactualSessionProjectionResponse`.
+- Session snapshot DTO: `ProvenanceFactualSessionProjectionSnapshot`.
+- Provider-thread identity DTO:
+  `ProvenanceFactualSessionProjectionProviderThreadIdentity`.
+- Compact turn reference DTO: `ProvenanceFactualSessionProjectionTurnReference`.
+- Turn-detail request: `ProvenanceFactualSessionTurnDetailRequest(turnID:)`.
+- Turn-detail response: `ProvenanceFactualSessionTurnDetailResponse`.
+- Turn-detail DTO: `ProvenanceFactualSessionProjectionTurnSnapshot`.
+- Client methods: `ProvenanceEngineClient.factualSessionProjection(...)` and
+  `ProvenanceEngineClient.factualSessionTurnDetail(...)`.
+- Capabilities: `query_factual_session_projection` and
+  `query_factual_session_turn_detail`.
 
 This contract is a revisioned factual Current State snapshot for one PE
-session. It groups observed coding-agent evidence into provider thread and turn
-structure: session identity, provider thread identity, turns, latest submitted
-prompt per turn, latest/current plan per turn, completed commands, visible
-reasoning summaries, and file-change attributions. The snapshot revision is
-derived from the newest accepted ledger sequence for the requested session and
-is intended for consumer reconciliation by re-fetch.
+session. Schema version 2 emphasizes session identity, observed provider thread
+identities, detailed factual latest turn state, and compact prior-turn
+references. Provider thread identities are factual data and consumers must not
+assume a permanent 1:1 mapping between a PE session and one provider thread.
+The snapshot also retains the lower-level detailed `turns` array for
+compatibility and diagnostics; new consumer presentation should prefer
+`latestTurn` plus `priorTurns`, then use `factualSessionTurnDetail(...)` for
+independent drilldown.
+
+Detailed turn snapshots include only evidence directly linked to that turn:
+latest submitted prompt, latest/current plan, completed command facts, completed
+visible reasoning summaries, and file-change attributions. The session snapshot
+revision and turn-detail revision are derived from the newest accepted ledger
+sequence for the owning session and are intended for consumer reconciliation by
+re-fetch.
+
+When no session projection matches `sessionID`, the session response returns
+`found == false`, `reason == "no_session"`, and `snapshot == nil`. When no turn
+projection matches `turnID`, the turn-detail response returns `found == false`,
+`reason == "no_turn"`, `sessionID == nil`, `revision == nil`, and
+`turnDetail == nil`.
 
 This read remains below `SessionWorkModel`: it is deterministic Current State
 over accepted evidence. Unknown relationships stay absent rather than guessed.

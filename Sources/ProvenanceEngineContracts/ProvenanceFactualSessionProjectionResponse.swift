@@ -19,7 +19,7 @@ public struct ProvenanceFactualSessionProjectionResponse: Codable, Equatable, Se
 
     /// Creates a factual session projection response.
     public init(
-        schemaVersion: Int = 1,
+        schemaVersion: Int = 2,
         found: Bool,
         reason: String? = nil,
         sessionID: String,

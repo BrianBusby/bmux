@@ -107,20 +107,38 @@ struct WriteSideProducerSDKTests {
         )
         let snapshot = try #require(response.snapshot)
         let turn = try #require(snapshot.turns.first)
+        let latestTurn = try #require(snapshot.latestTurn)
 
         #expect(response.found)
         #expect(response.reason == nil)
         #expect(response.sessionID == fixture.session.id)
+        #expect(response.schemaVersion == 2)
         #expect(snapshot.revision == fixture.events.count)
         #expect(snapshot.session == fixture.session)
+        #expect(snapshot.providerThreadIdentities == [
+            ProvenanceFactualSessionProjectionProviderThreadIdentity(thread: fixture.thread),
+        ])
         #expect(snapshot.providerThreads == [fixture.thread])
+        #expect(snapshot.priorTurns.isEmpty)
         #expect(snapshot.turns.count == 1)
+        #expect(latestTurn == turn)
         #expect(turn.turn == fixture.projectedTurn)
         #expect(turn.submittedPrompt == fixture.prompt)
         #expect(turn.currentPlan == fixture.currentPlan)
         #expect(turn.completedCommands == [fixture.command])
         #expect(turn.visibleReasoningSummaries == [fixture.reasoningSummary])
         #expect(turn.fileChangeAttributions == [fixture.fileChangeAttribution])
+
+        let detailResponse = try await client.factualSessionTurnDetail(
+            ProvenanceFactualSessionTurnDetailRequest(turnID: fixture.projectedTurn.id)
+        )
+        #expect(detailResponse == ProvenanceFactualSessionTurnDetailResponse(
+            found: true,
+            turnID: fixture.projectedTurn.id,
+            sessionID: fixture.session.id,
+            revision: fixture.events.count,
+            turnDetail: turn
+        ))
     }
 
     @Test
@@ -138,6 +156,15 @@ struct WriteSideProducerSDKTests {
             reason: "no_session",
             sessionID: "session-missing",
             snapshot: nil
+        ))
+
+        #expect(try await client.factualSessionTurnDetail(
+            ProvenanceFactualSessionTurnDetailRequest(turnID: "turn-missing")
+        ) == ProvenanceFactualSessionTurnDetailResponse(
+            found: false,
+            reason: "no_turn",
+            turnID: "turn-missing",
+            turnDetail: nil
         ))
     }
 

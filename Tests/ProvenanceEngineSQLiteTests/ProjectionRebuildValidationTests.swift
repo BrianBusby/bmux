@@ -102,23 +102,55 @@ struct ProjectionRebuildValidationTests {
         #expect(beforeAttribution.fileChangeIDs == [fixture.fileChange.id])
         #expect(beforeAttribution.paths == [fixture.fileChange.path])
         #expect(beforeFactualProjection.found)
+        #expect(beforeFactualProjection.schemaVersion == 2)
         #expect(beforeSnapshot.revision == fixture.events.count)
         #expect(beforeSnapshot.session == fixture.session)
-        #expect(beforeSnapshot.providerThreads == [fixture.thread])
-        #expect(beforeSnapshot.turns.map(\.turn) == [beforeTurn, fixture.secondTurn])
+        #expect(beforeSnapshot.providerThreadIdentities == [
+            ProvenanceFactualSessionProjectionProviderThreadIdentity(thread: fixture.thread),
+            ProvenanceFactualSessionProjectionProviderThreadIdentity(thread: fixture.secondThread),
+        ])
+        #expect(beforeSnapshot.providerThreads == [fixture.thread, fixture.secondThread])
+        #expect(beforeSnapshot.latestTurn?.turn == fixture.thirdTurn)
+        #expect(beforeSnapshot.priorTurns == [
+            ProvenanceFactualSessionProjectionTurnReference(turn: beforeTurn),
+            ProvenanceFactualSessionProjectionTurnReference(turn: fixture.secondTurn),
+        ])
+        #expect(beforeSnapshot.turns.map(\.turn) == [beforeTurn, fixture.secondTurn, fixture.thirdTurn])
         #expect(beforeSnapshot.turns.first?.submittedPrompt == fixture.prompt)
         #expect(beforeSnapshot.turns.first?.currentPlan == fixture.finalPlanUpdate)
         #expect(beforeSnapshot.turns.first?.completedCommands == [fixture.command])
         #expect(beforeSnapshot.turns.first?.visibleReasoningSummaries == [fixture.reasoningSummary])
         #expect(beforeSnapshot.turns.first?.fileChangeAttributions == [fixture.fileChangeAttribution])
-        #expect(beforeSnapshot.turns.last?.submittedPrompt == nil)
-        #expect(beforeSnapshot.turns.last?.currentPlan == nil)
-        #expect(beforeSnapshot.turns.last?.completedCommands.isEmpty == true)
-        #expect(beforeSnapshot.turns.last?.visibleReasoningSummaries.isEmpty == true)
-        #expect(beforeSnapshot.turns.last?.fileChangeAttributions.isEmpty == true)
+        #expect(beforeSnapshot.latestTurn?.submittedPrompt == nil)
+        #expect(beforeSnapshot.latestTurn?.currentPlan == nil)
+        #expect(beforeSnapshot.latestTurn?.completedCommands.isEmpty == true)
+        #expect(beforeSnapshot.latestTurn?.visibleReasoningSummaries.isEmpty == true)
+        #expect(beforeSnapshot.latestTurn?.fileChangeAttributions.isEmpty == true)
         #expect(try await repository.factualSessionProjection(
             ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id, turnLimit: 1)
         ).snapshot?.turns.map(\.turn.id) == [beforeTurn.id])
+        #expect(try await repository.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id, turnLimit: 1)
+        ).snapshot?.latestTurn?.turn.id == fixture.thirdTurn.id)
+
+        let turnDetail = try await repository.factualSessionTurnDetail(
+            ProvenanceFactualSessionTurnDetailRequest(turnID: fixture.firstTurnStarted.id)
+        )
+        #expect(turnDetail.found)
+        #expect(turnDetail.reason == nil)
+        #expect(turnDetail.turnID == fixture.firstTurnStarted.id)
+        #expect(turnDetail.sessionID == fixture.session.id)
+        #expect(turnDetail.revision == fixture.events.count)
+        #expect(turnDetail.turnDetail == beforeSnapshot.turns.first)
+
+        #expect(try await repository.factualSessionTurnDetail(
+            ProvenanceFactualSessionTurnDetailRequest(turnID: "turn-missing")
+        ) == ProvenanceFactualSessionTurnDetailResponse(
+            found: false,
+            reason: "no_turn",
+            turnID: "turn-missing",
+            turnDetail: nil
+        ))
 
         let fileExplanation = try await repository.fileExplanation(
             ProvenanceFileExplanationRequest(worktreeID: fixture.worktree.id, path: fixture.fileChange.path)
@@ -134,12 +166,19 @@ struct ProjectionRebuildValidationTests {
             duplicateFailed = true
         }
         #expect(duplicateFailed)
-        #expect(try await repository.storageSummary().codingAgentThreadCount == 1)
+        #expect(try await repository.storageSummary().codingAgentThreadCount == 2)
+
+        try await Self.append(event: fixture.replayedThreadEvent, into: repository)
+        #expect(try await repository.storageSummary().codingAgentThreadCount == 2)
+        let afterReplayFactualProjection = try await repository.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id)
+        )
+        #expect(afterReplayFactualProjection.snapshot?.revision == fixture.events.count + 1)
 
         try Self.deleteCodingAgentProjectionRows(databaseURL: url)
         #expect(try await repository.codingAgentThread(id: fixture.thread.id) == nil)
 
-        #expect(try await repository.rebuildProjectionsFromEventLedger(batchSize: 2) == fixture.events.count)
+        #expect(try await repository.rebuildProjectionsFromEventLedger(batchSize: 2) == fixture.events.count + 1)
         #expect(try await repository.codingAgentThread(id: fixture.thread.id) == beforeThread)
         #expect(try await repository.codingAgentTurn(id: fixture.firstTurnStarted.id) == beforeTurn)
         #expect(try await repository.codingAgentPrompt(id: fixture.prompt.id) == beforePrompt)
@@ -152,7 +191,7 @@ struct ProjectionRebuildValidationTests {
         )
         #expect(
             try await repository.factualSessionProjection(ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id))
-                == beforeFactualProjection
+                == afterReplayFactualProjection
         )
         #expect(try await repository.validateProjectionKeys(limit: 20).mismatches.isEmpty)
     }
@@ -445,9 +484,11 @@ private struct CodingAgentEvidenceFixture {
     let worktree: ProvenanceWorktreeRecord
     let session: ProvenanceSessionRecord
     let thread: ProvenanceCodingAgentThreadRecord
+    let secondThread: ProvenanceCodingAgentThreadRecord
     let firstTurnStarted: ProvenanceCodingAgentTurnRecord
     let firstTurnCompleted: ProvenanceCodingAgentTurnRecord
     let secondTurn: ProvenanceCodingAgentTurnRecord
+    let thirdTurn: ProvenanceCodingAgentTurnRecord
     let prompt: ProvenanceCodingAgentPromptRecord
     let firstPlanUpdate: ProvenanceCodingAgentPlanUpdateRecord
     let finalPlanUpdate: ProvenanceCodingAgentPlanUpdateRecord
@@ -457,6 +498,7 @@ private struct CodingAgentEvidenceFixture {
     let fileChange: ProvenanceFileChangeRecord
     let fileChangeAttribution: ProvenanceCodingAgentFileChangeAttributionRecord
     let threadEvent: ProvenanceEvent
+    let replayedThreadEvent: ProvenanceEvent
     let events: [ProvenanceEvent]
 
     init() {
@@ -501,6 +543,17 @@ private struct CodingAgentEvidenceFixture {
             firstObservedAt: timestamp.addingTimeInterval(2),
             updatedAt: timestamp.addingTimeInterval(2)
         )
+        let secondThread = ProvenanceCodingAgentThreadRecord(
+            id: "coding-agent-thread-codex-43",
+            sessionID: session.id,
+            provider: "codex",
+            providerThreadID: "codex-thread-43",
+            worktreeID: worktree.id,
+            source: .observed,
+            confidence: .high,
+            firstObservedAt: timestamp.addingTimeInterval(10),
+            updatedAt: timestamp.addingTimeInterval(10)
+        )
         let firstTurnStarted = ProvenanceCodingAgentTurnRecord(
             id: "coding-agent-turn-codex-1",
             sessionID: session.id,
@@ -530,12 +583,25 @@ private struct CodingAgentEvidenceFixture {
         let secondTurn = ProvenanceCodingAgentTurnRecord(
             id: "coding-agent-turn-codex-2",
             sessionID: session.id,
-            threadID: thread.id,
+            threadID: secondThread.id,
             provider: "codex",
             providerTurnID: "codex-turn-2",
-            status: "started",
+            status: "completed",
             startedAt: timestamp.addingTimeInterval(12),
-            updatedAt: timestamp.addingTimeInterval(12),
+            completedAt: timestamp.addingTimeInterval(13),
+            updatedAt: timestamp.addingTimeInterval(13),
+            source: .observed,
+            confidence: .high
+        )
+        let thirdTurn = ProvenanceCodingAgentTurnRecord(
+            id: "coding-agent-turn-codex-3",
+            sessionID: session.id,
+            threadID: secondThread.id,
+            provider: "codex",
+            providerTurnID: "codex-turn-3",
+            status: "started",
+            startedAt: timestamp.addingTimeInterval(14),
+            updatedAt: timestamp.addingTimeInterval(14),
             source: .observed,
             confidence: .high
         )
@@ -693,14 +759,28 @@ private struct CodingAgentEvidenceFixture {
             thread.firstObservedAt,
             ProvenanceEventPayload(externalIdentities: [threadIdentity], codingAgentThread: thread)
         )
+        let secondThreadEvent = baseEvent(
+            "event-codex-thread-2",
+            .codingAgentThreadObserved,
+            secondThread.firstObservedAt,
+            ProvenanceEventPayload(codingAgentThread: secondThread)
+        )
+        let replayedThreadEvent = baseEvent(
+            "event-codex-thread-replay",
+            .codingAgentThreadObserved,
+            timestamp.addingTimeInterval(15),
+            ProvenanceEventPayload(codingAgentThread: thread)
+        )
 
         self.repository = repository
         self.worktree = worktree
         self.session = session
         self.thread = thread
+        self.secondThread = secondThread
         self.firstTurnStarted = firstTurnStarted
         self.firstTurnCompleted = firstTurnCompleted
         self.secondTurn = secondTurn
+        self.thirdTurn = thirdTurn
         self.prompt = prompt
         self.firstPlanUpdate = firstPlanUpdate
         self.finalPlanUpdate = finalPlanUpdate
@@ -710,6 +790,7 @@ private struct CodingAgentEvidenceFixture {
         self.fileChange = fileChange
         self.fileChangeAttribution = fileChangeAttribution
         self.threadEvent = threadEvent
+        self.replayedThreadEvent = replayedThreadEvent
         self.events = [
             baseEvent(
                 "event-codex-worktree",
@@ -724,6 +805,7 @@ private struct CodingAgentEvidenceFixture {
                 ProvenanceEventPayload(session: session, externalIdentities: [sessionIdentity])
             ),
             threadEvent,
+            secondThreadEvent,
             baseEvent(
                 "event-codex-turn-1-started",
                 .codingAgentTurnObserved,
@@ -777,15 +859,21 @@ private struct CodingAgentEvidenceFixture {
                 ProvenanceEventPayload(codingAgentTurn: firstTurnCompleted)
             ),
             baseEvent(
-                "event-codex-turn-2-started",
+                "event-codex-turn-2-completed",
                 .codingAgentTurnObserved,
                 secondTurn.updatedAt,
                 ProvenanceEventPayload(codingAgentTurn: secondTurn)
             ),
             baseEvent(
+                "event-codex-turn-3-started",
+                .codingAgentTurnObserved,
+                thirdTurn.updatedAt,
+                ProvenanceEventPayload(codingAgentTurn: thirdTurn)
+            ),
+            baseEvent(
                 "event-codex-session-still-active",
                 .sessionObserved,
-                timestamp.addingTimeInterval(13),
+                timestamp.addingTimeInterval(16),
                 ProvenanceEventPayload(session: session)
             ),
         ]

@@ -163,16 +163,31 @@ The first public read contract is:
 - `ProvenanceFactualSessionProjectionRequest`
 - `ProvenanceFactualSessionProjectionResponse`
 - `ProvenanceFactualSessionProjectionSnapshot`
+- `ProvenanceFactualSessionProjectionProviderThreadIdentity`
+- `ProvenanceFactualSessionProjectionTurnReference`
 - `ProvenanceFactualSessionProjectionTurnSnapshot`
+- `ProvenanceFactualSessionTurnDetailRequest`
+- `ProvenanceFactualSessionTurnDetailResponse`
 - `ProvenanceEngineClient.factualSessionProjection(...)`
+- `ProvenanceEngineClient.factualSessionTurnDetail(...)`
 - `ProvenanceEngineCapability.queryFactualSessionProjection`
+- `ProvenanceEngineCapability.queryFactualSessionTurnDetail`
 
 It returns one PE session's observed coding-agent evidence grouped into factual
-thread and turn structure. The snapshot includes session identity, provider
-thread identities, observed turns, latest submitted prompt per turn, latest
-plan update per turn, completed commands, visible reasoning summaries, and
-file-change attributions. Its revision is the newest ledger append sequence for
-the requested session.
+thread and turn structure. The current session snapshot shape emphasizes PE
+session identity, observed provider thread identities as factual data, detailed
+factual latest-turn state, and compact prior-turn references. Provider thread
+identity is not treated as proof of a permanent 1:1 PE session/thread mapping.
+Consumers that need full detail for an older turn use the separate
+`ProvenanceFactualSessionTurnDetailRequest` /
+`ProvenanceFactualSessionTurnDetailResponse` read contract. The compatibility
+`turns` array still carries detailed observed turns for existing lower-level
+diagnostic consumers.
+
+Detailed factual turn snapshots include latest submitted prompt, latest plan
+update, completed commands, visible reasoning summaries, and file-change
+attributions linked directly to the turn. Session and turn-detail revisions are
+the newest ledger append sequence for the owning session.
 
 The implementation is deterministic and rebuildable from the immutable ledger.
 It is deliberately below `SessionWorkModel`: it does not synthesize missing

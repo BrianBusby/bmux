@@ -32,6 +32,12 @@ struct ProvenanceEngineHealthTests {
         #expect(ProvenanceEngineCapability.queryWorktrees.rawValue == "query_worktrees")
         #expect(ProvenanceEngineCapability.queryCurrentContext.rawValue == "query_current_context")
         #expect(ProvenanceEngineCapability.queryWorkspaceDisplay.rawValue == "query_workspace_display")
+        #expect(
+            ProvenanceEngineCapability.queryFactualSessionProjection.rawValue == "query_factual_session_projection"
+        )
+        #expect(
+            ProvenanceEngineCapability.queryFactualSessionTurnDetail.rawValue == "query_factual_session_turn_detail"
+        )
     }
 
     @Test
@@ -178,6 +184,90 @@ struct ProvenanceEngineHealthTests {
         #expect(link.system == "linear")
         #expect(link.title == nil)
         #expect(link.url == "https://linear.app/manaflow/issue/STE-1964")
+    }
+
+    @Test
+    func olderFactualSessionProjectionSnapshotDecodesIntoConsumerShape() throws {
+        let json = """
+        {
+          "revision": 7,
+          "session": {
+            "id": "session-1",
+            "agentKind": "codex",
+            "worktreeID": "worktree-1",
+            "status": "active",
+            "startedAt": 1,
+            "updatedAt": 1
+          },
+          "providerThreads": [
+            {
+              "id": "thread-1",
+              "sessionID": "session-1",
+              "provider": "codex",
+              "providerThreadID": "provider-thread-1",
+              "worktreeID": "worktree-1",
+              "source": "observed",
+              "confidence": "high",
+              "firstObservedAt": 1,
+              "updatedAt": 2
+            }
+          ],
+          "turns": [
+            {
+              "turn": {
+                "id": "turn-1",
+                "sessionID": "session-1",
+                "threadID": "thread-1",
+                "provider": "codex",
+                "providerTurnID": "provider-turn-1",
+                "status": "completed",
+                "model": "gpt-5",
+                "effort": "high",
+                "startedAt": 1,
+                "completedAt": 2,
+                "updatedAt": 2,
+                "source": "observed",
+                "confidence": "high"
+              },
+              "submittedPrompt": null,
+              "currentPlan": null,
+              "completedCommands": [],
+              "visibleReasoningSummaries": [],
+              "fileChangeAttributions": []
+            },
+            {
+              "turn": {
+                "id": "turn-2",
+                "sessionID": "session-1",
+                "threadID": "thread-1",
+                "provider": "codex",
+                "providerTurnID": "provider-turn-2",
+                "status": "started",
+                "updatedAt": 3,
+                "source": "observed",
+                "confidence": "high"
+              },
+              "submittedPrompt": null,
+              "currentPlan": null,
+              "completedCommands": [],
+              "visibleReasoningSummaries": [],
+              "fileChangeAttributions": []
+            }
+          ]
+        }
+        """
+        let data = try #require(json.data(using: .utf8))
+
+        let snapshot = try JSONDecoder().decode(ProvenanceFactualSessionProjectionSnapshot.self, from: data)
+
+        #expect(snapshot.revision == 7)
+        #expect(snapshot.providerThreadIdentities == [
+            ProvenanceFactualSessionProjectionProviderThreadIdentity(thread: snapshot.providerThreads[0]),
+        ])
+        #expect(snapshot.latestTurn?.turn.id == "turn-2")
+        #expect(snapshot.priorTurns == [
+            ProvenanceFactualSessionProjectionTurnReference(turn: snapshot.turns[0].turn),
+        ])
     }
 
     @Test

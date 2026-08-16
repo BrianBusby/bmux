@@ -33,6 +33,9 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
     /// Queries the factual session projection snapshot for a coding-agent session.
     case queryFactualSessionProjection = "query_factual_session_projection"
 
+    /// Queries factual detail for one observed coding-agent turn.
+    case queryFactualSessionTurnDetail = "query_factual_session_turn_detail"
+
     /// All currently advertised engine capabilities.
     public static let allCases: [ProvenanceEngineCapability] = [
         .appendEvent,
@@ -43,5 +46,6 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
         .queryCurrentContext,
         .queryWorkspaceDisplay,
         .queryFactualSessionProjection,
+        .queryFactualSessionTurnDetail,
     ]
 }
