@@ -521,6 +521,58 @@ roadmap:
             sha: df3866f697a916aca4331abe0535f557cbcf186e
         pull_requests: []
 
+    - id: phase_0a_canonical_nested_roadmap
+      kind: slice
+      title: Phase 0A Canonical Nested Roadmap and Concept Classification
+      parent: project_truth_manifest_and_ci
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: project_truth
+      depends_on:
+        - read_only_project_truth_ci_gate
+      enables:
+        - phase_0b_current_target_architecture
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - roadmap_hierarchy
+          - roadmap_dependency_validation
+        expected_code_areas:
+          - project/project-state.yaml
+          - project/schema/project-state.schema.json
+          - tools/project-docs
+          - docs/generated
+        likely_conflict_domains:
+          - project/project-state.yaml
+          - project/schema
+          - tools/project-docs
+          - docs/generated
+        contract_dependencies:
+          - project_truth_generated_docs
+          - project_docs_validation
+        worktree_required: true
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: e278a4423f1543176d60a9b436b1126e44888194
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 21
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-16
+      rationale: Establishes the nested dependency-aware roadmap and generated nested-roadmap view that later planning and architecture slices build on.
+
     - id: phase_0b_current_target_architecture
       kind: slice
       title: Phase 0B Current-and-Target Architecture
@@ -533,9 +585,73 @@ roadmap:
         primary: project_truth
         architecture_layer: project_truth
       depends_on:
-        - read_only_project_truth_ci_gate
+        - phase_0a_canonical_nested_roadmap
+      enables:
+        - phase_0c_parallel_worktree_metadata
       parallelism:
         classification: safe
+        expected_contract_domains:
+          - current_target_architecture_status
+        expected_code_areas:
+          - docs/current-and-target-architecture.md
+          - tools/project-docs
+        likely_conflict_domains:
+          - project/project-state.yaml
+          - docs/generated
+        contract_dependencies:
+          - project_truth_generated_docs
+        worktree_required: true
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: 533567ead8c69ff13c919d0e41ec0a9dd7916e3b
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 22
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-15
+      rationale: Records the living current-and-target architecture guide and its generated status block as project-truth infrastructure without changing product implementation sequencing.
+
+    - id: phase_0c_parallel_worktree_metadata
+      kind: slice
+      title: Phase 0C Parallel Slice Planning and Worktree Safety Metadata
+      parent: project_truth_manifest_and_ci
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: cross_repository_workflow
+      depends_on:
+        - phase_0b_current_target_architecture
+      parallelism:
+        classification: safe
+        expected_contract_domains:
+          - roadmap_parallelism_metadata
+          - active_worktree_preflight
+        expected_code_areas:
+          - project/project-state.yaml
+          - project/schema/project-state.schema.json
+          - project/schema/repo-status.schema.json
+          - tools/project-docs
+          - docs/generated
+        likely_conflict_domains:
+          - project/project-state.yaml
+          - project/schema
+          - tools/project-docs
+          - docs/generated
+        contract_dependencies:
+          - project_truth_generated_docs
+          - project_docs_validation
+        worktree_required: true
       execution:
         assignment: complete
         assigned_to: provenance_engine
@@ -544,10 +660,10 @@ roadmap:
       evidence:
         commits:
           - repository: BrianBusby/provenance-engine
-            sha: 533567ead8c69ff13c919d0e41ec0a9dd7916e3b
+            sha: 6fee11b0fa40593ac848fe55e8406687a4ceb795
         pull_requests: []
-      completed_at: 2026-08-15
-      rationale: Records the living current-and-target architecture guide and its generated status block as project-truth infrastructure without changing product implementation sequencing.
+      completed_at: 2026-08-16
+      rationale: Adds manifest-only parallel slice planning metadata, active worktree and branch safety validation, and generated preflight visibility without assigning future work automatically.
 
     - id: richer_session_understanding
       kind: program
@@ -713,6 +829,22 @@ roadmap:
         - semantic_inference_framework
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - factual_session_projection
+          - deterministic_current_state
+        expected_code_areas:
+          - Sources/ProvenanceEngineContracts
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+          - bmux factual projection consumers
+        likely_conflict_domains:
+          - factual_session_projection_contract
+          - deterministic_current_state_projection
+          - bmux_consumer_contract_shape
+        contract_dependencies:
+          - factual_session_projection_foundation
+          - deterministic_current_state_api
+        worktree_required: true
       execution:
         assignment: next_eligible
         assigned_to: provenance_engine
@@ -780,6 +912,20 @@ roadmap:
         - blocker_approach_change_semantics
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - semantic_inference_records
+          - session_work_model_semantics
+        expected_code_areas:
+          - Sources/ProvenanceEngineContracts
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - semantic_inference_schema
+          - session_work_model_projection
+        contract_dependencies:
+          - factual_session_projection
+          - evidence_reference_identity
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -809,6 +955,19 @@ roadmap:
         - scoped_architecture_projection
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - semantic_session_inferences
+          - session_work_model_semantics
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - semantic_inference_schema
+          - session_work_model_projection
+        contract_dependencies:
+          - semantic_inference_records
+          - factual_session_projection
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -816,7 +975,7 @@ roadmap:
       acceptance_status: proposed
       acceptance:
         criteria:
-          - Thread intent, turn intent, session phase, current activity, and first milestone structure are evidence-backed.
+          - Thread intent, turn intent, session phase, and current activity are evidence-backed.
 
     - id: human_readable_semantic_messaging
       kind: slice
@@ -839,6 +998,20 @@ roadmap:
         classification: safe
         with:
           - presentation_language_calibration_corpus
+        expected_contract_domains:
+          - semantic_message_contract
+          - session_work_model_presentation
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - docs/session-work-model.md
+          - bmux semantic presentation consumers
+        likely_conflict_domains:
+          - semantic_message_contract
+          - session_work_model_projection
+        contract_dependencies:
+          - semantic_session_inferences
+        worktree_required: true
+        conflict_note: Safe with the calibration corpus only when messaging edits stay in presentation contract code and corpus edits stay in example data.
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -861,6 +1034,19 @@ roadmap:
         - human_readable_semantic_messaging
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - semantic_explanation_provenance
+          - bmux_semantic_presentation
+        expected_code_areas:
+          - bmux UI semantic explanation surfaces
+          - Sources/ProvenanceEngineContracts
+        likely_conflict_domains:
+          - bmux_semantic_presentation
+          - semantic_message_contract
+        contract_dependencies:
+          - semantic_message_contract
+          - session_work_model_presentation
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: bmux
@@ -884,6 +1070,19 @@ roadmap:
         - presentation_language_calibration_corpus
       parallelism:
         classification: safe
+        expected_contract_domains:
+          - presentation_feedback_events
+          - semantic_message_calibration
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - bmux semantic feedback surfaces
+        likely_conflict_domains:
+          - presentation_feedback_events
+          - semantic_message_calibration
+        contract_dependencies:
+          - semantic_explanation_provenance
+          - presentation_language_corpus
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: shared
@@ -908,6 +1107,20 @@ roadmap:
         classification: safe
         with:
           - human_readable_semantic_messaging
+        expected_contract_domains:
+          - presentation_language_corpus
+          - semantic_message_calibration
+        expected_code_areas:
+          - Tests/ProvenanceEngineTests
+          - docs/session-work-model.md
+          - calibration fixtures
+        likely_conflict_domains:
+          - presentation_language_corpus
+          - semantic_message_calibration
+        contract_dependencies:
+          - semantic_session_inferences
+        worktree_required: true
+        conflict_note: Safe with human-readable messaging only when corpus edits do not change the semantic message contract.
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -970,6 +1183,18 @@ roadmap:
         - milestone_to_architecture_relationships
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - milestone_semantics
+          - session_work_model_milestones
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - milestone_semantics
+          - session_work_model_projection
+        contract_dependencies:
+          - semantic_session_inferences
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -993,6 +1218,19 @@ roadmap:
         classification: safe
         with:
           - milestone_inference
+        expected_contract_domains:
+          - blocker_semantics
+          - approach_change_semantics
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - blocker_semantics
+          - approach_change_semantics
+        contract_dependencies:
+          - semantic_inference_records
+        worktree_required: true
+        conflict_note: Safe only if blocker and approach-change records stay independent from milestone hierarchy writes.
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -1016,6 +1254,20 @@ roadmap:
         - richer_coding_agent_evidence_foundation
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - milestone_code_relationships
+          - file_change_attribution
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Sources/ProvenanceEngineContracts
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - milestone_relationships
+          - file_change_attribution
+        contract_dependencies:
+          - milestone_semantics
+          - richer_coding_agent_evidence
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -1077,6 +1329,20 @@ roadmap:
         - milestone_to_architecture_relationships
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - scoped_architecture_projection
+          - architecture_evidence_relationships
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Sources/ProvenanceEngineContracts
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - scoped_architecture_projection
+          - architecture_relationships
+        contract_dependencies:
+          - semantic_session_inferences
+          - file_change_attribution
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -1100,6 +1366,19 @@ roadmap:
         - milestone_inference
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - milestone_architecture_relationships
+          - scoped_architecture_projection
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - milestone_relationships
+          - architecture_relationships
+        contract_dependencies:
+          - scoped_architecture_projection
+          - milestone_semantics
+        worktree_required: true
       execution:
         assignment: planned
         assigned_to: provenance_engine
@@ -1122,6 +1401,21 @@ roadmap:
         - milestone_to_architecture_relationships
       parallelism:
         classification: serial
+        expected_contract_domains:
+          - knowledge_compiler_outputs
+          - retrieval_context_packages
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Sources/ProvenanceEngineContracts
+          - Tests/ProvenanceEngineTests
+          - docs/reference-architecture.md
+        likely_conflict_domains:
+          - knowledge_compiler
+          - retrieval_contracts
+        contract_dependencies:
+          - milestone_code_relationships
+          - milestone_architecture_relationships
+        worktree_required: true
       execution:
         assignment: deferred
         assigned_to: provenance_engine
