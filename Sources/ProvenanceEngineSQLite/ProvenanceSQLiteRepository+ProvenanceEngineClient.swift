@@ -30,4 +30,14 @@ extension ProvenanceSQLiteRepository: ProvenanceEngineClient {
         -> ProvenanceSemanticInferenceQueryResponse {
         try semanticInferenceRecords(request)
     }
+
+    func publishSemanticMessage(_ request: ProvenanceSemanticMessagePublishRequest) async throws
+        -> ProvenanceSemanticMessagePublishResponse {
+        try publishSemanticMessageRecord(request)
+    }
+
+    func semanticMessages(_ request: ProvenanceSemanticMessageQueryRequest) async throws
+        -> ProvenanceSemanticMessageQueryResponse {
+        try semanticMessageRecords(request)
+    }
 }

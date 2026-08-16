@@ -40,6 +40,9 @@ struct ProvenanceEngineHealthTests {
         )
         #expect(ProvenanceEngineCapability.publishSemanticInference.rawValue == "publish_semantic_inference")
         #expect(ProvenanceEngineCapability.querySemanticInferences.rawValue == "query_semantic_inferences")
+        #expect(ProvenanceEngineCapability.publishSemanticMessage.rawValue == "publish_semantic_message")
+        #expect(ProvenanceEngineCapability.querySemanticMessages.rawValue == "query_semantic_messages")
+        #expect(ProvenanceEngineCapability.materializeSemanticMessages.rawValue == "materialize_semantic_messages")
         #expect(
             ProvenanceEngineCapability.publishCodingAgentSessionSemanticInferences.rawValue ==
                 "publish_coding_agent_session_semantic_inferences"
