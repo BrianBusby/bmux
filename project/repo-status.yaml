@@ -33,6 +33,10 @@ local_capabilities:
   coding_agent_turn_intent: implemented
   coding_agent_session_phase: implemented
   coding_agent_current_activity: implemented
+  human_readable_semantic_messaging: implemented
+  semantic_message_records: implemented
+  semantic_message_materialization: implemented
+  semantic_message_presentation_policy: implemented
   scoped_architecture_projection: planned
 
 local_caveats:

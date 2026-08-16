@@ -137,7 +137,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/provenance-engine@50a4fb58a114, BrianBusby/provenance-engine#28 by [BrianBusby](https://github.com/BrianBusby)
           Acceptance reason: First concrete rule-produced semantic records now materialize thread intent, turn intent, session phase, and current activity from factual session projections with structured payloads, evidence references, factual revision, producer metadata, confidence, specificity, and supersession while keeping deterministic Current State factual only.
           Acceptance criteria: Thread intent, turn intent, session phase, and current activity are evidence-backed.
-        - **Human-readable semantic messaging** (`human_readable_semantic_messaging`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: next eligible / Provenance Engine; parallelism: safe; delivery: proposed; acceptance: proposed
+        - **Human-readable semantic messaging** (`human_readable_semantic_messaging`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: semantic understanding; layer: inference session work projections; execution: complete / Provenance Engine; parallelism: safe; delivery: merged; acceptance: implemented
           Depends on: `first_semantic_session_inferences`
           Enables: `clickable_semantic_explanation_ui`, `presentation_language_calibration_corpus`
           Parallel with: `presentation_language_calibration_corpus`
@@ -147,7 +147,10 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `semantic_session_inferences`
           Worktree required: true
           Conflict note: Safe with the calibration corpus only when messaging edits stay in presentation contract code and corpus edits stay in example data.
-        - **Clickable semantic explanation UI** (`clickable_semantic_explanation_ui`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: semantic understanding; layer: consumer presentation; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed
+          Evidence: BrianBusby/provenance-engine@ec0baa4b0d83, BrianBusby/provenance-engine#30 by [BrianBusby](https://github.com/BrianBusby)
+          Acceptance reason: Human-readable semantic message contracts, deterministic default rendering for first coding-agent semantic kinds, SQLite message cache/history persistence, public publish/query/materialization APIs, and coverage for wording, policy separation, supersession, rollback, retrieval, and Current State separation are implemented.
+          Acceptance criteria: Semantic inference records can be rendered into cached concise and expanded messages.; Message records preserve structured semantic meaning, provenance, confidence, specificity, producer, policy, history, and supersession.; Presentation wording remains separate from semantic inference truth and deterministic Current State.
+        - **Clickable semantic explanation UI** (`clickable_semantic_explanation_ui`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: semantic understanding; layer: consumer presentation; execution: next eligible / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed
           Depends on: `human_readable_semantic_messaging`
           Expected contract domains: `semantic_explanation_provenance`, `bmux_semantic_presentation`
           Expected code areas: `bmux UI semantic explanation surfaces`, `Sources/ProvenanceEngineContracts`
@@ -237,11 +240,11 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- |
-| Human-readable semantic messaging (`human_readable_semantic_messaging`) | safe | true | `semantic_message_contract`, `session_work_model_projection` | `semantic_session_inferences` | `semantic_message_contract`, `session_work_model_presentation` | `Sources/ProvenanceEngineCore`, `docs/session-work-model.md`, `bmux semantic presentation consumers` |
+| Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) | serial | true | `bmux_semantic_presentation`, `semantic_message_contract` | `semantic_message_contract`, `session_work_model_presentation` | `semantic_explanation_provenance`, `bmux_semantic_presentation` | `bmux UI semantic explanation surfaces`, `Sources/ProvenanceEngineContracts` |
 
 ## Next Eligible Work
 
-- Human-readable semantic messaging (`human_readable_semantic_messaging`) - depends on: `first_semantic_session_inferences`
+- Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - depends on: `human_readable_semantic_messaging`
 
 ## Deferred Or Blocked Work
 
