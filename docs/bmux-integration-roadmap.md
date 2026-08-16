@@ -382,6 +382,11 @@ architecture projections, and the high-level `SessionWorkModel` read contract.
 bmux owns provider acquisition, live process control, approvals, streaming UI,
 ephemeral interaction state, and rendering.
 
+Product shape: bmux should preserve three views over one coding-agent session.
+Native is the provider-native surface and escape hatch. Terminal is bmux's React
+live interaction surface, building from `agent-chat`. Session is a separate
+React smart summary surface backed by PE factual and semantic models.
+
 Adopter: bmux.
 
 Required contract sequence: new public evidence event/domain contracts for
@@ -403,8 +408,10 @@ Provenance-engine work:
 - Add deterministic factual session projections for live state only.
 - Add inference records with supporting evidence ids, producer/inference
   version, confidence, created time, and active/superseded/invalidated status.
-- Add the first semantic `SessionWorkModel` projection with revisioned
-  authoritative snapshot reads above the factual projection.
+- Add human-readable semantic messages above semantic inference truth without
+  making wording the source of truth.
+- Add the first revisioned PE-owned `SessionWorkModel` contract above factual
+  projection, semantic inference records, and semantic messages.
 - Add scoped architecture projections for thread and current-turn scope, with
   touched, affected, and contextual nodes.
 
@@ -414,9 +421,14 @@ bmux work:
   live process/PTy/WebView state, approvals, streaming deltas, and UI.
 - Forward only selected completed evidence units to Provenance Engine through
   public contracts.
-- Render `SessionWorkModel` as a human-readable coding-agent work view, using
-  push/delta notifications only as hints and re-fetching the authoritative
-  projection for reconciliation.
+- Productize the React Terminal surface for live interaction without treating
+  it as a semantic engine.
+- Build a separate React Smart Session surface that starts from PE factual
+  projection and semantic messages, then consumes `SessionWorkModel` when the
+  contract exists. Push/delta notifications are hints; authoritative summary
+  state should reconcile by re-fetching PE revisions.
+- Preserve one underlying provider thread/session identity across Native,
+  Terminal, and Session navigation.
 - Preserve lower-level diagnostics and fallbacks for live provider failures.
 
 Dependencies: accepted execution-telemetry foundation, accepted lifecycle and
@@ -442,6 +454,9 @@ Acceptance criteria for the first semantic vertical slice:
 - A `SessionWorkModel` snapshot exposes revision, subject/project, thread,
   current turn, current activity, milestone hierarchy, validation/risk state,
   and provenance metadata.
+- The React Smart Session consumer can distinguish directly observed evidence,
+  deterministic factual projection, PE semantic interpretation, and
+  human-readable presentation wording.
 - Thread intent, turn intent, session phase, current activity, milestone
   hierarchy, and milestone descriptions are active inference records with
   supporting evidence, producer version, confidence, and supersession status.

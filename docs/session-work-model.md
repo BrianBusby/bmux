@@ -38,6 +38,29 @@ implemented factual substrate intentionally uses the
 on deterministic Current State without assuming intent, milestone, activity,
 risk, or architecture meaning exists.
 
+## Primary Smart Session Consumer
+
+The major planned product consumer is bmux's React Smart Session view. It is
+separate from two other views over the same coding-agent session:
+
+- Native, which preserves provider-native fidelity and escape-hatch behavior.
+- Terminal, bmux's React live interaction surface for streaming conversation,
+  tool lifecycle, approvals, controls, interrupts, and live execution details.
+- Session, bmux's React smart summary surface for understanding what the work
+  means and how it is progressing.
+
+`SessionWorkModel` belongs to Provenance Engine because the Smart Session view
+must be able to distinguish observed evidence, deterministic factual
+projection, semantic interpretation, and presentation wording. bmux may host and
+render the React surface, but it should not recreate PE semantic inference from
+raw Terminal events or maintain a second independent model of session intent,
+progress, blockers, or approach changes.
+
+The current bmux factual Session UI is useful as a factual projection consumer
+and diagnostic baseline. Where that UI is native Swift, it should be treated as
+scaffolding or inspection support for the PE factual contract rather than the
+final Smart Session information architecture.
+
 ## Existing Contracts Stay Useful
 
 `SessionWorkModel` does not replace the existing V1 read contracts:
@@ -75,6 +98,14 @@ separate even if the public response combines them for convenience.
 `SessionWorkModel` may include fields from layers 2 and 3, but each field must
 carry provenance metadata identifying whether it is observed, deterministic,
 rule-derived, model-derived, or compiled from a later knowledge artifact.
+
+Completed turns and the current turn need different semantics. Completed turns
+should eventually be compact chronological summaries with expandable provenance
+and details such as intent, prompt/context, plan state, commands, visible
+reasoning summaries, files changed, semantic interpretation, and outcome. The
+current turn should expose the active goal, activity, plan state, and progress
+from new evidence without duplicating every live token or command-output delta;
+that detailed replay remains a Terminal or Native responsibility.
 
 ## Ownership Boundary
 
@@ -277,6 +308,22 @@ The response should be optimized for a consumer that needs to answer:
 
 > If I look at this for three seconds, can I tell whether the agent is making
 > progress, stuck, or doing something risky?
+
+Representative Smart Session questions the model should eventually support:
+
+- What is this session trying to accomplish?
+- What major turns have completed, and what happened in each one?
+- What is the current turn trying to achieve?
+- What is the agent doing right now?
+- What has it worked on, changed, and validated?
+- What does it plan to do next?
+- Is the session blocked, debugging, changing approach, or making forward
+  progress?
+
+Some of those answers already have factual or semantic foundations. Others
+depend on planned milestone, validation, blocker, approach-change, and fuller
+`SessionWorkModel` contract slices; consumers must not present planned
+capabilities as implemented truth.
 
 It must also support drilldown into the project subject, current thread intent,
 current turn intent, milestones, current activity, risks, architecture, and code

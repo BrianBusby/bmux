@@ -705,7 +705,8 @@ roadmap:
       execution:
         assignment: current
         assigned_to: shared
-      rationale: Richer coding-agent evidence and session projections are the active direction after V1 adoption and workspace-display observation.
+      rationale: >-
+        Richer coding-agent evidence and session projections are the active direction after V1 adoption and workspace-display observation. This program now explicitly supports bmux's three-view coding-session model: Native provider-native fidelity, React Terminal live interaction, and React Smart Session understanding backed by PE factual and semantic models.
 
     - id: richer_session_evidence_and_factual_state
       kind: phase
@@ -1061,6 +1062,8 @@ roadmap:
       enables:
         - clickable_semantic_explanation_ui
         - presentation_language_calibration_corpus
+        - react_smart_session_foundation
+        - session_work_model_contract_foundation
       parallelism:
         classification: safe
         with:
@@ -1102,10 +1105,106 @@ roadmap:
           - Presentation wording remains separate from semantic inference truth and deterministic Current State.
       acceptance_reason: Human-readable semantic message contracts, deterministic default rendering for first coding-agent semantic kinds, SQLite message cache/history persistence, public publish/query/materialization APIs, and coverage for wording, policy separation, supersession, rollback, retrieval, and Current State separation are implemented.
 
+    - id: session_work_model_contract_foundation
+      kind: slice
+      title: SessionWorkModel contract foundation
+      parent: semantic_session_work_model_projection
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: inference_session_work_projections
+        tags:
+          - session_work_model
+          - react_smart_session
+      depends_on:
+        - human_readable_semantic_messaging
+      enables:
+        - react_smart_session_work_model_consumer
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - session_work_model_contract
+          - factual_semantic_provenance
+          - semantic_message_contract
+        expected_code_areas:
+          - Sources/ProvenanceEngineContracts
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+          - docs/session-work-model.md
+        likely_conflict_domains:
+          - session_work_model_projection
+          - semantic_message_contract
+          - factual_session_projection_contract
+        contract_dependencies:
+          - factual_session_projection
+          - semantic_message_contract
+          - semantic_session_inferences
+        worktree_required: true
+        conflict_note: Define the PE-owned contract before bmux builds richer Smart Session presentation so bmux consumes a revisioned model instead of composing its own semantic interpretation.
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Introduce the first revisioned PE-owned SessionWorkModel snapshot contract for Smart Session consumers. The contract should preserve evidence references, deterministic factual projections, semantic inference records, semantic messages, and presentation boundaries.
+
+    - id: three_view_coding_session_experience
+      kind: phase
+      title: Three-view Coding Session Experience
+      parent: richer_session_understanding
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: consumer_presentation
+        tags:
+          - three_view_session
+          - react_terminal
+          - react_smart_session
+      depends_on:
+        - factual_projection_consumer_shape_followup
+      parallelism:
+        classification: safe
+      execution:
+        assignment: current
+        assigned_to: bmux
+      rationale: >-
+        Make the three distinct user-facing views durable in Project Truth: Native preserves provider-native fidelity, Terminal is the bmux React live interaction surface, and Session is a separate React smart summary surface backed by PE factual and semantic models.
+
+    - id: coding_session_view_surfaces
+      kind: milestone
+      title: Coding Session View Surfaces
+      parent: three_view_coding_session_experience
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: consumer_presentation
+        tags:
+          - native_session_view
+          - react_terminal
+          - react_smart_session
+      parallelism:
+        classification: safe
+      execution:
+        assignment: current
+        assigned_to: bmux
+      rationale: Groups bmux-owned presentation and navigation work that keeps Native, Terminal, and Session as separate views over one underlying coding-agent session identity.
+
     - id: factual_agent_session_view
       kind: slice
       title: Factual agent session view
-      parent: semantic_session_work_model_projection
+      parent: coding_session_view_surfaces
       status: active
       owner: bmux
       repositories:
@@ -1117,9 +1216,7 @@ roadmap:
       depends_on:
         - factual_projection_consumer_shape_followup
       enables:
-        - clickable_semantic_explanation_ui
-      sequence_before:
-        - clickable_semantic_explanation_ui
+        - react_smart_session_foundation
       parallelism:
         classification: conditional
         expected_contract_domains:
@@ -1129,6 +1226,7 @@ roadmap:
           - Sources/Panels/AgentSessionFactualProjectionView.swift
           - Sources/Panels/TerminalPanelView.swift
           - Sources/WorkProvenance/AgentSessionFactualProjectionStore.swift
+          - future React Smart Session factual data bridge
           - bmux factual projection consumers
         likely_conflict_domains:
           - bmux_factual_session_view
@@ -1138,14 +1236,14 @@ roadmap:
           - factual_session_projection
           - deterministic_current_state_api
         worktree_required: true
-        conflict_note: "Active bmux PR #49 uses the historical clickable-semantic-explanation-ui branch name but implements factual Session UI only; semantic explanation UI remains a later selected slice."
+        conflict_note: "Active bmux PR #49 uses the historical clickable-semantic-explanation-ui branch name but implements factual Swift/native Session UI only. Treat it as factual consumer groundwork and diagnostic scaffolding, not the final React Smart Session product."
       execution:
         assignment: current
         assigned_to: bmux
         active_worktree: /Users/brianbusby/repos/bmux-clickable-semantic-explanation-ui
         active_branch: clickable-semantic-explanation-ui
         active_agent: Codex
-        notes: "PR #49 is factual-only and should not be counted as satisfying clickable semantic explanation behavior."
+        notes: "PR #49 is factual-only Swift/native UI and should not be counted as satisfying React Smart Session or clickable semantic explanation behavior."
       delivery_status: draft
       acceptance_status: proposed
       evidence:
@@ -1158,12 +1256,158 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
-      rationale: Records the active bmux factual Session view work as a prerequisite consumer of PE factual projections without conflating it with semantic explanation UI.
+      rationale: Records the active bmux factual Session view work as a prerequisite PE factual-projection consumer. The native view is useful inspection/debug scaffolding and data-access foundation, but the intended user-facing Smart Session surface is React and remains separate from the React Terminal transcript/live interaction surface.
+
+    - id: react_terminal_productization
+      kind: slice
+      title: React Terminal live interaction productization
+      parent: coding_session_view_surfaces
+      status: planned
+      owner: bmux
+      repositories:
+        - bmux
+      concept_classification:
+        primary: execution_telemetry
+        architecture_layer: consumer_presentation
+        tags:
+          - react_terminal
+          - agent_chat
+      enables:
+        - three_view_session_navigation
+      parallelism:
+        classification: safe
+        expected_contract_domains:
+          - agent_chat_live_event_schema
+          - provider_runtime_identity
+          - native_webview_surface_lifecycle
+        expected_code_areas:
+          - agent-chat
+          - Sources/Panels/AgentSessionWebRenderer.swift
+          - Sources/Panels/AgentSessionWebRendererCoordinator.swift
+          - Sources/Panels/AgentSessionPanel.swift
+          - Sources/Panels/BrowserPanelView.swift
+        likely_conflict_domains:
+          - agent_chat_surface_lifecycle
+          - provider_runtime_controls
+          - browser_surface_integration
+        contract_dependencies:
+          - codex_app_server_live_events
+          - bmux_browser_surface_hosting
+        worktree_required: true
+        conflict_note: Can proceed in parallel with PE semantic work when it remains focused on live interaction, provider controls, runtime identity, and surface lifecycle rather than Smart Session inference.
+      execution:
+        assignment: planned
+        assigned_to: bmux
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Productize the existing agent-chat React surface as bmux's Terminal view for live conversation, streaming, tool lifecycle, controls, interrupts, and provider-normalized interaction. It must not become the Smart Session semantic summary surface or duplicate PE inference.
+
+    - id: react_smart_session_foundation
+      kind: slice
+      title: React Smart Session foundation
+      parent: coding_session_view_surfaces
+      status: planned
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: consumer_presentation
+        tags:
+          - react_smart_session
+          - session_summary
+      depends_on:
+        - factual_agent_session_view
+        - human_readable_semantic_messaging
+      enables:
+        - clickable_semantic_explanation_ui
+        - react_smart_session_work_model_consumer
+        - three_view_session_navigation
+      parallelism:
+        classification: conditional
+        expected_contract_domains:
+          - factual_session_projection
+          - semantic_message_contract
+          - react_smart_session_data_bridge
+        expected_code_areas:
+          - agent-chat shared React shell and primitives
+          - React Smart Session surface
+          - Sources/Panels/AgentSessionPanel.swift
+          - Sources/WorkProvenance
+          - docs/provenance-integration.md
+        likely_conflict_domains:
+          - react_session_presentation
+          - factual_session_projection_consumer
+          - semantic_message_consumer
+        contract_dependencies:
+          - factual_session_projection
+          - semantic_message_contract
+          - bmux_panel_surface_identity
+        worktree_required: true
+        conflict_note: Start after factual Session UI lands so the React surface can reuse proven factual consumer shape. Keep the presentation summary-oriented and PE-backed rather than transcript-oriented.
+      execution:
+        assignment: selected_next
+        assigned_to: bmux
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Establish a separate React Session surface that summarizes goal, completed turns, current turn, activity, plan state, worked-on areas, validations, outcomes, and provenance using PE factual projections and semantic messages. This foundation must not infer session meaning from raw provider events inside bmux.
+
+    - id: react_smart_session_work_model_consumer
+      kind: slice
+      title: React Smart SessionWorkModel consumer
+      parent: coding_session_view_surfaces
+      status: planned
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: structured_work_understanding
+        architecture_layer: consumer_presentation
+        tags:
+          - react_smart_session
+          - session_work_model
+      depends_on:
+        - react_smart_session_foundation
+        - session_work_model_contract_foundation
+        - milestone_inference
+        - blocker_approach_change_semantics
+      enables:
+        - continuous_presentation_learning
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - session_work_model_contract
+          - milestone_semantics
+          - blocker_approach_change_semantics
+          - semantic_explanation_provenance
+        expected_code_areas:
+          - React Smart Session surface
+          - bmux SessionWorkModel client
+          - Sources/WorkProvenance
+          - Sources/ProvenanceEngineContracts
+        likely_conflict_domains:
+          - session_work_model_projection
+          - react_session_presentation
+          - semantic_message_contract
+        contract_dependencies:
+          - session_work_model_contract
+          - milestone_semantics
+          - semantic_message_contract
+        worktree_required: true
+        conflict_note: Wait for PE to own richer progress, blocker, approach-change, and milestone semantics before presenting them as Smart Session truth in bmux.
+      execution:
+        assignment: planned
+        assigned_to: bmux
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Consume the PE SessionWorkModel for completed-turn summaries, current-turn state, plan/progress, blockers, approach changes, validations, and richer session-level synthesis once those contracts exist.
 
     - id: clickable_semantic_explanation_ui
       kind: slice
       title: Clickable semantic explanation UI
-      parent: semantic_session_work_model_projection
+      parent: coding_session_view_surfaces
       status: planned
       owner: bmux
       repositories:
@@ -1173,7 +1417,7 @@ roadmap:
         primary: semantic_understanding
         architecture_layer: consumer_presentation
       depends_on:
-        - factual_agent_session_view
+        - react_smart_session_foundation
         - human_readable_semantic_messaging
       parallelism:
         classification: serial
@@ -1181,7 +1425,8 @@ roadmap:
           - semantic_explanation_provenance
           - bmux_semantic_presentation
         expected_code_areas:
-          - bmux UI semantic explanation surfaces
+          - React Smart Session evidence drill-down
+          - bmux semantic presentation consumers
           - Sources/ProvenanceEngineContracts
         likely_conflict_domains:
           - bmux_semantic_presentation
@@ -1191,10 +1436,61 @@ roadmap:
           - session_work_model_presentation
         worktree_required: true
       execution:
-        assignment: selected_next
+        assignment: planned
         assigned_to: bmux
       delivery_status: proposed
       acceptance_status: proposed
+      rationale: Add clickable/expandable explanations inside the React Smart Session surface after the summary surface exists, preserving provenance boundaries between observed evidence, deterministic projection, semantic interpretation, and presentation text.
+
+    - id: three_view_session_navigation
+      kind: slice
+      title: Three-view session navigation
+      parent: coding_session_view_surfaces
+      status: planned
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: consumer_presentation
+        tags:
+          - three_view_session
+          - native_session_view
+          - react_terminal
+          - react_smart_session
+      depends_on:
+        - react_terminal_productization
+        - react_smart_session_foundation
+      parallelism:
+        classification: conditional
+        expected_contract_domains:
+          - provider_thread_identity
+          - bmux_session_identity
+          - worktree_identity
+          - surface_restore_state
+        expected_code_areas:
+          - Sources/Panels/AgentSessionPanel.swift
+          - Sources/Panels/TerminalPanelView.swift
+          - Sources/Panels/AgentSessionWebRenderer.swift
+          - agent-chat
+          - bmux surface routing and restoration
+        likely_conflict_domains:
+          - session_surface_identity
+          - provider_native_terminal_hosting
+          - browser_webview_surface_lifecycle
+        contract_dependencies:
+          - react_terminal_surface_identity
+          - react_smart_session_surface_identity
+          - provider_thread_identity
+        worktree_required: true
+        conflict_note: Depends on productized Terminal and Smart Session foundations so switching preserves one underlying agent session instead of creating separate conceptual sessions.
+      execution:
+        assignment: planned
+        assigned_to: bmux
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Provide coherent switching among Native, Terminal, and Session views while preserving provider thread/session identity, working directory/worktree identity, active view restoration, and the provider-native escape hatch.
 
     - id: continuous_presentation_learning
       kind: slice

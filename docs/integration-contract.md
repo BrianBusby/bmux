@@ -338,6 +338,15 @@ target design. It should sit above lower-level contracts such as
 `currentContext`, `sessionTree`, `fileExplanation`, `workspaceDisplay`, and
 `factualSessionProjection`; it should not replace them wholesale.
 
+For bmux's three-view coding-session model, these lower-level contracts feed the
+future React Smart Session view. The React Terminal view may use live provider
+events and runtime state for interaction, but Smart Session consumers should
+prefer PE factual projection, semantic inference, semantic messages, and the
+future `SessionWorkModel` over local reinterpretation of raw provider events.
+The current factual projection and semantic-message contracts are foundations;
+they do not yet constitute a complete progress, blocker, validation, milestone,
+or approach-change model.
+
 Rollback should be a scoped Git revert in the adopter repository that removes the package dependency and restores the previous local read path.
 
 Appender note: set `ProvenanceEvent.evidenceOrigin` and `ProvenanceEvent.evidenceScope` when the producing system or ownership boundary is known. Existing V1 adopters may leave both fields unset. `ProvenanceSource` remains the claim classification, not the origin system.

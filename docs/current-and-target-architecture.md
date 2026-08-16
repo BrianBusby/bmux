@@ -46,6 +46,33 @@ The boundary is intentionally asymmetric: bmux sees more than it persists.
 Provenance Engine stores only explicit accepted evidence, then derives reusable
 facts and interpretations with provenance.
 
+## Three-view Coding Session Model
+
+bmux's target coding-agent experience has three distinct views over one
+underlying provider session identity:
+
+- Native: the provider-native surface, kept for fidelity, debugging, provider
+  features bmux has not normalized, and escape-hatch workflows.
+- Terminal: bmux's React live interaction surface. It renders conversation,
+  streaming response state, tool and command lifecycle, provider controls,
+  approvals, interrupts, skills, modes, and other live execution interaction.
+- Session: bmux's React smart summary surface. It answers what the work means,
+  what has completed, what is happening now, what is planned next, and whether
+  the session is progressing.
+
+Provenance Engine is on the durable side of that model. It owns accepted
+evidence, deterministic factual session projection, semantic inference records,
+semantic messages, and the future `SessionWorkModel`. The React Terminal view
+may use ephemeral provider/runtime events directly, but the React Session view
+should preferentially consume PE factual and semantic contracts rather than
+reinterpreting raw provider events inside bmux.
+
+The current factual Session UI work in bmux is useful groundwork for the
+factual consumer shape and diagnostics. It is not the final Smart Session
+product by itself, especially where it is implemented as native Swift UI. The
+intended user-facing Smart Session information architecture is React, with
+native code hosting, routing, and preserving session identity where needed.
+
 ## Current Architecture
 
 The generated status block later in this document is authoritative for the
@@ -138,6 +165,13 @@ milestones, blockers, risks, validation state, and scoped architecture. bmux
 should render that state, expose provenance and explanation, and keep the user
 in control of interaction.
 
+For bmux's Smart Session view, completed turns and the current turn are distinct
+presentation needs. Completed turns should eventually be compact, chronological,
+and expandable with provenance. The current turn should update from new factual
+and semantic evidence without becoming a second live transcript. Detailed token,
+tool, and command-output replay belongs in the React Terminal view or the
+provider-native view.
+
 The semantic inference framework boundary sits between deterministic factual
 projections and the later `SessionWorkModel`. It stores versioned inference
 records with evidence references, factual revision, confidence, specificity,
@@ -174,6 +208,8 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Richer Session Understanding (`richer_session_understanding`) - program; status: active; owner: Provenance Engine
 - Semantic Understanding (`semantic_understanding`) - phase; status: active; owner: Provenance Engine
 - Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`) - milestone; status: active; owner: Provenance Engine
+- Three-view Coding Session Experience (`three_view_coding_session_experience`) - phase; status: active; owner: Bmux
+- Coding Session View Surfaces (`coding_session_view_surfaces`) - milestone; status: active; owner: Bmux
 - Factual agent session view (`factual_agent_session_view`) - slice; status: active; owner: Bmux
 
 ### Major Node Summaries
@@ -261,6 +297,8 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready Work
 
+- SessionWorkModel contract foundation (`session_work_model_contract_foundation`) - selection: planned; owner: Provenance Engine; depends on: `human_readable_semantic_messaging`. Rationale: Introduce the first revisioned PE-owned SessionWorkModel snapshot contract for Smart Session consumers. The contract should preserve evidence references, deterministic factual projections, semantic inference records, semantic messages, and presentation boundaries.
+- React Terminal live interaction productization (`react_terminal_productization`) - selection: planned; owner: Bmux; depends on: None. Rationale: Productize the existing agent-chat React surface as bmux's Terminal view for live conversation, streaming, tool lifecycle, controls, interrupts, and provider-normalized interaction. It must not become the Smart Session semantic summary surface or duplicate PE inference.
 - Presentation language calibration corpus (`presentation_language_calibration_corpus`) - selection: planned; owner: Provenance Engine; depends on: `first_semantic_session_inferences`.
 - Milestone inference (`milestone_inference`) - selection: planned; owner: Provenance Engine; depends on: `first_semantic_session_inferences`.
 - Blocker and approach-change semantics (`blocker_approach_change_semantics`) - selection: planned; owner: Provenance Engine; depends on: `semantic_inference_framework`.
@@ -268,10 +306,12 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Selected Next Work
 
-- Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - dependency status: blocked by `factual_agent_session_view`; owner: Bmux; depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`.
+- React Smart Session foundation (`react_smart_session_foundation`) - dependency status: blocked by `factual_agent_session_view`; owner: Bmux; depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`. Rationale: Establish a separate React Session surface that summarizes goal, completed turns, current turn, activity, plan state, worked-on areas, validations, outcomes, and provenance using PE factual projections and semantic messages. This foundation must not infer session meaning from raw provider events inside bmux.
 
 ### Dependency-Ready But Not Selected
 
+- SessionWorkModel contract foundation (`session_work_model_contract_foundation`) - owner: Provenance Engine; depends on: `human_readable_semantic_messaging`
+- React Terminal live interaction productization (`react_terminal_productization`) - owner: Bmux; depends on: None
 - Presentation language calibration corpus (`presentation_language_calibration_corpus`) - owner: Provenance Engine; depends on: `first_semantic_session_inferences`
 - Milestone inference (`milestone_inference`) - owner: Provenance Engine; depends on: `first_semantic_session_inferences`
 - Blocker and approach-change semantics (`blocker_approach_change_semantics`) - owner: Provenance Engine; depends on: `semantic_inference_framework`

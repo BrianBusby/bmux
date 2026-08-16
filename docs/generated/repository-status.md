@@ -25,6 +25,7 @@ Repository: `BrianBusby/provenance-engine`
 
 | Capability | State |
 | --- | --- |
+| Blocker Approach Change Semantics | planned |
 | Coding Agent Current Activity | implemented |
 | Coding Agent Session Phase | implemented |
 | Coding Agent Thread Intent | implemented |
@@ -36,6 +37,7 @@ Repository: `BrianBusby/provenance-engine`
 | First Semantic Session Inferences | implemented |
 | Human Readable Semantic Messaging | implemented |
 | Immutable Ledger | implemented |
+| Milestone Inference | planned |
 | Producer Neutral Lifecycle Recording | implemented |
 | Public In Process Sdk | implemented |
 | Richer Coding Agent Evidence | implemented |
@@ -47,6 +49,7 @@ Repository: `BrianBusby/provenance-engine`
 | Semantic Message Presentation Policy | implemented |
 | Semantic Message Records | implemented |
 | Semantic Session Work Model Projection | planned |
+| Session Work Model Contract Foundation | planned |
 | Workspace Display Current State | implemented |
 | Workspace Display Durable Context | implemented |
 | Workspace Display Project Link Facts | implemented |

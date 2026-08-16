@@ -37,6 +37,9 @@ local_capabilities:
   semantic_message_records: implemented
   semantic_message_materialization: implemented
   semantic_message_presentation_policy: implemented
+  session_work_model_contract_foundation: planned
+  milestone_inference: planned
+  blocker_approach_change_semantics: planned
   scoped_architecture_projection: planned
 
 local_caveats:
