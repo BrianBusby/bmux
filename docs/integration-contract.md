@@ -192,10 +192,39 @@ The concrete records use structured payloads:
 `ProvenanceCodingAgentCurrentActivityPayload`. Unknown remains explicit when
 bounded factual evidence does not support a stronger claim.
 
+Human-readable semantic messaging is available as a separate presentation layer
+above semantic inference truth through:
+
+- Presentation policy DTO: `ProvenanceSemanticMessagePresentationPolicy`.
+- Message record DTO: `ProvenanceSemanticMessageRecord`.
+- Publish request: `ProvenanceSemanticMessagePublishRequest`.
+- Publish response: `ProvenanceSemanticMessagePublishResponse`.
+- Query request: `ProvenanceSemanticMessageQueryRequest`.
+- Query response: `ProvenanceSemanticMessageQueryResponse`.
+- Materialization request:
+  `ProvenanceSemanticMessageMaterializationRequest`.
+- Materialization response:
+  `ProvenanceSemanticMessageMaterializationResponse`.
+- Client methods: `ProvenanceEngineClient.publishSemanticMessage(...)`,
+  `ProvenanceEngineClient.semanticMessages(...)`, and
+  `ProvenanceEngineClient.materializeSemanticMessages(...)`.
+- Capabilities: `publish_semantic_message`, `query_semantic_messages`, and
+  `materialize_semantic_messages`.
+
+Message records carry concise glance-level wording, expanded plain-language
+meaning, the structured semantic payload that was rendered, supporting evidence
+references, factual revision, confidence, specificity, presentation producer
+identity/version, presentation policy identity/version, locale, status, and
+supersession links. They are cached presentation records, not semantic truth:
+the semantic inference record remains authoritative for meaning. The SQLite
+implementation stores messages separately from deterministic Current State and
+does not include them in factual projection rebuild or drift validation.
+
 Milestones, architecture projection, Knowledge Compiler output, GitHub
-ingestion, semantic presentation wording, and bmux UI presentation remain later
-slices. Semantic records are stored separately from deterministic Current State
-and are not part of factual projection rebuild or drift validation.
+ingestion, bmux UI presentation, presentation feedback, and language calibration
+corpus work remain later slices. Semantic records and semantic message records
+are stored separately from deterministic Current State and are not part of
+factual projection rebuild or drift validation.
 
 Model-capable inference input is represented as a bounded packet shape:
 `ProvenanceSemanticInferenceInputPacket` carries references and bounded

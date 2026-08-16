@@ -1,9 +1,10 @@
 # SessionWorkModel Target Design
 
 Status: accepted target direction. The lower-level richer-session evidence
-foundation and first factual public session-projection read contract are
-implemented; semantic `SessionWorkModel` inference, milestone synthesis, and
-architecture projection are not implemented.
+foundation, factual public session-projection read contract, semantic inference
+framework, first coding-agent semantic inferences, and human-readable semantic
+message layer are implemented; semantic `SessionWorkModel` projection,
+milestone synthesis, and architecture projection are not implemented.
 
 This document defines the planned high-level Provenance Engine projection for
 live coding-agent work. It records product and architecture direction for the
@@ -195,6 +196,29 @@ turns, infer intent, derive milestones, classify current activity, compute
 risks, infer architecture, ingest GitHub evidence, or compile knowledge
 artifacts. Unknown relationships remain absent rather than guessed.
 
+## Implemented Semantic Inference And Messaging Foundation
+
+The reusable semantic layer now stores versioned, evidence-backed
+`ProvenanceSemanticInferenceRecord` values above deterministic Current State.
+The first concrete coding-agent semantic kinds are implemented:
+
+- `coding_agent.thread_intent`
+- `coding_agent.turn_intent`
+- `coding_agent.session_phase`
+- `coding_agent.current_activity`
+
+Those records carry structured payloads, supporting evidence references,
+supporting factual revision, confidence, specificity, producer identity/version,
+supersession links, and status. Unknown remains explicit when bounded factual
+evidence does not support a stronger claim.
+
+The presentation layer now stores `ProvenanceSemanticMessageRecord` values that
+render semantic inference records into concise glance-level phrases and expanded
+plain-language meanings. Message records preserve the structured semantic
+payload and evidence metadata they rendered, plus presentation producer and
+policy identity/version. They are presentation cache/history records, not the
+source of semantic truth, and remain outside deterministic Current State.
+
 ## Conceptual Shape
 
 `SessionWorkModel`
@@ -384,15 +408,20 @@ Inference records should preserve:
 - created time;
 - active, superseded, or invalidated status.
 
-The reusable framework foundation now exists for these records without defining
-the first semantic concepts. `ProvenanceSemanticInferenceRecord` is the public
-record contract for rule-produced or model-produced semantic claims above the
-factual projection. It preserves structured payloads, supporting evidence
-references, supporting factual revision, confidence, specificity, producer
-identity/version, supersession links, and status. The SQLite implementation
-persists semantic records in a separate table from deterministic Current State;
-publishing a replacement record preserves history by superseding prior records
-rather than rewriting them.
+The reusable framework foundation and first coding-agent semantic concepts now
+exist. `ProvenanceSemanticInferenceRecord` is the public record contract for
+rule-produced or model-produced semantic claims above the factual projection. It
+preserves structured payloads, supporting evidence references, supporting
+factual revision, confidence, specificity, producer identity/version,
+supersession links, and status. The SQLite implementation persists semantic
+records in a separate table from deterministic Current State; publishing a
+replacement record preserves history by superseding prior records rather than
+rewriting them.
+
+`ProvenanceSemanticMessageRecord` is the public presentation record contract for
+rendered concise/expanded wording. It remains traceable to the semantic
+inference and evidence that produced it, but wording changes do not rewrite the
+underlying semantic claim.
 
 The framework also defines a bounded input packet shape and deterministic dirty
 invalidation/coalescing policy. Model-capable workers receive references and
@@ -403,12 +432,15 @@ persist unrestricted transcripts through this contract. Bursts of prompt, plan,
 reasoning-summary, command-completion, file-change, validation, and lifecycle
 changes can be coalesced into one inference pass plan.
 
-Potential inference definitions:
+Implemented first-pass inference definitions:
 
 - `ThreadIntentInference`
 - `TurnIntentInference`
 - `SessionPhaseInference`
 - `CurrentActivityInference`
+
+Potential later inference definitions:
+
 - `MilestoneStructureInference`
 - `MilestoneDescriptionInference`
 - `MilestoneCurrentFocusInference`
