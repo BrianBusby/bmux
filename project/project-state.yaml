@@ -655,13 +655,18 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: provenance_engine
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
           - repository: BrianBusby/provenance-engine
             sha: 6fee11b0fa40593ac848fe55e8406687a4ceb795
-        pull_requests: []
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 23
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
       completed_at: 2026-08-16
       rationale: Adds manifest-only parallel slice planning metadata, active worktree and branch safety validation, and generated preflight visibility without assigning future work automatically.
 
@@ -692,7 +697,7 @@ roadmap:
       kind: phase
       title: Evidence and Factual State
       parent: richer_session_understanding
-      status: active
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -703,7 +708,7 @@ roadmap:
       parallelism:
         classification: serial
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: provenance_engine
 
     - id: richer_session_observable_evidence
@@ -760,7 +765,7 @@ roadmap:
       kind: milestone
       title: Factual Session Projection Read Contract
       parent: richer_session_evidence_and_factual_state
-      status: active
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -773,7 +778,7 @@ roadmap:
       parallelism:
         classification: serial
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: provenance_engine
 
     - id: factual_session_projection_foundation
@@ -813,7 +818,7 @@ roadmap:
       kind: slice
       title: Factual projection consumer shape follow-up
       parent: factual_session_projection_read_contract
-      status: planned
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -846,21 +851,33 @@ roadmap:
           - deterministic_current_state_api
         worktree_required: true
       execution:
-        assignment: next_eligible
+        assignment: complete
         assigned_to: provenance_engine
-      delivery_status: proposed
-      acceptance_status: proposed
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: db5f21f4bb561e4aba20e2ae76e3af954a367c87
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 24
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-16
       acceptance:
         criteria:
           - Confirm the factual projection shape needed by early consumers before semantic SessionWorkModel inference begins.
           - Preserve the boundary that deterministic Current State contains observed facts only.
-      rationale: This is the only next eligible richer-session implementation slice before semantic inference work.
+      acceptance_reason: The public factual projection now exposes a detailed latest-turn snapshot, compact prior-turn references, compact provider-thread identities, and independent factual turn-detail retrieval while preserving deterministic evidence-only semantics and v1 decoding compatibility.
+      rationale: Confirmed the PE-owned consumer shape before semantic inference depends on the factual session projection.
 
     - id: semantic_understanding
       kind: phase
       title: Semantic Understanding
       parent: richer_session_understanding
-      status: planned
+      status: active
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -873,14 +890,14 @@ roadmap:
       parallelism:
         classification: serial
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: provenance_engine
 
     - id: semantic_session_work_model_projection
       kind: milestone
       title: Semantic SessionWorkModel Projection
       parent: semantic_understanding
-      status: planned
+      status: active
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -891,7 +908,7 @@ roadmap:
       parallelism:
         classification: serial
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: provenance_engine
 
     - id: semantic_inference_framework
@@ -927,7 +944,7 @@ roadmap:
           - evidence_reference_identity
         worktree_required: true
       execution:
-        assignment: planned
+        assignment: next_eligible
         assigned_to: provenance_engine
       delivery_status: proposed
       acceptance_status: proposed

@@ -162,7 +162,7 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_planned_roadmap_slice_cannot_claim_implemented_acceptance(self):
         shared, local = self.load_valid()
-        self.roadmap_node(shared, "factual_projection_consumer_shape_followup")["acceptance_status"] = "implemented"
+        self.roadmap_node(shared, "semantic_inference_framework")["acceptance_status"] = "implemented"
         with self.assertRaisesRegex(project_docs.ProjectDocsError, "planned roadmap slice cannot declare"):
             project_docs.semantic_validate(shared, local, LOCAL)
 
@@ -224,7 +224,7 @@ class ProjectDocsTests(unittest.TestCase):
         self.assertIn("Semantic SessionWorkModel Projection", rendered)
         self.assertIn("Knowledge Compiler work later", rendered)
         self.assertIn(
-            "Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`) - depends on: `factual_session_projection_foundation`",
+            "Semantic inference framework (`semantic_inference_framework`) - depends on: `factual_projection_consumer_shape_followup`",
             rendered,
         )
 

@@ -157,8 +157,8 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 - Bmux and Provenance Engine (`bmux_provenance_platform`) - project; status: active; owner: Provenance Engine
 - Richer Session Understanding (`richer_session_understanding`) - program; status: active; owner: Provenance Engine
-- Evidence and Factual State (`richer_session_evidence_and_factual_state`) - phase; status: active; owner: Provenance Engine
-- Factual Session Projection Read Contract (`factual_session_projection_read_contract`) - milestone; status: active; owner: Provenance Engine
+- Semantic Understanding (`semantic_understanding`) - phase; status: active; owner: Provenance Engine
+- Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`) - milestone; status: active; owner: Provenance Engine
 
 ### Major Node Summaries
 
@@ -191,7 +191,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 #### Factual session projection
 
-- Status: Factual session projection foundation (`factual_session_projection_foundation`): implemented, delivery open, acceptance implemented; Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`): planned, delivery proposed, acceptance proposed; Factual Session Projection: implemented
+- Status: Factual session projection foundation (`factual_session_projection_foundation`): implemented, delivery open, acceptance implemented; Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`): implemented, delivery merged, acceptance implemented; Factual Session Projection: implemented
 - Owns: Revisioned factual snapshots of observed coding-agent thread and turn evidence for one PE session.
 - Inputs: Coding-agent thread, turn, prompt, plan, completed command, visible reasoning summary, and file-change attribution evidence.
 - Outputs: Observed thread/turn grouping with latest prompt, plan, commands, summaries, file changes, and ledger revision.
@@ -209,7 +209,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 #### SessionWorkModel semantic projection
 
-- Status: Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`): planned; First semantic session inferences (`first_semantic_session_inferences`): planned, delivery proposed, acceptance proposed; Semantic Session Work Model Projection: planned
+- Status: Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`): active; First semantic session inferences (`first_semantic_session_inferences`): planned, delivery proposed, acceptance proposed; Semantic Session Work Model Projection: planned
 - Owns: A coherent semantic view of one live coding-agent session with provenance on every non-observed field.
 - Inputs: Deterministic factual session projection plus active inference records.
 - Outputs: Subject, thread, current turn, current activity, milestones, validation/risk state, scoped architecture, and provenance metadata.
@@ -245,7 +245,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Next Eligible Work
 
-- Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`) - status: planned; owner: Provenance Engine; depends on: `factual_session_projection_foundation`. Rationale: This is the only next eligible richer-session implementation slice before semantic inference work.
+- Semantic inference framework (`semantic_inference_framework`) - status: planned; owner: Provenance Engine; depends on: `factual_projection_consumer_shape_followup`.
 
 ### Open Caveats
 
