@@ -24,6 +24,7 @@ local_capabilities:
   producer_neutral_lifecycle_recording: implemented
   richer_coding_agent_evidence: implemented
   factual_session_projection: implemented
+  factual_session_turn_detail: implemented
   semantic_session_work_model_projection: planned
   semantic_inference_framework: planned
   scoped_architecture_projection: planned

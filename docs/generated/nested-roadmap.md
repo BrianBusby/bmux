@@ -73,33 +73,33 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Worktree required: true
           Evidence: BrianBusby/provenance-engine@533567ead8c6, BrianBusby/provenance-engine#22 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Records the living current-and-target architecture guide and its generated status block as project-truth infrastructure without changing product implementation sequencing.
-        - **Phase 0C Parallel Slice Planning and Worktree Safety Metadata** (`phase_0c_parallel_worktree_metadata`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: cross repository workflow; execution: complete / Provenance Engine; parallelism: safe; delivery: open; acceptance: implemented
+        - **Phase 0C Parallel Slice Planning and Worktree Safety Metadata** (`phase_0c_parallel_worktree_metadata`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: cross repository workflow; execution: complete / Provenance Engine; parallelism: safe; delivery: merged; acceptance: implemented
           Depends on: `phase_0b_current_target_architecture`
           Expected contract domains: `roadmap_parallelism_metadata`, `active_worktree_preflight`
           Expected code areas: `project/project-state.yaml`, `project/schema/project-state.schema.json`, `project/schema/repo-status.schema.json`, `tools/project-docs`, `docs/generated`
           Likely conflict domains: `project/project-state.yaml`, `project/schema`, `tools/project-docs`, `docs/generated`
           Contract dependencies: `project_truth_generated_docs`, `project_docs_validation`
           Worktree required: true
-          Evidence: BrianBusby/provenance-engine@6fee11b0fa40
+          Evidence: BrianBusby/provenance-engine@6fee11b0fa40, BrianBusby/provenance-engine#23 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Adds manifest-only parallel slice planning metadata, active worktree and branch safety validation, and generated preflight visibility without assigning future work automatically.
   - **Richer Session Understanding** (`richer_session_understanding`) - program; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: current / Shared; parallelism: safe
     Depends on: `workspace_display_durable_context`
     Rationale: Richer coding-agent evidence and session projections are the active direction after V1 adoption and workspace-display observation.
-    - **Evidence and Factual State** (`richer_session_evidence_and_factual_state`) - phase; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: current / Provenance Engine; parallelism: serial
+    - **Evidence and Factual State** (`richer_session_evidence_and_factual_state`) - phase; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial
       - **Richer Coding-Agent Evidence Foundation** (`richer_session_observable_evidence`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: evidence store; execution: complete / Provenance Engine; parallelism: serial
         Enables: `factual_session_projection_read_contract`
         - **Richer coding-agent evidence foundation** (`richer_coding_agent_evidence_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: evidence store; execution: complete / Provenance Engine; parallelism: serial; delivery: open; acceptance: implemented; mirrors: `richer_session_work_model`
           Enables: `factual_session_projection_foundation`
           Evidence: BrianBusby/provenance-engine@9e69452a2ec2
           Acceptance reason: Completed-unit coding-agent evidence exists below the semantic layer; raw provider streams, private reasoning, approvals, validation, errors, and compaction remain gated follow-ups.
-      - **Factual Session Projection Read Contract** (`factual_session_projection_read_contract`) - milestone; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: current / Provenance Engine; parallelism: serial
+      - **Factual Session Projection Read Contract** (`factual_session_projection_read_contract`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial
         Depends on: `richer_session_observable_evidence`
         - **Factual session projection foundation** (`factual_session_projection_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: open; acceptance: implemented; mirrors: `richer_session_work_model`
           Depends on: `richer_coding_agent_evidence_foundation`
           Enables: `factual_projection_consumer_shape_followup`
           Evidence: BrianBusby/provenance-engine@2add52c611e2, BrianBusby/provenance-engine@a0f8c1fa2d0e
           Acceptance reason: First revisioned factualSessionProjection read contract returns observed thread/turn evidence without semantic inference.
-        - **Factual projection consumer shape follow-up** (`factual_projection_consumer_shape_followup`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: next eligible / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed
+        - **Factual projection consumer shape follow-up** (`factual_projection_consumer_shape_followup`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented
           Depends on: `factual_session_projection_foundation`
           Enables: `semantic_inference_framework`
           Sequence before: `semantic_inference_framework`
@@ -108,12 +108,14 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `factual_session_projection_contract`, `deterministic_current_state_projection`, `bmux_consumer_contract_shape`
           Contract dependencies: `factual_session_projection_foundation`, `deterministic_current_state_api`
           Worktree required: true
-          Rationale: This is the only next eligible richer-session implementation slice before semantic inference work.
+          Evidence: BrianBusby/provenance-engine@db5f21f4bb56, BrianBusby/provenance-engine#24 by [BrianBusby](https://github.com/BrianBusby)
+          Rationale: Confirmed the PE-owned consumer shape before semantic inference depends on the factual session projection.
+          Acceptance reason: The public factual projection now exposes a detailed latest-turn snapshot, compact prior-turn references, compact provider-thread identities, and independent factual turn-detail retrieval while preserving deterministic evidence-only semantics and v1 decoding compatibility.
           Acceptance criteria: Confirm the factual projection shape needed by early consumers before semantic SessionWorkModel inference begins.; Preserve the boundary that deterministic Current State contains observed facts only.
-    - **Semantic Understanding** (`semantic_understanding`) - phase; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: serial
+    - **Semantic Understanding** (`semantic_understanding`) - phase; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: current / Provenance Engine; parallelism: serial
       Depends on: `factual_projection_consumer_shape_followup`
-      - **Semantic SessionWorkModel Projection** (`semantic_session_work_model_projection`) - milestone; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: serial
-        - **Semantic inference framework** (`semantic_inference_framework`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine; concept: semantic understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed
+      - **Semantic SessionWorkModel Projection** (`semantic_session_work_model_projection`) - milestone; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: current / Provenance Engine; parallelism: serial
+        - **Semantic inference framework** (`semantic_inference_framework`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine; concept: semantic understanding; layer: inference session work projections; execution: next eligible / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed
           Depends on: `factual_projection_consumer_shape_followup`
           Enables: `first_semantic_session_inferences`, `blocker_approach_change_semantics`
           Expected contract domains: `semantic_inference_records`, `session_work_model_semantics`
@@ -231,11 +233,11 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- |
-| Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`) | serial | true | `factual_session_projection_contract`, `deterministic_current_state_projection`, `bmux_consumer_contract_shape` | `factual_session_projection_foundation`, `deterministic_current_state_api` | `factual_session_projection`, `deterministic_current_state` | `Sources/ProvenanceEngineContracts`, `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests`, `bmux factual projection consumers` |
+| Semantic inference framework (`semantic_inference_framework`) | serial | true | `semantic_inference_schema`, `session_work_model_projection` | `factual_session_projection`, `evidence_reference_identity` | `semantic_inference_records`, `session_work_model_semantics` | `Sources/ProvenanceEngineContracts`, `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests` |
 
 ## Next Eligible Work
 
-- Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`) - depends on: `factual_session_projection_foundation`
+- Semantic inference framework (`semantic_inference_framework`) - depends on: `factual_projection_consumer_shape_followup`
 
 ## Deferred Or Blocked Work
 

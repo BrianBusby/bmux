@@ -28,6 +28,7 @@ Repository: `BrianBusby/provenance-engine`
 | Deterministic Current State | implemented |
 | Engine Owned Sqlite Store | implemented |
 | Factual Session Projection | implemented |
+| Factual Session Turn Detail | implemented |
 | Immutable Ledger | implemented |
 | Producer Neutral Lifecycle Recording | implemented |
 | Public In Process Sdk | implemented |
