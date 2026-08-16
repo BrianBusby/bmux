@@ -38,6 +38,12 @@ struct ProvenanceEngineHealthTests {
         #expect(
             ProvenanceEngineCapability.queryFactualSessionTurnDetail.rawValue == "query_factual_session_turn_detail"
         )
+        #expect(ProvenanceEngineCapability.publishSemanticInference.rawValue == "publish_semantic_inference")
+        #expect(ProvenanceEngineCapability.querySemanticInferences.rawValue == "query_semantic_inferences")
+        #expect(
+            ProvenanceEngineCapability.publishCodingAgentSessionSemanticInferences.rawValue ==
+                "publish_coding_agent_session_semantic_inferences"
+        )
     }
 
     @Test

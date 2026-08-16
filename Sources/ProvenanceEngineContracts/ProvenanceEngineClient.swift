@@ -85,6 +85,15 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     /// - Throws: An implementation-defined error when the query fails.
     func semanticInferences(_ request: ProvenanceSemanticInferenceQueryRequest) async throws
         -> ProvenanceSemanticInferenceQueryResponse
+
+    /// Materializes first-pass coding-agent semantic inferences from factual session evidence.
+    ///
+    /// - Parameter request: Query/producer parameters for one PE session.
+    /// - Returns: Records published or retained by the inference pass.
+    /// - Throws: An implementation-defined error when factual reads, semantic reads, or semantic writes fail.
+    func publishCodingAgentSessionSemanticInferences(
+        _ request: ProvenanceCodingAgentSessionSemanticInferenceRequest
+    ) async throws -> ProvenanceCodingAgentSessionSemanticInferenceResponse
 }
 
 public extension ProvenanceEngineClient {

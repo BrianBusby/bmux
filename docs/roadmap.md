@@ -112,7 +112,9 @@ The implementation sequence is:
 6. Introduce semantic `SessionWorkModel` enrichment above the factual projection
    and lower-level APIs.
 7. Implement the first semantic vertical slice: thread intent, turn intent,
-   session phase, and current activity.
+   session phase, and current activity. This is the first concrete semantic
+   inference layer and still stops before milestone, architecture, presentation,
+   and knowledge-compilation work.
 8. Add milestone hierarchy/description in its own semantic work-understanding
    slice after the first session inference concepts are stable.
 9. Add scoped architecture inference/projection for thread and current-turn
@@ -122,13 +124,14 @@ The implementation sequence is:
 12. Use the Knowledge Compiler later for durable implementation outcomes and
     decisions beyond the live session model.
 
-The first vertical slice is accepted only when one real Codex turn produces a
-refreshable `SessionWorkModel` snapshot with revision, subject, thread, current
-turn, current activity, nested milestones, validation/risk state, a small
-scoped architecture projection, and provenance metadata for every non-observed
-field. Existing lower-level APIs must remain available, and tests or fixtures
-must prove model-derived fields are not written into deterministic Current
-State.
+The first semantic inference slice is accepted when one coding-agent session can
+produce refreshable thread intent, turn intent, session phase, and current
+activity records with structured payloads, evidence references, factual
+revision, producer version, confidence, specificity, and supersession. Existing
+lower-level APIs must remain available, and tests or fixtures must prove
+semantic fields are not written into deterministic Current State. Milestones,
+architecture, validation/risk synthesis, and full `SessionWorkModel`
+presentation remain later slices.
 
 ## External Evidence Model Validation
 

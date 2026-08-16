@@ -169,11 +169,33 @@ model-capable asynchronous workers. Publishing a replacement creates a new
 active record and marks prior records superseded; it does not silently rewrite
 historical semantic meaning.
 
-This framework does not define first semantic concepts yet. Thread intent, turn
-intent, session phase, current activity, milestones, architecture projection,
-Knowledge Compiler output, GitHub ingestion, and bmux UI presentation remain
-later slices. Semantic records are stored separately from deterministic Current
-State and are not part of factual projection rebuild or drift validation.
+The first concrete semantic session inference slice adds rule-produced coding
+agent records for:
+
+- `coding_agent.thread_intent` scoped to the current provider thread;
+- `coding_agent.turn_intent` scoped to the current/latest provider turn;
+- `coding_agent.session_phase` scoped to the PE session;
+- `coding_agent.current_activity` scoped to the current/latest provider turn.
+
+The public materialization helper is
+`ProvenanceEngineClient.publishCodingAgentSessionSemanticInferences(...)`. It
+reads `factualSessionProjection(...)`, creates evidence-backed rule-produced
+semantic records, queries existing active records, publishes changed claims, and
+supersedes replaced records through the normal semantic publish contract.
+Unchanged claims are retained rather than republished. The corresponding
+advertised capability is
+`publish_coding_agent_session_semantic_inferences`.
+
+The concrete records use structured payloads:
+`ProvenanceCodingAgentIntentPayload`,
+`ProvenanceCodingAgentSessionPhasePayload`, and
+`ProvenanceCodingAgentCurrentActivityPayload`. Unknown remains explicit when
+bounded factual evidence does not support a stronger claim.
+
+Milestones, architecture projection, Knowledge Compiler output, GitHub
+ingestion, semantic presentation wording, and bmux UI presentation remain later
+slices. Semantic records are stored separately from deterministic Current State
+and are not part of factual projection rebuild or drift validation.
 
 Model-capable inference input is represented as a bounded packet shape:
 `ProvenanceSemanticInferenceInputPacket` carries references and bounded
