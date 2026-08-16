@@ -1390,23 +1390,17 @@ actor ProvenanceSQLiteRepository {
         let providerThreads = try codingAgentThreadIDs(sessionID: request.sessionID).compactMap {
             try codingAgentThread(id: $0)
         }
+        let allTurnIDs = try codingAgentTurnIDs(sessionID: request.sessionID, limit: nil)
+        let latestTurnID = allTurnIDs.last
+        let latestTurn = try latestTurnID.flatMap { try factualTurnSnapshot(turnID: $0) }
+        let priorTurns = try allTurnIDs.dropLast(latestTurnID == nil ? 0 : 1).compactMap { turnID in
+            try codingAgentTurn(id: turnID).map(ProvenanceFactualSessionProjectionTurnReference.init(turn:))
+        }
         let turns = try codingAgentTurnIDs(
             sessionID: request.sessionID,
             limit: request.turnLimit
-        ).compactMap { turnID -> ProvenanceFactualSessionProjectionTurnSnapshot? in
-            guard let turn = try codingAgentTurn(id: turnID) else { return nil }
-            return ProvenanceFactualSessionProjectionTurnSnapshot(
-                turn: turn,
-                submittedPrompt: try latestCodingAgentPrompt(turnID: turnID),
-                currentPlan: try latestCodingAgentPlanUpdate(turnID: turnID),
-                completedCommands: try codingAgentCommandIDs(turnID: turnID).compactMap { try codingAgentCommand(id: $0) },
-                visibleReasoningSummaries: try codingAgentReasoningSummaryIDs(turnID: turnID).compactMap {
-                    try codingAgentReasoningSummary(id: $0)
-                },
-                fileChangeAttributions: try codingAgentFileChangeAttributionIDs(turnID: turnID).compactMap {
-                    try codingAgentFileChangeAttribution(id: $0)
-                }
-            )
+        ).compactMap { turnID in
+            try factualTurnSnapshot(turnID: turnID)
         }
 
         return ProvenanceFactualSessionProjectionResponse(
@@ -1415,9 +1409,39 @@ actor ProvenanceSQLiteRepository {
             snapshot: ProvenanceFactualSessionProjectionSnapshot(
                 revision: try latestEventSequence(sessionID: request.sessionID),
                 session: session,
+                providerThreadIdentities: providerThreads.map(
+                    ProvenanceFactualSessionProjectionProviderThreadIdentity.init(thread:)
+                ),
                 providerThreads: providerThreads,
+                latestTurn: latestTurn,
+                priorTurns: priorTurns,
                 turns: turns
             )
+        )
+    }
+
+    /// Reads factual detail for one observed coding-agent turn.
+    ///
+    /// - Parameter request: Factual turn-detail query parameters.
+    /// - Returns: Found response with revisioned factual turn evidence, or `no_turn` when absent.
+    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
+    func factualSessionTurnDetail(_ request: ProvenanceFactualSessionTurnDetailRequest) async throws
+        -> ProvenanceFactualSessionTurnDetailResponse {
+        guard let detail = try factualTurnSnapshot(turnID: request.turnID) else {
+            return ProvenanceFactualSessionTurnDetailResponse(
+                found: false,
+                reason: "no_turn",
+                turnID: request.turnID,
+                turnDetail: nil
+            )
+        }
+
+        return ProvenanceFactualSessionTurnDetailResponse(
+            found: true,
+            turnID: request.turnID,
+            sessionID: detail.turn.sessionID,
+            revision: try latestEventSequence(sessionID: detail.turn.sessionID),
+            turnDetail: detail
         )
     }
 
@@ -1502,6 +1526,22 @@ actor ProvenanceSQLiteRepository {
             try query.bind(rowLimit, at: 2)
         }
         return try stringIDs(from: query)
+    }
+
+    private func factualTurnSnapshot(turnID: String) throws -> ProvenanceFactualSessionProjectionTurnSnapshot? {
+        guard let turn = try codingAgentTurn(id: turnID) else { return nil }
+        return ProvenanceFactualSessionProjectionTurnSnapshot(
+            turn: turn,
+            submittedPrompt: try latestCodingAgentPrompt(turnID: turnID),
+            currentPlan: try latestCodingAgentPlanUpdate(turnID: turnID),
+            completedCommands: try codingAgentCommandIDs(turnID: turnID).compactMap { try codingAgentCommand(id: $0) },
+            visibleReasoningSummaries: try codingAgentReasoningSummaryIDs(turnID: turnID).compactMap {
+                try codingAgentReasoningSummary(id: $0)
+            },
+            fileChangeAttributions: try codingAgentFileChangeAttributionIDs(turnID: turnID).compactMap {
+                try codingAgentFileChangeAttribution(id: $0)
+            }
+        )
     }
 
     private func latestCodingAgentPrompt(turnID: String) throws -> ProvenanceCodingAgentPromptRecord? {
