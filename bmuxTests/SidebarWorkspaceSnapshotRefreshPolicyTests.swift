@@ -139,9 +139,7 @@ import Testing
         let ticket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
             id: "STE-1964",
             title: title,
-            url: nil,
-            ownerName: nil,
-            ownerURL: nil
+            url: nil
         )
 
         #expect(ticket.linkText == expected)
@@ -277,7 +275,6 @@ import Testing
 
     private static func snapshot(
         presentationKey: SidebarWorkspaceSnapshotBuilder.PresentationKey? = nil,
-        ticketTitle: String? = nil,
         title: String = "workspace",
         customDescription: String? = nil,
         isPinned: Bool = false,
@@ -296,7 +293,6 @@ import Testing
     ) -> SidebarWorkspaceSnapshotBuilder.Snapshot {
         SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: presentationKey ?? Self.presentationKey(),
-            ticketTitle: ticketTitle,
             title: title,
             customDescription: customDescription,
             isPinned: isPinned,

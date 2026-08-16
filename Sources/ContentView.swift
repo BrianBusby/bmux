@@ -13761,8 +13761,8 @@ struct TabItemView: View, Equatable {
                     .layoutPriority(1)
                 } else {
                     VStack(alignment: .leading, spacing: 1) {
-                        if let ticketTitle = workspaceSnapshot.ticketTitle {
-                            SidebarWorkspaceTicketTitleText(title: ticketTitle, font: magnifiedFont(scaledFontSize(13.5), weight: .bold), color: activePrimaryTextColor, lineLimit: settings.wrapsWorkspaceTitles ? 2 : 1)
+                        if !workspaceSnapshot.ticketRows.isEmpty {
+                            ticketRowsView(workspaceSnapshot.ticketRows, prominent: true)
                         }
 
                         Text(workspaceSnapshot.title)
@@ -13994,11 +13994,6 @@ struct TabItemView: View, Equatable {
             // Project rows
             if !workspaceSnapshot.projectRows.isEmpty {
                 projectRowsView(workspaceSnapshot.projectRows)
-            }
-
-            // Ticket rows
-            if !workspaceSnapshot.ticketRows.isEmpty {
-                ticketRowsView(workspaceSnapshot.ticketRows)
             }
 
             if !workspaceSnapshot.pullRequestRows.isEmpty {
@@ -14931,7 +14926,6 @@ struct TabItemView: View, Equatable {
         }
         return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: workspaceSnapshotPresentationKey,
-            ticketTitle: ticketRows.compactMap(\.title).first,
             title: provenanceDisplaySnapshot?.title ?? tab.title,
             customDescription: settings.showsWorkspaceDescription ? sidebarVisibleCustomDescription(hiddenPullRequestNumbers: displayedPullRequestNumbers) : nil,
             isPinned: tab.isPinned,

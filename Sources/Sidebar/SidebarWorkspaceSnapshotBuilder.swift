@@ -36,8 +36,6 @@ struct SidebarWorkspaceSnapshotBuilder {
         let id: String
         let title: String?
         let url: URL?
-        let ownerName: String?
-        let ownerURL: URL?
 
         var linkText: String {
             let trimmedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -62,7 +60,6 @@ struct SidebarWorkspaceSnapshotBuilder {
 
     struct Snapshot: Equatable {
         let presentationKey: PresentationKey
-        let ticketTitle: String?
         let title: String
         let customDescription: String?
         let isPinned: Bool
