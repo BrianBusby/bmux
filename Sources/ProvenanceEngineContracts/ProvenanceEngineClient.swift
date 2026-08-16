@@ -86,6 +86,30 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     func semanticInferences(_ request: ProvenanceSemanticInferenceQueryRequest) async throws
         -> ProvenanceSemanticInferenceQueryResponse
 
+    /// Publishes one human-readable semantic message record above semantic inference truth.
+    ///
+    /// - Parameter request: Semantic message record to publish.
+    /// - Returns: Response describing the accepted message and superseded wording history.
+    /// - Throws: An implementation-defined error when publishing fails.
+    func publishSemanticMessage(_ request: ProvenanceSemanticMessagePublishRequest) async throws
+        -> ProvenanceSemanticMessagePublishResponse
+
+    /// Returns human-readable semantic message records for one scoped subject.
+    ///
+    /// - Parameter request: Query parameters for semantic message records.
+    /// - Returns: Versioned semantic messages matching the query.
+    /// - Throws: An implementation-defined error when the query fails.
+    func semanticMessages(_ request: ProvenanceSemanticMessageQueryRequest) async throws
+        -> ProvenanceSemanticMessageQueryResponse
+
+    /// Materializes cached semantic messages from semantic inference records.
+    ///
+    /// - Parameter request: Semantic inference records and presentation policy to render.
+    /// - Returns: Message records published, retained, or skipped by this pass.
+    /// - Throws: An implementation-defined error when semantic reads or writes fail.
+    func materializeSemanticMessages(_ request: ProvenanceSemanticMessageMaterializationRequest) async throws
+        -> ProvenanceSemanticMessageMaterializationResponse
+
     /// Materializes first-pass coding-agent semantic inferences from factual session evidence.
     ///
     /// - Parameter request: Query/producer parameters for one PE session.

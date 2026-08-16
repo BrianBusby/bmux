@@ -42,6 +42,15 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
     /// Queries versioned semantic inference records.
     case querySemanticInferences = "query_semantic_inferences"
 
+    /// Publishes human-readable semantic message records.
+    case publishSemanticMessage = "publish_semantic_message"
+
+    /// Queries human-readable semantic message records.
+    case querySemanticMessages = "query_semantic_messages"
+
+    /// Materializes cached human-readable semantic messages from semantic inference records.
+    case materializeSemanticMessages = "materialize_semantic_messages"
+
     /// Materializes first-pass coding-agent semantic session inferences.
     case publishCodingAgentSessionSemanticInferences = "publish_coding_agent_session_semantic_inferences"
 
@@ -58,6 +67,9 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
         .queryFactualSessionTurnDetail,
         .publishSemanticInference,
         .querySemanticInferences,
+        .publishSemanticMessage,
+        .querySemanticMessages,
+        .materializeSemanticMessages,
         .publishCodingAgentSessionSemanticInferences,
     ]
 }

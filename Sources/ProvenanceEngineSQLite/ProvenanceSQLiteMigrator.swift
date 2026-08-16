@@ -252,6 +252,7 @@ struct ProvenanceSQLiteMigrator: Sendable {
                 "provenance_coding_agent_file_change_attributions",
             ]),
             (18, ["provenance_semantic_inferences"]),
+            (19, ["provenance_semantic_messages"]),
         ].flatMap { migrationVersion, tableNames in
             migrationVersion <= version ? tableNames : []
         }
