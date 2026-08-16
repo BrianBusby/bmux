@@ -16,6 +16,7 @@ implementation guidance. They must link to generated status rather than
 duplicate volatile facts.
 
 - [roadmap.md](roadmap.md)
+- [current-and-target-architecture.md](current-and-target-architecture.md)
 - [provenance-integration.md](provenance-integration.md)
 - [context-efficiency/current-status.md](context-efficiency/current-status.md)
 - [execution-telemetry/README.md](execution-telemetry/README.md)
