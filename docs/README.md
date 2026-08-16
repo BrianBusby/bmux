@@ -6,6 +6,7 @@ These files are generated from the project manifests and are authoritative for
 current milestone, gate, ownership, policy, caveat, and repository-status facts.
 
 - [generated/project-status.md](generated/project-status.md)
+- [generated/nested-roadmap.md](generated/nested-roadmap.md)
 - [generated/ownership-boundary.md](generated/ownership-boundary.md)
 - [generated/repository-status.md](generated/repository-status.md)
 

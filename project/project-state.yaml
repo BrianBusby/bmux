@@ -521,6 +521,34 @@ roadmap:
             sha: df3866f697a916aca4331abe0535f557cbcf186e
         pull_requests: []
 
+    - id: phase_0b_current_target_architecture
+      kind: slice
+      title: Phase 0B Current-and-Target Architecture
+      parent: project_truth_manifest_and_ci
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: project_truth
+      depends_on:
+        - read_only_project_truth_ci_gate
+      parallelism:
+        classification: safe
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: 533567ead8c69ff13c919d0e41ec0a9dd7916e3b
+        pull_requests: []
+      completed_at: 2026-08-15
+      rationale: Records the living current-and-target architecture guide and its generated status block as project-truth infrastructure without changing product implementation sequencing.
+
     - id: richer_session_understanding
       kind: program
       title: Richer Session Understanding

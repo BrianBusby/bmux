@@ -53,6 +53,10 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
         - **Read-only Project Truth CI gate** (`read_only_project_truth_ci_gate`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: cross repository workflow; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented
           Depends on: `canonical_project_truth_manifest`
           Evidence: BrianBusby/provenance-engine@df3866f697a9
+        - **Phase 0B Current-and-Target Architecture** (`phase_0b_current_target_architecture`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: project truth; execution: complete / Provenance Engine; parallelism: safe; delivery: open; acceptance: implemented
+          Depends on: `read_only_project_truth_ci_gate`
+          Evidence: BrianBusby/provenance-engine@533567ead8c6
+          Rationale: Records the living current-and-target architecture guide and its generated status block as project-truth infrastructure without changing product implementation sequencing.
   - **Richer Session Understanding** (`richer_session_understanding`) - program; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: current / Shared; parallelism: safe
     Depends on: `workspace_display_durable_context`
     Rationale: Richer coding-agent evidence and session projections are the active direction after V1 adoption and workspace-display observation.
