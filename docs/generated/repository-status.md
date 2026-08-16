@@ -29,9 +29,15 @@ Repository: `BrianBusby/bmux`
 | Capability | State |
 | --- | --- |
 | Factual Agent Session View | planned |
+| Native Provider Session View | implemented |
+| React Smart Session Surface | planned |
+| React Smart Session Work Model Consumer | planned |
+| React Terminal Agent Chat Surface | implemented |
+| React Terminal Productization | planned |
 | Richer Session Evidence Foundation | implemented |
 | Richer Session Work View | planned |
 | Session Work Model Consumer | planned |
+| Three View Session Navigation | planned |
 | Workspace Display Current State Diagnostic | implemented |
 | Workspace Display Durable Context | implemented |
 | Workspace Display Projection | implemented |

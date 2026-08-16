@@ -25,6 +25,12 @@ execution_telemetry:
 
 local_capabilities:
   factual_agent_session_view: planned
+  native_provider_session_view: implemented
+  react_terminal_agent_chat_surface: implemented
+  react_terminal_productization: planned
+  react_smart_session_surface: planned
+  react_smart_session_work_model_consumer: planned
+  three_view_session_navigation: planned
   richer_session_evidence_foundation: implemented
   workspace_display_projection: implemented
   workspace_display_current_state_diagnostic: implemented

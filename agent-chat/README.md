@@ -2,6 +2,22 @@
 
 MVP of the "UI mode" for bmux: a web chat surface (initial composer + chat view) rendered in bmux's existing browser surface, backed by any coding agent CLI. No Swift changes; the app side is just `bmux browser open http://127.0.0.1:7739`.
 
+In the three-view coding-session model, this project is the foundation for the
+Terminal view: bmux's React live interaction surface. It should remain focused
+on conversation, streaming state, tool and command lifecycle, provider controls,
+approvals, interrupts, skills, modes, and working-directory controls.
+
+It is separate from:
+
+- Native, the provider-native surface and escape hatch.
+- Session, the future React smart summary surface backed by Provenance Engine
+  factual projection, semantic inference, semantic messages, and later
+  `SessionWorkModel` snapshots.
+
+Agent-chat can share shell, theming, routing, and components with the future
+React Session surface, but it should not become a second semantic engine or the
+primary summary of what the work means.
+
 ## Run
 
 Three entrypoints, all landing on the same server:
@@ -143,3 +159,6 @@ Adding a provider is either one registry entry (ACP-speaking: id + cmd) or one s
 - Permission requests routed to native bmux dialogs/notifications instead of the auto-approve toggle; ACP already models this, and claude gets it via `--permission-prompt-tool` or the ACP adapter.
 - Attach chat sessions to the workspace's terminal/worktree (cwd = worktree, show diffs via `bmux-diff`), and a "open in terminal" escape hatch that resumes the same session in the provider's TUI (`claude --resume <id>`, `codex resume <thread>`).
 - Provider registry in `~/.config/bmux/agents.json` so users can add any ACP/stream-JSON agent without code.
+- Preserve session identity so the same underlying provider thread can later be
+  opened as Native, Terminal, or Session without starting a conceptually new
+  coding-agent session.

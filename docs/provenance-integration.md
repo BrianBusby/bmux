@@ -220,6 +220,34 @@ error, and compaction evidence remain unimplemented. Model-derived milestone,
 intent, current-activity, or architecture meaning must not be written into
 deterministic PE Current State.
 
+## Three-view Session Presentation Boundary
+
+bmux should preserve three distinct views for one coding-agent session:
+
+- Native: provider-native fidelity and escape hatch.
+- Terminal: React live interaction through the `agent-chat` direction.
+- Session: React smart summary backed by PE factual and semantic models.
+
+The React Terminal surface is allowed to stay close to provider/runtime events
+because it is the live interaction layer: streaming responses, tool lifecycle,
+provider controls, approvals, interrupts, modes, skills, and working-directory
+controls. It should not become the source of durable session meaning.
+
+The React Smart Session surface should consume PE contracts for higher-level
+understanding. Its first foundation can use `factualSessionProjection(...)`,
+`factualSessionTurnDetail(...)`, semantic inference records, and semantic
+messages. Later richer presentation should consume the PE `SessionWorkModel`
+contract for completed/current turn summaries, progress, blockers, approach
+changes, validations, risks, and milestone relationships. bmux should not build
+a parallel semantic model from raw Terminal events.
+
+The current factual Session view work is still valuable: it proves the factual
+projection consumer shape, establishes data-access and diagnostic behavior, and
+helps inspect provenance. Because that work is native Swift/factual-only, it
+should be treated as scaffolding or diagnostics for the final Smart Session path
+unless a future slice deliberately migrates or reuses pieces in the React
+surface.
+
 ## Future SessionWorkModel Consumer Direction
 
 The planned PE high-level projection is named `SessionWorkModel`. bmux should
