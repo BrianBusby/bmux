@@ -259,7 +259,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Next Eligible Work
 
-- Human-readable semantic messaging (`human_readable_semantic_messaging`) - status: planned; owner: Provenance Engine; depends on: `first_semantic_session_inferences`.
+- Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - status: planned; owner: Bmux; depends on: `human_readable_semantic_messaging`.
 
 ### Open Caveats
 

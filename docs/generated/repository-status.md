@@ -34,6 +34,7 @@ Repository: `BrianBusby/provenance-engine`
 | Factual Session Projection | implemented |
 | Factual Session Turn Detail | implemented |
 | First Semantic Session Inferences | implemented |
+| Human Readable Semantic Messaging | implemented |
 | Immutable Ledger | implemented |
 | Producer Neutral Lifecycle Recording | implemented |
 | Public In Process Sdk | implemented |
@@ -42,6 +43,9 @@ Repository: `BrianBusby/provenance-engine`
 | Scoped Architecture Projection | planned |
 | Semantic Inference Framework | implemented |
 | Semantic Inference Records | implemented |
+| Semantic Message Materialization | implemented |
+| Semantic Message Presentation Policy | implemented |
+| Semantic Message Records | implemented |
 | Semantic Session Work Model Projection | planned |
 | Workspace Display Current State | implemented |
 | Workspace Display Durable Context | implemented |
