@@ -4,6 +4,9 @@ Provenance Engine is a Swift package that separates public provenance contracts 
 
 This document describes the architecture currently implemented in this repository and the active design boundaries for V1 adoption. The platform north star is `docs/reference-architecture.md`. Implementation sequence and priorities live in `docs/roadmap.md`, public adopter contracts live in `docs/integration-contract.md`, and the accepted target design for the future high-level live coding-agent projection lives in `docs/session-work-model.md`.
 
+For a concise cross-repository current-and-target orientation, start with
+`docs/current-and-target-architecture.md`.
+
 ## Modules
 
 `ProvenanceEngineContracts` owns DTOs, request/response types, health checks, and the `ProvenanceEngineClient` protocol. External adopters should import this module for stable contract types.

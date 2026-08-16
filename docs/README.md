@@ -6,6 +6,7 @@ These files are generated from the project manifests and are authoritative for
 current milestone, gate, ownership, policy, caveat, and repository-status facts.
 
 - [generated/project-status.md](generated/project-status.md)
+- [generated/nested-roadmap.md](generated/nested-roadmap.md)
 - [generated/ownership-boundary.md](generated/ownership-boundary.md)
 - [generated/repository-status.md](generated/repository-status.md)
 
@@ -16,6 +17,7 @@ direction. They must link to generated status rather than duplicate volatile
 facts.
 
 - [reference-architecture.md](reference-architecture.md)
+- [current-and-target-architecture.md](current-and-target-architecture.md)
 - [architecture.md](architecture.md)
 - [session-work-model.md](session-work-model.md)
 - [integration-contract.md](integration-contract.md)
