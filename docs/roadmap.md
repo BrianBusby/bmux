@@ -41,19 +41,25 @@ The authoritative generated status is:
 
 This roadmap defines bmux product direction and sequencing. It must not
 independently maintain active gates, milestone state, evidence commits, current
-implementation slices, release state, or open caveat status.
+implementation slices, dependency-ready work, selected-next work, release
+state, or open caveat status.
 
-Still out of scope until a new slice is explicitly selected: daemon transport, UI work, observability API expansion, GitHub ingestion, Knowledge Compiler implementation, semantic retrieval, broad legacy data migration, and lifecycle policy automation.
+Use the generated nested roadmap for dependency-ready, selected-next, and
+active branch/worktree state. This authored roadmap records durable product
+scope: daemon transport, observability API expansion, GitHub ingestion,
+Knowledge Compiler implementation, semantic retrieval, broad legacy data
+migration, and lifecycle policy automation require explicit roadmap slices
+before bmux should pursue them.
 
 ## Near-Term Planned Work
 
 - Run an observation period against the accepted runtime cutover.
 - Remove or retire legacy WorkProvenance storage and client support after replacement contracts or obsolescence decisions.
 - Decide whether lifecycle observability traces need a public engine API or should remain bmux-local diagnostics.
-- Plan the richer coding-agent evidence and `SessionWorkModel` slice with PE:
-  bmux should keep provider acquisition, live interaction, approvals, streaming
-  deltas, and rendering, while forwarding selected completed evidence units to
-  PE once explicit contracts exist.
+- Continue the richer coding-agent evidence and `SessionWorkModel` sequence with
+  PE: bmux should keep provider acquisition, live interaction, approvals,
+  streaming deltas, and rendering, while forwarding selected completed evidence
+  units to PE through explicit contracts.
 - Cut a tagged Provenance Engine release so bmux can depend on a version tag rather than a revision pin.
 
 ## Longer-Term Direction

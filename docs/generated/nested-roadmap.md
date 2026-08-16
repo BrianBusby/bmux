@@ -89,9 +89,9 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
     - **Evidence and Factual State** (`richer_session_evidence_and_factual_state`) - phase; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial
       - **Richer Coding-Agent Evidence Foundation** (`richer_session_observable_evidence`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: evidence store; execution: complete / Provenance Engine; parallelism: serial
         Enables: `factual_session_projection_read_contract`
-        - **Richer coding-agent evidence foundation** (`richer_coding_agent_evidence_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: evidence store; execution: complete / Provenance Engine; parallelism: serial; delivery: open; acceptance: implemented; mirrors: `richer_session_work_model`
+        - **Richer coding-agent evidence foundation** (`richer_coding_agent_evidence_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: evidence store; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented; mirrors: `richer_session_work_model`
           Enables: `factual_session_projection_foundation`
-          Evidence: BrianBusby/provenance-engine@9e69452a2ec2
+          Evidence: BrianBusby/provenance-engine@9e69452a2ec2, BrianBusby/bmux@45b7188ea62d, BrianBusby/provenance-engine#19 by [BrianBusby](https://github.com/BrianBusby), BrianBusby/bmux#48 by [BrianBusby](https://github.com/BrianBusby)
           Acceptance reason: Completed-unit coding-agent evidence exists below the semantic layer; raw provider streams, private reasoning, approvals, validation, errors, and compaction remain gated follow-ups.
       - **Factual Session Projection Read Contract** (`factual_session_projection_read_contract`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial
         Depends on: `richer_session_observable_evidence`
@@ -102,7 +102,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Acceptance reason: First revisioned factualSessionProjection read contract returns observed thread/turn evidence without semantic inference.
         - **Factual projection consumer shape follow-up** (`factual_projection_consumer_shape_followup`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented
           Depends on: `factual_session_projection_foundation`
-          Enables: `semantic_inference_framework`
+          Enables: `factual_agent_session_view`, `semantic_inference_framework`
           Sequence before: `semantic_inference_framework`
           Expected contract domains: `factual_session_projection`, `deterministic_current_state`
           Expected code areas: `Sources/ProvenanceEngineContracts`, `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests`, `bmux factual projection consumers`
@@ -151,8 +151,22 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/provenance-engine@ec0baa4b0d83, BrianBusby/provenance-engine#30 by [BrianBusby](https://github.com/BrianBusby)
           Acceptance reason: Human-readable semantic message contracts, deterministic default rendering for first coding-agent semantic kinds, SQLite message cache/history persistence, public publish/query/materialization APIs, and coverage for wording, policy separation, supersession, rollback, retrieval, and Current State separation are implemented.
           Acceptance criteria: Semantic inference records can be rendered into cached concise and expanded messages.; Message records preserve structured semantic meaning, provenance, confidence, specificity, producer, policy, history, and supersession.; Presentation wording remains separate from semantic inference truth and deterministic Current State.
-        - **Clickable semantic explanation UI** (`clickable_semantic_explanation_ui`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: semantic understanding; layer: consumer presentation; execution: next eligible / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed
-          Depends on: `human_readable_semantic_messaging`
+        - **Factual agent session view** (`factual_agent_session_view`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: consumer presentation; execution: current / Bmux; parallelism: conditional; delivery: draft; acceptance: proposed
+          Depends on: `factual_projection_consumer_shape_followup`
+          Enables: `clickable_semantic_explanation_ui`
+          Sequence before: `clickable_semantic_explanation_ui`
+          Expected contract domains: `factual_session_projection`, `bmux_factual_session_view`
+          Expected code areas: `Sources/Panels/AgentSessionFactualProjectionView.swift`, `Sources/Panels/TerminalPanelView.swift`, `Sources/WorkProvenance/AgentSessionFactualProjectionStore.swift`, `bmux factual projection consumers`
+          Likely conflict domains: `bmux_factual_session_view`, `bmux_panel_ui`, `factual_session_projection_consumer`
+          Contract dependencies: `factual_session_projection`, `deterministic_current_state_api`
+          Worktree required: true
+          Conflict note: Active bmux PR #49 uses the historical clickable-semantic-explanation-ui branch name but implements factual Session UI only; semantic explanation UI remains a later selected slice.
+          Active assignment: worktree: `/Users/brianbusby/repos/bmux-clickable-semantic-explanation-ui`; branch: `clickable-semantic-explanation-ui`; agent: `Codex`
+          Execution notes: PR #49 is factual-only and should not be counted as satisfying clickable semantic explanation behavior.
+          Evidence: BrianBusby/bmux@6893fa3af6e5, BrianBusby/bmux#49 by [BrianBusby](https://github.com/BrianBusby)
+          Rationale: Records the active bmux factual Session view work as a prerequisite consumer of PE factual projections without conflating it with semantic explanation UI.
+        - **Clickable semantic explanation UI** (`clickable_semantic_explanation_ui`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: semantic understanding; layer: consumer presentation; execution: selected next / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed
+          Depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`
           Expected contract domains: `semantic_explanation_provenance`, `bmux_semantic_presentation`
           Expected code areas: `bmux UI semantic explanation surfaces`, `Sources/ProvenanceEngineContracts`
           Likely conflict domains: `bmux_semantic_presentation`, `semantic_message_contract`
@@ -235,17 +249,40 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-- Active implementation assignments: none selected.
+| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Factual agent session view (`factual_agent_session_view`) | conditional | /Users/brianbusby/repos/bmux-clickable-semantic-explanation-ui | clickable-semantic-explanation-ui | Codex | `bmux_factual_session_view`, `bmux_panel_ui`, `factual_session_projection_consumer` | `deterministic_current_state_api`, `factual_session_projection` | single active assignment |
 
-### Next Eligible Preflight
+### Dependency-Ready Preflight
 
-| Slice | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
-| --- | --- | --- | --- | --- | --- | --- |
-| Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) | serial | true | `bmux_semantic_presentation`, `semantic_message_contract` | `semantic_message_contract`, `session_work_model_presentation` | `semantic_explanation_provenance`, `bmux_semantic_presentation` | `bmux UI semantic explanation surfaces`, `Sources/ProvenanceEngineContracts` |
+| Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) | selected next | blocked by `factual_agent_session_view` | serial | true | `bmux_semantic_presentation`, `semantic_message_contract` | `semantic_message_contract`, `session_work_model_presentation` | `semantic_explanation_provenance`, `bmux_semantic_presentation` | `bmux UI semantic explanation surfaces`, `Sources/ProvenanceEngineContracts` |
+| Continuous presentation learning (`continuous_presentation_learning`) | planned | blocked by `clickable_semantic_explanation_ui`, `presentation_language_calibration_corpus` | safe | true | `presentation_feedback_events`, `semantic_message_calibration` | `semantic_explanation_provenance`, `presentation_language_corpus` | `presentation_feedback_events`, `semantic_message_calibration` | `Sources/ProvenanceEngineCore`, `bmux semantic feedback surfaces` |
+| Presentation language calibration corpus (`presentation_language_calibration_corpus`) | planned | ready | safe | true | `presentation_language_corpus`, `semantic_message_calibration` | `semantic_session_inferences` | `presentation_language_corpus`, `semantic_message_calibration` | `Tests/ProvenanceEngineTests`, `docs/session-work-model.md`, `calibration fixtures` |
+| Milestone inference (`milestone_inference`) | planned | ready | serial | true | `milestone_semantics`, `session_work_model_projection` | `semantic_session_inferences` | `milestone_semantics`, `session_work_model_milestones` | `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests` |
+| Blocker and approach-change semantics (`blocker_approach_change_semantics`) | planned | ready | safe | true | `blocker_semantics`, `approach_change_semantics` | `semantic_inference_records` | `blocker_semantics`, `approach_change_semantics` | `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests` |
+| Milestone-to-code relationships (`milestone_to_code_relationships`) | planned | blocked by `milestone_inference` | serial | true | `milestone_relationships`, `file_change_attribution` | `milestone_semantics`, `richer_coding_agent_evidence` | `milestone_code_relationships`, `file_change_attribution` | `Sources/ProvenanceEngineCore`, `Sources/ProvenanceEngineContracts`, `Tests/ProvenanceEngineTests` |
+| Scoped architecture projection (`scoped_architecture_projection`) | planned | ready | serial | true | `scoped_architecture_projection`, `architecture_relationships` | `semantic_session_inferences`, `file_change_attribution` | `scoped_architecture_projection`, `architecture_evidence_relationships` | `Sources/ProvenanceEngineCore`, `Sources/ProvenanceEngineContracts`, `Tests/ProvenanceEngineTests` |
+| Milestone-to-architecture relationships (`milestone_to_architecture_relationships`) | planned | blocked by `scoped_architecture_projection`, `milestone_inference` | serial | true | `milestone_relationships`, `architecture_relationships` | `scoped_architecture_projection`, `milestone_semantics` | `milestone_architecture_relationships`, `scoped_architecture_projection` | `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests` |
 
-## Next Eligible Work
+## Dependency-Ready Work
 
-- Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - depends on: `human_readable_semantic_messaging`
+- Presentation language calibration corpus (`presentation_language_calibration_corpus`) - selection: planned; depends on: `first_semantic_session_inferences`
+- Milestone inference (`milestone_inference`) - selection: planned; depends on: `first_semantic_session_inferences`
+- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - selection: planned; depends on: `semantic_inference_framework`
+- Scoped architecture projection (`scoped_architecture_projection`) - selection: planned; depends on: `first_semantic_session_inferences`
+
+## Selected Next Work
+
+- Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - dependency status: blocked by `factual_agent_session_view`; depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`
+
+## Dependency-Ready But Not Selected
+
+- Presentation language calibration corpus (`presentation_language_calibration_corpus`) - depends on: `first_semantic_session_inferences`
+- Milestone inference (`milestone_inference`) - depends on: `first_semantic_session_inferences`
+- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - depends on: `semantic_inference_framework`
+- Scoped architecture projection (`scoped_architecture_projection`) - depends on: `first_semantic_session_inferences`
 
 ## Deferred Or Blocked Work
 
