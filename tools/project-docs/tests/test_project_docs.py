@@ -477,6 +477,25 @@ class ProjectDocsTests(unittest.TestCase):
         issues = project_docs.github_evidence_issues(shared, [local], provider)
         self.assertTrue(any(issue.name == "issue_state_mismatch" for issue in issues))
         self.assertTrue(any(issue.name == "missing_release" for issue in issues))
+
+    def test_inactive_slice_cannot_have_active_assignment_metadata(self):
+        shared, local = self.load_valid()
+        node = self.roadmap_node(shared, "factual_projection_consumer_shape_followup")
+        node["execution"]["active_worktree"] = "/worktrees/factual-shape"
+        issues = project_docs.invariant_issues(shared, [local], {local["repository"]: LOCAL})
+        self.assertTrue(any(issue.name == "inactive_slice_has_active_assignment" for issue in issues))
+
+    def test_active_worktree_slice_requires_execution_identity(self):
+        shared, local = self.load_valid()
+        node = self.activate_slice(shared, "human_readable_semantic_messaging")
+        node["execution"].pop("active_worktree")
+        node["execution"].pop("active_branch")
+        node["execution"].pop("active_agent")
+        issues = project_docs.invariant_issues(shared, [local], {local["repository"]: LOCAL})
+        self.assertTrue(any(issue.name == "active_worktree_required" for issue in issues))
+        self.assertTrue(any(issue.name == "active_branch_required" for issue in issues))
+        self.assertTrue(any(issue.name == "active_agent_or_session_required" for issue in issues))
+
     def test_duplicate_active_worktree_fails(self):
         shared, local = self.load_valid()
         self.activate_slice(

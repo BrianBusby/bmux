@@ -53,15 +53,35 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
         - **Read-only Project Truth CI gate** (`read_only_project_truth_ci_gate`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: cross repository workflow; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented
           Depends on: `canonical_project_truth_manifest`
           Evidence: BrianBusby/provenance-engine@df3866f697a9
-        - **Phase 0B Current-and-Target Architecture** (`phase_0b_current_target_architecture`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: project truth; execution: complete / Provenance Engine; parallelism: safe; delivery: open; acceptance: implemented
+        - **Phase 0A Canonical Nested Roadmap and Concept Classification** (`phase_0a_canonical_nested_roadmap`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: project truth; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented
           Depends on: `read_only_project_truth_ci_gate`
+          Enables: `phase_0b_current_target_architecture`
+          Expected contract domains: `roadmap_hierarchy`, `roadmap_dependency_validation`
+          Expected code areas: `project/project-state.yaml`, `project/schema/project-state.schema.json`, `tools/project-docs`, `docs/generated`
+          Likely conflict domains: `project/project-state.yaml`, `project/schema`, `tools/project-docs`, `docs/generated`
+          Contract dependencies: `project_truth_generated_docs`, `project_docs_validation`
+          Worktree required: true
+          Evidence: BrianBusby/provenance-engine@e278a4423f15, BrianBusby/provenance-engine#21 by [BrianBusby](https://github.com/BrianBusby)
+          Rationale: Establishes the nested dependency-aware roadmap and generated nested-roadmap view that later planning and architecture slices build on.
+        - **Phase 0B Current-and-Target Architecture** (`phase_0b_current_target_architecture`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: project truth; execution: complete / Provenance Engine; parallelism: safe; delivery: merged; acceptance: implemented
+          Depends on: `phase_0a_canonical_nested_roadmap`
+          Enables: `phase_0c_parallel_worktree_metadata`
           Expected contract domains: `current_target_architecture_status`
           Expected code areas: `docs/current-and-target-architecture.md`, `tools/project-docs`
           Likely conflict domains: `project/project-state.yaml`, `docs/generated`
           Contract dependencies: `project_truth_generated_docs`
           Worktree required: true
-          Evidence: BrianBusby/provenance-engine@533567ead8c6
+          Evidence: BrianBusby/provenance-engine@533567ead8c6, BrianBusby/provenance-engine#22 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Records the living current-and-target architecture guide and its generated status block as project-truth infrastructure without changing product implementation sequencing.
+        - **Phase 0C Parallel Slice Planning and Worktree Safety Metadata** (`phase_0c_parallel_worktree_metadata`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: cross repository workflow; execution: complete / Provenance Engine; parallelism: safe; delivery: open; acceptance: implemented
+          Depends on: `phase_0b_current_target_architecture`
+          Expected contract domains: `roadmap_parallelism_metadata`, `active_worktree_preflight`
+          Expected code areas: `project/project-state.yaml`, `project/schema/project-state.schema.json`, `project/schema/repo-status.schema.json`, `tools/project-docs`, `docs/generated`
+          Likely conflict domains: `project/project-state.yaml`, `project/schema`, `tools/project-docs`, `docs/generated`
+          Contract dependencies: `project_truth_generated_docs`, `project_docs_validation`
+          Worktree required: true
+          Evidence: BrianBusby/provenance-engine@6fee11b0fa40
+          Rationale: Adds manifest-only parallel slice planning metadata, active worktree and branch safety validation, and generated preflight visibility without assigning future work automatically.
   - **Richer Session Understanding** (`richer_session_understanding`) - program; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: current / Shared; parallelism: safe
     Depends on: `workspace_display_durable_context`
     Rationale: Richer coding-agent evidence and session projections are the active direction after V1 adoption and workspace-display observation.
@@ -110,7 +130,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `semantic_inference_schema`, `session_work_model_projection`
           Contract dependencies: `semantic_inference_records`, `factual_session_projection`
           Worktree required: true
-          Acceptance criteria: Thread intent, turn intent, session phase, current activity, and first milestone structure are evidence-backed.
+          Acceptance criteria: Thread intent, turn intent, session phase, and current activity are evidence-backed.
         - **Human-readable semantic messaging** (`human_readable_semantic_messaging`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: safe; delivery: proposed; acceptance: proposed
           Depends on: `first_semantic_session_inferences`
           Enables: `clickable_semantic_explanation_ui`, `presentation_language_calibration_corpus`
