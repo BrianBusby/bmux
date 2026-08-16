@@ -52,6 +52,11 @@ ROADMAP_PARENT_KINDS = {
     "slice": "milestone",
 }
 PARALLEL_ACTIVE_CLASSIFICATIONS = ("safe", "conditional")
+SELECTED_NEXT_ASSIGNMENT = "selected_next"
+IMPLEMENTATION_CANDIDATE_ASSIGNMENTS = (SELECTED_NEXT_ASSIGNMENT, "planned", "unassigned")
+DEPENDENCY_SATISFYING_STATUSES = ("implemented", "accepted")
+DEPENDENCY_SATISFYING_ACCEPTANCE_STATUSES = ("implemented", "under_observation", "accepted")
+DEPENDENCY_REFERENCE_FIELDS = ("depends_on", "sequence_after")
 
 REPOSITORY_LABELS = {
     "provenance_engine": "Provenance Engine",
@@ -110,6 +115,17 @@ class ActiveSliceAssignment:
     likely_conflict_domains: frozenset[str]
     contract_dependencies: frozenset[str]
     conflict_note: str | None
+
+
+@dataclass(frozen=True)
+class DependencyReadiness:
+    node_id: str
+    title: str
+    blockers: tuple[str, ...]
+
+    @property
+    def ready(self) -> bool:
+        return not self.blockers
 
 
 @dataclass(frozen=True)
@@ -333,6 +349,18 @@ def roadmap_node_path(index: int, node: dict[str, Any]) -> str:
     return f"project/project-state.yaml:roadmap.nodes[{index}] ({node.get('id')})"
 
 
+def repository_key_for_slug(shared: dict[str, Any], slug: str) -> str | None:
+    for key, repository in shared.get("repositories", {}).items():
+        if repository.get("slug") == slug:
+            return key
+    return None
+
+
+def repository_label_for_slug(shared: dict[str, Any], slug: str) -> str:
+    key = repository_key_for_slug(shared, slug)
+    return owner_label(key) if key else slug
+
+
 def is_active_implementation_slice(node: dict[str, Any]) -> bool:
     return (
         node.get("kind") == "slice"
@@ -341,6 +369,63 @@ def is_active_implementation_slice(node: dict[str, Any]) -> bool:
             or node.get("execution", {}).get("assignment") == "current"
         )
     )
+
+
+def is_selected_next_slice(node: dict[str, Any]) -> bool:
+    return node.get("kind") == "slice" and node.get("execution", {}).get("assignment") == SELECTED_NEXT_ASSIGNMENT
+
+
+def is_dependency_satisfied(node: dict[str, Any]) -> bool:
+    return (
+        node.get("status") in DEPENDENCY_SATISFYING_STATUSES
+        or node.get("acceptance_status") in DEPENDENCY_SATISFYING_ACCEPTANCE_STATUSES
+        or node.get("execution", {}).get("assignment") == "complete"
+    )
+
+
+def is_implementation_candidate_slice(node: dict[str, Any]) -> bool:
+    if node.get("kind") != "slice":
+        return False
+    if node.get("status") in ("blocked", "deferred", "superseded", "implemented", "accepted"):
+        return False
+    if node.get("acceptance_status") in ("implemented", "under_observation", "accepted", "rejected", "superseded"):
+        return False
+    if node.get("delivery_status") in ("merged", "closed", "superseded"):
+        return False
+    return node.get("execution", {}).get("assignment") in IMPLEMENTATION_CANDIDATE_ASSIGNMENTS
+
+
+def readiness_reference_ids(node: dict[str, Any]) -> tuple[str, ...]:
+    references: list[str] = []
+    for field in DEPENDENCY_REFERENCE_FIELDS:
+        references.extend(str(item) for item in node.get(field, []))
+    return tuple(references)
+
+
+def dependency_readiness(node: dict[str, Any], node_by_id: dict[str, dict[str, Any]]) -> DependencyReadiness:
+    blockers = tuple(
+        ref_id
+        for ref_id in readiness_reference_ids(node)
+        if ref_id not in node_by_id or not is_dependency_satisfied(node_by_id[ref_id])
+    )
+    return DependencyReadiness(node_id=node["id"], title=node["title"], blockers=blockers)
+
+
+def implementation_candidate_nodes(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [node for node in nodes if is_implementation_candidate_slice(node)]
+
+
+def selected_next_nodes(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [node for node in nodes if is_selected_next_slice(node)]
+
+
+def dependency_ready_nodes(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    node_by_id = {node["id"]: node for node in nodes}
+    return [
+        node
+        for node in implementation_candidate_nodes(nodes)
+        if dependency_readiness(node, node_by_id).ready
+    ]
 
 
 def metadata_values(node: dict[str, Any], key: str) -> tuple[str, ...]:
@@ -556,9 +641,13 @@ def invariant_issues(
         node_id = node["id"]
         kind = node["kind"]
         parent = node.get("parent")
+        assignment = node.get("execution", {}).get("assignment")
 
         if node["owner"] not in node.get("repositories", []):
             add("roadmap_owner_in_repositories", path, "roadmap node owner must be listed in repositories")
+
+        if assignment == SELECTED_NEXT_ASSIGNMENT and kind != "slice":
+            add("selected_next_is_slice", path, "selected_next execution assignment is only valid on implementation slices")
 
         expected_parent_kind = ROADMAP_PARENT_KINDS[kind]
         if expected_parent_kind is None:
@@ -688,6 +777,28 @@ def invariant_issues(
                     add("active_slice_has_owner", str(candidate_path), "selected current slice must have owner")
                 if current_state in ("observation", "none_selected"):
                     add("active_slice_matches_repo_state", str(candidate_path), "active implementation slice cannot coexist with observation or none_selected repository state")
+                active_slice_id = active_slice.get("id")
+                roadmap_slice = node_by_id.get(active_slice_id) if active_slice_id else None
+                if roadmap_slice is None:
+                    add("active_slice_exists_in_roadmap", str(candidate_path), f"active slice '{active_slice_id}' is not a roadmap node")
+                elif roadmap_slice.get("kind") != "slice":
+                    add("active_slice_is_roadmap_slice", str(candidate_path), f"active slice '{active_slice_id}' must reference a roadmap slice")
+                else:
+                    repository_key = repository_key_for_slug(shared, repository)
+                    if repository_key and repository_key not in roadmap_slice.get("repositories", []):
+                        add("active_slice_repository_matches", str(candidate_path), f"active slice '{active_slice_id}' does not list repository {repository_key}")
+                    if not is_active_implementation_slice(roadmap_slice):
+                        add("active_slice_is_active_assignment", str(candidate_path), f"active slice '{active_slice_id}' must reference a roadmap slice with status active or execution.assignment current")
+                    if active_slice.get("title") and active_slice.get("title") != roadmap_slice.get("title"):
+                        add("active_slice_title_matches_roadmap", str(candidate_path), f"active slice title must match roadmap title '{roadmap_slice.get('title')}'")
+                    roadmap_execution = roadmap_slice.get("execution", {})
+                    for field in ("active_worktree", "active_branch", "active_agent", "active_session"):
+                        roadmap_value = roadmap_execution.get(field)
+                        local_value = active_slice.get(field)
+                        if roadmap_value and not local_value:
+                            add("active_slice_metadata_matches_roadmap", str(candidate_path), f"active slice must include {field} from roadmap active assignment")
+                        elif roadmap_value and local_value and roadmap_value != local_value:
+                            add("active_slice_metadata_matches_roadmap", str(candidate_path), f"active slice {field} must match roadmap value {roadmap_value!r}")
             elif current_state == "active":
                 add("no_active_slice_matches_repo_state", str(candidate_path), "active repository state must name an active slice")
 
@@ -914,6 +1025,12 @@ def optional_metadata_text(values: list[str] | tuple[str, ...] | None) -> str:
     return metadata_list_text(values) or "None"
 
 
+def readiness_status_text(readiness: DependencyReadiness) -> str:
+    if readiness.ready:
+        return "ready"
+    return "blocked by " + metadata_list_text(readiness.blockers)
+
+
 def active_assignment_safety_text(assignment: ActiveSliceAssignment, active_count: int) -> str:
     if active_count <= 1:
         return "single active assignment"
@@ -1089,6 +1206,8 @@ def render_nested_roadmap(context: dict[str, Any]) -> str:
                 active_fields.append(f"{label}: `{execution[key]}`")
         if active_fields:
             detail_lines.append("Active assignment: " + "; ".join(active_fields))
+        if execution.get("notes"):
+            detail_lines.append(f"Execution notes: {execution['notes']}")
         if node.get("evidence"):
             detail_lines.append(f"Evidence: {evidence_text(node['evidence'])}")
         if node.get("rationale"):
@@ -1113,6 +1232,15 @@ def render_nested_roadmap(context: dict[str, Any]) -> str:
         append_node(root, 0)
 
     active_assignments = active_slice_assignments(nodes)
+    node_by_id = {node["id"]: node for node in nodes}
+    candidates = implementation_candidate_nodes(nodes)
+    selected_nodes = selected_next_nodes(nodes)
+    ready_nodes = dependency_ready_nodes(nodes)
+    ready_but_not_selected = [
+        node
+        for node in ready_nodes
+        if node.get("execution", {}).get("assignment") != SELECTED_NEXT_ASSIGNMENT
+    ]
     lines.extend(
         [
             "",
@@ -1145,24 +1273,22 @@ def render_nested_roadmap(context: dict[str, Any]) -> str:
     else:
         lines.append("- Active implementation assignments: none selected.")
 
-    next_nodes = [
-        node
-        for node in nodes
-        if node.get("execution", {}).get("assignment") == "next_eligible"
-    ]
-    lines.extend(["", "### Next Eligible Preflight", ""])
-    if next_nodes:
+    lines.extend(["", "### Dependency-Ready Preflight", ""])
+    if candidates:
         lines.extend(
             [
-                "| Slice | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |",
-                "| --- | --- | --- | --- | --- | --- | --- |",
+                "| Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |",
+                "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
             ]
         )
-        for node in next_nodes:
+        for node in candidates:
             parallelism = node.get("parallelism", {})
+            readiness = dependency_readiness(node, node_by_id)
             lines.append(
                 "| "
                 f"{node['title']} (`{node['id']}`) | "
+                f"{status_label(node.get('execution', {}).get('assignment'))} | "
+                f"{readiness_status_text(readiness)} | "
                 f"{status_label(parallelism.get('classification'))} | "
                 f"{status_label(parallelism.get('worktree_required', False))} | "
                 f"{optional_metadata_text(parallelism.get('likely_conflict_domains'))} | "
@@ -1173,9 +1299,29 @@ def render_nested_roadmap(context: dict[str, Any]) -> str:
     else:
         lines.append("None.")
 
-    lines.extend(["", "## Next Eligible Work", ""])
-    if next_nodes:
-        for node in next_nodes:
+    lines.extend(["", "## Dependency-Ready Work", ""])
+    if ready_nodes:
+        for node in ready_nodes:
+            depends_on = reference_list_text(node.get("depends_on")) or "None"
+            selection = status_label(node.get("execution", {}).get("assignment"))
+            lines.append(f"- {node['title']} (`{node['id']}`) - selection: {selection}; depends on: {depends_on}")
+    else:
+        lines.append("None.")
+
+    lines.extend(["", "## Selected Next Work", ""])
+    if selected_nodes:
+        for node in selected_nodes:
+            depends_on = reference_list_text(node.get("depends_on")) or "None"
+            readiness = dependency_readiness(node, node_by_id)
+            lines.append(
+                f"- {node['title']} (`{node['id']}`) - dependency status: {readiness_status_text(readiness)}; depends on: {depends_on}"
+            )
+    else:
+        lines.append("None.")
+
+    lines.extend(["", "## Dependency-Ready But Not Selected", ""])
+    if ready_but_not_selected:
+        for node in ready_but_not_selected:
             depends_on = reference_list_text(node.get("depends_on")) or "None"
             lines.append(f"- {node['title']} (`{node['id']}`) - depends on: {depends_on}")
     else:
@@ -1355,6 +1501,8 @@ VOLATILE_STATUS_PATTERNS = (
     re.compile(r"\bactive gate is\b", re.IGNORECASE),
     re.compile(r"\bactive product gate is\b", re.IGNORECASE),
     re.compile(r"\bno (?:subsequent )?(?:implementation )?slice is selected\b", re.IGNORECASE),
+    re.compile(r"\bstill out of scope until (?:a )?new slice is explicitly selected\b", re.IGNORECASE),
+    re.compile(r"\b(?:ui work|bmux ui presentation)[^.\n]*remain(?:s)? planned(?: and gated)?\b", re.IGNORECASE),
     re.compile(r"\bCI enforcement is not implemented yet\b", re.IGNORECASE),
     re.compile(r"\blatest tag:\s*`?[^`\n]+`?", re.IGNORECASE),
     re.compile(r"\brelease status:\s*`?[^`\n]+`?", re.IGNORECASE),
@@ -1365,6 +1513,7 @@ AUTHORED_DOCS = (
     "docs/current-and-target-architecture.md",
     "docs/current-status.md",
     "docs/roadmap.md",
+    "docs/session-work-model.md",
     "docs/handoffs/latest.md",
     "docs/execution-telemetry/implementation-status.md",
     "project/README.md",
@@ -1444,6 +1593,7 @@ ARCHITECTURE_NODE_SUMMARIES = (
         "status_node_ids": (
             "factual_session_projection_foundation",
             "factual_projection_consumer_shape_followup",
+            "factual_agent_session_view",
         ),
         "capability_ids": (
             "factual_session_projection",
@@ -1456,6 +1606,7 @@ ARCHITECTURE_NODE_SUMMARIES = (
             "richer_coding_agent_evidence_foundation",
             "factual_session_projection_foundation",
             "factual_projection_consumer_shape_followup",
+            "factual_agent_session_view",
         ),
     },
     {
@@ -1629,10 +1780,14 @@ def render_current_target_architecture_status(context: dict[str, Any]) -> str:
         for node in roadmap_nodes(shared)
         if node.get("execution", {}).get("assignment") == "current"
     ]
-    next_nodes = [
+    all_nodes = roadmap_nodes(shared)
+    node_by_id = {node["id"]: node for node in all_nodes}
+    selected_nodes = selected_next_nodes(all_nodes)
+    ready_nodes = dependency_ready_nodes(all_nodes)
+    ready_but_not_selected = [
         node
-        for node in roadmap_nodes(shared)
-        if node.get("execution", {}).get("assignment") == "next_eligible"
+        for node in ready_nodes
+        if node.get("execution", {}).get("assignment") != SELECTED_NEXT_ASSIGNMENT
     ]
     open_caveats = [caveat for caveat in shared.get("caveats", []) if caveat["status"] in ("open", "monitoring")]
 
@@ -1653,7 +1808,8 @@ def render_current_target_architecture_status(context: dict[str, Any]) -> str:
         )
     else:
         lines.append("- Active implementation slice: none selected")
-    lines.append(f"- Provenance Engine repository state: {status_label(repo_status['current_work'].get('state'))}")
+    repo_label = repository_label_for_slug(shared, repo_status["repository"])
+    lines.append(f"- {repo_label} repository state: {status_label(repo_status['current_work'].get('state'))}")
 
     lines.extend(["", "### Current Roadmap Lanes", ""])
     if current_nodes:
@@ -1681,14 +1837,37 @@ def render_current_target_architecture_status(context: dict[str, Any]) -> str:
             ]
         )
 
-    lines.extend(["### Next Eligible Work", ""])
-    if next_nodes:
-        for node in next_nodes:
+    lines.extend(["### Dependency-Ready Work", ""])
+    if ready_nodes:
+        for node in ready_nodes:
             depends_on = reference_list_text(node.get("depends_on")) or "None"
             rationale = f" Rationale: {node['rationale']}" if node.get("rationale") else ""
             lines.append(
-                f"- {node['title']} (`{node['id']}`) - status: {status_label(node['status'])}; "
+                f"- {node['title']} (`{node['id']}`) - selection: {status_label(node.get('execution', {}).get('assignment'))}; "
                 f"owner: {owner_label(node['owner'])}; depends on: {depends_on}.{rationale}"
+            )
+    else:
+        lines.append("- None.")
+
+    lines.extend(["", "### Selected Next Work", ""])
+    if selected_nodes:
+        for node in selected_nodes:
+            depends_on = reference_list_text(node.get("depends_on")) or "None"
+            readiness = dependency_readiness(node, node_by_id)
+            rationale = f" Rationale: {node['rationale']}" if node.get("rationale") else ""
+            lines.append(
+                f"- {node['title']} (`{node['id']}`) - dependency status: {readiness_status_text(readiness)}; "
+                f"owner: {owner_label(node['owner'])}; depends on: {depends_on}.{rationale}"
+            )
+    else:
+        lines.append("- None.")
+
+    lines.extend(["", "### Dependency-Ready But Not Selected", ""])
+    if ready_but_not_selected:
+        for node in ready_but_not_selected:
+            depends_on = reference_list_text(node.get("depends_on")) or "None"
+            lines.append(
+                f"- {node['title']} (`{node['id']}`) - owner: {owner_label(node['owner'])}; depends on: {depends_on}"
             )
     else:
         lines.append("- None.")

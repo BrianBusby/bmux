@@ -1,10 +1,15 @@
 # SessionWorkModel Target Design
 
-Status: accepted target direction. The lower-level richer-session evidence
-foundation, factual public session-projection read contract, semantic inference
-framework, first coding-agent semantic inferences, and human-readable semantic
-message layer are implemented; semantic `SessionWorkModel` projection,
-milestone synthesis, and architecture projection are not implemented.
+Status: accepted target direction. Current implementation, dependency
+readiness, selected-next work, and active branch/worktree assignments are
+generated from Project Truth; this authored document records the durable target
+shape and layer boundaries.
+
+Authoritative mutable status:
+
+- [generated/project-status.md](generated/project-status.md)
+- [generated/nested-roadmap.md](generated/nested-roadmap.md)
+- [generated/repository-status.md](generated/repository-status.md)
 
 This document defines the planned high-level Provenance Engine projection for
 live coding-agent work. It records product and architecture direction for the
@@ -218,6 +223,24 @@ plain-language meanings. Message records preserve the structured semantic
 payload and evidence metadata they rendered, plus presentation producer and
 policy identity/version. They are presentation cache/history records, not the
 source of semantic truth, and remain outside deterministic Current State.
+
+## Future Feedback Categories
+
+Feedback for later presentation learning must distinguish two failures:
+
+- Semantic interpretation error: Provenance Engine inferred the wrong
+  intent, activity, phase, blocker, milestone, or architecture meaning. This is
+  a semantic-inference correction and must not be treated as a wording example.
+- Presentation wording error: the semantic inference was correct, but the
+  concise or expanded human-readable message was confusing, too vague, too
+  strong, or otherwise poorly phrased. This is presentation-policy or language
+  calibration feedback.
+
+Presentation learning may only train wording when the referenced semantic
+record is still considered correct. If the user is rejecting the inferred
+meaning, the system should mark or supersede the semantic inference through the
+semantic layer before generating new presentation examples. Human-readable
+wording must never become semantic truth.
 
 ## Conceptual Shape
 

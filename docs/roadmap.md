@@ -13,7 +13,9 @@ The authoritative generated status is:
 
 This roadmap defines sequencing and rationale. It must not independently
 maintain active gates, milestone state, evidence commits, release state, or open
-caveat status.
+caveat status. It also must not independently maintain dependency-ready,
+selected-next, or active branch/worktree claims; those volatile planning facts
+belong in the generated roadmap.
 
 ## V1 Adoption Guidance
 
@@ -80,12 +82,11 @@ with PE Current State and latest accepted evidence.
 
 ## Richer Coding-Agent Evidence And SessionWorkModel
 
-Status: evidence foundation, factual session projection read contract, semantic
-inference framework, first coding-agent semantic inferences, and
-human-readable semantic messaging are implemented. Full semantic
-`SessionWorkModel` projection, milestone synthesis, architecture projection,
-bmux UI presentation, calibration, and feedback learning remain planned and
-gated.
+Status: durable sequencing lives here; current dependency readiness, explicit
+selection, active assignments, and implementation evidence are generated from
+Project Truth. The implemented sequence now includes the evidence foundation,
+factual session projection read contract, semantic inference framework, first
+coding-agent semantic inferences, and human-readable semantic messaging.
 
 This phase addresses the main gap found after the execution-telemetry and
 workspace-display slices: bmux can observe richer structured coding-agent data
@@ -118,17 +119,19 @@ The implementation sequence is:
 7. Add human-readable semantic messaging above semantic inference truth. This is
    implemented as semantic message contracts, deterministic first-pass wording,
    message cache/history persistence, and public query/materialization APIs.
-8. Add bmux clickable semantic explanation UI that renders PE semantic messages
+8. Add a bmux factual Session view that renders PE factual session projection
+   data without adding semantic inference.
+9. Add bmux clickable semantic explanation UI that renders PE semantic messages
    without independently inferring meaning.
-9. Introduce semantic `SessionWorkModel` enrichment above the factual projection
+10. Introduce semantic `SessionWorkModel` enrichment above the factual projection
    and lower-level APIs.
-10. Add milestone hierarchy/description in its own semantic work-understanding
+11. Add milestone hierarchy/description in its own semantic work-understanding
    slice after the first session inference concepts are stable.
-11. Add scoped architecture inference/projection for thread and current-turn
+12. Add scoped architecture inference/projection for thread and current-turn
    scopes.
-12. Add milestone-to-architecture relationships.
-13. Add milestone-to-diff, Git, and GitHub attribution.
-14. Use the Knowledge Compiler later for durable implementation outcomes and
+13. Add milestone-to-architecture relationships.
+14. Add milestone-to-diff, Git, and GitHub attribution.
+15. Use the Knowledge Compiler later for durable implementation outcomes and
     decisions beyond the live session model.
 
 The first semantic inference slice is accepted when one coding-agent session can
@@ -145,7 +148,8 @@ be rendered into cached concise and expanded message records that preserve
 structured semantic meaning, provenance, confidence, specificity, producer,
 presentation policy, history, and supersession without making wording the source
 of semantic truth or deterministic Current State. bmux UI presentation,
-presentation language calibration, and feedback learning remain later slices.
+presentation language calibration, and feedback learning are separate slices;
+consult the generated roadmap for their current readiness and selection state.
 
 ## External Evidence Model Validation
 

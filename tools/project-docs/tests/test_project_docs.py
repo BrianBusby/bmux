@@ -57,6 +57,17 @@ class FakeGitHubProvider:
 
 
 class ProjectDocsTests(unittest.TestCase):
+    def mark_dependency_unimplemented(self, shared, node_id: str):
+        node = self.roadmap_node(shared, node_id)
+        node["status"] = "planned"
+        node["execution"]["assignment"] = "planned"
+        node["delivery_status"] = "proposed"
+        node["acceptance_status"] = "proposed"
+        node.pop("completed_at", None)
+        node.pop("accepted_at", None)
+        node.pop("acceptance_reason", None)
+        return node
+
     def load_valid(self):
         shared = project_docs.load_yaml(SHARED)
         local = project_docs.load_yaml(LOCAL)
@@ -132,6 +143,9 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_roadmap_parent_kind_validation_fails(self):
         shared, local = self.load_valid()
+        non_slice = self.roadmap_node(shared, "semantic_session_work_model_projection")
+        non_slice["execution"]["assignment"] = "selected_next"
+        self.assertNotIn(non_slice, project_docs.implementation_candidate_nodes(shared["roadmap"]["nodes"]))
         self.roadmap_node(shared, "semantic_inference_framework")["parent"] = "richer_session_understanding"
         with self.assertRaisesRegex(project_docs.ProjectDocsError, "slice parent must be milestone"):
             project_docs.semantic_validate(shared, local, LOCAL)
@@ -139,6 +153,7 @@ class ProjectDocsTests(unittest.TestCase):
     def test_roadmap_dependency_cycle_fails(self):
         shared, local = self.load_valid()
         self.roadmap_node(shared, "factual_projection_consumer_shape_followup")["depends_on"] = ["semantic_inference_framework"]
+        self.assertTrue(project_docs.is_dependency_satisfied(self.roadmap_node(shared, "semantic_inference_framework")))
         with self.assertRaisesRegex(project_docs.ProjectDocsError, "roadmap dependency/sequence cycle"):
             project_docs.semantic_validate(shared, local, LOCAL)
 
@@ -162,7 +177,12 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_planned_roadmap_slice_cannot_claim_implemented_acceptance(self):
         shared, local = self.load_valid()
-        self.roadmap_node(shared, "semantic_inference_framework")["acceptance_status"] = "implemented"
+        self.mark_dependency_unimplemented(shared, "human_readable_semantic_messaging")
+        selected = self.roadmap_node(shared, "clickable_semantic_explanation_ui")
+        selected["execution"]["assignment"] = "selected_next"
+        self.assertIn(selected, project_docs.selected_next_nodes(shared["roadmap"]["nodes"]))
+        self.assertNotIn(selected, project_docs.dependency_ready_nodes(shared["roadmap"]["nodes"]))
+        self.roadmap_node(shared, "clickable_semantic_explanation_ui")["acceptance_status"] = "implemented"
         with self.assertRaisesRegex(project_docs.ProjectDocsError, "planned roadmap slice cannot declare"):
             project_docs.semantic_validate(shared, local, LOCAL)
 
@@ -214,6 +234,10 @@ class ProjectDocsTests(unittest.TestCase):
         context = project_docs.load_inputs(ROOT)
         first = project_docs.render_all(context)
         second = project_docs.render_all(context)
+        shared, _ = self.load_valid()
+        ready_first = [item["id"] for item in project_docs.dependency_ready_nodes(shared["roadmap"]["nodes"])]
+        ready_second = [item["id"] for item in project_docs.dependency_ready_nodes(shared["roadmap"]["nodes"])]
+        self.assertEqual(ready_first, ready_second)
         self.assertEqual(first, second)
 
     def test_nested_roadmap_rendering_includes_hierarchy_and_next_work(self):
@@ -224,9 +248,13 @@ class ProjectDocsTests(unittest.TestCase):
         self.assertIn("Semantic SessionWorkModel Projection", rendered)
         self.assertIn("Knowledge Compiler work later", rendered)
         self.assertIn(
-            "Semantic inference framework (`semantic_inference_framework`) - depends on: `factual_projection_consumer_shape_followup`",
+            "**Semantic inference framework** (`semantic_inference_framework`)",
             rendered,
         )
+        self.assertIn("Depends on: `factual_projection_consumer_shape_followup`", rendered)
+        self.assertIn("## Dependency-Ready Work", rendered)
+        self.assertIn("## Selected Next Work", rendered)
+        self.assertNotIn("## Next Eligible Work", rendered)
 
     def test_nested_roadmap_rendering_is_deterministic(self):
         context = project_docs.load_inputs(ROOT)
@@ -268,9 +296,15 @@ class ProjectDocsTests(unittest.TestCase):
         context = project_docs.load_inputs(ROOT)
         rendered = project_docs.render_current_target_architecture_status(context)
         self.assertIn("Active implementation slice:", rendered)
+        self.assertIn("Provenance Engine repository state:", rendered)
         self.assertIn("Factual projection consumer shape follow-up", rendered)
         self.assertIn("SessionWorkModel semantic projection", rendered)
         self.assertIn("Knowledge Compiler, Knowledge Store, and Retrieval", rendered)
+        self.assertIn("### Dependency-Ready Work", rendered)
+        self.assertIn("### Selected Next Work", rendered)
+        bmux_context = dict(context)
+        bmux_context["repo_status"] = dict(context["repo_status"], repository="BrianBusby/bmux")
+        self.assertIn("Bmux repository state:", project_docs.render_current_target_architecture_status(bmux_context))
 
     def test_authored_generated_block_drift_detects_stale_architecture_doc(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -319,17 +353,47 @@ class ProjectDocsTests(unittest.TestCase):
         shared, local = self.load_valid()
         provider = FakeGitHubProvider()
         provider.repositories.update(project_docs.collect_evidence_repositories(shared, [local]))
+
+        def pr_evidence_for_delivery(delivery_status: str, owner: dict):
+            if delivery_status == "draft":
+                return project_docs.PullRequestEvidence(
+                    state="open",
+                    draft=True,
+                    merged=False,
+                    owner_login=owner.get("login"),
+                    owner_url=owner.get("profile_url"),
+                )
+            if delivery_status == "open":
+                return project_docs.PullRequestEvidence(
+                    state="open",
+                    draft=False,
+                    merged=False,
+                    owner_login=owner.get("login"),
+                    owner_url=owner.get("profile_url"),
+                )
+            if delivery_status == "closed":
+                return project_docs.PullRequestEvidence(
+                    state="closed",
+                    draft=False,
+                    merged=False,
+                    owner_login=owner.get("login"),
+                    owner_url=owner.get("profile_url"),
+                )
+            return project_docs.PullRequestEvidence(
+                state="closed",
+                draft=False,
+                merged=delivery_status == "merged",
+                owner_login=owner.get("login"),
+                owner_url=owner.get("profile_url"),
+            )
+
         for milestone in shared["milestones"]:
             for commit in milestone["evidence"]["commits"]:
                 provider.commits.add((commit["repository"], commit["sha"]))
             for pr in milestone["evidence"]["pull_requests"]:
                 owner = pr.get("owner", {})
-                provider.pull_requests[(pr["repository"], pr["number"])] = project_docs.PullRequestEvidence(
-                    state="closed",
-                    draft=False,
-                    merged=milestone["delivery_status"] == "merged",
-                    owner_login=owner.get("login"),
-                    owner_url=owner.get("profile_url"),
+                provider.pull_requests[(pr["repository"], pr["number"])] = pr_evidence_for_delivery(
+                    milestone["delivery_status"], owner
                 )
         for node in shared["roadmap"]["nodes"]:
             evidence = node.get("evidence", {})
@@ -337,12 +401,8 @@ class ProjectDocsTests(unittest.TestCase):
                 provider.commits.add((commit["repository"], commit["sha"]))
             for pr in evidence.get("pull_requests", []):
                 owner = pr.get("owner", {})
-                provider.pull_requests[(pr["repository"], pr["number"])] = project_docs.PullRequestEvidence(
-                    state="closed",
-                    draft=False,
-                    merged=node.get("delivery_status") == "merged",
-                    owner_login=owner.get("login"),
-                    owner_url=owner.get("profile_url"),
+                provider.pull_requests[(pr["repository"], pr["number"])] = pr_evidence_for_delivery(
+                    node.get("delivery_status"), owner
                 )
         for caveat in shared["caveats"]:
             issue = caveat.get("issue")
@@ -688,7 +748,8 @@ class ProjectDocsTests(unittest.TestCase):
             repo = Path(tmp)
             (repo / "docs/handoffs").mkdir(parents=True)
             (repo / "docs/handoffs/latest.md").write_text(
-                "See docs/generated/project-status.md. CI enforcement is not implemented yet.\n",
+                "See docs/generated/project-status.md. CI enforcement is not implemented yet. "
+                "Still out of scope until a new slice is explicitly selected.\n",
                 encoding="utf-8",
             )
             issues = project_docs.authored_doc_drift_issues(repo)

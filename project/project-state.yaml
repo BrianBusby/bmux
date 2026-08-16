@@ -102,15 +102,29 @@ milestones:
   - id: richer_session_work_model
     title: Richer Coding-Agent Evidence and Factual Session Projection
     owner: provenance_engine
-    delivery_status: open
+    delivery_status: merged
     acceptance_status: implemented
     evidence:
       commits:
         - repository: BrianBusby/provenance-engine
+          sha: 9e69452a2ec22ead8dcbb2ef5d2a3c63f4464096
+        - repository: BrianBusby/provenance-engine
           sha: 2add52c611e262ab053be47f8d2bd9f59934e00e
         - repository: BrianBusby/provenance-engine
           sha: a0f8c1fa2d0e93b6c0fc8593b4a76a9c52dcf0ee
-      pull_requests: []
+        - repository: BrianBusby/bmux
+          sha: 45b7188ea62d343bca433dee5cb0897e5427adc2
+      pull_requests:
+        - repository: BrianBusby/provenance-engine
+          number: 19
+          owner:
+            login: BrianBusby
+            profile_url: https://github.com/BrianBusby
+        - repository: BrianBusby/bmux
+          number: 48
+          owner:
+            login: BrianBusby
+            profile_url: https://github.com/BrianBusby
     completed_at: 2026-08-15
     acceptance_reason: First below-semantic-layer evidence foundation and factual session projection snapshot/read contract implemented; semantic SessionWorkModel inference, milestones, and architecture projection remain gated.
 
@@ -750,13 +764,25 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: provenance_engine
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
           - repository: BrianBusby/provenance-engine
             sha: 9e69452a2ec22ead8dcbb2ef5d2a3c63f4464096
-        pull_requests: []
+          - repository: BrianBusby/bmux
+            sha: 45b7188ea62d343bca433dee5cb0897e5427adc2
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 19
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+          - repository: BrianBusby/bmux
+            number: 48
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
       completed_at: 2026-08-15
       mirrors_milestone: richer_session_work_model
       acceptance_reason: Completed-unit coding-agent evidence exists below the semantic layer; raw provider streams, private reasoning, approvals, validation, errors, and compaction remain gated follow-ups.
@@ -829,6 +855,7 @@ roadmap:
       depends_on:
         - factual_session_projection_foundation
       enables:
+        - factual_agent_session_view
         - semantic_inference_framework
       sequence_before:
         - semantic_inference_framework
@@ -1075,6 +1102,64 @@ roadmap:
           - Presentation wording remains separate from semantic inference truth and deterministic Current State.
       acceptance_reason: Human-readable semantic message contracts, deterministic default rendering for first coding-agent semantic kinds, SQLite message cache/history persistence, public publish/query/materialization APIs, and coverage for wording, policy separation, supersession, rollback, retrieval, and Current State separation are implemented.
 
+    - id: factual_agent_session_view
+      kind: slice
+      title: Factual agent session view
+      parent: semantic_session_work_model_projection
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: consumer_presentation
+      depends_on:
+        - factual_projection_consumer_shape_followup
+      enables:
+        - clickable_semantic_explanation_ui
+      sequence_before:
+        - clickable_semantic_explanation_ui
+      parallelism:
+        classification: conditional
+        expected_contract_domains:
+          - factual_session_projection
+          - bmux_factual_session_view
+        expected_code_areas:
+          - Sources/Panels/AgentSessionFactualProjectionView.swift
+          - Sources/Panels/TerminalPanelView.swift
+          - Sources/WorkProvenance/AgentSessionFactualProjectionStore.swift
+          - bmux factual projection consumers
+        likely_conflict_domains:
+          - bmux_factual_session_view
+          - bmux_panel_ui
+          - factual_session_projection_consumer
+        contract_dependencies:
+          - factual_session_projection
+          - deterministic_current_state_api
+        worktree_required: true
+        conflict_note: "Active bmux PR #49 uses the historical clickable-semantic-explanation-ui branch name but implements factual Session UI only; semantic explanation UI remains a later selected slice."
+      execution:
+        assignment: current
+        assigned_to: bmux
+        active_worktree: /Users/brianbusby/repos/bmux-clickable-semantic-explanation-ui
+        active_branch: clickable-semantic-explanation-ui
+        active_agent: Codex
+        notes: "PR #49 is factual-only and should not be counted as satisfying clickable semantic explanation behavior."
+      delivery_status: draft
+      acceptance_status: proposed
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 6893fa3af6e5f4babb2d75e6e0b5045cc545c20e
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 49
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      rationale: Records the active bmux factual Session view work as a prerequisite consumer of PE factual projections without conflating it with semantic explanation UI.
+
     - id: clickable_semantic_explanation_ui
       kind: slice
       title: Clickable semantic explanation UI
@@ -1088,6 +1173,7 @@ roadmap:
         primary: semantic_understanding
         architecture_layer: consumer_presentation
       depends_on:
+        - factual_agent_session_view
         - human_readable_semantic_messaging
       parallelism:
         classification: serial
@@ -1105,7 +1191,7 @@ roadmap:
           - session_work_model_presentation
         worktree_required: true
       execution:
-        assignment: next_eligible
+        assignment: selected_next
         assigned_to: bmux
       delivery_status: proposed
       acceptance_status: proposed

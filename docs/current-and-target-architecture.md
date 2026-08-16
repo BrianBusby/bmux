@@ -48,9 +48,10 @@ facts and interpretations with provenance.
 
 ## Current Architecture
 
-The current system has implemented the lower factual layers and is still below
-the semantic live-work layer. The generated status block later in this document
-is authoritative for the exact current state.
+The generated status block later in this document is authoritative for the
+exact current state. The durable architecture keeps observable evidence,
+deterministic factual state, semantic inference, and presentation as separate
+layers.
 
 ```text
 Provider events
@@ -88,12 +89,12 @@ Planned above the factual layer:
   Knowledge Compiler -> Knowledge Store -> Retrieval
 ```
 
-Current completed work covers provider-neutral and Claude lifecycle telemetry on
-the bmux side, plus Provenance Engine durable evidence and factual session
-projection contracts for selected coding-agent facts. This does not mean raw
-stdout/stderr deltas, hidden reasoning, unrestricted transcripts, approvals,
-validation, errors, compaction, semantic milestones, or architecture inference
-are all implemented. Those remain gated by the roadmap and generated status.
+Implemented work should be read from generated Project Truth status, not from
+authored prose. Completion of a lower layer does not imply raw stdout/stderr
+deltas, hidden reasoning, unrestricted transcripts, approvals, validation,
+errors, compaction, semantic milestones, architecture inference, or presentation
+learning are available unless generated status says the relevant slice is
+implemented.
 
 ## Target Architecture
 
@@ -173,6 +174,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Richer Session Understanding (`richer_session_understanding`) - program; status: active; owner: Provenance Engine
 - Semantic Understanding (`semantic_understanding`) - phase; status: active; owner: Provenance Engine
 - Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`) - milestone; status: active; owner: Provenance Engine
+- Factual agent session view (`factual_agent_session_view`) - slice; status: active; owner: Bmux
 
 ### Major Node Summaries
 
@@ -187,7 +189,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 #### Provenance Engine durable evidence
 
-- Status: Provenance Engine V1 package (`provenance_engine_v1`): accepted, delivery merged, acceptance accepted; Richer coding-agent evidence foundation (`richer_coding_agent_evidence_foundation`): implemented, delivery open, acceptance implemented; Public In Process Sdk: implemented; Engine Owned Sqlite Store: implemented; Immutable Ledger: implemented; Schema Identity Validation: implemented; Producer Neutral Lifecycle Recording: implemented; Richer Coding Agent Evidence: implemented
+- Status: Provenance Engine V1 package (`provenance_engine_v1`): accepted, delivery merged, acceptance accepted; Richer coding-agent evidence foundation (`richer_coding_agent_evidence_foundation`): implemented, delivery merged, acceptance implemented; Public In Process Sdk: implemented; Engine Owned Sqlite Store: implemented; Immutable Ledger: implemented; Schema Identity Validation: implemented; Producer Neutral Lifecycle Recording: implemented; Richer Coding Agent Evidence: implemented
 - Owns: Accepted durable engineering evidence, validation, immutable ledger semantics, source/origin/scope metadata, and evidence relationships.
 - Inputs: Explicitly accepted events from producers such as bmux; completed or meaningful coding-agent units when policy allows them.
 - Outputs: Ledger events and rebuildable evidence relationships for lower projections and later inference.
@@ -205,12 +207,12 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 #### Factual session projection
 
-- Status: Factual session projection foundation (`factual_session_projection_foundation`): implemented, delivery open, acceptance implemented; Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`): implemented, delivery merged, acceptance implemented; Factual Session Projection: implemented
+- Status: Factual session projection foundation (`factual_session_projection_foundation`): implemented, delivery open, acceptance implemented; Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`): implemented, delivery merged, acceptance implemented; Factual agent session view (`factual_agent_session_view`): active, delivery draft, acceptance proposed; Factual Session Projection: implemented
 - Owns: Revisioned factual snapshots of observed coding-agent thread and turn evidence for one PE session.
 - Inputs: Coding-agent thread, turn, prompt, plan, completed command, visible reasoning summary, and file-change attribution evidence.
 - Outputs: Observed thread/turn grouping with latest prompt, plan, commands, summaries, file changes, and ledger revision.
 - Does not own: Synthetic turns, inferred intent, milestone hierarchy, session phase, risks, or architecture projection.
-- Related slices: Richer coding-agent evidence foundation (`richer_coding_agent_evidence_foundation`), Factual session projection foundation (`factual_session_projection_foundation`), Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`)
+- Related slices: Richer coding-agent evidence foundation (`richer_coding_agent_evidence_foundation`), Factual session projection foundation (`factual_session_projection_foundation`), Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`), Factual agent session view (`factual_agent_session_view`)
 
 #### Semantic inference framework
 
@@ -257,9 +259,23 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Does not own: The live session model's immediate interaction loop or consumer-specific UI presentation.
 - Related slices: Knowledge Compiler work later (`knowledge_compiler_outcomes`)
 
-### Next Eligible Work
+### Dependency-Ready Work
 
-- Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - status: planned; owner: Bmux; depends on: `human_readable_semantic_messaging`.
+- Presentation language calibration corpus (`presentation_language_calibration_corpus`) - selection: planned; owner: Provenance Engine; depends on: `first_semantic_session_inferences`.
+- Milestone inference (`milestone_inference`) - selection: planned; owner: Provenance Engine; depends on: `first_semantic_session_inferences`.
+- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - selection: planned; owner: Provenance Engine; depends on: `semantic_inference_framework`.
+- Scoped architecture projection (`scoped_architecture_projection`) - selection: planned; owner: Provenance Engine; depends on: `first_semantic_session_inferences`.
+
+### Selected Next Work
+
+- Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - dependency status: blocked by `factual_agent_session_view`; owner: Bmux; depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`.
+
+### Dependency-Ready But Not Selected
+
+- Presentation language calibration corpus (`presentation_language_calibration_corpus`) - owner: Provenance Engine; depends on: `first_semantic_session_inferences`
+- Milestone inference (`milestone_inference`) - owner: Provenance Engine; depends on: `first_semantic_session_inferences`
+- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - owner: Provenance Engine; depends on: `semantic_inference_framework`
+- Scoped architecture projection (`scoped_architecture_projection`) - owner: Provenance Engine; depends on: `first_semantic_session_inferences`
 
 ### Open Caveats
 

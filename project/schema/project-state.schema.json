@@ -243,7 +243,7 @@
       "additionalProperties": false,
       "required": ["assignment", "assigned_to"],
       "properties": {
-        "assignment": { "enum": ["complete", "current", "next_eligible", "planned", "deferred", "unassigned"] },
+        "assignment": { "enum": ["complete", "current", "selected_next", "planned", "deferred", "unassigned"] },
         "assigned_to": { "enum": ["provenance_engine", "bmux", "shared", "unassigned"] },
         "active_worktree": { "type": "string", "minLength": 1 },
         "active_branch": { "type": "string", "minLength": 1 },
