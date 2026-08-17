@@ -10,6 +10,7 @@ import BmuxFeedback
 struct PanelContentView: View {
     let panel: any Panel
     let workspaceId: UUID
+    var stableWorkspaceId: UUID? = nil
     let paneId: PaneID
     let isFocused: Bool
     let isSelectedInPane: Bool
@@ -22,6 +23,7 @@ struct PanelContentView: View {
     let customSidebarUnread: SidebarUnreadModel = TerminalNotificationStore.shared.sidebarUnread
     let hasUnreadNotification: Bool
     let terminalAgentContext: String
+    var workProvenanceRuntime: WorkProvenanceRuntime? = nil
     /// Explicit browser pane-ownership signal for hosts whose panels live outside
     /// the main `Workspace` tree (the Dock). `nil` keeps the main-area behavior.
     var paneOwnershipOverride: Bool? = nil
@@ -53,6 +55,8 @@ struct PanelContentView: View {
                     appearance: appearance,
                     hasUnreadNotification: hasUnreadNotification,
                     terminalAgentContext: terminalAgentContext,
+                    stableWorkspaceId: stableWorkspaceId ?? workspaceId,
+                    workProvenanceRuntime: workProvenanceRuntime,
                     onFocus: onFocus,
                     onResumeAgentHibernation: onResumeAgentHibernation,
                     onAutoResumeAgentHibernation: onAutoResumeAgentHibernation,
@@ -122,6 +126,8 @@ struct PanelContentView: View {
             if let agentSessionPanel = panel as? AgentSessionPanel {
                 AgentSessionPanelView(
                     panel: agentSessionPanel,
+                    stableWorkspaceId: stableWorkspaceId ?? workspaceId,
+                    workProvenanceRuntime: workProvenanceRuntime,
                     isFocused: isFocused,
                     isVisibleInUI: isVisibleInUI,
                     portalPriority: portalPriority,

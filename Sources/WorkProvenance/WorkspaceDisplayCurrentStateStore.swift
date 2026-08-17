@@ -16,6 +16,34 @@ final class WorkspaceDisplayCurrentStateStore {
         snapshotsByStableWorkspaceID[workspace.stableId]
     }
 
+    func snapshot(stableWorkspaceID: UUID) -> WorkspaceDisplayCurrentStateSnapshot? {
+        snapshotsByStableWorkspaceID[stableWorkspaceID]
+    }
+
+    func refreshedSnapshot(stableWorkspaceID: UUID) async -> WorkspaceDisplayCurrentStateSnapshot? {
+        let response: ProvenanceWorkspaceDisplayResponse
+        do {
+            response = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
+                workspaceID: stableWorkspaceID.uuidString
+            ))
+        } catch {
+            StartupBreadcrumbLog.append("workProvenance.displayCurrentState.refreshFailed", fields: [
+                "workspace": stableWorkspaceID.uuidString,
+                "error": String(describing: error)
+            ])
+            return snapshotsByStableWorkspaceID[stableWorkspaceID]
+        }
+        guard let display = response.display,
+              let snapshot = WorkspaceDisplayCurrentStateSnapshot(display) else {
+            return snapshotsByStableWorkspaceID[stableWorkspaceID]
+        }
+        guard snapshot.isNewerThan(snapshotsByStableWorkspaceID[stableWorkspaceID]) else {
+            return snapshotsByStableWorkspaceID[stableWorkspaceID]
+        }
+        snapshotsByStableWorkspaceID[stableWorkspaceID] = snapshot
+        return snapshot
+    }
+
     func refresh(
         stableWorkspaceIDs: [UUID],
         notify: @escaping @MainActor (UUID) -> Void

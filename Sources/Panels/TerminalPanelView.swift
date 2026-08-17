@@ -23,6 +23,8 @@ struct TerminalPanelView: View {
     let appearance: PanelAppearance
     let hasUnreadNotification: Bool
     let terminalAgentContext: String
+    var stableWorkspaceId: UUID? = nil
+    var workProvenanceRuntime: WorkProvenanceRuntime? = nil
     let onFocus: () -> Void
     let onResumeAgentHibernation: () -> Void
     let onAutoResumeAgentHibernation: () -> Void
@@ -61,6 +63,17 @@ struct TerminalPanelView: View {
     }
 
     private var terminalBody: some View {
+        AgentSessionFactualProjectionModeHost(
+            showsSwitcher: showsFactualSessionSwitcher,
+            stableWorkspaceID: stableWorkspaceId,
+            workProvenanceRuntime: workProvenanceRuntime,
+            backgroundColor: appearance.contentBackgroundColor
+        ) {
+            terminalSurfaceBody
+        }
+    }
+
+    private var terminalSurfaceBody: some View {
         @Bindable var textBoxState = panel.textBoxState
 
         return VStack(spacing: 0) {
@@ -158,6 +171,32 @@ struct TerminalPanelView: View {
         .onReceive(NotificationCenter.default.publisher(for: .ghosttyConfigDidReload)) { _ in
             terminalFontSize = GhosttyConfig.load(globalFontMagnificationPercent: GlobalFontMagnification.storedPercent).fontSize
         }
+    }
+
+    private var showsFactualSessionSwitcher: Bool {
+        Self.shouldShowFactualSessionSwitcher(
+            terminalAgentContext: effectiveTerminalAgentContext,
+            panelTitle: panel.displayTitle,
+            hasStableWorkspace: stableWorkspaceId != nil,
+            workProvenanceRuntimeAvailable: workProvenanceRuntime != nil
+        )
+    }
+
+    private static func shouldShowFactualSessionSwitcher(
+        terminalAgentContext: String,
+        panelTitle: String,
+        hasStableWorkspace: Bool,
+        workProvenanceRuntimeAvailable: Bool
+    ) -> Bool {
+        guard hasStableWorkspace,
+              workProvenanceRuntimeAvailable else {
+            return false
+        }
+        if TextBoxAgentDetection.codex.matches(context: terminalAgentContext) {
+            return true
+        }
+        let normalizedTitle = panelTitle.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return normalizedTitle == "codex"
     }
 
     private var effectiveTerminalAgentContext: String {
