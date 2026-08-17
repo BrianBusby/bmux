@@ -60,6 +60,42 @@ struct SessionWorkModelFoundationTests {
     }
 
     @Test
+    func modelLeavesCurrentThreadAbsentWhenThreadIdentityIsAmbiguous() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let base = WorkModelFixture()
+        let secondThread = ProvenanceCodingAgentThreadRecord(
+            id: "thread-work-model-fixture-2",
+            sessionID: base.session.id,
+            provider: "codex",
+            providerThreadID: "provider-thread-work-model-fixture-2",
+            worktreeID: "worktree-work-model-fixture",
+            source: .observed,
+            confidence: .high,
+            firstObservedAt: base.timestamp.addingTimeInterval(2),
+            updatedAt: base.timestamp.addingTimeInterval(2)
+        )
+
+        try await Self.append(base.session, into: repository)
+        try await Self.append(base.thread, eventID: "event-thread-work-model-fixture-1", into: repository)
+        try await Self.append(secondThread, eventID: "event-thread-work-model-fixture-2", into: repository)
+
+        let model = try #require(try await repository.sessionWorkModel(
+            ProvenanceSessionWorkModelRequest(sessionID: base.session.id)
+        ).model)
+
+        #expect(model.identity.providerThreadIdentities.map(\.threadID).sorted() == [
+            base.thread.id,
+            secondThread.id,
+        ])
+        #expect(model.thread == nil)
+        #expect(model.currentTurn == nil)
+        #expect(model.sessionPhase.state == .unknown)
+        #expect(model.basis.semanticInferenceRecords.isEmpty)
+    }
+
+    @Test
     func modelSelectsActiveSemanticInferencesWithProvenance() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
@@ -294,5 +330,52 @@ struct SessionWorkModelFoundationTests {
 
     private static func removeTemporaryDatabaseDirectory(for url: URL) {
         try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+    }
+
+    private static func append(
+        _ session: ProvenanceSessionRecord,
+        into repository: ProvenanceSQLiteRepository
+    ) async throws {
+        try await repository.appendEvent(event(
+            id: "event-session-work-model-fixture",
+            type: .sessionObserved,
+            timestamp: session.updatedAt,
+            sessionID: session.id,
+            payload: ProvenanceEventPayload(session: session)
+        ))
+    }
+
+    private static func append(
+        _ thread: ProvenanceCodingAgentThreadRecord,
+        eventID: String,
+        into repository: ProvenanceSQLiteRepository
+    ) async throws {
+        try await repository.appendEvent(event(
+            id: eventID,
+            type: .codingAgentThreadObserved,
+            timestamp: thread.updatedAt,
+            sessionID: thread.sessionID,
+            payload: ProvenanceEventPayload(codingAgentThread: thread)
+        ))
+    }
+
+    private static func event(
+        id: String,
+        type: ProvenanceEventType,
+        timestamp: Date,
+        sessionID: String,
+        payload: ProvenanceEventPayload
+    ) -> ProvenanceEvent {
+        ProvenanceEvent(
+            id: id,
+            eventType: type,
+            timestamp: timestamp,
+            sessionID: sessionID,
+            source: .observed,
+            evidenceOrigin: .codexSession,
+            evidenceScope: ProvenanceEvidenceScope(level: .personal, id: "session-work-model-fixture"),
+            confidence: .high,
+            payload: payload
+        )
     }
 }

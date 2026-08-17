@@ -168,11 +168,21 @@ extension ProvenanceSQLiteRepository {
         from factualProjection: ProvenanceFactualSessionProjectionSnapshot,
         latestTurn: ProvenanceCodingAgentTurnRecord?
     ) -> ProvenanceFactualSessionProjectionProviderThreadIdentity? {
-        if let threadID = latestTurn?.threadID,
-           let matchingThread = factualProjection.providerThreadIdentities.first(where: { $0.threadID == threadID }) {
-            return matchingThread
+        guard let latestTurn else {
+            return soleThreadIdentity(from: factualProjection)
         }
-        return factualProjection.providerThreadIdentities.first
+        guard let threadID = latestTurn.threadID else {
+            return soleThreadIdentity(from: factualProjection)
+        }
+        return factualProjection.providerThreadIdentities.first(where: { $0.threadID == threadID })
+    }
+
+    private static func soleThreadIdentity(
+        from factualProjection: ProvenanceFactualSessionProjectionSnapshot
+    ) -> ProvenanceFactualSessionProjectionProviderThreadIdentity? {
+        factualProjection.providerThreadIdentities.count == 1
+            ? factualProjection.providerThreadIdentities[0]
+            : nil
     }
 
     private func semanticField(

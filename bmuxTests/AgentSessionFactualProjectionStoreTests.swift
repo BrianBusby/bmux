@@ -151,8 +151,41 @@ struct AgentSessionFactualProjectionStoreTests {
         #expect(firstSnapshot.revision.key == secondSnapshot.revision.key)
         #expect(
             secondSnapshot.workModel.revision.latestSemanticInferenceCreatedAt ==
-                newerModel.revision.latestSemanticInferenceCreatedAt
+            newerModel.revision.latestSemanticInferenceCreatedAt
         )
+    }
+
+    @Test
+    func smartSessionBridgeLocalizesSemanticLabelsWithoutReplacingRawPayload() throws {
+        let model = Self.workModel(
+            sessionID: "session-1",
+            revision: 42,
+            activityBasis: "file_change_attribution",
+            sessionPhase: .waitingBlocked
+        )
+        let smartSnapshot = AgentSessionSmartSessionSnapshot(workModel: model, semanticMessages: [])
+        let phaseRecord = try #require(smartSnapshot.workModel.sessionPhase.record)
+        let phasePayload = try #require(ProvenanceCodingAgentSessionPhasePayload(
+            semanticPayloadValue: phaseRecord.payload
+        ))
+        let currentActivity = try #require(smartSnapshot.workModel.currentTurn?.currentActivity)
+        let activityRecord = try #require(currentActivity.record)
+        let activityPayload = try #require(ProvenanceCodingAgentCurrentActivityPayload(
+            semanticPayloadValue: activityRecord.payload
+        ))
+
+        #expect(smartSnapshot.workModel.sessionPhase.summary == String(
+            localized: "agentSession.web.smartSession.phase.waiting",
+            defaultValue: "Waiting"
+        ))
+        #expect(smartSnapshot.workModel.sessionPhase.summary != "waiting_blocked")
+        #expect(phasePayload.phase == .waitingBlocked)
+        #expect(currentActivity.detail == String(
+            localized: "agentSession.web.smartSession.activityBasis.fileChangeAttribution",
+            defaultValue: "Based on file changes"
+        ))
+        #expect(currentActivity.detail != "file_change_attribution")
+        #expect(activityPayload.basis == "file_change_attribution")
     }
 
     private static func snapshot(sessionID: String, revision: Int) -> ProvenanceFactualSessionProjectionSnapshot {
@@ -226,7 +259,9 @@ struct AgentSessionFactualProjectionStoreTests {
     private static func workModel(
         sessionID: String,
         revision: Int,
-        semanticCreatedAt: Date = Date(timeIntervalSince1970: 1_800_000_120)
+        semanticCreatedAt: Date = Date(timeIntervalSince1970: 1_800_000_120),
+        activityBasis: String = "coding_agent_prompt",
+        sessionPhase: ProvenanceCodingAgentSessionPhase? = nil
     ) -> ProvenanceSessionWorkModel {
         let factualProjection = snapshot(sessionID: sessionID, revision: revision)
         let threadIdentity = factualProjection.providerThreadIdentities[0]
@@ -239,16 +274,32 @@ struct AgentSessionFactualProjectionStoreTests {
             payload: ProvenanceCodingAgentCurrentActivityPayload(
                 activityKind: .implementation,
                 summary: "Rendering Smart Session from SessionWorkModel",
-                basis: "coding_agent_prompt"
+                basis: activityBasis
             ).semanticPayloadValue,
             factualRevision: revision,
             createdAt: semanticCreatedAt
         )
+        let phaseRecord = sessionPhase.map { phase in
+            semanticRecord(
+                id: "inference-session-phase-\(Int(semanticCreatedAt.timeIntervalSince1970))",
+                kind: ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue,
+                scope: .session,
+                scopeID: sessionID,
+                payload: ProvenanceCodingAgentSessionPhasePayload(
+                    phase: phase,
+                    reason: "Waiting on external input",
+                    signals: ["test"]
+                ).semanticPayloadValue,
+                factualRevision: revision,
+                createdAt: semanticCreatedAt
+            )
+        }
+        let semanticRecords = [currentActivityRecord] + (phaseRecord.map { [$0] } ?? [])
         return ProvenanceSessionWorkModel(
             revision: ProvenanceSessionWorkModelRevision(
                 factualRevision: revision,
-                semanticInferenceIDs: [currentActivityRecord.id],
-                latestSemanticInferenceCreatedAt: semanticCreatedAt
+                semanticInferenceIDs: semanticRecords.map(\.id),
+                latestSemanticInferenceCreatedAt: semanticRecords.map(\.createdAt).max()
             ),
             identity: ProvenanceSessionWorkModelIdentity(
                 session: factualProjection.session,
@@ -285,11 +336,12 @@ struct AgentSessionFactualProjectionStoreTests {
             sessionPhase: semanticField(
                 kind: ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue,
                 scope: .session,
-                scopeID: sessionID
+                scopeID: sessionID,
+                record: phaseRecord
             ),
             basis: ProvenanceSessionWorkModelBasis(
                 factualSessionProjection: factualProjection,
-                semanticInferenceRecords: [currentActivityRecord]
+                semanticInferenceRecords: semanticRecords
             )
         )
     }
