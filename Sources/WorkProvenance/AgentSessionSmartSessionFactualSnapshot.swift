@@ -70,7 +70,7 @@ extension AgentSessionSmartSessionSnapshot {
                 "completedAt": AgentSessionSmartSessionBridgeDictionary.optional(
                     AgentSessionSmartSessionBridgeDictionary.isoString(completedAt)
                 ),
-                "updatedAt": AgentSessionSmartSessionBridgeDictionary.isoString(updatedAt),
+                "updatedAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(updatedAt),
                 "prompt": AgentSessionSmartSessionBridgeDictionary.optional(prompt?.bridgePayload),
                 "plan": AgentSessionSmartSessionBridgeDictionary.optional(plan?.bridgePayload),
                 "completedCommands": completedCommands.map(\.bridgePayload),
@@ -114,7 +114,7 @@ extension AgentSessionSmartSessionSnapshot {
                 "completedAt": AgentSessionSmartSessionBridgeDictionary.optional(
                     AgentSessionSmartSessionBridgeDictionary.isoString(completedAt)
                 ),
-                "updatedAt": AgentSessionSmartSessionBridgeDictionary.isoString(updatedAt)
+                "updatedAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(updatedAt)
             ])
         }
     }
@@ -138,7 +138,7 @@ extension AgentSessionSmartSessionSnapshot {
             [
                 "promptId": promptID,
                 "text": text,
-                "submittedAt": AgentSessionSmartSessionBridgeDictionary.isoString(submittedAt),
+                "submittedAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(submittedAt),
                 "source": source,
                 "confidence": confidence
             ]
@@ -166,7 +166,7 @@ extension AgentSessionSmartSessionSnapshot {
             AgentSessionSmartSessionBridgeDictionary.compact([
                 "planId": planID,
                 "explanation": AgentSessionSmartSessionBridgeDictionary.optional(explanation),
-                "observedAt": AgentSessionSmartSessionBridgeDictionary.isoString(observedAt),
+                "observedAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(observedAt),
                 "source": source,
                 "confidence": confidence,
                 "steps": steps.map(\.bridgePayload)

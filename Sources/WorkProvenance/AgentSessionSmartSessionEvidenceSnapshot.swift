@@ -38,7 +38,7 @@ extension AgentSessionSmartSessionSnapshot {
                 "startedAt": AgentSessionSmartSessionBridgeDictionary.optional(
                     AgentSessionSmartSessionBridgeDictionary.isoString(startedAt)
                 ),
-                "completedAt": AgentSessionSmartSessionBridgeDictionary.isoString(completedAt),
+                "completedAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(completedAt),
                 "source": source,
                 "confidence": confidence
             ])
@@ -64,7 +64,7 @@ extension AgentSessionSmartSessionSnapshot {
             [
                 "summaryId": summaryID,
                 "text": text,
-                "completedAt": AgentSessionSmartSessionBridgeDictionary.isoString(completedAt),
+                "completedAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(completedAt),
                 "source": source,
                 "confidence": confidence
             ]
@@ -93,7 +93,7 @@ extension AgentSessionSmartSessionSnapshot {
                 "attributionId": attributionID,
                 "paths": paths,
                 "summary": AgentSessionSmartSessionBridgeDictionary.optional(summary),
-                "observedAt": AgentSessionSmartSessionBridgeDictionary.isoString(observedAt),
+                "observedAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(observedAt),
                 "source": source,
                 "confidence": confidence
             ])
@@ -156,7 +156,7 @@ extension AgentSessionSmartSessionSnapshot {
                 "presentationPolicyId": presentationPolicyID,
                 "presentationPolicyVersion": presentationPolicyVersion,
                 "localeIdentifier": AgentSessionSmartSessionBridgeDictionary.optional(localeIdentifier),
-                "createdAt": AgentSessionSmartSessionBridgeDictionary.isoString(createdAt),
+                "createdAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(createdAt),
                 "status": status
             ])
         }
