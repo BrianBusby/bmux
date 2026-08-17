@@ -31,8 +31,9 @@ Rationale:
 - It avoids `SessionPresentationModel`, which would make a reusable engine
   contract sound like a bmux UI shape.
 
-The planning name is reserved for the later semantic projection. The
-implemented factual substrate intentionally uses the
+The first public `SessionWorkModel` foundation now uses this name for the
+PE-owned composition layer above factual Current State and active semantic
+inference records. The implemented factual substrate intentionally uses the
 `ProvenanceFactualSessionProjection*` prefix and
 `ProvenanceEngineClient.factualSessionProjection(...)` so consumers can depend
 on deterministic Current State without assuming intent, milestone, activity,
@@ -70,11 +71,14 @@ final Smart Session information architecture.
 - `fileExplanation(...)`
 - `workspaceDisplay(...)`
 - `factualSessionProjection(...)`
+- `factualSessionTurnDetail(...)`
+- `semanticInferences(...)`
+- `semanticMessages(...)`
 
-Those remain lower-level domain and diagnostic contracts. The future semantic
-projection is a coherent consumer view assembled by Provenance Engine so
-sophisticated clients do not have to orchestrate many small queries and then
-perform semantic merging locally.
+Those remain lower-level domain, diagnostic, and presentation contracts. The
+SessionWorkModel read is a coherent consumer view assembled by Provenance
+Engine so sophisticated clients do not have to orchestrate many small queries
+and then perform semantic merging locally.
 
 ## Epistemic Layers
 
@@ -254,6 +258,66 @@ plain-language meanings. Message records preserve the structured semantic
 payload and evidence metadata they rendered, plus presentation producer and
 policy identity/version. They are presentation cache/history records, not the
 source of semantic truth, and remain outside deterministic Current State.
+
+## Implemented SessionWorkModel Foundation
+
+The first public PE-owned work-model read contract is:
+
+- `ProvenanceSessionWorkModelRequest`
+- `ProvenanceSessionWorkModelResponse`
+- `ProvenanceSessionWorkModel`
+- `ProvenanceSessionWorkModelRevision`
+- `ProvenanceSessionWorkModelIdentity`
+- `ProvenanceSessionWorkModelThread`
+- `ProvenanceSessionWorkModelCurrentTurn`
+- `ProvenanceSessionWorkModelSemanticField`
+- `ProvenanceSessionWorkModelSemanticState`
+- `ProvenanceSessionWorkModelSemanticRecord`
+- `ProvenanceSessionWorkModelBasis`
+- `ProvenanceEngineClient.sessionWorkModel(...)`
+- `ProvenanceEngineCapability.querySessionWorkModel`
+
+The contract composes one factual session projection with the active semantic
+inference records currently supported by the first semantic slice:
+
+- thread intent;
+- turn intent;
+- session phase;
+- current activity.
+
+The model preserves factual session identity, observed provider thread
+identities, the current/latest turn, compact prior-turn references, latest
+prompt, latest plan evidence, completed commands, visible reasoning summaries,
+and file-change attributions. Semantic fields are explicit `known`, `unknown`,
+or `unavailable` values. A `known` field embeds the selected active semantic
+record's payload, supporting evidence references, supporting factual revision,
+confidence, specificity, producer identity/version, status, and supersession
+metadata.
+
+Revision metadata deliberately separates the model schema version, factual
+projection revision, selected semantic inference ids, newest selected semantic
+creation time, and a consumer reconciliation key. These values are not
+interchangeable with semantic message revision or presentation policy version.
+
+The model is rebuildable from PE durable layers:
+
+```text
+immutable evidence
+    -> factualSessionProjection(...)
+    -> active ProvenanceSemanticInferenceRecord values
+    -> sessionWorkModel(...)
+```
+
+`ProvenanceSemanticMessageRecord` values are not inputs to work-model truth.
+Consumers may still query semantic messages for presentation wording, but the
+model's semantic meaning is grounded in factual projection plus semantic
+inference records.
+
+This first foundation remains intentionally narrow. It does not introduce
+milestone hierarchy, blockers, approach changes, progress percentage,
+validation or risk synthesis, architecture projections, GitHub attribution,
+Knowledge Compiler output, or presentation-learning behavior. Unsupported
+future concepts stay absent rather than guessed.
 
 ## Future Feedback Categories
 

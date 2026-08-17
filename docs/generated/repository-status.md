@@ -13,8 +13,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: React Smart Session foundation (`react_smart_session_foundation`)
-- Slice state: under observation
+- Active slice: React Smart Session initial SessionWorkModel consumer (`react_smart_session_initial_work_model_consumer`)
+- Slice state: open
 - Owner: bmux
 - Repository state: active
 
@@ -52,7 +52,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Semantic Message Presentation Policy | implemented |
 | Provenance Engine Semantic Message Records | implemented |
 | Provenance Engine Semantic Session Work Model Projection | planned |
-| Provenance Engine Session Work Model Contract Foundation | planned |
+| Provenance Engine Session Work Model Contract Foundation | implemented |
 | Provenance Engine Sqlite Store | implemented |
 | Provenance Engine Workspace Display Current State | implemented |
 | Provenance Engine Workspace Display Durable Context | implemented |
@@ -60,6 +60,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Workspace Display Projection Cursors | implemented |
 | Provenance Engine Workspace Display Ticket Link Facts | implemented |
 | Provenance Engine Workspace Display Ticket Title Facts | implemented |
+| React Smart Session Initial Work Model Consumer | planned |
 | React Smart Session Surface | under observation |
 | React Smart Session Work Model Consumer | planned |
 | React Terminal Agent Chat Surface | implemented |

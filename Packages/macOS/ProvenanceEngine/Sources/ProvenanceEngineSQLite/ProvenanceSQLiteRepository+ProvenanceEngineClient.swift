@@ -40,4 +40,9 @@ extension ProvenanceSQLiteRepository: ProvenanceEngineClient {
         -> ProvenanceSemanticMessageQueryResponse {
         try semanticMessageRecords(request)
     }
+
+    func sessionWorkModel(_ request: ProvenanceSessionWorkModelRequest) async throws
+        -> ProvenanceSessionWorkModelResponse {
+        try sessionWorkModelSnapshot(request)
+    }
 }

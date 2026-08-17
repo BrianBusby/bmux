@@ -118,6 +118,14 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     func publishCodingAgentSessionSemanticInferences(
         _ request: ProvenanceCodingAgentSessionSemanticInferenceRequest
     ) async throws -> ProvenanceCodingAgentSessionSemanticInferenceResponse
+
+    /// Returns the PE-owned factual plus semantic work model for one coding-agent session.
+    ///
+    /// - Parameter request: Query parameters for the SessionWorkModel snapshot.
+    /// - Returns: A revisioned response containing the coherent session-understanding model.
+    /// - Throws: An implementation-defined error when the query fails.
+    func sessionWorkModel(_ request: ProvenanceSessionWorkModelRequest) async throws
+        -> ProvenanceSessionWorkModelResponse
 }
 
 public extension ProvenanceEngineClient {
@@ -157,5 +165,16 @@ public extension ProvenanceEngineClient {
     func semanticInferences(_ request: ProvenanceSemanticInferenceQueryRequest) async throws
         -> ProvenanceSemanticInferenceQueryResponse {
         ProvenanceSemanticInferenceQueryResponse(records: [])
+    }
+
+    /// Default unsupported response for clients that have not adopted SessionWorkModel reads.
+    func sessionWorkModel(_ request: ProvenanceSessionWorkModelRequest) async throws
+        -> ProvenanceSessionWorkModelResponse {
+        ProvenanceSessionWorkModelResponse(
+            found: false,
+            reason: "unsupported",
+            sessionID: request.sessionID,
+            model: nil
+        )
     }
 }

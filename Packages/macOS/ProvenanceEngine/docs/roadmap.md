@@ -86,7 +86,8 @@ Status: durable sequencing lives here; current dependency readiness, explicit
 selection, active assignments, and implementation evidence are generated from
 Project Truth. The implemented sequence now includes the evidence foundation,
 factual session projection read contract, semantic inference framework, first
-coding-agent semantic inferences, and human-readable semantic messaging.
+coding-agent semantic inferences, human-readable semantic messaging, and the
+first PE-owned SessionWorkModel foundation.
 
 This phase addresses the main gap found after the execution-telemetry and
 workspace-display slices: bmux can observe richer structured coding-agent data
@@ -129,8 +130,9 @@ The implementation sequence is:
 10. Add a separate React Smart Session foundation that consumes PE factual
    projection and semantic messages for summary-oriented presentation.
 11. Define the first PE-owned `SessionWorkModel` contract above factual
-   projection, semantic inference records, and semantic messages so bmux does
-   not compose a second session model locally.
+   projection and active semantic inference records so bmux does not compose a
+   second session model locally. Semantic messages remain presentation records,
+   not work-model truth inputs.
 12. Add milestone hierarchy/description and blocker or approach-change
    semantics in their own structured-understanding slices after the first
    session inference concepts are stable.
@@ -163,6 +165,15 @@ presentation policy, history, and supersession without making wording the source
 of semantic truth or deterministic Current State. bmux UI presentation,
 presentation language calibration, and feedback learning are separate slices;
 consult the generated roadmap for their current readiness and selection state.
+
+The first SessionWorkModel foundation is accepted when a public
+`sessionWorkModel(...)` read composes factual projection plus current active
+semantic inference records for thread intent, turn intent, session phase, and
+current activity; preserves provenance, factual revision, semantic ids, and
+unknown/unavailable states; and keeps semantic messages as optional presentation
+records rather than authoritative truth. Milestones, blockers, approach
+changes, architecture projection, GitHub attribution, progress synthesis, and
+Knowledge Compiler output remain later slices.
 
 The three-view bmux product model is a consumer constraint on this PE roadmap:
 Native remains provider-native, Terminal remains React live interaction, and

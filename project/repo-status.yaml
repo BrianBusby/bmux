@@ -3,12 +3,12 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: react_smart_session_foundation
-    title: React Smart Session foundation
-    state: under_observation
+    id: react_smart_session_initial_work_model_consumer
+    title: React Smart Session initial SessionWorkModel consumer
+    state: open
     owner: bmux
-    active_worktree: /Users/brianbusby/repos/bmux-react-smart-session-foundation
-    active_branch: react-smart-session-foundation
+    active_worktree: /Users/brianbusby/repos/bmux-react-smart-session-initial-work-model-consumer
+    active_branch: react-smart-session-initial-work-model-consumer
     active_agent: Codex
   state: active
 
@@ -51,7 +51,7 @@ local_capabilities:
   provenance_engine_semantic_message_records: implemented
   provenance_engine_semantic_message_materialization: implemented
   provenance_engine_semantic_message_presentation_policy: implemented
-  provenance_engine_session_work_model_contract_foundation: planned
+  provenance_engine_session_work_model_contract_foundation: implemented
   provenance_engine_milestone_inference: planned
   provenance_engine_blocker_approach_change_semantics: planned
   provenance_engine_scoped_architecture_projection: planned
@@ -60,6 +60,7 @@ local_capabilities:
   react_terminal_agent_chat_surface: implemented
   react_terminal_productization: planned
   react_smart_session_surface: under_observation
+  react_smart_session_initial_work_model_consumer: planned
   react_smart_session_work_model_consumer: planned
   three_view_session_navigation: planned
   richer_session_evidence_foundation: implemented
