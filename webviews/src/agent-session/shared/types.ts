@@ -174,15 +174,83 @@ export type SmartSessionSnapshot = {
   schemaVersion: 1;
   revision: SmartSessionRevision;
   identity: SmartSessionIdentity;
+  workModel?: SmartSessionWorkModel;
   factual: SmartSessionFactual;
   semanticMessages: SmartSessionSemanticMessage[];
 };
 
 export type SmartSessionRevision = {
+  schemaVersion?: number;
   factualRevision?: number;
+  semanticInferenceIds?: string[];
+  latestSemanticInferenceCreatedAt?: string;
+  modelRevisionKey?: string;
   semanticMessageCount: number;
   latestSemanticMessageCreatedAt?: string;
   key: string;
+};
+
+export type SmartSessionWorkModel = {
+  schemaVersion: number;
+  revision: SmartSessionWorkModelRevision;
+  thread?: SmartSessionWorkModelThread;
+  currentTurn?: SmartSessionWorkModelCurrentTurn;
+  sessionPhase: SmartSessionSemanticField;
+};
+
+export type SmartSessionWorkModelRevision = {
+  schemaVersion: number;
+  factualRevision?: number;
+  semanticInferenceIds: string[];
+  latestSemanticInferenceCreatedAt?: string;
+  modelRevisionKey: string;
+};
+
+export type SmartSessionWorkModelThread = {
+  identity: SmartSessionProviderThread;
+  intent: SmartSessionSemanticField;
+};
+
+export type SmartSessionWorkModelCurrentTurn = {
+  turnId: string;
+  threadId?: string;
+  intent: SmartSessionSemanticField;
+  currentActivity: SmartSessionSemanticField;
+};
+
+export type SmartSessionSemanticField = {
+  kind: string;
+  scope: "session" | "thread" | "turn";
+  scopeId?: string;
+  state: "known" | "unknown" | "unavailable";
+  reason?: string;
+  record?: SmartSessionSemanticRecord;
+  summary?: string;
+  detail?: string;
+};
+
+export type SmartSessionSemanticRecord = {
+  inferenceId: string;
+  schemaVersion: number;
+  payload: unknown;
+  supportingEvidenceRefs: SmartSessionSemanticEvidenceRef[];
+  supportingFactualRevision?: number;
+  confidence: string;
+  specificity: string;
+  producerType: string;
+  producerId: string;
+  producerVersion: string;
+  createdAt: string;
+  status: "active" | "superseded" | "invalidated";
+  supersedes: string[];
+  supersededBy?: string;
+};
+
+export type SmartSessionSemanticEvidenceRef = {
+  kind: string;
+  id: string;
+  ledgerSequence?: number;
+  factualRevision?: number;
 };
 
 export type SmartSessionIdentity = {

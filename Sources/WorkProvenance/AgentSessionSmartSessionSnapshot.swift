@@ -1,22 +1,20 @@
 import Foundation
 import ProvenanceEngineContracts
 
-/// First-pass bridge snapshot for React Smart Session.
-///
-/// This is consumer scaffolding for Slice 1. It transports PE factual projection
-/// data and existing semantic presentation records without claiming to be the
-/// PE-owned SessionWorkModel contract.
+/// Bridge snapshot for the React Smart Session consumer of PE SessionWorkModel.
 struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
     let schemaVersion: Int
     let revision: Revision
     let identity: Identity
+    let workModel: WorkModel
     let factual: Factual
     let semanticMessages: [SemanticMessage]
 
     init(
-        factualProjection: ProvenanceFactualSessionProjectionSnapshot,
+        workModel: ProvenanceSessionWorkModel,
         semanticMessages semanticMessageRecords: [ProvenanceSemanticMessageRecord]
     ) {
+        let factualProjection = workModel.basis.factualSessionProjection
         let messages = semanticMessageRecords
             .sorted {
                 if $0.scope.rawValue != $1.scope.rawValue {
@@ -33,11 +31,12 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
             .map(SemanticMessage.init(record:))
         self.schemaVersion = 1
         self.revision = Revision(
-            factualRevision: factualProjection.revision,
+            workModelRevision: workModel.revision,
             semanticMessageCount: messages.count,
             latestSemanticMessageCreatedAt: messages.map(\.createdAt).max()
         )
         self.identity = Identity(factualProjection: factualProjection)
+        self.workModel = WorkModel(model: workModel)
         self.factual = Factual(factualProjection: factualProjection)
         self.semanticMessages = messages
     }
@@ -47,6 +46,7 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
             "schemaVersion": schemaVersion,
             "revision": revision.bridgePayload,
             "identity": identity.bridgePayload,
+            "workModel": workModel.bridgePayload,
             "factual": factual.bridgePayload,
             "semanticMessages": semanticMessages.map(\.bridgePayload)
         ]
@@ -54,22 +54,271 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
 }
 
 extension AgentSessionSmartSessionSnapshot {
-    struct Revision: Equatable, Sendable {
+    struct WorkModel: Equatable, Sendable {
+        let schemaVersion: Int
+        let revision: WorkModelRevision
+        let thread: WorkModelThread?
+        let currentTurn: WorkModelCurrentTurn?
+        let sessionPhase: SemanticField
+
+        init(model: ProvenanceSessionWorkModel) {
+            self.schemaVersion = model.schemaVersion
+            self.revision = WorkModelRevision(revision: model.revision)
+            self.thread = model.thread.map(WorkModelThread.init(thread:))
+            self.currentTurn = model.currentTurn.map(WorkModelCurrentTurn.init(currentTurn:))
+            self.sessionPhase = SemanticField(field: model.sessionPhase)
+        }
+
+        var bridgePayload: [String: Any] {
+            AgentSessionSmartSessionBridgeDictionary.compact([
+                "schemaVersion": schemaVersion,
+                "revision": revision.bridgePayload,
+                "thread": thread?.bridgePayload,
+                "currentTurn": currentTurn?.bridgePayload,
+                "sessionPhase": sessionPhase.bridgePayload
+            ])
+        }
+    }
+
+    struct WorkModelRevision: Equatable, Sendable {
+        let schemaVersion: Int
         let factualRevision: Int?
+        let semanticInferenceIDs: [String]
+        let latestSemanticInferenceCreatedAt: Date?
+        let modelRevisionKey: String
+
+        init(revision: ProvenanceSessionWorkModelRevision) {
+            self.schemaVersion = revision.schemaVersion
+            self.factualRevision = revision.factualRevision
+            self.semanticInferenceIDs = revision.semanticInferenceIDs
+            self.latestSemanticInferenceCreatedAt = revision.latestSemanticInferenceCreatedAt
+            self.modelRevisionKey = revision.modelRevisionKey
+        }
+
+        var bridgePayload: [String: Any] {
+            AgentSessionSmartSessionBridgeDictionary.compact([
+                "schemaVersion": schemaVersion,
+                "factualRevision": factualRevision,
+                "semanticInferenceIds": semanticInferenceIDs,
+                "latestSemanticInferenceCreatedAt": AgentSessionSmartSessionBridgeDictionary.isoString(
+                    latestSemanticInferenceCreatedAt
+                ),
+                "modelRevisionKey": modelRevisionKey
+            ])
+        }
+    }
+
+    struct WorkModelThread: Equatable, Sendable {
+        let identity: ProviderThread
+        let intent: SemanticField
+
+        init(thread: ProvenanceSessionWorkModelThread) {
+            self.identity = ProviderThread(identity: thread.identity)
+            self.intent = SemanticField(field: thread.intent)
+        }
+
+        var bridgePayload: [String: Any] {
+            [
+                "identity": identity.bridgePayload,
+                "intent": intent.bridgePayload
+            ]
+        }
+    }
+
+    struct WorkModelCurrentTurn: Equatable, Sendable {
+        let turnID: String
+        let threadID: String?
+        let intent: SemanticField
+        let currentActivity: SemanticField
+
+        init(currentTurn: ProvenanceSessionWorkModelCurrentTurn) {
+            self.turnID = currentTurn.turn.id
+            self.threadID = currentTurn.turn.threadID
+            self.intent = SemanticField(field: currentTurn.intent)
+            self.currentActivity = SemanticField(field: currentTurn.currentActivity)
+        }
+
+        var bridgePayload: [String: Any] {
+            AgentSessionSmartSessionBridgeDictionary.compact([
+                "turnId": turnID,
+                "threadId": threadID,
+                "intent": intent.bridgePayload,
+                "currentActivity": currentActivity.bridgePayload
+            ])
+        }
+    }
+
+    struct SemanticField: Equatable, Sendable {
+        let kind: String
+        let scope: String
+        let scopeID: String?
+        let state: String
+        let reason: String?
+        let record: SemanticRecord?
+        let summary: String?
+        let detail: String?
+
+        init(field: ProvenanceSessionWorkModelSemanticField) {
+            self.kind = field.kind
+            self.scope = field.scope.rawValue
+            self.scopeID = field.scopeID
+            self.state = field.state.rawValue
+            self.reason = field.reason
+            self.record = field.record.map(SemanticRecord.init(record:))
+            self.summary = Self.summary(kind: field.kind, record: field.record)
+            self.detail = Self.detail(kind: field.kind, record: field.record)
+        }
+
+        var bridgePayload: [String: Any] {
+            AgentSessionSmartSessionBridgeDictionary.compact([
+                "kind": kind,
+                "scope": scope,
+                "scopeId": scopeID,
+                "state": state,
+                "reason": reason,
+                "record": record?.bridgePayload,
+                "summary": summary,
+                "detail": detail
+            ])
+        }
+
+        private static func summary(
+            kind: String,
+            record: ProvenanceSessionWorkModelSemanticRecord?
+        ) -> String? {
+            guard let record else { return nil }
+            switch kind {
+            case ProvenanceCodingAgentSemanticInferenceKind.threadIntent.rawValue,
+                ProvenanceCodingAgentSemanticInferenceKind.turnIntent.rawValue:
+                return ProvenanceCodingAgentIntentPayload(semanticPayloadValue: record.payload)?.summary
+            case ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue:
+                return ProvenanceCodingAgentCurrentActivityPayload(semanticPayloadValue: record.payload)?.summary
+            case ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue:
+                return ProvenanceCodingAgentSessionPhasePayload(semanticPayloadValue: record.payload)?.phase.rawValue
+            default:
+                return nil
+            }
+        }
+
+        private static func detail(
+            kind: String,
+            record: ProvenanceSessionWorkModelSemanticRecord?
+        ) -> String? {
+            guard let record else { return nil }
+            switch kind {
+            case ProvenanceCodingAgentSemanticInferenceKind.threadIntent.rawValue,
+                ProvenanceCodingAgentSemanticInferenceKind.turnIntent.rawValue:
+                return ProvenanceCodingAgentIntentPayload(semanticPayloadValue: record.payload)?.sourceText
+            case ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue:
+                return ProvenanceCodingAgentCurrentActivityPayload(semanticPayloadValue: record.payload)?.basis
+            case ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue:
+                return ProvenanceCodingAgentSessionPhasePayload(semanticPayloadValue: record.payload)?.reason
+            default:
+                return nil
+            }
+        }
+    }
+
+    struct SemanticRecord: Equatable, Sendable {
+        let inferenceID: String
+        let schemaVersion: Int
+        let payload: ProvenanceSemanticPayloadValue
+        let supportingEvidenceRefs: [SemanticEvidenceRef]
+        let supportingFactualRevision: Int?
+        let confidence: String
+        let specificity: String
+        let producerType: String
+        let producerID: String
+        let producerVersion: String
+        let createdAt: Date
+        let status: String
+        let supersedes: [String]
+        let supersededBy: String?
+
+        init(record: ProvenanceSessionWorkModelSemanticRecord) {
+            self.inferenceID = record.inferenceID
+            self.schemaVersion = record.schemaVersion
+            self.payload = record.payload
+            self.supportingEvidenceRefs = record.supportingEvidenceRefs.map(SemanticEvidenceRef.init(ref:))
+            self.supportingFactualRevision = record.supportingFactualRevision
+            self.confidence = record.confidence.rawValue
+            self.specificity = record.specificity.rawValue
+            self.producerType = record.producerType.rawValue
+            self.producerID = record.producerID
+            self.producerVersion = record.producerVersion
+            self.createdAt = record.createdAt
+            self.status = record.status.rawValue
+            self.supersedes = record.supersedes
+            self.supersededBy = record.supersededBy
+        }
+
+        var bridgePayload: [String: Any] {
+            AgentSessionSmartSessionBridgeDictionary.compact([
+                "inferenceId": inferenceID,
+                "schemaVersion": schemaVersion,
+                "payload": AgentSessionSmartSessionBridgeDictionary.payloadValue(payload),
+                "supportingEvidenceRefs": supportingEvidenceRefs.map(\.bridgePayload),
+                "supportingFactualRevision": supportingFactualRevision,
+                "confidence": confidence,
+                "specificity": specificity,
+                "producerType": producerType,
+                "producerId": producerID,
+                "producerVersion": producerVersion,
+                "createdAt": AgentSessionSmartSessionBridgeDictionary.isoString(createdAt),
+                "status": status,
+                "supersedes": supersedes,
+                "supersededBy": supersededBy
+            ])
+        }
+    }
+
+    struct SemanticEvidenceRef: Equatable, Sendable {
+        let kind: String
+        let id: String
+        let ledgerSequence: Int?
+        let factualRevision: Int?
+
+        init(ref: ProvenanceSemanticEvidenceReference) {
+            self.kind = ref.kind
+            self.id = ref.id
+            self.ledgerSequence = ref.ledgerSequence
+            self.factualRevision = ref.factualRevision
+        }
+
+        var bridgePayload: [String: Any] {
+            AgentSessionSmartSessionBridgeDictionary.compact([
+                "kind": kind,
+                "id": id,
+                "ledgerSequence": ledgerSequence,
+                "factualRevision": factualRevision
+            ])
+        }
+    }
+
+    struct Revision: Equatable, Sendable {
+        let schemaVersion: Int
+        let factualRevision: Int?
+        let semanticInferenceIDs: [String]
+        let latestSemanticInferenceCreatedAt: Date?
+        let modelRevisionKey: String
         let semanticMessageCount: Int
         let latestSemanticMessageCreatedAt: Date?
         let key: String
 
         init(
-            factualRevision: Int?,
+            workModelRevision: ProvenanceSessionWorkModelRevision,
             semanticMessageCount: Int,
             latestSemanticMessageCreatedAt: Date?
         ) {
-            self.factualRevision = factualRevision
+            self.schemaVersion = workModelRevision.schemaVersion
+            self.factualRevision = workModelRevision.factualRevision
+            self.semanticInferenceIDs = workModelRevision.semanticInferenceIDs
+            self.latestSemanticInferenceCreatedAt = workModelRevision.latestSemanticInferenceCreatedAt
+            self.modelRevisionKey = workModelRevision.modelRevisionKey
             self.semanticMessageCount = semanticMessageCount
             self.latestSemanticMessageCreatedAt = latestSemanticMessageCreatedAt
             self.key = [
-                "factual:\(factualRevision.map(String.init) ?? "unknown")",
+                workModelRevision.modelRevisionKey,
                 "semanticCount:\(semanticMessageCount)",
                 "semanticLatest:\(AgentSessionSmartSessionBridgeDictionary.isoString(latestSemanticMessageCreatedAt) ?? "none")"
             ].joined(separator: "|")
@@ -85,6 +334,21 @@ extension AgentSessionSmartSessionSnapshot {
                 return false
             default:
                 break
+            }
+            switch (latestSemanticInferenceCreatedAt, other.latestSemanticInferenceCreatedAt) {
+            case let (left?, right?):
+                if left != right {
+                    return left > right
+                }
+            case (.some, .none):
+                return true
+            case (.none, .some):
+                return false
+            case (.none, .none):
+                break
+            }
+            if semanticInferenceIDs != other.semanticInferenceIDs {
+                return semanticInferenceIDs.count > other.semanticInferenceIDs.count
             }
             switch (latestSemanticMessageCreatedAt, other.latestSemanticMessageCreatedAt) {
             case let (left?, right?):
@@ -103,7 +367,13 @@ extension AgentSessionSmartSessionSnapshot {
 
         var bridgePayload: [String: Any] {
             AgentSessionSmartSessionBridgeDictionary.compact([
+                "schemaVersion": schemaVersion,
                 "factualRevision": factualRevision,
+                "semanticInferenceIds": semanticInferenceIDs,
+                "latestSemanticInferenceCreatedAt": AgentSessionSmartSessionBridgeDictionary.isoString(
+                    latestSemanticInferenceCreatedAt
+                ),
+                "modelRevisionKey": modelRevisionKey,
                 "semanticMessageCount": semanticMessageCount,
                 "latestSemanticMessageCreatedAt": AgentSessionSmartSessionBridgeDictionary.isoString(
                     latestSemanticMessageCreatedAt
@@ -207,7 +477,22 @@ enum AgentSessionSmartSessionBridgeDictionary {
         return formatter.string(from: date)
     }
 
-    static func isoString(_ date: Date) -> String {
-        isoString(Optional(date)) ?? ""
+    static func payloadValue(_ value: ProvenanceSemanticPayloadValue) -> Any {
+        switch value {
+        case .null:
+            return NSNull()
+        case let .bool(value):
+            return value
+        case let .int(value):
+            return value
+        case let .double(value):
+            return value
+        case let .string(value):
+            return value
+        case let .array(values):
+            return values.map { Self.payloadValue($0) }
+        case let .object(values):
+            return values.mapValues { Self.payloadValue($0) }
+        }
     }
 }

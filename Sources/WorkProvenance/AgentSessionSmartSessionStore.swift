@@ -1,7 +1,7 @@
 import Foundation
 import ProvenanceEngineContracts
 
-/// Reads PE factual and semantic presentation data for the React Smart Session surface.
+/// Reads PE SessionWorkModel data for the React Smart Session surface.
 @MainActor
 final class AgentSessionSmartSessionStore {
     private let client: any ProvenanceEngineClient
@@ -22,16 +22,18 @@ final class AgentSessionSmartSessionStore {
     func refreshedSnapshot(sessionID rawSessionID: String?) async -> AgentSessionSmartSessionReadResult {
         guard let sessionID = Self.trimmedNonEmpty(rawSessionID) else { return .missingSession }
         do {
-            let response = try await client.factualSessionProjection(
-                ProvenanceFactualSessionProjectionRequest(sessionID: sessionID, turnLimit: 12)
+            await materializeSemanticInferences(sessionID: sessionID)
+
+            let response = try await client.sessionWorkModel(
+                ProvenanceSessionWorkModelRequest(sessionID: sessionID, turnLimit: 12)
             )
-            guard response.found, let factualProjection = response.snapshot else {
+            guard response.found, let workModel = response.model else {
                 snapshotsBySessionID.removeValue(forKey: sessionID)
                 return .notFound(sessionID: sessionID, reason: response.reason)
             }
-            let semanticMessages = try await semanticMessages(for: factualProjection)
+            let semanticMessages = await presentationMessages(for: workModel)
             let nextSnapshot = AgentSessionSmartSessionSnapshot(
-                factualProjection: factualProjection,
+                workModel: workModel,
                 semanticMessages: semanticMessages
             )
             if let existing = snapshotsBySessionID[sessionID],
@@ -49,6 +51,37 @@ final class AgentSessionSmartSessionStore {
                 return .available(snapshot)
             }
             return .failed(sessionID: sessionID)
+        }
+    }
+
+    private func materializeSemanticInferences(sessionID: String) async {
+        do {
+            _ = try await client.publishCodingAgentSessionSemanticInferences(
+                ProvenanceCodingAgentSessionSemanticInferenceRequest(
+                    sessionID: sessionID,
+                    turnLimit: 12,
+                    createdAt: Date()
+                )
+            )
+        } catch {
+            StartupBreadcrumbLog.append("workProvenance.agentSessionSmartSession.semanticInferenceSkipped", fields: [
+                "session": sessionID,
+                "error": String(describing: error)
+            ])
+        }
+    }
+
+    private func presentationMessages(
+        for workModel: ProvenanceSessionWorkModel
+    ) async -> [ProvenanceSemanticMessageRecord] {
+        do {
+            return try await semanticMessages(for: workModel.basis.factualSessionProjection)
+        } catch {
+            StartupBreadcrumbLog.append("workProvenance.agentSessionSmartSession.semanticMessagesSkipped", fields: [
+                "session": workModel.identity.session.id,
+                "error": String(describing: error)
+            ])
+            return []
         }
     }
 
