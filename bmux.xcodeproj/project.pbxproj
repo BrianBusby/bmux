@@ -50,6 +50,10 @@
 		A9F20000000000000000000B /* AgentSessionBridgeError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000000B /* AgentSessionBridgeError.swift */; };
 		A9F20000000000000000000C /* AgentSessionBridgeRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000000C /* AgentSessionBridgeRequest.swift */; };
 		A9F200000000000000000003 /* AgentSessionDebugMenuButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000003 /* AgentSessionDebugMenuButtons.swift */; };
+		CE2F01040000000000000001 /* AgentSessionFactualProjectionReadResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F01040000000000000002 /* AgentSessionFactualProjectionReadResult.swift */; };
+		CE2F01030000000000000001 /* AgentSessionFactualProjectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F01030000000000000002 /* AgentSessionFactualProjectionStore.swift */; };
+		CE0E05100000000000000001 /* AgentSessionFactualProjectionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E05100000000000000002 /* AgentSessionFactualProjectionStoreTests.swift */; };
+		CE2F01010000000000000001 /* AgentSessionFactualProjectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F01010000000000000002 /* AgentSessionFactualProjectionView.swift */; };
 		A9F20000000000000000001B /* AgentSessionInputWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000001B /* AgentSessionInputWriter.swift */; };
 		A9F200000000000000000004 /* AgentSessionLaunchPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000004 /* AgentSessionLaunchPlan.swift */; };
 		A9F20000000000000000000E /* AgentSessionOutputLineBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000000E /* AgentSessionOutputLineBuffer.swift */; };
@@ -1792,6 +1796,10 @@
 		A9F10000000000000000000B /* AgentSessionBridgeError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionBridgeError.swift; sourceTree = "<group>"; };
 		A9F10000000000000000000C /* AgentSessionBridgeRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionBridgeRequest.swift; sourceTree = "<group>"; };
 		A9F100000000000000000003 /* AgentSessionDebugMenuButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionDebugMenuButtons.swift; sourceTree = "<group>"; };
+		CE2F01040000000000000002 /* AgentSessionFactualProjectionReadResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionFactualProjectionReadResult.swift; sourceTree = "<group>"; };
+		CE2F01030000000000000002 /* AgentSessionFactualProjectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionFactualProjectionStore.swift; sourceTree = "<group>"; };
+		CE0E05100000000000000002 /* AgentSessionFactualProjectionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionFactualProjectionStoreTests.swift; sourceTree = "<group>"; };
+		CE2F01010000000000000002 /* AgentSessionFactualProjectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionFactualProjectionView.swift; sourceTree = "<group>"; };
 		A9F10000000000000000001B /* AgentSessionInputWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionInputWriter.swift; sourceTree = "<group>"; };
 		A9F100000000000000000004 /* AgentSessionLaunchPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionLaunchPlan.swift; sourceTree = "<group>"; };
 		A9F10000000000000000000E /* AgentSessionOutputLineBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionOutputLineBuffer.swift; sourceTree = "<group>"; };
@@ -4238,6 +4246,7 @@
 				A9E01000000000000000000C /* AgentSessionWebRendererSession.swift */,
 				A9E01000000000000000000D /* AgentSessionWebTheme.swift */,
 				A9E010000000000000000004 /* AgentSessionPanelView.swift */,
+				CE2F01010000000000000002 /* AgentSessionFactualProjectionView.swift */,
 
 				B0A501000000000000000002 /* BrowserOmnibarAppKitBridge.swift */,
 				B0A500000000000000000002 /* BrowserOmnibarPerformanceSupport.swift */,
@@ -4974,6 +4983,7 @@
 				C0DE73840000000000000002 /* MobileHostWorkspaceTicketAuthorizationTests.swift */,
 				B8B056D80000000000000002 /* MobileHostIdentityTests.swift */,
 				5E2701030000000000000002 /* SentryEventScrubberTests.swift */,
+				CE0E05100000000000000002 /* AgentSessionFactualProjectionStoreTests.swift */,
 
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
 					CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */,
@@ -5056,6 +5066,8 @@
 				CE0E00040000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Support.swift */,
 				B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */,
 				CE0E03100000000000000002 /* WorkProvenanceSettingsLinearAuthorizationProvider.swift */,
+				CE2F01040000000000000002 /* AgentSessionFactualProjectionReadResult.swift */,
+				CE2F01030000000000000002 /* AgentSessionFactualProjectionStore.swift */,
 				CE0E01050000000000000002 /* WorkspaceDisplayCurrentStateFileWatcher.swift */,
 				CE0E01010000000000000002 /* WorkspaceDisplayCurrentStatePullRequestSnapshot.swift */,
 				CE0E01020000000000000002 /* WorkspaceDisplayCurrentStateSnapshot.swift */,
@@ -5535,6 +5547,9 @@
 				A9F20000000000000000000B /* AgentSessionBridgeError.swift in Sources */,
 				A9F20000000000000000000C /* AgentSessionBridgeRequest.swift in Sources */,
 				A9F200000000000000000003 /* AgentSessionDebugMenuButtons.swift in Sources */,
+				CE2F01040000000000000001 /* AgentSessionFactualProjectionReadResult.swift in Sources */,
+				CE2F01030000000000000001 /* AgentSessionFactualProjectionStore.swift in Sources */,
+				CE2F01010000000000000001 /* AgentSessionFactualProjectionView.swift in Sources */,
 				A9F20000000000000000001B /* AgentSessionInputWriter.swift in Sources */,
 				A9F200000000000000000004 /* AgentSessionLaunchPlan.swift in Sources */,
 				A9F20000000000000000000E /* AgentSessionOutputLineBuffer.swift in Sources */,
@@ -6727,6 +6742,7 @@
 				A5D41230A1B2C3D4E5F60718 /* AgentNotificationGateTests.swift in Sources */,
 				D3610B010000000000000001 /* AgentSessionAutoResumeSettingsTests.swift in Sources */,
 				D3610B020000000000000001 /* AgentSessionAutoResumeSwiftTests.swift in Sources */,
+				CE0E05100000000000000001 /* AgentSessionFactualProjectionStoreTests.swift in Sources */,
 				A9E030000000000000000002 /* AgentSessionSocketSurfaceTests.swift in Sources */,
 				A9E050000000000000000002 /* AgentSessionWebRendererTests.swift in Sources */,
 				725746692D9647948561044D /* AppDelegateBareSpaceShortcutRoutingTests.swift in Sources */,

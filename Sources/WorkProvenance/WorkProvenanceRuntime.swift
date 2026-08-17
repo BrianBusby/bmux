@@ -9,6 +9,7 @@ final class WorkProvenanceRuntime {
     private weak var tabManager: TabManager?
     private let observationService: WorkProvenanceObservationService?
     private let workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore?
+    private let agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore?
     private let workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
     private let codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder?
@@ -31,6 +32,7 @@ final class WorkProvenanceRuntime {
     init(
         observationService: WorkProvenanceObservationService?,
         workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore? = nil,
+        agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore? = nil,
         workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription? = nil,
         sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil,
         codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder? = nil,
@@ -39,6 +41,7 @@ final class WorkProvenanceRuntime {
     ) {
         self.observationService = observationService
         self.workspaceDisplayCurrentStateStore = workspaceDisplayCurrentStateStore
+        self.agentSessionFactualProjectionStore = agentSessionFactualProjectionStore
         self.workspaceDisplayCurrentStateSubscription = workspaceDisplayCurrentStateSubscription
         self.sessionLifecycleRecorder = sessionLifecycleRecorder
         self.codingAgentEvidenceRecorder = codingAgentEvidenceRecorder
@@ -63,6 +66,7 @@ final class WorkProvenanceRuntime {
         do {
             let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
                 try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
+            let workspaceDisplayCurrentStateStore = WorkspaceDisplayCurrentStateStore(client: client)
             NSLog("bmux provenance runtime using database: %@", location.databaseURL.path)
             return WorkProvenanceRuntime(
                 observationService: WorkProvenanceObservationService(
@@ -72,7 +76,8 @@ final class WorkProvenanceRuntime {
                         authorizationProvider: linearAuthorizationProvider
                     )
                 ),
-                workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore(client: client),
+                workspaceDisplayCurrentStateStore: workspaceDisplayCurrentStateStore,
+                agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore(client: client),
                 workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription(
                     databaseURL: location.databaseURL
                 ),
@@ -150,6 +155,21 @@ final class WorkProvenanceRuntime {
     /// Reads the latest PE-owned workspace display state cached for a workspace.
     func workspaceDisplayCurrentStateSnapshot(for workspace: Workspace) -> WorkspaceDisplayCurrentStateSnapshot? {
         workspaceDisplayCurrentStateStore?.snapshot(for: workspace)
+    }
+
+    /// Reads the PE factual session projection for the latest submitted prompt in one workspace.
+    func agentSessionFactualProjection(stableWorkspaceID: UUID) async -> AgentSessionFactualProjectionReadResult {
+        guard let workspaceDisplayCurrentStateStore,
+              let agentSessionFactualProjectionStore else {
+            return .unavailable
+        }
+        let displaySnapshot = await workspaceDisplayCurrentStateStore.refreshedSnapshot(
+            stableWorkspaceID: stableWorkspaceID
+        )
+        guard let sessionID = displaySnapshot?.lastSubmittedPromptSessionID else {
+            return .missingSession
+        }
+        return await agentSessionFactualProjectionStore.refreshedSnapshot(sessionID: sessionID)
     }
 
     /// Refreshes one workspace display projection from PE for tab/sidebar rendering.

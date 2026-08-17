@@ -36,6 +36,7 @@ private struct WorkspacePanelContentHostView: View {
         PanelContentView(
             panel: panel,
             workspaceId: workspace.id,
+            stableWorkspaceId: workspace.stableId,
             paneId: paneId,
             isFocused: isFocused,
             isSelectedInPane: isSelectedInPane,
@@ -47,6 +48,7 @@ private struct WorkspacePanelContentHostView: View {
             customSidebarTabManager: customSidebarTabManager,
             hasUnreadNotification: hasUnreadNotification,
             terminalAgentContext: WorkspaceContentView.terminalAgentContext(panel: panel, workspace: workspace),
+            workProvenanceRuntime: workspace.owningTabManager?.workProvenanceRuntime,
             onFocus: onFocus,
             onRequestPanelFocus: onRequestPanelFocus,
             onResumeAgentHibernation: onResumeAgentHibernation,
