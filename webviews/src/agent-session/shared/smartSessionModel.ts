@@ -43,6 +43,10 @@ export function initialSmartSessionState(): SmartSessionState {
   };
 }
 
+export function shouldRefreshSmartSession(hasContext: boolean, isActive: boolean): boolean {
+  return hasContext && isActive;
+}
+
 export function reduceSmartSession(state: SmartSessionState, action: SmartSessionAction): SmartSessionState {
   if (action.requestId < state.requestId) {
     return state;

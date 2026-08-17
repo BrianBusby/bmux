@@ -4,6 +4,7 @@ import {
   loadSmartSessionSnapshot,
   reduceSmartSession,
   semanticFieldForKind,
+  shouldRefreshSmartSession,
   SMART_SESSION_SEMANTIC_KINDS,
   type SmartSessionState,
 } from "../shared/smartSessionModel";
@@ -21,13 +22,15 @@ import type {
 
 const h = React.createElement;
 
-export function SmartSessionSurface({ context }: { context?: AppContext }) {
+export function SmartSessionSurface({ context, isActive }: { context?: AppContext; isActive: boolean }) {
   const [state, dispatch] = useReducer(reduceSmartSession, initialSmartSessionState());
   const requestIdRef = useRef(0);
   const copy = context?.copy;
   const hasContext = context != null;
   const stableWorkspaceId = context?.stableWorkspaceId;
   const workspaceId = context?.workspaceId;
+  const refreshIdentity = stableWorkspaceId ?? workspaceId ?? "";
+  const shouldRefresh = shouldRefreshSmartSession(hasContext, isActive);
 
   const refresh = useCallback(() => {
     const requestId = requestIdRef.current + 1;
@@ -39,10 +42,10 @@ export function SmartSessionSurface({ context }: { context?: AppContext }) {
   }, []);
 
   useEffect(() => {
-    if (hasContext) {
+    if (shouldRefresh && refreshIdentity.length > 0) {
       refresh();
     }
-  }, [hasContext, stableWorkspaceId, workspaceId, refresh]);
+  }, [shouldRefresh, refreshIdentity, refresh]);
 
   return h(
     "section",
@@ -57,7 +60,7 @@ export function SmartSessionSurface({ context }: { context?: AppContext }) {
           className: "smart-session-refresh",
           type: "button",
           onClick: refresh,
-          disabled: !hasContext || state.status === "loading",
+          disabled: !hasContext || !isActive || state.status === "loading",
         },
         copyText(copy, "smartSessionRefresh", "Refresh"),
       ),

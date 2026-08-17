@@ -18,6 +18,7 @@ import {
   reduceSmartSession,
   semanticFieldForKind,
   semanticMessageForKind,
+  shouldRefreshSmartSession,
   SMART_SESSION_SEMANTIC_KINDS,
 } from "./smartSessionModel";
 import type { AppContext, ProviderInfo, SmartSessionSnapshot } from "./types";
@@ -1016,6 +1017,13 @@ test("bridge request errors use copy from session state", () => {
   });
 
   expect(messageForError(new Error("Native bridge request failed."), state)).toBe("Localized bridge failure.");
+});
+
+test("smart session refresh waits until the Session surface is active", () => {
+  expect(shouldRefreshSmartSession(false, false)).toBe(false);
+  expect(shouldRefreshSmartSession(false, true)).toBe(false);
+  expect(shouldRefreshSmartSession(true, false)).toBe(false);
+  expect(shouldRefreshSmartSession(true, true)).toBe(true);
 });
 
 test("send failures for the active running session keep stop available", () => {
