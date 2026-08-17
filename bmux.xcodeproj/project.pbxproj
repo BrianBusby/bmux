@@ -67,6 +67,7 @@
 		CE2F02040000000000000001 /* AgentSessionSmartSessionEvidenceSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02040000000000000002 /* AgentSessionSmartSessionEvidenceSnapshot.swift */; };
 		CE2F02050000000000000001 /* AgentSessionSmartSessionFactualSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02050000000000000002 /* AgentSessionSmartSessionFactualSnapshot.swift */; };
 		CE2F02010000000000000001 /* AgentSessionSmartSessionReadResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02010000000000000002 /* AgentSessionSmartSessionReadResult.swift */; };
+		CE2F02060000000000000001 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02060000000000000002 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift */; };
 		CE2F02020000000000000001 /* AgentSessionSmartSessionSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02020000000000000002 /* AgentSessionSmartSessionSnapshot.swift */; };
 		CE2F02030000000000000001 /* AgentSessionSmartSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02030000000000000002 /* AgentSessionSmartSessionStore.swift */; };
 		A9E030000000000000000002 /* AgentSessionSocketSurfaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E030000000000000000001 /* AgentSessionSocketSurfaceTests.swift */; };
@@ -1819,6 +1820,7 @@
 		CE2F02040000000000000002 /* AgentSessionSmartSessionEvidenceSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionEvidenceSnapshot.swift; sourceTree = "<group>"; };
 		CE2F02050000000000000002 /* AgentSessionSmartSessionFactualSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionFactualSnapshot.swift; sourceTree = "<group>"; };
 		CE2F02010000000000000002 /* AgentSessionSmartSessionReadResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionReadResult.swift; sourceTree = "<group>"; };
+		CE2F02060000000000000002 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AgentSessionSmartSessionSnapshot+SemanticPresentation.swift"; sourceTree = "<group>"; };
 		CE2F02020000000000000002 /* AgentSessionSmartSessionSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionSnapshot.swift; sourceTree = "<group>"; };
 		CE2F02030000000000000002 /* AgentSessionSmartSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionStore.swift; sourceTree = "<group>"; };
 		A9E030000000000000000001 /* AgentSessionSocketSurfaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSocketSurfaceTests.swift; sourceTree = "<group>"; };
@@ -5084,6 +5086,7 @@
 				CE2F02010000000000000002 /* AgentSessionSmartSessionReadResult.swift */,
 				CE2F02040000000000000002 /* AgentSessionSmartSessionEvidenceSnapshot.swift */,
 				CE2F02050000000000000002 /* AgentSessionSmartSessionFactualSnapshot.swift */,
+				CE2F02060000000000000002 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift */,
 				CE2F02020000000000000002 /* AgentSessionSmartSessionSnapshot.swift */,
 				CE2F02030000000000000002 /* AgentSessionSmartSessionStore.swift */,
 				CE0E01050000000000000002 /* WorkspaceDisplayCurrentStateFileWatcher.swift */,
@@ -5581,6 +5584,7 @@
 				CE2F02040000000000000001 /* AgentSessionSmartSessionEvidenceSnapshot.swift in Sources */,
 				CE2F02050000000000000001 /* AgentSessionSmartSessionFactualSnapshot.swift in Sources */,
 				CE2F02010000000000000001 /* AgentSessionSmartSessionReadResult.swift in Sources */,
+				CE2F02060000000000000001 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift in Sources */,
 				CE2F02020000000000000001 /* AgentSessionSmartSessionSnapshot.swift in Sources */,
 				CE2F02030000000000000001 /* AgentSessionSmartSessionStore.swift in Sources */,
 				A9F200000000000000000011 /* AgentSessionStartedSession.swift in Sources */,

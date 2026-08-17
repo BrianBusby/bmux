@@ -165,25 +165,17 @@ struct AgentSessionFactualProjectionStoreTests {
         )
         let smartSnapshot = AgentSessionSmartSessionSnapshot(workModel: model, semanticMessages: [])
         let phaseRecord = try #require(smartSnapshot.workModel.sessionPhase.record)
-        let phasePayload = try #require(ProvenanceCodingAgentSessionPhasePayload(
-            semanticPayloadValue: phaseRecord.payload
-        ))
+        let phasePayload = try #require(ProvenanceCodingAgentSessionPhasePayload(semanticPayloadValue: phaseRecord.payload))
         let currentActivity = try #require(smartSnapshot.workModel.currentTurn?.currentActivity)
         let activityRecord = try #require(currentActivity.record)
-        let activityPayload = try #require(ProvenanceCodingAgentCurrentActivityPayload(
-            semanticPayloadValue: activityRecord.payload
-        ))
+        let activityPayload = try #require(ProvenanceCodingAgentCurrentActivityPayload(semanticPayloadValue: activityRecord.payload))
+        let phaseLabel = String(localized: "agentSession.web.smartSession.phase.waiting", defaultValue: "Waiting")
+        let basisDetail = String(localized: "agentSession.web.smartSession.activityBasis.fileChangeAttribution", defaultValue: "Based on file changes")
 
-        #expect(smartSnapshot.workModel.sessionPhase.summary == String(
-            localized: "agentSession.web.smartSession.phase.waiting",
-            defaultValue: "Waiting"
-        ))
+        #expect(smartSnapshot.workModel.sessionPhase.summary == phaseLabel)
         #expect(smartSnapshot.workModel.sessionPhase.summary != "waiting_blocked")
         #expect(phasePayload.phase == .waitingBlocked)
-        #expect(currentActivity.detail == String(
-            localized: "agentSession.web.smartSession.activityBasis.fileChangeAttribution",
-            defaultValue: "Based on file changes"
-        ))
+        #expect(currentActivity.detail == basisDetail)
         #expect(currentActivity.detail != "file_change_attribution")
         #expect(activityPayload.basis == "file_change_attribution")
     }
