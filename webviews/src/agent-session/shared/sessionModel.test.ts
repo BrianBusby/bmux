@@ -13,7 +13,13 @@ import {
   statusLabel,
   type Action,
 } from "./sessionModel";
-import type { AppContext, ProviderInfo } from "./types";
+import {
+  initialSmartSessionState,
+  reduceSmartSession,
+  semanticMessageForKind,
+  SMART_SESSION_SEMANTIC_KINDS,
+} from "./smartSessionModel";
+import type { AppContext, ProviderInfo, SmartSessionSnapshot } from "./types";
 
 const theme = {
   isDark: true,
@@ -108,6 +114,33 @@ const context: AppContext = {
     providerStarted: "Provider started",
     providerExitedFormat: "Provider exited %d",
     requestFailed: "Native bridge request failed.",
+    terminalView: "Terminal",
+    sessionView: "Session",
+    smartSessionRefresh: "Refresh",
+    smartSessionLoading: "Loading session",
+    smartSessionNoSession: "No linked session",
+    smartSessionUnavailable: "Session data unavailable",
+    smartSessionNotFound: "Session not found",
+    smartSessionFailed: "Session refresh failed",
+    smartSessionUnknown: "Unknown",
+    smartSessionIdentity: "Identity",
+    smartSessionPurpose: "Purpose",
+    smartSessionCurrentTurn: "Current turn",
+    smartSessionCurrentActivity: "Current activity",
+    smartSessionPhase: "Phase",
+    smartSessionPrompt: "Prompt",
+    smartSessionPlan: "Plan",
+    smartSessionEvidence: "Evidence",
+    smartSessionCommands: "Commands",
+    smartSessionFiles: "Files",
+    smartSessionReasoning: "Reasoning",
+    smartSessionPriorTurns: "Prior turns",
+    smartSessionNoPlan: "No plan evidence",
+    smartSessionNoEvidence: "No evidence yet",
+    smartSessionSessionID: "Session ID",
+    smartSessionRevision: "Revision",
+    smartSessionThread: "Thread",
+    smartSessionTurn: "Turn",
   },
   theme,
 };
@@ -151,6 +184,7 @@ test("provider started event records running session", () => {
   expect(state.runningSessionId).toBe("session-1");
   expect(state.log.at(-1)?.text).toBe("Provider started");
 });
+
 
 test("rate limit row event updates context", () => {
   const initial = reduceSession(initialState("react"), { type: "context", context });
@@ -1159,3 +1193,189 @@ test("client ids do not require crypto.randomUUID", () => {
     }
   }
 });
+
+test("smart session reducer ignores an older refresh response", () => {
+  const loading = reduceSmartSession(initialSmartSessionState(), { type: "refreshStarted", requestId: 2 });
+  const state = reduceSmartSession(loading, {
+    type: "refreshSucceeded",
+    requestId: 1,
+    result: {
+      schemaVersion: 1,
+      status: "available",
+      snapshot: smartSessionSnapshot({ factualRevision: 1 }),
+    },
+  });
+
+  expect(state.status).toBe("loading");
+  expect(state.snapshot).toBeUndefined();
+});
+
+test("smart session reducer keeps newer factual revisions", () => {
+  const current = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded",
+    requestId: 1,
+    result: {
+      schemaVersion: 1,
+      status: "available",
+      snapshot: smartSessionSnapshot({ factualRevision: 4 }),
+    },
+  });
+  const state = reduceSmartSession(current, {
+    type: "refreshSucceeded",
+    requestId: 2,
+    result: {
+      schemaVersion: 1,
+      status: "available",
+      snapshot: smartSessionSnapshot({ factualRevision: 3 }),
+    },
+  });
+
+  expect(state.snapshot?.revision.factualRevision).toBe(4);
+});
+
+test("smart session transfers semantic messages by exact PE kind and scope", () => {
+  const model = smartSessionSnapshot({
+    factualRevision: 2,
+    semanticMessages: [
+      semanticMessage({
+        kind: SMART_SESSION_SEMANTIC_KINDS.threadIntent,
+        scope: "thread",
+        scopeId: "thread-1",
+        concisePhrase: "Build Smart Session bridge",
+      }),
+      semanticMessage({
+        kind: SMART_SESSION_SEMANTIC_KINDS.sessionPhase,
+        scope: "session",
+        scopeId: "session-1",
+        concisePhrase: "implementation",
+      }),
+    ],
+  });
+
+  expect(
+    semanticMessageForKind(model, {
+      kind: SMART_SESSION_SEMANTIC_KINDS.threadIntent,
+      scope: "thread",
+      scopeId: "thread-1",
+    })?.concisePhrase,
+  ).toBe("Build Smart Session bridge");
+  expect(
+    semanticMessageForKind(model, {
+      kind: SMART_SESSION_SEMANTIC_KINDS.threadIntent,
+      scope: "session",
+      scopeId: "session-1",
+    }),
+  ).toBeUndefined();
+});
+
+test("smart session leaves unknown semantics absent instead of inferring from prompt text", () => {
+  const model = smartSessionSnapshot({
+    factualRevision: 1,
+    prompt: "Blocked on milestone 2 and 75% complete",
+    semanticMessages: [],
+  });
+
+  expect(
+    semanticMessageForKind(model, {
+      kind: SMART_SESSION_SEMANTIC_KINDS.currentActivity,
+      scope: "turn",
+      scopeId: "turn-1",
+    }),
+  ).toBeUndefined();
+  expect(model.semanticMessages.map((message) => message.concisePhrase).join(" ")).not.toContain("Blocked");
+  expect(model.semanticMessages.map((message) => message.concisePhrase).join(" ")).not.toContain("75%");
+});
+
+function smartSessionSnapshot({
+  factualRevision,
+  prompt = "Add a Smart Session surface",
+  semanticMessages = [],
+}: {
+  factualRevision: number;
+  prompt?: string;
+  semanticMessages?: SmartSessionSnapshot["semanticMessages"];
+}): SmartSessionSnapshot {
+  return {
+    schemaVersion: 1,
+    revision: {
+      factualRevision,
+      key: `factual:${factualRevision}`,
+      latestSemanticMessageCreatedAt: semanticMessages[0]?.createdAt,
+      semanticMessageCount: semanticMessages.length,
+    },
+    identity: {
+      agentKind: "codex",
+      cwd: "/repo",
+      providerThreads: [
+        {
+          confidence: "high",
+          firstObservedAt: "2026-08-17T07:00:00.000Z",
+          provider: "codex",
+          providerThreadId: "provider-thread-1",
+          source: "observed",
+          threadId: "thread-1",
+          updatedAt: "2026-08-17T07:01:00.000Z",
+        },
+      ],
+      sessionId: "session-1",
+      startedAt: "2026-08-17T07:00:00.000Z",
+      status: "active",
+      updatedAt: "2026-08-17T07:01:00.000Z",
+      workspaceId: "workspace-1",
+    },
+    factual: {
+      latestTurn: {
+        completedCommands: [],
+        fileChangeAttributions: [],
+        provider: "codex",
+        providerTurnId: "provider-turn-1",
+        prompt: {
+          confidence: "high",
+          promptId: "prompt-1",
+          source: "observed",
+          submittedAt: "2026-08-17T07:00:00.000Z",
+          text: prompt,
+        },
+        status: "completed",
+        threadId: "thread-1",
+        turnId: "turn-1",
+        updatedAt: "2026-08-17T07:01:00.000Z",
+        visibleReasoningSummaries: [],
+      },
+      priorTurns: [],
+      turnCount: 1,
+    },
+    semanticMessages,
+  };
+}
+
+function semanticMessage({
+  kind,
+  scope,
+  scopeId,
+  concisePhrase,
+}: {
+  kind: string;
+  scope: "session" | "thread" | "turn";
+  scopeId: string;
+  concisePhrase: string;
+}): SmartSessionSnapshot["semanticMessages"][number] {
+  return {
+    concisePhrase,
+    confidence: "high",
+    createdAt: "2026-08-17T07:02:00.000Z",
+    expandedMeaning: concisePhrase,
+    messageId: `message-${kind}`,
+    presentationPolicyId: "policy",
+    presentationPolicyVersion: "v1",
+    presentationProducerId: "producer",
+    presentationProducerVersion: "v1",
+    scope,
+    scopeId,
+    semanticInferenceId: `inference-${kind}`,
+    semanticInferenceKind: kind,
+    specificity: "scoped",
+    status: "active",
+    supportingFactualRevision: 1,
+  };
+}

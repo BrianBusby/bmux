@@ -64,6 +64,9 @@
 		A9E020000000000000000001 /* AgentSessionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000001 /* AgentSessionProvider.swift */; };
 		A9E02000000000000000000F /* AgentSessionRendererKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000F /* AgentSessionRendererKind.swift */; };
 		A9F200000000000000000010 /* AgentSessionRunningSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000010 /* AgentSessionRunningSession.swift */; };
+		CE2F02010000000000000001 /* AgentSessionSmartSessionReadResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02010000000000000002 /* AgentSessionSmartSessionReadResult.swift */; };
+		CE2F02020000000000000001 /* AgentSessionSmartSessionSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02020000000000000002 /* AgentSessionSmartSessionSnapshot.swift */; };
+		CE2F02030000000000000001 /* AgentSessionSmartSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02030000000000000002 /* AgentSessionSmartSessionStore.swift */; };
 		A9E030000000000000000002 /* AgentSessionSocketSurfaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E030000000000000000001 /* AgentSessionSocketSurfaceTests.swift */; };
 		A9F200000000000000000011 /* AgentSessionStartedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000011 /* AgentSessionStartedSession.swift */; };
 		A9E02000000000000000000A /* AgentSessionStreamAccumulators.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000A /* AgentSessionStreamAccumulators.swift */; };
@@ -1810,6 +1813,9 @@
 		A9E010000000000000000001 /* AgentSessionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionProvider.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000F /* AgentSessionRendererKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionRendererKind.swift; sourceTree = "<group>"; };
 		A9F100000000000000000010 /* AgentSessionRunningSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionRunningSession.swift; sourceTree = "<group>"; };
+		CE2F02010000000000000002 /* AgentSessionSmartSessionReadResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionReadResult.swift; sourceTree = "<group>"; };
+		CE2F02020000000000000002 /* AgentSessionSmartSessionSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionSnapshot.swift; sourceTree = "<group>"; };
+		CE2F02030000000000000002 /* AgentSessionSmartSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionStore.swift; sourceTree = "<group>"; };
 		A9E030000000000000000001 /* AgentSessionSocketSurfaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSocketSurfaceTests.swift; sourceTree = "<group>"; };
 		A9F100000000000000000011 /* AgentSessionStartedSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionStartedSession.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000A /* AgentSessionStreamAccumulators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionStreamAccumulators.swift; sourceTree = "<group>"; };
@@ -5068,6 +5074,9 @@
 				CE0E03100000000000000002 /* WorkProvenanceSettingsLinearAuthorizationProvider.swift */,
 				CE2F01040000000000000002 /* AgentSessionFactualProjectionReadResult.swift */,
 				CE2F01030000000000000002 /* AgentSessionFactualProjectionStore.swift */,
+				CE2F02010000000000000002 /* AgentSessionSmartSessionReadResult.swift */,
+				CE2F02020000000000000002 /* AgentSessionSmartSessionSnapshot.swift */,
+				CE2F02030000000000000002 /* AgentSessionSmartSessionStore.swift */,
 				CE0E01050000000000000002 /* WorkspaceDisplayCurrentStateFileWatcher.swift */,
 				CE0E01010000000000000002 /* WorkspaceDisplayCurrentStatePullRequestSnapshot.swift */,
 				CE0E01020000000000000002 /* WorkspaceDisplayCurrentStateSnapshot.swift */,
@@ -5560,6 +5569,9 @@
 				A9E020000000000000000001 /* AgentSessionProvider.swift in Sources */,
 				A9E02000000000000000000F /* AgentSessionRendererKind.swift in Sources */,
 				A9F200000000000000000010 /* AgentSessionRunningSession.swift in Sources */,
+				CE2F02010000000000000001 /* AgentSessionSmartSessionReadResult.swift in Sources */,
+				CE2F02020000000000000001 /* AgentSessionSmartSessionSnapshot.swift in Sources */,
+				CE2F02030000000000000001 /* AgentSessionSmartSessionStore.swift in Sources */,
 				A9F200000000000000000011 /* AgentSessionStartedSession.swift in Sources */,
 				A9E02000000000000000000A /* AgentSessionStreamAccumulators.swift in Sources */,
 				A9F200000000000000000012 /* AgentSessionWebHostGeometryState.swift in Sources */,

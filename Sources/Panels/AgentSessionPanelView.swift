@@ -13,23 +13,18 @@ struct AgentSessionPanelView: View {
     var body: some View {
         Group {
             if isVisibleInUI {
-                AgentSessionFactualProjectionModeHost(
-                    showsSwitcher: true,
-                    stableWorkspaceID: stableWorkspaceId,
+                AgentSessionWebRenderer(
+                    panel: panel,
+                    stableWorkspaceId: stableWorkspaceId,
                     workProvenanceRuntime: workProvenanceRuntime,
-                    backgroundColor: appearance.contentBackgroundColor
-                ) {
-                    AgentSessionWebRenderer(
-                        panel: panel,
-                        isFocused: isFocused,
-                        backgroundColor: appearance.contentBackgroundColor,
-                        theme: AgentSessionWebTheme.resolve(appearance: appearance),
-                        onRequestPanelFocus: onRequestPanelFocus
-                    )
-                    .id(panel.id)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .zIndex(Double(portalPriority))
-                }
+                    isFocused: isFocused,
+                    backgroundColor: appearance.contentBackgroundColor,
+                    theme: AgentSessionWebTheme.resolve(appearance: appearance),
+                    onRequestPanelFocus: onRequestPanelFocus
+                )
+                .id(panel.id)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .zIndex(Double(portalPriority))
             } else {
                 Color.clear
             }

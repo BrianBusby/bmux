@@ -5,6 +5,8 @@ import WebKit
 
 struct AgentSessionWebRenderer: NSViewRepresentable {
     let panel: AgentSessionPanel
+    let stableWorkspaceId: UUID
+    let workProvenanceRuntime: WorkProvenanceRuntime?
     let isFocused: Bool
     let backgroundColor: NSColor
     let theme: AgentSessionWebTheme
@@ -14,6 +16,8 @@ struct AgentSessionWebRenderer: NSViewRepresentable {
         panel.rendererSession.coordinator(
             panelId: panel.id,
             workspaceId: panel.workspaceId,
+            stableWorkspaceId: stableWorkspaceId,
+            workProvenanceRuntime: workProvenanceRuntime,
             rendererKind: panel.rendererKind,
             initialProviderID: panel.currentProviderID,
             workingDirectory: panel.workingDirectory,
@@ -34,6 +38,8 @@ struct AgentSessionWebRenderer: NSViewRepresentable {
         context.coordinator.bind(
             panelId: panel.id,
             workspaceId: panel.workspaceId,
+            stableWorkspaceId: stableWorkspaceId,
+            workProvenanceRuntime: workProvenanceRuntime,
             rendererKind: panel.rendererKind,
             initialProviderID: panel.currentProviderID,
             workingDirectory: panel.workingDirectory,
