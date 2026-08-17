@@ -10,7 +10,10 @@ extension AgentSessionSmartSessionSnapshot.SemanticField {
         switch kind {
         case ProvenanceCodingAgentSemanticInferenceKind.threadIntent.rawValue,
             ProvenanceCodingAgentSemanticInferenceKind.turnIntent.rawValue:
-            return ProvenanceCodingAgentIntentPayload(semanticPayloadValue: record.payload)?.summary
+            guard let payload = ProvenanceCodingAgentIntentPayload(semanticPayloadValue: record.payload) else {
+                return nil
+            }
+            return localizedIntentSummary(payload)
         case ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue:
             guard let payload = ProvenanceCodingAgentCurrentActivityPayload(semanticPayloadValue: record.payload) else {
                 return nil
@@ -41,7 +44,10 @@ extension AgentSessionSmartSessionSnapshot.SemanticField {
             }
             return localizedActivityBasisDetail(payload.basis)
         case ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue:
-            return ProvenanceCodingAgentSessionPhasePayload(semanticPayloadValue: record.payload)?.reason
+            guard let payload = ProvenanceCodingAgentSessionPhasePayload(semanticPayloadValue: record.payload) else {
+                return nil
+            }
+            return localizedPhaseDetail(payload)
         default:
             return nil
         }
@@ -68,6 +74,13 @@ extension AgentSessionSmartSessionSnapshot.SemanticField {
         case .unknown:
             return String(localized: "agentSession.web.smartSession.unknown", defaultValue: "Unknown")
         }
+    }
+
+    private static func localizedIntentSummary(_ payload: ProvenanceCodingAgentIntentPayload) -> String? {
+        if payload.unknownReason != nil && payload.summary.hasPrefix("Unknown ") {
+            return nil
+        }
+        return payload.summary
     }
 
     private static func localizedActivityBasisDetail(_ basis: String) -> String {
@@ -120,7 +133,12 @@ extension AgentSessionSmartSessionSnapshot.SemanticField {
         }
     }
 
-    private static func localizedActivitySummary(_ payload: ProvenanceCodingAgentCurrentActivityPayload) -> String {
+    private static func localizedActivitySummary(_ payload: ProvenanceCodingAgentCurrentActivityPayload) -> String? {
+        if payload.activityKind == .unknown,
+           payload.unknownReason != nil,
+           payload.summary == "Unknown current activity" {
+            return nil
+        }
         switch (payload.basis, payload.activityKind, payload.summary) {
         case let ("completed_command", .validation, summary) where summary.hasPrefix("Validating with "):
             return String(
@@ -140,5 +158,43 @@ extension AgentSessionSmartSessionSnapshot.SemanticField {
         default:
             return payload.summary
         }
+    }
+
+    private static func localizedPhaseDetail(_ payload: ProvenanceCodingAgentSessionPhasePayload) -> String {
+        if payload.phase == .waitingBlocked && payload.reason == "Latest turn lifecycle is blocked." {
+            return String(
+                localized: "agentSession.web.smartSession.phaseDetail.blockedLifecycle",
+                defaultValue: "Latest turn lifecycle is blocked"
+            )
+        }
+        if payload.phase == .unknown {
+            switch payload.signals.first {
+            case "missing_turn":
+                return localizedActivityBasisDetail("missing_turn")
+            case "insufficient_turn_evidence":
+                return localizedActivityBasisDetail("insufficient_turn_evidence")
+            default:
+                return String(localized: "agentSession.web.smartSession.unknown", defaultValue: "Unknown")
+            }
+        }
+        if payload.reason.hasPrefix("Validating with ") {
+            return String(
+                localized: "agentSession.web.smartSession.activitySummary.validatingCurrentChanges",
+                defaultValue: "Validating current changes"
+            )
+        }
+        if payload.reason.hasPrefix("Inspecting with ") {
+            return String(
+                localized: "agentSession.web.smartSession.activitySummary.inspectingWorkspaceEvidence",
+                defaultValue: "Inspecting workspace evidence"
+            )
+        }
+        if payload.reason.hasPrefix("Investigating failed command: ") {
+            return String(
+                localized: "agentSession.web.smartSession.activitySummary.investigatingFailedCommand",
+                defaultValue: "Investigating failed command"
+            )
+        }
+        return payload.reason
     }
 }

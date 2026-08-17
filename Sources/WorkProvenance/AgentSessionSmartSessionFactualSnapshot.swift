@@ -15,7 +15,7 @@ extension AgentSessionSmartSessionSnapshot {
 
         var bridgePayload: [String: Any] {
             AgentSessionSmartSessionBridgeDictionary.compact([
-                "latestTurn": latestTurn?.bridgePayload,
+                "latestTurn": AgentSessionSmartSessionBridgeDictionary.optional(latestTurn?.bridgePayload),
                 "priorTurns": priorTurns.map(\.bridgePayload),
                 "turnCount": turnCount
             ])
@@ -59,16 +59,20 @@ extension AgentSessionSmartSessionSnapshot {
         var bridgePayload: [String: Any] {
             AgentSessionSmartSessionBridgeDictionary.compact([
                 "turnId": turnID,
-                "threadId": threadID,
+                "threadId": AgentSessionSmartSessionBridgeDictionary.optional(threadID),
                 "provider": provider,
                 "providerTurnId": providerTurnID,
                 "status": status,
-                "model": model,
-                "startedAt": AgentSessionSmartSessionBridgeDictionary.isoString(startedAt),
-                "completedAt": AgentSessionSmartSessionBridgeDictionary.isoString(completedAt),
+                "model": AgentSessionSmartSessionBridgeDictionary.optional(model),
+                "startedAt": AgentSessionSmartSessionBridgeDictionary.optional(
+                    AgentSessionSmartSessionBridgeDictionary.isoString(startedAt)
+                ),
+                "completedAt": AgentSessionSmartSessionBridgeDictionary.optional(
+                    AgentSessionSmartSessionBridgeDictionary.isoString(completedAt)
+                ),
                 "updatedAt": AgentSessionSmartSessionBridgeDictionary.isoString(updatedAt),
-                "prompt": prompt?.bridgePayload,
-                "plan": plan?.bridgePayload,
+                "prompt": AgentSessionSmartSessionBridgeDictionary.optional(prompt?.bridgePayload),
+                "plan": AgentSessionSmartSessionBridgeDictionary.optional(plan?.bridgePayload),
                 "completedCommands": completedCommands.map(\.bridgePayload),
                 "visibleReasoningSummaries": visibleReasoningSummaries.map(\.bridgePayload),
                 "fileChangeAttributions": fileChangeAttributions.map(\.bridgePayload)
@@ -100,12 +104,16 @@ extension AgentSessionSmartSessionSnapshot {
         var bridgePayload: [String: Any] {
             AgentSessionSmartSessionBridgeDictionary.compact([
                 "turnId": turnID,
-                "threadId": threadID,
+                "threadId": AgentSessionSmartSessionBridgeDictionary.optional(threadID),
                 "provider": provider,
                 "providerTurnId": providerTurnID,
                 "status": status,
-                "startedAt": AgentSessionSmartSessionBridgeDictionary.isoString(startedAt),
-                "completedAt": AgentSessionSmartSessionBridgeDictionary.isoString(completedAt),
+                "startedAt": AgentSessionSmartSessionBridgeDictionary.optional(
+                    AgentSessionSmartSessionBridgeDictionary.isoString(startedAt)
+                ),
+                "completedAt": AgentSessionSmartSessionBridgeDictionary.optional(
+                    AgentSessionSmartSessionBridgeDictionary.isoString(completedAt)
+                ),
                 "updatedAt": AgentSessionSmartSessionBridgeDictionary.isoString(updatedAt)
             ])
         }
@@ -157,7 +165,7 @@ extension AgentSessionSmartSessionSnapshot {
         var bridgePayload: [String: Any] {
             AgentSessionSmartSessionBridgeDictionary.compact([
                 "planId": planID,
-                "explanation": explanation,
+                "explanation": AgentSessionSmartSessionBridgeDictionary.optional(explanation),
                 "observedAt": AgentSessionSmartSessionBridgeDictionary.isoString(observedAt),
                 "source": source,
                 "confidence": confidence,

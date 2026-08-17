@@ -6,7 +6,8 @@ import ProvenanceEngineContracts
 final class AgentSessionSmartSessionStore {
     private let client: any ProvenanceEngineClient
     private var snapshotsBySessionID: [String: AgentSessionSmartSessionSnapshot] = [:]
-    private var refreshTasksBySessionID: [String: Task<AgentSessionSmartSessionReadResult, Never>] = [:]
+    private var refreshTasksBySessionID: [String: RefreshTaskEntry] = [:]
+    private static let semanticReconciliationAttemptLimit = 3
 
     init(client: any ProvenanceEngineClient) {
         self.client = client
@@ -22,39 +23,53 @@ final class AgentSessionSmartSessionStore {
 
     func refreshedSnapshot(sessionID rawSessionID: String?) async -> AgentSessionSmartSessionReadResult {
         guard let sessionID = Self.trimmedNonEmpty(rawSessionID) else { return .missingSession }
-        if let task = refreshTasksBySessionID[sessionID] {
-            return await task.value
+        if let entry = refreshTasksBySessionID[sessionID] {
+            return await entry.task.value
         }
+        let requestID = UUID()
         let task = Task { @MainActor in
             await self.loadSnapshot(sessionID: sessionID)
         }
-        refreshTasksBySessionID[sessionID] = task
+        refreshTasksBySessionID[sessionID] = RefreshTaskEntry(id: requestID, task: task)
         let result = await task.value
-        refreshTasksBySessionID.removeValue(forKey: sessionID)
+        if refreshTasksBySessionID[sessionID]?.id == requestID {
+            refreshTasksBySessionID.removeValue(forKey: sessionID)
+        }
         return result
     }
 
     private func loadSnapshot(sessionID: String) async -> AgentSessionSmartSessionReadResult {
         do {
-            let materialization = await materializeSemanticInferences(sessionID: sessionID)
-
-            var response = try await client.sessionWorkModel(
-                ProvenanceSessionWorkModelRequest(sessionID: sessionID, turnLimit: 12)
-            )
-            guard response.found, var workModel = response.model else {
-                snapshotsBySessionID.removeValue(forKey: sessionID)
-                return .notFound(sessionID: sessionID, reason: response.reason)
-            }
-            if Self.needsSemanticReconciliation(materialization: materialization, workModel: workModel) {
-                _ = await materializeSemanticInferences(sessionID: sessionID)
-                response = try await client.sessionWorkModel(
+            var notFoundReason: String?
+            var workModel: ProvenanceSessionWorkModel?
+            for attempt in 1...Self.semanticReconciliationAttemptLimit {
+                let materialization = await materializeSemanticInferences(sessionID: sessionID)
+                let response = try await client.sessionWorkModel(
                     ProvenanceSessionWorkModelRequest(sessionID: sessionID, turnLimit: 12)
                 )
-                guard response.found, let retryWorkModel = response.model else {
-                    snapshotsBySessionID.removeValue(forKey: sessionID)
-                    return .notFound(sessionID: sessionID, reason: response.reason)
+                guard response.found, let responseModel = response.model else {
+                    notFoundReason = response.reason
+                    workModel = nil
+                    break
                 }
-                workModel = retryWorkModel
+                workModel = responseModel
+                guard Self.needsSemanticReconciliation(materialization: materialization, workModel: responseModel) else {
+                    break
+                }
+                if attempt == Self.semanticReconciliationAttemptLimit {
+                    StartupBreadcrumbLog.append(
+                        "workProvenance.agentSessionSmartSession.semanticReconciliationLimitReached",
+                        fields: [
+                            "session": sessionID,
+                            "materializedFactualRevision": materialization?.factualRevision.map(String.init) ?? "none",
+                            "modelFactualRevision": responseModel.revision.factualRevision.map(String.init) ?? "none"
+                        ]
+                    )
+                }
+            }
+            guard let workModel else {
+                snapshotsBySessionID.removeValue(forKey: sessionID)
+                return .notFound(sessionID: sessionID, reason: notFoundReason)
             }
             let semanticMessages = await presentationMessages(for: workModel)
             let nextSnapshot = AgentSessionSmartSessionSnapshot(
@@ -181,5 +196,10 @@ final class AgentSessionSmartSessionStore {
     private struct SemanticMessageSubject: Hashable {
         let scope: ProvenanceSemanticInferenceScope
         let scopeID: String
+    }
+
+    private struct RefreshTaskEntry {
+        let id: UUID
+        let task: Task<AgentSessionSmartSessionReadResult, Never>
     }
 }

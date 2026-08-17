@@ -9135,6 +9135,23 @@
         }
       }
     },
+    "agentSession.web.smartSession.phaseDetail.blockedLifecycle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latest turn lifecycle is blocked"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最新のターンがブロック状態です"
+          }
+        }
+      }
+    },
     "agentSession.web.smartSession.phase": {
       "extractionState": "manual",
       "localizations": {
