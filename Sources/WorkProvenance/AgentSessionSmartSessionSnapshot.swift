@@ -207,7 +207,4 @@ enum AgentSessionSmartSessionBridgeDictionary {
         return formatter.string(from: date)
     }
 
-    static func isoString(_ date: Date) -> String {
-        isoString(Optional(date)) ?? ""
-    }
 }
