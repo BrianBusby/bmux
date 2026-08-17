@@ -5126,6 +5126,9 @@ final class Workspace: Identifiable, ObservableObject {
               let rows = renderedTerminalRowsForActiveWork(panelId: panelId) else {
             return false
         }
+        if panelShellActivityStates[panelId] == .promptIdle {
+            return false
+        }
         if interruptedAgentWorkPanelIds.contains(panelId) {
             return false
         }
