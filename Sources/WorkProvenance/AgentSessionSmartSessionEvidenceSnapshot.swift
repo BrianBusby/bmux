@@ -31,11 +31,13 @@ extension AgentSessionSmartSessionSnapshot {
             AgentSessionSmartSessionBridgeDictionary.compact([
                 "commandId": commandID,
                 "command": command,
-                "cwd": cwd,
+                "cwd": AgentSessionSmartSessionBridgeDictionary.optional(cwd),
                 "status": status,
-                "exitCode": exitCode,
-                "outputSummary": outputSummary,
-                "startedAt": AgentSessionSmartSessionBridgeDictionary.isoString(startedAt),
+                "exitCode": AgentSessionSmartSessionBridgeDictionary.optional(exitCode),
+                "outputSummary": AgentSessionSmartSessionBridgeDictionary.optional(outputSummary),
+                "startedAt": AgentSessionSmartSessionBridgeDictionary.optional(
+                    AgentSessionSmartSessionBridgeDictionary.isoString(startedAt)
+                ),
                 "completedAt": AgentSessionSmartSessionBridgeDictionary.isoString(completedAt),
                 "source": source,
                 "confidence": confidence
@@ -90,7 +92,7 @@ extension AgentSessionSmartSessionSnapshot {
             AgentSessionSmartSessionBridgeDictionary.compact([
                 "attributionId": attributionID,
                 "paths": paths,
-                "summary": summary,
+                "summary": AgentSessionSmartSessionBridgeDictionary.optional(summary),
                 "observedAt": AgentSessionSmartSessionBridgeDictionary.isoString(observedAt),
                 "source": source,
                 "confidence": confidence
@@ -146,14 +148,14 @@ extension AgentSessionSmartSessionSnapshot {
                 "scopeId": scopeID,
                 "concisePhrase": concisePhrase,
                 "expandedMeaning": expandedMeaning,
-                "supportingFactualRevision": supportingFactualRevision,
+                "supportingFactualRevision": AgentSessionSmartSessionBridgeDictionary.optional(supportingFactualRevision),
                 "confidence": confidence,
                 "specificity": specificity,
                 "presentationProducerId": presentationProducerID,
                 "presentationProducerVersion": presentationProducerVersion,
                 "presentationPolicyId": presentationPolicyID,
                 "presentationPolicyVersion": presentationPolicyVersion,
-                "localeIdentifier": localeIdentifier,
+                "localeIdentifier": AgentSessionSmartSessionBridgeDictionary.optional(localeIdentifier),
                 "createdAt": AgentSessionSmartSessionBridgeDictionary.isoString(createdAt),
                 "status": status
             ])

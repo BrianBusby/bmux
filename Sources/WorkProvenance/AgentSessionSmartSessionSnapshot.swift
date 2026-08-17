@@ -103,10 +103,10 @@ extension AgentSessionSmartSessionSnapshot {
 
         var bridgePayload: [String: Any] {
             AgentSessionSmartSessionBridgeDictionary.compact([
-                "factualRevision": factualRevision,
+                "factualRevision": AgentSessionSmartSessionBridgeDictionary.optional(factualRevision),
                 "semanticMessageCount": semanticMessageCount,
-                "latestSemanticMessageCreatedAt": AgentSessionSmartSessionBridgeDictionary.isoString(
-                    latestSemanticMessageCreatedAt
+                "latestSemanticMessageCreatedAt": AgentSessionSmartSessionBridgeDictionary.optional(
+                    AgentSessionSmartSessionBridgeDictionary.isoString(latestSemanticMessageCreatedAt)
                 ),
                 "key": key
             ])
@@ -143,12 +143,14 @@ extension AgentSessionSmartSessionSnapshot {
             AgentSessionSmartSessionBridgeDictionary.compact([
                 "sessionId": sessionID,
                 "agentKind": agentKind,
-                "workspaceId": workspaceID,
-                "surfaceId": surfaceID,
-                "worktreeId": worktreeID,
-                "cwd": cwd,
+                "workspaceId": AgentSessionSmartSessionBridgeDictionary.optional(workspaceID),
+                "surfaceId": AgentSessionSmartSessionBridgeDictionary.optional(surfaceID),
+                "worktreeId": AgentSessionSmartSessionBridgeDictionary.optional(worktreeID),
+                "cwd": AgentSessionSmartSessionBridgeDictionary.optional(cwd),
                 "status": status,
-                "startedAt": AgentSessionSmartSessionBridgeDictionary.isoString(startedAt),
+                "startedAt": AgentSessionSmartSessionBridgeDictionary.optional(
+                    AgentSessionSmartSessionBridgeDictionary.isoString(startedAt)
+                ),
                 "updatedAt": AgentSessionSmartSessionBridgeDictionary.isoString(updatedAt),
                 "providerThreads": providerThreads.map(\.bridgePayload)
             ])
@@ -181,7 +183,7 @@ extension AgentSessionSmartSessionSnapshot {
                 "threadId": threadID,
                 "provider": provider,
                 "providerThreadId": providerThreadID,
-                "worktreeId": worktreeID,
+                "worktreeId": AgentSessionSmartSessionBridgeDictionary.optional(worktreeID),
                 "source": source,
                 "confidence": confidence,
                 "firstObservedAt": AgentSessionSmartSessionBridgeDictionary.isoString(firstObservedAt),
@@ -192,6 +194,11 @@ extension AgentSessionSmartSessionSnapshot {
 }
 
 enum AgentSessionSmartSessionBridgeDictionary {
+    static func optional<T>(_ value: T?) -> Any? {
+        guard let value else { return nil }
+        return value
+    }
+
     static func compact(_ values: [String: Any?]) -> [String: Any] {
         values.reduce(into: [String: Any]()) { partialResult, pair in
             if let value = pair.value {
@@ -202,6 +209,12 @@ enum AgentSessionSmartSessionBridgeDictionary {
 
     static func isoString(_ date: Date?) -> String? {
         guard let date else { return nil }
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.string(from: date)
+    }
+
+    static func isoString(_ date: Date) -> String {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter.string(from: date)
