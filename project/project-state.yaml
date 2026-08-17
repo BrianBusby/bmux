@@ -1334,7 +1334,7 @@ roadmap:
       kind: slice
       title: React Smart Session foundation
       parent: coding_session_view_surfaces
-      status: planned
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -1375,11 +1375,27 @@ roadmap:
         worktree_required: true
         conflict_note: Start after factual Session UI lands so the React surface can reuse proven factual consumer shape. Keep the presentation summary-oriented and PE-backed rather than transcript-oriented.
       execution:
-        assignment: selected_next
+        assignment: current
         assigned_to: bmux
-      delivery_status: proposed
-      acceptance_status: proposed
-      rationale: Establish a separate React Session surface that summarizes goal, completed turns, current turn, activity, plan state, worked-on areas, validations, outcomes, and provenance using PE factual projections and semantic messages. This foundation must not infer session meaning from raw provider events inside bmux.
+        active_worktree: /Users/brianbusby/repos/bmux-react-smart-session-foundation
+        active_branch: react-smart-session-foundation
+        active_agent: Codex
+        notes: "PR #56 is the first-pass React Smart Session foundation and is waiting for UI dogfood before merge."
+      delivery_status: open
+      acceptance_status: under_observation
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 1a9f01708b55783bb1cbde275e4163d586e68d90
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 56
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-17
+      rationale: Establish a separate React Session surface that consumes PE factual projections and existing semantic messages through a typed revision-safe bridge. This foundation must not infer session meaning from raw provider events inside bmux and must not define the future PE-owned SessionWorkModel contract.
+      acceptance_reason: "PR #56 adds the separate React Session surface, Slice 1 bridge DTOs, PE factual and semantic-message refresh path, stale-response protection, explicit unavailable/unknown states, focused React/native tests, and localized copy; UI dogfood remains the merge/acceptance gate."
 
     - id: react_smart_session_work_model_consumer
       kind: slice

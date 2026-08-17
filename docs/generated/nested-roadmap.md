@@ -215,7 +215,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Worktree required: true
           Conflict note: Can proceed in parallel with PE semantic work when it remains focused on live interaction, provider controls, runtime identity, and surface lifecycle rather than Smart Session inference.
           Rationale: Productize the existing agent-chat React surface as bmux's Terminal view for live conversation, streaming, tool lifecycle, controls, interrupts, and provider-normalized interaction. It must not become the Smart Session semantic summary surface or duplicate PE inference.
-        - **React Smart Session foundation** (`react_smart_session_foundation`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: semantic understanding; layer: consumer presentation; execution: selected next / Bmux; parallelism: conditional; delivery: proposed; acceptance: proposed
+        - **React Smart Session foundation** (`react_smart_session_foundation`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: semantic understanding; layer: consumer presentation; execution: current / Bmux; parallelism: conditional; delivery: open; acceptance: under observation
           Depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`
           Enables: `clickable_semantic_explanation_ui`, `react_smart_session_work_model_consumer`, `three_view_session_navigation`
           Expected contract domains: `factual_session_projection`, `semantic_message_contract`, `react_smart_session_data_bridge`
@@ -224,7 +224,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `factual_session_projection`, `semantic_message_contract`, `bmux_panel_surface_identity`
           Worktree required: true
           Conflict note: Start after factual Session UI lands so the React surface can reuse proven factual consumer shape. Keep the presentation summary-oriented and PE-backed rather than transcript-oriented.
-          Rationale: Establish a separate React Session surface that summarizes goal, completed turns, current turn, activity, plan state, worked-on areas, validations, outcomes, and provenance using PE factual projections and semantic messages. This foundation must not infer session meaning from raw provider events inside bmux.
+          Active assignment: worktree: `/Users/brianbusby/repos/bmux-react-smart-session-foundation`; branch: `react-smart-session-foundation`; agent: `Codex`
+          Execution notes: PR #56 is the first-pass React Smart Session foundation and is waiting for UI dogfood before merge.
+          Evidence: BrianBusby/bmux@1a9f01708b55, BrianBusby/bmux#56 by [BrianBusby](https://github.com/BrianBusby)
+          Rationale: Establish a separate React Session surface that consumes PE factual projections and existing semantic messages through a typed revision-safe bridge. This foundation must not infer session meaning from raw provider events inside bmux and must not define the future PE-owned SessionWorkModel contract.
+          Acceptance reason: PR #56 adds the separate React Session surface, Slice 1 bridge DTOs, PE factual and semantic-message refresh path, stale-response protection, explicit unavailable/unknown states, focused React/native tests, and localized copy; UI dogfood remains the merge/acceptance gate.
         - **React Smart SessionWorkModel consumer** (`react_smart_session_work_model_consumer`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: structured work understanding; layer: consumer presentation; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed
           Depends on: `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
           Enables: `continuous_presentation_learning`
@@ -313,7 +317,9 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-- Active implementation assignments: none selected.
+| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| React Smart Session foundation (`react_smart_session_foundation`) | conditional | /Users/brianbusby/repos/bmux-react-smart-session-foundation | react-smart-session-foundation | Codex | `factual_session_projection_consumer`, `react_session_presentation`, `semantic_message_consumer` | `bmux_panel_surface_identity`, `factual_session_projection`, `semantic_message_contract` | single active assignment |
 
 ### Dependency-Ready Preflight
 
@@ -321,10 +327,9 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | SessionWorkModel contract foundation (`session_work_model_contract_foundation`) | planned | ready | serial | true | `session_work_model_projection`, `semantic_message_contract`, `factual_session_projection_contract` | `factual_session_projection`, `semantic_message_contract`, `semantic_session_inferences` | `session_work_model_contract`, `factual_semantic_provenance`, `semantic_message_contract` | `Sources/ProvenanceEngineContracts`, `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests`, `docs/session-work-model.md` |
 | React Terminal live interaction productization (`react_terminal_productization`) | planned | ready | safe | true | `agent_chat_surface_lifecycle`, `provider_runtime_controls`, `browser_surface_integration` | `codex_app_server_live_events`, `bmux_browser_surface_hosting` | `agent_chat_live_event_schema`, `provider_runtime_identity`, `native_webview_surface_lifecycle` | `agent-chat`, `Sources/Panels/AgentSessionWebRenderer.swift`, `Sources/Panels/AgentSessionWebRendererCoordinator.swift`, `Sources/Panels/AgentSessionPanel.swift`, `Sources/Panels/BrowserPanelView.swift` |
-| React Smart Session foundation (`react_smart_session_foundation`) | selected next | ready | conditional | true | `react_session_presentation`, `factual_session_projection_consumer`, `semantic_message_consumer` | `factual_session_projection`, `semantic_message_contract`, `bmux_panel_surface_identity` | `factual_session_projection`, `semantic_message_contract`, `react_smart_session_data_bridge` | `agent-chat shared React shell and primitives`, `React Smart Session surface`, `Sources/Panels/AgentSessionPanel.swift`, `Sources/WorkProvenance`, `docs/provenance-integration.md` |
-| React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) | planned | blocked by `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics` | serial | true | `session_work_model_projection`, `react_session_presentation`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `blocker_approach_change_semantics`, `semantic_explanation_provenance` | `React Smart Session surface`, `bmux SessionWorkModel client`, `Sources/WorkProvenance`, `Sources/ProvenanceEngineContracts` |
-| Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) | planned | blocked by `react_smart_session_foundation` | serial | true | `bmux_semantic_presentation`, `semantic_message_contract` | `semantic_message_contract`, `session_work_model_presentation` | `semantic_explanation_provenance`, `bmux_semantic_presentation` | `React Smart Session evidence drill-down`, `bmux semantic presentation consumers`, `Sources/ProvenanceEngineContracts` |
-| Three-view session navigation (`three_view_session_navigation`) | planned | blocked by `react_terminal_productization`, `react_smart_session_foundation` | conditional | true | `session_surface_identity`, `provider_native_terminal_hosting`, `browser_webview_surface_lifecycle` | `react_terminal_surface_identity`, `react_smart_session_surface_identity`, `provider_thread_identity` | `provider_thread_identity`, `bmux_session_identity`, `worktree_identity`, `surface_restore_state` | `Sources/Panels/AgentSessionPanel.swift`, `Sources/Panels/TerminalPanelView.swift`, `Sources/Panels/AgentSessionWebRenderer.swift`, `agent-chat`, `bmux surface routing and restoration` |
+| React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) | planned | blocked by `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics` | serial | true | `session_work_model_projection`, `react_session_presentation`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `blocker_approach_change_semantics`, `semantic_explanation_provenance` | `React Smart Session surface`, `bmux SessionWorkModel client`, `Sources/WorkProvenance`, `Sources/ProvenanceEngineContracts` |
+| Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) | planned | ready | serial | true | `bmux_semantic_presentation`, `semantic_message_contract` | `semantic_message_contract`, `session_work_model_presentation` | `semantic_explanation_provenance`, `bmux_semantic_presentation` | `React Smart Session evidence drill-down`, `bmux semantic presentation consumers`, `Sources/ProvenanceEngineContracts` |
+| Three-view session navigation (`three_view_session_navigation`) | planned | blocked by `react_terminal_productization` | conditional | true | `session_surface_identity`, `provider_native_terminal_hosting`, `browser_webview_surface_lifecycle` | `react_terminal_surface_identity`, `react_smart_session_surface_identity`, `provider_thread_identity` | `provider_thread_identity`, `bmux_session_identity`, `worktree_identity`, `surface_restore_state` | `Sources/Panels/AgentSessionPanel.swift`, `Sources/Panels/TerminalPanelView.swift`, `Sources/Panels/AgentSessionWebRenderer.swift`, `agent-chat`, `bmux surface routing and restoration` |
 | Continuous presentation learning (`continuous_presentation_learning`) | planned | blocked by `clickable_semantic_explanation_ui`, `presentation_language_calibration_corpus` | safe | true | `presentation_feedback_events`, `semantic_message_calibration` | `semantic_explanation_provenance`, `presentation_language_corpus` | `presentation_feedback_events`, `semantic_message_calibration` | `Sources/ProvenanceEngineCore`, `bmux semantic feedback surfaces` |
 | Presentation language calibration corpus (`presentation_language_calibration_corpus`) | planned | ready | safe | true | `presentation_language_corpus`, `semantic_message_calibration` | `semantic_session_inferences` | `presentation_language_corpus`, `semantic_message_calibration` | `Tests/ProvenanceEngineTests`, `docs/session-work-model.md`, `calibration fixtures` |
 | Milestone inference (`milestone_inference`) | planned | ready | serial | true | `milestone_semantics`, `session_work_model_projection` | `semantic_session_inferences` | `milestone_semantics`, `session_work_model_milestones` | `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests` |
@@ -337,7 +342,7 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 - SessionWorkModel contract foundation (`session_work_model_contract_foundation`) - selection: planned; depends on: `human_readable_semantic_messaging`
 - React Terminal live interaction productization (`react_terminal_productization`) - selection: planned; depends on: None
-- React Smart Session foundation (`react_smart_session_foundation`) - selection: selected next; depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`
+- Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - selection: planned; depends on: `react_smart_session_foundation`, `human_readable_semantic_messaging`
 - Presentation language calibration corpus (`presentation_language_calibration_corpus`) - selection: planned; depends on: `first_semantic_session_inferences`
 - Milestone inference (`milestone_inference`) - selection: planned; depends on: `first_semantic_session_inferences`
 - Blocker and approach-change semantics (`blocker_approach_change_semantics`) - selection: planned; depends on: `semantic_inference_framework`
@@ -345,12 +350,13 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 ## Selected Next Work
 
-- React Smart Session foundation (`react_smart_session_foundation`) - dependency status: ready; depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`
+None.
 
 ## Dependency-Ready But Not Selected
 
 - SessionWorkModel contract foundation (`session_work_model_contract_foundation`) - depends on: `human_readable_semantic_messaging`
 - React Terminal live interaction productization (`react_terminal_productization`) - depends on: None
+- Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - depends on: `react_smart_session_foundation`, `human_readable_semantic_messaging`
 - Presentation language calibration corpus (`presentation_language_calibration_corpus`) - depends on: `first_semantic_session_inferences`
 - Milestone inference (`milestone_inference`) - depends on: `first_semantic_session_inferences`
 - Blocker and approach-change semantics (`blocker_approach_change_semantics`) - depends on: `semantic_inference_framework`
