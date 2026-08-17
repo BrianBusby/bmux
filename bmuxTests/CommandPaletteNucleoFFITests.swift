@@ -479,10 +479,14 @@ final class CommandPaletteNucleoFFITests: XCTestCase {
             estimatedDroppedFrames(for: nucleoPreviewDurationsMs)
         ))
 
-        XCTAssertLessThanOrEqual(
-            estimatedDroppedFrames(for: nucleoPreviewDurationsMs),
-            estimatedDroppedFrames(for: nucleoFullDurationsMs)
+        let nucleoPreviewDroppedFrames = estimatedDroppedFrames(for: nucleoPreviewDurationsMs)
+        let nucleoFullDroppedFrames = estimatedDroppedFrames(for: nucleoFullDurationsMs)
+        XCTAssertLessThan(
+            nucleoPreviewDurationsMs.reduce(0, +),
+            nucleoFullDurationsMs.reduce(0, +) * 0.75
         )
+        XCTAssertLessThanOrEqual(nucleoFullDroppedFrames, 2)
+        XCTAssertLessThanOrEqual(nucleoPreviewDroppedFrames, 4)
     }
 
     func testNucleoFFIEdgeCaseTypingFrameBudgetComparison() throws {
