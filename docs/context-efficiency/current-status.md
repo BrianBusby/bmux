@@ -10,9 +10,10 @@ not be maintained here.
 - [Ownership boundary](../generated/ownership-boundary.md)
 - [Repository status](../generated/repository-status.md)
 
-Update `project/repo-status.yaml` for bmux-local slice, release, capability, or
-caveat changes. Shared milestone, gate, ownership, and policy changes belong in
-`BrianBusby/provenance-engine:project/project-state.yaml`.
+Update `project/repo-status.yaml` for monorepo-local slice, release, capability,
+or caveat changes. Shared milestone, gate, ownership, roadmap, and policy
+changes belong in root `project/project-state.yaml`. The old
+`project/shared-project-source.yaml` pointer is obsolete.
 
 ## Read Order
 
@@ -21,12 +22,17 @@ caveat changes. Shared milestone, gate, ownership, and policy changes belong in
 3. `docs/generated/project-status.md`
 4. `docs/generated/ownership-boundary.md`
 5. `docs/generated/repository-status.md`
-6. `docs/roadmap.md`
-7. `docs/provenance-integration.md`
-8. `docs/context-efficiency/roadmap.md`
-9. `docs/context-efficiency/milestones.md`
-10. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
-11. Relevant bmux skills for Swift/package/build/test/localization work.
+6. `docs/architecture/README.md`
+7. `docs/architecture/system-overview.md`
+8. `docs/architecture/implementation-map.md`
+9. `docs/product/coding-session-views.md`
+10. `docs/planning/monorepo-migration-ledger.md`
+11. `docs/roadmap.md`
+12. `docs/provenance-integration.md`
+13. `docs/context-efficiency/roadmap.md`
+14. `docs/context-efficiency/milestones.md`
+15. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
+16. Relevant bmux skills for Swift/package/build/test/localization work.
 
 ## Current Boundary
 
@@ -64,11 +70,17 @@ consumer groundwork/diagnostics and data-access foundation, not the final React
 Smart Session product. Use generated Project Truth for active work,
 dependency-ready work, selected-next work, and safe parallel work.
 
+Monorepo migration status: bmux is the canonical repository and PE now lives as
+a package under `Packages/macOS/ProvenanceEngine`. Cross-component slices should
+use one branch and one worktree unless a future release/extraction task
+explicitly requires a separate PE checkout. The original PE repository remains
+an archival and recovery reference until the migration is accepted.
+
 Verification for planning/docs-only Project Truth slices:
 
-- PE docs: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
-- bmux docs: `PROJECT_TRUTH_TOOL_ROOT=<pe>/tools/project-docs PROJECT_TRUTH_SHARED_STATE=<pe>/project/project-state.yaml ./scripts/project-docs validate && ... generate && ... check`
-- Run `git diff --check` in both repositories.
+- Project Truth: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
+- Read-only CI gate locally when GitHub evidence access is available: `./scripts/project-docs ci`
+- Run `git diff --check` in the monorepo.
 
 Runtime tests or tagged reloads are only required when production app/runtime
 behavior changes; this three-view clarification is planning/documentation only.

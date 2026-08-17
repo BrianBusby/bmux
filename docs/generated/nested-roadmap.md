@@ -1,8 +1,7 @@
 <!--
 GENERATED FILE. DO NOT EDIT MANUALLY.
 Sources:
-- BrianBusby/provenance-engine:project/project-state.yaml
-- project/shared-project-source.yaml
+- project/project-state.yaml
 - project/repo-status.yaml
 Regenerate with: ./scripts/project-docs generate
 -->
@@ -15,7 +14,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ## Roadmap Tree
 
 - **Bmux and Provenance Engine** (`bmux_provenance_platform`) - project; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: platform; layer: platform; execution: current / Shared; parallelism: safe
-  Rationale: Canonical cross-repository roadmap root for Provenance Engine-owned evidence/current-state work and bmux-owned observation/presentation work.
+  Rationale: Canonical monorepo roadmap root for Provenance Engine-owned evidence/current-state work and bmux-owned observation/presentation work.
   - **V1 Foundation and Bmux Adoption** (`v1_foundation_and_adoption`) - program; status: accepted; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: v1 adoption; layer: platform; execution: complete / Shared; parallelism: serial
     Rationale: Records the accepted V1 package and first bmux adoption path without expanding the legacy flat milestone list.
     - **V1 Baseline** (`v1_baseline`) - phase; status: accepted; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: v1 adoption; layer: evidence store; execution: complete / Shared; parallelism: serial
@@ -83,6 +82,19 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Worktree required: true
           Evidence: BrianBusby/provenance-engine@6fee11b0fa40, BrianBusby/provenance-engine#23 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Adds manifest-only parallel slice planning metadata, active worktree and branch safety validation, and generated preflight visibility without assigning future work automatically.
+        - **bmux and Provenance Engine monorepo consolidation** (`monorepo_repository_consolidation`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: project truth; layer: project truth; execution: current / Shared; parallelism: conditional; delivery: draft; acceptance: proposed
+          Depends on: `phase_0c_parallel_worktree_metadata`
+          Enables: `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `scoped_architecture_projection`
+          Expected contract domains: `monorepo_project_truth`, `provenance_engine_package_boundary`, `local_pe_dependency`, `architecture_documentation`
+          Expected code areas: `Packages/macOS/ProvenanceEngine`, `bmux.xcodeproj/project.pbxproj`, `bmux.xcworkspace/contents.xcworkspacedata`, `project`, `tools/project-docs`, `scripts/project-docs`, `docs/architecture`, `docs/product`, `docs/decisions`, `.github/workflows/project-truth.yml`
+          Likely conflict domains: `project_truth_manifest`, `project_docs_generation`, `provenance_engine_dependency_model`, `architecture_documentation`, `open_bmux_pe_branch_reconciliation`
+          Contract dependencies: `provenance_engine_public_contracts`, `project_docs_validation`, `bmux_package_boundary_rules`
+          Worktree required: true
+          Conflict note: This slice intentionally freezes artificial cross-repository coordination work while active branches are inventoried and rebased or superseded in the monorepo. It must preserve PE as an independent Swift package and prohibit PE imports of bmux runtime or UI internals.
+          Active assignment: worktree: `/Users/brianbusby/repos/bmux-monorepo-provenance-engine`; branch: `monorepo-provenance-engine`; agent: `Codex`
+          Execution notes: One monorepo worktree now represents cross-component slices; PE remains package-scoped under Packages/macOS/ProvenanceEngine with public contracts consumed by bmux.
+          Evidence: None recorded
+          Rationale: Consolidates the Git repository boundary that had become accidental coordination overhead while preserving Provenance Engine as a standalone Swift package boundary, retaining imported PE history, and replacing peer-repo Project Truth with a root-local canonical project graph.
   - **Richer Session Understanding** (`richer_session_understanding`) - program; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: current / Shared; parallelism: safe
     Depends on: `workspace_display_durable_context`
     Rationale: Richer coding-agent evidence and session projections are the active direction after V1 adoption and workspace-display observation. This program now explicitly supports bmux's three-view coding-session model: Native provider-native fidelity, React Terminal live interaction, and React Smart Session understanding backed by PE factual and semantic models.
@@ -304,7 +316,8 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Factual agent session view (`factual_agent_session_view`) | conditional | /Users/brianbusby/repos/bmux-clickable-semantic-explanation-ui | clickable-semantic-explanation-ui | Codex | `bmux_factual_session_view`, `bmux_panel_ui`, `factual_session_projection_consumer` | `deterministic_current_state_api`, `factual_session_projection` | single active assignment |
+| bmux and Provenance Engine monorepo consolidation (`monorepo_repository_consolidation`) | conditional | /Users/brianbusby/repos/bmux-monorepo-provenance-engine | monorepo-provenance-engine | Codex | `architecture_documentation`, `open_bmux_pe_branch_reconciliation`, `project_docs_generation`, `project_truth_manifest`, `provenance_engine_dependency_model` | `bmux_package_boundary_rules`, `project_docs_validation`, `provenance_engine_public_contracts` | conditional |
+| Factual agent session view (`factual_agent_session_view`) | conditional | /Users/brianbusby/repos/bmux-clickable-semantic-explanation-ui | clickable-semantic-explanation-ui | Codex | `bmux_factual_session_view`, `bmux_panel_ui`, `factual_session_projection_consumer` | `deterministic_current_state_api`, `factual_session_projection` | conditional |
 
 ### Dependency-Ready Preflight
 

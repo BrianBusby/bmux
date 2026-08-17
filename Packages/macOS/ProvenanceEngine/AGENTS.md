@@ -1,10 +1,15 @@
 # Provenance Engine Agent Notes
 
+This package is the Provenance Engine component inside the bmux monorepo. Keep
+the package architecturally independent: PE code may depend on its public
+contracts and implementation modules, but it must not import bmux UI/runtime
+internals.
+
 ## Project-State Rule
 
 When implementation changes a milestone, gate, ownership boundary, persistence
 policy, current slice, release state, or known caveat, update the appropriate
-file under `project/` and regenerate documentation.
+file under the monorepo root `project/` directory and regenerate documentation.
 
 Do not manually edit `docs/generated/`.
 

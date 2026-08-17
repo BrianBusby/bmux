@@ -2,10 +2,10 @@
 
 Provenance Engine is a Swift package that separates public provenance contracts from storage implementation.
 
-This document describes the architecture currently implemented in this repository and the active design boundaries for V1 adoption. The platform north star is `docs/reference-architecture.md`. Implementation sequence and priorities live in `docs/roadmap.md`, public adopter contracts live in `docs/integration-contract.md`, and the accepted target design for the future high-level live coding-agent projection lives in `docs/session-work-model.md`.
+This document describes the architecture currently implemented in this package and the active design boundaries for adoption. The package north star is `docs/reference-architecture.md`. Public adopter contracts live in `docs/integration-contract.md`, and the accepted target design for the future high-level live coding-agent projection lives in `docs/session-work-model.md`.
 
-For a concise cross-repository current-and-target orientation, start with
-`docs/current-and-target-architecture.md`.
+For the canonical monorepo architecture map, start with
+`../../../../docs/architecture/README.md`.
 
 ## Modules
 
@@ -21,7 +21,7 @@ The SQLite backend stores an immutable event ledger and rebuildable current-stat
 
 Current accepted projections include repositories, worktrees, sessions, session relationships, file explanations, current context records, workspace-display Current State, and factual session projection snapshots for coding-agent evidence.
 
-No public semantic `SessionWorkModel`, inference record, milestone, or scoped architecture projection contract is implemented yet. Those are accepted target direction, not V1 behavior.
+Implemented semantic contracts include versioned semantic inference records, first coding-agent semantic inference kinds, semantic message records, and deterministic message materialization. A public `SessionWorkModel`, milestone semantics, blocker/approach-change semantics, and scoped architecture projection remain planned target behavior.
 
 ## Evidence Model
 

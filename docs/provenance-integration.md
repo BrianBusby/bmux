@@ -1,14 +1,10 @@
 # bmux Provenance Integration
 
-This document records bmux's reference integration with the finalized Provenance Engine V1 public contract.
+This document records bmux's reference integration with the Provenance Engine public contract in the monorepo.
 
-The cross-repository roadmap remains in provenance-engine:
-
-https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md
-
-The Provenance Engine integration contract remains the technical authority for public APIs:
-
-https://github.com/BrianBusby/provenance-engine/blob/main/docs/integration-contract.md
+The current system architecture starts at [architecture/README.md](architecture/README.md).
+The PE package boundary is documented at [architecture/provenance-engine/README.md](architecture/provenance-engine/README.md).
+The imported PE package docs remain under `Packages/macOS/ProvenanceEngine/docs/`.
 
 Current milestone, ownership, policy, caveat, and local status facts are
 generated from the project manifests:
@@ -18,8 +14,9 @@ generated from the project manifests:
 - [Repository status](generated/repository-status.md)
 
 The planned high-level live coding-agent projection is documented in
-provenance-engine as `docs/session-work-model.md`. bmux should treat that as
-target direction, not as implemented behavior.
+`Packages/macOS/ProvenanceEngine/docs/session-work-model.md`. bmux should treat
+that as target direction until generated Project Truth marks the relevant
+`SessionWorkModel` slices implemented.
 
 ## Public SDK Boundary
 

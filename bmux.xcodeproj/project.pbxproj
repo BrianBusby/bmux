@@ -5300,7 +5300,7 @@
 				A5001252 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 				A5001272 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 				A5001292 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
-				CE1E00000000000000000001 /* XCRemoteSwiftPackageReference "provenance-engine" */,
+				CE1E00000000000000000001 /* XCLocalSwiftPackageReference "ProvenanceEngine" */,
 				A5001260 /* XCLocalSwiftPackageReference "bonsplit" */,
 				40B63BB4A170F0BD2D1DEFD1 /* XCLocalSwiftPackageReference "BMUXAuthCore" */,
 				53750001A0B1C2D3E4F50001 /* XCLocalSwiftPackageReference "BmuxAuthRuntime" */,
@@ -7568,6 +7568,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/macOS/BmuxContextEfficiency;
 		};
+		CE1E00000000000000000001 /* XCLocalSwiftPackageReference "ProvenanceEngine" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/macOS/ProvenanceEngine;
+		};
 		C0DE4A000000000000000003 /* XCLocalSwiftPackageReference "BmuxSidebarProviderKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/macOS/BmuxSidebarProviderKit;
@@ -7713,14 +7717,6 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 2.4.1;
-			};
-		};
-		CE1E00000000000000000001 /* XCRemoteSwiftPackageReference "provenance-engine" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/BrianBusby/provenance-engine.git";
-			requirement = {
-				kind = revision;
-				revision = 9e69452a2ec22ead8dcbb2ef5d2a3c63f4464096;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -7992,12 +7988,12 @@
 		};
 		CE1E00000000000000000011 /* ProvenanceEngineContracts */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CE1E00000000000000000001 /* XCRemoteSwiftPackageReference "provenance-engine" */;
+			package = CE1E00000000000000000001 /* XCLocalSwiftPackageReference "ProvenanceEngine" */;
 			productName = ProvenanceEngineContracts;
 		};
 		CE1E00000000000000000012 /* ProvenanceEngineSDK */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CE1E00000000000000000001 /* XCRemoteSwiftPackageReference "provenance-engine" */;
+			package = CE1E00000000000000000001 /* XCLocalSwiftPackageReference "ProvenanceEngine" */;
 			productName = ProvenanceEngineSDK;
 		};
 		A8BD195031FC4B82B4354297 /* StackAuth */ = {

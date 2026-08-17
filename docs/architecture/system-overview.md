@@ -1,0 +1,92 @@
+# System Overview
+
+bmux is now the canonical repository for one product architecture with multiple
+strong component boundaries. Provenance Engine is a first-class package inside
+that architecture, not a bmux implementation detail.
+
+## Current Repository Shape
+
+```text
+bmux/
+  apps and product runtime: root app sources, web, agent-chat, webviews
+  Packages/macOS/ProvenanceEngine/: independent PE Swift package
+  Packages/Shared/, Packages/iOS/, Packages/macOS/: other package groups
+  project/: canonical Project Truth graph and repo status
+  tools/project-docs/: Project Truth validation and generation
+  docs/: authored architecture, product, planning, decisions, generated status
+  .github/: monorepo CI
+```
+
+The imported PE package still owns its SwiftPM package metadata, public products,
+contracts, SDK, storage implementation, tests, docs, and future extraction path.
+
+## Level 1 Product Map
+
+```mermaid
+flowchart TD
+  providers["EXTERNAL: Coding agent providers\nCodex / Claude / ACP / PI / future"] --> bmux["CURRENT: bmux runtime and product shell"]
+  git["EXTERNAL: Git repositories and worktrees"] --> bmux
+  github["EXTERNAL: GitHub / PR metadata"] --> bmux
+  linear["EXTERNAL: Linear / project metadata"] --> bmux
+  bmux --> adapters["CURRENT: provider adapters and normalization"]
+  adapters --> native["CURRENT: Native provider surface"]
+  adapters --> terminal["CURRENT: React Terminal / agent-chat"]
+  adapters --> evidence["CURRENT: accepted structured observations"]
+  evidence --> pe["CURRENT: Provenance Engine package"]
+  pe --> factual["CURRENT: deterministic factual projections"]
+  pe --> semantic["CURRENT: semantic records and messages"]
+  semantic --> swm["PLANNED: SessionWorkModel"]
+  factual --> session["ACTIVE/PLANNED: Smart Session presentation"]
+  swm --> session
+  pe --> knowledge["PLANNED: Knowledge Compiler / Store / Retrieval"]
+  knowledge --> context["PLANNED: future agent context"]
+```
+
+## Current Responsibilities
+
+bmux owns live interaction, local runtime behavior, provider acquisition,
+provider-specific adapters, session lifecycle, terminal/native/web surfaces,
+capture policy, optimistic presentation, UI routing, and user-facing fallbacks.
+
+Provenance Engine owns accepted evidence contracts, local durable storage,
+rebuildable factual projections, semantic inference contracts and records,
+semantic messages, and the future `SessionWorkModel`, Knowledge Compiler,
+Knowledge Store, and retrieval layers.
+
+The dependency direction is intentionally one-way:
+
+```text
+bmux runtime/UI -> PE public contracts and SDK -> PE storage/projection internals
+```
+
+PE must not import bmux app, UI, terminal, runtime, or provider-adapter internals.
+
+## Current Versus Target
+
+CURRENT:
+
+- bmux can consume PE from the local monorepo package path.
+- PE is a standalone SwiftPM package under `Packages/macOS/ProvenanceEngine`.
+- Project Truth is root-local under `project/`.
+- The Project Truth workflow validates one canonical graph without peer checkout.
+- PE has implemented factual session projection, semantic inference framework,
+  first coding-agent semantic records, and human-readable semantic messages.
+- bmux has React Terminal foundations in `agent-chat` and native/workspace PE
+  consumers.
+
+ACTIVE:
+
+- The monorepo migration branch imports PE history, rewires the local package
+  dependency, removes obsolete peer Project Truth mechanics, and creates this
+  architecture map.
+- The factual agent Session view PR remains a product branch to rebase after the
+  monorepo migration rather than a completed Smart Session product.
+
+PLANNED:
+
+- React Smart Session surface backed by PE facts and semantics.
+- PE `SessionWorkModel` contract and projection.
+- Milestone, blocker, approach-change, and scoped architecture semantics.
+- Knowledge Compiler, durable Knowledge Store, retrieval, and future agent
+  context integration.
+

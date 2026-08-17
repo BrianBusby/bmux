@@ -177,12 +177,13 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 ### Current Active Work
 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
-- Active implementation slice: Factual agent session view (`factual_agent_session_view`) - draft
+- Active implementation slice: bmux and Provenance Engine monorepo consolidation (`monorepo_repository_consolidation`) - draft
 - Bmux repository state: active
 
 ### Current Roadmap Lanes
 
 - Bmux and Provenance Engine (`bmux_provenance_platform`) - project; status: active; owner: Provenance Engine
+- bmux and Provenance Engine monorepo consolidation (`monorepo_repository_consolidation`) - slice; status: active; owner: Bmux
 - Richer Session Understanding (`richer_session_understanding`) - program; status: active; owner: Provenance Engine
 - Semantic Understanding (`semantic_understanding`) - phase; status: active; owner: Provenance Engine
 - Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`) - milestone; status: active; owner: Provenance Engine

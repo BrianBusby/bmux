@@ -2,7 +2,7 @@
 
 Status: implementation sequence reconciled on 2026-07-19 after merging the subsession/delegation integration plan, the agent retrieval/knowledge-projection plan, and the provenance observability integration plan into the original context-efficiency roadmap.
 
-Planning authority: this file is detailed context-efficiency and provenance extraction history. The canonical bmux product roadmap is `docs/roadmap.md`. The canonical cross-repository bmux to provenance-engine roadmap is `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
+Planning authority: this file is detailed context-efficiency and provenance extraction history. The canonical bmux product roadmap is `docs/roadmap.md`. The canonical monorepo architecture and Project Truth roadmap begin at `docs/architecture/README.md` and `docs/generated/nested-roadmap.md`.
 
 Cross-cutting plans:
 

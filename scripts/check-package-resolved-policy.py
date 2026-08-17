@@ -52,6 +52,7 @@ def git_stdout(*args: str) -> str:
         ["git", *args],
         check=True,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
     )
     return result.stdout

@@ -296,7 +296,7 @@ class ProjectDocsTests(unittest.TestCase):
         context = project_docs.load_inputs(ROOT)
         rendered = project_docs.render_current_target_architecture_status(context)
         self.assertIn("Active implementation slice:", rendered)
-        self.assertIn("Provenance Engine repository state:", rendered)
+        self.assertIn("Bmux repository state:", rendered)
         self.assertIn("Factual projection consumer shape follow-up", rendered)
         self.assertIn("SessionWorkModel semantic projection", rendered)
         self.assertIn("Knowledge Compiler, Knowledge Store, and Retrieval", rendered)
@@ -323,7 +323,7 @@ class ProjectDocsTests(unittest.TestCase):
             doc = repo / "docs/current-and-target-architecture.md"
             doc.write_text(
                 doc.read_text(encoding="utf-8").replace(
-                    "Active implementation slice: none selected",
+                    "Active implementation slice: bmux and Provenance Engine monorepo consolidation",
                     "Active implementation slice: stale",
                     1,
                 ),
@@ -334,7 +334,7 @@ class ProjectDocsTests(unittest.TestCase):
             with self.assertRaisesRegex(project_docs.ProjectDocsError, "Authored generated blocks are stale"):
                 project_docs.check_authored_generated_blocks(context)
 
-    def test_bmux_missing_shared_manifest_fails_clearly(self):
+    def test_missing_canonical_monorepo_manifest_fails_clearly(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
             (repo / "project").mkdir(parents=True)
@@ -342,11 +342,7 @@ class ProjectDocsTests(unittest.TestCase):
                 "schema_version: 1\nrepository: BrianBusby/bmux\ncurrent_work:\n  state: observation\nrelease:\n  latest_tag: null\n  release_status: untagged\nlocal_caveats: []\n",
                 encoding="utf-8",
             )
-            (repo / "project/shared-project-source.yaml").write_text(
-                "schema_version: 1\nrepository: BrianBusby/provenance-engine\npath: project/project-state.yaml\ndefault_ref: main\n",
-                encoding="utf-8",
-            )
-            with self.assertRaisesRegex(project_docs.ProjectDocsError, "cannot resolve canonical shared manifest"):
+            with self.assertRaisesRegex(project_docs.ProjectDocsError, "Expected project/project-state.yaml"):
                 project_docs.load_inputs(repo)
 
     def fake_provider_for_current_manifests(self) -> FakeGitHubProvider:
@@ -504,7 +500,9 @@ class ProjectDocsTests(unittest.TestCase):
         provider = self.fake_provider_for_current_manifests()
         caveat_issue = next(caveat["issue"] for caveat in shared["caveats"] if "issue" in caveat)
         provider.issues.pop((caveat_issue["repository"], caveat_issue["number"]))
-        tag = local["release"]["latest_tag"]
+        tag = "v-test-missing"
+        local["release"]["latest_tag"] = tag
+        provider.tags[(local["repository"], tag)] = project_docs.TagEvidence(target_sha="a" * 40)
         provider.tags.pop((local["repository"], tag))
         issues = project_docs.github_evidence_issues(shared, [local], provider)
         self.assertTrue(any(issue.name == "missing_issue" for issue in issues))
@@ -532,8 +530,10 @@ class ProjectDocsTests(unittest.TestCase):
         provider = self.fake_provider_for_current_manifests()
         caveat_issue = next(caveat["issue"] for caveat in shared["caveats"] if "issue" in caveat)
         provider.issues[(caveat_issue["repository"], caveat_issue["number"])] = project_docs.IssueEvidence(state="closed")
-        tag = local["release"]["latest_tag"]
+        tag = "v-test-release"
+        local["release"]["latest_tag"] = tag
         local["release"]["release_status"] = "released"
+        provider.tags[(local["repository"], tag)] = project_docs.TagEvidence(target_sha="a" * 40)
         issues = project_docs.github_evidence_issues(shared, [local], provider)
         self.assertTrue(any(issue.name == "issue_state_mismatch" for issue in issues))
         self.assertTrue(any(issue.name == "missing_release" for issue in issues))
@@ -705,11 +705,10 @@ class ProjectDocsTests(unittest.TestCase):
         issues = project_docs.invariant_issues(shared, [local], {local["repository"]: LOCAL})
         self.assertTrue(any(issue.name == "bmux_no_durable_ownership" for issue in issues))
 
-    def test_malformed_bmux_shared_source_fails(self):
+    def test_obsolete_shared_source_pointer_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
             shutil.copytree(ROOT / "project", repo / "project")
-            (repo / "project/project-state.yaml").unlink()
             (repo / "project/shared-project-source.yaml").write_text(
                 "schema_version: 1\nrepository: BrianBusby/not-provenance\npath: other.yaml\ndefault_ref: main\n",
                 encoding="utf-8",
@@ -718,30 +717,25 @@ class ProjectDocsTests(unittest.TestCase):
                 "repo_root": repo,
                 "repo_status": {"repository": "BrianBusby/bmux"},
                 "pointer": project_docs.load_yaml(repo / "project/shared-project-source.yaml"),
-                "shared": {"project": {"shared_state_owner": "BrianBusby/provenance-engine"}},
-                "shared_path": repo / "missing.yaml",
+                "shared": {"project": {"shared_state_owner": "BrianBusby/bmux"}},
+                "shared_path": repo / "project/project-state.yaml",
             }
             issues = project_docs.validate_shared_source_issues(context)
-            self.assertTrue(any(issue.name == "shared_source_repository" for issue in issues))
-            self.assertTrue(any(issue.name == "shared_source_path" for issue in issues))
+            self.assertTrue(any(issue.name == "obsolete_shared_source_pointer" for issue in issues))
 
-    def test_bmux_copied_shared_manifest_fails_shared_source_validation(self):
+    def test_non_monorepo_shared_owner_fails_validation(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
             shutil.copytree(ROOT / "project", repo / "project")
-            (repo / "project/shared-project-source.yaml").write_text(
-                "schema_version: 1\nrepository: BrianBusby/provenance-engine\npath: project/project-state.yaml\ndefault_ref: main\n",
-                encoding="utf-8",
-            )
             context = {
                 "repo_root": repo,
                 "repo_status": {"repository": "BrianBusby/bmux"},
-                "pointer": project_docs.load_yaml(repo / "project/shared-project-source.yaml"),
+                "pointer": None,
                 "shared": {"project": {"shared_state_owner": "BrianBusby/provenance-engine"}},
                 "shared_path": repo / "project/project-state.yaml",
             }
             issues = project_docs.validate_shared_source_issues(context)
-            self.assertTrue(any(issue.name == "no_copied_shared_manifest" for issue in issues))
+            self.assertTrue(any(issue.name == "shared_state_owner_matches_monorepo" for issue in issues))
 
     def test_authored_doc_drift_detects_volatile_claim(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -778,16 +772,16 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_project_truth_workflow_runs_canonical_ci_gate(self):
         text = PROJECT_TRUTH_WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("repository: BrianBusby/bmux", text)
-        self.assertIn("Use dependency bmux branch when declared", text)
-        self.assertIn("PEER_REPOSITORY: BrianBusby/bmux", text)
         self.assertIn("contents: read", text)
         self.assertIn("issues: read", text)
         self.assertIn("pull-requests: read", text)
         self.assertNotIn("contents: write", text)
+        self.assertNotIn("PEER_REPOSITORY", text)
+        self.assertNotIn("peer-repo-root", text)
+        self.assertNotIn("Use dependency bmux branch when declared", text)
         self.assertIn("./scripts/project-docs validate", text)
         self.assertIn("./scripts/project-docs check", text)
-        self.assertIn("./scripts/project-docs ci --peer-repo-root .project-truth/bmux", text)
+        self.assertIn("./scripts/project-docs ci", text)
 
 
 if __name__ == "__main__":

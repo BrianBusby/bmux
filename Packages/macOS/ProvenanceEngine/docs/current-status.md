@@ -2,14 +2,14 @@
 
 The authoritative current project facts are generated from manifests:
 
-- [Project status](generated/project-status.md)
-- [Ownership boundary](generated/ownership-boundary.md)
-- [Repository status](generated/repository-status.md)
+- [Project status](../../../../docs/generated/project-status.md)
+- [Ownership boundary](../../../../docs/generated/ownership-boundary.md)
+- [Repository status](../../../../docs/generated/repository-status.md)
 
 Do not update this file with active gates, milestone state, current caveats, or
-release state. Update the appropriate manifest under `project/`, regenerate
-with `./scripts/project-docs generate`, and verify with
-`./scripts/project-docs check`.
+release state. Update the appropriate manifest under monorepo root `../../../../project/`,
+regenerate from the monorepo root with `./scripts/project-docs generate`, and
+verify with `./scripts/project-docs check`.
 
 ## Authored Context
 
@@ -18,7 +18,7 @@ with `./scripts/project-docs generate`, and verify with
 - Planned live coding-agent projection: `docs/session-work-model.md`
 - Product roadmap and sequencing guidance: `docs/roadmap.md`
 - Technical adopter contract: `docs/integration-contract.md`
-- Cross-repository bmux integration roadmap: `docs/bmux-integration-roadmap.md`
+- Historical bmux integration roadmap: `docs/bmux-integration-roadmap.md`
 
 ## Historical Evidence
 

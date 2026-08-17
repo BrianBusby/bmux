@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/BrianBusby/provenance-engine/project/schema/project-state.schema.json",
+  "$id": "https://github.com/BrianBusby/bmux/project/schema/project-state.schema.json",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "project", "repositories", "cross_repository", "milestones", "roadmap", "ownership", "policies", "caveats"],

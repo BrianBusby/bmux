@@ -1,15 +1,15 @@
 # Provenance Engine Roadmap
 
-This is the authoritative roadmap for the provenance-engine repository. It defines implementation sequence and priorities for reusable provenance contracts, storage, SDK boundaries, retrieval, shared evidence, and derived knowledge. The full platform shape is defined in `docs/reference-architecture.md`; this file describes when slices of that architecture should be pursued. bmux product behavior and user experience belong in the bmux roadmap. Coordinated adoption milestones live in `docs/bmux-integration-roadmap.md`.
+This is the package roadmap for Provenance Engine inside the bmux monorepo. It defines implementation sequence and priorities for reusable provenance contracts, storage, SDK boundaries, retrieval, shared evidence, and derived knowledge. The full platform shape is defined in `docs/reference-architecture.md`; root Project Truth is the current status authority. bmux product behavior and user experience belong in the bmux roadmap.
 
 ## Current Project Status
 
 The authoritative generated status is:
 
-- [Project status](generated/project-status.md)
-- [Nested roadmap](generated/nested-roadmap.md)
-- [Ownership boundary](generated/ownership-boundary.md)
-- [Repository status](generated/repository-status.md)
+- [Project status](../../../../docs/generated/project-status.md)
+- [Nested roadmap](../../../../docs/generated/nested-roadmap.md)
+- [Ownership boundary](../../../../docs/generated/ownership-boundary.md)
+- [Repository status](../../../../docs/generated/repository-status.md)
 
 This roadmap defines sequencing and rationale. It must not independently
 maintain active gates, milestone state, evidence commits, release state, or open
@@ -30,8 +30,8 @@ name for the high-level projection is `SessionWorkModel`; the target design is
 `docs/session-work-model.md`.
 
 Canonical current milestone state and evidence are generated from
-`project/project-state.yaml`. Cross-repository sequencing details live in
-`docs/bmux-integration-roadmap.md`.
+`../../../../project/project-state.yaml`. Historical adoption sequencing details live
+in `docs/bmux-integration-roadmap.md`.
 
 ## Additional Bmux Adoption Paths
 

@@ -7,9 +7,9 @@ shape and layer boundaries.
 
 Authoritative mutable status:
 
-- [generated/project-status.md](generated/project-status.md)
-- [generated/nested-roadmap.md](generated/nested-roadmap.md)
-- [generated/repository-status.md](generated/repository-status.md)
+- [generated/project-status.md](../../../../docs/generated/project-status.md)
+- [generated/nested-roadmap.md](../../../../docs/generated/nested-roadmap.md)
+- [generated/repository-status.md](../../../../docs/generated/repository-status.md)
 
 This document defines the planned high-level Provenance Engine projection for
 live coding-agent work. It records product and architecture direction for the

@@ -30,8 +30,6 @@ GENERATED_FILES = (
     "repository-status.md",
 )
 GENERATED_WARNING = "GENERATED FILE. DO NOT EDIT MANUALLY."
-CANONICAL_SHARED_REPOSITORY = "BrianBusby/provenance-engine"
-CANONICAL_SHARED_PATH = "project/project-state.yaml"
 PROVIDER_ERROR = object()
 
 DELIVERY_STATUSES = ("proposed", "draft", "open", "merged", "closed", "superseded")
@@ -288,23 +286,9 @@ def resolve_shared_state(repo_root: Path, explicit_shared_state: str | None) -> 
     if local_shared.exists():
         return local_shared, None
 
-    pointer_path = repo_root / "project" / "shared-project-source.yaml"
-    pointer = load_yaml(pointer_path)
-    validate_schema(pointer, SCHEMA_ROOT / "shared-project-source.schema.json", pointer_path)
-
-    env_path = os.environ.get("PROJECT_TRUTH_SHARED_STATE")
-    if env_path:
-        return Path(env_path).expanduser().resolve(), pointer
-
-    repo_name = pointer["repository"].split("/", 1)[1]
-    sibling = repo_root.parent / repo_name / pointer["path"]
-    if sibling.exists():
-        return sibling.resolve(), pointer
-
     raise ProjectDocsError(
-        f"{repo_root}: cannot resolve canonical shared manifest. Set "
-        "PROJECT_TRUTH_SHARED_STATE=/path/to/project-state.yaml or keep a sibling "
-        f"checkout at ../{repo_name}/{pointer['path']}."
+        f"{repo_root}: cannot resolve canonical project manifest. Expected "
+        "project/project-state.yaml in the monorepo root."
     )
 
 
@@ -320,9 +304,7 @@ def load_inputs(repo_root: Path, explicit_shared_state: str | None = None) -> di
     validate_schema(shared, SCHEMA_ROOT / "project-state.schema.json", shared_path)
     validate_schema(repo_status, SCHEMA_ROOT / "repo-status.schema.json", repo_status_path)
     if pointer_path.exists():
-        if pointer is None:
-            pointer = load_yaml(pointer_path)
-            validate_schema(pointer, SCHEMA_ROOT / "shared-project-source.schema.json", pointer_path)
+        pointer = load_yaml(pointer_path)
 
     semantic_validate(shared, repo_status, repo_status_path)
 
@@ -834,23 +816,15 @@ def validate_shared_source_issues(context: dict[str, Any]) -> list[ValidationIss
     def add(name: str, path: str, message: str) -> None:
         issues.append(ValidationIssue("invariant", name, path, message))
 
-    if repo_status.get("repository") == "BrianBusby/bmux":
-        if pointer is None:
-            add("shared_source_declared", str(pointer_path), "bmux must declare the canonical shared project-state source")
-        else:
-            if pointer.get("repository") != CANONICAL_SHARED_REPOSITORY:
-                add("shared_source_repository", str(pointer_path), f"repository must be {CANONICAL_SHARED_REPOSITORY}")
-            if pointer.get("path") != CANONICAL_SHARED_PATH:
-                add("shared_source_path", str(pointer_path), f"path must be {CANONICAL_SHARED_PATH}")
-        unauthorized_copy = repo_root / "project" / "project-state.yaml"
-        if unauthorized_copy.exists():
-            add("no_copied_shared_manifest", str(unauthorized_copy), "bmux must resolve the shared manifest through shared-project-source.yaml instead of committing a copy")
-
+    canonical_manifest = repo_root / "project" / "project-state.yaml"
     if pointer is not None:
-        if shared.get("project", {}).get("shared_state_owner") != pointer.get("repository"):
-            add("shared_source_owner_matches_manifest", str(pointer_path), "pointer repository must match project.shared_state_owner in the resolved shared manifest")
-        if not shared_path.exists():
-            add("shared_source_resolves", str(pointer_path), f"resolved shared manifest does not exist: {shared_path}")
+        add("obsolete_shared_source_pointer", str(pointer_path), "monorepo Project Truth must use project/project-state.yaml directly")
+    if shared_path != canonical_manifest:
+        add("canonical_manifest_location", str(shared_path), f"canonical manifest must be {canonical_manifest}")
+    if shared.get("project", {}).get("shared_state_owner") != repo_status.get("repository"):
+        add("shared_state_owner_matches_monorepo", "project/project-state.yaml:project.shared_state_owner", "project.shared_state_owner must match the monorepo repository")
+    if not canonical_manifest.exists():
+        add("canonical_manifest_exists", str(canonical_manifest), "canonical Project Truth manifest is missing")
 
     return issues
 
@@ -2001,27 +1975,10 @@ def command_check(args: argparse.Namespace) -> None:
     check_authored_generated_blocks(context)
 
 
-def load_peer_repo_statuses(peer_roots: list[str]) -> tuple[list[dict[str, Any]], dict[str, Path]]:
-    statuses: list[dict[str, Any]] = []
-    paths: dict[str, Path] = {}
-    for peer_root in peer_roots:
-        root = Path(peer_root).expanduser().resolve()
-        path = root / "project" / "repo-status.yaml"
-        status = load_yaml(path)
-        validate_schema(status, SCHEMA_ROOT / "repo-status.schema.json", path)
-        repository = status.get("repository", str(path))
-        statuses.append(status)
-        paths[repository] = path
-    return statuses, paths
-
-
 def command_ci(args: argparse.Namespace) -> None:
     context = load_inputs(Path(args.repo_root), args.shared_state)
     repo_statuses = [context["repo_status"]]
     repo_status_paths = {context["repo_status"].get("repository", "<current>"): context["repo_status_path"]}
-    peer_statuses, peer_paths = load_peer_repo_statuses(args.peer_repo_root)
-    repo_statuses.extend(peer_statuses)
-    repo_status_paths.update(peer_paths)
 
     issues: list[ValidationIssue] = []
     issues.extend(invariant_issues(context["shared"], repo_statuses, repo_status_paths))
@@ -2043,9 +2000,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate and render project truth documentation.")
     parser.add_argument("command", choices=("validate", "generate", "check", "ci"))
     parser.add_argument("--repo-root", default=os.getcwd())
-    parser.add_argument("--shared-state", default=os.environ.get("PROJECT_TRUTH_SHARED_STATE"))
+    parser.add_argument("--shared-state", default=None)
     parser.add_argument("--require-generated", action="store_true")
-    parser.add_argument("--peer-repo-root", action="append", default=[], help="Additional checkout root whose project/repo-status.yaml participates in cross-repository invariants.")
     parser.add_argument("--skip-github", action="store_true", help="Skip live GitHub evidence verification. Do not use in CI.")
     args = parser.parse_args(argv)
 

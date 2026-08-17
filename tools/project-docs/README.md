@@ -37,20 +37,13 @@ invariant, GitHub, and authored-doc failures and prefixes each error with a
 stable category such as `[schema:...]`, `[generation:...]`, `[invariant:...]`,
 `[github:...]`, or `[authored-doc:...]`.
 
-For coordinated local checks, pass additional repository roots whose
-`project/repo-status.yaml` files should participate in cross-repository
-invariants:
-
-```bash
-./scripts/project-docs ci --peer-repo-root ../bmux
-```
-
 GitHub evidence verification uses `GITHUB_TOKEN` or `GH_TOKEN` when present and
 falls back to unauthenticated public API reads. Missing evidence, contradictory
 GitHub state, authentication failures, rate limits, and network failures are
 reported distinctly. `--skip-github` is reserved for offline diagnosis and unit
 tests, not CI.
 
-The bmux wrapper resolves this canonical tool through `PROJECT_TRUTH_TOOL_ROOT`
-or an expected sibling checkout. `PROJECT_TRUTH_TOOL_ROOT` may point either to
-the Provenance Engine repository root or directly to `tools/project-docs`.
+The bmux wrapper resolves this canonical tool from the monorepo root at
+`tools/project-docs`. `PROJECT_TRUTH_TOOL_ROOT` remains available for local tool
+development and may point either to a repository root containing
+`tools/project-docs` or directly to a `tools/project-docs` directory.

@@ -4,7 +4,7 @@ Status: Operational V1 integration complete with named caveats. bmux uses the fi
 
 Engine revision: `18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03` from `git@github.com:BrianBusby/provenance-engine.git`.
 
-Planning authority: this is the bmux-local adoption inventory and implementation state. The canonical cross-repository roadmap is `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
+Planning authority: this is the bmux-local adoption inventory and implementation state. Current monorepo architecture and Project Truth sequencing are canonical in `../../architecture/README.md` and `../../generated/nested-roadmap.md`.
 
 ## Current State
 

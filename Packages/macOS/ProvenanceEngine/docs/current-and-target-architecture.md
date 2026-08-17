@@ -8,10 +8,10 @@ user, a new engineer, or Codex starting a slice.
 Volatile status is generated from canonical project truth. If this page and the
 generated files disagree, trust:
 
-- [generated/project-status.md](generated/project-status.md)
-- [generated/repository-status.md](generated/repository-status.md)
-- [generated/nested-roadmap.md](generated/nested-roadmap.md)
-- [generated/ownership-boundary.md](generated/ownership-boundary.md)
+- [generated/project-status.md](../../../../docs/generated/project-status.md)
+- [generated/repository-status.md](../../../../docs/generated/repository-status.md)
+- [generated/nested-roadmap.md](../../../../docs/generated/nested-roadmap.md)
+- [generated/ownership-boundary.md](../../../../docs/generated/ownership-boundary.md)
 
 Use [reference-architecture.md](reference-architecture.md) as the durable
 north-star architecture. This page is the current-and-target working map, not a
@@ -194,7 +194,7 @@ and reusable context from preserved evidence without replacing the evidence.
 ## Canonical Status
 
 <!-- BEGIN GENERATED: current-target-architecture-status -->
-Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For the full generated views, see [project status](generated/project-status.md), [repository status](generated/repository-status.md), and [nested roadmap](generated/nested-roadmap.md).
+Generated from `../../../../project/project-state.yaml` and `../../../../project/repo-status.yaml`. For the full generated views, see [project status](../../../../docs/generated/project-status.md), [repository status](../../../../docs/generated/repository-status.md), and [nested roadmap](../../../../docs/generated/nested-roadmap.md).
 
 ### Current Active Work
 
@@ -333,5 +333,5 @@ for the accepted semantic live-session target, and
 
 When changing architecture status, ownership, gates, milestones, current work,
 release state, or caveats, update the canonical manifests under `project/`,
-then run `./scripts/project-docs generate` so this page and `docs/generated/`
+then run `./scripts/project-docs generate` from the monorepo root so this page and `../../../../docs/generated/`
 stay in sync.

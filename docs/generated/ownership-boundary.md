@@ -1,8 +1,7 @@
 <!--
 GENERATED FILE. DO NOT EDIT MANUALLY.
 Sources:
-- BrianBusby/provenance-engine:project/project-state.yaml
-- project/shared-project-source.yaml
+- project/project-state.yaml
 - project/repo-status.yaml
 Regenerate with: ./scripts/project-docs generate
 -->

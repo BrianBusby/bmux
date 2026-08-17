@@ -3,15 +3,15 @@ schema_version: 1
 project:
   id: bmux-provenance-platform
   name: Bmux and Provenance Engine
-  shared_state_owner: BrianBusby/provenance-engine
+  shared_state_owner: BrianBusby/bmux
 
 repositories:
   provenance_engine:
     slug: BrianBusby/provenance-engine
-    role: durable_evidence_and_current_state
+    role: provenance_engine_component_history_and_archival_source
   bmux:
     slug: BrianBusby/bmux
-    role: observation_workflow_and_presentation
+    role: canonical_monorepo_observation_workflow_presentation_and_engine_package
 
 cross_repository:
   active_gate:
@@ -148,7 +148,7 @@ roadmap:
       execution:
         assignment: current
         assigned_to: shared
-      rationale: Canonical cross-repository roadmap root for Provenance Engine-owned evidence/current-state work and bmux-owned observation/presentation work.
+      rationale: Canonical monorepo roadmap root for Provenance Engine-owned evidence/current-state work and bmux-owned observation/presentation work.
 
     - id: v1_foundation_and_adoption
       kind: program
@@ -683,6 +683,73 @@ roadmap:
               profile_url: https://github.com/BrianBusby
       completed_at: 2026-08-16
       rationale: Adds manifest-only parallel slice planning metadata, active worktree and branch safety validation, and generated preflight visibility without assigning future work automatically.
+
+    - id: monorepo_repository_consolidation
+      kind: slice
+      title: bmux and Provenance Engine monorepo consolidation
+      parent: project_truth_manifest_and_ci
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: project_truth
+        tags:
+          - monorepo
+          - package_boundary
+          - architecture_documentation
+      depends_on:
+        - phase_0c_parallel_worktree_metadata
+      enables:
+        - react_smart_session_foundation
+        - session_work_model_contract_foundation
+        - milestone_inference
+        - scoped_architecture_projection
+      parallelism:
+        classification: conditional
+        expected_contract_domains:
+          - monorepo_project_truth
+          - provenance_engine_package_boundary
+          - local_pe_dependency
+          - architecture_documentation
+        expected_code_areas:
+          - Packages/macOS/ProvenanceEngine
+          - bmux.xcodeproj/project.pbxproj
+          - bmux.xcworkspace/contents.xcworkspacedata
+          - project
+          - tools/project-docs
+          - scripts/project-docs
+          - docs/architecture
+          - docs/product
+          - docs/decisions
+          - .github/workflows/project-truth.yml
+        likely_conflict_domains:
+          - project_truth_manifest
+          - project_docs_generation
+          - provenance_engine_dependency_model
+          - architecture_documentation
+          - open_bmux_pe_branch_reconciliation
+        contract_dependencies:
+          - provenance_engine_public_contracts
+          - project_docs_validation
+          - bmux_package_boundary_rules
+        worktree_required: true
+        conflict_note: This slice intentionally freezes artificial cross-repository coordination work while active branches are inventoried and rebased or superseded in the monorepo. It must preserve PE as an independent Swift package and prohibit PE imports of bmux runtime or UI internals.
+      execution:
+        assignment: current
+        assigned_to: shared
+        active_worktree: /Users/brianbusby/repos/bmux-monorepo-provenance-engine
+        active_branch: monorepo-provenance-engine
+        active_agent: Codex
+        notes: One monorepo worktree now represents cross-component slices; PE remains package-scoped under Packages/macOS/ProvenanceEngine with public contracts consumed by bmux.
+      delivery_status: draft
+      acceptance_status: proposed
+      evidence:
+        commits: []
+        pull_requests: []
+      rationale: Consolidates the Git repository boundary that had become accidental coordination overhead while preserving Provenance Engine as a standalone Swift package boundary, retaining imported PE history, and replacing peer-repo Project Truth with a root-local canonical project graph.
 
     - id: richer_session_understanding
       kind: program

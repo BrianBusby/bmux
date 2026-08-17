@@ -1,8 +1,7 @@
 <!--
 GENERATED FILE. DO NOT EDIT MANUALLY.
 Sources:
-- BrianBusby/provenance-engine:project/project-state.yaml
-- project/shared-project-source.yaml
+- project/project-state.yaml
 - project/repo-status.yaml
 Regenerate with: ./scripts/project-docs generate
 -->
@@ -14,7 +13,7 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Factual agent session view (`factual_agent_session_view`)
+- Active slice: bmux and Provenance Engine monorepo consolidation (`monorepo_repository_consolidation`)
 - Slice state: draft
 - Owner: Codex
 - Repository state: active
@@ -30,6 +29,37 @@ Repository: `BrianBusby/bmux`
 | --- | --- |
 | Factual Agent Session View | planned |
 | Native Provider Session View | implemented |
+| Provenance Engine Blocker Approach Change Semantics | planned |
+| Provenance Engine Coding Agent Current Activity | implemented |
+| Provenance Engine Coding Agent Session Phase | implemented |
+| Provenance Engine Coding Agent Thread Intent | implemented |
+| Provenance Engine Coding Agent Turn Intent | implemented |
+| Provenance Engine Deterministic Current State | implemented |
+| Provenance Engine Factual Session Projection | implemented |
+| Provenance Engine Factual Session Turn Detail | implemented |
+| Provenance Engine First Semantic Session Inferences | implemented |
+| Provenance Engine Human Readable Semantic Messaging | implemented |
+| Provenance Engine Immutable Ledger | implemented |
+| Provenance Engine Milestone Inference | planned |
+| Provenance Engine Producer Neutral Lifecycle Recording | implemented |
+| Provenance Engine Public In Process Sdk | implemented |
+| Provenance Engine Richer Coding Agent Evidence | implemented |
+| Provenance Engine Schema Identity Validation | implemented |
+| Provenance Engine Scoped Architecture Projection | planned |
+| Provenance Engine Semantic Inference Framework | implemented |
+| Provenance Engine Semantic Inference Records | implemented |
+| Provenance Engine Semantic Message Materialization | implemented |
+| Provenance Engine Semantic Message Presentation Policy | implemented |
+| Provenance Engine Semantic Message Records | implemented |
+| Provenance Engine Semantic Session Work Model Projection | planned |
+| Provenance Engine Session Work Model Contract Foundation | planned |
+| Provenance Engine Sqlite Store | implemented |
+| Provenance Engine Workspace Display Current State | implemented |
+| Provenance Engine Workspace Display Durable Context | implemented |
+| Provenance Engine Workspace Display Project Link Facts | implemented |
+| Provenance Engine Workspace Display Projection Cursors | implemented |
+| Provenance Engine Workspace Display Ticket Link Facts | implemented |
+| Provenance Engine Workspace Display Ticket Title Facts | implemented |
 | React Smart Session Surface | planned |
 | React Smart Session Work Model Consumer | planned |
 | React Terminal Agent Chat Surface | implemented |

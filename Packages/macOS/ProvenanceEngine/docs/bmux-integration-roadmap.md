@@ -1,6 +1,6 @@
 # bmux Integration Roadmap
 
-This is the canonical shared roadmap for work that crosses the bmux and provenance-engine repository boundary. It is not a combined product roadmap and it does not replace the platform reference architecture in `docs/reference-architecture.md`. provenance-engine owns reusable provenance capabilities and public contracts. bmux owns product behavior, UI, CLI presentation, orchestration, capture adapters, and rollout decisions.
+This is the historical shared roadmap for work that originally crossed the bmux and provenance-engine repository boundary. The canonical current roadmap is now root Project Truth in `../../../../project/project-state.yaml` with generated status under `../../../../docs/generated/`. This document remains useful for adoption rationale and contract history. Provenance Engine owns reusable provenance capabilities and public contracts. bmux owns product behavior, UI, CLI presentation, orchestration, capture adapters, and rollout decisions.
 
 Detailed technical contract rules remain in `docs/integration-contract.md`. The provenance-engine product roadmap is `docs/roadmap.md`. The bmux product roadmap should link here instead of duplicating these milestones.
 
@@ -8,13 +8,13 @@ Detailed technical contract rules remain in `docs/integration-contract.md`. The 
 
 The authoritative generated status is:
 
-- [Project status](generated/project-status.md)
-- [Ownership boundary](generated/ownership-boundary.md)
-- [Repository status](generated/repository-status.md)
+- [Project status](../../../../docs/generated/project-status.md)
+- [Ownership boundary](../../../../docs/generated/ownership-boundary.md)
+- [Repository status](../../../../docs/generated/repository-status.md)
 
-This roadmap defines cross-repository sequencing, ownership rationale,
-acceptance criteria, compatibility expectations, and rollback strategy. It must
-not independently maintain the active gate, milestone state, evidence commits,
+This roadmap defines historical sequencing, ownership rationale, acceptance
+criteria, compatibility expectations, and rollback strategy. It must not
+independently maintain the active gate, milestone state, evidence commits,
 current caveat status, or telemetry persistence policy.
 
 ## Milestone: bmux Worktree Reads
