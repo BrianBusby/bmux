@@ -220,6 +220,58 @@ the semantic inference record remains authoritative for meaning. The SQLite
 implementation stores messages separately from deterministic Current State and
 does not include them in factual projection rebuild or drift validation.
 
+The accepted SessionWorkModel read contract is:
+
+- Request: `ProvenanceSessionWorkModelRequest(sessionID:turnLimit:)`.
+- Response: `ProvenanceSessionWorkModelResponse`.
+- Model DTO: `ProvenanceSessionWorkModel`.
+- Revision DTO: `ProvenanceSessionWorkModelRevision`.
+- Identity DTO: `ProvenanceSessionWorkModelIdentity`.
+- Thread DTO: `ProvenanceSessionWorkModelThread`.
+- Current-turn DTO: `ProvenanceSessionWorkModelCurrentTurn`.
+- Semantic field DTO: `ProvenanceSessionWorkModelSemanticField`.
+- Semantic state enum: `ProvenanceSessionWorkModelSemanticState`.
+- Embedded semantic record DTO:
+  `ProvenanceSessionWorkModelSemanticRecord`.
+- Basis DTO: `ProvenanceSessionWorkModelBasis`.
+- Client method: `ProvenanceEngineClient.sessionWorkModel(...)`.
+- Capability: `query_session_work_model`.
+
+This contract is the first PE-owned session-understanding composition layer.
+It reads the factual session projection for one PE session, selects active
+semantic inference records for the current supported coding-agent kinds, and
+returns one coherent model. Consumers should use it when they need the current
+thread intent, turn intent, session phase, current activity, factual prompt,
+plan, completed commands, visible reasoning summaries, file-change attribution,
+and compact prior-turn references without reimplementing PE supersession or
+semantic selection rules.
+
+When no session projection matches `sessionID`, the response returns
+`found == false`, `reason == "no_session"`, and `model == nil`. When a session
+exists but a supported semantic field has no active inference record, that
+field returns `state == .unknown` with a stable reason. When factual data cannot
+identify the scope needed for a semantic field, the field returns
+`state == .unavailable`.
+
+Revision semantics are intentionally layered. The model response carries a
+schema version; the model revision carries the factual projection revision,
+selected active semantic inference ids, the newest selected semantic inference
+creation time, and a `modelRevisionKey` for consumer reconciliation. These are
+not semantic message revisions, presentation policy revisions, or provider live
+transport revisions.
+
+The model basis includes the factual session projection snapshot and the active
+semantic inference records selected into model fields. It does not use
+`ProvenanceSemanticMessageRecord` values as truth input. Consumers may query or
+materialize semantic messages separately for wording, but semantic message
+records must not be treated as authoritative model facts.
+
+The first SessionWorkModel contract remains narrow. It does not include
+milestone hierarchy, blockers, approach changes, progress percentage,
+validation or risk synthesis, architecture projections, GitHub attribution,
+Knowledge Compiler output, or presentation-learning fields. Consumers must not
+invent those meanings from lower-level factual data or semantic messages.
+
 Milestones, architecture projection, Knowledge Compiler output, GitHub
 ingestion, bmux UI presentation, presentation feedback, and language calibration
 corpus work remain later slices. Semantic records and semantic message records
@@ -333,19 +385,19 @@ evidence to existing session, worktree, change-set, file-change, and validation
 records where possible, and keep semantic inference separate from deterministic
 Current State.
 
-The planned high-level semantic projection is named `SessionWorkModel` in the
-target design. It should sit above lower-level contracts such as
-`currentContext`, `sessionTree`, `fileExplanation`, `workspaceDisplay`, and
-`factualSessionProjection`; it should not replace them wholesale.
+The first high-level session-understanding projection is named
+`SessionWorkModel`. It sits above lower-level contracts such as
+`currentContext`, `sessionTree`, `fileExplanation`, `workspaceDisplay`,
+`factualSessionProjection`, and semantic inference reads; it does not replace
+them wholesale.
 
 For bmux's three-view coding-session model, these lower-level contracts feed the
-future React Smart Session view. The React Terminal view may use live provider
+React Smart Session view. The React Terminal view may use live provider
 events and runtime state for interaction, but Smart Session consumers should
-prefer PE factual projection, semantic inference, semantic messages, and the
-future `SessionWorkModel` over local reinterpretation of raw provider events.
-The current factual projection and semantic-message contracts are foundations;
-they do not yet constitute a complete progress, blocker, validation, milestone,
-or approach-change model.
+prefer PE factual projection, semantic inference, semantic messages, and
+`SessionWorkModel` over local reinterpretation of raw provider events. The
+current SessionWorkModel foundation does not yet constitute a complete progress,
+blocker, validation, milestone, or approach-change model.
 
 Rollback should be a scoped Git revert in the adopter repository that removes the package dependency and restores the previous local read path.
 
