@@ -1,0 +1,385 @@
+# Provenance Engine Integration Contract
+
+This document is the technical contract authority for adopters. It defines public integration contracts, not the full platform architecture or implementation roadmap. The complete platform north star is `docs/reference-architecture.md`; the current implementation boundaries are in `docs/architecture.md`; the coordinated bmux adoption sequence and cross-repository acceptance gates live in `docs/bmux-integration-roadmap.md`.
+
+External adopters should import:
+
+```swift
+import ProvenanceEngineContracts
+import ProvenanceEngineSDK
+```
+
+Create an in-process SQLite client through `ProvenanceEngineClientFactory`:
+
+```swift
+let client = try ProvenanceEngineClientFactory()
+    .sqliteClient(databaseURL: databaseURL)
+let response = try await client.worktrees(ProvenanceWorktreeListRequest())
+```
+
+For default engine-owned storage, use:
+
+```swift
+let client = try ProvenanceEngineClientFactory().defaultSQLiteClient()
+```
+
+Do not construct `ProvenanceSQLiteRepository` from adopter code. Do not read engine SQLite tables directly. Seed integration tests by appending public `ProvenanceEvent` values through `ProvenanceEngineClient.appendEvent`.
+
+The accepted worktree read contract is:
+
+- Request: `ProvenanceWorktreeListRequest(repositoryID:limit:)`
+- Response: `ProvenanceWorktreeListResponse`
+- Row: `ProvenanceWorktreeListEntry`
+- Worktree DTO: `ProvenanceWorktreeRecord`
+- Repository DTO: `ProvenanceRepositoryRecord`
+
+The accepted session-tree read contract is:
+
+- Request: `ProvenanceSessionTreeRequest(rootSessionID:limit:)`
+- Response: `ProvenanceSessionTreeResponse`
+- Root ID: `ProvenanceSessionTreeResponse.rootSessionID`
+- Found flag: `ProvenanceSessionTreeResponse.found`
+- Missing reason: `ProvenanceSessionTreeResponse.reason`, currently `no_session` when no root session projection is found
+- Session DTO: `ProvenanceSessionRecord`
+- Relationship DTO: `ProvenanceSessionRelationshipRecord`
+- External identity DTO: `ProvenanceExternalIdentityRecord`
+
+Session-tree responses return domain records in engine query order. Consumers own CLI, UI, JSON, and fallback presentation. Consumers must not read `provenance_sessions`, `provenance_session_relationships`, or `provenance_session_external_identities` directly.
+
+`ProvenanceSessionTreeRequest.limit` is an engine row budget, not a presentation cap. The current SQLite-backed implementation applies the limit across the combined session and relationship rows needed for tree traversal. Returned relationships are coherent for returned child sessions: the engine does not keep a relationship row when the child session could not be included within the limit. External identities are then returned for the included sessions. Consumers that need a session-count-oriented product cap should adapt at their presentation or adapter boundary instead of treating the engine limit as that cap. If future consumers need independent session, relationship, or identity limits, add an explicit versioned request contract rather than overloading the current `limit`.
+
+The accepted file-explanation read contract is:
+
+- Request: `ProvenanceFileExplanationRequest(worktreeID:path:)`
+- Response: `ProvenanceFileExplanationResponse`
+- Found flag: `ProvenanceFileExplanationResponse.found`
+- Missing reason: `ProvenanceFileExplanationResponse.reason`, currently `no_file` when no file-change projection matches the requested worktree and path
+- Explanation DTO: `ProvenanceFileExplanation`
+- File-change DTO: `ProvenanceFileChangeRecord`
+- Linked DTOs, when available: `ProvenanceChangeSetRecord`, `ProvenanceCheckpointRecord`, `ProvenanceContributionRecord`, `ProvenanceSessionRecord`, `ProvenanceWorkItemRecord`, `ProvenanceWorktreeRecord`, and `ProvenanceRepositoryRecord`
+
+File-explanation requests use V1 path identity: `worktreeID` identifies the Git worktree, and `path` is the normalized repository-relative path exactly as stored on `ProvenanceFileChangeRecord.path`. The engine does not resolve absolute paths, call Git, inspect the filesystem, expand symlinks, fold case, or infer repository roots for this request. Consumers that accept CLI or UI paths should resolve the Git worktree and normalize to repository-relative path before calling the engine.
+
+For a matching `worktreeID` and `path`, the engine returns at most one explanation: the newest file-change projection for that exact path in that exact worktree. The current SQLite-backed implementation orders matching file changes by `updatedAt` descending with append-storage insertion order as a deterministic tie-breaker. There is no request limit because the V1 response is a single focused explanation, not a list. Consumers own JSON, text, fallback, and presentation compatibility.
+
+When no file-change projection matches, the engine returns `found == false`, `reason == "no_file"`, and `explanation == nil`. Missing database, missing worktree, path outside a Git worktree, and user-facing fallback strings remain consumer responsibilities unless a future public contract explicitly moves those concerns into the engine.
+
+Consumers must not read `provenance_file_changes`, `provenance_change_sets`, `provenance_checkpoints`, `provenance_work_contributions`, `provenance_sessions`, `provenance_work_items`, `provenance_worktrees`, or `provenance_repositories` directly for file explanations.
+
+V1 path identity limitations: moved files are represented only by the current file-change records already appended by producers; no historical rename tracking is performed. Deleted files can be explained only when a producer appended a matching repository-relative path with a deletion-like status. Case sensitivity follows exact stored string equality. Symlink targets are not resolved by the engine. Historical identity across renames, copies, case-only renames, repository moves, or multiple checked-out paths is outside V1.
+
+The Slice E-ready current-context read contract is:
+
+- Request: `ProvenanceCurrentContextRequest(repositoryPath:activeSessionLimit:dirtyFileLimit:unattributedChangeLimit:recentCheckpointLimit:validationRunLimit:conflictLimit:)`
+- Response: `ProvenanceCurrentContextResponse`
+- Found flag: `ProvenanceCurrentContextResponse.found`
+- Missing reason: `ProvenanceCurrentContextResponse.reason`, currently `no_worktree` when no worktree projection matches the requested repository path
+- Worktree DTO: `ProvenanceWorktreeRecord`
+- Repository DTO: `ProvenanceRepositoryRecord`, when available
+- Active session row: `ProvenanceCurrentContextSession`
+- Dirty and unattributed file rows: `ProvenanceCurrentContextFileChange`
+- Checkpoint row: `ProvenanceCurrentContextCheckpoint`
+- Validation-run row: `ProvenanceCurrentContextValidationRun`
+- Conflict row: `ProvenanceCurrentContextConflict`
+
+Current-context requests use V1 worktree path identity: `repositoryPath` is the absolute Git worktree root path already resolved by the consumer. The engine does not inspect `cwd`, shell out to Git, normalize repository paths, discover repository roots, or choose default limits from CLI policy. Consumers should resolve the current directory to a Git worktree root before calling the engine.
+
+When a worktree projection exists for the requested path, the engine returns `found == true`, `reason == nil`, the matched worktree, the linked repository when present, and bounded sections. A known worktree with no recorded session, file, checkpoint, validation, or conflict activity is still a found response with empty section arrays. When no matching worktree projection exists, the engine returns `found == false`, `reason == "no_worktree"`, `worktree == nil`, `repository == nil`, and empty section arrays.
+
+Current-context section semantics are domain query semantics, not presentation semantics:
+
+- Active sessions include sessions for the worktree whose status is not terminal. Terminal statuses currently include complete/completed/finished/interrupted/cancelled/canceled/closed/stopped, matched case-insensitively. Linked active contributions and work items are included when available.
+- Dirty files return the newest file-change projection per repository-relative path for the worktree, regardless of attribution source. This section reports recorded current file-change evidence; the consumer decides how to label or render dirty state.
+- Unattributed changes are the subset of newest per-path file changes whose attribution source is `unattributed`.
+- Recent checkpoints return checkpoint projections linked through contributions in the worktree.
+- Validation runs return validation projections linked directly to a contribution or through a checkpoint contribution in the worktree.
+- Conflicts report repository-relative paths touched by more than one active contribution in the worktree, with a count, a comma-separated contribution identifier list, and the latest update time for that path.
+
+Current-context ordering is deterministic for the observable V1 behavior: active sessions are newest `updatedAt` first; dirty and unattributed file rows are newest file-change `updatedAt` first with append order as a tie-breaker; checkpoints are newest `createdAt` first with append order as a tie-breaker; validation runs are newest completion/start time first with append order as a tie-breaker; conflicts are newest path update first. Consumers should preserve or intentionally adapt the returned order at their presentation boundary instead of recreating engine SQL.
+
+Each request limit is an independent engine row budget for its matching response section. Negative limits are treated as zero by the current SQLite-backed implementation. These limits are not bmux default CLI policy; bmux owns user defaults and any presentation caps.
+
+Response guarantees: `schemaVersion == 1` for the current V1 shape; arrays are always present; linked records are optional where producers may have appended partial or unattributed evidence; no SQLite table names, row identifiers, SQL predicates, terminal rendering, JSON payload compatibility, fallback strings, or CLI errors are part of the public contract. Consumers must not read `provenance_worktrees`, `provenance_repositories`, `provenance_sessions`, `provenance_work_contributions`, `provenance_work_items`, `provenance_file_changes`, `provenance_change_sets`, `provenance_checkpoints`, or `provenance_validation_runs` directly for current context.
+
+The accepted factual session-projection read contracts are:
+
+- Session request: `ProvenanceFactualSessionProjectionRequest(sessionID:turnLimit:)`.
+- Session response: `ProvenanceFactualSessionProjectionResponse`.
+- Session snapshot DTO: `ProvenanceFactualSessionProjectionSnapshot`.
+- Provider-thread identity DTO:
+  `ProvenanceFactualSessionProjectionProviderThreadIdentity`.
+- Compact turn reference DTO: `ProvenanceFactualSessionProjectionTurnReference`.
+- Turn-detail request: `ProvenanceFactualSessionTurnDetailRequest(turnID:)`.
+- Turn-detail response: `ProvenanceFactualSessionTurnDetailResponse`.
+- Turn-detail DTO: `ProvenanceFactualSessionProjectionTurnSnapshot`.
+- Client methods: `ProvenanceEngineClient.factualSessionProjection(...)` and
+  `ProvenanceEngineClient.factualSessionTurnDetail(...)`.
+- Capabilities: `query_factual_session_projection` and
+  `query_factual_session_turn_detail`.
+
+This contract is a revisioned factual Current State snapshot for one PE
+session. Schema version 2 emphasizes session identity, observed provider thread
+identities, detailed factual latest turn state, and compact prior-turn
+references. Provider thread identities are factual data and consumers must not
+assume a permanent 1:1 mapping between a PE session and one provider thread.
+The snapshot also retains the lower-level detailed `turns` array for
+compatibility and diagnostics; new consumer presentation should prefer
+`latestTurn` plus `priorTurns`, then use `factualSessionTurnDetail(...)` for
+independent drilldown.
+
+Detailed turn snapshots include only evidence directly linked to that turn:
+latest submitted prompt, latest/current plan, completed command facts, completed
+visible reasoning summaries, and file-change attributions. The session snapshot
+revision and turn-detail revision are derived from the newest accepted ledger
+sequence for the owning session and are intended for consumer reconciliation by
+re-fetch.
+
+When no session projection matches `sessionID`, the session response returns
+`found == false`, `reason == "no_session"`, and `snapshot == nil`. When no turn
+projection matches `turnID`, the turn-detail response returns `found == false`,
+`reason == "no_turn"`, `sessionID == nil`, `revision == nil`, and
+`turnDetail == nil`.
+
+This read remains below `SessionWorkModel`: it is deterministic Current State
+over accepted evidence. Unknown relationships stay absent rather than guessed.
+It does not infer thread intent, turn intent, milestone hierarchy, current
+activity, validation/risk state, architecture, Knowledge Compiler artifacts,
+GitHub evidence, or semantic meaning from prompts, plans, commands, or file
+paths.
+
+The semantic inference framework foundation is available above deterministic
+Current State through:
+
+- Publish request: `ProvenanceSemanticInferencePublishRequest`.
+- Publish response: `ProvenanceSemanticInferencePublishResponse`.
+- Query request: `ProvenanceSemanticInferenceQueryRequest`.
+- Query response: `ProvenanceSemanticInferenceQueryResponse`.
+- Record DTO: `ProvenanceSemanticInferenceRecord`.
+- Evidence reference DTO: `ProvenanceSemanticEvidenceReference`.
+- Client methods: `ProvenanceEngineClient.publishSemanticInference(...)` and
+  `ProvenanceEngineClient.semanticInferences(...)`.
+- Capabilities: `publish_semantic_inference` and
+  `query_semantic_inferences`.
+
+Semantic inference records are versioned, evidence-backed records with kind,
+scope, structured payload, supporting evidence references, supporting factual
+revision, confidence, specificity, producer type and version, creation time,
+supersession links, and status. They may be produced by deterministic rules or
+model-capable asynchronous workers. Publishing a replacement creates a new
+active record and marks prior records superseded; it does not silently rewrite
+historical semantic meaning.
+
+The first concrete semantic session inference slice adds rule-produced coding
+agent records for:
+
+- `coding_agent.thread_intent` scoped to the current provider thread;
+- `coding_agent.turn_intent` scoped to the current/latest provider turn;
+- `coding_agent.session_phase` scoped to the PE session;
+- `coding_agent.current_activity` scoped to the current/latest provider turn.
+
+The public materialization helper is
+`ProvenanceEngineClient.publishCodingAgentSessionSemanticInferences(...)`. It
+reads `factualSessionProjection(...)`, creates evidence-backed rule-produced
+semantic records, queries existing active records, publishes changed claims, and
+supersedes replaced records through the normal semantic publish contract.
+Unchanged claims are retained rather than republished. The corresponding
+advertised capability is
+`publish_coding_agent_session_semantic_inferences`.
+
+The concrete records use structured payloads:
+`ProvenanceCodingAgentIntentPayload`,
+`ProvenanceCodingAgentSessionPhasePayload`, and
+`ProvenanceCodingAgentCurrentActivityPayload`. Unknown remains explicit when
+bounded factual evidence does not support a stronger claim.
+
+Human-readable semantic messaging is available as a separate presentation layer
+above semantic inference truth through:
+
+- Presentation policy DTO: `ProvenanceSemanticMessagePresentationPolicy`.
+- Message record DTO: `ProvenanceSemanticMessageRecord`.
+- Publish request: `ProvenanceSemanticMessagePublishRequest`.
+- Publish response: `ProvenanceSemanticMessagePublishResponse`.
+- Query request: `ProvenanceSemanticMessageQueryRequest`.
+- Query response: `ProvenanceSemanticMessageQueryResponse`.
+- Materialization request:
+  `ProvenanceSemanticMessageMaterializationRequest`.
+- Materialization response:
+  `ProvenanceSemanticMessageMaterializationResponse`.
+- Client methods: `ProvenanceEngineClient.publishSemanticMessage(...)`,
+  `ProvenanceEngineClient.semanticMessages(...)`, and
+  `ProvenanceEngineClient.materializeSemanticMessages(...)`.
+- Capabilities: `publish_semantic_message`, `query_semantic_messages`, and
+  `materialize_semantic_messages`.
+
+Message records carry concise glance-level wording, expanded plain-language
+meaning, the structured semantic payload that was rendered, supporting evidence
+references, factual revision, confidence, specificity, presentation producer
+identity/version, presentation policy identity/version, locale, status, and
+supersession links. They are cached presentation records, not semantic truth:
+the semantic inference record remains authoritative for meaning. The SQLite
+implementation stores messages separately from deterministic Current State and
+does not include them in factual projection rebuild or drift validation.
+
+Milestones, architecture projection, Knowledge Compiler output, GitHub
+ingestion, bmux UI presentation, presentation feedback, and language calibration
+corpus work remain later slices. Semantic records and semantic message records
+are stored separately from deterministic Current State and are not part of
+factual projection rebuild or drift validation.
+
+Model-capable inference input is represented as a bounded packet shape:
+`ProvenanceSemanticInferenceInputPacket` carries references and bounded
+summaries for the current prompt, current/latest plan, visible reasoning
+summaries, recent completed commands, recent file-change attribution,
+lifecycle facts, prior semantic state, and relevant factual context. It is not
+an unrestricted transcript persistence contract.
+
+Invalidation and burst coalescing are represented by
+`ProvenanceSemanticInferenceEvidenceChange`,
+`ProvenanceSemanticInferenceInvalidationRule`, and
+`ProvenanceSemanticInferenceInvalidationPolicy`. The policy maps prompt, plan,
+visible reasoning summary, meaningful command completion, file-change activity,
+validation, and lifecycle changes to dirty inference kinds, and coalesces a
+burst into at most one deterministic inference pass plan.
+
+The accepted richer-session evidence write contract is append-only and
+lower-level than the factual session projection. Producers append
+`ProvenanceEvent` values through `ProvenanceEngineClient.appendEvent(...)`
+using these event types and payload records:
+
+- `.codingAgentThreadObserved` with `ProvenanceCodingAgentThreadRecord`
+- `.codingAgentTurnObserved` with `ProvenanceCodingAgentTurnRecord`
+- `.codingAgentPromptSubmitted` with `ProvenanceCodingAgentPromptRecord`
+- `.codingAgentPlanUpdated` with `ProvenanceCodingAgentPlanUpdateRecord`
+- `.codingAgentCommandCompleted` with `ProvenanceCodingAgentCommandRecord`
+- `.codingAgentReasoningSummaryCompleted` with
+  `ProvenanceCodingAgentReasoningSummaryRecord`
+- `.codingAgentFileChangeAttributed` with
+  `ProvenanceCodingAgentFileChangeAttributionRecord`
+
+These are observable facts and deterministic Current State projections, not
+semantic session models. Provider-native thread and turn identities must be
+preserved in the typed records rather than flattened into generic text. Session,
+repository, worktree, change-set, file-change, contribution, and validation
+relationships should be included only when the producer can establish them
+reliably. Unknown is preferable to guessed.
+
+Raw provider transport streams, stdout/stderr deltas, raw reasoning deltas,
+hidden chain-of-thought, unrestricted transcripts, token-by-token envelopes, and
+bmux live projection state are not part of the durable default contract.
+Reasoning-summary evidence is limited to visible/provider-supported completed
+summary units. Command output summaries are optional and subject to producer
+retention/privacy policy.
+
+The accepted workspace-display Current State contract is:
+
+- Write evidence: append a `ProvenanceEvent` with `eventType == .workspaceDisplayObserved` and `payload.workspaceDisplay`.
+- Read request: `ProvenanceWorkspaceDisplayRequest(workspaceID:)`.
+- Read response: `ProvenanceWorkspaceDisplayResponse`.
+- Display DTO: `ProvenanceWorkspaceDisplayRecord`.
+- Ticket DTO: `ProvenanceWorkspaceDisplayTicketLinkRecord`.
+- Project DTO: `ProvenanceWorkspaceDisplayProjectLinkRecord`.
+- Field provenance DTO: `ProvenanceWorkspaceDisplayFieldMetadataRecord`.
+
+Workspace-display Current State is field-reconciled. It is not rebuilt as the
+latest event payload. Absence of a field in a later accepted observation is not
+evidence that the previously known field is false. Missing branch, ticket,
+project, PR, current-work, or prompt values preserve prior accepted values until newer
+evidence replaces them or an explicit clear establishes that they are no longer
+pertinent.
+
+Explicit clearing is represented by `ProvenanceWorkspaceDisplayRecord.clearedFields`.
+Supported field clears include individual field names such as `branch`,
+`current_work_summary`, and `last_submitted_prompt`, plus grouped work-item
+clears such as `pull_request`, `tickets`, `ticket_ids`, `ticket_links`,
+`projects`, and `project_links`.
+Provider timeouts, lookup failures, incomplete producer payloads, app activation,
+observer reconnect, telemetry events lacking a workspace-display field, session
+compaction, and live session disappearance are not clear evidence.
+
+The projection stores field-level provenance metadata for diagnostics and refresh
+policy: field name, observed timestamp, source, evidence origin, evidence event
+ID, evidence sequence, freshness, and explicit-clear state. Consumers are not
+required to display that metadata, but diagnostics should use it to distinguish
+current, stale, failed-refresh, explicitly-cleared, and unknown states.
+
+`lastSubmittedPrompt` is a bounded workspace-display text fact supplied by the
+consumer. It is not general transcript persistence. A consumer that needs raw
+prompt or transcript storage must introduce a separate capture-policy contract
+instead of expanding workspace-display state silently.
+
+## Planned Richer Coding-Agent Evidence Boundary
+
+The current V1 contract records selected durable evidence through
+`appendEvent(...)` and lifecycle helpers. It does not persist raw execution
+telemetry or provider transport streams.
+
+Future richer-session contracts should preserve the same distinction:
+
+- streaming deltas, UI replay, provider transport envelopes, raw command output,
+  unrestricted transcripts, and private reasoning remain consumer/runtime
+  concerns by default;
+- completed or meaningful evidence units may become durable Provenance Engine
+  evidence through explicit contracts, validation, retention policy, and privacy
+  review.
+
+Candidate evidence units include provider thread identity, provider turn
+identity and lifecycle, user prompt facts, plan updates, completed command facts
+with cwd/status/result metadata, completed reasoning summaries when exposed as
+supported provider summaries, completed file-change or diff units, approval
+state, validation results, errors, and compaction events.
+
+Future contracts must preserve source identity where available, relate new
+evidence to existing session, worktree, change-set, file-change, and validation
+records where possible, and keep semantic inference separate from deterministic
+Current State.
+
+The planned high-level semantic projection is named `SessionWorkModel` in the
+target design. It should sit above lower-level contracts such as
+`currentContext`, `sessionTree`, `fileExplanation`, `workspaceDisplay`, and
+`factualSessionProjection`; it should not replace them wholesale.
+
+For bmux's three-view coding-session model, these lower-level contracts feed the
+future React Smart Session view. The React Terminal view may use live provider
+events and runtime state for interaction, but Smart Session consumers should
+prefer PE factual projection, semantic inference, semantic messages, and the
+future `SessionWorkModel` over local reinterpretation of raw provider events.
+The current factual projection and semantic-message contracts are foundations;
+they do not yet constitute a complete progress, blocker, validation, milestone,
+or approach-change model.
+
+Rollback should be a scoped Git revert in the adopter repository that removes the package dependency and restores the previous local read path.
+
+Appender note: set `ProvenanceEvent.evidenceOrigin` and `ProvenanceEvent.evidenceScope` when the producing system or ownership boundary is known. Existing V1 adopters may leave both fields unset. `ProvenanceSource` remains the claim classification, not the origin system.
+
+## V1 Lifecycle Recording Contract
+
+The canonical public lifecycle helper is now:
+
+- Request: `ProvenanceSessionLifecycleRequest`
+- Response: `ProvenanceSessionLifecycleResponse`
+- Phase: `ProvenanceSessionLifecyclePhase`
+- Method: `ProvenanceEngineClient.recordSessionLifecycle(...)`
+
+This API is producer-neutral. A producer may provide an explicit `sessionID` for a root session, a `parentSessionID` when the session belongs to another session, or both when it already knows the source-domain identity and relationship. The engine records session lifecycle evidence and derives session relationship Current State when a parent is supplied.
+
+Compatibility: `recordSubsessionLifecycle(...)`, `ProvenanceSubsessionLifecycleRequest`, `ProvenanceSubsessionLifecycleResponse`, `ProvenanceSubsessionLifecyclePhase`, and `ProvenanceEngineCapability.recordSubsessionLifecycle` remain temporarily available as deprecated compatibility wrappers for early adopters. New producers must use the session lifecycle names.
+
+## V1 Local Durability Contract
+
+A successful local SDK write is durable.
+
+For `appendEvent(...)`, success means the event was committed to the local immutable ledger before `ProvenanceAppendEventResponse` was returned. For `recordSessionLifecycle(...)`, `accepted == true` means the lifecycle event was committed to the local immutable ledger before the response was returned.
+
+The SQLite-backed implementation inserts the ledger event and applies deterministic Current State projection updates in one transaction. If the ledger insert, projection update, or commit fails, success is not returned. Duplicate event identifiers fail through the ledger uniqueness constraint and do not replace the accepted event or its projections.
+
+This is an engine durability guarantee, not a producer delivery guarantee. Producers remain responsible for retrying calls that fail or never receive acknowledgement, and for any local outbox needed to survive producer crashes before the engine accepts an event.
+
+## V1 Current State Contract
+
+Current State is the canonical deterministic interpretation of engineering evidence. It is derived only from accepted evidence and deterministic engine rules, is rebuildable from the ledger, and powers worktrees, session trees, file explanations, and current context.
+
+Producers own observing activity, assigning stable source/domain identities, emitting observable or declared facts, and retrying failed or unacknowledged delivery where needed.
+
+Provenance Engine owns evidence validation, durable evidence storage, deterministic ordering and relationships, Current State derivation, projection rebuild, bounded provenance queries, and evidence attribution.
+
+Consumers own presentation, UI, CLI formatting, local fallback policy, live Git probing when explicitly outside persisted provenance, and product-specific interaction behavior.

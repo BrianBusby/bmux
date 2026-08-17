@@ -1,0 +1,1946 @@
+schema_version: 1
+
+project:
+  id: bmux-provenance-platform
+  name: Bmux and Provenance Engine
+  shared_state_owner: BrianBusby/provenance-engine
+
+repositories:
+  provenance_engine:
+    slug: BrianBusby/provenance-engine
+    role: durable_evidence_and_current_state
+  bmux:
+    slug: BrianBusby/bmux
+    role: observation_workflow_and_presentation
+
+cross_repository:
+  active_gate:
+    id: engineering_observation_period
+    title: Engineering Observation Period
+    status: active
+
+milestones:
+  - id: provenance_engine_v1
+    title: Provenance Engine V1 package
+    owner: provenance_engine
+    delivery_status: merged
+    acceptance_status: accepted
+    evidence:
+      commits:
+        - repository: BrianBusby/provenance-engine
+          sha: 18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03
+        - repository: BrianBusby/provenance-engine
+          sha: 0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc
+      pull_requests: []
+    accepted_at: 2026-07-29
+
+  - id: bmux_slice_e_adoption
+    title: Bmux Provenance Engine Slice E adoption
+    owner: bmux
+    delivery_status: merged
+    acceptance_status: accepted
+    evidence:
+      commits:
+        - repository: BrianBusby/bmux
+          sha: 3cbacd1501768f79ea377eb2d6aea9113f199d1b
+        - repository: BrianBusby/provenance-engine
+          sha: 0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc
+      pull_requests: []
+    accepted_at: 2026-07-29
+
+  - id: execution_telemetry_foundation
+    title: Provider-neutral execution telemetry foundation
+    owner: bmux
+    delivery_status: merged
+    acceptance_status: implemented
+    evidence:
+      commits:
+        - repository: BrianBusby/bmux
+          sha: c32ed93989c8ed8531d9b573bb34b36149461475
+        - repository: BrianBusby/bmux
+          sha: 9d7fefacbb402bc918b22888214021a8223f14ff
+      pull_requests:
+        - repository: BrianBusby/bmux
+          number: 12
+          owner:
+            login: BrianBusby
+            profile_url: https://github.com/BrianBusby
+
+  - id: claude_lifecycle_telemetry
+    title: Claude lifecycle telemetry migration
+    owner: bmux
+    delivery_status: merged
+    acceptance_status: implemented
+    evidence:
+      commits:
+        - repository: BrianBusby/bmux
+          sha: 5a4a463f17e07a1c5e2a037f07bfe4f743f839c5
+        - repository: BrianBusby/bmux
+          sha: 3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9
+      pull_requests:
+        - repository: BrianBusby/bmux
+          number: 13
+          owner:
+            login: BrianBusby
+            profile_url: https://github.com/BrianBusby
+    completed_at: 2026-07-31
+
+  - id: workspace_display_durable_context
+    title: Workspace Display Durable Context and Reconciliation
+    owner: bmux
+    delivery_status: open
+    acceptance_status: implemented
+    evidence:
+      commits:
+        - repository: BrianBusby/provenance-engine
+          sha: bdf81ae0454f274ff3e3f11df287b88320f1b272
+        - repository: BrianBusby/bmux
+          sha: 54316195468987c47512eb4f16d4fca2b3c2f8ed
+      pull_requests: []
+    completed_at: 2026-08-13
+
+  - id: richer_session_work_model
+    title: Richer Coding-Agent Evidence and Factual Session Projection
+    owner: provenance_engine
+    delivery_status: merged
+    acceptance_status: implemented
+    evidence:
+      commits:
+        - repository: BrianBusby/provenance-engine
+          sha: 9e69452a2ec22ead8dcbb2ef5d2a3c63f4464096
+        - repository: BrianBusby/provenance-engine
+          sha: 2add52c611e262ab053be47f8d2bd9f59934e00e
+        - repository: BrianBusby/provenance-engine
+          sha: a0f8c1fa2d0e93b6c0fc8593b4a76a9c52dcf0ee
+        - repository: BrianBusby/bmux
+          sha: 45b7188ea62d343bca433dee5cb0897e5427adc2
+      pull_requests:
+        - repository: BrianBusby/provenance-engine
+          number: 19
+          owner:
+            login: BrianBusby
+            profile_url: https://github.com/BrianBusby
+        - repository: BrianBusby/bmux
+          number: 48
+          owner:
+            login: BrianBusby
+            profile_url: https://github.com/BrianBusby
+    completed_at: 2026-08-15
+    acceptance_reason: First below-semantic-layer evidence foundation and factual session projection snapshot/read contract implemented; semantic SessionWorkModel inference, milestones, and architecture projection remain gated.
+
+roadmap:
+  nodes:
+    - id: bmux_provenance_platform
+      kind: project
+      title: Bmux and Provenance Engine
+      status: active
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: platform
+        architecture_layer: platform
+        tags:
+          - project_truth
+      parallelism:
+        classification: safe
+      execution:
+        assignment: current
+        assigned_to: shared
+      rationale: Canonical cross-repository roadmap root for Provenance Engine-owned evidence/current-state work and bmux-owned observation/presentation work.
+
+    - id: v1_foundation_and_adoption
+      kind: program
+      title: V1 Foundation and Bmux Adoption
+      parent: bmux_provenance_platform
+      status: accepted
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: v1_adoption
+        architecture_layer: platform
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: shared
+      rationale: Records the accepted V1 package and first bmux adoption path without expanding the legacy flat milestone list.
+
+    - id: v1_baseline
+      kind: phase
+      title: V1 Baseline
+      parent: v1_foundation_and_adoption
+      status: accepted
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: v1_adoption
+        architecture_layer: evidence_store
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: shared
+
+    - id: v1_package_and_slice_e
+      kind: milestone
+      title: V1 Package and Slice E Adoption
+      parent: v1_baseline
+      status: accepted
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: v1_adoption
+        architecture_layer: platform
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: shared
+
+    - id: provenance_engine_v1
+      kind: slice
+      title: Provenance Engine V1 package
+      parent: v1_package_and_slice_e
+      status: accepted
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: v1_adoption
+        architecture_layer: evidence_store
+      enables:
+        - bmux_slice_e_adoption
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: accepted
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: 18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03
+          - repository: BrianBusby/provenance-engine
+            sha: 0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc
+        pull_requests: []
+      accepted_at: 2026-07-29
+      mirrors_milestone: provenance_engine_v1
+
+    - id: bmux_slice_e_adoption
+      kind: slice
+      title: Bmux Provenance Engine Slice E adoption
+      parent: v1_package_and_slice_e
+      status: accepted
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: v1_adoption
+        architecture_layer: consumer_presentation
+      depends_on:
+        - provenance_engine_v1
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: bmux
+      delivery_status: merged
+      acceptance_status: accepted
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 3cbacd1501768f79ea377eb2d6aea9113f199d1b
+          - repository: BrianBusby/provenance-engine
+            sha: 0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc
+        pull_requests: []
+      accepted_at: 2026-07-29
+      mirrors_milestone: bmux_slice_e_adoption
+
+    - id: runtime_observation_and_workspace_display
+      kind: phase
+      title: Runtime Observation and Workspace Display
+      parent: v1_foundation_and_adoption
+      status: implemented
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: workspace_display
+        architecture_layer: deterministic_current_state
+      depends_on:
+        - bmux_slice_e_adoption
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: shared
+      rationale: Captures the post-V1 adoption work that connected bmux runtime observation to Provenance Engine-owned durable context and deterministic display projections.
+
+    - id: execution_telemetry_migration
+      kind: milestone
+      title: Execution Telemetry Migration
+      parent: runtime_observation_and_workspace_display
+      status: implemented
+      owner: bmux
+      repositories:
+        - bmux
+      concept_classification:
+        primary: execution_telemetry
+        architecture_layer: evidence_sources
+      enables:
+        - workspace_display_durable_context
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: bmux
+
+    - id: execution_telemetry_foundation
+      kind: slice
+      title: Provider-neutral execution telemetry foundation
+      parent: execution_telemetry_migration
+      status: implemented
+      owner: bmux
+      repositories:
+        - bmux
+      concept_classification:
+        primary: execution_telemetry
+        architecture_layer: evidence_sources
+      enables:
+        - claude_lifecycle_telemetry
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: bmux
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: c32ed93989c8ed8531d9b573bb34b36149461475
+          - repository: BrianBusby/bmux
+            sha: 9d7fefacbb402bc918b22888214021a8223f14ff
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 12
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      mirrors_milestone: execution_telemetry_foundation
+
+    - id: claude_lifecycle_telemetry
+      kind: slice
+      title: Claude lifecycle telemetry migration
+      parent: execution_telemetry_migration
+      status: implemented
+      owner: bmux
+      repositories:
+        - bmux
+      concept_classification:
+        primary: execution_telemetry
+        architecture_layer: evidence_sources
+      depends_on:
+        - execution_telemetry_foundation
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: bmux
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 5a4a463f17e07a1c5e2a037f07bfe4f743f839c5
+          - repository: BrianBusby/bmux
+            sha: 3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 13
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-07-31
+      mirrors_milestone: claude_lifecycle_telemetry
+
+    - id: workspace_display_current_state
+      kind: milestone
+      title: Workspace Display Current State
+      parent: runtime_observation_and_workspace_display
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: workspace_display
+        architecture_layer: deterministic_current_state
+      depends_on:
+        - execution_telemetry_migration
+      enables:
+        - richer_session_understanding
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: shared
+
+    - id: workspace_display_durable_context
+      kind: slice
+      title: Workspace Display Durable Context and Reconciliation
+      parent: workspace_display_current_state
+      status: implemented
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: workspace_display
+        architecture_layer: deterministic_current_state
+      depends_on:
+        - claude_lifecycle_telemetry
+      enables:
+        - richer_session_understanding
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: shared
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: bdf81ae0454f274ff3e3f11df287b88320f1b272
+          - repository: BrianBusby/bmux
+            sha: 54316195468987c47512eb4f16d4fca2b3c2f8ed
+        pull_requests: []
+      completed_at: 2026-08-13
+      mirrors_milestone: workspace_display_durable_context
+
+    - id: project_truth_governance
+      kind: program
+      title: Project Truth Governance
+      parent: bmux_provenance_platform
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: project_truth
+        architecture_layer: project_truth
+      parallelism:
+        classification: safe
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      rationale: Maintains canonical structured project state, generated status, and read-only CI checks that prevent authored documentation drift.
+
+    - id: canonical_project_truth_state
+      kind: phase
+      title: Canonical Project Truth State
+      parent: project_truth_governance
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: project_truth
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+
+    - id: project_truth_manifest_and_ci
+      kind: milestone
+      title: Project Truth Manifest and CI
+      parent: canonical_project_truth_state
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: project_truth
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+
+    - id: canonical_project_truth_manifest
+      kind: slice
+      title: Canonical project truth manifest and generated docs
+      parent: project_truth_manifest_and_ci
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: project_truth
+      enables:
+        - read_only_project_truth_ci_gate
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: 88a9b4e175d441f8f7dd6f845aa8a0093707a8dd
+        pull_requests: []
+
+    - id: read_only_project_truth_ci_gate
+      kind: slice
+      title: Read-only Project Truth CI gate
+      parent: project_truth_manifest_and_ci
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: cross_repository_workflow
+      depends_on:
+        - canonical_project_truth_manifest
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: df3866f697a916aca4331abe0535f557cbcf186e
+        pull_requests: []
+
+    - id: phase_0a_canonical_nested_roadmap
+      kind: slice
+      title: Phase 0A Canonical Nested Roadmap and Concept Classification
+      parent: project_truth_manifest_and_ci
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: project_truth
+      depends_on:
+        - read_only_project_truth_ci_gate
+      enables:
+        - phase_0b_current_target_architecture
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - roadmap_hierarchy
+          - roadmap_dependency_validation
+        expected_code_areas:
+          - project/project-state.yaml
+          - project/schema/project-state.schema.json
+          - tools/project-docs
+          - docs/generated
+        likely_conflict_domains:
+          - project/project-state.yaml
+          - project/schema
+          - tools/project-docs
+          - docs/generated
+        contract_dependencies:
+          - project_truth_generated_docs
+          - project_docs_validation
+        worktree_required: true
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: e278a4423f1543176d60a9b436b1126e44888194
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 21
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-16
+      rationale: Establishes the nested dependency-aware roadmap and generated nested-roadmap view that later planning and architecture slices build on.
+
+    - id: phase_0b_current_target_architecture
+      kind: slice
+      title: Phase 0B Current-and-Target Architecture
+      parent: project_truth_manifest_and_ci
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: project_truth
+      depends_on:
+        - phase_0a_canonical_nested_roadmap
+      enables:
+        - phase_0c_parallel_worktree_metadata
+      parallelism:
+        classification: safe
+        expected_contract_domains:
+          - current_target_architecture_status
+        expected_code_areas:
+          - docs/current-and-target-architecture.md
+          - tools/project-docs
+        likely_conflict_domains:
+          - project/project-state.yaml
+          - docs/generated
+        contract_dependencies:
+          - project_truth_generated_docs
+        worktree_required: true
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: 533567ead8c69ff13c919d0e41ec0a9dd7916e3b
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 22
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-15
+      rationale: Records the living current-and-target architecture guide and its generated status block as project-truth infrastructure without changing product implementation sequencing.
+
+    - id: phase_0c_parallel_worktree_metadata
+      kind: slice
+      title: Phase 0C Parallel Slice Planning and Worktree Safety Metadata
+      parent: project_truth_manifest_and_ci
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: cross_repository_workflow
+      depends_on:
+        - phase_0b_current_target_architecture
+      parallelism:
+        classification: safe
+        expected_contract_domains:
+          - roadmap_parallelism_metadata
+          - active_worktree_preflight
+        expected_code_areas:
+          - project/project-state.yaml
+          - project/schema/project-state.schema.json
+          - project/schema/repo-status.schema.json
+          - tools/project-docs
+          - docs/generated
+        likely_conflict_domains:
+          - project/project-state.yaml
+          - project/schema
+          - tools/project-docs
+          - docs/generated
+        contract_dependencies:
+          - project_truth_generated_docs
+          - project_docs_validation
+        worktree_required: true
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: 6fee11b0fa40593ac848fe55e8406687a4ceb795
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 23
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-16
+      rationale: Adds manifest-only parallel slice planning metadata, active worktree and branch safety validation, and generated preflight visibility without assigning future work automatically.
+
+    - id: richer_session_understanding
+      kind: program
+      title: Richer Session Understanding
+      parent: bmux_provenance_platform
+      status: active
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: inference_session_work_projections
+        tags:
+          - session_work_model
+      depends_on:
+        - workspace_display_durable_context
+      parallelism:
+        classification: safe
+      execution:
+        assignment: current
+        assigned_to: shared
+      rationale: >-
+        Richer coding-agent evidence and session projections are the active direction after V1 adoption and workspace-display observation. This program now explicitly supports bmux's three-view coding-session model: Native provider-native fidelity, React Terminal live interaction, and React Smart Session understanding backed by PE factual and semantic models.
+
+    - id: richer_session_evidence_and_factual_state
+      kind: phase
+      title: Evidence and Factual State
+      parent: richer_session_understanding
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: deterministic_current_state
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+
+    - id: richer_session_observable_evidence
+      kind: milestone
+      title: Richer Coding-Agent Evidence Foundation
+      parent: richer_session_evidence_and_factual_state
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: evidence_store
+      enables:
+        - factual_session_projection_read_contract
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+
+    - id: richer_coding_agent_evidence_foundation
+      kind: slice
+      title: Richer coding-agent evidence foundation
+      parent: richer_session_observable_evidence
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: evidence_store
+      enables:
+        - factual_session_projection_foundation
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: 9e69452a2ec22ead8dcbb2ef5d2a3c63f4464096
+          - repository: BrianBusby/bmux
+            sha: 45b7188ea62d343bca433dee5cb0897e5427adc2
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 19
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+          - repository: BrianBusby/bmux
+            number: 48
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-15
+      mirrors_milestone: richer_session_work_model
+      acceptance_reason: Completed-unit coding-agent evidence exists below the semantic layer; raw provider streams, private reasoning, approvals, validation, errors, and compaction remain gated follow-ups.
+
+    - id: factual_session_projection_read_contract
+      kind: milestone
+      title: Factual Session Projection Read Contract
+      parent: richer_session_evidence_and_factual_state
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: deterministic_current_state
+      depends_on:
+        - richer_session_observable_evidence
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+
+    - id: factual_session_projection_foundation
+      kind: slice
+      title: Factual session projection foundation
+      parent: factual_session_projection_read_contract
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: deterministic_current_state
+      depends_on:
+        - richer_coding_agent_evidence_foundation
+      enables:
+        - factual_projection_consumer_shape_followup
+      parallelism:
+        classification: serial
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: 2add52c611e262ab053be47f8d2bd9f59934e00e
+          - repository: BrianBusby/provenance-engine
+            sha: a0f8c1fa2d0e93b6c0fc8593b4a76a9c52dcf0ee
+        pull_requests: []
+      completed_at: 2026-08-15
+      mirrors_milestone: richer_session_work_model
+      acceptance_reason: First revisioned factualSessionProjection read contract returns observed thread/turn evidence without semantic inference.
+
+    - id: factual_projection_consumer_shape_followup
+      kind: slice
+      title: Factual projection consumer shape follow-up
+      parent: factual_session_projection_read_contract
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: deterministic_current_state
+      depends_on:
+        - factual_session_projection_foundation
+      enables:
+        - factual_agent_session_view
+        - semantic_inference_framework
+      sequence_before:
+        - semantic_inference_framework
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - factual_session_projection
+          - deterministic_current_state
+        expected_code_areas:
+          - Sources/ProvenanceEngineContracts
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+          - bmux factual projection consumers
+        likely_conflict_domains:
+          - factual_session_projection_contract
+          - deterministic_current_state_projection
+          - bmux_consumer_contract_shape
+        contract_dependencies:
+          - factual_session_projection_foundation
+          - deterministic_current_state_api
+        worktree_required: true
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: db5f21f4bb561e4aba20e2ae76e3af954a367c87
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 24
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-16
+      acceptance:
+        criteria:
+          - Confirm the factual projection shape needed by early consumers before semantic SessionWorkModel inference begins.
+          - Preserve the boundary that deterministic Current State contains observed facts only.
+      acceptance_reason: The public factual projection now exposes a detailed latest-turn snapshot, compact prior-turn references, compact provider-thread identities, and independent factual turn-detail retrieval while preserving deterministic evidence-only semantics and v1 decoding compatibility.
+      rationale: Confirmed the PE-owned consumer shape before semantic inference depends on the factual session projection.
+
+    - id: semantic_understanding
+      kind: phase
+      title: Semantic Understanding
+      parent: richer_session_understanding
+      status: active
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - factual_projection_consumer_shape_followup
+      parallelism:
+        classification: serial
+      execution:
+        assignment: current
+        assigned_to: provenance_engine
+
+    - id: semantic_session_work_model_projection
+      kind: milestone
+      title: Semantic SessionWorkModel Projection
+      parent: semantic_understanding
+      status: active
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: inference_session_work_projections
+      parallelism:
+        classification: serial
+      execution:
+        assignment: current
+        assigned_to: provenance_engine
+
+    - id: semantic_inference_framework
+      kind: slice
+      title: Semantic inference framework
+      parent: semantic_session_work_model_projection
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - factual_projection_consumer_shape_followup
+      enables:
+        - first_semantic_session_inferences
+        - blocker_approach_change_semantics
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - semantic_inference_records
+          - session_work_model_semantics
+        expected_code_areas:
+          - Sources/ProvenanceEngineContracts
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - semantic_inference_schema
+          - session_work_model_projection
+        contract_dependencies:
+          - factual_session_projection
+          - evidence_reference_identity
+        worktree_required: true
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: d66e847c5cb71d7a63a3d0b3ecdf3c29b65c1f28
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 26
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-16
+      acceptance:
+        criteria:
+          - Inference records carry supporting evidence, producer version, confidence, and supersession state.
+          - Model-derived fields remain out of deterministic Current State.
+      acceptance_reason: Versioned semantic inference records, bounded input/invalidation/coalescing contracts, SQLite persistence, transactional supersession, and public query/publish APIs are implemented above deterministic factual projections without adding concrete semantic concepts.
+
+    - id: first_semantic_session_inferences
+      kind: slice
+      title: First semantic session inferences
+      parent: semantic_session_work_model_projection
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - semantic_inference_framework
+      enables:
+        - human_readable_semantic_messaging
+        - milestone_inference
+        - scoped_architecture_projection
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - semantic_session_inferences
+          - session_work_model_semantics
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - semantic_inference_schema
+          - session_work_model_projection
+        contract_dependencies:
+          - semantic_inference_records
+          - factual_session_projection
+        worktree_required: true
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: 50a4fb58a1147feea581eee9d26d45a325b4672d
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 28
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-16
+      acceptance:
+        criteria:
+          - Thread intent, turn intent, session phase, and current activity are evidence-backed.
+      acceptance_reason: First concrete rule-produced semantic records now materialize thread intent, turn intent, session phase, and current activity from factual session projections with structured payloads, evidence references, factual revision, producer metadata, confidence, specificity, and supersession while keeping deterministic Current State factual only.
+
+    - id: human_readable_semantic_messaging
+      kind: slice
+      title: Human-readable semantic messaging
+      parent: semantic_session_work_model_projection
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - first_semantic_session_inferences
+      enables:
+        - clickable_semantic_explanation_ui
+        - presentation_language_calibration_corpus
+        - react_smart_session_foundation
+        - session_work_model_contract_foundation
+      parallelism:
+        classification: safe
+        with:
+          - presentation_language_calibration_corpus
+        expected_contract_domains:
+          - semantic_message_contract
+          - session_work_model_presentation
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - docs/session-work-model.md
+          - bmux semantic presentation consumers
+        likely_conflict_domains:
+          - semantic_message_contract
+          - session_work_model_projection
+        contract_dependencies:
+          - semantic_session_inferences
+        worktree_required: true
+        conflict_note: Safe with the calibration corpus only when messaging edits stay in presentation contract code and corpus edits stay in example data.
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/provenance-engine
+            sha: ec0baa4b0d83b2a1025c6d6a0c0b4a8d15416e65
+        pull_requests:
+          - repository: BrianBusby/provenance-engine
+            number: 30
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-16
+      acceptance:
+        criteria:
+          - Semantic inference records can be rendered into cached concise and expanded messages.
+          - Message records preserve structured semantic meaning, provenance, confidence, specificity, producer, policy, history, and supersession.
+          - Presentation wording remains separate from semantic inference truth and deterministic Current State.
+      acceptance_reason: Human-readable semantic message contracts, deterministic default rendering for first coding-agent semantic kinds, SQLite message cache/history persistence, public publish/query/materialization APIs, and coverage for wording, policy separation, supersession, rollback, retrieval, and Current State separation are implemented.
+
+    - id: session_work_model_contract_foundation
+      kind: slice
+      title: SessionWorkModel contract foundation
+      parent: semantic_session_work_model_projection
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: inference_session_work_projections
+        tags:
+          - session_work_model
+          - react_smart_session
+      depends_on:
+        - human_readable_semantic_messaging
+      enables:
+        - react_smart_session_work_model_consumer
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - session_work_model_contract
+          - factual_semantic_provenance
+          - semantic_message_contract
+        expected_code_areas:
+          - Sources/ProvenanceEngineContracts
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+          - docs/session-work-model.md
+        likely_conflict_domains:
+          - session_work_model_projection
+          - semantic_message_contract
+          - factual_session_projection_contract
+        contract_dependencies:
+          - factual_session_projection
+          - semantic_message_contract
+          - semantic_session_inferences
+        worktree_required: true
+        conflict_note: Define the PE-owned contract before bmux builds richer Smart Session presentation so bmux consumes a revisioned model instead of composing its own semantic interpretation.
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Introduce the first revisioned PE-owned SessionWorkModel snapshot contract for Smart Session consumers. The contract should preserve evidence references, deterministic factual projections, semantic inference records, semantic messages, and presentation boundaries.
+
+    - id: three_view_coding_session_experience
+      kind: phase
+      title: Three-view Coding Session Experience
+      parent: richer_session_understanding
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: consumer_presentation
+        tags:
+          - three_view_session
+          - react_terminal
+          - react_smart_session
+      depends_on:
+        - factual_projection_consumer_shape_followup
+      parallelism:
+        classification: safe
+      execution:
+        assignment: current
+        assigned_to: bmux
+      rationale: >-
+        Make the three distinct user-facing views durable in Project Truth: Native preserves provider-native fidelity, Terminal is the bmux React live interaction surface, and Session is a separate React smart summary surface backed by PE factual and semantic models.
+
+    - id: coding_session_view_surfaces
+      kind: milestone
+      title: Coding Session View Surfaces
+      parent: three_view_coding_session_experience
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: consumer_presentation
+        tags:
+          - native_session_view
+          - react_terminal
+          - react_smart_session
+      parallelism:
+        classification: safe
+      execution:
+        assignment: current
+        assigned_to: bmux
+      rationale: Groups bmux-owned presentation and navigation work that keeps Native, Terminal, and Session as separate views over one underlying coding-agent session identity.
+
+    - id: factual_agent_session_view
+      kind: slice
+      title: Factual agent session view
+      parent: coding_session_view_surfaces
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: consumer_presentation
+      depends_on:
+        - factual_projection_consumer_shape_followup
+      enables:
+        - react_smart_session_foundation
+      parallelism:
+        classification: conditional
+        expected_contract_domains:
+          - factual_session_projection
+          - bmux_factual_session_view
+        expected_code_areas:
+          - Sources/Panels/AgentSessionFactualProjectionView.swift
+          - Sources/Panels/TerminalPanelView.swift
+          - Sources/WorkProvenance/AgentSessionFactualProjectionStore.swift
+          - future React Smart Session factual data bridge
+          - bmux factual projection consumers
+        likely_conflict_domains:
+          - bmux_factual_session_view
+          - bmux_panel_ui
+          - factual_session_projection_consumer
+        contract_dependencies:
+          - factual_session_projection
+          - deterministic_current_state_api
+        worktree_required: true
+        conflict_note: "Active bmux PR #49 uses the historical clickable-semantic-explanation-ui branch name but implements factual Swift/native Session UI only. Treat it as factual consumer groundwork and diagnostic scaffolding, not the final React Smart Session product."
+      execution:
+        assignment: current
+        assigned_to: bmux
+        active_worktree: /Users/brianbusby/repos/bmux-clickable-semantic-explanation-ui
+        active_branch: clickable-semantic-explanation-ui
+        active_agent: Codex
+        notes: "PR #49 is factual-only Swift/native UI and should not be counted as satisfying React Smart Session or clickable semantic explanation behavior."
+      delivery_status: draft
+      acceptance_status: proposed
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 6893fa3af6e5f4babb2d75e6e0b5045cc545c20e
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 49
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      rationale: Records the active bmux factual Session view work as a prerequisite PE factual-projection consumer. The native view is useful inspection/debug scaffolding and data-access foundation, but the intended user-facing Smart Session surface is React and remains separate from the React Terminal transcript/live interaction surface.
+
+    - id: react_terminal_productization
+      kind: slice
+      title: React Terminal live interaction productization
+      parent: coding_session_view_surfaces
+      status: planned
+      owner: bmux
+      repositories:
+        - bmux
+      concept_classification:
+        primary: execution_telemetry
+        architecture_layer: consumer_presentation
+        tags:
+          - react_terminal
+          - agent_chat
+      enables:
+        - three_view_session_navigation
+      parallelism:
+        classification: safe
+        expected_contract_domains:
+          - agent_chat_live_event_schema
+          - provider_runtime_identity
+          - native_webview_surface_lifecycle
+        expected_code_areas:
+          - agent-chat
+          - Sources/Panels/AgentSessionWebRenderer.swift
+          - Sources/Panels/AgentSessionWebRendererCoordinator.swift
+          - Sources/Panels/AgentSessionPanel.swift
+          - Sources/Panels/BrowserPanelView.swift
+        likely_conflict_domains:
+          - agent_chat_surface_lifecycle
+          - provider_runtime_controls
+          - browser_surface_integration
+        contract_dependencies:
+          - codex_app_server_live_events
+          - bmux_browser_surface_hosting
+        worktree_required: true
+        conflict_note: Can proceed in parallel with PE semantic work when it remains focused on live interaction, provider controls, runtime identity, and surface lifecycle rather than Smart Session inference.
+      execution:
+        assignment: planned
+        assigned_to: bmux
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Productize the existing agent-chat React surface as bmux's Terminal view for live conversation, streaming, tool lifecycle, controls, interrupts, and provider-normalized interaction. It must not become the Smart Session semantic summary surface or duplicate PE inference.
+
+    - id: react_smart_session_foundation
+      kind: slice
+      title: React Smart Session foundation
+      parent: coding_session_view_surfaces
+      status: planned
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: consumer_presentation
+        tags:
+          - react_smart_session
+          - session_summary
+      depends_on:
+        - factual_agent_session_view
+        - human_readable_semantic_messaging
+      enables:
+        - clickable_semantic_explanation_ui
+        - react_smart_session_work_model_consumer
+        - three_view_session_navigation
+      parallelism:
+        classification: conditional
+        expected_contract_domains:
+          - factual_session_projection
+          - semantic_message_contract
+          - react_smart_session_data_bridge
+        expected_code_areas:
+          - agent-chat shared React shell and primitives
+          - React Smart Session surface
+          - Sources/Panels/AgentSessionPanel.swift
+          - Sources/WorkProvenance
+          - docs/provenance-integration.md
+        likely_conflict_domains:
+          - react_session_presentation
+          - factual_session_projection_consumer
+          - semantic_message_consumer
+        contract_dependencies:
+          - factual_session_projection
+          - semantic_message_contract
+          - bmux_panel_surface_identity
+        worktree_required: true
+        conflict_note: Start after factual Session UI lands so the React surface can reuse proven factual consumer shape. Keep the presentation summary-oriented and PE-backed rather than transcript-oriented.
+      execution:
+        assignment: selected_next
+        assigned_to: bmux
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Establish a separate React Session surface that summarizes goal, completed turns, current turn, activity, plan state, worked-on areas, validations, outcomes, and provenance using PE factual projections and semantic messages. This foundation must not infer session meaning from raw provider events inside bmux.
+
+    - id: react_smart_session_work_model_consumer
+      kind: slice
+      title: React Smart SessionWorkModel consumer
+      parent: coding_session_view_surfaces
+      status: planned
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: structured_work_understanding
+        architecture_layer: consumer_presentation
+        tags:
+          - react_smart_session
+          - session_work_model
+      depends_on:
+        - react_smart_session_foundation
+        - session_work_model_contract_foundation
+        - milestone_inference
+        - blocker_approach_change_semantics
+      enables:
+        - continuous_presentation_learning
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - session_work_model_contract
+          - milestone_semantics
+          - blocker_approach_change_semantics
+          - semantic_explanation_provenance
+        expected_code_areas:
+          - React Smart Session surface
+          - bmux SessionWorkModel client
+          - Sources/WorkProvenance
+          - Sources/ProvenanceEngineContracts
+        likely_conflict_domains:
+          - session_work_model_projection
+          - react_session_presentation
+          - semantic_message_contract
+        contract_dependencies:
+          - session_work_model_contract
+          - milestone_semantics
+          - semantic_message_contract
+        worktree_required: true
+        conflict_note: Wait for PE to own richer progress, blocker, approach-change, and milestone semantics before presenting them as Smart Session truth in bmux.
+      execution:
+        assignment: planned
+        assigned_to: bmux
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Consume the PE SessionWorkModel for completed-turn summaries, current-turn state, plan/progress, blockers, approach changes, validations, and richer session-level synthesis once those contracts exist.
+
+    - id: clickable_semantic_explanation_ui
+      kind: slice
+      title: Clickable semantic explanation UI
+      parent: coding_session_view_surfaces
+      status: planned
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: consumer_presentation
+      depends_on:
+        - react_smart_session_foundation
+        - human_readable_semantic_messaging
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - semantic_explanation_provenance
+          - bmux_semantic_presentation
+        expected_code_areas:
+          - React Smart Session evidence drill-down
+          - bmux semantic presentation consumers
+          - Sources/ProvenanceEngineContracts
+        likely_conflict_domains:
+          - bmux_semantic_presentation
+          - semantic_message_contract
+        contract_dependencies:
+          - semantic_message_contract
+          - session_work_model_presentation
+        worktree_required: true
+      execution:
+        assignment: planned
+        assigned_to: bmux
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Add clickable/expandable explanations inside the React Smart Session surface after the summary surface exists, preserving provenance boundaries between observed evidence, deterministic projection, semantic interpretation, and presentation text.
+
+    - id: three_view_session_navigation
+      kind: slice
+      title: Three-view session navigation
+      parent: coding_session_view_surfaces
+      status: planned
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: consumer_presentation
+        tags:
+          - three_view_session
+          - native_session_view
+          - react_terminal
+          - react_smart_session
+      depends_on:
+        - react_terminal_productization
+        - react_smart_session_foundation
+      parallelism:
+        classification: conditional
+        expected_contract_domains:
+          - provider_thread_identity
+          - bmux_session_identity
+          - worktree_identity
+          - surface_restore_state
+        expected_code_areas:
+          - Sources/Panels/AgentSessionPanel.swift
+          - Sources/Panels/TerminalPanelView.swift
+          - Sources/Panels/AgentSessionWebRenderer.swift
+          - agent-chat
+          - bmux surface routing and restoration
+        likely_conflict_domains:
+          - session_surface_identity
+          - provider_native_terminal_hosting
+          - browser_webview_surface_lifecycle
+        contract_dependencies:
+          - react_terminal_surface_identity
+          - react_smart_session_surface_identity
+          - provider_thread_identity
+        worktree_required: true
+        conflict_note: Depends on productized Terminal and Smart Session foundations so switching preserves one underlying agent session instead of creating separate conceptual sessions.
+      execution:
+        assignment: planned
+        assigned_to: bmux
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Provide coherent switching among Native, Terminal, and Session views while preserving provider thread/session identity, working directory/worktree identity, active view restoration, and the provider-native escape hatch.
+
+    - id: continuous_presentation_learning
+      kind: slice
+      title: Continuous presentation learning
+      parent: semantic_session_work_model_projection
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - clickable_semantic_explanation_ui
+        - presentation_language_calibration_corpus
+      parallelism:
+        classification: safe
+        expected_contract_domains:
+          - presentation_feedback_events
+          - semantic_message_calibration
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - bmux semantic feedback surfaces
+        likely_conflict_domains:
+          - presentation_feedback_events
+          - semantic_message_calibration
+        contract_dependencies:
+          - semantic_explanation_provenance
+          - presentation_language_corpus
+        worktree_required: true
+      execution:
+        assignment: planned
+        assigned_to: shared
+      delivery_status: proposed
+      acceptance_status: proposed
+
+    - id: presentation_language_calibration_corpus
+      kind: slice
+      title: Presentation language calibration corpus
+      parent: semantic_session_work_model_projection
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: semantic_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - first_semantic_session_inferences
+      parallelism:
+        classification: safe
+        with:
+          - human_readable_semantic_messaging
+        expected_contract_domains:
+          - presentation_language_corpus
+          - semantic_message_calibration
+        expected_code_areas:
+          - Tests/ProvenanceEngineTests
+          - docs/session-work-model.md
+          - calibration fixtures
+        likely_conflict_domains:
+          - presentation_language_corpus
+          - semantic_message_calibration
+        contract_dependencies:
+          - semantic_session_inferences
+        worktree_required: true
+        conflict_note: Safe with human-readable messaging only when corpus edits do not change the semantic message contract.
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+      delivery_status: proposed
+      acceptance_status: proposed
+
+    - id: structured_work_understanding
+      kind: phase
+      title: Structured Work Understanding
+      parent: richer_session_understanding
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: structured_work_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - first_semantic_session_inferences
+      parallelism:
+        classification: safe
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+
+    - id: semantic_milestone_relationships
+      kind: milestone
+      title: Milestone Semantics and Relationships
+      parent: structured_work_understanding
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: structured_work_understanding
+        architecture_layer: inference_session_work_projections
+      parallelism:
+        classification: safe
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+
+    - id: milestone_inference
+      kind: slice
+      title: Milestone inference
+      parent: semantic_milestone_relationships
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: structured_work_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - first_semantic_session_inferences
+      enables:
+        - milestone_to_code_relationships
+        - milestone_to_architecture_relationships
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - milestone_semantics
+          - session_work_model_milestones
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - milestone_semantics
+          - session_work_model_projection
+        contract_dependencies:
+          - semantic_session_inferences
+        worktree_required: true
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+      delivery_status: proposed
+      acceptance_status: proposed
+
+    - id: blocker_approach_change_semantics
+      kind: slice
+      title: Blocker and approach-change semantics
+      parent: semantic_milestone_relationships
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: structured_work_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - semantic_inference_framework
+      parallelism:
+        classification: safe
+        with:
+          - milestone_inference
+        expected_contract_domains:
+          - blocker_semantics
+          - approach_change_semantics
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - blocker_semantics
+          - approach_change_semantics
+        contract_dependencies:
+          - semantic_inference_records
+        worktree_required: true
+        conflict_note: Safe only if blocker and approach-change records stay independent from milestone hierarchy writes.
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+      delivery_status: proposed
+      acceptance_status: proposed
+
+    - id: milestone_to_code_relationships
+      kind: slice
+      title: Milestone-to-code relationships
+      parent: semantic_milestone_relationships
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: structured_work_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - milestone_inference
+        - richer_coding_agent_evidence_foundation
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - milestone_code_relationships
+          - file_change_attribution
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Sources/ProvenanceEngineContracts
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - milestone_relationships
+          - file_change_attribution
+        contract_dependencies:
+          - milestone_semantics
+          - richer_coding_agent_evidence
+        worktree_required: true
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+      delivery_status: proposed
+      acceptance_status: proposed
+
+    - id: architecture_understanding
+      kind: phase
+      title: Architecture Understanding
+      parent: richer_session_understanding
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: architecture_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - first_semantic_session_inferences
+      parallelism:
+        classification: safe
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+
+    - id: scoped_architecture_understanding
+      kind: milestone
+      title: Scoped Architecture Understanding
+      parent: architecture_understanding
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: architecture_understanding
+        architecture_layer: inference_session_work_projections
+      parallelism:
+        classification: serial
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+
+    - id: scoped_architecture_projection
+      kind: slice
+      title: Scoped architecture projection
+      parent: scoped_architecture_understanding
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: architecture_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - first_semantic_session_inferences
+      enables:
+        - milestone_to_architecture_relationships
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - scoped_architecture_projection
+          - architecture_evidence_relationships
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Sources/ProvenanceEngineContracts
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - scoped_architecture_projection
+          - architecture_relationships
+        contract_dependencies:
+          - semantic_session_inferences
+          - file_change_attribution
+        worktree_required: true
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+      delivery_status: proposed
+      acceptance_status: proposed
+
+    - id: milestone_to_architecture_relationships
+      kind: slice
+      title: Milestone-to-architecture relationships
+      parent: scoped_architecture_understanding
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: architecture_understanding
+        architecture_layer: inference_session_work_projections
+      depends_on:
+        - scoped_architecture_projection
+        - milestone_inference
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - milestone_architecture_relationships
+          - scoped_architecture_projection
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Tests/ProvenanceEngineTests
+        likely_conflict_domains:
+          - milestone_relationships
+          - architecture_relationships
+        contract_dependencies:
+          - scoped_architecture_projection
+          - milestone_semantics
+        worktree_required: true
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+      delivery_status: proposed
+      acceptance_status: proposed
+
+    - id: durable_knowledge
+      kind: phase
+      title: Durable Knowledge
+      parent: richer_session_understanding
+      status: deferred
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: durable_knowledge
+        architecture_layer: knowledge_compiler
+      depends_on:
+        - milestone_to_code_relationships
+        - milestone_to_architecture_relationships
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - knowledge_compiler_outputs
+          - retrieval_context_packages
+        expected_code_areas:
+          - Sources/ProvenanceEngineCore
+          - Sources/ProvenanceEngineContracts
+          - Tests/ProvenanceEngineTests
+          - docs/reference-architecture.md
+        likely_conflict_domains:
+          - knowledge_compiler
+          - retrieval_contracts
+        contract_dependencies:
+          - milestone_code_relationships
+          - milestone_architecture_relationships
+        worktree_required: true
+      execution:
+        assignment: deferred
+        assigned_to: provenance_engine
+
+    - id: knowledge_compiler_later
+      kind: milestone
+      title: Knowledge Compiler Later
+      parent: durable_knowledge
+      status: deferred
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: durable_knowledge
+        architecture_layer: knowledge_compiler
+      parallelism:
+        classification: serial
+      execution:
+        assignment: deferred
+        assigned_to: provenance_engine
+
+    - id: knowledge_compiler_outcomes
+      kind: slice
+      title: Knowledge Compiler work later
+      parent: knowledge_compiler_later
+      status: deferred
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+      concept_classification:
+        primary: durable_knowledge
+        architecture_layer: knowledge_compiler
+      depends_on:
+        - milestone_to_code_relationships
+        - milestone_to_architecture_relationships
+      parallelism:
+        classification: serial
+      execution:
+        assignment: deferred
+        assigned_to: provenance_engine
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Durable Knowledge Compiler artifacts remain intentionally later than live session evidence, inference, and architecture projection validation.
+
+ownership:
+  durable_evidence: provenance_engine
+  deterministic_current_state: provenance_engine
+  meaningful_execution_evidence: provenance_engine
+  semantic_inference: provenance_engine
+  session_work_model_projection: provenance_engine
+  milestone_semantics: provenance_engine
+  scoped_architecture_projection: provenance_engine
+  schema_compatibility: provenance_engine
+  bounded_provenance_queries: provenance_engine
+  workflow_observation: bmux
+  execution_telemetry: bmux
+  streaming_execution_telemetry: bmux
+  provider_specific_acquisition: bmux
+  capture_policy: bmux
+  runtime_orchestration: bmux
+  user_interface: bmux
+  presentation: bmux
+
+policies:
+  raw_execution_telemetry_persisted: false
+  live_projection_persisted: false
+  narrow_lifecycle_projection_enabled: true
+  automatic_checkpoint_diagnostics:
+    status: not_implemented
+    selected_for_implementation: false
+
+caveats:
+  - id: broad_legacy_storage_migration
+    title: Broad legacy bmux-local storage migration
+    status: open
+    owner: bmux
+
+  - id: observability_trace_api
+    title: Observability trace API boundary
+    status: open
+    owner: provenance_engine
+
+  - id: github_actions_runner_reliability
+    title: GitHub Actions runner reliability
+    status: open
+    owner: bmux
+    issue:
+      repository: BrianBusby/bmux
+      number: 8

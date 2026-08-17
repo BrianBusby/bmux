@@ -1,0 +1,47 @@
+schema_version: 1
+repository: BrianBusby/provenance-engine
+
+current_work:
+  active_slice: null
+  state: observation
+
+release:
+  latest_tag: "0.1.0"
+  release_status: tagged
+
+local_capabilities:
+  public_in_process_sdk: implemented
+  engine_owned_sqlite_store: implemented
+  immutable_ledger: implemented
+  deterministic_current_state: implemented
+  workspace_display_current_state: implemented
+  workspace_display_projection_cursors: implemented
+  workspace_display_ticket_link_facts: implemented
+  workspace_display_ticket_title_facts: implemented
+  workspace_display_project_link_facts: implemented
+  workspace_display_durable_context: implemented
+  schema_identity_validation: implemented
+  producer_neutral_lifecycle_recording: implemented
+  richer_coding_agent_evidence: implemented
+  factual_session_projection: implemented
+  factual_session_turn_detail: implemented
+  semantic_session_work_model_projection: planned
+  semantic_inference_framework: implemented
+  semantic_inference_records: implemented
+  first_semantic_session_inferences: implemented
+  coding_agent_thread_intent: implemented
+  coding_agent_turn_intent: implemented
+  coding_agent_session_phase: implemented
+  coding_agent_current_activity: implemented
+  human_readable_semantic_messaging: implemented
+  semantic_message_records: implemented
+  semantic_message_materialization: implemented
+  semantic_message_presentation_policy: implemented
+  session_work_model_contract_foundation: planned
+  milestone_inference: planned
+  blocker_approach_change_semantics: planned
+  scoped_architecture_projection: planned
+
+local_caveats:
+  - id: observability_trace_api
+    status: open
