@@ -67,8 +67,13 @@ struct SidebarWorkspaceWorkingBorder: View {
                 lineWidth: effectiveLineWidth,
                 elapsedTime: elapsedTime
             )
+            drawEdgeLighting(
+                context: &layer,
+                outerRect: outerRect,
+                lineWidth: effectiveLineWidth
+            )
             layer.fill(rectanglePath(outerRect), with: .linearGradient(
-                glossGradient,
+                ambientGlossGradient,
                 startPoint: CGPoint(x: outerRect.minX, y: outerRect.minY),
                 endPoint: CGPoint(x: outerRect.maxX, y: outerRect.maxY)
             ))
@@ -147,19 +152,89 @@ struct SidebarWorkspaceWorkingBorder: View {
         context.fill(path, with: .color(color))
     }
 
+    private func drawEdgeLighting(
+        context: inout GraphicsContext,
+        outerRect: CGRect,
+        lineWidth: CGFloat
+    ) {
+        let topEdge = CGRect(
+            x: outerRect.minX,
+            y: outerRect.minY,
+            width: outerRect.width,
+            height: lineWidth
+        )
+        let bottomEdge = CGRect(
+            x: outerRect.minX,
+            y: outerRect.maxY - lineWidth,
+            width: outerRect.width,
+            height: lineWidth
+        )
+        let leftEdge = CGRect(
+            x: outerRect.minX,
+            y: outerRect.minY,
+            width: lineWidth,
+            height: outerRect.height
+        )
+        let rightEdge = CGRect(
+            x: outerRect.maxX - lineWidth,
+            y: outerRect.minY,
+            width: lineWidth,
+            height: outerRect.height
+        )
+
+        context.fill(rectanglePath(topEdge), with: .linearGradient(
+            litOuterTubeGradient,
+            startPoint: CGPoint(x: topEdge.midX, y: topEdge.minY),
+            endPoint: CGPoint(x: topEdge.midX, y: topEdge.maxY)
+        ))
+        context.fill(rectanglePath(leftEdge), with: .linearGradient(
+            litOuterTubeGradient,
+            startPoint: CGPoint(x: leftEdge.minX, y: leftEdge.midY),
+            endPoint: CGPoint(x: leftEdge.maxX, y: leftEdge.midY)
+        ))
+        context.fill(rectanglePath(bottomEdge), with: .linearGradient(
+            shadedOuterTubeGradient,
+            startPoint: CGPoint(x: bottomEdge.midX, y: bottomEdge.minY),
+            endPoint: CGPoint(x: bottomEdge.midX, y: bottomEdge.maxY)
+        ))
+        context.fill(rectanglePath(rightEdge), with: .linearGradient(
+            shadedOuterTubeGradient,
+            startPoint: CGPoint(x: rightEdge.minX, y: rightEdge.midY),
+            endPoint: CGPoint(x: rightEdge.maxX, y: rightEdge.midY)
+        ))
+    }
+
     private var baseEnamelColor: Color {
         colorScheme == .dark
             ? Color(red: 0.82, green: 0.84, blue: 0.88)
             : Color(red: 0.94, green: 0.95, blue: 0.97)
     }
 
-    private var glossGradient: Gradient {
+    private var litOuterTubeGradient: Gradient {
         Gradient(stops: [
-            .init(color: Color.white.opacity(colorScheme == .dark ? 0.08 : 0.16), location: 0.0),
-            .init(color: Color.white.opacity(colorScheme == .dark ? 0.52 : 0.64), location: 0.18),
+            .init(color: Color.white.opacity(colorScheme == .dark ? 0.34 : 0.48), location: 0.0),
+            .init(color: Color.white.opacity(colorScheme == .dark ? 0.18 : 0.28), location: 0.24),
+            .init(color: Color.clear, location: 0.54),
+            .init(color: Color.black.opacity(colorScheme == .dark ? 0.24 : 0.1), location: 1.0)
+        ])
+    }
+
+    private var shadedOuterTubeGradient: Gradient {
+        Gradient(stops: [
+            .init(color: Color.white.opacity(colorScheme == .dark ? 0.12 : 0.16), location: 0.0),
+            .init(color: Color.clear, location: 0.34),
+            .init(color: Color.black.opacity(colorScheme == .dark ? 0.24 : 0.12), location: 0.78),
+            .init(color: Color.black.opacity(colorScheme == .dark ? 0.42 : 0.22), location: 1.0)
+        ])
+    }
+
+    private var ambientGlossGradient: Gradient {
+        Gradient(stops: [
+            .init(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.1), location: 0.0),
+            .init(color: Color.white.opacity(colorScheme == .dark ? 0.18 : 0.24), location: 0.2),
             .init(color: Color.clear, location: 0.44),
-            .init(color: Color.black.opacity(colorScheme == .dark ? 0.42 : 0.2), location: 0.78),
-            .init(color: Color.white.opacity(colorScheme == .dark ? 0.12 : 0.24), location: 1.0)
+            .init(color: Color.black.opacity(colorScheme == .dark ? 0.14 : 0.07), location: 0.78),
+            .init(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.08), location: 1.0)
         ])
     }
 
