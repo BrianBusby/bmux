@@ -2,15 +2,8 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice:
-    id: monorepo_repository_consolidation
-    title: bmux and Provenance Engine monorepo consolidation
-    state: draft
-    owner: Codex
-    active_worktree: /Users/brianbusby/repos/bmux-monorepo-provenance-engine
-    active_branch: monorepo-provenance-engine
-    active_agent: Codex
-  state: active
+  active_slice: null
+  state: none_selected
 
 execution_telemetry:
   provider_neutral_contract: implemented
@@ -55,7 +48,7 @@ local_capabilities:
   provenance_engine_milestone_inference: planned
   provenance_engine_blocker_approach_change_semantics: planned
   provenance_engine_scoped_architecture_projection: planned
-  factual_agent_session_view: planned
+  factual_agent_session_view: implemented
   native_provider_session_view: implemented
   react_terminal_agent_chat_surface: implemented
   react_terminal_productization: planned

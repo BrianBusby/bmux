@@ -8,7 +8,7 @@ or closed.
 
 | Area | Old location | New location | Status |
 | --- | --- | --- | --- |
-| PE Swift package | `BrianBusby/provenance-engine` root | `Packages/macOS/ProvenanceEngine` | imported with history |
+| PE Swift package | `BrianBusby/provenance-engine` root | `Packages/macOS/ProvenanceEngine` | merged in PR #53 with history |
 | PE Project Truth manifest/schema/tool | PE `project/`, `tools/project-docs` | monorepo root `project/`, `tools/project-docs` | moved |
 | bmux PE dependency | remote Git revision pin | local Xcode package reference | migrated |
 | Generated Project Truth docs | duplicated bmux/PE generated docs | root `docs/generated` | consolidated |
@@ -20,7 +20,7 @@ or closed.
 | --- | --- | --- | --- |
 | bmux | `project-truth-bmux-state-reconciliation` / PR #52 | merged into migration branch before PE import | incorporated |
 | provenance-engine | `project-truth-eligibility-reconciliation` / PR #33 | imported by subtree into `Packages/macOS/ProvenanceEngine`, then root Project Truth reconciled | incorporated |
-| bmux | `clickable-semantic-explanation-ui` / PR #49 | rebase or recreate after migration; treat as factual/native Session groundwork, not final React Smart Session | pending |
+| bmux | `clickable-semantic-explanation-ui` / PR #49 | recreated on monorepo `main` and merged as factual/native Session groundwork, not final React Smart Session | merged |
 | bmux | `workspace-tab-card-cleanup` / PR #47 | rebase after migration if still desired | pending |
 | bmux | `fix-workspace-tab-prompt-links` / PR #37 | rebase or close if superseded by newer workspace tab work | pending |
 | bmux | `remove-live-pr-sidebar-row` / PR #33 | rebase only if still product-relevant; base branch is non-main | pending |
@@ -34,8 +34,8 @@ or closed.
 | Worktree | Branch | Disposition | Status |
 | --- | --- | --- | --- |
 | `/Users/brianbusby/repos/bmux` | `fix-workspace-tab-link-ordering` | original checkout restored and left clean | safe |
-| `/Users/brianbusby/repos/bmux-monorepo-provenance-engine` | `monorepo-provenance-engine` | migration worktree | active |
-| `/Users/brianbusby/repos/bmux-clickable-semantic-explanation-ui` | `clickable-semantic-explanation-ui` | rebase/recreate after migration | pending |
+| `/Users/brianbusby/repos/bmux-monorepo-provenance-engine` | `monorepo-provenance-engine` | migration worktree for PR #53 | merged |
+| `/Users/brianbusby/repos/bmux-clickable-semantic-explanation-ui` | `clickable-semantic-explanation-ui` | historical PR #49 source branch; useful work was recreated on monorepo `main` and merged | merged |
 | `/Users/brianbusby/repos/provenance-engine` | `main` | archival/source reference; do not delete | preserve |
 | `/Users/brianbusby/repos/provenance-engine-project-truth-eligibility` | `project-truth-eligibility-reconciliation` | incorporated by subtree; can close after migration PR lands | pending |
 | `/Users/brianbusby/repos/bmux-pe-current-state` | `subscribe-pe-current-state` | upstream gone; inspect before discarding | pending |
@@ -47,8 +47,7 @@ or closed.
 
 ## Merge Guidance
 
-Do not merge or close old PRs only because the monorepo exists. After the
-migration PR lands, each pending branch should either be rebased into the
-monorepo, replaced by an equivalent monorepo branch, or explicitly closed as
-superseded with a pointer to the monorepo change.
-
+Do not merge or close old PRs only because the monorepo exists. Remaining
+pending branches should either be rebased into the monorepo, replaced by an
+equivalent monorepo branch, or explicitly closed as superseded with a pointer to
+the monorepo change.

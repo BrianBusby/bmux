@@ -668,7 +668,7 @@ roadmap:
       kind: slice
       title: bmux and Provenance Engine monorepo consolidation
       parent: project_truth_manifest_and_ci
-      status: active
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -718,18 +718,24 @@ roadmap:
         worktree_required: true
         conflict_note: This slice intentionally freezes artificial cross-repository coordination work while active branches are inventoried and rebased or superseded in the monorepo. It must preserve PE as an independent Swift package and prohibit PE imports of bmux runtime or UI internals.
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: shared
-        active_worktree: /Users/brianbusby/repos/bmux-monorepo-provenance-engine
-        active_branch: monorepo-provenance-engine
-        active_agent: Codex
-        notes: One monorepo worktree now represents cross-component slices; PE remains package-scoped under Packages/macOS/ProvenanceEngine with public contracts consumed by bmux.
-      delivery_status: draft
-      acceptance_status: proposed
+        notes: One canonical bmux repository now contains the independent Provenance Engine SwiftPM package under Packages/macOS/ProvenanceEngine, with public contracts consumed locally by bmux.
+      delivery_status: merged
+      acceptance_status: implemented
       evidence:
-        commits: []
-        pull_requests: []
+        commits:
+          - repository: BrianBusby/bmux
+            sha: f4b96132c2c70e6fe7d84150ef720c38096b2d30
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 53
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-17
       rationale: Consolidates the Git repository boundary that had become accidental coordination overhead while preserving Provenance Engine as a standalone Swift package boundary, retaining imported PE history, and replacing peer-repo Project Truth with a root-local canonical project graph.
+      acceptance_reason: "PR #53 merged the local Provenance Engine package, root Project Truth tooling, generated docs, and monorepo package dependency model without making PE a bmux-internal module."
 
     - id: richer_session_understanding
       kind: program
@@ -1227,7 +1233,7 @@ roadmap:
       kind: slice
       title: Factual agent session view
       parent: coding_session_view_surfaces
-      status: active
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -1258,27 +1264,27 @@ roadmap:
           - factual_session_projection
           - deterministic_current_state_api
         worktree_required: true
-        conflict_note: "Active bmux PR #49 uses the historical clickable-semantic-explanation-ui branch name but implements factual Swift/native Session UI only. Treat it as factual consumer groundwork and diagnostic scaffolding, not the final React Smart Session product."
+        conflict_note: "Merged bmux PR #49 preserves factual Swift/native Session UI only. Treat it as factual consumer groundwork and diagnostic scaffolding, not the final React Smart Session product."
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: bmux
-        active_worktree: /Users/brianbusby/repos/bmux-clickable-semantic-explanation-ui
-        active_branch: clickable-semantic-explanation-ui
-        active_agent: Codex
         notes: "PR #49 is factual-only Swift/native UI and should not be counted as satisfying React Smart Session or clickable semantic explanation behavior."
-      delivery_status: draft
-      acceptance_status: proposed
+      delivery_status: merged
+      acceptance_status: implemented
       evidence:
         commits:
           - repository: BrianBusby/bmux
-            sha: 6893fa3af6e5f4babb2d75e6e0b5045cc545c20e
+            sha: 6fe54d5411febdbe9bc79ef320b25be28c563938
+          - repository: BrianBusby/bmux
+            sha: 1c1281d7b58ddfbd80d6c57ef352f7b685662727
         pull_requests:
           - repository: BrianBusby/bmux
             number: 49
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
-      rationale: Records the active bmux factual Session view work as a prerequisite PE factual-projection consumer. The native view is useful inspection/debug scaffolding and data-access foundation, but the intended user-facing Smart Session surface is React and remains separate from the React Terminal transcript/live interaction surface.
+      completed_at: 2026-08-17
+      rationale: Records the completed bmux factual Session view work as a prerequisite PE factual-projection consumer. The native view is useful inspection/debug scaffolding and data-access foundation, but the intended user-facing Smart Session surface is React and remains separate from the React Terminal transcript/live interaction surface.
 
     - id: react_terminal_productization
       kind: slice

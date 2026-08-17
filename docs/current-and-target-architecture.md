@@ -177,19 +177,17 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 ### Current Active Work
 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
-- Active implementation slice: bmux and Provenance Engine monorepo consolidation (`monorepo_repository_consolidation`) - draft
-- Bmux repository state: active
+- Active implementation slice: none selected
+- Bmux repository state: none selected
 
 ### Current Roadmap Lanes
 
 - Bmux and Provenance Engine (`bmux_provenance_platform`) - project; status: active; owner: Provenance Engine
-- bmux and Provenance Engine monorepo consolidation (`monorepo_repository_consolidation`) - slice; status: active; owner: Bmux
 - Richer Session Understanding (`richer_session_understanding`) - program; status: active; owner: Provenance Engine
 - Semantic Understanding (`semantic_understanding`) - phase; status: active; owner: Provenance Engine
 - Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`) - milestone; status: active; owner: Provenance Engine
 - Three-view Coding Session Experience (`three_view_coding_session_experience`) - phase; status: active; owner: Bmux
 - Coding Session View Surfaces (`coding_session_view_surfaces`) - milestone; status: active; owner: Bmux
-- Factual agent session view (`factual_agent_session_view`) - slice; status: active; owner: Bmux
 
 ### Major Node Summaries
 
@@ -222,7 +220,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 #### Factual session projection
 
-- Status: Factual session projection foundation (`factual_session_projection_foundation`): implemented, delivery open, acceptance implemented; Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`): implemented, delivery merged, acceptance implemented; Factual agent session view (`factual_agent_session_view`): active, delivery draft, acceptance proposed; Factual Session Projection: not listed
+- Status: Factual session projection foundation (`factual_session_projection_foundation`): implemented, delivery open, acceptance implemented; Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`): implemented, delivery merged, acceptance implemented; Factual agent session view (`factual_agent_session_view`): implemented, delivery merged, acceptance implemented; Factual Session Projection: not listed
 - Owns: Revisioned factual snapshots of observed coding-agent thread and turn evidence for one PE session.
 - Inputs: Coding-agent thread, turn, prompt, plan, completed command, visible reasoning summary, and file-change attribution evidence.
 - Outputs: Observed thread/turn grouping with latest prompt, plan, commands, summaries, file changes, and ledger revision.
@@ -278,6 +276,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 - SessionWorkModel contract foundation (`session_work_model_contract_foundation`) - selection: planned; owner: Provenance Engine; depends on: `human_readable_semantic_messaging`. Rationale: Introduce the first revisioned PE-owned SessionWorkModel snapshot contract for Smart Session consumers. The contract should preserve evidence references, deterministic factual projections, semantic inference records, semantic messages, and presentation boundaries.
 - React Terminal live interaction productization (`react_terminal_productization`) - selection: planned; owner: Bmux; depends on: None. Rationale: Productize the existing agent-chat React surface as bmux's Terminal view for live conversation, streaming, tool lifecycle, controls, interrupts, and provider-normalized interaction. It must not become the Smart Session semantic summary surface or duplicate PE inference.
+- React Smart Session foundation (`react_smart_session_foundation`) - selection: selected next; owner: Bmux; depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`. Rationale: Establish a separate React Session surface that summarizes goal, completed turns, current turn, activity, plan state, worked-on areas, validations, outcomes, and provenance using PE factual projections and semantic messages. This foundation must not infer session meaning from raw provider events inside bmux.
 - Presentation language calibration corpus (`presentation_language_calibration_corpus`) - selection: planned; owner: Provenance Engine; depends on: `first_semantic_session_inferences`.
 - Milestone inference (`milestone_inference`) - selection: planned; owner: Provenance Engine; depends on: `first_semantic_session_inferences`.
 - Blocker and approach-change semantics (`blocker_approach_change_semantics`) - selection: planned; owner: Provenance Engine; depends on: `semantic_inference_framework`.
@@ -285,7 +284,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Selected Next Work
 
-- React Smart Session foundation (`react_smart_session_foundation`) - dependency status: blocked by `factual_agent_session_view`; owner: Bmux; depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`. Rationale: Establish a separate React Session surface that summarizes goal, completed turns, current turn, activity, plan state, worked-on areas, validations, outcomes, and provenance using PE factual projections and semantic messages. This foundation must not infer session meaning from raw provider events inside bmux.
+- React Smart Session foundation (`react_smart_session_foundation`) - dependency status: ready; owner: Bmux; depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`. Rationale: Establish a separate React Session surface that summarizes goal, completed turns, current turn, activity, plan state, worked-on areas, validations, outcomes, and provenance using PE factual projections and semantic messages. This foundation must not infer session meaning from raw provider events inside bmux.
 
 ### Dependency-Ready But Not Selected
 

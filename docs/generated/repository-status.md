@@ -13,10 +13,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: bmux and Provenance Engine monorepo consolidation (`monorepo_repository_consolidation`)
-- Slice state: draft
-- Owner: Codex
-- Repository state: active
+- Active slice: none selected
+- Repository state: none selected
 
 ## Release
 
@@ -27,7 +25,7 @@ Repository: `BrianBusby/bmux`
 
 | Capability | State |
 | --- | --- |
-| Factual Agent Session View | planned |
+| Factual Agent Session View | implemented |
 | Native Provider Session View | implemented |
 | Provenance Engine Blocker Approach Change Semantics | planned |
 | Provenance Engine Coding Agent Current Activity | implemented |

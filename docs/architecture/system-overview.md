@@ -36,7 +36,8 @@ flowchart TD
   pe --> factual["CURRENT: deterministic factual projections"]
   pe --> semantic["CURRENT: semantic records and messages"]
   semantic --> swm["PLANNED: SessionWorkModel"]
-  factual --> session["ACTIVE/PLANNED: Smart Session presentation"]
+  factual --> factualSession["CURRENT: factual native Session inspection"]
+  factualSession --> session["PLANNED: React Smart Session presentation"]
   swm --> session
   pe --> knowledge["PLANNED: Knowledge Compiler / Store / Retrieval"]
   knowledge --> context["PLANNED: future agent context"]
@@ -72,15 +73,12 @@ CURRENT:
 - PE has implemented factual session projection, semantic inference framework,
   first coding-agent semantic records, and human-readable semantic messages.
 - bmux has React Terminal foundations in `agent-chat` and native/workspace PE
-  consumers.
+  consumers, including the factual native Session inspection view.
 
-ACTIVE:
+SELECTED NEXT:
 
-- The monorepo migration branch imports PE history, rewires the local package
-  dependency, removes obsolete peer Project Truth mechanics, and creates this
-  architecture map.
-- The factual agent Session view PR remains a product branch to rebase after the
-  monorepo migration rather than a completed Smart Session product.
+- React Smart Session foundation backed by PE facts and semantic messages. This
+  is a React product surface, not the factual native Session inspection view.
 
 PLANNED:
 
@@ -89,4 +87,3 @@ PLANNED:
 - Milestone, blocker, approach-change, and scoped architecture semantics.
 - Knowledge Compiler, durable Knowledge Store, retrieval, and future agent
   context integration.
-
