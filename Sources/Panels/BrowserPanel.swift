@@ -2887,6 +2887,7 @@ final class BrowserPanel: Panel, ObservableObject {
     private var restoredHistoryCurrentURL: URL? {
         restoredSessionHistory.current
     }
+    private var pendingMainFrameNavigationURL: URL?
     private var isMainFrameProvisionalNavigationActive: Bool = false
 
     /// Published estimated progress (0.0 - 1.0)
@@ -3322,6 +3323,7 @@ final class BrowserPanel: Panel, ObservableObject {
         BrowserWindowPortalRegistry.detach(webView: oldWebView)
         webAuthnCoordinator.tearDown(from: oldWebView); oldWebView.stopLoading()
         isMainFrameProvisionalNavigationActive = false
+        pendingMainFrameNavigationURL = nil
         oldWebView.navigationDelegate = nil
         oldWebView.uiDelegate = nil
         if let oldBmuxWebView = oldWebView as? BmuxWebView { oldBmuxWebView.clearBrowserDownloadCallbacks() }
@@ -3761,7 +3763,13 @@ final class BrowserPanel: Panel, ObservableObject {
         navigationDelegate.didStartProvisionalNavigation = { [weak self] webView in
             MainActor.assumeIsolated {
                 guard let self, self.isCurrentWebView(webView, instanceID: boundWebViewInstanceID) else { return }
+                if self.pendingMainFrameNavigationURL == nil {
+                    self.pendingMainFrameNavigationURL = Self.remoteProxyDisplayURL(
+                        for: self.navigationDelegate?.lastAttemptedURL ?? webView.url
+                    ) ?? self.navigationDelegate?.lastAttemptedURL ?? webView.url
+                }
                 self.isMainFrameProvisionalNavigationActive = true
+                self.refreshNavigationAvailability()
                 self.refreshBackgroundAppearance()
                 self.applyMuteState(to: webView, reason: "navigationStart")
             }
@@ -3770,6 +3778,7 @@ final class BrowserPanel: Panel, ObservableObject {
             MainActor.assumeIsolated {
                 guard let self, self.isCurrentWebView(webView, instanceID: boundWebViewInstanceID) else { return }
                 self.isMainFrameProvisionalNavigationActive = false
+                self.pendingMainFrameNavigationURL = nil
                 // Reset playback tracking only once the new top-level document has
                 // actually replaced the old one. Resetting earlier (on provisional
                 // start) would drop a still-playing page's frames if the
@@ -3778,6 +3787,7 @@ final class BrowserPanel: Panel, ObservableObject {
                 // navigations, so a persisting SPA video keeps its frame id.
                 self.resetMediaPlaybackTracking()
                 self.publishCommittedURL(from: webView)
+                self.refreshNavigationAvailability()
                 self.applyMuteState(to: webView, reason: "navigationCommit")
             }
         }
@@ -3785,6 +3795,7 @@ final class BrowserPanel: Panel, ObservableObject {
             MainActor.assumeIsolated {
                 guard let self, self.isCurrentWebView(webView, instanceID: boundWebViewInstanceID) else { return }
                 self.isMainFrameProvisionalNavigationActive = false
+                self.pendingMainFrameNavigationURL = nil
                 self.publishCommittedURL(from: webView)
                 self.applyMuteState(to: webView, reason: "navigationFinish")
                 if self.navigationDelegate?.activeErrorPageDisplayURL == nil {
@@ -3792,6 +3803,7 @@ final class BrowserPanel: Panel, ObservableObject {
                     boundHistoryStore.recordVisit(url: webView.url, title: webView.title)
                     self.refreshFavicon(from: webView)
                 }
+                self.refreshNavigationAvailability()
                 // Keep find-in-page open through load completion and refresh matches for the new DOM.
                 self.restoreFindStateAfterNavigation(replaySearch: true)
             }
@@ -3800,6 +3812,7 @@ final class BrowserPanel: Panel, ObservableObject {
             MainActor.assumeIsolated {
                 guard let self, self.isCurrentWebView(failedWebView, instanceID: boundWebViewInstanceID) else { return }
                 self.isMainFrameProvisionalNavigationActive = false
+                self.pendingMainFrameNavigationURL = nil
                 if let url = URL(string: failedURL) {
                     self.currentURL = Self.remoteProxyDisplayURL(for: url) ?? url
                 }
@@ -3808,6 +3821,7 @@ final class BrowserPanel: Panel, ObservableObject {
                 self.pageTitle = failedURL.isEmpty ? "" : failedURL
                 self.faviconPNGData = nil
                 self.lastFaviconURLString = nil
+                self.refreshNavigationAvailability()
                 self.applyMuteState(to: failedWebView, reason: "navigationFail")
                 // Keep find-in-page open and clear stale counters on failed loads.
                 self.restoreFindStateAfterNavigation(replaySearch: false)
@@ -3817,7 +3831,9 @@ final class BrowserPanel: Panel, ObservableObject {
             MainActor.assumeIsolated {
                 guard let self, self.isCurrentWebView(webView, instanceID: boundWebViewInstanceID) else { return }
                 self.isMainFrameProvisionalNavigationActive = false
+                self.pendingMainFrameNavigationURL = nil
                 self.navigationDelegate?.clearAttemptedRequest()
+                self.refreshNavigationAvailability()
                 self.refreshBackgroundAppearance()
             }
         }
@@ -4567,6 +4583,7 @@ final class BrowserPanel: Panel, ObservableObject {
         BrowserWindowPortalRegistry.detach(webView: previousWebView)
         webAuthnCoordinator.tearDown(from: previousWebView); previousWebView.stopLoading()
         isMainFrameProvisionalNavigationActive = false
+        pendingMainFrameNavigationURL = nil
         previousWebView.navigationDelegate = nil
         previousWebView.uiDelegate = nil
         if let previousBmuxWebView = previousWebView as? BmuxWebView { previousBmuxWebView.clearBrowserDownloadCallbacks() }
@@ -4815,7 +4832,8 @@ final class BrowserPanel: Panel, ObservableObject {
             let observedURL = change.newValue ?? webView.url
             MainActor.assumeIsolated {
                 guard let self, self.isCurrentWebView(webView, instanceID: observedWebViewInstanceID) else { return }
-                guard !self.isMainFrameProvisionalNavigationActive else { return }
+                guard !self.isMainFrameProvisionalNavigationActive,
+                      self.pendingMainFrameNavigationURL == nil else { return }
                 self.currentURL = Self.remoteProxyDisplayURL(for: observedURL)
                 self.refreshBackgroundAppearance()
                 GlobalSearchCoordinator.shared.captureBrowserPanel(self)
@@ -5157,6 +5175,7 @@ final class BrowserPanel: Panel, ObservableObject {
         BrowserWindowPortalRegistry.detach(webView: oldWebView)
         webAuthnCoordinator.tearDown(from: oldWebView); oldWebView.stopLoading()
         isMainFrameProvisionalNavigationActive = false
+        pendingMainFrameNavigationURL = nil
         oldWebView.navigationDelegate = nil
         oldWebView.uiDelegate = nil
         if let oldBmuxWebView = oldWebView as? BmuxWebView { oldBmuxWebView.clearBrowserDownloadCallbacks() }
@@ -5342,6 +5361,7 @@ final class BrowserPanel: Panel, ObservableObject {
         for popup in popupsToClose { popup.closeAllChildPopups(); popup.closePopup() }
         webAuthnCoordinator.tearDown(from: webView); webView.stopLoading()
         isMainFrameProvisionalNavigationActive = false
+        pendingMainFrameNavigationURL = nil
         webView.navigationDelegate = nil
         webView.uiDelegate = nil
         if let bmuxWebView = webView as? BmuxWebView { bmuxWebView.clearBrowserDownloadCallbacks() }
@@ -5809,7 +5829,12 @@ final class BrowserPanel: Panel, ObservableObject {
         if recordTypedNavigation {
             historyStore.recordTypedNavigation(url: originalURL)
         }
-        browserLoadRequest(effectiveRequest, in: webView)
+        pendingMainFrameNavigationURL = Self.remoteProxyDisplayURL(for: originalURL) ?? originalURL
+        refreshNavigationAvailability()
+        if browserLoadRequest(effectiveRequest, in: webView) == nil {
+            pendingMainFrameNavigationURL = nil
+            refreshNavigationAvailability()
+        }
     }
 
     private func remoteProxyPreparedRequest(from request: URLRequest, logScope: String) -> URLRequest {
@@ -6154,6 +6179,7 @@ extension BrowserPanel {
         BrowserWindowPortalRegistry.detach(webView: oldWebView)
         webAuthnCoordinator.tearDown(from: oldWebView); oldWebView.stopLoading()
         isMainFrameProvisionalNavigationActive = false
+        pendingMainFrameNavigationURL = nil
         oldWebView.navigationDelegate = nil
         oldWebView.uiDelegate = nil
         if let oldBmuxWebView = oldWebView as? BmuxWebView { oldBmuxWebView.clearBrowserDownloadCallbacks() }
@@ -6242,10 +6268,15 @@ private func browserDottedHostWithPortCandidate(_ input: String, schemeCandidate
 }
 
 extension BrowserPanel {
-    private func cancelInFlightNavigationBeforeHistoryTraversal() {
-        guard webView.isLoading || isMainFrameProvisionalNavigationActive else { return }
+    @discardableResult
+    private func cancelInFlightNavigationBeforeHistoryTraversal() -> URL? {
+        guard webView.isLoading || isMainFrameProvisionalNavigationActive else { return nil }
+        let canceledForwardURL = cancellableProvisionalForwardURL
         webView.stopLoading()
         isMainFrameProvisionalNavigationActive = false
+        pendingMainFrameNavigationURL = nil
+        refreshNavigationAvailability()
+        return canceledForwardURL
     }
 
     @discardableResult
@@ -6267,7 +6298,7 @@ extension BrowserPanel {
     func goBack() {
         guard canGoBack else { return }
         reactivateDiscardedWebViewWithoutNavigation(reason: "goBack")
-        cancelInFlightNavigationBeforeHistoryTraversal()
+        let canceledForwardURL = cancelInFlightNavigationBeforeHistoryTraversal()
         if usesRestoredSessionHistory {
             realignRestoredSessionHistoryToLiveCurrentIfPossible()
 
@@ -6289,6 +6320,18 @@ extension BrowserPanel {
             case .nativeGoForward, .refreshOnly:
                 refreshNavigationAvailability()
             }
+            return
+        }
+
+        if !nativeCanGoBack,
+           let canceledForwardURL,
+           let currentURLString = Self.serializableSessionHistoryURLString(resolvedCurrentSessionHistoryURL()),
+           let canceledForwardURLString = Self.serializableSessionHistoryURLString(canceledForwardURL) {
+            restoreSessionNavigationHistory(
+                backHistoryURLStrings: [],
+                forwardHistoryURLStrings: [canceledForwardURLString],
+                currentURLString: currentURLString
+            )
             return
         }
 
@@ -6454,6 +6497,8 @@ extension BrowserPanel {
     func stopLoading() {
         webView.stopLoading()
         isMainFrameProvisionalNavigationActive = false
+        pendingMainFrameNavigationURL = nil
+        refreshNavigationAvailability()
     }
 
 
@@ -7830,14 +7875,26 @@ extension BrowserPanel {
         return restoredHistoryCurrentURL
     }
 
+    private var cancellableProvisionalForwardURL: URL? {
+        guard isMainFrameProvisionalNavigationActive || pendingMainFrameNavigationURL != nil else { return nil }
+        guard let attemptedURL = pendingMainFrameNavigationURL ?? navigationDelegate?.lastAttemptedURL,
+              let attemptedURLString = Self.serializableSessionHistoryURLString(attemptedURL),
+              let currentURLString = Self.serializableSessionHistoryURLString(currentURL ?? restoredHistoryCurrentURL),
+              attemptedURLString != currentURLString else {
+            return nil
+        }
+        return attemptedURL
+    }
+
     private func refreshNavigationAvailability() {
         let availability = restoredSessionHistory.availability(
             nativeCanGoBack: nativeCanGoBack,
             nativeCanGoForward: nativeCanGoForward
         )
+        let canGoBackNow = availability.canGoBack || cancellableProvisionalForwardURL != nil
 
-        if canGoBack != availability.canGoBack {
-            canGoBack = availability.canGoBack
+        if canGoBack != canGoBackNow {
+            canGoBack = canGoBackNow
         }
         if canGoForward != availability.canGoForward {
             canGoForward = availability.canGoForward

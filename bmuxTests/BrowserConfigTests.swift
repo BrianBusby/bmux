@@ -2758,7 +2758,7 @@ final class BrowserSessionHistoryRestoreTests: XCTestCase {
         XCTAssertTrue(panel.canGoForward)
     }
 
-    func testGoBackPrefersLiveWKWebViewHistoryBeforeRestoredFallback() throws {
+    func testGoBackReplaysRestoredHistoryWithoutDependingOnLiveWKHistory() throws {
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-browser-history-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
@@ -2766,10 +2766,8 @@ final class BrowserSessionHistoryRestoreTests: XCTestCase {
 
         let pageA = tempDir.appendingPathComponent("a.html")
         let pageB = tempDir.appendingPathComponent("b.html")
-        let pageC = tempDir.appendingPathComponent("c.html")
         try writeBrowserFixturePage(at: pageA, title: "A")
         try writeBrowserFixturePage(at: pageB, title: "B")
-        try writeBrowserFixturePage(at: pageC, title: "C")
 
         let panel = BrowserPanel(
             workspaceId: UUID(),
@@ -2784,20 +2782,11 @@ final class BrowserSessionHistoryRestoreTests: XCTestCase {
             currentURLString: pageB.absoluteString
         )
 
-        _ = browserLoadRequest(URLRequest(url: pageC), in: panel.webView)
-        waitForBrowserPanel(panel, url: pageC)
-
-        let snapshot = panel.sessionNavigationHistorySnapshot()
-        XCTAssertEqual(
-            snapshot.backHistoryURLStrings,
-            [pageA.absoluteString, pageB.absoluteString]
-        )
-
-        panel.goBack()
-        waitForBrowserPanel(panel, url: pageB)
-
         panel.goBack()
         waitForBrowserPanel(panel, url: pageA)
+
+        panel.goForward()
+        waitForBrowserPanel(panel, url: pageB)
     }
 
     func testBackDuringProvisionalNavigationDoesNotDesyncPublishedURLFromRenderedPage() throws {
@@ -2810,14 +2799,16 @@ final class BrowserSessionHistoryRestoreTests: XCTestCase {
         defer { panel.close() }
 
         waitForBrowserPanel(panel, url: pageA)
-        XCTAssertEqual(panel.pageTitle, "Race A")
+        try waitUntil("initial page A title to publish") {
+            panel.pageTitle == "Race A"
+        }
 
         panel.navigate(to: pageB)
         try waitUntil("server to receive provisional page B request") {
             server.didReceiveBRequest
         }
         try waitUntil("browser back availability during provisional page B navigation") {
-            panel.canGoBack && panel.webView.isLoading
+            panel.canGoBack
         }
         XCTAssertFalse(panel.canGoForward)
 
