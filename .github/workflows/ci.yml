@@ -1469,7 +1469,7 @@ jobs:
     # restored SwiftPM cache. Default to a clean paid macOS 26 runner instead
     # of the generic persistent macOS 26 pool.
     runs-on: ${{ vars.MACOS_RUNNER_26_RELEASE || 'blacksmith-6vcpu-macos-26' }}
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       BMUX_CI_XCODE_APP: ${{ vars.BMUX_CI_XCODE_APP_MACOS_26 }}
       BMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
