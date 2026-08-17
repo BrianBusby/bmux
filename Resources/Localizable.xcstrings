@@ -9084,6 +9084,57 @@
         }
       }
     },
+    "agentSession.web.smartSession.activitySummary.inspectingWorkspaceEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspecting workspace evidence"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ワークスペースの根拠を確認中"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activitySummary.investigatingFailedCommand": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Investigating failed command"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "失敗したコマンドを調査中"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activitySummary.validatingCurrentChanges": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validating current changes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在の変更を検証中"
+          }
+        }
+      }
+    },
     "agentSession.web.smartSession.phase": {
       "extractionState": "manual",
       "localizations": {

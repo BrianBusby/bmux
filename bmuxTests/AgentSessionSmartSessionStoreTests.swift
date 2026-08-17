@@ -13,7 +13,10 @@ import Testing
 struct AgentSessionSmartSessionStoreTests {
     @Test
     func concurrentRefreshesForSameSessionShareRefreshTask() async {
-        let client = RefreshCoalescingProvenanceEngineClient(model: Self.model(sessionID: "session-1"))
+        let client = SmartSessionStoreTestClient(
+            model: Self.model(sessionID: "session-1", revision: 42),
+            waitForRelease: true
+        )
         let store = AgentSessionSmartSessionStore(client: client)
 
         async let firstResult = store.refreshedSnapshot(sessionID: "session-1")
@@ -37,7 +40,55 @@ struct AgentSessionSmartSessionStoreTests {
         #expect(await client.sessionWorkModelRequestCount() == 1)
     }
 
-    private static func model(sessionID: String) -> ProvenanceSessionWorkModel {
+    @Test
+    func refreshRetriesWhenModelFactualRevisionAdvancesAfterMaterialization() async {
+        let model = Self.model(sessionID: "session-1", revision: 43)
+        let client = SmartSessionStoreTestClient(
+            models: [model, model],
+            materializedFactualRevisions: [42, 43]
+        )
+        let store = AgentSessionSmartSessionStore(client: client)
+
+        guard case let .available(snapshot) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Expected available Smart Session snapshot after retry")
+            return
+        }
+
+        #expect(snapshot.revision.factualRevision == 43)
+        #expect(await client.publishRequestCount() == 2)
+        #expect(await client.sessionWorkModelRequestCount() == 2)
+    }
+
+    @Test
+    func generatedCommandActivitySummariesAreLocalized() throws {
+        let payload = ProvenanceCodingAgentCurrentActivityPayload(
+            activityKind: .validation,
+            summary: "Validating with swift test",
+            action: "validate",
+            subject: "current changes",
+            basis: "completed_command"
+        )
+        let record = ProvenanceSessionWorkModelSemanticRecord(record: Self.semanticRecord(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue,
+            scope: .turn,
+            scopeID: "turn-1",
+            payload: payload.semanticPayloadValue
+        ))
+
+        let summary = try #require(AgentSessionSmartSessionSnapshot.SemanticField.summary(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue,
+            record: record
+        ))
+
+        #expect(summary == String(
+            localized: "agentSession.web.smartSession.activitySummary.validatingCurrentChanges",
+            defaultValue: "Validating current changes"
+        ))
+        #expect(summary != payload.summary)
+        #expect(record.payload == payload.semanticPayloadValue)
+    }
+
+    private static func model(sessionID: String, revision: Int) -> ProvenanceSessionWorkModel {
         let updatedAt = Date(timeIntervalSince1970: 1_800_000_000)
         let session = ProvenanceSessionRecord(
             id: sessionID,
@@ -51,14 +102,14 @@ struct AgentSessionSmartSessionStoreTests {
             updatedAt: updatedAt
         )
         let factualProjection = ProvenanceFactualSessionProjectionSnapshot(
-            revision: 42,
+            revision: revision,
             session: session,
             providerThreads: [],
             turns: []
         )
         return ProvenanceSessionWorkModel(
             revision: ProvenanceSessionWorkModelRevision(
-                factualRevision: 42,
+                factualRevision: revision,
                 semanticInferenceIDs: [],
                 latestSemanticInferenceCreatedAt: nil
             ),
@@ -82,22 +133,66 @@ struct AgentSessionSmartSessionStoreTests {
             )
         )
     }
+
+    private static func semanticRecord(
+        kind: String,
+        scope: ProvenanceSemanticInferenceScope,
+        scopeID: String,
+        payload: ProvenanceSemanticPayloadValue
+    ) -> ProvenanceSemanticInferenceRecord {
+        ProvenanceSemanticInferenceRecord(
+            id: "inference-1",
+            kind: kind,
+            scope: scope,
+            scopeID: scopeID,
+            payload: payload,
+            supportingEvidenceRefs: [
+                ProvenanceSemanticEvidenceReference(
+                    kind: "factual_session_projection",
+                    id: "session-1",
+                    factualRevision: 42
+                )
+            ],
+            supportingFactualRevision: 42,
+            confidence: .medium,
+            specificity: .granular,
+            producerType: .rule,
+            producerID: "test",
+            producerVersion: "v1",
+            createdAt: Date(timeIntervalSince1970: 1_800_000_120)
+        )
+    }
 }
 
-private enum RefreshCoalescingTestError: Error {
+private enum SmartSessionStoreTestError: Error {
     case unimplemented
 }
 
-private actor RefreshCoalescingProvenanceEngineClient: ProvenanceEngineClient {
-    private let model: ProvenanceSessionWorkModel
+private actor SmartSessionStoreTestClient: ProvenanceEngineClient {
+    private let models: [ProvenanceSessionWorkModel]
+    private let materializedFactualRevisions: [Int?]
     private var publishRequests: [ProvenanceCodingAgentSessionSemanticInferenceRequest] = []
     private var workModelRequests: [ProvenanceSessionWorkModelRequest] = []
     private var publishStartedContinuation: CheckedContinuation<Void, Never>?
     private var releaseContinuations: [CheckedContinuation<Void, Never>] = []
-    private var isPublishReleased = false
+    private var isPublishReleased: Bool
 
-    init(model: ProvenanceSessionWorkModel) {
-        self.model = model
+    init(model: ProvenanceSessionWorkModel, waitForRelease: Bool = false) {
+        self.init(
+            models: [model],
+            materializedFactualRevisions: [model.revision.factualRevision],
+            waitForRelease: waitForRelease
+        )
+    }
+
+    init(
+        models: [ProvenanceSessionWorkModel],
+        materializedFactualRevisions: [Int?],
+        waitForRelease: Bool = false
+    ) {
+        self.models = models
+        self.materializedFactualRevisions = materializedFactualRevisions
+        self.isPublishReleased = !waitForRelease
     }
 
     func waitForPublishStart() async {
@@ -131,7 +226,7 @@ private actor RefreshCoalescingProvenanceEngineClient: ProvenanceEngineClient {
     func appendEvent(
         _ request: ProvenanceEngineContracts.ProvenanceAppendEventRequest
     ) async throws -> ProvenanceEngineContracts.ProvenanceAppendEventResponse {
-        throw RefreshCoalescingTestError.unimplemented
+        throw SmartSessionStoreTestError.unimplemented
     }
 
     func recordSessionLifecycle(_ request: ProvenanceSessionLifecycleRequest) async -> ProvenanceSessionLifecycleResponse {
@@ -145,42 +240,44 @@ private actor RefreshCoalescingProvenanceEngineClient: ProvenanceEngineClient {
     }
 
     func sessionTree(_ request: ProvenanceSessionTreeRequest) async throws -> ProvenanceSessionTreeResponse {
-        throw RefreshCoalescingTestError.unimplemented
+        throw SmartSessionStoreTestError.unimplemented
     }
 
     func fileExplanation(_ request: ProvenanceFileExplanationRequest) async throws -> ProvenanceFileExplanationResponse {
-        throw RefreshCoalescingTestError.unimplemented
+        throw SmartSessionStoreTestError.unimplemented
     }
 
     func worktrees(_ request: ProvenanceWorktreeListRequest) async throws -> ProvenanceWorktreeListResponse {
-        throw RefreshCoalescingTestError.unimplemented
+        throw SmartSessionStoreTestError.unimplemented
     }
 
     func currentContext(
         _ request: ProvenanceEngineContracts.ProvenanceCurrentContextRequest
     ) async throws -> ProvenanceEngineContracts.ProvenanceCurrentContextResponse {
-        throw RefreshCoalescingTestError.unimplemented
+        throw SmartSessionStoreTestError.unimplemented
     }
 
     func workspaceDisplay(_ request: ProvenanceWorkspaceDisplayRequest) async throws -> ProvenanceWorkspaceDisplayResponse {
-        throw RefreshCoalescingTestError.unimplemented
+        throw SmartSessionStoreTestError.unimplemented
     }
 
     func factualSessionProjection(
         _ request: ProvenanceFactualSessionProjectionRequest
     ) async throws -> ProvenanceFactualSessionProjectionResponse {
-        throw RefreshCoalescingTestError.unimplemented
+        throw SmartSessionStoreTestError.unimplemented
     }
 
     func sessionWorkModel(_ request: ProvenanceSessionWorkModelRequest) async throws -> ProvenanceSessionWorkModelResponse {
+        let index = workModelRequests.count
         workModelRequests.append(request)
+        let model = models[min(index, models.count - 1)]
         return ProvenanceSessionWorkModelResponse(found: true, sessionID: request.sessionID, model: model)
     }
 
     func publishSemanticMessage(
         _ request: ProvenanceSemanticMessagePublishRequest
     ) async throws -> ProvenanceSemanticMessagePublishResponse {
-        throw RefreshCoalescingTestError.unimplemented
+        throw SmartSessionStoreTestError.unimplemented
     }
 
     func semanticMessages(
@@ -192,12 +289,13 @@ private actor RefreshCoalescingProvenanceEngineClient: ProvenanceEngineClient {
     func materializeSemanticMessages(
         _ request: ProvenanceSemanticMessageMaterializationRequest
     ) async throws -> ProvenanceSemanticMessageMaterializationResponse {
-        throw RefreshCoalescingTestError.unimplemented
+        throw SmartSessionStoreTestError.unimplemented
     }
 
     func publishCodingAgentSessionSemanticInferences(
         _ request: ProvenanceCodingAgentSessionSemanticInferenceRequest
     ) async throws -> ProvenanceCodingAgentSessionSemanticInferenceResponse {
+        let index = publishRequests.count
         publishRequests.append(request)
         publishStartedContinuation?.resume()
         publishStartedContinuation = nil
@@ -206,10 +304,11 @@ private actor RefreshCoalescingProvenanceEngineClient: ProvenanceEngineClient {
                 releaseContinuations.append(continuation)
             }
         }
+        let factualRevision = materializedFactualRevisions[min(index, materializedFactualRevisions.count - 1)]
         return ProvenanceCodingAgentSessionSemanticInferenceResponse(
             found: true,
             sessionID: request.sessionID,
-            factualRevision: model.revision.factualRevision
+            factualRevision: factualRevision
         )
     }
 }

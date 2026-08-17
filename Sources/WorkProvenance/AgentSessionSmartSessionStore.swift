@@ -36,14 +36,25 @@ final class AgentSessionSmartSessionStore {
 
     private func loadSnapshot(sessionID: String) async -> AgentSessionSmartSessionReadResult {
         do {
-            await materializeSemanticInferences(sessionID: sessionID)
+            let materialization = await materializeSemanticInferences(sessionID: sessionID)
 
-            let response = try await client.sessionWorkModel(
+            var response = try await client.sessionWorkModel(
                 ProvenanceSessionWorkModelRequest(sessionID: sessionID, turnLimit: 12)
             )
-            guard response.found, let workModel = response.model else {
+            guard response.found, var workModel = response.model else {
                 snapshotsBySessionID.removeValue(forKey: sessionID)
                 return .notFound(sessionID: sessionID, reason: response.reason)
+            }
+            if Self.needsSemanticReconciliation(materialization: materialization, workModel: workModel) {
+                _ = await materializeSemanticInferences(sessionID: sessionID)
+                response = try await client.sessionWorkModel(
+                    ProvenanceSessionWorkModelRequest(sessionID: sessionID, turnLimit: 12)
+                )
+                guard response.found, let retryWorkModel = response.model else {
+                    snapshotsBySessionID.removeValue(forKey: sessionID)
+                    return .notFound(sessionID: sessionID, reason: response.reason)
+                }
+                workModel = retryWorkModel
             }
             let semanticMessages = await presentationMessages(for: workModel)
             let nextSnapshot = AgentSessionSmartSessionSnapshot(
@@ -68,9 +79,11 @@ final class AgentSessionSmartSessionStore {
         }
     }
 
-    private func materializeSemanticInferences(sessionID: String) async {
+    private func materializeSemanticInferences(
+        sessionID: String
+    ) async -> ProvenanceCodingAgentSessionSemanticInferenceResponse? {
         do {
-            _ = try await client.publishCodingAgentSessionSemanticInferences(
+            return try await client.publishCodingAgentSessionSemanticInferences(
                 ProvenanceCodingAgentSessionSemanticInferenceRequest(
                     sessionID: sessionID,
                     turnLimit: 12,
@@ -82,7 +95,19 @@ final class AgentSessionSmartSessionStore {
                 "session": sessionID,
                 "error": String(describing: error)
             ])
+            return nil
         }
+    }
+
+    private static func needsSemanticReconciliation(
+        materialization: ProvenanceCodingAgentSessionSemanticInferenceResponse?,
+        workModel: ProvenanceSessionWorkModel
+    ) -> Bool {
+        guard let materializedRevision = materialization?.factualRevision,
+              let modelRevision = workModel.revision.factualRevision else {
+            return false
+        }
+        return modelRevision > materializedRevision
     }
 
     private func presentationMessages(

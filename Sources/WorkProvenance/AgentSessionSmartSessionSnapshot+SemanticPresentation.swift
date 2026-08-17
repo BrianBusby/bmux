@@ -12,7 +12,10 @@ extension AgentSessionSmartSessionSnapshot.SemanticField {
             ProvenanceCodingAgentSemanticInferenceKind.turnIntent.rawValue:
             return ProvenanceCodingAgentIntentPayload(semanticPayloadValue: record.payload)?.summary
         case ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue:
-            return ProvenanceCodingAgentCurrentActivityPayload(semanticPayloadValue: record.payload)?.summary
+            guard let payload = ProvenanceCodingAgentCurrentActivityPayload(semanticPayloadValue: record.payload) else {
+                return nil
+            }
+            return localizedActivitySummary(payload)
         case ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue:
             guard let payload = ProvenanceCodingAgentSessionPhasePayload(semanticPayloadValue: record.payload) else {
                 return nil
@@ -114,6 +117,28 @@ extension AgentSessionSmartSessionSnapshot.SemanticField {
                 localized: "agentSession.web.smartSession.activityBasis.semanticEvidence",
                 defaultValue: "Based on semantic evidence"
             )
+        }
+    }
+
+    private static func localizedActivitySummary(_ payload: ProvenanceCodingAgentCurrentActivityPayload) -> String {
+        switch (payload.basis, payload.activityKind, payload.summary) {
+        case let ("completed_command", .validation, summary) where summary.hasPrefix("Validating with "):
+            return String(
+                localized: "agentSession.web.smartSession.activitySummary.validatingCurrentChanges",
+                defaultValue: "Validating current changes"
+            )
+        case let ("completed_command", .investigation, summary) where summary.hasPrefix("Inspecting with "):
+            return String(
+                localized: "agentSession.web.smartSession.activitySummary.inspectingWorkspaceEvidence",
+                defaultValue: "Inspecting workspace evidence"
+            )
+        case let ("failed_command", .debugging, summary) where summary.hasPrefix("Investigating failed command: "):
+            return String(
+                localized: "agentSession.web.smartSession.activitySummary.investigatingFailedCommand",
+                defaultValue: "Investigating failed command"
+            )
+        default:
+            return payload.summary
         }
     }
 }
