@@ -239,7 +239,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Worktree required: true
           Conflict note: This is the narrow first consumer proving SessionWorkModel -> bridge -> React rendering. It must not claim the later milestone/blocker-gated Smart Session consumer complete.
           Active assignment: worktree: `/Users/brianbusby/repos/bmux-react-smart-session-initial-work-model-consumer`; branch: `react-smart-session-initial-work-model-consumer`; agent: `Codex`
-          Evidence: BrianBusby/bmux@000468433cc4
+          Evidence: BrianBusby/bmux@000468433cc4, BrianBusby/bmux#58 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Replace the Slice 1 disposable Smart Session bridge composition with the first PE-owned SessionWorkModel consumer path for supported fields only, while leaving milestone, blocker, approach-change, progress, and architecture semantics gated for later work.
           Acceptance reason: Stacked implementation commit 000468433 wires the React Smart Session bridge to PE SessionWorkModel for supported intent, activity, phase, factual evidence, revision, and provenance fields. The broader Smart SessionWorkModel consumer remains planned because milestone and blocker/approach-change semantics are still intentionally gated.
         - **React Smart SessionWorkModel consumer** (`react_smart_session_work_model_consumer`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: structured work understanding; layer: consumer presentation; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed
