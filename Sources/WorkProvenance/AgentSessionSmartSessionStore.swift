@@ -6,6 +6,7 @@ import ProvenanceEngineContracts
 final class AgentSessionSmartSessionStore {
     private let client: any ProvenanceEngineClient
     private var snapshotsBySessionID: [String: AgentSessionSmartSessionSnapshot] = [:]
+    private var refreshTasksBySessionID: [String: Task<AgentSessionSmartSessionReadResult, Never>] = [:]
 
     init(client: any ProvenanceEngineClient) {
         self.client = client
@@ -21,6 +22,19 @@ final class AgentSessionSmartSessionStore {
 
     func refreshedSnapshot(sessionID rawSessionID: String?) async -> AgentSessionSmartSessionReadResult {
         guard let sessionID = Self.trimmedNonEmpty(rawSessionID) else { return .missingSession }
+        if let task = refreshTasksBySessionID[sessionID] {
+            return await task.value
+        }
+        let task = Task { @MainActor in
+            await self.loadSnapshot(sessionID: sessionID)
+        }
+        refreshTasksBySessionID[sessionID] = task
+        let result = await task.value
+        refreshTasksBySessionID.removeValue(forKey: sessionID)
+        return result
+    }
+
+    private func loadSnapshot(sessionID: String) async -> AgentSessionSmartSessionReadResult {
         do {
             await materializeSemanticInferences(sessionID: sessionID)
 

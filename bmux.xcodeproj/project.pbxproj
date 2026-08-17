@@ -70,6 +70,7 @@
 		CE2F02060000000000000001 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02060000000000000002 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift */; };
 		CE2F02020000000000000001 /* AgentSessionSmartSessionSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02020000000000000002 /* AgentSessionSmartSessionSnapshot.swift */; };
 		CE2F02030000000000000001 /* AgentSessionSmartSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02030000000000000002 /* AgentSessionSmartSessionStore.swift */; };
+		CE2F03010000000000000001 /* AgentSessionSmartSessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F03010000000000000002 /* AgentSessionSmartSessionStoreTests.swift */; };
 		A9E030000000000000000002 /* AgentSessionSocketSurfaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E030000000000000000001 /* AgentSessionSocketSurfaceTests.swift */; };
 		A9F200000000000000000011 /* AgentSessionStartedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000011 /* AgentSessionStartedSession.swift */; };
 		A9E02000000000000000000A /* AgentSessionStreamAccumulators.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000A /* AgentSessionStreamAccumulators.swift */; };
@@ -1823,6 +1824,7 @@
 		CE2F02060000000000000002 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AgentSessionSmartSessionSnapshot+SemanticPresentation.swift"; sourceTree = "<group>"; };
 		CE2F02020000000000000002 /* AgentSessionSmartSessionSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionSnapshot.swift; sourceTree = "<group>"; };
 		CE2F02030000000000000002 /* AgentSessionSmartSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionStore.swift; sourceTree = "<group>"; };
+		CE2F03010000000000000002 /* AgentSessionSmartSessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionStoreTests.swift; sourceTree = "<group>"; };
 		A9E030000000000000000001 /* AgentSessionSocketSurfaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSocketSurfaceTests.swift; sourceTree = "<group>"; };
 		A9F100000000000000000011 /* AgentSessionStartedSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionStartedSession.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000A /* AgentSessionStreamAccumulators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionStreamAccumulators.swift; sourceTree = "<group>"; };
@@ -4999,6 +5001,7 @@
 				B8B056D80000000000000002 /* MobileHostIdentityTests.swift */,
 				5E2701030000000000000002 /* SentryEventScrubberTests.swift */,
 				CE0E05100000000000000002 /* AgentSessionFactualProjectionStoreTests.swift */,
+				CE2F03010000000000000002 /* AgentSessionSmartSessionStoreTests.swift */,
 
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
 					CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */,
@@ -6771,6 +6774,7 @@
 				D3610B010000000000000001 /* AgentSessionAutoResumeSettingsTests.swift in Sources */,
 				D3610B020000000000000001 /* AgentSessionAutoResumeSwiftTests.swift in Sources */,
 				CE0E05100000000000000001 /* AgentSessionFactualProjectionStoreTests.swift in Sources */,
+				CE2F03010000000000000001 /* AgentSessionSmartSessionStoreTests.swift in Sources */,
 				A9E030000000000000000002 /* AgentSessionSocketSurfaceTests.swift in Sources */,
 				A9E050000000000000000002 /* AgentSessionWebRendererTests.swift in Sources */,
 				725746692D9647948561044D /* AppDelegateBareSpaceShortcutRoutingTests.swift in Sources */,
