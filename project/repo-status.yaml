@@ -60,7 +60,7 @@ local_capabilities:
   react_terminal_agent_chat_surface: implemented
   react_terminal_productization: planned
   react_smart_session_surface: under_observation
-  react_smart_session_initial_work_model_consumer: planned
+  react_smart_session_initial_work_model_consumer: implemented
   react_smart_session_work_model_consumer: planned
   three_view_session_navigation: planned
   richer_session_evidence_foundation: implemented

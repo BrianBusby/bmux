@@ -188,7 +188,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`) - milestone; status: active; owner: Provenance Engine
 - Three-view Coding Session Experience (`three_view_coding_session_experience`) - phase; status: active; owner: Bmux
 - Coding Session View Surfaces (`coding_session_view_surfaces`) - milestone; status: active; owner: Bmux
-- React Smart Session initial SessionWorkModel consumer (`react_smart_session_initial_work_model_consumer`) - slice; status: active; owner: Bmux
+- React Smart Session initial SessionWorkModel consumer (`react_smart_session_initial_work_model_consumer`) - slice; status: implemented; owner: Bmux
 
 ### Major Node Summaries
 

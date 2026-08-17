@@ -60,7 +60,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Workspace Display Projection Cursors | implemented |
 | Provenance Engine Workspace Display Ticket Link Facts | implemented |
 | Provenance Engine Workspace Display Ticket Title Facts | implemented |
-| React Smart Session Initial Work Model Consumer | planned |
+| React Smart Session Initial Work Model Consumer | implemented |
 | React Smart Session Surface | under observation |
 | React Smart Session Work Model Consumer | planned |
 | React Terminal Agent Chat Surface | implemented |
