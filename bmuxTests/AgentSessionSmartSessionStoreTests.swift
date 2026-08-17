@@ -88,6 +88,92 @@ struct AgentSessionSmartSessionStoreTests {
         #expect(record.payload == payload.semanticPayloadValue)
     }
 
+    @Test
+    func unknownSemanticSummariesUseLocalizedFallback() throws {
+        let turnIntentPayload = ProvenanceCodingAgentIntentPayload(
+            summary: "Unknown turn intent",
+            unknownReason: "No submitted prompt or active plan step is available for this turn."
+        )
+        let turnIntentRecord = ProvenanceSessionWorkModelSemanticRecord(record: Self.semanticRecord(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.turnIntent.rawValue,
+            scope: .turn,
+            scopeID: "turn-1",
+            payload: turnIntentPayload.semanticPayloadValue
+        ))
+        let activityPayload = ProvenanceCodingAgentCurrentActivityPayload(
+            activityKind: .unknown,
+            summary: "Unknown current activity",
+            basis: "insufficient_turn_evidence",
+            unknownReason: "No bounded prompt, plan, visible reasoning, command, or file-change evidence is available for this turn."
+        )
+        let activityRecord = ProvenanceSessionWorkModelSemanticRecord(record: Self.semanticRecord(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue,
+            scope: .turn,
+            scopeID: "turn-1",
+            payload: activityPayload.semanticPayloadValue
+        ))
+
+        #expect(AgentSessionSmartSessionSnapshot.SemanticField.summary(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.turnIntent.rawValue,
+            record: turnIntentRecord
+        ) == nil)
+        #expect(AgentSessionSmartSessionSnapshot.SemanticField.summary(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue,
+            record: activityRecord
+        ) == nil)
+        #expect(turnIntentRecord.payload == turnIntentPayload.semanticPayloadValue)
+        #expect(activityRecord.payload == activityPayload.semanticPayloadValue)
+    }
+
+    @Test
+    func generatedPhaseDetailsAreLocalized() throws {
+        let payload = ProvenanceCodingAgentSessionPhasePayload(
+            phase: .waitingBlocked,
+            reason: "Latest turn lifecycle is blocked.",
+            signals: ["turn_lifecycle"]
+        )
+        let record = ProvenanceSessionWorkModelSemanticRecord(record: Self.semanticRecord(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue,
+            scope: .session,
+            scopeID: "session-1",
+            payload: payload.semanticPayloadValue
+        ))
+
+        let detail = try #require(AgentSessionSmartSessionSnapshot.SemanticField.detail(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue,
+            record: record
+        ))
+
+        #expect(detail == String(
+            localized: "agentSession.web.smartSession.phaseDetail.blockedLifecycle",
+            defaultValue: "Latest turn lifecycle is blocked"
+        ))
+        #expect(detail != payload.reason)
+        #expect(record.payload == payload.semanticPayloadValue)
+    }
+
+    @Test
+    func refreshRepeatsRevisionCheckAfterRetryRead() async {
+        let client = SmartSessionStoreTestClient(
+            models: [
+                Self.model(sessionID: "session-1", revision: 43),
+                Self.model(sessionID: "session-1", revision: 44),
+                Self.model(sessionID: "session-1", revision: 44),
+            ],
+            materializedFactualRevisions: [42, 43, 44]
+        )
+        let store = AgentSessionSmartSessionStore(client: client)
+
+        guard case let .available(snapshot) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Expected available Smart Session snapshot after bounded revision reconciliation")
+            return
+        }
+
+        #expect(snapshot.revision.factualRevision == 44)
+        #expect(await client.publishRequestCount() == 3)
+        #expect(await client.sessionWorkModelRequestCount() == 3)
+    }
+
     private static func model(sessionID: String, revision: Int) -> ProvenanceSessionWorkModel {
         let updatedAt = Date(timeIntervalSince1970: 1_800_000_000)
         let session = ProvenanceSessionRecord(
