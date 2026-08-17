@@ -132,7 +132,7 @@ struct AgentSessionSocketSurfaceTests {
     }
 
     @Test
-    func testWorkspaceBusyIndicatorUsesVisibleStatusLineWhenIdle() throws {
+    func testWorkspaceBusyIndicatorIgnoresVisibleStatusLineAtShellPrompt() throws {
         let manager = TabManager()
         let workspace = try #require(manager.selectedWorkspace)
         let panelId = try #require(workspace.focusedPanelId)
@@ -148,6 +148,10 @@ struct AgentSessionSocketSurfaceTests {
         workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .idle)
 
         #expect(workspace.hasActiveAIWork)
+
+        workspace.updatePanelShellActivityState(panelId: panelId, state: .promptIdle)
+
+        #expect(!workspace.hasActiveAIWork)
     }
 
     @Test
