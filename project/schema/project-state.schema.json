@@ -1,0 +1,322 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BrianBusby/bmux/project/schema/project-state.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "project", "repositories", "cross_repository", "milestones", "roadmap", "ownership", "policies", "caveats"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "shared_state_owner"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$" },
+        "name": { "type": "string", "minLength": 1 },
+        "shared_state_owner": { "$ref": "#/$defs/repositorySlug" }
+      }
+    },
+    "repositories": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slug", "role"],
+        "properties": {
+          "slug": { "$ref": "#/$defs/repositorySlug" },
+          "role": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "cross_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active_gate"],
+      "properties": {
+        "active_gate": { "$ref": "#/$defs/gate" }
+      }
+    },
+    "milestones": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/milestone" }
+    },
+    "roadmap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodes"],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/roadmapNode" }
+        }
+      }
+    },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": { "enum": ["provenance_engine", "bmux"] },
+      "minProperties": 1
+    },
+    "policies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_execution_telemetry_persisted", "live_projection_persisted", "narrow_lifecycle_projection_enabled", "automatic_checkpoint_diagnostics"],
+      "properties": {
+        "raw_execution_telemetry_persisted": { "type": "boolean" },
+        "live_projection_persisted": { "type": "boolean" },
+        "narrow_lifecycle_projection_enabled": { "type": "boolean" },
+        "automatic_checkpoint_diagnostics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "selected_for_implementation"],
+          "properties": {
+            "status": { "enum": ["not_implemented", "implemented"] },
+            "selected_for_implementation": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "caveats": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/caveat" }
+    }
+  },
+  "$defs": {
+    "repositorySlug": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_]*$"
+    },
+    "repositoryKey": {
+      "enum": ["provenance_engine", "bmux"]
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "pullRequestOwner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["login", "profile_url"],
+      "properties": {
+        "login": { "type": "string", "minLength": 1 },
+        "profile_url": { "type": "string", "pattern": "^https://github\\.com/.+" }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commits", "pull_requests"],
+      "properties": {
+        "commits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["repository", "sha"],
+            "properties": {
+              "repository": { "$ref": "#/$defs/repositorySlug" },
+              "sha": { "$ref": "#/$defs/sha" }
+            }
+          }
+        },
+        "pull_requests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["repository", "number"],
+            "properties": {
+              "repository": { "$ref": "#/$defs/repositorySlug" },
+              "number": { "type": "integer", "minimum": 1 },
+              "owner": { "$ref": "#/$defs/pullRequestOwner" }
+            }
+          }
+        }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["planned", "active", "complete", "blocked", "superseded"] }
+      }
+    },
+    "milestone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "owner", "delivery_status", "acceptance_status", "evidence"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 },
+        "owner": { "enum": ["provenance_engine", "bmux"] },
+        "delivery_status": { "enum": ["proposed", "draft", "open", "merged", "closed", "superseded"] },
+        "acceptance_status": { "enum": ["proposed", "implemented", "under_observation", "accepted", "rejected", "superseded"] },
+        "evidence": { "$ref": "#/$defs/evidence" },
+        "completed_at": { "anyOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }] },
+        "accepted_at": { "anyOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }] },
+        "acceptance_reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "roadmapReferenceList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/id" }
+    },
+    "roadmapMetadataList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "roadmapConceptClassification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary", "architecture_layer"],
+      "properties": {
+        "primary": {
+          "enum": [
+            "platform",
+            "v1_adoption",
+            "project_truth",
+            "execution_telemetry",
+            "workspace_display",
+            "evidence_and_factual_state",
+            "semantic_understanding",
+            "structured_work_understanding",
+            "architecture_understanding",
+            "durable_knowledge",
+            "shared_evidence",
+            "retrieval",
+            "deployment"
+          ]
+        },
+        "architecture_layer": {
+          "enum": [
+            "platform",
+            "evidence_sources",
+            "evidence_adapters",
+            "evidence_store",
+            "deterministic_current_state",
+            "inference_session_work_projections",
+            "knowledge_compiler",
+            "knowledge_store",
+            "retrieval_engine",
+            "consumer_presentation",
+            "project_truth",
+            "cross_repository_workflow"
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "roadmapParallelism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classification"],
+      "properties": {
+        "classification": { "enum": ["safe", "conditional", "serial", "unknown"] },
+        "with": { "$ref": "#/$defs/roadmapReferenceList" },
+        "expected_contract_domains": { "$ref": "#/$defs/roadmapMetadataList" },
+        "expected_code_areas": { "$ref": "#/$defs/roadmapMetadataList" },
+        "likely_conflict_domains": { "$ref": "#/$defs/roadmapMetadataList" },
+        "contract_dependencies": { "$ref": "#/$defs/roadmapMetadataList" },
+        "worktree_required": { "type": "boolean" },
+        "conflict_note": { "type": "string", "minLength": 1 }
+      }
+    },
+    "roadmapExecution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assignment", "assigned_to"],
+      "properties": {
+        "assignment": { "enum": ["complete", "current", "selected_next", "planned", "deferred", "unassigned"] },
+        "assigned_to": { "enum": ["provenance_engine", "bmux", "shared", "unassigned"] },
+        "active_worktree": { "type": "string", "minLength": 1 },
+        "active_branch": { "type": "string", "minLength": 1 },
+        "active_agent": { "type": "string", "minLength": 1 },
+        "active_session": { "type": "string", "minLength": 1 },
+        "notes": { "type": "string", "minLength": 1 }
+      }
+    },
+    "roadmapAcceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "criteria": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "delivery": { "type": "string", "minLength": 1 }
+      }
+    },
+    "roadmapNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "title", "status", "owner", "repositories", "concept_classification", "parallelism", "execution"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["project", "program", "phase", "milestone", "slice"] },
+        "title": { "type": "string", "minLength": 1 },
+        "parent": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+        "status": { "enum": ["planned", "active", "implemented", "accepted", "blocked", "deferred", "superseded"] },
+        "owner": { "$ref": "#/$defs/repositoryKey" },
+        "repositories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/repositoryKey" }
+        },
+        "concept_classification": { "$ref": "#/$defs/roadmapConceptClassification" },
+        "depends_on": { "$ref": "#/$defs/roadmapReferenceList" },
+        "enables": { "$ref": "#/$defs/roadmapReferenceList" },
+        "sequence_after": { "$ref": "#/$defs/roadmapReferenceList" },
+        "sequence_before": { "$ref": "#/$defs/roadmapReferenceList" },
+        "parallelism": { "$ref": "#/$defs/roadmapParallelism" },
+        "execution": { "$ref": "#/$defs/roadmapExecution" },
+        "delivery_status": { "enum": ["proposed", "draft", "open", "merged", "closed", "superseded"] },
+        "acceptance_status": { "enum": ["proposed", "implemented", "under_observation", "accepted", "rejected", "superseded"] },
+        "evidence": { "$ref": "#/$defs/evidence" },
+        "completed_at": { "anyOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }] },
+        "accepted_at": { "anyOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }] },
+        "rationale": { "type": "string", "minLength": 1 },
+        "acceptance": { "$ref": "#/$defs/roadmapAcceptance" },
+        "acceptance_reason": { "type": "string", "minLength": 1 },
+        "mirrors_milestone": { "$ref": "#/$defs/id" }
+      }
+    },
+    "caveat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "status", "owner"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["open", "monitoring", "resolved", "accepted_risk", "superseded"] },
+        "owner": { "enum": ["provenance_engine", "bmux"] },
+        "issue": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repository", "number"],
+          "properties": {
+            "repository": { "$ref": "#/$defs/repositorySlug" },
+            "number": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    }
+  }
+}

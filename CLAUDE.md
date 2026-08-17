@@ -17,17 +17,19 @@ A project-status change is incomplete until:
 5. authored documents do not contradict the generated state.
 
 CI enforcement runs the read-only `./scripts/project-docs ci` gate through the
-canonical Provenance Engine tooling. It validates schema, generation freshness,
-bmux shared-source semantics, named invariants, authored-doc drift, and GitHub
-evidence without writing repository state.
+root-local Project Truth tooling. It validates schema, generation freshness,
+monorepo Project Truth semantics, named invariants, authored-doc drift, and
+GitHub evidence without writing repository state.
 
 ## Context efficiency roadmap
 
 Before continuing the context-efficiency, thread-lifecycle, provenance, and handoff system work, read these files in order:
 
 1. `docs/context-efficiency/current-status.md`
-2. `docs/context-efficiency/roadmap.md`
-3. `docs/context-efficiency/milestones.md`
+2. `docs/architecture/README.md`
+3. `docs/architecture/system-overview.md`
+4. `docs/context-efficiency/roadmap.md`
+5. `docs/context-efficiency/milestones.md`
 
 `current-status.md` is the live handoff index: it records the active phase, phase gate, last completed slice, next valid targets, verification commands, and known local quirks. Update it at the end of every context-efficiency slice before handing off. `roadmap.md` preserves the user's requested roadmap verbatim and should be treated as durable project memory for this effort.
 

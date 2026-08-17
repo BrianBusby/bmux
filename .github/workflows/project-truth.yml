@@ -21,34 +21,12 @@ jobs:
     name: project-truth
     runs-on: ${{ vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
     timeout-minutes: 10
-    env:
-      PROJECT_TRUTH_SHARED_STATE: .project-truth/provenance-engine/project/project-state.yaml
-      PROJECT_TRUTH_TOOL_ROOT: .project-truth/provenance-engine/tools/project-docs
     steps:
-      - name: Checkout bmux
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Checkout Provenance Engine tooling
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          repository: BrianBusby/provenance-engine
-          path: .project-truth/provenance-engine
-
-      - name: Use matching Provenance Engine branch when available
-        env:
-          PROVENANCE_REF: ${{ github.head_ref || github.ref_name }}
-        run: |
-          set -euo pipefail
-          if [ -z "$PROVENANCE_REF" ] || [ "$PROVENANCE_REF" = "main" ]; then
-            exit 0
-          fi
-          if git -C .project-truth/provenance-engine ls-remote --exit-code --heads origin "$PROVENANCE_REF" >/dev/null 2>&1; then
-            git -C .project-truth/provenance-engine fetch --depth=1 origin "$PROVENANCE_REF"
-            git -C .project-truth/provenance-engine checkout --detach FETCH_HEAD
-          fi
 
       - name: Install Project Truth dependencies
-        run: python3 -m pip install -r .project-truth/provenance-engine/tools/project-docs/requirements.txt
+        run: python3 -m pip install -r tools/project-docs/requirements.txt
 
       - name: Validate manifests
         run: ./scripts/project-docs validate
@@ -59,4 +37,4 @@ jobs:
       - name: Run read-only CI validation
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: ./scripts/project-docs ci --peer-repo-root .project-truth/provenance-engine
+        run: ./scripts/project-docs ci

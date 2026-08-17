@@ -192,6 +192,9 @@
       <FileRef
          location = "group:BmuxWorkspaces">
       </FileRef>
+      <FileRef
+         location = "group:ProvenanceEngine">
+      </FileRef>
    </Group>
    <Group
       location = "container:Examples"

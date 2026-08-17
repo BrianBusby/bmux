@@ -1,56 +1,53 @@
-# bmux Handoff
+# Latest Handoff
 
-## Project Truth CI and Read-Only Drift Verification
+## Active Slice
 
-Project Truth read-only CI validation is the current completed infrastructure
-slice for the bmux and Provenance Engine integration effort.
+- Slice: `monorepo_repository_consolidation`
+- Branch: `monorepo-provenance-engine`
+- Worktree: `/Users/brianbusby/repos/bmux-monorepo-provenance-engine`
+- Status: active draft migration branch
 
-- Shared cross-repository facts live in
-  `BrianBusby/provenance-engine:project/project-state.yaml`.
-- bmux local facts live in `project/repo-status.yaml`.
-- `project/shared-project-source.yaml` identifies the canonical shared source.
-- Generated current-status pages live under `docs/generated/`, starting with
-  [`docs/generated/project-status.md`](../generated/project-status.md).
-- Generated files must not be edited manually.
-- The continuing project state remains the Engineering Observation Period;
-  do not select a new product implementation slice from this handoff alone.
-- Domain-specific canonical mutation paths are tracked as a bounded
-  architectural/refactor workstream in
-  [`docs/canonical-mutation-paths.md`](../canonical-mutation-paths.md). That
-  workstream is not the repository's active generated project gate.
+## Current State
 
-## Commands
+bmux is the canonical monorepo. Provenance Engine has been imported with history
+under `Packages/macOS/ProvenanceEngine` and remains an independent SwiftPM
+package boundary. Root Project Truth now lives under `project/`; generated status
+lives under `docs/generated/`; architecture entrypoints begin at
+`docs/architecture/README.md`.
+
+The old `project/shared-project-source.yaml`, peer checkout CI, and per-feature
+PE revision pinning are obsolete for normal development. Cross-component slices
+should use one monorepo branch/worktree/PR while preserving PE package
+boundaries.
+
+## Read Next
+
+1. `AGENTS.md`
+2. `docs/README.md`
+3. `docs/generated/project-status.md`
+4. `docs/generated/nested-roadmap.md`
+5. `docs/generated/repository-status.md`
+6. `docs/architecture/README.md`
+7. `docs/planning/monorepo-migration-ledger.md`
+
+## Verification Commands
 
 ```bash
-PROJECT_TRUTH_SHARED_STATE=../provenance-engine/project/project-state.yaml ./scripts/project-docs validate
-PROJECT_TRUTH_SHARED_STATE=../provenance-engine/project/project-state.yaml ./scripts/project-docs generate
-PROJECT_TRUTH_SHARED_STATE=../provenance-engine/project/project-state.yaml ./scripts/project-docs check
-PROJECT_TRUTH_SHARED_STATE=../provenance-engine/project/project-state.yaml ./scripts/project-docs ci --peer-repo-root ../provenance-engine
+./scripts/project-docs validate
+./scripts/project-docs generate
+./scripts/project-docs check
+./scripts/project-docs ci
+python3 tools/project-docs/tests/test_project_docs.py
+python3 scripts/check-workspace-package-groups.py --check
+python3 scripts/check-package-resolved-policy.py
+cd Packages/macOS/ProvenanceEngine && swift test
 ```
 
-Set `PROJECT_TRUTH_TOOL_ROOT` when the canonical provenance-engine tool is not
-available through a sibling checkout. It may point either to the Provenance
-Engine repository root or directly to `tools/project-docs`.
+Run bmux focused build/tests after package resolution is stable and before
+handoff or PR publication.
 
-`ci` validates schema validity, generated-doc freshness, bmux shared-source
-semantics, named cross-repository invariants, bounded authored-doc drift, and
-read-only GitHub evidence. It uses `GITHUB_TOKEN` or `GH_TOKEN` when available.
-Network, auth, rate-limit, missing-resource, and contradictory-evidence
-failures are reported separately.
+## Pending Product Branches
 
-## Next Recommended Slice
-
-Keep the read-only checks under observation as required branch-protection
-candidates. Do not build GitHub App synchronization, automatic manifest edits,
-provenance-backed project-state events, telemetry checkpoint automation, or new
-bmux UI work until the observation gate produces a specific follow-up decision.
-
-The newly documented planning candidate is richer coding-agent evidence plus a
-PE-owned `SessionWorkModel` projection. If selected, keep it completed-unit
-first: define which Codex thread, turn, plan, command, reasoning-summary,
-file-change/diff, approval, validation, error, and compaction facts cross into
-PE; preserve raw streams and deltas as bmux live state; and require every
-inferred milestone, intent, activity, risk, or architecture field to retain PE
-provenance and confidence. Do not broaden that slice into GitHub ingestion,
-Knowledge Compiler work, transcript storage, raw execution telemetry
-persistence, automatic workspace naming redesign, or a broad UI rewrite.
+See `docs/planning/monorepo-migration-ledger.md`. The factual agent Session view
+branch/PR is the most important product branch to rebase or supersede after the
+migration lands.

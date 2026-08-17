@@ -954,6 +954,7 @@ jobs:
             BmuxTerminalCore
             BmuxUpdater
             BMUXAgentLaunch
+            ProvenanceEngine
           )
           # SwiftPM emits an error-severity diagnostic while planning the
           # GhosttyKit binaryTarget (the xcframework's static archive is not

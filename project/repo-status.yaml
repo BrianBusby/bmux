@@ -3,10 +3,13 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: richer_session_evidence_foundation
-    title: Richer Session Evidence Foundation
-    state: implemented
+    id: monorepo_repository_consolidation
+    title: bmux and Provenance Engine monorepo consolidation
+    state: draft
     owner: Codex
+    active_worktree: /Users/brianbusby/repos/bmux-monorepo-provenance-engine
+    active_branch: monorepo-provenance-engine
+    active_agent: Codex
   state: active
 
 execution_telemetry:
@@ -21,6 +24,44 @@ execution_telemetry:
   completed_unit_provenance_projection: implemented
 
 local_capabilities:
+  provenance_engine_public_in_process_sdk: implemented
+  provenance_engine_sqlite_store: implemented
+  provenance_engine_immutable_ledger: implemented
+  provenance_engine_deterministic_current_state: implemented
+  provenance_engine_workspace_display_current_state: implemented
+  provenance_engine_workspace_display_projection_cursors: implemented
+  provenance_engine_workspace_display_ticket_link_facts: implemented
+  provenance_engine_workspace_display_ticket_title_facts: implemented
+  provenance_engine_workspace_display_project_link_facts: implemented
+  provenance_engine_workspace_display_durable_context: implemented
+  provenance_engine_schema_identity_validation: implemented
+  provenance_engine_producer_neutral_lifecycle_recording: implemented
+  provenance_engine_richer_coding_agent_evidence: implemented
+  provenance_engine_factual_session_projection: implemented
+  provenance_engine_factual_session_turn_detail: implemented
+  provenance_engine_semantic_session_work_model_projection: planned
+  provenance_engine_semantic_inference_framework: implemented
+  provenance_engine_semantic_inference_records: implemented
+  provenance_engine_first_semantic_session_inferences: implemented
+  provenance_engine_coding_agent_thread_intent: implemented
+  provenance_engine_coding_agent_turn_intent: implemented
+  provenance_engine_coding_agent_session_phase: implemented
+  provenance_engine_coding_agent_current_activity: implemented
+  provenance_engine_human_readable_semantic_messaging: implemented
+  provenance_engine_semantic_message_records: implemented
+  provenance_engine_semantic_message_materialization: implemented
+  provenance_engine_semantic_message_presentation_policy: implemented
+  provenance_engine_session_work_model_contract_foundation: planned
+  provenance_engine_milestone_inference: planned
+  provenance_engine_blocker_approach_change_semantics: planned
+  provenance_engine_scoped_architecture_projection: planned
+  factual_agent_session_view: planned
+  native_provider_session_view: implemented
+  react_terminal_agent_chat_surface: implemented
+  react_terminal_productization: planned
+  react_smart_session_surface: planned
+  react_smart_session_work_model_consumer: planned
+  three_view_session_navigation: planned
   richer_session_evidence_foundation: implemented
   workspace_display_projection: implemented
   workspace_display_current_state_diagnostic: implemented
@@ -34,6 +75,11 @@ local_capabilities:
 release:
   latest_tag: null
   release_status: untagged
+
+component_releases:
+  provenance_engine:
+    latest_tag: "0.1.0"
+    release_status: tagged
 
 local_caveats:
   - id: broad_legacy_storage_migration

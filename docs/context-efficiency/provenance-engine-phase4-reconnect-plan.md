@@ -3,7 +3,7 @@
 Status: active controlled migration; updated on 2026-07-23 after the second
 external bmux adoption slice completed in bmux.
 
-Planning authority: this document is detailed bmux-side Phase 4 history and implementation guidance. The canonical cross-repository bmux to provenance-engine roadmap is `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
+Planning authority: this document is detailed bmux-side Phase 4 history and implementation guidance. Current monorepo architecture and Project Truth sequencing are canonical in `../architecture/README.md` and `../generated/nested-roadmap.md`.
 
 Inputs:
 

@@ -38,14 +38,6 @@
       }
     },
     {
-      "identity" : "provenance-engine",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/BrianBusby/provenance-engine.git",
-      "state" : {
-        "revision" : "9e69452a2ec22ead8dcbb2ef5d2a3c63f4464096"
-      }
-    },
-    {
       "identity" : "sentry-cocoa",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getsentry/sentry-cocoa.git",

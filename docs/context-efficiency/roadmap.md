@@ -1,6 +1,6 @@
 # Bmux Context Efficiency and Thread Lifecycle System
 
-Planning authority: this document preserves the original context-efficiency, thread-lifecycle, provenance, and handoff roadmap. The canonical bmux product roadmap is `../roadmap.md`. Cross-repository bmux to provenance-engine milestones are canonical in `https://github.com/BrianBusby/provenance-engine/blob/main/docs/bmux-integration-roadmap.md`.
+Planning authority: this document preserves the original context-efficiency, thread-lifecycle, provenance, and handoff roadmap. The canonical bmux product roadmap is `../roadmap.md`. Current monorepo architecture and Project Truth sequencing are canonical in `../architecture/README.md` and `../generated/nested-roadmap.md`.
 
 Mission
 
@@ -67,7 +67,7 @@ quality are proven.
 
 Session work model update
 
-The next accepted cross-repository direction is PE-owned richer coding-agent
+The next accepted cross-component direction is PE-owned richer coding-agent
 evidence and a high-level `SessionWorkModel` projection for one live
 coding-agent session. This supersedes older bmux-owned "work-phase and progress
 model" wording where it would require bmux to infer thread intent, turn intent,

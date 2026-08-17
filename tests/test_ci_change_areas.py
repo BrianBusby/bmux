@@ -164,6 +164,10 @@ def test_app_source_runs_macos() -> None:
     assert_areas(["Sources/AppDelegate.swift"], macos=True, web=False, go=False)
 
 
+def test_provenance_engine_package_runs_macos_swift_package_tests() -> None:
+    assert_areas(["Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts/ProvenanceEngineClient.swift"], macos=True, web=False, go=False)
+
+
 def test_workflow_changes_run_everything() -> None:
     assert_areas(
         [".github/workflows/ci.yml"],

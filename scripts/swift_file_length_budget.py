@@ -294,9 +294,13 @@ def compare_budget(
         if base_ref and actual_count >= threshold:
             base_count = count_lines_at_ref(repo_root, base_ref, rel_path)
             if base_count is None:
+                if allowed_count is not None and actual_count <= allowed_count:
+                    continue
                 failures.append((rel_path, actual_count, allowed_count, "new tracked file"))
                 continue
             if base_count < threshold:
+                if allowed_count is not None and actual_count <= allowed_count:
+                    continue
                 failures.append((rel_path, actual_count, allowed_count, "newly tracked file"))
                 continue
 

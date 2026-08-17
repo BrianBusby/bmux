@@ -19,6 +19,7 @@
 6359	bmuxTests/SessionPersistenceTests.swift
 6255	bmuxTests/GhosttyConfigTests.swift
 6229	Sources/TabManager.swift
+5945	Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite/ProvenanceSQLiteRepository.swift
 5809	Sources/TextBoxInput.swift
 5572	bmuxTests/BrowserConfigTests.swift
 4786	Sources/bmuxApp.swift
@@ -31,6 +32,7 @@
 3934	Sources/Feed/FeedPanelView.swift
 3721	bmuxTests/TabManagerSessionSnapshotTests.swift
 3668	bmuxTests/CLIGenericHookPersistenceTests.swift
+3440	Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSQLiteTests/ProvenanceSQLiteDatabaseTests.swift
 3365	Sources/BmuxConfig.swift
 3230	Sources/Update/UpdateTitlebarAccessory.swift
 2880	Sources/SessionIndexView.swift
@@ -84,6 +86,7 @@
 1204	bmuxTests/FileExplorerStoreTests.swift
 1197	bmuxTests/CodexAppServerSessionTests.swift
 1197	bmuxTests/VMDefaultCloudCommandTests.swift
+1189	Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts/ProvenanceCodingAgentSemanticInferenceContracts.swift
 1180	Sources/Panels/TerminalPanel.swift
 1166	Sources/VaultAgentProcessScanner.swift
 1147	bmuxTests/PiVaultAgentPersistenceTests.swift
@@ -113,6 +116,7 @@
 926	Sources/CommandPalette/CommandPaletteSettingsToggle.swift
 918	Sources/Panels/BrowserPopupWindowController.swift
 905	Sources/BmuxSSHURLRequest.swift
+903	Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSQLiteTests/ProjectionRebuildValidationTests.swift
 899	Sources/Panels/MarkdownWebRenderer.swift
 889	Sources/Panels/AgentSessionProcessStore.swift
 885	bmuxTests/SidebarWorkspaceDropPlannerTests.swift
@@ -123,6 +127,7 @@
 847	Sources/PricingPlansScreen.swift
 847	bmuxTests/AgentSessionAutoResumeSettingsTests.swift
 845	bmuxTests/SSHStartupSignalLifecycleTests.swift
+843	Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSDKTests/WriteSideProducerSDKTests.swift
 841	Packages/iOS/BmuxMobileShell/Tests/BmuxMobileShellTests/TerminalOutputDeliveryQueueTests.swift
 834	Sources/MainWindowFocusController.swift
 830	Sources/TaskManagerTypes.swift
@@ -143,6 +148,7 @@
 761	CLI/BMUXCLI+CodexFireAndForgetHooks.swift
 758	Sources/TerminalController+ControlWorkspaceContext.swift
 757	Sources/Mobile/AgentChat/AgentChatSessionRegistry.swift
+755	Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts/ProvenanceSemanticMessageContracts.swift
 754	bmuxTests/GhosttyTerminalStartupEnvironmentTests.swift
 752	bmuxUITests/CloseWorkspaceCmdDUITests.swift
 749	bmuxTests/UpdatePillReleaseVisibilityTests.swift
@@ -179,6 +185,7 @@
 663	Sources/PortScanner.swift
 661	Packages/macOS/BmuxRemoteSession/Sources/BmuxRemoteSession/Session/RemoteSessionCoordinator.swift
 660	Packages/iOS/BmuxMobileShell/Tests/BmuxMobileShellTests/MobileShellRenderGridInputCatchUpTests.swift
+659	Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSDKTests/CurrentContextSDKTests.swift
 655	Packages/macOS/BmuxTerminal/Sources/BmuxTerminal/Surface/TerminalSurface+RuntimeLifecycle.swift
 652	CLI/BMUXCLI+ContextEfficiency.swift
 650	Packages/macOS/BmuxBrowser/Sources/BmuxBrowser/Import/Detection/BrowserInstalledBrowserDetector.swift
@@ -203,12 +210,15 @@
 607	Packages/macOS/BmuxTerminal/Sources/BmuxTerminal/Surface/TerminalSurface.swift
 607	Sources/SessionIndexModels.swift
 607	Sources/SleepyFaceView.swift
+605	Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts/ProvenanceSemanticInferenceContracts.swift
 604	Packages/macOS/BmuxCommandPalette/Tests/BmuxCommandPaletteTests/CommandPaletteNucleoFFITests.swift
+604	Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSQLiteTests/SemanticMessageFoundationTests.swift
 601	Packages/macOS/BMUXAgentLaunch/Sources/BMUXAgentLaunch/AgentLaunchSanitizerPrimaryPolicies.swift
 601	Packages/macOS/BmuxWorkspaces/Sources/BmuxWorkspaces/Coordinators/WorkspaceReorderCoordinator.swift
 598	Packages/macOS/BMUXAgentLaunch/Sources/BMUXAgentLaunch/AgentLaunchSanitizer.swift
 596	bmuxTests/BmuxEventBusTests.swift
 594	bmuxTests/PortalTabDragRoutingTests.swift
+592	Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSQLiteTests/FirstSemanticSessionInferenceTests.swift
 592	Sources/TextBoxSubmitActions.swift
 591	Packages/macOS/BmuxSettingsUI/Tests/BmuxSettingsUITests/DefaultsValueModelLifecycleTests.swift
 590	CLI/BMUXCLI+AgentHookDefinitions.swift
@@ -243,6 +253,7 @@
 539	CLI/BMUXCLI+Themes.swift
 539	CLI/CodexTeamsApprovalBridge.swift
 538	Packages/Shared/BMUXMobileCore/Tests/BMUXMobileCoreTests/MobileTerminalRenderGridTests.swift
+538	Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSQLiteTests/WorkspaceDisplayCurrentStateProjectionTests.swift
 538	Sources/TerminalController+ControlSurfaceContext2.swift
 535	Sources/App/WorkspaceRuntimeSettings.swift
 534	bmuxTests/TabManagerTitleUpdateTests.swift
@@ -261,6 +272,7 @@
 518	Packages/macOS/BmuxSwiftRender/Tests/BmuxSwiftRenderTests/Corpus/stress-git-review-queue-command-deck.swift
 516	Packages/macOS/BmuxControlSocket/Tests/BmuxControlSocketTests/ControlCommandContextTestStubs.swift
 516	Sources/TerminalImageTransfer.swift
+515	Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineContractsTests/ProvenanceEngineHealthTests.swift
 514	Packages/macOS/BmuxSwiftRender/Sources/BmuxSwiftRender/ExpressionEvaluator.swift
 514	bmuxUITests/UpdatePillUITests.swift
 511	Packages/macOS/BmuxControlSocket/Sources/BmuxControlSocket/Coordinator/Sidebar/ControlCommandCoordinator+SidebarReportsV1.swift

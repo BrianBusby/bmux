@@ -10,9 +10,10 @@ not be maintained here.
 - [Ownership boundary](../generated/ownership-boundary.md)
 - [Repository status](../generated/repository-status.md)
 
-Update `project/repo-status.yaml` for bmux-local slice, release, capability, or
-caveat changes. Shared milestone, gate, ownership, and policy changes belong in
-`BrianBusby/provenance-engine:project/project-state.yaml`.
+Update `project/repo-status.yaml` for monorepo-local slice, release, capability,
+or caveat changes. Shared milestone, gate, ownership, roadmap, and policy
+changes belong in root `project/project-state.yaml`. The old
+`project/shared-project-source.yaml` pointer is obsolete.
 
 ## Read Order
 
@@ -21,12 +22,17 @@ caveat changes. Shared milestone, gate, ownership, and policy changes belong in
 3. `docs/generated/project-status.md`
 4. `docs/generated/ownership-boundary.md`
 5. `docs/generated/repository-status.md`
-6. `docs/roadmap.md`
-7. `docs/provenance-integration.md`
-8. `docs/context-efficiency/roadmap.md`
-9. `docs/context-efficiency/milestones.md`
-10. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
-11. Relevant bmux skills for Swift/package/build/test/localization work.
+6. `docs/architecture/README.md`
+7. `docs/architecture/system-overview.md`
+8. `docs/architecture/implementation-map.md`
+9. `docs/product/coding-session-views.md`
+10. `docs/planning/monorepo-migration-ledger.md`
+11. `docs/roadmap.md`
+12. `docs/provenance-integration.md`
+13. `docs/context-efficiency/roadmap.md`
+14. `docs/context-efficiency/milestones.md`
+15. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
+16. Relevant bmux skills for Swift/package/build/test/localization work.
 
 ## Current Boundary
 
@@ -49,22 +55,35 @@ contracts. PE records provider thread/turn identity, submitted prompt, plan
 updates, completed command facts, visible reasoning summaries, and file-change
 attribution as durable observable evidence below the semantic layer.
 
-Next planning target: PE owns the future `SessionWorkModel` projection for one
-coding-agent session. bmux should consume that revisioned authoritative snapshot
-for human-readable live work views and should not build a parallel semantic
-milestone/architecture model. Current implemented behavior remains lower-level
-evidence modeling and deterministic projection; SessionWorkModel, inference,
-milestone synthesis, and architecture projection are not implemented.
+Three-view session boundary: one coding-agent session should be viewable as
+Native, Terminal, and Session. Native is the provider-native surface and escape
+hatch. Terminal is bmux's React live interaction surface, building on
+`agent-chat`. Session is a separate React smart summary surface backed by PE
+factual and semantic models. bmux should not turn Terminal into a semantic
+engine or build parallel Swift and React Smart Session products.
 
-Verification for this slice:
+Planning target: PE owns the future `SessionWorkModel` projection for one
+coding-agent session. bmux should consume PE factual projection, semantic
+messages, and eventually the revisioned `SessionWorkModel` snapshot for Smart
+Session summaries. Current factual Session UI work should be treated as factual
+consumer groundwork/diagnostics and data-access foundation, not the final React
+Smart Session product. Use generated Project Truth for active work,
+dependency-ready work, selected-next work, and safe parallel work.
 
-- PE: `swift test`
-- PE docs: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
-- bmux sidecar test: `cd agent-chat && bun test/codex-telemetry-migration.test.ts`
-- bmux Swift package test: `cd Packages/Shared/BmuxAgentChat && swift test --filter executionTelemetryEventClientReadsBoundedCursorEndpoint`
-- bmux focused test: `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -destination 'platform=macOS,arch=arm64' -derivedDataPath /tmp/bmux-richer-session-evidence-foundation -only-testing:bmuxTests/SessionProvenanceTests`
-- bmux docs: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
-- bmux tagged reload: `./scripts/reload.sh --tag richer-session-evidence-foundation`
+Monorepo migration status: bmux is the canonical repository and PE now lives as
+a package under `Packages/macOS/ProvenanceEngine`. Cross-component slices should
+use one branch and one worktree unless a future release/extraction task
+explicitly requires a separate PE checkout. The original PE repository remains
+an archival and recovery reference until the migration is accepted.
+
+Verification for planning/docs-only Project Truth slices:
+
+- Project Truth: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
+- Read-only CI gate locally when GitHub evidence access is available: `./scripts/project-docs ci`
+- Run `git diff --check` in the monorepo.
+
+Runtime tests or tagged reloads are only required when production app/runtime
+behavior changes; this three-view clarification is planning/documentation only.
 
 Known local quirk: the normal Xcode app build script can fail while building the
 Ghostty CLI helper with Zig unresolved macOS symbols on this machine. The focused

@@ -2,30 +2,19 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-if [[ -n "${PROJECT_TRUTH_TOOL_ROOT:-}" ]]; then
-  tool_root="$PROJECT_TRUTH_TOOL_ROOT"
-  if [[ ! -f "$tool_root/project_docs.py" && -f "$tool_root/tools/project-docs/project_docs.py" ]]; then
-    tool_root="$tool_root/tools/project-docs"
-  fi
-else
-  tool_root="$(cd "$repo_root/.." && pwd)/provenance-engine/tools/project-docs"
+tool_root="${PROJECT_TRUTH_TOOL_ROOT:-"$repo_root/tools/project-docs"}"
+if [[ ! -f "$tool_root/project_docs.py" && -f "$tool_root/tools/project-docs/project_docs.py" ]]; then
+  tool_root="$tool_root/tools/project-docs"
 fi
 
 if [[ ! -f "$tool_root/project_docs.py" ]]; then
-  cat >&2 <<MSG
-project-docs: cannot find canonical project-docs tool.
-
-Set PROJECT_TRUTH_TOOL_ROOT=/path/to/provenance-engine/tools/project-docs
-or keep a sibling checkout at ../provenance-engine.
-MSG
+  echo "project-docs: cannot find canonical tool at $tool_root" >&2
   exit 1
 fi
 
 python_bin="${PROJECT_TRUTH_PYTHON:-python3}"
-provenance_root="$(cd "$tool_root/../.." && pwd)"
-if [[ -x "$provenance_root/.venv-project-docs/bin/python" ]]; then
-  python_bin="$provenance_root/.venv-project-docs/bin/python"
+if [[ -x "$repo_root/.venv-project-docs/bin/python" ]]; then
+  python_bin="$repo_root/.venv-project-docs/bin/python"
 fi
 
 exec "$python_bin" "$tool_root/project_docs.py" "$@" --repo-root "$repo_root"

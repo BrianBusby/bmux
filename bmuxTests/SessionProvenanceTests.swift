@@ -381,6 +381,12 @@ private actor CapturingProvenanceEngineClient: ProvenanceEngineContracts.Provena
         throw TestError.unimplemented
     }
 
+    func factualSessionProjection(
+        _ request: ProvenanceEngineContracts.ProvenanceFactualSessionProjectionRequest
+    ) async throws -> ProvenanceEngineContracts.ProvenanceFactualSessionProjectionResponse {
+        throw TestError.unimplemented
+    }
+
     private enum TestError: Error {
         case unimplemented
     }
