@@ -754,6 +754,12 @@ struct WorkProvenanceObserverTests {
         ) async throws -> ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse {
             try await backing.workspaceDisplay(request)
         }
+
+        func factualSessionProjection(
+            _ request: ProvenanceEngineContracts.ProvenanceFactualSessionProjectionRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceFactualSessionProjectionResponse {
+            try await backing.factualSessionProjection(request)
+        }
     }
 
     private static func linearTicketLink(id: String = "STE-1964") -> ProvenanceWorkspaceDisplayTicketLinkRecord {
