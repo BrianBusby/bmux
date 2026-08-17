@@ -19,6 +19,11 @@ Local bmux integration notes live in `docs/provenance-integration.md`.
 
 - Native macOS app with Ghostty terminal rendering, vertical workspace tabs, split panes, browser panes, CLI/socket automation, and custom configuration.
 - Agent-aware workspace state including notifications, busy/idle detection, unread routing, command/browser automation, and short refs for windows, workspaces, panes, and surfaces.
+- Provider-native coding-agent session surfaces remain available as the Native
+  view and escape hatch.
+- The `agent-chat` React app exists as the foundation for a bmux-owned Terminal
+  live interaction surface, including structured live events, provider controls,
+  and Codex app-server integration.
 - Context-efficiency telemetry package and CLI surfaces for read-only Codex rollout inspection.
 - Local WorkProvenance capture, projections, lifecycle relationship recording, and provenance CLI presentation for legacy support and observability traces.
 - Provenance Engine V1 integration through public SDK boundaries for adopted
@@ -41,27 +46,46 @@ The authoritative generated status is:
 
 This roadmap defines bmux product direction and sequencing. It must not
 independently maintain active gates, milestone state, evidence commits, current
-implementation slices, release state, or open caveat status.
+implementation slices, dependency-ready work, selected-next work, release
+state, or open caveat status.
 
-Still out of scope until a new slice is explicitly selected: daemon transport, UI work, observability API expansion, GitHub ingestion, Knowledge Compiler implementation, semantic retrieval, broad legacy data migration, and lifecycle policy automation.
+Use the generated nested roadmap for dependency-ready, selected-next, and
+active branch/worktree state. This authored roadmap records durable product
+scope: daemon transport, observability API expansion, GitHub ingestion,
+Knowledge Compiler implementation, semantic retrieval, broad legacy data
+migration, and lifecycle policy automation require explicit roadmap slices
+before bmux should pursue them.
 
 ## Near-Term Planned Work
 
 - Run an observation period against the accepted runtime cutover.
 - Remove or retire legacy WorkProvenance storage and client support after replacement contracts or obsolescence decisions.
 - Decide whether lifecycle observability traces need a public engine API or should remain bmux-local diagnostics.
-- Plan the richer coding-agent evidence and `SessionWorkModel` slice with PE:
-  bmux should keep provider acquisition, live interaction, approvals, streaming
-  deltas, and rendering, while forwarding selected completed evidence units to
-  PE once explicit contracts exist.
+- Continue the richer coding-agent evidence and `SessionWorkModel` sequence with
+  PE: bmux should keep provider acquisition, live interaction, approvals,
+  streaming deltas, and rendering, while forwarding selected completed evidence
+  units to PE through explicit contracts.
+- Productize the existing React `agent-chat` surface as the Terminal view for
+  live interaction without turning it into a semantic summary engine.
+- Build a separate React Smart Session foundation after the factual Session view
+  proves the PE factual consumer shape. This surface should consume PE factual
+  projection and semantic messages, not infer session meaning from raw provider
+  events.
+- Plan coherent Native / Terminal / Session switching only after Terminal and
+  Smart Session foundations can preserve one underlying provider thread/session
+  identity, worktree identity, and surface restore state.
 - Cut a tagged Provenance Engine release so bmux can depend on a version tag rather than a revision pin.
 
 ## Longer-Term Direction
 
 - Provenance-powered bmux context assembly and task handoff features after durable evidence queries are proven.
-- Human-readable live coding-agent work views powered by PE
-  `SessionWorkModel` snapshots, including thread/turn intent, milestone
-  hierarchy, current activity, scoped architecture, risk/validation state, and
+- Three distinct user-facing coding-agent views: Native for provider-native
+  fidelity, React Terminal for live interaction, and React Session for smart
+  summaries backed by PE factual and semantic models.
+- Human-readable Smart Session views powered by PE `SessionWorkModel`
+  snapshots, including completed-turn summaries, current-turn state,
+  thread/turn intent, milestone hierarchy, current activity, scoped
+  architecture, risk/validation state, blockers, approach changes, and
   provenance for inferred fields.
 - Session awareness across related workspaces and subsessions.
 - User-facing reports that explain current session, task, and artifact state without exposing engine internals.

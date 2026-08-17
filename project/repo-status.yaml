@@ -3,10 +3,13 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: richer_session_evidence_foundation
-    title: Richer Session Evidence Foundation
-    state: implemented
+    id: factual_agent_session_view
+    title: Factual agent session view
+    state: draft
     owner: Codex
+    active_worktree: /Users/brianbusby/repos/bmux-clickable-semantic-explanation-ui
+    active_branch: clickable-semantic-explanation-ui
+    active_agent: Codex
   state: active
 
 execution_telemetry:
@@ -21,6 +24,13 @@ execution_telemetry:
   completed_unit_provenance_projection: implemented
 
 local_capabilities:
+  factual_agent_session_view: planned
+  native_provider_session_view: implemented
+  react_terminal_agent_chat_surface: implemented
+  react_terminal_productization: planned
+  react_smart_session_surface: planned
+  react_smart_session_work_model_consumer: planned
+  three_view_session_navigation: planned
   richer_session_evidence_foundation: implemented
   workspace_display_projection: implemented
   workspace_display_current_state_diagnostic: implemented

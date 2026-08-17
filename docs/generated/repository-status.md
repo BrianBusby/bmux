@@ -14,8 +14,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Richer Session Evidence Foundation (`richer_session_evidence_foundation`)
-- Slice state: implemented
+- Active slice: Factual agent session view (`factual_agent_session_view`)
+- Slice state: draft
 - Owner: Codex
 - Repository state: active
 
@@ -28,9 +28,16 @@ Repository: `BrianBusby/bmux`
 
 | Capability | State |
 | --- | --- |
+| Factual Agent Session View | planned |
+| Native Provider Session View | implemented |
+| React Smart Session Surface | planned |
+| React Smart Session Work Model Consumer | planned |
+| React Terminal Agent Chat Surface | implemented |
+| React Terminal Productization | planned |
 | Richer Session Evidence Foundation | implemented |
 | Richer Session Work View | planned |
 | Session Work Model Consumer | planned |
+| Three View Session Navigation | planned |
 | Workspace Display Current State Diagnostic | implemented |
 | Workspace Display Durable Context | implemented |
 | Workspace Display Projection | implemented |
