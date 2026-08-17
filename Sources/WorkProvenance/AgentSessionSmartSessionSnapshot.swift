@@ -388,9 +388,7 @@ extension AgentSessionSmartSessionSnapshot {
                 "startedAt": AgentSessionSmartSessionBridgeDictionary.optional(
                     AgentSessionSmartSessionBridgeDictionary.isoString(startedAt)
                 ),
-                "updatedAt": AgentSessionSmartSessionBridgeDictionary.optional(
-                    AgentSessionSmartSessionBridgeDictionary.isoString(updatedAt)
-                ),
+                "updatedAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(updatedAt),
                 "providerThreads": providerThreads.map(\.bridgePayload)
             ])
         }
@@ -425,12 +423,8 @@ extension AgentSessionSmartSessionSnapshot {
                 "worktreeId": AgentSessionSmartSessionBridgeDictionary.optional(worktreeID),
                 "source": source,
                 "confidence": confidence,
-                "firstObservedAt": AgentSessionSmartSessionBridgeDictionary.optional(
-                    AgentSessionSmartSessionBridgeDictionary.isoString(firstObservedAt)
-                ),
-                "updatedAt": AgentSessionSmartSessionBridgeDictionary.optional(
-                    AgentSessionSmartSessionBridgeDictionary.isoString(updatedAt)
-                )
+                "firstObservedAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(firstObservedAt),
+                "updatedAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(updatedAt)
             ])
         }
     }
@@ -457,7 +451,7 @@ enum AgentSessionSmartSessionBridgeDictionary {
         return formatter.string(from: date)
     }
 
-    static func isoString(_ date: Date) -> String {
+    static func requiredISOString(_ date: Date) -> String {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter.string(from: date)
