@@ -170,6 +170,49 @@ struct AgentSessionSocketSurfaceTests {
     }
 
     @Test
+    func testWorkspaceBusyIndicatorIgnoresVisibleStatusLineWhenIdleHasUnknownCompanion() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+
+        workspace.debugRenderedTerminalRowsForActiveWorkTesting = [
+            panelId: [
+                "Working (36s, Esc to interrupt)",
+                "",
+            ],
+        ]
+        workspace.setAgentLifecycle(key: "legacy", panelId: panelId, lifecycle: .unknown)
+        #expect(workspace.hasActiveAIWork)
+
+        workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .idle)
+
+        #expect(!workspace.hasActiveAIWork)
+    }
+
+    @Test
+    func testWorkspaceBusyIndicatorKeepsVisibleStatusLineWhenAnyLifecycleIsActive() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+
+        workspace.debugRenderedTerminalRowsForActiveWorkTesting = [
+            panelId: [
+                "Working (36s, Esc to interrupt)",
+                "",
+            ],
+        ]
+
+        workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .idle)
+        workspace.setAgentLifecycle(key: "assistant", panelId: panelId, lifecycle: .running)
+
+        #expect(workspace.hasActiveAIWork)
+
+        workspace.setAgentLifecycle(key: "assistant", panelId: panelId, lifecycle: .needsInput)
+
+        #expect(workspace.hasActiveAIWork)
+    }
+
+    @Test
     func testInterruptingTerminalAgentWorkClearsWorkspaceBusyIndicator() throws {
         let manager = TabManager()
         let workspace = try #require(manager.selectedWorkspace)
