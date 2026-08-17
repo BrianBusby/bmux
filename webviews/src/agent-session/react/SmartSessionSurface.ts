@@ -24,6 +24,9 @@ export function SmartSessionSurface({ context }: { context?: AppContext }) {
   const [state, dispatch] = useReducer(reduceSmartSession, initialSmartSessionState());
   const requestIdRef = useRef(0);
   const copy = context?.copy;
+  const hasContext = context != null;
+  const stableWorkspaceId = context?.stableWorkspaceId;
+  const workspaceId = context?.workspaceId;
 
   const refresh = useCallback(() => {
     const requestId = requestIdRef.current + 1;
@@ -35,10 +38,10 @@ export function SmartSessionSurface({ context }: { context?: AppContext }) {
   }, []);
 
   useEffect(() => {
-    if (context) {
+    if (hasContext) {
       refresh();
     }
-  }, [context?.stableWorkspaceId, context?.workspaceId, refresh]);
+  }, [hasContext, stableWorkspaceId, workspaceId, refresh]);
 
   return h(
     "section",
@@ -53,7 +56,7 @@ export function SmartSessionSurface({ context }: { context?: AppContext }) {
           className: "smart-session-refresh",
           type: "button",
           onClick: refresh,
-          disabled: !context || state.status === "loading",
+          disabled: !hasContext || state.status === "loading",
         },
         copyText(copy, "smartSessionRefresh", "Refresh"),
       ),
