@@ -2763,7 +2763,7 @@ final class BrowserPanel: Panel, ObservableObject {
     /// Used to keep omnibar text-field focus from being immediately stolen by panel focus.
     private var suppressWebViewFocusUntil: Date?
     private var suppressWebViewFocusForAddressBar: Bool = false
-    private let blankURLString = "about:blank"
+    let blankURLString = "about:blank"
 
     /// Owns the address-bar page-focus capture/restore subsystem.
     ///
@@ -2884,11 +2884,11 @@ final class BrowserPanel: Panel, ObservableObject {
     private var usesRestoredSessionHistory: Bool {
         restoredSessionHistory.usesRestoredSessionHistory
     }
-    private var restoredHistoryCurrentURL: URL? {
+    var restoredHistoryCurrentURL: URL? {
         restoredSessionHistory.current
     }
-    private var pendingMainFrameNavigationURL: URL?
-    private var isMainFrameProvisionalNavigationActive: Bool = false
+    var pendingMainFrameNavigationURL: URL?
+    var isMainFrameProvisionalNavigationActive: Bool = false
 
     /// Published estimated progress (0.0 - 1.0)
     @Published private(set) var estimatedProgress: Double = 0.0
@@ -2990,7 +2990,7 @@ final class BrowserPanel: Panel, ObservableObject {
     private var pendingDistinctPortalHostReplacementPaneId: UUID?
     private var lockedPortalHost: PortalHostLock?
     private var webViewCancellables = Set<AnyCancellable>()
-    private var navigationDelegate: BrowserNavigationDelegate?
+    var navigationDelegate: BrowserNavigationDelegate?
     private var uiDelegate: BrowserUIDelegate?
     var downloadDelegate: BrowserDownloadDelegate?
     private let webAuthnCoordinator = BrowserWebAuthnCoordinator()
@@ -5052,7 +5052,7 @@ final class BrowserPanel: Panel, ObservableObject {
         return value.caseInsensitiveCompare("about:blank") == .orderedSame
     }
 
-    private func restorableDisplayURLForCurrentErrorPage(liveURL: URL?) -> URL? {
+    func restorableDisplayURLForCurrentErrorPage(liveURL: URL?) -> URL? {
         Self.restorableDisplayURL(
             liveURL: liveURL,
             currentURL: currentURL,
@@ -7843,49 +7843,6 @@ extension BrowserPanel {
         )
     }
 
-    /// Returns the most reliable URL string for omnibar-related matching and UI decisions.
-    /// `currentURL` can lag behind navigation changes, so prefer the live WKWebView URL.
-    func preferredURLStringForOmnibar() -> String? {
-        if let webViewURL = restorableDisplayURLForCurrentErrorPage(liveURL: webView.url)?.absoluteString
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-           !webViewURL.isEmpty,
-           webViewURL != blankURLString {
-            return webViewURL
-        }
-
-        if let current = currentURL?.absoluteString
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-           !current.isEmpty,
-           current != blankURLString {
-            return current
-        }
-
-        return nil
-    }
-
-    private func resolvedCurrentSessionHistoryURL() -> URL? {
-        if let displayURL = restorableDisplayURLForCurrentErrorPage(liveURL: webView.url),
-           Self.serializableSessionHistoryURLString(displayURL) != nil {
-            return displayURL
-        }
-        if let currentURL,
-           Self.serializableSessionHistoryURLString(currentURL) != nil {
-            return currentURL
-        }
-        return restoredHistoryCurrentURL
-    }
-
-    private var cancellableProvisionalForwardURL: URL? {
-        guard isMainFrameProvisionalNavigationActive || pendingMainFrameNavigationURL != nil else { return nil }
-        guard let attemptedURL = pendingMainFrameNavigationURL ?? navigationDelegate?.lastAttemptedURL,
-              let attemptedURLString = Self.serializableSessionHistoryURLString(attemptedURL),
-              let currentURLString = Self.serializableSessionHistoryURLString(currentURL ?? restoredHistoryCurrentURL),
-              attemptedURLString != currentURLString else {
-            return nil
-        }
-        return attemptedURL
-    }
-
     private func refreshNavigationAvailability() {
         let availability = restoredSessionHistory.availability(
             nativeCanGoBack: nativeCanGoBack,
@@ -7904,28 +7861,6 @@ extension BrowserPanel {
     private func abandonRestoredSessionHistoryIfNeeded() {
         guard restoredSessionHistory.abandon() else { return }
         refreshNavigationAvailability()
-    }
-
-    /// Shared sanitizer mirroring the restored-session-history URL rules, used by
-    /// the surface's WebKit-touching resolution helpers.
-    private static let sessionHistoryURLSanitizer = SessionHistoryURLSanitizer {
-        browserIsTemporaryHistoryURL($0)
-    }
-
-    private static func serializableSessionHistoryURLString(_ url: URL?) -> String? {
-        sessionHistoryURLSanitizer.serializableSessionHistoryURLString(url)
-    }
-
-    private static func sanitizedSessionHistoryURL(_ raw: String?) -> URL? {
-        sessionHistoryURLSanitizer.sanitizedSessionHistoryURL(raw)
-    }
-
-    private static func sanitizedSessionHistoryURLs(_ values: [String]) -> [URL] {
-        sessionHistoryURLSanitizer.sanitizedSessionHistoryURLs(values)
-    }
-
-    private static func isTemporarySessionHistoryURL(_ url: URL?) -> Bool {
-        sessionHistoryURLSanitizer.isTemporarySessionHistoryURL(url)
     }
 
 }
