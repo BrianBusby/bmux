@@ -21,10 +21,10 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
       - **V1 Package and Slice E Adoption** (`v1_package_and_slice_e`) - milestone; status: accepted; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: v1 adoption; layer: platform; execution: complete / Shared; parallelism: serial
         - **Provenance Engine V1 package** (`provenance_engine_v1`) - slice; status: accepted; owner: Provenance Engine; repositories: Provenance Engine; concept: v1 adoption; layer: evidence store; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: accepted; mirrors: `provenance_engine_v1`
           Enables: `bmux_slice_e_adoption`
-          Evidence: BrianBusby/provenance-engine@18f5511a7c83, BrianBusby/provenance-engine@0ed9f68b6612
+          Evidence: BrianBusby/bmux@18f5511a7c83, BrianBusby/bmux@0ed9f68b6612
         - **Bmux Provenance Engine Slice E adoption** (`bmux_slice_e_adoption`) - slice; status: accepted; owner: Bmux; repositories: Bmux, Provenance Engine; concept: v1 adoption; layer: consumer presentation; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: accepted; mirrors: `bmux_slice_e_adoption`
           Depends on: `provenance_engine_v1`
-          Evidence: BrianBusby/bmux@3cbacd150176, BrianBusby/provenance-engine@0ed9f68b6612
+          Evidence: BrianBusby/bmux@3cbacd150176, BrianBusby/bmux@0ed9f68b6612
     - **Runtime Observation and Workspace Display** (`runtime_observation_and_workspace_display`) - phase; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: workspace display; layer: deterministic current state; execution: complete / Shared; parallelism: serial
       Depends on: `bmux_slice_e_adoption`
       Rationale: Captures the post-V1 adoption work that connected bmux runtime observation to Provenance Engine-owned durable context and deterministic display projections.
@@ -42,17 +42,17 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
         - **Workspace Display Durable Context and Reconciliation** (`workspace_display_durable_context`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: workspace display; layer: deterministic current state; execution: complete / Shared; parallelism: serial; delivery: open; acceptance: implemented; mirrors: `workspace_display_durable_context`
           Depends on: `claude_lifecycle_telemetry`
           Enables: `richer_session_understanding`
-          Evidence: BrianBusby/provenance-engine@bdf81ae0454f, BrianBusby/bmux@543161954689
+          Evidence: BrianBusby/bmux@bdf81ae0454f, BrianBusby/bmux@543161954689
   - **Project Truth Governance** (`project_truth_governance`) - program; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: project truth; layer: project truth; execution: complete / Provenance Engine; parallelism: safe
     Rationale: Maintains canonical structured project state, generated status, and read-only CI checks that prevent authored documentation drift.
     - **Canonical Project Truth State** (`canonical_project_truth_state`) - phase; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: project truth; execution: complete / Provenance Engine; parallelism: serial
       - **Project Truth Manifest and CI** (`project_truth_manifest_and_ci`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: project truth; execution: complete / Provenance Engine; parallelism: serial
         - **Canonical project truth manifest and generated docs** (`canonical_project_truth_manifest`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: project truth; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented
           Enables: `read_only_project_truth_ci_gate`
-          Evidence: BrianBusby/provenance-engine@88a9b4e175d4
+          Evidence: BrianBusby/bmux@88a9b4e175d4
         - **Read-only Project Truth CI gate** (`read_only_project_truth_ci_gate`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: cross repository workflow; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented
           Depends on: `canonical_project_truth_manifest`
-          Evidence: BrianBusby/provenance-engine@df3866f697a9
+          Evidence: BrianBusby/bmux@df3866f697a9
         - **Phase 0A Canonical Nested Roadmap and Concept Classification** (`phase_0a_canonical_nested_roadmap`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: project truth; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented
           Depends on: `read_only_project_truth_ci_gate`
           Enables: `phase_0b_current_target_architecture`
@@ -61,7 +61,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `project/project-state.yaml`, `project/schema`, `tools/project-docs`, `docs/generated`
           Contract dependencies: `project_truth_generated_docs`, `project_docs_validation`
           Worktree required: true
-          Evidence: BrianBusby/provenance-engine@e278a4423f15, BrianBusby/provenance-engine#21 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@e278a4423f15
           Rationale: Establishes the nested dependency-aware roadmap and generated nested-roadmap view that later planning and architecture slices build on.
         - **Phase 0B Current-and-Target Architecture** (`phase_0b_current_target_architecture`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: project truth; execution: complete / Provenance Engine; parallelism: safe; delivery: merged; acceptance: implemented
           Depends on: `phase_0a_canonical_nested_roadmap`
@@ -71,7 +71,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `project/project-state.yaml`, `docs/generated`
           Contract dependencies: `project_truth_generated_docs`
           Worktree required: true
-          Evidence: BrianBusby/provenance-engine@533567ead8c6, BrianBusby/provenance-engine#22 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@533567ead8c6
           Rationale: Records the living current-and-target architecture guide and its generated status block as project-truth infrastructure without changing product implementation sequencing.
         - **Phase 0C Parallel Slice Planning and Worktree Safety Metadata** (`phase_0c_parallel_worktree_metadata`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: cross repository workflow; execution: complete / Provenance Engine; parallelism: safe; delivery: merged; acceptance: implemented
           Depends on: `phase_0b_current_target_architecture`
@@ -80,7 +80,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `project/project-state.yaml`, `project/schema`, `tools/project-docs`, `docs/generated`
           Contract dependencies: `project_truth_generated_docs`, `project_docs_validation`
           Worktree required: true
-          Evidence: BrianBusby/provenance-engine@6fee11b0fa40, BrianBusby/provenance-engine#23 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@6fee11b0fa40
           Rationale: Adds manifest-only parallel slice planning metadata, active worktree and branch safety validation, and generated preflight visibility without assigning future work automatically.
         - **bmux and Provenance Engine monorepo consolidation** (`monorepo_repository_consolidation`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: project truth; layer: project truth; execution: current / Shared; parallelism: conditional; delivery: draft; acceptance: proposed
           Depends on: `phase_0c_parallel_worktree_metadata`
@@ -103,14 +103,14 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
         Enables: `factual_session_projection_read_contract`
         - **Richer coding-agent evidence foundation** (`richer_coding_agent_evidence_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: evidence store; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented; mirrors: `richer_session_work_model`
           Enables: `factual_session_projection_foundation`
-          Evidence: BrianBusby/provenance-engine@9e69452a2ec2, BrianBusby/bmux@45b7188ea62d, BrianBusby/provenance-engine#19 by [BrianBusby](https://github.com/BrianBusby), BrianBusby/bmux#48 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@9e69452a2ec2, BrianBusby/bmux@45b7188ea62d, BrianBusby/bmux#48 by [BrianBusby](https://github.com/BrianBusby)
           Acceptance reason: Completed-unit coding-agent evidence exists below the semantic layer; raw provider streams, private reasoning, approvals, validation, errors, and compaction remain gated follow-ups.
       - **Factual Session Projection Read Contract** (`factual_session_projection_read_contract`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial
         Depends on: `richer_session_observable_evidence`
         - **Factual session projection foundation** (`factual_session_projection_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: open; acceptance: implemented; mirrors: `richer_session_work_model`
           Depends on: `richer_coding_agent_evidence_foundation`
           Enables: `factual_projection_consumer_shape_followup`
-          Evidence: BrianBusby/provenance-engine@2add52c611e2, BrianBusby/provenance-engine@a0f8c1fa2d0e
+          Evidence: BrianBusby/bmux@2add52c611e2, BrianBusby/bmux@a0f8c1fa2d0e
           Acceptance reason: First revisioned factualSessionProjection read contract returns observed thread/turn evidence without semantic inference.
         - **Factual projection consumer shape follow-up** (`factual_projection_consumer_shape_followup`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented
           Depends on: `factual_session_projection_foundation`
@@ -121,7 +121,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `factual_session_projection_contract`, `deterministic_current_state_projection`, `bmux_consumer_contract_shape`
           Contract dependencies: `factual_session_projection_foundation`, `deterministic_current_state_api`
           Worktree required: true
-          Evidence: BrianBusby/provenance-engine@db5f21f4bb56, BrianBusby/provenance-engine#24 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@db5f21f4bb56
           Rationale: Confirmed the PE-owned consumer shape before semantic inference depends on the factual session projection.
           Acceptance reason: The public factual projection now exposes a detailed latest-turn snapshot, compact prior-turn references, compact provider-thread identities, and independent factual turn-detail retrieval while preserving deterministic evidence-only semantics and v1 decoding compatibility.
           Acceptance criteria: Confirm the factual projection shape needed by early consumers before semantic SessionWorkModel inference begins.; Preserve the boundary that deterministic Current State contains observed facts only.
@@ -136,7 +136,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `semantic_inference_schema`, `session_work_model_projection`
           Contract dependencies: `factual_session_projection`, `evidence_reference_identity`
           Worktree required: true
-          Evidence: BrianBusby/provenance-engine@d66e847c5cb7, BrianBusby/provenance-engine#26 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@d66e847c5cb7
           Acceptance reason: Versioned semantic inference records, bounded input/invalidation/coalescing contracts, SQLite persistence, transactional supersession, and public query/publish APIs are implemented above deterministic factual projections without adding concrete semantic concepts.
           Acceptance criteria: Inference records carry supporting evidence, producer version, confidence, and supersession state.; Model-derived fields remain out of deterministic Current State.
         - **First semantic session inferences** (`first_semantic_session_inferences`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: semantic understanding; layer: inference session work projections; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented
@@ -147,7 +147,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `semantic_inference_schema`, `session_work_model_projection`
           Contract dependencies: `semantic_inference_records`, `factual_session_projection`
           Worktree required: true
-          Evidence: BrianBusby/provenance-engine@50a4fb58a114, BrianBusby/provenance-engine#28 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@50a4fb58a114
           Acceptance reason: First concrete rule-produced semantic records now materialize thread intent, turn intent, session phase, and current activity from factual session projections with structured payloads, evidence references, factual revision, producer metadata, confidence, specificity, and supersession while keeping deterministic Current State factual only.
           Acceptance criteria: Thread intent, turn intent, session phase, and current activity are evidence-backed.
         - **Human-readable semantic messaging** (`human_readable_semantic_messaging`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: semantic understanding; layer: inference session work projections; execution: complete / Provenance Engine; parallelism: safe; delivery: merged; acceptance: implemented
@@ -160,7 +160,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `semantic_session_inferences`
           Worktree required: true
           Conflict note: Safe with the calibration corpus only when messaging edits stay in presentation contract code and corpus edits stay in example data.
-          Evidence: BrianBusby/provenance-engine@ec0baa4b0d83, BrianBusby/provenance-engine#30 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@ec0baa4b0d83
           Acceptance reason: Human-readable semantic message contracts, deterministic default rendering for first coding-agent semantic kinds, SQLite message cache/history persistence, public publish/query/materialization APIs, and coverage for wording, policy separation, supersession, rollback, retrieval, and Current State separation are implemented.
           Acceptance criteria: Semantic inference records can be rendered into cached concise and expanded messages.; Message records preserve structured semantic meaning, provenance, confidence, specificity, producer, policy, history, and supersession.; Presentation wording remains separate from semantic inference truth and deterministic Current State.
         - **SessionWorkModel contract foundation** (`session_work_model_contract_foundation`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed

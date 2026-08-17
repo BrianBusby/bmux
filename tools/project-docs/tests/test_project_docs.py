@@ -306,6 +306,11 @@ class ProjectDocsTests(unittest.TestCase):
         bmux_context["repo_status"] = dict(context["repo_status"], repository="BrianBusby/bmux")
         self.assertIn("Bmux repository state:", project_docs.render_current_target_architecture_status(bmux_context))
 
+    def test_repository_label_prefers_canonical_repo_for_duplicate_component_slug(self):
+        shared, _local = self.load_valid()
+        shared["repositories"]["provenance_engine"]["slug"] = "BrianBusby/bmux"
+        self.assertEqual("Bmux", project_docs.repository_label_for_slug(shared, "BrianBusby/bmux"))
+
     def test_authored_generated_block_drift_detects_stale_architecture_doc(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
@@ -429,7 +434,7 @@ class ProjectDocsTests(unittest.TestCase):
         provider = self.fake_provider_for_current_manifests()
         first_commit = shared["milestones"][0]["evidence"]["commits"][0]
         provider.commits.remove((first_commit["repository"], first_commit["sha"]))
-        provider.commits.add(("BrianBusby/bmux", first_commit["sha"]))
+        provider.commits.add(("BrianBusby/not-bmux", first_commit["sha"]))
         issues = project_docs.github_evidence_issues(shared, [local], provider)
         self.assertTrue(any(issue.name == "missing_commit" for issue in issues))
 

@@ -320,31 +320,44 @@ public struct ProvenanceCodingAgentSessionSemanticInferenceResponse: Codable, Eq
 }
 
 /// Deterministic, rule-based first-pass semantic producer for coding-agent session facts.
-public enum ProvenanceCodingAgentSessionSemanticInferenceProducer {
+public struct ProvenanceCodingAgentSessionSemanticInferenceProducer: Sendable {
     /// Stable producer identity for first-pass rule inferences.
     public static let producerID = "provenance-engine.coding-agent-session-semantics.rule"
 
     /// Stable producer version for first-pass rule inferences.
     public static let producerVersion = "first-semantic-session-inferences-v1"
 
+    /// Producer identity written to generated inference records.
+    public let producerID: String
+
+    /// Producer version written to generated inference records.
+    public let producerVersion: String
+
+    /// Creates a coding-agent semantic inference producer.
+    public init(
+        producerID: String = Self.producerID,
+        producerVersion: String = Self.producerVersion
+    ) {
+        self.producerID = producerID
+        self.producerVersion = producerVersion
+    }
+
     /// Builds candidate semantic records from one factual coding-agent session projection.
-    public static func records(
+    public func records(
         for snapshot: ProvenanceFactualSessionProjectionSnapshot,
-        createdAt: Date,
-        producerID: String = producerID,
-        producerVersion: String = producerVersion
+        createdAt: Date
     ) -> [ProvenanceSemanticInferenceRecord] {
         let latestTurn = snapshot.latestTurn
         var records: [ProvenanceSemanticInferenceRecord] = []
 
-        if let thread = currentThread(in: snapshot, latestTurn: latestTurn) {
-            let threadPayload = threadIntentPayload(for: thread, in: snapshot, latestTurn: latestTurn)
-            records.append(record(
+        if let thread = Self.currentThread(in: snapshot, latestTurn: latestTurn) {
+            let threadPayload = Self.threadIntentPayload(for: thread, in: snapshot, latestTurn: latestTurn)
+            records.append(Self.record(
                 kind: .threadIntent,
                 scope: .thread,
                 scopeID: thread.id,
                 payload: threadPayload.semanticPayloadValue,
-                evidenceRefs: evidenceRefs(for: threadPayload, thread: thread, snapshot: snapshot),
+                evidenceRefs: Self.evidenceRefs(for: threadPayload, thread: thread, snapshot: snapshot),
                 revision: snapshot.revision,
                 confidence: threadPayload.unknownReason == nil ? .medium : .unknown,
                 specificity: threadPayload.unknownReason == nil ? .scoped : .broad,
@@ -355,13 +368,13 @@ public enum ProvenanceCodingAgentSessionSemanticInferenceProducer {
         }
 
         if let latestTurn {
-            let intentPayload = turnIntentPayload(for: latestTurn)
-            records.append(record(
+            let intentPayload = Self.turnIntentPayload(for: latestTurn)
+            records.append(Self.record(
                 kind: .turnIntent,
                 scope: .turn,
                 scopeID: latestTurn.turn.id,
                 payload: intentPayload.semanticPayloadValue,
-                evidenceRefs: evidenceRefs(for: intentPayload, turn: latestTurn, snapshot: snapshot),
+                evidenceRefs: Self.evidenceRefs(for: intentPayload, turn: latestTurn, snapshot: snapshot),
                 revision: snapshot.revision,
                 confidence: intentPayload.unknownReason == nil ? .high : .unknown,
                 specificity: intentPayload.unknownReason == nil ? .scoped : .broad,
@@ -371,14 +384,14 @@ public enum ProvenanceCodingAgentSessionSemanticInferenceProducer {
             ))
         }
 
-        let activityPayload = currentActivityPayload(for: latestTurn)
-        let phasePayload = sessionPhasePayload(from: activityPayload, latestTurn: latestTurn)
-        records.append(record(
+        let activityPayload = Self.currentActivityPayload(for: latestTurn)
+        let phasePayload = Self.sessionPhasePayload(from: activityPayload, latestTurn: latestTurn)
+        records.append(Self.record(
             kind: .sessionPhase,
             scope: .session,
             scopeID: snapshot.session.id,
             payload: phasePayload.semanticPayloadValue,
-            evidenceRefs: evidenceRefs(for: phasePayload, latestTurn: latestTurn, snapshot: snapshot),
+            evidenceRefs: Self.evidenceRefs(for: phasePayload, latestTurn: latestTurn, snapshot: snapshot),
             revision: snapshot.revision,
             confidence: phasePayload.phase == .unknown ? .unknown : .medium,
             specificity: phasePayload.phase == .unknown ? .broad : .scoped,
@@ -388,12 +401,12 @@ public enum ProvenanceCodingAgentSessionSemanticInferenceProducer {
         ))
 
         if let latestTurn {
-            records.append(record(
+            records.append(Self.record(
                 kind: .currentActivity,
                 scope: .turn,
                 scopeID: latestTurn.turn.id,
                 payload: activityPayload.semanticPayloadValue,
-                evidenceRefs: evidenceRefs(for: activityPayload, turn: latestTurn, snapshot: snapshot),
+                evidenceRefs: Self.evidenceRefs(for: activityPayload, turn: latestTurn, snapshot: snapshot),
                 revision: snapshot.revision,
                 confidence: activityPayload.activityKind == .unknown ? .unknown : .medium,
                 specificity: activityPayload.activityKind == .unknown ? .broad : .granular,
@@ -404,6 +417,17 @@ public enum ProvenanceCodingAgentSessionSemanticInferenceProducer {
         }
 
         return records
+    }
+
+    /// Builds candidate semantic records with one-off producer metadata.
+    public static func records(
+        for snapshot: ProvenanceFactualSessionProjectionSnapshot,
+        createdAt: Date,
+        producerID: String = Self.producerID,
+        producerVersion: String = Self.producerVersion
+    ) -> [ProvenanceSemanticInferenceRecord] {
+        Self(producerID: producerID, producerVersion: producerVersion)
+            .records(for: snapshot, createdAt: createdAt)
     }
 }
 
@@ -448,11 +472,13 @@ public extension ProvenanceEngineClient {
             )
         }
 
-        let candidates = ProvenanceCodingAgentSessionSemanticInferenceProducer.records(
-            for: snapshot,
-            createdAt: request.createdAt,
+        let producer = ProvenanceCodingAgentSessionSemanticInferenceProducer(
             producerID: request.producerID,
             producerVersion: request.producerVersion
+        )
+        let candidates = producer.records(
+            for: snapshot,
+            createdAt: request.createdAt
         )
 
         var activeRecords: [ProvenanceSemanticInferenceRecord] = []

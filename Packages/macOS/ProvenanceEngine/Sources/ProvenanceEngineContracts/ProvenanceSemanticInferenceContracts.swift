@@ -517,9 +517,12 @@ public struct ProvenanceSemanticInferencePassPlan: Codable, Equatable, Sendable 
 }
 
 /// Deterministic invalidation and coalescing policy for semantic inference workers.
-public enum ProvenanceSemanticInferenceInvalidationPolicy {
+public struct ProvenanceSemanticInferenceInvalidationPolicy: Sendable {
+    /// Creates a semantic inference invalidation policy.
+    public init() {}
+
     /// Returns dirty inference kinds for a burst of evidence changes.
-    public static func dirtyInferenceKinds(
+    public func dirtyInferenceKinds(
         for changes: [ProvenanceSemanticInferenceEvidenceChange],
         rules: [ProvenanceSemanticInferenceInvalidationRule]
     ) -> [String] {
@@ -535,7 +538,7 @@ public enum ProvenanceSemanticInferenceInvalidationPolicy {
     }
 
     /// Coalesces a burst of evidence changes into at most one inference pass plan for one scope.
-    public static func coalescedPass(
+    public func coalescedPass(
         scope: ProvenanceSemanticInferenceScope,
         scopeID: String,
         changes: [ProvenanceSemanticInferenceEvidenceChange],
@@ -580,5 +583,23 @@ public enum ProvenanceSemanticInferenceInvalidationPolicy {
             triggeringChangeKinds: triggeringKinds,
             triggeringEvidenceRefs: triggeringRefs
         )
+    }
+
+    /// Returns dirty inference kinds for a burst of evidence changes using the default policy.
+    public static func dirtyInferenceKinds(
+        for changes: [ProvenanceSemanticInferenceEvidenceChange],
+        rules: [ProvenanceSemanticInferenceInvalidationRule]
+    ) -> [String] {
+        Self().dirtyInferenceKinds(for: changes, rules: rules)
+    }
+
+    /// Coalesces a burst of evidence changes using the default policy.
+    public static func coalescedPass(
+        scope: ProvenanceSemanticInferenceScope,
+        scopeID: String,
+        changes: [ProvenanceSemanticInferenceEvidenceChange],
+        rules: [ProvenanceSemanticInferenceInvalidationRule]
+    ) -> ProvenanceSemanticInferencePassPlan? {
+        Self().coalescedPass(scope: scope, scopeID: scopeID, changes: changes, rules: rules)
     }
 }

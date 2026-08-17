@@ -7,8 +7,8 @@ project:
 
 repositories:
   provenance_engine:
-    slug: BrianBusby/provenance-engine
-    role: provenance_engine_component_history_and_archival_source
+    slug: BrianBusby/bmux
+    role: provenance_engine_component_monorepo_package
   bmux:
     slug: BrianBusby/bmux
     role: canonical_monorepo_observation_workflow_presentation_and_engine_package
@@ -27,9 +27,9 @@ milestones:
     acceptance_status: accepted
     evidence:
       commits:
-        - repository: BrianBusby/provenance-engine
+        - repository: BrianBusby/bmux
           sha: 18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03
-        - repository: BrianBusby/provenance-engine
+        - repository: BrianBusby/bmux
           sha: 0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc
       pull_requests: []
     accepted_at: 2026-07-29
@@ -43,7 +43,7 @@ milestones:
       commits:
         - repository: BrianBusby/bmux
           sha: 3cbacd1501768f79ea377eb2d6aea9113f199d1b
-        - repository: BrianBusby/provenance-engine
+        - repository: BrianBusby/bmux
           sha: 0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc
       pull_requests: []
     accepted_at: 2026-07-29
@@ -92,7 +92,7 @@ milestones:
     acceptance_status: implemented
     evidence:
       commits:
-        - repository: BrianBusby/provenance-engine
+        - repository: BrianBusby/bmux
           sha: bdf81ae0454f274ff3e3f11df287b88320f1b272
         - repository: BrianBusby/bmux
           sha: 54316195468987c47512eb4f16d4fca2b3c2f8ed
@@ -106,20 +106,15 @@ milestones:
     acceptance_status: implemented
     evidence:
       commits:
-        - repository: BrianBusby/provenance-engine
+        - repository: BrianBusby/bmux
           sha: 9e69452a2ec22ead8dcbb2ef5d2a3c63f4464096
-        - repository: BrianBusby/provenance-engine
+        - repository: BrianBusby/bmux
           sha: 2add52c611e262ab053be47f8d2bd9f59934e00e
-        - repository: BrianBusby/provenance-engine
+        - repository: BrianBusby/bmux
           sha: a0f8c1fa2d0e93b6c0fc8593b4a76a9c52dcf0ee
         - repository: BrianBusby/bmux
           sha: 45b7188ea62d343bca433dee5cb0897e5427adc2
       pull_requests:
-        - repository: BrianBusby/provenance-engine
-          number: 19
-          owner:
-            login: BrianBusby
-            profile_url: https://github.com/BrianBusby
         - repository: BrianBusby/bmux
           number: 48
           owner:
@@ -227,9 +222,9 @@ roadmap:
       acceptance_status: accepted
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: 18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: 0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc
         pull_requests: []
       accepted_at: 2026-07-29
@@ -260,7 +255,7 @@ roadmap:
         commits:
           - repository: BrianBusby/bmux
             sha: 3cbacd1501768f79ea377eb2d6aea9113f199d1b
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: 0ed9f68b66126ce50ec0f0ce7f7f6569b02a9dbc
         pull_requests: []
       accepted_at: 2026-07-29
@@ -422,7 +417,7 @@ roadmap:
       acceptance_status: implemented
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: bdf81ae0454f274ff3e3f11df287b88320f1b272
           - repository: BrianBusby/bmux
             sha: 54316195468987c47512eb4f16d4fca2b3c2f8ed
@@ -505,7 +500,7 @@ roadmap:
       acceptance_status: implemented
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: 88a9b4e175d441f8f7dd6f845aa8a0093707a8dd
         pull_requests: []
 
@@ -531,7 +526,7 @@ roadmap:
       acceptance_status: implemented
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: df3866f697a916aca4331abe0535f557cbcf186e
         pull_requests: []
 
@@ -576,14 +571,9 @@ roadmap:
       acceptance_status: implemented
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: e278a4423f1543176d60a9b436b1126e44888194
-        pull_requests:
-          - repository: BrianBusby/provenance-engine
-            number: 21
-            owner:
-              login: BrianBusby
-              profile_url: https://github.com/BrianBusby
+        pull_requests: []
       completed_at: 2026-08-16
       rationale: Establishes the nested dependency-aware roadmap and generated nested-roadmap view that later planning and architecture slices build on.
 
@@ -622,14 +612,9 @@ roadmap:
       acceptance_status: implemented
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: 533567ead8c69ff13c919d0e41ec0a9dd7916e3b
-        pull_requests:
-          - repository: BrianBusby/provenance-engine
-            number: 22
-            owner:
-              login: BrianBusby
-              profile_url: https://github.com/BrianBusby
+        pull_requests: []
       completed_at: 2026-08-15
       rationale: Records the living current-and-target architecture guide and its generated status block as project-truth infrastructure without changing product implementation sequencing.
 
@@ -673,14 +658,9 @@ roadmap:
       acceptance_status: implemented
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: 6fee11b0fa40593ac848fe55e8406687a4ceb795
-        pull_requests:
-          - repository: BrianBusby/provenance-engine
-            number: 23
-            owner:
-              login: BrianBusby
-              profile_url: https://github.com/BrianBusby
+        pull_requests: []
       completed_at: 2026-08-16
       rationale: Adds manifest-only parallel slice planning metadata, active worktree and branch safety validation, and generated preflight visibility without assigning future work automatically.
 
@@ -836,16 +816,11 @@ roadmap:
       acceptance_status: implemented
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: 9e69452a2ec22ead8dcbb2ef5d2a3c63f4464096
           - repository: BrianBusby/bmux
             sha: 45b7188ea62d343bca433dee5cb0897e5427adc2
         pull_requests:
-          - repository: BrianBusby/provenance-engine
-            number: 19
-            owner:
-              login: BrianBusby
-              profile_url: https://github.com/BrianBusby
           - repository: BrianBusby/bmux
             number: 48
             owner:
@@ -899,9 +874,9 @@ roadmap:
       acceptance_status: implemented
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: 2add52c611e262ab053be47f8d2bd9f59934e00e
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: a0f8c1fa2d0e93b6c0fc8593b4a76a9c52dcf0ee
         pull_requests: []
       completed_at: 2026-08-15
@@ -952,14 +927,9 @@ roadmap:
       acceptance_status: implemented
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: db5f21f4bb561e4aba20e2ae76e3af954a367c87
-        pull_requests:
-          - repository: BrianBusby/provenance-engine
-            number: 24
-            owner:
-              login: BrianBusby
-              profile_url: https://github.com/BrianBusby
+        pull_requests: []
       completed_at: 2026-08-16
       acceptance:
         criteria:
@@ -1045,14 +1015,9 @@ roadmap:
       acceptance_status: implemented
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: d66e847c5cb71d7a63a3d0b3ecdf3c29b65c1f28
-        pull_requests:
-          - repository: BrianBusby/provenance-engine
-            number: 26
-            owner:
-              login: BrianBusby
-              profile_url: https://github.com/BrianBusby
+        pull_requests: []
       completed_at: 2026-08-16
       acceptance:
         criteria:
@@ -1099,14 +1064,9 @@ roadmap:
       acceptance_status: implemented
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: 50a4fb58a1147feea581eee9d26d45a325b4672d
-        pull_requests:
-          - repository: BrianBusby/provenance-engine
-            number: 28
-            owner:
-              login: BrianBusby
-              profile_url: https://github.com/BrianBusby
+        pull_requests: []
       completed_at: 2026-08-16
       acceptance:
         criteria:
@@ -1156,14 +1116,9 @@ roadmap:
       acceptance_status: implemented
       evidence:
         commits:
-          - repository: BrianBusby/provenance-engine
+          - repository: BrianBusby/bmux
             sha: ec0baa4b0d83b2a1025c6d6a0c0b4a8d15416e65
-        pull_requests:
-          - repository: BrianBusby/provenance-engine
-            number: 30
-            owner:
-              login: BrianBusby
-              profile_url: https://github.com/BrianBusby
+        pull_requests: []
       completed_at: 2026-08-16
       acceptance:
         criteria:

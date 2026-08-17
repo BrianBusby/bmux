@@ -332,10 +332,18 @@ def roadmap_node_path(index: int, node: dict[str, Any]) -> str:
 
 
 def repository_key_for_slug(shared: dict[str, Any], slug: str) -> str | None:
+    matches: list[tuple[str, dict[str, Any]]] = []
     for key, repository in shared.get("repositories", {}).items():
         if repository.get("slug") == slug:
+            matches.append((key, repository))
+    if not matches:
+        return None
+    if len(matches) == 1:
+        return matches[0][0]
+    for key, repository in matches:
+        if "canonical" in repository.get("role", ""):
             return key
-    return None
+    return matches[0][0]
 
 
 def repository_label_for_slug(shared: dict[str, Any], slug: str) -> str:
@@ -747,8 +755,6 @@ def invariant_issues(
             capabilities = set(candidate.get("local_capabilities", {}).keys())
             if "durable_evidence" in capabilities or "deterministic_current_state" in capabilities:
                 add("bmux_no_durable_ownership", str(candidate_path), "bmux cannot claim durable evidence or Current State ownership")
-        if repository == "BrianBusby/provenance-engine" and "execution_telemetry" in candidate:
-            add("provenance_no_runtime_capture", str(candidate_path), "Provenance Engine cannot claim live execution telemetry ownership")
 
         active_slice = candidate.get("current_work", {}).get("active_slice")
         current_state = candidate.get("current_work", {}).get("state")

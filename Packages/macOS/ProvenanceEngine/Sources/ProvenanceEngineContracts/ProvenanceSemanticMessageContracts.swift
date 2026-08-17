@@ -308,24 +308,41 @@ public struct ProvenanceSemanticMessageMaterializationResponse: Codable, Equatab
 }
 
 /// Deterministic default renderer for first-pass semantic message records.
-public enum ProvenanceSemanticMessageRenderer {
+public struct ProvenanceSemanticMessageRenderer: Sendable {
     /// Stable presentation producer identity.
     public static let producerID = "provenance-engine.semantic-message.rule"
 
     /// Stable presentation producer version.
     public static let producerVersion = "human-readable-semantic-messaging-v1"
 
-    /// Builds one candidate message record for a supported semantic inference record.
-    public static func record(
-        for inference: ProvenanceSemanticInferenceRecord,
+    /// Presentation policy applied to rendered messages.
+    public let presentationPolicy: ProvenanceSemanticMessagePresentationPolicy
+
+    /// Presentation producer identity written to generated message records.
+    public let presentationProducerID: String
+
+    /// Presentation producer version written to generated message records.
+    public let presentationProducerVersion: String
+
+    /// Creates a semantic message renderer.
+    public init(
         presentationPolicy: ProvenanceSemanticMessagePresentationPolicy = ProvenanceSemanticMessagePresentationPolicy(),
-        createdAt: Date,
-        presentationProducerID: String = producerID,
-        presentationProducerVersion: String = producerVersion
+        presentationProducerID: String = Self.producerID,
+        presentationProducerVersion: String = Self.producerVersion
+    ) {
+        self.presentationPolicy = presentationPolicy
+        self.presentationProducerID = presentationProducerID
+        self.presentationProducerVersion = presentationProducerVersion
+    }
+
+    /// Builds one candidate message record for a supported semantic inference record.
+    public func record(
+        for inference: ProvenanceSemanticInferenceRecord,
+        createdAt: Date
     ) -> ProvenanceSemanticMessageRecord? {
-        guard let rendered = render(inference) else { return nil }
+        guard let rendered = Self.render(inference) else { return nil }
         return ProvenanceSemanticMessageRecord(
-            id: stableMessageID(
+            id: Self.stableMessageID(
                 inferenceID: inference.id,
                 policy: presentationPolicy,
                 producerID: presentationProducerID,
@@ -352,6 +369,21 @@ public enum ProvenanceSemanticMessageRenderer {
             localeIdentifier: presentationPolicy.localeIdentifier,
             createdAt: createdAt
         )
+    }
+
+    /// Builds one candidate message record with one-off renderer metadata.
+    public static func record(
+        for inference: ProvenanceSemanticInferenceRecord,
+        presentationPolicy: ProvenanceSemanticMessagePresentationPolicy = ProvenanceSemanticMessagePresentationPolicy(),
+        createdAt: Date,
+        presentationProducerID: String = Self.producerID,
+        presentationProducerVersion: String = Self.producerVersion
+    ) -> ProvenanceSemanticMessageRecord? {
+        Self(
+            presentationPolicy: presentationPolicy,
+            presentationProducerID: presentationProducerID,
+            presentationProducerVersion: presentationProducerVersion
+        ).record(for: inference, createdAt: createdAt)
     }
 }
 
@@ -412,13 +444,15 @@ public extension ProvenanceEngineClient {
         var unchangedIDs: [String] = []
         var skippedIDs: [String] = []
 
+        let renderer = ProvenanceSemanticMessageRenderer(
+            presentationPolicy: request.presentationPolicy,
+            presentationProducerID: request.presentationProducerID,
+            presentationProducerVersion: request.presentationProducerVersion
+        )
         for inference in request.semanticInferenceRecords {
-            guard let candidate = ProvenanceSemanticMessageRenderer.record(
+            guard let candidate = renderer.record(
                 for: inference,
-                presentationPolicy: request.presentationPolicy,
-                createdAt: request.createdAt,
-                presentationProducerID: request.presentationProducerID,
-                presentationProducerVersion: request.presentationProducerVersion
+                createdAt: request.createdAt
             ) else {
                 skippedIDs.append(inference.id)
                 continue

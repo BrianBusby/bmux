@@ -19,12 +19,12 @@ Regenerate with: ./scripts/project-docs generate
 
 | Milestone | Owner | Delivery | Acceptance | Evidence |
 | --- | --- | --- | --- | --- |
-| Provenance Engine V1 package (`provenance_engine_v1`) | Provenance Engine | merged | accepted | BrianBusby/provenance-engine@18f5511a7c83, BrianBusby/provenance-engine@0ed9f68b6612 |
-| Bmux Provenance Engine Slice E adoption (`bmux_slice_e_adoption`) | Bmux | merged | accepted | BrianBusby/bmux@3cbacd150176, BrianBusby/provenance-engine@0ed9f68b6612 |
+| Provenance Engine V1 package (`provenance_engine_v1`) | Provenance Engine | merged | accepted | BrianBusby/bmux@18f5511a7c83, BrianBusby/bmux@0ed9f68b6612 |
+| Bmux Provenance Engine Slice E adoption (`bmux_slice_e_adoption`) | Bmux | merged | accepted | BrianBusby/bmux@3cbacd150176, BrianBusby/bmux@0ed9f68b6612 |
 | Provider-neutral execution telemetry foundation (`execution_telemetry_foundation`) | Bmux | merged | implemented | BrianBusby/bmux@c32ed93989c8, BrianBusby/bmux@9d7fefacbb40, BrianBusby/bmux#12 by [BrianBusby](https://github.com/BrianBusby) |
 | Claude lifecycle telemetry migration (`claude_lifecycle_telemetry`) | Bmux | merged | implemented | BrianBusby/bmux@5a4a463f17e0, BrianBusby/bmux@3f49c5d5abbe, BrianBusby/bmux#13 by [BrianBusby](https://github.com/BrianBusby) |
-| Workspace Display Durable Context and Reconciliation (`workspace_display_durable_context`) | Bmux | open | implemented | BrianBusby/provenance-engine@bdf81ae0454f, BrianBusby/bmux@543161954689 |
-| Richer Coding-Agent Evidence and Factual Session Projection (`richer_session_work_model`) | Provenance Engine | merged | implemented | BrianBusby/provenance-engine@9e69452a2ec2, BrianBusby/provenance-engine@2add52c611e2, BrianBusby/provenance-engine@a0f8c1fa2d0e, BrianBusby/bmux@45b7188ea62d, BrianBusby/provenance-engine#19 by [BrianBusby](https://github.com/BrianBusby), BrianBusby/bmux#48 by [BrianBusby](https://github.com/BrianBusby) |
+| Workspace Display Durable Context and Reconciliation (`workspace_display_durable_context`) | Bmux | open | implemented | BrianBusby/bmux@bdf81ae0454f, BrianBusby/bmux@543161954689 |
+| Richer Coding-Agent Evidence and Factual Session Projection (`richer_session_work_model`) | Provenance Engine | merged | implemented | BrianBusby/bmux@9e69452a2ec2, BrianBusby/bmux@2add52c611e2, BrianBusby/bmux@a0f8c1fa2d0e, BrianBusby/bmux@45b7188ea62d, BrianBusby/bmux#48 by [BrianBusby](https://github.com/BrianBusby) |
 
 ## Open Shared Caveats
 
