@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: none selected
+- Active slice: SessionWorkModel contract foundation (`session_work_model_contract_foundation`)
+- Slice state: implemented
+- Owner: provenance_engine
+- Repository state: active
 
 ## Release
 
@@ -50,7 +52,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Semantic Message Presentation Policy | implemented |
 | Provenance Engine Semantic Message Records | implemented |
 | Provenance Engine Semantic Session Work Model Projection | planned |
-| Provenance Engine Session Work Model Contract Foundation | planned |
+| Provenance Engine Session Work Model Contract Foundation | implemented |
 | Provenance Engine Sqlite Store | implemented |
 | Provenance Engine Workspace Display Current State | implemented |
 | Provenance Engine Workspace Display Durable Context | implemented |

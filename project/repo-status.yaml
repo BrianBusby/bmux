@@ -2,8 +2,15 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice: null
-  state: none_selected
+  active_slice:
+    id: session_work_model_contract_foundation
+    title: SessionWorkModel contract foundation
+    state: implemented
+    owner: provenance_engine
+    active_worktree: /Users/brianbusby/repos/bmux-session-work-model-contract-foundation
+    active_branch: session-work-model-contract-foundation
+    active_agent: Codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented
@@ -44,7 +51,7 @@ local_capabilities:
   provenance_engine_semantic_message_records: implemented
   provenance_engine_semantic_message_materialization: implemented
   provenance_engine_semantic_message_presentation_policy: implemented
-  provenance_engine_session_work_model_contract_foundation: planned
+  provenance_engine_session_work_model_contract_foundation: implemented
   provenance_engine_milestone_inference: planned
   provenance_engine_blocker_approach_change_semantics: planned
   provenance_engine_scoped_architecture_projection: planned

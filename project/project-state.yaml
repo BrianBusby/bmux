@@ -1137,7 +1137,7 @@ roadmap:
       kind: slice
       title: SessionWorkModel contract foundation
       parent: semantic_session_work_model_projection
-      status: planned
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -1157,7 +1157,7 @@ roadmap:
         expected_contract_domains:
           - session_work_model_contract
           - factual_semantic_provenance
-          - semantic_message_contract
+          - semantic_inference_records
         expected_code_areas:
           - Sources/ProvenanceEngineContracts
           - Sources/ProvenanceEngineCore
@@ -1165,20 +1165,40 @@ roadmap:
           - docs/session-work-model.md
         likely_conflict_domains:
           - session_work_model_projection
-          - semantic_message_contract
+          - semantic_inference_contract
           - factual_session_projection_contract
         contract_dependencies:
           - factual_session_projection
-          - semantic_message_contract
+          - semantic_inference_records
           - semantic_session_inferences
         worktree_required: true
         conflict_note: Define the PE-owned contract before bmux builds richer Smart Session presentation so bmux consumes a revisioned model instead of composing its own semantic interpretation.
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: provenance_engine
-      delivery_status: proposed
-      acceptance_status: proposed
-      rationale: Introduce the first revisioned PE-owned SessionWorkModel snapshot contract for Smart Session consumers. The contract should preserve evidence references, deterministic factual projections, semantic inference records, semantic messages, and presentation boundaries.
+        active_worktree: /Users/brianbusby/repos/bmux-session-work-model-contract-foundation
+        active_branch: session-work-model-contract-foundation
+        active_agent: Codex
+        notes: "PR #57 is the first-pass PE SessionWorkModel contract foundation and is waiting on review/CI before merge."
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: c623bf26bd8aaefe7352a8669b1044b6132cfc5b
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 57
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-17
+      acceptance:
+        criteria:
+          - Expose a public SessionWorkModel read contract through ProvenanceEngineClient.
+          - Compose deterministic factual session projection with active semantic inference records.
+          - Preserve factual and semantic provenance, revision metadata, unknown states, and semantic-message separation.
+      rationale: Introduce the first revisioned PE-owned SessionWorkModel snapshot contract for Smart Session consumers. The contract preserves evidence references, deterministic factual projections, semantic inference records, and presentation boundaries without using semantic messages as truth input.
 
     - id: three_view_coding_session_experience
       kind: phase
