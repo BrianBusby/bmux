@@ -5124,7 +5124,9 @@ final class Workspace: Identifiable, ObservableObject {
               let rows = renderedTerminalRowsForActiveWork(panelId: panelId) else {
             return false
         }
-        if agentHibernationLifecycleState(panelId: panelId, fallback: nil) == .idle {
+        if let lifecycleStates = agentLifecycleStatesByPanelId[panelId],
+           lifecycleStates.values.contains(.idle),
+           !lifecycleStates.values.contains(where: { $0 == .running || $0 == .needsInput }) {
             return false
         }
         if panelShellActivityStates[panelId] == .promptIdle {
