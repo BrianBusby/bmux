@@ -13473,17 +13473,6 @@ struct TabItemView: View, Equatable {
         usesInvertedActiveForeground ? activeSecondaryColor(0.8) : bmuxAccentColor()
     }
 
-    private var workspaceLoadingIndicatorColor: Color {
-        Color(nsColor: sidebarWorkspaceRowLoadingIndicatorNSColor(
-            activeTabIndicatorStyle: activeTabIndicatorStyle,
-            isActive: isActive,
-            isMultiSelected: isMultiSelected,
-            customColorHex: workspaceRowColorHex,
-            colorScheme: colorScheme,
-            sidebarSelectionColorHex: sidebarSelectionColorHex
-        ))
-    }
-
     private var shortcutHintEmphasis: Double {
         usesInvertedActiveForeground ? 1.0 : 0.9
     }
@@ -13643,9 +13632,16 @@ struct TabItemView: View, Equatable {
         let closeButtonTooltip = workspaceSnapshot.isPinned
             ? protectedWorkspaceTooltip
             : KeyboardShortcutSettings.Action.closeWorkspace.tooltip(closeWorkspaceTooltip)
-        let accessibilityHintText = String(localized: "sidebar.workspace.accessibilityHint", defaultValue: "Activate to focus this workspace. Drag to reorder, or use Move Up and Move Down actions.")
+        let baseAccessibilityHintText = String(localized: "sidebar.workspace.accessibilityHint", defaultValue: "Activate to focus this workspace. Drag to reorder, or use Move Up and Move Down actions.")
         let moveUpActionText = String(localized: "sidebar.workspace.moveUpAction", defaultValue: "Move Up")
         let moveDownActionText = String(localized: "sidebar.workspace.moveDownAction", defaultValue: "Move Down")
+        let aiBusyTooltip = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running or needs input")
+        let accessibilityHintText = workspaceSnapshot.hasActiveAIWork
+            ? "\(baseAccessibilityHintText) \(aiBusyTooltip)"
+            : baseAccessibilityHintText
+        let rowHelpText = workspaceSnapshot.hasActiveAIWork
+            ? "\(workspaceSnapshot.title)\n\(aiBusyTooltip)"
+            : workspaceSnapshot.title
         let conversationMessageSubtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
             latestSubmittedMessage: workspaceSnapshot.latestSubmittedMessage,
             latestConversationMessage: workspaceSnapshot.latestConversationMessage,
@@ -13660,25 +13656,13 @@ struct TabItemView: View, Equatable {
         let detailVisibility = visibleAuxiliaryDetails
         let titleLineLimit = SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: settings.wrapsWorkspaceTitles)
         let scaledUnreadBadgeSize = 16 * fontScale
-        let scaledLoadingIndicatorSize = TronLoadingIndicatorMotion.workspaceTabSize(forBadgeSize: scaledUnreadBadgeSize)
         let scaledCloseButtonHitSize = max(16, 16 * fontScale)
         let scaledCloseButtonWidth = max(
             SidebarTrailingAccessoryWidthPolicy().closeButtonWidth,
             scaledCloseButtonHitSize
         )
-        let aiBusyTooltip = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running or needs input")
         let rowView = VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .top, spacing: 8) {
-                if workspaceSnapshot.hasActiveAIWork {
-                    TronLoadingIndicator(
-                        size: scaledLoadingIndicatorSize,
-                        color: workspaceLoadingIndicatorColor,
-                        lineWidth: max(1.15, scaledLoadingIndicatorSize * 0.085)
-                    )
-                    .safeHelp(aiBusyTooltip)
-                    .accessibilityLabel(aiBusyTooltip)
-                }
-
                 if unreadCount > 0 {
                     ZStack {
                         Circle()
@@ -14039,8 +14023,12 @@ struct TabItemView: View, Equatable {
             RoundedRectangle(cornerRadius: 6)
                 .fill(backgroundColor)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 6)
-                        .strokeBorder(activeBorderColor, lineWidth: activeBorderLineWidth)
+                    if workspaceSnapshot.hasActiveAIWork {
+                        SidebarWorkspaceWorkingBorder(cornerRadius: 6, lineWidth: 3)
+                    } else {
+                        RoundedRectangle(cornerRadius: 6)
+                            .strokeBorder(activeBorderColor, lineWidth: activeBorderLineWidth)
+                    }
                 }
                 .overlay(alignment: .leading) {
                     if showsLeadingRail {
@@ -14207,7 +14195,7 @@ struct TabItemView: View, Equatable {
                 beginInlineRename()
             }
         )
-        .safeHelp(workspaceSnapshot.title)
+        .safeHelp(rowHelpText)
         .modifier(SidebarRowAccessibilityModifier(
             isEditing: isEditing,
             label: accessibilityTitle,
