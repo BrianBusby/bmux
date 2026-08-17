@@ -145,11 +145,26 @@ struct AgentSessionSocketSurfaceTests {
         ]
         #expect(workspace.hasActiveAIWork)
 
-        workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .idle)
+        workspace.updatePanelShellActivityState(panelId: panelId, state: .promptIdle)
 
+        #expect(!workspace.hasActiveAIWork)
+    }
+
+    @Test
+    func testWorkspaceBusyIndicatorIgnoresVisibleStatusLineAfterStructuredIdle() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+
+        workspace.debugRenderedTerminalRowsForActiveWorkTesting = [
+            panelId: [
+                "Working (36s, Esc to interrupt)",
+                "",
+            ],
+        ]
         #expect(workspace.hasActiveAIWork)
 
-        workspace.updatePanelShellActivityState(panelId: panelId, state: .promptIdle)
+        workspace.setAgentLifecycle(key: "codex", panelId: panelId, lifecycle: .idle)
 
         #expect(!workspace.hasActiveAIWork)
     }
