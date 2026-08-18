@@ -48,6 +48,19 @@ bmux production integration -> ProvenanceEngineSQLite implementation types
 React Session UI -> raw semantic inference from provider events
 ```
 
+## Durable Knowledge Retrieval Direction
+
+Future durable knowledge retrieval must preserve the same boundary: bmux supplies
+current task/session context and asks PE for relevant knowledge; PE owns graph
+relationships, retrieval planning, ranking, validity/revision, provenance, and
+bounded context assembly. bmux must not become a client of PE's storage schema or
+independently traverse/rank canonical project knowledge.
+
+See:
+
+- [`knowledge-retrieval.md`](knowledge-retrieval.md) for the durable retrieval architecture and guardrails.
+- [`knowledge-retrieval-codex-handoff.md`](knowledge-retrieval-codex-handoff.md) for a future implementation handoff once Project Truth selects the slice and real Knowledge Compiler output exists.
+
 ## Future Independence
 
 Keep PE extractable by preserving:
@@ -62,4 +75,3 @@ Keep PE extractable by preserving:
 Future options include independent semantic versioning, mirroring the package to
 a public repository, publishing package products, or extracting the package back
 to a standalone repository.
-
