@@ -2,8 +2,15 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice: null
-  state: none_selected
+  active_slice:
+    id: react_smart_session_foundation
+    title: React Smart Session foundation
+    state: under_observation
+    owner: bmux
+    active_worktree: /Users/brianbusby/repos/bmux-react-smart-session-foundation
+    active_branch: react-smart-session-foundation
+    active_agent: Codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented
@@ -52,7 +59,7 @@ local_capabilities:
   native_provider_session_view: implemented
   react_terminal_agent_chat_surface: implemented
   react_terminal_productization: planned
-  react_smart_session_surface: planned
+  react_smart_session_surface: under_observation
   react_smart_session_work_model_consumer: planned
   three_view_session_navigation: planned
   richer_session_evidence_foundation: implemented

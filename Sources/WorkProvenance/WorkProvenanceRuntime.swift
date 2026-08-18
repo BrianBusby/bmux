@@ -10,6 +10,7 @@ final class WorkProvenanceRuntime {
     private let observationService: WorkProvenanceObservationService?
     private let workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore?
     private let agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore?
+    private let agentSessionSmartSessionStore: AgentSessionSmartSessionStore?
     private let workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
     private let codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder?
@@ -33,6 +34,7 @@ final class WorkProvenanceRuntime {
         observationService: WorkProvenanceObservationService?,
         workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore? = nil,
         agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore? = nil,
+        agentSessionSmartSessionStore: AgentSessionSmartSessionStore? = nil,
         workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription? = nil,
         sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil,
         codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder? = nil,
@@ -42,6 +44,7 @@ final class WorkProvenanceRuntime {
         self.observationService = observationService
         self.workspaceDisplayCurrentStateStore = workspaceDisplayCurrentStateStore
         self.agentSessionFactualProjectionStore = agentSessionFactualProjectionStore
+        self.agentSessionSmartSessionStore = agentSessionSmartSessionStore
         self.workspaceDisplayCurrentStateSubscription = workspaceDisplayCurrentStateSubscription
         self.sessionLifecycleRecorder = sessionLifecycleRecorder
         self.codingAgentEvidenceRecorder = codingAgentEvidenceRecorder
@@ -78,6 +81,7 @@ final class WorkProvenanceRuntime {
                 ),
                 workspaceDisplayCurrentStateStore: workspaceDisplayCurrentStateStore,
                 agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore(client: client),
+                agentSessionSmartSessionStore: AgentSessionSmartSessionStore(client: client),
                 workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription(
                     databaseURL: location.databaseURL
                 ),
@@ -170,6 +174,21 @@ final class WorkProvenanceRuntime {
             return .missingSession
         }
         return await agentSessionFactualProjectionStore.refreshedSnapshot(sessionID: sessionID)
+    }
+
+    /// Reads the first-pass React Smart Session bridge snapshot for the latest submitted prompt.
+    func agentSessionSmartSession(stableWorkspaceID: UUID) async -> AgentSessionSmartSessionReadResult {
+        guard let workspaceDisplayCurrentStateStore,
+              let agentSessionSmartSessionStore else {
+            return .unavailable
+        }
+        let displaySnapshot = await workspaceDisplayCurrentStateStore.refreshedSnapshot(
+            stableWorkspaceID: stableWorkspaceID
+        )
+        guard let sessionID = displaySnapshot?.lastSubmittedPromptSessionID else {
+            return .missingSession
+        }
+        return await agentSessionSmartSessionStore.refreshedSnapshot(sessionID: sessionID)
     }
 
     /// Refreshes one workspace display projection from PE for tab/sidebar rendering.

@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: none selected
+- Active slice: React Smart Session foundation (`react_smart_session_foundation`)
+- Slice state: under observation
+- Owner: bmux
+- Repository state: active
 
 ## Release
 
@@ -58,7 +60,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Workspace Display Projection Cursors | implemented |
 | Provenance Engine Workspace Display Ticket Link Facts | implemented |
 | Provenance Engine Workspace Display Ticket Title Facts | implemented |
-| React Smart Session Surface | planned |
+| React Smart Session Surface | under observation |
 | React Smart Session Work Model Consumer | planned |
 | React Terminal Agent Chat Surface | implemented |
 | React Terminal Productization | planned |

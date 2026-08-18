@@ -22,6 +22,8 @@ final class AgentSessionWebRendererSession {
     func coordinator(
         panelId: UUID,
         workspaceId: UUID,
+        stableWorkspaceId: UUID,
+        workProvenanceRuntime: WorkProvenanceRuntime?,
         rendererKind: AgentSessionRendererKind,
         initialProviderID: AgentSessionProviderID,
         workingDirectory: String?,
@@ -31,6 +33,8 @@ final class AgentSessionWebRendererSession {
         ownedCoordinator.bind(
             panelId: panelId,
             workspaceId: workspaceId,
+            stableWorkspaceId: stableWorkspaceId,
+            workProvenanceRuntime: workProvenanceRuntime,
             rendererKind: rendererKind,
             initialProviderID: initialProviderID,
             workingDirectory: workingDirectory,

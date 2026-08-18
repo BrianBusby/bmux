@@ -92,6 +92,28 @@ struct AgentSessionFactualProjectionStoreTests {
         #expect(await store.refreshedSnapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
     }
 
+    @Test
+    func smartSessionRefreshReturnsAvailableFactualSnapshot() async {
+        let snapshot = Self.snapshot(sessionID: "session-1", revision: 42)
+        let client = FakeProvenanceEngineClient(factualProjectionResults: [
+            .success(ProvenanceFactualSessionProjectionResponse(
+                found: true,
+                sessionID: "session-1",
+                snapshot: snapshot
+            ))
+        ])
+        let store = AgentSessionSmartSessionStore(client: client)
+
+        guard case let .available(smartSnapshot) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Expected available Smart Session snapshot")
+            return
+        }
+
+        #expect(smartSnapshot.identity.sessionID == "session-1")
+        #expect(smartSnapshot.factual.latestTurn?.turnID == "turn-1")
+        #expect(smartSnapshot.revision.factualRevision == 42)
+    }
+
     private static func snapshot(sessionID: String, revision: Int) -> ProvenanceFactualSessionProjectionSnapshot {
         let updatedAt = Date(timeIntervalSince1970: 1_800_000_000)
         let thread = ProvenanceCodingAgentThreadRecord(
@@ -234,7 +256,8 @@ private actor FakeProvenanceEngineClient: ProvenanceEngineClient {
     func semanticMessages(
         _ request: ProvenanceSemanticMessageQueryRequest
     ) async throws -> ProvenanceSemanticMessageQueryResponse {
-        throw TestError.unimplemented
+        _ = request
+        return ProvenanceSemanticMessageQueryResponse(records: [])
     }
 
     func materializeSemanticMessages(

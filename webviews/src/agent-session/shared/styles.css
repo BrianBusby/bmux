@@ -274,6 +274,53 @@ select {
   cursor: default;
 }
 
+.agent-view-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  color: var(--agent-text);
+  background: var(--agent-page-bg);
+}
+
+.agent-view-switcher {
+  display: inline-flex;
+  align-self: center;
+  gap: 2px;
+  margin: 8px 0 0;
+  padding: 2px;
+  border: 1px solid var(--agent-border);
+  border-radius: 8px;
+  background: var(--agent-control);
+}
+
+.agent-view-switcher-button {
+  min-width: 78px;
+  height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--agent-soft);
+  background: transparent;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.agent-view-switcher-button[data-active="true"] {
+  color: var(--agent-text);
+  background: var(--agent-surface-elevated);
+}
+
+.agent-view-panes,
+.agent-view-frame {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.agent-view-frame[hidden] {
+  display: none !important;
+}
+
 .agent-shell {
   display: flex;
   flex-direction: column;
@@ -282,6 +329,262 @@ select {
   padding: var(--padding-toolbar);
   color: var(--agent-text);
   background: var(--agent-page-bg);
+}
+
+.smart-session-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 12px 16px 16px;
+  color: var(--agent-text);
+  background: var(--agent-page-bg);
+}
+
+.smart-session-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--agent-border);
+}
+
+.smart-session-heading {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--agent-text);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.smart-session-refresh {
+  flex: 0 0 auto;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--agent-border);
+  border-radius: 6px;
+  color: var(--agent-text);
+  background: var(--agent-control);
+  font-size: 12px;
+}
+
+.smart-session-refresh:disabled {
+  opacity: 0.54;
+}
+
+.smart-session-state {
+  display: grid;
+  flex: 1 1 auto;
+  min-height: 0;
+  place-items: center;
+  color: var(--agent-muted);
+  font-size: 13px;
+}
+
+.smart-session-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-top: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--agent-muted) 28%, transparent) transparent;
+}
+
+.smart-session-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.smart-session-panel {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--agent-border);
+  border-radius: 8px;
+  background: var(--agent-card);
+}
+
+.smart-session-panel h2,
+.smart-session-section h2,
+.smart-session-evidence-list h3 {
+  margin: 0;
+  color: var(--agent-muted);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.smart-session-panel-primary {
+  margin-top: 6px;
+  color: var(--agent-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.smart-session-panel-detail {
+  display: -webkit-box;
+  margin: 6px 0 0;
+  max-height: 54px;
+  overflow: hidden;
+  color: var(--agent-soft);
+  font-size: 12px;
+  line-height: 18px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.smart-session-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 12px;
+}
+
+.smart-session-section {
+  padding: 12px 0;
+  border-top: 1px solid var(--agent-border);
+}
+
+.smart-session-definition-list {
+  display: grid;
+  grid-template-columns: minmax(86px, max-content) minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 8px 0 0;
+}
+
+.smart-session-definition-list dt {
+  color: var(--agent-muted);
+}
+
+.smart-session-definition-list dd {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--agent-soft);
+  font-family: var(--font-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.smart-session-prewrap {
+  margin: 8px 0 0;
+  color: var(--agent-soft);
+  font-size: 13px;
+  line-height: 19px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.smart-session-muted {
+  margin: 8px 0 0;
+  color: var(--agent-muted);
+  font-size: 13px;
+}
+
+.smart-session-plan-list,
+.smart-session-prior-list,
+.smart-session-evidence-list ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.smart-session-plan-list li,
+.smart-session-prior-list li,
+.smart-session-evidence-list li {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--agent-soft);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.smart-session-status-pill {
+  flex: 0 0 auto;
+  max-width: 120px;
+  overflow: hidden;
+  padding: 2px 6px;
+  border: 1px solid var(--agent-border);
+  border-radius: 999px;
+  color: var(--agent-muted);
+  font-size: 11px;
+  line-height: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.smart-session-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.smart-session-evidence-list {
+  min-width: 0;
+}
+
+.smart-session-evidence-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.smart-session-evidence-item code,
+.smart-session-evidence-item span,
+.smart-session-evidence-item small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.smart-session-evidence-item code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.smart-session-evidence-item small {
+  color: var(--agent-muted);
+  font-size: 11px;
+}
+
+@media (max-width: 900px) {
+  .smart-session-grid,
+  .smart-session-evidence-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .agent-view-switcher {
+    align-self: stretch;
+    margin-inline: 8px;
+  }
+
+  .agent-view-switcher-button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .smart-session-grid,
+  .smart-session-evidence-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .agent-log,
