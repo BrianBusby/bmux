@@ -60,6 +60,7 @@ See:
 
 - [`knowledge-retrieval.md`](knowledge-retrieval.md) for the durable retrieval architecture and guardrails.
 - [`knowledge-retrieval-codex-handoff.md`](knowledge-retrieval-codex-handoff.md) for a future implementation handoff once Project Truth selects the slice and real Knowledge Compiler output exists.
+- [`shared-knowledge.md`](shared-knowledge.md) for the future local-first multi-user/shared organizational knowledge architecture and privacy boundary.
 
 ## Future Independence
 
