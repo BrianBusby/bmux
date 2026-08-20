@@ -217,7 +217,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Worktree required: true
           Conflict note: Can proceed in parallel with PE semantic work when it remains focused on live interaction, provider controls, runtime identity, and surface lifecycle rather than Smart Session inference.
           Rationale: Productize the existing agent-chat React surface as bmux's Terminal view for live conversation, streaming, tool lifecycle, controls, interrupts, and provider-normalized interaction. It must not become the Smart Session semantic summary surface or duplicate PE inference.
-        - **React Smart Session foundation** (`react_smart_session_foundation`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: semantic understanding; layer: consumer presentation; execution: complete / Bmux; parallelism: conditional; delivery: open; acceptance: under observation
+        - **React Smart Session foundation** (`react_smart_session_foundation`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: semantic understanding; layer: consumer presentation; execution: complete / Bmux; parallelism: conditional; delivery: merged; acceptance: under observation
           Depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`
           Enables: `clickable_semantic_explanation_ui`, `react_smart_session_initial_work_model_consumer`, `react_smart_session_work_model_consumer`, `three_view_session_navigation`
           Expected contract domains: `factual_session_projection`, `semantic_message_contract`, `react_smart_session_data_bridge`
@@ -228,7 +228,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Conflict note: Start after factual Session UI lands so the React surface can reuse proven factual consumer shape. Keep the presentation summary-oriented and PE-backed rather than transcript-oriented.
           Evidence: BrianBusby/bmux@1a9f01708b55, BrianBusby/bmux#56 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Establish a separate React Session surface that consumes PE factual projections and existing semantic messages through a typed revision-safe bridge. This foundation must not infer session meaning from raw provider events inside bmux and must not define the future PE-owned SessionWorkModel contract.
-          Acceptance reason: PR #56 adds the separate React Session surface, Slice 1 bridge DTOs, PE factual and semantic-message refresh path, stale-response protection, explicit unavailable/unknown states, focused React/native tests, and localized copy; UI dogfood remains the merge/acceptance gate.
+          Acceptance reason: PR #56 merged the React Smart Session foundation delivery. Acceptance remains under observation while PR #58 carries the active initial SessionWorkModel consumer delivery.
         - **React Smart Session initial SessionWorkModel consumer** (`react_smart_session_initial_work_model_consumer`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: structured work understanding; layer: consumer presentation; execution: current / Bmux; parallelism: serial; delivery: open; acceptance: under observation
           Depends on: `react_smart_session_foundation`, `session_work_model_contract_foundation`
           Enables: `react_smart_session_work_model_consumer`

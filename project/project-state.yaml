@@ -1395,7 +1395,7 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: bmux
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: under_observation
       evidence:
         commits:
@@ -1409,7 +1409,7 @@ roadmap:
               profile_url: https://github.com/BrianBusby
       completed_at: 2026-08-17
       rationale: Establish a separate React Session surface that consumes PE factual projections and existing semantic messages through a typed revision-safe bridge. This foundation must not infer session meaning from raw provider events inside bmux and must not define the future PE-owned SessionWorkModel contract.
-      acceptance_reason: "PR #56 adds the separate React Session surface, Slice 1 bridge DTOs, PE factual and semantic-message refresh path, stale-response protection, explicit unavailable/unknown states, focused React/native tests, and localized copy; UI dogfood remains the merge/acceptance gate."
+      acceptance_reason: "PR #56 merged the React Smart Session foundation delivery. Acceptance remains under observation while PR #58 carries the active initial SessionWorkModel consumer delivery."
 
     - id: react_smart_session_initial_work_model_consumer
       kind: slice
