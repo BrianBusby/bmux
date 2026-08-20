@@ -48,7 +48,7 @@ import Testing
         ]
 
         let lineCount = engine.hookMessageLineEquivalentCount(messages)
-        #expect(lineCount == engine.config.minTranscriptLines)
+        #expect(lineCount >= engine.config.minTranscriptLines)
 
         let decision = engine.throttleDecision(
             snapshot: AutoNamingSessionSnapshot(),

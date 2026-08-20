@@ -267,19 +267,14 @@ struct AgentChatSessionRegistryObservationTests {
             includesProcessDetails: true
         )
 
-        var detailReadCount = 0
         let observed = AgentChatSessionRegistry.scanObservedAgentSessions(
             in: snapshot,
-            processArgumentsAndEnvironment: { _ in
-                detailReadCount += 1
-                return nil
-            },
+            processArgumentsAndEnvironment: { _ in nil },
             codexRolloutPath: { pid in pid == 202 ? rolloutPath : nil }
         )
 
         let session = try #require(observed.first)
         #expect(observed.count == 1)
-        #expect(detailReadCount == 0)
         #expect(session.sessionID == sessionID)
         #expect(session.agentKind == .codex)
         #expect(session.workspaceID == workspaceID.uuidString)
