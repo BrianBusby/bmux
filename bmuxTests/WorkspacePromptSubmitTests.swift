@@ -2,6 +2,7 @@ import Foundation
 import Testing
 import Combine
 import BMUXAgentLaunch
+import BmuxFoundation
 import BmuxSidebar
 
 #if canImport(bmux_DEV)
@@ -9,6 +10,73 @@ import BmuxSidebar
 #elseif canImport(bmux)
 @testable import bmux
 #endif
+
+private struct PromptPullRequestMetadataInvocation: Equatable, Sendable {
+    let directory: String
+    let executable: String
+    let arguments: [String]
+    let timeout: TimeInterval?
+}
+
+private actor PromptPullRequestMetadataInvocationRecorder {
+    private var storedInvocations: [PromptPullRequestMetadataInvocation] = []
+
+    func append(_ invocation: PromptPullRequestMetadataInvocation) {
+        storedInvocations.append(invocation)
+    }
+
+    func snapshot() -> [PromptPullRequestMetadataInvocation] {
+        storedInvocations
+    }
+}
+
+private final class PromptPullRequestMetadataCommandRunner: CommandRunning, @unchecked Sendable {
+    private let output: String
+    private let recorder = PromptPullRequestMetadataInvocationRecorder()
+
+    init(output: String) {
+        self.output = output
+    }
+
+    func run(
+        directory: String,
+        executable: String,
+        arguments: [String],
+        timeout: TimeInterval?
+    ) async -> CommandResult {
+        let invocation = PromptPullRequestMetadataInvocation(
+            directory: directory,
+            executable: executable,
+            arguments: arguments,
+            timeout: timeout
+        )
+        await recorder.append(invocation)
+
+        guard executable == "gh",
+              arguments.count >= 3,
+              arguments[0] == "pr",
+              arguments[1] == "view" else {
+            return CommandResult(
+                stdout: nil,
+                stderr: "unexpected command",
+                exitStatus: 1,
+                timedOut: false,
+                executionError: nil
+            )
+        }
+        return CommandResult(
+            stdout: output,
+            stderr: "",
+            exitStatus: 0,
+            timedOut: false,
+            executionError: nil
+        )
+    }
+
+    var invocations: [PromptPullRequestMetadataInvocation] {
+        get async { await recorder.snapshot() }
+    }
+}
 
 @MainActor
 @Suite(.serialized)
@@ -262,6 +330,43 @@ struct WorkspacePromptSubmitTests {
         #expect(pullRequest.url.absoluteString == "https://github.com/manaflow-ai/bmux/pull/5314")
         #expect(pullRequest.branch == nil)
         #expect(workspace.sidebarPullRequestsInDisplayOrder().map(\.number) == [5314])
+    }
+
+    @Test func testPromptSubmitGithubPullRequestURLResolvesLiveTitle() async throws {
+        let runner = PromptPullRequestMetadataCommandRunner(
+            output: "26554\tOPEN\tShow prompt-linked PR titles in workspace tabs\thttps://github.com/CompanyCam/Company-Cam-API/pull/26554\tBrianBusby\thttps://github.com/BrianBusby\n"
+        )
+        let manager = TabManager(commandRunner: runner)
+        let workspace = manager.tabs[0]
+        let panelId = try #require(workspace.focusedPanelId)
+
+        let outcome = try #require(
+            manager.handlePromptSubmit(
+                workspaceId: workspace.id,
+                message: "do an adversarial review of this pr: https://github.com/CompanyCam/Company-Cam-API/pull/26554",
+                surfaceId: panelId,
+                iMessageModeEnabled: false
+            )
+        )
+
+        #expect(outcome.messageRecorded)
+        let pullRequest = try await pullRequest(
+            in: workspace,
+            panelId: panelId,
+            matchingTitle: "Show prompt-linked PR titles in workspace tabs"
+        )
+        #expect(pullRequest.number == 26554)
+        #expect(pullRequest.title == "Show prompt-linked PR titles in workspace tabs")
+        #expect(pullRequest.ownerLogin == "BrianBusby")
+        #expect(pullRequest.ownerURL?.absoluteString == "https://github.com/BrianBusby")
+        #expect(pullRequest.branch == nil)
+        let invocations = await runner.invocations
+        #expect(invocations.contains { invocation in
+            invocation.executable == "gh"
+                && invocation.arguments.contains("pr")
+                && invocation.arguments.contains("view")
+                && invocation.arguments.contains("https://github.com/CompanyCam/Company-Cam-API/pull/26554")
+        })
     }
 
     @Test func testPromptSubmitPullRequestMentionProjectsPromptWorkContextSource() throws {
@@ -523,6 +628,22 @@ struct WorkspacePromptSubmitTests {
 
         #expect(mention.number == 26117)
         #expect(mention.url.absoluteString == "https://github.com/CompanyCam/Company-Cam-API/pull/26117")
+    }
+
+    private func pullRequest(
+        in workspace: Workspace,
+        panelId: UUID,
+        matchingTitle expectedTitle: String,
+        maxYields: Int = 5_000
+    ) async throws -> SidebarPullRequestState {
+        for _ in 0..<maxYields {
+            if let pullRequest = workspace.panelPullRequests[panelId],
+               pullRequest.title == expectedTitle {
+                return pullRequest
+            }
+            await Task.yield()
+        }
+        return try #require(workspace.panelPullRequests[panelId])
     }
 
     @Test func testAssistantFinalMessageReplacesStalePullRequestMentionWhenIMessageModeDisabled() throws {
