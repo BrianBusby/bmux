@@ -211,7 +211,8 @@ import Testing
         #expect(row.number == 26171)
         #expect(row.title == "Fix route parameter handling")
         #expect(row.label == "PR")
-        #expect(row.rowTitle(statusLabel: "merged") == "PR #26171 merged Fix route parameter handling")
+        #expect(row.primaryLine(statusLabel: "merged") == "PR #26171 merged")
+        #expect(row.titleLine == "Fix route parameter handling")
     }
 
     @Test func latestPromptPullRequestURLOverridesStaleProvenancePullRequestWhenLiveStateIsMissing() throws {

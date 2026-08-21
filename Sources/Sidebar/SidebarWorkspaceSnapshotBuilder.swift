@@ -32,10 +32,13 @@ struct SidebarWorkspaceSnapshotBuilder {
         let isStale: Bool
         let isFromProvenance: Bool
 
-        func rowTitle(statusLabel: String) -> String {
-            let prefix = "\(label) #\(number) \(statusLabel)"
+        func primaryLine(statusLabel: String) -> String {
+            "\(label) #\(number) \(statusLabel)"
+        }
+
+        var titleLine: String? {
             let trimmedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            return trimmedTitle.isEmpty ? prefix : "\(prefix) \(trimmedTitle)"
+            return trimmedTitle.isEmpty ? nil : trimmedTitle
         }
     }
 

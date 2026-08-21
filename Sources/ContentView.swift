@@ -15159,21 +15159,32 @@ struct TabItemView: View, Equatable {
     private func pullRequestRowsView(_ rows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay]) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             ForEach(rows) { pullRequest in
-                let pullRequestTitle = pullRequest.rowTitle(
+                let primaryLine = pullRequest.primaryLine(
                     statusLabel: pullRequestStatusLabel(pullRequest.status)
                 )
-                let rowContent = HStack(spacing: 4) {
+                let titleLine = pullRequest.titleLine
+                let textColor = pullRequest.url == nil ? pullRequestForegroundColor : pullRequestLinkColor
+                let rowContent = HStack(alignment: .center, spacing: 4) {
                     PullRequestStatusIcon(
                         status: pullRequest.status,
                         color: pullRequestForegroundColor,
                         fontScale: fontScale
                     )
-                    Text(pullRequestTitle)
-                        .underline(pullRequest.url != nil)
-                        .foregroundColor(pullRequest.url == nil ? pullRequestForegroundColor : pullRequestLinkColor)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                    Spacer(minLength: 0)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(primaryLine)
+                            .underline(pullRequest.url != nil)
+                            .foregroundColor(textColor)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        if let titleLine {
+                            Text(titleLine)
+                                .underline(pullRequest.url != nil)
+                                .foregroundColor(textColor)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .font(magnifiedFont(scaledFontSize(10), weight: .semibold))
                 .foregroundColor(pullRequestForegroundColor)
