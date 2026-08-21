@@ -79,17 +79,23 @@ struct CodexTranscriptParserTests {
             messageLine(role: "user", texts: [
                 "# AGENTS.md instructions for /repo\n<INSTRUCTIONS>...",
                 "<environment_context>\n  <cwd>/repo</cwd>\n</environment_context>",
+                "<image name=[Image #1] path=\"/tmp/screenshot.png\">",
+                "</image>",
+                "[Image #1] fix the parser",
             ]),
             messageLine(role: "user", texts: ["fix the parser"]),
             messageLine(role: "assistant", texts: ["On it."]),
         ]
         let result = parser.parse(lines: lines, startingSeq: 0)
-        #expect(result.messages.count == 2)
+        #expect(result.messages.count == 3)
         #expect(result.messages[0].role == .user)
-        #expect(result.messages[0].kind == .prose(ChatProse(text: "fix the parser")))
-        #expect(result.messages[0].seq == 2)
-        #expect(result.messages[1].role == .agent)
-        #expect(result.messages[1].kind == .prose(ChatProse(text: "On it.")))
+        #expect(result.messages[0].kind == .prose(ChatProse(text: "[Image #1] fix the parser")))
+        #expect(result.messages[0].seq == 1)
+        #expect(result.messages[1].role == .user)
+        #expect(result.messages[1].kind == .prose(ChatProse(text: "fix the parser")))
+        #expect(result.messages[1].seq == 2)
+        #expect(result.messages[2].role == .agent)
+        #expect(result.messages[2].kind == .prose(ChatProse(text: "On it.")))
     }
 
     @Test("reasoning summaries concatenate into a thought; empty summaries are skipped")
@@ -312,6 +318,36 @@ struct CodexTranscriptParserTests {
         #expect(tool.status == .succeeded)
     }
 
+    @Test("prompt backfill extracts real user prompts from parser output")
+    func promptBackfillExtractsUserPrompts() {
+        let lines = [
+            messageLine(role: "user", texts: ["# AGENTS.md instructions for /repo\n<INSTRUCTIONS>..."]),
+            messageLine(role: "assistant", texts: ["Working."]),
+            messageLine(role: "user", texts: ["Fix the session tab"]),
+        ]
+        let result = CodexTranscriptPromptBackfill().userPromptMessages(lines: lines)
+        #expect(result.map(\.role) == [.user])
+        #expect(result.compactMap(Self.proseText) == ["Fix the session tab"])
+    }
+
+    @Test("prompt backfill preserves bounded tail sequence numbers")
+    func promptBackfillFileTailSequence() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("codex-prompt-backfill-\(UUID().uuidString).jsonl")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let text = [
+            messageLine(role: "user", texts: ["Old prompt"]),
+            messageLine(role: "assistant", texts: ["Done."]),
+            messageLine(role: "user", texts: ["Newest prompt"]),
+        ].joined(separator: "\n") + "\n"
+        try text.write(to: url, atomically: true, encoding: .utf8)
+
+        let result = CodexTranscriptPromptBackfill(maxLines: 2).userPromptMessages(path: url.path)
+        #expect(result.count == 1)
+        #expect(result.first?.seq == 2)
+        #expect(result.compactMap(Self.proseText) == ["Newest prompt"])
+    }
+
     // MARK: - Robustness
 
     @Test("event_msg, turn_context, and malformed lines are skipped; seq tracks line offsets")
@@ -355,5 +391,10 @@ struct CodexTranscriptParserTests {
         }
         #expect((capture.output?.count ?? 0) <= 16_385)
         #expect(capture.output?.hasSuffix("…") == true)
+    }
+
+    private static func proseText(_ message: ChatMessage) -> String? {
+        guard case .prose(let prose) = message.kind else { return nil }
+        return prose.text
     }
 }

@@ -27,6 +27,8 @@ final class AgentChatTranscriptService {
     private let hasEventSubscribers: @MainActor () -> Bool
     private let emitEventPayload: @MainActor ([String: Any]) -> Void
     private var recordSessionLifecycle: @MainActor (AgentSessionLifecycleChange, Date) -> Void
+    private var recordHookUserPromptSubmit: @MainActor (AgentChatSessionRecord, WorkstreamEvent) -> Void
+    private var recordTranscriptUserPrompts: @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
     private let recordTaskWorkspaceDirectory: @MainActor (AgentChatSessionRecord, String) -> Void
     private let now: () -> Date
     /// Drives the live agent-prose streaming preview.
@@ -68,6 +70,8 @@ final class AgentChatTranscriptService {
             MobileHostService.emitEvent(topic: AgentChatTranscriptService.eventTopic, payload: payload)
         },
         recordSessionLifecycle: @escaping @MainActor (AgentSessionLifecycleChange, Date) -> Void = { _, _ in },
+        recordHookUserPromptSubmit: @escaping @MainActor (AgentChatSessionRecord, WorkstreamEvent) -> Void = { _, _ in },
+        recordTranscriptUserPrompts: @escaping @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void = { _, _ in },
         recordTaskWorkspaceDirectory: @escaping @MainActor (AgentChatSessionRecord, String) -> Void =
             AgentChatTranscriptService.defaultRecordTaskWorkspaceDirectory,
         now: @escaping () -> Date = { Date() }
@@ -79,6 +83,8 @@ final class AgentChatTranscriptService {
         self.hasEventSubscribers = hasEventSubscribers
         self.emitEventPayload = emitEventPayload
         self.recordSessionLifecycle = recordSessionLifecycle
+        self.recordHookUserPromptSubmit = recordHookUserPromptSubmit
+        self.recordTranscriptUserPrompts = recordTranscriptUserPrompts
         self.recordTaskWorkspaceDirectory = recordTaskWorkspaceDirectory
         self.now = now
         registry.onRecordChanged = { [weak self] record, previous in
@@ -191,13 +197,28 @@ final class AgentChatTranscriptService {
         // Seeding reads+parses the hook-store JSON off the main actor; kick it
         // off and return. Live hook events also populate the registry, and the
         // seed converges within milliseconds.
-        Task { [weak self] in await self?.registry.seedFromHookStores() }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            await self.registry.seedFromHookStores()
+            AgentChatTranscriptPromptEvidenceSeeder.seed(
+                records: self.registry.sessions(workspaceID: nil),
+                resolver: self.resolver,
+                tokenOptimizationMode: self.tokenOptimizationModeProvider(),
+                recordPrompts: { [weak self] record, messages in self?.recordTranscriptUserPrompts(record, messages) }
+            )
+        }
     }
 
     /// Routes session lifecycle changes into the provenance runtime.
     func recordSessionLifecycleChanges(with runtime: WorkProvenanceRuntime) {
         recordSessionLifecycle = { change, timestamp in
             runtime.recordSessionLifecycleChange(change, timestamp: timestamp)
+        }
+        recordHookUserPromptSubmit = { record, event in
+            runtime.recordHookUserPromptSubmit(record: record, event: event)
+        }
+        recordTranscriptUserPrompts = { record, messages in
+            runtime.recordTranscriptUserPrompts(record: record, messages: messages)
         }
     }
 
@@ -229,6 +250,7 @@ final class AgentChatTranscriptService {
         // prompt starts the in-flight turn, Stop ends it.
         switch event.hookEventName {
         case .userPromptSubmit:
+            recordHookUserPromptSubmit(record, event)
             if record.state != .ended,
                let surfaceID = record.surfaceID.flatMap(UUID.init(uuidString:)) {
                 proseStreamer.turnStarted(
@@ -452,6 +474,9 @@ final class AgentChatTranscriptService {
             registry.update(sessionID: sessionID) { $0.title = title }
         }
         if !batch.appended.isEmpty {
+            if let record = registry.record(sessionID: sessionID) {
+                recordTranscriptUserPrompts(record, batch.appended)
+            }
             // The authoritative prose for the turn just landed: settle the live
             // preview so the committed message takes over with no duplicate.
             if Self.batchContainsAgentProse(batch.appended) {

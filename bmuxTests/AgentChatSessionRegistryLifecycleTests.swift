@@ -1,4 +1,5 @@
 import BMUXAgentLaunch
+import BmuxAgentChat
 import Foundation
 import Testing
 
@@ -572,6 +573,28 @@ struct AgentChatSessionRegistryLifecycleTests {
         }
 
         #expect(recordedDirectories == ["/private/tmp/bmux-pr-worktree"])
+    }
+
+    @MainActor
+    @Test func startupBackfillsCodexTranscriptPromptsFromHookStoreSessions() async throws {
+        let home = try temporaryHomeDirectory(), sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b", workspaceID = UUID().uuidString, surfaceID = UUID().uuidString
+        let transcriptURL = home.appendingPathComponent(".codex/sessions/2026/08/21", isDirectory: true).appendingPathComponent("rollout-2026-08-21T10-00-00-\(sessionID).jsonl")
+        try FileManager.default.createDirectory(at: transcriptURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try [
+            ##"{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"# AGENTS.md instructions for /repo\\n<INSTRUCTIONS>noise</INSTRUCTIONS>"}]}}"##,
+            ##"{"type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Working."}]}}"##,
+            ##"{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"<image name=[Image #1] path=\"/tmp/screenshot.png\">"},{"type":"input_text","text":"</image>"},{"type":"input_text","text":"[Image #1] Fix the PE session tab link"}]}}"##,
+        ].joined(separator: "\n").appending("\n").write(to: transcriptURL, atomically: true, encoding: .utf8)
+        let hookDir = home.appendingPathComponent(".bmuxterm", isDirectory: true)
+        try FileManager.default.createDirectory(at: hookDir, withIntermediateDirectories: true)
+        try #"{"sessions":{"\#(sessionID)":{"workspaceId":"\#(workspaceID)","surfaceId":"\#(surfaceID)","cwd":"/Users/example/project","transcriptPath":"\#(transcriptURL.path)","updatedAt":140}}}"#.write(to: hookDir.appendingPathComponent("codex-hook-sessions.json"), atomically: true, encoding: .utf8)
+        var recorded = [(record: AgentChatSessionRecord, messages: [ChatMessage])]()
+        let service = AgentChatTranscriptService(registry: AgentChatSessionRegistry(hookStore: AgentChatHookSessionStore(homeDirectory: home)), resolver: AgentChatTranscriptResolver(homeDirectory: home, environment: [:]), recordTranscriptUserPrompts: { recorded.append(($0, $1)) })
+        service.start()
+        for _ in 0..<100 where recorded.isEmpty { try await Task.sleep(nanoseconds: 10_000_000) }
+        let captured = try #require(recorded.first)
+        let texts = captured.messages.compactMap { message -> String? in guard case .prose(let prose) = message.kind else { return nil }; return prose.text }
+        #expect((captured.record.sessionID, captured.record.workspaceID, captured.record.surfaceID, texts) == (sessionID, workspaceID, surfaceID, ["[Image #1] Fix the PE session tab link"]))
     }
 
     private func temporaryHomeDirectory() throws -> URL {
