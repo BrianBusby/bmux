@@ -17,6 +17,8 @@ public struct CodexTranscriptParser: Sendable {
         "<permissions",
         "<collaboration_mode",
         "<turn_aborted",
+        "<image",
+        "</image>",
         "# AGENTS.md instructions",
     ]
     private static let shellToolNames: Set<String> = [

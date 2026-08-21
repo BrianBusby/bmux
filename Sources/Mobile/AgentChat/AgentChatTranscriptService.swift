@@ -204,7 +204,7 @@ final class AgentChatTranscriptService {
                 records: self.registry.sessions(workspaceID: nil),
                 resolver: self.resolver,
                 tokenOptimizationMode: self.tokenOptimizationModeProvider(),
-                recordPrompts: self.recordTranscriptUserPrompts
+                recordPrompts: { [weak self] record, messages in self?.recordTranscriptUserPrompts(record, messages) }
             )
         }
     }

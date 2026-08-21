@@ -583,7 +583,7 @@ struct AgentChatSessionRegistryLifecycleTests {
         try [
             ##"{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"# AGENTS.md instructions for /repo\\n<INSTRUCTIONS>noise</INSTRUCTIONS>"}]}}"##,
             ##"{"type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Working."}]}}"##,
-            ##"{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Fix the PE session tab link"}]}}"##,
+            ##"{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"<image name=[Image #1] path=\"/tmp/screenshot.png\">"},{"type":"input_text","text":"</image>"},{"type":"input_text","text":"[Image #1] Fix the PE session tab link"}]}}"##,
         ].joined(separator: "\n").appending("\n").write(to: transcriptURL, atomically: true, encoding: .utf8)
         let hookDir = home.appendingPathComponent(".bmuxterm", isDirectory: true)
         try FileManager.default.createDirectory(at: hookDir, withIntermediateDirectories: true)
@@ -594,7 +594,7 @@ struct AgentChatSessionRegistryLifecycleTests {
         for _ in 0..<100 where recorded.isEmpty { try await Task.sleep(nanoseconds: 10_000_000) }
         let captured = try #require(recorded.first)
         let texts = captured.messages.compactMap { message -> String? in guard case .prose(let prose) = message.kind else { return nil }; return prose.text }
-        #expect((captured.record.sessionID, captured.record.workspaceID, captured.record.surfaceID, texts) == (sessionID, workspaceID, surfaceID, ["Fix the PE session tab link"]))
+        #expect((captured.record.sessionID, captured.record.workspaceID, captured.record.surfaceID, texts) == (sessionID, workspaceID, surfaceID, ["[Image #1] Fix the PE session tab link"]))
     }
 
     private func temporaryHomeDirectory() throws -> URL {
