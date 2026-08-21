@@ -68,6 +68,14 @@ bmux launches or observes sessions
 
 The engine is the shared memory layer. bmux is the orchestration layer.
 
+Normal Coding-Agent Evidence Ingestion is now a data-foundation prerequisite for
+validating this target with real bmux/Codex usage. Agent Chat can produce
+high-fidelity structured evidence today, but cross-session awareness should not
+depend on that UI path. Historical and live normal-terminal Codex transcript
+ingestion should give the engine representative prompts, turns, commands, plans,
+file attribution, and source provenance before coordination and retrieval quality
+are judged.
+
 ## Session Lifecycle Events
 
 Every session should eventually produce structured lifecycle and work events:
@@ -223,12 +231,20 @@ Cross-session coordination depends on earlier standalone-engine capabilities:
 Reliable lifecycle capture
 -> normalized provenance
 -> task and session identity
+-> normal coding-agent evidence ingestion
 -> structured decisions and project facts
 -> semantic processing and knowledge projection
 -> retrieval and context packages
 -> active work index and conflict detection
 -> bmux coordination UI and prompt assembly
 ```
+
+The normal-ingestion dependency does not invalidate completed downstream
+implementation history, such as factual projection, semantic inference, or
+human-readable semantic messaging. It does materially affect how useful those
+systems are in practice because ordinary terminal sessions must supply
+representative evidence before cross-session and retrieval experiments can be
+trusted.
 
 Do not implement active-work coordination before retrieval quality is validated.
 The first implementation gate is an architecture investigation that inspects

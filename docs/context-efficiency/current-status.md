@@ -49,12 +49,24 @@ contracts. PE records provider thread/turn identity, submitted prompt, plan
 updates, completed command facts, visible reasoning summaries, and file-change
 attribution as durable observable evidence below the semantic layer.
 
-Next planning target: PE owns the future `SessionWorkModel` projection for one
-coding-agent session. bmux should consume that revisioned authoritative snapshot
-for human-readable live work views and should not build a parallel semantic
-milestone/architecture model. Current implemented behavior remains lower-level
-evidence modeling and deterministic projection; SessionWorkModel, inference,
-milestone synthesis, and architecture projection are not implemented.
+Normal terminal Codex rich evidence remains the current data-foundation gap for
+active sessions. Local observation showed that ordinary `codex` sessions inside
+bmux primarily populate lifecycle/session evidence while they run. The first
+Normal Coding-Agent Evidence Ingestion slice,
+`codex_transcript_canonical_evidence_import`, is now implemented for historical
+Codex JSONL transcripts via `bmux provenance import codex-transcripts`; live
+normal-terminal tailing and multi-source reconciliation remain planned.
+
+Next planning target: implement live normal-terminal Codex evidence ingestion by
+tailing newly appended Codex transcript facts through the same canonical PE
+evidence path. PE still owns the future
+`SessionWorkModel` projection for one coding-agent session. bmux should consume
+that revisioned authoritative snapshot for human-readable live work views and
+should not build a parallel semantic milestone/architecture model. Current
+implemented behavior remains lower-level evidence modeling, deterministic
+projection, first semantic inference, and human-readable semantic messaging;
+full `SessionWorkModel` presentation, milestone synthesis, architecture
+projection, and normal terminal ingestion remain planned.
 
 Verification for this slice:
 
@@ -65,6 +77,9 @@ Verification for this slice:
 - bmux focused test: `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -destination 'platform=macOS,arch=arm64' -derivedDataPath /tmp/bmux-richer-session-evidence-foundation -only-testing:bmuxTests/SessionProvenanceTests`
 - bmux docs: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
 - bmux tagged reload: `./scripts/reload.sh --tag richer-session-evidence-foundation`
+
+Codex transcript importer verification is covered by the
+`WorkProvenanceStoreTests` suite in the `bmux-unit` scheme.
 
 Known local quirk: the normal Xcode app build script can fail while building the
 Ghostty CLI helper with Zig unresolved macOS symbols on this machine. The focused
