@@ -7,7 +7,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     let stableWorkspaceID: UUID?
     let workProvenanceRuntime: WorkProvenanceRuntime?
     let backgroundColor: NSColor
-    @ViewBuilder let primaryContent: () -> PrimaryContent
+    @ViewBuilder let primaryContent: (_ isVisible: Bool) -> PrimaryContent
 
     @State private var viewMode: AgentSessionFactualProjectionMode = .terminal
     @State private var factualProjectionResult: AgentSessionFactualProjectionReadResult = .missingSession
@@ -36,20 +36,32 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
 
     @ViewBuilder
     private var selectedContent: some View {
-        if showsSwitcher,
-           viewMode == .session {
-            AgentSessionFactualProjectionView(
-                result: factualProjectionResult,
-                isLoading: isLoadingFactualProjection,
-                backgroundColor: Color(nsColor: backgroundColor),
-                onRefresh: {
-                    Task { await refreshFactualProjection() }
-                }
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else {
-            primaryContent()
+        ZStack {
+            primaryContent(primaryContentIsVisible)
+                .opacity(primaryContentIsVisible ? 1 : 0)
+                .allowsHitTesting(primaryContentIsVisible)
+                .accessibilityHidden(!primaryContentIsVisible)
+
+            if showsSessionContent {
+                AgentSessionFactualProjectionView(
+                    result: factualProjectionResult,
+                    isLoading: isLoadingFactualProjection,
+                    backgroundColor: Color(nsColor: backgroundColor),
+                    onRefresh: {
+                        Task { await refreshFactualProjection() }
+                    }
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
+    }
+
+    private var showsSessionContent: Bool {
+        showsSwitcher && viewMode == .session
+    }
+
+    private var primaryContentIsVisible: Bool {
+        !showsSessionContent
     }
 
     private var modePicker: some View {

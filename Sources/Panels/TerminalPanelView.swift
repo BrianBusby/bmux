@@ -68,13 +68,14 @@ struct TerminalPanelView: View {
             stableWorkspaceID: stableWorkspaceId,
             workProvenanceRuntime: workProvenanceRuntime,
             backgroundColor: appearance.contentBackgroundColor
-        ) {
-            terminalSurfaceBody
+        ) { isVisibleForMode in
+            terminalSurfaceBody(isVisibleForMode: isVisibleForMode)
         }
     }
 
-    private var terminalSurfaceBody: some View {
+    private func terminalSurfaceBody(isVisibleForMode: Bool) -> some View {
         @Bindable var textBoxState = panel.textBoxState
+        let terminalIsVisibleInUI = isVisibleInUI && isVisibleForMode
 
         return VStack(spacing: 0) {
             // Layering contract: terminal find UI is mounted in GhosttySurfaceScrollView (AppKit portal layer)
@@ -82,11 +83,11 @@ struct TerminalPanelView: View {
             GhosttyTerminalView(
                 terminalSurface: panel.surface,
                 paneId: paneId,
-                isActive: isFocused,
-                isVisibleInUI: isVisibleInUI,
+                isActive: isFocused && isVisibleForMode,
+                isVisibleInUI: terminalIsVisibleInUI,
                 portalZPriority: portalPriority,
-                showsInactiveOverlay: isSplit && !isFocused,
-                showsUnreadNotificationRing: hasUnreadNotification && notificationPaneRingEnabled,
+                showsInactiveOverlay: terminalIsVisibleInUI && isSplit && !isFocused,
+                showsUnreadNotificationRing: terminalIsVisibleInUI && hasUnreadNotification && notificationPaneRingEnabled,
                 inactiveOverlayColor: appearance.unfocusedOverlayNSColor,
                 inactiveOverlayOpacity: appearance.unfocusedOverlayOpacity,
                 searchState: panel.searchState,
