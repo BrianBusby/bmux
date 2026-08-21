@@ -10995,6 +10995,7 @@ struct VerticalTabsSidebar: View {
                 let pullRequests = workspace.pullRequests.map {
                     BmuxSidebarPullRequest(
                         number: $0.number,
+                        title: $0.title,
                         label: $0.label,
                         url: $0.url,
                         status: $0.status,
@@ -11269,6 +11270,7 @@ struct VerticalTabsSidebar: View {
             pullRequests: pullRequests.map {
                 BmuxSidebarProviderPullRequest(
                     number: $0.number,
+                    title: $0.title,
                     label: $0.label,
                     url: $0.url.absoluteString,
                     status: $0.status.rawValue,
@@ -15151,8 +15153,9 @@ struct TabItemView: View, Equatable {
     private func pullRequestRowsView(_ rows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay]) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             ForEach(rows) { pullRequest in
-                let pullRequestNumber = String(pullRequest.number)
-                let pullRequestTitle = "\(pullRequest.label) #\(pullRequestNumber) \(pullRequestStatusLabel(pullRequest.status))"
+                let pullRequestTitle = pullRequest.rowTitle(
+                    statusLabel: pullRequestStatusLabel(pullRequest.status)
+                )
                 let rowContent = HStack(spacing: 4) {
                     PullRequestStatusIcon(
                         status: pullRequest.status,

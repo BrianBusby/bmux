@@ -194,6 +194,28 @@ import Testing
         #expect(row.isFromProvenance == false)
     }
 
+    @Test func livePullRequestRowsPreserveKnownTitle() throws {
+        let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: [
+                try Self.livePullRequest(
+                    number: 26171,
+                    title: "Fix route parameter handling",
+                    status: .merged
+                ),
+            ],
+            provenancePullRequest: nil,
+            latestSubmittedMessage: nil,
+            latestConversationMessage: nil,
+            label: "PR"
+        )
+
+        let row = try #require(rows.first)
+        #expect(row.number == 26171)
+        #expect(row.title == "Fix route parameter handling")
+        #expect(row.label == "PR")
+        #expect(row.rowTitle(statusLabel: "merged") == "PR #26171 merged Fix route parameter handling")
+    }
+
     @Test func latestPromptPullRequestURLOverridesStaleProvenancePullRequestWhenLiveStateIsMissing() throws {
         let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
             livePullRequests: [],
@@ -355,11 +377,13 @@ import Testing
 
     private static func pullRequest(
         number: Int,
+        title: String? = nil,
         isStale: Bool = false
     ) -> SidebarWorkspaceSnapshotBuilder.PullRequestDisplay {
         SidebarWorkspaceSnapshotBuilder.PullRequestDisplay(
             id: "pr#\(number)|https://github.com/manaflow-ai/bmux/pull/\(number)",
             number: number,
+            title: title,
             label: "PR",
             url: URL(string: "https://github.com/manaflow-ai/bmux/pull/\(number)")!,
             status: .open,
@@ -370,12 +394,17 @@ import Testing
         )
     }
 
-    private static func livePullRequest(number: Int) throws -> SidebarPullRequestState {
+    private static func livePullRequest(
+        number: Int,
+        title: String? = nil,
+        status: SidebarPullRequestStatus = .open
+    ) throws -> SidebarPullRequestState {
         SidebarPullRequestState(
             number: number,
+            title: title,
             label: "PR",
             url: try #require(URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/\(number)")),
-            status: .open
+            status: status
         )
     }
 

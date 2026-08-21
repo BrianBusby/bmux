@@ -23,6 +23,7 @@ struct SidebarWorkspaceSnapshotBuilder {
     struct PullRequestDisplay: Identifiable, Equatable {
         let id: String
         let number: Int
+        let title: String?
         let label: String
         let url: URL?
         let status: SidebarPullRequestStatus
@@ -30,6 +31,12 @@ struct SidebarWorkspaceSnapshotBuilder {
         let ownerURL: URL?
         let isStale: Bool
         let isFromProvenance: Bool
+
+        func rowTitle(statusLabel: String) -> String {
+            let prefix = "\(label) #\(number) \(statusLabel)"
+            let trimmedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return trimmedTitle.isEmpty ? prefix : "\(prefix) \(trimmedTitle)"
+        }
     }
 
     struct TicketDisplay: Identifiable, Equatable {
@@ -141,6 +148,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         return [PullRequestDisplay(
             id: "\(label.lowercased())#\(pullRequest.number)|\(url?.absoluteString ?? "")",
             number: pullRequest.number,
+            title: nil,
             label: label,
             url: url,
             status: pullRequest.status.flatMap(SidebarPullRequestStatus.init(rawValue:)) ?? .open,
@@ -166,6 +174,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         return PullRequestDisplay(
             id: "\(pullRequest.label.lowercased())#\(pullRequest.number)|\(pullRequest.url.absoluteString)",
             number: pullRequest.number,
+            title: nil,
             label: pullRequest.label,
             url: pullRequest.url,
             status: pullRequest.status,
@@ -197,6 +206,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         PullRequestDisplay(
             id: "\(label.lowercased())#\(mention.number)|\(mention.url.absoluteString)",
             number: mention.number,
+            title: nil,
             label: label,
             url: mention.url,
             status: .open,
