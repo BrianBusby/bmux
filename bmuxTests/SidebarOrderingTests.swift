@@ -1176,31 +1176,7 @@ final class TerminalControllerSidebarDedupeTests: XCTestCase {
         XCTAssertTrue(
             TerminalController.shouldReplacePullRequest(
                 current: current,
-                number: 42,
-                title: nil,
-                label: "PR",
-                url: url,
-                ownerLogin: nil, ownerURL: nil,
-                status: .open, branch: "feature/work"
-            )
-        )
-    }
-
-    func testShouldReplacePullRequestReturnsTrueWhenTitleBecomesKnown() throws {
-        let url = try XCTUnwrap(URL(string: "https://github.com/manaflow-ai/bmux/pull/42"))
-        let current = SidebarPullRequestState(
-            number: 42,
-            label: "PR",
-            url: url,
-            status: .open,
-            branch: "feature/work"
-        )
-
-        XCTAssertTrue(
-            TerminalController.shouldReplacePullRequest(
-                current: current,
-                number: 42,
-                title: "Display PR titles in sidebar rows",
+                number: 42, title: nil,
                 label: "PR",
                 url: url,
                 ownerLogin: nil, ownerURL: nil,

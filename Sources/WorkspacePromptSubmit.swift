@@ -1,6 +1,5 @@
 import BMUXAgentLaunch
 import BmuxAgentChat
-import BmuxGit
 import BmuxSidebar
 import Bonsplit
 import Foundation
@@ -67,17 +66,6 @@ enum IMessageModeGroupSortSettings {
     }
 }
 
-struct SubmittedPromptPullRequestMention: Equatable, Sendable {
-    let number: Int
-    let url: URL
-}
-
-struct SubmittedPromptPullRequestRecord: Equatable, Sendable {
-    let recorded: Bool
-    let panelId: UUID?
-    let mention: SubmittedPromptPullRequestMention?
-}
-
 extension WorkstreamEvent {
     var submittedPromptMessage: String? {
         guard hookEventName == .userPromptSubmit else { return nil }
@@ -113,14 +101,7 @@ extension WorkstreamEvent {
     }
 
     private static let promptMessageKeys = ["prompt", "text", "message", "body"]
-    private static let assistantMessageKeys = [
-        "last_assistant_message",
-        "lastAssistantMessage",
-        "assistantPreamble",
-        "assistant_preamble",
-        "last_agent_message",
-        "lastAgentMessage",
-    ]
+    private static let assistantMessageKeys = ["last_assistant_message", "lastAssistantMessage", "assistantPreamble", "assistant_preamble", "last_agent_message", "lastAgentMessage"]
 
     private static func messageText(fromJSON jsonString: String?, keys: [String]) -> String? {
         guard let jsonString else { return nil }
@@ -166,7 +147,6 @@ extension WorkstreamEvent {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return normalized.isEmpty ? nil : normalized
     }
-
 }
 
 extension TabManager {
@@ -227,10 +207,9 @@ extension TabManager {
         switch kind {
         case .promptSubmission:
             _ = workspace.recordPromptNavigationBookmark(surfaceId: surfaceId, message: message)
-            let pullRequestRecord = workspace.recordSubmittedPullRequestMention(message, surfaceId: surfaceId)
             refreshSubmittedPullRequestMentionIfNeeded(
                 workspaceId: workspaceId,
-                record: pullRequestRecord
+                record: workspace.recordSubmittedPullRequestMention(message, surfaceId: surfaceId)
             )
             messageRecorded = workspace.recordSubmittedMessage(message)
             if messageRecorded {
@@ -241,10 +220,9 @@ extension TabManager {
                 )
             }
         case .assistantFinal:
-            let pullRequestRecord = workspace.recordSubmittedPullRequestMention(message, surfaceId: surfaceId)
             refreshSubmittedPullRequestMentionIfNeeded(
                 workspaceId: workspaceId,
-                record: pullRequestRecord
+                record: workspace.recordSubmittedPullRequestMention(message, surfaceId: surfaceId)
             )
             guard iMessageModeEnabled else {
                 return (false, false, originalIndex)
@@ -262,69 +240,6 @@ extension TabManager {
         return (messageRecorded, newIndex != originalIndex, newIndex)
     }
 
-    private func refreshSubmittedPullRequestMentionIfNeeded(
-        workspaceId: UUID,
-        record: SubmittedPromptPullRequestRecord
-    ) {
-        guard let panelId = record.panelId,
-              let mention = record.mention else {
-            return
-        }
-        let probeService = pullRequestProbeService
-        Task.detached(priority: .utility) { [weak self] in
-            guard let pullRequest = await probeService.fetchPromptMentionPullRequest(
-                url: mention.url,
-                expectedNumber: mention.number
-            ),
-                  let status = PullRequestStatus(githubState: pullRequest.state),
-                  let resolvedURL = URL(string: pullRequest.url) else {
-                return
-            }
-            await MainActor.run { [weak self] in
-                guard let self,
-                      let workspace = self.tabs.first(where: { $0.id == workspaceId }),
-                      workspace.panels[panelId] != nil,
-                      let currentPullRequest = workspace.panelPullRequests[panelId],
-                      currentPullRequest.number == mention.number,
-                      currentPullRequest.url == mention.url else {
-                    return
-                }
-                let ownerURL = Self.promptMentionOwnerURL(
-                    explicitURLString: pullRequest.ownerURLString,
-                    ownerLogin: pullRequest.ownerLogin
-                )
-                workspace.updatePanelPullRequest(
-                    panelId: panelId,
-                    number: pullRequest.number,
-                    title: pullRequest.title,
-                    label: currentPullRequest.label,
-                    url: resolvedURL,
-                    ownerLogin: pullRequest.ownerLogin,
-                    ownerURL: ownerURL,
-                    status: SidebarPullRequestStatus(rawValue: status.rawValue) ?? .open,
-                    branch: nil,
-                    isStale: false,
-                    bindToCurrentBranch: false,
-                    source: .promptMention
-                )
-            }
-        }
-    }
-
-    private static func promptMentionOwnerURL(
-        explicitURLString: String?,
-        ownerLogin: String?
-    ) -> URL? {
-        if let explicitURLString,
-           let explicitURL = URL(string: explicitURLString) {
-            return explicitURL
-        }
-        guard let ownerLogin = ownerLogin?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !ownerLogin.isEmpty else {
-            return nil
-        }
-        return URL(string: "https://github.com/\(ownerLogin)")
-    }
 }
 
 extension Workspace {

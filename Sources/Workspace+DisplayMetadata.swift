@@ -1,3 +1,4 @@
+import BmuxGit
 import BmuxSidebar
 import Foundation
 
@@ -43,6 +44,70 @@ private extension Set where Element == String {
         guard let branch else { return false }
         guard let normalizedBranch = branch.normalizedSidebarBranchName else { return false }
         return contains(normalizedBranch)
+    }
+}
+
+struct SubmittedPromptPullRequestMention: Equatable, Sendable {
+    let number: Int
+    let url: URL
+}
+
+struct SubmittedPromptPullRequestRecord: Equatable, Sendable {
+    let recorded: Bool
+    let panelId: UUID?
+    let mention: SubmittedPromptPullRequestMention?
+}
+
+extension TabManager {
+    func refreshSubmittedPullRequestMentionIfNeeded(
+        workspaceId: UUID,
+        record: SubmittedPromptPullRequestRecord
+    ) {
+        guard let panelId = record.panelId,
+              let mention = record.mention else { return }
+        let probeService = pullRequestProbeService
+        Task.detached(priority: .utility) { [weak self] in
+            guard let pullRequest = await probeService.fetchPromptMentionPullRequest(
+                url: mention.url,
+                expectedNumber: mention.number
+            ),
+                  let status = PullRequestStatus(githubState: pullRequest.state),
+                  let resolvedURL = URL(string: pullRequest.url) else { return }
+            await MainActor.run { [weak self] in
+                guard let self,
+                      let workspace = self.tabs.first(where: { $0.id == workspaceId }),
+                      workspace.panels[panelId] != nil,
+                      let currentPullRequest = workspace.panelPullRequests[panelId],
+                      currentPullRequest.number == mention.number,
+                      currentPullRequest.url == mention.url else { return }
+                workspace.updatePanelPullRequest(
+                    panelId: panelId,
+                    number: pullRequest.number,
+                    title: pullRequest.title,
+                    label: currentPullRequest.label,
+                    url: resolvedURL,
+                    ownerLogin: pullRequest.ownerLogin,
+                    ownerURL: Self.promptMentionOwnerURL(
+                        explicitURLString: pullRequest.ownerURLString,
+                        ownerLogin: pullRequest.ownerLogin
+                    ),
+                    status: SidebarPullRequestStatus(rawValue: status.rawValue) ?? .open,
+                    branch: nil,
+                    isStale: false,
+                    bindToCurrentBranch: false,
+                    source: .promptMention
+                )
+            }
+        }
+    }
+
+    private static func promptMentionOwnerURL(explicitURLString: String?, ownerLogin: String?) -> URL? {
+        if let explicitURLString, let explicitURL = URL(string: explicitURLString) {
+            return explicitURL
+        }
+        guard let ownerLogin = ownerLogin?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !ownerLogin.isEmpty else { return nil }
+        return URL(string: "https://github.com/\(ownerLogin)")
     }
 }
 

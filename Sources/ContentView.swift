@@ -15154,34 +15154,20 @@ struct TabItemView: View, Equatable {
         }
         return result
     }
-
     @ViewBuilder
     private func pullRequestRowsView(_ rows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay]) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             ForEach(rows) { pullRequest in
-                let primaryLine = pullRequest.primaryLine(
-                    statusLabel: pullRequestStatusLabel(pullRequest.status)
-                )
-                let titleLine = pullRequest.titleLine
                 let textColor = pullRequest.url == nil ? pullRequestForegroundColor : pullRequestLinkColor
                 let rowContent = HStack(alignment: .center, spacing: 4) {
-                    PullRequestStatusIcon(
-                        status: pullRequest.status,
-                        color: pullRequestForegroundColor,
-                        fontScale: fontScale
-                    )
+                    PullRequestStatusIcon(status: pullRequest.status, color: pullRequestForegroundColor,
+                                          fontScale: fontScale)
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(primaryLine)
-                            .underline(pullRequest.url != nil)
-                            .foregroundColor(textColor)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                        if let titleLine {
-                            Text(titleLine)
-                                .underline(pullRequest.url != nil)
-                                .foregroundColor(textColor)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
+                        Text(pullRequest.primaryLine(statusLabel: pullRequestStatusLabel(pullRequest.status)))
+                            .underline(pullRequest.url != nil).foregroundColor(textColor).lineLimit(1).truncationMode(.tail)
+                        if let titleLine = pullRequest.titleLine {
+                            Text(titleLine).underline(pullRequest.url != nil).foregroundColor(textColor)
+                                .lineLimit(1).truncationMode(.tail)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)

@@ -615,9 +615,7 @@ class TerminalController {
 
     nonisolated static func shouldReplacePullRequest(
         current: SidebarPullRequestState?,
-        number: Int,
-        title: String?,
-        label: String,
+        number: Int, title: String?, label: String,
         url: URL,
         ownerLogin: String?,
         ownerURL: URL?,
@@ -627,7 +625,6 @@ class TerminalController {
         guard let current else { return true }
         let normalizedBranch = branch?.trimmingCharacters(in: .whitespacesAndNewlines)
         let isSamePullRequest = current.number == number && current.url == url
-        let effectiveTitle = title ?? (isSamePullRequest ? current.title : nil)
         let effectiveOwnerLogin = ownerLogin ?? (isSamePullRequest ? current.ownerLogin : nil)
         let effectiveOwnerURL = ownerURL ?? (isSamePullRequest ? current.ownerURL : nil)
         let effectiveBranch: String? = {
@@ -645,7 +642,7 @@ class TerminalController {
         return current.number != number
             || current.label != label
             || current.url != url
-            || current.title != effectiveTitle
+            || current.title != (title ?? (isSamePullRequest ? current.title : nil))
             || current.ownerLogin != effectiveOwnerLogin
             || current.ownerURL != effectiveOwnerURL
             || current.status != status

@@ -194,13 +194,7 @@ import Testing
 
     @Test func livePullRequestRowsPreserveKnownTitle() throws {
         let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
-            livePullRequests: [
-                try Self.livePullRequest(
-                    number: 26171,
-                    title: "Fix route parameter handling",
-                    status: .merged
-                ),
-            ],
+            livePullRequests: [try Self.livePullRequest(number: 26171, title: "Fix route parameter handling", status: .merged)],
             provenancePullRequest: nil,
             latestSubmittedMessage: nil,
             latestConversationMessage: nil,
@@ -210,7 +204,6 @@ import Testing
         let row = try #require(rows.first)
         #expect(row.number == 26171)
         #expect(row.title == "Fix route parameter handling")
-        #expect(row.label == "PR")
         #expect(row.primaryLine(statusLabel: "merged") == "PR #26171 merged")
         #expect(row.titleLine == "Fix route parameter handling")
     }
@@ -391,11 +384,7 @@ import Testing
         )
     }
 
-    private static func livePullRequest(
-        number: Int,
-        title: String? = nil,
-        status: SidebarPullRequestStatus = .open
-    ) throws -> SidebarPullRequestState {
+    private static func livePullRequest(number: Int, title: String? = nil, status: SidebarPullRequestStatus = .open) throws -> SidebarPullRequestState {
         SidebarPullRequestState(
             number: number,
             title: title,

@@ -1,6 +1,54 @@
 import Foundation
+import BmuxFoundation
 import Testing
 @testable import BmuxGit
+
+private actor PromptMentionProbeCommandLog {
+    private var storedArguments: [[String]] = []
+
+    func append(_ arguments: [String]) {
+        storedArguments.append(arguments)
+    }
+
+    func snapshot() -> [[String]] {
+        storedArguments
+    }
+}
+
+private final class PromptMentionProbeCommandRunner: CommandRunning, @unchecked Sendable {
+    private let expectedURLString: String
+    private let output: String
+    private let log = PromptMentionProbeCommandLog()
+
+    init(expectedURLString: String, output: String) {
+        self.expectedURLString = expectedURLString
+        self.output = output
+    }
+
+    func run(
+        directory: String,
+        executable: String,
+        arguments: [String],
+        timeout: TimeInterval?
+    ) async -> CommandResult {
+        await log.append(arguments)
+        guard executable == "gh",
+              arguments == [
+                  "pr",
+                  "view",
+                  expectedURLString,
+                  "--json",
+                  "number,state,title,url,author",
+              ] else {
+            return CommandResult(stdout: nil, stderr: "unexpected command", exitStatus: 1, timedOut: false, executionError: nil)
+        }
+        return CommandResult(stdout: output, stderr: "", exitStatus: 0, timedOut: false, executionError: nil)
+    }
+
+    var invocations: [[String]] {
+        get async { await log.snapshot() }
+    }
+}
 
 /// Pure pull-request probe logic. The selection/policy cases are migrated from
 /// the app target's `TabManagerPullRequestProbeTests`, where they tested the
@@ -77,6 +125,40 @@ import Testing
     }
 
     // MARK: refresh policy
+
+    @Test func promptMentionPullRequestFetchUsesURLAndPreservesTitle() async throws {
+        let url = try #require(URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/26554"))
+        let runner = PromptMentionProbeCommandRunner(
+            expectedURLString: url.absoluteString,
+            output: #"{"number":26554,"state":"OPEN","title":"Show prompt-linked PR titles in workspace tabs","url":"https://github.com/CompanyCam/Company-Cam-API/pull/26554","author":{"login":"BrianBusby","url":"https://github.com/BrianBusby"}}"#
+        )
+        let service = PullRequestProbeService(commandRunner: runner)
+
+        let pullRequest = try #require(await service.fetchPromptMentionPullRequest(url: url, expectedNumber: 26554))
+
+        #expect(pullRequest.number == 26554)
+        #expect(pullRequest.title == "Show prompt-linked PR titles in workspace tabs")
+        #expect(pullRequest.ownerLogin == "BrianBusby")
+        #expect(pullRequest.ownerURLString == "https://github.com/BrianBusby")
+        let invocations = await runner.invocations
+        #expect(invocations == [[
+            "pr",
+            "view",
+            "https://github.com/CompanyCam/Company-Cam-API/pull/26554",
+            "--json",
+            "number,state,title,url,author",
+        ]])
+    }
+
+    @Test func promptMentionPullRequestFetchRejectsMismatchedNumberBeforeCommand() async throws {
+        let url = try #require(URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/26554"))
+        let runner = PromptMentionProbeCommandRunner(expectedURLString: url.absoluteString, output: "{}")
+        let service = PullRequestProbeService(commandRunner: runner)
+
+        #expect(await service.fetchPromptMentionPullRequest(url: url, expectedNumber: 26555) == nil)
+        let invocations = await runner.invocations
+        #expect(invocations.isEmpty)
+    }
 
     @Test func shouldSkipLookupOnlyForExactMainAndMaster() {
         #expect(PullRequestProbeService.shouldSkipLookup(branch: "main"))
