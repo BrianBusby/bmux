@@ -2,7 +2,7 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice:
+  active_slice: null
   state: observation
 
 execution_telemetry:
@@ -15,68 +15,10 @@ execution_telemetry:
   claude_lifecycle_telemetry: implemented
   automatic_checkpoint_scheduler: not_implemented
   completed_unit_provenance_projection: implemented
-  completed_assistant_output_provenance_projection: implemented
   codex_transcript_canonical_evidence_import: implemented
-  normal_terminal_codex_evidence_ingestion: implemented
-  coding_agent_evidence_source_reconciliation: implemented
-  live_codex_evidence_convergence_correctness: implemented
+  normal_terminal_codex_evidence_ingestion: planned
 
 local_capabilities:
-  ordinary_cli_read_only_chat: under_observation
-  ordinary_cli_shared_control: not_implemented
-  connected_codex_shared_host_controls: under_observation
-  provenance_engine_public_in_process_sdk: implemented
-  provenance_engine_sqlite_store: implemented
-  provenance_engine_immutable_ledger: implemented
-  provenance_engine_deterministic_current_state: implemented
-  provenance_engine_workspace_display_current_state: implemented
-  provenance_engine_workspace_display_projection_cursors: implemented
-  provenance_engine_workspace_display_ticket_link_facts: implemented
-  provenance_engine_workspace_display_ticket_title_facts: implemented
-  provenance_engine_workspace_display_project_link_facts: implemented
-  provenance_engine_workspace_display_durable_context: implemented
-  provenance_engine_schema_identity_validation: implemented
-  provenance_engine_producer_neutral_lifecycle_recording: implemented
-  provenance_engine_richer_coding_agent_evidence: implemented
-  provenance_engine_factual_session_projection: implemented
-  provenance_engine_factual_session_turn_detail: implemented
-  provenance_engine_turn_outcome_projection: implemented
-  provenance_engine_session_outcome_aggregation: implemented
-  provenance_engine_semantic_session_work_model_projection: implemented
-  provenance_engine_semantic_inference_framework: implemented
-  provenance_engine_semantic_inference_records: implemented
-  provenance_engine_first_semantic_session_inferences: implemented
-  provenance_engine_coding_agent_thread_intent: implemented
-  provenance_engine_coding_agent_turn_intent: implemented
-  provenance_engine_coding_agent_session_phase: implemented
-  provenance_engine_coding_agent_current_activity: implemented
-  provenance_engine_coding_agent_assistant_outputs: implemented
-  provenance_engine_human_readable_semantic_messaging: implemented
-  provenance_engine_semantic_message_records: implemented
-  provenance_engine_semantic_message_materialization: implemented
-  provenance_engine_semantic_message_presentation_policy: implemented
-  provenance_engine_session_work_model_contract_foundation: implemented
-  provenance_engine_cross_session_work_awareness: implemented
-  provenance_engine_workspace_coding_agent_session_association: under_observation
-  provenance_engine_related_session_read_model: implemented
-  provenance_engine_cross_session_artifact_collision_awareness: implemented
-  provenance_engine_rich_cross_session_work_state_semantics: implemented
-  provenance_engine_agent_accessible_cross_session_retrieval: implemented
-  provenance_engine_milestone_inference: implemented
-  provenance_engine_blocker_approach_change_semantics: implemented
-  provenance_engine_scoped_architecture_projection: planned
-  bmux_proactive_cross_session_awareness: implemented
-  bmux_cross_session_context_assembly_experiment: planned
-  knowledge_compiler_cross_session_bridge: planned
-  factual_agent_session_view: implemented
-  native_provider_session_view: implemented
-  react_terminal_agent_chat_surface: implemented
-  react_terminal_productization: planned
-  react_smart_session_surface: under_observation
-  react_smart_session_initial_work_model_consumer: implemented
-  react_smart_session_work_model_consumer: planned
-  react_smart_session_hybrid_focus_workbench: under_observation
-  three_view_session_navigation: planned
   richer_session_evidence_foundation: implemented
   workspace_display_projection: implemented
   workspace_display_current_state_diagnostic: implemented
@@ -84,25 +26,9 @@ local_capabilities:
   workspace_display_tab_projection: implemented
   workspace_display_ticket_title_sidebar: implemented
   workspace_display_durable_context: implemented
-  workspace_display_prompt_resource_discovery: implemented
   session_work_model_consumer: planned
   richer_session_work_view: planned
-  normal_coding_agent_evidence_ingestion: implemented
-  workspace_coding_agent_session_linkage_hardening: under_observation
-  app_runtime_composition_boundary: under_observation
-  app_host_test_runtime_isolation: under_observation
-  work_provenance_runtime_lifecycle_state: under_observation
-  app_runtime_browser_devtools_lifecycle: under_observation
-  app_runtime_sidebar_git_pr_lifecycle: under_observation
-  app_runtime_notification_push_lifecycle: under_observation
-  app_runtime_menu_bar_presentation_lifecycle: under_observation
-  workspace_display_file_watcher_churn_policy: planned
-  pe_shared_sqlite_writer_policy: planned
-  codex_historical_import_startup_boundary_guard: planned
-  workspace_launch_canonical_mutation_path: planned
-  test_determinism_allowlist_burndown: planned
-  legacy_bmux_provenance_retirement: planned
-  monorepo_migration_ledger_closure: planned
+  normal_coding_agent_evidence_ingestion: planned
   remote_mobile_planning_reconciliation: planned
   remote_local_session_host_contract: planned
   remote_session_protocol_loopback: planned
@@ -117,36 +43,11 @@ local_capabilities:
   remote_general_internet_route: planned
 
 release:
-  latest_tag:
+  latest_tag: null
   release_status: untagged
 
-component_releases:
-  provenance_engine:
-    latest_tag: "0.1.0"
-    release_status: tagged
-
 local_caveats:
-  - id: connected_codex_delivery_and_recovery_verification
-    status: open
-  - id: shared_host_codex_stale_interrupt
-    status: open
-  - id: ordinary_cli_shared_control_unverified
-    status: open
   - id: broad_legacy_storage_migration
-    status: open
-  - id: residual_app_runtime_lifecycle_ownership
-    status: open
-  - id: workspace_display_file_watcher_churn
-    status: open
-  - id: pe_shared_sqlite_multi_writer_policy
-    status: open
-  - id: codex_historical_import_startup_boundary
-    status: monitoring
-  - id: test_determinism_allowlist_debt
-    status: open
-  - id: config_workspace_launch_mutation_bypass
-    status: open
-  - id: monorepo_migration_ledger_pending_dispositions
     status: open
   - id: github_actions_runner_reliability
     status: open
@@ -155,8 +56,6 @@ local_caveats:
   - id: sidecar_disappearance_lifecycle_policy
     status: open
   - id: normal_terminal_codex_rich_evidence_gap
-    status: resolved
-  - id: remote_mobile_open_architecture_decisions
     status: open
-  - id: hybrid_focus_render_capture
+  - id: remote_mobile_open_architecture_decisions
     status: open

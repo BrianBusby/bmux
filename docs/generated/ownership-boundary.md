@@ -1,7 +1,8 @@
 <!--
 GENERATED FILE. DO NOT EDIT MANUALLY.
 Sources:
-- project/project-state.yaml
+- BrianBusby/provenance-engine:project/project-state.yaml
+- project/shared-project-source.yaml
 - project/repo-status.yaml
 Regenerate with: ./scripts/project-docs generate
 -->
@@ -11,42 +12,37 @@ Regenerate with: ./scripts/project-docs generate
 
 | Responsibility | Owner |
 | --- | --- |
-| App Host Test Runtime Isolation | Bmux |
-| App Runtime Composition | Bmux |
-| Automatic Context Assembly Policy | Bmux |
 | Bounded provenance queries | Provenance Engine |
-| Browser Devtools Lifecycle | Bmux |
+| Canonical Coding Agent Evidence Model | Provenance Engine |
 | Capture policy | Bmux |
-| Codex Transcript Import Boundary | Bmux |
-| Cross Session Presentation | Bmux |
-| Cross Session Relationships | Provenance Engine |
-| Cross Session Retrieval | Provenance Engine |
-| Cross Session Work Awareness | Provenance Engine |
+| Codex Transcript Acquisition | Bmux |
 | Deterministic Current State | Provenance Engine |
+| Device Pairing | Bmux |
 | Durable evidence | Provenance Engine |
 | Execution telemetry | Bmux |
-| Legacy Bmux Provenance Storage | Bmux |
-| Local Pe Store Runtime Policy | Bmux |
+| Local Session Host | Bmux |
 | Meaningful Execution Evidence | Provenance Engine |
-| Menu Bar Presentation Lifecycle | Bmux |
 | Milestone Semantics | Provenance Engine |
-| Monorepo Migration Disposition | Bmux |
-| Notification Push Lifecycle | Bmux |
+| Mobile Connectivity | Bmux |
+| Mobile Session Intelligence Presentation | Bmux |
+| Mobile Terminal Rendering | Bmux |
 | Presentation | Bmux |
 | Provider Specific Acquisition | Bmux |
+| React Native Mobile App | Bmux |
+| Remote Connectivity | Bmux |
+| Remote Device Authorization | Bmux |
+| Remote Session Protocol | Bmux |
 | Runtime orchestration | Bmux |
 | Schema compatibility | Provenance Engine |
 | Scoped Architecture Projection | Provenance Engine |
 | Semantic Inference | Provenance Engine |
 | Session Work Model Projection | Provenance Engine |
-| Sidebar Git Pr Lifecycle | Bmux |
 | Streaming Execution Telemetry | Bmux |
-| Test Determinism | Bmux |
+| Terminal Process Lifecycle | Bmux |
+| Terminal Remote Control | Bmux |
+| Terminal Snapshot Streaming | Bmux |
 | User interface | Bmux |
 | Workflow observation | Bmux |
-| Workspace Coding Agent Session Association | Provenance Engine |
-| Workspace Display Resource Discovery | Bmux |
-| Workspace Mutation Paths | Bmux |
 
 ## Durable Versus Ephemeral Policy
 
