@@ -10,59 +10,9 @@ not be maintained here.
 - [Ownership boundary](../generated/ownership-boundary.md)
 - [Repository status](../generated/repository-status.md)
 
-Update `project/repo-status.yaml` for monorepo-local slice, release, capability,
-or caveat changes. Shared milestone, gate, ownership, roadmap, and policy
-changes belong in root `project/project-state.yaml`. The old
-`project/shared-project-source.yaml` pointer is obsolete.
-
-The selected hybrid Focus workbench slice is under observation on
-`hybrid-focus-design`. The normal workspace path now exposes one coherent
-Terminal / Chat / Focus / Learnings host: Terminal remains the native provider
-surface, Chat retains its existing connected/read-only boundary, Focus uses the
-source-backed factual projection with stable completed-turn ordering, and
-Learnings is an honest unavailable state. The native shell now uses rich rounded
-workspace cards, retained assigned colors, a restrained card-only selection border,
-separate link controls, a prominent shared workspace header, and underline view
-navigation. Focus puts current evidence before restrained newest-first history,
-with identity/thread detail behind disclosure. The selected header receives the
-owning native workspace title, assigned color, source-supported activity, and
-all known PE-backed ticket, pull-request, project, and owner links. Token
-attribution and curated learning records remain unsupported data dependencies.
-A tagged build is reproducible with the pinned sources plus the local
-Ghostty/Bonsplit cache workaround. Current-build CUA capture remains
-unavailable: exact tagged-app attachment returns `cgWindowNotFound`, shell
-`screencapture` lacks Screen Recording authorization, and a ScreenCaptureKit
-attempt aborts in `CGS_REQUIRE_INIT`. The supplied build-612 Terminal screenshot
-is before-state evidence; the obsolete shared perimeter is now removed in
-source. Dark/light, narrow, Focus, and populated-history states remain visually
-unverified.
-
-The user-selected implementation is `shared_session_chat`, tracked in the root
-manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)
-for the capability matrix and evidence. Shared ordinary-CLI control remains
-unproven; read-only Chat is implemented and under observation, with local
-transport, transcript, native bridge and tagged macOS evidence in that decision.
-Broader provider/recovery acceptance and all shared controls remain open. A new
-shared-host TUI probe accepted a second-client prompt, but a stale interrupt
-with an old turn ID stopped a newer turn in Codex 0.154.0. This is a provider
-control gate failure. The user subsequently authorized opt-in newly connected
-sessions. Queue and expected-turn steering are implemented with live transport proof on
-`connected-session-controls`; build 572 now passed one acknowledged Chat-to-original-Terminal submission. A temporary startup ambiguity recovered without restart; its cause and broader UI acceptance remain open. Interrupt remains disabled. The original
-`shared-session-chat` dogfood build must remain running and untouched.
-Process Integrity remains the broader frontier and its completed slices remain
-unchanged. This assignment does not authorize unrelated cleanup.
-
-The remaining patched-area audit backlog is now represented in Project Truth.
-The selected next Process Integrity slice is
-`app_runtime_browser_devtools_lifecycle_migration`; that backlog is not being implemented in the Chat branch. The planning snapshot and grouping rationale live in
-[`docs/process-integrity/remaining-patch-audit-backlog.md`](../process-integrity/remaining-patch-audit-backlog.md),
-with detailed historical context in the runtime composition and mobile-host
-audit documents.
-
-Do not treat this planning state as authorization to implement cleanup inline.
-Runtime lifecycle, workspace mutation, deterministic-test, legacy provenance,
-monorepo-ledger, and PE runtime-policy work should be selected as future slices
-according to the generated Project Truth frontier.
+Update `project/repo-status.yaml` for bmux-local slice, release, capability, or
+caveat changes. Shared milestone, gate, ownership, and policy changes belong in
+`BrianBusby/provenance-engine:project/project-state.yaml`.
 
 ## Read Order
 
@@ -71,18 +21,12 @@ according to the generated Project Truth frontier.
 3. `docs/generated/project-status.md`
 4. `docs/generated/ownership-boundary.md`
 5. `docs/generated/repository-status.md`
-6. `docs/process-integrity/remaining-patch-audit-backlog.md`
-7. `docs/architecture/README.md`
-8. `docs/architecture/system-overview.md`
-9. `docs/architecture/implementation-map.md`
-10. `docs/product/coding-session-views.md`
-11. `docs/planning/monorepo-migration-ledger.md`
-12. `docs/roadmap.md`
-13. `docs/provenance-integration.md`
-14. `docs/context-efficiency/roadmap.md`
-15. `docs/context-efficiency/milestones.md`
-16. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
-17. Relevant bmux skills for Swift/package/build/test/localization work.
+6. `docs/roadmap.md`
+7. `docs/provenance-integration.md`
+8. `docs/context-efficiency/roadmap.md`
+9. `docs/context-efficiency/milestones.md`
+10. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
+11. Relevant bmux skills for Swift/package/build/test/localization work.
 
 ## Current Boundary
 
@@ -98,192 +42,41 @@ streams and deltas stay live/ephemeral in bmux, while selected completed or
 meaningful evidence units may become durable PE evidence once explicit
 contracts, retention policy, and privacy review exist.
 
-Live Terminal Codex Evidence Ingestion and Coding-Agent Evidence Source
-Reconciliation remain implemented. Engineering Observation Period dogfood in a
-normal live Codex terminal session exposed a correctness gap that is now
-represented by `live_codex_evidence_convergence_correctness` and marked
-implemented after real dogfood validation. The correction slice owns continuous
-transcript tail convergence, factual projection freshness, visible
-commentary/summary classification, provider/model/effort metadata, and identity
-labeling for ordinary bmux-hosted Codex CLI sessions.
+Richer Session Evidence Foundation is the latest implemented slice. bmux now
+forwards selected completed Codex evidence units through the existing
+provider-neutral execution telemetry path to Provenance Engine public append
+contracts. PE records provider thread/turn identity, submitted prompt, plan
+updates, completed command facts, visible reasoning summaries, and file-change
+attribution as durable observable evidence below the semantic layer.
 
-Hook and transcript observations now converge on provider turn identity when
-Codex exposes it. The hook feed payload forwards `turn_id`, hook prompt
-evidence uses that provider turn instead of a synthetic hook turn, transcript
-prompt IDs canonicalize by provider turn when available, and prompt-only
-transcript backfill no longer creates duplicate transcript-specific turns.
+Normal terminal Codex rich evidence remains the current data-foundation gap for
+active sessions. Local observation showed that ordinary `codex` sessions inside
+bmux primarily populate lifecycle/session evidence while they run. The first
+Normal Coding-Agent Evidence Ingestion slice,
+`codex_transcript_canonical_evidence_import`, is now implemented for historical
+Codex JSONL transcripts via `bmux provenance import codex-transcripts`; live
+normal-terminal tailing and multi-source reconciliation remain planned.
 
-Three-view session boundary: Terminal is the original provider CLI, Chat is the
-styled conversation with connection-scoped capabilities, and Session is the
-PE-backed work overview. The old Native/Terminal labels are historical; renderer
-identifiers and persisted selections must retain their existing meanings.
-Chat never owns the original terminal process and PE is not a control transport.
+Next planning target: implement live normal-terminal Codex evidence ingestion by
+tailing newly appended Codex transcript facts through the same canonical PE
+evidence path. PE still owns the future
+`SessionWorkModel` projection for one coding-agent session. bmux should consume
+that revisioned authoritative snapshot for human-readable live work views and
+should not build a parallel semantic milestone/architecture model. Current
+implemented behavior remains lower-level evidence modeling, deterministic
+projection, first semantic inference, and human-readable semantic messaging;
+full `SessionWorkModel` presentation, milestone synthesis, architecture
+projection, and normal terminal ingestion remain planned.
 
-Normal terminal Codex rich evidence is implemented for active bmux-managed
-Codex sessions under the current factual evidence contract. Historical import
-remains available via `bmux provenance import codex-transcripts`, and active
-sessions use the same canonical evidence semantics through live transcript
-ingestion. PE semantic work must consume this reconciled factual foundation
-rather than repairing hook/transcript duplication, stale projections, or
-metadata mistakes downstream.
+Verification for this slice:
 
-Deterministic Turn Outcome Projection is implemented in the Provenance Engine
-package inside the bmux monorepo. `turnOutcome(...)` exposes a revisioned,
-rebuildable factual outcome for one coding-agent turn with field or item
-evidence references, source evidence watermark, repository/worktree boundary,
-validation command attempts, explicit continuation state, and completeness
-metadata. It remains below semantic `SessionWorkModel` interpretation and does
-not summarize, rank, or inject cross-session context.
-
-Session Outcome aggregation is implemented on branch
-`session-outcome-aggregation` as the next factual PE layer above Turn Outcome.
-`sessionOutcome(...)` exposes a revisioned, rebuildable outcome projection for
-one coding-agent session, aggregates exact accepted `TurnOutcome` revisions,
-preserves ordered constituent turn references, reconciles latest factual plan
-state, records repository/worktree/branch/HEAD boundaries without silently
-mixing incompatible boundaries, and exposes completeness/source-availability
-metadata. It remains below semantic `SessionWorkModel`, Smart Session UI,
-cross-session retrieval, context injection, and Knowledge Compiler output.
-
-Cross-session work awareness foundation is implemented on branch
-`cross-session-work-awareness-foundation` as the first PE-owned read-only
-related-session layer above Session Outcome and SessionWorkModel.
-`relatedSessions(...)` accepts a target PE session id plus bounded result,
-omission, recent-time, and revision options. It returns deterministic
-related-session briefs with typed relationship reasons, exact Session Outcome
-revision ids, compact Session Outcome facts, optional existing SessionWorkModel
-semantic fields with their original provenance, freshness/source-watermark
-metadata, and explicit completeness states. It remains read-only and does not
-add prompt injection, agent coordination, raw transcript sharing, proactive UI,
-artifact-collision warnings, Knowledge Compiler behavior, or new milestone,
-blocker, decision, risk, approach-change, or architecture inference.
-
-Artifact and change collision awareness is implemented as the next PE-owned
-deterministic read above Session Outcome and related-session discovery.
-`artifactCollisions(...)` returns bounded possible-collision candidates for a
-target session, exact normalized artifact path, participating sessions,
-repository/worktree/branch/HEAD boundaries, temporal overlap state, freshness,
-completeness, source watermarks, Session Outcome and related-session projection
-revisions, and supporting evidence references. It is intentionally possible
-collision awareness only: it does not infer semantic incompatibility, rename
-identity, overwrite risk, correctness, obsolescence, coordination policy,
-prompt/context injection, bmux UI, proactive notification, whole-transcript
-sharing, or Knowledge Compiler behavior.
-
-Live prompt-link repair is implemented for active Codex sessions: on
-`UserPromptSubmit`, bmux now starts/resumes transcript observation and runs the
-bounded Codex prompt backfill even when no mobile chat subscriber is attached,
-so PE can receive prompt evidence and a `lastSubmittedPromptSessionID` for the
-Session tab. Dogfood on build 480 showed prompt evidence was recorded but not
-linked when transcript backfill resolved only the runtime workspace id; the
-runtime now resolves prompt evidence through all routed app tab managers so the
-stable workspace display row receives the session link. This does not complete
-the broader semantic-session product. Routed workspace display refreshes now
-notify the owning tab manager rather than only the startup manager, so linked
-prompt state can update immediately in the window that owns the workspace.
-
-Workspace coding-agent session linkage hardening is the current reliability
-slice. The recurring empty Session state came from treating Workspace Display
-metadata, especially `lastSubmittedPromptSessionID`, as the authoritative bridge
-from a workspace to a PE coding-agent session. The intended corrected boundary
-is factual and PE-owned:
-
-```text
-Codex evidence
--> identity reconciliation
--> durable PE workspace/session association
--> factual projection
--> Session/Smart Session consumers
-```
-
-bmux may continue to write bounded prompt/display facts for workspace rows, but
-native Session, React Smart Session, and future cross-session consumers should
-resolve session identity through the PE workspace/session association read path.
-The association must be deterministic and idempotent across hook-first,
-transcript-first, partial JSONL, duplicate/replayed evidence, app restart,
-resume, and multiple concurrent sessions. User-facing Session states should
-distinguish unsupported/no-agent, awaiting first prompt, association pending,
-projection pending, failures, and available data; detailed diagnostics should
-carry stage/reason identifiers without prompt contents.
-
-Workspace prompt resource discovery is implemented for Workspace Display
-Current State. Submitted prompts, stored submitted prompts used for idempotent
-backfill, PR titles, and PR branches now share one extraction/linking boundary
-for Linear issue IDs and issue URLs. bmux performs provider-specific extraction
-and optional Linear enrichment, preserving unresolved IDs and explicit prompt
-URLs when authentication or resolution fails; PE remains the durable display
-fact store/projection owner, and sidebar views still render only normalized
-workspace metadata. Captured agent output and initial session instructions are
-not inputs yet; they should use the same boundary only after a follow-up
-capture-policy and false-positive slice.
-
-Milestone inference is implemented on branch `session-milestone-inference` and
-PR #84. SessionWorkModel now exposes bounded coding-agent milestone semantics
-from existing semantic inference records: plan-derived milestone collections,
-prompt fallback only when no usable plan exists, reported state basis,
-identity basis, evidence references, hierarchy validation, bounded omissions,
-ambiguity notes, producer version, and existing semantic supersession metadata.
-Provider-reported completion is not validation, merge, or acceptance proof.
-Blocker and approach-change semantics are implemented by PR #85. Progress,
-milestone-to-code relationships, milestone-to-architecture relationships, risk,
-and scoped architecture remain future semantic slices.
-
-Rich cross-session work-state semantics is implemented and merged through PR
-#87 as the PE related-session rule-version 2 contract. `relatedSessions(...)`
-now carries existing SessionWorkModel thread
-intent, turn intent, current activity, milestones, blockers, approach changes,
-and session phase fields into related-session briefs with source-session scope,
-semantic record identity, bounded structured payloads, supporting factual
-revisions, producer/confidence/specificity metadata, evidence references,
-supersession status, explicit unknown/unavailable states, and partial
-availability for source-history or brief-bound omissions. It still does not add
-agent retrieval, automatic context injection, coordination, proactive UI,
-cross-session milestone unification, semantic conflict judgments, or new
-natural-language inference.
-
-Agent-accessible cross-session retrieval is implemented locally on branch
-`agent-accessible-cross-session-retrieval`. The bmux provenance CLI now exposes
-`bmux provenance sessions related <pe-session-id>` and
-`bmux provenance sessions collisions <pe-session-id>` over the existing public
-PE `relatedSessions(...)` and `artifactCollisions(...)` reads. The commands are
-explicit, bounded, database-selectable, no-socket reads with JSON and compact
-localized text output. They preserve source revisions, semantic field
-availability, evidence references, repository/worktree/branch/HEAD boundaries,
-unknown/partial/omitted states, and the collision limitation that candidates
-start from the target session's recorded changed artifacts. This slice does not
-add prompt injection, proactive bmux UI, agent messaging, coordination policy,
-arbitrary file-history search, semantic conflict detection, raw transcript
-sharing, Knowledge Compiler integration, or automatic session-id resolution.
-
-Planning target: PE owns the `SessionWorkModel` projection for one
-coding-agent session. bmux should consume PE factual projection, semantic
-messages, and the revisioned `SessionWorkModel` snapshot for Smart Session
-summaries. Current factual Session UI work should be treated as factual
-consumer groundwork/diagnostics and data-access foundation, not the final React
-Smart Session product. Use generated Project Truth for active work,
-dependency-ready work, selected-next work, and safe parallel work.
-
-Monorepo migration status: bmux is the canonical repository and PE now lives as
-a package under `Packages/macOS/ProvenanceEngine`. Cross-component slices should
-use one branch and one worktree unless a future release/extraction task
-explicitly requires a separate PE checkout. The original PE repository remains
-an archival and recovery reference until the migration is accepted.
-
-Latest Provenance Engine semantic/cross-session retrieval verification:
-
-- Project Truth: `./scripts/project-docs validate`, `./scripts/project-docs generate`, `./scripts/project-docs check`, and authenticated `./scripts/project-docs ci`
-- Provenance Engine: `swift test --package-path Packages/macOS/ProvenanceEngine`
-- CLI focus: `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -configuration Debug -destination 'platform=macOS' -derivedDataPath /Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-agent-accessible-cross-session-retrieval-tests -only-testing:bmuxTests/CLIProvenanceSessionOutcomeCommandTests`
-- CLI help: `BMUX_CLI_BIN=/Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-agent-accessible-cross-session-retrieval-tests/Build/Products/Debug/bmux python3 tests/test_cli_contract_help.py`
-- Runtime build: `./scripts/reload.sh --tag agent-accessible-cross-session-retrieval` succeeded with local build number 509 and did not launch the app.
-- Dogfood: `ProvenanceRetrievalDemoSeed` seeded an isolated PE SQLite database, then the tagged app bundle CLI queried `session-retrieval-demo-b` with explicit `--database` and a forced nonexistent socket. Observed output sizes were 3,844 bytes for related text, 79,859 bytes for related JSON with `--limit 1`, 1,175 bytes for collision text, and 5,548 bytes for untouched-path collision JSON. Observed timings were `real 4.70s` for related text and `real 0.05s` for collision text.
-- Regression focus: semantic inference, SessionWorkModel, Turn Outcome, Session Outcome, related-session, artifact-collision, SDK, migration, rebuild, and CLI formatting suites through the full PE package test and focused bundled CLI test.
-- Guards: `python3 scripts/swift_file_length_budget.py --repo-root . --base-ref origin/main`, `git diff --check`, `./scripts/lint-pbxproj-test-wiring.sh`, `python3 scripts/check-package-resolved-policy.py`, and `python3 scripts/check-workspace-package-groups.py --check`.
-
-Runtime tests and tagged reloads are required for production CLI behavior
-changes. Use the tagged app bundle CLI or a launched tag-bound helper with an
-explicit test database; do not test these retrieval reads against the production
-database or the ambiguous `/tmp/bmux-cli` symlink.
+- PE: `swift test`
+- PE docs: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
+- bmux sidecar test: `cd agent-chat && bun test/codex-telemetry-migration.test.ts`
+- bmux Swift package test: `cd Packages/Shared/BmuxAgentChat && swift test --filter executionTelemetryEventClientReadsBoundedCursorEndpoint`
+- bmux focused test: `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -destination 'platform=macOS,arch=arm64' -derivedDataPath /tmp/bmux-richer-session-evidence-foundation -only-testing:bmuxTests/SessionProvenanceTests`
+- bmux docs: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
+- bmux tagged reload: `./scripts/reload.sh --tag richer-session-evidence-foundation`
 
 Codex transcript importer verification is covered by the
 `WorkProvenanceStoreTests` suite in the `bmux-unit` scheme.
