@@ -171,7 +171,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         return PullRequestDisplay(
             id: "\(pullRequest.label.lowercased())#\(pullRequest.number)|\(pullRequest.url.absoluteString)",
             number: pullRequest.number,
-            title: nil,
+            title: pullRequest.title,
             label: pullRequest.label,
             url: pullRequest.url,
             status: pullRequest.status,
