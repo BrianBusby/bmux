@@ -615,8 +615,7 @@ class TerminalController {
 
     nonisolated static func shouldReplacePullRequest(
         current: SidebarPullRequestState?,
-        number: Int,
-        label: String,
+        number: Int, title: String?, label: String,
         url: URL,
         ownerLogin: String?,
         ownerURL: URL?,
@@ -643,6 +642,7 @@ class TerminalController {
         return current.number != number
             || current.label != label
             || current.url != url
+            || current.title != (title ?? (isSamePullRequest ? current.title : nil))
             || current.ownerLogin != effectiveOwnerLogin
             || current.ownerURL != effectiveOwnerURL
             || current.status != status

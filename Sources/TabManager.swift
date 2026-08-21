@@ -457,10 +457,9 @@ class TabManager: ObservableObject {
     private static let sharedWorkspaceGitProbeLimiter = WorkspaceGitMetadataProbeLimiter(limit: 2)
 
     // The sidebar git/PR subsystem (extracted to BmuxSidebarGit). TabManager
-    // is the per-window composition point: it constructs the concrete
-    // services, stores only the seams, implements SidebarGitHosting
-    // (see TabManager+SidebarGitHosting.swift), and forwards its legacy
-    // entry points.
+    // is the per-window composition point: it constructs the concrete services,
+    // stores only the seams, implements SidebarGitHosting, and forwards legacy entry points.
+    let pullRequestProbeService: PullRequestProbeService
     let sidebarGitMetadataService: any SidebarGitMetadataServing
     let pullRequestProbing: any PullRequestProbing
 
@@ -503,6 +502,7 @@ class TabManager: ObservableObject {
             commandRunner: commandRunner,
             debugLog: sidebarGitDebugLog
         )
+        self.pullRequestProbeService = pullRequestProbeService
         let pullRequestPollService = PullRequestPollService(
             gitMetadataService: gitMetadataService,
             probeService: pullRequestProbeService,

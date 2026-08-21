@@ -177,6 +177,7 @@ public protocol ControlSidebarContext: AnyObject {
     nonisolated func controlSidebarSchedulePanelPullRequestUpdate(
         target: ControlSidebarPanelMutationTarget,
         number: Int,
+        title: String?,
         label: String,
         url: URL,
         ownerLogin: String?,

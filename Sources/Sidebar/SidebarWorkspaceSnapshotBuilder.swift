@@ -23,6 +23,7 @@ struct SidebarWorkspaceSnapshotBuilder {
     struct PullRequestDisplay: Identifiable, Equatable {
         let id: String
         let number: Int
+        let title: String?
         let label: String
         let url: URL?
         let status: SidebarPullRequestStatus
@@ -30,6 +31,15 @@ struct SidebarWorkspaceSnapshotBuilder {
         let ownerURL: URL?
         let isStale: Bool
         let isFromProvenance: Bool
+
+        func primaryLine(statusLabel: String) -> String {
+            "\(label) #\(number) \(statusLabel)"
+        }
+
+        var titleLine: String? {
+            let trimmedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return trimmedTitle.isEmpty ? nil : trimmedTitle
+        }
     }
 
     struct TicketDisplay: Identifiable, Equatable {
@@ -138,6 +148,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         return [PullRequestDisplay(
             id: "\(label.lowercased())#\(pullRequest.number)|\(url?.absoluteString ?? "")",
             number: pullRequest.number,
+            title: nil,
             label: label,
             url: url,
             status: pullRequest.status.flatMap(SidebarPullRequestStatus.init(rawValue:)) ?? .open,
@@ -163,6 +174,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         return PullRequestDisplay(
             id: "\(pullRequest.label.lowercased())#\(pullRequest.number)|\(pullRequest.url.absoluteString)",
             number: pullRequest.number,
+            title: pullRequest.title,
             label: pullRequest.label,
             url: pullRequest.url,
             status: pullRequest.status,
@@ -188,12 +200,13 @@ struct SidebarWorkspaceSnapshotBuilder {
     }
 
     private static func promptPullRequestDisplay(
-        _ mention: (number: Int, url: URL),
+        _ mention: SubmittedPromptPullRequestMention,
         label: String
     ) -> PullRequestDisplay {
         PullRequestDisplay(
             id: "\(label.lowercased())#\(mention.number)|\(mention.url.absoluteString)",
             number: mention.number,
+            title: nil,
             label: label,
             url: mention.url,
             status: .open,
@@ -206,7 +219,7 @@ struct SidebarWorkspaceSnapshotBuilder {
 
     private static func firstPromptPullRequestMention(
         messages: [String?]
-    ) -> (number: Int, url: URL)? {
+    ) -> SubmittedPromptPullRequestMention? {
         for message in messages {
             guard let mention = Workspace.submittedPromptPullRequestMention(from: message) else {
                 continue

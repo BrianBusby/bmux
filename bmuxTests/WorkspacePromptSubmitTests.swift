@@ -525,6 +525,22 @@ struct WorkspacePromptSubmitTests {
         #expect(mention.url.absoluteString == "https://github.com/CompanyCam/Company-Cam-API/pull/26117")
     }
 
+    private func pullRequest(
+        in workspace: Workspace,
+        panelId: UUID,
+        matchingTitle expectedTitle: String,
+        maxYields: Int = 5_000
+    ) async throws -> SidebarPullRequestState {
+        for _ in 0..<maxYields {
+            if let pullRequest = workspace.panelPullRequests[panelId],
+               pullRequest.title == expectedTitle {
+                return pullRequest
+            }
+            await Task.yield()
+        }
+        return try #require(workspace.panelPullRequests[panelId])
+    }
+
     @Test func testAssistantFinalMessageReplacesStalePullRequestMentionWhenIMessageModeDisabled() throws {
         let manager = TabManager()
         let workspace = manager.tabs[0]

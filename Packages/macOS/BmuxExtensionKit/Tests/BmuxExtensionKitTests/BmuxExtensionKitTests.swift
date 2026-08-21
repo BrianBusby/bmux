@@ -29,6 +29,7 @@ struct BMUXExtensionKitTests {
                     pullRequests: [
                         BmuxSidebarPullRequest(
                             number: 1,
+                            title: "Add sidebar extension transport",
                             label: "PR",
                             url: "https://github.com/manaflow-ai/bmux/pull/1",
                             status: "open",
@@ -47,6 +48,7 @@ struct BMUXExtensionKitTests {
         #expect(decoded.apiVersion == BmuxExtensionAPIVersion.sidebarV2)
         #expect(decoded.grantedReadScopes.contains(.workspaceMetadata))
         #expect(decoded.grantedActionScopes == [.selectWorkspace])
+        #expect(decoded.workspaces.first?.pullRequests.first?.title == "Add sidebar extension transport")
         #expect(decoded.workspaces.first?.pullRequests.first?.ownerLogin == "octocat")
         #expect(decoded.workspaces.first?.pullRequests.first?.ownerURL == "https://github.com/octocat")
     }
@@ -115,6 +117,7 @@ struct BMUXExtensionKitTests {
                     pullRequests: [
                         BmuxSidebarPullRequest(
                             number: 4994,
+                            title: "Build richer custom sidebars",
                             label: "PR",
                             url: "https://github.com/manaflow-ai/bmux/pull/4994",
                             status: "open",
@@ -145,6 +148,7 @@ struct BMUXExtensionKitTests {
         let pullFiltered = snapshot.filtered(for: [BmuxExtensionScope.workspaceMetadata, .pullRequests])
         let pullWorkspace = try #require(pullFiltered.workspaces.first)
         #expect(pullWorkspace.pullRequestURLs == ["https://github.com/manaflow-ai/bmux/pull/4994"])
+        #expect(pullWorkspace.pullRequests.first?.title == "Build richer custom sidebars")
         #expect(pullWorkspace.pullRequests.first?.ownerLogin == "octocat")
         #expect(pullWorkspace.pullRequests.first?.ownerURL == "https://github.com/octocat")
     }

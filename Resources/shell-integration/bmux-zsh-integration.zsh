@@ -1337,7 +1337,7 @@ _bmux_report_pr_for_path() {
         return 0
     fi
 
-    local branch repo_slug="" gh_output="" gh_error="" err_file="" number state url status_opt="" gh_status
+    local branch repo_slug="" gh_output="" gh_error="" err_file="" number state url title owner_login owner_url status_opt="" gh_status
     local now="${EPOCHSECONDS:-$SECONDS}"
     local prefix="" branch_file="" repo_file="" result_file="" timestamp_file="" no_pr_branch_file=""
     local cache_branch="" cache_result="" cache_no_pr_branch=""
@@ -1382,8 +1382,8 @@ _bmux_report_pr_for_path() {
         builtin cd "$repo_path" 2>/dev/null \
             && gh pr view "$branch" \
                 "${gh_repo_args[@]}" \
-                --json number,state,url \
-                --jq '[.number, .state, .url] | @tsv' \
+                --json number,state,title,url,author \
+                --jq '[.number, .state, .url, (.title // ""), (.author.login // ""), (.author.url // "")] | @tsv' \
                 2>"$err_file"
     )"
     gh_status=$?
@@ -1427,7 +1427,7 @@ _bmux_report_pr_for_path() {
     fi
 
     local IFS=$'\t'
-    read -r number state url <<< "$gh_output"
+    read -r number state url title owner_login owner_url <<< "$gh_output"
     if [[ -z "$number" ]] || [[ -z "$url" ]]; then
         return 1
     fi
@@ -1450,7 +1450,14 @@ _bmux_report_pr_for_path() {
     _BMUX_PR_NO_PR_BRANCH=""
 
     local quoted_branch="${branch//\"/\\\"}"
-    _bmux_send "report_pr $number $url $status_opt --branch=\"$quoted_branch\" --tab=$BMUX_TAB_ID --panel=$BMUX_PANEL_ID"
+    local quoted_title="${title//\"/\\\"}"
+    local quoted_owner_login="${owner_login//\"/\\\"}"
+    local quoted_owner_url="${owner_url//\"/\\\"}"
+    local payload="report_pr $number $url $status_opt --branch=\"$quoted_branch\" --tab=$BMUX_TAB_ID --panel=$BMUX_PANEL_ID"
+    [[ -n "$title" ]] && payload="$payload --title=\"$quoted_title\""
+    [[ -n "$owner_login" ]] && payload="$payload --owner=\"$quoted_owner_login\""
+    [[ -n "$owner_url" ]] && payload="$payload --owner-url=\"$quoted_owner_url\""
+    _bmux_send "$payload"
 }
 
 _bmux_child_pids() {

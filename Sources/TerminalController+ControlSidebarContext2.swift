@@ -113,6 +113,7 @@ extension TerminalController {
     nonisolated func controlSidebarSchedulePanelPullRequestUpdate(
         target: ControlSidebarPanelMutationTarget,
         number: Int,
+        title: String?,
         label: String,
         url: URL,
         ownerLogin: String?,
@@ -133,6 +134,7 @@ extension TerminalController {
             guard Self.shouldReplacePullRequest(
                 current: tab.panelPullRequests[surfaceId],
                 number: number,
+                title: title,
                 label: label,
                 url: url,
                 ownerLogin: ownerLogin,
@@ -146,6 +148,7 @@ extension TerminalController {
             tab.updatePanelPullRequest(
                 panelId: surfaceId,
                 number: number,
+                title: title,
                 label: label,
                 url: url,
                 ownerLogin: ownerLogin,

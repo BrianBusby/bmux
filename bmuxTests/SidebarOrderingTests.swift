@@ -1176,7 +1176,7 @@ final class TerminalControllerSidebarDedupeTests: XCTestCase {
         XCTAssertTrue(
             TerminalController.shouldReplacePullRequest(
                 current: current,
-                number: 42,
+                number: 42, title: nil,
                 label: "PR",
                 url: url,
                 ownerLogin: nil, ownerURL: nil,
