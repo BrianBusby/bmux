@@ -33,6 +33,11 @@ extension BMUXCLI {
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
+        case "import":
+            try await runProvenanceImport(
+                commandArgs: Array(commandArgs.dropFirst()),
+                jsonOutput: jsonOutput
+            )
         case "traces":
             try runProvenanceTraces(
                 commandArgs: Array(commandArgs.dropFirst()),
@@ -476,7 +481,7 @@ extension BMUXCLI {
         printProvenanceLifecycleTraceList(list, jsonOutput: jsonOutput)
     }
 
-    private func rejectProvenanceUnknownFlags(_ args: [String], commandName: String) throws {
+    func rejectProvenanceUnknownFlags(_ args: [String], commandName: String) throws {
         if let unknown = args.first(where: { $0.hasPrefix("--") }) {
             throw CLIError(message: String.localizedStringWithFormat(
                 String(
@@ -489,7 +494,7 @@ extension BMUXCLI {
         }
     }
 
-    private func provenanceUnexpectedArgumentMessage(commandName: String, argument: String) -> String {
+    func provenanceUnexpectedArgumentMessage(commandName: String, argument: String) -> String {
         String.localizedStringWithFormat(
             String(
                 localized: "cli.provenance.error.commandUnexpectedArgument",
@@ -500,7 +505,7 @@ extension BMUXCLI {
         )
     }
 
-    private func provenanceEngineClient(
+    func provenanceEngineClient(
         databasePath: String?
     ) throws -> (client: any ProvenanceEngineContracts.ProvenanceEngineClient, databaseURL: URL) {
         if let databaseURL = provenanceDatabaseOverrideURL(databasePath: databasePath) {
@@ -595,7 +600,7 @@ extension BMUXCLI {
         return url
     }
 
-    private func provenanceTraceFilterValue(_ value: String?) -> String? {
+    func provenanceTraceFilterValue(_ value: String?) -> String? {
         guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
               !trimmed.isEmpty else {
             return nil
@@ -1203,24 +1208,6 @@ extension BMUXCLI {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter.string(from: Date(timeIntervalSince1970: timestamp))
-    }
-
-    private func provenanceUsage() -> String {
-        String(
-            localized: "cli.provenance.usage",
-            defaultValue: """
-            Usage:
-              bmux provenance explain <path> [--json]
-              bmux provenance context current [--json]
-              bmux provenance worktrees list [--json]
-              bmux provenance sessions tree <session-id> [--json]
-              bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]
-              bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]
-              bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]
-
-            Inspect bmux work provenance without requiring a live app socket.
-            """
-        )
     }
 
     func provenanceWorkspaceDisplayDiagnosticPayload(

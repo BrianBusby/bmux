@@ -62,6 +62,18 @@ hatch. Terminal is bmux's React live interaction surface, building on
 factual and semantic models. bmux should not turn Terminal into a semantic
 engine or build parallel Swift and React Smart Session products.
 
+Normal terminal Codex rich evidence remains the current data-foundation gap for
+active sessions. Local observation showed that ordinary `codex` sessions inside
+bmux primarily populate lifecycle/session evidence while they run. The first
+Normal Coding-Agent Evidence Ingestion slice,
+`codex_transcript_canonical_evidence_import`, is now implemented for historical
+Codex JSONL transcripts via `bmux provenance import codex-transcripts`; live
+normal-terminal tailing and multi-source reconciliation remain planned.
+
+Next ingestion target: implement live normal-terminal Codex evidence ingestion
+by tailing newly appended Codex transcript facts through the same canonical PE
+evidence path.
+
 Planning target: PE owns the future `SessionWorkModel` projection for one
 coding-agent session. bmux should consume PE factual projection, semantic
 messages, and eventually the revisioned `SessionWorkModel` snapshot for Smart
@@ -84,6 +96,9 @@ Verification for planning/docs-only Project Truth slices:
 
 Runtime tests or tagged reloads are only required when production app/runtime
 behavior changes; this three-view clarification is planning/documentation only.
+
+Codex transcript importer verification is covered by the
+`WorkProvenanceStoreTests` suite in the `bmux-unit` scheme.
 
 Known local quirk: the normal Xcode app build script can fail while building the
 Ghostty CLI helper with Zig unresolved macOS symbols on this machine. The focused

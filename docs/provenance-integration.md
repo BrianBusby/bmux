@@ -18,6 +18,14 @@ The planned high-level live coding-agent projection is documented in
 that as target direction until generated Project Truth marks the relevant
 `SessionWorkModel` slices implemented.
 
+Normal Coding-Agent Evidence Ingestion is the active data-foundation gap for
+ordinary `codex` terminal sessions inside bmux. Agent Chat / Codex app-server
+telemetry remains the high-fidelity structured producer; historical normal
+terminal Codex transcripts can now be imported through the
+`bmux provenance import codex-transcripts` CLI, and live transcript-backed
+ingestion remains planned so active sessions can converge into the same durable
+PE evidence model without requiring the Agent Chat UI.
+
 ## Public SDK Boundary
 
 bmux imports only the public engine products for adopted provenance paths:
@@ -196,6 +204,16 @@ Captured workflows today:
   facts, completed visible reasoning summaries, and file-change attribution
   through typed PE coding-agent evidence payloads.
 
+Current ingestion gap: ordinary Codex terminal sessions launched inside bmux
+mostly reach PE through lifecycle/hooks and Git/worktree observation. They do not
+yet automatically populate the richer `provenance_coding_agent_*` evidence at
+the same fidelity as the structured Agent Chat path. Historical Codex JSONL
+transcripts can now be imported with `bmux provenance import codex-transcripts`,
+which adapts transcript facts into the canonical execution evidence path. Live
+normal-terminal tailing remains planned, and transcript adapters must preserve
+unavailable facts as unavailable and stay away from direct projection-table
+writes.
+
 Not every agent UI action implies a recorded session. Opening an agent-session surface alone creates UI state; durable lifecycle evidence is recorded when supported hooks/feed events reach bmux. Engine durability covers accepted events after they reach the SDK; producer delivery reliability remains bmux-owned.
 
 The engine does not ingest or own the full execution telemetry stream. Raw
@@ -268,9 +286,10 @@ phase, current activity, milestone hierarchy and descriptions, blocker/risk
 state, scoped thread/current-turn architecture projections, milestone-to-
 architecture links, and later milestone-to-diff/Git/GitHub attribution.
 
-Current implemented behavior remains the lower-level V1 contract set:
-`currentContext`, `sessionTree`, `fileExplanation`, `workspaceDisplay`,
-lifecycle recording, and selected worktree/display evidence writes.
+Current implemented behavior remains below full `SessionWorkModel`
+presentation: `currentContext`, `sessionTree`, `fileExplanation`,
+`workspaceDisplay`, lifecycle recording, selected worktree/display evidence
+writes, and structured Agent Chat coding-agent evidence writes/projections.
 
 ## Cross-Session Work Awareness Direction
 
