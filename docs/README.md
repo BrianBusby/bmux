@@ -43,6 +43,7 @@ they are historical records tied to an older workstream.
 
 ## Planning And Migration Records
 
+- [planning/cross-session-work-awareness.md](planning/cross-session-work-awareness.md)
 - [planning/monorepo-migration-ledger.md](planning/monorepo-migration-ledger.md)
 - [handoffs/latest.md](handoffs/latest.md)
 - [execution-telemetry/handoffs/latest.md](execution-telemetry/handoffs/latest.md)

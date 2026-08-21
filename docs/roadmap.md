@@ -87,7 +87,9 @@ before bmux should pursue them.
   thread/turn intent, milestone hierarchy, current activity, scoped
   architecture, risk/validation state, blockers, approach changes, and
   provenance for inferred fields.
-- Session awareness across related workspaces and subsessions.
+- Cross-session work awareness across related sessions, workspaces, worktrees,
+  branches, milestones, and artifacts through bounded PE-owned relationship
+  briefs rather than raw transcript sharing.
 - User-facing reports that explain current session, task, and artifact state without exposing engine internals.
 - Mobile and remote-session workflows that preserve bmux orchestration and UI ownership.
 - Model and capacity management for long-running agent work.
@@ -102,6 +104,8 @@ before bmux should pursue them.
 - GitHub ingestion and Knowledge Compiler features.
 - Raw execution-telemetry persistence or whole-stream PE ingestion.
 - Broad lifecycle policy automation, warnings, or automatic context mutation.
+- Automatic cross-session context injection before explicit retrieval,
+  relevance, provenance, and effectiveness measurements are validated.
 - Broad workspace UI rewrite or automatic workspace naming redesign beyond the
   deterministic display-fact projection slice.
 - Organization-scale provenance deployment.

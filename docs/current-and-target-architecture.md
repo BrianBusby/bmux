@@ -279,6 +279,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready Work
 
+- Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) - selection: planned; owner: Provenance Engine; depends on: `session_work_model_contract_foundation`, `factual_session_projection_foundation`, `richer_coding_agent_evidence_foundation`. Rationale: First implementation slice for deterministic related-session discovery and bounded PE-owned briefs over active or recent coding-agent sessions. This slice is dependency-ready but remains planned until Project Truth selects it for implementation.
 - Milestone inference (`milestone_inference`) - selection: selected next; owner: Provenance Engine; depends on: `first_semantic_session_inferences`.
 - Blocker and approach-change semantics (`blocker_approach_change_semantics`) - selection: planned; owner: Provenance Engine; depends on: `semantic_inference_framework`.
 
@@ -288,6 +289,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready But Not Selected
 
+- Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) - owner: Provenance Engine; depends on: `session_work_model_contract_foundation`, `factual_session_projection_foundation`, `richer_coding_agent_evidence_foundation`
 - Blocker and approach-change semantics (`blocker_approach_change_semantics`) - owner: Provenance Engine; depends on: `semantic_inference_framework`
 
 ### Gated / Blocked Downstream Work
@@ -304,6 +306,35 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Three-view session navigation (`three_view_session_navigation`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - React Terminal live interaction productization (`react_terminal_productization`) is not dependency-satisfying
   - React Terminal live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
+- Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
+  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) is not dependency-satisfying
+  - Milestone inference (`milestone_inference`) is not dependency-satisfying
+  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) is not dependency-satisfying
+  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) has maturity ready; requires validated for gate `cross_session_foundation_validated`: Rich cross-session briefs should build on a validated deterministic relationship/read foundation.
+  - Milestone inference (`milestone_inference`) has maturity ready; requires validated for gate `milestone_semantics_validated`: Cross-session milestone identity and hierarchy must come from validated PE milestone semantics.
+  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity ready; requires validated for gate `blocker_approach_semantics_validated`: Cross-session blockers, failed attempts, and approach changes must be backed by validated PE semantic records.
+- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
+  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) is not dependency-satisfying
+  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) has maturity ready; requires validated for gate `cross_session_foundation_validated`: Collision detection needs validated related-session relationships and bounded explanation semantics.
+- Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
+  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) is not dependency-satisfying
+  - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) is not dependency-satisfying
+  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) is not dependency-satisfying
+  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) has maturity ready; requires validated for gate `cross_session_foundation_validated`: Agents should query cross-session state only after the relationship/read model is validated.
+  - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) has maturity gated; requires validated for gate `cross_session_semantics_validated`: Agent questions about blockers, decisions, failed approaches, and validation require validated semantic brief fields.
+  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) has maturity gated; requires validated for gate `artifact_collision_awareness_validated`: Agent questions about file or component collisions need validated artifact-overlap explanations.
+- Proactive bmux cross-session awareness (`proactive_bmux_cross_session_awareness`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
+  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) is not dependency-satisfying
+  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity gated; requires validated for gate `cross_session_retrieval_validated`: Proactive presentation should depend on observed useful retrieval and relevance behavior.
+- Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
+  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity gated; requires validated for gate `cross_session_retrieval_validated`: Automatic context assembly should be an experiment after explicit cross-session retrieval proves useful.
+- Knowledge Compiler cross-session bridge (`knowledge_compiler_cross_session_bridge`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
+  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
+  - Local Knowledge Compiler (`knowledge_compiler_outcomes`) is not dependency-satisfying
+  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity gated; requires validated for gate `cross_session_retrieval_validated`: The bridge should consume validated working-memory retrieval behavior, not transient session statements.
+  - Local Knowledge Compiler (`knowledge_compiler_outcomes`) has maturity gated; requires active for gate `compiler_implementation_available`: Cross-session outcomes cannot be promoted into durable knowledge until the Knowledge Compiler exists.
 - Continuous presentation learning (`continuous_presentation_learning`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) is not dependency-satisfying
   - Presentation language calibration corpus (`presentation_language_calibration_corpus`) is not dependency-satisfying

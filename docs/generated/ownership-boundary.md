@@ -11,8 +11,13 @@ Regenerate with: ./scripts/project-docs generate
 
 | Responsibility | Owner |
 | --- | --- |
+| Automatic Context Assembly Policy | Bmux |
 | Bounded provenance queries | Provenance Engine |
 | Capture policy | Bmux |
+| Cross Session Presentation | Bmux |
+| Cross Session Relationships | Provenance Engine |
+| Cross Session Retrieval | Provenance Engine |
+| Cross Session Work Awareness | Provenance Engine |
 | Deterministic Current State | Provenance Engine |
 | Durable evidence | Provenance Engine |
 | Execution telemetry | Bmux |

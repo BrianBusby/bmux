@@ -272,6 +272,27 @@ Current implemented behavior remains the lower-level V1 contract set:
 `currentContext`, `sessionTree`, `fileExplanation`, `workspaceDisplay`,
 lifecycle recording, and selected worktree/display evidence writes.
 
+## Cross-Session Work Awareness Direction
+
+Cross-session work awareness is planned as PE-owned working memory for nearby
+active or recent coding-agent work. It should let a session ask which other
+sessions are related, why they are related, what bounded work state matters, and
+what evidence or semantic provenance supports the answer.
+
+The relationship/read model belongs in Provenance Engine. It should derive
+deterministic reasons from durable evidence where possible: explicit
+parent/child session relationships, same repository, same worktree, same
+branch, and overlapping recorded file-change paths. Richer reasons such as
+milestones, blockers, approach changes, validation state, and scoped
+architecture must wait for the corresponding PE-owned semantic slices.
+
+bmux may call the PE public API and present the result, but it must not create a
+parallel semantic cross-session engine from raw Terminal or provider output.
+Automatic prompt/context injection, proactive warnings, collision policy, and
+Knowledge Compiler integration are all later slices. See
+[planning/cross-session-work-awareness.md](planning/cross-session-work-awareness.md)
+for the durable sequence and non-goals.
+
 ## Smoke Test
 
 Use the tagged debug build and bundled CLI when validating local integration:

@@ -27,13 +27,19 @@ Repository: `BrianBusby/bmux`
 
 | Capability | State |
 | --- | --- |
+| Bmux Cross Session Context Assembly Experiment | planned |
+| Bmux Proactive Cross Session Awareness | planned |
 | Factual Agent Session View | implemented |
+| Knowledge Compiler Cross Session Bridge | planned |
 | Native Provider Session View | implemented |
+| Provenance Engine Agent Accessible Cross Session Retrieval | planned |
 | Provenance Engine Blocker Approach Change Semantics | planned |
 | Provenance Engine Coding Agent Current Activity | implemented |
 | Provenance Engine Coding Agent Session Phase | implemented |
 | Provenance Engine Coding Agent Thread Intent | implemented |
 | Provenance Engine Coding Agent Turn Intent | implemented |
+| Provenance Engine Cross Session Artifact Collision Awareness | planned |
+| Provenance Engine Cross Session Work Awareness | planned |
 | Provenance Engine Deterministic Current State | implemented |
 | Provenance Engine Factual Session Projection | implemented |
 | Provenance Engine Factual Session Turn Detail | implemented |
@@ -43,6 +49,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Milestone Inference | planned |
 | Provenance Engine Producer Neutral Lifecycle Recording | implemented |
 | Provenance Engine Public In Process Sdk | implemented |
+| Provenance Engine Related Session Read Model | planned |
 | Provenance Engine Richer Coding Agent Evidence | implemented |
 | Provenance Engine Schema Identity Validation | implemented |
 | Provenance Engine Scoped Architecture Projection | planned |
