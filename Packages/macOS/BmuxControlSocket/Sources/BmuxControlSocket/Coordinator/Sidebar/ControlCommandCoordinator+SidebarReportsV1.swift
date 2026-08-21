@@ -104,6 +104,7 @@ extension ControlCommandCoordinator {
         if sidebarNormalizedOptionValue(parsed.options["checks"]) != nil {
             return "ERROR: Unsupported option '--checks' — pull request checks are no longer tracked"
         }
+        let title = sidebarNormalizedOptionValue(parsed.options["title"])
         let ownerLogin = sidebarNormalizedOptionValue(parsed.options["owner"])
             ?? sidebarNormalizedOptionValue(parsed.options["author"])
         let ownerURL: URL?
@@ -143,6 +144,7 @@ extension ControlCommandCoordinator {
         context?.controlSidebarSchedulePanelPullRequestUpdate(
             target: target,
             number: number,
+            title: title,
             label: label,
             url: url,
             ownerLogin: ownerLogin,
