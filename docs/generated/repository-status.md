@@ -14,10 +14,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Richer Session Evidence Foundation (`richer_session_evidence_foundation`)
-- Slice state: implemented
-- Owner: Codex
-- Repository state: active
+- Active slice: none selected
+- Repository state: observation
 
 ## Release
 
@@ -28,6 +26,19 @@ Repository: `BrianBusby/bmux`
 
 | Capability | State |
 | --- | --- |
+| Normal Coding Agent Evidence Ingestion | planned |
+| Remote Device Identity Pairing | planned |
+| Remote First Transport | planned |
+| Remote General Internet Route | planned |
+| Remote Local Session Host Contract | planned |
+| Remote Mobile Planning Reconciliation | planned |
+| Remote Mobile Terminal Vertical Slice | planned |
+| Remote Notifications Background Behavior | planned |
+| Remote Pe Smart Session Integration | planned |
+| Remote React Native App Foundation | planned |
+| Remote Session Control Lifecycle | planned |
+| Remote Session Protocol Loopback | planned |
+| Remote Terminal Fidelity Mobile Interaction | planned |
 | Richer Session Evidence Foundation | implemented |
 | Richer Session Work View | planned |
 | Session Work Model Consumer | planned |
@@ -45,11 +56,13 @@ Repository: `BrianBusby/bmux`
 | Automatic Checkpoint Scheduler | not implemented |
 | Claude Lifecycle Telemetry | implemented |
 | Codex Fanout | implemented |
+| Codex Transcript Canonical Evidence Import | implemented |
 | Completed Unit Provenance Projection | implemented |
 | Diagnostic | implemented |
 | Lifecycle Producer | implemented |
 | Live Projection | implemented |
 | Native Read Client | implemented |
+| Normal Terminal Codex Evidence Ingestion | planned |
 | Provider Neutral Contract | implemented |
 
 ## Local Caveats
@@ -60,3 +73,5 @@ Repository: `BrianBusby/bmux`
 | `github_actions_runner_reliability` | open |
 | `non_default_agent_chat_url_dogfood` | open |
 | `sidecar_disappearance_lifecycle_policy` | open |
+| `normal_terminal_codex_rich_evidence_gap` | open |
+| `remote_mobile_open_architecture_decisions` | open |
