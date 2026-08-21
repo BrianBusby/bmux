@@ -43,8 +43,9 @@
     "roadmap": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["nodes"],
+      "required": ["primary_capability_frontier", "nodes"],
       "properties": {
+        "primary_capability_frontier": { "$ref": "#/$defs/id" },
         "nodes": {
           "type": "array",
           "minItems": 1,
@@ -173,6 +174,27 @@
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/id" }
     },
+    "capabilityMaturity": {
+      "enum": ["captured", "gated", "ready", "active", "validated", "complete"]
+    },
+    "roadmapGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "requires", "reason"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "requires": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["node", "maturity"],
+          "properties": {
+            "node": { "$ref": "#/$defs/id" },
+            "maturity": { "$ref": "#/$defs/capabilityMaturity" }
+          }
+        },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
     "roadmapMetadataList": {
       "type": "array",
       "uniqueItems": true,
@@ -281,6 +303,11 @@
           "items": { "$ref": "#/$defs/repositoryKey" }
         },
         "concept_classification": { "$ref": "#/$defs/roadmapConceptClassification" },
+        "capability_maturity": { "$ref": "#/$defs/capabilityMaturity" },
+        "gates": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/roadmapGate" }
+        },
         "depends_on": { "$ref": "#/$defs/roadmapReferenceList" },
         "enables": { "$ref": "#/$defs/roadmapReferenceList" },
         "sequence_after": { "$ref": "#/$defs/roadmapReferenceList" },

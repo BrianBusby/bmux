@@ -22,6 +22,7 @@ otherwise they use `python3` and fail clearly if dependencies are missing.
 ./scripts/project-docs validate
 ./scripts/project-docs generate
 ./scripts/project-docs check
+./scripts/project-docs next
 ./scripts/project-docs ci
 ```
 
@@ -29,6 +30,9 @@ otherwise they use `python3` and fail clearly if dependencies are missing.
 express cleanly. `generate` validates first, then rewrites only files under
 `docs/generated/`. `check` renders into a temporary directory and compares the
 result with committed generated files without modifying the working tree.
+`next` is read-only and prints the primary capability frontier, active
+implementation slices, selected-next work, dependency-ready candidates, and
+gated downstream work with blockers.
 
 `ci` is the non-interactive, read-only gate for GitHub Actions. It validates
 schemas, named invariants, generated-document freshness, bounded authored-doc

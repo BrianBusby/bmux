@@ -52,6 +52,17 @@ ROADMAP_PARENT_KINDS = {
 PARALLEL_ACTIVE_CLASSIFICATIONS = ("safe", "conditional")
 SELECTED_NEXT_ASSIGNMENT = "selected_next"
 IMPLEMENTATION_CANDIDATE_ASSIGNMENTS = (SELECTED_NEXT_ASSIGNMENT, "planned", "unassigned")
+CAPABILITY_MATURITIES = ("captured", "gated", "ready", "active", "validated", "complete")
+CAPABILITY_MATURITY_ORDER = {value: index for index, value in enumerate(CAPABILITY_MATURITIES)}
+IMPLEMENTATION_GATED_MATURITIES = ("captured", "gated")
+IMPLEMENTATION_NON_CANDIDATE_MATURITIES = (
+    "captured",
+    "gated",
+    "active",
+    "validated",
+    "complete",
+)
+DEPENDENCY_SATISFYING_MATURITIES = ("validated", "complete")
 DEPENDENCY_SATISFYING_STATUSES = ("implemented", "accepted")
 DEPENDENCY_SATISFYING_ACCEPTANCE_STATUSES = ("implemented", "under_observation", "accepted")
 DEPENDENCY_REFERENCE_FIELDS = ("depends_on", "sequence_after")
@@ -124,6 +135,16 @@ class DependencyReadiness:
     @property
     def ready(self) -> bool:
         return not self.blockers
+
+
+@dataclass(frozen=True)
+class NextWorkSummary:
+    primary_frontier: dict[str, Any] | None
+    frontier_active_or_selected: tuple[dict[str, Any], ...]
+    active: tuple[dict[str, Any], ...]
+    selected_next: tuple[dict[str, Any], ...]
+    ready_candidates: tuple[dict[str, Any], ...]
+    gated_or_blocked: tuple[dict[str, Any], ...]
 
 
 @dataclass(frozen=True)
@@ -365,7 +386,27 @@ def is_selected_next_slice(node: dict[str, Any]) -> bool:
     return node.get("kind") == "slice" and node.get("execution", {}).get("assignment") == SELECTED_NEXT_ASSIGNMENT
 
 
+def capability_maturity(node: dict[str, Any]) -> str | None:
+    value = node.get("capability_maturity")
+    return str(value) if value else None
+
+
+def capability_maturity_text(node: dict[str, Any] | None) -> str:
+    if not node:
+        return "missing"
+    return capability_maturity(node) or "unspecified"
+
+
+def capability_maturity_satisfies(actual: str | None, required: str) -> bool:
+    if actual is None:
+        return False
+    return CAPABILITY_MATURITY_ORDER[actual] >= CAPABILITY_MATURITY_ORDER[required]
+
+
 def is_dependency_satisfied(node: dict[str, Any]) -> bool:
+    maturity = capability_maturity(node)
+    if maturity in DEPENDENCY_SATISFYING_MATURITIES:
+        return True
     return (
         node.get("status") in DEPENDENCY_SATISFYING_STATUSES
         or node.get("acceptance_status") in DEPENDENCY_SATISFYING_ACCEPTANCE_STATUSES
@@ -375,6 +416,9 @@ def is_dependency_satisfied(node: dict[str, Any]) -> bool:
 
 def is_implementation_candidate_slice(node: dict[str, Any]) -> bool:
     if node.get("kind") != "slice":
+        return False
+    maturity = capability_maturity(node)
+    if maturity in IMPLEMENTATION_NON_CANDIDATE_MATURITIES:
         return False
     if node.get("status") in ("blocked", "deferred", "superseded", "implemented", "accepted"):
         return False
@@ -392,12 +436,41 @@ def readiness_reference_ids(node: dict[str, Any]) -> tuple[str, ...]:
     return tuple(references)
 
 
+def roadmap_gates(node: dict[str, Any]) -> tuple[dict[str, Any], ...]:
+    return tuple(node.get("gates", []))
+
+
+def readiness_blockers(node: dict[str, Any], node_by_id: dict[str, dict[str, Any]]) -> tuple[str, ...]:
+    blockers: list[str] = []
+    for ref_id in readiness_reference_ids(node):
+        ref_node = node_by_id.get(ref_id)
+        if ref_node is None:
+            blockers.append(f"Missing dependency `{ref_id}`")
+        elif not is_dependency_satisfied(ref_node):
+            blockers.append(f"{ref_node['title']} (`{ref_id}`) is not dependency-satisfying")
+
+    for gate in roadmap_gates(node):
+        gate_id = gate["id"]
+        requires = gate["requires"]
+        ref_id = str(requires["node"])
+        required = str(requires["maturity"])
+        ref_node = node_by_id.get(ref_id)
+        if ref_node is None:
+            blockers.append(f"Gate `{gate_id}` references missing node `{ref_id}`")
+            continue
+        actual = capability_maturity(ref_node)
+        if not capability_maturity_satisfies(actual, required):
+            reason = gate.get("reason")
+            suffix = f": {reason}" if reason else ""
+            blockers.append(
+                f"{ref_node['title']} (`{ref_id}`) has maturity {capability_maturity_text(ref_node)}; "
+                f"requires {required} for gate `{gate_id}`{suffix}"
+            )
+    return tuple(blockers)
+
+
 def dependency_readiness(node: dict[str, Any], node_by_id: dict[str, dict[str, Any]]) -> DependencyReadiness:
-    blockers = tuple(
-        ref_id
-        for ref_id in readiness_reference_ids(node)
-        if ref_id not in node_by_id or not is_dependency_satisfied(node_by_id[ref_id])
-    )
+    blockers = readiness_blockers(node, node_by_id)
     return DependencyReadiness(node_id=node["id"], title=node["title"], blockers=blockers)
 
 
@@ -416,6 +489,76 @@ def dependency_ready_nodes(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
         for node in implementation_candidate_nodes(nodes)
         if dependency_readiness(node, node_by_id).ready
     ]
+
+
+def gated_or_blocked_nodes(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    node_by_id = {node["id"]: node for node in nodes}
+    result: list[dict[str, Any]] = []
+    for node in nodes:
+        if node.get("kind") != "slice":
+            continue
+        if node.get("status") in ("implemented", "accepted", "superseded"):
+            continue
+        if node.get("execution", {}).get("assignment") == "complete":
+            continue
+        readiness = dependency_readiness(node, node_by_id)
+        maturity = capability_maturity(node)
+        if (
+            maturity in IMPLEMENTATION_GATED_MATURITIES
+            or node.get("status") in ("blocked", "deferred")
+            or node.get("execution", {}).get("assignment") == "deferred"
+            or not readiness.ready
+        ):
+            result.append(node)
+    return result
+
+
+def primary_frontier_node(shared: dict[str, Any]) -> dict[str, Any] | None:
+    frontier_id = shared.get("roadmap", {}).get("primary_capability_frontier")
+    if not frontier_id:
+        return None
+    return {node["id"]: node for node in roadmap_nodes(shared)}.get(frontier_id)
+
+
+def node_descends_from(node: dict[str, Any], ancestor_id: str, node_by_id: dict[str, dict[str, Any]]) -> bool:
+    current: dict[str, Any] | None = node
+    while current:
+        if current.get("id") == ancestor_id:
+            return True
+        parent_id = current.get("parent")
+        current = node_by_id.get(parent_id) if parent_id else None
+    return False
+
+
+def next_work_summary(shared: dict[str, Any]) -> NextWorkSummary:
+    nodes = roadmap_nodes(shared)
+    node_by_id = {node["id"]: node for node in nodes}
+    frontier = primary_frontier_node(shared)
+    frontier_id = frontier["id"] if frontier else None
+    active = tuple(node for node in nodes if is_active_implementation_slice(node))
+    selected = tuple(selected_next_nodes(nodes))
+    ready = tuple(
+        node
+        for node in dependency_ready_nodes(nodes)
+        if node.get("execution", {}).get("assignment") != SELECTED_NEXT_ASSIGNMENT
+    )
+    frontier_active_or_selected: tuple[dict[str, Any], ...] = tuple()
+    if frontier_id:
+        frontier_active_or_selected = tuple(
+            node
+            for node in nodes
+            if node.get("kind") == "slice"
+            and (is_active_implementation_slice(node) or is_selected_next_slice(node))
+            and node_descends_from(node, frontier_id, node_by_id)
+        )
+    return NextWorkSummary(
+        primary_frontier=frontier,
+        frontier_active_or_selected=frontier_active_or_selected,
+        active=active,
+        selected_next=selected,
+        ready_candidates=ready,
+        gated_or_blocked=tuple(gated_or_blocked_nodes(nodes)),
+    )
 
 
 def metadata_values(node: dict[str, Any], key: str) -> tuple[str, ...]:
@@ -622,6 +765,14 @@ def invariant_issues(
         add("unique_roadmap_node_ids", "project/project-state.yaml:roadmap.nodes", f"duplicate roadmap node id '{node_id}'")
 
     node_by_id = {node["id"]: node for node in nodes}
+    primary_frontier_id = shared.get("roadmap", {}).get("primary_capability_frontier")
+    if not primary_frontier_id:
+        add("primary_capability_frontier_required", "project/project-state.yaml:roadmap.primary_capability_frontier", "roadmap must name one primary capability frontier")
+    elif primary_frontier_id not in node_by_id:
+        add("primary_capability_frontier_exists", "project/project-state.yaml:roadmap.primary_capability_frontier", f"primary capability frontier '{primary_frontier_id}' does not exist")
+    elif node_by_id[primary_frontier_id]["kind"] == "slice":
+        add("primary_capability_frontier_not_slice", "project/project-state.yaml:roadmap.primary_capability_frontier", "primary capability frontier must be a container node, not an implementation slice")
+
     milestone_id_set = set(milestone_ids)
     hierarchy_edges: dict[str, list[str]] = {node_id: [] for node_id in node_by_id}
     ordering_edges: dict[str, list[str]] = {node_id: [] for node_id in node_by_id}
@@ -632,12 +783,30 @@ def invariant_issues(
         kind = node["kind"]
         parent = node.get("parent")
         assignment = node.get("execution", {}).get("assignment")
+        maturity = capability_maturity(node)
 
         if node["owner"] not in node.get("repositories", []):
             add("roadmap_owner_in_repositories", path, "roadmap node owner must be listed in repositories")
 
         if assignment == SELECTED_NEXT_ASSIGNMENT and kind != "slice":
             add("selected_next_is_slice", path, "selected_next execution assignment is only valid on implementation slices")
+
+        readiness = dependency_readiness(node, node_by_id)
+        if assignment == SELECTED_NEXT_ASSIGNMENT and not readiness.ready:
+            add("selected_next_readiness", path, "selected_next slice has unsatisfied prerequisites: " + "; ".join(readiness.blockers))
+        if is_active_implementation_slice(node) and not readiness.ready:
+            add("active_readiness", path, "active/current slice has unsatisfied prerequisites: " + "; ".join(readiness.blockers))
+
+        if maturity == "active" and node.get("status") != "active" and assignment != "current":
+            add("capability_active_requires_current", path, "capability_maturity active must correspond to active status or current execution")
+        if maturity in ("captured", "gated") and assignment == SELECTED_NEXT_ASSIGNMENT:
+            add("capability_not_selectable", path, f"capability_maturity {maturity} cannot be selected_next")
+        if maturity in ("captured", "gated") and is_active_implementation_slice(node):
+            add("capability_gated_not_active", path, f"capability_maturity {maturity} cannot be current or active")
+        if maturity == "ready" and not readiness.ready:
+            add("capability_ready_readiness", path, "capability_maturity ready has unsatisfied prerequisites: " + "; ".join(readiness.blockers))
+        if maturity == "complete" and assignment in ("current", SELECTED_NEXT_ASSIGNMENT, "planned"):
+            add("capability_complete_not_open", path, "capability_maturity complete cannot coexist with an open implementation assignment")
 
         expected_parent_kind = ROADMAP_PARENT_KINDS[kind]
         if expected_parent_kind is None:
@@ -673,6 +842,20 @@ def invariant_issues(
                 elif field == "sequence_before":
                     ordering_edges[node_id].append(ref_id)
 
+        gate_ids = [gate["id"] for gate in roadmap_gates(node)]
+        duplicate_gate_ids = sorted({gate_id for gate_id in gate_ids if gate_ids.count(gate_id) > 1})
+        for gate_id in duplicate_gate_ids:
+            add("roadmap_gate_ids_unique", path, f"duplicate gate id '{gate_id}'")
+        for gate in roadmap_gates(node):
+            gate_id = gate["id"]
+            ref_id = str(gate["requires"]["node"])
+            if ref_id == node_id:
+                add("roadmap_reference_not_self", path, f"gate '{gate_id}' cannot reference the node itself")
+            if ref_id not in node_by_id:
+                add("roadmap_gate_reference_exists", path, f"gate '{gate_id}' reference '{ref_id}' does not exist")
+                continue
+            ordering_edges[ref_id].append(node_id)
+
         for ref_id in node.get("parallelism", {}).get("with", []):
             if ref_id == node_id:
                 add("roadmap_reference_not_self", path, "parallelism.with cannot reference the node itself")
@@ -697,6 +880,19 @@ def invariant_issues(
                     add("roadmap_planned_slice_not_delivered", path, "planned roadmap slice must not carry completed_at or accepted_at")
                 if delivery_status in ("merged", "closed") or acceptance_status in ("implemented", "accepted"):
                     add("roadmap_planned_slice_status_conflict", path, "planned roadmap slice cannot declare delivered or accepted status")
+            if maturity in ("validated", "complete"):
+                if not has_evidence_record(node.get("evidence")):
+                    add("capability_maturity_requires_evidence", path, f"capability_maturity {maturity} requires commit or pull request evidence")
+                if (
+                    status not in ("implemented", "accepted")
+                    and acceptance_status not in DEPENDENCY_SATISFYING_ACCEPTANCE_STATUSES
+                    and assignment != "complete"
+                ):
+                    add(
+                        "capability_maturity_requires_implementation",
+                        path,
+                        f"capability_maturity {maturity} requires implemented, under_observation, accepted, or complete delivery state",
+                    )
 
     add_active_assignment_issues(nodes, add)
 
@@ -1008,7 +1204,7 @@ def optional_metadata_text(values: list[str] | tuple[str, ...] | None) -> str:
 def readiness_status_text(readiness: DependencyReadiness) -> str:
     if readiness.ready:
         return "ready"
-    return "blocked by " + metadata_list_text(readiness.blockers)
+    return "blocked by " + "; ".join(readiness.blockers)
 
 
 def active_assignment_safety_text(assignment: ActiveSliceAssignment, active_count: int) -> str:
@@ -1019,6 +1215,129 @@ def active_assignment_safety_text(assignment: ActiveSliceAssignment, active_coun
     if assignment.classification == "conditional":
         return "conditional"
     return "not parallelizable"
+
+
+def roadmap_node_work_text(node: dict[str, Any]) -> str:
+    parts = [
+        f"maturity: {capability_maturity_text(node)}",
+        f"status: {status_label(node.get('status'))}",
+        f"selection: {status_label(node.get('execution', {}).get('assignment'))}",
+        f"owner: {owner_label(node.get('owner', 'unassigned'))}",
+    ]
+    return f"{node['title']} (`{node['id']}`) - " + "; ".join(parts)
+
+
+def blocker_explanations(node: dict[str, Any], node_by_id: dict[str, dict[str, Any]]) -> tuple[str, ...]:
+    blockers = list(dependency_readiness(node, node_by_id).blockers)
+    maturity = capability_maturity(node)
+    if maturity == "captured":
+        blockers.insert(0, "Architecture or product direction is captured, but the slice is not implementation-ready.")
+    elif maturity == "gated" and not blockers:
+        blockers.insert(0, "Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.")
+    return tuple(blockers)
+
+
+def render_next_work_markdown(context: dict[str, Any], heading_level: int = 2) -> str:
+    shared = context["shared"]
+    nodes = roadmap_nodes(shared)
+    node_by_id = {node["id"]: node for node in nodes}
+    summary = next_work_summary(shared)
+    heading = "#" * heading_level
+    subheading = "#" * (heading_level + 1)
+    lines = [
+        f"{heading} What Can Be Worked On Next",
+        "",
+        f"{subheading} Current Capability Frontier",
+        "",
+    ]
+    if summary.primary_frontier:
+        lines.append(
+            f"- Primary Capability Frontier: {summary.primary_frontier['title']} (`{summary.primary_frontier['id']}`)"
+        )
+    else:
+        lines.append("- Primary Capability Frontier: none")
+    if summary.frontier_active_or_selected:
+        lines.append("- Active or selected slices in the frontier:")
+        for node in summary.frontier_active_or_selected:
+            lines.append(f"  - {roadmap_node_work_text(node)}")
+    else:
+        lines.append("- Active or selected slices in the frontier: none")
+
+    lines.extend(["", f"{subheading} Active Implementation", ""])
+    if summary.active:
+        for node in summary.active:
+            lines.append(f"- {roadmap_node_work_text(node)}")
+    else:
+        lines.append("- None.")
+
+    lines.extend(["", f"{subheading} Selected Next", ""])
+    if summary.selected_next:
+        for node in summary.selected_next:
+            readiness = dependency_readiness(node, node_by_id)
+            lines.append(f"- {roadmap_node_work_text(node)}; dependency status: {readiness_status_text(readiness)}")
+    else:
+        lines.append("- None.")
+
+    lines.extend(["", f"{subheading} Ready Candidates", ""])
+    if summary.ready_candidates:
+        for node in summary.ready_candidates:
+            lines.append(f"- {roadmap_node_work_text(node)}")
+    else:
+        lines.append("- None.")
+
+    lines.extend(["", f"{subheading} Gated / Blocked Downstream Work", ""])
+    if summary.gated_or_blocked:
+        for node in summary.gated_or_blocked:
+            lines.append(f"- {roadmap_node_work_text(node)}")
+            for blocker in blocker_explanations(node, node_by_id):
+                lines.append(f"  - {blocker}")
+    else:
+        lines.append("- None.")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_next_work_text(context: dict[str, Any]) -> str:
+    shared = context["shared"]
+    nodes = roadmap_nodes(shared)
+    node_by_id = {node["id"]: node for node in nodes}
+    summary = next_work_summary(shared)
+    lines: list[str] = ["Primary frontier:"]
+    if summary.primary_frontier:
+        lines.append(f"  {summary.primary_frontier['title']} ({summary.primary_frontier['id']})")
+    else:
+        lines.append("  none")
+
+    lines.append("")
+    lines.append("Frontier active or selected:")
+    if summary.frontier_active_or_selected:
+        for node in summary.frontier_active_or_selected:
+            lines.append(f"  - {roadmap_node_work_text(node)}")
+    else:
+        lines.append("  none")
+
+    for label, items in (
+        ("Current", summary.active),
+        ("Selected next", summary.selected_next),
+        ("Ready", summary.ready_candidates),
+    ):
+        lines.extend(["", f"{label}:"])
+        if items:
+            for node in items:
+                lines.append(f"  - {roadmap_node_work_text(node)}")
+        else:
+            lines.append("  none")
+
+    lines.extend(["", "Gated:"])
+    if summary.gated_or_blocked:
+        for node in summary.gated_or_blocked:
+            lines.append(f"  - {roadmap_node_work_text(node)}")
+            for blocker in blocker_explanations(node, node_by_id):
+                lines.append(f"    - {blocker}")
+    else:
+        lines.append("  none")
+
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def generated_header(context: dict[str, Any]) -> str:
@@ -1063,6 +1382,12 @@ def render_project_status(context: dict[str, Any]) -> str:
             f"- ID: `{gate['id']}`",
             f"- Title: {gate['title']}",
             f"- Status: {status_label(gate['status'])}",
+            "",
+        ]
+    )
+    lines.extend(render_next_work_markdown(context, 2).rstrip().splitlines())
+    lines.extend(
+        [
             "",
             "## Shared Milestones",
             "",
@@ -1121,9 +1446,9 @@ def render_nested_roadmap(context: dict[str, Any]) -> str:
         "",
         "This view is generated from `project/project-state.yaml` and preserves the roadmap hierarchy, sequencing, and evidence references.",
         "",
-        "## Roadmap Tree",
-        "",
     ]
+    lines.extend(render_next_work_markdown(context, 2).rstrip().splitlines())
+    lines.extend(["", "## Roadmap Tree", ""])
 
     def append_node(node: dict[str, Any], depth: int) -> None:
         indent = "  " * depth
@@ -1144,6 +1469,8 @@ def render_nested_roadmap(context: dict[str, Any]) -> str:
             parts.append(f"acceptance: {status_label(node['acceptance_status'])}")
         if node.get("mirrors_milestone"):
             parts.append(f"mirrors: `{node['mirrors_milestone']}`")
+        if node.get("capability_maturity"):
+            parts.append(f"maturity: {status_label(node['capability_maturity'])}")
 
         lines.append(f"{indent}- **{node['title']}** (`{node['id']}`) - " + "; ".join(parts))
 
@@ -1188,6 +1515,11 @@ def render_nested_roadmap(context: dict[str, Any]) -> str:
             detail_lines.append("Active assignment: " + "; ".join(active_fields))
         if execution.get("notes"):
             detail_lines.append(f"Execution notes: {execution['notes']}")
+        for gate in roadmap_gates(node):
+            requires = gate["requires"]
+            detail_lines.append(
+                f"Gate `{gate['id']}`: requires `{requires['node']}` maturity {requires['maturity']}; reason: {gate['reason']}"
+            )
         if node.get("evidence"):
             detail_lines.append(f"Evidence: {evidence_text(node['evidence'])}")
         if node.get("rationale"):
@@ -1762,6 +2094,7 @@ def render_current_target_architecture_status(context: dict[str, Any]) -> str:
     ]
     all_nodes = roadmap_nodes(shared)
     node_by_id = {node["id"]: node for node in all_nodes}
+    next_summary = next_work_summary(shared)
     selected_nodes = selected_next_nodes(all_nodes)
     ready_nodes = dependency_ready_nodes(all_nodes)
     ready_but_not_selected = [
@@ -1782,6 +2115,12 @@ def render_current_target_architecture_status(context: dict[str, Any]) -> str:
         "",
         f"- Active gate: {gate['title']} (`{gate['id']}`) - {status_label(gate['status'])}",
     ]
+    if next_summary.primary_frontier:
+        lines.append(
+            f"- Primary capability frontier: {next_summary.primary_frontier['title']} (`{next_summary.primary_frontier['id']}`)"
+        )
+    else:
+        lines.append("- Primary capability frontier: none")
     if isinstance(active_slice, dict) and active_slice.get("id"):
         lines.append(
             f"- Active implementation slice: {active_slice['title']} (`{active_slice['id']}`) - {status_label(active_slice['state'])}"
@@ -1849,6 +2188,16 @@ def render_current_target_architecture_status(context: dict[str, Any]) -> str:
             lines.append(
                 f"- {node['title']} (`{node['id']}`) - owner: {owner_label(node['owner'])}; depends on: {depends_on}"
             )
+    else:
+        lines.append("- None.")
+
+    lines.extend(["", "### Gated / Blocked Downstream Work", ""])
+    gated_nodes = gated_or_blocked_nodes(all_nodes)
+    if gated_nodes:
+        for node in gated_nodes:
+            lines.append(f"- {roadmap_node_work_text(node)}")
+            for blocker in blocker_explanations(node, node_by_id):
+                lines.append(f"  - {blocker}")
     else:
         lines.append("- None.")
 
@@ -1981,6 +2330,11 @@ def command_check(args: argparse.Namespace) -> None:
     check_authored_generated_blocks(context)
 
 
+def command_next(args: argparse.Namespace) -> None:
+    context = load_inputs(Path(args.repo_root), args.shared_state)
+    sys.stdout.write(render_next_work_text(context))
+
+
 def command_ci(args: argparse.Namespace) -> None:
     context = load_inputs(Path(args.repo_root), args.shared_state)
     repo_statuses = [context["repo_status"]]
@@ -2004,7 +2358,7 @@ def command_ci(args: argparse.Namespace) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate and render project truth documentation.")
-    parser.add_argument("command", choices=("validate", "generate", "check", "ci"))
+    parser.add_argument("command", choices=("validate", "generate", "check", "next", "ci"))
     parser.add_argument("--repo-root", default=os.getcwd())
     parser.add_argument("--shared-state", default=None)
     parser.add_argument("--require-generated", action="store_true")
@@ -2018,6 +2372,8 @@ def main(argv: list[str] | None = None) -> int:
             command_generate(args)
         elif args.command == "check":
             command_check(args)
+        elif args.command == "next":
+            command_next(args)
         elif args.command == "ci":
             command_ci(args)
         return 0

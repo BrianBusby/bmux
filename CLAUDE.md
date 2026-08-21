@@ -21,6 +21,11 @@ root-local Project Truth tooling. It validates schema, generation freshness,
 monorepo Project Truth semantics, named invariants, authored-doc drift, and
 GitHub evidence without writing repository state.
 
+Architecture or design documentation is not authorization to implement a
+capability. Implementation is authorized only when Project Truth identifies a
+slice as `current` or explicitly `selected_next`, and all required dependencies
+and gates are satisfied.
+
 ## Context efficiency roadmap
 
 Before continuing the context-efficiency, thread-lifecycle, provenance, and handoff system work, read these files in order:
