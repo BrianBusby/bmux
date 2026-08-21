@@ -197,7 +197,7 @@ struct SidebarWorkspaceSnapshotBuilder {
     }
 
     private static func promptPullRequestDisplay(
-        _ mention: (number: Int, url: URL),
+        _ mention: SubmittedPromptPullRequestMention,
         label: String
     ) -> PullRequestDisplay {
         PullRequestDisplay(
@@ -216,7 +216,7 @@ struct SidebarWorkspaceSnapshotBuilder {
 
     private static func firstPromptPullRequestMention(
         messages: [String?]
-    ) -> (number: Int, url: URL)? {
+    ) -> SubmittedPromptPullRequestMention? {
         for message in messages {
             guard let mention = Workspace.submittedPromptPullRequestMention(from: message) else {
                 continue

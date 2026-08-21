@@ -334,7 +334,7 @@ struct WorkspacePromptSubmitTests {
 
     @Test func testPromptSubmitGithubPullRequestURLResolvesLiveTitle() async throws {
         let runner = PromptPullRequestMetadataCommandRunner(
-            output: "26554\tOPEN\tShow prompt-linked PR titles in workspace tabs\thttps://github.com/CompanyCam/Company-Cam-API/pull/26554\tBrianBusby\thttps://github.com/BrianBusby\n"
+            output: #"{"number":26554,"state":"OPEN","title":"Show prompt-linked PR titles in workspace tabs","url":"https://github.com/CompanyCam/Company-Cam-API/pull/26554","author":{"login":"BrianBusby","url":"https://github.com/BrianBusby"}}"#
         )
         let manager = TabManager(commandRunner: runner)
         let workspace = manager.tabs[0]

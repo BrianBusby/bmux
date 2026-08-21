@@ -461,6 +461,7 @@ class TabManager: ObservableObject {
     // services, stores only the seams, implements SidebarGitHosting
     // (see TabManager+SidebarGitHosting.swift), and forwards its legacy
     // entry points.
+    let pullRequestProbeService: PullRequestProbeService
     let sidebarGitMetadataService: any SidebarGitMetadataServing
     let pullRequestProbing: any PullRequestProbing
 
@@ -503,6 +504,7 @@ class TabManager: ObservableObject {
             commandRunner: commandRunner,
             debugLog: sidebarGitDebugLog
         )
+        self.pullRequestProbeService = pullRequestProbeService
         let pullRequestPollService = PullRequestPollService(
             gitMetadataService: gitMetadataService,
             probeService: pullRequestProbeService,
