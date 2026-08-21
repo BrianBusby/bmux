@@ -105,4 +105,41 @@ actor WorkProvenanceCodingAgentEvidenceRecorder {
             throw error
         }
     }
+
+    func append(
+        eventType: ProvenanceEventType,
+        envelopeID: String,
+        timestamp: Date,
+        sessionID: String,
+        repositoryID: String?,
+        worktreeID: String?,
+        confidence: ProvenanceConfidence,
+        payload: ProvenanceEventPayload
+    ) async throws {
+        let event = ProvenanceEngineContracts.ProvenanceEvent(
+            id: "event-\(envelopeID)",
+            eventType: eventType,
+            timestamp: timestamp,
+            repositoryID: repositoryID,
+            worktreeID: worktreeID,
+            sessionID: sessionID,
+            source: .observed,
+            evidenceOrigin: .codexSession,
+            evidenceScope: ProvenanceEvidenceScope(level: .personal, id: "bmux-local"),
+            confidence: confidence,
+            payload: payload
+        )
+        do {
+            _ = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
+            lastErrorDescription = nil
+        } catch {
+            if Self.isDuplicateAppendError(error) {
+                lastErrorDescription = nil
+                return
+            }
+            let description = String(describing: error)
+            lastErrorDescription = description
+            throw error
+        }
+    }
 }

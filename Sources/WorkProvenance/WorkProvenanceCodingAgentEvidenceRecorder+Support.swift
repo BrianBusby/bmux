@@ -1,8 +1,101 @@
+import BMUXAgentLaunch
 import BmuxAgentChat
 import Foundation
 import ProvenanceEngineContracts
 
 extension WorkProvenanceCodingAgentEvidenceRecorder {
+    func recordHookUserPromptSubmit(
+        record: AgentChatSessionRecord,
+        event: WorkstreamEvent,
+        stableWorkspaceID: UUID
+    ) async throws {
+        guard record.agentKind == .codex,
+              event.hookEventName == .userPromptSubmit,
+              let sessionID = trimmedNonEmpty(record.sessionID),
+              let promptText = hookPromptText(from: event).map({ bounded($0, limit: Self.textLimit) })
+        else {
+            return
+        }
+        let observedAt = event.receivedAt
+        let workingDirectory = firstNonEmpty(record.workingDirectory, event.cwd)
+        let workspaceID = firstNonEmpty(record.workspaceID, event.workspaceId)
+        let surfaceID = firstNonEmpty(record.surfaceID, event.surfaceId)
+        let gitContext = await gitContext(for: workingDirectory, observedAt: observedAt)
+        let hookTurnSeed = [
+            sessionID,
+            event.requestId ?? "",
+            event.sessionId,
+            String(observedAt.timeIntervalSince1970),
+            promptText
+        ].joined(separator: "\n")
+        let providerTurnID = stableIDFactory.id(prefix: "hook-codex-turn", value: hookTurnSeed)
+        let turnID = turnRecordID(providerTurnID: providerTurnID)
+        let session = ProvenanceSessionRecord(
+            id: sessionID,
+            agentKind: "codex",
+            workspaceID: workspaceID,
+            surfaceID: surfaceID,
+            worktreeID: gitContext?.worktreeID,
+            cwd: workingDirectory,
+            status: "active",
+            startedAt: observedAt,
+            updatedAt: observedAt
+        )
+        let turn = ProvenanceCodingAgentTurnRecord(
+            id: turnID,
+            sessionID: sessionID,
+            provider: "codex",
+            providerTurnID: providerTurnID,
+            status: "started",
+            startedAt: observedAt,
+            updatedAt: observedAt,
+            source: .observed,
+            confidence: .medium
+        )
+        let prompt = ProvenanceCodingAgentPromptRecord(
+            id: stableIDFactory.id(
+                prefix: "coding-agent-prompt",
+                value: "hook\n\(sessionID)\n\(providerTurnID)\n\(promptText)"
+            ),
+            sessionID: sessionID,
+            turnID: turnID,
+            provider: "codex",
+            text: promptText,
+            submittedAt: observedAt,
+            source: .observed,
+            confidence: .medium
+        )
+        let display = ProvenanceWorkspaceDisplayRecord(
+            id: stableIDFactory.workspaceDisplayID(stableWorkspaceID: stableWorkspaceID),
+            workspaceID: stableWorkspaceID.uuidString,
+            repositoryID: gitContext?.repositoryID,
+            worktreeID: gitContext?.worktreeID,
+            currentDirectory: workingDirectory,
+            lastSubmittedPrompt: promptText,
+            lastSubmittedPromptSubmittedAt: observedAt,
+            lastSubmittedPromptSessionID: sessionID,
+            observedAt: observedAt,
+            updatedAt: observedAt
+        )
+        try await append(
+            eventType: .codingAgentPromptSubmitted,
+            envelopeID: stableIDFactory.id(prefix: "hook-codex-prompt", value: hookTurnSeed),
+            timestamp: observedAt,
+            sessionID: sessionID,
+            repositoryID: gitContext?.repositoryID,
+            worktreeID: gitContext?.worktreeID,
+            confidence: .medium,
+            payload: ProvenanceEventPayload(
+                repository: gitContext?.repository,
+                worktree: gitContext?.worktree,
+                session: session,
+                workspaceDisplay: display,
+                codingAgentTurn: turn,
+                codingAgentPrompt: prompt
+            )
+        )
+    }
+
     func codingAgentTurn(
         summary: AgentChatSessionSummary,
         providerThreadID: String?,
@@ -163,6 +256,39 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let description = String(describing: error).lowercased()
         return description.contains("provenance_events")
             && (description.contains("unique") || description.contains("constraint") || description.contains("duplicate"))
+    }
+}
+
+private extension WorkProvenanceCodingAgentEvidenceRecorder {
+    func hookPromptText(from event: WorkstreamEvent) -> String? {
+        firstNonEmpty(
+            event.context?.lastUserMessage,
+            hookPromptText(fromJSON: event.toolInputJSON),
+            hookPromptText(fromJSON: event.extraFieldsJSON)
+        )
+    }
+
+    func hookPromptText(fromJSON json: String?) -> String? {
+        guard let json,
+              let data = json.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
+        else {
+            return nil
+        }
+        if let dictionary = object as? [String: Any] {
+            return hookPromptText(from: dictionary)
+        }
+        return nil
+    }
+
+    func hookPromptText(from object: [String: Any]) -> String? {
+        for key in ["prompt", "userPrompt", "lastUserMessage", "last_user_message", "text", "message"] {
+            if let value = object[key] as? String,
+               let prompt = trimmedNonEmpty(value) {
+                return prompt
+            }
+        }
+        return nil
     }
 }
 

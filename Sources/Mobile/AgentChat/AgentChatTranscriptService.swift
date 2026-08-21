@@ -27,6 +27,7 @@ final class AgentChatTranscriptService {
     private let hasEventSubscribers: @MainActor () -> Bool
     private let emitEventPayload: @MainActor ([String: Any]) -> Void
     private var recordSessionLifecycle: @MainActor (AgentSessionLifecycleChange, Date) -> Void
+    private var recordHookUserPromptSubmit: @MainActor (AgentChatSessionRecord, WorkstreamEvent) -> Void
     private let recordTaskWorkspaceDirectory: @MainActor (AgentChatSessionRecord, String) -> Void
     private let now: () -> Date
     /// Drives the live agent-prose streaming preview.
@@ -68,6 +69,7 @@ final class AgentChatTranscriptService {
             MobileHostService.emitEvent(topic: AgentChatTranscriptService.eventTopic, payload: payload)
         },
         recordSessionLifecycle: @escaping @MainActor (AgentSessionLifecycleChange, Date) -> Void = { _, _ in },
+        recordHookUserPromptSubmit: @escaping @MainActor (AgentChatSessionRecord, WorkstreamEvent) -> Void = { _, _ in },
         recordTaskWorkspaceDirectory: @escaping @MainActor (AgentChatSessionRecord, String) -> Void =
             AgentChatTranscriptService.defaultRecordTaskWorkspaceDirectory,
         now: @escaping () -> Date = { Date() }
@@ -79,6 +81,7 @@ final class AgentChatTranscriptService {
         self.hasEventSubscribers = hasEventSubscribers
         self.emitEventPayload = emitEventPayload
         self.recordSessionLifecycle = recordSessionLifecycle
+        self.recordHookUserPromptSubmit = recordHookUserPromptSubmit
         self.recordTaskWorkspaceDirectory = recordTaskWorkspaceDirectory
         self.now = now
         registry.onRecordChanged = { [weak self] record, previous in
@@ -199,6 +202,9 @@ final class AgentChatTranscriptService {
         recordSessionLifecycle = { change, timestamp in
             runtime.recordSessionLifecycleChange(change, timestamp: timestamp)
         }
+        recordHookUserPromptSubmit = { record, event in
+            runtime.recordHookUserPromptSubmit(record: record, event: event)
+        }
     }
 
     /// Ingests one hook event (called from the socket dispatch path).
@@ -229,6 +235,7 @@ final class AgentChatTranscriptService {
         // prompt starts the in-flight turn, Stop ends it.
         switch event.hookEventName {
         case .userPromptSubmit:
+            recordHookUserPromptSubmit(record, event)
             if record.state != .ended,
                let surfaceID = record.surfaceID.flatMap(UUID.init(uuidString:)) {
                 proseStreamer.turnStarted(

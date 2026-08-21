@@ -1,4 +1,5 @@
 import AppKit
+import BMUXAgentLaunch
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
@@ -204,6 +205,31 @@ final class WorkProvenanceRuntime {
         }
     }
 
+    /// Persists hook-observed prompt evidence when sidecar telemetry has not linked the workspace yet.
+    func recordHookUserPromptSubmit(record: AgentChatSessionRecord, event: WorkstreamEvent) {
+        guard let codingAgentEvidenceRecorder,
+              let stableWorkspaceID = stableWorkspaceID(forRuntimeWorkspaceID: record.workspaceID ?? event.workspaceId) else {
+            return
+        }
+        Task { [weak self] in
+            do {
+                try await codingAgentEvidenceRecorder.recordHookUserPromptSubmit(
+                    record: record,
+                    event: event,
+                    stableWorkspaceID: stableWorkspaceID
+                )
+                await MainActor.run {
+                    self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [stableWorkspaceID])
+                }
+            } catch {
+                StartupBreadcrumbLog.append("workProvenance.hookPrompt.recordFailed", fields: [
+                    "session": record.sessionID,
+                    "error": String(describing: error)
+                ])
+            }
+        }
+    }
+
     private func startDirectoryObservationIfNeeded() {
         guard directoryObservationTask == nil else { return }
         directoryObservationTask = Task { @MainActor [weak self] in
@@ -287,6 +313,11 @@ final class WorkProvenanceRuntime {
                 self?.workspaceDisplayCurrentStateDidChange(stableWorkspaceID: stableWorkspaceID)
             }
         )
+    }
+
+    private func stableWorkspaceID(forRuntimeWorkspaceID workspaceID: String?) -> UUID? {
+        guard let workspaceID = workspaceID.flatMap(UUID.init(uuidString:)) else { return nil }
+        return tabManager?.tabs.first(where: { $0.id == workspaceID })?.stableId
     }
 
     private func workspaceDisplayCurrentStateDidChange(stableWorkspaceID: UUID) {

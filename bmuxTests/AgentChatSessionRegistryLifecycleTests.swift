@@ -574,6 +574,30 @@ struct AgentChatSessionRegistryLifecycleTests {
         #expect(recordedDirectories == ["/private/tmp/bmux-pr-worktree"])
     }
 
+    @MainActor
+    @Test func userPromptSubmitRequestsHookPromptProvenanceRecording() throws {
+        var recorded: [(record: AgentChatSessionRecord, event: WorkstreamEvent)] = []
+        let service = AgentChatTranscriptService(registry: AgentChatSessionRegistry(), recordHookUserPromptSubmit: { recorded.append(($0, $1)) })
+        let workspaceID = UUID().uuidString
+        service.noteHookEvent(WorkstreamEvent(
+            sessionId: "codex-session-hook",
+            hookEventName: .userPromptSubmit,
+            source: "codex",
+            workspaceId: workspaceID,
+            surfaceId: "surface-1",
+            cwd: "/Users/example/project",
+            context: WorkstreamContext(lastUserMessage: "Explain the failing session tab"),
+            receivedAt: Date(timeIntervalSince1970: 200)
+        ))
+
+        let captured = try #require(recorded.first)
+        #expect(recorded.count == 1)
+        #expect(captured.record.sessionID == "session-hook")
+        #expect(captured.record.workspaceID == workspaceID)
+        #expect(captured.record.workingDirectory == "/Users/example/project")
+        #expect(captured.event.context?.lastUserMessage == "Explain the failing session tab")
+    }
+
     private func temporaryHomeDirectory() throws -> URL {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-agent-chat-\(UUID().uuidString)", isDirectory: true)
