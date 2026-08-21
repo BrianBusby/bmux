@@ -63,6 +63,7 @@ class ProjectDocsTests(unittest.TestCase):
         node["execution"]["assignment"] = "planned"
         node["delivery_status"] = "proposed"
         node["acceptance_status"] = "proposed"
+        node.pop("capability_maturity", None)
         node.pop("completed_at", None)
         node.pop("accepted_at", None)
         node.pop("acceptance_reason", None)
@@ -90,6 +91,7 @@ class ProjectDocsTests(unittest.TestCase):
     ):
         node = self.roadmap_node(shared, node_id)
         node["status"] = "active"
+        node["capability_maturity"] = "active"
         node["parallelism"]["classification"] = classification
         node["parallelism"]["worktree_required"] = True
         if conflict_domains is not None:
@@ -156,6 +158,116 @@ class ProjectDocsTests(unittest.TestCase):
         self.assertTrue(project_docs.is_dependency_satisfied(self.roadmap_node(shared, "semantic_inference_framework")))
         with self.assertRaisesRegex(project_docs.ProjectDocsError, "roadmap dependency/sequence cycle"):
             project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_dependency_satisfied_slice_becomes_ready(self):
+        shared, _local = self.load_valid()
+        nodes = shared["roadmap"]["nodes"]
+        ready_ids = {node["id"] for node in project_docs.dependency_ready_nodes(nodes)}
+        self.assertIn("milestone_inference", ready_ids)
+        readiness = project_docs.dependency_readiness(
+            self.roadmap_node(shared, "milestone_inference"),
+            {node["id"]: node for node in nodes},
+        )
+        self.assertTrue(readiness.ready)
+
+    def test_unsatisfied_dependency_remains_gated(self):
+        shared, _local = self.load_valid()
+        node = self.roadmap_node(shared, "milestone_to_code_relationships")
+        readiness = project_docs.dependency_readiness(
+            node,
+            {item["id"]: item for item in shared["roadmap"]["nodes"]},
+        )
+        self.assertFalse(readiness.ready)
+        self.assertTrue(any("milestone_inference" in blocker for blocker in readiness.blockers))
+        self.assertNotIn(node, project_docs.dependency_ready_nodes(shared["roadmap"]["nodes"]))
+
+    def test_gate_requiring_validated_does_not_pass_when_dependency_is_merely_implemented(self):
+        shared, _local = self.load_valid()
+        milestone = self.roadmap_node(shared, "milestone_inference")
+        milestone["status"] = "implemented"
+        milestone["delivery_status"] = "merged"
+        milestone["acceptance_status"] = "implemented"
+        milestone["capability_maturity"] = "active"
+        milestone["execution"]["assignment"] = "complete"
+        milestone["evidence"] = {"commits": [{"repository": "BrianBusby/bmux", "sha": "a" * 40}], "pull_requests": []}
+        node = self.roadmap_node(shared, "milestone_to_code_relationships")
+        readiness = project_docs.dependency_readiness(
+            node,
+            {item["id"]: item for item in shared["roadmap"]["nodes"]},
+        )
+        self.assertFalse(readiness.ready)
+        self.assertTrue(any("requires validated" in blocker for blocker in readiness.blockers))
+
+    def test_gate_passes_once_required_maturity_is_reached(self):
+        shared, _local = self.load_valid()
+        milestone = self.roadmap_node(shared, "milestone_inference")
+        milestone["status"] = "implemented"
+        milestone["delivery_status"] = "merged"
+        milestone["acceptance_status"] = "implemented"
+        milestone["capability_maturity"] = "validated"
+        milestone["execution"]["assignment"] = "complete"
+        milestone["evidence"] = {"commits": [{"repository": "BrianBusby/bmux", "sha": "a" * 40}], "pull_requests": []}
+        node = self.roadmap_node(shared, "milestone_to_code_relationships")
+        readiness = project_docs.dependency_readiness(
+            node,
+            {item["id"]: item for item in shared["roadmap"]["nodes"]},
+        )
+        self.assertTrue(readiness.ready)
+
+    def test_gated_slice_cannot_be_selected_next(self):
+        shared, local = self.load_valid()
+        node = self.roadmap_node(shared, "milestone_to_code_relationships")
+        node["execution"]["assignment"] = "selected_next"
+        with self.assertRaisesRegex(project_docs.ProjectDocsError, "capability_maturity gated cannot be selected_next"):
+            project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_gated_slice_cannot_be_active_current(self):
+        shared, local = self.load_valid()
+        node = self.roadmap_node(shared, "milestone_to_code_relationships")
+        node["status"] = "active"
+        node["execution"]["assignment"] = "current"
+        node["execution"]["active_worktree"] = "/worktrees/gated"
+        node["execution"]["active_branch"] = "gated"
+        node["execution"]["active_agent"] = "agent"
+        with self.assertRaisesRegex(project_docs.ProjectDocsError, "capability_maturity gated cannot be current or active"):
+            project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_ready_slice_can_be_selected_next(self):
+        shared, local = self.load_valid()
+        selected = self.roadmap_node(shared, "milestone_inference")
+        self.assertEqual("ready", selected["capability_maturity"])
+        self.assertEqual("selected_next", selected["execution"]["assignment"])
+        project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_missing_gate_reference_fails_clearly(self):
+        shared, local = self.load_valid()
+        self.roadmap_node(shared, "milestone_to_code_relationships")["gates"][0]["requires"]["node"] = "missing_gate_node"
+        with self.assertRaisesRegex(project_docs.ProjectDocsError, "gate 'milestone_semantics_validated' reference 'missing_gate_node' does not exist"):
+            project_docs.semantic_validate(shared, local, LOCAL)
+
+    def test_generated_next_output_explains_blockers_and_frontier(self):
+        context = project_docs.load_inputs(ROOT)
+        rendered = project_docs.render_next_work_text(context)
+        self.assertIn("Primary frontier:", rendered)
+        self.assertIn("Richer Session Understanding (richer_session_understanding)", rendered)
+        self.assertIn("Selected next:", rendered)
+        self.assertIn("Milestone inference (`milestone_inference`)", rendered)
+        self.assertIn("Evidence-aware knowledge retrieval", rendered)
+        self.assertIn("requires validated for gate `compiled_knowledge_validated`", rendered)
+
+    def test_primary_capability_frontier_renders_in_generated_docs(self):
+        context = project_docs.load_inputs(ROOT)
+        rendered = project_docs.render_project_status(context)
+        self.assertIn("Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)", rendered)
+        self.assertIn("## What Can Be Worked On Next", rendered)
+
+    def test_historical_accepted_and_observation_nodes_satisfy_dependencies(self):
+        shared, local = self.load_valid()
+        self.assertTrue(project_docs.is_dependency_satisfied(self.roadmap_node(shared, "bmux_slice_e_adoption")))
+        observation = self.roadmap_node(shared, "react_smart_session_initial_work_model_consumer")
+        self.assertEqual("under_observation", observation["acceptance_status"])
+        self.assertTrue(project_docs.is_dependency_satisfied(observation))
+        project_docs.semantic_validate(shared, local, LOCAL)
 
     def test_accepted_milestone_without_evidence_fails(self):
         shared, local = self.load_valid()
@@ -246,7 +358,8 @@ class ProjectDocsTests(unittest.TestCase):
         self.assertIn("# Nested Roadmap", rendered)
         self.assertIn("Richer Session Understanding", rendered)
         self.assertIn("Semantic SessionWorkModel Projection", rendered)
-        self.assertIn("Knowledge Compiler work later", rendered)
+        self.assertIn("Local Knowledge Compiler", rendered)
+        self.assertIn("## What Can Be Worked On Next", rendered)
         self.assertIn(
             "**Semantic inference framework** (`semantic_inference_framework`)",
             rendered,
@@ -302,6 +415,7 @@ class ProjectDocsTests(unittest.TestCase):
         self.assertIn("Knowledge Compiler, Knowledge Store, and Retrieval", rendered)
         self.assertIn("### Dependency-Ready Work", rendered)
         self.assertIn("### Selected Next Work", rendered)
+        self.assertIn("### Gated / Blocked Downstream Work", rendered)
         bmux_context = dict(context)
         bmux_context["repo_status"] = dict(context["repo_status"], repository="BrianBusby/bmux")
         self.assertIn("Bmux repository state:", project_docs.render_current_target_architecture_status(bmux_context))
@@ -328,7 +442,7 @@ class ProjectDocsTests(unittest.TestCase):
             doc = repo / "docs/current-and-target-architecture.md"
             doc.write_text(
                 doc.read_text(encoding="utf-8").replace(
-                    "Active implementation slice: bmux and Provenance Engine monorepo consolidation",
+                    "Active implementation slice: Project Truth dependency and capability frontier governance",
                     "Active implementation slice: stale",
                     1,
                 ),

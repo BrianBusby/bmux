@@ -13,9 +13,9 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: React Smart Session initial SessionWorkModel consumer (`react_smart_session_initial_work_model_consumer`)
+- Active slice: Project Truth dependency and capability frontier governance (`project_truth_capability_frontier_governance`)
 - Slice state: open
-- Owner: bmux
+- Owner: provenance_engine
 - Repository state: active
 
 ## Release
@@ -51,7 +51,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Semantic Message Materialization | implemented |
 | Provenance Engine Semantic Message Presentation Policy | implemented |
 | Provenance Engine Semantic Message Records | implemented |
-| Provenance Engine Semantic Session Work Model Projection | planned |
+| Provenance Engine Semantic Session Work Model Projection | implemented |
 | Provenance Engine Session Work Model Contract Foundation | implemented |
 | Provenance Engine Sqlite Store | implemented |
 | Provenance Engine Workspace Display Current State | implemented |
