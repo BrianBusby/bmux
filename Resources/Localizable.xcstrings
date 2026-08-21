@@ -8931,6 +8931,227 @@
         }
       }
     },
+    "agentSession.web.smartSession.activityBasis.completedCommand": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on completed commands"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完了したコマンドに基づく"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activityBasis.currentPlan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on the current plan"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在の計画に基づく"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activityBasis.failedCommand": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on a failed command"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "失敗したコマンドに基づく"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activityBasis.fileChangeAttribution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on file changes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイル変更に基づく"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activityBasis.insufficientTurnEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not enough turn evidence yet"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ターンの根拠がまだ不足しています"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activityBasis.missingTurn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No current turn evidence"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在のターンの根拠がありません"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activityBasis.semanticEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on semantic evidence"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セマンティック根拠に基づく"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activityBasis.submittedPrompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on the submitted prompt"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送信されたプロンプトに基づく"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activityBasis.visibleReasoningSummary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on visible reasoning"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示された推論に基づく"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activitySummary.inspectingWorkspaceEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspecting workspace evidence"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ワークスペースの根拠を確認中"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activitySummary.investigatingFailedCommand": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Investigating failed command"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "失敗したコマンドを調査中"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.activitySummary.validatingCurrentChanges": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validating current changes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在の変更を検証中"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.phaseDetail.blockedLifecycle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latest turn lifecycle is blocked"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最新のターンがブロック状態です"
+          }
+        }
+      }
+    },
     "agentSession.web.smartSession.phase": {
       "extractionState": "manual",
       "localizations": {
@@ -8944,6 +9165,142 @@
           "stringUnit": {
             "state": "translated",
             "value": "フェーズ"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.phase.concluding": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concluding"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完了処理"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.phase.debugging": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debugging"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバッグ"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.phase.implementation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Implementation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "実装"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.phase.investigation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Investigation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "調査"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.phase.planning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planning"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "計画中"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.phase.understanding": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Understanding"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "理解中"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.phase.validation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "検証"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.phase.waiting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待機中"
           }
         }
       }

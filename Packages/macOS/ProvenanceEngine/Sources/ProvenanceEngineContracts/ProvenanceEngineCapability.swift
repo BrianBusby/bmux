@@ -54,6 +54,9 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
     /// Materializes first-pass coding-agent semantic session inferences.
     case publishCodingAgentSessionSemanticInferences = "publish_coding_agent_session_semantic_inferences"
 
+    /// Queries the PE-owned coding-agent SessionWorkModel.
+    case querySessionWorkModel = "query_session_work_model"
+
     /// All currently advertised engine capabilities.
     public static let allCases: [ProvenanceEngineCapability] = [
         .appendEvent,
@@ -71,5 +74,6 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
         .querySemanticMessages,
         .materializeSemanticMessages,
         .publishCodingAgentSessionSemanticInferences,
+        .querySessionWorkModel,
     ]
 }

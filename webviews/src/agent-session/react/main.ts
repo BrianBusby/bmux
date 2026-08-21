@@ -290,7 +290,7 @@ export function AgentSessionApp() {
       h(
         "div",
         { className: "agent-view-frame", hidden: viewMode !== "session" },
-        h(SmartSessionSurface, { context: state.context }),
+        h(SmartSessionSurface, { context: state.context, isActive: viewMode === "session" }),
       ),
     ),
   );

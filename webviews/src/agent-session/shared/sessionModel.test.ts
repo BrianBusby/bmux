@@ -16,7 +16,9 @@ import {
 import {
   initialSmartSessionState,
   reduceSmartSession,
+  semanticFieldForKind,
   semanticMessageForKind,
+  shouldRefreshSmartSession,
   SMART_SESSION_SEMANTIC_KINDS,
 } from "./smartSessionModel";
 import type { AppContext, ProviderInfo, SmartSessionSnapshot } from "./types";
@@ -1017,6 +1019,13 @@ test("bridge request errors use copy from session state", () => {
   expect(messageForError(new Error("Native bridge request failed."), state)).toBe("Localized bridge failure.");
 });
 
+test("smart session refresh waits until the Session surface is active", () => {
+  expect(shouldRefreshSmartSession(false, false)).toBe(false);
+  expect(shouldRefreshSmartSession(false, true)).toBe(false);
+  expect(shouldRefreshSmartSession(true, false)).toBe(false);
+  expect(shouldRefreshSmartSession(true, true)).toBe(true);
+});
+
 test("send failures for the active running session keep stop available", () => {
   const running = {
     ...reduceSession(initialState("react"), { type: "context", context }),
@@ -1233,6 +1242,40 @@ test("smart session reducer keeps newer factual revisions", () => {
   expect(state.snapshot?.revision.factualRevision).toBe(4);
 });
 
+test("smart session reducer keeps newer SessionWorkModel semantic revisions", () => {
+  const current = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded",
+    requestId: 1,
+    result: {
+      schemaVersion: 1,
+      status: "available",
+      snapshot: smartSessionSnapshot({
+        factualRevision: 4,
+        latestSemanticInferenceCreatedAt: "2026-08-17T07:05:00.000Z",
+      }),
+    },
+  });
+  const state = reduceSmartSession(current, {
+    type: "refreshSucceeded",
+    requestId: 2,
+    result: {
+      schemaVersion: 1,
+      status: "available",
+      snapshot: smartSessionSnapshot({
+        factualRevision: 4,
+        latestSemanticInferenceCreatedAt: "2026-08-17T07:03:00.000Z",
+      }),
+    },
+  });
+  expect(state.snapshot?.revision.latestSemanticInferenceCreatedAt).toBe("2026-08-17T07:05:00.000Z");
+});
+
+test("smart session reads supported meaning from SessionWorkModel fields", () => {
+  const model = smartSessionSnapshot({ factualRevision: 2, threadIntent: "Build Smart Session bridge" });
+  expect(model.workModel?.thread?.intent.kind).toBe(SMART_SESSION_SEMANTIC_KINDS.threadIntent);
+  expect(model.workModel?.thread?.intent.summary).toBe("Build Smart Session bridge");
+});
+
 test("smart session transfers semantic messages by exact PE kind and scope", () => {
   const model = smartSessionSnapshot({
     factualRevision: 2,
@@ -1273,15 +1316,16 @@ test("smart session leaves unknown semantics absent instead of inferring from pr
     factualRevision: 1,
     prompt: "Blocked on milestone 2 and 75% complete",
     semanticMessages: [],
+    knownSemantics: false,
   });
 
   expect(
-    semanticMessageForKind(model, {
+    semanticFieldForKind(model, {
       kind: SMART_SESSION_SEMANTIC_KINDS.currentActivity,
       scope: "turn",
       scopeId: "turn-1",
-    }),
-  ).toBeUndefined();
+    })?.state,
+  ).toBe("unknown");
   expect(model.semanticMessages.map((message) => message.concisePhrase).join(" ")).not.toContain("Blocked");
   expect(model.semanticMessages.map((message) => message.concisePhrase).join(" ")).not.toContain("75%");
 });
@@ -1290,38 +1334,107 @@ function smartSessionSnapshot({
   factualRevision,
   prompt = "Add a Smart Session surface",
   semanticMessages = [],
+  latestSemanticInferenceCreatedAt = "2026-08-17T07:02:00.000Z",
+  knownSemantics = true,
+  threadIntent = "Add a Smart Session surface",
+  turnIntent = "Add a Smart Session surface",
+  currentActivity = "Rendering supported session meaning",
+  sessionPhase = "implementation",
 }: {
   factualRevision: number;
   prompt?: string;
   semanticMessages?: SmartSessionSnapshot["semanticMessages"];
+  latestSemanticInferenceCreatedAt?: string;
+  knownSemantics?: boolean;
+  threadIntent?: string;
+  turnIntent?: string;
+  currentActivity?: string;
+  sessionPhase?: string;
 }): SmartSessionSnapshot {
+  const semanticInferenceIds = knownSemantics
+    ? [
+        `inference-${SMART_SESSION_SEMANTIC_KINDS.sessionPhase}`,
+        `inference-${SMART_SESSION_SEMANTIC_KINDS.threadIntent}`,
+        `inference-${SMART_SESSION_SEMANTIC_KINDS.turnIntent}`,
+        `inference-${SMART_SESSION_SEMANTIC_KINDS.currentActivity}`,
+      ]
+    : [];
+  const modelRevisionKey = `schema:1|factual:${factualRevision}|semantic:${semanticInferenceIds.join(",")}`;
+  const providerThread = {
+    confidence: "high",
+    firstObservedAt: "2026-08-17T07:00:00.000Z",
+    provider: "codex",
+    providerThreadId: "provider-thread-1",
+    source: "observed",
+    threadId: "thread-1",
+    updatedAt: "2026-08-17T07:01:00.000Z",
+  };
   return {
     schemaVersion: 1,
     revision: {
+      schemaVersion: 1,
       factualRevision,
-      key: `factual:${factualRevision}`,
+      key: modelRevisionKey,
+      latestSemanticInferenceCreatedAt: knownSemantics ? latestSemanticInferenceCreatedAt : undefined,
       latestSemanticMessageCreatedAt: semanticMessages[0]?.createdAt,
+      modelRevisionKey,
+      semanticInferenceIds,
       semanticMessageCount: semanticMessages.length,
     },
     identity: {
       agentKind: "codex",
       cwd: "/repo",
-      providerThreads: [
-        {
-          confidence: "high",
-          firstObservedAt: "2026-08-17T07:00:00.000Z",
-          provider: "codex",
-          providerThreadId: "provider-thread-1",
-          source: "observed",
-          threadId: "thread-1",
-          updatedAt: "2026-08-17T07:01:00.000Z",
-        },
-      ],
+      providerThreads: [providerThread],
       sessionId: "session-1",
       startedAt: "2026-08-17T07:00:00.000Z",
       status: "active",
       updatedAt: "2026-08-17T07:01:00.000Z",
       workspaceId: "workspace-1",
+    },
+    workModel: {
+      schemaVersion: 1,
+      revision: {
+        factualRevision,
+        latestSemanticInferenceCreatedAt: knownSemantics ? latestSemanticInferenceCreatedAt : undefined,
+        modelRevisionKey,
+        schemaVersion: 1,
+        semanticInferenceIds,
+      },
+      thread: {
+        identity: providerThread,
+        intent: semanticField({
+          kind: SMART_SESSION_SEMANTIC_KINDS.threadIntent,
+          known: knownSemantics,
+          scope: "thread",
+          scopeId: "thread-1",
+          summary: threadIntent,
+        }),
+      },
+      currentTurn: {
+        currentActivity: semanticField({
+          kind: SMART_SESSION_SEMANTIC_KINDS.currentActivity,
+          known: knownSemantics,
+          scope: "turn",
+          scopeId: "turn-1",
+          summary: currentActivity,
+        }),
+        intent: semanticField({
+          kind: SMART_SESSION_SEMANTIC_KINDS.turnIntent,
+          known: knownSemantics,
+          scope: "turn",
+          scopeId: "turn-1",
+          summary: turnIntent,
+        }),
+        threadId: "thread-1",
+        turnId: "turn-1",
+      },
+      sessionPhase: semanticField({
+        kind: SMART_SESSION_SEMANTIC_KINDS.sessionPhase,
+        known: knownSemantics,
+        scope: "session",
+        scopeId: "session-1",
+        summary: sessionPhase,
+      }),
     },
     factual: {
       latestTurn: {
@@ -1346,6 +1459,53 @@ function smartSessionSnapshot({
       turnCount: 1,
     },
     semanticMessages,
+  };
+}
+
+function semanticField({
+  kind,
+  scope,
+  scopeId,
+  summary,
+  known = true,
+}: {
+  kind: string;
+  scope: "session" | "thread" | "turn";
+  scopeId: string;
+  summary: string;
+  known?: boolean;
+}): NonNullable<SmartSessionSnapshot["workModel"]>["sessionPhase"] {
+  if (!known) {
+    return {
+      kind,
+      reason: "no_active_semantic_inference",
+      scope,
+      scopeId,
+      state: "unknown",
+    };
+  }
+  return {
+    detail: summary,
+    kind,
+    record: {
+      confidence: "high",
+      createdAt: "2026-08-17T07:02:00.000Z",
+      inferenceId: `inference-${kind}`,
+      payload: { summary },
+      producerId: "producer",
+      producerType: "rule",
+      producerVersion: "v1",
+      schemaVersion: 1,
+      specificity: "scoped",
+      status: "active",
+      supersedes: [],
+      supportingEvidenceRefs: [{ factualRevision: 1, id: "turn-1", kind: "coding_agent_turn" }],
+      supportingFactualRevision: 1,
+    },
+    scope,
+    scopeId,
+    state: "known",
+    summary,
   };
 }
 

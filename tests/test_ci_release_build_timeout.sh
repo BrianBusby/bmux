@@ -15,8 +15,8 @@ if [ -z "$timeout" ]; then
   exit 1
 fi
 
-if [ "$timeout" -lt 40 ]; then
-  echo "FAIL: release-build timeout-minutes must be at least 40, got $timeout"
+if [ "$timeout" -lt 75 ]; then
+  echo "FAIL: release-build timeout-minutes must be at least 75, got $timeout"
   exit 1
 fi
 

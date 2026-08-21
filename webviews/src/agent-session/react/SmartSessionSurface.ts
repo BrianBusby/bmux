@@ -3,7 +3,8 @@ import {
   initialSmartSessionState,
   loadSmartSessionSnapshot,
   reduceSmartSession,
-  semanticMessageForKind,
+  semanticFieldForKind,
+  shouldRefreshSmartSession,
   SMART_SESSION_SEMANTIC_KINDS,
   type SmartSessionState,
 } from "../shared/smartSessionModel";
@@ -14,19 +15,22 @@ import type {
   SmartSessionFileChangeAttribution,
   SmartSessionPlanStep,
   SmartSessionReasoningSummary,
+  SmartSessionSemanticField,
   SmartSessionSnapshot,
   SmartSessionTurnReference,
 } from "../shared/types";
 
 const h = React.createElement;
 
-export function SmartSessionSurface({ context }: { context?: AppContext }) {
+export function SmartSessionSurface({ context, isActive }: { context?: AppContext; isActive: boolean }) {
   const [state, dispatch] = useReducer(reduceSmartSession, initialSmartSessionState());
   const requestIdRef = useRef(0);
   const copy = context?.copy;
   const hasContext = context != null;
   const stableWorkspaceId = context?.stableWorkspaceId;
   const workspaceId = context?.workspaceId;
+  const refreshIdentity = stableWorkspaceId ?? workspaceId ?? "";
+  const shouldRefresh = shouldRefreshSmartSession(hasContext, isActive);
 
   const refresh = useCallback(() => {
     const requestId = requestIdRef.current + 1;
@@ -38,10 +42,10 @@ export function SmartSessionSurface({ context }: { context?: AppContext }) {
   }, []);
 
   useEffect(() => {
-    if (hasContext) {
+    if (shouldRefresh && refreshIdentity.length > 0) {
       refresh();
     }
-  }, [hasContext, stableWorkspaceId, workspaceId, refresh]);
+  }, [shouldRefresh, refreshIdentity, refresh]);
 
   return h(
     "section",
@@ -56,7 +60,7 @@ export function SmartSessionSurface({ context }: { context?: AppContext }) {
           className: "smart-session-refresh",
           type: "button",
           onClick: refresh,
-          disabled: !hasContext || state.status === "loading",
+          disabled: !hasContext || !isActive || state.status === "loading",
         },
         copyText(copy, "smartSessionRefresh", "Refresh"),
       ),
@@ -85,24 +89,27 @@ function SmartSessionSnapshotView({
   copy?: AgentSessionCopy;
 }) {
   const latestTurn = snapshot.factual.latestTurn;
-  const threadID = latestTurn?.threadId ?? snapshot.identity.providerThreads[0]?.threadId;
-  const turnID = latestTurn?.turnId;
-  const threadIntent = semanticMessageForKind(snapshot, {
+  const threadID =
+    snapshot.workModel?.thread?.identity.threadId ??
+    latestTurn?.threadId ??
+    snapshot.identity.providerThreads[0]?.threadId;
+  const turnID = snapshot.workModel?.currentTurn?.turnId ?? latestTurn?.turnId;
+  const threadIntent = semanticFieldForKind(snapshot, {
     kind: SMART_SESSION_SEMANTIC_KINDS.threadIntent,
     scope: "thread",
     scopeId: threadID,
   });
-  const turnIntent = semanticMessageForKind(snapshot, {
+  const turnIntent = semanticFieldForKind(snapshot, {
     kind: SMART_SESSION_SEMANTIC_KINDS.turnIntent,
     scope: "turn",
     scopeId: turnID,
   });
-  const currentActivity = semanticMessageForKind(snapshot, {
+  const currentActivity = semanticFieldForKind(snapshot, {
     kind: SMART_SESSION_SEMANTIC_KINDS.currentActivity,
     scope: "turn",
     scopeId: turnID,
   });
-  const phase = semanticMessageForKind(snapshot, {
+  const phase = semanticFieldForKind(snapshot, {
     kind: SMART_SESSION_SEMANTIC_KINDS.sessionPhase,
     scope: "session",
     scopeId: snapshot.identity.sessionId,
@@ -117,7 +124,7 @@ function SmartSessionSnapshotView({
       h(SmartSessionPanel, {
         title: copyText(copy, "smartSessionPurpose", "Purpose"),
         children: semanticText(threadIntent, copy),
-        detail: threadIntent?.expandedMeaning,
+        detail: threadIntent?.detail,
       }),
       h(SmartSessionPanel, {
         title: copyText(copy, "smartSessionCurrentTurn", "Current turn"),
@@ -127,12 +134,12 @@ function SmartSessionSnapshotView({
       h(SmartSessionPanel, {
         title: copyText(copy, "smartSessionCurrentActivity", "Current activity"),
         children: semanticText(currentActivity, copy),
-        detail: currentActivity?.expandedMeaning,
+        detail: currentActivity?.detail,
       }),
       h(SmartSessionPanel, {
         title: copyText(copy, "smartSessionPhase", "Phase"),
         children: semanticText(phase, copy),
-        detail: phase?.expandedMeaning,
+        detail: phase?.detail,
       }),
     ),
     h(
@@ -375,10 +382,13 @@ function renderReasoning(summary: SmartSessionReasoningSummary) {
 }
 
 function semanticText(
-  message: ReturnType<typeof semanticMessageForKind>,
+  field: SmartSessionSemanticField | undefined,
   copy?: AgentSessionCopy,
 ) {
-  return message?.concisePhrase ?? copyText(copy, "smartSessionUnknown", "Unknown");
+  if (field?.state === "known" && field.summary) {
+    return field.summary;
+  }
+  return copyText(copy, "smartSessionUnknown", "Unknown");
 }
 
 function statusMessage(state: SmartSessionState, copy?: AgentSessionCopy): string {

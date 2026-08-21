@@ -1,11 +1,13 @@
 import Foundation
 import ProvenanceEngineContracts
 
-/// Reads PE factual and semantic presentation data for the React Smart Session surface.
+/// Reads PE SessionWorkModel data for the React Smart Session surface.
 @MainActor
 final class AgentSessionSmartSessionStore {
     private let client: any ProvenanceEngineClient
     private var snapshotsBySessionID: [String: AgentSessionSmartSessionSnapshot] = [:]
+    private var refreshTasksBySessionID: [String: RefreshTaskEntry] = [:]
+    private static let semanticReconciliationAttemptLimit = 3
 
     init(client: any ProvenanceEngineClient) {
         self.client = client
@@ -21,17 +23,57 @@ final class AgentSessionSmartSessionStore {
 
     func refreshedSnapshot(sessionID rawSessionID: String?) async -> AgentSessionSmartSessionReadResult {
         guard let sessionID = Self.trimmedNonEmpty(rawSessionID) else { return .missingSession }
+        if let entry = refreshTasksBySessionID[sessionID] {
+            return await entry.task.value
+        }
+        let requestID = UUID()
+        let task = Task { @MainActor in
+            await self.loadSnapshot(sessionID: sessionID)
+        }
+        refreshTasksBySessionID[sessionID] = RefreshTaskEntry(id: requestID, task: task)
+        let result = await task.value
+        if refreshTasksBySessionID[sessionID]?.id == requestID {
+            refreshTasksBySessionID.removeValue(forKey: sessionID)
+        }
+        return result
+    }
+
+    private func loadSnapshot(sessionID: String) async -> AgentSessionSmartSessionReadResult {
         do {
-            let response = try await client.factualSessionProjection(
-                ProvenanceFactualSessionProjectionRequest(sessionID: sessionID, turnLimit: 12)
-            )
-            guard response.found, let factualProjection = response.snapshot else {
-                snapshotsBySessionID.removeValue(forKey: sessionID)
-                return .notFound(sessionID: sessionID, reason: response.reason)
+            var notFoundReason: String?
+            var workModel: ProvenanceSessionWorkModel?
+            for attempt in 1...Self.semanticReconciliationAttemptLimit {
+                let materialization = await materializeSemanticInferences(sessionID: sessionID)
+                let response = try await client.sessionWorkModel(
+                    ProvenanceSessionWorkModelRequest(sessionID: sessionID, turnLimit: 12)
+                )
+                guard response.found, let responseModel = response.model else {
+                    notFoundReason = response.reason
+                    workModel = nil
+                    break
+                }
+                workModel = responseModel
+                guard Self.needsSemanticReconciliation(materialization: materialization, workModel: responseModel) else {
+                    break
+                }
+                if attempt == Self.semanticReconciliationAttemptLimit {
+                    StartupBreadcrumbLog.append(
+                        "workProvenance.agentSessionSmartSession.semanticReconciliationLimitReached",
+                        fields: [
+                            "session": sessionID,
+                            "materializedFactualRevision": materialization?.factualRevision.map(String.init) ?? "none",
+                            "modelFactualRevision": responseModel.revision.factualRevision.map(String.init) ?? "none"
+                        ]
+                    )
+                }
             }
-            let semanticMessages = try await semanticMessages(for: factualProjection)
+            guard let workModel else {
+                snapshotsBySessionID.removeValue(forKey: sessionID)
+                return .notFound(sessionID: sessionID, reason: notFoundReason)
+            }
+            let semanticMessages = await presentationMessages(for: workModel)
             let nextSnapshot = AgentSessionSmartSessionSnapshot(
-                factualProjection: factualProjection,
+                workModel: workModel,
                 semanticMessages: semanticMessages
             )
             if let existing = snapshotsBySessionID[sessionID],
@@ -49,6 +91,51 @@ final class AgentSessionSmartSessionStore {
                 return .available(snapshot)
             }
             return .failed(sessionID: sessionID)
+        }
+    }
+
+    private func materializeSemanticInferences(
+        sessionID: String
+    ) async -> ProvenanceCodingAgentSessionSemanticInferenceResponse? {
+        do {
+            return try await client.publishCodingAgentSessionSemanticInferences(
+                ProvenanceCodingAgentSessionSemanticInferenceRequest(
+                    sessionID: sessionID,
+                    turnLimit: 12,
+                    createdAt: Date()
+                )
+            )
+        } catch {
+            StartupBreadcrumbLog.append("workProvenance.agentSessionSmartSession.semanticInferenceSkipped", fields: [
+                "session": sessionID,
+                "error": String(describing: error)
+            ])
+            return nil
+        }
+    }
+
+    private static func needsSemanticReconciliation(
+        materialization: ProvenanceCodingAgentSessionSemanticInferenceResponse?,
+        workModel: ProvenanceSessionWorkModel
+    ) -> Bool {
+        guard let materializedRevision = materialization?.factualRevision,
+              let modelRevision = workModel.revision.factualRevision else {
+            return false
+        }
+        return modelRevision > materializedRevision
+    }
+
+    private func presentationMessages(
+        for workModel: ProvenanceSessionWorkModel
+    ) async -> [ProvenanceSemanticMessageRecord] {
+        do {
+            return try await semanticMessages(for: workModel.basis.factualSessionProjection)
+        } catch {
+            StartupBreadcrumbLog.append("workProvenance.agentSessionSmartSession.semanticMessagesSkipped", fields: [
+                "session": workModel.identity.session.id,
+                "error": String(describing: error)
+            ])
+            return []
         }
     }
 
@@ -109,5 +196,10 @@ final class AgentSessionSmartSessionStore {
     private struct SemanticMessageSubject: Hashable {
         let scope: ProvenanceSemanticInferenceScope
         let scopeID: String
+    }
+
+    private struct RefreshTaskEntry {
+        let id: UUID
+        let task: Task<AgentSessionSmartSessionReadResult, Never>
     }
 }

@@ -21,7 +21,7 @@ The SQLite backend stores an immutable event ledger and rebuildable current-stat
 
 Current accepted projections include repositories, worktrees, sessions, session relationships, file explanations, current context records, workspace-display Current State, and factual session projection snapshots for coding-agent evidence.
 
-Implemented semantic contracts include versioned semantic inference records, first coding-agent semantic inference kinds, semantic message records, and deterministic message materialization. A public `SessionWorkModel`, milestone semantics, blocker/approach-change semantics, and scoped architecture projection remain planned target behavior.
+Implemented semantic contracts include versioned semantic inference records, first coding-agent semantic inference kinds, semantic message records, deterministic message materialization, and the public `SessionWorkModel` foundation/read path. Milestone semantics, blocker/approach-change semantics, and scoped architecture projection remain planned target behavior.
 
 ## Evidence Model
 
@@ -55,7 +55,7 @@ Additional daemon, migration, retrieval, semantic, and observability capabilitie
 
 GitHub ingestion and Knowledge Compiler implementation are also frozen until after the current V1 adoption milestone. The accepted V1-compatible change is limited to preserving source-origin and scope metadata on events so later shared evidence does not require reworking the core ledger contract.
 
-Design work for richer coding-agent evidence and semantic `SessionWorkModel` may proceed as planning while preserving the freeze. Runtime implementation requires an explicitly selected milestone and must start with completed or meaningful evidence units and deterministic factual projections, not raw provider transport deltas.
+Design work for richer coding-agent evidence and future `SessionWorkModel` fields may proceed while preserving the freeze. Runtime expansion beyond the implemented foundation requires an explicitly selected milestone and must start with completed or meaningful evidence units and deterministic factual projections, not raw provider transport deltas.
 
 ## Current State
 

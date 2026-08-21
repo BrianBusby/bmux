@@ -1532,7 +1532,7 @@ This section maps the north-star architecture above to the current repository de
 - New engine-owned local storage defaults to `~/.local/state/provenance-engine/provenance.sqlite`.
 - Events can carry optional `ProvenanceEvidenceOrigin` and `ProvenanceEvidenceScope` metadata so the ledger is not hard-coded as personal-only evidence.
 - bmux adopted the engine SDK for the accepted worktree, session-tree, file-explanation, current-context, lifecycle, worktree-observation, and workspace-display paths described by the integration roadmap.
-- There is no public milestone contract, scoped architecture projection contract, or semantic `SessionWorkModel` contract yet. The current factual session projection does not infer semantic meaning.
+- There is a public `SessionWorkModel` foundation/read contract for composing supported factual session projection data with active semantic inference records. There is no public milestone contract or scoped architecture projection contract yet. The factual session projection remains deterministic and does not infer semantic meaning.
 
 ### Partially implemented
 
@@ -1540,7 +1540,7 @@ This section maps the north-star architecture above to the current repository de
 - Evidence scope currently supports the accepted V1 coarse scopes: personal, project, and organization. Finer-grained scopes such as session, workspace, team, repository, and public remain architectural concepts unless added through future contracts.
 - Cross-system relationships are represented for current local session/worktree projections, but Git, GitHub, review, issue, document, and communication relationships are not implemented.
 - Bmux is both a current adopter and a likely evidence producer, but V1 adoption is intentionally limited to one path at a time.
-- Current context, file explanation, workspace-display, and semantic inference record contracts exist, but first concrete semantic inference kinds, `SessionWorkModel`, evidence-aware retrieval, and compiled knowledge retrieval do not exist.
+- Current context, file explanation, workspace-display, semantic inference record contracts, first coding-agent semantic inference kinds, and the initial `SessionWorkModel` foundation exist. Evidence-aware retrieval and compiled knowledge retrieval do not exist.
 - Storage validation, replay, and repair support the current local ledger, but source deletion propagation, raw payload retention policy, and organization-level audit policy are not implemented.
 
 ### Planned after V1
@@ -1549,9 +1549,6 @@ This section maps the north-star architecture above to the current repository de
 - Richer coding-agent evidence ingestion for completed or meaningful thread,
   turn, plan, command, file-change, approval, validation, error, and compaction
   units while keeping provider transport deltas live/ephemeral.
-- A first `SessionWorkModel` projection that combines deterministic factual
-  state with evidence-backed inference while preserving each field's basis and
-  provenance.
 - Scoped thread and turn architecture projections, milestone-to-architecture
   relationships, and milestone-to-diff evidence attribution.
 - Shared evidence-store design for personal, project, and organization evidence.

@@ -2,6 +2,7 @@ import { callNative } from "./bridge";
 import type {
   SmartSessionReadResult,
   SmartSessionRevision,
+  SmartSessionSemanticField,
   SmartSessionSemanticMessage,
   SmartSessionSnapshot,
 } from "./types";
@@ -40,6 +41,10 @@ export function initialSmartSessionState(): SmartSessionState {
     requestId: 0,
     status: "idle",
   };
+}
+
+export function shouldRefreshSmartSession(hasContext: boolean, isActive: boolean): boolean {
+  return hasContext && isActive;
 }
 
 export function reduceSmartSession(state: SmartSessionState, action: SmartSessionAction): SmartSessionState {
@@ -103,6 +108,12 @@ export type SmartSessionSemanticMessageFilter = {
   scopeId?: string;
 };
 
+export type SmartSessionSemanticFieldFilter = {
+  kind: string;
+  scope?: SmartSessionSemanticField["scope"];
+  scopeId?: string;
+};
+
 export function semanticMessageForKind(
   snapshot: SmartSessionSnapshot | undefined,
   filter: SmartSessionSemanticMessageFilter,
@@ -124,6 +135,30 @@ export function semanticMessageForKind(
   });
 }
 
+export function semanticFieldForKind(
+  snapshot: SmartSessionSnapshot | undefined,
+  filter: SmartSessionSemanticFieldFilter,
+): SmartSessionSemanticField | undefined {
+  const fields = [
+    snapshot?.workModel?.thread?.intent,
+    snapshot?.workModel?.currentTurn?.intent,
+    snapshot?.workModel?.currentTurn?.currentActivity,
+    snapshot?.workModel?.sessionPhase,
+  ].filter((field): field is SmartSessionSemanticField => Boolean(field));
+  return fields.find((field) => {
+    if (field.kind !== filter.kind) {
+      return false;
+    }
+    if (filter.scope && field.scope !== filter.scope) {
+      return false;
+    }
+    if (filter.scopeId && field.scopeId !== filter.scopeId) {
+      return false;
+    }
+    return true;
+  });
+}
+
 export function compareSmartSessionRevisions(left: SmartSessionRevision, right: SmartSessionRevision): number {
   if (left.factualRevision !== right.factualRevision) {
     if (left.factualRevision == null) {
@@ -133,6 +168,26 @@ export function compareSmartSessionRevisions(left: SmartSessionRevision, right: 
       return 1;
     }
     return left.factualRevision > right.factualRevision ? 1 : -1;
+  }
+  const leftInference = Date.parse(left.latestSemanticInferenceCreatedAt ?? "");
+  const rightInference = Date.parse(right.latestSemanticInferenceCreatedAt ?? "");
+  const leftHasInference = Number.isFinite(leftInference);
+  const rightHasInference = Number.isFinite(rightInference);
+  if (leftHasInference && rightHasInference && leftInference !== rightInference) {
+    return leftInference > rightInference ? 1 : -1;
+  }
+  if (leftHasInference !== rightHasInference) {
+    return leftHasInference ? 1 : -1;
+  }
+  const leftInferenceIds = left.semanticInferenceIds?.join("\u0000") ?? "";
+  const rightInferenceIds = right.semanticInferenceIds?.join("\u0000") ?? "";
+  if (leftInferenceIds !== rightInferenceIds) {
+    const leftCount = left.semanticInferenceIds?.length ?? 0;
+    const rightCount = right.semanticInferenceIds?.length ?? 0;
+    if (leftCount !== rightCount) {
+      return leftCount > rightCount ? 1 : -1;
+    }
+    return 0;
   }
   const leftSemantic = Date.parse(left.latestSemanticMessageCreatedAt ?? "");
   const rightSemantic = Date.parse(right.latestSemanticMessageCreatedAt ?? "");

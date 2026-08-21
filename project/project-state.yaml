@@ -1137,7 +1137,7 @@ roadmap:
       kind: slice
       title: SessionWorkModel contract foundation
       parent: semantic_session_work_model_projection
-      status: planned
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -1151,13 +1151,14 @@ roadmap:
       depends_on:
         - human_readable_semantic_messaging
       enables:
+        - react_smart_session_initial_work_model_consumer
         - react_smart_session_work_model_consumer
       parallelism:
         classification: serial
         expected_contract_domains:
           - session_work_model_contract
           - factual_semantic_provenance
-          - semantic_message_contract
+          - semantic_inference_records
         expected_code_areas:
           - Sources/ProvenanceEngineContracts
           - Sources/ProvenanceEngineCore
@@ -1165,20 +1166,36 @@ roadmap:
           - docs/session-work-model.md
         likely_conflict_domains:
           - session_work_model_projection
-          - semantic_message_contract
+          - semantic_inference_contract
           - factual_session_projection_contract
         contract_dependencies:
           - factual_session_projection
-          - semantic_message_contract
+          - semantic_inference_records
           - semantic_session_inferences
         worktree_required: true
         conflict_note: Define the PE-owned contract before bmux builds richer Smart Session presentation so bmux consumes a revisioned model instead of composing its own semantic interpretation.
       execution:
-        assignment: planned
+        assignment: complete
         assigned_to: provenance_engine
-      delivery_status: proposed
-      acceptance_status: proposed
-      rationale: Introduce the first revisioned PE-owned SessionWorkModel snapshot contract for Smart Session consumers. The contract should preserve evidence references, deterministic factual projections, semantic inference records, semantic messages, and presentation boundaries.
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: c623bf26bd8aaefe7352a8669b1044b6132cfc5b
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 57
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-17
+      acceptance:
+        criteria:
+          - Expose a public SessionWorkModel read contract through ProvenanceEngineClient.
+          - Compose deterministic factual session projection with active semantic inference records.
+          - Preserve factual and semantic provenance, revision metadata, unknown states, and semantic-message separation.
+      rationale: Introduce the first revisioned PE-owned SessionWorkModel snapshot contract for Smart Session consumers. The contract preserves evidence references, deterministic factual projections, semantic inference records, and presentation boundaries without using semantic messages as truth input.
 
     - id: three_view_coding_session_experience
       kind: phase
@@ -1350,6 +1367,7 @@ roadmap:
         - human_readable_semantic_messaging
       enables:
         - clickable_semantic_explanation_ui
+        - react_smart_session_initial_work_model_consumer
         - react_smart_session_work_model_consumer
         - three_view_session_navigation
       parallelism:
@@ -1375,13 +1393,9 @@ roadmap:
         worktree_required: true
         conflict_note: Start after factual Session UI lands so the React surface can reuse proven factual consumer shape. Keep the presentation summary-oriented and PE-backed rather than transcript-oriented.
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: bmux
-        active_worktree: /Users/brianbusby/repos/bmux-react-smart-session-foundation
-        active_branch: react-smart-session-foundation
-        active_agent: Codex
-        notes: "PR #56 is the first-pass React Smart Session foundation and is waiting for UI dogfood before merge."
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: under_observation
       evidence:
         commits:
@@ -1395,7 +1409,68 @@ roadmap:
               profile_url: https://github.com/BrianBusby
       completed_at: 2026-08-17
       rationale: Establish a separate React Session surface that consumes PE factual projections and existing semantic messages through a typed revision-safe bridge. This foundation must not infer session meaning from raw provider events inside bmux and must not define the future PE-owned SessionWorkModel contract.
-      acceptance_reason: "PR #56 adds the separate React Session surface, Slice 1 bridge DTOs, PE factual and semantic-message refresh path, stale-response protection, explicit unavailable/unknown states, focused React/native tests, and localized copy; UI dogfood remains the merge/acceptance gate."
+      acceptance_reason: "PR #56 merged the React Smart Session foundation delivery. Acceptance remains under observation while PR #58 carries the active initial SessionWorkModel consumer delivery."
+
+    - id: react_smart_session_initial_work_model_consumer
+      kind: slice
+      title: React Smart Session initial SessionWorkModel consumer
+      parent: coding_session_view_surfaces
+      status: implemented
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: structured_work_understanding
+        architecture_layer: consumer_presentation
+        tags:
+          - react_smart_session
+          - session_work_model
+      depends_on:
+        - react_smart_session_foundation
+        - session_work_model_contract_foundation
+      enables:
+        - react_smart_session_work_model_consumer
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - session_work_model_contract
+          - react_smart_session_data_bridge
+        expected_code_areas:
+          - React Smart Session surface
+          - bmux SessionWorkModel client
+          - Sources/WorkProvenance
+          - Sources/ProvenanceEngineContracts
+        likely_conflict_domains:
+          - session_work_model_projection
+          - react_session_presentation
+          - project_truth_manifest
+        contract_dependencies:
+          - session_work_model_contract
+          - react_smart_session_surface_identity
+        worktree_required: true
+        conflict_note: This is the narrow first consumer proving SessionWorkModel -> bridge -> React rendering. It must not claim the later milestone/blocker-gated Smart Session consumer complete.
+      execution:
+        assignment: current
+        assigned_to: bmux
+        active_worktree: /Users/brianbusby/repos/bmux-react-smart-session-initial-work-model-consumer
+        active_branch: react-smart-session-initial-work-model-consumer
+        active_agent: Codex
+      delivery_status: open
+      acceptance_status: under_observation
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 000468433cc46e96a1a8f5555179546af921fcb3
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 58
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-17
+      rationale: Replace the Slice 1 disposable Smart Session bridge composition with the first PE-owned SessionWorkModel consumer path for supported fields only, while leaving milestone, blocker, approach-change, progress, and architecture semantics gated for later work.
+      acceptance_reason: "Stacked implementation commit 000468433 wires the React Smart Session bridge to PE SessionWorkModel for supported intent, activity, phase, factual evidence, revision, and provenance fields. The broader Smart SessionWorkModel consumer remains planned because milestone and blocker/approach-change semantics are still intentionally gated."
 
     - id: react_smart_session_work_model_consumer
       kind: slice
@@ -1413,6 +1488,7 @@ roadmap:
           - react_smart_session
           - session_work_model
       depends_on:
+        - react_smart_session_initial_work_model_consumer
         - react_smart_session_foundation
         - session_work_model_contract_foundation
         - milestone_inference
