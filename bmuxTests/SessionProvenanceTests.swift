@@ -220,6 +220,20 @@ final class SessionProvenanceTests: XCTestCase {
         XCTAssertEqual(display.lastSubmittedPrompt, "Fix the PE session tab")
         XCTAssertEqual(display.lastSubmittedPromptSessionID, "raw-codex-session")
         XCTAssertEqual(display.worktreeID, WorkProvenanceStableIDFactory().worktreeID(repositoryRoot: "/repo"))
+
+        try await recorder.recordTranscriptUserPrompts(
+            record: record,
+            messages: [
+                ChatMessage(id: "line-12", seq: 12, role: .user, timestamp: timestamp.addingTimeInterval(10), kind: .prose(ChatProse(text: "Backfilled transcript prompt"))),
+                ChatMessage(id: "line-13", seq: 13, role: .agent, timestamp: timestamp.addingTimeInterval(11), kind: .prose(ChatProse(text: "Agent response"))),
+            ],
+            stableWorkspaceID: stableWorkspaceID
+        )
+        let backfillRequests = await client.appendedEventRequests
+        let backfillRequest = try XCTUnwrap(backfillRequests.last)
+        XCTAssertEqual(backfillRequests.count, 2)
+        XCTAssertEqual(backfillRequest.event.payload.codingAgentPrompt?.text, "Backfilled transcript prompt")
+        XCTAssertEqual(backfillRequest.event.payload.workspaceDisplay?.lastSubmittedPromptSessionID, "raw-codex-session")
     }
 
     @MainActor

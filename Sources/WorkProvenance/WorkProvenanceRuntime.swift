@@ -1,5 +1,6 @@
 import AppKit
 import BMUXAgentLaunch
+import BmuxAgentChat
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
@@ -208,21 +209,49 @@ final class WorkProvenanceRuntime {
     /// Persists hook-observed prompt evidence when sidecar telemetry has not linked the workspace yet.
     func recordHookUserPromptSubmit(record: AgentChatSessionRecord, event: WorkstreamEvent) {
         guard let codingAgentEvidenceRecorder,
-              let stableWorkspaceID = stableWorkspaceID(forRuntimeWorkspaceID: record.workspaceID ?? event.workspaceId) else {
+              let workspace = workspace(forRuntimeOrStableWorkspaceID: record.workspaceID ?? event.workspaceId) else {
             return
         }
+        let stableWorkspaceID = workspace.stableId
+        let fallbackPromptText = workspace.latestSubmittedMessage
         Task { [weak self] in
             do {
                 try await codingAgentEvidenceRecorder.recordHookUserPromptSubmit(
                     record: record,
                     event: event,
-                    stableWorkspaceID: stableWorkspaceID
+                    stableWorkspaceID: stableWorkspaceID,
+                    fallbackPromptText: fallbackPromptText
                 )
                 await MainActor.run {
                     self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [stableWorkspaceID])
                 }
             } catch {
                 StartupBreadcrumbLog.append("workProvenance.hookPrompt.recordFailed", fields: [
+                    "session": record.sessionID,
+                    "error": String(describing: error)
+                ])
+            }
+        }
+    }
+
+    /// Persists transcript-observed prompt evidence when sidecar telemetry did not project it.
+    func recordTranscriptUserPrompts(record: AgentChatSessionRecord, messages: [ChatMessage]) {
+        guard let codingAgentEvidenceRecorder, !messages.isEmpty else { return }
+        let stableWorkspaceID = workspace(forRuntimeOrStableWorkspaceID: record.workspaceID)?.stableId
+        Task { [weak self] in
+            do {
+                try await codingAgentEvidenceRecorder.recordTranscriptUserPrompts(
+                    record: record,
+                    messages: messages,
+                    stableWorkspaceID: stableWorkspaceID
+                )
+                if let stableWorkspaceID {
+                    await MainActor.run {
+                        self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [stableWorkspaceID])
+                    }
+                }
+            } catch {
+                StartupBreadcrumbLog.append("workProvenance.transcriptPrompt.recordFailed", fields: [
                     "session": record.sessionID,
                     "error": String(describing: error)
                 ])
@@ -315,9 +344,11 @@ final class WorkProvenanceRuntime {
         )
     }
 
-    private func stableWorkspaceID(forRuntimeWorkspaceID workspaceID: String?) -> UUID? {
+    private func workspace(forRuntimeOrStableWorkspaceID workspaceID: String?) -> Workspace? {
         guard let workspaceID = workspaceID.flatMap(UUID.init(uuidString:)) else { return nil }
-        return tabManager?.tabs.first(where: { $0.id == workspaceID })?.stableId
+        return tabManager?.tabs.first { workspace in
+            workspace.id == workspaceID || workspace.stableId == workspaceID
+        }
     }
 
     private func workspaceDisplayCurrentStateDidChange(stableWorkspaceID: UUID) {

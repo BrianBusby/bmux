@@ -312,6 +312,36 @@ struct CodexTranscriptParserTests {
         #expect(tool.status == .succeeded)
     }
 
+    @Test("prompt backfill extracts real user prompts from parser output")
+    func promptBackfillExtractsUserPrompts() {
+        let lines = [
+            messageLine(role: "user", texts: ["# AGENTS.md instructions for /repo\n<INSTRUCTIONS>..."]),
+            messageLine(role: "assistant", texts: ["Working."]),
+            messageLine(role: "user", texts: ["Fix the session tab"]),
+        ]
+        let result = CodexTranscriptPromptBackfill().userPromptMessages(lines: lines)
+        #expect(result.map(\.role) == [.user])
+        #expect(result.compactMap(Self.proseText) == ["Fix the session tab"])
+    }
+
+    @Test("prompt backfill preserves bounded tail sequence numbers")
+    func promptBackfillFileTailSequence() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("codex-prompt-backfill-\(UUID().uuidString).jsonl")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let text = [
+            messageLine(role: "user", texts: ["Old prompt"]),
+            messageLine(role: "assistant", texts: ["Done."]),
+            messageLine(role: "user", texts: ["Newest prompt"]),
+        ].joined(separator: "\n") + "\n"
+        try text.write(to: url, atomically: true, encoding: .utf8)
+
+        let result = CodexTranscriptPromptBackfill(maxLines: 2).userPromptMessages(path: url.path)
+        #expect(result.count == 1)
+        #expect(result.first?.seq == 2)
+        #expect(result.compactMap(Self.proseText) == ["Newest prompt"])
+    }
+
     // MARK: - Robustness
 
     @Test("event_msg, turn_context, and malformed lines are skipped; seq tracks line offsets")
@@ -355,5 +385,10 @@ struct CodexTranscriptParserTests {
         }
         #expect((capture.output?.count ?? 0) <= 16_385)
         #expect(capture.output?.hasSuffix("…") == true)
+    }
+
+    private static func proseText(_ message: ChatMessage) -> String? {
+        guard case .prose(let prose) = message.kind else { return nil }
+        return prose.text
     }
 }

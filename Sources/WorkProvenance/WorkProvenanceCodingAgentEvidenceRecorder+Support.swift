@@ -7,12 +7,16 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
     func recordHookUserPromptSubmit(
         record: AgentChatSessionRecord,
         event: WorkstreamEvent,
-        stableWorkspaceID: UUID
+        stableWorkspaceID: UUID,
+        fallbackPromptText: String? = nil
     ) async throws {
         guard record.agentKind == .codex,
               event.hookEventName == .userPromptSubmit,
               let sessionID = trimmedNonEmpty(record.sessionID),
-              let promptText = hookPromptText(from: event).map({ bounded($0, limit: Self.textLimit) })
+              let promptText = firstNonEmpty(
+                event.submittedPromptMessage,
+                fallbackPromptText
+              ).map({ bounded($0, limit: Self.textLimit) })
         else {
             return
         }
@@ -94,6 +98,93 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
                 codingAgentPrompt: prompt
             )
         )
+    }
+
+    func recordTranscriptUserPrompts(
+        record: AgentChatSessionRecord,
+        messages: [ChatMessage],
+        stableWorkspaceID: UUID? = nil
+    ) async throws {
+        guard record.agentKind == .codex,
+              let sessionID = trimmedNonEmpty(record.sessionID) else {
+            return
+        }
+        let workingDirectory = trimmedNonEmpty(record.workingDirectory)
+        let gitContext = await gitContext(for: workingDirectory, observedAt: record.lastActivityAt)
+        for message in messages {
+            guard message.role == .user,
+                  case .prose(let prose) = message.kind,
+                  let promptText = trimmedNonEmpty(prose.text).map({ bounded($0, limit: Self.textLimit) }) else {
+                continue
+            }
+            let submittedAt = message.timestamp
+            let turnSeed = "transcript\n\(sessionID)\n\(submittedAt.timeIntervalSince1970)\n\(promptText)"
+            let providerTurnID = stableIDFactory.id(prefix: "transcript-codex-turn", value: turnSeed)
+            let turnID = turnRecordID(providerTurnID: providerTurnID)
+            let session = ProvenanceSessionRecord(
+                id: sessionID,
+                agentKind: "codex",
+                workspaceID: record.workspaceID,
+                surfaceID: record.surfaceID,
+                worktreeID: gitContext?.worktreeID,
+                cwd: workingDirectory,
+                status: record.state == .ended ? "ended" : "active",
+                startedAt: nil,
+                updatedAt: record.lastActivityAt
+            )
+            let turn = ProvenanceCodingAgentTurnRecord(
+                id: turnID,
+                sessionID: sessionID,
+                provider: "codex",
+                providerTurnID: providerTurnID,
+                status: "started",
+                startedAt: submittedAt,
+                updatedAt: submittedAt,
+                source: .observed,
+                confidence: .medium
+            )
+            let prompt = ProvenanceCodingAgentPromptRecord(
+                id: stableIDFactory.id(prefix: "coding-agent-prompt", value: turnSeed),
+                sessionID: sessionID,
+                turnID: turnID,
+                provider: "codex",
+                text: promptText,
+                submittedAt: submittedAt,
+                source: .observed,
+                confidence: .medium
+            )
+            let display = stableWorkspaceID.map { workspaceDisplay in
+                ProvenanceWorkspaceDisplayRecord(
+                    id: stableIDFactory.workspaceDisplayID(stableWorkspaceID: workspaceDisplay),
+                    workspaceID: workspaceDisplay.uuidString,
+                    repositoryID: gitContext?.repositoryID,
+                    worktreeID: gitContext?.worktreeID,
+                    currentDirectory: workingDirectory,
+                    lastSubmittedPrompt: promptText,
+                    lastSubmittedPromptSubmittedAt: submittedAt,
+                    lastSubmittedPromptSessionID: sessionID,
+                    observedAt: submittedAt,
+                    updatedAt: submittedAt
+                )
+            }
+            try await append(
+                eventType: .codingAgentPromptSubmitted,
+                envelopeID: stableIDFactory.id(prefix: "transcript-codex-prompt", value: turnSeed),
+                timestamp: submittedAt,
+                sessionID: sessionID,
+                repositoryID: gitContext?.repositoryID,
+                worktreeID: gitContext?.worktreeID,
+                confidence: .medium,
+                payload: ProvenanceEventPayload(
+                    repository: gitContext?.repository,
+                    worktree: gitContext?.worktree,
+                    session: session,
+                    workspaceDisplay: display,
+                    codingAgentTurn: turn,
+                    codingAgentPrompt: prompt
+                )
+            )
+        }
     }
 
     func codingAgentTurn(
@@ -256,39 +347,6 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let description = String(describing: error).lowercased()
         return description.contains("provenance_events")
             && (description.contains("unique") || description.contains("constraint") || description.contains("duplicate"))
-    }
-}
-
-private extension WorkProvenanceCodingAgentEvidenceRecorder {
-    func hookPromptText(from event: WorkstreamEvent) -> String? {
-        firstNonEmpty(
-            event.context?.lastUserMessage,
-            hookPromptText(fromJSON: event.toolInputJSON),
-            hookPromptText(fromJSON: event.extraFieldsJSON)
-        )
-    }
-
-    func hookPromptText(fromJSON json: String?) -> String? {
-        guard let json,
-              let data = json.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
-        else {
-            return nil
-        }
-        if let dictionary = object as? [String: Any] {
-            return hookPromptText(from: dictionary)
-        }
-        return nil
-    }
-
-    func hookPromptText(from object: [String: Any]) -> String? {
-        for key in ["prompt", "userPrompt", "lastUserMessage", "last_user_message", "text", "message"] {
-            if let value = object[key] as? String,
-               let prompt = trimmedNonEmpty(value) {
-                return prompt
-            }
-        }
-        return nil
     }
 }
 
