@@ -32,43 +32,23 @@ struct WorkProvenanceObserverTests {
     @MainActor
     @Test
     func workspaceResolverSearchesAllCandidateManagersByRuntimeOrStableID() throws {
-        let firstManager = TabManager()
-        let secondManager = TabManager()
-        let firstWorkspace = Workspace(title: "First Workspace")
-        let targetWorkspace = Workspace(title: "Prompt Linked Workspace")
-        firstManager.tabs = [firstWorkspace]
-        secondManager.tabs = [targetWorkspace]
+        let firstManager = TabManager(), secondManager = TabManager()
+        let firstWorkspace = Workspace(title: "First Workspace"), targetWorkspace = Workspace(title: "Prompt Linked Workspace")
+        firstManager.tabs = [firstWorkspace]; secondManager.tabs = [targetWorkspace]
         var immediateObservationCount = 0
-        let cancellable = targetWorkspace.sidebarImmediateObservationChangeSubject.sink {
-            immediateObservationCount += 1
-        }
+        let cancellable = targetWorkspace.sidebarImmediateObservationChangeSubject.sink { immediateObservationCount += 1 }
         defer { cancellable.cancel() }
+        let managers = [firstManager, secondManager]
+        let match = try #require(WorkProvenanceRuntime.workspaceMatch(matching: targetWorkspace.stableId, in: managers))
 
-        #expect(WorkProvenanceRuntime.workspace(
-            matching: targetWorkspace.id,
-            in: [firstManager, secondManager]
-        ) === targetWorkspace)
-        #expect(WorkProvenanceRuntime.workspace(
-            matching: targetWorkspace.stableId,
-            in: [firstManager, secondManager]
-        ) === targetWorkspace)
-        let match = try #require(WorkProvenanceRuntime.workspaceMatch(
-            matching: targetWorkspace.stableId,
-            in: [firstManager, secondManager]
-        ))
+        #expect(WorkProvenanceRuntime.workspace(matching: targetWorkspace.id, in: managers) === targetWorkspace)
+        #expect(WorkProvenanceRuntime.workspace(matching: targetWorkspace.stableId, in: managers) === targetWorkspace)
         #expect(match.tabManager === secondManager)
         #expect(match.workspace === targetWorkspace)
-        #expect(WorkProvenanceRuntime.stableWorkspaceIDs(in: [
-            firstManager,
-            secondManager,
-            secondManager,
-        ]) == [
-            firstWorkspace.stableId,
-            targetWorkspace.stableId,
-        ])
+        #expect(WorkProvenanceRuntime.stableWorkspaceIDs(in: managers + [secondManager]) == [firstWorkspace.stableId, targetWorkspace.stableId])
         #expect(WorkProvenanceRuntime.notifyWorkspaceDisplayCurrentStateDidChange(
             stableWorkspaceID: targetWorkspace.stableId,
-            in: [firstManager, secondManager]
+            in: managers
         ))
         #expect(immediateObservationCount == 1)
     }
