@@ -34,7 +34,7 @@ extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
         if let unknown = milestones.first(where: { $0.status == .unknown }) {
             return unknown.id
         }
-        return milestones.last(where: { $0.status == .completed })?.id
+        return nil
     }
 
     static func milestoneID(prefix: String, title: String, order: Int) -> String {

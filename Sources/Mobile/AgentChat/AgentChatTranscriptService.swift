@@ -465,15 +465,19 @@ final class AgentChatTranscriptService {
               record.state != .ended else {
             return
         }
-        ensureTailer(for: record)
-        AgentChatTranscriptPromptEvidenceSeeder.seed(
-            record: record,
-            resolver: resolver,
-            tokenOptimizationMode: tokenOptimizationModeProvider(),
-            recordPrompts: { [weak self] record, messages in
-                self?.recordTranscriptUserPrompts(record, messages)
-            }
-        )
+        guard let tailer = ensureTailer(for: record) else { return }
+        Task { @MainActor [weak self] in
+            await tailer.start()
+            guard let self else { return }
+            AgentChatTranscriptPromptEvidenceSeeder.seed(
+                record: record,
+                resolver: resolver,
+                tokenOptimizationMode: tokenOptimizationModeProvider(),
+                recordPrompts: { [weak self] record, messages in
+                    self?.recordTranscriptUserPrompts(record, messages)
+                }
+            )
+        }
     }
 
     private func publishBatch(_ batch: AgentChatTranscriptTailer.Batch, sessionID: String) {

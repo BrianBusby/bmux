@@ -49,6 +49,30 @@ struct MilestoneInferenceTests {
         #expect(hasPlanEvidence)
     }
 
+    @Test
+    func completedPlanStepsDoNotProduceCurrentMilestone() throws {
+        let base = FixtureBase()
+        let turn = base.turn(status: "started")
+        let plan = base.plan(
+            steps: [
+                (text: "Inspect existing semantic fields", status: "completed"),
+                (text: "Add milestone payload contracts", status: "completed"),
+            ],
+            turnID: turn.id,
+            offset: 6
+        )
+        let snapshot = base.snapshot(turns: [base.turnSnapshot(turn: turn, plan: plan)])
+
+        let records = ProvenanceCodingAgentSessionSemanticInferenceProducer.records(
+            for: snapshot,
+            createdAt: base.timestamp.addingTimeInterval(20)
+        )
+        let milestoneRecord = try Self.record(.milestones, scope: .session, scopeID: base.session.id, from: records)
+        let payload = try Self.milestonePayload(from: milestoneRecord)
+
+        #expect(payload.milestones.map(\.status) == [.completed, .completed])
+        #expect(payload.currentMilestoneID == nil)
+    }
 
     @Test
     func ambiguousTurnEvidencePublishesUnknownBroadMilestoneClaim() throws {
