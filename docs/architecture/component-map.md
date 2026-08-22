@@ -61,7 +61,7 @@ flowchart TB
   semfw["CURRENT: semantic inference framework"]
   semrec["CURRENT: semantic records/history"]
   semmsg["CURRENT: semantic presentation messages"]
-  swm["PLANNED: SessionWorkModel"]
+  swm["CURRENT: SessionWorkModel"]
   compiler["PLANNED: Knowledge Compiler"]
   store["PLANNED: Knowledge Store"]
   retrieval["PLANNED: retrieval"]

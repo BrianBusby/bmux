@@ -35,7 +35,7 @@ flowchart TD
   evidence --> pe["CURRENT: Provenance Engine package"]
   pe --> factual["CURRENT: deterministic factual projections"]
   pe --> semantic["CURRENT: semantic records and messages"]
-  semantic --> swm["PLANNED: SessionWorkModel"]
+  semantic --> swm["CURRENT: SessionWorkModel"]
   factual --> factualSession["CURRENT: factual native Session inspection"]
   factualSession --> session["PLANNED: React Smart Session presentation"]
   swm --> session
