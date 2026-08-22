@@ -11,6 +11,9 @@ public enum ProvenanceCodingAgentSemanticInferenceKind: String, Codable, Equatab
     /// Current high-level session phase.
     case sessionPhase = "coding_agent.session_phase"
 
+    /// Current milestone set inferred from bounded coding-agent plan or prompt evidence.
+    case milestones = "coding_agent.milestones"
+
     /// Current/latest concrete activity inside a turn.
     case currentActivity = "coding_agent.current_activity"
 }
@@ -385,6 +388,21 @@ public struct ProvenanceCodingAgentSessionSemanticInferenceProducer: Sendable {
         }
 
         let activityPayload = Self.currentActivityPayload(for: latestTurn)
+        let milestonePayload = Self.milestonePayload(for: latestTurn)
+        records.append(Self.record(
+            kind: .milestones,
+            scope: .session,
+            scopeID: snapshot.session.id,
+            payload: milestonePayload.semanticPayloadValue,
+            evidenceRefs: Self.evidenceRefs(for: milestonePayload, latestTurn: latestTurn, snapshot: snapshot),
+            revision: snapshot.revision,
+            confidence: milestonePayload.unknownReason == nil ? .medium : .unknown,
+            specificity: milestonePayload.unknownReason == nil ? .scoped : .broad,
+            createdAt: createdAt,
+            producerID: producerID,
+            producerVersion: producerVersion
+        ))
+
         let phasePayload = Self.sessionPhasePayload(from: activityPayload, latestTurn: latestTurn)
         records.append(Self.record(
             kind: .sessionPhase,
@@ -602,6 +620,52 @@ private extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
         return ProvenanceCodingAgentIntentPayload(
             summary: "Unknown turn intent",
             unknownReason: "No submitted prompt or active plan step is available for this turn."
+        )
+    }
+
+    static func milestonePayload(
+        for turn: ProvenanceFactualSessionProjectionTurnSnapshot?
+    ) -> ProvenanceCodingAgentMilestonePayload {
+        guard let turn else {
+            return ProvenanceCodingAgentMilestonePayload(
+                currentMilestoneID: nil,
+                milestones: [],
+                basis: "missing_turn",
+                unknownReason: "No coding-agent turn has been observed for this session."
+            )
+        }
+
+        if let plan = turn.currentPlan {
+            let milestones = milestones(from: plan)
+            if !milestones.isEmpty {
+                return ProvenanceCodingAgentMilestonePayload(
+                    currentMilestoneID: currentMilestoneID(in: milestones),
+                    milestones: milestones,
+                    basis: "current_plan"
+                )
+            }
+        }
+
+        if let prompt = turn.submittedPrompt,
+           let summary = normalizedEvidenceText(prompt.text) {
+            let milestone = ProvenanceCodingAgentMilestone(
+                id: milestoneID(prefix: "prompt", title: summary, order: 0),
+                title: summary,
+                status: .active,
+                order: 0
+            )
+            return ProvenanceCodingAgentMilestonePayload(
+                currentMilestoneID: milestone.id,
+                milestones: [milestone],
+                basis: "submitted_prompt"
+            )
+        }
+
+        return ProvenanceCodingAgentMilestonePayload(
+            currentMilestoneID: nil,
+            milestones: [],
+            basis: "insufficient_milestone_evidence",
+            unknownReason: "No bounded plan or submitted prompt evidence is available for this turn."
         )
     }
 
@@ -916,6 +980,34 @@ private extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
     }
 
     static func evidenceRefs(
+        for payload: ProvenanceCodingAgentMilestonePayload,
+        latestTurn: ProvenanceFactualSessionProjectionTurnSnapshot?,
+        snapshot: ProvenanceFactualSessionProjectionSnapshot
+    ) -> [ProvenanceSemanticEvidenceReference] {
+        var refs = baseEvidenceRefs(sessionID: snapshot.session.id, revision: snapshot.revision)
+        guard let latestTurn else { return refs }
+        refs.append(ProvenanceSemanticEvidenceReference(kind: "coding_agent_turn", id: latestTurn.turn.id))
+        switch payload.basis {
+        case "current_plan":
+            if let plan = latestTurn.currentPlan {
+                refs.append(ProvenanceSemanticEvidenceReference(kind: "coding_agent_plan_update", id: plan.id))
+            }
+        case "submitted_prompt":
+            if let prompt = latestTurn.submittedPrompt {
+                refs.append(ProvenanceSemanticEvidenceReference(kind: "coding_agent_prompt", id: prompt.id))
+            }
+        default:
+            if let plan = latestTurn.currentPlan {
+                refs.append(ProvenanceSemanticEvidenceReference(kind: "coding_agent_plan_update", id: plan.id))
+            }
+            if let prompt = latestTurn.submittedPrompt {
+                refs.append(ProvenanceSemanticEvidenceReference(kind: "coding_agent_prompt", id: prompt.id))
+            }
+        }
+        return deduplicated(refs)
+    }
+
+    static func evidenceRefs(
         for payload: ProvenanceCodingAgentSessionPhasePayload,
         latestTurn: ProvenanceFactualSessionProjectionTurnSnapshot?,
         snapshot: ProvenanceFactualSessionProjectionSnapshot
@@ -1008,6 +1100,67 @@ private extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
         return ["semantic", kind, scope.rawValue, scopeID, "rev", String(revision ?? 0), fingerprint]
             .map(sanitizedIDComponent)
             .joined(separator: "-")
+    }
+
+    static func milestones(
+        from plan: ProvenanceCodingAgentPlanUpdateRecord
+    ) -> [ProvenanceCodingAgentMilestone] {
+        let normalizedSteps = plan.steps
+            .sorted { lhs, rhs in
+                if lhs.order == rhs.order { return lhs.id < rhs.id }
+                return lhs.order < rhs.order
+            }
+            .compactMap { step -> (title: String, status: ProvenanceCodingAgentMilestoneStatus)? in
+                guard let title = normalizedEvidenceText(step.text) else { return nil }
+                return (title, milestoneStatus(from: step.status))
+            }
+
+        return normalizedSteps.enumerated().map { index, step in
+            ProvenanceCodingAgentMilestone(
+                id: milestoneID(prefix: "plan", title: step.title, order: index),
+                title: step.title,
+                status: step.status,
+                order: index
+            )
+        }
+    }
+
+    static func currentMilestoneID(in milestones: [ProvenanceCodingAgentMilestone]) -> String? {
+        if let active = milestones.first(where: { $0.status == .active }) {
+            return active.id
+        }
+        if let planned = milestones.first(where: { $0.status == .planned }) {
+            return planned.id
+        }
+        if let unknown = milestones.first(where: { $0.status == .unknown }) {
+            return unknown.id
+        }
+        return milestones.last(where: { $0.status == .completed })?.id
+    }
+
+    static func milestoneID(prefix: String, title: String, order: Int) -> String {
+        let fingerprint = fnv1a64Hex("\(prefix)|\(order)|\(title)")
+        return ["milestone", prefix, String(order), fingerprint]
+            .map(sanitizedIDComponent)
+            .joined(separator: "-")
+    }
+
+    static func milestoneStatus(from status: String) -> ProvenanceCodingAgentMilestoneStatus {
+        let normalized = status
+            .lowercased()
+            .replacingOccurrences(of: "-", with: "_")
+            .replacingOccurrences(of: " ", with: "_")
+            .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+        switch normalized {
+        case "pending", "todo", "planned", "not_started":
+            return .planned
+        case "in_progress", "active", "started":
+            return .active
+        case "completed", "complete", "done":
+            return .completed
+        default:
+            return .unknown
+        }
     }
 
     static func currentPlanStep(_ plan: ProvenanceCodingAgentPlanUpdateRecord?) -> ProvenanceCodingAgentPlanStepRecord? {

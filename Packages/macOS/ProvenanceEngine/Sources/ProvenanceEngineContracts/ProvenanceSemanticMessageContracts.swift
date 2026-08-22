@@ -513,6 +513,11 @@ private extension ProvenanceSemanticMessageRenderer {
                 return nil
             }
             return phaseMessage(payload)
+        case .milestones:
+            guard let payload = ProvenanceCodingAgentMilestonePayload(semanticPayloadValue: inference.payload) else {
+                return nil
+            }
+            return milestonesMessage(payload)
         case .currentActivity:
             guard let payload = ProvenanceCodingAgentCurrentActivityPayload(semanticPayloadValue: inference.payload) else {
                 return nil
@@ -554,6 +559,28 @@ private extension ProvenanceSemanticMessageRenderer {
         return RenderedMessage(
             concisePhrase: label,
             expandedMeaning: "The session is in the \(payload.phase.rawValue.replacingOccurrences(of: "_", with: " ")) phase because \(lowercaseFirst(payload.reason))."
+        )
+    }
+
+    static func milestonesMessage(_ payload: ProvenanceCodingAgentMilestonePayload) -> RenderedMessage {
+        if let unknownReason = payload.unknownReason {
+            return RenderedMessage(
+                concisePhrase: "Milestones unknown",
+                expandedMeaning: unknownReason
+            )
+        }
+
+        guard let currentMilestoneID = payload.currentMilestoneID,
+              let currentMilestone = payload.milestones.first(where: { $0.id == currentMilestoneID }) else {
+            return RenderedMessage(
+                concisePhrase: "Milestones inferred",
+                expandedMeaning: "The session has \(payload.milestones.count) inferred milestones."
+            )
+        }
+
+        return RenderedMessage(
+            concisePhrase: currentMilestone.title,
+            expandedMeaning: "The current milestone is \(lowercaseFirst(currentMilestone.title))."
         )
     }
 

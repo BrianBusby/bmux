@@ -1046,9 +1046,8 @@ It may use Provenance Engine for:
 - reading Current State for workspace tab and sidebar metadata such as title,
   branch, and pull request status after the relevant display projection
   contract exists
-- reading a future `SessionWorkModel` projection for a coherent live
-  coding-agent work view after richer session evidence and inference contracts
-  exist
+- reading `SessionWorkModel` for a coherent live coding-agent work view as
+  richer session evidence and inference contracts mature
 - displaying session trees
 - current-task context
 - worktree awareness

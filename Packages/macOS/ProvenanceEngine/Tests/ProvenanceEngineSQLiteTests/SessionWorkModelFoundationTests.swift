@@ -52,6 +52,7 @@ struct SessionWorkModelFoundationTests {
         #expect(model.thread?.intent.state == .unknown)
         #expect(currentTurn.intent.state == .unknown)
         #expect(currentTurn.currentActivity.state == .unknown)
+        #expect(model.milestones.state == .unknown)
         #expect(model.sessionPhase.state == .unknown)
         #expect(model.basis.semanticInferenceRecords.isEmpty)
         #expect(try await repository.factualSessionProjection(
@@ -91,6 +92,7 @@ struct SessionWorkModelFoundationTests {
         ])
         #expect(model.thread == nil)
         #expect(model.currentTurn == nil)
+        #expect(model.milestones.state == .unknown)
         #expect(model.sessionPhase.state == .unknown)
         #expect(model.basis.semanticInferenceRecords.isEmpty)
     }
@@ -121,22 +123,31 @@ struct SessionWorkModelFoundationTests {
         let threadIntent = try #require(model.thread?.intent.record)
         let turnIntent = try #require(currentTurn.intent.record)
         let currentActivity = try #require(currentTurn.currentActivity.record)
+        let milestones = try #require(model.milestones.record)
         let phase = try #require(model.sessionPhase.record)
+        let milestonePayload = try #require(ProvenanceCodingAgentMilestonePayload(
+            semanticPayloadValue: milestones.payload
+        ))
         let activityPayload = try #require(ProvenanceCodingAgentCurrentActivityPayload(
             semanticPayloadValue: currentActivity.payload
         ))
 
-        #expect(published.publishedInferenceIDs.count == 4)
+        #expect(published.publishedInferenceIDs.count == 5)
         #expect(model.revision.semanticInferenceIDs.sorted() == model.basis.semanticInferenceRecords.map(\.id).sorted())
-        #expect(model.basis.semanticInferenceRecords.count == 4)
+        #expect(model.basis.semanticInferenceRecords.count == 5)
         #expect(model.thread?.intent.state == .known)
         #expect(currentTurn.intent.state == .known)
         #expect(currentTurn.currentActivity.state == .known)
+        #expect(model.milestones.state == .known)
         #expect(model.sessionPhase.state == .known)
         #expect(threadIntent.supportingFactualRevision == model.revision.factualRevision)
         #expect(turnIntent.supportingFactualRevision == model.revision.factualRevision)
+        #expect(milestones.supportingFactualRevision == model.revision.factualRevision)
         #expect(currentActivity.supportingEvidenceRefs.isEmpty == false)
         #expect(phase.producerID == ProvenanceCodingAgentSessionSemanticInferenceProducer.producerID)
+        #expect(milestonePayload.basis == "submitted_prompt")
+        #expect(milestonePayload.milestones.map(\.title) == ["Implement the SessionWorkModel read path"])
+        #expect(milestonePayload.currentMilestoneID == milestonePayload.milestones.first?.id)
         #expect(activityPayload.activityKind == .investigation)
         #expect(activityPayload.summary == "Inspecting semantic inference records")
     }

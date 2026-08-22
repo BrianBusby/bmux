@@ -30,7 +30,7 @@ struct FirstSemanticSessionInferenceTests {
             )
         )
         let initialActivity = try Self.activityPayload(from: firstPass.records, scopeID: startedTurn.id)
-        #expect(firstPass.publishedInferenceIDs.count == 4)
+        #expect(firstPass.publishedInferenceIDs.count == 5)
         #expect(initialActivity.activityKind == .investigation)
         #expect(initialActivity.summary == "Reading workspace-selection callers before changing them")
 
@@ -63,7 +63,7 @@ struct FirstSemanticSessionInferenceTests {
             )
         )
 
-        #expect(secondPass.unchangedInferenceIDs.count == 2)
+        #expect(secondPass.unchangedInferenceIDs.count == 3)
         #expect(secondPass.publishedInferenceIDs.count == 2)
         #expect(updatedActivity.activityKind == .implementation)
         #expect(updatedActivity.summary == "Changing App Menu workspace selection to use TabManager")
@@ -181,6 +181,50 @@ struct FirstSemanticSessionInferenceTests {
     }
 
     @Test
+    func currentPlanStepsProduceSessionMilestones() throws {
+        let base = FixtureBase()
+        let turn = base.turn(status: "started")
+        let plan = base.plan(
+            steps: [
+                (text: "Inspect existing semantic fields", status: "completed"),
+                (text: "Add milestone payload contracts", status: "in_progress"),
+                (text: "Project milestones into SessionWorkModel", status: "pending"),
+            ],
+            turnID: turn.id,
+            offset: 6
+        )
+        let snapshot = base.snapshot(turns: [base.turnSnapshot(
+            turn: turn,
+            prompt: base.prompt("Implement milestone inference for coding-agent sessions.", turnID: turn.id),
+            plan: plan
+        )])
+
+        let records = ProvenanceCodingAgentSessionSemanticInferenceProducer.records(
+            for: snapshot,
+            createdAt: base.timestamp.addingTimeInterval(20)
+        )
+        let milestoneRecord = try Self.record(.milestones, scope: .session, scopeID: base.session.id, from: records)
+        let payload = try Self.milestonePayload(from: milestoneRecord)
+        let activeMilestone = try #require(payload.milestones.first { $0.status == .active })
+        let hasPlanEvidence = milestoneRecord.supportingEvidenceRefs.contains {
+            $0.kind == "coding_agent_plan_update" && $0.id == plan.id
+        }
+
+        #expect(payload.basis == "current_plan")
+        #expect(payload.milestones.map(\.title) == [
+            "Inspect existing semantic fields",
+            "Add milestone payload contracts",
+            "Project milestones into SessionWorkModel",
+        ])
+        #expect(payload.milestones.map(\.status) == [.completed, .active, .planned])
+        #expect(payload.milestones.count == 3)
+        #expect(payload.currentMilestoneID == activeMilestone.id)
+        #expect(milestoneRecord.confidence == .medium)
+        #expect(milestoneRecord.specificity == .scoped)
+        #expect(hasPlanEvidence)
+    }
+
+    @Test
     func ambiguousTurnEvidencePublishesUnknownBroadClaims() throws {
         let base = FixtureBase()
         let turn = base.turn(status: "started")
@@ -191,15 +235,21 @@ struct FirstSemanticSessionInferenceTests {
             createdAt: base.timestamp.addingTimeInterval(20)
         )
         let turnIntentRecord = try Self.record(.turnIntent, scope: .turn, scopeID: turn.id, from: records)
+        let milestoneRecord = try Self.record(.milestones, scope: .session, scopeID: base.session.id, from: records)
         let activityRecord = try Self.record(.currentActivity, scope: .turn, scopeID: turn.id, from: records)
         let phaseRecord = try Self.record(.sessionPhase, scope: .session, scopeID: base.session.id, from: records)
         let turnIntent = try #require(ProvenanceCodingAgentIntentPayload(semanticPayloadValue: turnIntentRecord.payload))
+        let milestonePayload = try Self.milestonePayload(from: milestoneRecord)
         let activity = try Self.activityPayload(from: activityRecord)
         let phase = try Self.phasePayload(from: phaseRecord)
 
         #expect(turnIntent.summary == "Unknown turn intent")
         #expect(turnIntentRecord.confidence == .unknown)
         #expect(turnIntentRecord.specificity == .broad)
+        #expect(milestonePayload.milestones.isEmpty)
+        #expect(milestonePayload.unknownReason != nil)
+        #expect(milestoneRecord.confidence == .unknown)
+        #expect(milestoneRecord.specificity == .broad)
         #expect(activity.activityKind == .unknown)
         #expect(activityRecord.confidence == .unknown)
         #expect(activityRecord.specificity == .broad)
@@ -246,6 +296,7 @@ struct FirstSemanticSessionInferenceTests {
         #expect(first.map(\.kind) == [
             ProvenanceCodingAgentSemanticInferenceKind.threadIntent.rawValue,
             ProvenanceCodingAgentSemanticInferenceKind.turnIntent.rawValue,
+            ProvenanceCodingAgentSemanticInferenceKind.milestones.rawValue,
             ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue,
             ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue,
         ])
@@ -286,6 +337,12 @@ struct FirstSemanticSessionInferenceTests {
         from record: ProvenanceSemanticInferenceRecord
     ) throws -> ProvenanceCodingAgentCurrentActivityPayload {
         try #require(ProvenanceCodingAgentCurrentActivityPayload(semanticPayloadValue: record.payload))
+    }
+
+    private static func milestonePayload(
+        from record: ProvenanceSemanticInferenceRecord
+    ) throws -> ProvenanceCodingAgentMilestonePayload {
+        try #require(ProvenanceCodingAgentMilestonePayload(semanticPayloadValue: record.payload))
     }
 
     private static func phasePayload(
@@ -384,6 +441,14 @@ private struct FixtureBase {
     }
 
     func plan(_ text: String, turnID: String, offset: TimeInterval = 5) -> ProvenanceCodingAgentPlanUpdateRecord {
+        plan(steps: [(text: text, status: "in_progress")], turnID: turnID, offset: offset)
+    }
+
+    func plan(
+        steps: [(text: String, status: String)],
+        turnID: String,
+        offset: TimeInterval = 5
+    ) -> ProvenanceCodingAgentPlanUpdateRecord {
         ProvenanceCodingAgentPlanUpdateRecord(
             id: "plan-\(turnID)-\(Int(offset))",
             sessionID: session.id,
@@ -391,14 +456,14 @@ private struct FixtureBase {
             turnID: turnID,
             provider: "codex",
             explanation: nil,
-            steps: [
+            steps: steps.enumerated().map { index, step in
                 ProvenanceCodingAgentPlanStepRecord(
-                    id: "plan-step-\(turnID)-\(Int(offset))",
-                    order: 0,
-                    text: text,
-                    status: "in_progress"
-                ),
-            ],
+                    id: "plan-step-\(turnID)-\(Int(offset))-\(index)",
+                    order: index,
+                    text: step.text,
+                    status: step.status
+                )
+            },
             observedAt: timestamp.addingTimeInterval(offset),
             source: .observed,
             confidence: .high

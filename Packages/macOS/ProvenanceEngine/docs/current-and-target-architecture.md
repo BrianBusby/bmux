@@ -38,8 +38,8 @@ state, immediate interaction, normalization at the product edge, presentation,
 UI, capture policy, optimistic UI, and user-facing fallback behavior.
 
 Provenance Engine owns accepted durable evidence, deterministic Current State,
-factual projections, semantic inference, the future `SessionWorkModel`,
-milestone semantics, scoped architecture projections, and later knowledge
+factual projections, semantic inference, `SessionWorkModel`, milestone
+semantics, scoped architecture projections, and later knowledge
 compilation, storage, retrieval, citation, and context budgeting.
 
 The boundary is intentionally asymmetric: bmux sees more than it persists.
@@ -62,7 +62,7 @@ underlying provider session identity:
 
 Provenance Engine is on the durable side of that model. It owns accepted
 evidence, deterministic factual session projection, semantic inference records,
-semantic messages, and the future `SessionWorkModel`. The React Terminal view
+semantic messages, and `SessionWorkModel`. The React Terminal view
 may use ephemeral provider/runtime events directly, but the React Session view
 should preferentially consume PE factual and semantic contracts rather than
 reinterpreting raw provider events inside bmux.

@@ -742,7 +742,7 @@ roadmap:
       kind: slice
       title: Project Truth dependency and capability frontier governance
       parent: project_truth_manifest_and_ci
-      status: active
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -753,7 +753,7 @@ roadmap:
         tags:
           - capability_frontier
           - roadmap_readiness
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - monorepo_repository_consolidation
       parallelism:
@@ -779,14 +779,25 @@ roadmap:
         worktree_required: true
         conflict_note: Infrastructure-only governance slice. It may run beside semantic-session implementation work when it does not edit product contracts, runtime behavior, or downstream PE capability code.
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: provenance_engine
-        active_worktree: /Users/brianbusby/repos/bmux-project-truth-capability-frontier-governance
-        active_branch: project-truth-capability-frontier-governance
-        active_agent: Codex
-      delivery_status: open
-      acceptance_status: proposed
+      delivery_status: merged
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 0ce21dfb424d69368f4562e6b98e20e893e6cb76
+          - repository: BrianBusby/bmux
+            sha: 8a8a4de3064cd91bf05b6507279edae052f82a18
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 60
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-21
       rationale: Add explicit capability maturity, readiness gates, primary frontier reporting, and stricter validation so documented future architecture cannot become implementation-ready without Project Truth authorization.
+      acceptance_reason: "PR #60 merged capability maturity, readiness gates, primary frontier reporting, stricter validation, and generated preflight visibility."
 
     - id: richer_session_understanding
       kind: program
@@ -2503,14 +2514,15 @@ roadmap:
       kind: slice
       title: Milestone inference
       parent: semantic_milestone_relationships
-      status: planned
+      status: active
       owner: provenance_engine
       repositories:
         - provenance_engine
+        - bmux
       concept_classification:
         primary: structured_work_understanding
         architecture_layer: inference_session_work_projections
-      capability_maturity: ready
+      capability_maturity: active
       depends_on:
         - first_semantic_session_inferences
       enables:
@@ -2522,8 +2534,9 @@ roadmap:
           - milestone_semantics
           - session_work_model_milestones
         expected_code_areas:
-          - Sources/ProvenanceEngineCore
-          - Tests/ProvenanceEngineTests
+          - Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts
+          - Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite
+          - Packages/macOS/ProvenanceEngine/Tests
         likely_conflict_domains:
           - milestone_semantics
           - session_work_model_projection
@@ -2531,9 +2544,12 @@ roadmap:
           - semantic_session_inferences
         worktree_required: true
       execution:
-        assignment: selected_next
+        assignment: current
         assigned_to: provenance_engine
-      delivery_status: proposed
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/milestone-inference
+        active_branch: milestone-inference
+        active_agent: Codex
+      delivery_status: open
       acceptance_status: proposed
 
     - id: blocker_approach_change_semantics

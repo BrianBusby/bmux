@@ -112,6 +112,7 @@ struct ProvenanceEngineSessionWorkModelClientFactoryTests {
         #expect(model.currentTurn?.turn == turn)
         #expect(model.currentTurn?.prompt == prompt)
         #expect(model.currentTurn?.intent.state == .unknown)
+        #expect(model.milestones.state == .unknown)
     }
 
     private static func temporaryDatabaseURL() -> URL {

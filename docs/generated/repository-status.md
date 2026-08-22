@@ -13,7 +13,7 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Project Truth dependency and capability frontier governance (`project_truth_capability_frontier_governance`)
+- Active slice: Milestone inference (`milestone_inference`)
 - Slice state: open
 - Owner: provenance_engine
 - Repository state: active
@@ -47,7 +47,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine First Semantic Session Inferences | implemented |
 | Provenance Engine Human Readable Semantic Messaging | implemented |
 | Provenance Engine Immutable Ledger | implemented |
-| Provenance Engine Milestone Inference | planned |
+| Provenance Engine Milestone Inference | implemented |
 | Provenance Engine Producer Neutral Lifecycle Recording | implemented |
 | Provenance Engine Public In Process Sdk | implemented |
 | Provenance Engine Related Session Read Model | planned |

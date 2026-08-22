@@ -79,7 +79,7 @@ flowchart TB
 ```
 
 PE's implemented semantic layer records inferred meaning and separately
-materializes human-readable messages. The future `SessionWorkModel` should
+materializes human-readable messages. `SessionWorkModel` should
 compose factual projections, semantic records, semantic messages, and provenance
 references into a stable consumer snapshot.
 
@@ -92,4 +92,3 @@ references into a stable consumer snapshot.
   contracts and SDK.
 - Shared Project Truth status lives at repository root, not inside PE or a peer
   checkout.
-

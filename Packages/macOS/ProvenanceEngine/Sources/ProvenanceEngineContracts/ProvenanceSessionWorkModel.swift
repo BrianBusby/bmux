@@ -20,6 +20,9 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
     /// Compact factual references for earlier turns.
     public let priorTurns: [ProvenanceFactualSessionProjectionTurnReference]
 
+    /// Session-level semantic milestone set.
+    public let milestones: ProvenanceSessionWorkModelSemanticField
+
     /// Session-level semantic phase.
     public let sessionPhase: ProvenanceSessionWorkModelSemanticField
 
@@ -35,15 +38,17 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
     ///   - thread: Current provider thread and thread-level meaning.
     ///   - currentTurn: Latest turn and turn-level meaning.
     ///   - priorTurns: Compact references for earlier turns.
+    ///   - milestones: Session-level milestone field.
     ///   - sessionPhase: Session-level phase field.
     ///   - basis: Source factual and semantic layers used for composition.
     public init(
-        schemaVersion: Int = 1,
+        schemaVersion: Int = 2,
         revision: ProvenanceSessionWorkModelRevision,
         identity: ProvenanceSessionWorkModelIdentity,
         thread: ProvenanceSessionWorkModelThread?,
         currentTurn: ProvenanceSessionWorkModelCurrentTurn?,
         priorTurns: [ProvenanceFactualSessionProjectionTurnReference],
+        milestones: ProvenanceSessionWorkModelSemanticField? = nil,
         sessionPhase: ProvenanceSessionWorkModelSemanticField,
         basis: ProvenanceSessionWorkModelBasis
     ) {
@@ -53,7 +58,67 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
         self.thread = thread
         self.currentTurn = currentTurn
         self.priorTurns = priorTurns
+        self.milestones = milestones ?? Self.defaultMilestones(identity: identity)
         self.sessionPhase = sessionPhase
         self.basis = basis
+    }
+
+    /// Decodes a SessionWorkModel, defaulting missing v1 milestone fields to unknown.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let identity = try container.decode(ProvenanceSessionWorkModelIdentity.self, forKey: .identity)
+        self.schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        self.revision = try container.decode(ProvenanceSessionWorkModelRevision.self, forKey: .revision)
+        self.identity = identity
+        self.thread = try container.decodeIfPresent(ProvenanceSessionWorkModelThread.self, forKey: .thread)
+        self.currentTurn = try container.decodeIfPresent(ProvenanceSessionWorkModelCurrentTurn.self, forKey: .currentTurn)
+        self.priorTurns = try container.decode(
+            [ProvenanceFactualSessionProjectionTurnReference].self,
+            forKey: .priorTurns
+        )
+        self.milestones = try container.decodeIfPresent(
+            ProvenanceSessionWorkModelSemanticField.self,
+            forKey: .milestones
+        ) ?? Self.defaultMilestones(identity: identity)
+        self.sessionPhase = try container.decode(ProvenanceSessionWorkModelSemanticField.self, forKey: .sessionPhase)
+        self.basis = try container.decode(ProvenanceSessionWorkModelBasis.self, forKey: .basis)
+    }
+
+    /// Encodes a SessionWorkModel snapshot.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(schemaVersion, forKey: .schemaVersion)
+        try container.encode(revision, forKey: .revision)
+        try container.encode(identity, forKey: .identity)
+        try container.encodeIfPresent(thread, forKey: .thread)
+        try container.encodeIfPresent(currentTurn, forKey: .currentTurn)
+        try container.encode(priorTurns, forKey: .priorTurns)
+        try container.encode(milestones, forKey: .milestones)
+        try container.encode(sessionPhase, forKey: .sessionPhase)
+        try container.encode(basis, forKey: .basis)
+    }
+
+    private static func defaultMilestones(
+        identity: ProvenanceSessionWorkModelIdentity
+    ) -> ProvenanceSessionWorkModelSemanticField {
+        ProvenanceSessionWorkModelSemanticField(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.milestones.rawValue,
+            scope: .session,
+            scopeID: identity.session.id,
+            state: .unknown,
+            reason: "no_active_semantic_inference"
+        )
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion
+        case revision
+        case identity
+        case thread
+        case currentTurn
+        case priorTurns
+        case milestones
+        case sessionPhase
+        case basis
     }
 }

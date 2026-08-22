@@ -52,6 +52,5 @@ semantic, and provenance detail available on demand.
 
 bmux presents the views and owns interaction. PE owns accepted evidence,
 deterministic factual projection, semantic records, semantic messages, and the
-future `SessionWorkModel`. React should render PE-owned meaning, not recreate
+`SessionWorkModel`. React should render PE-owned meaning, not recreate
 that meaning from raw provider events.
-

@@ -2,7 +2,7 @@
 
 Provenance Engine is a Swift package that separates public provenance contracts from storage implementation.
 
-This document describes the architecture currently implemented in this package and the active design boundaries for adoption. The package north star is `docs/reference-architecture.md`. Public adopter contracts live in `docs/integration-contract.md`, and the accepted target design for the future high-level live coding-agent projection lives in `docs/session-work-model.md`.
+This document describes the architecture currently implemented in this package and the active design boundaries for adoption. The package north star is `docs/reference-architecture.md`. Public adopter contracts live in `docs/integration-contract.md`, and the accepted target design plus implemented foundation for the high-level live coding-agent projection lives in `docs/session-work-model.md`.
 
 For the canonical monorepo architecture map, start with
 `../../../../docs/architecture/README.md`.
@@ -21,7 +21,7 @@ The SQLite backend stores an immutable event ledger and rebuildable current-stat
 
 Current accepted projections include repositories, worktrees, sessions, session relationships, file explanations, current context records, workspace-display Current State, and factual session projection snapshots for coding-agent evidence.
 
-Implemented semantic contracts include versioned semantic inference records, first coding-agent semantic inference kinds, semantic message records, deterministic message materialization, and the public `SessionWorkModel` foundation/read path. Milestone semantics, blocker/approach-change semantics, and scoped architecture projection remain planned target behavior.
+Implemented semantic contracts include versioned semantic inference records, first coding-agent semantic inference kinds, semantic message records, deterministic message materialization, the public `SessionWorkModel` foundation/read path, and the first plan/prompt-backed milestone field. Nested milestone hierarchy, blocker/approach-change semantics, and scoped architecture projection remain planned target behavior.
 
 ## Evidence Model
 
