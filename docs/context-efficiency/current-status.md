@@ -78,7 +78,10 @@ Session tab. Dogfood on build 480 showed prompt evidence was recorded but not
 linked when transcript backfill resolved only the runtime workspace id; the
 runtime now resolves prompt evidence through all routed app tab managers so the
 stable workspace display row receives the session link. This does not complete
-the broader live rich-evidence ingestion target.
+the broader live rich-evidence ingestion target. Routed workspace display
+refreshes now notify the owning tab manager rather than only the startup
+manager, so linked prompt state can update immediately in the window that owns
+the workspace.
 
 Next ingestion target: implement live normal-terminal Codex evidence ingestion
 by tailing newly appended Codex transcript facts through the same canonical PE

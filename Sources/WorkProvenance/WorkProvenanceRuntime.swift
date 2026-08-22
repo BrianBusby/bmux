@@ -309,7 +309,7 @@ final class WorkProvenanceRuntime {
     private func startWorkspaceDisplayCurrentStateSubscriptionIfNeeded() {
         workspaceDisplayCurrentStateSubscription?.start(
             stableWorkspaceIDs: { [weak self] in
-                self?.tabManager?.tabs.map(\.stableId) ?? []
+                self?.currentDisplayStableWorkspaceIDs() ?? []
             },
             refresh: { [weak self] stableWorkspaceIDs in
                 self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: stableWorkspaceIDs)
@@ -325,14 +325,17 @@ final class WorkProvenanceRuntime {
         let workspaceID = (notification.userInfo?["workspaceId"] as? UUID)
             ?? (notification.userInfo?[GhosttyNotificationKey.tabId] as? UUID)
         guard let workspaceID,
-              let workspace = tabManager?.tabs.first(where: { $0.id == workspaceID }) else {
+              let workspace = Self.workspace(
+                matching: workspaceID,
+                in: workspaceResolutionTabManagers(for: workspaceID)
+              ) else {
             return
         }
         observeWorkspaces([workspace])
     }
 
     private func refreshAllWorkspaceDisplayCurrentState() {
-        refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: tabManager?.tabs.map(\.stableId) ?? [])
+        refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: currentDisplayStableWorkspaceIDs())
     }
 
     private func refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [UUID]) {
@@ -353,18 +356,53 @@ final class WorkProvenanceRuntime {
     }
 
     static func workspace(matching workspaceID: UUID, in tabManagers: [TabManager]) -> Workspace? {
+        workspaceMatch(matching: workspaceID, in: tabManagers)?.workspace
+    }
+
+    static func workspaceMatch(
+        matching workspaceID: UUID,
+        in tabManagers: [TabManager]
+    ) -> (tabManager: TabManager, workspace: Workspace)? {
         var seenManagers: Set<ObjectIdentifier> = []
         for tabManager in tabManagers where seenManagers.insert(ObjectIdentifier(tabManager)).inserted {
             if let workspace = tabManager.tabs.first(where: { workspace in
                 workspace.id == workspaceID || workspace.stableId == workspaceID
             }) {
-                return workspace
+                return (tabManager, workspace)
             }
         }
         return nil
     }
 
-    private func workspaceResolutionTabManagers(for runtimeOrStableWorkspaceID: UUID) -> [TabManager] {
+    static func stableWorkspaceIDs(in tabManagers: [TabManager]) -> [UUID] {
+        var seenWorkspaceIDs: Set<UUID> = []
+        var ids: [UUID] = []
+        for tabManager in tabManagers {
+            for workspace in tabManager.tabs where seenWorkspaceIDs.insert(workspace.stableId).inserted {
+                ids.append(workspace.stableId)
+            }
+        }
+        return ids
+    }
+
+    @discardableResult
+    static func notifyWorkspaceDisplayCurrentStateDidChange(
+        stableWorkspaceID: UUID,
+        in tabManagers: [TabManager]
+    ) -> Bool {
+        guard let match = workspaceMatch(matching: stableWorkspaceID, in: tabManagers) else {
+            return false
+        }
+        match.tabManager.objectWillChange.send()
+        match.workspace.sidebarImmediateObservationChangeSubject.send(())
+        return true
+    }
+
+    private func currentDisplayStableWorkspaceIDs() -> [UUID] {
+        Self.stableWorkspaceIDs(in: workspaceResolutionTabManagers(for: nil))
+    }
+
+    private func workspaceResolutionTabManagers(for runtimeOrStableWorkspaceID: UUID?) -> [TabManager] {
         var managers: [TabManager] = []
         var seenManagers: Set<ObjectIdentifier> = []
         func append(_ manager: TabManager?) {
@@ -377,7 +415,9 @@ final class WorkProvenanceRuntime {
 
         append(tabManager)
         guard let appDelegate = AppDelegate.shared else { return managers }
-        append(appDelegate.tabManagerFor(tabId: runtimeOrStableWorkspaceID))
+        if let runtimeOrStableWorkspaceID {
+            append(appDelegate.tabManagerFor(tabId: runtimeOrStableWorkspaceID))
+        }
         append(appDelegate.tabManager)
         for window in appDelegate.scriptableMainWindows() {
             append(window.tabManager)
@@ -386,12 +426,10 @@ final class WorkProvenanceRuntime {
     }
 
     private func workspaceDisplayCurrentStateDidChange(stableWorkspaceID: UUID) {
-        guard let tabManager,
-              let workspace = tabManager.tabs.first(where: { $0.stableId == stableWorkspaceID }) else {
-            return
-        }
-        tabManager.objectWillChange.send()
-        workspace.sidebarImmediateObservationChangeSubject.send(())
+        Self.notifyWorkspaceDisplayCurrentStateDidChange(
+            stableWorkspaceID: stableWorkspaceID,
+            in: workspaceResolutionTabManagers(for: stableWorkspaceID)
+        )
     }
 
     private static var isRunningUnderXCTest: Bool {
