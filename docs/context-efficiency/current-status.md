@@ -70,6 +70,13 @@ Normal Coding-Agent Evidence Ingestion slice,
 Codex JSONL transcripts via `bmux provenance import codex-transcripts`; live
 normal-terminal tailing and multi-source reconciliation remain planned.
 
+Live prompt-link repair is implemented for active Codex sessions: on
+`UserPromptSubmit`, bmux now starts/resumes transcript observation and runs the
+bounded Codex prompt backfill even when no mobile chat subscriber is attached,
+so PE can receive prompt evidence and a `lastSubmittedPromptSessionID` for the
+Session tab. This does not complete the broader live rich-evidence ingestion
+target.
+
 Next ingestion target: implement live normal-terminal Codex evidence ingestion
 by tailing newly appended Codex transcript facts through the same canonical PE
 evidence path.

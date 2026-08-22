@@ -251,6 +251,7 @@ final class AgentChatTranscriptService {
         switch event.hookEventName {
         case .userPromptSubmit:
             recordHookUserPromptSubmit(record, event)
+            recordLiveCodexPromptEvidenceFromTranscript(for: record)
             if record.state != .ended,
                let surfaceID = record.surfaceID.flatMap(UUID.init(uuidString:)) {
                 proseStreamer.turnStarted(
@@ -457,6 +458,22 @@ final class AgentChatTranscriptService {
         tailers[sessionID] = tailer
         Task { await tailer.start() }
         return tailer
+    }
+
+    private func recordLiveCodexPromptEvidenceFromTranscript(for record: AgentChatSessionRecord) {
+        guard record.agentKind == .codex,
+              record.state != .ended else {
+            return
+        }
+        ensureTailer(for: record)
+        AgentChatTranscriptPromptEvidenceSeeder.seed(
+            record: record,
+            resolver: resolver,
+            tokenOptimizationMode: tokenOptimizationModeProvider(),
+            recordPrompts: { [weak self] record, messages in
+                self?.recordTranscriptUserPrompts(record, messages)
+            }
+        )
     }
 
     private func publishBatch(_ batch: AgentChatTranscriptTailer.Batch, sessionID: String) {
