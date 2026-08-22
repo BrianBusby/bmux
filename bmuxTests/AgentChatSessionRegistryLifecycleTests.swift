@@ -608,22 +608,13 @@ struct AgentChatSessionRegistryLifecycleTests {
         ].joined(separator: "\n").appending("\n").write(to: transcriptURL, atomically: true, encoding: .utf8)
         var recorded = [(record: AgentChatSessionRecord, messages: [ChatMessage])]()
         let service = AgentChatTranscriptService(
-            registry: AgentChatSessionRegistry(),
-            resolver: AgentChatTranscriptResolver(homeDirectory: home, environment: [:]),
-            hasEventSubscribers: { false },
-            recordTranscriptUserPrompts: { recorded.append(($0, $1)) }
+            registry: AgentChatSessionRegistry(), resolver: AgentChatTranscriptResolver(homeDirectory: home, environment: [:]),
+            hasEventSubscribers: { false }, recordTranscriptUserPrompts: { recorded.append(($0, $1)) }
         )
-
         service.noteHookEvent(WorkstreamEvent(
-            sessionId: sessionID,
-            hookEventName: .userPromptSubmit,
-            source: "codex",
-            workspaceId: workspaceID,
-            surfaceId: surfaceID,
-            transcriptPath: transcriptURL.path,
-            cwd: "/Users/example/project"
+            sessionId: sessionID, hookEventName: .userPromptSubmit, source: "codex",
+            workspaceId: workspaceID, surfaceId: surfaceID, transcriptPath: transcriptURL.path, cwd: "/Users/example/project"
         ))
-
         for _ in 0..<100 where recorded.isEmpty { try await Task.sleep(nanoseconds: 10_000_000) }
         let captured = try #require(recorded.first)
         let texts = captured.messages.compactMap { message -> String? in guard case .prose(let prose) = message.kind else { return nil }; return prose.text }
