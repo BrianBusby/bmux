@@ -74,8 +74,11 @@ Live prompt-link repair is implemented for active Codex sessions: on
 `UserPromptSubmit`, bmux now starts/resumes transcript observation and runs the
 bounded Codex prompt backfill even when no mobile chat subscriber is attached,
 so PE can receive prompt evidence and a `lastSubmittedPromptSessionID` for the
-Session tab. This does not complete the broader live rich-evidence ingestion
-target.
+Session tab. Dogfood on build 480 showed prompt evidence was recorded but not
+linked when transcript backfill resolved only the runtime workspace id; the
+runtime now resolves prompt evidence through all routed app tab managers so the
+stable workspace display row receives the session link. This does not complete
+the broader live rich-evidence ingestion target.
 
 Next ingestion target: implement live normal-terminal Codex evidence ingestion
 by tailing newly appended Codex transcript facts through the same canonical PE

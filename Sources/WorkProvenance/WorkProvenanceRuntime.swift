@@ -346,9 +346,43 @@ final class WorkProvenanceRuntime {
 
     private func workspace(forRuntimeOrStableWorkspaceID workspaceID: String?) -> Workspace? {
         guard let workspaceID = workspaceID.flatMap(UUID.init(uuidString:)) else { return nil }
-        return tabManager?.tabs.first { workspace in
-            workspace.id == workspaceID || workspace.stableId == workspaceID
+        return Self.workspace(
+            matching: workspaceID,
+            in: workspaceResolutionTabManagers(for: workspaceID)
+        )
+    }
+
+    static func workspace(matching workspaceID: UUID, in tabManagers: [TabManager]) -> Workspace? {
+        var seenManagers: Set<ObjectIdentifier> = []
+        for tabManager in tabManagers where seenManagers.insert(ObjectIdentifier(tabManager)).inserted {
+            if let workspace = tabManager.tabs.first(where: { workspace in
+                workspace.id == workspaceID || workspace.stableId == workspaceID
+            }) {
+                return workspace
+            }
         }
+        return nil
+    }
+
+    private func workspaceResolutionTabManagers(for runtimeOrStableWorkspaceID: UUID) -> [TabManager] {
+        var managers: [TabManager] = []
+        var seenManagers: Set<ObjectIdentifier> = []
+        func append(_ manager: TabManager?) {
+            guard let manager,
+                  seenManagers.insert(ObjectIdentifier(manager)).inserted else {
+                return
+            }
+            managers.append(manager)
+        }
+
+        append(tabManager)
+        guard let appDelegate = AppDelegate.shared else { return managers }
+        append(appDelegate.tabManagerFor(tabId: runtimeOrStableWorkspaceID))
+        append(appDelegate.tabManager)
+        for window in appDelegate.scriptableMainWindows() {
+            append(window.tabManager)
+        }
+        return managers
     }
 
     private func workspaceDisplayCurrentStateDidChange(stableWorkspaceID: UUID) {

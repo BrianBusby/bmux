@@ -28,6 +28,24 @@ struct WorkProvenanceObserverTests {
         ) == "https://linear.app/companycam/project/starter-template-rollout")
     }
 
+    @MainActor
+    @Test
+    func workspaceResolverSearchesAllCandidateManagersByRuntimeOrStableID() {
+        let firstManager = TabManager()
+        let secondManager = TabManager()
+        let targetWorkspace = Workspace(title: "Prompt Linked Workspace")
+        secondManager.tabs = [targetWorkspace]
+
+        #expect(WorkProvenanceRuntime.workspace(
+            matching: targetWorkspace.id,
+            in: [firstManager, secondManager]
+        ) === targetWorkspace)
+        #expect(WorkProvenanceRuntime.workspace(
+            matching: targetWorkspace.stableId,
+            in: [firstManager, secondManager]
+        ) === targetWorkspace)
+    }
+
     @Test
     func defaultRuntimeStoreObservationCanBeReadThroughPublicCurrentContext() async throws {
         let homeDirectory = FileManager.default.temporaryDirectory
