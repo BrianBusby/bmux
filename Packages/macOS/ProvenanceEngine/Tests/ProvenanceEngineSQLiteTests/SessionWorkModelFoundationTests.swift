@@ -43,6 +43,9 @@ struct SessionWorkModelFoundationTests {
         let currentTurn = try #require(model.currentTurn)
 
         #expect(response.found == true)
+        #expect(model.schemaVersion == 2)
+        #expect(model.revision.schemaVersion == model.schemaVersion)
+        #expect(model.revision.modelRevisionKey.hasPrefix("schema:2"))
         #expect(model.identity.session.id == base.session.id)
         #expect(model.thread?.identity.threadID == base.thread.id)
         #expect(currentTurn.turn.id == turn.id)
