@@ -112,6 +112,27 @@ struct CLIProvenanceCodexTranscriptImporterTests {
     }
 
     @Test
+    func liveImportKeepsTailStateWhenAppendFails() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("codex-session.jsonl")
+        let lines = try Self.codexTranscriptFixtureLines()
+        try (lines[0] + "\n").write(to: transcriptURL, atomically: true, encoding: .utf8)
+        let importer = CLIProvenanceCodexTranscriptImporter(client: FailingAppendClient())
+        var state = CLIProvenanceCodexTranscriptImporter.LiveImportState()
+
+        do {
+            _ = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+            Issue.record("Expected append failure to fail the live import batch")
+        } catch {
+            #expect(state.offset == 0)
+            #expect(state.nextLineNumber == 1)
+            #expect(state.metadata == nil)
+            #expect(state.pendingLines.isEmpty)
+        }
+    }
+
+    @Test
     func hookAndLiveTranscriptEvidenceShareOneFactualTurn() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
@@ -337,6 +358,66 @@ struct CLIProvenanceCodexTranscriptImporterTests {
     private struct EmptyGitInspector: WorkProvenanceGitInspecting {
         func snapshot(for directory: String) async -> WorkProvenanceGitSnapshot? {
             nil
+        }
+    }
+
+    private actor FailingAppendClient: ProvenanceEngineContracts.ProvenanceEngineClient {
+        func health() async throws -> ProvenanceEngineContracts.ProvenanceEngineHealth {
+            throw CancellationError()
+        }
+
+        func appendEvent(
+            _ request: ProvenanceEngineContracts.ProvenanceAppendEventRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceAppendEventResponse {
+            throw CancellationError()
+        }
+
+        func recordSessionLifecycle(
+            _ request: ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest
+        ) async -> ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse {
+            ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse(
+                accepted: false,
+                eventID: nil,
+                sessionID: nil,
+                relationshipSessionID: nil,
+                externalIdentityID: nil
+            )
+        }
+
+        func sessionTree(
+            _ request: ProvenanceEngineContracts.ProvenanceSessionTreeRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceSessionTreeResponse {
+            throw CancellationError()
+        }
+
+        func fileExplanation(
+            _ request: ProvenanceEngineContracts.ProvenanceFileExplanationRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceFileExplanationResponse {
+            throw CancellationError()
+        }
+
+        func worktrees(
+            _ request: ProvenanceEngineContracts.ProvenanceWorktreeListRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceWorktreeListResponse {
+            throw CancellationError()
+        }
+
+        func currentContext(
+            _ request: ProvenanceEngineContracts.ProvenanceCurrentContextRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceCurrentContextResponse {
+            throw CancellationError()
+        }
+
+        func workspaceDisplay(
+            _ request: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse {
+            throw CancellationError()
+        }
+
+        func factualSessionProjection(
+            _ request: ProvenanceEngineContracts.ProvenanceFactualSessionProjectionRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceFactualSessionProjectionResponse {
+            throw CancellationError()
         }
     }
 }
