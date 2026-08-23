@@ -84,9 +84,7 @@ struct AgentSessionFactualProjectionStoreTests {
 
     @Test
     func refreshFailureWithoutCacheReturnsFailure() async {
-        let client = FakeProvenanceEngineClient(factualProjectionResults: [
-            .failure(TestError.unavailable)
-        ])
+        let client = FakeProvenanceEngineClient(factualProjectionResults: [.failure(TestError.unavailable)])
         let store = AgentSessionFactualProjectionStore(client: client)
 
         #expect(await store.refreshedSnapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
@@ -182,9 +180,7 @@ struct AgentSessionFactualProjectionStoreTests {
 
     @Test
     func factualProjectionEvidenceRowsUseLatestCompactSlice() {
-        let rows = AgentSessionFactualProjectionEvidenceRows.latestRows(["a", "b", "c", "d"], limit: 2)
-
-        #expect(rows == ["c", "d"])
+        #expect(AgentSessionFactualProjectionEvidenceRows.latestRows(["a", "b", "c", "d"], limit: 2) == ["c", "d"])
     }
 
     private static func snapshot(sessionID: String, revision: Int) -> ProvenanceFactualSessionProjectionSnapshot {
@@ -408,13 +404,9 @@ private actor FakeProvenanceEngineClient: ProvenanceEngineClient {
         self.sessionWorkModelResults = sessionWorkModelResults
     }
 
-    func factualProjectionRequests() -> [ProvenanceFactualSessionProjectionRequest] {
-        requests
-    }
+    func factualProjectionRequests() -> [ProvenanceFactualSessionProjectionRequest] { requests }
 
-    func sessionWorkModelRequests() -> [ProvenanceSessionWorkModelRequest] {
-        workModelRequests
-    }
+    func sessionWorkModelRequests() -> [ProvenanceSessionWorkModelRequest] { workModelRequests }
 
     func health() async throws -> ProvenanceEngineHealth {
         ProvenanceEngineHealth(status: .available, version: "test", capabilities: [])
