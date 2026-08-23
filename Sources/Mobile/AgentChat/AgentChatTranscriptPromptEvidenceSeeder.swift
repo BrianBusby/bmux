@@ -32,4 +32,18 @@ struct AgentChatTranscriptPromptEvidenceSeeder {
             }
         }
     }
+
+    static func seed(
+        record: AgentChatSessionRecord,
+        resolver: AgentChatTranscriptResolver,
+        tokenOptimizationMode: TokenOptimizationMode,
+        recordPrompts: @escaping @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
+    ) {
+        seed(
+            records: [record],
+            resolver: resolver,
+            tokenOptimizationMode: tokenOptimizationMode,
+            recordPrompts: recordPrompts
+        )
+    }
 }

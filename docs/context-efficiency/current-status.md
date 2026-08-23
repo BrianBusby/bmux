@@ -76,10 +76,29 @@ same evidence semantics through live transcript ingestion. The next PE semantic
 work should consume this reconciled factual foundation rather than repairing
 hook/transcript duplication downstream.
 
-Planning target: PE owns the future `SessionWorkModel` projection for one
+Live prompt-link repair is implemented for active Codex sessions: on
+`UserPromptSubmit`, bmux now starts/resumes transcript observation and runs the
+bounded Codex prompt backfill even when no mobile chat subscriber is attached,
+so PE can receive prompt evidence and a `lastSubmittedPromptSessionID` for the
+Session tab. Dogfood on build 480 showed prompt evidence was recorded but not
+linked when transcript backfill resolved only the runtime workspace id; the
+runtime now resolves prompt evidence through all routed app tab managers so the
+stable workspace display row receives the session link. This does not complete
+the broader semantic-session product. Routed workspace display refreshes now
+notify the owning tab manager rather than only the startup manager, so linked
+prompt state can update immediately in the window that owns the workspace.
+
+SessionWorkModel now exposes the first milestone semantic field. PE produces a
+session-scoped `coding_agent.milestones` record from the latest current plan
+steps when available, falling back to the submitted prompt when no plan exists.
+Nested milestone hierarchy, milestone-to-code relationships, blockers,
+approach changes, progress, risk, and scoped architecture remain future
+semantic slices.
+
+Planning target: PE owns the `SessionWorkModel` projection for one
 coding-agent session. bmux should consume PE factual projection, semantic
-messages, and eventually the revisioned `SessionWorkModel` snapshot for Smart
-Session summaries. Current factual Session UI work should be treated as factual
+messages, and the revisioned `SessionWorkModel` snapshot for Smart Session
+summaries. Current factual Session UI work should be treated as factual
 consumer groundwork/diagnostics and data-access foundation, not the final React
 Smart Session product. Use generated Project Truth for active work,
 dependency-ready work, selected-next work, and safe parallel work.

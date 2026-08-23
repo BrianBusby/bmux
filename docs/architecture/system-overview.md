@@ -35,7 +35,7 @@ flowchart TD
   evidence --> pe["CURRENT: Provenance Engine package"]
   pe --> factual["CURRENT: deterministic factual projections"]
   pe --> semantic["CURRENT: semantic records and messages"]
-  semantic --> swm["PLANNED: SessionWorkModel"]
+  semantic --> swm["CURRENT: SessionWorkModel"]
   factual --> factualSession["CURRENT: factual native Session inspection"]
   factualSession --> session["PLANNED: React Smart Session presentation"]
   swm --> session
@@ -51,7 +51,7 @@ capture policy, optimistic presentation, UI routing, and user-facing fallbacks.
 
 Provenance Engine owns accepted evidence contracts, local durable storage,
 rebuildable factual projections, semantic inference contracts and records,
-semantic messages, and the future `SessionWorkModel`, Knowledge Compiler,
+semantic messages, `SessionWorkModel`, Knowledge Compiler,
 Knowledge Store, and retrieval layers.
 
 The dependency direction is intentionally one-way:
@@ -71,19 +71,21 @@ CURRENT:
 - Project Truth is root-local under `project/`.
 - The Project Truth workflow validates one canonical graph without peer checkout.
 - PE has implemented factual session projection, semantic inference framework,
-  first coding-agent semantic records, and human-readable semantic messages.
+  first coding-agent semantic records, human-readable semantic messages,
+  SessionWorkModel projection, and a first plan/prompt-backed milestone
+  semantic field.
 - bmux has React Terminal foundations in `agent-chat` and native/workspace PE
   consumers, including the factual native Session inspection view.
 
 SELECTED NEXT:
 
-- React Smart Session foundation backed by PE facts and semantic messages. This
-  is a React product surface, not the factual native Session inspection view.
+- Use generated Project Truth for the current selected-next and active work.
+  React Smart Session work should consume PE facts, semantic messages, and
+  SessionWorkModel fields rather than infer semantic meaning inside bmux.
 
 PLANNED:
 
 - React Smart Session surface backed by PE facts and semantics.
-- PE `SessionWorkModel` contract and projection.
-- Milestone, blocker, approach-change, and scoped architecture semantics.
+- Nested milestone, blocker, approach-change, and scoped architecture semantics.
 - Knowledge Compiler, durable Knowledge Store, retrieval, and future agent
   context integration.

@@ -69,6 +69,7 @@ extension ProvenanceSQLiteRepository {
             )
         }
         let revision = ProvenanceSessionWorkModelRevision(
+            schemaVersion: 2,
             factualRevision: factualProjection.revision,
             semanticInferenceIDs: semanticRecords.map(\.id),
             latestSemanticInferenceCreatedAt: semanticRecords.map(\.createdAt).max()
@@ -82,6 +83,12 @@ extension ProvenanceSQLiteRepository {
             thread: thread,
             currentTurn: currentTurn,
             priorTurns: factualProjection.priorTurns,
+            milestones: semanticField(
+                kind: ProvenanceCodingAgentSemanticInferenceKind.milestones.rawValue,
+                scope: .session,
+                scopeID: factualProjection.session.id,
+                records: semanticRecordByField
+            ),
             sessionPhase: semanticField(
                 kind: ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue,
                 scope: .session,
@@ -107,6 +114,11 @@ extension ProvenanceSQLiteRepository {
         turnID: String?
     ) throws -> [ProvenanceSemanticInferenceRecord] {
         var records: [ProvenanceSemanticInferenceRecord] = []
+        records.append(contentsOf: try activeSemanticRecords(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.milestones.rawValue,
+            scope: .session,
+            scopeID: sessionID
+        ))
         records.append(contentsOf: try activeSemanticRecords(
             kind: ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue,
             scope: .session,

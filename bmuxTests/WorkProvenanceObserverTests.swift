@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
@@ -26,6 +27,30 @@ struct WorkProvenanceObserverTests {
             apiURL: " https://linear.app/companycam/project/starter-template-rollout ",
             projectSlug: "fallback-project"
         ) == "https://linear.app/companycam/project/starter-template-rollout")
+    }
+
+    @MainActor
+    @Test
+    func workspaceResolverSearchesAllCandidateManagersByRuntimeOrStableID() throws {
+        let firstManager = TabManager(), secondManager = TabManager()
+        let firstWorkspace = Workspace(title: "First Workspace"), targetWorkspace = Workspace(title: "Prompt Linked Workspace")
+        firstManager.tabs = [firstWorkspace]; secondManager.tabs = [targetWorkspace]
+        var immediateObservationCount = 0
+        let cancellable = targetWorkspace.sidebarImmediateObservationChangeSubject.sink { immediateObservationCount += 1 }
+        defer { cancellable.cancel() }
+        let managers = [firstManager, secondManager]
+        let match = try #require(WorkProvenanceRuntime.workspaceMatch(matching: targetWorkspace.stableId, in: managers))
+
+        #expect(WorkProvenanceRuntime.workspace(matching: targetWorkspace.id, in: managers) === targetWorkspace)
+        #expect(WorkProvenanceRuntime.workspace(matching: targetWorkspace.stableId, in: managers) === targetWorkspace)
+        #expect(match.tabManager === secondManager)
+        #expect(match.workspace === targetWorkspace)
+        #expect(WorkProvenanceRuntime.stableWorkspaceIDs(in: managers + [secondManager]) == [firstWorkspace.stableId, targetWorkspace.stableId])
+        #expect(WorkProvenanceRuntime.notifyWorkspaceDisplayCurrentStateDidChange(
+            stableWorkspaceID: targetWorkspace.stableId,
+            in: managers
+        ))
+        #expect(immediateObservationCount == 1)
     }
 
     @Test

@@ -47,6 +47,8 @@ actor AgentChatTranscriptTailer {
     private var watchTask: Task<Void, Never>?
     private var watcher: FileWatcher?
     private var started = false
+    private var startupComplete = false
+    private var startupWaiters: [CheckedContinuation<Void, Never>] = []
     private var reportedTitle = false
 
     /// Creates a tailer.
@@ -83,7 +85,13 @@ actor AgentChatTranscriptTailer {
     /// Performs the initial backfill (idempotent) and starts watching for
     /// growth.
     func start() async {
-        guard !started else { return }
+        if startupComplete { return }
+        if started {
+            await withCheckedContinuation { continuation in
+                startupWaiters.append(continuation)
+            }
+            return
+        }
         started = true
         await loadInitialTail()
         let watcher = FileWatcher(path: path, throttle: .milliseconds(200))
@@ -94,6 +102,9 @@ actor AgentChatTranscriptTailer {
                 await self.drainNewContent()
             }
         }
+        startupComplete = true
+        startupWaiters.forEach { $0.resume() }
+        startupWaiters.removeAll()
     }
 
     /// Stops watching and releases resources.

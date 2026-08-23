@@ -11,7 +11,7 @@ flowchart TD
   evidence --> factual["CURRENT: factual session projection"]
   factual --> sem["CURRENT: semantic inference"]
   sem --> messages["CURRENT: semantic messages"]
-  messages --> swm["PLANNED: SessionWorkModel"]
+  messages --> swm["CURRENT: SessionWorkModel"]
   factual --> session["ACTIVE/PLANNED: React Session UI"]
   swm --> session
 ```
@@ -66,4 +66,3 @@ flowchart TD
 Dependency-ready, selected-next, active, and dependency-ready-but-not-selected
 remain distinct. Readiness is derived from dependency state. Selection is an
 execution decision, not a mutable readiness flag.
-

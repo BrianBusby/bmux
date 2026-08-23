@@ -282,6 +282,7 @@ inference records currently supported by the first semantic slice:
 
 - thread intent;
 - turn intent;
+- session milestones;
 - session phase;
 - current activity.
 
@@ -313,11 +314,13 @@ Consumers may still query semantic messages for presentation wording, but the
 model's semantic meaning is grounded in factual projection plus semantic
 inference records.
 
-This first foundation remains intentionally narrow. It does not introduce
-milestone hierarchy, blockers, approach changes, progress percentage,
-validation or risk synthesis, architecture projections, GitHub attribution,
-Knowledge Compiler output, or presentation-learning behavior. Unsupported
-future concepts stay absent rather than guessed.
+This first foundation remains intentionally narrow. It now includes a
+session-scoped milestone semantic field backed by current plan steps or the
+submitted prompt. It does not introduce nested milestone hierarchy, blockers,
+approach changes, progress percentage, validation or risk synthesis,
+architecture projections, GitHub attribution, Knowledge Compiler output, or
+presentation-learning behavior. Unsupported future concepts stay absent rather
+than guessed.
 
 ## Future Feedback Categories
 

@@ -17,15 +17,15 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 - Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)
 - Active or selected slices in the frontier:
-  - Milestone inference (`milestone_inference`) - maturity: ready; status: planned; selection: selected next; owner: Provenance Engine
+  - Milestone inference (`milestone_inference`) - maturity: active; status: active; selection: current; owner: Provenance Engine
 
 ### Active Implementation
 
-- Project Truth dependency and capability frontier governance (`project_truth_capability_frontier_governance`) - maturity: active; status: active; selection: current; owner: Provenance Engine
+- Milestone inference (`milestone_inference`) - maturity: active; status: active; selection: current; owner: Provenance Engine
 
 ### Selected Next
 
-- Milestone inference (`milestone_inference`) - maturity: ready; status: planned; selection: selected next; owner: Provenance Engine; dependency status: ready
+- None.
 
 ### Ready Candidates
 
@@ -39,7 +39,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Milestone inference (`milestone_inference`) is not dependency-satisfying
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) is not dependency-satisfying
-  - Milestone inference (`milestone_inference`) has maturity ready; requires validated for gate `milestone_semantics_validated`: Smart Session must not present progress or milestone structure until PE milestone semantics are validated.
+  - Milestone inference (`milestone_inference`) has maturity active; requires validated for gate `milestone_semantics_validated`: Smart Session must not present progress or milestone structure until PE milestone semantics are validated.
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity ready; requires validated for gate `blocker_approach_semantics_validated`: Smart Session blocker and approach-change presentation must be backed by validated PE semantics.
 - Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
@@ -51,7 +51,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - Milestone inference (`milestone_inference`) is not dependency-satisfying
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) is not dependency-satisfying
   - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) has maturity ready; requires validated for gate `cross_session_foundation_validated`: Rich cross-session briefs should build on a validated deterministic relationship/read foundation.
-  - Milestone inference (`milestone_inference`) has maturity ready; requires validated for gate `milestone_semantics_validated`: Cross-session milestone identity and hierarchy must come from validated PE milestone semantics.
+  - Milestone inference (`milestone_inference`) has maturity active; requires validated for gate `milestone_semantics_validated`: Cross-session milestone identity and hierarchy must come from validated PE milestone semantics.
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity ready; requires validated for gate `blocker_approach_semantics_validated`: Cross-session blockers, failed attempts, and approach changes must be backed by validated PE semantic records.
 - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) is not dependency-satisfying
@@ -84,7 +84,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Milestone inference (`milestone_inference`) is not dependency-satisfying
-  - Milestone inference (`milestone_inference`) has maturity ready; requires validated for gate `milestone_semantics_validated`: Code relationships need validated milestone identity and hierarchy before attribution can be trusted.
+  - Milestone inference (`milestone_inference`) has maturity active; requires validated for gate `milestone_semantics_validated`: Code relationships need validated milestone identity and hierarchy before attribution can be trusted.
 - Scoped architecture projection (`scoped_architecture_projection`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Milestone-to-code relationships (`milestone_to_code_relationships`) is not dependency-satisfying
   - Milestone-to-code relationships (`milestone_to_code_relationships`) has maturity gated; requires validated for gate `milestone_code_relationships_validated`: Scoped architecture projection should be designed against validated milestone-to-code evidence relationships.
@@ -92,7 +92,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - Scoped architecture projection (`scoped_architecture_projection`) is not dependency-satisfying
   - Milestone inference (`milestone_inference`) is not dependency-satisfying
   - Scoped architecture projection (`scoped_architecture_projection`) has maturity gated; requires validated for gate `scoped_architecture_validated`: Milestone-to-architecture links require validated scoped architecture projections.
-  - Milestone inference (`milestone_inference`) has maturity ready; requires validated for gate `milestone_semantics_validated`: Milestone-to-architecture links require validated milestone identity and hierarchy.
+  - Milestone inference (`milestone_inference`) has maturity active; requires validated for gate `milestone_semantics_validated`: Milestone-to-architecture links require validated milestone identity and hierarchy.
 - Local Knowledge Compiler (`knowledge_compiler_outcomes`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
   - Milestone-to-code relationships (`milestone_to_code_relationships`) is not dependency-satisfying
   - Milestone-to-architecture relationships (`milestone_to_architecture_relationships`) is not dependency-satisfying
@@ -213,7 +213,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@f4b96132c2c7, BrianBusby/bmux#53 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Consolidates the Git repository boundary that had become accidental coordination overhead while preserving Provenance Engine as a standalone Swift package boundary, retaining imported PE history, and replacing peer-repo Project Truth with a root-local canonical project graph.
           Acceptance reason: PR #53 merged the local Provenance Engine package, root Project Truth tooling, generated docs, and monorepo package dependency model without making PE a bmux-internal module.
-        - **Project Truth dependency and capability frontier governance** (`project_truth_capability_frontier_governance`) - slice; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: project truth; layer: project truth; execution: current / Provenance Engine; parallelism: safe; delivery: open; acceptance: proposed; maturity: active
+        - **Project Truth dependency and capability frontier governance** (`project_truth_capability_frontier_governance`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: project truth; layer: project truth; execution: complete / Provenance Engine; parallelism: safe; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `monorepo_repository_consolidation`
           Expected contract domains: `roadmap_capability_maturity`, `roadmap_readiness_gates`, `primary_capability_frontier`
           Expected code areas: `project/project-state.yaml`, `project/repo-status.yaml`, `project/schema/project-state.schema.json`, `tools/project-docs`, `docs/generated`, `AGENTS.md`
@@ -221,8 +221,9 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `project_truth_generated_docs`, `project_docs_validation`
           Worktree required: true
           Conflict note: Infrastructure-only governance slice. It may run beside semantic-session implementation work when it does not edit product contracts, runtime behavior, or downstream PE capability code.
-          Active assignment: worktree: `/Users/brianbusby/repos/bmux-project-truth-capability-frontier-governance`; branch: `project-truth-capability-frontier-governance`; agent: `Codex`
+          Evidence: BrianBusby/bmux@0ce21dfb424d, BrianBusby/bmux@8a8a4de3064c, BrianBusby/bmux#60 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Add explicit capability maturity, readiness gates, primary frontier reporting, and stricter validation so documented future architecture cannot become implementation-ready without Project Truth authorization.
+          Acceptance reason: PR #60 merged capability maturity, readiness gates, primary frontier reporting, stricter validation, and generated preflight visibility.
   - **Richer Session Understanding** (`richer_session_understanding`) - program; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: current / Shared; parallelism: safe; maturity: active
     Depends on: `workspace_display_durable_context`
     Rationale: Richer coding-agent evidence and session projections are the active direction after V1 adoption and workspace-display observation. This program now explicitly supports bmux's three-view coding-session model: Native provider-native fidelity, React Terminal live interaction, and React Smart Session understanding backed by PE factual and semantic models.
@@ -441,14 +442,15 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
     - **Structured Work Understanding** (`structured_work_understanding`) - phase; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: safe; maturity: ready
       Depends on: `first_semantic_session_inferences`
       - **Milestone Semantics and Relationships** (`semantic_milestone_relationships`) - milestone; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: safe; maturity: ready
-        - **Milestone inference** (`milestone_inference`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine; concept: structured work understanding; layer: inference session work projections; execution: selected next / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
+        - **Milestone inference** (`milestone_inference`) - slice; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: current / Provenance Engine; parallelism: serial; delivery: open; acceptance: proposed; maturity: active
           Depends on: `first_semantic_session_inferences`
           Enables: `milestone_to_code_relationships`, `milestone_to_architecture_relationships`
           Expected contract domains: `milestone_semantics`, `session_work_model_milestones`
-          Expected code areas: `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests`
+          Expected code areas: `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts`, `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite`, `Packages/macOS/ProvenanceEngine/Tests`
           Likely conflict domains: `milestone_semantics`, `session_work_model_projection`
           Contract dependencies: `semantic_session_inferences`
           Worktree required: true
+          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/milestone-inference`; branch: `milestone-inference`; agent: `Codex`
         - **Blocker and approach-change semantics** (`blocker_approach_change_semantics`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine; concept: structured work understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: safe; delivery: proposed; acceptance: proposed; maturity: ready
           Depends on: `semantic_inference_framework`
           Parallel with: `milestone_inference`
@@ -661,25 +663,23 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Project Truth dependency and capability frontier governance (`project_truth_capability_frontier_governance`) | safe | /Users/brianbusby/repos/bmux-project-truth-capability-frontier-governance | project-truth-capability-frontier-governance | Codex | `project_docs_generation`, `project_truth_manifest`, `roadmap_schema` | `project_docs_validation`, `project_truth_generated_docs` | single active assignment |
+| Milestone inference (`milestone_inference`) | serial | /Users/brianbusby/repos/.bmux-worktrees/milestone-inference | milestone-inference | Codex | `milestone_semantics`, `session_work_model_projection` | `semantic_session_inferences` | single active assignment |
 
 ### Dependency-Ready Preflight
 
 | Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) | planned | ready | serial | true | `related_session_contract`, `session_work_model_projection`, `factual_session_projection_contract`, `project_truth_manifest` | `session_work_model_contract`, `factual_session_projection`, `richer_coding_agent_evidence`, `deterministic_current_state_api` | `related_session_read_contract`, `related_session_reasons`, `relationship_freshness_revisions`, `factual_semantic_provenance` | `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts`, `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite`, `Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSQLiteTests`, `Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSDKTests`, `docs/planning/cross-session-work-awareness.md` |
-| Milestone inference (`milestone_inference`) | selected next | ready | serial | true | `milestone_semantics`, `session_work_model_projection` | `semantic_session_inferences` | `milestone_semantics`, `session_work_model_milestones` | `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests` |
 | Blocker and approach-change semantics (`blocker_approach_change_semantics`) | planned | ready | safe | true | `blocker_semantics`, `approach_change_semantics` | `semantic_inference_records` | `blocker_semantics`, `approach_change_semantics` | `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests` |
 
 ## Dependency-Ready Work
 
 - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) - selection: planned; depends on: `session_work_model_contract_foundation`, `factual_session_projection_foundation`, `richer_coding_agent_evidence_foundation`
-- Milestone inference (`milestone_inference`) - selection: selected next; depends on: `first_semantic_session_inferences`
 - Blocker and approach-change semantics (`blocker_approach_change_semantics`) - selection: planned; depends on: `semantic_inference_framework`
 
 ## Selected Next Work
 
-- Milestone inference (`milestone_inference`) - dependency status: ready; depends on: `first_semantic_session_inferences`
+None.
 
 ## Dependency-Ready But Not Selected
 
