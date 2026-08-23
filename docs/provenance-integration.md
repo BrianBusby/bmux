@@ -18,13 +18,25 @@ The planned high-level live coding-agent projection is documented in
 that as target direction until generated Project Truth marks the relevant
 `SessionWorkModel` slices implemented.
 
-Normal Coding-Agent Evidence Ingestion is the active data-foundation gap for
-ordinary `codex` terminal sessions inside bmux. Agent Chat / Codex app-server
-telemetry remains the high-fidelity structured producer; historical normal
-terminal Codex transcripts can now be imported through the
-`bmux provenance import codex-transcripts` CLI, and live transcript-backed
-ingestion remains planned so active sessions can converge into the same durable
-PE evidence model without requiring the Agent Chat UI.
+Normal Coding-Agent Evidence Ingestion is implemented for ordinary `codex`
+terminal sessions inside bmux. Agent Chat / Codex app-server telemetry remains
+the high-fidelity structured producer, while ordinary Codex CLI sessions now
+use hooks plus live JSONL transcript adaptation to converge into the same PE
+coding-agent evidence and factual session model. Historical normal-terminal
+transcripts can still be replayed through
+`bmux provenance import codex-transcripts`; live ingestion and later replay use
+stable evidence IDs so repeated observations remain idempotent.
+
+The capture mechanisms differ, not the provenance model:
+
+- Agent Chat: structured live provider telemetry.
+- Ordinary Codex CLI: bmux hooks plus live transcript-backed canonical evidence ingestion.
+- Both: PE-owned evidence, deterministic factual projections, and semantic SessionWorkModel consumers.
+
+Hook and transcript events are treated as complementary observations of the
+same logical Codex work. When Codex exposes provider turn identity, hook prompt
+evidence and transcript evidence reconcile onto the same factual turn before
+semantic inference or Smart Session presentation consumes the session.
 
 ## Public SDK Boundary
 

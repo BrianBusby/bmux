@@ -32,7 +32,7 @@ Repository: `BrianBusby/bmux`
 | Factual Agent Session View | implemented |
 | Knowledge Compiler Cross Session Bridge | planned |
 | Native Provider Session View | implemented |
-| Normal Coding Agent Evidence Ingestion | planned |
+| Normal Coding Agent Evidence Ingestion | implemented |
 | Provenance Engine Agent Accessible Cross Session Retrieval | planned |
 | Provenance Engine Blocker Approach Change Semantics | planned |
 | Provenance Engine Coding Agent Current Activity | implemented |
@@ -104,12 +104,13 @@ Repository: `BrianBusby/bmux`
 | Claude Lifecycle Telemetry | implemented |
 | Codex Fanout | implemented |
 | Codex Transcript Canonical Evidence Import | implemented |
+| Coding Agent Evidence Source Reconciliation | implemented |
 | Completed Unit Provenance Projection | implemented |
 | Diagnostic | implemented |
 | Lifecycle Producer | implemented |
 | Live Projection | implemented |
 | Native Read Client | implemented |
-| Normal Terminal Codex Evidence Ingestion | planned |
+| Normal Terminal Codex Evidence Ingestion | implemented |
 | Provider Neutral Contract | implemented |
 
 ## Local Caveats
@@ -120,5 +121,5 @@ Repository: `BrianBusby/bmux`
 | `github_actions_runner_reliability` | open |
 | `non_default_agent_chat_url_dogfood` | open |
 | `sidecar_disappearance_lifecycle_policy` | open |
-| `normal_terminal_codex_rich_evidence_gap` | open |
+| `normal_terminal_codex_rich_evidence_gap` | resolved |
 | `remote_mobile_open_architecture_decisions` | open |

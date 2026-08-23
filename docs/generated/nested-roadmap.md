@@ -233,6 +233,42 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Enables: `factual_session_projection_foundation`
           Evidence: BrianBusby/bmux@9e69452a2ec2, BrianBusby/bmux@45b7188ea62d, BrianBusby/bmux#48 by [BrianBusby](https://github.com/BrianBusby)
           Acceptance reason: Completed-unit coding-agent evidence exists below the semantic layer; raw provider streams, private reasoning, approvals, validation, errors, and compaction remain gated follow-ups.
+      - **Normal Coding-Agent Evidence Ingestion** (`normal_coding_agent_evidence_ingestion`) - milestone; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence sources; execution: complete / Bmux; parallelism: serial; maturity: validated
+        Depends on: `richer_coding_agent_evidence_foundation`
+        Enables: `factual_projection_consumer_shape_followup`, `semantic_inference_framework`
+        Rationale: Ordinary Codex CLI sessions in bmux converge into PE's canonical coding-agent evidence through hook observations plus Codex JSONL transcript adaptation, without requiring Agent Chat.
+        - **Codex transcript canonical evidence import** (`codex_transcript_canonical_evidence_import`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence sources; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
+          Depends on: `richer_coding_agent_evidence_foundation`
+          Enables: `live_terminal_codex_evidence_ingestion`
+          Expected contract domains: `codex_jsonl_transcript_adapter`, `canonical_coding_agent_evidence`, `idempotent_evidence_import`
+          Expected code areas: `CLI/CLIProvenanceCodexTranscriptImporter*.swift`, `CLI/BMUXCLI+ProvenanceImport.swift`, `bmuxTests/CLIProvenanceCodexTranscriptImporterTests.swift`
+          Likely conflict domains: `codex_transcript_parsing`, `provenance_cli_import`
+          Contract dependencies: `richer_coding_agent_evidence_foundation`, `provenance_engine_public_append_contract`
+          Worktree required: true
+          Evidence: BrianBusby/bmux@1e7018fda8ff, BrianBusby/bmux@3d2376f6ed69, BrianBusby/bmux#66 by [BrianBusby](https://github.com/BrianBusby)
+          Acceptance reason: Historical Codex JSONL transcripts import into canonical PE thread, turn, prompt, plan, command, visible reasoning summary, and file-change attribution evidence with stable idempotent event IDs.
+        - **Live terminal Codex evidence ingestion** (`live_terminal_codex_evidence_ingestion`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence sources; execution: complete / Bmux; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
+          Depends on: `codex_transcript_canonical_evidence_import`
+          Enables: `coding_agent_evidence_source_reconciliation`
+          Expected contract domains: `codex_jsonl_transcript_adapter`, `canonical_coding_agent_evidence`, `live_transcript_tail_progress`, `restart_replay_idempotence`
+          Expected code areas: `CLI/CLIProvenanceCodexTranscriptImporter*.swift`, `CLI/bmux.swift`, `bmuxTests/CLIProvenanceCodexTranscriptImporterTests.swift`
+          Likely conflict domains: `codex_hook_monitor`, `codex_transcript_parsing`, `provenance_cli_import`
+          Contract dependencies: `codex_transcript_canonical_evidence_import`, `provenance_engine_public_append_contract`
+          Worktree required: true
+          Evidence: BrianBusby/bmux@29a5a5d1ea0a
+          Acceptance reason: The existing Codex monitor now tails known session transcripts into PE via the shared importer, preserving partial-line safety and stable event IDs while leaving raw private reasoning/full stream persistence out of scope.
+          Acceptance criteria: Active bmux-managed Codex transcript monitors append newly completed JSONL lines through the shared canonical transcript adapter.; Partial final lines remain buffered until newline completion.; Live ingestion followed by historical import is idempotent.; Restart/replay can reread existing transcript content without duplicating canonical PE events.
+        - **Coding-agent evidence source reconciliation** (`coding_agent_evidence_source_reconciliation`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Bmux; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
+          Depends on: `live_terminal_codex_evidence_ingestion`
+          Enables: `semantic_inference_framework`, `react_smart_session_work_model_consumer`
+          Expected contract domains: `provider_turn_identity`, `hook_transcript_reconciliation`, `factual_session_projection`, `provenance_event_sources`
+          Expected code areas: `Sources/WorkProvenance/WorkProvenanceCodingAgentEvidenceRecorder+Support.swift`, `Sources/WorkspacePromptSubmit.swift`, `CLI/BMUXCLI hook feed payloads`, `bmuxTests/CLIProvenanceCodexTranscriptImporterTests.swift`, `bmuxTests/SessionProvenanceTests.swift`
+          Likely conflict domains: `codex_hook_prompt_evidence`, `transcript_prompt_backfill`, `factual_session_projection_identity`
+          Contract dependencies: `live_terminal_codex_evidence_ingestion`, `factual_session_projection`
+          Worktree required: true
+          Evidence: BrianBusby/bmux@29a5a5d1ea0a
+          Acceptance reason: Hook feed payloads now forward Codex turn IDs, app-side hook evidence prefers provider turn identity, transcript prompt IDs canonicalize by provider turn when available, and focused SQLite projection coverage verifies hook-plus-live-transcript evidence appears as one factual turn.
+          Acceptance criteria: Codex hook prompt evidence uses provider turn identity when the hook exposes it.; Hook and transcript prompt observations for one provider turn converge onto one canonical prompt record while preserving distinct ledger events.; Prompt-only transcript backfill does not create synthetic transcript turns that duplicate live transcript turns.; Factual session projection exposes one logical turn when hook and transcript sources observe the same Codex turn.
       - **Factual Session Projection Read Contract** (`factual_session_projection_read_contract`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial
         Depends on: `richer_session_observable_evidence`
         - **Factual session projection foundation** (`factual_session_projection_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: open; acceptance: implemented; mirrors: `richer_session_work_model`; maturity: validated

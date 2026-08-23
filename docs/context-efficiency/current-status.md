@@ -48,12 +48,19 @@ streams and deltas stay live/ephemeral in bmux, while selected completed or
 meaningful evidence units may become durable PE evidence once explicit
 contracts, retention policy, and privacy review exist.
 
-Richer Session Evidence Foundation is the latest implemented slice. bmux now
-forwards selected completed Codex evidence units through the existing
-provider-neutral execution telemetry path to Provenance Engine public append
-contracts. PE records provider thread/turn identity, submitted prompt, plan
-updates, completed command facts, visible reasoning summaries, and file-change
-attribution as durable observable evidence below the semantic layer.
+Live Terminal Codex Evidence Ingestion and Coding-Agent Evidence Source
+Reconciliation are the latest implemented slices. bmux now tails active
+ordinary Codex CLI JSONL transcripts from the existing Codex monitor path,
+feeds newly completed lines through the same canonical transcript adapter used
+by historical import, and writes PE thread, turn, prompt, plan, command,
+visible reasoning summary, and file-change attribution evidence incrementally
+without requiring Agent Chat.
+
+Hook and transcript observations now converge on provider turn identity when
+Codex exposes it. The hook feed payload forwards `turn_id`, hook prompt
+evidence uses that provider turn instead of a synthetic hook turn, transcript
+prompt IDs canonicalize by provider turn when available, and prompt-only
+transcript backfill no longer creates duplicate transcript-specific turns.
 
 Three-view session boundary: one coding-agent session should be viewable as
 Native, Terminal, and Session. Native is the provider-native surface and escape
@@ -62,17 +69,12 @@ hatch. Terminal is bmux's React live interaction surface, building on
 factual and semantic models. bmux should not turn Terminal into a semantic
 engine or build parallel Swift and React Smart Session products.
 
-Normal terminal Codex rich evidence remains the current data-foundation gap for
-active sessions. Local observation showed that ordinary `codex` sessions inside
-bmux primarily populate lifecycle/session evidence while they run. The first
-Normal Coding-Agent Evidence Ingestion slice,
-`codex_transcript_canonical_evidence_import`, is now implemented for historical
-Codex JSONL transcripts via `bmux provenance import codex-transcripts`; live
-normal-terminal tailing and multi-source reconciliation remain planned.
-
-Next ingestion target: implement live normal-terminal Codex evidence ingestion
-by tailing newly appended Codex transcript facts through the same canonical PE
-evidence path.
+Normal terminal Codex rich evidence is no longer the current data-foundation
+gap for active bmux-managed Codex sessions. Historical import remains available
+via `bmux provenance import codex-transcripts`; active sessions now use the
+same evidence semantics through live transcript ingestion. The next PE semantic
+work should consume this reconciled factual foundation rather than repairing
+hook/transcript duplication downstream.
 
 Planning target: PE owns the future `SessionWorkModel` projection for one
 coding-agent session. bmux should consume PE factual projection, semantic
