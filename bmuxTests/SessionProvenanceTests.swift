@@ -234,7 +234,7 @@ final class SessionProvenanceTests: XCTestCase {
         XCTAssertEqual(prompt.confidence, .medium)
         XCTAssertEqual(
             request.event.id,
-            WorkProvenanceStableIDFactory().id(prefix: "hook-codex-prompt", value: legacyHookTurnSeed)
+            "event-\(WorkProvenanceStableIDFactory().id(prefix: "hook-codex-prompt", value: legacyHookTurnSeed))"
         )
 
         let display = try XCTUnwrap(request.event.payload.workspaceDisplay)
