@@ -17,11 +17,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 - Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)
 - Active or selected slices in the frontier:
-  - Milestone inference (`milestone_inference`) - maturity: active; status: active; selection: current; owner: Provenance Engine
+  - Live Codex Evidence Convergence & Metadata Correctness (`live_codex_evidence_convergence_correctness`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Active Implementation
 
-- Milestone inference (`milestone_inference`) - maturity: active; status: active; selection: current; owner: Provenance Engine
+- Live Codex Evidence Convergence & Metadata Correctness (`live_codex_evidence_convergence_correctness`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -30,7 +30,6 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ### Ready Candidates
 
 - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) - maturity: ready; status: planned; selection: planned; owner: Provenance Engine
-- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - maturity: ready; status: planned; selection: planned; owner: Provenance Engine
 
 ### Gated / Blocked Downstream Work
 
@@ -39,7 +38,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Milestone inference (`milestone_inference`) is not dependency-satisfying
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) is not dependency-satisfying
-  - Milestone inference (`milestone_inference`) has maturity active; requires validated for gate `milestone_semantics_validated`: Smart Session must not present progress or milestone structure until PE milestone semantics are validated.
+  - Milestone inference (`milestone_inference`) has maturity ready; requires validated for gate `milestone_semantics_validated`: Smart Session must not present progress or milestone structure until PE milestone semantics are validated.
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity ready; requires validated for gate `blocker_approach_semantics_validated`: Smart Session blocker and approach-change presentation must be backed by validated PE semantics.
 - Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
@@ -51,7 +50,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - Milestone inference (`milestone_inference`) is not dependency-satisfying
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) is not dependency-satisfying
   - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) has maturity ready; requires validated for gate `cross_session_foundation_validated`: Rich cross-session briefs should build on a validated deterministic relationship/read foundation.
-  - Milestone inference (`milestone_inference`) has maturity active; requires validated for gate `milestone_semantics_validated`: Cross-session milestone identity and hierarchy must come from validated PE milestone semantics.
+  - Milestone inference (`milestone_inference`) has maturity ready; requires validated for gate `milestone_semantics_validated`: Cross-session milestone identity and hierarchy must come from validated PE milestone semantics.
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity ready; requires validated for gate `blocker_approach_semantics_validated`: Cross-session blockers, failed attempts, and approach changes must be backed by validated PE semantic records.
 - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) is not dependency-satisfying
@@ -82,9 +81,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - Presentation language calibration corpus (`presentation_language_calibration_corpus`) has maturity captured; requires validated for gate `calibration_corpus_validated`: Presentation learning needs a validated corpus before feedback changes policy.
 - Presentation language calibration corpus (`presentation_language_calibration_corpus`) - maturity: captured; status: planned; selection: planned; owner: Provenance Engine
   - Architecture or product direction is captured, but the slice is not implementation-ready.
+- Milestone inference (`milestone_inference`) - maturity: ready; status: planned; selection: deferred; owner: Provenance Engine
+- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - maturity: ready; status: planned; selection: deferred; owner: Provenance Engine
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Milestone inference (`milestone_inference`) is not dependency-satisfying
-  - Milestone inference (`milestone_inference`) has maturity active; requires validated for gate `milestone_semantics_validated`: Code relationships need validated milestone identity and hierarchy before attribution can be trusted.
+  - Milestone inference (`milestone_inference`) has maturity ready; requires validated for gate `milestone_semantics_validated`: Code relationships need validated milestone identity and hierarchy before attribution can be trusted.
 - Scoped architecture projection (`scoped_architecture_projection`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Milestone-to-code relationships (`milestone_to_code_relationships`) is not dependency-satisfying
   - Milestone-to-code relationships (`milestone_to_code_relationships`) has maturity gated; requires validated for gate `milestone_code_relationships_validated`: Scoped architecture projection should be designed against validated milestone-to-code evidence relationships.
@@ -92,7 +93,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - Scoped architecture projection (`scoped_architecture_projection`) is not dependency-satisfying
   - Milestone inference (`milestone_inference`) is not dependency-satisfying
   - Scoped architecture projection (`scoped_architecture_projection`) has maturity gated; requires validated for gate `scoped_architecture_validated`: Milestone-to-architecture links require validated scoped architecture projections.
-  - Milestone inference (`milestone_inference`) has maturity active; requires validated for gate `milestone_semantics_validated`: Milestone-to-architecture links require validated milestone identity and hierarchy.
+  - Milestone inference (`milestone_inference`) has maturity ready; requires validated for gate `milestone_semantics_validated`: Milestone-to-architecture links require validated milestone identity and hierarchy.
 - Local Knowledge Compiler (`knowledge_compiler_outcomes`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
   - Milestone-to-code relationships (`milestone_to_code_relationships`) is not dependency-satisfying
   - Milestone-to-architecture relationships (`milestone_to_architecture_relationships`) is not dependency-satisfying
@@ -270,6 +271,17 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@29a5a5d1ea0a
           Acceptance reason: Hook feed payloads now forward Codex turn IDs, app-side hook evidence prefers provider turn identity, transcript prompt IDs canonicalize by provider turn when available, and focused SQLite projection coverage verifies hook-plus-live-transcript evidence appears as one factual turn.
           Acceptance criteria: Codex hook prompt evidence uses provider turn identity when the hook exposes it.; Hook and transcript prompt observations for one provider turn converge onto one canonical prompt record while preserving distinct ledger events.; Prompt-only transcript backfill does not create synthetic transcript turns that duplicate live transcript turns.; Factual session projection exposes one logical turn when hook and transcript sources observe the same Codex turn.
+        - **Live Codex Evidence Convergence & Metadata Correctness** (`live_codex_evidence_convergence_correctness`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: current / Bmux; parallelism: serial; delivery: open; acceptance: under observation; maturity: active
+          Depends on: `live_terminal_codex_evidence_ingestion`, `coding_agent_evidence_source_reconciliation`
+          Enables: `milestone_inference`
+          Expected contract domains: `codex_jsonl_transcript_adapter`, `live_transcript_tail_progress`, `canonical_coding_agent_evidence`, `factual_session_projection`, `session_surface_refresh`
+          Expected code areas: `CLI/CLIProvenanceCodexTranscriptImporter*.swift`, `CLI/bmux.swift`, `Sources/Panels/AgentSessionFactualProjectionView.swift`, `bmuxTests/CLIProvenanceCodexTranscriptImporterTests.swift`
+          Likely conflict domains: `codex_transcript_parsing`, `codex_hook_monitor`, `factual_session_projection_identity`, `session_factual_projection_consumer`
+          Contract dependencies: `live_terminal_codex_evidence_ingestion`, `coding_agent_evidence_source_reconciliation`, `factual_session_projection`
+          Worktree required: true
+          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/live-codex-evidence-convergence-correctness`; branch: `live-codex-evidence-convergence-correctness`; agent: `Codex`
+          Acceptance reason: Engineering Observation Period dogfood of PR
+          Acceptance criteria: A long-running ordinary Codex CLI turn continues ingesting appended JSONL records while the turn is active.; Accepted live transcript evidence advances PE factual session projection revisions and factual reads.; Visible Codex commentary/progress summaries are imported only when they are completed provider-visible summary units, never from hidden reasoning content.; Provider/model/effort fields remain distinct and use authoritative Codex transcript/runtime sources.; Hook and transcript observations converge on one factual session/thread/turn without duplicate logical turns.; Historical transcript import remains idempotent after live ingestion.; An open Session surface refreshes revisioned factual state without requiring the tab to be reopened.
       - **Factual Session Projection Read Contract** (`factual_session_projection_read_contract`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial
         Depends on: `richer_session_observable_evidence`
         - **Factual session projection foundation** (`factual_session_projection_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: open; acceptance: implemented; mirrors: `richer_session_work_model`; maturity: validated
@@ -442,16 +454,15 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
     - **Structured Work Understanding** (`structured_work_understanding`) - phase; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: safe; maturity: ready
       Depends on: `first_semantic_session_inferences`
       - **Milestone Semantics and Relationships** (`semantic_milestone_relationships`) - milestone; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: safe; maturity: ready
-        - **Milestone inference** (`milestone_inference`) - slice; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: current / Provenance Engine; parallelism: serial; delivery: open; acceptance: proposed; maturity: active
-          Depends on: `first_semantic_session_inferences`
+        - **Milestone inference** (`milestone_inference`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: deferred / Provenance Engine; parallelism: serial; delivery: open; acceptance: proposed; maturity: ready
+          Depends on: `first_semantic_session_inferences`, `live_codex_evidence_convergence_correctness`
           Enables: `milestone_to_code_relationships`, `milestone_to_architecture_relationships`
           Expected contract domains: `milestone_semantics`, `session_work_model_milestones`
           Expected code areas: `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts`, `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite`, `Packages/macOS/ProvenanceEngine/Tests`
           Likely conflict domains: `milestone_semantics`, `session_work_model_projection`
           Contract dependencies: `semantic_session_inferences`
           Worktree required: true
-          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/milestone-inference`; branch: `milestone-inference`; agent: `Codex`
-        - **Blocker and approach-change semantics** (`blocker_approach_change_semantics`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine; concept: structured work understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: safe; delivery: proposed; acceptance: proposed; maturity: ready
+        - **Blocker and approach-change semantics** (`blocker_approach_change_semantics`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine; concept: structured work understanding; layer: inference session work projections; execution: deferred / Provenance Engine; parallelism: safe; delivery: proposed; acceptance: proposed; maturity: ready
           Depends on: `semantic_inference_framework`
           Parallel with: `milestone_inference`
           Expected contract domains: `blocker_semantics`, `approach_change_semantics`
@@ -663,19 +674,17 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Milestone inference (`milestone_inference`) | serial | /Users/brianbusby/repos/.bmux-worktrees/milestone-inference | milestone-inference | Codex | `milestone_semantics`, `session_work_model_projection` | `semantic_session_inferences` | single active assignment |
+| Live Codex Evidence Convergence & Metadata Correctness (`live_codex_evidence_convergence_correctness`) | serial | /Users/brianbusby/repos/.bmux-worktrees/live-codex-evidence-convergence-correctness | live-codex-evidence-convergence-correctness | Codex | `codex_hook_monitor`, `codex_transcript_parsing`, `factual_session_projection_identity`, `session_factual_projection_consumer` | `coding_agent_evidence_source_reconciliation`, `factual_session_projection`, `live_terminal_codex_evidence_ingestion` | single active assignment |
 
 ### Dependency-Ready Preflight
 
 | Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) | planned | ready | serial | true | `related_session_contract`, `session_work_model_projection`, `factual_session_projection_contract`, `project_truth_manifest` | `session_work_model_contract`, `factual_session_projection`, `richer_coding_agent_evidence`, `deterministic_current_state_api` | `related_session_read_contract`, `related_session_reasons`, `relationship_freshness_revisions`, `factual_semantic_provenance` | `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts`, `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite`, `Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSQLiteTests`, `Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSDKTests`, `docs/planning/cross-session-work-awareness.md` |
-| Blocker and approach-change semantics (`blocker_approach_change_semantics`) | planned | ready | safe | true | `blocker_semantics`, `approach_change_semantics` | `semantic_inference_records` | `blocker_semantics`, `approach_change_semantics` | `Sources/ProvenanceEngineCore`, `Tests/ProvenanceEngineTests` |
 
 ## Dependency-Ready Work
 
 - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) - selection: planned; depends on: `session_work_model_contract_foundation`, `factual_session_projection_foundation`, `richer_coding_agent_evidence_foundation`
-- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - selection: planned; depends on: `semantic_inference_framework`
 
 ## Selected Next Work
 
@@ -684,13 +693,14 @@ None.
 ## Dependency-Ready But Not Selected
 
 - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) - depends on: `session_work_model_contract_foundation`, `factual_session_projection_foundation`, `richer_coding_agent_evidence_foundation`
-- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - depends on: `semantic_inference_framework`
 
 ## Deferred Or Blocked Work
 
 - Cross-Session Awareness Knowledge Bridge (`cross_session_awareness_knowledge_bridge`) - status: deferred; depends on: `agent_accessible_cross_session_retrieval`, `knowledge_compiler_outcomes`
 - Cross-Session Knowledge Compiler Bridge (`cross_session_knowledge_bridge_milestone`) - status: deferred; depends on: `agent_accessible_cross_session_retrieval`, `knowledge_compiler_outcomes`
 - Knowledge Compiler cross-session bridge (`knowledge_compiler_cross_session_bridge`) - status: deferred; depends on: `agent_accessible_cross_session_retrieval`, `knowledge_compiler_outcomes`
+- Milestone inference (`milestone_inference`) - status: planned; depends on: `first_semantic_session_inferences`, `live_codex_evidence_convergence_correctness`
+- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - status: planned; depends on: `semantic_inference_framework`
 - Durable Knowledge (`durable_knowledge`) - status: deferred; depends on: `milestone_to_code_relationships`, `milestone_to_architecture_relationships`
 - Knowledge Compiler and Validation (`knowledge_compiler_later`) - status: deferred; depends on: None
 - Local Knowledge Compiler (`knowledge_compiler_outcomes`) - status: deferred; depends on: `milestone_to_code_relationships`, `milestone_to_architecture_relationships`

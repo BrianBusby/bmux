@@ -2,6 +2,8 @@ import AppKit
 import SwiftUI
 import ProvenanceEngineContracts
 
+private let agentSessionFactualProjectionAutoRefreshNanoseconds: UInt64 = 2_000_000_000
+
 struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     let showsSwitcher: Bool
     let stableWorkspaceID: UUID?
@@ -29,8 +31,13 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
         }
         .task(id: factualProjectionTaskID) {
             guard showsSwitcher,
-                  viewMode == .session else { return }
+            viewMode == .session else { return }
             await refreshFactualProjection()
+        }
+        .task(id: factualProjectionRefreshLoopTaskID) {
+            guard showsSwitcher,
+                  viewMode == .session else { return }
+            await runFactualProjectionRefreshLoop()
         }
     }
 
@@ -86,18 +93,39 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
         "\(showsSwitcher):\(viewMode.rawValue):\(stableWorkspaceID?.uuidString ?? "no-workspace")"
     }
 
-    private func refreshFactualProjection() async {
+    private var factualProjectionRefreshLoopTaskID: String {
+        "\(factualProjectionTaskID):loop"
+    }
+
+    private func runFactualProjectionRefreshLoop() async {
+        while !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: agentSessionFactualProjectionAutoRefreshNanoseconds)
+            guard !Task.isCancelled else { return }
+            await refreshFactualProjection(showLoading: false)
+        }
+    }
+
+    private func refreshFactualProjection(showLoading: Bool = true) async {
         guard !isLoadingFactualProjection else { return }
-        isLoadingFactualProjection = true
-        defer { isLoadingFactualProjection = false }
+        if showLoading {
+            isLoadingFactualProjection = true
+        }
+        defer {
+            if showLoading {
+                isLoadingFactualProjection = false
+            }
+        }
         guard let stableWorkspaceID,
               let workProvenanceRuntime else {
             factualProjectionResult = .unavailable
             return
         }
-        factualProjectionResult = await workProvenanceRuntime.agentSessionFactualProjection(
+        let nextResult = await workProvenanceRuntime.agentSessionFactualProjection(
             stableWorkspaceID: stableWorkspaceID
         )
+        if nextResult != factualProjectionResult {
+            factualProjectionResult = nextResult
+        }
     }
 }
 
@@ -244,10 +272,8 @@ struct AgentSessionFactualProjectionView: View {
 
     private func threadRow(_ thread: ProvenanceFactualSessionProjectionProviderThreadIdentity) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(thread.providerThreadID)
-                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                .lineLimit(1)
-                .truncationMode(.middle)
+            factRow(String(localized: "agentSession.factual.providerThreadID", defaultValue: "Provider thread ID"), thread.providerThreadID)
+            factRow(String(localized: "agentSession.factual.peThreadID", defaultValue: "PE thread ID"), thread.threadID)
             HStack(spacing: 8) {
                 badge(thread.provider)
                 badge(thread.confidence.rawValue)
@@ -260,8 +286,9 @@ struct AgentSessionFactualProjectionView: View {
 
     private func turnDetail(_ turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            factRow(String(localized: "agentSession.factual.turnID", defaultValue: "Turn ID"), turnSnapshot.turn.providerTurnID)
-            factRow(String(localized: "agentSession.factual.threadID", defaultValue: "Thread ID"), turnSnapshot.turn.threadID)
+            factRow(String(localized: "agentSession.factual.providerTurnID", defaultValue: "Provider turn ID"), turnSnapshot.turn.providerTurnID)
+            factRow(String(localized: "agentSession.factual.peTurnID", defaultValue: "PE turn ID"), turnSnapshot.turn.id)
+            factRow(String(localized: "agentSession.factual.peThreadID", defaultValue: "PE thread ID"), turnSnapshot.turn.threadID)
             factRow(String(localized: "agentSession.factual.status", defaultValue: "Status"), turnSnapshot.turn.status)
             factRow(String(localized: "agentSession.factual.model", defaultValue: "Model"), turnSnapshot.turn.model)
             if let prompt = turnSnapshot.submittedPrompt?.text {

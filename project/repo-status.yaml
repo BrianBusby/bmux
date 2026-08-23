@@ -3,12 +3,12 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: milestone_inference
-    title: Milestone inference
-    state: open
-    owner: provenance_engine
-    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/milestone-inference
-    active_branch: milestone-inference
+    id: live_codex_evidence_convergence_correctness
+    title: Live Codex Evidence Convergence & Metadata Correctness
+    state: under_observation
+    owner: bmux
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/live-codex-evidence-convergence-correctness
+    active_branch: live-codex-evidence-convergence-correctness
     active_agent: Codex
   state: active
 
@@ -25,6 +25,7 @@ execution_telemetry:
   codex_transcript_canonical_evidence_import: implemented
   normal_terminal_codex_evidence_ingestion: implemented
   coding_agent_evidence_source_reconciliation: implemented
+  live_codex_evidence_convergence_correctness: under_observation
 
 local_capabilities:
   provenance_engine_public_in_process_sdk: implemented
@@ -115,6 +116,6 @@ local_caveats:
   - id: sidecar_disappearance_lifecycle_policy
     status: open
   - id: normal_terminal_codex_rich_evidence_gap
-    status: resolved
+    status: monitoring
   - id: remote_mobile_open_architecture_decisions
     status: open

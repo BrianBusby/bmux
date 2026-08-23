@@ -26824,7 +26824,7 @@ struct BMUXCLI {
     }
 
     private func codexMonitorOwnerState(workspaceId: String, surfaceId: String?, client: SocketClient) -> CodexMonitorOwnerState {
-        guard client.connectionAppearsOpen() else { return client.isRelayBacked ? .unknown : .gone }
+        guard client.connectionAppearsOpen() else { return .unknown }
         guard let payload = try? client.sendV2(
             method: "surface.list",
             params: ["workspace_id": workspaceId],
@@ -26866,7 +26866,6 @@ struct BMUXCLI {
 
         let executablePath = resolvedExecutableURL()?.path ?? args.first ?? "bmux"
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: executablePath)
         var monitorArgs = [
             "hooks", "codex",
             "monitor",
@@ -26890,7 +26889,13 @@ struct BMUXCLI {
         if let leasePath, !leasePath.isEmpty {
             monitorArgs += ["--lease", leasePath]
         }
-        process.arguments = monitorArgs
+        if FileManager.default.isExecutableFile(atPath: "/usr/bin/nohup") {
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/nohup")
+            process.arguments = [executablePath] + monitorArgs
+        } else {
+            process.executableURL = URL(fileURLWithPath: executablePath)
+            process.arguments = monitorArgs
+        }
         process.environment = env.merging(["BMUX_CLI_SENTRY_DISABLED": "1"], uniquingKeysWith: { _, new in new })
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = FileHandle.nullDevice
@@ -26920,24 +26925,94 @@ struct BMUXCLI {
         let deadline = Date().addingTimeInterval(4 * 60 * 60)
         var nextOwnerCheck = Date.distantPast
         var publishedUserInputCallIds = Set<String>()
+        let hasLease = normalizedHookValue(leasePath) != nil
+
+#if DEBUG
+        func logMonitor(_ reason: String, extra: String = "") {
+            agentHookDebugLog(
+                "codexMonitor.\(reason) session=\(agentHookDebugShort(sessionId)) turn=\(agentHookDebugShort(turnId)) workspace=\(agentHookDebugShort(workspaceId)) surface=\(agentHookDebugShort(surfaceId)) hasLease=\(hasLease ? 1 : 0) offset=\(transcriptImportState.offset)\(extra.isEmpty ? "" : " \(extra)")",
+                socketPath: client.socketPath,
+                env: env
+            )
+        }
+
+        logMonitor("start", extra: "hasTranscript=\(transcriptPath == nil ? 0 : 1)")
+#endif
+
+        func consumeCurrentTranscriptAppend() async {
+            guard let transcriptImporter, let currentTranscriptPath = transcriptPath else { return }
+            do {
+                let result = try await transcriptImporter.importLiveTranscriptAppend(
+                    at: URL(fileURLWithPath: currentTranscriptPath, isDirectory: false),
+                    state: &transcriptImportState
+                )
+#if DEBUG
+                if result.consumedLines > 0 || result.fileReport.eventsAppended > 0 || result.fileReport.duplicateEvents > 0 {
+                    logMonitor(
+                        "import",
+                        extra: "lines=\(result.consumedLines) events=\(result.fileReport.eventsAppended) duplicates=\(result.fileReport.duplicateEvents) commands=\(result.fileReport.commands) reasoning=\(result.fileReport.reasoningSummaries) partial=\(result.retainedPartialLine ? 1 : 0) metadata=\(result.metadataAvailable ? 1 : 0)"
+                    )
+                }
+#endif
+            } catch {
+#if DEBUG
+                logMonitor("importError", extra: "error=\(agentHookDebugShort(String(describing: error)))")
+#endif
+            }
+        }
+
+        func finishCurrentTranscriptImport() async {
+            await consumeCurrentTranscriptAppend()
+            guard let transcriptImporter, let currentTranscriptPath = transcriptPath else { return }
+            do {
+                let report = try await transcriptImporter.finishLiveTranscriptImport(
+                    state: &transcriptImportState,
+                    path: currentTranscriptPath
+                )
+#if DEBUG
+                logMonitor(
+                    "finish",
+                    extra: "events=\(report.eventsAppended) duplicates=\(report.duplicateEvents) prompts=\(report.prompts)"
+                )
+#endif
+            } catch {
+#if DEBUG
+                logMonitor("finishError", extra: "error=\(agentHookDebugShort(String(describing: error)))")
+#endif
+            }
+        }
+
         while Date() < deadline {
             if isCodexMonitorLeaseRetired(path: leasePath) {
+#if DEBUG
+                logMonitor("exit.leaseRetired")
+#endif
+                await finishCurrentTranscriptImport()
                 return
             }
             let now = Date()
             if now >= nextOwnerCheck {
                 nextOwnerCheck = now.addingTimeInterval(Self.codexMonitorOwnerCheckIntervalSeconds)
                 if codexMonitorOwnerState(workspaceId: workspaceId, surfaceId: surfaceId, client: client) == .gone {
+#if DEBUG
+                    logMonitor("exit.ownerGone")
+#endif
+                    await finishCurrentTranscriptImport()
                     return
                 }
             }
 
             if transcriptPath == nil {
                 transcriptPath = findCodexTranscriptPath(sessionId: sessionId, env: env)
+#if DEBUG
+                if transcriptPath != nil {
+                    logMonitor("transcriptResolved")
+                }
+#endif
             }
 
             if let currentTranscriptPath = transcriptPath {
-                if let transcriptImporter { _ = try? await transcriptImporter.importLiveTranscriptAppend(at: URL(fileURLWithPath: currentTranscriptPath, isDirectory: false), state: &transcriptImportState) }
+                await consumeCurrentTranscriptAppend()
 
                 if let userInput = readCodexTranscriptUserInput(
                     path: currentTranscriptPath,
@@ -26959,7 +27034,10 @@ struct BMUXCLI {
                     requireTerminalCompletion: true
                 ) {
                 case .failure(let failure):
-                    if let transcriptImporter { _ = try? await transcriptImporter.finishLiveTranscriptImport(state: &transcriptImportState, path: currentTranscriptPath) }
+#if DEBUG
+                    logMonitor("exit.failure")
+#endif
+                    await finishCurrentTranscriptImport()
                     publishCodexMonitorFailure(
                         failure,
                         workspaceId: workspaceId,
@@ -26968,8 +27046,14 @@ struct BMUXCLI {
                     )
                     return
                 case .healthy:
-                    if let transcriptImporter { _ = try? await transcriptImporter.finishLiveTranscriptImport(state: &transcriptImportState, path: currentTranscriptPath) }
-                    return
+                    guard hasLease else {
+#if DEBUG
+                        logMonitor("exit.healthyNoLease")
+#endif
+                        await finishCurrentTranscriptImport()
+                        return
+                    }
+                    break
                 case .pending:
                     break
                 case .unavailable:
@@ -26978,6 +27062,7 @@ struct BMUXCLI {
                     if let resolvedTranscriptPath = findCodexTranscriptPath(sessionId: sessionId, env: env) {
                         transcriptPath = resolvedTranscriptPath
                         if resolvedTranscriptPath != unavailableTranscriptPath {
+                            transcriptImportState = CLIProvenanceCodexTranscriptImporter.LiveImportState()
                             continue
                         }
                     }
@@ -26985,9 +27070,19 @@ struct BMUXCLI {
             }
 
             let remaining = deadline.timeIntervalSinceNow
-            guard remaining > 0 else { return }
+            guard remaining > 0 else {
+#if DEBUG
+                logMonitor("exit.deadline")
+#endif
+                await finishCurrentTranscriptImport()
+                return
+            }
             waitForCodexTranscriptChange(path: transcriptPath, leasePath: leasePath, timeout: min(30, remaining))
         }
+#if DEBUG
+        logMonitor("exit.loop")
+#endif
+        await finishCurrentTranscriptImport()
     }
 
     private func publishCodexMonitorUserInput(

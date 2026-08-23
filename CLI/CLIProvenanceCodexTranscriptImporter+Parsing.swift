@@ -58,8 +58,11 @@ extension CLIProvenanceCodexTranscriptImporter {
                 providerThreadID: sessionID,
                 cwd: Self.trimmedNonEmpty(Self.string(line.payload["cwd"])),
                 timestamp: Self.dateFromString(Self.string(line.payload["timestamp"])) ?? line.timestamp ?? Date(timeIntervalSince1970: 0),
-                model: Self.trimmedNonEmpty(Self.string(line.payload["model"]))
-                    ?? Self.trimmedNonEmpty(Self.string(line.payload["model_provider"]))
+                model: Self.trimmedNonEmpty(Self.string(line.payload["model"])),
+                effort: Self.trimmedNonEmpty(Self.firstNonEmpty(
+                    Self.string(line.payload["effort"]),
+                    Self.string(line.payload["reasoning_effort"])
+                ))
             )
         }
         return nil

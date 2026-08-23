@@ -75,6 +75,7 @@ extension CLIProvenanceCodexTranscriptImporter {
             providerTurnID: providerTurnID,
             status: "observed",
             model: context.latestModel,
+            effort: context.latestEffort,
             startedAt: nil,
             completedAt: nil,
             fileReport: &fileReport
@@ -88,6 +89,7 @@ extension CLIProvenanceCodexTranscriptImporter {
         providerTurnID: String,
         status: String,
         model: String?,
+        effort: String?,
         startedAt: Date?,
         completedAt: Date?,
         fileReport: inout FileReport
@@ -108,7 +110,7 @@ extension CLIProvenanceCodexTranscriptImporter {
             providerTurnID: providerTurnID,
             status: status,
             model: Self.trimmedNonEmpty(model),
-            effort: nil,
+            effort: Self.trimmedNonEmpty(effort),
             startedAt: startedAt,
             completedAt: completedAt,
             updatedAt: observedAt,
