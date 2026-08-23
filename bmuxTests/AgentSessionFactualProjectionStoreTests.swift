@@ -180,6 +180,13 @@ struct AgentSessionFactualProjectionStoreTests {
         #expect(activityPayload.basis == "file_change_attribution")
     }
 
+    @Test
+    func factualProjectionEvidenceRowsUseLatestCompactSlice() {
+        let rows = AgentSessionFactualProjectionEvidenceRows.latestRows(["a", "b", "c", "d"], limit: 2)
+
+        #expect(rows == ["c", "d"])
+    }
+
     private static func snapshot(sessionID: String, revision: Int) -> ProvenanceFactualSessionProjectionSnapshot {
         let updatedAt = Date(timeIntervalSince1970: 1_800_000_000)
         let thread = ProvenanceCodingAgentThreadRecord(

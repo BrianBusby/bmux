@@ -4,6 +4,14 @@ import ProvenanceEngineContracts
 
 private let agentSessionFactualProjectionAutoRefreshNanoseconds: UInt64 = 2_000_000_000
 
+enum AgentSessionFactualProjectionEvidenceRows {
+    static func latestRows<Value>(_ values: [Value], limit: Int) -> [Value] {
+        guard limit > 0 else { return [] }
+        guard values.count > limit else { return values }
+        return Array(values.suffix(limit))
+    }
+}
+
 struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     let showsSwitcher: Bool
     let stableWorkspaceID: UUID?
@@ -339,7 +347,7 @@ struct AgentSessionFactualProjectionView: View {
 
     private func commandRows(_ commands: [ProvenanceCodingAgentCommandRecord]) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            ForEach(commands.prefix(5), id: \.id) { command in
+            ForEach(AgentSessionFactualProjectionEvidenceRows.latestRows(commands, limit: 5), id: \.id) { command in
                 labeledText(command.status, command.command, lineLimit: 2)
             }
         }
@@ -347,7 +355,7 @@ struct AgentSessionFactualProjectionView: View {
 
     private func reasoningRows(_ summaries: [ProvenanceCodingAgentReasoningSummaryRecord]) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            ForEach(summaries.prefix(3), id: \.id) { summary in
+            ForEach(AgentSessionFactualProjectionEvidenceRows.latestRows(summaries, limit: 3), id: \.id) { summary in
                 labeledText(
                     String(localized: "agentSession.factual.reasoningSummary", defaultValue: "Reasoning summary"),
                     summary.text,
@@ -359,7 +367,7 @@ struct AgentSessionFactualProjectionView: View {
 
     private func fileRows(_ attributions: [ProvenanceCodingAgentFileChangeAttributionRecord]) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            ForEach(attributions.prefix(4), id: \.id) { attribution in
+            ForEach(AgentSessionFactualProjectionEvidenceRows.latestRows(attributions, limit: 4), id: \.id) { attribution in
                 labeledText(
                     String(localized: "agentSession.factual.fileChange", defaultValue: "File change"),
                     attribution.summary ?? attribution.paths.prefix(4).joined(separator: ", "),
