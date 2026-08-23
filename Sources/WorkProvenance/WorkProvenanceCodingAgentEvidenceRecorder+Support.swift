@@ -3,6 +3,44 @@ import BmuxAgentChat
 import Foundation
 import ProvenanceEngineContracts
 
+extension WorkstreamEvent {
+    var codexProviderTurnID: String? {
+        guard source == "codex" else { return nil }
+        return Self.scalarString(fromJSON: extraFieldsJSON, keys: Self.codexProviderTurnIDKeys)
+            ?? Self.scalarString(fromJSON: toolInputJSON, keys: Self.codexProviderTurnIDKeys)
+    }
+
+    private static let codexProviderTurnIDKeys = ["turn_id", "turnId", "provider_turn_id", "providerTurnID"]
+
+    private static func scalarString(fromJSON jsonString: String?, keys: [String]) -> String? {
+        guard let jsonString,
+              let data = jsonString.data(using: .utf8),
+              let dict = (try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])) as? [String: Any]
+        else {
+            return nil
+        }
+        return scalarString(from: dict, keys: keys)
+    }
+
+    private static func scalarString(from dict: [String: Any], keys: [String]) -> String? {
+        for key in keys {
+            if let value = normalizedScalarText(dict[key]) { return value }
+        }
+        for key in ["metadata", "data", "context"] {
+            if let nested = dict[key] as? [String: Any],
+               let value = scalarString(from: nested, keys: keys) { return value }
+        }
+        return nil
+    }
+
+    private static func normalizedScalarText(_ value: Any?) -> String? {
+        if let value = value as? NSNumber { return value.stringValue }
+        guard let value = value as? String else { return nil }
+        let normalized = value.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return normalized.isEmpty ? nil : normalized
+    }
+}
+
 extension WorkProvenanceCodingAgentEvidenceRecorder {
     func recordHookUserPromptSubmit(
         record: AgentChatSessionRecord,
@@ -25,14 +63,27 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let workspaceID = firstNonEmpty(record.workspaceID, event.workspaceId)
         let surfaceID = firstNonEmpty(record.surfaceID, event.surfaceId)
         let gitContext = await gitContext(for: workingDirectory, observedAt: observedAt)
-        let hookTurnSeed = [
-            sessionID,
-            event.requestId ?? "",
-            event.sessionId,
-            String(observedAt.timeIntervalSince1970),
-            promptText
-        ].joined(separator: "\n")
-        let providerTurnID = stableIDFactory.id(prefix: "hook-codex-turn", value: hookTurnSeed)
+        let nativeProviderTurnID = event.codexProviderTurnID
+        let hookTurnSeedComponents = if let nativeProviderTurnID {
+            [
+                sessionID,
+                nativeProviderTurnID,
+                event.requestId ?? "",
+                event.sessionId,
+                String(observedAt.timeIntervalSince1970),
+                promptText
+            ]
+        } else {
+            [
+                sessionID,
+                event.requestId ?? "",
+                event.sessionId,
+                String(observedAt.timeIntervalSince1970),
+                promptText
+            ]
+        }
+        let hookTurnSeed = hookTurnSeedComponents.joined(separator: "\n")
+        let providerTurnID = nativeProviderTurnID ?? stableIDFactory.id(prefix: "hook-codex-turn", value: hookTurnSeed)
         let turnID = turnRecordID(providerTurnID: providerTurnID)
         let session = ProvenanceSessionRecord(
             id: sessionID,
@@ -59,7 +110,7 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let prompt = ProvenanceCodingAgentPromptRecord(
             id: stableIDFactory.id(
                 prefix: "coding-agent-prompt",
-                value: "hook\n\(sessionID)\n\(providerTurnID)\n\(promptText)"
+                value: "\(nativeProviderTurnID == nil ? "hook" : "codex")\n\(sessionID)\n\(providerTurnID)\n\(promptText)"
             ),
             sessionID: sessionID,
             turnID: turnID,
@@ -119,8 +170,6 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
             }
             let submittedAt = message.timestamp
             let turnSeed = "transcript\n\(sessionID)\n\(submittedAt.timeIntervalSince1970)\n\(promptText)"
-            let providerTurnID = stableIDFactory.id(prefix: "transcript-codex-turn", value: turnSeed)
-            let turnID = turnRecordID(providerTurnID: providerTurnID)
             let session = ProvenanceSessionRecord(
                 id: sessionID,
                 agentKind: "codex",
@@ -132,21 +181,10 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
                 startedAt: nil,
                 updatedAt: record.lastActivityAt
             )
-            let turn = ProvenanceCodingAgentTurnRecord(
-                id: turnID,
-                sessionID: sessionID,
-                provider: "codex",
-                providerTurnID: providerTurnID,
-                status: "started",
-                startedAt: submittedAt,
-                updatedAt: submittedAt,
-                source: .observed,
-                confidence: .medium
-            )
             let prompt = ProvenanceCodingAgentPromptRecord(
                 id: stableIDFactory.id(prefix: "coding-agent-prompt", value: turnSeed),
                 sessionID: sessionID,
-                turnID: turnID,
+                turnID: nil,
                 provider: "codex",
                 text: promptText,
                 submittedAt: submittedAt,
@@ -180,7 +218,6 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
                     worktree: gitContext?.worktree,
                     session: session,
                     workspaceDisplay: display,
-                    codingAgentTurn: turn,
                     codingAgentPrompt: prompt
                 )
             )

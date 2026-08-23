@@ -1,4 +1,6 @@
 import Foundation
+import BMUXAgentLaunch
+import BmuxAgentChat
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
 import Testing
@@ -37,9 +39,171 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         #expect(secondImport.duplicateEvents == 7)
     }
 
+    @Test
+    func liveImportConsumesCompletedAppendsAndReplaysIdempotently() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("codex-session.jsonl")
+        FileManager.default.createFile(atPath: transcriptURL.path, contents: Data())
+        let lines = try Self.codexTranscriptFixtureLines()
+        let importer = CLIProvenanceCodexTranscriptImporter(client: client)
+        var state = CLIProvenanceCodexTranscriptImporter.LiveImportState()
+
+        try Self.appendText(lines[0] + "\n", to: transcriptURL)
+        let metadataImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(metadataImport.consumedLines == 1)
+        #expect(metadataImport.fileReport.threads == 1)
+        #expect(metadataImport.metadataAvailable)
+
+        try Self.appendText(lines[1], to: transcriptURL)
+        let partialImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(partialImport.consumedLines == 0)
+        #expect(partialImport.retainedPartialLine)
+
+        try Self.appendText("\n" + lines[2] + "\n", to: transcriptURL)
+        let turnImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(turnImport.consumedLines == 2)
+        #expect(turnImport.fileReport.turns == 1)
+        #expect(turnImport.fileReport.prompts == 1)
+
+        try Self.appendText(lines[3...].joined(separator: "\n") + "\n", to: transcriptURL)
+        let evidenceImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(evidenceImport.consumedLines == 4)
+        #expect(evidenceImport.fileReport.plans == 1)
+        #expect(evidenceImport.fileReport.commands == 1)
+        #expect(evidenceImport.fileReport.reasoningSummaries == 1)
+        #expect(evidenceImport.fileReport.fileChanges == 1)
+
+        let replay = try await importer.importTranscripts(path: transcriptURL.path)
+        #expect(replay.eventsAppended == 0)
+        #expect(replay.duplicateEvents == 7)
+    }
+
+    @Test
+    func liveImportKeepsTailStateWhenBatchParsingFails() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("codex-session.jsonl")
+        FileManager.default.createFile(atPath: transcriptURL.path, contents: Data())
+        let importer = CLIProvenanceCodexTranscriptImporter(client: client)
+        var state = CLIProvenanceCodexTranscriptImporter.LiveImportState()
+        let lines = try Self.codexTranscriptFixtureLines()
+
+        try Self.appendText(lines[0] + "\nnot-json\n", to: transcriptURL)
+        do {
+            _ = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+            Issue.record("Expected invalid JSON to fail the live import batch")
+        } catch {
+            #expect(state.offset == 0)
+            #expect(state.nextLineNumber == 1)
+            #expect(state.metadata == nil)
+            #expect(state.pendingLines.isEmpty)
+        }
+
+        try (lines[0] + "\n").write(to: transcriptURL, atomically: true, encoding: .utf8)
+        let retry = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(retry.consumedLines == 1)
+        #expect(retry.fileReport.threads == 1)
+        #expect(state.metadata != nil)
+    }
+
+    @Test
+    func liveImportKeepsTailStateWhenAppendFails() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("codex-session.jsonl")
+        let lines = try Self.codexTranscriptFixtureLines()
+        try (lines[0] + "\n").write(to: transcriptURL, atomically: true, encoding: .utf8)
+        let importer = CLIProvenanceCodexTranscriptImporter(client: FailingAppendClient())
+        var state = CLIProvenanceCodexTranscriptImporter.LiveImportState()
+
+        do {
+            _ = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+            Issue.record("Expected append failure to fail the live import batch")
+        } catch {
+            #expect(state.offset == 0)
+            #expect(state.nextLineNumber == 1)
+            #expect(state.metadata == nil)
+            #expect(state.pendingLines.isEmpty)
+        }
+    }
+
+    @Test
+    func hookAndLiveTranscriptEvidenceShareOneFactualTurn() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let recorder = WorkProvenanceCodingAgentEvidenceRecorder(
+            client: client,
+            gitInspector: EmptyGitInspector()
+        )
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("codex-session.jsonl")
+        let lines = try Self.codexTranscriptFixtureLines()
+        try (lines.joined(separator: "\n") + "\n").write(to: transcriptURL, atomically: true, encoding: .utf8)
+
+        let timestamp = Date(timeIntervalSince1970: 1_787_325_601)
+        let record = AgentChatSessionRecord(
+            sessionID: "codex-session-1",
+            agentKind: .codex,
+            workspaceID: "workspace-1",
+            surfaceID: "surface-1",
+            workingDirectory: "/tmp/provenance-transcript-fixture",
+            transcriptPath: transcriptURL.path,
+            state: .working(since: timestamp),
+            lastActivityAt: timestamp,
+            title: nil,
+            pid: 123
+        )
+        let hookEvent = WorkstreamEvent(
+            sessionId: "codex-session-1",
+            hookEventName: .userPromptSubmit,
+            source: "codex",
+            workspaceId: "workspace-1",
+            surfaceId: "surface-1",
+            transcriptPath: transcriptURL.path,
+            cwd: "/tmp/provenance-transcript-fixture",
+            context: WorkstreamContext(lastUserMessage: "Please add transcript ingestion."),
+            requestId: "hook-request-1",
+            ppid: 123,
+            receivedAt: timestamp,
+            extraFieldsJSON: #"{"turn_id":"turn-1"}"#
+        )
+
+        try await recorder.recordHookUserPromptSubmit(
+            record: record,
+            event: hookEvent,
+            stableWorkspaceID: UUID()
+        )
+
+        let importer = CLIProvenanceCodexTranscriptImporter(client: client)
+        var state = CLIProvenanceCodexTranscriptImporter.LiveImportState()
+        _ = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+
+        let projection = try await client.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: "codex-session-1")
+        )
+        let snapshot = try #require(projection.snapshot)
+        #expect(snapshot.turns.count == 1)
+        let turn = try #require(snapshot.latestTurn)
+        #expect(turn.turn.providerTurnID == "turn-1")
+        #expect(turn.submittedPrompt?.text == "Please add transcript ingestion.")
+    }
+
     private static func writeCodexTranscriptFixture(to url: URL) throws {
         let lines = try codexTranscriptFixtureLines()
         try lines.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    private static func appendText(_ text: String, to url: URL) throws {
+        let handle = try FileHandle(forWritingTo: url)
+        defer { try? handle.close() }
+        handle.seekToEndOfFile()
+        handle.write(Data(text.utf8))
     }
 
     private static func codexTranscriptFixtureLines() throws -> [String] {
@@ -188,6 +352,72 @@ struct CLIProvenanceCodexTranscriptImporterTests {
 
         func remove() {
             try? FileManager.default.removeItem(at: directoryURL)
+        }
+    }
+
+    private struct EmptyGitInspector: WorkProvenanceGitInspecting {
+        func snapshot(for directory: String) async -> WorkProvenanceGitSnapshot? {
+            nil
+        }
+    }
+
+    private actor FailingAppendClient: ProvenanceEngineContracts.ProvenanceEngineClient {
+        func health() async throws -> ProvenanceEngineContracts.ProvenanceEngineHealth {
+            throw CancellationError()
+        }
+
+        func appendEvent(
+            _ request: ProvenanceEngineContracts.ProvenanceAppendEventRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceAppendEventResponse {
+            throw CancellationError()
+        }
+
+        func recordSessionLifecycle(
+            _ request: ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest
+        ) async -> ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse {
+            ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse(
+                accepted: false,
+                eventID: nil,
+                sessionID: nil,
+                relationshipSessionID: nil,
+                externalIdentityID: nil
+            )
+        }
+
+        func sessionTree(
+            _ request: ProvenanceEngineContracts.ProvenanceSessionTreeRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceSessionTreeResponse {
+            throw CancellationError()
+        }
+
+        func fileExplanation(
+            _ request: ProvenanceEngineContracts.ProvenanceFileExplanationRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceFileExplanationResponse {
+            throw CancellationError()
+        }
+
+        func worktrees(
+            _ request: ProvenanceEngineContracts.ProvenanceWorktreeListRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceWorktreeListResponse {
+            throw CancellationError()
+        }
+
+        func currentContext(
+            _ request: ProvenanceEngineContracts.ProvenanceCurrentContextRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceCurrentContextResponse {
+            throw CancellationError()
+        }
+
+        func workspaceDisplay(
+            _ request: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse {
+            throw CancellationError()
+        }
+
+        func factualSessionProjection(
+            _ request: ProvenanceEngineContracts.ProvenanceFactualSessionProjectionRequest
+        ) async throws -> ProvenanceEngineContracts.ProvenanceFactualSessionProjectionResponse {
+            throw CancellationError()
         }
     }
 }

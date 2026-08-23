@@ -209,10 +209,16 @@ final class SessionProvenanceTests: XCTestCase {
         XCTAssertEqual(turn.provider, "codex")
         XCTAssertEqual(turn.status, "started")
         XCTAssertEqual(turn.confidence, .medium)
+        let legacyHookTurnSeed = "raw-codex-session\nhook-request-1\ncodex-raw-codex-session\n\(timestamp.timeIntervalSince1970)\nFix the PE session tab"
+        let stableIDFactory = WorkProvenanceStableIDFactory()
+        let expectedSyntheticProviderTurnID = stableIDFactory.id(prefix: "hook-codex-turn", value: legacyHookTurnSeed)
+        XCTAssertEqual(turn.providerTurnID, expectedSyntheticProviderTurnID)
         XCTAssertEqual(prompt.sessionID, "raw-codex-session")
         XCTAssertEqual(prompt.turnID, turn.id)
+        XCTAssertEqual(prompt.id, stableIDFactory.id(prefix: "coding-agent-prompt", value: "hook\nraw-codex-session\n\(expectedSyntheticProviderTurnID)\nFix the PE session tab"))
         XCTAssertEqual(prompt.text, "Fix the PE session tab")
         XCTAssertEqual(prompt.confidence, .medium)
+        XCTAssertEqual(request.event.id, "event-\(stableIDFactory.id(prefix: "hook-codex-prompt", value: legacyHookTurnSeed))")
 
         let display = try XCTUnwrap(request.event.payload.workspaceDisplay)
         XCTAssertEqual(display.workspaceID, stableWorkspaceID.uuidString)
@@ -232,7 +238,9 @@ final class SessionProvenanceTests: XCTestCase {
         let backfillRequests = await client.appendedEventRequests
         let backfillRequest = try XCTUnwrap(backfillRequests.last)
         XCTAssertEqual(backfillRequests.count, 2)
+        XCTAssertNil(backfillRequest.event.payload.codingAgentTurn)
         XCTAssertEqual(backfillRequest.event.payload.codingAgentPrompt?.text, "Backfilled transcript prompt")
+        XCTAssertNil(backfillRequest.event.payload.codingAgentPrompt?.turnID)
         XCTAssertEqual(backfillRequest.event.payload.workspaceDisplay?.lastSubmittedPromptSessionID, "raw-codex-session")
     }
 

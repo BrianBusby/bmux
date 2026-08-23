@@ -105,6 +105,146 @@ struct CLIProvenanceCodexTranscriptImporter {
         return fileReport
     }
 
+    func importLiveTranscriptAppend(at url: URL, state: inout LiveImportState) async throws -> LiveImportResult {
+        let path = url.standardizedFileURL.path
+        var fileReport = FileReport(path: path, status: "live")
+        let fileSize = try currentFileSize(at: url)
+        if fileSize < state.offset {
+            state = LiveImportState()
+        }
+
+        guard fileSize > state.offset else {
+            return LiveImportResult(
+                fileReport: fileReport,
+                consumedLines: 0,
+                retainedPartialLine: !state.pendingFragment.isEmpty,
+                metadataAvailable: state.metadata != nil
+            )
+        }
+
+        let startOffset = state.offset
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        try handle.seek(toOffset: startOffset)
+        let appendedData = handle.readDataToEndOfFile()
+        let nextOffset = startOffset + UInt64(appendedData.count)
+
+        var workingState = state
+        let lines = try completedTranscriptLines(
+            from: appendedData,
+            path: path,
+            state: &workingState
+        )
+        try await importLiveTranscriptLines(lines, state: &workingState, fileReport: &fileReport)
+        workingState.offset = nextOffset
+        state = workingState
+        return LiveImportResult(
+            fileReport: fileReport,
+            consumedLines: lines.count,
+            retainedPartialLine: !state.pendingFragment.isEmpty,
+            metadataAvailable: state.metadata != nil
+        )
+    }
+
+    func finishLiveTranscriptImport(state: inout LiveImportState, path: String) async throws -> FileReport {
+        var fileReport = FileReport(path: path, status: "live-finished")
+        guard let metadata = state.metadata,
+              var context = state.context,
+              !context.pendingPrompts.isEmpty else {
+            return fileReport
+        }
+        let pendingPrompts = context.pendingPrompts
+        context.pendingPrompts = []
+        for pendingPrompt in pendingPrompts {
+            try await appendPrompt(
+                metadata: metadata,
+                line: pendingPrompt.line,
+                text: pendingPrompt.text,
+                providerTurnID: nil,
+                fileReport: &fileReport
+            )
+        }
+        state.context = context
+        return fileReport
+    }
+
+    private func currentFileSize(at url: URL) throws -> UInt64 {
+        let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+        return (attributes[.size] as? NSNumber)?.uint64Value ?? 0
+    }
+
+    private func completedTranscriptLines(
+        from appendedData: Data,
+        path: String,
+        state: inout LiveImportState
+    ) throws -> [TranscriptLine] {
+        guard !appendedData.isEmpty else { return [] }
+        var buffer = state.pendingFragment
+        buffer.append(appendedData)
+        var lines: [TranscriptLine] = []
+        let bytes = [UInt8](buffer)
+        var lineStart = 0
+        for index in bytes.indices where bytes[index] == 0x0a {
+            let lineData = Data(bytes[lineStart..<index])
+            if let lineText = String(data: lineData, encoding: .utf8),
+               let line = try transcriptLine(
+                   from: lineText,
+                   lineNumber: state.nextLineNumber,
+                   path: path
+               ) {
+                lines.append(line)
+            } else if !lineData.isEmpty {
+                throw ImportError(message: String.localizedStringWithFormat(
+                    String(
+                        localized: "cli.provenance.import.error.invalidUTF8Line",
+                        defaultValue: "Codex transcript line is not valid UTF-8: %@:%d"
+                    ),
+                    path,
+                    state.nextLineNumber
+                ))
+            }
+            state.nextLineNumber += 1
+            lineStart = index + 1
+        }
+        state.pendingFragment = lineStart < bytes.count ? Data(bytes[lineStart..<bytes.count]) : Data()
+        return lines
+    }
+
+    private func importLiveTranscriptLines(
+        _ lines: [TranscriptLine],
+        state: inout LiveImportState,
+        fileReport: inout FileReport
+    ) async throws {
+        guard !lines.isEmpty else { return }
+        if state.metadata == nil {
+            state.pendingLines.append(contentsOf: lines)
+            guard let metadata = sessionMetadata(from: state.pendingLines) else { return }
+            state.metadata = metadata
+            state.context = TranscriptContext(
+                sessionID: metadata.sessionID,
+                providerThreadID: metadata.providerThreadID,
+                cwd: metadata.cwd,
+                sessionStartedAt: metadata.timestamp,
+                latestModel: metadata.model
+            )
+        } else {
+            state.pendingLines.append(contentsOf: lines)
+        }
+
+        guard let metadata = state.metadata,
+              var context = state.context else { return }
+        if !state.threadObserved {
+            try await appendThread(metadata: metadata, line: metadata.line, fileReport: &fileReport)
+            state.threadObserved = true
+        }
+        let importLines = state.pendingLines
+        state.pendingLines = []
+        for line in importLines {
+            try await importLine(line, metadata: metadata, context: &context, fileReport: &fileReport)
+        }
+        state.context = context
+    }
+
     private func importLine(
         _ line: TranscriptLine,
         metadata: TranscriptMetadata,
