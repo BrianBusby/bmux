@@ -25,14 +25,16 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let workspaceID = firstNonEmpty(record.workspaceID, event.workspaceId)
         let surfaceID = firstNonEmpty(record.surfaceID, event.surfaceId)
         let gitContext = await gitContext(for: workingDirectory, observedAt: observedAt)
+        let nativeProviderTurnID = event.codexProviderTurnID
         let hookTurnSeed = [
             sessionID,
+            nativeProviderTurnID ?? "",
             event.requestId ?? "",
             event.sessionId,
             String(observedAt.timeIntervalSince1970),
             promptText
         ].joined(separator: "\n")
-        let providerTurnID = stableIDFactory.id(prefix: "hook-codex-turn", value: hookTurnSeed)
+        let providerTurnID = nativeProviderTurnID ?? stableIDFactory.id(prefix: "hook-codex-turn", value: hookTurnSeed)
         let turnID = turnRecordID(providerTurnID: providerTurnID)
         let session = ProvenanceSessionRecord(
             id: sessionID,
@@ -59,7 +61,7 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let prompt = ProvenanceCodingAgentPromptRecord(
             id: stableIDFactory.id(
                 prefix: "coding-agent-prompt",
-                value: "hook\n\(sessionID)\n\(providerTurnID)\n\(promptText)"
+                value: "codex\n\(sessionID)\n\(providerTurnID)\n\(promptText)"
             ),
             sessionID: sessionID,
             turnID: turnID,
@@ -119,8 +121,6 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
             }
             let submittedAt = message.timestamp
             let turnSeed = "transcript\n\(sessionID)\n\(submittedAt.timeIntervalSince1970)\n\(promptText)"
-            let providerTurnID = stableIDFactory.id(prefix: "transcript-codex-turn", value: turnSeed)
-            let turnID = turnRecordID(providerTurnID: providerTurnID)
             let session = ProvenanceSessionRecord(
                 id: sessionID,
                 agentKind: "codex",
@@ -132,21 +132,10 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
                 startedAt: nil,
                 updatedAt: record.lastActivityAt
             )
-            let turn = ProvenanceCodingAgentTurnRecord(
-                id: turnID,
-                sessionID: sessionID,
-                provider: "codex",
-                providerTurnID: providerTurnID,
-                status: "started",
-                startedAt: submittedAt,
-                updatedAt: submittedAt,
-                source: .observed,
-                confidence: .medium
-            )
             let prompt = ProvenanceCodingAgentPromptRecord(
                 id: stableIDFactory.id(prefix: "coding-agent-prompt", value: turnSeed),
                 sessionID: sessionID,
-                turnID: turnID,
+                turnID: nil,
                 provider: "codex",
                 text: promptText,
                 submittedAt: submittedAt,
@@ -180,7 +169,6 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
                     worktree: gitContext?.worktree,
                     session: session,
                     workspaceDisplay: display,
-                    codingAgentTurn: turn,
                     codingAgentPrompt: prompt
                 )
             )

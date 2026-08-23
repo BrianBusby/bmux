@@ -233518,6 +233518,23 @@
         }
       }
     },
+    "cli.provenance.import.error.invalidUTF8Line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex transcript line is not valid UTF-8: %@:%d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex transcript 行は有効な UTF-8 ではありません: %@:%d"
+          }
+        }
+      }
+    },
     "cli.provenance.import.error.pathMissing": {
       "extractionState": "manual",
       "localizations": {

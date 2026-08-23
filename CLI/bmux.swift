@@ -5286,11 +5286,11 @@ struct BMUXCLI {
             }
         case "codex-hook": // Backwards compatibility for older installed Codex hooks. Hidden from help.
             guard let codexDef = Self.agentDef(named: "codex") else { print("{}"); return }
-            try runGenericAgentHook(def: codexDef, commandArgs: commandArgs, client: client, telemetry: cliTelemetry, socketPassword: socketPasswordArg)
+            try await runGenericAgentHook(def: codexDef, commandArgs: commandArgs, client: client, telemetry: cliTelemetry, socketPassword: socketPasswordArg)
         case "feed-hook": // Backwards compatibility for older installed Feed hooks. Hidden from help.
             try runFeedHook(commandArgs: commandArgs, client: client, telemetry: cliTelemetry)
         case "hooks":
-            try runHooksSocketCommand(commandArgs: commandArgs, client: client, telemetry: cliTelemetry, socketPassword: socketPasswordArg)
+            try await runHooksSocketCommand(commandArgs: commandArgs, client: client, telemetry: cliTelemetry, socketPassword: socketPasswordArg)
 
         case "set-app-focus":
             guard let value = commandArgs.first else { throw CLIError(message: "set-app-focus requires a value") }
@@ -26903,7 +26903,7 @@ struct BMUXCLI {
         }
     }
 
-    private func runCodexTranscriptMonitor(commandArgs: [String], client: SocketClient) throws {
+    private func runCodexTranscriptMonitor(commandArgs: [String], client: SocketClient) async throws {
         let env = ProcessInfo.processInfo.environment
         let workspaceId = optionValue(commandArgs, name: "--workspace") ?? env["BMUX_WORKSPACE_ID"] ?? ""
         let surfaceId = optionValue(commandArgs, name: "--surface") ?? env["BMUX_SURFACE_ID"]
@@ -26922,6 +26922,9 @@ struct BMUXCLI {
         }
 
         defer { removeCodexMonitorLease(path: leasePath) }
+        let provenanceClient = try? provenanceEngineClient(databasePath: nil).client
+        let transcriptImporter = provenanceClient.map { CLIProvenanceCodexTranscriptImporter(client: $0) }
+        var transcriptImportState = CLIProvenanceCodexTranscriptImporter.LiveImportState()
         let deadline = Date().addingTimeInterval(4 * 60 * 60)
         var nextOwnerCheck = Date.distantPast
         var publishedUserInputCallIds = Set<String>()
@@ -26942,6 +26945,13 @@ struct BMUXCLI {
             }
 
             if let currentTranscriptPath = transcriptPath {
+                if let transcriptImporter {
+                    _ = try? await transcriptImporter.importLiveTranscriptAppend(
+                        at: URL(fileURLWithPath: currentTranscriptPath, isDirectory: false),
+                        state: &transcriptImportState
+                    )
+                }
+
                 if let userInput = readCodexTranscriptUserInput(
                     path: currentTranscriptPath,
                     turnId: turnId,
@@ -26962,6 +26972,12 @@ struct BMUXCLI {
                     requireTerminalCompletion: true
                 ) {
                 case .failure(let failure):
+                    if let transcriptImporter {
+                        _ = try? await transcriptImporter.finishLiveTranscriptImport(
+                            state: &transcriptImportState,
+                            path: currentTranscriptPath
+                        )
+                    }
                     publishCodexMonitorFailure(
                         failure,
                         workspaceId: workspaceId,
@@ -26970,6 +26986,12 @@ struct BMUXCLI {
                     )
                     return
                 case .healthy:
+                    if let transcriptImporter {
+                        _ = try? await transcriptImporter.finishLiveTranscriptImport(
+                            state: &transcriptImportState,
+                            path: currentTranscriptPath
+                        )
+                    }
                     return
                 case .pending:
                     break
@@ -30539,14 +30561,14 @@ export default BMUXSessionRestore;
         client: SocketClient,
         telemetry: CLISocketSentryTelemetry,
         socketPassword: String? = nil
-    ) throws {
+    ) async throws {
         let env = ProcessInfo.processInfo.environment
         let subcommand = commandArgs.first?.lowercased() ?? ""
         let hookArgs = Array(commandArgs.dropFirst())
         telemetry.breadcrumb("\(def.name)-hook.\(subcommand)")
 
         if def.name == "codex", subcommand == "monitor" {
-            try runCodexTranscriptMonitor(commandArgs: hookArgs, client: client)
+            try await runCodexTranscriptMonitor(commandArgs: hookArgs, client: client)
             return
         }
 
@@ -32174,6 +32196,9 @@ export default BMUXSessionRestore;
         }
         if let transcriptPath = parsedInput.transcriptPath, !transcriptPath.isEmpty {
             event["transcript_path"] = transcriptPath
+        }
+        if let turnId = parsedInput.turnId, !turnId.isEmpty {
+            event["turn_id"] = turnId
         }
         if let cwd = parsedInput.cwd { event["cwd"] = cwd }
         let toolName = parsedInput.object?["tool_name"] as? String
@@ -35069,14 +35094,14 @@ export default BMUXSessionRestore;
 
     private func runCursorInstallHooks() throws { try installAgentHooks(Self.agentDef(named: "cursor")!) }
     private func runCursorUninstallHooks() throws { try uninstallAgentHooks(Self.agentDef(named: "cursor")!) }
-    private func runCursorHook(commandArgs: [String], client: SocketClient, telemetry: CLISocketSentryTelemetry) throws {
-        try runGenericAgentHook(def: Self.agentDef(named: "cursor")!, commandArgs: commandArgs, client: client, telemetry: telemetry)
+    private func runCursorHook(commandArgs: [String], client: SocketClient, telemetry: CLISocketSentryTelemetry) async throws {
+        try await runGenericAgentHook(def: Self.agentDef(named: "cursor")!, commandArgs: commandArgs, client: client, telemetry: telemetry)
     }
 
     private func runGeminiInstallHooks() throws { try installAgentHooks(Self.agentDef(named: "gemini")!) }
     private func runGeminiUninstallHooks() throws { try uninstallAgentHooks(Self.agentDef(named: "gemini")!) }
-    private func runGeminiHook(commandArgs: [String], client: SocketClient, telemetry: CLISocketSentryTelemetry) throws {
-        try runGenericAgentHook(def: Self.agentDef(named: "gemini")!, commandArgs: commandArgs, client: client, telemetry: telemetry)
+    private func runGeminiHook(commandArgs: [String], client: SocketClient, telemetry: CLISocketSentryTelemetry) async throws {
+        try await runGenericAgentHook(def: Self.agentDef(named: "gemini")!, commandArgs: commandArgs, client: client, telemetry: telemetry)
     }
 
     // MARK: - Hooks namespace
@@ -35203,7 +35228,7 @@ export default BMUXSessionRestore;
         client: SocketClient,
         telemetry: CLISocketSentryTelemetry,
         socketPassword: String? = nil
-    ) throws {
+    ) async throws {
         guard let first = commandArgs.first?.lowercased() else {
             throw CLIError(message: "Usage: bmux hooks <setup|uninstall|feed|claude|agent>")
         }
@@ -35241,7 +35266,7 @@ export default BMUXSessionRestore;
             }
             telemetry.breadcrumb("hooks.\(def.name).dispatch")
             do {
-                try runGenericAgentHook(def: def, commandArgs: rest, client: client, telemetry: telemetry, socketPassword: socketPassword)
+                try await runGenericAgentHook(def: def, commandArgs: rest, client: client, telemetry: telemetry, socketPassword: socketPassword)
                 telemetry.breadcrumb("hooks.\(def.name).completed")
             } catch {
                 telemetry.breadcrumb("hooks.\(def.name).failure")

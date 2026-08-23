@@ -232,7 +232,9 @@ final class SessionProvenanceTests: XCTestCase {
         let backfillRequests = await client.appendedEventRequests
         let backfillRequest = try XCTUnwrap(backfillRequests.last)
         XCTAssertEqual(backfillRequests.count, 2)
+        XCTAssertNil(backfillRequest.event.payload.codingAgentTurn)
         XCTAssertEqual(backfillRequest.event.payload.codingAgentPrompt?.text, "Backfilled transcript prompt")
+        XCTAssertNil(backfillRequest.event.payload.codingAgentPrompt?.turnID)
         XCTAssertEqual(backfillRequest.event.payload.workspaceDisplay?.lastSubmittedPromptSessionID, "raw-codex-session")
     }
 

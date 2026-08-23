@@ -142,8 +142,19 @@ extension CLIProvenanceCodexTranscriptImporter {
         guard let text = Self.trimmedNonEmpty(text).map({ Self.bounded($0, limit: Self.textLimit) }) else { return }
         let observedAt = line.timestamp ?? metadata.timestamp
         let gitContext = await gitContext(for: metadata.cwd, observedAt: observedAt)
+        let promptID = providerTurnID.map {
+            stableIDFactory.id(
+                prefix: "coding-agent-prompt",
+                value: "codex\n\(metadata.sessionID)\n\($0)\n\(text)"
+            )
+        } ?? recordID(
+            prefix: "coding-agent-prompt",
+            sessionID: metadata.sessionID,
+            line: line,
+            discriminator: text
+        )
         let prompt = ProvenanceCodingAgentPromptRecord(
-            id: recordID(prefix: "coding-agent-prompt", sessionID: metadata.sessionID, line: line, discriminator: text),
+            id: promptID,
             sessionID: metadata.sessionID,
             threadID: threadRecordID(providerThreadID: metadata.providerThreadID),
             turnID: providerTurnID.map(turnRecordID(providerTurnID:)),

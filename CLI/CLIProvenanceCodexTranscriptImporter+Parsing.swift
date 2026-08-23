@@ -16,28 +16,32 @@ extension CLIProvenanceCodexTranscriptImporter {
             .split(separator: "\n", omittingEmptySubsequences: false)
             .enumerated()
             .compactMap { index, lineText -> TranscriptLine? in
-                let trimmed = lineText.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { return nil }
-                let data = Data(trimmed.utf8)
-                guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let payload = Self.dictionary(object["payload"]) else {
-                    throw ImportError(message: String.localizedStringWithFormat(
-                        String(
-                            localized: "cli.provenance.import.error.invalidJSONLine",
-                            defaultValue: "Codex transcript line is not a JSON object: %@:%d"
-                        ),
-                        url.path,
-                        index + 1
-                    ))
-                }
-                return TranscriptLine(
-                    lineNumber: index + 1,
-                    ordinal: Self.int(object["ordinal"]),
-                    type: Self.string(object["type"]) ?? "",
-                    timestamp: Self.dateFromString(Self.string(object["timestamp"])),
-                    payload: payload
-                )
+                try transcriptLine(from: String(lineText), lineNumber: index + 1, path: url.path)
             }
+    }
+
+    func transcriptLine(from lineText: String, lineNumber: Int, path: String) throws -> TranscriptLine? {
+        let trimmed = lineText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let data = Data(trimmed.utf8)
+        guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let payload = Self.dictionary(object["payload"]) else {
+            throw ImportError(message: String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.import.error.invalidJSONLine",
+                    defaultValue: "Codex transcript line is not a JSON object: %@:%d"
+                ),
+                path,
+                lineNumber
+            ))
+        }
+        return TranscriptLine(
+            lineNumber: lineNumber,
+            ordinal: Self.int(object["ordinal"]),
+            type: Self.string(object["type"]) ?? "",
+            timestamp: Self.dateFromString(Self.string(object["timestamp"])),
+            payload: payload
+        )
     }
 
     func sessionMetadata(from lines: [TranscriptLine]) -> TranscriptMetadata? {

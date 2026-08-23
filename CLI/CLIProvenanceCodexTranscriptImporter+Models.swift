@@ -93,6 +93,23 @@ extension CLIProvenanceCodexTranscriptImporter {
         var fileChanges: Int = 0
     }
 
+    struct LiveImportResult: Equatable {
+        let fileReport: FileReport
+        let consumedLines: Int
+        let retainedPartialLine: Bool
+        let metadataAvailable: Bool
+    }
+
+    struct LiveImportState {
+        var offset: UInt64 = 0
+        var pendingFragment = Data()
+        var nextLineNumber = 1
+        var metadata: TranscriptMetadata?
+        var context: TranscriptContext?
+        var pendingLines: [TranscriptLine] = []
+        var threadObserved = false
+    }
+
     struct TranscriptLine {
         let lineNumber: Int
         let ordinal: Int?
