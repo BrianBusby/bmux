@@ -3,6 +3,44 @@ import BmuxAgentChat
 import Foundation
 import ProvenanceEngineContracts
 
+extension WorkstreamEvent {
+    var codexProviderTurnID: String? {
+        guard source == "codex" else { return nil }
+        return Self.scalarString(fromJSON: extraFieldsJSON, keys: Self.codexProviderTurnIDKeys)
+            ?? Self.scalarString(fromJSON: toolInputJSON, keys: Self.codexProviderTurnIDKeys)
+    }
+
+    private static let codexProviderTurnIDKeys = ["turn_id", "turnId", "provider_turn_id", "providerTurnID"]
+
+    private static func scalarString(fromJSON jsonString: String?, keys: [String]) -> String? {
+        guard let jsonString,
+              let data = jsonString.data(using: .utf8),
+              let dict = (try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])) as? [String: Any]
+        else {
+            return nil
+        }
+        return scalarString(from: dict, keys: keys)
+    }
+
+    private static func scalarString(from dict: [String: Any], keys: [String]) -> String? {
+        for key in keys {
+            if let value = normalizedScalarText(dict[key]) { return value }
+        }
+        for key in ["metadata", "data", "context"] {
+            if let nested = dict[key] as? [String: Any],
+               let value = scalarString(from: nested, keys: keys) { return value }
+        }
+        return nil
+    }
+
+    private static func normalizedScalarText(_ value: Any?) -> String? {
+        if let value = value as? NSNumber { return value.stringValue }
+        guard let value = value as? String else { return nil }
+        let normalized = value.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return normalized.isEmpty ? nil : normalized
+    }
+}
+
 extension WorkProvenanceCodingAgentEvidenceRecorder {
     func recordHookUserPromptSubmit(
         record: AgentChatSessionRecord,

@@ -83,12 +83,6 @@ extension WorkstreamEvent {
             ?? Self.messageText(fromJSON: toolInputJSON, keys: Self.assistantMessageKeys)
     }
 
-    var codexProviderTurnID: String? {
-        guard source == "codex" else { return nil }
-        return Self.scalarString(fromJSON: extraFieldsJSON, keys: Self.codexProviderTurnIDKeys)
-            ?? Self.scalarString(fromJSON: toolInputJSON, keys: Self.codexProviderTurnIDKeys)
-    }
-
     func assistantFinalMessageForWorkspaceSidebar() -> String? {
         let directMessage = assistantFinalMessage
         if Workspace.workstreamContainsPullRequestMention(directMessage) {
@@ -108,36 +102,6 @@ extension WorkstreamEvent {
 
     private static let promptMessageKeys = ["prompt", "text", "message", "body"]
     private static let assistantMessageKeys = ["last_assistant_message", "lastAssistantMessage", "assistantPreamble", "assistant_preamble", "last_agent_message", "lastAgentMessage"]
-    private static let codexProviderTurnIDKeys = ["turn_id", "turnId", "provider_turn_id", "providerTurnID"]
-
-    private static func scalarString(fromJSON jsonString: String?, keys: [String]) -> String? {
-        guard let jsonString,
-              let data = jsonString.data(using: .utf8),
-              let value = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) else {
-            return nil
-        }
-        guard let dict = value as? [String: Any] else { return nil }
-        return scalarString(from: dict, keys: keys)
-    }
-
-    private static func scalarString(from dict: [String: Any], keys: [String]) -> String? {
-        for key in keys {
-            if let value = dict[key] as? String,
-               let normalized = normalizedPromptText(value) {
-                return normalized
-            }
-            if let value = dict[key] as? NSNumber {
-                return value.stringValue
-            }
-        }
-        for key in ["metadata", "data", "context"] {
-            if let nested = dict[key] as? [String: Any],
-               let value = scalarString(from: nested, keys: keys) {
-                return value
-            }
-        }
-        return nil
-    }
 
     private static func messageText(fromJSON jsonString: String?, keys: [String]) -> String? {
         guard let jsonString else { return nil }

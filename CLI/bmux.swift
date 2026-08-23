@@ -26907,23 +26907,15 @@ struct BMUXCLI {
         let env = ProcessInfo.processInfo.environment
         let workspaceId = optionValue(commandArgs, name: "--workspace") ?? env["BMUX_WORKSPACE_ID"] ?? ""
         let surfaceId = optionValue(commandArgs, name: "--surface") ?? env["BMUX_SURFACE_ID"]
-        let sessionId = optionValue(commandArgs, name: "--session")
-            ?? env["BMUX_CODEX_SESSION_ID"]
-            ?? env["CODEX_SESSION_ID"]
-            ?? env["BMUX_AGENT_SESSION_ID"]
-            ?? ""
+        let sessionId = optionValue(commandArgs, name: "--session") ?? env["BMUX_CODEX_SESSION_ID"] ?? env["CODEX_SESSION_ID"] ?? env["BMUX_AGENT_SESSION_ID"] ?? ""
         let turnId = optionValue(commandArgs, name: "--turn")
         var transcriptPath = optionValue(commandArgs, name: "--transcript")
         let leasePath = optionValue(commandArgs, name: "--lease")
 
-        guard !workspaceId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              !sessionId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return
-        }
+        guard !workspaceId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !sessionId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
 
         defer { removeCodexMonitorLease(path: leasePath) }
-        let provenanceClient = try? provenanceEngineClient(databasePath: nil).client
-        let transcriptImporter = provenanceClient.map { CLIProvenanceCodexTranscriptImporter(client: $0) }
+        let transcriptImporter = (try? provenanceEngineClient(databasePath: nil).client).map(CLIProvenanceCodexTranscriptImporter.init(client:))
         var transcriptImportState = CLIProvenanceCodexTranscriptImporter.LiveImportState()
         let deadline = Date().addingTimeInterval(4 * 60 * 60)
         var nextOwnerCheck = Date.distantPast
@@ -26945,12 +26937,7 @@ struct BMUXCLI {
             }
 
             if let currentTranscriptPath = transcriptPath {
-                if let transcriptImporter {
-                    _ = try? await transcriptImporter.importLiveTranscriptAppend(
-                        at: URL(fileURLWithPath: currentTranscriptPath, isDirectory: false),
-                        state: &transcriptImportState
-                    )
-                }
+                if let transcriptImporter { _ = try? await transcriptImporter.importLiveTranscriptAppend(at: URL(fileURLWithPath: currentTranscriptPath, isDirectory: false), state: &transcriptImportState) }
 
                 if let userInput = readCodexTranscriptUserInput(
                     path: currentTranscriptPath,
@@ -26972,12 +26959,7 @@ struct BMUXCLI {
                     requireTerminalCompletion: true
                 ) {
                 case .failure(let failure):
-                    if let transcriptImporter {
-                        _ = try? await transcriptImporter.finishLiveTranscriptImport(
-                            state: &transcriptImportState,
-                            path: currentTranscriptPath
-                        )
-                    }
+                    if let transcriptImporter { _ = try? await transcriptImporter.finishLiveTranscriptImport(state: &transcriptImportState, path: currentTranscriptPath) }
                     publishCodexMonitorFailure(
                         failure,
                         workspaceId: workspaceId,
@@ -26986,12 +26968,7 @@ struct BMUXCLI {
                     )
                     return
                 case .healthy:
-                    if let transcriptImporter {
-                        _ = try? await transcriptImporter.finishLiveTranscriptImport(
-                            state: &transcriptImportState,
-                            path: currentTranscriptPath
-                        )
-                    }
+                    if let transcriptImporter { _ = try? await transcriptImporter.finishLiveTranscriptImport(state: &transcriptImportState, path: currentTranscriptPath) }
                     return
                 case .pending:
                     break
@@ -32197,9 +32174,7 @@ export default BMUXSessionRestore;
         if let transcriptPath = parsedInput.transcriptPath, !transcriptPath.isEmpty {
             event["transcript_path"] = transcriptPath
         }
-        if let turnId = parsedInput.turnId, !turnId.isEmpty {
-            event["turn_id"] = turnId
-        }
+        if let turnId = parsedInput.turnId, !turnId.isEmpty { event["turn_id"] = turnId }
         if let cwd = parsedInput.cwd { event["cwd"] = cwd }
         let toolName = parsedInput.object?["tool_name"] as? String
         if let toolName, !toolName.isEmpty {

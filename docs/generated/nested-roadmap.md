@@ -246,7 +246,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `codex_transcript_parsing`, `provenance_cli_import`
           Contract dependencies: `richer_coding_agent_evidence_foundation`, `provenance_engine_public_append_contract`
           Worktree required: true
-          Evidence: BrianBusby/bmux@1e7018fda8ff, BrianBusby/bmux@3d2376f6ed69, BrianBusby/bmux#66 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@6329fe8ec849, BrianBusby/bmux#66 by [BrianBusby](https://github.com/BrianBusby)
           Acceptance reason: Historical Codex JSONL transcripts import into canonical PE thread, turn, prompt, plan, command, visible reasoning summary, and file-change attribution evidence with stable idempotent event IDs.
         - **Live terminal Codex evidence ingestion** (`live_terminal_codex_evidence_ingestion`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence sources; execution: complete / Bmux; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
           Depends on: `codex_transcript_canonical_evidence_import`
