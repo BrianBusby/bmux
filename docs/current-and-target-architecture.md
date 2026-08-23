@@ -178,8 +178,8 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
 - Primary capability frontier: Richer Session Understanding (`richer_session_understanding`)
-- Active implementation slice: Live Codex Evidence Convergence & Metadata Correctness (`live_codex_evidence_convergence_correctness`) - under observation
-- Bmux repository state: active
+- Active implementation slice: none selected
+- Bmux repository state: none selected
 
 ### Current Roadmap Lanes
 
@@ -188,7 +188,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Canonical Project Truth State (`canonical_project_truth_state`) - phase; status: active; owner: Provenance Engine
 - Project Truth Manifest and CI (`project_truth_manifest_and_ci`) - milestone; status: active; owner: Provenance Engine
 - Richer Session Understanding (`richer_session_understanding`) - program; status: active; owner: Provenance Engine
-- Live Codex Evidence Convergence & Metadata Correctness (`live_codex_evidence_convergence_correctness`) - slice; status: active; owner: Bmux
 - Semantic Understanding (`semantic_understanding`) - phase; status: active; owner: Provenance Engine
 - Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`) - milestone; status: active; owner: Provenance Engine
 - Three-view Coding Session Experience (`three_view_coding_session_experience`) - phase; status: active; owner: Bmux

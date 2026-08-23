@@ -20,12 +20,11 @@ Regenerate with: ./scripts/project-docs generate
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)
-- Active or selected slices in the frontier:
-  - Live Codex Evidence Convergence & Metadata Correctness (`live_codex_evidence_convergence_correctness`) - maturity: active; status: active; selection: current; owner: Bmux
+- Active or selected slices in the frontier: none
 
 ### Active Implementation
 
-- Live Codex Evidence Convergence & Metadata Correctness (`live_codex_evidence_convergence_correctness`) - maturity: active; status: active; selection: current; owner: Bmux
+- None.
 
 ### Selected Next
 

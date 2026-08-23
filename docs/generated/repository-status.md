@@ -13,10 +13,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Live Codex Evidence Convergence & Metadata Correctness (`live_codex_evidence_convergence_correctness`)
-- Slice state: under observation
-- Owner: bmux
-- Repository state: active
+- Active slice: none selected
+- Repository state: none selected
 
 ## Release
 
@@ -108,7 +106,7 @@ Repository: `BrianBusby/bmux`
 | Completed Unit Provenance Projection | implemented |
 | Diagnostic | implemented |
 | Lifecycle Producer | implemented |
-| Live Codex Evidence Convergence Correctness | under observation |
+| Live Codex Evidence Convergence Correctness | implemented |
 | Live Projection | implemented |
 | Native Read Client | implemented |
 | Normal Terminal Codex Evidence Ingestion | implemented |
@@ -122,5 +120,5 @@ Repository: `BrianBusby/bmux`
 | `github_actions_runner_reliability` | open |
 | `non_default_agent_chat_url_dogfood` | open |
 | `sidecar_disappearance_lifecycle_policy` | open |
-| `normal_terminal_codex_rich_evidence_gap` | monitoring |
+| `normal_terminal_codex_rich_evidence_gap` | resolved |
 | `remote_mobile_open_architecture_decisions` | open |

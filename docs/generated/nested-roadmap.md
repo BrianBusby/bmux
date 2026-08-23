@@ -16,12 +16,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)
-- Active or selected slices in the frontier:
-  - Live Codex Evidence Convergence & Metadata Correctness (`live_codex_evidence_convergence_correctness`) - maturity: active; status: active; selection: current; owner: Bmux
+- Active or selected slices in the frontier: none
 
 ### Active Implementation
 
-- Live Codex Evidence Convergence & Metadata Correctness (`live_codex_evidence_convergence_correctness`) - maturity: active; status: active; selection: current; owner: Bmux
+- None.
 
 ### Selected Next
 
@@ -271,7 +270,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@29a5a5d1ea0a
           Acceptance reason: Hook feed payloads now forward Codex turn IDs, app-side hook evidence prefers provider turn identity, transcript prompt IDs canonicalize by provider turn when available, and focused SQLite projection coverage verifies hook-plus-live-transcript evidence appears as one factual turn.
           Acceptance criteria: Codex hook prompt evidence uses provider turn identity when the hook exposes it.; Hook and transcript prompt observations for one provider turn converge onto one canonical prompt record while preserving distinct ledger events.; Prompt-only transcript backfill does not create synthetic transcript turns that duplicate live transcript turns.; Factual session projection exposes one logical turn when hook and transcript sources observe the same Codex turn.
-        - **Live Codex Evidence Convergence & Metadata Correctness** (`live_codex_evidence_convergence_correctness`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: current / Bmux; parallelism: serial; delivery: open; acceptance: under observation; maturity: active
+        - **Live Codex Evidence Convergence & Metadata Correctness** (`live_codex_evidence_convergence_correctness`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Bmux; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
           Depends on: `live_terminal_codex_evidence_ingestion`, `coding_agent_evidence_source_reconciliation`
           Enables: `milestone_inference`
           Expected contract domains: `codex_jsonl_transcript_adapter`, `live_transcript_tail_progress`, `canonical_coding_agent_evidence`, `factual_session_projection`, `session_surface_refresh`
@@ -279,7 +278,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `codex_transcript_parsing`, `codex_hook_monitor`, `factual_session_projection_identity`, `session_factual_projection_consumer`
           Contract dependencies: `live_terminal_codex_evidence_ingestion`, `coding_agent_evidence_source_reconciliation`, `factual_session_projection`
           Worktree required: true
-          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/live-codex-evidence-convergence-correctness`; branch: `live-codex-evidence-convergence-correctness`; agent: `Codex`
+          Evidence: BrianBusby/bmux@69c1cf02314e
           Acceptance reason: Engineering Observation Period dogfood of PR
           Acceptance criteria: A long-running ordinary Codex CLI turn continues ingesting appended JSONL records while the turn is active.; Accepted live transcript evidence advances PE factual session projection revisions and factual reads.; Visible Codex commentary/progress summaries are imported only when they are completed provider-visible summary units, never from hidden reasoning content.; Provider/model/effort fields remain distinct and use authoritative Codex transcript/runtime sources.; Hook and transcript observations converge on one factual session/thread/turn without duplicate logical turns.; Historical transcript import remains idempotent after live ingestion.; An open Session surface refreshes revisioned factual state without requiring the tab to be reopened.
       - **Factual Session Projection Read Contract** (`factual_session_projection_read_contract`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial
@@ -672,9 +671,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Live Codex Evidence Convergence & Metadata Correctness (`live_codex_evidence_convergence_correctness`) | serial | /Users/brianbusby/repos/.bmux-worktrees/live-codex-evidence-convergence-correctness | live-codex-evidence-convergence-correctness | Codex | `codex_hook_monitor`, `codex_transcript_parsing`, `factual_session_projection_identity`, `session_factual_projection_consumer` | `coding_agent_evidence_source_reconciliation`, `factual_session_projection`, `live_terminal_codex_evidence_ingestion` | single active assignment |
+- Active implementation assignments: none selected.
 
 ### Dependency-Ready Preflight
 

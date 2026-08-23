@@ -1109,7 +1109,7 @@ roadmap:
       kind: slice
       title: Live Codex Evidence Convergence & Metadata Correctness
       parent: normal_coding_agent_evidence_ingestion
-      status: active
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -1123,7 +1123,7 @@ roadmap:
           - live_ingestion
           - factual_projection
           - engineering_observation_period
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - live_terminal_codex_evidence_ingestion
         - coding_agent_evidence_source_reconciliation
@@ -1153,13 +1153,16 @@ roadmap:
           - factual_session_projection
         worktree_required: true
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: bmux
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/live-codex-evidence-convergence-correctness
-        active_branch: live-codex-evidence-convergence-correctness
-        active_agent: Codex
       delivery_status: open
-      acceptance_status: under_observation
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 69c1cf02314e987d6372f370b6f2fd3025c23e55
+        pull_requests: []
+      completed_at: 2026-08-23
       acceptance:
         criteria:
           - A long-running ordinary Codex CLI turn continues ingesting appended JSONL records while the turn is active.
