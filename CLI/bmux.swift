@@ -26810,7 +26810,7 @@ struct BMUXCLI {
         }
     }
 
-    private func isCodexMonitorLeaseRetired(path: String?) -> Bool {
+    func isCodexMonitorLeaseRetired(path: String?) -> Bool {
         guard let path, !path.isEmpty else { return false }
         guard let record = readCodexMonitorLease(path: path) else {
             return !FileManager.default.fileExists(atPath: path)
