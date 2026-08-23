@@ -26,14 +26,25 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let surfaceID = firstNonEmpty(record.surfaceID, event.surfaceId)
         let gitContext = await gitContext(for: workingDirectory, observedAt: observedAt)
         let nativeProviderTurnID = event.codexProviderTurnID
-        let hookTurnSeed = [
-            sessionID,
-            nativeProviderTurnID ?? "",
-            event.requestId ?? "",
-            event.sessionId,
-            String(observedAt.timeIntervalSince1970),
-            promptText
-        ].joined(separator: "\n")
+        let hookTurnSeedComponents = if let nativeProviderTurnID {
+            [
+                sessionID,
+                nativeProviderTurnID,
+                event.requestId ?? "",
+                event.sessionId,
+                String(observedAt.timeIntervalSince1970),
+                promptText
+            ]
+        } else {
+            [
+                sessionID,
+                event.requestId ?? "",
+                event.sessionId,
+                String(observedAt.timeIntervalSince1970),
+                promptText
+            ]
+        }
+        let hookTurnSeed = hookTurnSeedComponents.joined(separator: "\n")
         let providerTurnID = nativeProviderTurnID ?? stableIDFactory.id(prefix: "hook-codex-turn", value: hookTurnSeed)
         let turnID = turnRecordID(providerTurnID: providerTurnID)
         let session = ProvenanceSessionRecord(
@@ -61,7 +72,7 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let prompt = ProvenanceCodingAgentPromptRecord(
             id: stableIDFactory.id(
                 prefix: "coding-agent-prompt",
-                value: "codex\n\(sessionID)\n\(providerTurnID)\n\(promptText)"
+                value: "\(nativeProviderTurnID == nil ? "hook" : "codex")\n\(sessionID)\n\(providerTurnID)\n\(promptText)"
             ),
             sessionID: sessionID,
             turnID: turnID,

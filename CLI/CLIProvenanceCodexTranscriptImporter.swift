@@ -122,18 +122,22 @@ struct CLIProvenanceCodexTranscriptImporter {
             )
         }
 
+        let startOffset = state.offset
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
-        try handle.seek(toOffset: state.offset)
+        try handle.seek(toOffset: startOffset)
         let appendedData = handle.readDataToEndOfFile()
-        state.offset += UInt64(appendedData.count)
+        let nextOffset = startOffset + UInt64(appendedData.count)
 
+        var workingState = state
         let lines = try completedTranscriptLines(
             from: appendedData,
             path: path,
-            state: &state
+            state: &workingState
         )
-        try await importLiveTranscriptLines(lines, state: &state, fileReport: &fileReport)
+        try await importLiveTranscriptLines(lines, state: &workingState, fileReport: &fileReport)
+        workingState.offset = nextOffset
+        state = workingState
         return LiveImportResult(
             fileReport: fileReport,
             consumedLines: lines.count,

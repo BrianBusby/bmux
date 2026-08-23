@@ -82,6 +82,36 @@ struct CLIProvenanceCodexTranscriptImporterTests {
     }
 
     @Test
+    func liveImportKeepsTailStateWhenBatchParsingFails() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("codex-session.jsonl")
+        FileManager.default.createFile(atPath: transcriptURL.path, contents: Data())
+        let importer = CLIProvenanceCodexTranscriptImporter(client: client)
+        var state = CLIProvenanceCodexTranscriptImporter.LiveImportState()
+        let lines = try Self.codexTranscriptFixtureLines()
+
+        try Self.appendText(lines[0] + "\nnot-json\n", to: transcriptURL)
+        do {
+            _ = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+            Issue.record("Expected invalid JSON to fail the live import batch")
+        } catch {
+            #expect(state.offset == 0)
+            #expect(state.nextLineNumber == 1)
+            #expect(state.metadata == nil)
+            #expect(state.pendingLines.isEmpty)
+        }
+
+        try (lines[0] + "\n").write(to: transcriptURL, atomically: true, encoding: .utf8)
+        let retry = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(retry.consumedLines == 1)
+        #expect(retry.fileReport.threads == 1)
+        #expect(state.metadata != nil)
+    }
+
+    @Test
     func hookAndLiveTranscriptEvidenceShareOneFactualTurn() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
