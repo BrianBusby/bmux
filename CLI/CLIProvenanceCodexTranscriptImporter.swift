@@ -338,6 +338,7 @@ struct CLIProvenanceCodexTranscriptImporter {
                 fileReport: &fileReport
             )
             context.observedProviderTurnIDs.insert(providerTurnID)
+            context.currentProviderTurnID = nil
         case "item_completed":
             guard let item = Self.dictionary(line.payload["item"]),
                   let itemType = Self.string(item["type"]) else {

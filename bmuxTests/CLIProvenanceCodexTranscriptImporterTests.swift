@@ -147,6 +147,48 @@ struct CLIProvenanceCodexTranscriptImporterTests {
     }
 
     @Test
+    func promptAfterCompletedTurnLinksToNextProviderTurn() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("codex-two-turn-session.jsonl")
+        FileManager.default.createFile(atPath: transcriptURL.path, contents: Data())
+        let lines = try Self.twoTurnCodexTranscriptFixtureLines()
+        let importer = CLIProvenanceCodexTranscriptImporter(client: client)
+        var state = CLIProvenanceCodexTranscriptImporter.LiveImportState()
+
+        try Self.appendText(lines[0...3].joined(separator: "\n") + "\n", to: transcriptURL)
+        let firstTurnImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(firstTurnImport.fileReport.prompts == 1)
+        let firstProjection = try await Self.factualProjection(client: client, sessionID: "codex-two-turn-session")
+        #expect(firstProjection.latestTurn?.turn.providerTurnID == "turn-1")
+        #expect(firstProjection.latestTurn?.submittedPrompt?.text == "First prompt.")
+
+        try Self.appendText(lines[4] + "\n", to: transcriptURL)
+        let pendingPromptImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(pendingPromptImport.fileReport.prompts == 0)
+        let pendingProjection = try await Self.factualProjection(client: client, sessionID: "codex-two-turn-session")
+        #expect(pendingProjection.latestTurn?.turn.providerTurnID == "turn-1")
+        #expect(pendingProjection.latestTurn?.submittedPrompt?.text == "First prompt.")
+
+        try Self.appendText(lines[5] + "\n", to: transcriptURL)
+        let secondTurnImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(secondTurnImport.fileReport.prompts == 1)
+
+        let projection = try await Self.factualProjection(client: client, sessionID: "codex-two-turn-session")
+        #expect(projection.turns.map(\.turn.providerTurnID) == ["turn-1", "turn-2"])
+        let firstTurn = try #require(projection.turns.first { $0.turn.providerTurnID == "turn-1" })
+        let secondTurn = try #require(projection.turns.first { $0.turn.providerTurnID == "turn-2" })
+        #expect(firstTurn.submittedPrompt?.text == "First prompt.")
+        #expect(secondTurn.submittedPrompt?.text == "Second prompt.")
+        #expect(projection.latestTurn?.turn.providerTurnID == "turn-2")
+
+        let replay = try await importer.importTranscripts(path: transcriptURL.path)
+        #expect(replay.eventsAppended == 0)
+    }
+
+    @Test
     func liveImportKeepsTailStateWhenBatchParsingFails() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
@@ -474,6 +516,85 @@ struct CLIProvenanceCodexTranscriptImporterTests {
                     "type": "task_complete",
                     "turn_id": "turn-long-1",
                     "completed_at": 1_787_412_011
+                ]
+            )
+        ]
+    }
+
+    private static func twoTurnCodexTranscriptFixtureLines() throws -> [String] {
+        return [
+            try codexTranscriptLine(
+                ordinal: 0,
+                type: "session_meta",
+                timestamp: "2026-08-22T11:00:00Z",
+                payload: [
+                    "session_id": "codex-two-turn-session",
+                    "id": "codex-two-turn-session",
+                    "timestamp": "2026-08-22T11:00:00Z",
+                    "cwd": "/tmp/provenance-two-turn-transcript-fixture",
+                    "originator": "codex-tui",
+                    "source": "cli",
+                    "model_provider": "openai"
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 1,
+                type: "response_item",
+                timestamp: "2026-08-22T11:00:01Z",
+                payload: [
+                    "type": "message",
+                    "role": "user",
+                    "content": [
+                        [
+                            "type": "input_text",
+                            "text": "First prompt."
+                        ]
+                    ]
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 2,
+                type: "event_msg",
+                timestamp: "2026-08-22T11:00:02Z",
+                payload: [
+                    "type": "task_started",
+                    "turn_id": "turn-1",
+                    "started_at": 1_787_415_602
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 3,
+                type: "event_msg",
+                timestamp: "2026-08-22T11:00:03Z",
+                payload: [
+                    "type": "task_complete",
+                    "turn_id": "turn-1",
+                    "completed_at": 1_787_415_603
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 4,
+                type: "response_item",
+                timestamp: "2026-08-22T11:00:04Z",
+                payload: [
+                    "type": "message",
+                    "role": "user",
+                    "content": [
+                        [
+                            "type": "input_text",
+                            "text": "Second prompt."
+                        ]
+                    ]
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 5,
+                type: "event_msg",
+                timestamp: "2026-08-22T11:00:05Z",
+                payload: [
+                    "type": "task_started",
+                    "turn_id": "turn-2",
+                    "started_at": 1_787_415_605
                 ]
             )
         ]

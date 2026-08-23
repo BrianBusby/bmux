@@ -1,7 +1,7 @@
 # bmux-owned Swift file length budget.
 # Format: max_lines<TAB>relative path
 # Reduce counts as files shrink. CI fails if tracked files exceed this budget.
-35914	CLI/bmux.swift
+35824	CLI/bmux.swift
 18366	Sources/AppDelegate.swift
 16645	Sources/ContentView.swift
 15126	Sources/TerminalController.swift
@@ -151,6 +151,7 @@
 755	Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts/ProvenanceSemanticMessageContracts.swift
 754	bmuxTests/GhosttyTerminalStartupEnvironmentTests.swift
 752	bmuxUITests/CloseWorkspaceCmdDUITests.swift
+749	bmuxTests/CLIProvenanceCodexTranscriptImporterTests.swift
 749	bmuxTests/UpdatePillReleaseVisibilityTests.swift
 743	bmuxTests/SidebarWorkspaceSnapshotRefreshPolicyTests.swift
 738	Packages/macOS/BMUXProjectModel/Sources/BMUXProjectModel/XcodeProjectAdapter.swift
@@ -275,6 +276,7 @@
 515	Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineContractsTests/ProvenanceEngineHealthTests.swift
 514	Packages/macOS/BmuxSwiftRender/Sources/BmuxSwiftRender/ExpressionEvaluator.swift
 514	bmuxUITests/UpdatePillUITests.swift
+511	CLI/CLIProvenanceCodexTranscriptImporter.swift
 511	Packages/macOS/BmuxControlSocket/Sources/BmuxControlSocket/Coordinator/Sidebar/ControlCommandCoordinator+SidebarReportsV1.swift
 509	Packages/macOS/BMUXAgentLaunch/Sources/BMUXAgentLaunch/AgentLaunchSanitizerAdditionalPolicies.swift
 508	Packages/iOS/BmuxMobileShellUI/Sources/BmuxMobileShellUI/GhosttySurfaceRepresentable.swift
