@@ -318,19 +318,30 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             into: repository
         )
         try await Self.appendWorkspaceDisplay(
-            eventID: "event-workspace-display-tool-event",
+            eventID: "event-workspace-display-prompt-a-without-session",
             timestamp: baseTime.addingTimeInterval(1),
-            display: Self.workspaceDisplay(branch: "feature/prompt-sequence", observedAt: baseTime.addingTimeInterval(1)),
+            display: Self.workspaceDisplay(
+                branch: "feature/prompt-sequence",
+                lastSubmittedPrompt: "prompt A",
+                lastSubmittedPromptSubmittedAt: baseTime,
+                observedAt: baseTime.addingTimeInterval(1)
+            ),
+            into: repository
+        )
+        try await Self.appendWorkspaceDisplay(
+            eventID: "event-workspace-display-tool-event",
+            timestamp: baseTime.addingTimeInterval(2),
+            display: Self.workspaceDisplay(branch: "feature/prompt-sequence", observedAt: baseTime.addingTimeInterval(2)),
             into: repository
         )
         try await Self.appendWorkspaceDisplay(
             eventID: "event-workspace-display-prompt-b",
-            timestamp: baseTime.addingTimeInterval(2),
+            timestamp: baseTime.addingTimeInterval(3),
             display: Self.workspaceDisplay(
                 lastSubmittedPrompt: "prompt B",
-                lastSubmittedPromptSubmittedAt: baseTime.addingTimeInterval(2),
+                lastSubmittedPromptSubmittedAt: baseTime.addingTimeInterval(3),
                 lastSubmittedPromptSessionID: "session-b",
-                observedAt: baseTime.addingTimeInterval(2)
+                observedAt: baseTime.addingTimeInterval(3)
             ),
             into: repository
         )

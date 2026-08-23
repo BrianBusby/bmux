@@ -1046,9 +1046,8 @@ It may use Provenance Engine for:
 - reading Current State for workspace tab and sidebar metadata such as title,
   branch, and pull request status after the relevant display projection
   contract exists
-- reading a future `SessionWorkModel` projection for a coherent live
-  coding-agent work view after richer session evidence and inference contracts
-  exist
+- reading `SessionWorkModel` for a coherent live coding-agent work view as
+  richer session evidence and inference contracts mature
 - displaying session trees
 - current-task context
 - worktree awareness
@@ -1532,7 +1531,7 @@ This section maps the north-star architecture above to the current repository de
 - New engine-owned local storage defaults to `~/.local/state/provenance-engine/provenance.sqlite`.
 - Events can carry optional `ProvenanceEvidenceOrigin` and `ProvenanceEvidenceScope` metadata so the ledger is not hard-coded as personal-only evidence.
 - bmux adopted the engine SDK for the accepted worktree, session-tree, file-explanation, current-context, lifecycle, worktree-observation, and workspace-display paths described by the integration roadmap.
-- There is a public `SessionWorkModel` foundation/read contract for composing supported factual session projection data with active semantic inference records. There is no public milestone contract or scoped architecture projection contract yet. The factual session projection remains deterministic and does not infer semantic meaning.
+- There is a public `SessionWorkModel` foundation/read contract for composing supported factual session projection data with active semantic inference records. It now includes the first narrow session-scoped milestone semantic field backed by current plan or prompt evidence. There is no public nested milestone hierarchy, milestone relationship, or scoped architecture projection contract yet. The factual session projection remains deterministic and does not infer semantic meaning.
 
 ### Partially implemented
 

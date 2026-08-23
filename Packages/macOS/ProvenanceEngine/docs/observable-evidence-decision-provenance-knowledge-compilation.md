@@ -108,8 +108,8 @@ The platform now uses four epistemic categories:
 4. Compiled knowledge: durable higher-level artifacts that may outlive the live
    session.
 
-The future `SessionWorkModel` projection may combine deterministic state and
-active inference for consumers, but every derived field must preserve its basis.
+`SessionWorkModel` combines deterministic state and active inference for
+consumers, and every derived field must preserve its basis.
 Model-derived milestone, intent, and architecture meaning must not be written
 into deterministic Current State.
 

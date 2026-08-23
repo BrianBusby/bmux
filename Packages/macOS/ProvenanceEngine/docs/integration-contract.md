@@ -266,17 +266,20 @@ semantic inference records selected into model fields. It does not use
 materialize semantic messages separately for wording, but semantic message
 records must not be treated as authoritative model facts.
 
-The first SessionWorkModel contract remains narrow. It does not include
-milestone hierarchy, blockers, approach changes, progress percentage,
-validation or risk synthesis, architecture projections, GitHub attribution,
-Knowledge Compiler output, or presentation-learning fields. Consumers must not
-invent those meanings from lower-level factual data or semantic messages.
+The first SessionWorkModel contract remains narrow. It includes a session
+milestone semantic field backed by current plan or prompt evidence, but it does
+not include nested milestone hierarchy, blockers, approach changes, progress
+percentage, validation or risk synthesis, architecture projections, GitHub
+attribution, Knowledge Compiler output, or presentation-learning fields.
+Consumers must not invent those meanings from lower-level factual data or
+semantic messages.
 
-Milestones, architecture projection, Knowledge Compiler output, GitHub
-ingestion, bmux UI presentation, presentation feedback, and language calibration
-corpus work remain later slices. Semantic records and semantic message records
-are stored separately from deterministic Current State and are not part of
-factual projection rebuild or drift validation.
+Nested milestones, milestone-to-code relationships, architecture projection,
+Knowledge Compiler output, GitHub ingestion, bmux UI presentation, presentation
+feedback, and language calibration corpus work remain later slices. Semantic
+records and semantic message records are stored separately from deterministic
+Current State and are not part of factual projection rebuild or drift
+validation.
 
 Model-capable inference input is represented as a bounded packet shape:
 `ProvenanceSemanticInferenceInputPacket` carries references and bounded
