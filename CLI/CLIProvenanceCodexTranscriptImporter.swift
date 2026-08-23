@@ -82,7 +82,8 @@ struct CLIProvenanceCodexTranscriptImporter {
             providerThreadID: metadata.providerThreadID,
             cwd: metadata.cwd,
             sessionStartedAt: metadata.timestamp,
-            latestModel: metadata.model
+            latestModel: metadata.model,
+            latestEffort: metadata.effort
         )
         var fileReport = FileReport(path: url.path, status: "imported")
 
@@ -225,7 +226,8 @@ struct CLIProvenanceCodexTranscriptImporter {
                 providerThreadID: metadata.providerThreadID,
                 cwd: metadata.cwd,
                 sessionStartedAt: metadata.timestamp,
-                latestModel: metadata.model
+                latestModel: metadata.model,
+                latestEffort: metadata.effort
             )
         } else {
             state.pendingLines.append(contentsOf: lines)
@@ -255,6 +257,27 @@ struct CLIProvenanceCodexTranscriptImporter {
         case "turn_context":
             context.cwd = Self.firstNonEmpty(Self.string(line.payload["cwd"]), context.cwd)
             context.latestModel = Self.firstNonEmpty(Self.string(line.payload["model"]), context.latestModel)
+            context.latestEffort = Self.firstNonEmpty(
+                Self.string(line.payload["effort"]),
+                Self.string(line.payload["reasoning_effort"]),
+                context.latestEffort
+            )
+            if let providerTurnID = Self.trimmedNonEmpty(Self.string(line.payload["turn_id"])) {
+                context.currentProviderTurnID = providerTurnID
+                let status = context.startedProviderTurnIDs.contains(providerTurnID) ? "started" : "observed"
+                try await appendTurn(
+                    metadata: metadata,
+                    line: line,
+                    providerTurnID: providerTurnID,
+                    status: status,
+                    model: context.latestModel,
+                    effort: context.latestEffort,
+                    startedAt: nil,
+                    completedAt: nil,
+                    fileReport: &fileReport
+                )
+                context.observedProviderTurnIDs.insert(providerTurnID)
+            }
         case "event_msg":
             try await importEventMessage(line, metadata: metadata, context: &context, fileReport: &fileReport)
         case "response_item":
@@ -280,11 +303,13 @@ struct CLIProvenanceCodexTranscriptImporter {
                 providerTurnID: providerTurnID,
                 status: "started",
                 model: context.latestModel,
+                effort: context.latestEffort,
                 startedAt: Self.dateFromSeconds(line.payload["started_at"]) ?? line.timestamp,
                 completedAt: nil,
                 fileReport: &fileReport
             )
             context.observedProviderTurnIDs.insert(providerTurnID)
+            context.startedProviderTurnIDs.insert(providerTurnID)
             let pendingPrompts = context.pendingPrompts
             context.pendingPrompts = []
             for prompt in pendingPrompts {
@@ -296,6 +321,24 @@ struct CLIProvenanceCodexTranscriptImporter {
                     fileReport: &fileReport
                 )
             }
+        case "task_complete", "turn_complete":
+            guard let providerTurnID = Self.trimmedNonEmpty(Self.string(line.payload["turn_id"])) else { return }
+            context.currentProviderTurnID = providerTurnID
+            try await appendTurn(
+                metadata: metadata,
+                line: line,
+                providerTurnID: providerTurnID,
+                status: "completed",
+                model: context.latestModel,
+                effort: context.latestEffort,
+                startedAt: nil,
+                completedAt: Self.dateFromSeconds(line.payload["completed_at"])
+                    ?? Self.dateFromMilliseconds(line.payload["completed_at_ms"])
+                    ?? line.timestamp,
+                fileReport: &fileReport
+            )
+            context.observedProviderTurnIDs.insert(providerTurnID)
+            context.currentProviderTurnID = nil
         case "item_completed":
             guard let item = Self.dictionary(line.payload["item"]),
                   let itemType = Self.string(item["type"]) else {
@@ -343,6 +386,31 @@ struct CLIProvenanceCodexTranscriptImporter {
         fileReport: inout FileReport
     ) async throws {
         let itemType = Self.string(line.payload["type"])
+        if itemType == "message",
+           Self.string(line.payload["role"]) == "assistant",
+           Self.string(line.payload["phase"]) == "commentary",
+           let text = Self.messageText(from: line.payload) {
+            let providerTurnID = Self.firstNonEmpty(Self.turnID(from: line.payload), context.currentProviderTurnID)
+            if let providerTurnID {
+                try await ensureTurnObserved(
+                    metadata: metadata,
+                    line: line,
+                    context: &context,
+                    providerTurnID: providerTurnID,
+                    fileReport: &fileReport
+                )
+            }
+            try await appendReasoningSummary(
+                metadata: metadata,
+                line: line,
+                itemID: Self.firstNonEmpty(Self.string(line.payload["id"]), Self.string(line.payload["call_id"])),
+                text: text,
+                providerTurnID: providerTurnID,
+                fileReport: &fileReport
+            )
+            return
+        }
+
         if itemType == "message",
            Self.string(line.payload["role"]) == "user",
            let text = Self.messageText(from: line.payload) {

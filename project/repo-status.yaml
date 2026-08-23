@@ -2,15 +2,8 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice:
-    id: milestone_inference
-    title: Milestone inference
-    state: open
-    owner: provenance_engine
-    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/milestone-inference
-    active_branch: milestone-inference
-    active_agent: Codex
-  state: active
+  active_slice: null
+  state: none_selected
 
 execution_telemetry:
   provider_neutral_contract: implemented
@@ -25,6 +18,7 @@ execution_telemetry:
   codex_transcript_canonical_evidence_import: implemented
   normal_terminal_codex_evidence_ingestion: implemented
   coding_agent_evidence_source_reconciliation: implemented
+  live_codex_evidence_convergence_correctness: implemented
 
 local_capabilities:
   provenance_engine_public_in_process_sdk: implemented

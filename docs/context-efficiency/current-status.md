@@ -49,12 +49,13 @@ meaningful evidence units may become durable PE evidence once explicit
 contracts, retention policy, and privacy review exist.
 
 Live Terminal Codex Evidence Ingestion and Coding-Agent Evidence Source
-Reconciliation are the latest implemented slices. bmux now tails active
-ordinary Codex CLI JSONL transcripts from the existing Codex monitor path,
-feeds newly completed lines through the same canonical transcript adapter used
-by historical import, and writes PE thread, turn, prompt, plan, command,
-visible reasoning summary, and file-change attribution evidence incrementally
-without requiring Agent Chat.
+Reconciliation remain implemented. Engineering Observation Period dogfood in a
+normal live Codex terminal session exposed a correctness gap that is now
+represented by `live_codex_evidence_convergence_correctness` and marked
+implemented after real dogfood validation. The correction slice owns continuous
+transcript tail convergence, factual projection freshness, visible
+commentary/summary classification, provider/model/effort metadata, and identity
+labeling for ordinary bmux-hosted Codex CLI sessions.
 
 Hook and transcript observations now converge on provider turn identity when
 Codex exposes it. The hook feed payload forwards `turn_id`, hook prompt
@@ -69,12 +70,13 @@ hatch. Terminal is bmux's React live interaction surface, building on
 factual and semantic models. bmux should not turn Terminal into a semantic
 engine or build parallel Swift and React Smart Session products.
 
-Normal terminal Codex rich evidence is no longer the current data-foundation
-gap for active bmux-managed Codex sessions. Historical import remains available
-via `bmux provenance import codex-transcripts`; active sessions now use the
-same evidence semantics through live transcript ingestion. The next PE semantic
-work should consume this reconciled factual foundation rather than repairing
-hook/transcript duplication downstream.
+Normal terminal Codex rich evidence is implemented for active bmux-managed
+Codex sessions under the current factual evidence contract. Historical import
+remains available via `bmux provenance import codex-transcripts`, and active
+sessions use the same canonical evidence semantics through live transcript
+ingestion. PE semantic work must consume this reconciled factual foundation
+rather than repairing hook/transcript duplication, stale projections, or
+metadata mistakes downstream.
 
 Live prompt-link repair is implemented for active Codex sessions: on
 `UserPromptSubmit`, bmux now starts/resumes transcript observation and runs the
@@ -88,12 +90,11 @@ the broader semantic-session product. Routed workspace display refreshes now
 notify the owning tab manager rather than only the startup manager, so linked
 prompt state can update immediately in the window that owns the workspace.
 
-SessionWorkModel now exposes the first milestone semantic field. PE produces a
-session-scoped `coding_agent.milestones` record from the latest current plan
-steps when available, falling back to the submitted prompt when no plan exists.
-Nested milestone hierarchy, milestone-to-code relationships, blockers,
-approach changes, progress, risk, and scoped architecture remain future
-semantic slices.
+SessionWorkModel now exposes the first milestone semantic field, and the
+milestone-inference implementation slice may resume on top of the corrected
+factual session substrate. Nested milestone hierarchy, milestone-to-code
+relationships, blockers, approach changes, progress, risk, and scoped
+architecture remain future semantic slices.
 
 Planning target: PE owns the `SessionWorkModel` projection for one
 coding-agent session. bmux should consume PE factual projection, semantic

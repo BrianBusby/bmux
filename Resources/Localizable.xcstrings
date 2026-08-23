@@ -3177,6 +3177,74 @@
         }
       }
     },
+    "agentSession.factual.peThreadID": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PE thread ID"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PE スレッド ID"
+          }
+        }
+      }
+    },
+    "agentSession.factual.peTurnID": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PE turn ID"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PE ターン ID"
+          }
+        }
+      }
+    },
+    "agentSession.factual.providerThreadID": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provider thread ID"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロバイダー スレッド ID"
+          }
+        }
+      }
+    },
+    "agentSession.factual.providerTurnID": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provider turn ID"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロバイダー ターン ID"
+          }
+        }
+      }
+    },
     "agentSession.factual.noPriorTurns": {
       "extractionState": "manual",
       "localizations": {

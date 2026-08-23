@@ -13,10 +13,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Milestone inference (`milestone_inference`)
-- Slice state: open
-- Owner: provenance_engine
-- Repository state: active
+- Active slice: none selected
+- Repository state: none selected
 
 ## Release
 
@@ -108,6 +106,7 @@ Repository: `BrianBusby/bmux`
 | Completed Unit Provenance Projection | implemented |
 | Diagnostic | implemented |
 | Lifecycle Producer | implemented |
+| Live Codex Evidence Convergence Correctness | implemented |
 | Live Projection | implemented |
 | Native Read Client | implemented |
 | Normal Terminal Codex Evidence Ingestion | implemented |

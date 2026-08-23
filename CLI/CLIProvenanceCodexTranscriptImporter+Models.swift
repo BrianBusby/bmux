@@ -125,6 +125,7 @@ extension CLIProvenanceCodexTranscriptImporter {
         let cwd: String?
         let timestamp: Date
         let model: String?
+        let effort: String?
     }
 
     struct TranscriptContext {
@@ -133,8 +134,10 @@ extension CLIProvenanceCodexTranscriptImporter {
         var cwd: String?
         let sessionStartedAt: Date
         var latestModel: String?
+        var latestEffort: String?
         var currentProviderTurnID: String?
         var observedProviderTurnIDs: Set<String> = []
+        var startedProviderTurnIDs: Set<String> = []
         var pendingPrompts: [PendingPrompt] = []
     }
 
