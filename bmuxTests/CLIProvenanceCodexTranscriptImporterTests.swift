@@ -82,6 +82,71 @@ struct CLIProvenanceCodexTranscriptImporterTests {
     }
 
     @Test
+    func liveImportConvergesLongRunningCodexTurnAcrossAppendCycles() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("codex-long-session.jsonl")
+        FileManager.default.createFile(atPath: transcriptURL.path, contents: Data())
+        let lines = try Self.longRunningCodexTranscriptFixtureLines()
+        let importer = CLIProvenanceCodexTranscriptImporter(client: client)
+        var state = CLIProvenanceCodexTranscriptImporter.LiveImportState()
+
+        try Self.appendText(lines[0] + "\n", to: transcriptURL)
+        let metadataImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(metadataImport.fileReport.threads == 1)
+        let metadataProjection = try await Self.factualProjection(client: client, sessionID: "codex-long-session")
+        #expect(metadataProjection.latestTurn == nil)
+
+        try Self.appendText(lines[1...5].joined(separator: "\n") + "\n", to: transcriptURL)
+        let firstEvidenceImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(firstEvidenceImport.fileReport.prompts == 1)
+        #expect(firstEvidenceImport.fileReport.commands == 1)
+        #expect(firstEvidenceImport.fileReport.reasoningSummaries == 1)
+        let firstProjection = try await Self.factualProjection(client: client, sessionID: "codex-long-session")
+        let firstTurn = try #require(firstProjection.latestTurn)
+        #expect(firstTurn.turn.provider == "codex")
+        #expect(firstTurn.turn.providerTurnID == "turn-long-1")
+        #expect(firstTurn.turn.model == "gpt-5.5")
+        #expect(firstTurn.turn.effort == "xhigh")
+        #expect(firstTurn.submittedPrompt?.text == "Review this PR for evidence convergence.")
+        #expect(firstTurn.completedCommands.count == 1)
+        #expect(firstTurn.visibleReasoningSummaries.count == 1)
+        #expect(firstProjection.providerThreadIdentities.map(\.providerThreadID) == ["codex-long-session"])
+
+        try Self.appendText(lines[6], to: transcriptURL)
+        let partialImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(partialImport.consumedLines == 0)
+        #expect(partialImport.retainedPartialLine)
+
+        try Self.appendText("\n" + lines[7...10].joined(separator: "\n") + "\n", to: transcriptURL)
+        let laterEvidenceImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(laterEvidenceImport.fileReport.commands == 3)
+        #expect(laterEvidenceImport.fileReport.reasoningSummaries == 2)
+        let laterProjection = try await Self.factualProjection(client: client, sessionID: "codex-long-session")
+        let laterTurn = try #require(laterProjection.latestTurn)
+        #expect((laterProjection.revision ?? 0) > (firstProjection.revision ?? 0))
+        #expect(laterProjection.turns.map(\.turn.providerTurnID) == ["turn-long-1"])
+        #expect(laterTurn.completedCommands.count == 4)
+        #expect(laterTurn.visibleReasoningSummaries.count == 3)
+        #expect(laterTurn.submittedPrompt?.text == "Review this PR for evidence convergence.")
+
+        let retry = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(retry.consumedLines == 0)
+        let replay = try await importer.importTranscripts(path: transcriptURL.path)
+        #expect(replay.eventsAppended == 0)
+        let replayProjection = try await Self.factualProjection(client: client, sessionID: "codex-long-session")
+        #expect(replayProjection.latestTurn?.completedCommands.count == 4)
+        #expect(replayProjection.latestTurn?.visibleReasoningSummaries.count == 3)
+
+        try Self.appendText(lines[11] + "\n", to: transcriptURL)
+        _ = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        let completedProjection = try await Self.factualProjection(client: client, sessionID: "codex-long-session")
+        #expect(completedProjection.latestTurn?.turn.status == "completed")
+    }
+
+    @Test
     func liveImportKeepsTailStateWhenBatchParsingFails() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
@@ -206,6 +271,16 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         handle.write(Data(text.utf8))
     }
 
+    private static func factualProjection(
+        client: any ProvenanceEngineContracts.ProvenanceEngineClient,
+        sessionID: String
+    ) async throws -> ProvenanceFactualSessionProjectionSnapshot {
+        let projection = try await client.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: sessionID)
+        )
+        return try #require(projection.snapshot)
+    }
+
     private static func codexTranscriptFixtureLines() throws -> [String] {
         let patch = [
             "*** Begin Patch",
@@ -318,6 +393,136 @@ struct CLIProvenanceCodexTranscriptImporterTests {
                 ]
             )
         ]
+    }
+
+    private static func longRunningCodexTranscriptFixtureLines() throws -> [String] {
+        return [
+            try codexTranscriptLine(
+                ordinal: 0,
+                type: "session_meta",
+                timestamp: "2026-08-22T10:00:00Z",
+                payload: [
+                    "session_id": "codex-long-session",
+                    "id": "codex-long-session",
+                    "timestamp": "2026-08-22T10:00:00Z",
+                    "cwd": "/tmp/provenance-long-transcript-fixture",
+                    "originator": "codex-tui",
+                    "source": "cli",
+                    "model_provider": "openai"
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 1,
+                type: "response_item",
+                timestamp: "2026-08-22T10:00:01Z",
+                payload: [
+                    "type": "message",
+                    "role": "user",
+                    "content": [
+                        [
+                            "type": "input_text",
+                            "text": "Review this PR for evidence convergence."
+                        ]
+                    ]
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 2,
+                type: "event_msg",
+                timestamp: "2026-08-22T10:00:02Z",
+                payload: [
+                    "type": "task_started",
+                    "turn_id": "turn-long-1",
+                    "started_at": 1_787_412_002
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 3,
+                type: "turn_context",
+                timestamp: "2026-08-22T10:00:03Z",
+                payload: [
+                    "turn_id": "turn-long-1",
+                    "cwd": "/tmp/provenance-long-transcript-fixture",
+                    "model": "gpt-5.5",
+                    "effort": "xhigh"
+                ]
+            ),
+            try assistantCommentaryLine(
+                ordinal: 4,
+                id: "agent-message-1",
+                text: "Inspecting the recently merged transcript ingestion path first."
+            ),
+            try commandLine(ordinal: 5, id: "cmd-1", command: ["rg", "CodexTranscriptImporter"]),
+            try assistantCommentaryLine(
+                ordinal: 6,
+                id: "agent-message-2",
+                text: "The first import pass reached PE; now checking whether later appends reuse the same turn."
+            ),
+            try commandLine(ordinal: 7, id: "cmd-2", command: ["gh", "pr", "view", "68"]),
+            try commandLine(ordinal: 8, id: "cmd-3", command: ["node", "--test", "url-prefix.test.js"]),
+            try assistantCommentaryLine(
+                ordinal: 9,
+                id: "agent-message-3",
+                text: "The reproduction is confirmed; continuing into CODEOWNERS and Slack evidence."
+            ),
+            try commandLine(ordinal: 10, id: "cmd-4", command: ["rg", "CODEOWNERS"]),
+            try codexTranscriptLine(
+                ordinal: 11,
+                type: "event_msg",
+                timestamp: "2026-08-22T10:00:11Z",
+                payload: [
+                    "type": "task_complete",
+                    "turn_id": "turn-long-1",
+                    "completed_at": 1_787_412_011
+                ]
+            )
+        ]
+    }
+
+    private static func assistantCommentaryLine(ordinal: Int, id: String, text: String) throws -> String {
+        try codexTranscriptLine(
+            ordinal: ordinal,
+            type: "response_item",
+            timestamp: String(format: "2026-08-22T10:00:%02dZ", ordinal),
+            payload: [
+                "type": "message",
+                "role": "assistant",
+                "phase": "commentary",
+                "id": id,
+                "internal_chat_message_metadata_passthrough": [
+                    "turn_id": "turn-long-1"
+                ],
+                "content": [
+                    [
+                        "type": "output_text",
+                        "text": text
+                    ]
+                ]
+            ]
+        )
+    }
+
+    private static func commandLine(ordinal: Int, id: String, command: [String]) throws -> String {
+        try codexTranscriptLine(
+            ordinal: ordinal,
+            type: "event_msg",
+            timestamp: String(format: "2026-08-22T10:00:%02dZ", ordinal),
+            payload: [
+                "type": "item_completed",
+                "thread_id": "codex-long-session",
+                "turn_id": "turn-long-1",
+                "started_at_ms": 1_787_412_000_000 + ordinal * 1_000,
+                "completed_at_ms": 1_787_412_000_500 + ordinal * 1_000,
+                "item": [
+                    "type": "CommandExecution",
+                    "id": id,
+                    "command": command,
+                    "cwd": "/tmp/provenance-long-transcript-fixture",
+                    "status": "completed",
+                    "exit_code": 0
+                ]
+            ]
+        )
     }
 
     private static func codexTranscriptLine(
