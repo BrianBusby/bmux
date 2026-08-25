@@ -3109,6 +3109,57 @@
         }
       }
     },
+    "agentSession.factual.details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Details"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "詳細"
+          }
+        }
+      }
+    },
+    "agentSession.factual.duration": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duration %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所要時間 %@"
+          }
+        }
+      }
+    },
+    "agentSession.factual.duration.seconds": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.0f sec"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.0f秒"
+          }
+        }
+      }
+    },
     "agentSession.factual.files": {
       "extractionState": "manual",
       "localizations": {
@@ -3122,6 +3173,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ファイル"
+          }
+        }
+      }
+    },
+    "agentSession.factual.finished": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finished %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了 %@"
           }
         }
       }
@@ -3381,6 +3449,23 @@
         }
       }
     },
+    "agentSession.factual.prompt.missing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No prompt captured"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロンプトが記録されていません"
+          }
+        }
+      }
+    },
     "agentSession.factual.provider": {
       "extractionState": "manual",
       "localizations": {
@@ -3500,6 +3585,23 @@
         }
       }
     },
+    "agentSession.factual.started": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Started %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開始 %@"
+          }
+        }
+      }
+    },
     "agentSession.factual.status": {
       "extractionState": "manual",
       "localizations": {
@@ -3513,6 +3615,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "状態"
+          }
+        }
+      }
+    },
+    "agentSession.factual.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summary"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サマリー"
+          }
+        }
+      }
+    },
+    "agentSession.factual.summary.commands": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ran %d commands"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d件のコマンドを実行"
+          }
+        }
+      }
+    },
+    "agentSession.factual.summary.status": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn ended with status %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ターンは状態 %@ で終了"
           }
         }
       }
@@ -3581,6 +3734,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ターン ID"
+          }
+        }
+      }
+    },
+    "agentSession.factual.turnOrdinal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ターン%d"
           }
         }
       }
