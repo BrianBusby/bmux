@@ -237,6 +237,7 @@
 572	Sources/Feed/FeedTextEditorDebugWindowController.swift
 567	Packages/macOS/BmuxSettingsUI/Sources/BmuxSettingsUI/Sections/BrowserSection.swift
 567	Packages/macOS/BmuxTerminalCore/Sources/BmuxTerminalCore/ConfigDiscovery/GhosttyConfigDiscovery.swift
+565	bmuxTests/AgentSessionFactualProjectionStoreTests.swift
 562	bmuxTests/AgentExecutableResolverTests.swift
 561	bmuxTests/GhosttyConfigPathResolverTests.swift
 560	bmuxTests/CLISSHPTYResizeInputTests.swift
@@ -264,6 +265,7 @@
 527	bmuxTests/BrowserHTTPBasicAuthPromptTests.swift
 526	Packages/macOS/BMUXAgentLaunch/Sources/BMUXAgentLaunch/Workstream/WorkstreamStore.swift
 526	Sources/BrowserPaneDropTargetView.swift
+526	Sources/Panels/AgentSessionFactualProjectionView.swift
 525	Packages/macOS/BmuxSettings/Sources/BmuxSettings/SocketControl/SocketControlSettings.swift
 522	Sources/TerminalPaneDropTargetView.swift
 520	CLI/BMUXCLI+AmpExtension.swift
