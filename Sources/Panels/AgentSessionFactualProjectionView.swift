@@ -4,6 +4,63 @@ import ProvenanceEngineContracts
 
 private let agentSessionFactualProjectionAutoRefreshNanoseconds: UInt64 = 2_000_000_000
 
+enum AgentSessionFactualProjectionEvidenceRows {
+    enum TurnProperty: Equatable {
+        case prompt(String)
+        case providerTurnID(String)
+        case peTurnID(String)
+        case peThreadID(String?)
+        case status(String)
+        case model(String?)
+    }
+
+    enum PriorTurnItem: Equatable {
+        case detail(ProvenanceFactualSessionProjectionTurnSnapshot)
+        case reference(ProvenanceFactualSessionProjectionTurnReference)
+
+        var id: String {
+            switch self {
+            case .detail(let turnSnapshot):
+                turnSnapshot.turn.id
+            case .reference(let turn):
+                turn.turnID
+            }
+        }
+    }
+
+    static func turnProperties(for turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot) -> [TurnProperty] {
+        var rows: [TurnProperty] = []
+        if let prompt = turnSnapshot.submittedPrompt?.text {
+            rows.append(.prompt(prompt))
+        }
+        rows.append(.providerTurnID(turnSnapshot.turn.providerTurnID))
+        rows.append(.peTurnID(turnSnapshot.turn.id))
+        rows.append(.peThreadID(turnSnapshot.turn.threadID))
+        rows.append(.status(turnSnapshot.turn.status))
+        rows.append(.model(turnSnapshot.turn.model))
+        return rows
+    }
+
+    static func priorTurnItems(for snapshot: ProvenanceFactualSessionProjectionSnapshot) -> [PriorTurnItem] {
+        var detailedTurnsByID: [String: ProvenanceFactualSessionProjectionTurnSnapshot] = [:]
+        for turn in snapshot.turns {
+            detailedTurnsByID[turn.turn.id] = turn
+        }
+        return snapshot.priorTurns.map { turn in
+            if let detail = detailedTurnsByID[turn.turnID] {
+                return .detail(detail)
+            }
+            return .reference(turn)
+        }
+    }
+
+    static func latestRows<Value>(_ values: [Value], limit: Int) -> [Value] {
+        guard limit > 0 else { return [] }
+        guard values.count > limit else { return values }
+        return Array(values.suffix(limit))
+    }
+}
+
 struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     let showsSwitcher: Bool
     let stableWorkspaceID: UUID?
@@ -251,8 +308,8 @@ struct AgentSessionFactualProjectionView: View {
                 if snapshot.priorTurns.isEmpty {
                     mutedText(String(localized: "agentSession.factual.noPriorTurns", defaultValue: "No prior turns."))
                 } else {
-                    ForEach(snapshot.priorTurns, id: \.turnID) { turn in
-                        priorTurnRow(turn)
+                    ForEach(AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot), id: \.id) { item in
+                        priorTurnItem(item)
                     }
                 }
             }
@@ -286,13 +343,8 @@ struct AgentSessionFactualProjectionView: View {
 
     private func turnDetail(_ turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            factRow(String(localized: "agentSession.factual.providerTurnID", defaultValue: "Provider turn ID"), turnSnapshot.turn.providerTurnID)
-            factRow(String(localized: "agentSession.factual.peTurnID", defaultValue: "PE turn ID"), turnSnapshot.turn.id)
-            factRow(String(localized: "agentSession.factual.peThreadID", defaultValue: "PE thread ID"), turnSnapshot.turn.threadID)
-            factRow(String(localized: "agentSession.factual.status", defaultValue: "Status"), turnSnapshot.turn.status)
-            factRow(String(localized: "agentSession.factual.model", defaultValue: "Model"), turnSnapshot.turn.model)
-            if let prompt = turnSnapshot.submittedPrompt?.text {
-                labeledText(String(localized: "agentSession.factual.prompt", defaultValue: "Prompt"), prompt, lineLimit: 4)
+            ForEach(Array(AgentSessionFactualProjectionEvidenceRows.turnProperties(for: turnSnapshot).enumerated()), id: \.offset) { _, property in
+                turnPropertyRow(property)
             }
             if let plan = turnSnapshot.currentPlan {
                 planRows(plan)
@@ -301,6 +353,24 @@ struct AgentSessionFactualProjectionView: View {
             commandRows(turnSnapshot.completedCommands)
             reasoningRows(turnSnapshot.visibleReasoningSummaries)
             fileRows(turnSnapshot.fileChangeAttributions)
+        }
+    }
+
+    @ViewBuilder
+    private func turnPropertyRow(_ property: AgentSessionFactualProjectionEvidenceRows.TurnProperty) -> some View {
+        switch property {
+        case .prompt(let prompt):
+            labeledText(String(localized: "agentSession.factual.prompt", defaultValue: "Prompt"), prompt, lineLimit: 4)
+        case .providerTurnID(let providerTurnID):
+            factRow(String(localized: "agentSession.factual.providerTurnID", defaultValue: "Provider turn ID"), providerTurnID)
+        case .peTurnID(let peTurnID):
+            factRow(String(localized: "agentSession.factual.peTurnID", defaultValue: "PE turn ID"), peTurnID)
+        case .peThreadID(let peThreadID):
+            factRow(String(localized: "agentSession.factual.peThreadID", defaultValue: "PE thread ID"), peThreadID)
+        case .status(let status):
+            factRow(String(localized: "agentSession.factual.status", defaultValue: "Status"), status)
+        case .model(let model):
+            factRow(String(localized: "agentSession.factual.model", defaultValue: "Model"), model)
         }
     }
 
@@ -339,7 +409,7 @@ struct AgentSessionFactualProjectionView: View {
 
     private func commandRows(_ commands: [ProvenanceCodingAgentCommandRecord]) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            ForEach(commands.prefix(5), id: \.id) { command in
+            ForEach(AgentSessionFactualProjectionEvidenceRows.latestRows(commands, limit: 5), id: \.id) { command in
                 labeledText(command.status, command.command, lineLimit: 2)
             }
         }
@@ -347,7 +417,7 @@ struct AgentSessionFactualProjectionView: View {
 
     private func reasoningRows(_ summaries: [ProvenanceCodingAgentReasoningSummaryRecord]) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            ForEach(summaries.prefix(3), id: \.id) { summary in
+            ForEach(AgentSessionFactualProjectionEvidenceRows.latestRows(summaries, limit: 3), id: \.id) { summary in
                 labeledText(
                     String(localized: "agentSession.factual.reasoningSummary", defaultValue: "Reasoning summary"),
                     summary.text,
@@ -359,7 +429,7 @@ struct AgentSessionFactualProjectionView: View {
 
     private func fileRows(_ attributions: [ProvenanceCodingAgentFileChangeAttributionRecord]) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            ForEach(attributions.prefix(4), id: \.id) { attribution in
+            ForEach(AgentSessionFactualProjectionEvidenceRows.latestRows(attributions, limit: 4), id: \.id) { attribution in
                 labeledText(
                     String(localized: "agentSession.factual.fileChange", defaultValue: "File change"),
                     attribution.summary ?? attribution.paths.prefix(4).joined(separator: ", "),
@@ -380,6 +450,16 @@ struct AgentSessionFactualProjectionView: View {
             Text(dateText(turn.completedAt ?? turn.updatedAt))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private func priorTurnItem(_ item: AgentSessionFactualProjectionEvidenceRows.PriorTurnItem) -> some View {
+        switch item {
+        case .detail(let turnSnapshot):
+            turnDetail(turnSnapshot)
+        case .reference(let turn):
+            priorTurnRow(turn)
         }
     }
 
