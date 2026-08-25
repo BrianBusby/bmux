@@ -13671,16 +13671,6 @@ struct TabItemView: View, Equatable {
         let aiBusyTooltip = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running or needs input")
         let rowView = VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .top, spacing: 8) {
-                if workspaceSnapshot.hasActiveAIWork {
-                    TronLoadingIndicator(
-                        size: scaledLoadingIndicatorSize,
-                        color: workspaceLoadingIndicatorColor,
-                        lineWidth: max(1.15, scaledLoadingIndicatorSize * 0.085)
-                    )
-                    .safeHelp(aiBusyTooltip)
-                    .accessibilityLabel(aiBusyTooltip)
-                }
-
                 if unreadCount > 0 {
                     ZStack {
                         Circle()
@@ -13759,6 +13749,7 @@ struct TabItemView: View, Equatable {
                         },
                         onCancel: { isEditing = false }
                     )
+                    .padding(.trailing, workspaceSnapshot.hasActiveAIWork && !canCloseWorkspace ? scaledLoadingIndicatorSize + 4 : 0)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .layoutPriority(1)
                 } else {
@@ -13783,6 +13774,7 @@ struct TabItemView: View, Equatable {
                                 .truncationMode(.middle)
                         }
                     }
+                    .padding(.trailing, workspaceSnapshot.hasActiveAIWork && !canCloseWorkspace ? scaledLoadingIndicatorSize + 4 : 0)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .layoutPriority(1)
                 }
@@ -14051,6 +14043,13 @@ struct TabItemView: View, Equatable {
                 }
                 .shadow(color: activeElevationShadowColor, radius: 4, x: 0, y: 2)
         )
+        .overlay(alignment: .topTrailing) {
+            if workspaceSnapshot.hasActiveAIWork && !showCloseButton {
+                TronLoadingIndicator(size: scaledLoadingIndicatorSize, color: workspaceLoadingIndicatorColor, lineWidth: max(1.15, scaledLoadingIndicatorSize * 0.085))
+                    .safeHelp(aiBusyTooltip).accessibilityLabel(aiBusyTooltip).allowsHitTesting(false)
+                    .padding(.top, 6).padding(.trailing, 7)
+            }
+        }
         .sidebarShortcutHintOverlay(
             text: showsWorkspaceShortcutHint ? workspaceShortcutLabel : nil,
             emphasis: shortcutHintEmphasis,
