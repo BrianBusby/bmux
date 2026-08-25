@@ -1264,6 +1264,8 @@
 		B4B350010000000000000001 /* SidebarWorkspaceWorkingBorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B350010000000000000002 /* SidebarWorkspaceWorkingBorder.swift */; };
 		B4B350020000000000000001 /* SidebarWorkspaceWorkingBorderMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B350020000000000000002 /* SidebarWorkspaceWorkingBorderMotion.swift */; };
 		B4B350030000000000000001 /* SidebarWorkspaceWorkingBorderMotionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B350030000000000000002 /* SidebarWorkspaceWorkingBorderMotionTests.swift */; };
+		B4B350040000000000000001 /* SidebarWorkspaceWorkingIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B350040000000000000002 /* SidebarWorkspaceWorkingIndicator.swift */; };
+		B4B350050000000000000001 /* SidebarWorkspaceWorkingIndicatorMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B350050000000000000002 /* SidebarWorkspaceWorkingIndicatorMotion.swift */; };
 		C7B0000000000000000000F2 /* SleepyAgentCensus.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B0000000000000000000F1 /* SleepyAgentCensus.swift */; };
 		C7B0FACE0000000000000004 /* SleepyAgentCensusing.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B0FACE0000000000000005 /* SleepyAgentCensusing.swift */; };
 		C7B0FACE0000000000000002 /* SleepyAgentCounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B0FACE0000000000000003 /* SleepyAgentCounts.swift */; };
@@ -2934,6 +2936,8 @@
 		B4B350010000000000000002 /* SidebarWorkspaceWorkingBorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarWorkspaceWorkingBorder.swift; sourceTree = "<group>"; };
 		B4B350020000000000000002 /* SidebarWorkspaceWorkingBorderMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarWorkspaceWorkingBorderMotion.swift; sourceTree = "<group>"; };
 		B4B350030000000000000002 /* SidebarWorkspaceWorkingBorderMotionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarWorkspaceWorkingBorderMotionTests.swift; sourceTree = "<group>"; };
+		B4B350040000000000000002 /* SidebarWorkspaceWorkingIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarWorkspaceWorkingIndicator.swift; sourceTree = "<group>"; };
+		B4B350050000000000000002 /* SidebarWorkspaceWorkingIndicatorMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarWorkspaceWorkingIndicatorMotion.swift; sourceTree = "<group>"; };
 		C7B0000000000000000000F1 /* SleepyAgentCensus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepyAgentCensus.swift; sourceTree = "<group>"; };
 		C7B0FACE0000000000000005 /* SleepyAgentCensusing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepyAgentCensusing.swift; sourceTree = "<group>"; };
 		C7B0FACE0000000000000003 /* SleepyAgentCounts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepyAgentCounts.swift; sourceTree = "<group>"; };
@@ -3775,6 +3779,8 @@
 				C9A57602C9A57602C9A57602 /* SidebarWorkspaceTopDropIndicator.swift */,
 				B4B350010000000000000002 /* SidebarWorkspaceWorkingBorder.swift */,
 				B4B350020000000000000002 /* SidebarWorkspaceWorkingBorderMotion.swift */,
+				B4B350040000000000000002 /* SidebarWorkspaceWorkingIndicator.swift */,
+				B4B350050000000000000002 /* SidebarWorkspaceWorkingIndicatorMotion.swift */,
 				C9A5720CC9A5720CC9A5720C /* TabItemView+WorkspaceGroups.swift */,
 				C9A5720AC9A5720AC9A5720A /* VerticalTabsSidebar+WorkspaceGroups.swift */,
 				C9A57204C9A57204C9A57204 /* WorkspaceGroupMenuSnapshot.swift */,
@@ -6276,6 +6282,8 @@
 				C9A57601C9A57601C9A57601 /* SidebarWorkspaceTopDropIndicator.swift in Sources */,
 				B4B350010000000000000001 /* SidebarWorkspaceWorkingBorder.swift in Sources */,
 				B4B350020000000000000001 /* SidebarWorkspaceWorkingBorderMotion.swift in Sources */,
+				B4B350040000000000000001 /* SidebarWorkspaceWorkingIndicator.swift in Sources */,
+				B4B350050000000000000001 /* SidebarWorkspaceWorkingIndicatorMotion.swift in Sources */,
 				C7B0000000000000000000F2 /* SleepyAgentCensus.swift in Sources */,
 				C7B0FACE0000000000000004 /* SleepyAgentCensusing.swift in Sources */,
 				C7B0FACE0000000000000002 /* SleepyAgentCounts.swift in Sources */,

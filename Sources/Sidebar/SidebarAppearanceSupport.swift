@@ -328,3 +328,51 @@ func sidebarWorkspaceRowBackgroundStyle(
         return .clear
     }
 }
+
+func sidebarWorkspaceRowLoadingIndicatorNSColor(
+    activeTabIndicatorStyle: WorkspaceIndicatorStyle,
+    isActive: Bool,
+    isMultiSelected: Bool,
+    customColorHex: String?,
+    colorScheme: ColorScheme,
+    sidebarSelectionColorHex: String?
+) -> NSColor {
+    sidebarWorkspaceRowLoadingIndicatorNSColor(
+        activeTabIndicatorStyle: activeTabIndicatorStyle,
+        isActive: isActive,
+        isMultiSelected: isMultiSelected,
+        customColorHex: customColorHex,
+        colorScheme: colorScheme,
+        sidebarSelectionColorHex: sidebarSelectionColorHex,
+        baseBackgroundColor: colorScheme == .dark ? .black : .white
+    )
+}
+
+func sidebarWorkspaceRowLoadingIndicatorNSColor(
+    activeTabIndicatorStyle: WorkspaceIndicatorStyle,
+    isActive: Bool,
+    isMultiSelected: Bool,
+    customColorHex: String?,
+    colorScheme: ColorScheme,
+    sidebarSelectionColorHex: String?,
+    baseBackgroundColor: NSColor
+) -> NSColor {
+    let style = sidebarWorkspaceRowBackgroundStyle(
+        activeTabIndicatorStyle: activeTabIndicatorStyle,
+        isActive: isActive,
+        isMultiSelected: isMultiSelected,
+        customColorHex: customColorHex,
+        colorScheme: colorScheme,
+        sidebarSelectionColorHex: sidebarSelectionColorHex
+    )
+    let effectiveBackground: NSColor
+    if let rowColor = style.color {
+        effectiveBackground = bmuxCompositedNSColor(
+            rowColor.withAlphaComponent(CGFloat(style.opacity)),
+            over: baseBackgroundColor
+        )
+    } else {
+        effectiveBackground = baseBackgroundColor
+    }
+    return bmuxReadableForegroundNSColor(on: effectiveBackground, opacity: 1)
+}

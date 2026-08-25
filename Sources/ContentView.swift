@@ -13475,6 +13475,17 @@ struct TabItemView: View, Equatable {
         usesInvertedActiveForeground ? activeSecondaryColor(0.8) : bmuxAccentColor()
     }
 
+    private var workspaceWorkingIndicatorColor: Color {
+        Color(nsColor: sidebarWorkspaceRowLoadingIndicatorNSColor(
+            activeTabIndicatorStyle: activeTabIndicatorStyle,
+            isActive: isActive,
+            isMultiSelected: isMultiSelected,
+            customColorHex: workspaceRowColorHex,
+            colorScheme: colorScheme,
+            sidebarSelectionColorHex: sidebarSelectionColorHex
+        ))
+    }
+
     private var shortcutHintEmphasis: Double {
         usesInvertedActiveForeground ? 1.0 : 0.9
     }
@@ -13658,6 +13669,12 @@ struct TabItemView: View, Equatable {
         let detailVisibility = visibleAuxiliaryDetails
         let titleLineLimit = SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: settings.wrapsWorkspaceTitles)
         let scaledUnreadBadgeSize = 16 * fontScale
+        let scaledWorkingIndicatorSize = SidebarWorkspaceWorkingIndicatorMotion.workspaceTabSize(
+            forBadgeSize: scaledUnreadBadgeSize
+        )
+        let workingIndicatorTrailingProtection = workspaceSnapshot.hasActiveAIWork && !canCloseWorkspace
+            ? scaledWorkingIndicatorSize + 4
+            : 0
         let scaledCloseButtonHitSize = max(16, 16 * fontScale)
         let scaledCloseButtonWidth = max(
             SidebarTrailingAccessoryWidthPolicy().closeButtonWidth,
@@ -13743,6 +13760,7 @@ struct TabItemView: View, Equatable {
                         },
                         onCancel: { isEditing = false }
                     )
+                    .padding(.trailing, workingIndicatorTrailingProtection)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .layoutPriority(1)
                 } else {
@@ -13767,6 +13785,7 @@ struct TabItemView: View, Equatable {
                                 .truncationMode(.middle)
                         }
                     }
+                    .padding(.trailing, workingIndicatorTrailingProtection)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .layoutPriority(1)
                 }
@@ -14044,6 +14063,20 @@ struct TabItemView: View, Equatable {
                 }
                 .shadow(color: activeElevationShadowColor, radius: 4, x: 0, y: 2)
         )
+        .overlay(alignment: .topTrailing) {
+            if workspaceSnapshot.hasActiveAIWork && !showCloseButton {
+                SidebarWorkspaceWorkingIndicator(
+                    size: scaledWorkingIndicatorSize,
+                    color: workspaceWorkingIndicatorColor,
+                    lineWidth: max(1.15, scaledWorkingIndicatorSize * 0.085)
+                )
+                .safeHelp(aiBusyTooltip)
+                .accessibilityLabel(aiBusyTooltip)
+                .allowsHitTesting(false)
+                .padding(.top, 6)
+                .padding(.trailing, 7)
+            }
+        }
         .sidebarShortcutHintOverlay(
             text: showsWorkspaceShortcutHint ? workspaceShortcutLabel : nil,
             emphasis: shortcutHintEmphasis,
