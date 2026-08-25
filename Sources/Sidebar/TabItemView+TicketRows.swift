@@ -11,15 +11,20 @@ extension TabItemView {
                 let linkText = ticket.linkText
                 let fontSize = prominent ? scaledFontSize(11.5) : scaledFontSize(10)
                 let fontWeight: Font.Weight = prominent ? .bold : .semibold
-                let rowContent = HStack(spacing: 4) {
+                let linkedTitleLineLimit = SidebarWorkspaceRowLineLimitPolicy.linkedTitleLineLimit(
+                    wrapsWorkspaceTitles: settings.wrapsWorkspaceTitles
+                )
+                let rowContent = HStack(alignment: .top, spacing: 4) {
                     BmuxSystemSymbolImage(magnified: "ticket", pointSize: scaledFontSize(prominent ? 10 : 9), weight: .medium)
                         .foregroundColor(activeSecondaryColor(0.72))
                     Text(linkText)
                         .underline(ticket.url != nil)
                         .foregroundColor(ticket.url == nil ? activeSecondaryColor(0.75) : pullRequestLinkColor)
-                        .lineLimit(1)
+                        .lineLimit(linkedTitleLineLimit)
                         .truncationMode(.tail)
-                    Spacer(minLength: 0)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .font(magnifiedFont(fontSize, weight: fontWeight, design: .monospaced))
                 .foregroundColor(activeSecondaryColor(0.75))
