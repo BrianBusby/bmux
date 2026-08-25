@@ -183,7 +183,39 @@ struct AgentSessionFactualProjectionStoreTests {
         #expect(AgentSessionFactualProjectionEvidenceRows.latestRows(["a", "b", "c", "d"], limit: 2) == ["c", "d"])
     }
 
-    private static func snapshot(sessionID: String, revision: Int) -> ProvenanceFactualSessionProjectionSnapshot {
+    @Test
+    func factualProjectionTurnPropertiesStartWithPrompt() throws {
+        let snapshot = Self.snapshot(sessionID: "session-1", revision: 42)
+        let turn = try #require(snapshot.latestTurn)
+
+        let rows = AgentSessionFactualProjectionEvidenceRows.turnProperties(for: turn)
+
+        #expect(rows.first == .prompt("Show factual session data"))
+        #expect(rows.dropFirst().first == .providerTurnID("provider-turn-1"))
+    }
+
+    @Test
+    func factualProjectionPriorTurnsUseDetailedPromptRowsWhenAvailable() throws {
+        let snapshot = Self.snapshot(
+            sessionID: "session-1",
+            revision: 42,
+            priorPrompt: "Earlier prompt"
+        )
+
+        let priorItem = try #require(AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot).first)
+        guard case .detail(let turn) = priorItem else {
+            Issue.record("Expected prior turn detail when snapshot.turns includes the referenced turn")
+            return
+        }
+
+        #expect(AgentSessionFactualProjectionEvidenceRows.turnProperties(for: turn).first == .prompt("Earlier prompt"))
+    }
+
+    private static func snapshot(
+        sessionID: String,
+        revision: Int,
+        priorPrompt: String? = nil
+    ) -> ProvenanceFactualSessionProjectionSnapshot {
         let updatedAt = Date(timeIntervalSince1970: 1_800_000_000)
         let thread = ProvenanceCodingAgentThreadRecord(
             id: "thread-1",
@@ -196,6 +228,42 @@ struct AgentSessionFactualProjectionStoreTests {
             firstObservedAt: updatedAt,
             updatedAt: updatedAt
         )
+        let priorTurn = priorPrompt.map { _ in
+            ProvenanceCodingAgentTurnRecord(
+                id: "turn-0",
+                sessionID: sessionID,
+                threadID: thread.id,
+                provider: "codex",
+                providerTurnID: "provider-turn-0",
+                status: "completed",
+                model: "gpt-5-codex",
+                startedAt: updatedAt.addingTimeInterval(-120),
+                completedAt: updatedAt.addingTimeInterval(-60),
+                updatedAt: updatedAt.addingTimeInterval(-60),
+                source: .observed,
+                confidence: .high
+            )
+        }
+        let priorTurnSnapshot = priorTurn.map { turn in
+            ProvenanceFactualSessionProjectionTurnSnapshot(
+                turn: turn,
+                submittedPrompt: ProvenanceCodingAgentPromptRecord(
+                    id: "prompt-0",
+                    sessionID: sessionID,
+                    threadID: thread.id,
+                    turnID: turn.id,
+                    provider: "codex",
+                    text: priorPrompt ?? "",
+                    submittedAt: updatedAt.addingTimeInterval(-120),
+                    source: .observed,
+                    confidence: .high
+                ),
+                currentPlan: nil,
+                completedCommands: [],
+                visibleReasoningSummaries: [],
+                fileChangeAttributions: []
+            )
+        }
         let turn = ProvenanceCodingAgentTurnRecord(
             id: "turn-1",
             sessionID: sessionID,
@@ -246,8 +314,8 @@ struct AgentSessionFactualProjectionStoreTests {
             ],
             providerThreads: [thread],
             latestTurn: turnSnapshot,
-            priorTurns: [],
-            turns: [turnSnapshot]
+            priorTurns: priorTurn.map { [ProvenanceFactualSessionProjectionTurnReference(turn: $0)] } ?? [],
+            turns: (priorTurnSnapshot.map { [$0] } ?? []) + [turnSnapshot]
         )
     }
 
