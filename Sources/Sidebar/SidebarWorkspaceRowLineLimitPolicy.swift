@@ -10,9 +10,14 @@ struct SidebarWorkspaceRowLineLimitPolicy {
     private static let compactNotificationSubtitleLines = 2
     private static let conversationSubtitleLines = 3
     private static let wrappedWorkspaceTitleLines = 3
+    private static let wrappedLinkedTitleLines = 3
 
     static func titleLineLimit(wrapsWorkspaceTitles: Bool) -> Int {
         wrapsWorkspaceTitles ? wrappedWorkspaceTitleLines : 1
+    }
+
+    static func linkedTitleLineLimit(wrapsWorkspaceTitles: Bool) -> Int {
+        wrapsWorkspaceTitles ? wrappedLinkedTitleLines : 1
     }
 
     static func conversationMessage(

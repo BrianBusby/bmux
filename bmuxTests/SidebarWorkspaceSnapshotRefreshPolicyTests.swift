@@ -452,6 +452,14 @@ import Testing
         #expect(SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: false) == 1)
     }
 
+    @Test func linkedTitlesUseAtMostThreeLinesWhenWrappingIsEnabled() {
+        #expect(SidebarWorkspaceRowLineLimitPolicy.linkedTitleLineLimit(wrapsWorkspaceTitles: true) == 3)
+    }
+
+    @Test func linkedTitlesStaySingleLineWhenWrappingIsDisabled() {
+        #expect(SidebarWorkspaceRowLineLimitPolicy.linkedTitleLineLimit(wrapsWorkspaceTitles: false) == 1)
+    }
+
     @Test func workspaceTitleWrappingIsEnabledByDefault() {
         #expect(SidebarWorkspaceTitleWrapSettings.defaultWrap)
     }
