@@ -318,62 +318,6 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         )
     }
 
-    func recordCompletedMessage(
-        summary: AgentChatSessionSummary,
-        envelope: ExecutionTelemetryEventEnvelope,
-        event: ExecutionTelemetryMessageCompletedEvent
-    ) async throws {
-        switch normalizedMessageStream(event.stream) {
-        case "reasoning":
-            try await recordReasoningSummary(summary: summary, envelope: envelope, event: event)
-        case "assistant":
-            try await recordAssistantMessage(summary: summary, envelope: envelope, event: event)
-        default:
-            return
-        }
-    }
-
-    func recordAssistantMessage(
-        summary: AgentChatSessionSummary,
-        envelope: ExecutionTelemetryEventEnvelope,
-        event: ExecutionTelemetryMessageCompletedEvent
-    ) async throws {
-        guard normalizedMessageStream(event.stream) == "assistant",
-              let text = trimmedNonEmpty(event.text).map({ bounded($0, limit: Self.textLimit) }) else {
-            return
-        }
-        let observedAt = timestamp(milliseconds: envelope.capturedAtMs)
-        let providerThreadID = effectiveProviderThreadID(summary: summary, envelope: envelope)
-        let providerTurnID = effectiveProviderTurnID(summary: summary, envelope: envelope)
-        let message = ProvenanceCodingAgentAssistantMessageRecord(
-            id: "coding-agent-assistant-message-\(envelope.eventID)",
-            sessionID: summary.id,
-            threadID: providerThreadID.map(threadRecordID(providerThreadID:)),
-            turnID: providerTurnID.map(turnRecordID(providerTurnID:)),
-            provider: "codex",
-            itemID: trimmedNonEmpty(event.itemID),
-            text: text,
-            completedAt: observedAt,
-            source: .observed,
-            confidence: .high
-        )
-        let gitContext = await gitContext(for: summary.cwd, observedAt: observedAt)
-        try await append(
-            eventType: .codingAgentAssistantMessageCompleted,
-            envelope: envelope,
-            timestamp: observedAt,
-            sessionID: summary.id,
-            repositoryID: gitContext?.repositoryID,
-            worktreeID: gitContext?.worktreeID,
-            confidence: .high,
-            payload: ProvenanceEventPayload(
-                repository: gitContext?.repository,
-                worktree: gitContext?.worktree,
-                codingAgentAssistantMessage: message
-            )
-        )
-    }
-
     func recordPendingTool(
         summary: AgentChatSessionSummary,
         envelope: ExecutionTelemetryEventEnvelope,

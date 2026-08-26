@@ -444,26 +444,7 @@ struct CLIProvenanceCodexTranscriptImporterTests {
                     "input": patch
                 ]
             ),
-            try codexTranscriptLine(
-                ordinal: 7,
-                type: "response_item",
-                timestamp: "2026-08-21T10:00:07Z",
-                payload: [
-                    "type": "message",
-                    "role": "assistant",
-                    "phase": "final",
-                    "id": "assistant-final-1",
-                    "internal_chat_message_metadata_passthrough": [
-                        "turn_id": "turn-1"
-                    ],
-                    "content": [
-                        [
-                            "type": "output_text",
-                            "text": "Final."
-                        ]
-                    ]
-                ]
-            )
+            try assistantFinalLine(ordinal: 7, timestamp: "2026-08-21T10:00:07Z", id: "assistant-final-1", text: "Final.", turnID: "turn-1")
         ]
     }
 
@@ -548,23 +529,7 @@ struct CLIProvenanceCodexTranscriptImporterTests {
                     "completed_at": 1_787_412_011
                 ]
             ),
-            try codexTranscriptLine(
-                ordinal: 12,
-                type: "response_item",
-                timestamp: "2026-08-22T10:00:12Z",
-                payload: [
-                    "type": "message",
-                    "role": "assistant",
-                    "phase": "final",
-                    "id": "agent-final-1",
-                    "content": [
-                        [
-                            "type": "output_text",
-                            "text": "Final."
-                        ]
-                    ]
-                ]
-            )
+            try assistantFinalLine(ordinal: 12, timestamp: "2026-08-22T10:00:12Z", id: "agent-final-1", text: "Final.")
         ]
     }
 
@@ -668,6 +633,15 @@ struct CLIProvenanceCodexTranscriptImporterTests {
                 ]
             ]
         )
+    }
+
+    private static func assistantFinalLine(ordinal: Int, timestamp: String, id: String, text: String, turnID: String? = nil) throws -> String {
+        var payload: [String: Any] = [
+            "type": "message", "role": "assistant", "phase": "final", "id": id,
+            "content": [["type": "output_text", "text": text]]
+        ]
+        if let turnID { payload["internal_chat_message_metadata_passthrough"] = ["turn_id": turnID] }
+        return try codexTranscriptLine(ordinal: ordinal, type: "response_item", timestamp: timestamp, payload: payload)
     }
 
     private static func commandLine(ordinal: Int, id: String, command: [String]) throws -> String {

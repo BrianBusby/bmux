@@ -3388,11 +3388,7 @@ struct ProvenanceSQLiteDatabaseTests {
         return try query.step()
     }
 
-    private static func tableHasColumn(
-        _ tableName: String,
-        _ columnName: String,
-        in database: ProvenanceSQLiteDatabase
-    ) throws -> Bool {
+    private static func tableHasColumn(_ tableName: String, _ columnName: String, in database: ProvenanceSQLiteDatabase) throws -> Bool {
         let query = try database.prepare("PRAGMA table_info(\(tableName))")
         defer { query.finalize() }
         while try query.step() {

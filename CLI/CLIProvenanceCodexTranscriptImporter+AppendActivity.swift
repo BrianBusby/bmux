@@ -148,6 +148,54 @@ extension CLIProvenanceCodexTranscriptImporter {
         try await append(event, stat: \.assistantMessages, fileReport: &fileReport)
     }
 
+    func importAssistantResponseItem(
+        _ line: TranscriptLine,
+        itemType: String?,
+        metadata: TranscriptMetadata,
+        context: inout TranscriptContext,
+        fileReport: inout FileReport
+    ) async throws -> Bool {
+        guard itemType == "message",
+              Self.string(line.payload["role"]) == "assistant",
+              let text = Self.messageText(from: line.payload) else {
+            return false
+        }
+        let itemID = Self.firstNonEmpty(Self.string(line.payload["id"]), Self.string(line.payload["call_id"]))
+        let isReasoningSummary = Self.string(line.payload["phase"]) == "commentary"
+        let providerTurnID = isReasoningSummary
+            ? Self.firstNonEmpty(Self.turnID(from: line.payload), context.currentProviderTurnID)
+            : Self.firstNonEmpty(Self.turnID(from: line.payload), context.currentProviderTurnID, context.lastCompletedProviderTurnID)
+        if let providerTurnID {
+            try await ensureTurnObserved(
+                metadata: metadata,
+                line: line,
+                context: &context,
+                providerTurnID: providerTurnID,
+                fileReport: &fileReport
+            )
+        }
+        if isReasoningSummary {
+            try await appendReasoningSummary(
+                metadata: metadata,
+                line: line,
+                itemID: itemID,
+                text: text,
+                providerTurnID: providerTurnID,
+                fileReport: &fileReport
+            )
+        } else {
+            try await appendAssistantMessage(
+                metadata: metadata,
+                line: line,
+                itemID: itemID,
+                text: text,
+                providerTurnID: providerTurnID,
+                fileReport: &fileReport
+            )
+        }
+        return true
+    }
+
     func appendFileChangeAttribution(
         metadata: TranscriptMetadata,
         line: TranscriptLine,

@@ -462,9 +462,7 @@ private actor CapturingProvenanceEngineClient: ProvenanceEngineContracts.Provena
         return ProvenanceEngineContracts.ProvenanceAppendEventResponse(eventID: request.event.id, eventType: request.event.eventType.rawValue)
     }
 
-    func recordSessionLifecycle(
-        _ request: ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest
-    ) async -> ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse {
+    func recordSessionLifecycle(_ request: ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest) async -> ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse {
         recordedLifecycleRequests.append(request)
         return lifecycleResponse
     }
@@ -473,8 +471,7 @@ private actor CapturingProvenanceEngineClient: ProvenanceEngineContracts.Provena
         throw TestError.unimplemented
     }
 
-    func fileExplanation(_ request: ProvenanceEngineContracts.ProvenanceFileExplanationRequest) async throws
-        -> ProvenanceEngineContracts.ProvenanceFileExplanationResponse {
+    func fileExplanation(_ request: ProvenanceEngineContracts.ProvenanceFileExplanationRequest) async throws -> ProvenanceEngineContracts.ProvenanceFileExplanationResponse {
         throw TestError.unimplemented
     }
 
@@ -482,19 +479,15 @@ private actor CapturingProvenanceEngineClient: ProvenanceEngineContracts.Provena
         throw TestError.unimplemented
     }
 
-    func currentContext(_ request: ProvenanceEngineContracts.ProvenanceCurrentContextRequest) async throws
-        -> ProvenanceEngineContracts.ProvenanceCurrentContextResponse {
+    func currentContext(_ request: ProvenanceEngineContracts.ProvenanceCurrentContextRequest) async throws -> ProvenanceEngineContracts.ProvenanceCurrentContextResponse {
         throw TestError.unimplemented
     }
 
-    func workspaceDisplay(_ request: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest) async throws
-        -> ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse {
+    func workspaceDisplay(_ request: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest) async throws -> ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse {
         throw TestError.unimplemented
     }
 
-    func factualSessionProjection(
-        _ request: ProvenanceEngineContracts.ProvenanceFactualSessionProjectionRequest
-    ) async throws -> ProvenanceEngineContracts.ProvenanceFactualSessionProjectionResponse {
+    func factualSessionProjection(_ request: ProvenanceEngineContracts.ProvenanceFactualSessionProjectionRequest) async throws -> ProvenanceEngineContracts.ProvenanceFactualSessionProjectionResponse {
         throw TestError.unimplemented
     }
 
