@@ -1244,9 +1244,11 @@ roadmap:
       depends_on:
         - factual_session_projection_foundation
       enables:
+        - deterministic_turn_outcome_projection
         - factual_agent_session_view
         - semantic_inference_framework
       sequence_before:
+        - deterministic_turn_outcome_projection
         - semantic_inference_framework
       parallelism:
         classification: serial
@@ -1284,6 +1286,128 @@ roadmap:
       acceptance_reason: The public factual projection now exposes a detailed latest-turn snapshot, compact prior-turn references, compact provider-thread identities, and independent factual turn-detail retrieval while preserving deterministic evidence-only semantics and v1 decoding compatibility.
       rationale: Confirmed the PE-owned consumer shape before semantic inference depends on the factual session projection.
 
+    - id: deterministic_turn_outcome_projection
+      kind: slice
+      title: Deterministic Turn Outcome Projection
+      parent: factual_session_projection_read_contract
+      status: implemented
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: deterministic_current_state
+        tags:
+          - turn_outcome
+          - factual_projection
+          - codex
+      capability_maturity: validated
+      depends_on:
+        - factual_projection_consumer_shape_followup
+        - live_codex_evidence_convergence_correctness
+      enables:
+        - session_outcome_aggregation
+      sequence_before:
+        - session_outcome_aggregation
+        - cross_session_work_awareness
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - turn_outcome_projection
+          - field_level_evidence_provenance
+          - deterministic_projection_revisions
+          - validation_command_classification
+        expected_code_areas:
+          - Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts
+          - Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite
+          - Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSQLiteTests
+          - Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSDKTests
+          - CLI/BMUXCLI+Provenance.swift
+          - Packages/macOS/ProvenanceEngine/docs
+        likely_conflict_domains:
+          - factual_session_projection_contract
+          - coding_agent_turn_projection
+          - sqlite_projection_revisions
+          - project_truth_manifest
+          - docs/generated
+        contract_dependencies:
+          - factual_session_projection
+          - factual_session_turn_detail
+          - live_codex_evidence_convergence_correctness
+        worktree_required: true
+        conflict_note: This slice is PE package work inside the bmux monorepo. It must reuse accepted evidence, projection, revision, SDK, CLI, and migration conventions and must not introduce semantic summaries, cross-session ranking, or raw transcript retention.
+      execution:
+        assignment: complete
+        assigned_to: provenance_engine
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: ef1650a814560072aada782e7c6d20ef525cf92c
+        pull_requests: []
+      completed_at: 2026-08-26
+      acceptance:
+        criteria:
+          - Build a revisioned, rebuildable factual outcome projection for one coding-agent turn from accepted canonical evidence.
+          - Preserve supporting evidence references at field or item level and record the source evidence watermark and projection rule identity.
+          - Represent missing optional information through unavailable, unknown, partial, or not-observed states instead of inventing objective, decisions, blockers, or resume points.
+          - Keep duplicate, overlapping, late, corrected, and out-of-order evidence idempotent and revisioned according to deterministic rules.
+          - Expose latest and specific revisions through the public PE SDK and bmux CLI boundary.
+      acceptance_reason: Deterministic Turn Outcome Projection is implemented as a schema-v21 SQLite projection and public PE read contract for turn-level factual outcomes. It remains below Session Outcome aggregation and semantic/cross-session context assembly.
+
+    - id: session_outcome_aggregation
+      kind: slice
+      title: Session Outcome aggregation
+      parent: factual_session_projection_read_contract
+      status: planned
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: deterministic_current_state
+        tags:
+          - session_outcome
+          - turn_outcome
+          - factual_projection
+      capability_maturity: ready
+      depends_on:
+        - deterministic_turn_outcome_projection
+      enables:
+        - cross_session_work_awareness
+        - react_smart_session_work_model_consumer
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - session_outcome_projection
+          - turn_outcome_revision_aggregation
+          - factual_session_completion_state
+        expected_code_areas:
+          - Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts
+          - Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite
+          - Packages/macOS/ProvenanceEngine/Tests
+          - Packages/macOS/ProvenanceEngine/docs
+        likely_conflict_domains:
+          - turn_outcome_projection
+          - session_work_model_projection
+          - cross_session_work_awareness
+          - project_truth_manifest
+        contract_dependencies:
+          - deterministic_turn_outcome_projection
+          - factual_session_projection
+          - deterministic_current_state_api
+        worktree_required: true
+        conflict_note: This next slice should aggregate factual turn outcomes into a session outcome without adding LLM-authored summaries, semantic ranking, cross-session injection, or Knowledge Compiler output.
+      execution:
+        assignment: planned
+        assigned_to: provenance_engine
+      delivery_status: proposed
+      acceptance_status: proposed
+      rationale: Aggregates evidence-backed TurnOutcome revisions into one factual session-level outcome boundary so later Smart Session and cross-session handoff work can consume bounded factual units before semantic enrichment.
+
     - id: semantic_understanding
       kind: phase
       title: Semantic Understanding
@@ -1299,6 +1423,7 @@ roadmap:
       capability_maturity: active
       depends_on:
         - factual_projection_consumer_shape_followup
+        - deterministic_turn_outcome_projection
       parallelism:
         classification: serial
       execution:
@@ -1997,15 +2122,16 @@ roadmap:
           - cross_session_awareness
           - session_work_model
           - active_work
-      capability_maturity: ready
+      capability_maturity: gated
       depends_on:
         - session_work_model_contract_foundation
-        - factual_session_projection_foundation
+        - session_outcome_aggregation
       parallelism:
         classification: conditional
         expected_contract_domains:
           - cross_session_relationships
           - related_session_briefs
+          - session_outcome_projection
           - factual_semantic_provenance
         expected_code_areas:
           - Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts
@@ -2020,7 +2146,7 @@ roadmap:
           - docs/generated
         contract_dependencies:
           - session_work_model_contract
-          - factual_session_projection
+          - session_outcome_projection
           - semantic_inference_records
           - provider_runtime_identity
         worktree_required: true
@@ -2046,9 +2172,10 @@ roadmap:
         architecture_layer: inference_session_work_projections
         tags:
           - cross_session_awareness
-      capability_maturity: ready
+      capability_maturity: gated
       depends_on:
         - session_work_model_contract_foundation
+        - session_outcome_aggregation
       parallelism:
         classification: serial
       execution:
@@ -2071,10 +2198,10 @@ roadmap:
         tags:
           - cross_session_awareness
           - related_sessions
-      capability_maturity: ready
+      capability_maturity: gated
       depends_on:
         - session_work_model_contract_foundation
-        - factual_session_projection_foundation
+        - session_outcome_aggregation
       parallelism:
         classification: serial
       execution:
@@ -2097,10 +2224,10 @@ roadmap:
         tags:
           - cross_session_awareness
           - related_sessions
-      capability_maturity: ready
+      capability_maturity: gated
       depends_on:
         - session_work_model_contract_foundation
-        - factual_session_projection_foundation
+        - session_outcome_aggregation
         - richer_coding_agent_evidence_foundation
       enables:
         - rich_cross_session_work_state_semantics
@@ -2126,7 +2253,7 @@ roadmap:
           - project_truth_manifest
         contract_dependencies:
           - session_work_model_contract
-          - factual_session_projection
+          - session_outcome_projection
           - richer_coding_agent_evidence
           - deterministic_current_state_api
         worktree_required: true

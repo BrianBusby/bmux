@@ -21,6 +21,11 @@ extension ProvenanceSQLiteRepository: ProvenanceEngineClient {
         )
     }
 
+    func turnOutcome(_ request: ProvenanceTurnOutcomeRequest) async throws
+        -> ProvenanceTurnOutcomeResponse {
+        try turnOutcomeRecord(request)
+    }
+
     func publishSemanticInference(_ request: ProvenanceSemanticInferencePublishRequest) async throws
         -> ProvenanceSemanticInferencePublishResponse {
         try publishSemanticInferenceRecord(request)

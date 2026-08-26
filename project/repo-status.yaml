@@ -37,6 +37,8 @@ local_capabilities:
   provenance_engine_richer_coding_agent_evidence: implemented
   provenance_engine_factual_session_projection: implemented
   provenance_engine_factual_session_turn_detail: implemented
+  provenance_engine_turn_outcome_projection: implemented
+  provenance_engine_session_outcome_aggregation: planned
   provenance_engine_semantic_session_work_model_projection: implemented
   provenance_engine_semantic_inference_framework: implemented
   provenance_engine_semantic_inference_records: implemented

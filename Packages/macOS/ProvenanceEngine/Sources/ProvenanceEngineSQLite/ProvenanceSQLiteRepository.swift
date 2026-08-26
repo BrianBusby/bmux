@@ -4,9 +4,9 @@ import ProvenanceEngineContracts
 /// Internal repository actor that owns one migrated SQLite database connection.
 actor ProvenanceSQLiteRepository {
     let database: ProvenanceSQLiteDatabase
-    private let payloadEncoder: JSONEncoder
-    private let payloadDecoder: JSONDecoder
-    private let stableIDFactory: ProvenanceStableIDFactory
+    let payloadEncoder: JSONEncoder
+    let payloadDecoder: JSONDecoder
+    let stableIDFactory: ProvenanceStableIDFactory
 
     /// Opens the database and applies the supplied migrations before returning.
     ///
@@ -83,7 +83,9 @@ actor ProvenanceSQLiteRepository {
             codingAgentCommandCount: try countRows(in: "provenance_coding_agent_commands"),
             codingAgentReasoningSummaryCount: try countRows(in: "provenance_coding_agent_reasoning_summaries"),
             codingAgentAssistantMessageCount: try countRows(in: "provenance_coding_agent_assistant_messages"),
-            codingAgentFileChangeAttributionCount: try countRows(in: "provenance_coding_agent_file_change_attributions")
+            codingAgentFileChangeAttributionCount: try countRows(in: "provenance_coding_agent_file_change_attributions"),
+            codingAgentTurnOutcomeCount: try countRows(in: "provenance_coding_agent_turn_outcomes"),
+            codingAgentTurnOutcomeRevisionCount: try countRows(in: "provenance_coding_agent_turn_outcome_revisions")
         )
     }
 
@@ -3218,10 +3220,13 @@ actor ProvenanceSQLiteRepository {
         if let codingAgentFileChangeAttribution = payload.codingAgentFileChangeAttribution {
             try upsertCodingAgentFileChangeAttribution(codingAgentFileChangeAttribution)
         }
+        try refreshTurnOutcomes(affectedBy: event, latestEventSequence: latestEventSequence)
     }
 
     private func clearProjectionTables() throws {
         for tableName in [
+            "provenance_coding_agent_turn_outcomes",
+            "provenance_coding_agent_turn_outcome_revisions",
             "provenance_coding_agent_file_change_attributions",
             "provenance_coding_agent_assistant_messages",
             "provenance_coding_agent_reasoning_summaries",
@@ -5744,6 +5749,56 @@ actor ProvenanceSQLiteRepository {
                 """
                 UPDATE provenance_metadata
                 SET value = '20'
+                WHERE key = 'schema_version'
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 21,
+            statements: [
+                """
+                CREATE TABLE provenance_coding_agent_turn_outcome_revisions (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    turn_id TEXT NOT NULL,
+                    session_id TEXT NOT NULL,
+                    projection_rule_id TEXT NOT NULL,
+                    projection_rule_version TEXT NOT NULL,
+                    source_watermark_sequence INTEGER,
+                    content_fingerprint TEXT NOT NULL,
+                    outcome_json TEXT NOT NULL,
+                    created_at_seconds REAL
+                )
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_turn_outcome_revisions_turn_index
+                ON provenance_coding_agent_turn_outcome_revisions (
+                    turn_id,
+                    source_watermark_sequence,
+                    created_at_seconds
+                )
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_turn_outcome_revisions_session_index
+                ON provenance_coding_agent_turn_outcome_revisions (session_id, source_watermark_sequence)
+                """,
+                """
+                CREATE TABLE provenance_coding_agent_turn_outcomes (
+                    turn_id TEXT PRIMARY KEY NOT NULL,
+                    latest_revision_id TEXT NOT NULL,
+                    session_id TEXT NOT NULL,
+                    projection_rule_id TEXT NOT NULL,
+                    projection_rule_version TEXT NOT NULL,
+                    latest_evaluated_sequence INTEGER,
+                    updated_at_seconds REAL
+                )
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_turn_outcomes_session_index
+                ON provenance_coding_agent_turn_outcomes (session_id, latest_evaluated_sequence)
+                """,
+                """
+                UPDATE provenance_metadata
+                SET value = '21'
                 WHERE key = 'schema_version'
                 """,
             ]

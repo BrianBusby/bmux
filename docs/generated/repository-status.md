@@ -59,8 +59,10 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Semantic Message Presentation Policy | implemented |
 | Provenance Engine Semantic Message Records | implemented |
 | Provenance Engine Semantic Session Work Model Projection | implemented |
+| Provenance Engine Session Outcome Aggregation | planned |
 | Provenance Engine Session Work Model Contract Foundation | implemented |
 | Provenance Engine Sqlite Store | implemented |
+| Provenance Engine Turn Outcome Projection | implemented |
 | Provenance Engine Workspace Display Current State | implemented |
 | Provenance Engine Workspace Display Durable Context | implemented |
 | Provenance Engine Workspace Display Project Link Facts | implemented |

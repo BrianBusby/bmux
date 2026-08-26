@@ -143,6 +143,55 @@ struct WriteSideProducerSDKTests {
     }
 
     @Test
+    func sqliteClientReadsTurnOutcomeThroughPublicContractAndCodableSerialization() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
+        let fixture = FactualSessionProjectionSDKFixture()
+
+        for event in fixture.events {
+            _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: event))
+        }
+
+        let health = try await client.health()
+        #expect(health.capabilities.contains(.queryTurnOutcome))
+
+        let request = ProvenanceTurnOutcomeRequest(turnID: fixture.projectedTurn.id)
+        let encodedRequest = try JSONEncoder().encode(request)
+        #expect(try JSONDecoder().decode(ProvenanceTurnOutcomeRequest.self, from: encodedRequest) == request)
+
+        let response = try await client.turnOutcome(request)
+        let outcome = try #require(response.outcome)
+        #expect(response.found)
+        #expect(response.reason == nil)
+        #expect(response.turnID == fixture.projectedTurn.id)
+        #expect(outcome.objective?.text == fixture.prompt.text)
+        #expect(outcome.planItems.map(\.text) == fixture.currentPlan.steps.map(\.text))
+        #expect(outcome.actionsCompleted.map(\.text) == fixture.currentPlan.steps.map(\.text))
+        #expect(outcome.commandsCompleted.first?.id == fixture.command.id)
+
+        let encodedResponse = try JSONEncoder().encode(response)
+        #expect(try JSONDecoder().decode(ProvenanceTurnOutcomeResponse.self, from: encodedResponse) == response)
+
+        let specificRevision = try await client.turnOutcome(
+            ProvenanceTurnOutcomeRequest(
+                turnID: fixture.projectedTurn.id,
+                revisionID: outcome.projection.revisionID
+            )
+        )
+        #expect(specificRevision.found)
+
+        #expect(try await client.turnOutcome(
+            ProvenanceTurnOutcomeRequest(turnID: "turn-missing-sdk")
+        ) == ProvenanceTurnOutcomeResponse(
+            found: false,
+            reason: "no_turn",
+            turnID: "turn-missing-sdk",
+            outcome: nil
+        ))
+    }
+
+    @Test
     func sqliteClientReturnsNoSessionForUnknownFactualSessionProjection() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }

@@ -33,6 +33,11 @@ extension BMUXCLI {
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
+        case "turn":
+            try await runProvenanceTurn(
+                commandArgs: Array(commandArgs.dropFirst()),
+                jsonOutput: jsonOutput
+            )
         case "import":
             try await runProvenanceImport(
                 commandArgs: Array(commandArgs.dropFirst()),
@@ -262,6 +267,50 @@ extension BMUXCLI {
             externalIdentityLimit: 200
         )
         printProvenanceSessionTree(tree, jsonOutput: jsonOutput)
+    }
+
+    private func runProvenanceTurn(commandArgs: [String], jsonOutput: Bool) async throws {
+        let commandName = "provenance turn outcome"
+        let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
+        let (revisionID, remainingAfterRevision) = parseOption(remainingAfterDatabase, name: "--revision")
+        var remaining = remainingAfterRevision
+        try rejectProvenanceUnknownFlags(remaining, commandName: commandName)
+        guard remaining.first?.lowercased() == "outcome" else {
+            throw CLIError(message: String(
+                localized: "cli.provenance.turn.usage",
+                defaultValue: "Usage: bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]"
+            ))
+        }
+        remaining.removeFirst()
+        guard let turnID = remaining.first?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !turnID.isEmpty else {
+            throw CLIError(message: String(
+                localized: "cli.provenance.turn.usage",
+                defaultValue: "Usage: bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]"
+            ))
+        }
+        remaining.removeFirst()
+        guard remaining.isEmpty else {
+            throw CLIError(message: provenanceUnexpectedArgumentMessage(commandName: commandName, argument: remaining[0]))
+        }
+
+        let response: ProvenanceTurnOutcomeResponse
+        if let databaseURL = provenanceDatabaseOverrideURL(databasePath: databasePath),
+           !FileManager.default.fileExists(atPath: databaseURL.path) {
+            response = ProvenanceTurnOutcomeResponse(
+                found: false,
+                reason: "no_database",
+                turnID: turnID,
+                outcome: nil
+            )
+        } else {
+            let (client, _) = try provenanceEngineClient(databasePath: databasePath)
+            response = try await client.turnOutcome(ProvenanceTurnOutcomeRequest(
+                turnID: turnID,
+                revisionID: revisionID
+            ))
+        }
+        printProvenanceTurnOutcome(response, jsonOutput: jsonOutput)
     }
 
     private func runProvenanceDiagnostics(
@@ -640,6 +689,17 @@ extension BMUXCLI {
         print(renderProvenanceSessionTree(tree))
     }
 
+    private func printProvenanceTurnOutcome(
+        _ response: ProvenanceEngineContracts.ProvenanceTurnOutcomeResponse,
+        jsonOutput: Bool
+    ) {
+        if jsonOutput {
+            print(jsonString(provenanceTurnOutcomeResponsePayload(response)))
+            return
+        }
+        print(renderProvenanceTurnOutcome(response))
+    }
+
     private func printProvenanceLifecycleTraceList(
         _ list: CLIProvenanceLifecycleTraceList,
         jsonOutput: Bool
@@ -924,6 +984,86 @@ extension BMUXCLI {
             lines.append(renderProvenanceSessionTreeRow(row))
         }
         return lines.joined(separator: "\n")
+    }
+
+    private func renderProvenanceTurnOutcome(
+        _ response: ProvenanceEngineContracts.ProvenanceTurnOutcomeResponse
+    ) -> String {
+        guard response.found, let outcome = response.outcome else {
+            return [
+                String.localizedStringWithFormat(
+                    String(
+                        localized: "cli.provenance.turn.output.notFound",
+                        defaultValue: "No turn outcome found for %@"
+                    ),
+                    response.turnID
+                ),
+                response.reason.map {
+                    String.localizedStringWithFormat(
+                        String(localized: "cli.provenance.output.reason", defaultValue: "Reason: %@"),
+                        $0
+                    )
+                },
+            ].compactMap(\.self).joined(separator: "\n")
+        }
+
+        let unknown = String(localized: "cli.provenance.turn.output.unknown", defaultValue: "unknown")
+        let watermark = outcome.projection.sourceEvidenceWatermark.map(String.init) ?? unknown
+        var lines = provenanceTurnOutcomeHeaderLines(outcome, watermark: watermark)
+        provenanceAppendTurnOutcomeOptionalText(outcome, to: &lines)
+        return lines.joined(separator: "\n")
+    }
+
+    private func provenanceTurnOutcomeHeaderLines(
+        _ outcome: ProvenanceEngineContracts.ProvenanceTurnOutcome,
+        watermark: String
+    ) -> [String] {
+        [
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.turn.output.header", defaultValue: "Turn outcome for %@"),
+                outcome.turnID
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.turn.output.session", defaultValue: "Session: %@"),
+                outcome.sessionID
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.turn.output.providerTurn", defaultValue: "Provider turn: %@"),
+                [outcome.provider, outcome.providerTurnID].joined(separator: " - ")
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.turn.output.lifecycle", defaultValue: "Lifecycle: %@ - state: %@"),
+                outcome.lifecycleState,
+                outcome.completionState
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.turn.output.revision", defaultValue: "Revision: %@ - watermark: %@"),
+                outcome.projection.revisionID,
+                watermark
+            ),
+            String.localizedStringWithFormat(
+                String(localized: "cli.provenance.turn.output.completeness", defaultValue: "Completeness: %@"),
+                outcome.completeness.status
+            ),
+        ]
+    }
+
+    private func provenanceAppendTurnOutcomeOptionalText(
+        _ outcome: ProvenanceEngineContracts.ProvenanceTurnOutcome,
+        to lines: inout [String]
+    ) {
+        if let objective = outcome.objective?.text, !objective.isEmpty {
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.turn.output.objective", defaultValue: "Objective: %@"),
+                objective
+            ))
+        }
+        if let resumePoint = outcome.resumePoint?.text, !resumePoint.isEmpty {
+            lines.append(String.localizedStringWithFormat(
+                String(localized: "cli.provenance.turn.output.resumePoint", defaultValue: "Resume point: %@"),
+                resumePoint
+            ))
+        }
     }
 
     private func renderProvenanceLifecycleTraceList(_ list: CLIProvenanceLifecycleTraceList) -> String {
@@ -1385,6 +1525,24 @@ extension BMUXCLI {
                 partial[item.key] = value
             }
         }
+    }
+
+    private func provenanceTurnOutcomeResponsePayload(
+        _ response: ProvenanceEngineContracts.ProvenanceTurnOutcomeResponse
+    ) -> [String: Any] {
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        encoder.dateEncodingStrategy = .secondsSince1970
+        guard let data = try? encoder.encode(response),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return [
+                "found": false,
+                "reason": "encoding_failed",
+                "turn_id": response.turnID,
+                "outcome": NSNull(),
+            ]
+        }
+        return object
     }
 
     func provenanceExecutionTelemetryObservationDiagnosticPayload(

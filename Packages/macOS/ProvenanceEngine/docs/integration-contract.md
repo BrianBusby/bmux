@@ -147,6 +147,50 @@ activity, validation/risk state, architecture, Knowledge Compiler artifacts,
 GitHub evidence, or semantic meaning from prompts, plans, commands, or file
 paths.
 
+The accepted turn-outcome read contract is:
+
+- Request: `ProvenanceTurnOutcomeRequest(turnID:revisionID:)`.
+- Response: `ProvenanceTurnOutcomeResponse`.
+- Outcome DTO: `ProvenanceTurnOutcome`.
+- Projection metadata DTO: `ProvenanceTurnOutcomeProjectionMetadata`.
+- Evidence reference DTO: `ProvenanceTurnOutcomeEvidenceReference`.
+- Repository boundary DTO: `ProvenanceTurnOutcomeRepositoryBoundary`.
+- Item DTOs: `ProvenanceTurnOutcomePlanItem`,
+  `ProvenanceTurnOutcomeCommand`, `ProvenanceTurnOutcomeArtifact`,
+  `ProvenanceTurnOutcomeValidation`, and
+  `ProvenanceTurnOutcomeTextFact`.
+- Client method: `ProvenanceEngineClient.turnOutcome(...)`.
+- Capability: `query_turn_outcome`.
+
+This contract is a revisioned factual Current State projection for one
+coding-agent turn. It summarizes observable outcome facts only when they are
+supported by accepted evidence: stable turn/session/provider identity,
+repository/worktree/branch/HEAD boundary, explicit objective, plan items,
+completed commands, attributed file changes, explicit completed actions,
+validation command attempts, explicit blockers, explicit unresolved items,
+explicit resume point, lifecycle state, completeness metadata, and item-level
+evidence references.
+
+When no turn matches `turnID`, the response returns `found == false`,
+`reason == "no_turn"`, and `outcome == nil`. A specific historical revision can
+be requested with `revisionID`; missing revisions return `found == false` with
+`reason == "no_revision"`.
+
+Turn outcomes are rebuilt from the immutable ledger using the projection rule
+id/version recorded in the outcome metadata. Duplicate replay or overlapping
+transcript and hook evidence that changes only supporting references does not
+create a new factual revision. Late or corrected evidence that changes factual
+outcome content does create a new revision while preserving prior revisions.
+The source evidence watermark is the accepted ledger sequence boundary used for
+the projection.
+
+This read remains below `SessionWorkModel`, Session Outcome aggregation, and
+cross-session handoff assembly. It does not infer decisions from ordinary prose,
+infer unstated intent, invent blockers or unresolved work, evaluate
+architecture, generate LLM-authored summaries, retain raw transcripts, or treat
+one passing validation command as proof that the entire turn is valid. Full
+contract details are in `docs/turn-outcome.md`.
+
 The semantic inference framework foundation is available above deterministic
 Current State through:
 

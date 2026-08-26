@@ -70,6 +70,14 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     func factualSessionTurnDetail(_ request: ProvenanceFactualSessionTurnDetailRequest) async throws
         -> ProvenanceFactualSessionTurnDetailResponse
 
+    /// Returns the deterministic factual outcome projection for one observed coding-agent turn.
+    ///
+    /// - Parameter request: Query parameters for the turn outcome.
+    /// - Returns: A revisioned response containing evidence-backed outcome facts for the turn.
+    /// - Throws: An implementation-defined error when the query fails.
+    func turnOutcome(_ request: ProvenanceTurnOutcomeRequest) async throws
+        -> ProvenanceTurnOutcomeResponse
+
     /// Publishes one semantic inference record above deterministic Current State.
     ///
     /// - Parameter request: Semantic inference record to publish.
@@ -148,6 +156,17 @@ public extension ProvenanceEngineClient {
             reason: "unsupported",
             turnID: request.turnID,
             turnDetail: nil
+        )
+    }
+
+    /// Default unsupported response for clients that have not adopted turn-outcome reads.
+    func turnOutcome(_ request: ProvenanceTurnOutcomeRequest) async throws
+        -> ProvenanceTurnOutcomeResponse {
+        ProvenanceTurnOutcomeResponse(
+            found: false,
+            reason: "unsupported",
+            turnID: request.turnID,
+            outcome: nil
         )
     }
 
