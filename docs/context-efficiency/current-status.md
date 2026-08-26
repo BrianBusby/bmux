@@ -78,6 +78,15 @@ ingestion. PE semantic work must consume this reconciled factual foundation
 rather than repairing hook/transcript duplication, stale projections, or
 metadata mistakes downstream.
 
+Deterministic Turn Outcome Projection is implemented in the Provenance Engine
+package inside the bmux monorepo. `turnOutcome(...)` exposes a revisioned,
+rebuildable factual outcome for one coding-agent turn with field or item
+evidence references, source evidence watermark, repository/worktree boundary,
+validation command attempts, explicit continuation state, and completeness
+metadata. It remains below semantic `SessionWorkModel` interpretation and does
+not summarize, rank, or inject cross-session context. The next factual PE slice
+is Session Outcome aggregation over TurnOutcome revisions.
+
 Live prompt-link repair is implemented for active Codex sessions: on
 `UserPromptSubmit`, bmux now starts/resumes transcript observation and runs the
 bounded Codex prompt backfill even when no mobile chat subscriber is attached,
