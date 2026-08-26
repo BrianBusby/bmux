@@ -213,18 +213,17 @@ Captured workflows today:
   with cwd used only to derive a worktree id when possible.
 - Codex sidecar telemetry records provider thread identity, provider turn
   lifecycle, submitted prompt text, provider plan updates, completed command
-  facts, completed visible reasoning summaries, and file-change attribution
-  through typed PE coding-agent evidence payloads.
+  facts, completed visible reasoning summaries, completed visible assistant
+  outputs, and file-change attribution through typed PE coding-agent evidence
+  payloads.
 
-Current ingestion gap: ordinary Codex terminal sessions launched inside bmux
-mostly reach PE through lifecycle/hooks and Git/worktree observation. They do not
-yet automatically populate the richer `provenance_coding_agent_*` evidence at
-the same fidelity as the structured Agent Chat path. Historical Codex JSONL
-transcripts can now be imported with `bmux provenance import codex-transcripts`,
-which adapts transcript facts into the canonical execution evidence path. Live
-normal-terminal tailing remains planned, and transcript adapters must preserve
-unavailable facts as unavailable and stay away from direct projection-table
-writes.
+Ordinary Codex terminal sessions launched inside bmux now populate the richer
+`provenance_coding_agent_*` evidence path through hooks plus live transcript-
+backed ingestion. Historical Codex JSONL transcripts can still be imported with
+`bmux provenance import codex-transcripts`, which adapts transcript facts into
+the canonical execution evidence path. Live ingestion and replay use stable
+evidence IDs for idempotency, preserve unavailable facts as unavailable, and
+stay away from direct projection-table writes.
 
 Not every agent UI action implies a recorded session. Opening an agent-session surface alone creates UI state; durable lifecycle evidence is recorded when supported hooks/feed events reach bmux. Engine durability covers accepted events after they reach the SDK; producer delivery reliability remains bmux-owned.
 
@@ -232,7 +231,9 @@ The engine does not ingest or own the full execution telemetry stream. Raw
 provider envelopes, streaming deltas, unrestricted assistant transcript text,
 raw reasoning deltas, hidden chain-of-thought, unrestricted command output,
 token-update streams, diagnostics scheduling, UI, and analytics remain bmux-
-owned unless a later policy slice explicitly changes that boundary.
+owned unless a later policy slice explicitly changes that boundary. Completed
+visible assistant output is a selected bounded evidence unit, not unrestricted
+transcript persistence.
 
 The accepted target direction is more precise than the older shorthand that
 "execution telemetry remains bmux-owned." bmux owns provider acquisition, live

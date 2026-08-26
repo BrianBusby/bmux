@@ -82,6 +82,7 @@ actor ProvenanceSQLiteRepository {
             codingAgentPlanUpdateCount: try countRows(in: "provenance_coding_agent_plan_updates"),
             codingAgentCommandCount: try countRows(in: "provenance_coding_agent_commands"),
             codingAgentReasoningSummaryCount: try countRows(in: "provenance_coding_agent_reasoning_summaries"),
+            codingAgentAssistantMessageCount: try countRows(in: "provenance_coding_agent_assistant_messages"),
             codingAgentFileChangeAttributionCount: try countRows(in: "provenance_coding_agent_file_change_attributions"),
             codingAgentTurnOutcomeCount: try countRows(in: "provenance_coding_agent_turn_outcomes"),
             codingAgentTurnOutcomeRevisionCount: try countRows(in: "provenance_coding_agent_turn_outcome_revisions")
@@ -1695,155 +1696,6 @@ actor ProvenanceSQLiteRepository {
         return query.double(at: 0).map(Int.init)
     }
 
-    private func codingAgentThreadIDs(sessionID: String) throws -> [String] {
-        let query = try database.prepare(
-            """
-            SELECT id
-            FROM provenance_coding_agent_threads
-            WHERE session_id = ?
-            ORDER BY first_observed_at_seconds ASC, rowid ASC
-            """
-        )
-        defer { query.finalize() }
-
-        try query.bind(sessionID, at: 1)
-        return try stringIDs(from: query)
-    }
-
-    private func codingAgentTurnIDs(sessionID: String, limit: Int?) throws -> [String] {
-        let rowLimit = limit.map { max(0, $0) }
-        var sql = """
-            SELECT id
-            FROM provenance_coding_agent_turns
-            WHERE session_id = ?
-            ORDER BY COALESCE(started_at_seconds, updated_at_seconds) ASC, rowid ASC
-            """
-        if rowLimit != nil {
-            sql += "\nLIMIT ?"
-        }
-
-        let query = try database.prepare(sql)
-        defer { query.finalize() }
-
-        try query.bind(sessionID, at: 1)
-        if let rowLimit {
-            try query.bind(rowLimit, at: 2)
-        }
-        return try stringIDs(from: query)
-    }
-
-    private func factualTurnSnapshot(turnID: String) throws -> ProvenanceFactualSessionProjectionTurnSnapshot? {
-        guard let turn = try codingAgentTurn(id: turnID) else { return nil }
-        return ProvenanceFactualSessionProjectionTurnSnapshot(
-            turn: turn,
-            submittedPrompt: try latestCodingAgentPrompt(turnID: turnID),
-            currentPlan: try latestCodingAgentPlanUpdate(turnID: turnID),
-            completedCommands: try codingAgentCommandIDs(turnID: turnID).compactMap { try codingAgentCommand(id: $0) },
-            visibleReasoningSummaries: try codingAgentReasoningSummaryIDs(turnID: turnID).compactMap {
-                try codingAgentReasoningSummary(id: $0)
-            },
-            fileChangeAttributions: try codingAgentFileChangeAttributionIDs(turnID: turnID).compactMap {
-                try codingAgentFileChangeAttribution(id: $0)
-            }
-        )
-    }
-
-    private func latestCodingAgentPrompt(turnID: String) throws -> ProvenanceCodingAgentPromptRecord? {
-        guard let id = try latestCodingAgentRecordID(
-            tableName: "provenance_coding_agent_prompts",
-            timeColumn: "submitted_at_seconds",
-            turnID: turnID
-        ) else {
-            return nil
-        }
-        return try codingAgentPrompt(id: id)
-    }
-
-    private func latestCodingAgentPlanUpdate(turnID: String) throws -> ProvenanceCodingAgentPlanUpdateRecord? {
-        guard let id = try latestCodingAgentRecordID(
-            tableName: "provenance_coding_agent_plan_updates",
-            timeColumn: "observed_at_seconds",
-            turnID: turnID
-        ) else {
-            return nil
-        }
-        return try codingAgentPlanUpdate(id: id)
-    }
-
-    private func codingAgentCommandIDs(turnID: String) throws -> [String] {
-        try codingAgentRecordIDs(
-            tableName: "provenance_coding_agent_commands",
-            timeColumn: "completed_at_seconds",
-            turnID: turnID
-        )
-    }
-
-    private func codingAgentReasoningSummaryIDs(turnID: String) throws -> [String] {
-        try codingAgentRecordIDs(
-            tableName: "provenance_coding_agent_reasoning_summaries",
-            timeColumn: "completed_at_seconds",
-            turnID: turnID
-        )
-    }
-
-    private func codingAgentFileChangeAttributionIDs(turnID: String) throws -> [String] {
-        try codingAgentRecordIDs(
-            tableName: "provenance_coding_agent_file_change_attributions",
-            timeColumn: "observed_at_seconds",
-            turnID: turnID
-        )
-    }
-
-    private func latestCodingAgentRecordID(
-        tableName: String,
-        timeColumn: String,
-        turnID: String
-    ) throws -> String? {
-        let query = try database.prepare(
-            """
-            SELECT id
-            FROM \(tableName)
-            WHERE turn_id = ?
-            ORDER BY \(timeColumn) DESC, rowid DESC
-            LIMIT 1
-            """
-        )
-        defer { query.finalize() }
-
-        try query.bind(turnID, at: 1)
-        guard try query.step() else { return nil }
-        return query.string(at: 0)
-    }
-
-    private func codingAgentRecordIDs(
-        tableName: String,
-        timeColumn: String,
-        turnID: String
-    ) throws -> [String] {
-        let query = try database.prepare(
-            """
-            SELECT id
-            FROM \(tableName)
-            WHERE turn_id = ?
-            ORDER BY \(timeColumn) ASC, rowid ASC
-            """
-        )
-        defer { query.finalize() }
-
-        try query.bind(turnID, at: 1)
-        return try stringIDs(from: query)
-    }
-
-    private func stringIDs(from query: ProvenanceSQLiteStatement) throws -> [String] {
-        var ids: [String] = []
-        while try query.step() {
-            if let id = query.string(at: 0) {
-                ids.append(id)
-            }
-        }
-        return ids
-    }
-
     private func projectionCounts(from payloads: [ProvenanceEventPayload]) -> [String: Int] {
         var repositories = Set<String>()
         var worktrees = Set<String>()
@@ -1863,6 +1715,7 @@ actor ProvenanceSQLiteRepository {
         var codingAgentPlanUpdates = Set<String>()
         var codingAgentCommands = Set<String>()
         var codingAgentReasoningSummaries = Set<String>()
+        var codingAgentAssistantMessages = Set<String>()
         var codingAgentFileChangeAttributions = Set<String>()
 
         for payload in payloads {
@@ -1920,6 +1773,9 @@ actor ProvenanceSQLiteRepository {
             if let codingAgentReasoningSummary = payload.codingAgentReasoningSummary {
                 codingAgentReasoningSummaries.insert(codingAgentReasoningSummary.id)
             }
+            if let codingAgentAssistantMessage = payload.codingAgentAssistantMessage {
+                codingAgentAssistantMessages.insert(codingAgentAssistantMessage.id)
+            }
             if let codingAgentFileChangeAttribution = payload.codingAgentFileChangeAttribution {
                 codingAgentFileChangeAttributions.insert(codingAgentFileChangeAttribution.id)
             }
@@ -1944,6 +1800,7 @@ actor ProvenanceSQLiteRepository {
             "provenance_coding_agent_plan_updates": codingAgentPlanUpdates.count,
             "provenance_coding_agent_commands": codingAgentCommands.count,
             "provenance_coding_agent_reasoning_summaries": codingAgentReasoningSummaries.count,
+            "provenance_coding_agent_assistant_messages": codingAgentAssistantMessages.count,
             "provenance_coding_agent_file_change_attributions": codingAgentFileChangeAttributions.count,
         ]
     }
@@ -1967,6 +1824,7 @@ actor ProvenanceSQLiteRepository {
         var codingAgentPlanUpdates = Set<String>()
         var codingAgentCommands = Set<String>()
         var codingAgentReasoningSummaries = Set<String>()
+        var codingAgentAssistantMessages = Set<String>()
         var codingAgentFileChangeAttributions = Set<String>()
 
         for payload in payloads {
@@ -2024,6 +1882,9 @@ actor ProvenanceSQLiteRepository {
             if let codingAgentReasoningSummary = payload.codingAgentReasoningSummary {
                 codingAgentReasoningSummaries.insert(codingAgentReasoningSummary.id)
             }
+            if let codingAgentAssistantMessage = payload.codingAgentAssistantMessage {
+                codingAgentAssistantMessages.insert(codingAgentAssistantMessage.id)
+            }
             if let codingAgentFileChangeAttribution = payload.codingAgentFileChangeAttribution {
                 codingAgentFileChangeAttributions.insert(codingAgentFileChangeAttribution.id)
             }
@@ -2048,6 +1909,7 @@ actor ProvenanceSQLiteRepository {
             "provenance_coding_agent_plan_updates": codingAgentPlanUpdates,
             "provenance_coding_agent_commands": codingAgentCommands,
             "provenance_coding_agent_reasoning_summaries": codingAgentReasoningSummaries,
+            "provenance_coding_agent_assistant_messages": codingAgentAssistantMessages,
             "provenance_coding_agent_file_change_attributions": codingAgentFileChangeAttributions,
         ]
     }
@@ -2136,6 +1998,7 @@ actor ProvenanceSQLiteRepository {
             "provenance_coding_agent_plan_updates",
             "provenance_coding_agent_commands",
             "provenance_coding_agent_reasoning_summaries",
+            "provenance_coding_agent_assistant_messages",
             "provenance_coding_agent_file_change_attributions",
         ]
     }
@@ -3351,6 +3214,9 @@ actor ProvenanceSQLiteRepository {
         if let codingAgentReasoningSummary = payload.codingAgentReasoningSummary {
             try upsertCodingAgentReasoningSummary(codingAgentReasoningSummary)
         }
+        if let codingAgentAssistantMessage = payload.codingAgentAssistantMessage {
+            try upsertCodingAgentAssistantMessage(codingAgentAssistantMessage)
+        }
         if let codingAgentFileChangeAttribution = payload.codingAgentFileChangeAttribution {
             try upsertCodingAgentFileChangeAttribution(codingAgentFileChangeAttribution)
         }
@@ -3362,6 +3228,7 @@ actor ProvenanceSQLiteRepository {
             "provenance_coding_agent_turn_outcomes",
             "provenance_coding_agent_turn_outcome_revisions",
             "provenance_coding_agent_file_change_attributions",
+            "provenance_coding_agent_assistant_messages",
             "provenance_coding_agent_reasoning_summaries",
             "provenance_coding_agent_commands",
             "provenance_coding_agent_plan_updates",
@@ -4938,6 +4805,49 @@ actor ProvenanceSQLiteRepository {
         _ = try upsert.step()
     }
 
+    private func upsertCodingAgentAssistantMessage(_ message: ProvenanceCodingAgentAssistantMessageRecord) throws {
+        let upsert = try database.prepare(
+            """
+            INSERT INTO provenance_coding_agent_assistant_messages (
+                id,
+                session_id,
+                thread_id,
+                turn_id,
+                provider,
+                item_id,
+                text,
+                completed_at_seconds,
+                source,
+                confidence
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                session_id = excluded.session_id,
+                thread_id = excluded.thread_id,
+                turn_id = excluded.turn_id,
+                provider = excluded.provider,
+                item_id = excluded.item_id,
+                text = excluded.text,
+                completed_at_seconds = excluded.completed_at_seconds,
+                source = excluded.source,
+                confidence = excluded.confidence
+            """
+        )
+        defer { upsert.finalize() }
+
+        try upsert.bind(message.id, at: 1)
+        try upsert.bind(message.sessionID, at: 2)
+        try upsert.bind(message.threadID, at: 3)
+        try upsert.bind(message.turnID, at: 4)
+        try upsert.bind(message.provider, at: 5)
+        try upsert.bind(message.itemID, at: 6)
+        try upsert.bind(message.text, at: 7)
+        try upsert.bind(message.completedAt.timeIntervalSince1970, at: 8)
+        try upsert.bind(message.source.rawValue, at: 9)
+        try upsert.bind(message.confidence.rawValue, at: 10)
+
+        _ = try upsert.step()
+    }
+
     private func upsertCodingAgentFileChangeAttribution(
         _ attribution: ProvenanceCodingAgentFileChangeAttributionRecord
     ) throws {
@@ -5815,6 +5725,38 @@ actor ProvenanceSQLiteRepository {
             version: 20,
             statements: [
                 """
+                CREATE TABLE provenance_coding_agent_assistant_messages (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    session_id TEXT NOT NULL,
+                    thread_id TEXT,
+                    turn_id TEXT,
+                    provider TEXT NOT NULL,
+                    item_id TEXT,
+                    text TEXT NOT NULL,
+                    completed_at_seconds REAL NOT NULL,
+                    source TEXT NOT NULL,
+                    confidence TEXT NOT NULL
+                )
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_assistant_messages_session_index
+                ON provenance_coding_agent_assistant_messages (session_id, completed_at_seconds)
+                """,
+                """
+                CREATE INDEX provenance_coding_agent_assistant_messages_turn_index
+                ON provenance_coding_agent_assistant_messages (turn_id, completed_at_seconds)
+                """,
+                """
+                UPDATE provenance_metadata
+                SET value = '20'
+                WHERE key = 'schema_version'
+                """,
+            ]
+        ),
+        ProvenanceSQLiteMigration(
+            version: 21,
+            statements: [
+                """
                 CREATE TABLE provenance_coding_agent_turn_outcome_revisions (
                     id TEXT PRIMARY KEY NOT NULL,
                     turn_id TEXT NOT NULL,
@@ -5856,7 +5798,7 @@ actor ProvenanceSQLiteRepository {
                 """,
                 """
                 UPDATE provenance_metadata
-                SET value = '20'
+                SET value = '21'
                 WHERE key = 'schema_version'
                 """,
             ]

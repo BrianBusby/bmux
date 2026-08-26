@@ -136,6 +136,7 @@ const context: AppContext = {
     smartSessionCommands: "Commands",
     smartSessionFiles: "Files",
     smartSessionReasoning: "Reasoning",
+    smartSessionFinalOutput: "Final output",
     smartSessionPriorTurns: "Prior turns",
     smartSessionNoPlan: "No plan evidence",
     smartSessionNoEvidence: "No evidence yet",
@@ -1438,6 +1439,7 @@ function smartSessionSnapshot({
     },
     factual: {
       latestTurn: {
+        assistantMessages: [],
         completedCommands: [],
         fileChangeAttributions: [],
         provider: "codex",

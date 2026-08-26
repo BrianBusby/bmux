@@ -68,6 +68,9 @@ struct ProjectionRebuildValidationTests {
         let beforeSummary = try #require(
             try await repository.codingAgentReasoningSummary(id: fixture.reasoningSummary.id)
         )
+        let beforeAssistantMessage = try #require(
+            try await repository.codingAgentAssistantMessage(id: fixture.assistantMessage.id)
+        )
         let beforeAttribution = try #require(
             try await repository.codingAgentFileChangeAttribution(id: fixture.fileChangeAttribution.id)
         )
@@ -97,6 +100,7 @@ struct ProjectionRebuildValidationTests {
         #expect(beforeCommand.exitCode == 0)
         #expect(beforeCommand.outputSummary == nil)
         #expect(beforeSummary.text == "Identified the provider-neutral telemetry adapter and PE append boundary.")
+        #expect(beforeAssistantMessage.text.contains("Final output"))
         #expect(beforeAttribution.turnID == fixture.firstTurnStarted.id)
         #expect(beforeAttribution.changeSetID == fixture.changeSet.id)
         #expect(beforeAttribution.fileChangeIDs == [fixture.fileChange.id])
@@ -120,11 +124,13 @@ struct ProjectionRebuildValidationTests {
         #expect(beforeSnapshot.turns.first?.currentPlan == fixture.finalPlanUpdate)
         #expect(beforeSnapshot.turns.first?.completedCommands == [fixture.command])
         #expect(beforeSnapshot.turns.first?.visibleReasoningSummaries == [fixture.reasoningSummary])
+        #expect(beforeSnapshot.turns.first?.assistantMessages == [fixture.assistantMessage])
         #expect(beforeSnapshot.turns.first?.fileChangeAttributions == [fixture.fileChangeAttribution])
         #expect(beforeSnapshot.latestTurn?.submittedPrompt == nil)
         #expect(beforeSnapshot.latestTurn?.currentPlan == nil)
         #expect(beforeSnapshot.latestTurn?.completedCommands.isEmpty == true)
         #expect(beforeSnapshot.latestTurn?.visibleReasoningSummaries.isEmpty == true)
+        #expect(beforeSnapshot.latestTurn?.assistantMessages.isEmpty == true)
         #expect(beforeSnapshot.latestTurn?.fileChangeAttributions.isEmpty == true)
         #expect(try await repository.factualSessionProjection(
             ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id, turnLimit: 1)
@@ -185,6 +191,7 @@ struct ProjectionRebuildValidationTests {
         #expect(try await repository.codingAgentPlanUpdate(id: fixture.firstPlanUpdate.id) == beforePlan)
         #expect(try await repository.codingAgentCommand(id: fixture.command.id) == beforeCommand)
         #expect(try await repository.codingAgentReasoningSummary(id: fixture.reasoningSummary.id) == beforeSummary)
+        #expect(try await repository.codingAgentAssistantMessage(id: fixture.assistantMessage.id) == beforeAssistantMessage)
         #expect(
             try await repository.codingAgentFileChangeAttribution(id: fixture.fileChangeAttribution.id)
                 == beforeAttribution
@@ -334,6 +341,7 @@ struct ProjectionRebuildValidationTests {
         try database.execute(
             """
             DELETE FROM provenance_coding_agent_file_change_attributions;
+            DELETE FROM provenance_coding_agent_assistant_messages;
             DELETE FROM provenance_coding_agent_reasoning_summaries;
             DELETE FROM provenance_coding_agent_commands;
             DELETE FROM provenance_coding_agent_plan_updates;
@@ -493,6 +501,7 @@ private struct CodingAgentEvidenceFixture {
     let firstPlanUpdate: ProvenanceCodingAgentPlanUpdateRecord
     let finalPlanUpdate: ProvenanceCodingAgentPlanUpdateRecord
     let reasoningSummary: ProvenanceCodingAgentReasoningSummaryRecord
+    let assistantMessage: ProvenanceCodingAgentAssistantMessageRecord
     let command: ProvenanceCodingAgentCommandRecord
     let changeSet: ProvenanceChangeSetRecord
     let fileChange: ProvenanceFileChangeRecord
@@ -653,6 +662,18 @@ private struct CodingAgentEvidenceFixture {
             source: .observed,
             confidence: .high
         )
+        let assistantMessage = ProvenanceCodingAgentAssistantMessageRecord(
+            id: "coding-agent-assistant-message-codex-1",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: firstTurnStarted.id,
+            provider: "codex",
+            itemID: "assistant-message-item-1",
+            text: "Final output.",
+            completedAt: timestamp.addingTimeInterval(10),
+            source: .observed,
+            confidence: .high
+        )
         let toolRun = ProvenanceCodingAgentCommandRecord(
             id: "coding-agent-command-codex-1",
             sessionID: session.id,
@@ -785,6 +806,7 @@ private struct CodingAgentEvidenceFixture {
         self.firstPlanUpdate = firstPlanUpdate
         self.finalPlanUpdate = finalPlanUpdate
         self.reasoningSummary = reasoningSummary
+        self.assistantMessage = assistantMessage
         self.command = toolRun
         self.changeSet = changeSet
         self.fileChange = fileChange
@@ -792,50 +814,16 @@ private struct CodingAgentEvidenceFixture {
         self.threadEvent = threadEvent
         self.replayedThreadEvent = replayedThreadEvent
         self.events = [
-            baseEvent(
-                "event-codex-worktree",
-                .worktreeObserved,
-                timestamp,
-                ProvenanceEventPayload(repository: repository, worktree: worktree)
-            ),
-            baseEvent(
-                "event-codex-session",
-                .sessionObserved,
-                session.updatedAt,
-                ProvenanceEventPayload(session: session, externalIdentities: [sessionIdentity])
-            ),
+            baseEvent("event-codex-worktree", .worktreeObserved, timestamp, ProvenanceEventPayload(repository: repository, worktree: worktree)),
+            baseEvent("event-codex-session", .sessionObserved, session.updatedAt, ProvenanceEventPayload(session: session, externalIdentities: [sessionIdentity])),
             threadEvent,
             secondThreadEvent,
-            baseEvent(
-                "event-codex-turn-1-started",
-                .codingAgentTurnObserved,
-                firstTurnStarted.updatedAt,
-                ProvenanceEventPayload(codingAgentTurn: firstTurnStarted)
-            ),
-            baseEvent(
-                "event-codex-prompt-1",
-                .codingAgentPromptSubmitted,
-                prompt.submittedAt,
-                ProvenanceEventPayload(codingAgentPrompt: prompt)
-            ),
-            baseEvent(
-                "event-codex-plan-1-a",
-                .codingAgentPlanUpdated,
-                firstPlanUpdate.observedAt,
-                ProvenanceEventPayload(codingAgentPlanUpdate: firstPlanUpdate)
-            ),
-            baseEvent(
-                "event-codex-reasoning-summary-1",
-                .codingAgentReasoningSummaryCompleted,
-                reasoningSummary.completedAt,
-                ProvenanceEventPayload(codingAgentReasoningSummary: reasoningSummary)
-            ),
-            baseEvent(
-                "event-codex-tool-run-1",
-                .codingAgentCommandCompleted,
-                toolRun.completedAt,
-                ProvenanceEventPayload(codingAgentCommand: toolRun)
-            ),
+            baseEvent("event-codex-turn-1-started", .codingAgentTurnObserved, firstTurnStarted.updatedAt, ProvenanceEventPayload(codingAgentTurn: firstTurnStarted)),
+            baseEvent("event-codex-prompt-1", .codingAgentPromptSubmitted, prompt.submittedAt, ProvenanceEventPayload(codingAgentPrompt: prompt)),
+            baseEvent("event-codex-plan-1-a", .codingAgentPlanUpdated, firstPlanUpdate.observedAt, ProvenanceEventPayload(codingAgentPlanUpdate: firstPlanUpdate)),
+            baseEvent("event-codex-reasoning-summary-1", .codingAgentReasoningSummaryCompleted, reasoningSummary.completedAt, ProvenanceEventPayload(codingAgentReasoningSummary: reasoningSummary)),
+            baseEvent("event-codex-assistant-message-1", .codingAgentAssistantMessageCompleted, assistantMessage.completedAt, ProvenanceEventPayload(codingAgentAssistantMessage: assistantMessage)),
+            baseEvent("event-codex-tool-run-1", .codingAgentCommandCompleted, toolRun.completedAt, ProvenanceEventPayload(codingAgentCommand: toolRun)),
             baseEvent(
                 "event-codex-file-change-1",
                 .codingAgentFileChangeAttributed,
@@ -846,36 +834,11 @@ private struct CodingAgentEvidenceFixture {
                     codingAgentFileChangeAttribution: fileChangeAttribution
                 )
             ),
-            baseEvent(
-                "event-codex-plan-1-b",
-                .codingAgentPlanUpdated,
-                finalPlanUpdate.observedAt,
-                ProvenanceEventPayload(codingAgentPlanUpdate: finalPlanUpdate)
-            ),
-            baseEvent(
-                "event-codex-turn-1-completed",
-                .codingAgentTurnObserved,
-                firstTurnCompleted.updatedAt,
-                ProvenanceEventPayload(codingAgentTurn: firstTurnCompleted)
-            ),
-            baseEvent(
-                "event-codex-turn-2-completed",
-                .codingAgentTurnObserved,
-                secondTurn.updatedAt,
-                ProvenanceEventPayload(codingAgentTurn: secondTurn)
-            ),
-            baseEvent(
-                "event-codex-turn-3-started",
-                .codingAgentTurnObserved,
-                thirdTurn.updatedAt,
-                ProvenanceEventPayload(codingAgentTurn: thirdTurn)
-            ),
-            baseEvent(
-                "event-codex-session-still-active",
-                .sessionObserved,
-                timestamp.addingTimeInterval(16),
-                ProvenanceEventPayload(session: session)
-            ),
+            baseEvent("event-codex-plan-1-b", .codingAgentPlanUpdated, finalPlanUpdate.observedAt, ProvenanceEventPayload(codingAgentPlanUpdate: finalPlanUpdate)),
+            baseEvent("event-codex-turn-1-completed", .codingAgentTurnObserved, firstTurnCompleted.updatedAt, ProvenanceEventPayload(codingAgentTurn: firstTurnCompleted)),
+            baseEvent("event-codex-turn-2-completed", .codingAgentTurnObserved, secondTurn.updatedAt, ProvenanceEventPayload(codingAgentTurn: secondTurn)),
+            baseEvent("event-codex-turn-3-started", .codingAgentTurnObserved, thirdTurn.updatedAt, ProvenanceEventPayload(codingAgentTurn: thirdTurn)),
+            baseEvent("event-codex-session-still-active", .sessionObserved, timestamp.addingTimeInterval(16), ProvenanceEventPayload(session: session)),
         ]
     }
 

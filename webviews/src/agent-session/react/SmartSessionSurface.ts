@@ -10,6 +10,7 @@ import {
 } from "../shared/smartSessionModel";
 import type {
   AgentSessionCopy,
+  SmartSessionAssistantMessage,
   AppContext,
   SmartSessionCommand,
   SmartSessionFileChangeAttribution,
@@ -265,7 +266,9 @@ function EvidenceSection({
   const commands = turn?.completedCommands ?? [];
   const fileChanges = turn?.fileChangeAttributions ?? [];
   const reasoning = turn?.visibleReasoningSummaries ?? [];
-  const hasEvidence = commands.length > 0 || fileChanges.length > 0 || reasoning.length > 0;
+  const assistantMessages = turn?.assistantMessages ?? [];
+  const finalOutput = assistantMessages.length ? [assistantMessages[assistantMessages.length - 1]] : [];
+  const hasEvidence = commands.length > 0 || fileChanges.length > 0 || reasoning.length > 0 || finalOutput.length > 0;
   return h(
     "section",
     { className: "smart-session-section" },
@@ -274,6 +277,12 @@ function EvidenceSection({
       ? h(
           "div",
           { className: "smart-session-evidence-grid" },
+          h(EvidenceList, {
+            title: copyText(copy, "smartSessionFinalOutput", "Final output"),
+            items: finalOutput,
+            emptyLabel: copyText(copy, "smartSessionNoEvidence", "No evidence yet"),
+            renderItem: (item: SmartSessionEvidenceItem) => renderAssistantMessage(item as SmartSessionAssistantMessage),
+          }),
           h(EvidenceList, {
             title: copyText(copy, "smartSessionCommands", "Commands"),
             items: commands.slice(0, 6),
@@ -298,6 +307,7 @@ function EvidenceSection({
 }
 
 type SmartSessionEvidenceItem =
+  | SmartSessionAssistantMessage
   | SmartSessionCommand
   | SmartSessionFileChangeAttribution
   | SmartSessionReasoningSummary;
@@ -379,6 +389,10 @@ function renderFileChange(change: SmartSessionFileChangeAttribution) {
 
 function renderReasoning(summary: SmartSessionReasoningSummary) {
   return h("p", { className: "smart-session-prewrap" }, summary.text);
+}
+
+function renderAssistantMessage(message: SmartSessionAssistantMessage) {
+  return h("p", { className: "smart-session-prewrap" }, message.text);
 }
 
 function semanticText(

@@ -15,6 +15,7 @@ execution_telemetry:
   claude_lifecycle_telemetry: implemented
   automatic_checkpoint_scheduler: not_implemented
   completed_unit_provenance_projection: implemented
+  completed_assistant_output_provenance_projection: implemented
   codex_transcript_canonical_evidence_import: implemented
   normal_terminal_codex_evidence_ingestion: implemented
   coding_agent_evidence_source_reconciliation: implemented
@@ -46,6 +47,7 @@ local_capabilities:
   provenance_engine_coding_agent_turn_intent: implemented
   provenance_engine_coding_agent_session_phase: implemented
   provenance_engine_coding_agent_current_activity: implemented
+  provenance_engine_coding_agent_assistant_outputs: implemented
   provenance_engine_human_readable_semantic_messaging: implemented
   provenance_engine_semantic_message_records: implemented
   provenance_engine_semantic_message_materialization: implemented

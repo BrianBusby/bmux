@@ -1355,7 +1355,7 @@ roadmap:
           - Represent missing optional information through unavailable, unknown, partial, or not-observed states instead of inventing objective, decisions, blockers, or resume points.
           - Keep duplicate, overlapping, late, corrected, and out-of-order evidence idempotent and revisioned according to deterministic rules.
           - Expose latest and specific revisions through the public PE SDK and bmux CLI boundary.
-      acceptance_reason: Deterministic Turn Outcome Projection is implemented as a schema-v20 SQLite projection and public PE read contract for turn-level factual outcomes. It remains below Session Outcome aggregation and semantic/cross-session context assembly.
+      acceptance_reason: Deterministic Turn Outcome Projection is implemented as a schema-v21 SQLite projection and public PE read contract for turn-level factual outcomes. It remains below Session Outcome aggregation and semantic/cross-session context assembly.
 
     - id: session_outcome_aggregation
       kind: slice

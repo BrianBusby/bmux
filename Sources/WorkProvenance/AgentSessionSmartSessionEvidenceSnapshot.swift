@@ -71,6 +71,32 @@ extension AgentSessionSmartSessionSnapshot {
         }
     }
 
+    struct AssistantMessage: Equatable, Sendable {
+        let messageID: String
+        let text: String
+        let completedAt: Date
+        let source: String
+        let confidence: String
+
+        init(record: ProvenanceCodingAgentAssistantMessageRecord) {
+            self.messageID = record.id
+            self.text = record.text
+            self.completedAt = record.completedAt
+            self.source = record.source.rawValue
+            self.confidence = record.confidence.rawValue
+        }
+
+        var bridgePayload: [String: Any] {
+            [
+                "messageId": messageID,
+                "text": text,
+                "completedAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(completedAt),
+                "source": source,
+                "confidence": confidence
+            ]
+        }
+    }
+
     struct FileChangeAttribution: Equatable, Sendable {
         let attributionID: String
         let paths: [String]

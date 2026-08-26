@@ -33,6 +33,7 @@ Repository: `BrianBusby/bmux`
 | Normal Coding Agent Evidence Ingestion | implemented |
 | Provenance Engine Agent Accessible Cross Session Retrieval | planned |
 | Provenance Engine Blocker Approach Change Semantics | planned |
+| Provenance Engine Coding Agent Assistant Outputs | implemented |
 | Provenance Engine Coding Agent Current Activity | implemented |
 | Provenance Engine Coding Agent Session Phase | implemented |
 | Provenance Engine Coding Agent Thread Intent | implemented |
@@ -105,6 +106,7 @@ Repository: `BrianBusby/bmux`
 | Codex Fanout | implemented |
 | Codex Transcript Canonical Evidence Import | implemented |
 | Coding Agent Evidence Source Reconciliation | implemented |
+| Completed Assistant Output Provenance Projection | implemented |
 | Completed Unit Provenance Projection | implemented |
 | Diagnostic | implemented |
 | Lifecycle Producer | implemented |

@@ -73,6 +73,9 @@ public struct ProvenanceEventType: Codable, Equatable, Hashable, Sendable, RawRe
     /// A client observed a provider-supported visible reasoning summary.
     public static let codingAgentReasoningSummaryCompleted = Self(rawValue: "coding_agent_reasoning_summary_completed")
 
+    /// A client observed provider-emitted visible assistant output.
+    public static let codingAgentAssistantMessageCompleted = Self(rawValue: "coding_agent_assistant_message_completed")
+
     /// A client observed file-change activity attributed to a coding-agent turn.
     public static let codingAgentFileChangeAttributed = Self(rawValue: "coding_agent_file_change_attributed")
 
