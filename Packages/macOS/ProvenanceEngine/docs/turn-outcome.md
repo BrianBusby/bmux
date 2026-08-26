@@ -71,15 +71,15 @@ context.
 
 Each projected fact carries `ProvenanceTurnOutcomeEvidenceReference` values
 where the contract can identify supporting records. A reference records the
-canonical evidence id, source kind, origin and scope where available, adapter or
-projection rule identity/version, source completeness state, accepted ledger
-sequence, and event timestamp where known.
+ledger event id, accepted append sequence, event type, event source, origin and
+scope where available, supported record kind/id, interpreting rule version, and
+source availability state.
 
 The outcome projection metadata records the projection rule id/version,
-projection revision id, source evidence watermark, creation time, and whether
-the response is the latest revision. Consumers should trace a claim by reading
-the claim's evidence references first, then inspecting the underlying accepted
-event through the engine-owned evidence/debug path available to that consumer.
+projection revision id, content fingerprint, source evidence watermark, and
+deterministic generation time. Consumers should trace a claim by reading the
+claim's evidence references first, then inspecting the underlying accepted event
+through the engine-owned evidence/debug path available to that consumer.
 
 ## Rebuild And Revisions
 
@@ -103,10 +103,9 @@ latest revision or a specific revision id.
 
 Completeness is explicit rather than inferred:
 
-- `complete`: the projection has required turn/session identity and no known
-  partial-source caveat.
-- `partial`: accepted evidence exists, but one or more expected sources or
-  relationships are partial.
+- `complete`: every tracked v1 field is observed.
+- `partial`: accepted evidence exists, but one or more tracked fields are not
+  observed, unavailable, or partial.
 - `unavailable`: the requested turn does not exist or a specific optional fact
   has no supported evidence.
 - `stale`: reserved for future scheduling where a latest pointer is known to
@@ -157,12 +156,13 @@ print(outcome.completeness.status)
 
 if let validation = outcome.validationsAttempted.first {
     print(validation.command)
-    print(validation.resultStatus ?? "unknown")
+    print(validation.resultStatus)
 
     for reference in validation.evidence {
-        print(reference.evidenceID)
-        print(reference.sourceKind)
-        print(reference.adapterVersion ?? "no adapter version")
+        print(reference.eventID)
+        print(reference.eventSequence)
+        print(reference.recordKind)
+        print(reference.interpretedByRuleVersion)
     }
 }
 ```
