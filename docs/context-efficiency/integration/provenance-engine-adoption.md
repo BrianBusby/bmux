@@ -36,6 +36,8 @@ Test fixtures: session tree, file explanation, and current context CLI fixtures 
 
 Runtime cutover: default production clients now use the engine-owned store at `~/.local/state/provenance-engine/provenance.sqlite`. `BMUX_PROVENANCE_HOME` overrides the default home for isolated tests/dev runs, and CLI `--database <path>` remains an explicit one-command override.
 
+Runtime concurrency: engine SQLite connections set a bounded busy timeout and attempt write-ahead logging because bmux app instances, tagged debug builds, hook monitors, and CLI diagnostics can access the same default store concurrently. If an older rollback-journal client temporarily blocks WAL activation, the connection stays usable and later connections can switch the store once contention clears.
+
 Schema identity: Provenance Engine revision `18f5511a7c836b3f12f3fa0fbe3aefe42efd3f03` writes `provenance_metadata` identity rows and rejects foreign/legacy databases before normal queries.
 
 Live validation: build `bmux DEV slice-e-v1.app` build 248 opened the canonical V1 store, observed Git worktrees, accepted hook-derived Codex lifecycle evidence, and `bmux provenance context current` returned one active Codex session for the bmux worktree.
