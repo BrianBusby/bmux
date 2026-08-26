@@ -4,6 +4,22 @@ struct SessionTranscriptTurn: Identifiable, Equatable, Sendable {
     let id: Int
     let role: SessionTranscriptRole
     let text: String
+    let timestamp: Date?
+    let finishedAt: Date?
+
+    init(
+        id: Int,
+        role: SessionTranscriptRole,
+        text: String,
+        timestamp: Date? = nil,
+        finishedAt: Date? = nil
+    ) {
+        self.id = id
+        self.role = role
+        self.text = text
+        self.timestamp = timestamp
+        self.finishedAt = finishedAt ?? timestamp
+    }
 }
 
 enum SessionTranscriptRole: Equatable, Sendable {

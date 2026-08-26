@@ -805,14 +805,14 @@ private struct SessionTranscriptPreviewView: View {
                 systemImage: "exclamationmark.triangle.fill",
                 text: String(localized: "sessionIndex.preview.error", defaultValue: "Couldn't load transcript")
             )
-        case .loaded(let turns):
-            if turns.isEmpty {
+        case .loaded(let cards):
+            if cards.isEmpty {
                 statusRow(
                     systemImage: "text.bubble",
                     text: String(localized: "sessionIndex.preview.empty", defaultValue: "No previewable messages")
                 )
             } else {
-                SessionTranscriptVirtualizedList(rows: turns)
+                SessionTranscriptTurnCardList(cards: cards)
             }
         }
     }
@@ -850,7 +850,7 @@ private struct SessionTranscriptPreviewView: View {
         do {
             let turns = try await SessionTranscriptLoader.load(entry: entry)
             guard !Task.isCancelled else { return }
-            loadState = .loaded(SessionTranscriptDisplayRow.rows(from: turns))
+            loadState = .loaded(SessionTranscriptTurnCard.cards(from: turns))
         } catch SessionTranscriptLoadError.missingFile {
             guard !Task.isCancelled else { return }
             loadState = .missingFile
@@ -920,134 +920,11 @@ private struct SessionTranscriptResizeHandle: View {
     }
 }
 
-private struct SessionTranscriptVirtualizedList: View, Equatable {
-    let rows: [SessionTranscriptDisplayRow]
-
-    var body: some View {
-        ScrollView(.vertical) {
-            LazyVStack(alignment: .leading, spacing: 0) {
-                ForEach(rows) { row in
-                    SessionTranscriptTurnView(row: row)
-                        .id(row.id)
-                }
-            }
-            .padding(.vertical, 6)
-        }
-        .background(Color.primary.opacity(0.018))
-    }
-}
-
-private struct SessionTranscriptTurnView: View, Equatable {
-    let row: SessionTranscriptDisplayRow
-    @Environment(\.colorScheme) private var colorScheme
-
-    static func == (lhs: SessionTranscriptTurnView, rhs: SessionTranscriptTurnView) -> Bool {
-        lhs.row == rhs.row
-    }
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            VStack(spacing: 3) {
-                Text(row.isContinuation ? "" : row.role.label)
-                    .bmuxFont(size: 10, weight: .semibold)
-                    .foregroundColor(row.role.foregroundColor(colorScheme: colorScheme))
-                    .lineLimit(1)
-                    .frame(width: 58, alignment: .trailing)
-                if row.isContinuation {
-                    Circle()
-                        .fill(row.role.foregroundColor(colorScheme: colorScheme).opacity(0.38))
-                        .frame(width: 3, height: 3)
-                }
-            }
-            Text(row.text)
-                .bmuxFont(size: row.role.bodyFontSize, design: row.role.bodyFontDesign)
-                .foregroundColor(row.role.bodyForegroundColor(colorScheme: colorScheme))
-                .textSelection(.enabled)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .overlay(alignment: .leading) {
-            Rectangle()
-                .fill(row.role.foregroundColor(colorScheme: colorScheme).opacity(0.46))
-                .frame(width: 2)
-        }
-        .background(row.role.backgroundColor(colorScheme: colorScheme))
-    }
-}
-
-private struct SessionTranscriptDisplayRow: Identifiable, Equatable {
-    let id: String
-    let role: SessionTranscriptRole
-    let text: String
-    let isContinuation: Bool
-
-    private static let chunkCharacterLimit = 5_000
-
-    static func rows(from turns: [SessionTranscriptTurn]) -> [SessionTranscriptDisplayRow] {
-        turns.flatMap { turn in
-            chunks(for: turn.text).enumerated().map { offset, chunk in
-                SessionTranscriptDisplayRow(
-                    id: "\(turn.id)-\(offset)",
-                    role: turn.role,
-                    text: chunk,
-                    isContinuation: offset > 0
-                )
-            }
-        }
-    }
-
-    private static func chunks(for text: String) -> [String] {
-        guard text.count > chunkCharacterLimit else {
-            return [text]
-        }
-        var output: [String] = []
-        var start = text.startIndex
-        while start < text.endIndex {
-            let rawEnd = text.index(
-                start,
-                offsetBy: chunkCharacterLimit,
-                limitedBy: text.endIndex
-            ) ?? text.endIndex
-            let end = preferredBreak(in: text, from: start, rawEnd: rawEnd)
-            output.append(String(text[start..<end]).trimmingCharacters(in: .whitespacesAndNewlines))
-            start = end
-            while start < text.endIndex, text[start].isWhitespace {
-                start = text.index(after: start)
-            }
-        }
-        return output.filter { !$0.isEmpty }
-    }
-
-    private static func preferredBreak(
-        in text: String,
-        from start: String.Index,
-        rawEnd: String.Index
-    ) -> String.Index {
-        guard rawEnd < text.endIndex else {
-            return text.endIndex
-        }
-        let searchStart = text.index(
-            rawEnd,
-            offsetBy: -min(chunkCharacterLimit / 4, text.distance(from: start, to: rawEnd))
-        )
-        if let newline = text[searchStart..<rawEnd].lastIndex(of: "\n") {
-            return text.index(after: newline)
-        }
-        if let space = text[searchStart..<rawEnd].lastIndex(where: { $0.isWhitespace }) {
-            return text.index(after: space)
-        }
-        return rawEnd
-    }
-}
-
 private enum SessionTranscriptPreviewState: Equatable {
     case loading
     case missingFile
     case failed
-    case loaded([SessionTranscriptDisplayRow])
+    case loaded([SessionTranscriptTurnCard])
 }
 
 private extension SessionEntry {
@@ -1331,7 +1208,14 @@ private enum SessionTranscriptLoader {
             guard let text = normalizedText(from: content, role: .user, agent: agent) else {
                 return false
             }
-            turns.append(SessionTranscriptTurn(id: lineIndex, role: .user, text: text))
+            turns.append(
+                SessionTranscriptTurn(
+                    id: lineIndex,
+                    role: .user,
+                    text: text,
+                    timestamp: timestamp(from: object)
+                )
+            )
             return false
         }
         if didHitTurnLimit {
@@ -1374,7 +1258,7 @@ private enum SessionTranscriptLoader {
         _ = sqlite3_busy_timeout(db, 50)
 
         let sql = """
-            SELECT m.id, m.data, p.data
+            SELECT m.id, m.data, p.data, COALESCE(p.time_created, m.time_created)
             FROM message m
             LEFT JOIN part p ON p.message_id = m.id
             WHERE m.session_id = ?
@@ -1411,7 +1295,12 @@ private enum SessionTranscriptLoader {
                 currentMessageRole = openCodeMessageRole(from: sqliteText(stmt, 1)) ?? .event
             }
             if let partJSON = sqliteText(stmt, 2),
-               let turn = parseOpenCodePart(partJSON, messageRole: currentMessageRole, id: turnId) {
+               let turn = parseOpenCodePart(
+                   partJSON,
+                   messageRole: currentMessageRole,
+                   id: turnId,
+                   timestamp: dateFromEpochMilliseconds(sqlite3_column_int64(stmt, 3))
+               ) {
                 turns.append(turn)
                 turnId += 1
                 if turns.count >= maxPreviewTurns {
@@ -1448,7 +1337,11 @@ private enum SessionTranscriptLoader {
                 }
                 let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty else { return nil }
-                return SessionTranscriptTurn(id: index, role: role, text: truncatedText(trimmed, role: role))
+                return SessionTranscriptTurn(
+                    id: index,
+                    role: role,
+                    text: truncatedText(trimmed, role: role)
+                )
             }
             if didHitTurnLimit {
                 appendTurnLimitMarker(to: &previewTurns, id: previewTurns.count)
@@ -1466,6 +1359,38 @@ private enum SessionTranscriptLoader {
     private static func sqliteMessage(_ db: OpaquePointer?) -> String? {
         guard let db, let cString = sqlite3_errmsg(db) else { return nil }
         return String(cString: cString)
+    }
+
+    private static func timestamp(from object: [String: Any]) -> Date? {
+        for key in ["timestamp", "created_at", "createdAt", "time"] {
+            if let raw = object[key] as? String,
+               let date = dateFromTimestampString(raw) {
+                return date
+            }
+            if let raw = object[key] as? NSNumber {
+                return dateFromEpochNumber(raw)
+            }
+        }
+        return nil
+    }
+
+    private static func dateFromTimestampString(_ raw: String) -> Date? {
+        if let date = try? Date.ISO8601FormatStyle(includingFractionalSeconds: true).parse(raw) {
+            return date
+        }
+        return try? Date.ISO8601FormatStyle().parse(raw)
+    }
+
+    private static func dateFromEpochMilliseconds(_ value: Int64) -> Date? {
+        guard value > 0 else { return nil }
+        return Date(timeIntervalSince1970: TimeInterval(value) / 1000.0)
+    }
+
+    private static func dateFromEpochNumber(_ number: NSNumber) -> Date? {
+        let value = number.doubleValue
+        guard value > 0 else { return nil }
+        let seconds = value > 100_000_000_000 ? value / 1000.0 : value
+        return Date(timeIntervalSince1970: seconds)
     }
 
     private static func parseLineData(
@@ -1493,24 +1418,30 @@ private enum SessionTranscriptLoader {
         usesGrokTranscriptLayout: Bool,
         id: Int
     ) -> SessionTranscriptTurn? {
+        let timestamp = timestamp(from: object)
         switch agent {
         case .claude:
-            return parseClaudeLine(object, id: id)
+            return parseClaudeLine(object, id: id, timestamp: timestamp)
         case .codex:
-            return parseCodexLine(object, id: id)
+            return parseCodexLine(object, id: id, timestamp: timestamp)
         case .grok, .opencode, .rovodev, .registered:
             return parseGenericLine(
                 object,
                 agent: agent,
                 usesGrokTranscriptLayout: usesGrokTranscriptLayout,
-                id: id
+                id: id,
+                timestamp: timestamp
             )
         case .hermesAgent:
             return nil
         }
     }
 
-    private static func parseClaudeLine(_ object: [String: Any], id: Int) -> SessionTranscriptTurn? {
+    private static func parseClaudeLine(
+        _ object: [String: Any],
+        id: Int,
+        timestamp: Date?
+    ) -> SessionTranscriptTurn? {
         guard (object["isMeta"] as? Bool) != true,
               let type = object["type"] as? String,
               type == "user" || type == "assistant" else {
@@ -1522,10 +1453,14 @@ private enum SessionTranscriptLoader {
         guard let text = normalizedText(from: content, role: role, agent: .claude) else {
             return nil
         }
-        return SessionTranscriptTurn(id: id, role: role, text: text)
+        return SessionTranscriptTurn(id: id, role: role, text: text, timestamp: timestamp)
     }
 
-    private static func parseCodexLine(_ object: [String: Any], id: Int) -> SessionTranscriptTurn? {
+    private static func parseCodexLine(
+        _ object: [String: Any],
+        id: Int,
+        timestamp: Date?
+    ) -> SessionTranscriptTurn? {
         guard (object["type"] as? String) == "response_item",
               let payload = object["payload"] as? [String: Any],
               let payloadType = payload["type"] as? String else {
@@ -1539,13 +1474,13 @@ private enum SessionTranscriptLoader {
             guard let text = normalizedText(from: payload["content"], role: role, agent: .codex) else {
                 return nil
             }
-            return SessionTranscriptTurn(id: id, role: role, text: text)
+            return SessionTranscriptTurn(id: id, role: role, text: text, timestamp: timestamp)
         }
         if payloadType == "function_call" || payloadType == "function_call_output" {
             guard let text = normalizedText(from: payload, role: .tool, agent: .codex) else {
                 return nil
             }
-            return SessionTranscriptTurn(id: id, role: .tool, text: text)
+            return SessionTranscriptTurn(id: id, role: .tool, text: text, timestamp: timestamp)
         }
         return nil
     }
@@ -1554,13 +1489,15 @@ private enum SessionTranscriptLoader {
         _ object: [String: Any],
         agent: SessionAgent,
         usesGrokTranscriptLayout: Bool,
-        id: Int
+        id: Int,
+        timestamp: Date?
     ) -> SessionTranscriptTurn? {
         if let parsed = parseGenericMessage(
             object,
             agent: agent,
             usesGrokTranscriptLayout: usesGrokTranscriptLayout,
-            id: id
+            id: id,
+            timestamp: timestamp
         ) {
             return parsed
         }
@@ -1569,7 +1506,8 @@ private enum SessionTranscriptLoader {
                payload,
                agent: agent,
                usesGrokTranscriptLayout: usesGrokTranscriptLayout,
-               id: id
+               id: id,
+               timestamp: timestamp
            ) {
             return parsed
         }
@@ -1578,7 +1516,8 @@ private enum SessionTranscriptLoader {
                message,
                agent: agent,
                usesGrokTranscriptLayout: usesGrokTranscriptLayout,
-               id: id
+               id: id,
+               timestamp: timestamp
            ) {
             return parsed
         }
@@ -1589,7 +1528,8 @@ private enum SessionTranscriptLoader {
         _ object: [String: Any],
         agent: SessionAgent,
         usesGrokTranscriptLayout: Bool,
-        id: Int
+        id: Int,
+        timestamp: Date?
     ) -> SessionTranscriptTurn? {
         let fallbackRole: SessionTranscriptRole? = { if case .registered = agent { return .event }; return nil }()
         let rawRole = object["role"] as? String
@@ -1619,7 +1559,12 @@ private enum SessionTranscriptLoader {
         guard let text = normalizedText(from: content, role: role, agent: agent) else {
             return nil
         }
-        return SessionTranscriptTurn(id: id, role: role, text: text)
+        return SessionTranscriptTurn(
+            id: id,
+            role: role,
+            text: text,
+            timestamp: Self.timestamp(from: object) ?? timestamp
+        )
     }
 
     private static func openCodeMessageRole(from raw: String?) -> SessionTranscriptRole? {
@@ -1634,7 +1579,8 @@ private enum SessionTranscriptLoader {
     private static func parseOpenCodePart(
         _ raw: String,
         messageRole: SessionTranscriptRole,
-        id: Int
+        id: Int,
+        timestamp: Date?
     ) -> SessionTranscriptTurn? {
         guard let data = raw.data(using: .utf8),
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -1659,7 +1605,7 @@ private enum SessionTranscriptLoader {
         guard let text = normalizedText(from: object, role: role, agent: .opencode) else {
             return nil
         }
-        return SessionTranscriptTurn(id: id, role: role, text: text)
+        return SessionTranscriptTurn(id: id, role: role, text: text, timestamp: timestamp)
     }
 
     private static func transcriptRole(from raw: String?) -> SessionTranscriptRole? {
@@ -1805,14 +1751,22 @@ private enum SessionTranscriptLoader {
                 output[output.count - 1] = SessionTranscriptTurn(
                     id: last.id,
                     role: last.role,
-                    text: last.text + "\n\n" + turn.text
+                    text: last.text + "\n\n" + turn.text,
+                    timestamp: last.timestamp,
+                    finishedAt: turn.finishedAt ?? turn.timestamp ?? last.finishedAt
                 )
             } else {
                 output.append(turn)
             }
         }
         return output.enumerated().map { offset, turn in
-            SessionTranscriptTurn(id: offset, role: turn.role, text: turn.text)
+            SessionTranscriptTurn(
+                id: offset,
+                role: turn.role,
+                text: turn.text,
+                timestamp: turn.timestamp,
+                finishedAt: turn.finishedAt
+            )
         }
     }
 
