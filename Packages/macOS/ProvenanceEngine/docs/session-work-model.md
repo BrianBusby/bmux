@@ -236,6 +236,32 @@ turns, infer intent, derive milestones, classify current activity, compute
 risks, infer architecture, ingest GitHub evidence, or compile knowledge
 artifacts. Unknown relationships remain absent rather than guessed.
 
+## Implemented Turn Outcome Projection
+
+The factual turn-outcome projection adds a revisioned read for the observable
+outcome of one coding-agent turn:
+
+- `ProvenanceTurnOutcomeRequest`
+- `ProvenanceTurnOutcomeResponse`
+- `ProvenanceTurnOutcome`
+- `ProvenanceTurnOutcomeEvidenceReference`
+- `ProvenanceEngineClient.turnOutcome(...)`
+- `ProvenanceEngineCapability.queryTurnOutcome`
+
+It summarizes stable turn identity, repository/worktree/branch/HEAD boundary,
+explicit objective, plan items, completed commands, attributed artifacts,
+validation attempts, explicit blockers or unresolved items, explicit resume
+point, lifecycle/completion state, completeness metadata, and field or item
+evidence references when those facts are supported by accepted evidence.
+
+This projection is still deterministic Current State. It does not infer the
+user's unstated intent, generate semantic summaries, decide that prose is an
+accepted decision, evaluate architecture quality, infer session progress, or
+assemble cross-session context. It exists so the next Session Outcome
+aggregation slice can build a factual session-level outcome from bounded,
+evidence-backed turn units before Smart Session and cross-session consumers add
+semantic policy.
+
 ## Implemented Semantic Inference And Messaging Foundation
 
 The reusable semantic layer now stores versioned, evidence-backed

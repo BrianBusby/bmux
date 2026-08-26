@@ -234130,19 +234130,206 @@
         }
       }
     },
+    "cli.provenance.turn.output.completeness": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completeness: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完全性: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.turn.output.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn outcome for %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ のターン結果"
+          }
+        }
+      }
+    },
+    "cli.provenance.turn.output.lifecycle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lifecycle: %@ - state: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライフサイクル: %@ - 状態: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.turn.output.notFound": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No turn outcome found for %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ のターン結果は見つかりませんでした"
+          }
+        }
+      }
+    },
+    "cli.provenance.turn.output.objective": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objective: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目的: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.turn.output.providerTurn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provider turn: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロバイダターン: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.turn.output.resumePoint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume point: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再開地点: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.turn.output.revision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revision: %@ - watermark: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リビジョン: %@ - ウォーターマーク: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.turn.output.session": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッション: %@"
+          }
+        }
+      }
+    },
+    "cli.provenance.turn.output.unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unknown"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明"
+          }
+        }
+      }
+    },
+    "cli.provenance.turn.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法: bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]"
+          }
+        }
+      }
+    },
     "cli.provenance.usage": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\nInspect bmux work provenance without requiring a live app socket."
+            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\nInspect bmux work provenance without requiring a live app socket."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
+            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。"
           }
         }
       }

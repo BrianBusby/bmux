@@ -19,6 +19,7 @@ UI internals.
 - Current implemented architecture: `docs/architecture.md`
 - Product roadmap and implementation sequence: `docs/roadmap.md`
 - Technical integration contract: `docs/integration-contract.md`
+- Turn Outcome factual projection contract: `docs/turn-outcome.md`
 - Canonical bmux integration roadmap: `docs/bmux-integration-roadmap.md`
 - Historical current-status baseline: `docs/current-status.md`
 - Historical Slice D file-explanation readiness evidence: `docs/file-explanation-readiness-slice-completion.md`

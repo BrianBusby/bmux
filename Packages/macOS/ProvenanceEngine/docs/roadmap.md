@@ -85,9 +85,11 @@ with PE Current State and latest accepted evidence.
 Status: durable sequencing lives here; current dependency readiness, explicit
 selection, active assignments, and implementation evidence are generated from
 Project Truth. The implemented sequence now includes the evidence foundation,
-factual session projection read contract, semantic inference framework, first
-coding-agent semantic inferences, human-readable semantic messaging, and the
-first PE-owned SessionWorkModel foundation.
+factual session projection read contract, deterministic Turn Outcome
+projection, semantic inference framework, first coding-agent semantic
+inferences, human-readable semantic messaging, and the first PE-owned
+SessionWorkModel foundation. Session Outcome aggregation remains the next
+factual slice before cross-session handoff assembly.
 
 This phase addresses the main gap found after the execution-telemetry and
 workspace-display slices: bmux can observe richer structured coding-agent data
@@ -110,43 +112,51 @@ The implementation sequence is:
 4. Add deterministic factual session projections for live state only.
    Implemented through the first revisioned `factualSessionProjection(...)`
    read contract for one PE session.
-5. Add an inference framework with evidence references, producer versions,
+5. Add deterministic Turn Outcome projection as the factual outcome unit for
+   one coding-agent turn. Implemented through `turnOutcome(...)` with
+   projection revisions, source evidence watermarks, completeness metadata, and
+   field or item evidence references.
+6. Add Session Outcome aggregation over TurnOutcome revisions before later
+   Smart Session and cross-session handoff work consumes outcome facts. This is
+   the next factual slice and must not add LLM-authored summaries or semantic
+   ranking.
+7. Add an inference framework with evidence references, producer versions,
    confidence, specificity, and supersession. The foundation is implemented as
    reusable semantic record storage and invalidation/coalescing policy.
-6. Implement the first semantic vertical slice: thread intent, turn intent,
+8. Implement the first semantic vertical slice: thread intent, turn intent,
    session phase, and current activity. This is the first concrete semantic
    inference layer and still stops before milestone, architecture, presentation,
    and knowledge-compilation work.
-7. Add human-readable semantic messaging above semantic inference truth. This is
+9. Add human-readable semantic messaging above semantic inference truth. This is
    implemented as semantic message contracts, deterministic first-pass wording,
    message cache/history persistence, and public query/materialization APIs.
-8. Add a bmux factual Session view that renders PE factual session projection
-   data without adding semantic inference. This is factual consumer groundwork
-   and diagnostic/inspection scaffolding, not the full Smart Session product.
-9. Productize bmux's existing React `agent-chat` surface as the Terminal view
-   for live interaction. This can proceed independently from many PE semantic
-   slices as long as it stays focused on provider live UX and does not become a
-   semantic engine.
-10. Add a separate React Smart Session foundation that consumes PE factual
-   projection and semantic messages for summary-oriented presentation.
-11. Define the first PE-owned `SessionWorkModel` contract above factual
-   projection and active semantic inference records so bmux does not compose a
-   second session model locally. Semantic messages remain presentation records,
-   not work-model truth inputs.
-12. Add milestone hierarchy/description and blocker or approach-change
-   semantics in their own structured-understanding slices after the first
-   session inference concepts are stable.
-13. Consume the PE `SessionWorkModel` from the React Smart Session surface for
-   completed/current turn summaries, progress, blockers, validations, risks,
-   and richer session-level synthesis.
-14. Add clickable semantic explanation and evidence drilldown inside the React
-   Smart Session surface, preserving the boundary between observed evidence,
-   deterministic projection, semantic inference, and wording.
-15. Add scoped architecture inference/projection for thread and current-turn
-   scopes.
-16. Add milestone-to-architecture relationships.
-17. Add milestone-to-diff, Git, and GitHub attribution.
-18. Use the Knowledge Compiler later for durable implementation outcomes and
+10. Add a bmux factual Session view that renders PE factual session projection
+    data without adding semantic inference. This is factual consumer groundwork
+    and diagnostic/inspection scaffolding, not the full Smart Session product.
+11. Productize bmux's existing React `agent-chat` surface as the Terminal view
+    for live interaction. This can proceed independently from many PE semantic
+    slices as long as it stays focused on provider live UX and does not become a
+    semantic engine.
+12. Add a separate React Smart Session foundation that consumes PE factual
+    projection and semantic messages for summary-oriented presentation.
+13. Define the first PE-owned `SessionWorkModel` contract above factual
+    projection and active semantic inference records so bmux does not compose a
+    second session model locally. Semantic messages remain presentation records,
+    not work-model truth inputs.
+14. Add milestone hierarchy/description and blocker or approach-change
+    semantics in their own structured-understanding slices after the first
+    session inference concepts are stable.
+15. Consume the PE `SessionWorkModel` from the React Smart Session surface for
+    completed/current turn summaries, progress, blockers, validations, risks,
+    and richer session-level synthesis.
+16. Add clickable semantic explanation and evidence drilldown inside the React
+    Smart Session surface, preserving the boundary between observed evidence,
+    deterministic projection, semantic inference, and wording.
+17. Add scoped architecture inference/projection for thread and current-turn
+    scopes.
+18. Add milestone-to-architecture relationships.
+19. Add milestone-to-diff, Git, and GitHub attribution.
+20. Use the Knowledge Compiler later for durable implementation outcomes and
     decisions beyond the live session model.
 
 The first semantic inference slice is accepted when one coding-agent session can
