@@ -59,6 +59,20 @@ enum AgentSessionFactualProjectionEvidenceRows {
         guard values.count > limit else { return values }
         return Array(values.suffix(limit))
     }
+
+    static func finalAssistantMessageText(for turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
+        turnSnapshot.assistantMessages.reversed().compactMap { message in
+            trimmedNonEmpty(message.text)
+        }.first
+    }
+
+    private static func trimmedNonEmpty(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
+    }
 }
 
 struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {

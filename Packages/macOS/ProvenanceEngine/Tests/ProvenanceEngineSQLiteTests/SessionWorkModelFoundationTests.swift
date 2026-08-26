@@ -32,6 +32,7 @@ struct SessionWorkModelFoundationTests {
         try await base.append(base.prompt("Add a PE SessionWorkModel contract.", turnID: turn.id), into: repository)
         try await base.append(base.plan("Define the public contract", turnID: turn.id), into: repository)
         try await base.append(base.command("swift test", turnID: turn.id, offset: 7), into: repository)
+        try await base.append(base.assistantMessage("Done.", turnID: turn.id, offset: 8), into: repository)
         let factualBefore = try await repository.factualSessionProjection(
             ProvenanceFactualSessionProjectionRequest(sessionID: base.session.id)
         )
@@ -52,6 +53,7 @@ struct SessionWorkModelFoundationTests {
         #expect(currentTurn.prompt?.text == "Add a PE SessionWorkModel contract.")
         #expect(currentTurn.plan?.steps.map(\.text) == ["Define the public contract"])
         #expect(currentTurn.completedCommands.map(\.command) == ["swift test"])
+        #expect(currentTurn.assistantMessages.count == 1)
         #expect(model.thread?.intent.state == .unknown)
         #expect(currentTurn.intent.state == .unknown)
         #expect(currentTurn.currentActivity.state == .unknown)

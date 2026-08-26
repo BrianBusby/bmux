@@ -57,7 +57,7 @@ actor WorkProvenanceCodingAgentEvidenceRecorder {
         case .planUpdated(let event):
             try await recordPlanUpdate(summary: summary, envelope: envelope, event: event)
         case .messageCompleted(let event):
-            try await recordReasoningSummary(summary: summary, envelope: envelope, event: event)
+            try await recordCompletedMessage(summary: summary, envelope: envelope, event: event)
         case .toolStarted(let event):
             recordPendingTool(summary: summary, envelope: envelope, event: event)
         case .toolCompleted(let event):

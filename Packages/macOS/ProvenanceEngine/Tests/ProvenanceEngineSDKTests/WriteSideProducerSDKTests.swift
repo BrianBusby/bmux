@@ -127,6 +127,7 @@ struct WriteSideProducerSDKTests {
         #expect(turn.currentPlan == fixture.currentPlan)
         #expect(turn.completedCommands == [fixture.command])
         #expect(turn.visibleReasoningSummaries == [fixture.reasoningSummary])
+        #expect(turn.assistantMessages == [fixture.assistantMessage])
         #expect(turn.fileChangeAttributions == [fixture.fileChangeAttribution])
 
         let detailResponse = try await client.factualSessionTurnDetail(
@@ -595,6 +596,7 @@ private struct FactualSessionProjectionSDKFixture {
     let currentPlan: ProvenanceCodingAgentPlanUpdateRecord
     let command: ProvenanceCodingAgentCommandRecord
     let reasoningSummary: ProvenanceCodingAgentReasoningSummaryRecord
+    let assistantMessage: ProvenanceCodingAgentAssistantMessageRecord
     let fileChangeAttribution: ProvenanceCodingAgentFileChangeAttributionRecord
     let events: [ProvenanceEvent]
 
@@ -740,6 +742,18 @@ private struct FactualSessionProjectionSDKFixture {
             source: .observed,
             confidence: .high
         )
+        let assistantMessage = ProvenanceCodingAgentAssistantMessageRecord(
+            id: "assistant-message-work-model-1",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: startedTurn.id,
+            provider: "codex",
+            itemID: "assistant-message-item-work-model-1",
+            text: "Final output.",
+            completedAt: timestamp.addingTimeInterval(7),
+            source: .observed,
+            confidence: .high
+        )
         let fileChangeAttribution = ProvenanceCodingAgentFileChangeAttributionRecord(
             id: "file-attribution-work-model-1",
             sessionID: session.id,
@@ -763,6 +777,7 @@ private struct FactualSessionProjectionSDKFixture {
         self.currentPlan = currentPlan
         self.command = command
         self.reasoningSummary = reasoningSummary
+        self.assistantMessage = assistantMessage
         self.fileChangeAttribution = fileChangeAttribution
         self.events = [
             event("event-work-model-session", .sessionObserved, timestamp, ProvenanceEventPayload(session: session)),
@@ -795,6 +810,12 @@ private struct FactualSessionProjectionSDKFixture {
                 .codingAgentReasoningSummaryCompleted,
                 reasoningSummary.completedAt,
                 ProvenanceEventPayload(codingAgentReasoningSummary: reasoningSummary)
+            ),
+            event(
+                "event-work-model-assistant-message",
+                .codingAgentAssistantMessageCompleted,
+                assistantMessage.completedAt,
+                ProvenanceEventPayload(codingAgentAssistantMessage: assistantMessage)
             ),
             event(
                 "event-work-model-plan-current",

@@ -56,6 +56,9 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
     /// Completed visible coding-agent reasoning-summary projection update.
     public var codingAgentReasoningSummary: ProvenanceCodingAgentReasoningSummaryRecord?
 
+    /// Completed visible coding-agent assistant-output projection update.
+    public var codingAgentAssistantMessage: ProvenanceCodingAgentAssistantMessageRecord?
+
     /// Coding-agent file-change attribution projection update.
     public var codingAgentFileChangeAttribution: ProvenanceCodingAgentFileChangeAttributionRecord?
 
@@ -78,6 +81,7 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         case codingAgentPlanUpdate
         case codingAgentCommand
         case codingAgentReasoningSummary
+        case codingAgentAssistantMessage
         case codingAgentFileChangeAttribution
     }
 
@@ -101,6 +105,7 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         codingAgentPlanUpdate: ProvenanceCodingAgentPlanUpdateRecord? = nil,
         codingAgentCommand: ProvenanceCodingAgentCommandRecord? = nil,
         codingAgentReasoningSummary: ProvenanceCodingAgentReasoningSummaryRecord? = nil,
+        codingAgentAssistantMessage: ProvenanceCodingAgentAssistantMessageRecord? = nil,
         codingAgentFileChangeAttribution: ProvenanceCodingAgentFileChangeAttributionRecord? = nil
     ) {
         self.repository = repository
@@ -121,6 +126,7 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         self.codingAgentPlanUpdate = codingAgentPlanUpdate
         self.codingAgentCommand = codingAgentCommand
         self.codingAgentReasoningSummary = codingAgentReasoningSummary
+        self.codingAgentAssistantMessage = codingAgentAssistantMessage
         self.codingAgentFileChangeAttribution = codingAgentFileChangeAttribution
     }
 
@@ -177,6 +183,10 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         self.codingAgentReasoningSummary = try container.decodeIfPresent(
             ProvenanceCodingAgentReasoningSummaryRecord.self,
             forKey: .codingAgentReasoningSummary
+        )
+        self.codingAgentAssistantMessage = try container.decodeIfPresent(
+            ProvenanceCodingAgentAssistantMessageRecord.self,
+            forKey: .codingAgentAssistantMessage
         )
         self.codingAgentFileChangeAttribution = try container.decodeIfPresent(
             ProvenanceCodingAgentFileChangeAttributionRecord.self,

@@ -324,6 +324,7 @@ struct CLIProvenanceCodexTranscriptImporter {
         case "task_complete", "turn_complete":
             guard let providerTurnID = Self.trimmedNonEmpty(Self.string(line.payload["turn_id"])) else { return }
             context.currentProviderTurnID = providerTurnID
+            context.lastCompletedProviderTurnID = providerTurnID
             try await appendTurn(
                 metadata: metadata,
                 line: line,
@@ -386,28 +387,13 @@ struct CLIProvenanceCodexTranscriptImporter {
         fileReport: inout FileReport
     ) async throws {
         let itemType = Self.string(line.payload["type"])
-        if itemType == "message",
-           Self.string(line.payload["role"]) == "assistant",
-           Self.string(line.payload["phase"]) == "commentary",
-           let text = Self.messageText(from: line.payload) {
-            let providerTurnID = Self.firstNonEmpty(Self.turnID(from: line.payload), context.currentProviderTurnID)
-            if let providerTurnID {
-                try await ensureTurnObserved(
-                    metadata: metadata,
-                    line: line,
-                    context: &context,
-                    providerTurnID: providerTurnID,
-                    fileReport: &fileReport
-                )
-            }
-            try await appendReasoningSummary(
-                metadata: metadata,
-                line: line,
-                itemID: Self.firstNonEmpty(Self.string(line.payload["id"]), Self.string(line.payload["call_id"])),
-                text: text,
-                providerTurnID: providerTurnID,
-                fileReport: &fileReport
-            )
+        if try await importAssistantResponseItem(
+            line,
+            itemType: itemType,
+            metadata: metadata,
+            context: &context,
+            fileReport: &fileReport
+        ) {
             return
         }
 

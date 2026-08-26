@@ -16,6 +16,23 @@ if ! command -v bunx >/dev/null 2>&1; then
   exit 1
 fi
 
+run_esbuild() {
+  if [ -x "$ROOT/node_modules/.bin/esbuild" ]; then
+    "$ROOT/node_modules/.bin/esbuild" "$@"
+  else
+    bunx esbuild "$@"
+  fi
+}
+
+run_tailwindcss() {
+  if [ -x "$ROOT/node_modules/.bin/tailwindcss" ]; then
+    NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--preserve-symlinks --preserve-symlinks-main" \
+      "$ROOT/node_modules/.bin/tailwindcss" "$@"
+  else
+    bunx tailwindcss "$@"
+  fi
+}
+
 if [ ! -f "$MARKED_JS" ]; then
   echo "error: missing markdown parser asset at $MARKED_JS" >&2
   exit 1
@@ -24,25 +41,27 @@ fi
 rm -rf "$OUT_REACT" "$OUT_SOLID"
 mkdir -p "$OUT_REACT/assets" "$OUT_SOLID/assets"
 
-bunx esbuild "$ROOT/webviews/src/agent-session/react/standalone.ts" \
+run_esbuild "$ROOT/webviews/src/agent-session/react/standalone.ts" \
   --bundle \
   --format=esm \
   --platform=browser \
   --target=es2022 \
+  --preserve-symlinks \
   '--define:process.env.NODE_ENV="production"' \
   --minify \
   --outfile="$OUT_REACT/assets/app.js"
 
-bunx esbuild "$ROOT/webviews/src/agent-session/solid/main.ts" \
+run_esbuild "$ROOT/webviews/src/agent-session/solid/main.ts" \
   --bundle \
   --format=esm \
   --platform=browser \
   --target=es2022 \
+  --preserve-symlinks \
   '--define:process.env.NODE_ENV="production"' \
   --minify \
   --outfile="$OUT_SOLID/assets/app.js"
 
-bunx tailwindcss \
+run_tailwindcss \
   -i "$ROOT/webviews/src/agent-session/shared/styles.css" \
   -o "$OUT_REACT/assets/styles.css" \
   --minify

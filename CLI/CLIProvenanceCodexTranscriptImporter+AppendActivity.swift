@@ -109,6 +109,93 @@ extension CLIProvenanceCodexTranscriptImporter {
         try await append(event, stat: \.reasoningSummaries, fileReport: &fileReport)
     }
 
+    func appendAssistantMessage(
+        metadata: TranscriptMetadata,
+        line: TranscriptLine,
+        itemID: String?,
+        text: String,
+        providerTurnID: String?,
+        fileReport: inout FileReport
+    ) async throws {
+        guard let text = Self.trimmedNonEmpty(text).map({ Self.bounded($0, limit: Self.textLimit) }) else { return }
+        let completedAt = line.timestamp ?? metadata.timestamp
+        let gitContext = await gitContext(for: metadata.cwd, observedAt: completedAt)
+        let message = ProvenanceCodingAgentAssistantMessageRecord(
+            id: recordID(prefix: "coding-agent-assistant-message", sessionID: metadata.sessionID, line: line, discriminator: itemID),
+            sessionID: metadata.sessionID,
+            threadID: threadRecordID(providerThreadID: metadata.providerThreadID),
+            turnID: providerTurnID.map(turnRecordID(providerTurnID:)),
+            provider: "codex",
+            itemID: Self.trimmedNonEmpty(itemID),
+            text: text,
+            completedAt: completedAt,
+            source: .observed,
+            confidence: .high
+        )
+        let event = provenanceEvent(
+            id: eventID(sessionID: metadata.sessionID, line: line, kind: "assistant-message-\(itemID ?? "")"),
+            eventType: .codingAgentAssistantMessageCompleted,
+            timestamp: completedAt,
+            sessionID: metadata.sessionID,
+            gitContext: gitContext,
+            confidence: .high,
+            payload: ProvenanceEventPayload(
+                repository: gitContext?.repository,
+                worktree: gitContext?.worktree,
+                codingAgentAssistantMessage: message
+            )
+        )
+        try await append(event, stat: \.assistantMessages, fileReport: &fileReport)
+    }
+
+    func importAssistantResponseItem(
+        _ line: TranscriptLine,
+        itemType: String?,
+        metadata: TranscriptMetadata,
+        context: inout TranscriptContext,
+        fileReport: inout FileReport
+    ) async throws -> Bool {
+        guard itemType == "message",
+              Self.string(line.payload["role"]) == "assistant",
+              let text = Self.messageText(from: line.payload) else {
+            return false
+        }
+        let itemID = Self.firstNonEmpty(Self.string(line.payload["id"]), Self.string(line.payload["call_id"]))
+        let isReasoningSummary = Self.string(line.payload["phase"]) == "commentary"
+        let providerTurnID = isReasoningSummary
+            ? Self.firstNonEmpty(Self.turnID(from: line.payload), context.currentProviderTurnID)
+            : Self.firstNonEmpty(Self.turnID(from: line.payload), context.currentProviderTurnID, context.lastCompletedProviderTurnID)
+        if let providerTurnID {
+            try await ensureTurnObserved(
+                metadata: metadata,
+                line: line,
+                context: &context,
+                providerTurnID: providerTurnID,
+                fileReport: &fileReport
+            )
+        }
+        if isReasoningSummary {
+            try await appendReasoningSummary(
+                metadata: metadata,
+                line: line,
+                itemID: itemID,
+                text: text,
+                providerTurnID: providerTurnID,
+                fileReport: &fileReport
+            )
+        } else {
+            try await appendAssistantMessage(
+                metadata: metadata,
+                line: line,
+                itemID: itemID,
+                text: text,
+                providerTurnID: providerTurnID,
+                fileReport: &fileReport
+            )
+        }
+        return true
+    }
+
     func appendFileChangeAttribution(
         metadata: TranscriptMetadata,
         line: TranscriptLine,

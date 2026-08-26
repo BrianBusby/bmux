@@ -17,6 +17,7 @@ extension CLIProvenanceCodexTranscriptImporter {
         var plans: Int = 0
         var commands: Int = 0
         var reasoningSummaries: Int = 0
+        var assistantMessages: Int = 0
         var fileChanges: Int = 0
 
         var payload: [String: Any] {
@@ -39,6 +40,7 @@ extension CLIProvenanceCodexTranscriptImporter {
                     "plans": plans,
                     "commands": commands,
                     "reasoning_summaries": reasoningSummaries,
+                    "assistant_messages": assistantMessages,
                     "file_changes": fileChanges
                 ]
             ]
@@ -58,6 +60,7 @@ extension CLIProvenanceCodexTranscriptImporter {
             plans += fileReport.plans
             commands += fileReport.commands
             reasoningSummaries += fileReport.reasoningSummaries
+            assistantMessages += fileReport.assistantMessages
             fileChanges += fileReport.fileChanges
         }
 
@@ -90,6 +93,7 @@ extension CLIProvenanceCodexTranscriptImporter {
         var plans: Int = 0
         var commands: Int = 0
         var reasoningSummaries: Int = 0
+        var assistantMessages: Int = 0
         var fileChanges: Int = 0
     }
 
@@ -136,6 +140,7 @@ extension CLIProvenanceCodexTranscriptImporter {
         var latestModel: String?
         var latestEffort: String?
         var currentProviderTurnID: String?
+        var lastCompletedProviderTurnID: String?
         var observedProviderTurnIDs: Set<String> = []
         var startedProviderTurnIDs: Set<String> = []
         var pendingPrompts: [PendingPrompt] = []

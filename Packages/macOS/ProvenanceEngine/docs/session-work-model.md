@@ -149,6 +149,7 @@ The intended boundary is completed or meaningful evidence units:
 | completed command | show live result | command fact with cwd, status, exit/result metadata, bounded summaries, and evidence links |
 | reasoning deltas | optional live display | no default durable record |
 | completed reasoning summary | optional live display | summary evidence when exposed as a supported provider summary, not hidden chain-of-thought |
+| completed assistant output | show completed response | bounded final/visible assistant output evidence when exposed as a supported provider message |
 | plan update | render current plan | plan evidence linked to thread/turn/session |
 | file-change or diff unit | show live diff/status | completed file-change or diff evidence linked to worktree/change-set where possible |
 | approval request/resolution | drive interaction | approval evidence when it materially affects engineering risk or write behavior |
@@ -183,6 +184,7 @@ Implemented durable evidence records:
 - `ProvenanceCodingAgentPlanUpdateRecord`
 - `ProvenanceCodingAgentCommandRecord`
 - `ProvenanceCodingAgentReasoningSummaryRecord`
+- `ProvenanceCodingAgentAssistantMessageRecord`
 - `ProvenanceCodingAgentFileChangeAttributionRecord`
 
 The records preserve provider identity (`provider`, provider thread id, provider
@@ -226,9 +228,10 @@ Consumers that need full detail for an older turn use the separate
 diagnostic consumers.
 
 Detailed factual turn snapshots include latest submitted prompt, latest plan
-update, completed commands, visible reasoning summaries, and file-change
-attributions linked directly to the turn. Session and turn-detail revisions are
-the newest ledger append sequence for the owning session.
+update, completed commands, visible reasoning summaries, completed assistant
+outputs, and file-change attributions linked directly to the turn. Session and
+turn-detail revisions are the newest ledger append sequence for the owning
+session.
 
 The implementation is deterministic and rebuildable from the immutable ledger.
 It is deliberately below `SessionWorkModel`: it does not synthesize missing
