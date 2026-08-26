@@ -83,6 +83,10 @@ extension AgentSessionWebRendererCoordinator {
                 localized: "agentSession.web.smartSession.reasoning",
                 defaultValue: "Reasoning"
             ),
+            "smartSessionFinalOutput": String(
+                localized: "agentSession.web.smartSession.finalOutput",
+                defaultValue: "Final output"
+            ),
             "smartSessionPriorTurns": String(
                 localized: "agentSession.web.smartSession.priorTurns",
                 defaultValue: "Prior turns"

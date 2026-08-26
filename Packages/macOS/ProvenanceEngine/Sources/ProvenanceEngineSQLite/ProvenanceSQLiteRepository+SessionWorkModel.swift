@@ -65,7 +65,8 @@ extension ProvenanceSQLiteRepository {
                     scope: .turn,
                     scopeID: turnSnapshot.turn.id,
                     records: semanticRecordByField
-                )
+                ),
+                assistantMessages: turnSnapshot.assistantMessages
             )
         }
         let revision = ProvenanceSessionWorkModelRevision(

@@ -17,6 +17,9 @@ public struct ProvenanceSessionWorkModelCurrentTurn: Codable, Equatable, Sendabl
     /// Visible reasoning summaries for this turn.
     public let visibleReasoningSummaries: [ProvenanceCodingAgentReasoningSummaryRecord]
 
+    /// Completed visible assistant outputs for this turn.
+    public let assistantMessages: [ProvenanceCodingAgentAssistantMessageRecord]
+
     /// File-change attribution facts for this turn.
     public let fileChangeAttributions: [ProvenanceCodingAgentFileChangeAttributionRecord]
 
@@ -26,6 +29,18 @@ public struct ProvenanceSessionWorkModelCurrentTurn: Codable, Equatable, Sendabl
     /// PE-owned semantic current activity.
     public let currentActivity: ProvenanceSessionWorkModelSemanticField
 
+    private enum CodingKeys: String, CodingKey {
+        case turn
+        case prompt
+        case plan
+        case completedCommands
+        case visibleReasoningSummaries
+        case assistantMessages
+        case fileChangeAttributions
+        case intent
+        case currentActivity
+    }
+
     /// Creates a current turn section.
     ///
     /// - Parameters:
@@ -34,6 +49,7 @@ public struct ProvenanceSessionWorkModelCurrentTurn: Codable, Equatable, Sendabl
     ///   - plan: Latest plan evidence for this turn.
     ///   - completedCommands: Completed command facts for this turn.
     ///   - visibleReasoningSummaries: Visible reasoning summaries for this turn.
+    ///   - assistantMessages: Completed visible assistant outputs for this turn.
     ///   - fileChangeAttributions: File-change attribution facts for this turn.
     ///   - intent: PE-owned semantic turn intent.
     ///   - currentActivity: PE-owned semantic current activity.
@@ -45,15 +61,43 @@ public struct ProvenanceSessionWorkModelCurrentTurn: Codable, Equatable, Sendabl
         visibleReasoningSummaries: [ProvenanceCodingAgentReasoningSummaryRecord],
         fileChangeAttributions: [ProvenanceCodingAgentFileChangeAttributionRecord],
         intent: ProvenanceSessionWorkModelSemanticField,
-        currentActivity: ProvenanceSessionWorkModelSemanticField
+        currentActivity: ProvenanceSessionWorkModelSemanticField,
+        assistantMessages: [ProvenanceCodingAgentAssistantMessageRecord] = []
     ) {
         self.turn = turn
         self.prompt = prompt
         self.plan = plan
         self.completedCommands = completedCommands
         self.visibleReasoningSummaries = visibleReasoningSummaries
+        self.assistantMessages = assistantMessages
         self.fileChangeAttributions = fileChangeAttributions
         self.intent = intent
         self.currentActivity = currentActivity
+    }
+
+    /// Creates a current turn section from stored JSON, preserving compatibility with older model snapshots.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.turn = try container.decode(ProvenanceCodingAgentTurnRecord.self, forKey: .turn)
+        self.prompt = try container.decodeIfPresent(ProvenanceCodingAgentPromptRecord.self, forKey: .prompt)
+        self.plan = try container.decodeIfPresent(ProvenanceCodingAgentPlanUpdateRecord.self, forKey: .plan)
+        self.completedCommands = try container.decode([ProvenanceCodingAgentCommandRecord].self, forKey: .completedCommands)
+        self.visibleReasoningSummaries = try container.decode(
+            [ProvenanceCodingAgentReasoningSummaryRecord].self,
+            forKey: .visibleReasoningSummaries
+        )
+        self.assistantMessages = try container.decodeIfPresent(
+            [ProvenanceCodingAgentAssistantMessageRecord].self,
+            forKey: .assistantMessages
+        ) ?? []
+        self.fileChangeAttributions = try container.decode(
+            [ProvenanceCodingAgentFileChangeAttributionRecord].self,
+            forKey: .fileChangeAttributions
+        )
+        self.intent = try container.decode(ProvenanceSessionWorkModelSemanticField.self, forKey: .intent)
+        self.currentActivity = try container.decode(
+            ProvenanceSessionWorkModelSemanticField.self,
+            forKey: .currentActivity
+        )
     }
 }

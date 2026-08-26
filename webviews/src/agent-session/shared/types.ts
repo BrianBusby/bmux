@@ -141,6 +141,7 @@ export type AgentSessionCopy = {
   smartSessionCommands: string;
   smartSessionFiles: string;
   smartSessionReasoning: string;
+  smartSessionFinalOutput: string;
   smartSessionPriorTurns: string;
   smartSessionNoPlan: string;
   smartSessionNoEvidence: string;
@@ -297,6 +298,7 @@ export type SmartSessionTurn = {
   plan?: SmartSessionPlan;
   completedCommands: SmartSessionCommand[];
   visibleReasoningSummaries: SmartSessionReasoningSummary[];
+  assistantMessages: SmartSessionAssistantMessage[];
   fileChangeAttributions: SmartSessionFileChangeAttribution[];
 };
 
@@ -350,6 +352,14 @@ export type SmartSessionCommand = {
 
 export type SmartSessionReasoningSummary = {
   summaryId: string;
+  text: string;
+  completedAt: string;
+  source: string;
+  confidence: string;
+};
+
+export type SmartSessionAssistantMessage = {
+  messageId: string;
   text: string;
   completedAt: string;
   source: string;

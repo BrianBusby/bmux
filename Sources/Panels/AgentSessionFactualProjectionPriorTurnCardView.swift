@@ -151,6 +151,9 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
     private var summary: String {
         switch item {
         case .detail(let turnSnapshot):
+            if let finalOutput = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turnSnapshot) {
+                return finalOutput
+            }
             if let summary = turnSnapshot.fileChangeAttributions.compactMap(\.summary).last?.trimmingCharacters(in: .whitespacesAndNewlines),
                !summary.isEmpty {
                 return summary

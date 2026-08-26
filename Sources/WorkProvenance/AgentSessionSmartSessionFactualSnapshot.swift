@@ -36,6 +36,7 @@ extension AgentSessionSmartSessionSnapshot {
         let plan: Plan?
         let completedCommands: [Command]
         let visibleReasoningSummaries: [ReasoningSummary]
+        let assistantMessages: [AssistantMessage]
         let fileChangeAttributions: [FileChangeAttribution]
 
         init(turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot) {
@@ -53,6 +54,7 @@ extension AgentSessionSmartSessionSnapshot {
             self.plan = turnSnapshot.currentPlan.map(Plan.init(record:))
             self.completedCommands = turnSnapshot.completedCommands.map(Command.init(record:))
             self.visibleReasoningSummaries = turnSnapshot.visibleReasoningSummaries.map(ReasoningSummary.init(record:))
+            self.assistantMessages = turnSnapshot.assistantMessages.map(AssistantMessage.init(record:))
             self.fileChangeAttributions = turnSnapshot.fileChangeAttributions.map(FileChangeAttribution.init(record:))
         }
 
@@ -75,6 +77,7 @@ extension AgentSessionSmartSessionSnapshot {
                 "plan": AgentSessionSmartSessionBridgeDictionary.optional(plan?.bridgePayload),
                 "completedCommands": completedCommands.map(\.bridgePayload),
                 "visibleReasoningSummaries": visibleReasoningSummaries.map(\.bridgePayload),
+                "assistantMessages": assistantMessages.map(\.bridgePayload),
                 "fileChangeAttributions": fileChangeAttributions.map(\.bridgePayload)
             ])
         }

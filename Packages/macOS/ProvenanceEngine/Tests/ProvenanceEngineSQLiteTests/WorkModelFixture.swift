@@ -134,6 +134,21 @@ struct WorkModelFixture {
         )
     }
 
+    func assistantMessage(_ text: String, turnID: String, offset: TimeInterval) -> ProvenanceCodingAgentAssistantMessageRecord {
+        ProvenanceCodingAgentAssistantMessageRecord(
+            id: "assistant-message-\(turnID)-\(Int(offset))",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: turnID,
+            provider: "codex",
+            itemID: "assistant-message-item-\(turnID)-\(Int(offset))",
+            text: text,
+            completedAt: timestamp.addingTimeInterval(offset),
+            source: .observed,
+            confidence: .high
+        )
+    }
+
     func fileAttribution(
         _ summary: String,
         turnID: String,
@@ -226,6 +241,19 @@ struct WorkModelFixture {
             eventType: .codingAgentReasoningSummaryCompleted,
             timestamp: reasoning.completedAt,
             payload: ProvenanceEventPayload(codingAgentReasoningSummary: reasoning),
+            into: repository
+        )
+    }
+
+    func append(
+        _ message: ProvenanceCodingAgentAssistantMessageRecord,
+        into repository: ProvenanceSQLiteRepository
+    ) async throws {
+        try await append(
+            eventID: "event-\(message.id)",
+            eventType: .codingAgentAssistantMessageCompleted,
+            timestamp: message.completedAt,
+            payload: ProvenanceEventPayload(codingAgentAssistantMessage: message),
             into: repository
         )
     }

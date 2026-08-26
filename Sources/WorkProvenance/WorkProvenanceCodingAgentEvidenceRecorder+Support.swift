@@ -358,6 +358,10 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         provider.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
+    func normalizedMessageStream(_ stream: String) -> String {
+        stream.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
     func trimmedNonEmpty(_ value: String?) -> String? {
         guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
               !trimmed.isEmpty else {

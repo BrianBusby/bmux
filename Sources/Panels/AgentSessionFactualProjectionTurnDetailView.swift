@@ -16,6 +16,7 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
                 planRows(plan)
             }
             summaryCounts
+            assistantOutputRows(turnSnapshot.assistantMessages)
             commandRows(turnSnapshot.completedCommands)
             reasoningRows(turnSnapshot.visibleReasoningSummaries)
             fileRows(turnSnapshot.fileChangeAttributions)
@@ -67,8 +68,23 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
                 turnSnapshot.visibleReasoningSummaries.count
             )
             countBadge(
+                String(localized: "agentSession.factual.outputs", defaultValue: "Outputs"),
+                turnSnapshot.assistantMessages.count
+            )
+            countBadge(
                 String(localized: "agentSession.factual.files", defaultValue: "Files"),
                 turnSnapshot.fileChangeAttributions.count
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func assistantOutputRows(_ messages: [ProvenanceCodingAgentAssistantMessageRecord]) -> some View {
+        if let finalOutput = messages.last?.text {
+            labeledText(
+                String(localized: "agentSession.factual.finalOutput", defaultValue: "Final output"),
+                finalOutput,
+                lineLimit: nil
             )
         }
     }
@@ -83,11 +99,11 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
 
     private func reasoningRows(_ summaries: [ProvenanceCodingAgentReasoningSummaryRecord]) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            ForEach(AgentSessionFactualProjectionEvidenceRows.latestRows(summaries, limit: 3), id: \.id) { summary in
+            ForEach(summaries, id: \.id) { summary in
                 labeledText(
                     String(localized: "agentSession.factual.reasoningSummary", defaultValue: "Reasoning summary"),
                     summary.text,
-                    lineLimit: 3
+                    lineLimit: nil
                 )
             }
         }
@@ -118,7 +134,7 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
         }
     }
 
-    private func labeledText(_ label: String, _ text: String, lineLimit: Int) -> some View {
+    private func labeledText(_ label: String, _ text: String, lineLimit: Int?) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label)
                 .font(.system(size: 11, weight: .medium))

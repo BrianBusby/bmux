@@ -26,7 +26,7 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         let firstImport = try await importer.importTranscripts(path: transcriptURL.path)
         let secondImport = try await importer.importTranscripts(path: transcriptURL.path)
 
-        #expect(firstImport.eventsAppended == 7)
+        #expect(firstImport.eventsAppended == 8)
         #expect(firstImport.duplicateEvents == 0)
         #expect(firstImport.threads == 1)
         #expect(firstImport.turns == 1)
@@ -34,9 +34,12 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         #expect(firstImport.plans == 1)
         #expect(firstImport.commands == 1)
         #expect(firstImport.reasoningSummaries == 1)
+        #expect(firstImport.assistantMessages == 1)
         #expect(firstImport.fileChanges == 1)
         #expect(secondImport.eventsAppended == 0)
-        #expect(secondImport.duplicateEvents == 7)
+        #expect(secondImport.duplicateEvents == 8)
+        let projection = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        #expect(projection.latestTurn?.assistantMessages.count == 1)
     }
 
     @Test
@@ -70,15 +73,16 @@ struct CLIProvenanceCodexTranscriptImporterTests {
 
         try Self.appendText(lines[3...].joined(separator: "\n") + "\n", to: transcriptURL)
         let evidenceImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
-        #expect(evidenceImport.consumedLines == 4)
+        #expect(evidenceImport.consumedLines == 5)
         #expect(evidenceImport.fileReport.plans == 1)
         #expect(evidenceImport.fileReport.commands == 1)
         #expect(evidenceImport.fileReport.reasoningSummaries == 1)
+        #expect(evidenceImport.fileReport.assistantMessages == 1)
         #expect(evidenceImport.fileReport.fileChanges == 1)
 
         let replay = try await importer.importTranscripts(path: transcriptURL.path)
         #expect(replay.eventsAppended == 0)
-        #expect(replay.duplicateEvents == 7)
+        #expect(replay.duplicateEvents == 8)
     }
 
     @Test
@@ -144,6 +148,12 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         _ = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
         let completedProjection = try await Self.factualProjection(client: client, sessionID: "codex-long-session")
         #expect(completedProjection.latestTurn?.turn.status == "completed")
+
+        try Self.appendText(lines[12] + "\n", to: transcriptURL)
+        let finalOutputImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(finalOutputImport.fileReport.assistantMessages == 1)
+        let finalProjection = try await Self.factualProjection(client: client, sessionID: "codex-long-session")
+        #expect(finalProjection.latestTurn?.assistantMessages.count == 1)
     }
 
     @Test
@@ -433,6 +443,26 @@ struct CLIProvenanceCodexTranscriptImporterTests {
                     ],
                     "input": patch
                 ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 7,
+                type: "response_item",
+                timestamp: "2026-08-21T10:00:07Z",
+                payload: [
+                    "type": "message",
+                    "role": "assistant",
+                    "phase": "final",
+                    "id": "assistant-final-1",
+                    "internal_chat_message_metadata_passthrough": [
+                        "turn_id": "turn-1"
+                    ],
+                    "content": [
+                        [
+                            "type": "output_text",
+                            "text": "Final."
+                        ]
+                    ]
+                ]
             )
         ]
     }
@@ -516,6 +546,23 @@ struct CLIProvenanceCodexTranscriptImporterTests {
                     "type": "task_complete",
                     "turn_id": "turn-long-1",
                     "completed_at": 1_787_412_011
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 12,
+                type: "response_item",
+                timestamp: "2026-08-22T10:00:12Z",
+                payload: [
+                    "type": "message",
+                    "role": "assistant",
+                    "phase": "final",
+                    "id": "agent-final-1",
+                    "content": [
+                        [
+                            "type": "output_text",
+                            "text": "Final."
+                        ]
+                    ]
                 ]
             )
         ]

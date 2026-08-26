@@ -209,6 +209,7 @@ struct AgentSessionFactualProjectionStoreTests {
         }
 
         #expect(AgentSessionFactualProjectionEvidenceRows.turnProperties(for: turn).first == .prompt("Earlier prompt"))
+        #expect(AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turn) == "Final.")
     }
 
     private static func snapshot(
@@ -261,7 +262,21 @@ struct AgentSessionFactualProjectionStoreTests {
                 currentPlan: nil,
                 completedCommands: [],
                 visibleReasoningSummaries: [],
-                fileChangeAttributions: []
+                fileChangeAttributions: [],
+                assistantMessages: [
+                    ProvenanceCodingAgentAssistantMessageRecord(
+                        id: "assistant-message-0",
+                        sessionID: sessionID,
+                        threadID: thread.id,
+                        turnID: turn.id,
+                        provider: "codex",
+                        itemID: "assistant-message-item-0",
+                        text: "Final.",
+                        completedAt: updatedAt.addingTimeInterval(-60),
+                        source: .observed,
+                        confidence: .high
+                    )
+                ]
             )
         }
         let turn = ProvenanceCodingAgentTurnRecord(
@@ -393,7 +408,8 @@ struct AgentSessionFactualProjectionStoreTests {
                     scope: .turn,
                     scopeID: turnSnapshot.turn.id,
                     record: currentActivityRecord
-                )
+                ),
+                assistantMessages: turnSnapshot.assistantMessages
             ),
             priorTurns: factualProjection.priorTurns,
             sessionPhase: semanticField(
