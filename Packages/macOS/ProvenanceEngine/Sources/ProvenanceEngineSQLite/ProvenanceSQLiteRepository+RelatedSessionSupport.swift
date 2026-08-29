@@ -114,19 +114,28 @@ extension ProvenanceSQLiteRepository {
         _ evidence: [ProvenanceRelatedSessionEvidenceReference]
     ) -> [ProvenanceRelatedSessionEvidenceReference] {
         var seen = Set<String>()
-        return evidence.sorted(by: relatedSessionEvidenceSort).filter { item in
-            let key = [
-                item.kind,
-                item.id,
-                item.eventSequence.map(String.init) ?? "",
-                item.eventType ?? "",
-                item.projectionRevisionID ?? "",
-                item.projectionWatermark.map(String.init) ?? "",
-                item.field ?? "",
-                item.sourceState ?? "",
-            ].joined(separator: "|")
+        let sortedEvidence = evidence.sorted(by: relatedSessionEvidenceSort)
+        return sortedEvidence.filter { item in
+            let key = relatedSessionEvidenceIdentityKey(item)
             return seen.insert(key).inserted
         }
+    }
+
+    func relatedSessionEvidenceIdentityKey(
+        _ item: ProvenanceRelatedSessionEvidenceReference
+    ) -> String {
+        let eventSequence = item.eventSequence.map(String.init) ?? ""
+        let projectionWatermark = item.projectionWatermark.map(String.init) ?? ""
+        return [
+            item.kind,
+            item.id,
+            eventSequence,
+            item.eventType ?? "",
+            item.projectionRevisionID ?? "",
+            projectionWatermark,
+            item.field ?? "",
+            item.sourceState ?? "",
+        ].joined(separator: "|")
     }
 
     func uniqueRelatedSessionBoundaries(
