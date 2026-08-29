@@ -1361,7 +1361,7 @@ roadmap:
       kind: slice
       title: Session Outcome aggregation
       parent: factual_session_projection_read_contract
-      status: planned
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -1373,7 +1373,7 @@ roadmap:
           - session_outcome
           - turn_outcome
           - factual_projection
-      capability_maturity: ready
+      capability_maturity: validated
       depends_on:
         - deterministic_turn_outcome_projection
       enables:
@@ -1400,12 +1400,26 @@ roadmap:
           - factual_session_projection
           - deterministic_current_state_api
         worktree_required: true
-        conflict_note: This next slice should aggregate factual turn outcomes into a session outcome without adding LLM-authored summaries, semantic ranking, cross-session injection, or Knowledge Compiler output.
+        conflict_note: This slice aggregates factual turn outcomes into a session outcome without adding LLM-authored summaries, semantic ranking, cross-session injection, or Knowledge Compiler output.
       execution:
-        assignment: planned
+        assignment: complete
         assigned_to: provenance_engine
-      delivery_status: proposed
-      acceptance_status: proposed
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 2a4f2d7bc43f5d66cd6273e970835266f7e3d09b
+        pull_requests: []
+      completed_at: 2026-08-28
+      acceptance:
+        criteria:
+          - Build a revisioned, rebuildable factual outcome projection for one coding-agent session from accepted TurnOutcome revisions.
+          - Track ordered constituent turns and the exact TurnOutcome revision id, content fingerprint, and source watermark used for each turn.
+          - Preserve session lifecycle, completion state, objectives, plan states, commands, changed artifacts, validation attempts, blockers, unresolved work, resume points, repository/worktree/branch/HEAD boundaries, completeness metadata, and supporting evidence references where accepted evidence supports them.
+          - Keep duplicate, overlapping, late, corrected, and out-of-order evidence idempotent and revisioned according to deterministic rules.
+          - Expose latest and specific revisions through the public PE SDK and bmux CLI boundary.
+      acceptance_reason: Session Outcome aggregation is implemented as a schema-v22 SQLite projection and public PE read contract for session-level factual outcomes. It aggregates exact TurnOutcome revisions and remains below semantic SessionWorkModel, Smart Session UI, cross-session retrieval, context injection, and Knowledge Compiler output.
       rationale: Aggregates evidence-backed TurnOutcome revisions into one factual session-level outcome boundary so later Smart Session and cross-session handoff work can consume bounded factual units before semantic enrichment.
 
     - id: semantic_understanding
@@ -2224,7 +2238,7 @@ roadmap:
         tags:
           - cross_session_awareness
           - related_sessions
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - session_work_model_contract_foundation
         - session_outcome_aggregation
