@@ -81,6 +81,7 @@
 1258	Sources/Feed/FeedCoordinator.swift
 1240	bmuxTests/SidebarOrderingTests.swift
 1228	CLI/BMUXCLI+CodexTokenAudit.swift
+1217	Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite/ProvenanceSQLiteRepository+TurnOutcome.swift
 1209	Packages/macOS/BmuxCommandPalette/Tests/BmuxCommandPaletteTests/CommandPaletteSearchEngineTests.swift
 1205	Sources/RemoteTmuxController.swift
 1204	bmuxTests/FileExplorerStoreTests.swift
@@ -89,6 +90,7 @@
 1189	Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts/ProvenanceCodingAgentSemanticInferenceContracts.swift
 1180	Sources/Panels/TerminalPanel.swift
 1166	Sources/VaultAgentProcessScanner.swift
+1156	Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite/ProvenanceSQLiteRepository+SessionOutcome.swift
 1147	bmuxTests/PiVaultAgentPersistenceTests.swift
 1121	bmuxTests/AgentHibernationTests.swift
 1093	bmuxUITests/BonsplitTabDragUITests.swift
@@ -151,6 +153,7 @@
 755	Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts/ProvenanceSemanticMessageContracts.swift
 754	bmuxTests/GhosttyTerminalStartupEnvironmentTests.swift
 752	bmuxUITests/CloseWorkspaceCmdDUITests.swift
+750	Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSQLiteTests/TurnOutcomeProjectionTests.swift
 749	bmuxTests/CLIProvenanceCodexTranscriptImporterTests.swift
 749	bmuxTests/UpdatePillReleaseVisibilityTests.swift
 743	bmuxTests/SidebarWorkspaceSnapshotRefreshPolicyTests.swift

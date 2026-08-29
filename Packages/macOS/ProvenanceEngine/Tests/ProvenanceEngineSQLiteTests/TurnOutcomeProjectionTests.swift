@@ -53,7 +53,7 @@ struct TurnOutcomeProjectionTests {
         #expect(outcome.commandsCompleted.allSatisfy { !$0.evidence.isEmpty })
         #expect(outcome.validationsAttempted.allSatisfy { !$0.evidence.isEmpty })
         #expect(outcome.artifactsChanged.allSatisfy { !$0.evidence.isEmpty })
-        #expect(try await repository.storageSummary().schemaVersion == 21)
+        #expect(try await repository.storageSummary().schemaVersion == 22)
         #expect(try await repository.storageSummary().codingAgentTurnOutcomeCount == 1)
         #expect(try await repository.storageSummary().codingAgentTurnOutcomeRevisionCount >= 4)
 
@@ -338,6 +338,7 @@ struct TurnOutcomeProjectionTests {
         #expect(missingRevision.reason == "no_revision")
     }
 
+
     private static func seed(_ events: [ProvenanceEvent], into repository: ProvenanceSQLiteRepository) async throws {
         for event in events {
             try await append(event, into: repository)
@@ -360,23 +361,32 @@ struct TurnOutcomeProjectionTests {
     }
 }
 
-private struct TurnOutcomeFixture {
+struct TurnOutcomeFixture {
     let suffix: String
     let branch: String
     let head: String
     let pathSuffix: String
+    let sessionID: String
+    let usesSessionWorktree: Bool
+    let sessionStatus: String
     let baseTime = Date(timeIntervalSince1970: 1_800_000_000)
 
     init(
         suffix: String = "main",
         branch: String = "feature/turn-outcome",
         head: String = "abc123",
-        pathSuffix: String = "main"
+        pathSuffix: String = "main",
+        sessionID: String? = nil,
+        usesSessionWorktree: Bool = true,
+        sessionStatus: String = "completed"
     ) {
         self.suffix = suffix
         self.branch = branch
         self.head = head
         self.pathSuffix = pathSuffix
+        self.sessionID = sessionID ?? "session-\(suffix)"
+        self.usesSessionWorktree = usesSessionWorktree
+        self.sessionStatus = sessionStatus
     }
 
     var repository: ProvenanceRepositoryRecord {
@@ -407,13 +417,13 @@ private struct TurnOutcomeFixture {
 
     var session: ProvenanceSessionRecord {
         ProvenanceSessionRecord(
-            id: "session-\(suffix)",
+            id: sessionID,
             agentKind: "codex",
             workspaceID: "workspace-\(suffix)",
             surfaceID: "surface-\(suffix)",
-            worktreeID: worktree.id,
-            cwd: worktree.path,
-            status: "completed",
+            worktreeID: usesSessionWorktree ? worktree.id : nil,
+            cwd: usesSessionWorktree ? worktree.path : nil,
+            status: sessionStatus,
             startedAt: time(1),
             updatedAt: time(9)
         )

@@ -2,7 +2,6 @@ import Foundation
 import BmuxAgentChat
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
-
 extension BMUXCLI {
     func runProvenanceCommand(
         commandArgs: [String],
@@ -38,6 +37,8 @@ extension BMUXCLI {
                 commandArgs: Array(commandArgs.dropFirst()),
                 jsonOutput: jsonOutput
             )
+        case "session":
+            try await runProvenanceSession(commandArgs: Array(commandArgs.dropFirst()), jsonOutput: jsonOutput)
         case "import":
             try await runProvenanceImport(
                 commandArgs: Array(commandArgs.dropFirst()),
@@ -69,7 +70,6 @@ extension BMUXCLI {
             ))
         }
     }
-
     private func runProvenanceExplain(commandArgs: [String], jsonOutput: Bool) async throws {
         let commandName = "provenance explain"
         let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")

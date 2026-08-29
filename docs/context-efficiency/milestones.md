@@ -33,6 +33,8 @@ PE-owned richer completed evidence ingestion, inference records, milestone
 semantics, scoped architecture projections, and a high-level `SessionWorkModel`
 consumer projection. Older milestone language that suggests bmux owns semantic
 progress modeling should now be read as historical product motivation only.
+Session Outcome is the deterministic factual aggregation layer that now sits
+between `TurnOutcome` revisions and later semantic/cross-session consumers.
 
 The cross-session coordination roadmap is recorded in
 `docs/context-efficiency/cross-session-coordination-active-work-awareness.md`.

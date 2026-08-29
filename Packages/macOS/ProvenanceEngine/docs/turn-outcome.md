@@ -1,8 +1,8 @@
 # Turn Outcome Projection
 
 `TurnOutcome` is the factual, revisioned outcome projection for one
-coding-agent turn. It is the smallest durable unit PE exposes for later
-session-outcome aggregation and bounded cross-session handoffs.
+coding-agent turn. It is the turn-level durable unit PE exposes as input to
+Session Outcome aggregation and later bounded cross-session handoffs.
 
 The projection is deterministic Current State. It summarizes accepted evidence
 already in the immutable PE ledger. It does not infer intent, evaluate quality,
@@ -123,15 +123,19 @@ of observed session, thread, turn, prompt, plan, command, visible-summary, and
 file-attribution evidence. `turnOutcome(...)` is a more outcome-oriented view
 for one turn, still entirely factual and evidence-backed.
 
-`SessionWorkModel` remains the PE-owned composition layer above factual
-projection and active semantic inference records. Turn Outcome is not a
-semantic field inside SessionWorkModel; it is a factual input that later
-Session Outcome and Smart Session work may consume.
+`sessionOutcome(...)` is the factual aggregation layer above Turn Outcome. It
+records which exact Turn Outcome revisions were included for a PE session while
+remaining below semantic interpretation.
 
-Deferred work includes Session Outcome aggregation, richer dedicated validation
-evidence links, approval/error/compaction evidence, milestone and blocker
-semantics, progress/risk/architecture semantics, cross-session retrieval and
-handoff assembly, and Knowledge Compiler output.
+`SessionWorkModel` remains the PE-owned composition layer above factual
+projection, Turn Outcome, Session Outcome, and active semantic inference
+records. Turn Outcome is not a semantic field inside SessionWorkModel; it is a
+factual input that Session Outcome and Smart Session work may consume.
+
+Deferred work includes richer dedicated validation evidence links,
+approval/error/compaction evidence, milestone and blocker semantics,
+progress/risk/architecture semantics, cross-session retrieval and handoff
+assembly, and Knowledge Compiler output.
 
 ## Example
 

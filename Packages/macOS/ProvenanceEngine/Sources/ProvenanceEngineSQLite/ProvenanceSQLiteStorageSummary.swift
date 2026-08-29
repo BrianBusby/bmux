@@ -75,6 +75,12 @@ struct ProvenanceSQLiteStorageSummary: Equatable, Sendable {
     /// Number of historical coding-agent turn outcome revision rows.
     var codingAgentTurnOutcomeRevisionCount: Int
 
+    /// Number of latest coding-agent session outcome projection rows.
+    var codingAgentSessionOutcomeCount: Int
+
+    /// Number of historical coding-agent session outcome revision rows.
+    var codingAgentSessionOutcomeRevisionCount: Int
+
     init(
         schemaVersion: Int32,
         eventCount: Int,
@@ -100,7 +106,9 @@ struct ProvenanceSQLiteStorageSummary: Equatable, Sendable {
         codingAgentAssistantMessageCount: Int = 0,
         codingAgentFileChangeAttributionCount: Int = 0,
         codingAgentTurnOutcomeCount: Int = 0,
-        codingAgentTurnOutcomeRevisionCount: Int = 0
+        codingAgentTurnOutcomeRevisionCount: Int = 0,
+        codingAgentSessionOutcomeCount: Int = 0,
+        codingAgentSessionOutcomeRevisionCount: Int = 0
     ) {
         self.schemaVersion = schemaVersion
         self.eventCount = eventCount
@@ -127,5 +135,7 @@ struct ProvenanceSQLiteStorageSummary: Equatable, Sendable {
         self.codingAgentFileChangeAttributionCount = codingAgentFileChangeAttributionCount
         self.codingAgentTurnOutcomeCount = codingAgentTurnOutcomeCount
         self.codingAgentTurnOutcomeRevisionCount = codingAgentTurnOutcomeRevisionCount
+        self.codingAgentSessionOutcomeCount = codingAgentSessionOutcomeCount
+        self.codingAgentSessionOutcomeRevisionCount = codingAgentSessionOutcomeRevisionCount
     }
 }

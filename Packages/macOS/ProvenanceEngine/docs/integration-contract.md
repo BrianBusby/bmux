@@ -191,6 +191,53 @@ architecture, generate LLM-authored summaries, retain raw transcripts, or treat
 one passing validation command as proof that the entire turn is valid. Full
 contract details are in `docs/turn-outcome.md`.
 
+The accepted session-outcome read contract is:
+
+- Request: `ProvenanceSessionOutcomeRequest(sessionID:revisionID:)`.
+- Response: `ProvenanceSessionOutcomeResponse`.
+- Outcome DTO: `ProvenanceSessionOutcome`.
+- Projection metadata DTO: `ProvenanceSessionOutcomeProjectionMetadata`.
+- Constituent-turn DTO: `ProvenanceSessionOutcomeTurnReference`.
+- Completeness DTOs: `ProvenanceSessionOutcomeCompleteness` and
+  `ProvenanceSessionOutcomeAvailability`.
+- Repository boundary DTO: `ProvenanceSessionOutcomeRepositoryBoundary`.
+- Item DTOs: `ProvenanceSessionOutcomePlanItem`,
+  `ProvenanceSessionOutcomeCommand`, `ProvenanceSessionOutcomeArtifact`,
+  `ProvenanceSessionOutcomeValidation`, and
+  `ProvenanceSessionOutcomeTextFact`.
+- Client method: `ProvenanceEngineClient.sessionOutcome(...)`.
+- Capability: `query_session_outcome`.
+
+This contract is a revisioned factual Current State projection for one
+coding-agent session. It aggregates the accepted `TurnOutcome` revisions that
+belong to the session and records the exact turn outcome revision id, content
+fingerprint, and source watermark for every constituent turn. It exposes stable
+PE session identity, provider/session identities, ordered turns, explicit
+objectives, reconciled latest factual plan states, completed actions,
+completed commands, attributed file changes, validation attempts, blockers,
+unresolved items, resume points, repository/worktree/branch/HEAD boundaries,
+lifecycle state, completion state, completeness metadata, and supporting
+evidence references where accepted evidence supports those facts.
+
+When no session matches `sessionID`, the response returns `found == false`,
+`reason == "no_session"`, and `outcome == nil`. A specific historical revision
+can be requested with `revisionID`; missing revisions return `found == false`
+with `reason == "no_revision"`.
+
+Session outcomes are rebuilt from immutable accepted evidence plus the
+deterministic `TurnOutcome` revisions selected at projection time. Duplicate
+replay or overlapping evidence that changes only supporting references does
+not create a new factual revision. Late or corrected evidence that changes a
+constituent turn outcome or session-level factual output does create a new
+revision while preserving prior revisions.
+
+This read remains below semantic `SessionWorkModel`, Smart Session UI,
+cross-session retrieval, context injection, and Knowledge Compiler output. It
+does not infer unstated objectives, invent decisions or blockers, rank work,
+summarize raw transcripts, store hidden reasoning, or treat one passing
+validation command as proof that the entire session is valid. Full contract
+details are in `docs/session-outcome.md`.
+
 The semantic inference framework foundation is available above deterministic
 Current State through:
 

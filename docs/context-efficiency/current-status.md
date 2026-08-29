@@ -84,8 +84,19 @@ rebuildable factual outcome for one coding-agent turn with field or item
 evidence references, source evidence watermark, repository/worktree boundary,
 validation command attempts, explicit continuation state, and completeness
 metadata. It remains below semantic `SessionWorkModel` interpretation and does
-not summarize, rank, or inject cross-session context. The next factual PE slice
-is Session Outcome aggregation over TurnOutcome revisions.
+not summarize, rank, or inject cross-session context.
+
+Session Outcome aggregation is implemented on branch
+`session-outcome-aggregation` as the next factual PE layer above Turn Outcome.
+`sessionOutcome(...)` exposes a revisioned, rebuildable outcome projection for
+one coding-agent session, aggregates exact accepted `TurnOutcome` revisions,
+preserves ordered constituent turn references, reconciles latest factual plan
+state, records repository/worktree/branch/HEAD boundaries without silently
+mixing incompatible boundaries, and exposes completeness/source-availability
+metadata. It remains below semantic `SessionWorkModel`, Smart Session UI,
+cross-session retrieval, context injection, and Knowledge Compiler output.
+After this slice, the next dependency-ready factual direction is cross-session
+work awareness over bounded session-level factual units.
 
 Live prompt-link repair is implemented for active Codex sessions: on
 `UserPromptSubmit`, bmux now starts/resumes transcript observation and runs the
@@ -119,11 +130,9 @@ use one branch and one worktree unless a future release/extraction task
 explicitly requires a separate PE checkout. The original PE repository remains
 an archival and recovery reference until the migration is accepted.
 
-Verification for planning/docs-only Project Truth slices:
+Verification for this Session Outcome branch:
 
 - Project Truth: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
-- Read-only CI gate locally when GitHub evidence access is available: `./scripts/project-docs ci`
-- Run `git diff --check` in the monorepo.
 
 Runtime tests or tagged reloads are only required when production app/runtime
 behavior changes; this three-view clarification is planning/documentation only.

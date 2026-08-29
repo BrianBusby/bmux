@@ -42,6 +42,7 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         #expect(projection.latestTurn?.assistantMessages.count == 1)
     }
 
+
     @Test
     func liveImportConsumesCompletedAppendsAndReplaysIdempotently() async throws {
         let fixture = try StoreFixture()
@@ -333,7 +334,7 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         return try #require(projection.snapshot)
     }
 
-    private static func codexTranscriptFixtureLines() throws -> [String] {
+    static func codexTranscriptFixtureLines() throws -> [String] {
         let patch = [
             "*** Begin Patch",
             "*** Add File: Sources/Importer.swift",
@@ -666,6 +667,7 @@ struct CLIProvenanceCodexTranscriptImporterTests {
             ]
         )
     }
+
 
     private static func codexTranscriptLine(
         ordinal: Int,
