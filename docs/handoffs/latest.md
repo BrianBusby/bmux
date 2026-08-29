@@ -8,6 +8,12 @@
 - PR: https://github.com/BrianBusby/bmux/pull/80
 - Status: implemented and open for review; do not merge automatically
 
+## Current Generated Truth
+
+- [Project status](../generated/project-status.md)
+- [Nested roadmap](../generated/nested-roadmap.md)
+- [Repository status](../generated/repository-status.md)
+
 ## What Changed
 
 Provenance Engine now owns a read-only related-session awareness foundation.
