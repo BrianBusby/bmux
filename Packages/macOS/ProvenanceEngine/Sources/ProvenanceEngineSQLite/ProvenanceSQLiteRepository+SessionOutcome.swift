@@ -1115,7 +1115,7 @@ private struct SessionOutcomeBoundaryAccumulator {
         if !revisionIDs.contains(revisionID) {
             revisionIDs.append(revisionID)
         }
-        evidence = deduplicated(evidence + boundary.evidence)
+        evidence = Self.deduplicated(evidence + boundary.evidence)
     }
 
     func boundaryFact(id: String) -> ProvenanceSessionOutcomeRepositoryBoundary {
@@ -1133,24 +1133,24 @@ private struct SessionOutcomeBoundaryAccumulator {
             evidence: evidence
         )
     }
-}
 
-private func deduplicated(
-    _ references: [ProvenanceTurnOutcomeEvidenceReference]
-) -> [ProvenanceTurnOutcomeEvidenceReference] {
-    var seen = Set<String>()
-    var result: [ProvenanceTurnOutcomeEvidenceReference] = []
-    for reference in references {
-        let key = [
-            reference.eventID,
-            String(reference.eventSequence),
-            reference.recordKind,
-            reference.recordID,
-            reference.interpretedByRuleVersion,
-        ].joined(separator: "\u{0}")
-        guard !seen.contains(key) else { continue }
-        seen.insert(key)
-        result.append(reference)
+    private static func deduplicated(
+        _ references: [ProvenanceTurnOutcomeEvidenceReference]
+    ) -> [ProvenanceTurnOutcomeEvidenceReference] {
+        var seen = Set<String>()
+        var result: [ProvenanceTurnOutcomeEvidenceReference] = []
+        for reference in references {
+            let key = [
+                reference.eventID,
+                String(reference.eventSequence),
+                reference.recordKind,
+                reference.recordID,
+                reference.interpretedByRuleVersion,
+            ].joined(separator: "\u{0}")
+            guard !seen.contains(key) else { continue }
+            seen.insert(key)
+            result.append(reference)
+        }
+        return result
     }
-    return result
 }
