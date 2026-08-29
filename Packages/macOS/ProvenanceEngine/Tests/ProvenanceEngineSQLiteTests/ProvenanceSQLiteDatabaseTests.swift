@@ -491,35 +491,19 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try await repository.schemaVersion() == 22)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
-        #expect(try Self.tableExists("provenance_events", in: database))
-        #expect(try Self.tableExists("provenance_sessions", in: database))
-        #expect(try Self.tableExists("provenance_repositories", in: database))
-        #expect(try Self.tableExists("provenance_worktrees", in: database))
-        #expect(try Self.tableExists("provenance_session_relationships", in: database))
-        #expect(try Self.tableExists("provenance_session_external_identities", in: database))
-        #expect(try Self.tableExists("provenance_work_items", in: database))
-        #expect(try Self.tableExists("provenance_work_contributions", in: database))
-        #expect(try Self.tableExists("provenance_checkpoints", in: database))
-        #expect(try Self.tableExists("provenance_change_sets", in: database))
-        #expect(try Self.tableExists("provenance_file_changes", in: database))
-        #expect(try Self.tableExists("provenance_validation_runs", in: database))
-        #expect(try Self.tableExists("provenance_workspace_display", in: database))
-        #expect(try Self.tableExists("provenance_coding_agent_threads", in: database))
-        #expect(try Self.tableExists("provenance_coding_agent_turns", in: database))
-        #expect(try Self.tableExists("provenance_coding_agent_prompts", in: database))
-        #expect(try Self.tableExists("provenance_coding_agent_plan_updates", in: database))
-        #expect(try Self.tableExists("provenance_coding_agent_commands", in: database))
-        #expect(try Self.tableExists("provenance_coding_agent_reasoning_summaries", in: database))
-        #expect(try Self.tableExists("provenance_coding_agent_assistant_messages", in: database))
-        #expect(try Self.tableExists("provenance_coding_agent_file_change_attributions", in: database))
-        #expect(try Self.tableExists("provenance_coding_agent_turn_outcome_revisions", in: database))
-        #expect(try Self.tableExists("provenance_coding_agent_turn_outcomes", in: database))
-        #expect(try Self.tableExists("provenance_coding_agent_session_outcome_revisions", in: database))
-        #expect(try Self.tableExists("provenance_coding_agent_session_outcomes", in: database))
-        #expect(try Self.tableExists("provenance_semantic_inferences", in: database))
-        #expect(try Self.tableExists("provenance_semantic_messages", in: database))
-        #expect(try Self.tableExists("provenance_storage_repair_attempts", in: database))
-        #expect(try Self.tableExists("provenance_schema_migrations", in: database))
+        try Self.expectTables([
+            "provenance_events", "provenance_sessions", "provenance_repositories", "provenance_worktrees",
+            "provenance_session_relationships", "provenance_session_external_identities", "provenance_work_items",
+            "provenance_work_contributions", "provenance_checkpoints", "provenance_change_sets",
+            "provenance_file_changes", "provenance_validation_runs", "provenance_workspace_display",
+            "provenance_coding_agent_threads", "provenance_coding_agent_turns", "provenance_coding_agent_prompts",
+            "provenance_coding_agent_plan_updates", "provenance_coding_agent_commands",
+            "provenance_coding_agent_reasoning_summaries", "provenance_coding_agent_assistant_messages",
+            "provenance_coding_agent_file_change_attributions", "provenance_coding_agent_turn_outcome_revisions",
+            "provenance_coding_agent_turn_outcomes", "provenance_coding_agent_session_outcome_revisions",
+            "provenance_coding_agent_session_outcomes", "provenance_semantic_inferences",
+            "provenance_semantic_messages", "provenance_storage_repair_attempts", "provenance_schema_migrations",
+        ], in: database)
         #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [22, 21, 20, 19, 18, 17, 16, 15, 14, 13])
     }
 
@@ -3470,6 +3454,12 @@ struct ProvenanceSQLiteDatabaseTests {
         defer { query.finalize() }
         try query.bind(tableName, at: 1)
         return try query.step()
+    }
+
+    private static func expectTables(_ tableNames: [String], in database: ProvenanceSQLiteDatabase) throws {
+        for tableName in tableNames {
+            #expect(try Self.tableExists(tableName, in: database))
+        }
     }
 
     private static func tableHasColumn(_ tableName: String, _ columnName: String, in database: ProvenanceSQLiteDatabase) throws -> Bool {

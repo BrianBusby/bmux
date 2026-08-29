@@ -54,43 +54,6 @@ actor ProvenanceSQLiteRepository {
         try database.userVersion
     }
 
-    /// Reads internal storage counts for the event ledger and current-state projection tables.
-    ///
-    /// - Returns: A bounded summary of repository-owned SQLite storage state.
-    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects one of the reads.
-    func storageSummary() throws -> ProvenanceSQLiteStorageSummary {
-        let ledgerSummary = try eventLedgerSummary()
-        return ProvenanceSQLiteStorageSummary(
-            schemaVersion: try schemaVersion(),
-            eventCount: ledgerSummary.count,
-            latestEventSequence: ledgerSummary.latestSequence,
-            repositoryCount: try countRows(in: "provenance_repositories"),
-            worktreeCount: try countRows(in: "provenance_worktrees"),
-            sessionCount: try countRows(in: "provenance_sessions"),
-            sessionRelationshipCount: try countRows(in: "provenance_session_relationships"),
-            externalIdentityCount: try countRows(in: "provenance_session_external_identities"),
-            workItemCount: try countRows(in: "provenance_work_items"),
-            contributionCount: try countRows(in: "provenance_work_contributions"),
-            checkpointCount: try countRows(in: "provenance_checkpoints"),
-            changeSetCount: try countRows(in: "provenance_change_sets"),
-            fileChangeCount: try countRows(in: "provenance_file_changes"),
-            validationRunCount: try countRows(in: "provenance_validation_runs"),
-            workspaceDisplayCount: try countRows(in: "provenance_workspace_display"),
-            codingAgentThreadCount: try countRows(in: "provenance_coding_agent_threads"),
-            codingAgentTurnCount: try countRows(in: "provenance_coding_agent_turns"),
-            codingAgentPromptCount: try countRows(in: "provenance_coding_agent_prompts"),
-            codingAgentPlanUpdateCount: try countRows(in: "provenance_coding_agent_plan_updates"),
-            codingAgentCommandCount: try countRows(in: "provenance_coding_agent_commands"),
-            codingAgentReasoningSummaryCount: try countRows(in: "provenance_coding_agent_reasoning_summaries"),
-            codingAgentAssistantMessageCount: try countRows(in: "provenance_coding_agent_assistant_messages"),
-            codingAgentFileChangeAttributionCount: try countRows(in: "provenance_coding_agent_file_change_attributions"),
-            codingAgentTurnOutcomeCount: try countRows(in: "provenance_coding_agent_turn_outcomes"),
-            codingAgentTurnOutcomeRevisionCount: try countRows(in: "provenance_coding_agent_turn_outcome_revisions"),
-            codingAgentSessionOutcomeCount: try countRows(in: "provenance_coding_agent_session_outcomes"),
-            codingAgentSessionOutcomeRevisionCount: try countRows(in: "provenance_coding_agent_session_outcome_revisions")
-        )
-    }
-
     /// Appends one immutable provenance event to the internal ledger.
     ///
     /// - Parameter event: Contract event to persist.
@@ -1674,7 +1637,7 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
-    private func eventLedgerSummary() throws -> (count: Int, latestSequence: Int?) {
+    func eventLedgerSummary() throws -> (count: Int, latestSequence: Int?) {
         let query = try database.prepare("SELECT COUNT(*), MAX(sequence) FROM provenance_events")
         defer { query.finalize() }
         guard try query.step() else { return (0, nil) }
@@ -2043,7 +2006,7 @@ actor ProvenanceSQLiteRepository {
         "\(system)\u{0}\(kind)\u{0}\(externalID)"
     }
 
-    private func countRows(in tableName: String) throws -> Int {
+    func countRows(in tableName: String) throws -> Int {
         let query = try database.prepare("SELECT COUNT(*) FROM \(tableName)")
         defer { query.finalize() }
         guard try query.step() else { return 0 }
@@ -5808,62 +5771,7 @@ actor ProvenanceSQLiteRepository {
                 """,
             ]
         ),
-        ProvenanceSQLiteMigration(
-            version: 22,
-            statements: [
-                """
-                CREATE TABLE provenance_coding_agent_session_outcome_revisions (
-                    id TEXT PRIMARY KEY NOT NULL,
-                    session_id TEXT NOT NULL,
-                    projection_rule_id TEXT NOT NULL,
-                    projection_rule_version TEXT NOT NULL,
-                    source_watermark_sequence INTEGER,
-                    content_fingerprint TEXT NOT NULL,
-                    outcome_json TEXT NOT NULL,
-                    created_at_seconds REAL
-                )
-                """,
-                """
-                CREATE INDEX provenance_coding_agent_session_outcome_revisions_session_index
-                ON provenance_coding_agent_session_outcome_revisions (
-                    session_id,
-                    source_watermark_sequence,
-                    created_at_seconds
-                )
-                """,
-                """
-                CREATE INDEX provenance_coding_agent_session_outcome_revisions_rule_index
-                ON provenance_coding_agent_session_outcome_revisions (
-                    projection_rule_id,
-                    projection_rule_version,
-                    content_fingerprint
-                )
-                """,
-                """
-                CREATE TABLE provenance_coding_agent_session_outcomes (
-                    session_id TEXT PRIMARY KEY NOT NULL,
-                    latest_revision_id TEXT NOT NULL,
-                    projection_rule_id TEXT NOT NULL,
-                    projection_rule_version TEXT NOT NULL,
-                    latest_evaluated_sequence INTEGER,
-                    updated_at_seconds REAL
-                )
-                """,
-                """
-                CREATE INDEX provenance_coding_agent_session_outcomes_sequence_index
-                ON provenance_coding_agent_session_outcomes (
-                    latest_evaluated_sequence,
-                    updated_at_seconds
-                )
-                """,
-                """
-                UPDATE provenance_metadata
-                SET value = '22'
-                WHERE key = 'schema_version'
-                """,
-            ]
-        ),
-    ]
+    ] + sessionOutcomeMigrations
 }
 
 extension ProvenanceSQLiteRepository: ProvenanceSessionLifecycleRecording {
