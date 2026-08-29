@@ -363,6 +363,59 @@ struct ArtifactCollisionProjectionTests {
     }
 
     @Test
+    func partialBranchAndHeadEvidenceDoesNotClaimSameBoundary() async throws {
+        let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
+        defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }
+        let store = try ProvenanceSQLiteRepository(url: url)
+        let fixture = RelatedSessionFixture()
+        let repo = fixture.repository()
+        let targetWorktree = fixture.worktree(
+            id: "worktree-target",
+            repository: repo,
+            path: "/repos/partial-boundary-target",
+            branch: "main",
+            head: "target-head",
+            offset: 1
+        )
+        let relatedWorktree = fixture.worktree(
+            id: "worktree-related",
+            repository: repo,
+            path: "/repos/partial-boundary-related",
+            branch: nil,
+            head: nil,
+            offset: 2
+        )
+        let target = try await RelatedSessionProjectionTestSupport.seedSession(
+            id: "session-target",
+            status: "active",
+            worktree: targetWorktree,
+            repository: repo,
+            paths: ["Sources/Shared.swift"],
+            fixture: fixture,
+            into: store
+        )
+        _ = try await RelatedSessionProjectionTestSupport.seedSession(
+            id: "session-related",
+            status: "active",
+            worktree: relatedWorktree,
+            repository: repo,
+            paths: ["Sources/Shared.swift"],
+            fixture: fixture,
+            into: store
+        )
+
+        let candidate = try #require(try await store.artifactCollisions(
+            ProvenanceArtifactCollisionRequest(targetSessionID: target.session.id)
+        ).projection?.candidates.first)
+        let reasonKinds = Set(candidate.reasons.map(\.kind))
+
+        #expect(candidate.boundaryComparison.branchRelationship == "unknown_branch")
+        #expect(candidate.boundaryComparison.headRelationship == "unknown_head")
+        #expect(reasonKinds.contains(.sameBranch) == false)
+        #expect(reasonKinds.contains(.sameHead) == false)
+    }
+
+    @Test
     func orderingLimitsAndUpdatedAfterAreDeterministic() async throws {
         let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
         defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }
