@@ -2,52 +2,82 @@
 
 ## Active Slice
 
-- Slice: `monorepo_repository_consolidation`
-- Branch: `monorepo-provenance-engine`
-- Worktree: `/Users/brianbusby/repos/bmux-monorepo-provenance-engine`
-- Status: active draft migration branch
+- Slice: `cross_session_work_awareness_foundation`
+- Branch: `cross-session-work-awareness-foundation`
+- Worktree: `/Users/brianbusby/repos/.bmux-worktrees/cross-session-work-awareness-foundation`
+- PR: https://github.com/BrianBusby/bmux/pull/80
+- Status: implemented and open for review; do not merge automatically
 
-## Current State
+## What Changed
 
-bmux is the canonical monorepo. Provenance Engine has been imported with history
-under `Packages/macOS/ProvenanceEngine` and remains an independent SwiftPM
-package boundary. Root Project Truth now lives under `project/`; generated status
-lives under `docs/generated/`; architecture entrypoints begin at
-`docs/architecture/README.md`.
+Provenance Engine now owns a read-only related-session awareness foundation.
+`ProvenanceEngineClient.relatedSessions(...)` returns bounded related-session
+briefs for a target PE session with deterministic typed reasons, compact Session
+Outcome facts, exact Session Outcome and SessionWorkModel revision metadata,
+freshness/source-watermark metadata, evidence/projection references, and
+explicit completeness state.
 
-The old `project/shared-project-source.yaml`, peer checkout CI, and per-feature
-PE revision pinning are obsolete for normal development. Cross-component slices
-should use one monorepo branch/worktree/PR while preserving PE package
-boundaries.
+Implemented relationship reasons:
 
-## Read Next
+- same repository
+- same worktree
+- same branch
+- session-tree ancestor
+- session-tree descendant
+- session-tree sibling
+- shared provider thread
+- shared external identity
+- shared changed artifact path inside shared repository/worktree context
 
-1. `AGENTS.md`
-2. `docs/README.md`
-3. `docs/generated/project-status.md`
-4. `docs/generated/nested-roadmap.md`
-5. `docs/generated/repository-status.md`
-6. `docs/architecture/README.md`
-7. `docs/planning/monorepo-migration-ledger.md`
+Ordering is deterministic by strongest relationship reason, then freshness, then
+stable PE session id. Result-limit and recent-time omissions are bounded by
+`exclusionLimit` and explained with reason codes such as `result_limit` and
+`outside_recent_boundary`.
 
-## Verification Commands
+## Boundaries
 
-```bash
-./scripts/project-docs validate
-./scripts/project-docs generate
-./scripts/project-docs check
-./scripts/project-docs ci
-python3 tools/project-docs/tests/test_project_docs.py
-python3 scripts/check-workspace-package-groups.py --check
-python3 scripts/check-package-resolved-policy.py
-cd Packages/macOS/ProvenanceEngine && swift test
-```
+This slice is PE package contract/storage/docs work only. It does not add bmux
+UI or CLI consumption, prompt/context injection, agent coordination, automatic
+interruption, proactive notification, raw transcript retention, hidden reasoning
+storage, LLM-authored cross-session summaries, artifact-collision warnings,
+Knowledge Compiler integration, organization-scale storage, or new semantic
+milestone/blocker/decision/risk/architecture inference.
 
-Run bmux focused build/tests after package resolution is stable and before
-handoff or PR publication.
+Existing SessionWorkModel semantic fields may appear in related-session briefs,
+but only with their original semantic provenance. They are not relationship
+reasons.
 
-## Pending Product Branches
+## Validation
 
-See `docs/planning/monorepo-migration-ledger.md`. The factual agent Session view
-branch/PR is the most important product branch to rebase or supersede after the
-migration lands.
+Passed on 2026-08-29:
+
+- `swift test --package-path Packages/macOS/ProvenanceEngine --filter 'RelatedSessionProjectionTests|RelatedSessionProjectionRevisionTests|RelatedSessionMigrationTests|RelatedSessionContractTests'` - 15 tests / 4 suites
+- `swift test --package-path Packages/macOS/ProvenanceEngine` - 186 tests / 23 suites
+- `swift test --package-path Packages/macOS/ProvenanceEngine --filter 'SessionOutcomeProjectionTests|TurnOutcomeProjectionTests|SessionWorkModelFoundationTests|ProjectionRebuildValidationTests|ProvenanceEngineClientFactoryTests'` - 35 tests / 5 suites
+- `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
+- `GITHUB_TOKEN=$(gh auth token) ./scripts/project-docs ci`
+- `python3 scripts/swift_file_length_budget.py --repo-root . --base-ref origin/main`
+- `./scripts/lint-pbxproj-test-wiring.sh`
+- `git diff --check`
+
+No tagged app build or reload was run because no production bmux runtime/UI code
+changed.
+
+## Known Limitations
+
+Provider-thread and external-identity reasons appear only when accepted current
+state preserves shareable identity records for both sessions.
+
+Shared changed artifact is only a factual same-path relationship inside shared
+repository/worktree context. It is not rename tracking, diff-hunk identity,
+component inference, or collision analysis.
+
+`project-docs ci` should be run with `GITHUB_TOKEN=$(gh auth token)` in this
+local environment; without an explicit token it hit GitHub rate-limit responses.
+
+## Next Ready Work
+
+Generated Project Truth now lists `cross_session_artifact_collision_awareness`
+as the ready but unselected next cross-session slice. Rich cross-session
+work-state semantics remain gated on validated milestone and
+blocker/approach-change semantics.
