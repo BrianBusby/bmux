@@ -6,23 +6,25 @@ extension ProvenanceSQLiteRepository {
         participants: [ProvenanceArtifactCollisionSessionParticipation],
         sharedRepositoryKeys: [String]
     ) -> ProvenanceArtifactCollisionBoundaryComparison {
-        let worktreeIDs = Set(participants.flatMap { participant in
-            participant.repositoryBoundaries.compactMap(\.worktreeID)
-                + participant.worktreeBoundaries.compactMap(\.worktreeID)
-                + [participant.session.worktreeID].compactMap { $0 }
-        }).sorted()
-        let worktreePaths = Set(participants.flatMap { participant in
+        let worktreeIDValues = participants.map { participant in
+            Set(participant.repositoryBoundaries.compactMap(\.worktreeID)
+                + participant.worktreeBoundaries.compactMap(\.worktreeID))
+        }
+        let branchValues = participants.map { participant in
+            Set(participant.repositoryBoundaries.compactMap(\.branch)
+                + participant.worktreeBoundaries.compactMap(\.branch))
+        }
+        let headValues = participants.map { participant in
+            Set(participant.repositoryBoundaries.compactMap(\.head)
+                + participant.worktreeBoundaries.compactMap(\.head))
+        }
+        let worktreeIDs = Set(worktreeIDValues.flatMap { Array($0) }).sorted()
+        let worktreeBoundaryPaths = Set(participants.flatMap { participant in
             participant.repositoryBoundaries.compactMap(\.worktreePath)
                 + participant.worktreeBoundaries.compactMap(\.worktreePath)
         }).sorted()
-        let branches = Set(participants.flatMap { participant in
-            participant.repositoryBoundaries.compactMap(\.branch)
-                + participant.worktreeBoundaries.compactMap(\.branch)
-        }).sorted()
-        let heads = Set(participants.flatMap { participant in
-            participant.repositoryBoundaries.compactMap(\.head)
-                + participant.worktreeBoundaries.compactMap(\.head)
-        }).sorted()
+        let branches = Set(branchValues.flatMap { Array($0) }).sorted()
+        let heads = Set(headValues.flatMap { Array($0) }).sorted()
         let evidence = uniqueArtifactCollisionEvidence(participants.flatMap { participant in
             participant.repositoryBoundaries.flatMap {
                 artifactCollisionEvidence($0, sessionID: participant.sessionID)
@@ -35,29 +37,26 @@ extension ProvenanceSQLiteRepository {
                 ? "missing_repository_evidence"
                 : "shared_repository",
             worktreeRelationship: artifactCollisionBoundaryRelationship(
-                values: worktreeIDs,
-                participantCount: participants.count,
+                valueSets: worktreeIDValues,
                 sameValue: "same_worktree",
                 differentValue: "different_worktrees",
                 unknownValue: "unknown_worktree"
             ),
             branchRelationship: artifactCollisionBoundaryRelationship(
-                values: branches,
-                participantCount: participants.count,
+                valueSets: branchValues,
                 sameValue: "same_branch",
                 differentValue: "different_branches",
                 unknownValue: "unknown_branch"
             ),
             headRelationship: artifactCollisionBoundaryRelationship(
-                values: heads,
-                participantCount: participants.count,
+                valueSets: headValues,
                 sameValue: "same_head",
                 differentValue: "divergent_head",
                 unknownValue: "unknown_head"
             ),
             sharedRepositoryKeys: sharedRepositoryKeys,
             worktreeIDs: worktreeIDs,
-            worktreePaths: worktreePaths,
+            worktreePaths: worktreeBoundaryPaths,
             branches: branches,
             heads: heads,
             evidence: evidence
@@ -190,13 +189,16 @@ extension ProvenanceSQLiteRepository {
     }
 
     private func artifactCollisionBoundaryRelationship(
-        values: [String],
-        participantCount: Int,
+        valueSets: [Set<String>],
         sameValue: String,
         differentValue: String,
         unknownValue: String
     ) -> String {
-        _ = participantCount
+        guard !valueSets.isEmpty,
+              valueSets.allSatisfy({ !$0.isEmpty }) else {
+            return unknownValue
+        }
+        let values = Set(valueSets.flatMap { Array($0) })
         guard !values.isEmpty else { return unknownValue }
         return values.count == 1 ? sameValue : differentValue
     }

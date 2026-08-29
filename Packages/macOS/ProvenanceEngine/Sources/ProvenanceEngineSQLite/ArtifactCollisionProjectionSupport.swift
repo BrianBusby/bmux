@@ -4,7 +4,11 @@ import ProvenanceEngineContracts
 struct ArtifactCollisionSessionObservation {
     let profile: RelatedSessionProfile
     let artifactsByPath: [String: [ProvenanceSessionOutcomeArtifact]]
+    let repositoryKeysByArtifactID: [String: Set<String>]
+    let evidenceByArtifactID: [String: [ProvenanceArtifactCollisionEvidenceReference]]
     let observedPathsByPath: [String: Set<String>]
+    let repositoryKeysByPath: [String: Set<String>]
+    let repositoryEvidenceByPath: [String: [ProvenanceArtifactCollisionEvidenceReference]]
     let evidenceByPath: [String: [ProvenanceArtifactCollisionEvidenceReference]]
     let changedAtByPath: [String: [Date]]
 }
@@ -27,7 +31,11 @@ extension ProvenanceSQLiteRepository {
         profile: RelatedSessionProfile
     ) throws -> ArtifactCollisionSessionObservation {
         var artifactsByPath: [String: [ProvenanceSessionOutcomeArtifact]] = [:]
+        var repositoryKeysByArtifactID: [String: Set<String>] = [:]
+        var evidenceByArtifactID: [String: [ProvenanceArtifactCollisionEvidenceReference]] = [:]
         var observedPathsByPath: [String: Set<String>] = [:]
+        var repositoryKeysByPath: [String: Set<String>] = [:]
+        var repositoryEvidenceByPath: [String: [ProvenanceArtifactCollisionEvidenceReference]] = [:]
         var evidenceByPath: [String: [ProvenanceArtifactCollisionEvidenceReference]] = [:]
         var changedAtByPath: [String: [Date]] = [:]
 
@@ -35,7 +43,11 @@ extension ProvenanceSQLiteRepository {
             return ArtifactCollisionSessionObservation(
                 profile: profile,
                 artifactsByPath: artifactsByPath,
+                repositoryKeysByArtifactID: repositoryKeysByArtifactID,
+                evidenceByArtifactID: evidenceByArtifactID,
                 observedPathsByPath: observedPathsByPath,
+                repositoryKeysByPath: repositoryKeysByPath,
+                repositoryEvidenceByPath: repositoryEvidenceByPath,
                 evidenceByPath: evidenceByPath,
                 changedAtByPath: changedAtByPath
             )
@@ -55,13 +67,29 @@ extension ProvenanceSQLiteRepository {
             observedPaths.insert(artifact.artifact.path)
             observedPathsByPath[normalizedPath] = observedPaths
 
+            let repositoryIdentity = try artifactCollisionRepositoryIdentity(
+                artifact: artifact,
+                outcome: outcome,
+                sessionID: profile.session.id
+            )
+            var repositoryKeys = repositoryKeysByPath[normalizedPath] ?? []
+            repositoryKeys.formUnion(repositoryIdentity.keys)
+            repositoryKeysByPath[normalizedPath] = repositoryKeys
+            appendArtifactCollisionEvidence(
+                repositoryIdentity.evidence,
+                for: normalizedPath,
+                to: &repositoryEvidenceByPath
+            )
+
             let artifactEvidence = artifactCollisionEvidence(
                 artifact.artifact.evidence,
                 sessionID: profile.session.id,
                 turnID: artifact.sourceTurnID
             )
+            repositoryKeysByArtifactID[artifact.id] = repositoryIdentity.keys
+            evidenceByArtifactID[artifact.id] = artifactEvidence + [artifactCollisionEvidence(outcome)]
             appendArtifactCollisionEvidence(
-                artifactEvidence + [artifactCollisionEvidence(outcome)],
+                evidenceByArtifactID[artifact.id] ?? [],
                 for: normalizedPath,
                 to: &evidenceByPath
             )
@@ -77,7 +105,11 @@ extension ProvenanceSQLiteRepository {
             artifactsByPath: artifactsByPath.mapValues { items in
                 items.sorted(by: artifactCollisionArtifactSort)
             },
+            repositoryKeysByArtifactID: repositoryKeysByArtifactID,
+            evidenceByArtifactID: evidenceByArtifactID,
             observedPathsByPath: observedPathsByPath,
+            repositoryKeysByPath: repositoryKeysByPath,
+            repositoryEvidenceByPath: repositoryEvidenceByPath,
             evidenceByPath: evidenceByPath,
             changedAtByPath: changedAtByPath
         )
@@ -194,21 +226,25 @@ extension ProvenanceSQLiteRepository {
     func artifactCollisionEvidenceIdentityKey(
         _ item: ProvenanceArtifactCollisionEvidenceReference
     ) -> String {
-        [
+        let eventSequenceKey = item.eventSequence.map(String.init) ?? ""
+        let projectionWatermarkKey = item.projectionWatermark.map(String.init) ?? ""
+        let evidenceScopeKey = item.evidenceScope.map { "\($0.level.rawValue):\($0.id ?? "")" } ?? ""
+        let components: [String] = [
             item.kind,
             item.id,
-            item.eventSequence.map(String.init) ?? "",
+            eventSequenceKey,
             item.eventType ?? "",
             item.projectionRevisionID ?? "",
-            item.projectionWatermark.map(String.init) ?? "",
+            projectionWatermarkKey,
             item.source?.rawValue ?? "",
             item.evidenceOrigin?.rawValue ?? "",
-            item.evidenceScope.map { "\($0.level.rawValue):\($0.id ?? "")" } ?? "",
+            evidenceScopeKey,
             item.sessionID ?? "",
             item.turnID ?? "",
             item.field ?? "",
             item.sourceState ?? "",
-        ].joined(separator: "|")
+        ]
+        return components.joined(separator: "|")
     }
 
     func artifactCollisionEvidenceSort(

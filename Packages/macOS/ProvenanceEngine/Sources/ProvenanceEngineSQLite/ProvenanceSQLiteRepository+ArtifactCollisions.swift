@@ -127,21 +127,28 @@ extension ProvenanceSQLiteRepository {
         }
         for path in targetPaths {
             var matchingRelated: [(observation: ArtifactCollisionSessionObservation, repositoryKeys: [String])] = []
+            let targetPathRepositoryKeys = targetObservation.repositoryKeysByPath[path] ?? []
             for relatedObservation in relatedObservations.sorted(by: { $0.profile.session.id < $1.profile.session.id }) {
                 guard relatedObservation.artifactsByPath[path] != nil else { continue }
-                let sharedRepositoryKeys = targetProfile.repositoryKeys
-                    .intersection(relatedObservation.profile.repositoryKeys)
+                let relatedPathRepositoryKeys = relatedObservation.repositoryKeysByPath[path] ?? []
+                let sharedRepositoryKeys = targetPathRepositoryKeys
+                    .intersection(relatedPathRepositoryKeys)
                     .sorted()
                 guard !sharedRepositoryKeys.isEmpty else {
+                    let reason = targetPathRepositoryKeys.isEmpty || relatedPathRepositoryKeys.isEmpty
+                        ? "missing_artifact_repository_evidence"
+                        : "same_path_different_repository"
                     appendArtifactCollisionExclusion(
                         ProvenanceArtifactCollisionCandidateExclusion(
                             sessionID: relatedObservation.profile.session.id,
                             artifactPath: relatedObservation.observedPathsByPath[path]?.sorted().first,
                             normalizedArtifactPath: path,
-                            reason: "same_path_different_repository",
+                            reason: reason,
                             evidence: uniqueArtifactCollisionEvidence(
                                 (targetObservation.evidenceByPath[path] ?? [])
                                     + (relatedObservation.evidenceByPath[path] ?? [])
+                                    + (targetObservation.repositoryEvidenceByPath[path] ?? [])
+                                    + (relatedObservation.repositoryEvidenceByPath[path] ?? [])
                             )
                         ),
                         limit: exclusionLimit,
@@ -258,10 +265,12 @@ extension ProvenanceSQLiteRepository {
         staleBefore: Date?,
         sourceWatermark: Int?
     ) throws -> ArtifactCollisionCandidateDraft {
+        let candidateRepositoryKeys = Set(sharedRepositoryKeys)
         let participants = try observations.map {
             try artifactCollisionParticipation(
                 observation: $0,
                 normalizedPath: normalizedPath,
+                repositoryKeys: candidateRepositoryKeys,
                 sourceWatermark: sourceWatermark
             )
         }.sorted { lhs, rhs in
@@ -270,8 +279,8 @@ extension ProvenanceSQLiteRepository {
         let participantEvidence = participants.flatMap(\.evidence)
         let projectionEvidence = relatedProjection.map { [artifactCollisionEvidence($0)] } ?? []
         let evidence = uniqueArtifactCollisionEvidence(participantEvidence + projectionEvidence)
-        let observedPaths = Set(observations.flatMap {
-            $0.observedPathsByPath[normalizedPath] ?? []
+        let observedPaths = Set(participants.flatMap {
+            $0.matchedArtifacts.map(\.artifact.path)
         }).sorted()
         let artifactIdentityID = stableIDFactory.id(
             prefix: "artifact-collision-artifact",
@@ -373,15 +382,31 @@ extension ProvenanceSQLiteRepository {
     private func artifactCollisionParticipation(
         observation: ArtifactCollisionSessionObservation,
         normalizedPath: String,
+        repositoryKeys: Set<String>,
         sourceWatermark: Int?
     ) throws -> ProvenanceArtifactCollisionSessionParticipation {
         let profile = observation.profile
-        let artifacts = observation.artifactsByPath[normalizedPath] ?? []
-        let changedTimes = observation.changedAtByPath[normalizedPath] ?? []
-        let artifactEvidence = observation.evidenceByPath[normalizedPath] ?? []
-        let boundaryEvidence = profile.repositoryBoundaries.flatMap {
+        let artifacts = (observation.artifactsByPath[normalizedPath] ?? []).filter { artifact in
+            let artifactRepositoryKeys = observation.repositoryKeysByArtifactID[artifact.id] ?? []
+            return !artifactRepositoryKeys.intersection(repositoryKeys).isEmpty
+        }
+        let changedTimes = try artifacts.compactMap {
+            try artifactCollisionLatestEventTimestamp($0.artifact.evidence)
+        }
+        let artifactEvidence = uniqueArtifactCollisionEvidence(artifacts.flatMap {
+            observation.evidenceByArtifactID[$0.id] ?? []
+        })
+        let repositoryBoundaries = try artifactCollisionRepositoryBoundaries(
+            profile.repositoryBoundaries,
+            matching: repositoryKeys
+        )
+        let worktreeBoundaries = try artifactCollisionWorktreeBoundaries(
+            profile.worktreeBoundaries,
+            matching: repositoryKeys
+        )
+        let boundaryEvidence = repositoryBoundaries.flatMap {
             artifactCollisionEvidence($0, sessionID: profile.session.id)
-        } + profile.worktreeBoundaries.flatMap {
+        } + worktreeBoundaries.flatMap {
             artifactCollisionEvidence($0, sessionID: profile.session.id)
         }
         let evidence = uniqueArtifactCollisionEvidence(artifactEvidence + boundaryEvidence)
@@ -411,12 +436,36 @@ extension ProvenanceSQLiteRepository {
             sessionOutcomeRevisionID: profile.outcome?.projection.revisionID,
             sessionOutcomeProjection: profile.outcome?.projection,
             matchedArtifacts: artifacts,
-            repositoryBoundaries: profile.repositoryBoundaries,
-            worktreeBoundaries: profile.worktreeBoundaries,
+            repositoryBoundaries: repositoryBoundaries,
+            worktreeBoundaries: worktreeBoundaries,
             firstObservedChangedAt: changedTimes.min(),
             lastObservedChangedAt: changedTimes.max(),
             evidence: evidence,
             completeness: completeness
         )
+    }
+
+    private func artifactCollisionRepositoryBoundaries(
+        _ boundaries: [ProvenanceSessionOutcomeRepositoryBoundary],
+        matching repositoryKeys: Set<String>
+    ) throws -> [ProvenanceSessionOutcomeRepositoryBoundary] {
+        try boundaries.filter { boundary in
+            try !artifactCollisionRepositoryKeys(
+                repositoryID: boundary.repositoryID,
+                repositoryPath: boundary.repositoryPath
+            ).intersection(repositoryKeys).isEmpty
+        }
+    }
+
+    private func artifactCollisionWorktreeBoundaries(
+        _ boundaries: [ProvenanceRelatedSessionWorktreeBoundary],
+        matching repositoryKeys: Set<String>
+    ) throws -> [ProvenanceRelatedSessionWorktreeBoundary] {
+        try boundaries.filter { boundary in
+            try !artifactCollisionRepositoryKeys(
+                repositoryID: boundary.repositoryID,
+                repositoryPath: boundary.repositoryPath
+            ).intersection(repositoryKeys).isEmpty
+        }
     }
 }

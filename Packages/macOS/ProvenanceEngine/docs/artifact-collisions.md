@@ -66,11 +66,15 @@ has a changed artifact with the same normalized repository-relative path and the
 participants share an accepted repository identity key.
 
 Repository identity keys can come from repository id, repository path, or remote
-slug preserved by the related-session/source projections. Same relative path in
-different repositories is reported only as an excluded candidate with
+slug preserved by the related-session/source projections. Discovery uses the
+repository identity attached to each observed artifact path, not only the
+session's broader repository set. Same relative path in different repositories
+is reported only as an excluded candidate with
 `same_path_different_repository`; it is not returned as a collision candidate.
-Similar paths, neighboring directories, or identical filenames in different
-directories are not treated as overlaps.
+If a path match lacks artifact-scoped repository evidence on either side, the
+omission is reported as `missing_artifact_repository_evidence`. Similar paths,
+neighboring directories, or identical filenames in different directories are
+not treated as overlaps.
 
 ## Artifact Identity
 
