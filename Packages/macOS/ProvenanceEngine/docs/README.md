@@ -22,6 +22,7 @@ facts.
 - [architecture.md](architecture.md)
 - [session-work-model.md](session-work-model.md)
 - [turn-outcome.md](turn-outcome.md)
+- [related-sessions.md](related-sessions.md)
 - [integration-contract.md](integration-contract.md)
 - [roadmap.md](roadmap.md)
 - [bmux-integration-roadmap.md](bmux-integration-roadmap.md)

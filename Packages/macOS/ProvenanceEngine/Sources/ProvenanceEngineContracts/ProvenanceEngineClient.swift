@@ -86,6 +86,14 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     func sessionOutcome(_ request: ProvenanceSessionOutcomeRequest) async throws
         -> ProvenanceSessionOutcomeResponse
 
+    /// Returns the PE-owned deterministic related-session projection for one coding-agent session.
+    ///
+    /// - Parameter request: Query parameters for the related-session read.
+    /// - Returns: A bounded response containing evidence-backed related-session briefs.
+    /// - Throws: An implementation-defined error when the query fails.
+    func relatedSessions(_ request: ProvenanceRelatedSessionRequest) async throws
+        -> ProvenanceRelatedSessionResponse
+
     /// Publishes one semantic inference record above deterministic Current State.
     ///
     /// - Parameter request: Semantic inference record to publish.
@@ -186,6 +194,17 @@ public extension ProvenanceEngineClient {
             reason: "unsupported",
             sessionID: request.sessionID,
             outcome: nil
+        )
+    }
+
+    /// Default unsupported response for clients that have not adopted related-session reads.
+    func relatedSessions(_ request: ProvenanceRelatedSessionRequest) async throws
+        -> ProvenanceRelatedSessionResponse {
+        ProvenanceRelatedSessionResponse(
+            found: false,
+            reason: "unsupported",
+            targetSessionID: request.targetSessionID,
+            projection: nil
         )
     }
 

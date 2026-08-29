@@ -982,6 +982,7 @@ extension ProvenanceSQLiteRepository {
         if normalized.contains("cancel") { return "cancelled" }
         if normalized.contains("interrupt") { return "interrupted" }
         if normalized.contains("fail") || normalized.contains("error") { return "failed" }
+        if normalized.contains("incomplete") { return "incomplete" }
         if normalized.contains("complete")
             || normalized.contains("success")
             || normalized == "done"
@@ -993,8 +994,7 @@ extension ProvenanceSQLiteRepository {
         if normalized.contains("active")
             || normalized.contains("running")
             || normalized.contains("started")
-            || normalized.contains("progress")
-            || normalized.contains("incomplete") {
+            || normalized.contains("progress") {
             return "incomplete"
         }
         return "unknown"

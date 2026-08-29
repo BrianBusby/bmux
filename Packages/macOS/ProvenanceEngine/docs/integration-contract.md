@@ -238,6 +238,48 @@ summarize raw transcripts, store hidden reasoning, or treat one passing
 validation command as proof that the entire session is valid. Full contract
 details are in `docs/session-outcome.md`.
 
+The accepted related-session awareness read contract is:
+
+- Request: `ProvenanceRelatedSessionRequest(targetSessionID:limit:updatedAfter:revisionID:exclusionLimit:)`.
+- Response: `ProvenanceRelatedSessionResponse`.
+- Projection DTO: `ProvenanceRelatedSessionProjection`.
+- Brief DTO: `ProvenanceRelatedSessionBrief`.
+- Outcome brief DTO: `ProvenanceRelatedSessionOutcomeBrief`.
+- Relationship kind enum: `ProvenanceRelatedSessionRelationshipKind`.
+- Relationship reason DTO:
+  `ProvenanceRelatedSessionRelationshipReason`.
+- Evidence reference DTO: `ProvenanceRelatedSessionEvidenceReference`.
+- Freshness DTO: `ProvenanceRelatedSessionFreshness`.
+- Completeness DTOs: `ProvenanceRelatedSessionCompleteness` and
+  `ProvenanceRelatedSessionAvailability`.
+- Client method: `ProvenanceEngineClient.relatedSessions(...)`.
+- Capability: `query_related_sessions`.
+
+This contract is the first PE-owned cross-session awareness foundation. It
+discovers sessions related to a target PE session from accepted deterministic
+facts and existing projections, then returns bounded briefs with inspectable
+relationship reasons. Supported v1 reasons are same repository, same worktree,
+same branch, session-tree ancestor, session-tree descendant, session-tree
+sibling, shared provider thread, shared external identity, and shared changed
+artifact path inside a shared repository or worktree context.
+
+Ordering is deterministic: strongest relationship reason, then freshness, then
+stable PE session id. `limit` bounds returned briefs, `exclusionLimit` bounds
+explanations for omitted related sessions, and `updatedAfter` filters related
+sessions by observed freshness. Negative limits are treated as zero by the
+current SQLite-backed implementation.
+
+Each brief records the exact Session Outcome revision used, compact bounded
+Session Outcome facts, optional existing SessionWorkModel semantic fields with
+their original semantic provenance, freshness metadata, source evidence
+watermarks, and availability/completeness states. Relationship reasons do not
+come from semantic messages or ordinary assistant prose.
+
+This read is not agent coordination, prompt/context injection, artifact
+collision warning, proactive notification, raw transcript sharing, hidden
+reasoning storage, LLM-authored summary, Knowledge Compiler integration, or
+bmux Smart Session UI. Full contract details are in `docs/related-sessions.md`.
+
 The semantic inference framework foundation is available above deterministic
 Current State through:
 

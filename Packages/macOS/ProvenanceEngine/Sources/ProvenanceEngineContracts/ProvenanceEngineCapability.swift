@@ -42,6 +42,9 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
     /// Queries deterministic factual outcome for one observed coding-agent session.
     case querySessionOutcome = "query_session_outcome"
 
+    /// Queries deterministic related coding-agent sessions for one target session.
+    case queryRelatedSessions = "query_related_sessions"
+
     /// Publishes versioned semantic inference records.
     case publishSemanticInference = "publish_semantic_inference"
 
@@ -76,6 +79,7 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
         .queryFactualSessionTurnDetail,
         .queryTurnOutcome,
         .querySessionOutcome,
+        .queryRelatedSessions,
         .publishSemanticInference,
         .querySemanticInferences,
         .publishSemanticMessage,

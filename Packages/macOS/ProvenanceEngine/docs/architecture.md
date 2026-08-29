@@ -24,9 +24,24 @@ SQLite connections set a bounded busy timeout on open and attempt to use write-a
 Current accepted projections include repositories, worktrees, sessions, session
 relationships, file explanations, current context records, workspace-display
 Current State, factual session projection snapshots for coding-agent evidence,
-revisioned turn outcomes, and revisioned session outcomes.
+revisioned turn outcomes, revisioned session outcomes, and the read-only
+related-session awareness projection.
 
 Implemented semantic contracts include versioned semantic inference records, first coding-agent semantic inference kinds, semantic message records, deterministic message materialization, the public `SessionWorkModel` foundation/read path, and the first plan/prompt-backed milestone field. Nested milestone hierarchy, blocker/approach-change semantics, and scoped architecture projection remain planned target behavior.
+
+Related-session awareness is a PE-owned read model above Session Outcome and
+SessionWorkModel. It derives deterministic relationship reasons from accepted
+session, repository, worktree, branch, session-tree, provider identity, external
+identity, and Session Outcome artifact facts. The SQLite implementation stores
+schema-23 projection revisions and latest pointers, but consumers access it
+only through `ProvenanceEngineClient.relatedSessions(...)`.
+
+The related-session projector preserves the layer boundary: relationship
+reasons are deterministic facts or existing projection facts, while any
+included SessionWorkModel fields keep their semantic provenance and are not
+used as relationship reasons. It does not add prompt injection, raw transcript
+sharing, automatic agent coordination, collision policy, or new blocker,
+milestone, approach-change, risk, or architecture inference.
 
 ## Evidence Model
 

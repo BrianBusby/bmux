@@ -3190,7 +3190,7 @@ actor ProvenanceSQLiteRepository {
     }
 
     private func clearProjectionTables() throws {
-        for tableName in [
+        for tableName in Self.relatedSessionProjectionTableNames + [
             "provenance_coding_agent_session_outcomes",
             "provenance_coding_agent_session_outcome_revisions",
             "provenance_coding_agent_turn_outcomes",
@@ -5771,7 +5771,7 @@ actor ProvenanceSQLiteRepository {
                 """,
             ]
         ),
-    ] + sessionOutcomeMigrations
+    ] + sessionOutcomeMigrations + relatedSessionMigrations
 }
 
 extension ProvenanceSQLiteRepository: ProvenanceSessionLifecycleRecording {

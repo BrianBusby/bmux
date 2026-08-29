@@ -13,6 +13,8 @@ flowchart LR
     factual["Factual session projection"]
     semantic["Semantic inference records"]
     messages["Semantic message materialization"]
+    work_model["SessionWorkModel contract"]
+    related["Related-session awareness"]
     terminal["React Terminal / agent-chat"]
     telemetry["Provider-neutral telemetry foundation"]
     monorepo["Monorepo consolidation"]
@@ -24,23 +26,28 @@ flowchart LR
   end
 
   subgraph planned["Planned"]
-    swm["SessionWorkModel"]
     milestone["Milestone semantics"]
     blocker["Blocker / approach-change semantics"]
     architecture["Scoped architecture projection"]
+    cross_semantics["Cross-session semantics"]
+    collision["Artifact collision awareness"]
     knowledge["Knowledge Compiler / Store / Retrieval"]
   end
 
   telemetry --> factual
   pe_pkg --> local_sdk --> sqlite --> workspace
   sqlite --> factual --> semantic --> messages
+  semantic --> work_model
+  factual --> related
+  work_model --> related
   messages --> smart
-  semantic --> swm --> smart
+  work_model --> smart
   monorepo --> smart
-  monorepo --> swm
+  monorepo --> work_model
   factual_ui --> smart
-  swm --> milestone --> architecture --> knowledge
-  blocker --> swm
+  work_model --> milestone --> architecture --> knowledge
+  blocker --> work_model
+  related --> cross_semantics --> collision --> knowledge
 ```
 
 ## Completed Migration Impact
@@ -54,7 +61,9 @@ It does not make PE a bmux-internal module.
 After the completed monorepo and factual native Session view slices, the next
 product slices should resume in this order unless Project Truth changes:
 
-1. Build React Smart Session foundation from PE factual projection and semantic messages.
-2. Define the PE-owned `SessionWorkModel` contract.
-3. Add milestone, blocker, approach-change, and scoped architecture semantics.
-4. Connect React Smart Session to `SessionWorkModel` once the contract exists.
+1. Build richer cross-session work-state semantics from validated
+   `SessionWorkModel` and related-session foundations.
+2. Add artifact and change collision awareness from factual overlap evidence.
+3. Add agent-accessible explicit cross-session retrieval.
+4. Continue React Smart Session work from PE factual projection, semantic
+   messages, and `SessionWorkModel` without local semantic reinterpretation.

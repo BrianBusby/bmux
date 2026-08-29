@@ -2129,7 +2129,7 @@ roadmap:
       kind: program
       title: Cross-Session Work Awareness
       parent: bmux_provenance_platform
-      status: planned
+      status: active
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2141,7 +2141,7 @@ roadmap:
           - cross_session_awareness
           - session_work_model
           - active_work
-      capability_maturity: gated
+      capability_maturity: active
       depends_on:
         - session_work_model_contract_foundation
         - session_outcome_aggregation
@@ -2172,7 +2172,7 @@ roadmap:
         conflict_note: >-
           Cross-session awareness must stay PE-owned for durable relationships and read models. bmux may present or ask for bounded results, but must not infer a separate semantic cross-session model from raw provider output.
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: shared
       rationale: >-
         Capture the long-term cross-session working-memory capability so related coding-agent sessions can discover bounded evidence-backed work state, relationships, blockers, artifacts, and outcomes without sharing raw transcripts or automatically injecting context.
@@ -2181,7 +2181,7 @@ roadmap:
       kind: phase
       title: Cross-Session Awareness Read Models
       parent: cross_session_work_awareness
-      status: planned
+      status: active
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2191,14 +2191,14 @@ roadmap:
         architecture_layer: inference_session_work_projections
         tags:
           - cross_session_awareness
-      capability_maturity: gated
+      capability_maturity: active
       depends_on:
         - session_work_model_contract_foundation
         - session_outcome_aggregation
       parallelism:
         classification: serial
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: provenance_engine
       rationale: Group PE-owned read models that derive related-session briefs from durable evidence and validated semantic records.
 
@@ -2206,7 +2206,7 @@ roadmap:
       kind: milestone
       title: Related Session Awareness Foundation
       parent: cross_session_awareness_read_models
-      status: planned
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2217,14 +2217,14 @@ roadmap:
         tags:
           - cross_session_awareness
           - related_sessions
-      capability_maturity: gated
+      capability_maturity: validated
       depends_on:
         - session_work_model_contract_foundation
         - session_outcome_aggregation
       parallelism:
         classification: serial
       execution:
-        assignment: planned
+        assignment: complete
         assigned_to: provenance_engine
       rationale: First milestone for deterministic related-session discovery and bounded PE-owned brief contracts.
 
@@ -2232,7 +2232,7 @@ roadmap:
       kind: slice
       title: Cross-session work awareness foundation
       parent: related_session_awareness_foundation
-      status: planned
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2243,7 +2243,7 @@ roadmap:
         tags:
           - cross_session_awareness
           - related_sessions
-      capability_maturity: ready
+      capability_maturity: validated
       depends_on:
         - session_work_model_contract_foundation
         - session_outcome_aggregation
@@ -2277,26 +2277,41 @@ roadmap:
           - deterministic_current_state_api
         worktree_required: true
         conflict_note: >-
-          Slice 1 is read-only. It may derive deterministic relationships from existing session, worktree, repository, branch, session-tree, and file-change evidence, and may include already-supported SessionWorkModel semantic fields with their semantic provenance. It must not introduce coordination policy, prompt injection, whole-transcript sharing, or speculative milestone/blocker/architecture inference.
+          Slice 1 is read-only. It derives deterministic relationships from existing session, worktree, repository, branch, session-tree, provider identity, external identity, Session Outcome, and SessionWorkModel evidence, and does not introduce coordination policy, prompt injection, whole-transcript sharing, artifact-collision warnings, or speculative milestone/blocker/architecture inference.
       execution:
-        assignment: planned
+        assignment: complete
         assigned_to: provenance_engine
-      delivery_status: proposed
-      acceptance_status: proposed
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 2ec30211c5ce61caa7b8cf6a8c91c7202054a420
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 80
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-29
       acceptance:
         criteria:
           - Expose a PE public read contract for bounded related-session briefs.
           - Preserve individually inspectable relationship reasons and deterministic ordering.
           - Keep observed facts, explicit plan evidence, and semantic inference distinguishable.
           - Return freshness/revision metadata and provenance references without raw transcript sharing.
+          - Preserve exact Session Outcome and SessionWorkModel revision metadata used by every brief.
+          - Keep the slice read-only with no prompt injection, coordination policy, bmux UI, or artifact-collision warning behavior.
+      acceptance_reason: >-
+        Cross-session work awareness foundation is implemented as a schema-v23 PE read contract and SQLite projection. `relatedSessions(...)` returns bounded deterministic briefs with same-repository, same-worktree, same-branch, session-tree, provider-identity, external-identity, and shared changed-artifact relationship reasons; compact Session Outcome facts; exact Session Outcome and SessionWorkModel revision metadata; freshness/source-watermark metadata; and explicit availability/completeness states. The slice remains below richer cross-session semantics, collision awareness, explicit agent retrieval, bmux presentation, prompt/context injection, and Knowledge Compiler integration.
       rationale: >-
-        First implementation slice for deterministic related-session discovery and bounded PE-owned briefs over active or recent coding-agent sessions. This slice is dependency-ready but remains planned until Project Truth selects it for implementation.
+        First implementation slice for deterministic related-session discovery and bounded PE-owned briefs over active or recent coding-agent sessions.
 
     - id: cross_session_semantics_and_collisions
       kind: milestone
       title: Cross-Session Semantics and Collision Awareness
       parent: cross_session_awareness_read_models
-      status: planned
+      status: active
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2306,7 +2321,7 @@ roadmap:
         architecture_layer: inference_session_work_projections
         tags:
           - cross_session_awareness
-      capability_maturity: gated
+      capability_maturity: active
       depends_on:
         - cross_session_work_awareness_foundation
       gates:
@@ -2318,7 +2333,7 @@ roadmap:
       parallelism:
         classification: serial
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: provenance_engine
       rationale: Adds richer work-state semantics and factual artifact-overlap explanations after the foundational related-session read model is validated.
 
@@ -2402,7 +2417,7 @@ roadmap:
         tags:
           - cross_session_awareness
           - artifact_collision
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - cross_session_work_awareness_foundation
         - richer_coding_agent_evidence_foundation

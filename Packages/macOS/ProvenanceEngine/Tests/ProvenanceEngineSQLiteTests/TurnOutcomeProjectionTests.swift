@@ -53,7 +53,7 @@ struct TurnOutcomeProjectionTests {
         #expect(outcome.commandsCompleted.allSatisfy { !$0.evidence.isEmpty })
         #expect(outcome.validationsAttempted.allSatisfy { !$0.evidence.isEmpty })
         #expect(outcome.artifactsChanged.allSatisfy { !$0.evidence.isEmpty })
-        #expect(try await repository.storageSummary().schemaVersion == 22)
+        #expect(try await repository.storageSummary().schemaVersion == 23)
         #expect(try await repository.storageSummary().codingAgentTurnOutcomeCount == 1)
         #expect(try await repository.storageSummary().codingAgentTurnOutcomeRevisionCount >= 4)
 

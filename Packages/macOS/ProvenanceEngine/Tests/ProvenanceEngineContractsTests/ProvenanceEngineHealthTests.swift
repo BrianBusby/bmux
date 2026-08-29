@@ -48,6 +48,7 @@ struct ProvenanceEngineHealthTests {
                 "publish_coding_agent_session_semantic_inferences"
         )
         #expect(ProvenanceEngineCapability.querySessionWorkModel.rawValue == "query_session_work_model")
+        #expect(ProvenanceEngineCapability.queryRelatedSessions.rawValue == "query_related_sessions")
     }
 
     @Test

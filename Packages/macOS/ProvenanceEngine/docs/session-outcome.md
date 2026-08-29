@@ -146,10 +146,15 @@ file-attribution evidence. `turnOutcome(...)` remains the factual outcome view
 for one turn. `sessionOutcome(...)` is the factual aggregation layer above
 `turnOutcome(...)` and below semantic `SessionWorkModel` interpretation.
 
+The related-session awareness read now consumes Session Outcome as its bounded
+session-level factual source. It records the exact Session Outcome revision id
+used for every related-session brief and derives compact outcome summaries from
+Session Outcome fields without replaying whole turns or transcripts.
+
 Deferred work includes semantic milestone/blocker/approach-change fields,
-cross-session work awareness, context injection, Knowledge Compiler output,
-raw transcript retention policy changes, and richer dedicated validation
-evidence beyond command-attempt classification.
+richer cross-session work-state semantics, context injection, Knowledge
+Compiler output, raw transcript retention policy changes, and richer dedicated
+validation evidence beyond command-attempt classification.
 
 ## Example
 

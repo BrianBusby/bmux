@@ -39,7 +39,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Coding Agent Thread Intent | implemented |
 | Provenance Engine Coding Agent Turn Intent | implemented |
 | Provenance Engine Cross Session Artifact Collision Awareness | planned |
-| Provenance Engine Cross Session Work Awareness | planned |
+| Provenance Engine Cross Session Work Awareness | implemented |
 | Provenance Engine Deterministic Current State | implemented |
 | Provenance Engine Factual Session Projection | implemented |
 | Provenance Engine Factual Session Turn Detail | implemented |
@@ -49,7 +49,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Milestone Inference | implemented |
 | Provenance Engine Producer Neutral Lifecycle Recording | implemented |
 | Provenance Engine Public In Process Sdk | implemented |
-| Provenance Engine Related Session Read Model | planned |
+| Provenance Engine Related Session Read Model | implemented |
 | Provenance Engine Richer Coding Agent Evidence | implemented |
 | Provenance Engine Schema Identity Validation | implemented |
 | Provenance Engine Scoped Architecture Projection | planned |
