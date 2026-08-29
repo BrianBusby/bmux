@@ -5,8 +5,9 @@
 - Slice: `cross_session_artifact_collision_awareness`
 - Branch: `cross-session-artifact-collision-awareness`
 - Worktree: `/Users/brianbusby/repos/.bmux-worktrees/cross-session-artifact-collision-awareness`
-- PR: pending
-- Status: implemented locally; validation and PR handoff in progress
+- PR: https://github.com/BrianBusby/bmux/pull/82
+- Implementation commit: `a11e649812f7287d7f9466d9d1359fb61aafc88d`
+- Status: implemented and open for review; do not merge automatically
 
 ## Current Generated Truth
 
@@ -51,9 +52,20 @@ become collision candidates.
 
 ## Validation
 
-In progress.
+Passed on 2026-08-29:
 
-No tagged app build or reload is expected because this slice changes PE package
+- From `Packages/macOS/ProvenanceEngine`: `/usr/bin/swift test --filter ArtifactCollision` - 19 tests / 7 suites
+- From `Packages/macOS/ProvenanceEngine`: `/usr/bin/swift test --filter ProvenanceSQLiteSchemaMigrationTests` - 4 tests / 1 suite
+- From `Packages/macOS/ProvenanceEngine`: `/usr/bin/swift test` - 205 tests / 31 suites
+- `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
+- `python3 scripts/swift_file_length_budget.py --repo-root . --base-ref origin/main`
+- `git diff --check`
+- `./scripts/lint-pbxproj-test-wiring.sh`
+- `python3 scripts/check-package-resolved-policy.py`
+
+`GITHUB_TOKEN=$(gh auth token) ./scripts/project-docs ci`
+
+No tagged app build or reload was run because this slice changes PE package
 contracts/storage/docs only.
 
 ## Known Limitations
