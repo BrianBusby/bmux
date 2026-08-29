@@ -1,6 +1,7 @@
 import Foundation
 import ProvenanceEngineContracts
 @testable import ProvenanceEngineSQLite
+import SQLite3
 import Testing
 
 @Suite
@@ -34,6 +35,69 @@ struct ProvenanceSQLiteDatabaseTests {
 
         #expect(try database.userVersion == 7)
         #expect(database.changes == 1)
+    }
+
+    @Test
+    func opensConnectionWithMultiProcessPragmas() throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let database = try ProvenanceSQLiteDatabase(url: url)
+
+        #expect(try Self.firstString("PRAGMA journal_mode", in: database) == "wal")
+        #expect(try Self.firstString("PRAGMA busy_timeout", in: database) == "5000")
+        #expect(try Self.firstString("PRAGMA synchronous", in: database) == "1")
+    }
+
+    @Test
+    func readsCommittedRowsWhileAnotherConnectionHoldsWriteTransaction() throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let writer = try ProvenanceSQLiteDatabase(url: url, busyTimeoutMilliseconds: 100)
+        try writer.execute(
+            """
+            CREATE TABLE events (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL
+            );
+            INSERT INTO events (id, name) VALUES ('event-1', 'committed');
+            """
+        )
+        let reader = try ProvenanceSQLiteDatabase(url: url, busyTimeoutMilliseconds: 100)
+
+        try writer.execute("BEGIN EXCLUSIVE TRANSACTION")
+        defer { try? writer.execute("ROLLBACK") }
+        try writer.execute("INSERT INTO events (id, name) VALUES ('event-2', 'uncommitted')")
+
+        #expect(
+            try Self.firstString(
+                "SELECT name FROM events WHERE id = 'event-1'",
+                in: reader
+            ) == "committed"
+        )
+    }
+
+    @Test
+    func opensConnectionWhenWalUpgradeIsTemporarilyLocked() throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let rawDatabase = try Self.openRawSQLiteDatabase(at: url)
+        defer { sqlite3_close(rawDatabase) }
+        try Self.executeRawSQLite(
+            """
+            CREATE TABLE events (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL
+            );
+            INSERT INTO events (id, name) VALUES ('event-1', 'committed');
+            BEGIN EXCLUSIVE TRANSACTION;
+            """,
+            in: rawDatabase
+        )
+        defer { try? Self.executeRawSQLite("ROLLBACK", in: rawDatabase) }
+
+        let database = try ProvenanceSQLiteDatabase(url: url, busyTimeoutMilliseconds: 10)
+
+        #expect(try Self.firstString("PRAGMA busy_timeout", in: database) == "10")
     }
 
     @Test
@@ -3448,5 +3512,33 @@ struct ProvenanceSQLiteDatabaseTests {
 
     private static func removeTemporaryDatabaseDirectory(for url: URL) {
         try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+    }
+
+    private static func openRawSQLiteDatabase(at url: URL) throws -> OpaquePointer {
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        var database: OpaquePointer?
+        guard sqlite3_open_v2(url.path, &database, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, nil) == SQLITE_OK,
+              let opened = database else {
+            let message = database.flatMap { sqlite3_errmsg($0) }.map { String(cString: $0) } ?? "open failed"
+            if let database {
+                sqlite3_close(database)
+            }
+            throw ProvenanceSQLiteError.sqlite(message: message)
+        }
+        return opened
+    }
+
+    private static func executeRawSQLite(_ sql: String, in database: OpaquePointer) throws {
+        var errorMessage: UnsafeMutablePointer<CChar>?
+        guard sqlite3_exec(database, sql, nil, nil, &errorMessage) == SQLITE_OK else {
+            let message = errorMessage.map { String(cString: $0) }
+                ?? sqlite3_errmsg(database).map { String(cString: $0) }
+                ?? "unknown sqlite error"
+            sqlite3_free(errorMessage)
+            throw ProvenanceSQLiteError.sqlite(message: message)
+        }
     }
 }

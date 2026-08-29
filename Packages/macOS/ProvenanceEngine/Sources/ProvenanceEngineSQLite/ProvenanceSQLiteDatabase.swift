@@ -3,6 +3,8 @@ import SQLite3
 
 /// Thin SQLite connection wrapper intended to be owned by a higher-level repository actor.
 final class ProvenanceSQLiteDatabase {
+    private static let defaultBusyTimeoutMilliseconds: Int32 = 5_000
+
     private var handle: OpaquePointer?
     let url: URL
 
@@ -12,7 +14,11 @@ final class ProvenanceSQLiteDatabase {
     ///   - url: Database file URL to open.
     ///   - fileManager: Filesystem dependency used to create the parent directory.
     /// - Throws: ``ProvenanceSQLiteError`` or filesystem errors.
-    init(url: URL, fileManager: FileManager = .default) throws {
+    init(
+        url: URL,
+        fileManager: FileManager = .default,
+        busyTimeoutMilliseconds: Int32 = ProvenanceSQLiteDatabase.defaultBusyTimeoutMilliseconds
+    ) throws {
         self.url = url
         try fileManager.createDirectory(
             at: url.deletingLastPathComponent(),
@@ -29,6 +35,9 @@ final class ProvenanceSQLiteDatabase {
             throw ProvenanceSQLiteError.sqlite(message: message)
         }
         self.handle = opened
+        sqlite3_busy_timeout(opened, max(0, busyTimeoutMilliseconds))
+        try executeConnectionPragmaAllowingLockContention("PRAGMA journal_mode = WAL")
+        try executeConnectionPragmaAllowingLockContention("PRAGMA synchronous = NORMAL")
         try execute("PRAGMA foreign_keys = ON")
     }
 
@@ -99,5 +108,23 @@ final class ProvenanceSQLiteDatabase {
     var message: String {
         guard let handle, let raw = sqlite3_errmsg(handle) else { return "unknown sqlite error" }
         return String(cString: raw)
+    }
+
+    private func executeConnectionPragmaAllowingLockContention(_ sql: String) throws {
+        do {
+            try execute(sql)
+        } catch let error as ProvenanceSQLiteError {
+            if case let .sqlite(message) = error,
+               Self.isLockContentionMessage(message) {
+                return
+            }
+            throw error
+        }
+    }
+
+    private static func isLockContentionMessage(_ message: String) -> Bool {
+        let normalized = message.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return normalized.contains("database is locked")
+            || normalized.contains("database is busy")
     }
 }
