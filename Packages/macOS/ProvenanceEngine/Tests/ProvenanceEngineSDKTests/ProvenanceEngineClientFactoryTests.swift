@@ -145,6 +145,80 @@ struct ProvenanceEngineClientFactoryTests {
     }
 
     @Test
+    func sqliteClientReadsRelatedSessionsThroughPublicContract() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_100)
+        let repository = ProvenanceRepositoryRecord(
+            id: "repository-related-client",
+            path: "/repos/related-client",
+            remoteSlug: "owner/related-client",
+            createdAt: timestamp,
+            updatedAt: timestamp
+        )
+        let worktree = ProvenanceWorktreeRecord(
+            id: "worktree-related-client",
+            repositoryID: repository.id,
+            path: repository.path,
+            branch: "main",
+            currentHEAD: "client-head",
+            isDirty: false,
+            status: "active",
+            updatedAt: timestamp
+        )
+        let target = ProvenanceSessionRecord(
+            id: "session-target-client",
+            agentKind: "codex",
+            worktreeID: worktree.id,
+            status: "active",
+            startedAt: timestamp,
+            updatedAt: timestamp
+        )
+        let related = ProvenanceSessionRecord(
+            id: "session-related-client",
+            agentKind: "codex",
+            worktreeID: worktree.id,
+            status: "completed",
+            startedAt: timestamp.addingTimeInterval(1),
+            updatedAt: timestamp.addingTimeInterval(1)
+        )
+
+        _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: ProvenanceEvent(
+            id: "event-related-client-worktree",
+            eventType: .worktreeObserved,
+            timestamp: timestamp,
+            repositoryID: repository.id,
+            worktreeID: worktree.id,
+            source: .observed,
+            confidence: .high,
+            payload: ProvenanceEventPayload(repository: repository, worktree: worktree)
+        )))
+        for session in [target, related] {
+            _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: ProvenanceEvent(
+                id: "event-\(session.id)",
+                eventType: .sessionObserved,
+                timestamp: session.updatedAt,
+                worktreeID: session.worktreeID,
+                sessionID: session.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(session: session)
+            )))
+        }
+
+        let response = try await client.relatedSessions(
+            ProvenanceRelatedSessionRequest(targetSessionID: target.id, limit: 1)
+        )
+        let brief = try #require(response.projection?.relatedSessions.first)
+
+        #expect(response.found == true)
+        #expect(brief.sessionID == related.id)
+        #expect(brief.relationshipReasons.map(\.kind).contains(.sameWorktree))
+        #expect(brief.worktreeBoundaries.first?.head == "client-head")
+    }
+
+    @Test
     func defaultSQLiteClientUsesEngineOwnedStatePathUnderHomeDirectory() async throws {
         let homeDirectory = Self.temporaryHomeDirectory()
         defer { try? FileManager.default.removeItem(at: homeDirectory) }
@@ -204,7 +278,7 @@ struct ProvenanceEngineClientFactoryTests {
         #expect(try Self.metadata(in: expectedDatabaseURL) == [
             "schema_family": "provenance-engine",
             "schema_identity_version": "1",
-            "schema_version": "22",
+            "schema_version": "23",
         ])
 
         let reader = try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
@@ -221,7 +295,7 @@ struct ProvenanceEngineClientFactoryTests {
         let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
         _ = try await client.health()
 
-        #expect(try Self.userVersion(in: url) == 22)
+        #expect(try Self.userVersion(in: url) == 23)
         #expect(try Self.metadata(in: url)["schema_family"] == "provenance-engine")
         #expect(try Self.tableNames(in: url).contains("provenance_metadata"))
     }
