@@ -28,7 +28,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Ready Candidates
 
-- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - maturity: ready; status: planned; selection: planned; owner: Provenance Engine
+- None.
 
 ### Gated / Blocked Downstream Work
 
@@ -51,12 +51,9 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity ready; requires validated for gate `blocker_approach_semantics_validated`: Cross-session blockers, failed attempts, and approach changes must be backed by validated PE semantic records.
 - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) is not dependency-satisfying
-  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) is not dependency-satisfying
   - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) has maturity gated; requires validated for gate `cross_session_semantics_validated`: Agent questions about blockers, decisions, failed approaches, and validation require validated semantic brief fields.
-  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) has maturity ready; requires validated for gate `artifact_collision_awareness_validated`: Agent questions about file or component collisions need validated artifact-overlap explanations.
 - Proactive bmux cross-session awareness (`proactive_bmux_cross_session_awareness`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
-  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) is not dependency-satisfying
   - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity gated; requires validated for gate `cross_session_retrieval_validated`: Proactive presentation should depend on observed useful retrieval and relevance behavior.
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
@@ -618,7 +615,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Gate `milestone_semantics_validated`: requires `milestone_inference` maturity validated; reason: Cross-session milestone identity and hierarchy must come from validated PE milestone semantics.
           Gate `blocker_approach_semantics_validated`: requires `blocker_approach_change_semantics` maturity validated; reason: Cross-session blockers, failed attempts, and approach changes must be backed by validated PE semantic records.
           Rationale: Add richer validated semantic information to related-session briefs only after PE owns the underlying milestone, blocker, validation, and approach-change semantics.
-        - **Artifact and change collision awareness** (`cross_session_artifact_collision_awareness`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: deterministic current state; execution: planned / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
+        - **Artifact and change collision awareness** (`cross_session_artifact_collision_awareness`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
           Depends on: `cross_session_work_awareness_foundation`, `richer_coding_agent_evidence_foundation`, `factual_session_projection_foundation`
           Enables: `agent_accessible_cross_session_retrieval`, `proactive_bmux_cross_session_awareness`
           Expected contract domains: `cross_session_file_overlap`, `worktree_branch_overlap`, `artifact_collision_explanations`
@@ -627,7 +624,10 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `related_session_read_contract`, `richer_coding_agent_evidence`, `factual_file_change_evidence`
           Worktree required: true
           Gate `cross_session_foundation_validated`: requires `cross_session_work_awareness_foundation` maturity validated; reason: Collision detection needs validated related-session relationships and bounded explanation semantics.
+          Evidence: BrianBusby/bmux@eb5fb66823b2
           Rationale: Detect and explain possible parallel-work artifact collisions from factual worktree, branch, repository, change-set, and file-change evidence without automatically blocking or mutating another session.
+          Acceptance reason: Artifact and change collision awareness is implemented as a schema-v24 PE read contract and SQLite projection. `artifactCollisions(...)` returns bounded exact-path artifact-overlap candidates for a target session and related sessions, with per-session participation, repository/worktree/branch/HEAD boundary comparison, temporal overlap state, freshness and stale classification, completeness metadata, Session Outcome and related-session projection revision references, accepted evidence references, stable ordering, bounded exclusions, and deterministic revision persistence. The slice remains a factual possible-collision read only: rename identity is unsupported without accepted deterministic evidence, similar paths do not collide, same relative paths in different repositories are excluded, and no semantic compatibility judgment, coordination policy, prompt injection, raw transcript sharing, bmux UI, proactive notification, retrieval integration, or Knowledge Compiler behavior is added.
+          Acceptance criteria: Expose a PE public read contract for bounded artifact-collision awareness.; Detect exact normalized path overlaps only inside shared repository identity.; Preserve per-session participation, Session Outcome revisions, related-session projection revision metadata, and evidence references.; Report repository, worktree, branch, HEAD, temporal, freshness, and completeness boundaries deterministically.; Handle duplicate, late, corrected, and out-of-order evidence through revisioned deterministic projection semantics.; Keep rename identity unsupported unless accepted evidence can establish it deterministically.; Preserve factuality and non-coordination boundaries: no semantic conflict judgment, prompt injection, agent coordination, raw transcript sharing, proactive UI, or Knowledge Compiler behavior.
     - **Cross-Session Retrieval and Context** (`cross_session_awareness_retrieval_and_context`) - phase; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: retrieval; layer: retrieval engine; execution: planned / Shared; parallelism: serial; maturity: gated
       Depends on: `cross_session_work_awareness_foundation`
       Gate `cross_session_foundation_validated`: requires `cross_session_work_awareness_foundation` maturity validated; reason: Retrieval and context behavior should wait for a validated related-session read model.
@@ -696,13 +696,11 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 ### Dependency-Ready Preflight
 
-| Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) | planned | ready | serial | true | `related_session_contract`, `file_change_attribution`, `current_context_projection` | `related_session_read_contract`, `richer_coding_agent_evidence`, `factual_file_change_evidence` | `cross_session_file_overlap`, `worktree_branch_overlap`, `artifact_collision_explanations` | `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts`, `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite`, `Packages/macOS/ProvenanceEngine/Tests` |
+None.
 
 ## Dependency-Ready Work
 
-- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - selection: planned; depends on: `cross_session_work_awareness_foundation`, `richer_coding_agent_evidence_foundation`, `factual_session_projection_foundation`
+None.
 
 ## Selected Next Work
 
@@ -710,7 +708,7 @@ None.
 
 ## Dependency-Ready But Not Selected
 
-- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - depends on: `cross_session_work_awareness_foundation`, `richer_coding_agent_evidence_foundation`, `factual_session_projection_foundation`
+None.
 
 ## Deferred Or Blocked Work
 

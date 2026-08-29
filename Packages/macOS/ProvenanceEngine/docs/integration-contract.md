@@ -280,6 +280,68 @@ collision warning, proactive notification, raw transcript sharing, hidden
 reasoning storage, LLM-authored summary, Knowledge Compiler integration, or
 bmux Smart Session UI. Full contract details are in `docs/related-sessions.md`.
 
+
+The accepted artifact-collision awareness read contract is:
+
+- Request: `ProvenanceArtifactCollisionRequest(targetSessionID:limit:artifactPath:updatedAfter:staleBefore:revisionID:relatedSessionLimit:exclusionLimit:)`.
+- Response: `ProvenanceArtifactCollisionResponse`.
+- Projection DTO: `ProvenanceArtifactCollisionProjection`.
+- Projection metadata DTO: `ProvenanceArtifactCollisionProjectionMetadata`.
+- Candidate DTO: `ProvenanceArtifactCollisionCandidate`.
+- Participant DTO: `ProvenanceArtifactCollisionSessionParticipation`.
+- Artifact identity DTO: `ProvenanceArtifactCollisionArtifactIdentity`.
+- Path boundary DTO: `ProvenanceArtifactCollisionPathBoundary`.
+- Boundary comparison DTO: `ProvenanceArtifactCollisionBoundaryComparison`.
+- Temporal overlap DTO: `ProvenanceArtifactCollisionTemporalOverlap`.
+- Reason enum and DTO: `ProvenanceArtifactCollisionReasonKind` and
+  `ProvenanceArtifactCollisionReason`.
+- Evidence reference DTO: `ProvenanceArtifactCollisionEvidenceReference`.
+- Freshness DTO: `ProvenanceArtifactCollisionFreshness`.
+- Completeness DTOs: `ProvenanceArtifactCollisionCompleteness` and
+  `ProvenanceArtifactCollisionAvailability`.
+- Exclusion DTO: `ProvenanceArtifactCollisionCandidateExclusion`.
+- Client method: `ProvenanceEngineClient.artifactCollisions(...)`.
+- Capability: `query_artifact_collisions`.
+
+This contract detects evidence-backed artifact overlaps between a target PE
+session and bounded related sessions. The v1 rule id is
+`deterministic_artifact_collision_awareness` with rule version `1`. Candidate
+discovery requires exact normalized path overlap and shared repository identity;
+same relative path in different repositories, similar paths, neighboring
+directories, and same filenames in different directories are not returned as
+collision candidates. Unsupported cases can appear as bounded exclusions.
+
+Each candidate records artifact identity, per-session participation, exact
+Session Outcome revisions, related-session projection revision metadata,
+repository/worktree/branch/HEAD boundary comparison, temporal overlap state,
+freshness, completeness, and supporting evidence references. Supported reason
+kinds include exact path overlap, shared repository, same or different worktree,
+same or different branch, same or divergent HEAD, temporally overlapping edits,
+historical overlap, stale overlap, incomplete evidence, and unsupported rename
+identity.
+
+Candidate state is deliberately bounded: `current`, `historical`, `stale`, or
+`incomplete`. `updatedAfter` omits older candidates with an explained exclusion;
+`staleBefore` classifies stale candidates without omitting them. Returned
+candidates are ordered deterministically by state priority, temporal-overlap
+priority, latest artifact observation time, normalized path, and stable id.
+There is no semantic relevance score or LLM-authored summary.
+
+Path identity is exact, lexical, repository-relative, and case-sensitive. The
+projection preserves observed paths and normalized path, but it does not inspect
+the filesystem, call Git, resolve symlinks, compare diff hunks, or infer stable
+file identity across renames. Rename or move relationships remain unsupported
+unless future accepted evidence can establish them deterministically.
+
+This read is possible collision awareness, not conflict proof or coordination.
+It does not claim semantic incompatibility, merge-conflict certainty, overwrite
+risk, correctness, obsolescence, or that any session should stop. It also does
+not add prompt/context injection, automatic interruption, rebasing, merging,
+stashing, file mutation, raw transcript sharing, hidden reasoning storage,
+proactive bmux notifications, Smart Session collision UI, Knowledge Compiler
+integration, or organization-scale handling. Full contract details are in
+`docs/artifact-collisions.md`.
+
 The semantic inference framework foundation is available above deterministic
 Current State through:
 

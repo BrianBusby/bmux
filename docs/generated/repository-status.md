@@ -38,7 +38,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Coding Agent Session Phase | implemented |
 | Provenance Engine Coding Agent Thread Intent | implemented |
 | Provenance Engine Coding Agent Turn Intent | implemented |
-| Provenance Engine Cross Session Artifact Collision Awareness | planned |
+| Provenance Engine Cross Session Artifact Collision Awareness | implemented |
 | Provenance Engine Cross Session Work Awareness | implemented |
 | Provenance Engine Deterministic Current State | implemented |
 | Provenance Engine Factual Session Projection | implemented |

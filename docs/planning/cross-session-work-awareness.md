@@ -1,6 +1,6 @@
 # Cross-Session Work Awareness
 
-Status: implemented foundation plus planning context. Generated Project Truth
+Status: implemented related-session foundation and artifact-collision awareness plus planning context. Generated Project Truth
 is authoritative for dependency readiness, selected-next work, and active
 implementation:
 
@@ -49,9 +49,11 @@ omission bound.
 
 This foundation intentionally does not add bmux UI, automatic context assembly,
 agent coordination, proactive notifications, raw transcript sharing, hidden
-reasoning storage, LLM-authored cross-session summaries, artifact-collision
-warnings, Knowledge Compiler integration, organization-scale storage, or new
-semantic milestone/blocker/decision/risk/architecture inference.
+reasoning storage, LLM-authored cross-session summaries, Knowledge Compiler
+integration, organization-scale storage, or new semantic
+milestone/blocker/decision/risk/architecture inference. Artifact-collision
+awareness is implemented separately as an inspectable factual PE read and still
+does not warn, block, coordinate, inject context, or judge semantic conflict.
 
 ## Ownership
 
@@ -146,10 +148,19 @@ Known limitations:
 - There is no compact bmux CLI boundary in this slice; consumers should use the
   public PE client contract until a separate consumer slice is selected.
 
-After this foundation, the next dependency-ready cross-session slice is
-`cross_session_artifact_collision_awareness`. Richer cross-session work-state
-semantics remain gated on validated milestone and blocker/approach-change
-semantics.
+Artifact-collision awareness now adds `artifactCollisions(...)` above the
+related-session foundation. It detects exact normalized path overlaps within
+shared repository identity, records repository/worktree/branch/HEAD and
+temporal boundaries, returns per-session participation and evidence references,
+classifies current, historical, stale, or incomplete evidence states, and
+preserves the language boundary that a possible collision is not a proven
+semantic conflict. Stable rename identity remains unsupported until accepted
+evidence can establish it deterministically.
+
+After this slice, richer cross-session work-state semantics remain gated on
+validated milestone and blocker/approach-change semantics. Agent-accessible
+cross-session retrieval remains gated on those richer semantics plus validated
+artifact-collision awareness.
 
 ## Sequence
 
@@ -159,8 +170,8 @@ Project Truth models the capability as these slices:
    and deterministic related-session briefs.
 2. Rich cross-session work-state semantics: validated milestone, blocker,
    approach-change, validation, and activity semantics in briefs.
-3. Artifact and change collision awareness: detection and explanation of
-   overlapping work, not automatic blocking.
+3. Artifact and change collision awareness: implemented detection and
+   explanation of exact-path overlapping work, not automatic blocking.
 4. Agent-accessible cross-session retrieval: explicit bounded agent queries.
 5. Proactive bmux cross-session awareness: presentation or notifications for
    especially relevant changes.
@@ -177,7 +188,7 @@ current.
 Cross-session awareness does not initially implement:
 
 - automatic prompt or context injection;
-- coordination policy, file locks, merge blocking, or reassignment;
+- coordination policy, file locks, merge blocking, interruption, or reassignment;
 - agent-to-agent messaging;
 - whole-transcript sharing;
 - unrestricted summarization of raw session history;

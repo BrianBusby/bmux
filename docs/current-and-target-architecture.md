@@ -290,7 +290,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready Work
 
-- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - selection: planned; owner: Provenance Engine; depends on: `cross_session_work_awareness_foundation`, `richer_coding_agent_evidence_foundation`, `factual_session_projection_foundation`. Rationale: Detect and explain possible parallel-work artifact collisions from factual worktree, branch, repository, change-set, and file-change evidence without automatically blocking or mutating another session.
+- None.
 
 ### Selected Next Work
 
@@ -298,7 +298,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready But Not Selected
 
-- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - owner: Provenance Engine; depends on: `cross_session_work_awareness_foundation`, `richer_coding_agent_evidence_foundation`, `factual_session_projection_foundation`
+- None.
 
 ### Gated / Blocked Downstream Work
 
@@ -321,12 +321,9 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity ready; requires validated for gate `blocker_approach_semantics_validated`: Cross-session blockers, failed attempts, and approach changes must be backed by validated PE semantic records.
 - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) is not dependency-satisfying
-  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) is not dependency-satisfying
   - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) has maturity gated; requires validated for gate `cross_session_semantics_validated`: Agent questions about blockers, decisions, failed approaches, and validation require validated semantic brief fields.
-  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) has maturity ready; requires validated for gate `artifact_collision_awareness_validated`: Agent questions about file or component collisions need validated artifact-overlap explanations.
 - Proactive bmux cross-session awareness (`proactive_bmux_cross_session_awareness`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
-  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) is not dependency-satisfying
   - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity gated; requires validated for gate `cross_session_retrieval_validated`: Proactive presentation should depend on observed useful retrieval and relevance behavior.
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying

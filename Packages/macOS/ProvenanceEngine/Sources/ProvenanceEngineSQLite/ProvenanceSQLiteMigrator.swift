@@ -262,6 +262,14 @@ struct ProvenanceSQLiteMigrator: Sendable {
                 "provenance_coding_agent_session_outcome_revisions",
                 "provenance_coding_agent_session_outcomes",
             ]),
+            (23, [
+                "provenance_related_session_revisions",
+                "provenance_related_sessions",
+            ]),
+            (24, [
+                "provenance_artifact_collision_revisions",
+                "provenance_artifact_collisions",
+            ]),
         ].flatMap { migrationVersion, tableNames in
             migrationVersion <= version ? tableNames : []
         }

@@ -88,9 +88,9 @@ Project Truth. The implemented sequence now includes the evidence foundation,
 factual session projection read contract, deterministic Turn Outcome
 projection, semantic inference framework, first coding-agent semantic
 inferences, human-readable semantic messaging, and the first PE-owned
-SessionWorkModel foundation. Session Outcome aggregation and the first
-read-only related-session awareness foundation are implemented factual/read
-model layers before richer cross-session semantics, collision awareness, and
+SessionWorkModel foundation. Session Outcome aggregation, the first read-only related-session awareness
+foundation, and artifact-collision awareness are implemented factual/read model
+layers before richer cross-session semantics, agent-accessible retrieval, and
 context assembly.
 
 This phase addresses the main gap found after the execution-telemetry and
@@ -150,20 +150,25 @@ The implementation sequence is:
     SessionWorkModel. Implemented through `relatedSessions(...)` with bounded
     deterministic relationship reasons, compact outcome briefs, freshness,
     revision metadata, and factual-versus-semantic provenance separation.
-15. Add milestone hierarchy/description and blocker or approach-change
+15. Add PE-owned artifact-collision awareness above Session Outcome and
+    related-session discovery. Implemented through `artifactCollisions(...)`
+    with exact-path overlap candidates, repository/worktree/branch/HEAD
+    boundaries, temporal and freshness states, revision metadata, and explicit
+    non-coordination semantics.
+16. Add milestone hierarchy/description and blocker or approach-change
     semantics in their own structured-understanding slices after the first
     session inference concepts are stable.
-16. Consume the PE `SessionWorkModel` from the React Smart Session surface for
+17. Consume the PE `SessionWorkModel` from the React Smart Session surface for
     completed/current turn summaries, progress, blockers, validations, risks,
     and richer session-level synthesis.
-17. Add clickable semantic explanation and evidence drilldown inside the React
+18. Add clickable semantic explanation and evidence drilldown inside the React
     Smart Session surface, preserving the boundary between observed evidence,
     deterministic projection, semantic inference, and wording.
-18. Add scoped architecture inference/projection for thread and current-turn
+19. Add scoped architecture inference/projection for thread and current-turn
     scopes.
-19. Add milestone-to-architecture relationships.
-20. Add milestone-to-diff, Git, and GitHub attribution.
-21. Use the Knowledge Compiler later for durable implementation outcomes and
+20. Add milestone-to-architecture relationships.
+21. Add milestone-to-diff, Git, and GitHub attribution.
+22. Use the Knowledge Compiler later for durable implementation outcomes and
     decisions beyond the live session model.
 
 The first semantic inference slice is accepted when one coding-agent session can
@@ -200,6 +205,16 @@ external-identity, and shared changed-artifact reasons; track exact Session
 Outcome and SessionWorkModel revisions; expose freshness and completeness; and
 avoid raw transcripts, prompt injection, LLM-authored cross-session summaries,
 artifact-collision warnings, and new semantic inference.
+
+The artifact-collision awareness slice is accepted when a public
+`artifactCollisions(...)` read detects exact-path artifact overlaps between a
+target session and bounded related sessions; explains repository, worktree,
+branch, HEAD, temporal, freshness, completeness, and evidence boundaries;
+preserves Session Outcome and related-session revision identities; handles
+duplicate, late, corrected, and out-of-order evidence deterministically; and
+explicitly avoids semantic compatibility judgments, rename approximation,
+automatic coordination, prompt injection, raw transcript sharing, proactive UI,
+and Knowledge Compiler behavior.
 
 The three-view bmux product model is a consumer constraint on this PE roadmap:
 Native remains provider-native, Terminal remains React live interaction, and

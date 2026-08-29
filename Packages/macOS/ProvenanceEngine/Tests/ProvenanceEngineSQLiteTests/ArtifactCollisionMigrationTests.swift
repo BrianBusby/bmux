@@ -3,9 +3,9 @@ import Foundation
 import Testing
 
 @Suite
-struct RelatedSessionMigrationTests {
+struct ArtifactCollisionMigrationTests {
     @Test
-    func defaultMigrationsCreateRelatedSessionTablesAndEmptyCounters() async throws {
+    func defaultMigrationsCreateArtifactCollisionTablesAndEmptyCounters() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
 
@@ -14,34 +14,35 @@ struct RelatedSessionMigrationTests {
         let summary = try await repository.storageSummary()
 
         #expect(try await repository.schemaVersion() == 24)
-        #expect(try Self.tableExists("provenance_related_session_revisions", in: database))
-        #expect(try Self.tableExists("provenance_related_sessions", in: database))
-        #expect(summary.relatedSessionRevisionCount == 0)
-        #expect(summary.relatedSessionCount == 0)
+        #expect(try Self.tableExists("provenance_artifact_collision_revisions", in: database))
+        #expect(try Self.tableExists("provenance_artifact_collisions", in: database))
+        #expect(summary.artifactCollisionRevisionCount == 0)
+        #expect(summary.artifactCollisionCount == 0)
     }
 
     @Test
-    func versionTwentyTwoDatabasesMigrateToRelatedSessionSchema() async throws {
+    func versionTwentyThreeDatabasesMigrateToArtifactCollisionSchema() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
 
         let oldRepository = try ProvenanceSQLiteRepository(
             url: url,
-            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast(2))
+            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast())
         )
         let oldDatabase = try ProvenanceSQLiteDatabase(url: url)
 
-        #expect(try await oldRepository.schemaVersion() == 22)
-        #expect(try Self.tableExists("provenance_related_session_revisions", in: oldDatabase) == false)
-        #expect(try Self.tableExists("provenance_related_sessions", in: oldDatabase) == false)
+        #expect(try await oldRepository.schemaVersion() == 23)
+        #expect(try Self.tableExists("provenance_related_session_revisions", in: oldDatabase))
+        #expect(try Self.tableExists("provenance_artifact_collision_revisions", in: oldDatabase) == false)
+        #expect(try Self.tableExists("provenance_artifact_collisions", in: oldDatabase) == false)
 
         let repository = try ProvenanceSQLiteRepository(url: url)
         let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
 
         #expect(try await repository.schemaVersion() == 24)
-        #expect(try Self.tableExists("provenance_related_session_revisions", in: migratedDatabase))
-        #expect(try Self.tableExists("provenance_related_sessions", in: migratedDatabase))
-        #expect(try await repository.schemaMigrationRecords(limit: 3).map(\.version) == [24, 23, 22])
+        #expect(try Self.tableExists("provenance_artifact_collision_revisions", in: migratedDatabase))
+        #expect(try Self.tableExists("provenance_artifact_collisions", in: migratedDatabase))
+        #expect(try await repository.schemaMigrationRecords(limit: 2).map(\.version) == [24, 23])
     }
 
     private static func tableExists(_ name: String, in database: ProvenanceSQLiteDatabase) throws -> Bool {
@@ -59,7 +60,7 @@ struct RelatedSessionMigrationTests {
 
     private static func temporaryDatabaseURL() -> URL {
         FileManager.default.temporaryDirectory
-            .appendingPathComponent("provenance-engine-related-session-migration-tests", isDirectory: true)
+            .appendingPathComponent("provenance-engine-artifact-collision-migration-tests", isDirectory: true)
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
             .appendingPathComponent("provenance.sqlite")
     }

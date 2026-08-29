@@ -55,7 +55,7 @@ local_capabilities:
   provenance_engine_session_work_model_contract_foundation: implemented
   provenance_engine_cross_session_work_awareness: implemented
   provenance_engine_related_session_read_model: implemented
-  provenance_engine_cross_session_artifact_collision_awareness: planned
+  provenance_engine_cross_session_artifact_collision_awareness: implemented
   provenance_engine_agent_accessible_cross_session_retrieval: planned
   provenance_engine_milestone_inference: implemented
   provenance_engine_blocker_approach_change_semantics: planned
