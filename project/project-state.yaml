@@ -1404,7 +1404,7 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: provenance_engine
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
