@@ -28,7 +28,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Ready Candidates
 
-- Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) - maturity: ready; status: planned; selection: planned; owner: Provenance Engine
+- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - maturity: ready; status: planned; selection: planned; owner: Provenance Engine
 
 ### Gated / Blocked Downstream Work
 
@@ -45,22 +45,15 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - React Terminal live interaction productization (`react_terminal_productization`) is not dependency-satisfying
   - React Terminal live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
 - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
-  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) is not dependency-satisfying
   - Milestone inference (`milestone_inference`) is not dependency-satisfying
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) is not dependency-satisfying
-  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) has maturity ready; requires validated for gate `cross_session_foundation_validated`: Rich cross-session briefs should build on a validated deterministic relationship/read foundation.
   - Milestone inference (`milestone_inference`) has maturity ready; requires validated for gate `milestone_semantics_validated`: Cross-session milestone identity and hierarchy must come from validated PE milestone semantics.
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity ready; requires validated for gate `blocker_approach_semantics_validated`: Cross-session blockers, failed attempts, and approach changes must be backed by validated PE semantic records.
-- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
-  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) is not dependency-satisfying
-  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) has maturity ready; requires validated for gate `cross_session_foundation_validated`: Collision detection needs validated related-session relationships and bounded explanation semantics.
 - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
-  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) is not dependency-satisfying
   - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) is not dependency-satisfying
   - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) is not dependency-satisfying
-  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) has maturity ready; requires validated for gate `cross_session_foundation_validated`: Agents should query cross-session state only after the relationship/read model is validated.
   - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) has maturity gated; requires validated for gate `cross_session_semantics_validated`: Agent questions about blockers, decisions, failed approaches, and validation require validated semantic brief fields.
-  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) has maturity gated; requires validated for gate `artifact_collision_awareness_validated`: Agent questions about file or component collisions need validated artifact-overlap explanations.
+  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) has maturity ready; requires validated for gate `artifact_collision_awareness_validated`: Agent questions about file or component collisions need validated artifact-overlap explanations.
 - Proactive bmux cross-session awareness (`proactive_bmux_cross_session_awareness`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
   - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) is not dependency-satisfying
@@ -581,7 +574,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Gate `shared_retrieval_validated`: requires `shared_retrieval` maturity validated; reason: Organization-specific intelligence requires validated shared retrieval.
           Gate `trained_behavior_validated`: requires `pe_trained_behavior_layer` maturity validated; reason: Organization-specific intelligence should only combine with PE-trained behavior after that layer is validated.
           Rationale: Organization-scale intelligence is the downstream convergence point and remains gated by both shared retrieval and PE-derived behavior validation.
-  - **Cross-Session Work Awareness** (`cross_session_work_awareness`) - program; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: planned / Shared; parallelism: conditional; maturity: gated
+  - **Cross-Session Work Awareness** (`cross_session_work_awareness`) - program; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: current / Shared; parallelism: conditional; maturity: active
     Depends on: `session_work_model_contract_foundation`, `session_outcome_aggregation`
     Expected contract domains: `cross_session_relationships`, `related_session_briefs`, `session_outcome_projection`, `factual_semantic_provenance`
     Expected code areas: `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts`, `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite`, `Packages/macOS/ProvenanceEngine/Tests`, `bmux cross-session presentation consumers`, `docs/planning/cross-session-work-awareness.md`
@@ -590,13 +583,13 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
     Worktree required: true
     Conflict note: Cross-session awareness must stay PE-owned for durable relationships and read models. bmux may present or ask for bounded results, but must not infer a separate semantic cross-session model from raw provider output.
     Rationale: Capture the long-term cross-session working-memory capability so related coding-agent sessions can discover bounded evidence-backed work state, relationships, blockers, artifacts, and outcomes without sharing raw transcripts or automatically injecting context.
-    - **Cross-Session Awareness Read Models** (`cross_session_awareness_read_models`) - phase; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: serial; maturity: gated
+    - **Cross-Session Awareness Read Models** (`cross_session_awareness_read_models`) - phase; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: current / Provenance Engine; parallelism: serial; maturity: active
       Depends on: `session_work_model_contract_foundation`, `session_outcome_aggregation`
       Rationale: Group PE-owned read models that derive related-session briefs from durable evidence and validated semantic records.
-      - **Related Session Awareness Foundation** (`related_session_awareness_foundation`) - milestone; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: serial; maturity: gated
+      - **Related Session Awareness Foundation** (`related_session_awareness_foundation`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: complete / Provenance Engine; parallelism: serial; maturity: validated
         Depends on: `session_work_model_contract_foundation`, `session_outcome_aggregation`
         Rationale: First milestone for deterministic related-session discovery and bounded PE-owned brief contracts.
-        - **Cross-session work awareness foundation** (`cross_session_work_awareness_foundation`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
+        - **Cross-session work awareness foundation** (`cross_session_work_awareness_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: semantic understanding; layer: inference session work projections; execution: complete / Provenance Engine; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
           Depends on: `session_work_model_contract_foundation`, `session_outcome_aggregation`, `richer_coding_agent_evidence_foundation`
           Enables: `rich_cross_session_work_state_semantics`, `cross_session_artifact_collision_awareness`, `agent_accessible_cross_session_retrieval`
           Expected contract domains: `related_session_read_contract`, `related_session_reasons`, `relationship_freshness_revisions`, `factual_semantic_provenance`
@@ -604,10 +597,12 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `related_session_contract`, `session_work_model_projection`, `factual_session_projection_contract`, `project_truth_manifest`
           Contract dependencies: `session_work_model_contract`, `session_outcome_projection`, `richer_coding_agent_evidence`, `deterministic_current_state_api`
           Worktree required: true
-          Conflict note: Slice 1 is read-only. It may derive deterministic relationships from existing session, worktree, repository, branch, session-tree, and file-change evidence, and may include already-supported SessionWorkModel semantic fields with their semantic provenance. It must not introduce coordination policy, prompt injection, whole-transcript sharing, or speculative milestone/blocker/architecture inference.
-          Rationale: First implementation slice for deterministic related-session discovery and bounded PE-owned briefs over active or recent coding-agent sessions. This slice is dependency-ready but remains planned until Project Truth selects it for implementation.
-          Acceptance criteria: Expose a PE public read contract for bounded related-session briefs.; Preserve individually inspectable relationship reasons and deterministic ordering.; Keep observed facts, explicit plan evidence, and semantic inference distinguishable.; Return freshness/revision metadata and provenance references without raw transcript sharing.
-      - **Cross-Session Semantics and Collision Awareness** (`cross_session_semantics_and_collisions`) - milestone; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: serial; maturity: gated
+          Conflict note: Slice 1 is read-only. It derives deterministic relationships from existing session, worktree, repository, branch, session-tree, provider identity, external identity, Session Outcome, and SessionWorkModel evidence, and does not introduce coordination policy, prompt injection, whole-transcript sharing, artifact-collision warnings, or speculative milestone/blocker/architecture inference.
+          Evidence: BrianBusby/bmux@2ec30211c5ce
+          Rationale: First implementation slice for deterministic related-session discovery and bounded PE-owned briefs over active or recent coding-agent sessions.
+          Acceptance reason: Cross-session work awareness foundation is implemented as a schema-v23 PE read contract and SQLite projection. `relatedSessions(...)` returns bounded deterministic briefs with same-repository, same-worktree, same-branch, session-tree, provider-identity, external-identity, and shared changed-artifact relationship reasons; compact Session Outcome facts; exact Session Outcome and SessionWorkModel revision metadata; freshness/source-watermark metadata; and explicit availability/completeness states. The slice remains below richer cross-session semantics, collision awareness, explicit agent retrieval, bmux presentation, prompt/context injection, and Knowledge Compiler integration.
+          Acceptance criteria: Expose a PE public read contract for bounded related-session briefs.; Preserve individually inspectable relationship reasons and deterministic ordering.; Keep observed facts, explicit plan evidence, and semantic inference distinguishable.; Return freshness/revision metadata and provenance references without raw transcript sharing.; Preserve exact Session Outcome and SessionWorkModel revision metadata used by every brief.; Keep the slice read-only with no prompt injection, coordination policy, bmux UI, or artifact-collision warning behavior.
+      - **Cross-Session Semantics and Collision Awareness** (`cross_session_semantics_and_collisions`) - milestone; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: current / Provenance Engine; parallelism: serial; maturity: active
         Depends on: `cross_session_work_awareness_foundation`
         Gate `cross_session_foundation_validated`: requires `cross_session_work_awareness_foundation` maturity validated; reason: Richer cross-session semantics and collision explanations should build on a validated related-session foundation.
         Rationale: Adds richer work-state semantics and factual artifact-overlap explanations after the foundational related-session read model is validated.
@@ -623,7 +618,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Gate `milestone_semantics_validated`: requires `milestone_inference` maturity validated; reason: Cross-session milestone identity and hierarchy must come from validated PE milestone semantics.
           Gate `blocker_approach_semantics_validated`: requires `blocker_approach_change_semantics` maturity validated; reason: Cross-session blockers, failed attempts, and approach changes must be backed by validated PE semantic records.
           Rationale: Add richer validated semantic information to related-session briefs only after PE owns the underlying milestone, blocker, validation, and approach-change semantics.
-        - **Artifact and change collision awareness** (`cross_session_artifact_collision_awareness`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: deterministic current state; execution: planned / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+        - **Artifact and change collision awareness** (`cross_session_artifact_collision_awareness`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: deterministic current state; execution: planned / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
           Depends on: `cross_session_work_awareness_foundation`, `richer_coding_agent_evidence_foundation`, `factual_session_projection_foundation`
           Enables: `agent_accessible_cross_session_retrieval`, `proactive_bmux_cross_session_awareness`
           Expected contract domains: `cross_session_file_overlap`, `worktree_branch_overlap`, `artifact_collision_explanations`
@@ -703,11 +698,11 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) | planned | ready | serial | true | `related_session_contract`, `session_work_model_projection`, `factual_session_projection_contract`, `project_truth_manifest` | `session_work_model_contract`, `session_outcome_projection`, `richer_coding_agent_evidence`, `deterministic_current_state_api` | `related_session_read_contract`, `related_session_reasons`, `relationship_freshness_revisions`, `factual_semantic_provenance` | `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts`, `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite`, `Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSQLiteTests`, `Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSDKTests`, `docs/planning/cross-session-work-awareness.md` |
+| Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) | planned | ready | serial | true | `related_session_contract`, `file_change_attribution`, `current_context_projection` | `related_session_read_contract`, `richer_coding_agent_evidence`, `factual_file_change_evidence` | `cross_session_file_overlap`, `worktree_branch_overlap`, `artifact_collision_explanations` | `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts`, `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite`, `Packages/macOS/ProvenanceEngine/Tests` |
 
 ## Dependency-Ready Work
 
-- Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) - selection: planned; depends on: `session_work_model_contract_foundation`, `session_outcome_aggregation`, `richer_coding_agent_evidence_foundation`
+- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - selection: planned; depends on: `cross_session_work_awareness_foundation`, `richer_coding_agent_evidence_foundation`, `factual_session_projection_foundation`
 
 ## Selected Next Work
 
@@ -715,7 +710,7 @@ None.
 
 ## Dependency-Ready But Not Selected
 
-- Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) - depends on: `session_work_model_contract_foundation`, `session_outcome_aggregation`, `richer_coding_agent_evidence_foundation`
+- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - depends on: `cross_session_work_awareness_foundation`, `richer_coding_agent_evidence_foundation`, `factual_session_projection_foundation`
 
 ## Deferred Or Blocked Work
 

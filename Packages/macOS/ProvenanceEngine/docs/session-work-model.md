@@ -351,6 +351,36 @@ architecture projections, GitHub attribution, Knowledge Compiler output, or
 presentation-learning behavior. Unsupported future concepts stay absent rather
 than guessed.
 
+## Implemented Related-Session Awareness Foundation
+
+The first cross-session foundation now exposes
+`ProvenanceEngineClient.relatedSessions(...)` as a PE-owned read model above
+Session Outcome and SessionWorkModel. It returns bounded related-session briefs
+for one target PE session with deterministic relationship reasons, exact
+Session Outcome revision identity, compact Session Outcome facts, freshness
+metadata, source evidence watermarks, and explicit completeness state.
+
+The relationship rules are factual and inspectable: same repository, same
+worktree, same branch, session-tree ancestor, session-tree descendant,
+session-tree sibling, shared provider thread, shared external identity, and
+shared changed artifact path inside a shared repository or worktree context.
+Ordering is deterministic by strongest relationship reason, freshness, and
+stable session id.
+
+If a related session already has SessionWorkModel semantic fields, the brief can
+include those fields with their original semantic record, confidence,
+specificity, producer, inference version, and evidence basis. Those fields are
+not relationship reasons and the related-session projector does not create new
+semantic milestone, blocker, decision, approach-change, progress, risk, or
+architecture inference.
+
+This foundation is deliberately not Smart Session presentation, automatic
+context injection, agent coordination, artifact-collision warning, prompt
+assembly, raw transcript sharing, hidden reasoning storage, or Knowledge
+Compiler integration. Future cross-session semantic slices must build on this
+read contract instead of asking bmux to infer relationships from provider
+output locally.
+
 ## Future Feedback Categories
 
 Feedback for later presentation learning must distinguish two failures:

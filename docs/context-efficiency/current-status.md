@@ -95,8 +95,19 @@ state, records repository/worktree/branch/HEAD boundaries without silently
 mixing incompatible boundaries, and exposes completeness/source-availability
 metadata. It remains below semantic `SessionWorkModel`, Smart Session UI,
 cross-session retrieval, context injection, and Knowledge Compiler output.
-After this slice, the next dependency-ready factual direction is cross-session
-work awareness over bounded session-level factual units.
+
+Cross-session work awareness foundation is implemented on branch
+`cross-session-work-awareness-foundation` as the first PE-owned read-only
+related-session layer above Session Outcome and SessionWorkModel.
+`relatedSessions(...)` accepts a target PE session id plus bounded result,
+omission, recent-time, and revision options. It returns deterministic
+related-session briefs with typed relationship reasons, exact Session Outcome
+revision ids, compact Session Outcome facts, optional existing SessionWorkModel
+semantic fields with their original provenance, freshness/source-watermark
+metadata, and explicit completeness states. It remains read-only and does not
+add prompt injection, agent coordination, raw transcript sharing, proactive UI,
+artifact-collision warnings, Knowledge Compiler behavior, or new milestone,
+blocker, decision, risk, approach-change, or architecture inference.
 
 Live prompt-link repair is implemented for active Codex sessions: on
 `UserPromptSubmit`, bmux now starts/resumes transcript observation and runs the
@@ -130,12 +141,15 @@ use one branch and one worktree unless a future release/extraction task
 explicitly requires a separate PE checkout. The original PE repository remains
 an archival and recovery reference until the migration is accepted.
 
-Verification for this Session Outcome branch:
+Verification for this cross-session awareness branch:
 
 - Project Truth: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
+- Provenance Engine: `swift test --package-path Packages/macOS/ProvenanceEngine`
+- Related sessions: `swift test --package-path Packages/macOS/ProvenanceEngine --filter 'RelatedSessionProjectionTests|RelatedSessionProjectionRevisionTests|RelatedSessionMigrationTests|RelatedSessionContractTests'`
+- Guards: `python3 scripts/swift_file_length_budget.py --repo-root . --base-ref origin/main`, `git diff --check`, `./scripts/lint-pbxproj-test-wiring.sh`
 
 Runtime tests or tagged reloads are only required when production app/runtime
-behavior changes; this three-view clarification is planning/documentation only.
+behavior changes; this branch changes PE package contracts/storage only.
 
 Codex transcript importer verification is covered by the
 `WorkProvenanceStoreTests` suite in the `bmux-unit` scheme.

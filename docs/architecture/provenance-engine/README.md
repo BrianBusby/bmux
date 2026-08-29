@@ -23,7 +23,8 @@ external consumers later, move it through the documented package-group workflow.
 ## Public Products
 
 - `ProvenanceEngineContracts`: DTOs, request/response types, public protocol,
-  health, factual projection, semantic record, and semantic message contracts.
+  health, factual projection, semantic record, semantic message, SessionWorkModel,
+  and related-session awareness contracts.
 - `ProvenanceEngineSDK`: public client construction through
   `ProvenanceEngineClientFactory`.
 
@@ -46,6 +47,7 @@ Forbidden:
 ProvenanceEngine -> bmux app/runtime/UI internals
 bmux production integration -> ProvenanceEngineSQLite implementation types
 React Session UI -> raw semantic inference from provider events
+bmux presentation -> separate cross-session semantic model over provider output
 ```
 
 ## Future Independence
@@ -62,4 +64,3 @@ Keep PE extractable by preserving:
 Future options include independent semantic versioning, mirroring the package to
 a public repository, publishing package products, or extracting the package back
 to a standalone repository.
-

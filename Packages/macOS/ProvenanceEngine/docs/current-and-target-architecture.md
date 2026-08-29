@@ -38,8 +38,8 @@ state, immediate interaction, normalization at the product edge, presentation,
 UI, capture policy, optimistic UI, and user-facing fallback behavior.
 
 Provenance Engine owns accepted durable evidence, deterministic Current State,
-factual projections, semantic inference, `SessionWorkModel`, milestone
-semantics, scoped architecture projections, and later knowledge
+factual projections, semantic inference, `SessionWorkModel`, related-session
+awareness, milestone semantics, scoped architecture projections, and later knowledge
 compilation, storage, retrieval, citation, and context budgeting.
 
 The boundary is intentionally asymmetric: bmux sees more than it persists.
@@ -62,7 +62,7 @@ underlying provider session identity:
 
 Provenance Engine is on the durable side of that model. It owns accepted
 evidence, deterministic factual session projection, semantic inference records,
-semantic messages, and `SessionWorkModel`. The React Terminal view
+semantic messages, `SessionWorkModel`, and related-session awareness. The React Terminal view
 may use ephemeral provider/runtime events directly, but the React Session view
 should preferentially consume PE factual and semantic contracts rather than
 reinterpreting raw provider events inside bmux.
@@ -103,16 +103,22 @@ PE durable evidence store
         v
 PE deterministic Current State
   workspace display, current context, worktree/session/file views
-  factual session projection
+  factual session projection, TurnOutcome, SessionOutcome
+        |
+        v
+PE semantic inference, semantic messages, and SessionWorkModel
+        |
+        v
+PE related-session awareness
+  bounded briefs, factual relationship reasons, freshness, revisions
         |
         v
 bmux presentation
   tabs, sidebars, diagnostics, interaction, fallback, and live reconciliation
 
-Planned above the factual layer:
-  semantic inference -> intent / phase / current activity
+Planned above the implemented relationship foundation:
+  richer cross-session semantics -> artifact collision awareness
   milestone semantics -> scoped architecture projection
-  SessionWorkModel -> human-readable semantic presentation
   Knowledge Compiler -> Knowledge Store -> Retrieval
 ```
 
@@ -185,6 +191,11 @@ intent, turn intent, session phase, and current activity as rule-produced
 semantic records from bounded factual session projections. It deliberately stops
 before milestone semantics, scoped architecture projection, presentation
 wording, feedback learning, GitHub ingestion, and Knowledge Compiler artifacts.
+
+The first related-session awareness implementation reads Session Outcome and
+SessionWorkModel through PE contracts, returns bounded deterministic
+relationship briefs, and keeps cross-session presentation, prompt assembly,
+collision warnings, and richer semantic interpretation in later slices.
 
 In the durable loop, the Knowledge Compiler should run later, after live
 evidence, inference, milestones, architecture projections, and code

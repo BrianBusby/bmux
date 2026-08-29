@@ -40,7 +40,7 @@ UI, capture policy, optimistic UI, and user-facing fallback behavior.
 
 Provenance Engine owns accepted durable evidence, deterministic Current State,
 factual projections, semantic inference, `SessionWorkModel`, milestone
-semantics, scoped architecture projections, and later knowledge
+semantics, related-session awareness, scoped architecture projections, and later knowledge
 compilation, storage, retrieval, citation, and context budgeting.
 
 The boundary is intentionally asymmetric: bmux sees more than it persists.
@@ -111,6 +111,10 @@ PE semantic inference and semantic messages
   implemented and owned in PE; consumed by bmux UI as adoption slices land
         |
         v
+PE SessionWorkModel and related-session awareness
+  bounded factual/semantic session views and cross-session relationship briefs
+        |
+        v
 bmux presentation
   Native provider surface, React Terminal live interaction, diagnostics,
   fallback, and later React Smart Session summary UI
@@ -169,6 +173,11 @@ PE factual projection, semantic inference records, semantic messages, and the
 `SessionWorkModel`; it should not independently infer session meaning
 from raw Terminal events.
 
+Related-session awareness is a PE read model above Session Outcome and
+SessionWorkModel. It returns bounded, evidence-backed relationship briefs for a
+target session; bmux may present those results later, but should not infer a
+parallel cross-session semantic model from provider output.
+
 ## Canonical Status
 
 <!-- BEGIN GENERATED: current-target-architecture-status -->
@@ -192,6 +201,9 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`) - milestone; status: active; owner: Provenance Engine
 - Three-view Coding Session Experience (`three_view_coding_session_experience`) - phase; status: active; owner: Bmux
 - Coding Session View Surfaces (`coding_session_view_surfaces`) - milestone; status: active; owner: Bmux
+- Cross-Session Work Awareness (`cross_session_work_awareness`) - program; status: active; owner: Provenance Engine
+- Cross-Session Awareness Read Models (`cross_session_awareness_read_models`) - phase; status: active; owner: Provenance Engine
+- Cross-Session Semantics and Collision Awareness (`cross_session_semantics_and_collisions`) - milestone; status: active; owner: Provenance Engine
 
 ### Major Node Summaries
 
@@ -278,7 +290,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready Work
 
-- Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) - selection: planned; owner: Provenance Engine; depends on: `session_work_model_contract_foundation`, `session_outcome_aggregation`, `richer_coding_agent_evidence_foundation`. Rationale: First implementation slice for deterministic related-session discovery and bounded PE-owned briefs over active or recent coding-agent sessions. This slice is dependency-ready but remains planned until Project Truth selects it for implementation.
+- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - selection: planned; owner: Provenance Engine; depends on: `cross_session_work_awareness_foundation`, `richer_coding_agent_evidence_foundation`, `factual_session_projection_foundation`. Rationale: Detect and explain possible parallel-work artifact collisions from factual worktree, branch, repository, change-set, and file-change evidence without automatically blocking or mutating another session.
 
 ### Selected Next Work
 
@@ -286,7 +298,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready But Not Selected
 
-- Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) - owner: Provenance Engine; depends on: `session_work_model_contract_foundation`, `session_outcome_aggregation`, `richer_coding_agent_evidence_foundation`
+- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - owner: Provenance Engine; depends on: `cross_session_work_awareness_foundation`, `richer_coding_agent_evidence_foundation`, `factual_session_projection_foundation`
 
 ### Gated / Blocked Downstream Work
 
@@ -303,22 +315,15 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
   - React Terminal live interaction productization (`react_terminal_productization`) is not dependency-satisfying
   - React Terminal live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
 - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
-  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) is not dependency-satisfying
   - Milestone inference (`milestone_inference`) is not dependency-satisfying
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) is not dependency-satisfying
-  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) has maturity ready; requires validated for gate `cross_session_foundation_validated`: Rich cross-session briefs should build on a validated deterministic relationship/read foundation.
   - Milestone inference (`milestone_inference`) has maturity ready; requires validated for gate `milestone_semantics_validated`: Cross-session milestone identity and hierarchy must come from validated PE milestone semantics.
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity ready; requires validated for gate `blocker_approach_semantics_validated`: Cross-session blockers, failed attempts, and approach changes must be backed by validated PE semantic records.
-- Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
-  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) is not dependency-satisfying
-  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) has maturity ready; requires validated for gate `cross_session_foundation_validated`: Collision detection needs validated related-session relationships and bounded explanation semantics.
 - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
-  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) is not dependency-satisfying
   - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) is not dependency-satisfying
   - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) is not dependency-satisfying
-  - Cross-session work awareness foundation (`cross_session_work_awareness_foundation`) has maturity ready; requires validated for gate `cross_session_foundation_validated`: Agents should query cross-session state only after the relationship/read model is validated.
   - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) has maturity gated; requires validated for gate `cross_session_semantics_validated`: Agent questions about blockers, decisions, failed approaches, and validation require validated semantic brief fields.
-  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) has maturity gated; requires validated for gate `artifact_collision_awareness_validated`: Agent questions about file or component collisions need validated artifact-overlap explanations.
+  - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) has maturity ready; requires validated for gate `artifact_collision_awareness_validated`: Agent questions about file or component collisions need validated artifact-overlap explanations.
 - Proactive bmux cross-session awareness (`proactive_bmux_cross_session_awareness`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
   - Artifact and change collision awareness (`cross_session_artifact_collision_awareness`) is not dependency-satisfying

@@ -4,7 +4,8 @@ ProvenanceEngine is the independent local-first provenance package inside the
 bmux monorepo. The implemented platform provides public contracts, a public
 in-process SDK, engine-owned SQLite storage, an immutable ledger, deterministic
 Current State, factual session projections, semantic inference records, semantic
-messages, and adopted bmux integration through the public SDK.
+messages, SessionWorkModel, related-session awareness, and adopted bmux
+integration through the public SDK.
 
 The monorepo removes cross-repository coordination overhead; it does not make PE
 a bmux implementation detail. PE must not import bmux app, runtime, terminal, or
@@ -20,6 +21,7 @@ UI internals.
 - Product roadmap and implementation sequence: `docs/roadmap.md`
 - Technical integration contract: `docs/integration-contract.md`
 - Turn Outcome factual projection contract: `docs/turn-outcome.md`
+- Related-session awareness contract: `docs/related-sessions.md`
 - Canonical bmux integration roadmap: `docs/bmux-integration-roadmap.md`
 - Historical current-status baseline: `docs/current-status.md`
 - Historical Slice D file-explanation readiness evidence: `docs/file-explanation-readiness-slice-completion.md`
