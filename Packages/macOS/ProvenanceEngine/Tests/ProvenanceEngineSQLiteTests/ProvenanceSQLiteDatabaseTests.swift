@@ -488,7 +488,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 21)
+        #expect(try await repository.schemaVersion() == 22)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         #expect(try Self.tableExists("provenance_events", in: database))
@@ -514,11 +514,13 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_coding_agent_file_change_attributions", in: database))
         #expect(try Self.tableExists("provenance_coding_agent_turn_outcome_revisions", in: database))
         #expect(try Self.tableExists("provenance_coding_agent_turn_outcomes", in: database))
+        #expect(try Self.tableExists("provenance_coding_agent_session_outcome_revisions", in: database))
+        #expect(try Self.tableExists("provenance_coding_agent_session_outcomes", in: database))
         #expect(try Self.tableExists("provenance_semantic_inferences", in: database))
         #expect(try Self.tableExists("provenance_semantic_messages", in: database))
         #expect(try Self.tableExists("provenance_storage_repair_attempts", in: database))
         #expect(try Self.tableExists("provenance_schema_migrations", in: database))
-        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [21, 20, 19, 18, 17, 16, 15, 14, 13, 12])
+        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [22, 21, 20, 19, 18, 17, 16, 15, 14, 13])
     }
 
     @Test
@@ -528,7 +530,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         _ = try ProvenanceSQLiteRepository(
             url: url,
-            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast(8))
+            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast(9))
         )
 
         let olderDatabase = try ProvenanceSQLiteDatabase(url: url)
@@ -539,8 +541,8 @@ struct ProvenanceSQLiteDatabaseTests {
         let repository = try ProvenanceSQLiteRepository(url: url)
         let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
 
-        #expect(try await repository.schemaVersion() == 21)
-        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: migratedDatabase) == "21")
+        #expect(try await repository.schemaVersion() == 22)
+        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: migratedDatabase) == "22")
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_login", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_url", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "current_work_summary", in: migratedDatabase))
@@ -555,9 +557,11 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(try Self.tableExists("provenance_coding_agent_assistant_messages", in: migratedDatabase))
         #expect(try Self.tableExists("provenance_coding_agent_turn_outcome_revisions", in: migratedDatabase))
         #expect(try Self.tableExists("provenance_coding_agent_turn_outcomes", in: migratedDatabase))
+        #expect(try Self.tableExists("provenance_coding_agent_session_outcome_revisions", in: migratedDatabase))
+        #expect(try Self.tableExists("provenance_coding_agent_session_outcomes", in: migratedDatabase))
         #expect(try Self.tableExists("provenance_semantic_inferences", in: migratedDatabase))
         #expect(try Self.tableExists("provenance_semantic_messages", in: migratedDatabase))
-        #expect(try await repository.schemaMigrationRecords(limit: 3).map(\.version) == [21, 20, 19])
+        #expect(try await repository.schemaMigrationRecords(limit: 3).map(\.version) == [22, 21, 20])
     }
 
     @Test
@@ -617,7 +621,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
 
-        #expect(try await repository.schemaVersion() == 21)
+        #expect(try await repository.schemaVersion() == 22)
         #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
     }
 
@@ -883,7 +887,7 @@ struct ProvenanceSQLiteDatabaseTests {
         let summary = try await repository.storageSummary()
 
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 21,
+            schemaVersion: 22,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,
@@ -907,7 +911,9 @@ struct ProvenanceSQLiteDatabaseTests {
             codingAgentAssistantMessageCount: 0,
             codingAgentFileChangeAttributionCount: 0,
             codingAgentTurnOutcomeCount: 0,
-            codingAgentTurnOutcomeRevisionCount: 0
+            codingAgentTurnOutcomeRevisionCount: 0,
+            codingAgentSessionOutcomeCount: 0,
+            codingAgentSessionOutcomeRevisionCount: 0
         ))
     }
 

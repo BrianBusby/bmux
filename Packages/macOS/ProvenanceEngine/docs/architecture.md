@@ -21,7 +21,10 @@ The SQLite backend stores an immutable event ledger and rebuildable current-stat
 
 SQLite connections set a bounded busy timeout on open and attempt to use write-ahead logging so bmux app instances, tagged debug builds, hook monitors, and CLI diagnostics can share the engine-owned local store. If an older rollback-journal client temporarily blocks WAL activation, the connection stays usable and later connections can switch the store once contention clears.
 
-Current accepted projections include repositories, worktrees, sessions, session relationships, file explanations, current context records, workspace-display Current State, and factual session projection snapshots for coding-agent evidence.
+Current accepted projections include repositories, worktrees, sessions, session
+relationships, file explanations, current context records, workspace-display
+Current State, factual session projection snapshots for coding-agent evidence,
+revisioned turn outcomes, and revisioned session outcomes.
 
 Implemented semantic contracts include versioned semantic inference records, first coding-agent semantic inference kinds, semantic message records, deterministic message materialization, the public `SessionWorkModel` foundation/read path, and the first plan/prompt-backed milestone field. Nested milestone hierarchy, blocker/approach-change semantics, and scoped architecture projection remain planned target behavior.
 

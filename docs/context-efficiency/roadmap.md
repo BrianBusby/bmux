@@ -76,6 +76,12 @@ relationships. bmux remains the capture, orchestration, and presentation client;
 PE owns durable evidence, deterministic Current State, inference, and the
 coherent session work projection.
 
+Session Outcome is now the accepted deterministic factual aggregation layer for
+one coding-agent session. It aggregates exact `TurnOutcome` revisions, records
+session lifecycle and repository/worktree boundaries, and remains below
+semantic `SessionWorkModel`, cross-session retrieval, context injection, and
+Knowledge Compiler output.
+
 Important empirical findings
 
 Use these findings as the initial motivation and calibration data, not as unquestionable universal rules.
