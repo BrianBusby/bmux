@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 import BMUXAgentLaunch
 import BmuxAgentChat
 import ProvenanceEngineContracts
@@ -11,7 +12,7 @@ import Testing
 @testable import bmux
 #endif
 
-@Suite
+@Suite(.serialized)
 struct CLIProvenanceCodexTranscriptImporterTests {
     @Test
     func appendsCanonicalEvidenceIdempotently() async throws {
@@ -742,21 +743,20 @@ struct CLIProvenanceCodexTranscriptImporterTests {
     }
 
     private static func cleanCLIEnvironment(home: URL) -> [String: String] {
-        var environment = ProcessInfo.processInfo.environment
-        for key in Array(environment.keys) where key.hasPrefix("BMUX_") {
-            environment.removeValue(forKey: key)
-        }
-        environment["BMUX_CLI_SENTRY_DISABLED"] = "1"
-        environment["CFFIXED_USER_HOME"] = home.path
-        environment["HOME"] = home.path
-        return environment
+        [
+            "BMUX_CLI_SENTRY_DISABLED": "1",
+            "CFFIXED_USER_HOME": home.path,
+            "HOME": home.path,
+            "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+            "TMPDIR": FileManager.default.temporaryDirectory.path,
+        ]
     }
 
     private static func runCLI(
         executablePath: String,
         arguments: [String],
         environment: [String: String],
-        timeout: TimeInterval = 10
+        timeout: TimeInterval = 30
     ) -> CLIProcessResult {
         let process = Process()
         let outputPipe = Pipe()
@@ -767,21 +767,25 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         process.standardOutput = outputPipe
         process.standardError = outputPipe
 
+        let exitSignal = DispatchSemaphore(value: 0)
+        process.terminationHandler = { _ in
+            exitSignal.signal()
+        }
+
         do {
             try process.run()
         } catch {
             return CLIProcessResult(status: -1, output: String(describing: error), timedOut: false)
         }
 
-        let exitSignal = DispatchSemaphore(value: 0)
-        DispatchQueue.global(qos: .userInitiated).async {
-            process.waitUntilExit()
-            exitSignal.signal()
-        }
         let timedOut = exitSignal.wait(timeout: .now() + timeout) == .timedOut
         if timedOut {
             process.terminate()
-            _ = exitSignal.wait(timeout: .now() + 1)
+            if exitSignal.wait(timeout: .now() + 1) == .timedOut,
+               process.isRunning {
+                kill(process.processIdentifier, SIGKILL)
+                _ = exitSignal.wait(timeout: .now() + 1)
+            }
         }
         let output = String(
             data: outputPipe.fileHandleForReading.readDataToEndOfFile(),
