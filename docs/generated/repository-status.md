@@ -13,10 +13,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Blocker and approach-change semantics (`blocker_approach_change_semantics`)
-- Slice state: implemented
-- Owner: provenance_engine
-- Repository state: active
+- Active slice: none selected
+- Repository state: none selected
 
 ## Release
 

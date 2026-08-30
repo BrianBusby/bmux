@@ -1,14 +1,16 @@
 # Latest Handoff
 
-## Active Slice
+## Completed Slice
 
 - Slice: `blocker_approach_change_semantics`
 - Branch: `session-blocker-approach-semantics`
 - Worktree: `/Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics`
 - Base: `origin/main` containing merged milestone-inference PR #84, merge commit `cd59ec10b27500a4c0dc0954bd1da9f7fed44de8`
-- PR: https://github.com/BrianBusby/bmux/pull/85
+- PR: https://github.com/BrianBusby/bmux/pull/85, merged at `2026-08-30T18:46:46Z`
 - Implementation commit: `2cc991cae7a7b6306a24e19811fe0d5edc0527c4`
-- Status: implemented and open for review; do not merge automatically
+- Review/follow-up commits: `af91d9f09adc9d176b0cd5fc49460d8907dde5dc`, `b0e34ad6bec46120184bc215f61bdcfd4c5f3b79`
+- Merge commit: `79d6cd404b98f63a10f6fcc7748a921c3efbf19b`
+- Status: implemented, locally validated, CI green, and merged
 
 ## Current Generated Truth
 
@@ -119,8 +121,9 @@ work-state propagation remain out of scope.
 
 ## Next Ready Work
 
-The recommended next slice is `rich_cross_session_work_state_semantics` only
-after milestone inference and blocker/approach semantics are delivered through
-merged PRs and their validation evidence remains accepted. PR #85 is still open,
-so downstream consumer gates should remain closed until that delivery decision
-is made.
+The recommended next slice is `rich_cross_session_work_state_semantics`, after
+rechecking the current Project Truth graph from fresh `origin/main`. Milestone
+inference and blocker/approach semantics are now merged and validated locally;
+downstream consumer work should still preserve its own selection and validation
+gates instead of assuming Smart Session or cross-session propagation is ready by
+default.

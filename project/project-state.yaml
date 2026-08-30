@@ -3073,18 +3073,21 @@ roadmap:
         worktree_required: true
         conflict_note: Safe only if blocker and approach-change records stay independent from milestone hierarchy writes.
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: provenance_engine
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics
-        active_branch: session-blocker-approach-semantics
-        active_agent: codex
-        notes: "Implementation and local semantic validation completed in branch session-blocker-approach-semantics after PR #84 merged; delivery remains open until PR #85 merges."
-      delivery_status: open
+        notes: "Blocker and approach-change semantics were delivered by PR #85, merged at 2026-08-30T18:46:46Z with merge commit 79d6cd404b98f63a10f6fcc7748a921c3efbf19b."
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
           - repository: BrianBusby/bmux
             sha: 2cc991cae7a7b6306a24e19811fe0d5edc0527c4
+          - repository: BrianBusby/bmux
+            sha: af91d9f09adc9d176b0cd5fc49460d8907dde5dc
+          - repository: BrianBusby/bmux
+            sha: b0e34ad6bec46120184bc215f61bdcfd4c5f3b79
+          - repository: BrianBusby/bmux
+            sha: 79d6cd404b98f63a10f6fcc7748a921c3efbf19b
         pull_requests:
           - repository: BrianBusby/bmux
             number: 85

@@ -187,8 +187,8 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
 - Primary capability frontier: Richer Session Understanding (`richer_session_understanding`)
-- Active implementation slice: Blocker and approach-change semantics (`blocker_approach_change_semantics`) - implemented
-- Bmux repository state: active
+- Active implementation slice: none selected
+- Bmux repository state: none selected
 
 ### Current Roadmap Lanes
 
@@ -204,7 +204,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Cross-Session Work Awareness (`cross_session_work_awareness`) - program; status: active; owner: Provenance Engine
 - Cross-Session Awareness Read Models (`cross_session_awareness_read_models`) - phase; status: active; owner: Provenance Engine
 - Cross-Session Semantics and Collision Awareness (`cross_session_semantics_and_collisions`) - milestone; status: active; owner: Provenance Engine
-- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - slice; status: implemented; owner: Provenance Engine
 
 ### Major Node Summaries
 

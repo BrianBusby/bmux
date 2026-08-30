@@ -16,12 +16,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)
-- Active or selected slices in the frontier:
-  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) - maturity: validated; status: implemented; selection: current; owner: Provenance Engine
+- Active or selected slices in the frontier: none
 
 ### Active Implementation
 
-- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - maturity: validated; status: implemented; selection: current; owner: Provenance Engine
+- None.
 
 ### Selected Next
 
@@ -472,7 +471,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Rationale: Add conservative coding-agent milestone semantics from existing accepted plan and prompt evidence without introducing a second inference pipeline, bmux-local semantic logic, raw transcript retention, or external model dependency.
           Acceptance reason: Milestone inference is implemented as a producer-versioned semantic record payload consumed by the existing SessionWorkModel path. The built-in rule materializes plan-derived milestones with explicit identity and state bases, treats bmux-generated plan-step record ids as source-only evidence rather than provider-stable continuity anchors, falls back to a prompt-scoped milestone only when no usable plan exists, validates supported hierarchy links in the payload contract, preserves omission and ambiguity reasons, bounds large plan output, remains idempotent for unchanged semantic content, and keeps milestone interpretation out of factual Current State.
           Acceptance criteria: Expose bounded milestone semantics through existing semantic inference records and SessionWorkModel composition.; Preserve session-scoped milestone identities, reported work state basis, source evidence references, factual projection revisions, producer version, confidence, specificity, and supersession metadata.; Support acyclic parent-child relationships in the payload contract while emitting a flat collection from current structured plan evidence unless hierarchy is explicitly supported.; Keep provider-reported completion distinct from verified correctness, validation, merge, or acceptance.; Preserve uncertainty through unknown states, ambiguity reasons, omission reasons, bounded output, and abstention when supported evidence is insufficient.; Keep semantic milestones above deterministic factual Current State and compatible with existing factual, outcome, related-session, collision, and SDK read APIs.
-        - **Blocker and approach-change semantics** (`blocker_approach_change_semantics`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: current / Provenance Engine; parallelism: safe; delivery: open; acceptance: implemented; maturity: validated
+        - **Blocker and approach-change semantics** (`blocker_approach_change_semantics`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: complete / Provenance Engine; parallelism: safe; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `semantic_inference_framework`
           Parallel with: `milestone_inference`
           Expected contract domains: `blocker_semantics`, `approach_change_semantics`
@@ -481,9 +480,8 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `semantic_inference_records`
           Worktree required: true
           Conflict note: Safe only if blocker and approach-change records stay independent from milestone hierarchy writes.
-          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics`; branch: `session-blocker-approach-semantics`; agent: `codex`
-          Execution notes: Implementation and local semantic validation completed in branch session-blocker-approach-semantics after PR #84 merged; delivery remains open until PR #85 merges.
-          Evidence: BrianBusby/bmux@2cc991cae7a7, BrianBusby/bmux#85 by [BrianBusby](https://github.com/BrianBusby)
+          Execution notes: Blocker and approach-change semantics were delivered by PR #85, merged at 2026-08-30T18:46:46Z with merge commit 79d6cd404b98f63a10f6fcc7748a921c3efbf19b.
+          Evidence: BrianBusby/bmux@2cc991cae7a7, BrianBusby/bmux@af91d9f09adc, BrianBusby/bmux@b0e34ad6bec4, BrianBusby/bmux@79d6cd404b98, BrianBusby/bmux#85 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Add conservative coding-agent blocker and approach-change semantics from accepted visible statements without introducing a new inference pipeline, bmux-local semantic logic, raw transcript retention, cross-session propagation, or an external model dependency.
           Acceptance reason: Blocker and approach-change semantics are implemented as producer-versioned PE semantic records selected into the existing SessionWorkModel read. The built-in rule consumes only supported explicit visible assistant-output and visible reasoning-summary marker statements, preserves reported-versus-observed basis and source evidence, handles independent blockers, reported resolution/bypass/no-longer-applicable states, recurrence, exact milestone-id links, partial source history, bounded output, supersession, and SDK decoding, and abstains on unsupported command/prose/quote/hypothetical evidence. Validation used synthetic sanitized PE fixtures and the full ProvenanceEngine package suite; no real private session transcript validation is claimed.
           Acceptance criteria: Expose bounded blocker and approach-change semantic records through the existing PE semantic inference framework and SessionWorkModel composition.; Preserve stable session-scoped identities, identity basis, reported state basis, source evidence references, factual projection revisions, producer version, confidence, specificity, source-history completeness, ambiguity, omission, and supersession metadata.; Distinguish reported open, cleared, bypassed, no-longer-applicable, replaced, abandoned, deferred, and failed states without treating command failures, completed turns, successful commands, reordered plans, or clean worktrees as proof.; Link blockers and approach changes to milestones only by exact same-session milestone id, preserving unresolved or unsupported relationships as omissions.; Keep inferred blocker and approach-change semantics above deterministic factual Current State, Turn Outcome, and Session Outcome.; Preserve existing factual reads, milestone inference, related-session awareness, artifact-collision awareness, semantic messages, SDK consumers, restart/rebuild behavior, and old SessionWorkModel decoding.
@@ -693,9 +691,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Blocker and approach-change semantics (`blocker_approach_change_semantics`) | safe | /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics | session-blocker-approach-semantics | codex | `approach_change_semantics`, `blocker_semantics` | `semantic_inference_records` | single active assignment |
+- Active implementation assignments: none selected.
 
 ### Dependency-Ready Preflight
 
