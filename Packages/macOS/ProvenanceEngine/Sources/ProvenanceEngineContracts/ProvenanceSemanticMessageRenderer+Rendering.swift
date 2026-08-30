@@ -6,7 +6,10 @@ extension ProvenanceSemanticMessageRenderer {
         let expandedMeaning: String
     }
 
-    static func render(_ inference: ProvenanceSemanticInferenceRecord) -> RenderedMessage? {
+    static func render(
+        _ inference: ProvenanceSemanticInferenceRecord,
+        localeIdentifier: String? = nil
+    ) -> RenderedMessage? {
         guard let kind = ProvenanceCodingAgentSemanticInferenceKind(rawValue: inference.kind) else { return nil }
         switch kind {
         case .threadIntent:
@@ -33,12 +36,12 @@ extension ProvenanceSemanticMessageRenderer {
             guard let payload = ProvenanceCodingAgentBlockerPayload(semanticPayloadValue: inference.payload) else {
                 return nil
             }
-            return blockersMessage(payload)
+            return blockersMessage(payload, localeIdentifier: localeIdentifier)
         case .approachChanges:
             guard let payload = ProvenanceCodingAgentApproachChangePayload(semanticPayloadValue: inference.payload) else {
                 return nil
             }
-            return approachChangesMessage(payload)
+            return approachChangesMessage(payload, localeIdentifier: localeIdentifier)
         case .currentActivity:
             guard let payload = ProvenanceCodingAgentCurrentActivityPayload(semanticPayloadValue: inference.payload) else {
                 return nil
@@ -105,91 +108,57 @@ extension ProvenanceSemanticMessageRenderer {
         )
     }
 
-    static func blockersMessage(_ payload: ProvenanceCodingAgentBlockerPayload) -> RenderedMessage {
+    static func blockersMessage(
+        _ payload: ProvenanceCodingAgentBlockerPayload,
+        localeIdentifier: String?
+    ) -> RenderedMessage {
+        let localization = ProvenanceSemanticMessageLocalization(localeIdentifier: localeIdentifier)
         if let unknownReason = payload.unknownReason {
-            return RenderedMessage(
-                concisePhrase: "Blockers unknown",
-                expandedMeaning: unknownReason
-            )
+            return localization.blockersUnknown(reason: unknownReason)
         }
 
-        guard let blocker = payload.blockers.first else {
-            return RenderedMessage(
-                concisePhrase: "No supported blockers",
-                expandedMeaning: "No supported explicit blocker statement is active in the bounded session evidence."
-            )
+        guard let blocker = payload.blockers.first(where: { $0.state == .reportedOpen }) ?? payload.blockers.first else {
+            return localization.noSupportedBlockers()
         }
 
         switch blocker.state {
         case .reportedOpen:
-            return RenderedMessage(
-                concisePhrase: "Blocked: \(blocker.affectedActivity)",
-                expandedMeaning: "The provider reported \(lowercaseFirst(blocker.affectedActivity)) is blocked by \(blocker.condition)."
-            )
+            return localization.blockerOpen(blocker)
         case .reportedCleared:
-            return RenderedMessage(
-                concisePhrase: "Blocker cleared",
-                expandedMeaning: "The provider reported the blocker for \(lowercaseFirst(blocker.affectedActivity)) was cleared."
-            )
+            return localization.blockerCleared(blocker)
         case .reportedBypassed:
-            return RenderedMessage(
-                concisePhrase: "Blocker bypassed",
-                expandedMeaning: "The provider reported work can proceed by bypassing \(blocker.condition)."
-            )
+            return localization.blockerBypassed(blocker)
         case .reportedNoLongerApplies:
-            return RenderedMessage(
-                concisePhrase: "Blocker no longer applies",
-                expandedMeaning: "The provider reported \(blocker.condition) no longer applies to \(lowercaseFirst(blocker.affectedActivity))."
-            )
+            return localization.blockerNoLongerApplies(blocker)
         case .unknown:
-            return RenderedMessage(
-                concisePhrase: "Blocker state unknown",
-                expandedMeaning: blocker.description
-            )
+            return localization.blockerStateUnknown(blocker)
         }
     }
 
-    static func approachChangesMessage(_ payload: ProvenanceCodingAgentApproachChangePayload) -> RenderedMessage {
+    static func approachChangesMessage(
+        _ payload: ProvenanceCodingAgentApproachChangePayload,
+        localeIdentifier: String?
+    ) -> RenderedMessage {
+        let localization = ProvenanceSemanticMessageLocalization(localeIdentifier: localeIdentifier)
         if let unknownReason = payload.unknownReason {
-            return RenderedMessage(
-                concisePhrase: "Approach changes unknown",
-                expandedMeaning: unknownReason
-            )
+            return localization.approachChangesUnknown(reason: unknownReason)
         }
 
         guard let change = payload.approachChanges.first else {
-            return RenderedMessage(
-                concisePhrase: "No supported approach changes",
-                expandedMeaning: "No supported explicit approach-change statement is active in the bounded session evidence."
-            )
+            return localization.noSupportedApproachChanges()
         }
 
         switch change.state {
         case .reportedReplaced:
-            return RenderedMessage(
-                concisePhrase: "Approach replaced",
-                expandedMeaning: "The provider reported replacing \(lowercaseFirst(change.priorApproach)) with \(change.replacementApproach ?? "an unspecified replacement")."
-            )
+            return localization.approachReplaced(change)
         case .reportedAbandoned:
-            return RenderedMessage(
-                concisePhrase: "Approach abandoned",
-                expandedMeaning: "The provider reported abandoning \(lowercaseFirst(change.priorApproach))."
-            )
+            return localization.approachAbandoned(change)
         case .reportedDeferred:
-            return RenderedMessage(
-                concisePhrase: "Approach deferred",
-                expandedMeaning: "The provider reported deferring \(lowercaseFirst(change.priorApproach))."
-            )
+            return localization.approachDeferred(change)
         case .reportedFailed:
-            return RenderedMessage(
-                concisePhrase: "Approach failed",
-                expandedMeaning: "The provider reported \(lowercaseFirst(change.priorApproach)) failed."
-            )
+            return localization.approachFailed(change)
         case .unknown:
-            return RenderedMessage(
-                concisePhrase: "Approach-change state unknown",
-                expandedMeaning: change.objective
-            )
+            return localization.approachStateUnknown(change)
         }
     }
 
