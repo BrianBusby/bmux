@@ -97,6 +97,71 @@ struct MilestoneInferenceTests {
     }
 
     @Test
+    func generatedPlanStepRecordIDsDoNotClaimProviderStableIdentity() throws {
+        let base = FixtureBase()
+        let turn = base.turn(status: "started")
+        let firstPlan = base.plan(
+            id: "coding-agent-plan-event-a",
+            steps: [
+                Self.planStep(
+                    id: "coding-agent-plan-step-event-a-0",
+                    order: 0,
+                    text: "Inspect semantic contracts",
+                    status: "completed"
+                ),
+                Self.planStep(
+                    id: "coding-agent-plan-step-event-a-1",
+                    order: 1,
+                    text: "Implement milestone payloads",
+                    status: "in_progress"
+                ),
+            ],
+            turnID: turn.id,
+            offset: 5
+        )
+        let secondPlan = base.plan(
+            id: "coding-agent-plan-event-b",
+            steps: [
+                Self.planStep(
+                    id: "coding-agent-plan-step-event-b-0",
+                    order: 0,
+                    text: "Implement milestone payloads",
+                    status: "completed"
+                ),
+                Self.planStep(
+                    id: "coding-agent-plan-step-event-b-1",
+                    order: 1,
+                    text: "Validate milestone semantics",
+                    status: "in_progress"
+                ),
+                Self.planStep(
+                    id: "coding-agent-plan-step-event-b-2",
+                    order: 2,
+                    text: "Inspect semantic contracts",
+                    status: "completed"
+                ),
+            ],
+            turnID: turn.id,
+            offset: 7
+        )
+
+        let firstPayload = try Self.milestonePayload(from: firstPlan, turn: turn, base: base)
+        let secondPayload = try Self.milestonePayload(from: secondPlan, turn: turn, base: base)
+        let firstIDsByTitle = Dictionary(uniqueKeysWithValues: firstPayload.milestones.map { ($0.title, $0.id) })
+        let secondByTitle = Dictionary(uniqueKeysWithValues: secondPayload.milestones.map { ($0.title, $0) })
+
+        #expect(secondByTitle["Implement milestone payloads"]?.id == firstIDsByTitle["Implement milestone payloads"])
+        #expect(secondByTitle["Inspect semantic contracts"]?.id == firstIDsByTitle["Inspect semantic contracts"])
+        #expect(secondPayload.milestones.allSatisfy { $0.identityBasis == .uniquePlanStepText })
+        #expect(secondPayload.milestones.allSatisfy {
+            $0.omissionReasons.contains("provider_plan_step_id_unavailable")
+        })
+        #expect(secondByTitle["Implement milestone payloads"]?.sourceEvidenceRefs.contains {
+            $0.kind == "coding_agent_plan_step" && $0.id == "coding-agent-plan-step-event-b-0"
+        } == true)
+    }
+
+    @Test
     func unsupportedProviderStatusesRemainUnknownWithBasis() throws {
         let base = FixtureBase()
         let turn = base.turn(status: "started")
