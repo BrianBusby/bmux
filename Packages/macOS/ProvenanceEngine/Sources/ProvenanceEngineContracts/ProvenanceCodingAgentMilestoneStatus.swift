@@ -1,14 +1,14 @@
 import Foundation
 
-/// Provider-independent lifecycle state for a coding-agent milestone.
+/// Provider-independent reported work state for a coding-agent milestone.
 public enum ProvenanceCodingAgentMilestoneStatus: String, Codable, Equatable, Hashable, CaseIterable, Sendable {
-    /// Planned or pending work that has not started.
+    /// The provider reported planned or pending work that has not started.
     case planned
 
-    /// The milestone currently receiving work.
+    /// The provider reported the milestone currently receiving work.
     case active
 
-    /// Work the provider reported as complete.
+    /// The provider reported the milestone complete without proving validation, merge, or acceptance.
     case completed
 
     /// The provider supplied a status PE cannot safely normalize.

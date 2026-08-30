@@ -328,7 +328,10 @@ public struct ProvenanceCodingAgentSessionSemanticInferenceProducer: Sendable {
     public static let producerID = "provenance-engine.coding-agent-session-semantics.rule"
 
     /// Stable producer version for first-pass rule inferences.
-    public static let producerVersion = "first-semantic-session-inferences-v1"
+    public static let producerVersion = "first-semantic-session-inferences-v2"
+
+    /// Maximum plan-derived milestones included in one semantic milestone payload.
+    public static let maximumMilestonesPerPlan = 100
 
     /// Producer identity written to generated inference records.
     public let producerID: String

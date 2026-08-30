@@ -56,6 +56,24 @@ struct ProvenanceEngineSessionWorkModelClientFactoryTests {
             source: .observed,
             confidence: .high
         )
+        let plan = ProvenanceCodingAgentPlanUpdateRecord(
+            id: "plan-work-model-sdk",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: turn.id,
+            provider: "codex",
+            steps: [
+                ProvenanceCodingAgentPlanStepRecord(
+                    id: "plan-step-work-model-sdk",
+                    order: 0,
+                    text: "Expose milestone semantics through the public SDK.",
+                    status: "in_progress"
+                ),
+            ],
+            observedAt: timestamp.addingTimeInterval(4),
+            source: .observed,
+            confidence: .high
+        )
 
         let events = [
             ProvenanceEvent(
@@ -94,25 +112,65 @@ struct ProvenanceEngineSessionWorkModelClientFactoryTests {
                 confidence: .high,
                 payload: ProvenanceEventPayload(codingAgentPrompt: prompt)
             ),
+            ProvenanceEvent(
+                id: "event-\(plan.id)",
+                eventType: .codingAgentPlanUpdated,
+                timestamp: plan.observedAt,
+                sessionID: session.id,
+                source: .observed,
+                confidence: .high,
+                payload: ProvenanceEventPayload(codingAgentPlanUpdate: plan)
+            ),
         ]
         for event in events {
             _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: event))
         }
 
+        let publish = try await client.publishCodingAgentSessionSemanticInferences(
+            ProvenanceCodingAgentSessionSemanticInferenceRequest(
+                sessionID: session.id,
+                createdAt: timestamp.addingTimeInterval(20)
+            )
+        )
+        let repeatPublish = try await client.publishCodingAgentSessionSemanticInferences(
+            ProvenanceCodingAgentSessionSemanticInferenceRequest(
+                sessionID: session.id,
+                createdAt: timestamp.addingTimeInterval(21)
+            )
+        )
         let health = try await client.health()
         let response = try await client.sessionWorkModel(
             ProvenanceSessionWorkModelRequest(sessionID: session.id)
         )
         let model = try #require(response.model)
+        let milestoneRecord = try #require(model.milestones.record)
+        let milestonePayload = try #require(ProvenanceCodingAgentMilestonePayload(
+            semanticPayloadValue: milestoneRecord.payload
+        ))
 
         #expect(health.capabilities.contains(.querySessionWorkModel))
+        #expect(publish.publishedInferenceIDs.count == 5)
+        #expect(repeatPublish.unchangedInferenceIDs.count == 5)
         #expect(response.found == true)
         #expect(model.identity.session == session)
         #expect(model.thread?.identity.threadID == thread.id)
         #expect(model.currentTurn?.turn == turn)
         #expect(model.currentTurn?.prompt == prompt)
-        #expect(model.currentTurn?.intent.state == .unknown)
-        #expect(model.milestones.state == .unknown)
+        #expect(model.currentTurn?.intent.state == .known)
+        #expect(model.currentTurn?.currentActivity.state == .known)
+        #expect(model.milestones.state == .known)
+        #expect(milestonePayload.basis == "current_plan")
+        #expect(milestonePayload.milestones.map(\.title) == [
+            "Expose milestone semantics through the public SDK",
+        ])
+        #expect(milestonePayload.milestones.first?.identityBasis == .providerPlanStepID)
+        #expect(milestonePayload.milestones.first?.stateBasis == .providerPlanStepStatus)
+
+        let reopenedClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
+        let reopenedModel = try #require(try await reopenedClient.sessionWorkModel(
+            ProvenanceSessionWorkModelRequest(sessionID: session.id)
+        ).model)
+        #expect(reopenedModel.milestones.record?.inferenceID == milestoneRecord.inferenceID)
     }
 
     @Test

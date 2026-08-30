@@ -351,6 +351,82 @@ architecture projections, GitHub attribution, Knowledge Compiler output, or
 presentation-learning behavior. Unsupported future concepts stay absent rather
 than guessed.
 
+## Milestone Inference V1 Contract
+
+For this slice, a milestone is a coherent intended unit of engineering work
+inside one coding-agent session. It is not automatically a turn, command, file,
+plan-list position, Git commit, pull request, or Project Truth roadmap node.
+
+The built-in rule producer only materializes milestones from accepted bounded
+coding-agent evidence that already carries task meaning:
+
+- an explicit structured plan update can produce a flat ordered milestone set;
+- a submitted prompt can produce one active prompt-scoped milestone only when
+  no usable plan milestone exists;
+- a session with no supported plan or prompt evidence produces an explicit
+  unknown milestone semantic record rather than invented work.
+
+Plan-derived milestone output is bounded to the producer's documented
+`maximumMilestonesPerPlan`; truncation and any omitted current milestone pointer
+are reported through bounded omission reasons.
+
+Milestone identity is session-scoped and deterministic. When a plan step has a
+non-empty provider step id, that id is the continuity anchor, so reordering or
+inserting surrounding steps does not reassign the milestone. When provider step
+ids are not usable, the rule may use normalized text only if it is unique within
+the current supported plan evidence. Repeated wording without stable step ids is
+preserved as separate ambiguous milestones with an ambiguity note; PE does not
+silently merge them or pretend continuity is known. Prompt fallback milestones
+use a distinct prompt evidence identity so they cannot collide with plan steps.
+
+Milestone status is reported state, not verified outcome. `planned`, `active`,
+and `completed` mean the provider plan step reported pending, in-progress, or
+complete-like status and PE normalized that provider status. They do not prove
+correctness, validation, merge, or acceptance. `unknown` means the provider
+supplied a status PE cannot safely normalize. Successful commands, completed
+turns, final assistant messages, clean worktrees, or passing validations do not
+change milestone completion in v1.
+
+Hierarchy is supported by the payload shape through `parentID`, but the built-in
+plan rule emits a flat collection because current accepted plan-step evidence
+has no parent field. Ordering, indentation-like prose, shared files, and
+consecutive turns are not hierarchy evidence. A semantic producer that supplies
+parent ids must keep them session-scoped, acyclic, and resolvable inside the
+same payload; unsupported, cyclic, cross-session, or missing-parent
+relationships are omitted with an explanation.
+
+Each known milestone preserves its title, optional description, order, parent
+id when supported, identity basis, state basis, source evidence references, and
+ambiguity or omission notes. The containing semantic record preserves the
+supporting factual projection revision, producer id/version, provenance,
+confidence, specificity, freshness, supersession, and active/inactive status
+using the existing semantic inference record contract.
+
+V1 intentionally does not infer blockers, failed approaches, approach changes,
+progress percentages, validation coverage, milestone-to-code relationships,
+milestone-to-architecture relationships, cross-session milestone identity, Git
+commit/PR attribution, or Knowledge Compiler outcomes. If accepted evidence
+cannot support a field, PE leaves it absent, records an unknown/unavailable
+state, or adds a bounded omission/ambiguity explanation.
+
+Validation notes for this slice are synthetic and contract-level. Expected and
+observed behavior match for explicit multi-step plans, provider-reported
+completion, provider step id continuity through reorder/insertion, missing step
+ids, repeated titles, unsupported provider statuses, unsupported hierarchy
+markers, supported acyclic hierarchy supplied through the payload contract,
+missing/cyclic/duplicate parent relationships, legacy payload decoding, public
+SDK reads, restart durability, and idempotent repeated materialization.
+
+Expected abstentions also match observed behavior: no milestone is invented for
+turns without supported plan or prompt evidence; successful commands,
+completed turns, assistant messages, clean worktrees, and validation attempts
+do not prove milestone completion; indentation-like text does not imply
+hierarchy; duplicate or missing identity evidence is surfaced as ambiguity or
+omission rather than hidden certainty. This validation does not use private
+session data and does not validate blockers, failed approaches, cross-session
+milestone merging, Smart Session UI behavior, GitHub/PR attribution, or
+Knowledge Compiler readiness.
+
 ## Implemented Related-Session Awareness Foundation
 
 The first cross-session foundation now exposes
