@@ -67,11 +67,12 @@ swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-milest
 
 The new milestone tests use synthetic accepted evidence only. They cover
 multi-step plans, provider-reported completion, provider step id continuity
-through reorder/insertion, missing step ids, repeated titles, unsupported
-provider statuses, successful commands and completed turns not proving
-completion, unsupported hierarchy markers, supported hierarchy payloads,
-missing/cyclic/duplicate parent relationships, bounded output, legacy payload
-decoding, SDK reads, restart durability, and idempotent materialization.
+through reorder/insertion, missing step ids, bmux-generated plan-step record ids
+falling back to text identity, repeated titles, unsupported provider statuses,
+successful commands and completed turns not proving completion, unsupported
+hierarchy markers, supported hierarchy payloads, missing/cyclic/duplicate parent
+relationships, bounded output, legacy payload decoding, SDK reads, restart
+durability, and idempotent materialization.
 
 No tagged app build or reload was run because this slice changes PE package
 contracts, semantic producer logic, tests, and documentation only.
@@ -79,11 +80,12 @@ contracts, semantic producer logic, tests, and documentation only.
 ## Known Limitations
 
 Milestone identity is session-scoped. Provider plan step ids are the strongest
-continuity anchor; text-derived identities are explicitly marked with their
-weaker basis and omission reasons. Repeated text without stable ids remains
-ambiguous. The implementation does not validate real private session corpora and
-does not infer hierarchy from ordering, indentation, adjacent turns, shared
-files, or presentation wording.
+continuity anchor when they are provider-authored stable ids; bmux-generated
+plan-step record ids remain source evidence only. Text-derived identities are
+explicitly marked with their weaker basis and omission reasons. Repeated text
+without stable ids remains ambiguous. The implementation does not validate real
+private session corpora and does not infer hierarchy from ordering, indentation,
+adjacent turns, shared files, or presentation wording.
 
 ## Next Ready Work
 

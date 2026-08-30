@@ -90,7 +90,17 @@ extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
     }
 
     static func normalizedPlanStepID(_ id: String) -> String? {
+        guard let id = normalizedEvidenceText(id),
+              !isGeneratedPlanStepRecordID(id) else { return nil }
+        return id
+    }
+
+    static func normalizedSourcePlanStepID(_ id: String) -> String? {
         normalizedEvidenceText(id)
+    }
+
+    static func isGeneratedPlanStepRecordID(_ id: String) -> Bool {
+        id.hasPrefix("coding-agent-plan-step-")
     }
 
     static func milestoneIdentity(
@@ -146,7 +156,7 @@ extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
         step: ProvenanceCodingAgentPlanStepRecord
     ) -> [ProvenanceSemanticEvidenceReference] {
         var refs = [ProvenanceSemanticEvidenceReference(kind: "coding_agent_plan_update", id: plan.id)]
-        if normalizedPlanStepID(step.id) != nil {
+        if normalizedSourcePlanStepID(step.id) != nil {
             refs.append(ProvenanceSemanticEvidenceReference(kind: "coding_agent_plan_step", id: step.id))
         }
         return refs

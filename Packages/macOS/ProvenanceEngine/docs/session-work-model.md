@@ -370,14 +370,16 @@ Plan-derived milestone output is bounded to the producer's documented
 `maximumMilestonesPerPlan`; truncation and any omitted current milestone pointer
 are reported through bounded omission reasons.
 
-Milestone identity is session-scoped and deterministic. When a plan step has a
-non-empty provider step id, that id is the continuity anchor, so reordering or
-inserting surrounding steps does not reassign the milestone. When provider step
-ids are not usable, the rule may use normalized text only if it is unique within
-the current supported plan evidence. Repeated wording without stable step ids is
-preserved as separate ambiguous milestones with an ambiguity note; PE does not
-silently merge them or pretend continuity is known. Prompt fallback milestones
-use a distinct prompt evidence identity so they cannot collide with plan steps.
+Milestone identity is session-scoped and deterministic. When a plan step carries
+a provider-authored stable step id, that id is the continuity anchor, so
+reordering or inserting surrounding steps does not reassign the milestone.
+bmux-generated plan-step record ids remain source evidence references, but they
+are not treated as provider continuity anchors. When provider step ids are not
+usable, the rule may use normalized text only if it is unique within the current
+supported plan evidence. Repeated wording without stable step ids is preserved
+as separate ambiguous milestones with an ambiguity note; PE does not silently
+merge them or pretend continuity is known. Prompt fallback milestones use a
+distinct prompt evidence identity so they cannot collide with plan steps.
 
 Milestone status is reported state, not verified outcome. `planned`, `active`,
 and `completed` mean the provider plan step reported pending, in-progress, or
@@ -412,10 +414,11 @@ state, or adds a bounded omission/ambiguity explanation.
 Validation notes for this slice are synthetic and contract-level. Expected and
 observed behavior match for explicit multi-step plans, provider-reported
 completion, provider step id continuity through reorder/insertion, missing step
-ids, repeated titles, unsupported provider statuses, unsupported hierarchy
-markers, supported acyclic hierarchy supplied through the payload contract,
-missing/cyclic/duplicate parent relationships, legacy payload decoding, public
-SDK reads, restart durability, and idempotent repeated materialization.
+ids, bmux-generated plan-step record ids falling back to text identity, repeated
+titles, unsupported provider statuses, unsupported hierarchy markers, supported
+acyclic hierarchy supplied through the payload contract, missing/cyclic/duplicate
+parent relationships, legacy payload decoding, public SDK reads, restart
+durability, and idempotent repeated materialization.
 
 Expected abstentions also match observed behavior: no milestone is invented for
 turns without supported plan or prompt evidence; successful commands,
