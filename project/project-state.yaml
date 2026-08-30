@@ -3014,6 +3014,10 @@ roadmap:
         commits:
           - repository: BrianBusby/bmux
             sha: baa432af4141126f47abf65c6cc66c713b24bf8d
+          - repository: BrianBusby/bmux
+            sha: 7c0e7d7eb4af85f56940aefd3927b98084150a49
+          - repository: BrianBusby/bmux
+            sha: 7ec92cde42c484da71c2f2561acbc8a61a9d49db
         pull_requests:
           - repository: BrianBusby/bmux
             number: 84
@@ -3031,7 +3035,7 @@ roadmap:
           - Keep semantic milestones above deterministic factual Current State and compatible with existing factual, outcome, related-session, collision, and SDK read APIs.
       rationale: Add conservative coding-agent milestone semantics from existing accepted plan and prompt evidence without introducing a second inference pipeline, bmux-local semantic logic, raw transcript retention, or external model dependency.
       acceptance_reason: >-
-        Milestone inference is implemented as a producer-versioned semantic record payload consumed by the existing SessionWorkModel path. The built-in rule materializes plan-derived milestones with explicit identity and state bases, falls back to a prompt-scoped milestone only when no usable plan exists, validates supported hierarchy links in the payload contract, preserves omission and ambiguity reasons, bounds large plan output, remains idempotent for unchanged semantic content, and keeps milestone interpretation out of factual Current State.
+        Milestone inference is implemented as a producer-versioned semantic record payload consumed by the existing SessionWorkModel path. The built-in rule materializes plan-derived milestones with explicit identity and state bases, treats bmux-generated plan-step record ids as source-only evidence rather than provider-stable continuity anchors, falls back to a prompt-scoped milestone only when no usable plan exists, validates supported hierarchy links in the payload contract, preserves omission and ambiguity reasons, bounds large plan output, remains idempotent for unchanged semantic content, and keeps milestone interpretation out of factual Current State.
 
     - id: blocker_approach_change_semantics
       kind: slice

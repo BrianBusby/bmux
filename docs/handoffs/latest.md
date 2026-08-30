@@ -47,8 +47,8 @@ same payload; unsupported relationships are omitted with bounded reasons.
 
 Passed locally on 2026-08-29:
 
-- Focused PE filters: milestone inference plus SDK SessionWorkModel - 15 tests / 2 suites
-- Full PE package suite - 217 tests / 31 suites
+- Focused PE filters: milestone inference plus SDK SessionWorkModel - 16 tests / 2 suites
+- Full PE package suite - 218 tests / 31 suites
 - `./scripts/project-docs validate`
 - `./scripts/project-docs generate`
 - `./scripts/project-docs check`
