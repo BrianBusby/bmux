@@ -87,6 +87,12 @@ struct ProvenanceSQLiteStorageSummary: Equatable, Sendable {
     /// Number of historical related-session revision rows.
     var relatedSessionRevisionCount: Int
 
+    /// Number of latest artifact-collision projection rows.
+    var artifactCollisionCount: Int
+
+    /// Number of historical artifact-collision revision rows.
+    var artifactCollisionRevisionCount: Int
+
     init(
         schemaVersion: Int32,
         eventCount: Int,
@@ -116,7 +122,9 @@ struct ProvenanceSQLiteStorageSummary: Equatable, Sendable {
         codingAgentSessionOutcomeCount: Int = 0,
         codingAgentSessionOutcomeRevisionCount: Int = 0,
         relatedSessionCount: Int = 0,
-        relatedSessionRevisionCount: Int = 0
+        relatedSessionRevisionCount: Int = 0,
+        artifactCollisionCount: Int = 0,
+        artifactCollisionRevisionCount: Int = 0
     ) {
         self.schemaVersion = schemaVersion
         self.eventCount = eventCount
@@ -147,5 +155,7 @@ struct ProvenanceSQLiteStorageSummary: Equatable, Sendable {
         self.codingAgentSessionOutcomeRevisionCount = codingAgentSessionOutcomeRevisionCount
         self.relatedSessionCount = relatedSessionCount
         self.relatedSessionRevisionCount = relatedSessionRevisionCount
+        self.artifactCollisionCount = artifactCollisionCount
+        self.artifactCollisionRevisionCount = artifactCollisionRevisionCount
     }
 }

@@ -24,8 +24,9 @@ SQLite connections set a bounded busy timeout on open and attempt to use write-a
 Current accepted projections include repositories, worktrees, sessions, session
 relationships, file explanations, current context records, workspace-display
 Current State, factual session projection snapshots for coding-agent evidence,
-revisioned turn outcomes, revisioned session outcomes, and the read-only
-related-session awareness projection.
+revisioned turn outcomes, revisioned session outcomes, the read-only
+related-session awareness projection, and the artifact-collision awareness
+projection.
 
 Implemented semantic contracts include versioned semantic inference records, first coding-agent semantic inference kinds, semantic message records, deterministic message materialization, the public `SessionWorkModel` foundation/read path, and the first plan/prompt-backed milestone field. Nested milestone hierarchy, blocker/approach-change semantics, and scoped architecture projection remain planned target behavior.
 
@@ -42,6 +43,18 @@ included SessionWorkModel fields keep their semantic provenance and are not
 used as relationship reasons. It does not add prompt injection, raw transcript
 sharing, automatic agent coordination, collision policy, or new blocker,
 milestone, approach-change, risk, or architecture inference.
+
+Artifact-collision awareness is a PE-owned deterministic read model above
+Session Outcome and the related-session projection. It finds exact normalized
+repository-relative path overlaps within shared repository identity, reports
+repository/worktree/branch/HEAD boundaries, records per-session participation,
+classifies current, historical, stale, or incomplete evidence states, and
+returns source evidence and projection references for every candidate. SQLite
+schema 24 stores artifact-collision revisions and latest pointers; consumers
+access the model through `ProvenanceEngineClient.artifactCollisions(...)`. The
+projector does not judge semantic conflicts, rank compatibility, infer rename
+identity from path similarity, coordinate agents, mutate files, inject prompt
+context, notify users, or retain whole transcripts.
 
 ## Evidence Model
 

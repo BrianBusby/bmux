@@ -109,6 +109,18 @@ add prompt injection, agent coordination, raw transcript sharing, proactive UI,
 artifact-collision warnings, Knowledge Compiler behavior, or new milestone,
 blocker, decision, risk, approach-change, or architecture inference.
 
+Artifact and change collision awareness is implemented as the next PE-owned
+deterministic read above Session Outcome and related-session discovery.
+`artifactCollisions(...)` returns bounded possible-collision candidates for a
+target session, exact normalized artifact path, participating sessions,
+repository/worktree/branch/HEAD boundaries, temporal overlap state, freshness,
+completeness, source watermarks, Session Outcome and related-session projection
+revisions, and supporting evidence references. It is intentionally possible
+collision awareness only: it does not infer semantic incompatibility, rename
+identity, overwrite risk, correctness, obsolescence, coordination policy,
+prompt/context injection, bmux UI, proactive notification, whole-transcript
+sharing, or Knowledge Compiler behavior.
+
 Live prompt-link repair is implemented for active Codex sessions: on
 `UserPromptSubmit`, bmux now starts/resumes transcript observation and runs the
 bounded Codex prompt backfill even when no mobile chat subscriber is attached,
@@ -141,12 +153,13 @@ use one branch and one worktree unless a future release/extraction task
 explicitly requires a separate PE checkout. The original PE repository remains
 an archival and recovery reference until the migration is accepted.
 
-Verification for this cross-session awareness branch:
+Verification for this artifact-collision awareness branch:
 
-- Project Truth: `./scripts/project-docs validate && ./scripts/project-docs generate && ./scripts/project-docs check`
-- Provenance Engine: `swift test --package-path Packages/macOS/ProvenanceEngine`
-- Related sessions: `swift test --package-path Packages/macOS/ProvenanceEngine --filter 'RelatedSessionProjectionTests|RelatedSessionProjectionRevisionTests|RelatedSessionMigrationTests|RelatedSessionContractTests'`
-- Guards: `python3 scripts/swift_file_length_budget.py --repo-root . --base-ref origin/main`, `git diff --check`, `./scripts/lint-pbxproj-test-wiring.sh`
+- Project Truth: `./scripts/project-docs validate`, `./scripts/project-docs generate`, `./scripts/project-docs check`, and authenticated `./scripts/project-docs ci`
+- Provenance Engine: from `Packages/macOS/ProvenanceEngine`, `/usr/bin/swift test`
+- Collision awareness: from `Packages/macOS/ProvenanceEngine`, `/usr/bin/swift test --filter ArtifactCollision`
+- Regression focus: related-session, Session Outcome, Turn Outcome, factual projection, and SessionWorkModel suites through the full PE package test plus focused filters when needed
+- Guards: `python3 scripts/swift_file_length_budget.py --repo-root . --base-ref origin/main`, `git diff --check`, `./scripts/lint-pbxproj-test-wiring.sh`, and `python3 scripts/check-package-resolved-policy.py`
 
 Runtime tests or tagged reloads are only required when production app/runtime
 behavior changes; this branch changes PE package contracts/storage only.

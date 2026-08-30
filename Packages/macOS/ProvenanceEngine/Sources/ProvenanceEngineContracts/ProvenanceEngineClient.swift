@@ -94,6 +94,14 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     func relatedSessions(_ request: ProvenanceRelatedSessionRequest) async throws
         -> ProvenanceRelatedSessionResponse
 
+    /// Returns PE-owned deterministic artifact-collision awareness for one target session.
+    ///
+    /// - Parameter request: Query parameters for the artifact-collision read.
+    /// - Returns: A bounded response containing evidence-backed possible collision candidates.
+    /// - Throws: An implementation-defined error when the query fails.
+    func artifactCollisions(_ request: ProvenanceArtifactCollisionRequest) async throws
+        -> ProvenanceArtifactCollisionResponse
+
     /// Publishes one semantic inference record above deterministic Current State.
     ///
     /// - Parameter request: Semantic inference record to publish.
@@ -201,6 +209,17 @@ public extension ProvenanceEngineClient {
     func relatedSessions(_ request: ProvenanceRelatedSessionRequest) async throws
         -> ProvenanceRelatedSessionResponse {
         ProvenanceRelatedSessionResponse(
+            found: false,
+            reason: "unsupported",
+            targetSessionID: request.targetSessionID,
+            projection: nil
+        )
+    }
+
+    /// Default unsupported response for clients that have not adopted artifact-collision awareness reads.
+    func artifactCollisions(_ request: ProvenanceArtifactCollisionRequest) async throws
+        -> ProvenanceArtifactCollisionResponse {
+        ProvenanceArtifactCollisionResponse(
             found: false,
             reason: "unsupported",
             targetSessionID: request.targetSessionID,

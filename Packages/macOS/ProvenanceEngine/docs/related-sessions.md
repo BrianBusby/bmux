@@ -73,9 +73,10 @@ Implemented relationship kinds are:
   worktree key.
 
 Every relationship reason is typed and individually inspectable. There is no
-opaque relevance score. Artifact overlap is intentionally minimal and factual;
-it is not artifact-collision awareness and does not warn, block, coordinate, or
-infer conflict risk.
+opaque relevance score. Artifact overlap is intentionally minimal and factual inside the
+related-session read. The separate artifact-collision awareness projection owns
+possible-collision explanations and still does not warn, block, coordinate, or
+infer semantic conflict risk.
 
 ## Ordering
 
@@ -158,9 +159,11 @@ Provider-thread and external-identity relationships depend on accepted
 current-state identity records. They remain absent when producers do not append
 or preserve those identities in a shareable way.
 
-The v1 artifact relationship is only a factual shared changed path inside a
-shared repository/worktree context. It is not rename tracking, diff-hunk
-identity, semantic component overlap, or collision warning.
+The v1 related-session artifact relationship is only a factual shared
+changed path inside shared repository/worktree context. Possible-collision
+explanations now live in `artifact-collisions.md`, and they are still not
+rename tracking, diff-hunk identity, semantic component overlap, coordination,
+or conflict proof.
 
 There is no bmux UI, CLI command, prompt assembly, automatic retrieval,
 proactive notification, Knowledge Compiler bridge, organization-scale storage,

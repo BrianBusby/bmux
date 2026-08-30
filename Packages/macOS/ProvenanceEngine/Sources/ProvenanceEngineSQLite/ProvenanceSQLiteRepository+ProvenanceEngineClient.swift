@@ -36,6 +36,11 @@ extension ProvenanceSQLiteRepository: ProvenanceEngineClient {
         try relatedSessionRecord(request)
     }
 
+    func artifactCollisions(_ request: ProvenanceArtifactCollisionRequest) async throws
+        -> ProvenanceArtifactCollisionResponse {
+        try artifactCollisionRecord(request)
+    }
+
     func publishSemanticInference(_ request: ProvenanceSemanticInferencePublishRequest) async throws
         -> ProvenanceSemanticInferencePublishResponse {
         try publishSemanticInferenceRecord(request)

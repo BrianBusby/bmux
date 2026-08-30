@@ -36,7 +36,9 @@ extension ProvenanceSQLiteRepository {
             codingAgentSessionOutcomeCount: try countRows(in: "provenance_coding_agent_session_outcomes"),
             codingAgentSessionOutcomeRevisionCount: try countRows(in: "provenance_coding_agent_session_outcome_revisions"),
             relatedSessionCount: try countRows(in: "provenance_related_sessions"),
-            relatedSessionRevisionCount: try countRows(in: "provenance_related_session_revisions")
+            relatedSessionRevisionCount: try countRows(in: "provenance_related_session_revisions"),
+            artifactCollisionCount: try countRows(in: "provenance_artifact_collisions"),
+            artifactCollisionRevisionCount: try countRows(in: "provenance_artifact_collision_revisions")
         )
     }
 }

@@ -49,6 +49,7 @@ struct ProvenanceEngineHealthTests {
         )
         #expect(ProvenanceEngineCapability.querySessionWorkModel.rawValue == "query_session_work_model")
         #expect(ProvenanceEngineCapability.queryRelatedSessions.rawValue == "query_related_sessions")
+        #expect(ProvenanceEngineCapability.queryArtifactCollisions.rawValue == "query_artifact_collisions")
     }
 
     @Test

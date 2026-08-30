@@ -2406,7 +2406,7 @@ roadmap:
       kind: slice
       title: Artifact and change collision awareness
       parent: cross_session_semantics_and_collisions
-      status: planned
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2417,7 +2417,7 @@ roadmap:
         tags:
           - cross_session_awareness
           - artifact_collision
-      capability_maturity: ready
+      capability_maturity: validated
       depends_on:
         - cross_session_work_awareness_foundation
         - richer_coding_agent_evidence_foundation
@@ -2451,11 +2451,33 @@ roadmap:
           - factual_file_change_evidence
         worktree_required: true
       execution:
-        assignment: planned
+        assignment: complete
         assigned_to: provenance_engine
-      delivery_status: proposed
-      acceptance_status: proposed
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: a11e649812f7287d7f9466d9d1359fb61aafc88d
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 82
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-29
+      acceptance:
+        criteria:
+          - Expose a PE public read contract for bounded artifact-collision awareness.
+          - Detect exact normalized path overlaps only inside shared repository identity.
+          - Preserve per-session participation, Session Outcome revisions, related-session projection revision metadata, and evidence references.
+          - Report repository, worktree, branch, HEAD, temporal, freshness, and completeness boundaries deterministically.
+          - Handle duplicate, late, corrected, and out-of-order evidence through revisioned deterministic projection semantics.
+          - Keep rename identity unsupported unless accepted evidence can establish it deterministically.
+          - "Preserve factuality and non-coordination boundaries: no semantic conflict judgment, prompt injection, agent coordination, raw transcript sharing, proactive UI, or Knowledge Compiler behavior."
       rationale: Detect and explain possible parallel-work artifact collisions from factual worktree, branch, repository, change-set, and file-change evidence without automatically blocking or mutating another session.
+      acceptance_reason: >-
+        Artifact and change collision awareness is implemented as a schema-v24 PE read contract and SQLite projection. `artifactCollisions(...)` returns bounded exact-path artifact-overlap candidates for a target session and related sessions, with per-session participation, repository/worktree/branch/HEAD boundary comparison, temporal overlap state, freshness and stale classification, completeness metadata, Session Outcome and related-session projection revision references, accepted evidence references, stable ordering, bounded exclusions, and deterministic revision persistence. The slice remains a factual possible-collision read only: rename identity is unsupported without accepted deterministic evidence, similar paths do not collide, same relative paths in different repositories are excluded, and no semantic compatibility judgment, coordination policy, prompt injection, raw transcript sharing, bmux UI, proactive notification, retrieval integration, or Knowledge Compiler behavior is added.
 
     - id: cross_session_awareness_retrieval_and_context
       kind: phase
