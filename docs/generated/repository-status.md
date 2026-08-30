@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: none selected
+- Active slice: Milestone inference (`milestone_inference`)
+- Slice state: implemented
+- Owner: provenance_engine
+- Repository state: active
 
 ## Release
 

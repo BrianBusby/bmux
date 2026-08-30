@@ -4,22 +4,43 @@ extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
     static func milestones(
         from plan: ProvenanceCodingAgentPlanUpdateRecord
     ) -> [ProvenanceCodingAgentMilestone] {
-        let normalizedSteps = plan.steps
+        let sortedSteps = plan.steps
             .sorted { lhs, rhs in
                 if lhs.order == rhs.order { return lhs.id < rhs.id }
                 return lhs.order < rhs.order
             }
-            .compactMap { step -> (title: String, status: ProvenanceCodingAgentMilestoneStatus)? in
+        let normalizedSteps = sortedSteps.compactMap { step
+            -> (step: ProvenanceCodingAgentPlanStepRecord, title: String, status: ProvenanceCodingAgentMilestoneStatus)? in
                 guard let title = normalizedEvidenceText(step.text) else { return nil }
-                return (title, milestoneStatus(from: step.status))
+                return (step, title, milestoneStatus(from: step.status))
             }
+        let titleCounts = Dictionary(grouping: normalizedSteps.map(\.title), by: { $0 }).mapValues(\.count)
+        let stepIDCounts = Dictionary(
+            grouping: normalizedSteps.compactMap { normalizedPlanStepID($0.step.id) },
+            by: { $0 }
+        ).mapValues(\.count)
 
         return normalizedSteps.enumerated().map { index, step in
-            ProvenanceCodingAgentMilestone(
-                id: milestoneID(prefix: "plan", title: step.title, order: index),
+            let identity = milestoneIdentity(
+                for: step.step,
+                title: step.title,
+                index: index,
+                titleCounts: titleCounts,
+                stepIDCounts: stepIDCounts,
+                sessionID: plan.sessionID,
+                planID: plan.id
+            )
+            let stateBasis = milestoneStateBasis(from: step.status)
+            return ProvenanceCodingAgentMilestone(
+                id: identity.id,
                 title: step.title,
                 status: step.status,
-                order: index
+                order: index,
+                identityBasis: identity.basis,
+                stateBasis: stateBasis,
+                sourceEvidenceRefs: planStepEvidenceRefs(plan: plan, step: step.step),
+                ambiguityReasons: identity.ambiguityReasons,
+                omissionReasons: uniqueStrings(identity.omissionReasons + planStepOmissionReasons(stateBasis: stateBasis))
             )
         }
     }
@@ -37,9 +58,9 @@ extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
         return nil
     }
 
-    static func milestoneID(prefix: String, title: String, order: Int) -> String {
-        let fingerprint = fnv1a64Hex("\(prefix)|\(order)|\(title)")
-        return ["milestone", prefix, String(order), fingerprint]
+    static func milestoneID(prefix: String, stableKey: String) -> String {
+        let fingerprint = fnv1a64Hex("\(prefix)|\(stableKey)")
+        return ["milestone", prefix, fingerprint]
             .map(sanitizedIDComponent)
             .joined(separator: "-")
     }
@@ -60,6 +81,99 @@ extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
         default:
             return .unknown
         }
+    }
+
+    static func milestoneStateBasis(
+        from status: ProvenanceCodingAgentMilestoneStatus
+    ) -> ProvenanceCodingAgentMilestoneStateBasis {
+        status == .unknown ? .unsupportedProviderStatus : .providerPlanStepStatus
+    }
+
+    static func normalizedPlanStepID(_ id: String) -> String? {
+        guard let id = normalizedEvidenceText(id),
+              !isGeneratedPlanStepRecordID(id) else { return nil }
+        return id
+    }
+
+    static func normalizedSourcePlanStepID(_ id: String) -> String? {
+        normalizedEvidenceText(id)
+    }
+
+    static func isGeneratedPlanStepRecordID(_ id: String) -> Bool {
+        id.hasPrefix("coding-agent-plan-step-")
+    }
+
+    static func milestoneIdentity(
+        for step: ProvenanceCodingAgentPlanStepRecord,
+        title: String,
+        index: Int,
+        titleCounts: [String: Int],
+        stepIDCounts: [String: Int],
+        sessionID: String,
+        planID: String
+    ) -> (
+        id: String,
+        basis: ProvenanceCodingAgentMilestoneIdentityBasis,
+        ambiguityReasons: [String],
+        omissionReasons: [String]
+    ) {
+        let normalizedStepID = normalizedPlanStepID(step.id)
+        let stepIDOmission: [String]
+        if let stepID = normalizedStepID, stepIDCounts[stepID] == 1 {
+            stepIDOmission = []
+        } else if normalizedStepID == nil {
+            stepIDOmission = ["provider_plan_step_id_unavailable"]
+        } else {
+            stepIDOmission = ["provider_plan_step_id_ambiguous"]
+        }
+
+        if let stepID = normalizedStepID, stepIDCounts[stepID] == 1 {
+            return (
+                milestoneID(prefix: "plan-step", stableKey: "\(sessionID)|\(stepID)"),
+                .providerPlanStepID,
+                [],
+                []
+            )
+        }
+        if titleCounts[title] == 1 {
+            return (
+                milestoneID(prefix: "plan-title", stableKey: "\(sessionID)|\(title)"),
+                .uniquePlanStepText,
+                [],
+                stepIDOmission
+            )
+        }
+        return (
+            milestoneID(prefix: "plan-ambiguous", stableKey: "\(sessionID)|\(planID)|\(index)|\(step.order)|\(title)"),
+            .ambiguousPlanStepText,
+            ["repeated_plan_step_text_without_stable_identity"],
+            stepIDOmission
+        )
+    }
+
+    static func planStepEvidenceRefs(
+        plan: ProvenanceCodingAgentPlanUpdateRecord,
+        step: ProvenanceCodingAgentPlanStepRecord
+    ) -> [ProvenanceSemanticEvidenceReference] {
+        var refs = [ProvenanceSemanticEvidenceReference(kind: "coding_agent_plan_update", id: plan.id)]
+        if normalizedSourcePlanStepID(step.id) != nil {
+            refs.append(ProvenanceSemanticEvidenceReference(kind: "coding_agent_plan_step", id: step.id))
+        }
+        return refs
+    }
+
+    static func planStepOmissionReasons(
+        stateBasis: ProvenanceCodingAgentMilestoneStateBasis
+    ) -> [String] {
+        stateBasis == .unsupportedProviderStatus ? ["unsupported_provider_plan_step_status"] : []
+    }
+
+    static func milestoneAmbiguityReasons(in milestones: [ProvenanceCodingAgentMilestone]) -> [String] {
+        uniqueStrings(milestones.flatMap(\.ambiguityReasons))
+    }
+
+    static func milestoneOmissionReasons(in milestones: [ProvenanceCodingAgentMilestone]) -> [String] {
+        uniqueStrings(milestones.flatMap(\.omissionReasons))
     }
 
     static func currentPlanStep(_ plan: ProvenanceCodingAgentPlanUpdateRecord?) -> ProvenanceCodingAgentPlanStepRecord? {
@@ -84,6 +198,15 @@ extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
 
     static func normalizedStrings(_ values: [String]) -> [String] {
         values.compactMap(normalizedEvidenceText)
+    }
+
+    static func uniqueStrings(_ values: [String]) -> [String] {
+        var seen = Set<String>()
+        var result: [String] = []
+        for value in values where seen.insert(value).inserted {
+            result.append(value)
+        }
+        return result
     }
 
     static func components(from attributions: [ProvenanceCodingAgentFileChangeAttributionRecord]) -> [String] {

@@ -368,13 +368,7 @@ struct FixtureBase {
         turnID: String,
         offset: TimeInterval = 5
     ) -> ProvenanceCodingAgentPlanUpdateRecord {
-        ProvenanceCodingAgentPlanUpdateRecord(
-            id: "plan-\(turnID)-\(Int(offset))",
-            sessionID: session.id,
-            threadID: thread.id,
-            turnID: turnID,
-            provider: "codex",
-            explanation: nil,
+        plan(
             steps: steps.enumerated().map { index, step in
                 ProvenanceCodingAgentPlanStepRecord(
                     id: "plan-step-\(turnID)-\(Int(offset))-\(index)",
@@ -383,6 +377,25 @@ struct FixtureBase {
                     status: step.status
                 )
             },
+            turnID: turnID,
+            offset: offset
+        )
+    }
+
+    func plan(
+        id: String? = nil,
+        steps: [ProvenanceCodingAgentPlanStepRecord],
+        turnID: String,
+        offset: TimeInterval = 5
+    ) -> ProvenanceCodingAgentPlanUpdateRecord {
+        ProvenanceCodingAgentPlanUpdateRecord(
+            id: id ?? "plan-\(turnID)-\(Int(offset))",
+            sessionID: session.id,
+            threadID: thread.id,
+            turnID: turnID,
+            provider: "codex",
+            explanation: nil,
+            steps: steps,
             observedAt: timestamp.addingTimeInterval(offset),
             source: .observed,
             confidence: .high
@@ -522,6 +535,16 @@ struct FixtureBase {
             eventType: .codingAgentPromptSubmitted,
             timestamp: prompt.submittedAt,
             payload: ProvenanceEventPayload(codingAgentPrompt: prompt),
+            into: repository
+        )
+    }
+
+    func append(_ plan: ProvenanceCodingAgentPlanUpdateRecord, into repository: ProvenanceSQLiteRepository) async throws {
+        try await append(
+            eventID: "event-\(plan.id)",
+            eventType: .codingAgentPlanUpdated,
+            timestamp: plan.observedAt,
+            payload: ProvenanceEventPayload(codingAgentPlanUpdate: plan),
             into: repository
         )
     }

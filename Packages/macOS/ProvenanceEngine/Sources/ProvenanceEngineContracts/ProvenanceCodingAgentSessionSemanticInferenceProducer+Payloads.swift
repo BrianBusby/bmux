@@ -102,12 +102,27 @@ extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
         }
 
         if let plan = turn.currentPlan {
-            let milestones = milestones(from: plan)
+            let allMilestones = milestones(from: plan)
+            let milestones = Array(allMilestones.prefix(ProvenanceCodingAgentSessionSemanticInferenceProducer.maximumMilestonesPerPlan))
             if !milestones.isEmpty {
+                let unboundedCurrentID = currentMilestoneID(in: allMilestones)
+                let currentMilestoneID = unboundedCurrentID.flatMap { currentID in
+                    milestones.contains { $0.id == currentID } ? currentID : nil
+                }
+                var omissionReasons = milestoneOmissionReasons(in: milestones)
+                omissionReasons.append("hierarchy_not_evidenced_by_plan_steps")
+                if allMilestones.count > milestones.count {
+                    omissionReasons.append("milestone_output_truncated")
+                    if unboundedCurrentID != nil && currentMilestoneID == nil {
+                        omissionReasons.append("current_milestone_omitted_by_output_bound")
+                    }
+                }
                 return ProvenanceCodingAgentMilestonePayload(
-                    currentMilestoneID: currentMilestoneID(in: milestones),
+                    currentMilestoneID: currentMilestoneID,
                     milestones: milestones,
-                    basis: "current_plan"
+                    basis: "current_plan",
+                    ambiguityReasons: milestoneAmbiguityReasons(in: milestones),
+                    omissionReasons: omissionReasons
                 )
             }
         }
@@ -115,15 +130,29 @@ extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
         if let prompt = turn.submittedPrompt,
            let summary = normalizedEvidenceText(prompt.text) {
             let milestone = ProvenanceCodingAgentMilestone(
-                id: milestoneID(prefix: "prompt", title: summary, order: 0),
+                id: milestoneID(
+                    prefix: "prompt",
+                    stableKey: "\(turn.turn.sessionID)|\(turn.turn.id)|\(prompt.id)|\(summary)"
+                ),
                 title: summary,
                 status: .active,
-                order: 0
+                order: 0,
+                identityBasis: .submittedPrompt,
+                stateBasis: .submittedPromptFallback,
+                sourceEvidenceRefs: [
+                    ProvenanceSemanticEvidenceReference(kind: "coding_agent_turn", id: turn.turn.id),
+                    ProvenanceSemanticEvidenceReference(kind: "coding_agent_prompt", id: prompt.id),
+                ],
+                omissionReasons: [
+                    "no_structured_plan_milestones_available",
+                    "hierarchy_not_evidenced_by_submitted_prompt",
+                ]
             )
             return ProvenanceCodingAgentMilestonePayload(
                 currentMilestoneID: milestone.id,
                 milestones: [milestone],
-                basis: "submitted_prompt"
+                basis: "submitted_prompt",
+                omissionReasons: milestone.omissionReasons
             )
         }
 
