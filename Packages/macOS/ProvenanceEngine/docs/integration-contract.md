@@ -142,10 +142,10 @@ projection matches `turnID`, the turn-detail response returns `found == false`,
 
 This read remains below `SessionWorkModel`: it is deterministic Current State
 over accepted evidence. Unknown relationships stay absent rather than guessed.
-It does not infer thread intent, turn intent, milestone hierarchy, current
-activity, validation/risk state, architecture, Knowledge Compiler artifacts,
-GitHub evidence, or semantic meaning from prompts, plans, commands, or file
-paths.
+It does not infer thread intent, turn intent, milestones, blocker state,
+approach changes, current activity, validation/risk state, architecture,
+Knowledge Compiler artifacts, GitHub evidence, or semantic meaning from
+prompts, plans, commands, visible statements, or file paths.
 
 The accepted turn-outcome read contract is:
 
@@ -364,11 +364,14 @@ model-capable asynchronous workers. Publishing a replacement creates a new
 active record and marks prior records superseded; it does not silently rewrite
 historical semantic meaning.
 
-The first concrete semantic session inference slice adds rule-produced coding
-agent records for:
+The current coding-agent semantic inference implementation adds rule-produced
+records for:
 
 - `coding_agent.thread_intent` scoped to the current provider thread;
 - `coding_agent.turn_intent` scoped to the current/latest provider turn;
+- `coding_agent.milestones` scoped to the PE session;
+- `coding_agent.blockers` scoped to the PE session;
+- `coding_agent.approach_changes` scoped to the PE session;
 - `coding_agent.session_phase` scoped to the PE session;
 - `coding_agent.current_activity` scoped to the current/latest provider turn.
 
@@ -383,9 +386,24 @@ advertised capability is
 
 The concrete records use structured payloads:
 `ProvenanceCodingAgentIntentPayload`,
+`ProvenanceCodingAgentMilestonePayload`,
+`ProvenanceCodingAgentBlockerPayload`,
+`ProvenanceCodingAgentApproachChangePayload`,
 `ProvenanceCodingAgentSessionPhasePayload`, and
 `ProvenanceCodingAgentCurrentActivityPayload`. Unknown remains explicit when
 bounded factual evidence does not support a stronger claim.
+
+Milestone records are derived from current plan/prompt evidence using the
+rules documented in `docs/session-work-model.md`. Blocker and approach-change
+records are semantic interpretations of accepted visible assistant-output or
+visible reasoning-summary statements that use the supported bounded marker
+syntax documented there. A command failure, warning, completed turn, reordered
+plan, successful later command, clean worktree, or omitted item is not by
+itself a blocker, resolution, failed approach, or replacement strategy. The
+payloads preserve item-level source evidence, exact factual/source revisions,
+producer version, confidence, specificity, source-history completeness,
+ambiguity, and omission reasons. They are never written into factual Current
+State, Turn Outcome, or Session Outcome records.
 
 Human-readable semantic messaging is available as a separate presentation layer
 above semantic inference truth through:
@@ -438,7 +456,8 @@ semantic inference records for the current supported coding-agent kinds, and
 returns one coherent model. Consumers should use it when they need the current
 thread intent, turn intent, session phase, current activity, factual prompt,
 plan, completed commands, visible reasoning summaries, file-change attribution,
-and compact prior-turn references without reimplementing PE supersession or
+session milestones, explicit blocker state, explicit approach changes, and
+compact prior-turn references without reimplementing PE supersession or
 semantic selection rules.
 
 When no session projection matches `sessionID`, the response returns
@@ -461,13 +480,14 @@ semantic inference records selected into model fields. It does not use
 materialize semantic messages separately for wording, but semantic message
 records must not be treated as authoritative model facts.
 
-The first SessionWorkModel contract remains narrow. It includes a session
-milestone semantic field backed by current plan or prompt evidence, but it does
-not include nested milestone hierarchy, blockers, approach changes, progress
-percentage, validation or risk synthesis, architecture projections, GitHub
-attribution, Knowledge Compiler output, or presentation-learning fields.
-Consumers must not invent those meanings from lower-level factual data or
-semantic messages.
+The first SessionWorkModel contract remains narrow. It includes session
+milestones backed by current plan or prompt evidence plus explicit
+visible-statement blocker and approach-change semantic fields. It does not
+include inferred nested milestone hierarchy, progress percentage, validation or
+risk synthesis, architecture projections, GitHub attribution, Knowledge
+Compiler output, related-session propagation of these semantics, or
+presentation-learning fields. Consumers must not invent unsupported meanings
+from lower-level factual data or semantic messages.
 
 Nested milestones, milestone-to-code relationships, architecture projection,
 Knowledge Compiler output, GitHub ingestion, bmux UI presentation, presentation

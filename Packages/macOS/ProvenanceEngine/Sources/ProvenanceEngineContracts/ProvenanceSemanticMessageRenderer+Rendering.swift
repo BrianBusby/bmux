@@ -6,7 +6,10 @@ extension ProvenanceSemanticMessageRenderer {
         let expandedMeaning: String
     }
 
-    static func render(_ inference: ProvenanceSemanticInferenceRecord) -> RenderedMessage? {
+    static func render(
+        _ inference: ProvenanceSemanticInferenceRecord,
+        localeIdentifier: String? = nil
+    ) -> RenderedMessage? {
         guard let kind = ProvenanceCodingAgentSemanticInferenceKind(rawValue: inference.kind) else { return nil }
         switch kind {
         case .threadIntent:
@@ -29,6 +32,16 @@ extension ProvenanceSemanticMessageRenderer {
                 return nil
             }
             return milestonesMessage(payload)
+        case .blockers:
+            guard let payload = ProvenanceCodingAgentBlockerPayload(semanticPayloadValue: inference.payload) else {
+                return nil
+            }
+            return blockersMessage(payload, localeIdentifier: localeIdentifier)
+        case .approachChanges:
+            guard let payload = ProvenanceCodingAgentApproachChangePayload(semanticPayloadValue: inference.payload) else {
+                return nil
+            }
+            return approachChangesMessage(payload, localeIdentifier: localeIdentifier)
         case .currentActivity:
             guard let payload = ProvenanceCodingAgentCurrentActivityPayload(semanticPayloadValue: inference.payload) else {
                 return nil
@@ -93,6 +106,60 @@ extension ProvenanceSemanticMessageRenderer {
             concisePhrase: currentMilestone.title,
             expandedMeaning: "The current milestone is \(lowercaseFirst(currentMilestone.title))."
         )
+    }
+
+    static func blockersMessage(
+        _ payload: ProvenanceCodingAgentBlockerPayload,
+        localeIdentifier: String?
+    ) -> RenderedMessage {
+        let localization = ProvenanceSemanticMessageLocalization(localeIdentifier: localeIdentifier)
+        if let unknownReason = payload.unknownReason {
+            return localization.blockersUnknown(reason: unknownReason)
+        }
+
+        guard let blocker = payload.blockers.first(where: { $0.state == .reportedOpen }) ?? payload.blockers.first else {
+            return localization.noSupportedBlockers()
+        }
+
+        switch blocker.state {
+        case .reportedOpen:
+            return localization.blockerOpen(blocker)
+        case .reportedCleared:
+            return localization.blockerCleared(blocker)
+        case .reportedBypassed:
+            return localization.blockerBypassed(blocker)
+        case .reportedNoLongerApplies:
+            return localization.blockerNoLongerApplies(blocker)
+        case .unknown:
+            return localization.blockerStateUnknown(blocker)
+        }
+    }
+
+    static func approachChangesMessage(
+        _ payload: ProvenanceCodingAgentApproachChangePayload,
+        localeIdentifier: String?
+    ) -> RenderedMessage {
+        let localization = ProvenanceSemanticMessageLocalization(localeIdentifier: localeIdentifier)
+        if let unknownReason = payload.unknownReason {
+            return localization.approachChangesUnknown(reason: unknownReason)
+        }
+
+        guard let change = payload.approachChanges.first else {
+            return localization.noSupportedApproachChanges()
+        }
+
+        switch change.state {
+        case .reportedReplaced:
+            return localization.approachReplaced(change)
+        case .reportedAbandoned:
+            return localization.approachAbandoned(change)
+        case .reportedDeferred:
+            return localization.approachDeferred(change)
+        case .reportedFailed:
+            return localization.approachFailed(change)
+        case .unknown:
+            return localization.approachStateUnknown(change)
+        }
     }
 
     static func currentActivityMessage(_ payload: ProvenanceCodingAgentCurrentActivityPayload) -> RenderedMessage {

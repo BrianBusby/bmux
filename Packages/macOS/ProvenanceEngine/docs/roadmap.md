@@ -87,11 +87,12 @@ selection, active assignments, and implementation evidence are generated from
 Project Truth. The implemented sequence now includes the evidence foundation,
 factual session projection read contract, deterministic Turn Outcome
 projection, semantic inference framework, first coding-agent semantic
-inferences, human-readable semantic messaging, and the first PE-owned
-SessionWorkModel foundation. Session Outcome aggregation, the first read-only related-session awareness
-foundation, and artifact-collision awareness are implemented factual/read model
-layers before richer cross-session semantics, agent-accessible retrieval, and
-context assembly.
+inferences, human-readable semantic messaging, the first PE-owned
+SessionWorkModel foundation, milestone inference, and blocker/approach-change
+semantics. Session Outcome aggregation, the first read-only related-session
+awareness foundation, and artifact-collision awareness are implemented
+factual/read model layers before richer cross-session semantics,
+agent-accessible retrieval, and context assembly.
 
 This phase addresses the main gap found after the execution-telemetry and
 workspace-display slices: bmux can observe richer structured coding-agent data
@@ -157,7 +158,10 @@ The implementation sequence is:
     non-coordination semantics.
 16. Add milestone hierarchy/description and blocker or approach-change
     semantics in their own structured-understanding slices after the first
-    session inference concepts are stable.
+    session inference concepts are stable. Implemented for plan/prompt-backed
+    milestone identities/descriptions and explicit visible-statement blockers
+    and approach changes. Inferred nested milestone hierarchy remains future
+    work.
 17. Consume the PE `SessionWorkModel` from the React Smart Session surface for
     completed/current turn summaries, progress, blockers, validations, risks,
     and richer session-level synthesis.
@@ -193,9 +197,10 @@ The first SessionWorkModel foundation is accepted when a public
 semantic inference records for thread intent, turn intent, session phase, and
 current activity; preserves provenance, factual revision, semantic ids, and
 unknown/unavailable states; and keeps semantic messages as optional presentation
-records rather than authoritative truth. Milestones, blockers, approach
-changes, architecture projection, GitHub attribution, progress synthesis, and
-Knowledge Compiler output remain later slices.
+records rather than authoritative truth. Milestones and blocker/approach-change
+fields are now implemented as separate semantic slices. Architecture
+projection, GitHub attribution, progress synthesis, richer cross-session
+propagation, and Knowledge Compiler output remain later slices.
 
 The first related-session awareness foundation is accepted when a public
 `relatedSessions(...)` read can discover bounded sessions related to a target
@@ -215,6 +220,14 @@ duplicate, late, corrected, and out-of-order evidence deterministically; and
 explicitly avoids semantic compatibility judgments, rename approximation,
 automatic coordination, prompt injection, raw transcript sharing, proactive UI,
 and Knowledge Compiler behavior.
+
+The blocker and approach-change semantics slice is accepted when PE can infer
+bounded session-scoped blocker and approach-change records from accepted
+explicit visible statements, expose them through semantic records and
+`SessionWorkModel`, preserve reported versus observed basis, support exact
+same-session milestone links, retain source revisions and supersession history,
+abstain on unsupported commands/prose/quotes/hypotheticals, and keep inferred
+semantics out of deterministic Current State, Turn Outcome, and Session Outcome.
 
 The three-view bmux product model is a consumer constraint on this PE roadmap:
 Native remains provider-native, Terminal remains React live interaction, and

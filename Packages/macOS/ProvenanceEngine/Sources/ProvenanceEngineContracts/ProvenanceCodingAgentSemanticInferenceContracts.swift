@@ -14,6 +14,12 @@ public enum ProvenanceCodingAgentSemanticInferenceKind: String, Codable, Equatab
     /// Current milestone set inferred from bounded coding-agent plan or prompt evidence.
     case milestones = "coding_agent.milestones"
 
+    /// Current blocker set inferred from explicit visible coding-agent statements.
+    case blockers = "coding_agent.blockers"
+
+    /// Approach changes inferred from explicit visible coding-agent statements.
+    case approachChanges = "coding_agent.approach_changes"
+
     /// Current/latest concrete activity inside a turn.
     case currentActivity = "coding_agent.current_activity"
 }
@@ -328,10 +334,16 @@ public struct ProvenanceCodingAgentSessionSemanticInferenceProducer: Sendable {
     public static let producerID = "provenance-engine.coding-agent-session-semantics.rule"
 
     /// Stable producer version for first-pass rule inferences.
-    public static let producerVersion = "first-semantic-session-inferences-v2"
+    public static let producerVersion = "first-semantic-session-inferences-v3"
 
     /// Maximum plan-derived milestones included in one semantic milestone payload.
     public static let maximumMilestonesPerPlan = 100
+
+    /// Maximum blocker entries included in one semantic blocker payload.
+    public static let maximumBlockersPerSession = 50
+
+    /// Maximum approach-change entries included in one semantic approach-change payload.
+    public static let maximumApproachChangesPerSession = 50
 
     /// Producer identity written to generated inference records.
     public let producerID: String
@@ -404,6 +416,12 @@ public struct ProvenanceCodingAgentSessionSemanticInferenceProducer: Sendable {
             createdAt: createdAt,
             producerID: producerID,
             producerVersion: producerVersion
+        ))
+
+        records.append(contentsOf: blockerApproachRecords(
+            for: snapshot,
+            milestonePayload: milestonePayload,
+            createdAt: createdAt
         ))
 
         let phasePayload = Self.sessionPhasePayload(from: activityPayload, latestTurn: latestTurn)
@@ -514,13 +532,15 @@ public extension ProvenanceEngineClient {
                     limit: 1
                 )
             ).records.first
-            if let existing, existing.semanticClaimMatches(candidate) {
+            let effectiveCandidate = existing
+                .flatMap { candidate.mergingPartialSourceHistory(with: $0) } ?? candidate
+            if let existing, existing.semanticClaimMatches(effectiveCandidate) {
                 activeRecords.append(existing)
                 unchangedIDs.append(existing.id)
                 continue
             }
 
-            let record = candidate.superseding(existing.map { [$0.id] } ?? [])
+            let record = effectiveCandidate.superseding(existing.map { [$0.id] } ?? [])
             _ = try await publishSemanticInference(ProvenanceSemanticInferencePublishRequest(record: record))
             activeRecords.append(record)
             publishedIDs.append(record.id)

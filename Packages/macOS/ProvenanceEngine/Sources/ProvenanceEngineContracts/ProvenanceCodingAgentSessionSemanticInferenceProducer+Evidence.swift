@@ -112,6 +112,24 @@ extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
     }
 
     static func evidenceRefs(
+        for payload: ProvenanceCodingAgentBlockerPayload,
+        snapshot: ProvenanceFactualSessionProjectionSnapshot
+    ) -> [ProvenanceSemanticEvidenceReference] {
+        var refs = baseEvidenceRefs(sessionID: snapshot.session.id, revision: snapshot.revision)
+        refs.append(contentsOf: payload.blockers.flatMap(\.sourceEvidenceRefs))
+        return deduplicated(refs)
+    }
+
+    static func evidenceRefs(
+        for payload: ProvenanceCodingAgentApproachChangePayload,
+        snapshot: ProvenanceFactualSessionProjectionSnapshot
+    ) -> [ProvenanceSemanticEvidenceReference] {
+        var refs = baseEvidenceRefs(sessionID: snapshot.session.id, revision: snapshot.revision)
+        refs.append(contentsOf: payload.approachChanges.flatMap(\.sourceEvidenceRefs))
+        return deduplicated(refs)
+    }
+
+    static func evidenceRefs(
         for payload: ProvenanceCodingAgentCurrentActivityPayload,
         turn: ProvenanceFactualSessionProjectionTurnSnapshot,
         snapshot: ProvenanceFactualSessionProjectionSnapshot

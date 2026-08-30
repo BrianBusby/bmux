@@ -2,11 +2,12 @@
 
 ## Active Slice
 
-- Slice: `milestone_inference`
-- Branch: `session-milestone-inference`
-- Worktree: `/Users/brianbusby/repos/.bmux-worktrees/session-milestone-inference`
-- PR: https://github.com/BrianBusby/bmux/pull/84
-- Implementation commit: `baa432af4141126f47abf65c6cc66c713b24bf8d`
+- Slice: `blocker_approach_change_semantics`
+- Branch: `session-blocker-approach-semantics`
+- Worktree: `/Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics`
+- Base: `origin/main` containing merged milestone-inference PR #84, merge commit `cd59ec10b27500a4c0dc0954bd1da9f7fed44de8`
+- PR: https://github.com/BrianBusby/bmux/pull/85
+- Implementation commit: `2cc991cae7a7b6306a24e19811fe0d5edc0527c4`
 - Status: implemented and open for review; do not merge automatically
 
 ## Current Generated Truth
@@ -17,79 +18,109 @@
 
 ## What Changed
 
-Provenance Engine now exposes conservative coding-agent milestone semantics
+Provenance Engine now exposes bounded blocker and approach-change semantics
 through the existing semantic inference record framework and `SessionWorkModel`
-composition path. The built-in rule materializes plan-derived milestones from
-accepted structured plan-update evidence, falls back to one prompt-scoped active
-milestone only when no usable plan exists, and publishes unknown milestone
-claims rather than inventing work when evidence is insufficient.
+composition path. The rule-produced records are `coding_agent.blockers` and
+`coding_agent.approach_changes`, and the public model schema now includes
+session-level `blockers` and `approachChanges` semantic fields alongside
+milestones and session phase.
 
-Milestones now carry session-scoped identity basis, reported state basis,
-source evidence references, optional description, supported parent id,
-ambiguity reasons, omission reasons, producer version, confidence, specificity,
-supporting factual revision, and existing semantic supersession metadata.
-Provider-reported completion remains distinct from validation, correctness,
-merge, or acceptance.
+The v1 producer consumes supported explicit marker statements from accepted
+visible assistant output and visible reasoning summaries. It preserves source
+evidence references, reported provider/source attribution, identity basis,
+state basis, factual projection revision, producer version, confidence,
+specificity, source-history state, ambiguity reasons, omission reasons, and
+existing semantic supersession metadata.
+
+## Semantics
+
+Supported blocker statements use `Blocker:` or `Blocker resolved:` markers with
+structured fields such as `activity`, `condition`, `description`, `outcome`,
+and optional exact `milestone` id. Supported states are reported open, cleared,
+bypassed, and no-longer-applicable. A command failure, warning, completed turn,
+successful later command, clean worktree, or missing statement is not treated as
+proof of a blocker or resolution.
+
+Supported approach-change statements use `Approach change:` markers with
+`objective`, `prior`, `state`, optional `replacement`, optional `reason`, and
+optional exact `milestone` id. Supported states are reported replaced,
+abandoned, deferred, and failed. Replacement requires an explicit replacement
+approach. Reordered plans, routine retries, another command, and changed files
+do not imply a strategy change.
+
+Milestone relationships are attached only when the statement supplies an exact
+same-session milestone id from the current milestone payload. Title matching,
+foreign ids, duplicate titles, ordering, indentation-like prose, and
+cross-session relationships are omitted with bounded reasons instead of being
+guessed.
 
 ## Boundaries
 
-This slice does not add blocker, failed-approach, approach-change, progress,
-validation, milestone-to-code, milestone-to-architecture, GitHub/PR, Knowledge
-Compiler, Smart Session UI, agent retrieval, context injection, notifications,
-or cross-session milestone merging behavior.
+This slice does not add cross-session semantic propagation, agent retrieval,
+automatic context injection, coordination, notifications, Smart Session UI,
+progress percentages, milestone hierarchy rewrites, milestone-to-code or
+architecture relationships, GitHub ingestion, Knowledge Compiler behavior, raw
+transcript persistence, hidden reasoning access, or a general failure taxonomy.
 
-The built-in plan rule emits a flat milestone collection because current plan
-step evidence has no parent field. Supported hierarchy can pass through the
-payload contract only when parent ids are acyclic, resolvable, and scoped to the
-same payload; unsupported relationships are omitted with bounded reasons.
+The inference remains above deterministic factual Current State. The tests
+verify that semantic blockers and approach changes do not enter factual Current
+State, Turn Outcome, or Session Outcome projections.
 
 ## Validation
 
-Passed locally on 2026-08-29:
+Passed locally on 2026-08-30:
 
-- Focused PE filters: milestone inference plus SDK SessionWorkModel - 16 tests / 2 suites
-- Full PE package suite - 218 tests / 31 suites
+- `swiftc -parse-as-library -typecheck /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics/Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts/*.swift`
+- `swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics/Packages/macOS/ProvenanceEngine --filter BlockerApproachChange` - 9 tests / 2 suites
+- `swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics/Packages/macOS/ProvenanceEngine --filter SemanticMilestoneMessageTests` - 2 tests / 1 suite
+- `swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics/Packages/macOS/ProvenanceEngine` - 228 tests / 33 suites
 - `./scripts/project-docs validate`
 - `./scripts/project-docs generate`
 - `./scripts/project-docs check`
 - `GITHUB_TOKEN=$(gh auth token) ./scripts/project-docs ci`
-- `python3 scripts/swift_file_length_budget.py --repo-root . --base-ref origin/main`
 - `git diff --check`
-- `./scripts/lint-pbxproj-test-wiring.sh`
 - `python3 scripts/check-package-resolved-policy.py`
+- `python3 scripts/check-workspace-package-groups.py --check`
+- `scripts/lint-pbxproj-test-wiring.sh`
 
-The exact commands were:
+The Swift file-length budget check was run and remains blocked by pre-existing
+repository-wide budget debt. After splitting the new parser and tests, no new
+blocker/approach file appears in the failure list; the remaining failures are
+existing over-budget files such as `CLI/BMUXCLI+Provenance.swift`,
+`bmuxTests/WorkProvenanceObserverTests.swift`, and other unrelated files.
 
-```bash
-swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-milestone-inference/Packages/macOS/ProvenanceEngine --filter MilestoneInferenceTests --filter ProvenanceEngineSessionWorkModelClientFactoryTests
-swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-milestone-inference/Packages/macOS/ProvenanceEngine
-```
-
-The new milestone tests use synthetic accepted evidence only. They cover
-multi-step plans, provider-reported completion, provider step id continuity
-through reorder/insertion, missing step ids, bmux-generated plan-step record ids
-falling back to text identity, repeated titles, unsupported provider statuses,
-successful commands and completed turns not proving completion, unsupported
-hierarchy markers, supported hierarchy payloads, missing/cyclic/duplicate parent
-relationships, bounded output, legacy payload decoding, SDK reads, restart
-durability, and idempotent materialization.
+The new blocker/approach tests use synthetic sanitized accepted evidence only.
+They cover assistant-output and reasoning-summary markers, abstention for
+commands/warnings/reordered plans/unsupported prose, negated/hypothetical/quoted
+and code-fenced contexts, independent blockers, reported bypass, recurrence,
+partial source history retention, exact milestone links and rejected title or
+foreign links, legacy SessionWorkModel decoding, public SDK reads, restart
+durability, semantic message rendering, and factual-projection separation. No
+real private session transcript validation is claimed.
 
 No tagged app build or reload was run because this slice changes PE package
-contracts, semantic producer logic, tests, and documentation only.
+contracts, semantic producer logic, SQLite composition, tests, and documentation
+only; no bmux app/runtime path changed.
 
 ## Known Limitations
 
-Milestone identity is session-scoped. Provider plan step ids are the strongest
-continuity anchor when they are provider-authored stable ids; bmux-generated
-plan-step record ids remain source evidence only. Text-derived identities are
-explicitly marked with their weaker basis and omission reasons. Repeated text
-without stable ids remains ambiguous. The implementation does not validate real
-private session corpora and does not infer hierarchy from ordering, indentation,
-adjacent turns, shared files, or presentation wording.
+The v1 language contract is intentionally narrow. Unsupported wording abstains
+rather than trying to perform broad natural-language understanding. The producer
+does not infer blockers from failed commands, approvals, idle state, final
+assistant messages, or clean worktrees; does not infer approach changes from
+ordinary retries or file edits; and does not prove correctness, validation,
+merge, acceptance, or real resolution from provider claims.
+
+When bounded reads omit earlier turns, PE preserves existing active blocker or
+approach-change records instead of silently clearing them; consumers must inspect
+semantic record source revisions and source-history/omission metadata for
+freshness. Richer recurrence grouping, root-cause taxonomy, and cross-session
+work-state propagation remain out of scope.
 
 ## Next Ready Work
 
-The recommended next slice is blocker and approach-change semantics. Richer
-cross-session semantics, Smart Session consumers, retrieval, and
-milestone-to-code/architecture relationships should remain gated until their
-own prerequisites are implemented and validated.
+The recommended next slice is `rich_cross_session_work_state_semantics` only
+after milestone inference and blocker/approach semantics are delivered through
+merged PRs and their validation evidence remains accepted. PR #85 is still open,
+so downstream consumer gates should remain closed until that delivery decision
+is made.

@@ -312,6 +312,8 @@ inference records currently supported by the first semantic slice:
 - thread intent;
 - turn intent;
 - session milestones;
+- session blockers;
+- session approach changes;
 - session phase;
 - current activity.
 
@@ -343,13 +345,12 @@ Consumers may still query semantic messages for presentation wording, but the
 model's semantic meaning is grounded in factual projection plus semantic
 inference records.
 
-This first foundation remains intentionally narrow. It now includes a
-session-scoped milestone semantic field backed by current plan steps or the
-submitted prompt. It does not introduce nested milestone hierarchy, blockers,
-approach changes, progress percentage, validation or risk synthesis,
-architecture projections, GitHub attribution, Knowledge Compiler output, or
-presentation-learning behavior. Unsupported future concepts stay absent rather
-than guessed.
+This first foundation remains intentionally narrow. It now includes
+session-scoped milestone, blocker, and approach-change semantic fields backed
+by accepted bounded evidence. It does not introduce nested milestone hierarchy,
+progress percentage, validation or risk synthesis, architecture projections,
+GitHub attribution, Knowledge Compiler output, or presentation-learning
+behavior. Unsupported future concepts stay absent rather than guessed.
 
 ## Milestone Inference V1 Contract
 
@@ -429,6 +430,115 @@ omission rather than hidden certainty. This validation does not use private
 session data and does not validate blockers, failed approaches, cross-session
 milestone merging, Smart Session UI behavior, GitHub/PR attribution, or
 Knowledge Compiler readiness.
+
+## Blocker And Approach-Change Semantics V1 Contract
+
+For this slice, a blocker is a supported condition preventing a specific
+intended activity or milestone from progressing. A command error, warning, idle
+session, request for feedback, pending approval, completed turn, or clean
+worktree is not automatically a blocker.
+
+An approach change is a supported transition from one strategy to another for
+an identified objective. A reordered plan, another command, a changed file, or
+an abandoned approach is not automatically a strategy change. A failed approach
+is represented only when supported evidence explicitly reports failure.
+
+Resolution is evidence that a particular obstruction was cleared, bypassed, or
+ceased to apply. These are distinct reported states: a bypass can permit
+progress while the underlying condition remains unresolved, and a provider
+claim of success is not independent proof of correctness.
+
+V1 uses accepted visible coding-agent statements that are already present in
+the factual session projection: completed visible reasoning summaries and
+completed assistant messages. The built-in rule intentionally uses a narrow
+line-level field syntax rather than general natural-language classification.
+Supported lines must appear outside quoted/code blocks, start with one of the
+markers below after whitespace trimming, and contain semicolon-separated
+`key=value` fields:
+
+- `Blocker:` requires `activity` and `condition`; optional fields are
+  `description` and `milestone`.
+- `Blocker resolved:` requires `activity`, `condition`, and
+  `outcome=cleared|bypassed|no_longer_applies`; optional fields are
+  `description` and `milestone`.
+- `Approach change:` requires `objective`, `prior`, and `state`; `state`
+  supports `replaced`, `abandoned`, `deferred`, and `failed`. `replacement` is
+  required for `state=replaced`; `reason` and `milestone` are optional.
+
+The rule rejects questions, quoted examples, fenced code, hypothetical wording,
+negated current-blocker claims, and unsupported field combinations. Isolated
+keywords such as "blocked", "failed", or "instead" are insufficient. Plan
+steps may identify current milestones for optional relationships, but plan
+status and ordering do not create blocker or approach-change semantics.
+Completed command evidence is retained as factual activity or outcome evidence
+only; a failed command does not prove a blocker, and a later successful command
+does not resolve one.
+
+Blocker identity is session-scoped and based on normalized `activity`,
+`condition`, and a same-session milestone id when one is explicitly supplied
+and resolvable. A matching resolution updates the current episode for that
+identity; an open report after a resolved, bypassed, or no-longer-applicable
+episode creates a new recurrence. Multiple blockers are tracked independently,
+and resolving one does not clear another. When the relationship between a
+resolution and an earlier blocker is unsupported, the payload preserves that
+ambiguity rather than guessing.
+
+Approach-change identity is session-scoped and based on normalized `objective`,
+`prior`, `replacement`, `state`, explicit reason when present, and a same-session
+milestone id when supported. PE records the prior approach, replacement
+approach, supported reason, reported state, and affected activity or milestone
+only when the accepted statement supplies them. Duplicate and overlapping
+statements with the same normalized tuple coalesce with combined evidence
+references; corrected or materially changed statements supersede the active
+semantic record through the existing record lifecycle.
+
+Milestone links are accepted only when the statement supplies a milestone id
+that resolves to exactly one milestone in the current same-session milestone
+payload. Duplicate titles, title-only references, superseded target ids, and
+cross-session references are not matched. Unsupported links are omitted with a
+bounded ambiguity or omission reason. This slice does not modify milestone
+hierarchy, completion, code, architecture, or cross-session identity rules.
+
+Each known blocker and approach-change item preserves stable id, identity
+basis, concise description, affected activity or objective, optional milestone
+relationship, reported state and basis, source evidence references, ambiguity
+reasons, and omission reasons. The containing semantic record preserves the
+supporting factual projection revision, producer id/version, provenance,
+confidence, specificity, freshness, supersession, and active/inactive status
+using the existing semantic inference record contract. Unknown states remain
+explicit when no supported statement exists or when the bounded factual source
+history is incomplete. A bounded refresh that lacks prior detailed source
+history must not silently clear an existing active blocker or approach-change
+record.
+
+V1 intentionally does not infer root cause, risk, correctness, validation
+coverage, approval policy, failed-approach taxonomies beyond explicit reported
+state, cross-session propagation, Smart Session UI behavior, prompt injection,
+GitHub status, Knowledge Compiler output, or unrestricted historical transcript
+meaning. Factual Turn Outcome and Session Outcome fields remain deterministic
+facts; inferred blockers, approach changes, causes, and resolutions are not
+written back into those factual records.
+
+### Validation Record
+
+The implementation validation uses synthetic, sanitized PE fixtures rather than
+private real-session transcripts. The expected interpretation is that explicit
+supported marker statements materialize through the built-in producer into
+current semantic records and the public `sessionWorkModel(...)` read. Observed
+results cover one current blocker, one approach replacement, independent
+multiple blockers, a reported bypass resolution, recurrence as a new episode,
+exact same-session milestone-id links, unresolved/title milestone-link
+omissions, partial-source-history retention, old SessionWorkModel decoding,
+semantic message rendering, and SDK serialization compatibility.
+
+Expected abstentions are also covered: failed commands, warnings, completed
+turns, reordered plans, generic retry language, questions, negated blocker
+claims, hypothetical prefixes, fenced examples, missing replacement fields, and
+unrelated later success do not produce blocker or approach-change items.
+Factual projection equality plus Turn Outcome and Session Outcome checks verify
+that inferred semantics remain outside deterministic Current State. These tests
+validate the bounded rule and persistence lifecycle, not comprehensive natural
+language understanding or real-world usefulness across live sessions.
 
 ## Implemented Related-Session Awareness Foundation
 

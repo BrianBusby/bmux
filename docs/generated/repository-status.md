@@ -13,7 +13,7 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Milestone inference (`milestone_inference`)
+- Active slice: Blocker and approach-change semantics (`blocker_approach_change_semantics`)
 - Slice state: implemented
 - Owner: provenance_engine
 - Repository state: active
@@ -34,7 +34,7 @@ Repository: `BrianBusby/bmux`
 | Native Provider Session View | implemented |
 | Normal Coding Agent Evidence Ingestion | implemented |
 | Provenance Engine Agent Accessible Cross Session Retrieval | planned |
-| Provenance Engine Blocker Approach Change Semantics | planned |
+| Provenance Engine Blocker Approach Change Semantics | implemented |
 | Provenance Engine Coding Agent Assistant Outputs | implemented |
 | Provenance Engine Coding Agent Current Activity | implemented |
 | Provenance Engine Coding Agent Session Phase | implemented |

@@ -50,10 +50,11 @@ omission bound.
 This foundation intentionally does not add bmux UI, automatic context assembly,
 agent coordination, proactive notifications, raw transcript sharing, hidden
 reasoning storage, LLM-authored cross-session summaries, Knowledge Compiler
-integration, organization-scale storage, or new semantic
-milestone/blocker/decision/risk/architecture inference. Artifact-collision
-awareness is implemented separately as an inspectable factual PE read and still
-does not warn, block, coordinate, inject context, or judge semantic conflict.
+integration, organization-scale storage, or cross-session propagation of
+semantic milestone/blocker/approach-change/decision/risk/architecture
+inference. Artifact-collision awareness is implemented separately as an
+inspectable factual PE read and still does not warn, block, coordinate, inject
+context, or judge semantic conflict.
 
 ## Ownership
 
@@ -157,8 +158,9 @@ preserves the language boundary that a possible collision is not a proven
 semantic conflict. Stable rename identity remains unsupported until accepted
 evidence can establish it deterministically.
 
-After this slice, richer cross-session work-state semantics remain gated on
-validated milestone and blocker/approach-change semantics. Agent-accessible
+After the local milestone and blocker/approach-change semantic slices, richer
+cross-session work-state semantics remain gated on explicit selection and
+validation of how those fields should be carried into briefs. Agent-accessible
 cross-session retrieval remains gated on those richer semantics plus validated
 artifact-collision awareness.
 

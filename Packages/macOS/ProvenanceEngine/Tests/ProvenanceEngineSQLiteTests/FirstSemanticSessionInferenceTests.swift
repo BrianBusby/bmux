@@ -30,7 +30,7 @@ struct FirstSemanticSessionInferenceTests {
             )
         )
         let initialActivity = try Self.activityPayload(from: firstPass.records, scopeID: startedTurn.id)
-        #expect(firstPass.publishedInferenceIDs.count == 5)
+        #expect(firstPass.publishedInferenceIDs.count == 7)
         #expect(initialActivity.activityKind == .investigation)
         #expect(initialActivity.summary == "Reading workspace-selection callers before changing them")
 
@@ -63,7 +63,7 @@ struct FirstSemanticSessionInferenceTests {
             )
         )
 
-        #expect(secondPass.unchangedInferenceIDs.count == 3)
+        #expect(secondPass.unchangedInferenceIDs.count == 5)
         #expect(secondPass.publishedInferenceIDs.count == 2)
         #expect(updatedActivity.activityKind == .implementation)
         #expect(updatedActivity.summary == "Changing App Menu workspace selection to use TabManager")

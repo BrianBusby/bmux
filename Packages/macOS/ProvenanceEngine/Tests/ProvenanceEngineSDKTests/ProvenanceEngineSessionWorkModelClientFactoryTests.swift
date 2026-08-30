@@ -149,8 +149,8 @@ struct ProvenanceEngineSessionWorkModelClientFactoryTests {
         ))
 
         #expect(health.capabilities.contains(.querySessionWorkModel))
-        #expect(publish.publishedInferenceIDs.count == 5)
-        #expect(repeatPublish.unchangedInferenceIDs.count == 5)
+        #expect(publish.publishedInferenceIDs.count == 7)
+        #expect(repeatPublish.unchangedInferenceIDs.count == 7)
         #expect(response.found == true)
         #expect(model.identity.session == session)
         #expect(model.thread?.identity.threadID == thread.id)
@@ -159,6 +159,8 @@ struct ProvenanceEngineSessionWorkModelClientFactoryTests {
         #expect(model.currentTurn?.intent.state == .known)
         #expect(model.currentTurn?.currentActivity.state == .known)
         #expect(model.milestones.state == .known)
+        #expect(model.blockers.state == .known)
+        #expect(model.approachChanges.state == .known)
         #expect(milestonePayload.basis == "current_plan")
         #expect(milestonePayload.milestones.map(\.title) == [
             "Expose milestone semantics through the public SDK",
@@ -171,6 +173,8 @@ struct ProvenanceEngineSessionWorkModelClientFactoryTests {
             ProvenanceSessionWorkModelRequest(sessionID: session.id)
         ).model)
         #expect(reopenedModel.milestones.record?.inferenceID == milestoneRecord.inferenceID)
+        #expect(reopenedModel.blockers.record?.payload == model.blockers.record?.payload)
+        #expect(reopenedModel.approachChanges.record?.payload == model.approachChanges.record?.payload)
     }
 
     @Test

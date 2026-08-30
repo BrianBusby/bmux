@@ -23,6 +23,12 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
     /// Session-level semantic milestone set.
     public let milestones: ProvenanceSessionWorkModelSemanticField
 
+    /// Session-level semantic blocker set.
+    public let blockers: ProvenanceSessionWorkModelSemanticField
+
+    /// Session-level semantic approach-change set.
+    public let approachChanges: ProvenanceSessionWorkModelSemanticField
+
     /// Session-level semantic phase.
     public let sessionPhase: ProvenanceSessionWorkModelSemanticField
 
@@ -39,16 +45,20 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
     ///   - currentTurn: Latest turn and turn-level meaning.
     ///   - priorTurns: Compact references for earlier turns.
     ///   - milestones: Session-level milestone field.
+    ///   - blockers: Session-level blocker field.
+    ///   - approachChanges: Session-level approach-change field.
     ///   - sessionPhase: Session-level phase field.
     ///   - basis: Source factual and semantic layers used for composition.
     public init(
-        schemaVersion: Int = 2,
+        schemaVersion: Int = 3,
         revision: ProvenanceSessionWorkModelRevision,
         identity: ProvenanceSessionWorkModelIdentity,
         thread: ProvenanceSessionWorkModelThread?,
         currentTurn: ProvenanceSessionWorkModelCurrentTurn?,
         priorTurns: [ProvenanceFactualSessionProjectionTurnReference],
         milestones: ProvenanceSessionWorkModelSemanticField? = nil,
+        blockers: ProvenanceSessionWorkModelSemanticField? = nil,
+        approachChanges: ProvenanceSessionWorkModelSemanticField? = nil,
         sessionPhase: ProvenanceSessionWorkModelSemanticField,
         basis: ProvenanceSessionWorkModelBasis
     ) {
@@ -59,11 +69,13 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
         self.currentTurn = currentTurn
         self.priorTurns = priorTurns
         self.milestones = milestones ?? Self.defaultMilestones(identity: identity)
+        self.blockers = blockers ?? Self.defaultBlockers(identity: identity)
+        self.approachChanges = approachChanges ?? Self.defaultApproachChanges(identity: identity)
         self.sessionPhase = sessionPhase
         self.basis = basis
     }
 
-    /// Decodes a SessionWorkModel, defaulting missing v1 milestone fields to unknown.
+    /// Decodes a SessionWorkModel, defaulting missing older semantic fields to unknown.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let identity = try container.decode(ProvenanceSessionWorkModelIdentity.self, forKey: .identity)
@@ -80,6 +92,14 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
             ProvenanceSessionWorkModelSemanticField.self,
             forKey: .milestones
         ) ?? Self.defaultMilestones(identity: identity)
+        self.blockers = try container.decodeIfPresent(
+            ProvenanceSessionWorkModelSemanticField.self,
+            forKey: .blockers
+        ) ?? Self.defaultBlockers(identity: identity)
+        self.approachChanges = try container.decodeIfPresent(
+            ProvenanceSessionWorkModelSemanticField.self,
+            forKey: .approachChanges
+        ) ?? Self.defaultApproachChanges(identity: identity)
         self.sessionPhase = try container.decode(ProvenanceSessionWorkModelSemanticField.self, forKey: .sessionPhase)
         self.basis = try container.decode(ProvenanceSessionWorkModelBasis.self, forKey: .basis)
     }
@@ -94,6 +114,8 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
         try container.encodeIfPresent(currentTurn, forKey: .currentTurn)
         try container.encode(priorTurns, forKey: .priorTurns)
         try container.encode(milestones, forKey: .milestones)
+        try container.encode(blockers, forKey: .blockers)
+        try container.encode(approachChanges, forKey: .approachChanges)
         try container.encode(sessionPhase, forKey: .sessionPhase)
         try container.encode(basis, forKey: .basis)
     }
@@ -110,6 +132,30 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
         )
     }
 
+    private static func defaultBlockers(
+        identity: ProvenanceSessionWorkModelIdentity
+    ) -> ProvenanceSessionWorkModelSemanticField {
+        ProvenanceSessionWorkModelSemanticField(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.blockers.rawValue,
+            scope: .session,
+            scopeID: identity.session.id,
+            state: .unknown,
+            reason: "no_active_semantic_inference"
+        )
+    }
+
+    private static func defaultApproachChanges(
+        identity: ProvenanceSessionWorkModelIdentity
+    ) -> ProvenanceSessionWorkModelSemanticField {
+        ProvenanceSessionWorkModelSemanticField(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.approachChanges.rawValue,
+            scope: .session,
+            scopeID: identity.session.id,
+            state: .unknown,
+            reason: "no_active_semantic_inference"
+        )
+    }
+
     private enum CodingKeys: String, CodingKey {
         case schemaVersion
         case revision
@@ -118,6 +164,8 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
         case currentTurn
         case priorTurns
         case milestones
+        case blockers
+        case approachChanges
         case sessionPhase
         case basis
     }

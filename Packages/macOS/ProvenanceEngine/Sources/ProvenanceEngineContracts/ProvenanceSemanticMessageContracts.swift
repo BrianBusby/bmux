@@ -340,7 +340,10 @@ public struct ProvenanceSemanticMessageRenderer: Sendable {
         for inference: ProvenanceSemanticInferenceRecord,
         createdAt: Date
     ) -> ProvenanceSemanticMessageRecord? {
-        guard let rendered = Self.render(inference) else { return nil }
+        guard let rendered = Self.render(
+            inference,
+            localeIdentifier: presentationPolicy.localeIdentifier
+        ) else { return nil }
         return ProvenanceSemanticMessageRecord(
             id: Self.stableMessageID(
                 inferenceID: inference.id,
