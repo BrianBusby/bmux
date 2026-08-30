@@ -2971,7 +2971,7 @@ roadmap:
       kind: slice
       title: Milestone inference
       parent: semantic_milestone_relationships
-      status: planned
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2979,7 +2979,7 @@ roadmap:
       concept_classification:
         primary: structured_work_understanding
         architecture_layer: inference_session_work_projections
-      capability_maturity: ready
+      capability_maturity: validated
       depends_on:
         - first_semantic_session_inferences
         - live_codex_evidence_convergence_correctness
@@ -3002,10 +3002,36 @@ roadmap:
           - semantic_session_inferences
         worktree_required: true
       execution:
-        assignment: deferred
+        assignment: current
         assigned_to: provenance_engine
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/session-milestone-inference
+        active_branch: session-milestone-inference
+        active_agent: codex
+        notes: "Milestone inference is implemented on PR #84 and remains current until review/merge handoff completes."
       delivery_status: open
-      acceptance_status: proposed
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: baa432af4141126f47abf65c6cc66c713b24bf8d
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 84
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-30
+      acceptance:
+        criteria:
+          - Expose bounded milestone semantics through existing semantic inference records and SessionWorkModel composition.
+          - Preserve session-scoped milestone identities, reported work state basis, source evidence references, factual projection revisions, producer version, confidence, specificity, and supersession metadata.
+          - Support acyclic parent-child relationships in the payload contract while emitting a flat collection from current structured plan evidence unless hierarchy is explicitly supported.
+          - Keep provider-reported completion distinct from verified correctness, validation, merge, or acceptance.
+          - Preserve uncertainty through unknown states, ambiguity reasons, omission reasons, bounded output, and abstention when supported evidence is insufficient.
+          - Keep semantic milestones above deterministic factual Current State and compatible with existing factual, outcome, related-session, collision, and SDK read APIs.
+      rationale: Add conservative coding-agent milestone semantics from existing accepted plan and prompt evidence without introducing a second inference pipeline, bmux-local semantic logic, raw transcript retention, or external model dependency.
+      acceptance_reason: >-
+        Milestone inference is implemented as a producer-versioned semantic record payload consumed by the existing SessionWorkModel path. The built-in rule materializes plan-derived milestones with explicit identity and state bases, falls back to a prompt-scoped milestone only when no usable plan exists, validates supported hierarchy links in the payload contract, preserves omission and ambiguity reasons, bounds large plan output, remains idempotent for unchanged semantic content, and keeps milestone interpretation out of factual Current State.
 
     - id: blocker_approach_change_semantics
       kind: slice

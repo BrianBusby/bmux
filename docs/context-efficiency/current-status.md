@@ -133,11 +133,16 @@ the broader semantic-session product. Routed workspace display refreshes now
 notify the owning tab manager rather than only the startup manager, so linked
 prompt state can update immediately in the window that owns the workspace.
 
-SessionWorkModel now exposes the first milestone semantic field, and the
-milestone-inference implementation slice may resume on top of the corrected
-factual session substrate. Nested milestone hierarchy, milestone-to-code
-relationships, blockers, approach changes, progress, risk, and scoped
-architecture remain future semantic slices.
+Milestone inference is implemented on branch `session-milestone-inference` and
+PR #84. SessionWorkModel now exposes bounded coding-agent milestone semantics
+from existing semantic inference records: plan-derived milestone collections,
+prompt fallback only when no usable plan exists, reported state basis,
+identity basis, evidence references, hierarchy validation, bounded omissions,
+ambiguity notes, producer version, and existing semantic supersession metadata.
+Provider-reported completion is not validation, merge, or acceptance proof.
+Blockers, approach changes, progress, milestone-to-code relationships,
+milestone-to-architecture relationships, risk, and scoped architecture remain
+future semantic slices.
 
 Planning target: PE owns the `SessionWorkModel` projection for one
 coding-agent session. bmux should consume PE factual projection, semantic
@@ -153,12 +158,12 @@ use one branch and one worktree unless a future release/extraction task
 explicitly requires a separate PE checkout. The original PE repository remains
 an archival and recovery reference until the migration is accepted.
 
-Verification for this artifact-collision awareness branch:
+Verification for this milestone-inference branch:
 
 - Project Truth: `./scripts/project-docs validate`, `./scripts/project-docs generate`, `./scripts/project-docs check`, and authenticated `./scripts/project-docs ci`
-- Provenance Engine: from `Packages/macOS/ProvenanceEngine`, `/usr/bin/swift test`
-- Collision awareness: from `Packages/macOS/ProvenanceEngine`, `/usr/bin/swift test --filter ArtifactCollision`
-- Regression focus: related-session, Session Outcome, Turn Outcome, factual projection, and SessionWorkModel suites through the full PE package test plus focused filters when needed
+- Provenance Engine: `swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-milestone-inference/Packages/macOS/ProvenanceEngine`
+- Milestone focus: `swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-milestone-inference/Packages/macOS/ProvenanceEngine --filter MilestoneInferenceTests --filter ProvenanceEngineSessionWorkModelClientFactoryTests`
+- Regression focus: semantic inference, SessionWorkModel, Turn Outcome, Session Outcome, related-session, artifact-collision, SDK, migration, and rebuild suites through the full PE package test
 - Guards: `python3 scripts/swift_file_length_budget.py --repo-root . --base-ref origin/main`, `git diff --check`, `./scripts/lint-pbxproj-test-wiring.sh`, and `python3 scripts/check-package-resolved-policy.py`
 
 Runtime tests or tagged reloads are only required when production app/runtime

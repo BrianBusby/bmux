@@ -2,8 +2,15 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice: null
-  state: none_selected
+  active_slice:
+    id: milestone_inference
+    title: Milestone inference
+    state: implemented
+    owner: provenance_engine
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/session-milestone-inference
+    active_branch: session-milestone-inference
+    active_agent: codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented
