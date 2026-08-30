@@ -21,11 +21,11 @@ Regenerate with: ./scripts/project-docs generate
 
 - Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)
 - Active or selected slices in the frontier:
-  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) - maturity: active; status: active; selection: current; owner: Provenance Engine
+  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) - maturity: validated; status: implemented; selection: current; owner: Provenance Engine
 
 ### Active Implementation
 
-- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - maturity: active; status: active; selection: current; owner: Provenance Engine
+- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - maturity: validated; status: implemented; selection: current; owner: Provenance Engine
 
 ### Selected Next
 
@@ -40,16 +40,14 @@ Regenerate with: ./scripts/project-docs generate
 - React Terminal live interaction productization (`react_terminal_productization`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) is not dependency-satisfying
-  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity active; requires validated for gate `blocker_approach_semantics_validated`: Smart Session blocker and approach-change presentation must be backed by validated PE semantics.
+  - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Three-view session navigation (`three_view_session_navigation`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - React Terminal live interaction productization (`react_terminal_productization`) is not dependency-satisfying
   - React Terminal live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
 - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
-  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) is not dependency-satisfying
-  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity active; requires validated for gate `blocker_approach_semantics_validated`: Cross-session blockers, failed attempts, and approach changes must be backed by validated PE semantic records.
+  - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) is not dependency-satisfying
   - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) has maturity gated; requires validated for gate `cross_session_semantics_validated`: Agent questions about blockers, decisions, failed approaches, and validation require validated semantic brief fields.
