@@ -29,6 +29,16 @@ extension ProvenanceSemanticMessageRenderer {
                 return nil
             }
             return milestonesMessage(payload)
+        case .blockers:
+            guard let payload = ProvenanceCodingAgentBlockerPayload(semanticPayloadValue: inference.payload) else {
+                return nil
+            }
+            return blockersMessage(payload)
+        case .approachChanges:
+            guard let payload = ProvenanceCodingAgentApproachChangePayload(semanticPayloadValue: inference.payload) else {
+                return nil
+            }
+            return approachChangesMessage(payload)
         case .currentActivity:
             guard let payload = ProvenanceCodingAgentCurrentActivityPayload(semanticPayloadValue: inference.payload) else {
                 return nil
@@ -93,6 +103,94 @@ extension ProvenanceSemanticMessageRenderer {
             concisePhrase: currentMilestone.title,
             expandedMeaning: "The current milestone is \(lowercaseFirst(currentMilestone.title))."
         )
+    }
+
+    static func blockersMessage(_ payload: ProvenanceCodingAgentBlockerPayload) -> RenderedMessage {
+        if let unknownReason = payload.unknownReason {
+            return RenderedMessage(
+                concisePhrase: "Blockers unknown",
+                expandedMeaning: unknownReason
+            )
+        }
+
+        guard let blocker = payload.blockers.first else {
+            return RenderedMessage(
+                concisePhrase: "No supported blockers",
+                expandedMeaning: "No supported explicit blocker statement is active in the bounded session evidence."
+            )
+        }
+
+        switch blocker.state {
+        case .reportedOpen:
+            return RenderedMessage(
+                concisePhrase: "Blocked: \(blocker.affectedActivity)",
+                expandedMeaning: "The provider reported \(lowercaseFirst(blocker.affectedActivity)) is blocked by \(blocker.condition)."
+            )
+        case .reportedCleared:
+            return RenderedMessage(
+                concisePhrase: "Blocker cleared",
+                expandedMeaning: "The provider reported the blocker for \(lowercaseFirst(blocker.affectedActivity)) was cleared."
+            )
+        case .reportedBypassed:
+            return RenderedMessage(
+                concisePhrase: "Blocker bypassed",
+                expandedMeaning: "The provider reported work can proceed by bypassing \(blocker.condition)."
+            )
+        case .reportedNoLongerApplies:
+            return RenderedMessage(
+                concisePhrase: "Blocker no longer applies",
+                expandedMeaning: "The provider reported \(blocker.condition) no longer applies to \(lowercaseFirst(blocker.affectedActivity))."
+            )
+        case .unknown:
+            return RenderedMessage(
+                concisePhrase: "Blocker state unknown",
+                expandedMeaning: blocker.description
+            )
+        }
+    }
+
+    static func approachChangesMessage(_ payload: ProvenanceCodingAgentApproachChangePayload) -> RenderedMessage {
+        if let unknownReason = payload.unknownReason {
+            return RenderedMessage(
+                concisePhrase: "Approach changes unknown",
+                expandedMeaning: unknownReason
+            )
+        }
+
+        guard let change = payload.approachChanges.first else {
+            return RenderedMessage(
+                concisePhrase: "No supported approach changes",
+                expandedMeaning: "No supported explicit approach-change statement is active in the bounded session evidence."
+            )
+        }
+
+        switch change.state {
+        case .reportedReplaced:
+            return RenderedMessage(
+                concisePhrase: "Approach replaced",
+                expandedMeaning: "The provider reported replacing \(lowercaseFirst(change.priorApproach)) with \(change.replacementApproach ?? "an unspecified replacement")."
+            )
+        case .reportedAbandoned:
+            return RenderedMessage(
+                concisePhrase: "Approach abandoned",
+                expandedMeaning: "The provider reported abandoning \(lowercaseFirst(change.priorApproach))."
+            )
+        case .reportedDeferred:
+            return RenderedMessage(
+                concisePhrase: "Approach deferred",
+                expandedMeaning: "The provider reported deferring \(lowercaseFirst(change.priorApproach))."
+            )
+        case .reportedFailed:
+            return RenderedMessage(
+                concisePhrase: "Approach failed",
+                expandedMeaning: "The provider reported \(lowercaseFirst(change.priorApproach)) failed."
+            )
+        case .unknown:
+            return RenderedMessage(
+                concisePhrase: "Approach-change state unknown",
+                expandedMeaning: change.objective
+            )
+        }
     }
 
     static func currentActivityMessage(_ payload: ProvenanceCodingAgentCurrentActivityPayload) -> RenderedMessage {

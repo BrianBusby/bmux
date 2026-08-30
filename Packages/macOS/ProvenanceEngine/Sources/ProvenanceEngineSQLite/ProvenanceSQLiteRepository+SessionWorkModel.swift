@@ -70,7 +70,7 @@ extension ProvenanceSQLiteRepository {
             )
         }
         let revision = ProvenanceSessionWorkModelRevision(
-            schemaVersion: 2,
+            schemaVersion: 3,
             factualRevision: factualProjection.revision,
             semanticInferenceIDs: semanticRecords.map(\.id),
             latestSemanticInferenceCreatedAt: semanticRecords.map(\.createdAt).max()
@@ -86,6 +86,18 @@ extension ProvenanceSQLiteRepository {
             priorTurns: factualProjection.priorTurns,
             milestones: semanticField(
                 kind: ProvenanceCodingAgentSemanticInferenceKind.milestones.rawValue,
+                scope: .session,
+                scopeID: factualProjection.session.id,
+                records: semanticRecordByField
+            ),
+            blockers: semanticField(
+                kind: ProvenanceCodingAgentSemanticInferenceKind.blockers.rawValue,
+                scope: .session,
+                scopeID: factualProjection.session.id,
+                records: semanticRecordByField
+            ),
+            approachChanges: semanticField(
+                kind: ProvenanceCodingAgentSemanticInferenceKind.approachChanges.rawValue,
                 scope: .session,
                 scopeID: factualProjection.session.id,
                 records: semanticRecordByField
@@ -117,6 +129,16 @@ extension ProvenanceSQLiteRepository {
         var records: [ProvenanceSemanticInferenceRecord] = []
         records.append(contentsOf: try activeSemanticRecords(
             kind: ProvenanceCodingAgentSemanticInferenceKind.milestones.rawValue,
+            scope: .session,
+            scopeID: sessionID
+        ))
+        records.append(contentsOf: try activeSemanticRecords(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.blockers.rawValue,
+            scope: .session,
+            scopeID: sessionID
+        ))
+        records.append(contentsOf: try activeSemanticRecords(
+            kind: ProvenanceCodingAgentSemanticInferenceKind.approachChanges.rawValue,
             scope: .session,
             scopeID: sessionID
         ))

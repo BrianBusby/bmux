@@ -3002,13 +3002,10 @@ roadmap:
           - semantic_session_inferences
         worktree_required: true
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: provenance_engine
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/session-milestone-inference
-        active_branch: session-milestone-inference
-        active_agent: codex
-        notes: "Milestone inference is implemented on PR #84 and remains current until review/merge handoff completes."
-      delivery_status: open
+        notes: "Milestone inference was delivered by PR #84, merged at 2026-08-30T02:11:31Z with merge commit cd59ec10b27500a4c0dc0954bd1da9f7fed44de8."
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
@@ -3018,6 +3015,10 @@ roadmap:
             sha: 7c0e7d7eb4af85f56940aefd3927b98084150a49
           - repository: BrianBusby/bmux
             sha: 7ec92cde42c484da71c2f2561acbc8a61a9d49db
+          - repository: BrianBusby/bmux
+            sha: b936f9539d9a1187022a33434ce4cfe2368e667b
+          - repository: BrianBusby/bmux
+            sha: cd59ec10b27500a4c0dc0954bd1da9f7fed44de8
         pull_requests:
           - repository: BrianBusby/bmux
             number: 84
@@ -3041,14 +3042,15 @@ roadmap:
       kind: slice
       title: Blocker and approach-change semantics
       parent: semantic_milestone_relationships
-      status: planned
+      status: active
       owner: provenance_engine
       repositories:
         - provenance_engine
+        - bmux
       concept_classification:
         primary: structured_work_understanding
         architecture_layer: inference_session_work_projections
-      capability_maturity: ready
+      capability_maturity: active
       depends_on:
         - semantic_inference_framework
       parallelism:
@@ -3059,8 +3061,10 @@ roadmap:
           - blocker_semantics
           - approach_change_semantics
         expected_code_areas:
-          - Sources/ProvenanceEngineCore
-          - Tests/ProvenanceEngineTests
+          - Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts
+          - Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite
+          - Packages/macOS/ProvenanceEngine/Tests
+          - Packages/macOS/ProvenanceEngine/docs
         likely_conflict_domains:
           - blocker_semantics
           - approach_change_semantics
@@ -3069,10 +3073,15 @@ roadmap:
         worktree_required: true
         conflict_note: Safe only if blocker and approach-change records stay independent from milestone hierarchy writes.
       execution:
-        assignment: deferred
+        assignment: current
         assigned_to: provenance_engine
-      delivery_status: proposed
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics
+        active_branch: session-blocker-approach-semantics
+        active_agent: codex
+        notes: "Implemented in branch session-blocker-approach-semantics after PR #84 merged; delivery remains open until the review PR merges."
+      delivery_status: open
       acceptance_status: proposed
+      rationale: Add conservative coding-agent blocker and approach-change semantics from accepted visible statements without introducing a new inference pipeline, bmux-local semantic logic, raw transcript retention, cross-session propagation, or an external model dependency.
 
     - id: milestone_to_code_relationships
       kind: slice

@@ -187,7 +187,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
 - Primary capability frontier: Richer Session Understanding (`richer_session_understanding`)
-- Active implementation slice: Milestone inference (`milestone_inference`) - implemented
+- Active implementation slice: Blocker and approach-change semantics (`blocker_approach_change_semantics`) - open
 - Bmux repository state: active
 
 ### Current Roadmap Lanes
@@ -204,7 +204,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Cross-Session Work Awareness (`cross_session_work_awareness`) - program; status: active; owner: Provenance Engine
 - Cross-Session Awareness Read Models (`cross_session_awareness_read_models`) - phase; status: active; owner: Provenance Engine
 - Cross-Session Semantics and Collision Awareness (`cross_session_semantics_and_collisions`) - milestone; status: active; owner: Provenance Engine
-- Milestone inference (`milestone_inference`) - slice; status: implemented; owner: Provenance Engine
+- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - slice; status: active; owner: Provenance Engine
 
 ### Major Node Summaries
 
@@ -264,7 +264,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 #### Milestone semantics
 
-- Status: Milestone inference (`milestone_inference`): implemented, delivery open, acceptance implemented; Milestone-to-code relationships (`milestone_to_code_relationships`): planned, delivery proposed, acceptance proposed
+- Status: Milestone inference (`milestone_inference`): implemented, delivery merged, acceptance implemented; Milestone-to-code relationships (`milestone_to_code_relationships`): planned, delivery proposed, acceptance proposed
 - Owns: Evidence-backed milestone hierarchy, descriptions, current focus, completion criteria, and relationships to code evidence.
 - Inputs: Plans, prompts, command/file-change evidence, validation facts, reasoning summaries, and later Git/GitHub evidence.
 - Outputs: Nested live milestones and milestone-to-code relationships for SessionWorkModel and later knowledge compilation.
@@ -307,7 +307,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) is not dependency-satisfying
-  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity ready; requires validated for gate `blocker_approach_semantics_validated`: Smart Session blocker and approach-change presentation must be backed by validated PE semantics.
+  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity active; requires validated for gate `blocker_approach_semantics_validated`: Smart Session blocker and approach-change presentation must be backed by validated PE semantics.
 - Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Three-view session navigation (`three_view_session_navigation`) - maturity: gated; status: planned; selection: planned; owner: Bmux
@@ -315,7 +315,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
   - React Terminal live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
 - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Blocker and approach-change semantics (`blocker_approach_change_semantics`) is not dependency-satisfying
-  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity ready; requires validated for gate `blocker_approach_semantics_validated`: Cross-session blockers, failed attempts, and approach changes must be backed by validated PE semantic records.
+  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) has maturity active; requires validated for gate `blocker_approach_semantics_validated`: Cross-session blockers, failed attempts, and approach changes must be backed by validated PE semantic records.
 - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) is not dependency-satisfying
   - Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`) has maturity gated; requires validated for gate `cross_session_semantics_validated`: Agent questions about blockers, decisions, failed approaches, and validation require validated semantic brief fields.
@@ -337,7 +337,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
   - Presentation language calibration corpus (`presentation_language_calibration_corpus`) has maturity captured; requires validated for gate `calibration_corpus_validated`: Presentation learning needs a validated corpus before feedback changes policy.
 - Presentation language calibration corpus (`presentation_language_calibration_corpus`) - maturity: captured; status: planned; selection: planned; owner: Provenance Engine
   - Architecture or product direction is captured, but the slice is not implementation-ready.
-- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - maturity: ready; status: planned; selection: deferred; owner: Provenance Engine
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Scoped architecture projection (`scoped_architecture_projection`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine

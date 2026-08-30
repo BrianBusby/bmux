@@ -25,7 +25,7 @@ public struct ProvenanceSessionWorkModelRevision: Codable, Equatable, Sendable {
     ///   - semanticInferenceIDs: Active semantic inference IDs selected into the model.
     ///   - latestSemanticInferenceCreatedAt: Creation timestamp of the newest selected semantic inference.
     public init(
-        schemaVersion: Int = 2,
+        schemaVersion: Int = 3,
         factualRevision: Int?,
         semanticInferenceIDs: [String],
         latestSemanticInferenceCreatedAt: Date?

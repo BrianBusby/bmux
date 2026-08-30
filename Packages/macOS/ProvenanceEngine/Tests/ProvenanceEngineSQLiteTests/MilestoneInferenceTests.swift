@@ -342,6 +342,8 @@ struct MilestoneInferenceTests {
             ProvenanceCodingAgentSemanticInferenceKind.threadIntent.rawValue,
             ProvenanceCodingAgentSemanticInferenceKind.turnIntent.rawValue,
             ProvenanceCodingAgentSemanticInferenceKind.milestones.rawValue,
+            ProvenanceCodingAgentSemanticInferenceKind.blockers.rawValue,
+            ProvenanceCodingAgentSemanticInferenceKind.approachChanges.rawValue,
             ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue,
             ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue,
         ])

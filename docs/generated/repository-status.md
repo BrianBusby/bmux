@@ -13,8 +13,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Milestone inference (`milestone_inference`)
-- Slice state: implemented
+- Active slice: Blocker and approach-change semantics (`blocker_approach_change_semantics`)
+- Slice state: open
 - Owner: provenance_engine
 - Repository state: active
 

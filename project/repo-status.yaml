@@ -3,12 +3,12 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: milestone_inference
-    title: Milestone inference
-    state: implemented
+    id: blocker_approach_change_semantics
+    title: Blocker and approach-change semantics
+    state: open
     owner: provenance_engine
-    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/session-milestone-inference
-    active_branch: session-milestone-inference
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics
+    active_branch: session-blocker-approach-semantics
     active_agent: codex
   state: active
 

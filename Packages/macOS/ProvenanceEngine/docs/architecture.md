@@ -28,7 +28,13 @@ revisioned turn outcomes, revisioned session outcomes, the read-only
 related-session awareness projection, and the artifact-collision awareness
 projection.
 
-Implemented semantic contracts include versioned semantic inference records, first coding-agent semantic inference kinds, semantic message records, deterministic message materialization, the public `SessionWorkModel` foundation/read path, and the first plan/prompt-backed milestone field. Nested milestone hierarchy, blocker/approach-change semantics, and scoped architecture projection remain planned target behavior.
+Implemented semantic contracts include versioned semantic inference records,
+coding-agent semantic inference kinds, semantic message records, deterministic
+message materialization, the public `SessionWorkModel` foundation/read path,
+plan/prompt-backed session milestones, and explicit visible-statement blocker
+and approach-change fields. Inferred nested milestone hierarchy, richer
+cross-session work-state propagation, and scoped architecture projection remain
+planned target behavior.
 
 Related-session awareness is a PE-owned read model above Session Outcome and
 SessionWorkModel. It derives deterministic relationship reasons from accepted
