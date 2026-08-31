@@ -158,6 +158,49 @@ import Testing
         #expect(project.linkText == expected)
     }
 
+    @Test func sidebarTitleResolutionPrefersAuthoritativeLiveTitleOverStaleProvenanceTitle() {
+        let resolution = SidebarWorkspaceTitleResolution(
+            liveTitle: "Preventing regressions in bmux workspace title updates",
+            liveTitleIsAuthoritative: true,
+            provenanceTitle: "Company-Cam-API"
+        )
+
+        #expect(resolution.title == "Preventing regressions in bmux workspace title updates")
+        #expect(resolution.source == .live)
+        #expect(resolution.suppressedStaleProvenanceTitle)
+    }
+
+    @Test func sidebarTitleResolutionUsesProvenanceTitleWhenLiveTitleIsNotAuthoritative() {
+        let resolution = SidebarWorkspaceTitleResolution(
+            liveTitle: "Company-Cam-API",
+            liveTitleIsAuthoritative: false,
+            provenanceTitle: "Audit checklist completion"
+        )
+
+        #expect(resolution.title == "Audit checklist completion")
+        #expect(resolution.source == .provenance)
+        #expect(!resolution.suppressedStaleProvenanceTitle)
+    }
+
+    @Test func sidebarPresentationKeyChangesWhenResolvedTitleChanges() {
+        let first = Self.presentationKey(
+            titleResolution: SidebarWorkspaceTitleResolution(
+                liveTitle: "Company-Cam-API",
+                liveTitleIsAuthoritative: true,
+                provenanceTitle: "Company-Cam-API"
+            )
+        )
+        let second = Self.presentationKey(
+            titleResolution: SidebarWorkspaceTitleResolution(
+                liveTitle: "Preventing regressions in bmux workspace title updates",
+                liveTitleIsAuthoritative: true,
+                provenanceTitle: "Company-Cam-API"
+            )
+        )
+
+        #expect(first != second)
+    }
+
     @Test func livePullRequestRowsOverrideStaleProvenancePullRequest() throws {
         let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
             livePullRequests: [try Self.livePullRequest(number: 26196)],
@@ -353,7 +396,12 @@ import Testing
             showsPullRequests: true,
             showsPorts: true
         ),
-        provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot? = nil
+        provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot? = nil,
+        titleResolution: SidebarWorkspaceTitleResolution = SidebarWorkspaceTitleResolution(
+            liveTitle: "workspace",
+            liveTitleIsAuthoritative: true,
+            provenanceTitle: nil
+        )
     ) -> SidebarWorkspaceSnapshotBuilder.PresentationKey {
         SidebarWorkspaceSnapshotBuilder.PresentationKey(
             showsWorkspaceDescription: showsWorkspaceDescription,
@@ -361,7 +409,8 @@ import Testing
             showsGitBranch: showsGitBranch,
             usesViewportAwarePath: usesViewportAwarePath,
             visibleAuxiliaryDetails: visibleAuxiliaryDetails,
-            provenanceDisplaySnapshot: provenanceDisplaySnapshot
+            provenanceDisplaySnapshot: provenanceDisplaySnapshot,
+            titleResolution: titleResolution
         )
     }
 
