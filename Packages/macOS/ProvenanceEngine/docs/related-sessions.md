@@ -131,6 +131,12 @@ corresponding `semantic_field:<kind>` availability row is marked `partial`.
 For milestones, the current milestone pointer is retained inside the bound when
 the source payload identifies one.
 
+If an active semantic record exists but its payload carries `unknownReason`, the
+field remains present with the source record and the availability row is marked
+`unknown` with reason `source_semantic_unknown`. This distinguishes "PE has an
+active semantic claim that the bounded source does not support a known value"
+from "the related-session read model did not select or cannot read the field."
+
 ## Revisions And Freshness
 
 Projection metadata records the request fingerprint, content fingerprint,

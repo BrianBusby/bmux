@@ -414,6 +414,20 @@ struct RelatedSessionWorkStateSemanticTests {
         #expect(try Support.semanticField(.approachChanges, in: unknownBrief).state == .unknown)
         #expect(Support.availability(.blockers, in: unknownBrief)?.status == "unknown")
 
+        _ = try await Support.publishSemantics(sessionID: related.session.id, offset: 30, fixture: fixture, into: repository)
+        let knownUnknownBrief = try Support.require(try await repository.relatedSessions(
+            ProvenanceRelatedSessionRequest(targetSessionID: target.session.id)
+        ).projection?.relatedSessions.first)
+        let knownUnknownBlockerField = try Support.semanticField(.blockers, in: knownUnknownBrief)
+        let knownUnknownApproachField = try Support.semanticField(.approachChanges, in: knownUnknownBrief)
+        #expect(knownUnknownBlockerField.state == .known)
+        #expect(knownUnknownApproachField.state == .known)
+        #expect(try Support.blockerPayload(from: knownUnknownBrief).unknownReason != nil)
+        #expect(try Support.approachPayload(from: knownUnknownBrief).unknownReason != nil)
+        #expect(Support.availability(.blockers, in: knownUnknownBrief)?.status == "unknown")
+        #expect(Support.availability(.blockers, in: knownUnknownBrief)?.reason == "source_semantic_unknown")
+        #expect(Support.availability(.approachChanges, in: knownUnknownBrief)?.status == "unknown")
+
         try await fixture.appendPlan(
             Support.largePlan(
                 sessionID: related.session.id,

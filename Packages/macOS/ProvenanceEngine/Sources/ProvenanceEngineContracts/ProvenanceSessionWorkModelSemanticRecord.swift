@@ -68,7 +68,7 @@ public struct ProvenanceSessionWorkModelSemanticRecord: Codable, Equatable, Send
     ///
     /// Bounded read models can use this to expose a compact payload without losing the
     /// authoritative semantic record reference that consumers may query for the full source claim.
-    public func replacingPayload(
+    package func replacingPayload(
         _ payload: ProvenanceSemanticPayloadValue
     ) -> ProvenanceSessionWorkModelSemanticRecord {
         ProvenanceSessionWorkModelSemanticRecord(

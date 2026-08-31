@@ -88,6 +88,14 @@ extension ProvenanceSQLiteRepository {
         let evidence = relatedSessionSemanticFieldEvidence(field: field, workModel: workModel)
         switch field.state {
         case .known:
+            if let reason = relatedSessionSemanticUnknownReason(field.record?.payload) {
+                return ProvenanceRelatedSessionAvailability(
+                    field: "semantic_field:\(field.kind)",
+                    status: "unknown",
+                    reason: reason,
+                    evidence: evidence
+                )
+            }
             if let reason = relatedSessionSemanticPartialReason(field.record?.payload) {
                 return ProvenanceRelatedSessionAvailability(
                     field: "semantic_field:\(field.kind)",
@@ -133,6 +141,16 @@ extension ProvenanceSQLiteRepository {
             ))
         }
         return uniqueRelatedSessionEvidence(evidence)
+    }
+
+    func relatedSessionSemanticUnknownReason(
+        _ payload: ProvenanceSemanticPayloadValue?
+    ) -> String? {
+        guard case let .object(object) = payload,
+              relatedSessionSemanticPayloadString(object["unknownReason"]) != nil else {
+            return nil
+        }
+        return "source_semantic_unknown"
     }
 
     func relatedSessionSemanticPartialReason(
