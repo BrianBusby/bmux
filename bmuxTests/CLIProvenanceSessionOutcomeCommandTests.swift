@@ -266,6 +266,32 @@ struct CLIProvenanceSessionOutcomeCommandTests {
         #expect(missingRevisionPayload["found"] as? Bool == false)
         #expect(missingRevisionPayload["reason"] as? String == "no_revision")
 
+        let emptyRevision = Self.runCLI(
+            executablePath: cliPath,
+            arguments: [
+                "provenance", "sessions", "related", seeded.targetSessionID,
+                "--revision", "   ",
+                "--database", fixture.databaseURL.path,
+            ],
+            environment: environment
+        )
+        #expect(!emptyRevision.timedOut)
+        #expect(emptyRevision.status != 0)
+        #expect(emptyRevision.output.contains("--revision requires a value"))
+
+        let emptyLimit = Self.runCLI(
+            executablePath: cliPath,
+            arguments: [
+                "provenance", "sessions", "related", seeded.targetSessionID,
+                "--limit=   ",
+                "--database", fixture.databaseURL.path,
+            ],
+            environment: environment
+        )
+        #expect(!emptyLimit.timedOut)
+        #expect(emptyLimit.status != 0)
+        #expect(emptyLimit.output.contains("--limit requires a value"))
+
         let hugeLimit = Self.runCLI(
             executablePath: cliPath,
             arguments: [
@@ -291,6 +317,19 @@ struct CLIProvenanceSessionOutcomeCommandTests {
         #expect(!invalidDate.timedOut)
         #expect(invalidDate.status != 0)
         #expect(invalidDate.output.contains("--updated-after must be RFC 3339"))
+
+        let emptyArtifactPath = Self.runCLI(
+            executablePath: cliPath,
+            arguments: [
+                "provenance", "sessions", "collisions", seeded.targetSessionID,
+                "--artifact-path", "",
+                "--database", fixture.databaseURL.path,
+            ],
+            environment: environment
+        )
+        #expect(!emptyArtifactPath.timedOut)
+        #expect(emptyArtifactPath.status != 0)
+        #expect(emptyArtifactPath.output.contains("--artifact-path requires a value"))
 
         let invalidPath = Self.runCLI(
             executablePath: cliPath,

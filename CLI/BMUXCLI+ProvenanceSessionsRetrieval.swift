@@ -19,15 +19,9 @@ extension BMUXCLI {
                 jsonOutput: jsonOutput
             )
         case "help", "--help", "-h":
-            print(String(
-                localized: "cli.provenance.sessions.usage",
-                defaultValue: "Usage: bmux provenance sessions <tree|related|collisions> [...]"
-            ))
+            print(provenanceSessionsUsage())
         default:
-            throw CLIError(message: String(
-                localized: "cli.provenance.sessions.usage",
-                defaultValue: "Usage: bmux provenance sessions <tree|related|collisions> [...]"
-            ))
+            throw CLIError(message: provenanceSessionsUsage())
         }
     }
 
@@ -188,6 +182,13 @@ extension BMUXCLI {
         )
     }
 
+    func provenanceSessionsUsage() -> String {
+        String(
+            localized: "cli.provenance.sessions.usage",
+            defaultValue: "Usage: bmux provenance sessions <tree|related|collisions> [...]"
+        )
+    }
+
     func provenanceSessionsCollisionsUsage() -> String {
         String(
             localized: "cli.provenance.sessions.collisions.usage",
@@ -272,6 +273,12 @@ private extension BMUXCLI {
                     }
                     value = args[index + 1]
                     index += 1
+                }
+                guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    throw CLIError(message: provenanceRetrievalMissingValueMessage(
+                        commandName: commandName,
+                        option: name
+                    ))
                 }
                 values[name] = value
             } else {

@@ -3213,7 +3213,7 @@ struct BMUXCLI {
         // Check for --help/-h on subcommands before resolving sockets,
         // so help text is available even when bmux is not running.
         let preSeparatorArgs = commandArgs.firstIndex(of: "--").map { commandArgs[..<$0] } ?? commandArgs[...]
-        if command != "__tmux-compat", command != "provenance",
+        if command != "__tmux-compat",
            preSeparatorArgs.contains(where: { $0 == "--help" || $0 == "-h" }) {
             if dispatchSubcommandHelp(command: command, commandArgs: commandArgs) {
                 return
@@ -17071,18 +17071,7 @@ struct BMUXCLI {
         case "codex-token-audit", "token-audit":
             return codexTokenAuditUsage()
         case "provenance":
-            return String(localized: "cli.provenance.usage", defaultValue: """
-            Usage:
-              bmux provenance explain <path> [--json]
-              bmux provenance context current [--json]
-              bmux provenance worktrees list [--json]
-              bmux provenance sessions tree <session-id> [--json]
-              bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]
-              bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]
-              bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]
-
-            Inspect bmux work provenance without requiring a live app socket.
-            """)
+            return provenanceUsage()
         case "browser":
             return """
             Usage: bmux browser [--surface <id|ref|index> | <surface>] <subcommand> [args]
@@ -17198,12 +17187,42 @@ struct BMUXCLI {
 
     /// Dispatch help for a subcommand. Returns true if help was printed.
     private func dispatchSubcommandHelp(command: String, commandArgs: [String]) -> Bool {
-        guard commandArgs.contains("--help") || commandArgs.contains("-h") else { return false }
+        let preSeparatorArgs = commandArgs.firstIndex(of: "--").map { commandArgs[..<$0] } ?? commandArgs[...]
+        guard preSeparatorArgs.contains(where: { $0 == "--help" || $0 == "-h" }) else { return false }
+        if command == "provenance" {
+            return dispatchProvenanceSubcommandHelp(commandArgs: commandArgs)
+        }
         guard let text = subcommandUsage(command) else { return false }
+        printSubcommandHelp(command: command, text: text)
+        return true
+    }
+
+    private func dispatchProvenanceSubcommandHelp(commandArgs: [String]) -> Bool {
+        let preSeparatorArgs = commandArgs.firstIndex(of: "--").map { commandArgs[..<$0] } ?? commandArgs[...]
+        let tokens = preSeparatorArgs
+            .filter { $0 != "--help" && $0 != "-h" }
+            .map { $0.lowercased() }
+
+        if tokens == ["sessions"] {
+            printSubcommandHelp(command: "provenance sessions", text: provenanceSessionsUsage())
+            return true
+        }
+        if tokens.count >= 2, tokens[0] == "sessions", tokens[1] == "related" {
+            printSubcommandHelp(command: "provenance sessions related", text: provenanceSessionsRelatedUsage())
+            return true
+        }
+        if tokens.count >= 2, tokens[0] == "sessions", tokens[1] == "collisions" {
+            printSubcommandHelp(command: "provenance sessions collisions", text: provenanceSessionsCollisionsUsage())
+            return true
+        }
+        printSubcommandHelp(command: "provenance", text: provenanceUsage())
+        return true
+    }
+
+    private func printSubcommandHelp(command: String, text: String) {
         print("bmux \(command)")
         print("")
         print(text)
-        return true
     }
 
     /// Escape and quote a string for safe embedding in a v1 socket command.

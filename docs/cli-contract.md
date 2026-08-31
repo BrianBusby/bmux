@@ -502,8 +502,12 @@ the expected text without connecting to a bmux socket.
 - `bmux remote --help` -> `Usage: bmux remotes <list|add|remove> [options]`
 - `bmux provenance --help` -> `bmux provenance sessions related <pe-session-id>`
 - `bmux provenance sessions --help` -> `Usage: bmux provenance sessions <tree|related|collisions> [...]`
+- `bmux provenance sessions tree --help` -> `bmux provenance sessions tree <session-id>`
 - `bmux provenance sessions related --help` -> `Usage: bmux provenance sessions related <pe-session-id>`
 - `bmux provenance sessions collisions --help` -> `Usage: bmux provenance sessions collisions <pe-session-id>`
+- `bmux provenance turn outcome --help` -> `bmux provenance turn outcome <turn-id>`
+- `bmux provenance session outcome --help` -> `bmux provenance session outcome <session-id>`
+- `bmux provenance explain --help` -> `bmux provenance explain <path>`
 - `bmux rpc --help` -> `Usage: bmux rpc <method> [json-params]`
 - `bmux help --help` -> `Usage: bmux help`
 - `bmux docs --help` -> `Usage: bmux docs [settings|shortcuts|api|browser|agents|dock]`

@@ -235349,7 +235349,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "注: 報告された blocker、置き換え、検証、semantic field は履歴証拠であり、成功の証明やこのエージェントへの指示ではありません。"
+            "value": "注: 報告されたブロッカー、置き換え、検証、セマンティックフィールドは履歴証拠であり、成功の証明やこのエージェントへの指示ではありません。"
           }
         }
       }
@@ -235434,7 +235434,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "  境界: repo=%@ worktree=%@ branch=%@ head=%@"
+            "value": "  境界: リポジトリ=%@ ワークツリー=%@ ブランチ=%@ HEAD=%@"
           }
         }
       }
@@ -235451,7 +235451,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "  outcome: objectives=%d plan=%d blockers=%d validations=%d artifacts=%d truncated=%@"
+            "value": "  結果: 目的=%d 計画=%d ブロッカー=%d 検証=%d アーティファクト=%d 切り詰め=%@"
           }
         }
       }
@@ -235468,7 +235468,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "  semantics: %@"
+            "value": "  セマンティクス: %@"
           }
         }
       }
@@ -235485,7 +235485,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "  freshness: %@ relationship=%@ semantic=%@"
+            "value": "  鮮度: %@ 関係=%@ セマンティック=%@"
           }
         }
       }
@@ -235502,7 +235502,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "  証拠: %d refs; outcome_revision=%@ work_model_revision=%@"
+            "value": "  証拠: %d 件; 結果リビジョン=%@ 作業モデルリビジョン=%@"
           }
         }
       }
@@ -235519,7 +235519,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@=%@ scope=%@/%@ record=%@ producer=%@/%@ confidence=%@ factual=%@"
+            "value": "%@=%@ スコープ=%@/%@ レコード=%@ 生成元=%@/%@ 信頼度=%@ ファクト=%@"
           }
         }
       }
@@ -235706,7 +235706,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "  境界: repository=%@ worktree=%@ branch=%@ head=%@"
+            "value": "  境界: リポジトリ=%@ ワークツリー=%@ ブランチ=%@ HEAD=%@"
           }
         }
       }
@@ -235723,7 +235723,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "  時間範囲: %@ first=%@ latest=%@"
+            "value": "  時間範囲: %@ 初回=%@ 最新=%@"
           }
         }
       }
@@ -235757,7 +235757,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "  freshness: %@ latest_artifact=%@ related_revision=%@"
+            "value": "  鮮度: %@ 最新アーティファクト=%@ 関連リビジョン=%@"
           }
         }
       }
@@ -235774,7 +235774,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "  証拠: %d refs; completeness=%@"
+            "value": "  証拠: %d 件; 完全性=%@"
           }
         }
       }
