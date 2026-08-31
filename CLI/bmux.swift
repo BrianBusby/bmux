@@ -17189,40 +17189,18 @@ struct BMUXCLI {
     private func dispatchSubcommandHelp(command: String, commandArgs: [String]) -> Bool {
         let preSeparatorArgs = commandArgs.firstIndex(of: "--").map { commandArgs[..<$0] } ?? commandArgs[...]
         guard preSeparatorArgs.contains(where: { $0 == "--help" || $0 == "-h" }) else { return false }
-        if command == "provenance" {
-            return dispatchProvenanceSubcommandHelp(commandArgs: commandArgs)
+        if command == "provenance",
+           let help = provenanceSubcommandHelp(commandArgs: commandArgs) {
+            print("bmux \(help.command)")
+            print("")
+            print(help.text)
+            return true
         }
         guard let text = subcommandUsage(command) else { return false }
-        printSubcommandHelp(command: command, text: text)
-        return true
-    }
-
-    private func dispatchProvenanceSubcommandHelp(commandArgs: [String]) -> Bool {
-        let preSeparatorArgs = commandArgs.firstIndex(of: "--").map { commandArgs[..<$0] } ?? commandArgs[...]
-        let tokens = preSeparatorArgs
-            .filter { $0 != "--help" && $0 != "-h" }
-            .map { $0.lowercased() }
-
-        if tokens == ["sessions"] {
-            printSubcommandHelp(command: "provenance sessions", text: provenanceSessionsUsage())
-            return true
-        }
-        if tokens.count >= 2, tokens[0] == "sessions", tokens[1] == "related" {
-            printSubcommandHelp(command: "provenance sessions related", text: provenanceSessionsRelatedUsage())
-            return true
-        }
-        if tokens.count >= 2, tokens[0] == "sessions", tokens[1] == "collisions" {
-            printSubcommandHelp(command: "provenance sessions collisions", text: provenanceSessionsCollisionsUsage())
-            return true
-        }
-        printSubcommandHelp(command: "provenance", text: provenanceUsage())
-        return true
-    }
-
-    private func printSubcommandHelp(command: String, text: String) {
         print("bmux \(command)")
         print("")
         print(text)
+        return true
     }
 
     /// Escape and quote a string for safe embedding in a v1 socket command.

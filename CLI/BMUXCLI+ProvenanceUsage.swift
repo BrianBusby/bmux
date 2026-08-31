@@ -22,4 +22,22 @@ extension BMUXCLI {
             """
         )
     }
+
+    func provenanceSubcommandHelp(commandArgs: [String]) -> (command: String, text: String)? {
+        let preSeparatorArgs = commandArgs.firstIndex(of: "--").map { commandArgs[..<$0] } ?? commandArgs[...]
+        let tokens = preSeparatorArgs
+            .filter { $0 != "--help" && $0 != "-h" }
+            .map { $0.lowercased() }
+
+        if tokens == ["sessions"] {
+            return ("provenance sessions", provenanceSessionsUsage())
+        }
+        if tokens.count >= 2, tokens[0] == "sessions", tokens[1] == "related" {
+            return ("provenance sessions related", provenanceSessionsRelatedUsage())
+        }
+        if tokens.count >= 2, tokens[0] == "sessions", tokens[1] == "collisions" {
+            return ("provenance sessions collisions", provenanceSessionsCollisionsUsage())
+        }
+        return ("provenance", provenanceUsage())
+    }
 }
