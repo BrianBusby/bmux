@@ -2290,9 +2290,7 @@ final class Workspace: Identifiable, ObservableObject {
     @Published private(set) var latestSubmittedMessage: String? {
         didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: latestSubmittedMessage) }
     }
-    @Published private(set) var latestSubmittedPromptSessionID: String? {
-        didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: latestSubmittedPromptSessionID) }
-    }
+    @Published private(set) var latestSubmittedPromptSessionID: String? { didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: latestSubmittedPromptSessionID) } }
     @Published private(set) var latestSubmittedAt: Date? {
         didSet { publishSidebarImmediateObservationChangeIfNeeded(oldValue: oldValue, newValue: latestSubmittedAt) }
     }
@@ -5388,8 +5386,7 @@ final class Workspace: Identifiable, ObservableObject {
 
     @discardableResult
     func recordConversationMessage(_ message: String?) -> Bool {
-        guard let preview = Self.conversationMessagePreview(from: message) else { return false }
-        guard latestConversationMessage != preview else { return false }
+        guard let preview = Self.conversationMessagePreview(from: message), latestConversationMessage != preview else { return false }
         latestConversationMessage = preview
         return true
     }
@@ -5398,20 +5395,15 @@ final class Workspace: Identifiable, ObservableObject {
     func recordSubmittedMessage(_ message: String?, sessionID: String? = nil) -> Bool {
         guard let preview = Self.conversationMessagePreview(from: message) else { return false }
         latestSubmittedMessage = preview
-        latestSubmittedPromptSessionID = sessionID?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .nilIfEmpty
-        latestSubmittedAt = Date()
-        _ = recordConversationMessage(preview)
-        markWorkspaceDisplayFieldsKnown(["last_submitted_prompt", "last_submitted_prompt_session_id"])
-        postWorkspaceDisplayMetadataDidChange()
+        latestSubmittedPromptSessionID = sessionID?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        latestSubmittedAt = Date(); _ = recordConversationMessage(preview)
+        markWorkspaceDisplayFieldsKnown(["last_submitted_prompt", "last_submitted_prompt_session_id"]); postWorkspaceDisplayMetadataDidChange()
         return true
     }
 
     func clearRecordedPromptMessages() {
         latestConversationMessage = nil
-        latestSubmittedMessage = nil
-        latestSubmittedPromptSessionID = nil
+        latestSubmittedMessage = nil; latestSubmittedPromptSessionID = nil
         latestSubmittedAt = nil
         workspacePromptPullRequestIntentNumbers.removeAll()
         workspacePromptBranchIntentNames.removeAll()

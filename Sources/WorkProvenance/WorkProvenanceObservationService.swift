@@ -174,9 +174,7 @@ actor WorkProvenanceObservationService {
         let lastSubmittedPromptSessionID = lastSubmittedPrompt == nil
             ? nil
             : Self.normalizedNonEmpty(workspace.lastSubmittedPromptSessionID)
-        let lastSubmittedPromptSubmittedAt = lastSubmittedPrompt == nil
-            ? nil
-            : workspace.lastSubmittedPromptSubmittedAt
+        let lastSubmittedPromptSubmittedAt = lastSubmittedPrompt == nil ? nil : workspace.lastSubmittedPromptSubmittedAt
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
             title: workspace.title,

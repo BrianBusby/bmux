@@ -5693,8 +5693,7 @@ class TerminalController {
                 guard let tabManager = AppDelegate.shared?.tabManagerFor(tabId: workspaceId) else { return }
                 _ = tabManager.handlePromptSubmit(
                     workspaceId: workspaceId,
-                    message: event.submittedPromptMessage,
-                    sessionID: event.sessionId,
+                    message: event.submittedPromptMessage, sessionID: event.sessionId,
                     surfaceId: surfaceId,
                     iMessageModeEnabled: iMessageModeEnabled
                 )

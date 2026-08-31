@@ -419,9 +419,7 @@ extension Workspace {
         4 * 1024 * 1024
     }
 
-    nonisolated private static var transcriptFallbackMaxLines: Int {
-        600
-    }
+    nonisolated private static var transcriptFallbackMaxLines: Int { 600 }
 
     nonisolated static func workstreamContainsPullRequestMention(_ message: String?) -> Bool {
         submittedPromptPullRequestNumber(from: message) != nil
