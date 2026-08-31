@@ -2401,9 +2401,20 @@ roadmap:
         active_worktree: /Users/brianbusby/repos/.bmux-worktrees/rich-cross-session-work-state-semantics
         active_branch: rich-cross-session-work-state-semantics
         active_agent: Codex
-        notes: Selected from the 2026-08-31 Codex handoff after rechecking origin/main at 88b0fb7ba5e7d0a4296806eec49c245456e2fbf2. Gates are satisfied because cross_session_work_awareness_foundation, milestone_inference, and blocker_approach_change_semantics are implemented with capability_maturity validated and merged delivery evidence.
-      delivery_status: draft
-      acceptance_status: proposed
+        notes: Implemented on PR #87 after rechecking origin/main at 88b0fb7ba5e7d0a4296806eec49c245456e2fbf2. Gates are satisfied because cross_session_work_awareness_foundation, milestone_inference, and blocker_approach_change_semantics are implemented with capability_maturity validated and merged delivery evidence. Delivery remains open pending PR review and merge.
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 335d71518f94324ded81a68b6e0bc87c6618ff60
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 87
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-08-31
       acceptance:
         criteria:
           - Related-session public SDK reads carry supported SessionWorkModel milestones, blockers, and approach changes for related sessions with original semantic records, evidence references, producer/version, confidence, specificity, source-session attribution, and factual revision metadata intact.
@@ -2413,6 +2424,7 @@ roadmap:
           - Large semantic payloads are bounded deterministically with omission reasons and counts while retained items keep enough provenance to interpret their original source records.
           - Semantic work-state fields remain separate from factual relationship reasons, Session Outcome, Turn Outcome, factual Current State, artifact-collision facts, prompt injection, coordination policy, and Knowledge Compiler behavior.
           - A public-read example demonstrates the carried cross-session work state and limitations using sanitized fixture data.
+      acceptance_reason: Implemented in PR 87 with local PE package and Project Truth validation pending final PR review and merge; agent-accessible retrieval remains gated.
       rationale: Add richer validated semantic information to related-session briefs only after PE owns the underlying milestone, blocker, validation, and approach-change semantics.
 
     - id: cross_session_artifact_collision_awareness
