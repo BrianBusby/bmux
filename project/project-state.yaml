@@ -2311,7 +2311,7 @@ roadmap:
       kind: milestone
       title: Cross-Session Semantics and Collision Awareness
       parent: cross_session_awareness_read_models
-      status: active
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2321,7 +2321,7 @@ roadmap:
         architecture_layer: inference_session_work_projections
         tags:
           - cross_session_awareness
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - cross_session_work_awareness_foundation
       gates:
@@ -2333,7 +2333,7 @@ roadmap:
       parallelism:
         classification: serial
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: provenance_engine
       rationale: Adds richer work-state semantics and factual artifact-overlap explanations after the foundational related-session read model is validated.
 
@@ -2341,7 +2341,7 @@ roadmap:
       kind: slice
       title: Rich cross-session work-state semantics
       parent: cross_session_semantics_and_collisions
-      status: active
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2352,7 +2352,7 @@ roadmap:
         tags:
           - cross_session_awareness
           - session_work_model
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - cross_session_work_awareness_foundation
         - milestone_inference
@@ -2396,13 +2396,10 @@ roadmap:
           - semantic_inference_records
         worktree_required: true
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: provenance_engine
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/rich-cross-session-work-state-semantics
-        active_branch: rich-cross-session-work-state-semantics
-        active_agent: Codex
-        notes: Implemented on PR #87 after rechecking origin/main at 88b0fb7ba5e7d0a4296806eec49c245456e2fbf2. Gates are satisfied because cross_session_work_awareness_foundation, milestone_inference, and blocker_approach_change_semantics are implemented with capability_maturity validated and merged delivery evidence. Foreground review findings around unknown semantic availability and public helper scope were addressed. Delivery remains open pending PR review and merge.
-      delivery_status: open
+        notes: "Rich cross-session work-state semantics were delivered by PR #87, merged at 2026-08-31T05:44:25Z with merge commit adf55adb8a81f77a5b07e8fd129ad0d9cce2e149. Gates were satisfied because cross_session_work_awareness_foundation, milestone_inference, and blocker_approach_change_semantics were already implemented with capability_maturity validated and merged delivery evidence. Foreground review findings around unknown semantic availability and public helper scope were addressed before merge."
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
@@ -2410,6 +2407,10 @@ roadmap:
             sha: 335d71518f94324ded81a68b6e0bc87c6618ff60
           - repository: BrianBusby/bmux
             sha: 6022f6499f6a04ebcf8980530c6f439325a0f9fc
+          - repository: BrianBusby/bmux
+            sha: 6936c97540bae05ab8c31a5772c159032420ffba
+          - repository: BrianBusby/bmux
+            sha: adf55adb8a81f77a5b07e8fd129ad0d9cce2e149
         pull_requests:
           - repository: BrianBusby/bmux
             number: 87
@@ -2426,7 +2427,8 @@ roadmap:
           - Large semantic payloads are bounded deterministically with omission reasons and counts while retained items keep enough provenance to interpret their original source records.
           - Semantic work-state fields remain separate from factual relationship reasons, Session Outcome, Turn Outcome, factual Current State, artifact-collision facts, prompt injection, coordination policy, and Knowledge Compiler behavior.
           - A public-read example demonstrates the carried cross-session work state and limitations using sanitized fixture data.
-      acceptance_reason: Implemented in PR 87 with local PE package and Project Truth validation pending final PR review and merge; agent-accessible retrieval remains gated.
+      acceptance_reason: >-
+        Rich cross-session work-state semantics is implemented and merged through PR #87. Related-session rule version 2 carries existing SessionWorkModel milestones, blockers, approach changes, thread/turn intent, current activity, and session phase with source-session scope, semantic record identity, bounded payloads, evidence references, producer metadata, supporting factual revision, supersession metadata, explicit unknown/unavailable/partial availability, and deterministic content revision behavior. Validation used synthetic sanitized multi-session fixtures, public SDK reads, restart/rebuild and historical-revision coverage, focused related-session/blocker/approach suites, the full ProvenanceEngine package suite, foreground Codex review, and Project Truth gates. Agent-accessible retrieval is not selected or implemented by this slice.
       rationale: Add richer validated semantic information to related-session briefs only after PE owns the underlying milestone, blocker, validation, and approach-change semantics.
 
     - id: cross_session_artifact_collision_awareness
@@ -2520,7 +2522,7 @@ roadmap:
         architecture_layer: retrieval_engine
         tags:
           - cross_session_awareness
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - cross_session_work_awareness_foundation
       gates:
@@ -2550,7 +2552,7 @@ roadmap:
         architecture_layer: retrieval_engine
         tags:
           - cross_session_awareness
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - rich_cross_session_work_state_semantics
         - cross_session_artifact_collision_awareness
@@ -2587,7 +2589,7 @@ roadmap:
         tags:
           - cross_session_awareness
           - agent_retrieval
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - cross_session_work_awareness_foundation
         - rich_cross_session_work_state_semantics
@@ -2635,6 +2637,7 @@ roadmap:
       execution:
         assignment: planned
         assigned_to: shared
+        notes: "Likely next candidate after PR #87 merged and Project Truth validated rich_cross_session_work_state_semantics; not selected or started."
       delivery_status: proposed
       acceptance_status: proposed
       rationale: Provide explicit bounded agent queries over PE-owned cross-session state instead of blindly injecting historical context or exposing full transcripts.

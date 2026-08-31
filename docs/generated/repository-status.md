@@ -13,10 +13,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`)
-- Slice state: open
-- Owner: Provenance Engine
-- Repository state: active
+- Active slice: none selected
+- Repository state: none selected
 
 ## Release
 

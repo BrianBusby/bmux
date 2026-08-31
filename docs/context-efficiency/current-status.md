@@ -144,9 +144,9 @@ Blocker and approach-change semantics are implemented by PR #85. Progress,
 milestone-to-code relationships, milestone-to-architecture relationships, risk,
 and scoped architecture remain future semantic slices.
 
-Rich cross-session work-state semantics is implemented on branch
-`rich-cross-session-work-state-semantics` as the PE related-session rule-version
-2 contract. `relatedSessions(...)` now carries existing SessionWorkModel thread
+Rich cross-session work-state semantics is implemented and merged through PR
+#87 as the PE related-session rule-version 2 contract. `relatedSessions(...)`
+now carries existing SessionWorkModel thread
 intent, turn intent, current activity, milestones, blockers, approach changes,
 and session phase fields into related-session briefs with source-session scope,
 semantic record identity, bounded structured payloads, supporting factual
@@ -171,7 +171,7 @@ use one branch and one worktree unless a future release/extraction task
 explicitly requires a separate PE checkout. The original PE repository remains
 an archival and recovery reference until the migration is accepted.
 
-Verification for this milestone-inference branch:
+Latest Provenance Engine semantic/cross-session verification:
 
 - Project Truth: `./scripts/project-docs validate`, `./scripts/project-docs generate`, `./scripts/project-docs check`, and authenticated `./scripts/project-docs ci`
 - Provenance Engine: `swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-milestone-inference/Packages/macOS/ProvenanceEngine`

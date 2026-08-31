@@ -6,9 +6,10 @@
 - Branch: `rich-cross-session-work-state-semantics`
 - Worktree: `/Users/brianbusby/repos/.bmux-worktrees/rich-cross-session-work-state-semantics`
 - Base: `origin/main` at `88b0fb7ba5e7d0a4296806eec49c245456e2fbf2`
-- PR: https://github.com/BrianBusby/bmux/pull/87, open
+- PR: https://github.com/BrianBusby/bmux/pull/87, merged at 2026-08-31T05:44:25Z
+- Merge commit: `adf55adb8a81f77a5b07e8fd129ad0d9cce2e149`
 - Implementation commits: `335d71518f94324ded81a68b6e0bc87c6618ff60`, `6022f6499f6a04ebcf8980530c6f439325a0f9fc`
-- Status: implemented and locally validated; delivery remains open pending PR review, CI, merge, and acceptance
+- Status: implemented, merged, and validated in Project Truth; delivery is no longer active
 
 ## Current Generated Truth
 
@@ -90,8 +91,8 @@ The carried blocker and approach-change records remain the v1 explicit-marker se
 
 The slice does not add agent-accessible retrieval, CLI/MCP query integration, automatic context injection, agent coordination, file locks, merge blocking, proactive notifications, Smart Session UI, Knowledge Compiler integration, embeddings, graph storage, organization sharing, or semantic artifact conflict judgments.
 
-Project-wide Engineering Observation Period remains active. PR #87 is open, so `delivery_status` remains `open` and capability maturity remains below `validated` until review, CI, merge, and acceptance complete.
+Project-wide Engineering Observation Period remains active. PR #87 is merged, so `delivery_status` is `merged`, capability maturity is `validated`, and this slice is no longer the active assignment.
 
 ## Next Candidate
 
-After PR #87 is merged and the slice is validated in Project Truth, reassess `agent_accessible_cross_session_retrieval` against fresh `origin/main`. Related-session foundation, artifact-collision awareness, milestone inference, and blocker/approach semantics are implemented at this baseline, but retrieval must still be explicitly selected before work begins.
+`agent_accessible_cross_session_retrieval` is the likely next candidate after fresh `origin/main` reassessment. Related-session foundation, artifact-collision awareness, milestone inference, blocker/approach semantics, and rich work-state briefs are validated at this baseline, but retrieval is not selected or started.
