@@ -1,4 +1,5 @@
 import Foundation
+import BmuxSidebar
 import Testing
 
 #if canImport(bmux_DEV)
@@ -220,6 +221,66 @@ import Testing
         #expect(workspace.customTitle == "Shared Path")
         #expect(notifications.count == 1)
         #expect(notifications.first?.userInfo?[GhosttyNotificationKey.tabId] as? UUID == workspace.id)
+    }
+
+    @Test func sidebarTitleResolutionPrefersAuthoritativeLiveTitleOverStaleProvenanceTitle() {
+        let resolution = SidebarWorkspaceTitleResolution(
+            liveTitle: "Preventing regressions in bmux workspace title updates",
+            liveTitleIsAuthoritative: true,
+            provenanceTitle: "Company-Cam-API"
+        )
+
+        #expect(resolution.title == "Preventing regressions in bmux workspace title updates")
+        #expect(resolution.source == .live)
+        #expect(resolution.suppressedStaleProvenanceTitle)
+    }
+
+    @Test func sidebarTitleResolutionUsesProvenanceTitleWhenLiveTitleIsNotAuthoritative() {
+        let resolution = SidebarWorkspaceTitleResolution(
+            liveTitle: "Company-Cam-API",
+            liveTitleIsAuthoritative: false,
+            provenanceTitle: "Audit checklist completion"
+        )
+
+        #expect(resolution.title == "Audit checklist completion")
+        #expect(resolution.source == .provenance)
+        #expect(!resolution.suppressedStaleProvenanceTitle)
+    }
+
+    @Test func sidebarPresentationKeyChangesWhenResolvedTitleChanges() {
+        let first = Self.sidebarPresentationKey(titleResolution: SidebarWorkspaceTitleResolution(
+            liveTitle: "Company-Cam-API",
+            liveTitleIsAuthoritative: true,
+            provenanceTitle: "Company-Cam-API"
+        ))
+        let second = Self.sidebarPresentationKey(titleResolution: SidebarWorkspaceTitleResolution(
+            liveTitle: "Preventing regressions in bmux workspace title updates",
+            liveTitleIsAuthoritative: true,
+            provenanceTitle: "Company-Cam-API"
+        ))
+
+        #expect(first != second)
+    }
+
+    private static func sidebarPresentationKey(
+        titleResolution: SidebarWorkspaceTitleResolution
+    ) -> SidebarWorkspaceSnapshotBuilder.PresentationKey {
+        SidebarWorkspaceSnapshotBuilder.PresentationKey(
+            showsWorkspaceDescription: true,
+            usesVerticalBranchLayout: true,
+            showsGitBranch: true,
+            usesViewportAwarePath: false,
+            visibleAuxiliaryDetails: SidebarWorkspaceAuxiliaryDetailVisibility(
+                showsMetadata: true,
+                showsLog: true,
+                showsProgress: true,
+                showsBranchDirectory: true,
+                showsPullRequests: true,
+                showsPorts: true
+            ),
+            provenanceDisplaySnapshot: nil,
+            titleResolution: titleResolution
+        )
     }
 
     // MARK: - Panel titles
