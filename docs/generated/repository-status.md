@@ -13,10 +13,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`)
-- Slice state: draft
-- Owner: shared
-- Repository state: active
+- Active slice: none selected
+- Repository state: none selected
 
 ## Release
 
@@ -33,7 +31,7 @@ Repository: `BrianBusby/bmux`
 | Knowledge Compiler Cross Session Bridge | planned |
 | Native Provider Session View | implemented |
 | Normal Coding Agent Evidence Ingestion | implemented |
-| Provenance Engine Agent Accessible Cross Session Retrieval | planned |
+| Provenance Engine Agent Accessible Cross Session Retrieval | implemented |
 | Provenance Engine Blocker Approach Change Semantics | implemented |
 | Provenance Engine Coding Agent Assistant Outputs | implemented |
 | Provenance Engine Coding Agent Current Activity | implemented |

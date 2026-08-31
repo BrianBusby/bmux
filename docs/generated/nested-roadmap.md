@@ -20,7 +20,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Active Implementation
 
-- Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) - maturity: active; status: active; selection: current; owner: Provenance Engine
+- None.
 
 ### Selected Next
 
@@ -42,15 +42,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - React Terminal live interaction productization (`react_terminal_productization`) is not dependency-satisfying
   - React Terminal live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
 - Proactive bmux cross-session awareness (`proactive_bmux_cross_session_awareness`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
-  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity active; requires validated for gate `cross_session_retrieval_validated`: Proactive presentation should depend on observed useful retrieval and relevance behavior.
+  - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
-  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity active; requires validated for gate `cross_session_retrieval_validated`: Automatic context assembly should be an experiment after explicit cross-session retrieval proves useful.
+  - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Knowledge Compiler cross-session bridge (`knowledge_compiler_cross_session_bridge`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
-  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) is not dependency-satisfying
-  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity active; requires validated for gate `cross_session_retrieval_validated`: The bridge should consume validated working-memory retrieval behavior, not transient session statements.
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) has maturity gated; requires active for gate `compiler_implementation_available`: Cross-session outcomes cannot be promoted into durable knowledge until the Knowledge Compiler exists.
 - Continuous presentation learning (`continuous_presentation_learning`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) is not dependency-satisfying
@@ -635,7 +631,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
         Gate `cross_session_semantics_validated`: requires `rich_cross_session_work_state_semantics` maturity validated; reason: Retrieval and presentation should use validated semantic brief fields for blockers, decisions, and outcomes.
         Gate `artifact_collision_awareness_validated`: requires `cross_session_artifact_collision_awareness` maturity validated; reason: Retrieval and presentation should use validated artifact collision explanations before surfacing file-overlap claims.
         Rationale: Makes cross-session awareness accessible to agents and bmux only after the relationship and brief semantics prove reliable.
-        - **Agent-accessible cross-session retrieval** (`agent_accessible_cross_session_retrieval`) - slice; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: retrieval; layer: retrieval engine; execution: current / Shared; parallelism: serial; delivery: draft; acceptance: proposed; maturity: active
+        - **Agent-accessible cross-session retrieval** (`agent_accessible_cross_session_retrieval`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: retrieval; layer: retrieval engine; execution: complete / Shared; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
           Depends on: `cross_session_work_awareness_foundation`, `rich_cross_session_work_state_semantics`, `cross_session_artifact_collision_awareness`
           Enables: `proactive_bmux_cross_session_awareness`, `cross_session_context_assembly_experiment`, `knowledge_compiler_cross_session_bridge`
           Expected contract domains: `cross_session_agent_query`, `bounded_evidence_backed_retrieval`, `related_session_briefs`
@@ -643,12 +639,13 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `retrieval_contracts`, `related_session_contract`, `bmux_context_assembly`
           Contract dependencies: `related_session_read_contract`, `cross_session_semantic_briefs`, `artifact_collision_explanations`
           Worktree required: true
-          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/agent-accessible-cross-session-retrieval`; branch: `agent-accessible-cross-session-retrieval`; agent: `Codex`
           Execution notes: Implemented after PR #87 merged and Project Truth validated rich_cross_session_work_state_semantics. Scope is explicit bounded agent-facing CLI retrieval over existing PE related-session and artifact-collision read contracts; no prompt injection, proactive UI, coordination policy, arbitrary file-history search, or new inference layer is in scope. Local validation covered focused bmux-unit CLI dispatch, the full PE package suite, no-socket help, localization, tagged build 509, and an isolated two-session demo.
           Gate `cross_session_foundation_validated`: requires `cross_session_work_awareness_foundation` maturity validated; reason: Agents should query cross-session state only after the relationship/read model is validated.
           Gate `cross_session_semantics_validated`: requires `rich_cross_session_work_state_semantics` maturity validated; reason: Agent questions about blockers, decisions, failed approaches, and validation require validated semantic brief fields.
           Gate `artifact_collision_awareness_validated`: requires `cross_session_artifact_collision_awareness` maturity validated; reason: Agent questions about file or component collisions need validated artifact-overlap explanations.
+          Evidence: BrianBusby/bmux@6be29aaa60ff, BrianBusby/bmux#88 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Provide explicit bounded agent queries over PE-owned cross-session state instead of blindly injecting historical context or exposing full transcripts.
+          Acceptance reason: Implemented as two explicit `bmux provenance sessions` retrieval operations backed by public PE `relatedSessions(...)` and `artifactCollisions(...)` reads. The commands require explicit PE session ids, accept explicit databases without a live app socket, enforce finite limits and timestamp/path validation, preserve exact revision reads and missing/empty/partial distinctions, render compact localized text, emit stable JSON, document the target-session changed-artifact collision limitation, and include deterministic fixtures plus a reproducible two-session demo. Delivery is open in PR #88 and acceptance is not claimed until review and merge evidence support it.
           Acceptance criteria: Expose explicit agent retrieval CLI commands over existing PE related-session and artifact-collision reads.; Require explicit PE session ids and selected local databases; do not infer from focus or require a live app socket.; Support bounded limits, recent-time filters, exact historical revisions, artifact-path filters, stale classification, and clear malformed-argument failures.; Preserve JSON contract fields for relationship reasons, repository/worktree/branch/HEAD boundaries, semantic claims, evidence references, revisions, freshness, completeness, stale/partial states, and omissions.; Preserve the collision limitation that discovery starts from the target session's recorded changed artifacts and never treats same-path different-repository work as a collision.; Keep the reads workflow-neutral: no ingestion, mutation, prompt/context injection, notification, raw transcript sharing, or unrelated secret access.; Verify through real command dispatch, deterministic PE fixtures, no-socket help, documentation, localization, and a reproducible two-session demonstration.
         - **Proactive bmux cross-session awareness** (`proactive_bmux_cross_session_awareness`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: semantic understanding; layer: consumer presentation; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
           Depends on: `agent_accessible_cross_session_retrieval`, `cross_session_artifact_collision_awareness`
@@ -693,9 +690,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) | serial | /Users/brianbusby/repos/.bmux-worktrees/agent-accessible-cross-session-retrieval | agent-accessible-cross-session-retrieval | Codex | `bmux_context_assembly`, `related_session_contract`, `retrieval_contracts` | `artifact_collision_explanations`, `cross_session_semantic_briefs`, `related_session_read_contract` | single active assignment |
+- Active implementation assignments: none selected.
 
 ### Dependency-Ready Preflight
 

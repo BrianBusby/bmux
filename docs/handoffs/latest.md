@@ -6,9 +6,9 @@
 - Branch: `agent-accessible-cross-session-retrieval`
 - Worktree: `/Users/brianbusby/repos/.bmux-worktrees/agent-accessible-cross-session-retrieval`
 - Base: `origin/main` at `e90cbf54e7bcc75c9103c664143f03baabd20cb0`
-- PR: pending until this branch is pushed and opened
+- PR: https://github.com/BrianBusby/bmux/pull/88
 - Tagged build: `agent-accessible-cross-session-retrieval`, local build number 509
-- Status: implemented and locally validated in Project Truth; delivery remains draft until the PR is opened and remains unmerged/unaccepted
+- Status: implemented and locally validated in Project Truth; delivery is open in PR #88 and remains unmerged/unaccepted
 
 ## Current Generated Truth
 
@@ -99,8 +99,9 @@ Passed locally on 2026-08-31:
 - `python3 scripts/check-workspace-package-groups.py --check`
 - `python3 scripts/swift_file_length_budget.py --repo-root . --base-ref origin/main`
 
-Project Truth validate/generate/check/ci and `git diff --check` are part of the
-final guard pass before commit.
+`./scripts/project-docs validate`, `./scripts/project-docs generate`,
+`./scripts/project-docs check`, authenticated `./scripts/project-docs ci`, and
+`git diff --check` passed during the final guard pass.
 
 Localization audit: new bmux provenance CLI help, argument errors, and text
 presentation strings were added to `Resources/Localizable.xcstrings` with
