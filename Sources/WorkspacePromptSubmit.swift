@@ -159,12 +159,14 @@ extension TabManager {
     func handlePromptSubmit(
         workspaceId: UUID,
         message: String?,
+        sessionID: String? = nil,
         surfaceId: UUID? = nil,
         iMessageModeEnabled: Bool = IMessageModeSettings.isEnabled()
     ) -> (messageRecorded: Bool, reordered: Bool, index: Int)? {
         handleConversationMessage(
             workspaceId: workspaceId,
             message: message,
+            sessionID: sessionID,
             surfaceId: surfaceId,
             iMessageModeEnabled: iMessageModeEnabled,
             kind: .promptSubmission,
@@ -192,6 +194,7 @@ extension TabManager {
     private func handleConversationMessage(
         workspaceId: UUID,
         message: String?,
+        sessionID: String? = nil,
         surfaceId: UUID? = nil,
         iMessageModeEnabled: Bool,
         kind: ConversationMessageKind,
@@ -211,7 +214,7 @@ extension TabManager {
                 workspaceId: workspaceId,
                 record: workspace.recordSubmittedPullRequestMention(message, surfaceId: surfaceId)
             )
-            messageRecorded = workspace.recordSubmittedMessage(message)
+            messageRecorded = workspace.recordSubmittedMessage(message, sessionID: sessionID)
             if messageRecorded {
                 BmuxEventBus.shared.publishWorkspacePromptSubmitted(
                     workspaceId: workspaceId,

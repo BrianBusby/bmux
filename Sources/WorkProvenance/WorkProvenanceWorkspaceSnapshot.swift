@@ -61,6 +61,9 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
     /// Durable submitted prompt display text for the workspace, when known.
     let lastSubmittedPrompt: String?
 
+    /// Coding-agent session id linked to `lastSubmittedPrompt`, when known.
+    let lastSubmittedPromptSessionID: String?
+
     /// Submission timestamp for `lastSubmittedPrompt`, when known.
     let lastSubmittedPromptSubmittedAt: Date?
 
@@ -78,6 +81,7 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
         pullRequest: PullRequest? = nil,
         currentWorkSummary: String? = nil,
         lastSubmittedPrompt: String? = nil,
+        lastSubmittedPromptSessionID: String? = nil,
         lastSubmittedPromptSubmittedAt: Date? = nil,
         explicitlyClearedFields: [String] = []
     ) {
@@ -90,6 +94,7 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
         self.pullRequest = pullRequest
         self.currentWorkSummary = currentWorkSummary
         self.lastSubmittedPrompt = lastSubmittedPrompt
+        self.lastSubmittedPromptSessionID = lastSubmittedPromptSessionID
         self.lastSubmittedPromptSubmittedAt = lastSubmittedPromptSubmittedAt
         self.explicitlyClearedFields = explicitlyClearedFields
     }
@@ -101,6 +106,7 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
         let pullRequest = workspace.provenancePullRequestSnapshot()
         let currentWorkSummary = workspace.progress?.label
         let lastSubmittedPrompt = workspace.latestSubmittedMessage
+        let lastSubmittedPromptSessionID = workspace.latestSubmittedPromptSessionID
         var explicitlyClearedFields = Set(workspace.workspaceDisplayExplicitClearedFields)
         var knownFields: [String] = []
         if branch != nil {
@@ -119,6 +125,10 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
             explicitlyClearedFields.remove("last_submitted_prompt")
             knownFields.append("last_submitted_prompt")
         }
+        if lastSubmittedPromptSessionID != nil {
+            explicitlyClearedFields.remove("last_submitted_prompt_session_id")
+            knownFields.append("last_submitted_prompt_session_id")
+        }
         workspace.markWorkspaceDisplayFieldsKnown(knownFields)
         self.init(
             workspaceID: workspace.id,
@@ -130,6 +140,7 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
             pullRequest: pullRequest,
             currentWorkSummary: currentWorkSummary,
             lastSubmittedPrompt: lastSubmittedPrompt,
+            lastSubmittedPromptSessionID: lastSubmittedPromptSessionID,
             lastSubmittedPromptSubmittedAt: workspace.latestSubmittedAt,
             explicitlyClearedFields: explicitlyClearedFields.sorted()
         )

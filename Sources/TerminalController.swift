@@ -5694,6 +5694,7 @@ class TerminalController {
                 _ = tabManager.handlePromptSubmit(
                     workspaceId: workspaceId,
                     message: event.submittedPromptMessage,
+                    sessionID: event.sessionId,
                     surfaceId: surfaceId,
                     iMessageModeEnabled: iMessageModeEnabled
                 )

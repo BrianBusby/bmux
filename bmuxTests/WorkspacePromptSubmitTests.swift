@@ -146,12 +146,15 @@ struct WorkspacePromptSubmitTests {
         let outcome = try #require(manager.handlePromptSubmit(
             workspaceId: workspace.id,
             message: "preserve this prompt in workspace display",
+            sessionID: " session-1 ",
             iMessageModeEnabled: false
         ))
 
         #expect(outcome.messageRecorded)
+        #expect(workspace.latestSubmittedPromptSessionID == "session-1")
         #expect(notificationCount == 1)
         #expect(!workspace.workspaceDisplayExplicitClearedFields.contains("last_submitted_prompt"))
+        #expect(!workspace.workspaceDisplayExplicitClearedFields.contains("last_submitted_prompt_session_id"))
     }
 
     @Test func testAssistantFinalMessageRecordsMessageAndMovesWorkspaceToTopWhenIMessageModeEnabled() throws {

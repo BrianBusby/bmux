@@ -71,6 +71,7 @@ struct WorkProvenanceStableIDFactory: Sendable {
         projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord],
         currentWorkSummary: String?,
         lastSubmittedPrompt: String?,
+        lastSubmittedPromptSessionID: String?,
         lastSubmittedPromptSubmittedAt: Date?,
         explicitlyClearedFields: [String]
     ) -> String {
@@ -110,6 +111,7 @@ struct WorkProvenanceStableIDFactory: Sendable {
             projectLinkList,
             currentWorkSummary ?? "",
             lastSubmittedPrompt ?? "",
+            lastSubmittedPromptSessionID ?? "",
             promptSubmittedAt,
             clearList
         ]
