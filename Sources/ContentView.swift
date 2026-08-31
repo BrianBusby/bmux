@@ -10139,11 +10139,11 @@ struct VerticalTabsSidebar: View {
                 unreadCount: sidebarUnread.unreadCount(forWorkspaceId: workspace.id)
             )
         }
-        let selectedWorkspace = tabManager.tabs.first { $0.id == selectedId }
+        let selectedWorkspaceTitle = workspaces.first { $0.id == selectedId }?.title ?? ""
         let snapshot = CustomSidebarContextSnapshot(
             workspaces: workspaces,
             selectedWorkspaceId: selectedId,
-            selectedWorkspaceTitle: selectedWorkspace?.customTitle ?? selectedWorkspace?.title ?? "",
+            selectedWorkspaceTitle: selectedWorkspaceTitle,
             totalUnreadCount: sidebarUnread.totalUnreadCount,
             now: now
         )
@@ -11250,36 +11250,50 @@ struct VerticalTabsSidebar: View {
 
     private func extensionWorkspaceSnapshot(for workspace: Workspace) -> BmuxSidebarProviderWorkspace {
         let rootPath = extensionSidebarRootPath(for: workspace)
-        let pullRequests = workspace.sidebarPullRequestsInDisplayOrder()
+        let orderedPanelIds = workspace.sidebarOrderedPanelIds()
+        let provenanceDisplaySnapshot = tabManager.workProvenanceRuntime?
+            .workspaceDisplayCurrentStateSnapshot(for: workspace)
+        let pullRequestDisplays = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: workspace.sidebarPullRequestsInDisplayOrder(orderedPanelIds: orderedPanelIds),
+            provenancePullRequest: provenanceDisplaySnapshot?.pullRequest,
+            provenanceCurrentDirectory: provenanceDisplaySnapshot?.currentDirectory,
+            provenanceBranch: provenanceDisplaySnapshot?.branch,
+            latestSubmittedMessage: provenanceDisplaySnapshot?.lastSubmittedPrompt ?? workspace.latestSubmittedMessage,
+            latestConversationMessage: workspace.latestConversationMessage,
+            label: String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
+        )
+        let providerPullRequests: [BmuxSidebarProviderPullRequest] = pullRequestDisplays.compactMap { pullRequest -> BmuxSidebarProviderPullRequest? in
+            guard let url = pullRequest.url else { return nil }
+            return BmuxSidebarProviderPullRequest(
+                number: pullRequest.number,
+                title: pullRequest.title,
+                label: pullRequest.label,
+                url: url.absoluteString,
+                status: pullRequest.status.rawValue,
+                ownerLogin: pullRequest.ownerLogin,
+                ownerURL: pullRequest.ownerURL?.absoluteString,
+                branch: pullRequest.branch,
+                isStale: pullRequest.isStale
+            )
+        }
         return BmuxSidebarProviderWorkspace(
             id: workspace.id,
-            title: workspace.title,
+            title: workspace.customTitle ?? provenanceDisplaySnapshot?.title ?? workspace.title,
             customDescription: workspace.customDescription,
             isPinned: workspace.isPinned,
             rootPath: rootPath,
             projectRootPath: workspace.extensionSidebarProjectRootPath,
-            branchSummary: workspace.sidebarGitBranchesInDisplayOrder().first?.branch,
+            branchSummary: provenanceDisplaySnapshot?.branch
+                ?? workspace.sidebarGitBranchesInDisplayOrder().first?.branch,
             remoteDisplayTarget: workspace.remoteDisplayTarget,
             remoteConnectionState: workspace.remoteConnectionState.rawValue,
             unreadCount: sidebarUnread.unreadCount(forWorkspaceId: workspace.id),
             latestNotificationText: sidebarUnread.latestNotificationText(forWorkspaceId: workspace.id),
-            latestSubmittedMessage: workspace.latestSubmittedMessage,
-            latestSubmittedAt: workspace.latestSubmittedAt,
+            latestSubmittedMessage: provenanceDisplaySnapshot?.lastSubmittedPrompt ?? workspace.latestSubmittedMessage,
+            latestSubmittedAt: provenanceDisplaySnapshot?.lastSubmittedPromptSubmittedAt ?? workspace.latestSubmittedAt,
             listeningPorts: workspace.listeningPorts,
-            pullRequestURLs: pullRequests.map { $0.url.absoluteString },
-            pullRequests: pullRequests.map {
-                BmuxSidebarProviderPullRequest(
-                    number: $0.number,
-                    title: $0.title,
-                    label: $0.label,
-                    url: $0.url.absoluteString,
-                    status: $0.status.rawValue,
-                    ownerLogin: $0.ownerLogin,
-                    ownerURL: $0.ownerURL?.absoluteString,
-                    branch: $0.branch,
-                    isStale: $0.isStale
-                )
-            },
+            pullRequestURLs: providerPullRequests.map { $0.url },
+            pullRequests: providerPullRequests,
             panelDirectories: workspace.sidebarFilesystemDirectoriesInDisplayOrder(),
             gitBranches: workspace.sidebarGitBranchesInDisplayOrder().map {
                 BmuxSidebarProviderGitBranch(branch: $0.branch, isDirty: $0.isDirty)

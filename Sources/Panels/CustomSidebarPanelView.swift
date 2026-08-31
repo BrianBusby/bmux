@@ -102,11 +102,11 @@ struct CustomSidebarPanelView: View {
                 unreadCount: sidebarUnread.unreadCount(forWorkspaceId: workspace.id)
             )
         }
-        let selectedWorkspace = tabManager.tabs.first { $0.id == selectedId }
+        let selectedWorkspaceTitle = workspaces.first { $0.id == selectedId }?.title ?? ""
         let snapshot = CustomSidebarContextSnapshot(
             workspaces: workspaces,
             selectedWorkspaceId: selectedId,
-            selectedWorkspaceTitle: selectedWorkspace?.customTitle ?? selectedWorkspace?.title ?? "",
+            selectedWorkspaceTitle: selectedWorkspaceTitle,
             totalUnreadCount: sidebarUnread.totalUnreadCount,
             now: now
         )

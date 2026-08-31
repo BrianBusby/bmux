@@ -139,7 +139,9 @@ import Testing
         let ticket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
             id: "STE-1964",
             title: title,
-            url: nil
+            url: nil,
+            ownerName: nil,
+            ownerURL: nil
         )
 
         #expect(ticket.linkText == expected)
@@ -190,6 +192,20 @@ import Testing
         #expect(row.ownerLogin == "BrianBusby")
         #expect(row.ownerURL == URL(string: "https://github.com/BrianBusby"))
         #expect(row.isFromProvenance == false)
+    }
+
+    @Test func livePullRequestRowsPreserveKnownBranch() throws {
+        let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: [try Self.livePullRequest(number: 26171, branch: "inp-2153-advanced-checklists")],
+            provenancePullRequest: nil,
+            latestSubmittedMessage: nil,
+            latestConversationMessage: nil,
+            label: "PR"
+        )
+
+        let row = try #require(rows.first)
+        #expect(row.number == 26171)
+        #expect(row.branch == "inp-2153-advanced-checklists")
     }
 
     @Test func livePullRequestRowsPreserveKnownTitle() throws {
@@ -249,14 +265,19 @@ import Testing
     @Test func provenancePullRequestRendersWhenPromptMentionsSameNumber() throws {
         let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
             livePullRequests: [],
-            provenancePullRequest: try Self.provenancePullRequest(number: 26201),
+            provenancePullRequest: try Self.provenancePullRequest(
+                number: 26201,
+                branch: "inp-2153-advanced-checklists"
+            ),
             latestSubmittedMessage: "continue checking pull 26201",
             latestConversationMessage: nil,
             label: "PR"
         )
 
         #expect(rows.map(\.number) == [26201])
-        #expect(rows.first?.isFromProvenance == true)
+        let row = try #require(rows.first)
+        #expect(row.isFromProvenance == true)
+        #expect(row.branch == "inp-2153-advanced-checklists")
     }
 
     @Test func provenancePullRequestRendersForPullRequestScopedWorktree() throws {
@@ -379,18 +400,25 @@ import Testing
             status: .open,
             ownerLogin: nil,
             ownerURL: nil,
+            branch: nil,
             isStale: isStale,
             isFromProvenance: false
         )
     }
 
-    private static func livePullRequest(number: Int, title: String? = nil, status: SidebarPullRequestStatus = .open) throws -> SidebarPullRequestState {
+    private static func livePullRequest(
+        number: Int,
+        title: String? = nil,
+        status: SidebarPullRequestStatus = .open,
+        branch: String? = nil
+    ) throws -> SidebarPullRequestState {
         SidebarPullRequestState(
             number: number,
             title: title,
             label: "PR",
             url: try #require(URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/\(number)")),
-            status: status
+            status: status,
+            branch: branch
         )
     }
 
@@ -398,7 +426,8 @@ import Testing
         number: Int,
         status: String = "open",
         ownerLogin: String? = nil,
-        ownerURL: String? = nil
+        ownerURL: String? = nil,
+        branch: String? = nil
     ) throws -> WorkspaceDisplayCurrentStatePullRequestSnapshot {
         let updatedAt = Date(timeIntervalSince1970: 900)
         let record = ProvenanceWorkspaceDisplayRecord(
@@ -415,7 +444,7 @@ import Testing
             pullRequestOwnerLogin: ownerLogin,
             pullRequestOwnerURL: ownerURL,
             pullRequestStatus: status,
-            pullRequestBranch: nil,
+            pullRequestBranch: branch,
             pullRequestIsStale: false,
             isDirty: nil,
             ticketIDs: [],

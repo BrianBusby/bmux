@@ -29,6 +29,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         let status: SidebarPullRequestStatus
         let ownerLogin: String?
         let ownerURL: URL?
+        let branch: String?
         let isStale: Bool
         let isFromProvenance: Bool
 
@@ -46,6 +47,8 @@ struct SidebarWorkspaceSnapshotBuilder {
         let id: String
         let title: String?
         let url: URL?
+        let ownerName: String?
+        let ownerURL: URL?
 
         var linkText: String {
             let trimmedTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -157,6 +160,7 @@ struct SidebarWorkspaceSnapshotBuilder {
                 login: pullRequest.ownerLogin,
                 url: pullRequest.ownerURL
             ),
+            branch: pullRequest.branch,
             isStale: pullRequest.isStale,
             isFromProvenance: true
         )]
@@ -180,6 +184,7 @@ struct SidebarWorkspaceSnapshotBuilder {
             status: pullRequest.status,
             ownerLogin: ownerLogin,
             ownerURL: ownerURL,
+            branch: pullRequest.branch,
             isStale: pullRequest.isStale,
             isFromProvenance: false
         )
@@ -212,6 +217,7 @@ struct SidebarWorkspaceSnapshotBuilder {
             status: .open,
             ownerLogin: nil,
             ownerURL: nil,
+            branch: nil,
             isStale: false,
             isFromProvenance: false
         )

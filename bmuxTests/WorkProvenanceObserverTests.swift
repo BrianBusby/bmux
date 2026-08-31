@@ -428,7 +428,9 @@ struct WorkProvenanceObserverTests {
         let sidebarTicket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
             id: ticketLink.id,
             title: ticketLink.title,
-            url: ticketLink.url
+            url: ticketLink.url,
+            ownerName: ticketLink.ownerName,
+            ownerURL: ticketLink.ownerURL
         )
         let sidebarProject = SidebarWorkspaceSnapshotBuilder.ProjectDisplay(
             id: projectLink.id,
@@ -437,6 +439,8 @@ struct WorkProvenanceObserverTests {
         )
         #expect(ticketLink.url == URL(string: "https://linear.app/companycam/issue/INP-2122"))
         #expect(sidebarTicket.linkText == "INP-2122: Canonical domain mutation paths")
+        #expect(sidebarTicket.ownerName == "Brian Busby")
+        #expect(sidebarTicket.ownerURL == nil)
         #expect(projectLink.url == URL(string: "https://linear.app/companycam/project/context-efficiency-c1b9a"))
         #expect(sidebarProject.linkText == "Context Efficiency")
         #expect(await linearServer.requests == [

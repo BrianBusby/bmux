@@ -6,7 +6,9 @@ extension TabItemView {
             SidebarWorkspaceSnapshotBuilder.TicketDisplay(
                 id: $0.id,
                 title: $0.title,
-                url: $0.url
+                url: $0.url,
+                ownerName: $0.ownerName,
+                ownerURL: $0.ownerURL
             )
         } ?? []
     }
