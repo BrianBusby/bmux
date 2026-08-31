@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: none selected
+- Active slice: Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`)
+- Slice state: draft
+- Owner: shared
+- Repository state: active
 
 ## Release
 

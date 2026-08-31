@@ -223,7 +223,7 @@ extension BMUXCLI {
         printProvenanceWorktreeList(list, jsonOutput: jsonOutput)
     }
 
-    private func runProvenanceSessions(commandArgs: [String], jsonOutput: Bool) async throws {
+    func runProvenanceSessionsTree(commandArgs: [String], jsonOutput: Bool) async throws {
         let commandName = "provenance sessions tree"
         let (databasePath, remainingAfterDatabase) = parseOption(commandArgs, name: "--database")
         var remaining = remainingAfterDatabase

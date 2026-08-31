@@ -79,6 +79,7 @@ Environment:
 | `omc` | Launch Oh My Claude Code with bmux pane integration. |
 | `hooks` | Install, uninstall, and run agent hook integrations under one namespace. |
 | `codex` | Compatibility alias for installing or uninstalling Codex hooks. |
+| `provenance` | Inspect Provenance Engine state and bounded retrieval projections without requiring a live bmux socket. Supports `--json` on adopted reads. |
 | `ping` | Check socket connectivity. |
 | `capabilities` | Print server capabilities as JSON. |
 | `events` | Stream reconnectable bmux events as newline-delimited JSON. |
@@ -206,6 +207,48 @@ Remotes subcommands:
 | `remotes list`, `remotes ls` | List the team's registered remotes (name, deviceId, routes, tag, last seen). Supports `--json`. |
 | `remotes add <name>` | Register or update a remote with one or more `--route <host:port>`. Supports `--tag` and `--json`. Idempotent on `<name>` (re-adding updates routes). The host must be a Tailscale address the phone can authenticate to (CGNAT `100.64.x.x`-`100.127.x.x` or `*.ts.net`); loopback, plain LAN IPs, and bare hostnames are rejected. |
 | `remotes remove <name-or-deviceId>` | Remove a remote you registered. Aliases `rm`, `delete`. Supports `--json`. |
+
+Provenance subcommands:
+
+| Command | Contract |
+| --- | --- |
+| `provenance explain <path>` | Explain file-level provenance for a path in the current Git worktree. Supports `--database <path>` and `--json`. |
+| `provenance context current` | Print the current PE context snapshot. Supports `--database <path>` and `--json`. |
+| `provenance worktrees list` | List PE-observed worktrees. Supports `--database <path>` and `--json`. |
+| `provenance sessions tree <session-id>` | Read the PE session tree for an explicit PE session id. Supports `--database <path>` and `--json`. |
+| `provenance sessions related <pe-session-id>` | Read the bounded related-session projection for an explicit target PE session id through `ProvenanceEngineClient.relatedSessions(...)`. Supports `--limit`, `--exclusion-limit`, `--updated-after`, `--revision`, `--database`, and `--json`. |
+| `provenance sessions collisions <pe-session-id>` | Read bounded artifact-collision candidates for an explicit target PE session id through `ProvenanceEngineClient.artifactCollisions(...)`. Supports `--limit`, `--related-session-limit`, `--exclusion-limit`, `--artifact-path`, `--updated-after`, `--stale-before`, `--revision`, `--database`, and `--json`. |
+| `provenance turn outcome <turn-id>` | Read an exact or latest Turn Outcome projection. Supports `--revision <revision-id>`, `--database <path>`, and `--json`. |
+| `provenance session outcome <session-id>` | Read an exact or latest Session Outcome projection. Supports `--revision <revision-id>`, `--database <path>`, and `--json`. |
+| `provenance import codex-transcripts` | Replay historical Codex JSONL transcripts into PE using canonical evidence IDs. Supports `--path <path>`, `--limit <count>`, `--database <path>`, and `--json`. |
+
+Provenance retrieval commands use explicit PE session ids. A provider thread id,
+workspace id, surface id, or focused tab is not a substitute. Agents can find PE
+session ids through `provenance context current`, `provenance worktrees list`,
+`provenance sessions tree`, and existing session/outcome reads, then pass the
+chosen id explicitly.
+
+Retrieval defaults and bounds are finite. `related --limit` defaults to `10` and
+allows `0...25`; `related --exclusion-limit` defaults to `10` and allows
+`0...50`. `collisions --limit` defaults to `10` and allows `0...25`;
+`--related-session-limit` defaults to `50` and allows `0...100`;
+`--exclusion-limit` defaults to `10` and allows `0...50`. Timestamp filters
+accept RFC 3339, such as `2026-08-31T05:44:25Z`, or Unix epoch seconds.
+Malformed arguments fail with non-zero exit status and diagnostics on stderr.
+
+`--revision` is an exact historical read. An unknown revision returns a valid
+not-found payload (`found: false`, `reason: no_revision`) rather than falling
+back to latest. Missing sessions and missing databases are also distinct from
+valid empty results. With an explicit `--database`, a missing database returns
+`found: false`, `reason: no_database` and does not create an empty database just
+to satisfy the read.
+
+Artifact-collision retrieval starts with the target session's recorded changed
+artifacts and compares those against bounded related sessions. `--artifact-path`
+only narrows those overlap candidates; it is not arbitrary file-history search
+before the target has touched the file. An empty result for a path therefore does
+not prove nobody else has worked on that path. Same normalized path in another
+repository is not an artifact collision.
 
 Theme subcommands:
 
@@ -457,6 +500,10 @@ the expected text without connecting to a bmux socket.
 - `bmux cloud --help` -> `Usage: bmux cloud <base|new|ls|status|snapshot|fork|restore|rm|exec|shell|attach|ssh|ssh-info> [args...]`
 - `bmux remotes --help` -> `Usage: bmux remotes <list|add|remove> [options]`
 - `bmux remote --help` -> `Usage: bmux remotes <list|add|remove> [options]`
+- `bmux provenance --help` -> `bmux provenance sessions related <pe-session-id>`
+- `bmux provenance sessions --help` -> `Usage: bmux provenance sessions <tree|related|collisions> [...]`
+- `bmux provenance sessions related --help` -> `Usage: bmux provenance sessions related <pe-session-id>`
+- `bmux provenance sessions collisions --help` -> `Usage: bmux provenance sessions collisions <pe-session-id>`
 - `bmux rpc --help` -> `Usage: bmux rpc <method> [json-params]`
 - `bmux help --help` -> `Usage: bmux help`
 - `bmux docs --help` -> `Usage: bmux docs [settings|shortcuts|api|browser|agents|dock]`

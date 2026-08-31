@@ -3213,7 +3213,7 @@ struct BMUXCLI {
         // Check for --help/-h on subcommands before resolving sockets,
         // so help text is available even when bmux is not running.
         let preSeparatorArgs = commandArgs.firstIndex(of: "--").map { commandArgs[..<$0] } ?? commandArgs[...]
-        if command != "__tmux-compat",
+        if command != "__tmux-compat", command != "provenance",
            preSeparatorArgs.contains(where: { $0 == "--help" || $0 == "-h" }) {
             if dispatchSubcommandHelp(command: command, commandArgs: commandArgs) {
                 return

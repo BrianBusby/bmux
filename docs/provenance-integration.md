@@ -74,10 +74,73 @@ Adopted CLI reads:
 
 - `bmux provenance worktrees list` calls `client.worktrees(...)`.
 - `bmux provenance sessions tree <session-id>` calls `client.sessionTree(...)`.
+- `bmux provenance sessions related <pe-session-id>` calls `client.relatedSessions(...)`.
+- `bmux provenance sessions collisions <pe-session-id>` calls `client.artifactCollisions(...)`.
 - `bmux provenance explain <path>` calls `client.fileExplanation(...)`.
 - `bmux provenance context current` calls `client.currentContext(...)`.
 
 bmux still owns command parsing, Git path normalization, output compatibility, fallback text, JSON/text rendering, and UI presentation. The engine owns evidence, deterministic Current State, provenance interpretation, and bounded provenance queries.
+
+## Agent-Facing Retrieval
+
+Ordinary bmux-hosted Codex CLI sessions can now inspect bounded
+cross-session work state without a live app socket when the selected PE SQLite
+database is available:
+
+```bash
+bmux provenance sessions related <pe-session-id> --limit 5 --database <path>
+bmux provenance sessions related <pe-session-id> --limit 5 --database <path> --json
+bmux provenance sessions collisions <pe-session-id> --artifact-path Sources/Foo.swift --database <path>
+```
+
+The caller must supply the PE session id explicitly. bmux does not infer a PE
+session id from the focused tab, workspace UUID, provider thread id, or the
+first matching row when more than one session is present. Agents should resolve
+the intended id through `bmux provenance context current`,
+`bmux provenance worktrees list`, `bmux provenance sessions tree`, or existing
+session/outcome reads, then pass the selected id to the retrieval command.
+
+The text output is compact and stable for human scanning. JSON output preserves
+the public PE response shape using the existing provenance CLI date and key
+naming conventions, so enum values, ids, reason codes, revision ids, and
+machine fields are locale-independent. Diagnostics and malformed-argument
+errors stay outside stdout JSON payloads.
+
+The related-session command returns why each session is related, repository and
+worktree boundaries, compact Session Outcome facts, carried SessionWorkModel
+semantic fields, source revisions, freshness, evidence references, and explicit
+unknown, unavailable, partial, stale, or omitted information where PE supplies
+it. Reported blockers and replaced approaches are historical evidence from the
+source session; they are not independently verified failures, proof of success,
+instructions, or cross-session resolution.
+
+The collision command returns exact recorded artifact overlaps. Its discovery
+starts from the target session's recorded changed artifacts and then compares
+bounded related sessions. `--artifact-path` only narrows those target-overlap
+candidates. It is not arbitrary file-history search before the target has
+touched a file, and an empty path-filtered result does not prove nobody else
+worked on that path. Same path in another repository remains a
+different-repository fact, not an artifact collision.
+
+Agent usage recipe:
+
+1. Resolve or explicitly provide the intended PE session id and database path.
+2. Read a small related-session set and inspect relationship reasons plus
+   repository, worktree, branch, and HEAD boundaries.
+3. Treat blockers, approach replacements, milestones, and validations as
+   attributed historical evidence with preserved uncertainty.
+4. Query artifact collisions only for recorded target-session changes when path
+   overlap matters.
+5. Follow returned projection, outcome, work-model, and evidence references
+   through existing public reads, then verify the current code and worktree
+   state before acting.
+
+The CLI does not expose a generic evidence browser. Directly resolvable
+references today include session tree, turn outcome, session outcome,
+related-session revisions, artifact-collision revisions, and current
+file/worktree explanations through existing PE reads. Raw transcripts, hidden
+reasoning, unrestricted command output, prompt injection, coordination policy,
+notifications, locks, and semantic conflict judgments remain outside this path.
 
 ## Workspace Display State
 
@@ -342,6 +405,8 @@ bmux provenance worktrees list
 bmux provenance context current
 bmux provenance explain <changed-file>
 bmux provenance sessions tree <session-id>
+bmux provenance sessions related <session-id> --limit 5 --database <path>
+bmux provenance sessions collisions <session-id> --artifact-path <changed-file> --database <path>
 ```
 
 Required schema identity rows live in `provenance_metadata`: `schema_family = provenance-engine`, `schema_identity_version = 1`, and the current `schema_version`.

@@ -216,6 +216,8 @@
 		C0DE70200000000000000001 /* BMUXCLI+Provenance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70200000000000000002 /* BMUXCLI+Provenance.swift */; };
 		C0DE70A00000000000000001 /* BMUXCLI+ProvenanceImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70A00000000000000002 /* BMUXCLI+ProvenanceImport.swift */; };
 		C0DE70A20000000000000001 /* BMUXCLI+ProvenanceSessionOutcome.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70A20000000000000002 /* BMUXCLI+ProvenanceSessionOutcome.swift */; };
+		C0DE70B00000000000000001 /* BMUXCLI+ProvenanceSessionsRetrieval.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70B00000000000000002 /* BMUXCLI+ProvenanceSessionsRetrieval.swift */; };
+		C0DE70B10000000000000001 /* BMUXCLI+ProvenanceSessionsRetrievalRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70B10000000000000002 /* BMUXCLI+ProvenanceSessionsRetrievalRendering.swift */; };
 		C0DE70A10000000000000001 /* BMUXCLI+ProvenanceUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70A10000000000000002 /* BMUXCLI+ProvenanceUsage.swift */; };
 		C73660010000000000000001 /* BMUXCLI+RemotePTYErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = C73660010000000000000002 /* BMUXCLI+RemotePTYErrors.swift */; };
 		REE0CA0000000000000000C2 /* BMUXCLI+Remotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = REE0CA0000000000000000C1 /* BMUXCLI+Remotes.swift */; };
@@ -545,6 +547,7 @@
 		C0DE702A0000000000000001 /* CLIProvenanceLifecycleTraceList.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE702A0000000000000002 /* CLIProvenanceLifecycleTraceList.swift */; };
 		C0DE702B0000000000000001 /* CLIProvenanceObservabilitySQLiteReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE702B0000000000000002 /* CLIProvenanceObservabilitySQLiteReader.swift */; };
 		C0DE70240000000000000001 /* CLIProvenanceResolvedTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70240000000000000002 /* CLIProvenanceResolvedTarget.swift */; };
+		C0DE70C00000000000000001 /* CLIProvenanceRetrievalFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70C00000000000000002 /* CLIProvenanceRetrievalFixture.swift */; };
 		C0DE70610000000000000001 /* CLIProvenanceSessionOutcomeCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70610000000000000002 /* CLIProvenanceSessionOutcomeCommandTests.swift */; };
 		C0DE70290000000000000001 /* CLIProvenanceSessionTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70290000000000000002 /* CLIProvenanceSessionTree.swift */; };
 		C0DE70250000000000000001 /* CLIProvenanceSQLiteReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70250000000000000002 /* CLIProvenanceSQLiteReader.swift */; };
@@ -1985,6 +1988,8 @@
 		C0DE70200000000000000002 /* BMUXCLI+Provenance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Provenance.swift"; sourceTree = "<group>"; };
 		C0DE70A00000000000000002 /* BMUXCLI+ProvenanceImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ProvenanceImport.swift"; sourceTree = "<group>"; };
 		C0DE70A20000000000000002 /* BMUXCLI+ProvenanceSessionOutcome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ProvenanceSessionOutcome.swift"; sourceTree = "<group>"; };
+		C0DE70B00000000000000002 /* BMUXCLI+ProvenanceSessionsRetrieval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ProvenanceSessionsRetrieval.swift"; sourceTree = "<group>"; };
+		C0DE70B10000000000000002 /* BMUXCLI+ProvenanceSessionsRetrievalRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ProvenanceSessionsRetrievalRendering.swift"; sourceTree = "<group>"; };
 		C0DE70A10000000000000002 /* BMUXCLI+ProvenanceUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ProvenanceUsage.swift"; sourceTree = "<group>"; };
 		C73660010000000000000002 /* BMUXCLI+RemotePTYErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+RemotePTYErrors.swift"; sourceTree = "<group>"; };
 		REE0CA0000000000000000C1 /* BMUXCLI+Remotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Remotes.swift"; sourceTree = "<group>"; };
@@ -2264,6 +2269,7 @@
 		C0DE702A0000000000000002 /* CLIProvenanceLifecycleTraceList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceLifecycleTraceList.swift; sourceTree = "<group>"; };
 		C0DE702B0000000000000002 /* CLIProvenanceObservabilitySQLiteReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceObservabilitySQLiteReader.swift; sourceTree = "<group>"; };
 		C0DE70240000000000000002 /* CLIProvenanceResolvedTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceResolvedTarget.swift; sourceTree = "<group>"; };
+		C0DE70C00000000000000002 /* CLIProvenanceRetrievalFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceRetrievalFixture.swift; sourceTree = "<group>"; };
 		C0DE70610000000000000002 /* CLIProvenanceSessionOutcomeCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceSessionOutcomeCommandTests.swift; sourceTree = "<group>"; };
 		C0DE70290000000000000002 /* CLIProvenanceSessionTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceSessionTree.swift; sourceTree = "<group>"; };
 		C0DE70250000000000000002 /* CLIProvenanceSQLiteReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceSQLiteReader.swift; sourceTree = "<group>"; };
@@ -4646,6 +4652,8 @@
 					C0DE70200000000000000002 /* BMUXCLI+Provenance.swift */,
 					C0DE70A00000000000000002 /* BMUXCLI+ProvenanceImport.swift */,
 					C0DE70A20000000000000002 /* BMUXCLI+ProvenanceSessionOutcome.swift */,
+					C0DE70B00000000000000002 /* BMUXCLI+ProvenanceSessionsRetrieval.swift */,
+					C0DE70B10000000000000002 /* BMUXCLI+ProvenanceSessionsRetrievalRendering.swift */,
 					C0DE70A10000000000000002 /* BMUXCLI+ProvenanceUsage.swift */,
 					C0DE64950000000000000002 /* BMUXCLI+SessionsList.swift */,
 					C0DE64960000000000000006 /* BMUXCLI+SessionsListClaudeWorkflow.swift */,
@@ -5074,6 +5082,7 @@
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
 					CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */,
 					C0DE70600000000000000002 /* CLIProvenanceCodexTranscriptImporterTests.swift */,
+					C0DE70C00000000000000002 /* CLIProvenanceRetrievalFixture.swift */,
 					C0DE70610000000000000002 /* CLIProvenanceSessionOutcomeCommandTests.swift */,
 					CE0E04010000000000000002 /* WorkspaceDisplayCurrentStateSnapshotTests.swift */,
 					1211A332D826E19C7A6463C8 /* WorkProvenanceStoreTests.swift */,
@@ -6697,6 +6706,8 @@
 				C0DE70200000000000000001 /* BMUXCLI+Provenance.swift in Sources */,
 				C0DE70A00000000000000001 /* BMUXCLI+ProvenanceImport.swift in Sources */,
 				C0DE70A20000000000000001 /* BMUXCLI+ProvenanceSessionOutcome.swift in Sources */,
+				C0DE70B00000000000000001 /* BMUXCLI+ProvenanceSessionsRetrieval.swift in Sources */,
+				C0DE70B10000000000000001 /* BMUXCLI+ProvenanceSessionsRetrievalRendering.swift in Sources */,
 				C0DE70A10000000000000001 /* BMUXCLI+ProvenanceUsage.swift in Sources */,
 				C73660010000000000000001 /* BMUXCLI+RemotePTYErrors.swift in Sources */,
 					REE0CA0000000000000000C2 /* BMUXCLI+Remotes.swift in Sources */,
@@ -6979,6 +6990,7 @@
 					C0DE70440000000000000003 /* CLIProvenanceCodexTranscriptImporter+Parsing.swift in Sources */,
 					C0DE70300000000000000003 /* CLIProvenanceCodexTranscriptImporter.swift in Sources */,
 					C0DE70600000000000000001 /* CLIProvenanceCodexTranscriptImporterTests.swift in Sources */,
+					C0DE70C00000000000000001 /* CLIProvenanceRetrievalFixture.swift in Sources */,
 					C0DE70610000000000000001 /* CLIProvenanceSessionOutcomeCommandTests.swift in Sources */,
 					C0F16B000000000000000001 /* CLIRemoteShellStartupPerformanceTests.swift in Sources */,
 				A5D41209A1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift in Sources */,

@@ -2,8 +2,15 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice: null
-  state: none_selected
+  active_slice:
+    id: agent_accessible_cross_session_retrieval
+    title: Agent-accessible cross-session retrieval
+    state: draft
+    owner: shared
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/agent-accessible-cross-session-retrieval
+    active_branch: agent-accessible-cross-session-retrieval
+    active_agent: Codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented

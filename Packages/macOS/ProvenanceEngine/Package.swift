@@ -16,6 +16,10 @@ let package = Package(
             name: "ProvenanceEngineSDK",
             targets: ["ProvenanceEngineSDK"]
         ),
+        .executable(
+            name: "ProvenanceRetrievalDemoSeed",
+            targets: ["ProvenanceRetrievalDemoSeed"]
+        ),
     ],
     targets: [
         .target(name: "ProvenanceEngineContracts"),
@@ -32,6 +36,14 @@ let package = Package(
             linkerSettings: [
                 .linkedLibrary("sqlite3"),
             ]
+        ),
+        .executableTarget(
+            name: "ProvenanceRetrievalDemoSeed",
+            dependencies: [
+                "ProvenanceEngineContracts",
+                "ProvenanceEngineSDK",
+            ],
+            path: "Examples/ProvenanceRetrievalDemoSeed"
         ),
         .testTarget(
             name: "ProvenanceEngineContractsTests",

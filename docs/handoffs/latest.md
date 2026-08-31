@@ -2,14 +2,13 @@
 
 ## Completed Slice
 
-- Slice: `rich_cross_session_work_state_semantics`
-- Branch: `rich-cross-session-work-state-semantics`
-- Worktree: `/Users/brianbusby/repos/.bmux-worktrees/rich-cross-session-work-state-semantics`
-- Base: `origin/main` at `88b0fb7ba5e7d0a4296806eec49c245456e2fbf2`
-- PR: https://github.com/BrianBusby/bmux/pull/87, merged at 2026-08-31T05:44:25Z
-- Merge commit: `adf55adb8a81f77a5b07e8fd129ad0d9cce2e149`
-- Implementation commits: `335d71518f94324ded81a68b6e0bc87c6618ff60`, `6022f6499f6a04ebcf8980530c6f439325a0f9fc`
-- Status: implemented, merged, and validated in Project Truth; delivery is no longer active
+- Slice: `agent_accessible_cross_session_retrieval`
+- Branch: `agent-accessible-cross-session-retrieval`
+- Worktree: `/Users/brianbusby/repos/.bmux-worktrees/agent-accessible-cross-session-retrieval`
+- Base: `origin/main` at `e90cbf54e7bcc75c9103c664143f03baabd20cb0`
+- PR: pending until this branch is pushed and opened
+- Tagged build: `agent-accessible-cross-session-retrieval`, local build number 509
+- Status: implemented and locally validated in Project Truth; delivery remains draft until the PR is opened and remains unmerged/unaccepted
 
 ## Current Generated Truth
 
@@ -19,80 +18,111 @@
 
 ## What Changed
 
-Provenance Engine related-session briefs now carry the useful work-state
-semantics already present in each source session's `SessionWorkModel`:
-milestones, blockers, approach changes, thread intent, turn intent, current
-activity, and session phase. The public read remains
-`ProvenanceEngineClient.relatedSessions(...)`.
+The bmux provenance CLI now exposes two explicit, bounded agent-facing reads:
 
-The related-session rule version is now `2`. Content fingerprints include the
-public semantic field content, including field state/reason, source-session
-scope, record identity, bounded structured payload, supporting factual
-revision, confidence, specificity, producer identity/version, status,
-supersession links, and evidence references.
-
-Known milestone, blocker, and approach-change payload arrays are bounded to ten
-items inside the related-session brief. Retained items keep their original
-record reference and evidence; omitted items add
-`related_session_semantic_payload_omitted:<kind>:<count>` to payload omission
-reasons and mark the semantic availability row `partial`.
-
-## Semantics
-
-Briefs distinguish known, unknown, unavailable, partial, and bounded-away
-semantic state. Missing or unknown fields do not mean "no blockers," "no failed
-approaches," "resolved work," verified completion, merge, or acceptance.
-Ended sessions do not imply blockers cleared.
-
-An active semantic record whose payload carries `unknownReason` is kept in the
-brief with its record identity and evidence, but its availability row is
-`unknown` with reason `source_semantic_unknown`, not `observed`.
-
-Milestone, blocker, and approach identities remain scoped to the originating
-session. Same names, same ids, or same activity/condition text across sessions
-do not create shared identity, cross-session resolution, or semantic conflict.
-Supported same-session milestone links are preserved; no new cross-session
-links are inferred.
-
-Relationship reasons remain factual and inspectable. Semantic work-state fields
-are not relationship reasons, relevance scores, artifact-collision judgments,
-coordination policy, or prompt/context input.
-
-## Example
-
-A sanitized SDK fixture appends this visible assistant output in a related
-session:
-
-```text
-Blocker: activity=run package suite; condition=database unavailable
-Approach change: objective=validate related work state; prior=full package suite; replacement=SQLite SDK fixture; state=replaced; reason=database unavailable
+```bash
+bmux provenance sessions related <pe-session-id> [options] [--json]
+bmux provenance sessions collisions <pe-session-id> [options] [--json]
 ```
 
-The target session's `relatedSessions(...)` response includes the related
-session brief with `coding_agent.blockers` and
-`coding_agent.approach_changes` semantic fields. Both fields have `scopeID`
-equal to the related session id, carry the original semantic record metadata,
-and preserve evidence references back to the assistant message. A later partial
-blocker replacement creates a new related-session content revision without
-moving the factual source evidence watermark; requesting the old revision id
-still returns the old semantic payload.
+`sessions related` calls the public PE
+`ProvenanceEngineClient.relatedSessions(...)` contract. `sessions collisions`
+calls `ProvenanceEngineClient.artifactCollisions(...)`. Both commands support
+explicit `--database`, bounded `--limit` and `--exclusion-limit`, recent-time
+filters, exact `--revision`, localized text output, and stable JSON output.
+Collision reads also support `--artifact-path`, `--related-session-limit`, and
+`--stale-before`.
+
+The existing `sessions tree`, `turn outcome`, `session outcome`, context,
+worktree, import, trace, and diagnostic commands are preserved.
+
+## Retrieval Semantics
+
+The commands require an explicit PE session id. They do not infer the caller
+from focused windows, provider thread ids, workspace ids, or the first available
+session. They can run without a live app socket when the selected PE database
+exists, and a missing database is reported as a distinct no-database result.
+
+Text output keeps the result compact while retaining target/source ids,
+relationship reasons, repository/worktree/branch/HEAD boundaries, outcome
+revision ids, work-model revision ids, semantic field state, semantic record
+identity, producer/version, confidence, factual support, evidence-reference
+counts, freshness, completeness, and omissions. JSON preserves the public
+contract payload shape using existing snake-case and epoch timestamp
+conventions.
+
+The collision command preserves the PE limitation: candidates start from the
+target session's recorded changed artifacts, and `--artifact-path` only narrows
+those overlap candidates. An empty result is not arbitrary file-history search
+and does not prove nobody else has worked on the path. Same relative paths in
+different repositories are not collisions.
+
+Retrieved blockers, approach replacements, validations, milestones, and prose
+remain historical evidence. They are not current instructions, verified
+failures, proof of success, merge state, acceptance, or coordination policy.
+
+## Demo
+
+`ProvenanceRetrievalDemoSeed` seeds an isolated PE SQLite database through the
+public SDK with two sessions:
+
+- Session A records a plan milestone, an explicit reported blocker, an approach
+  replacement, validation/file evidence, and a change to `Sources/Shared.swift`.
+- Session B records a separate PE identity and a change to the same
+  repository-relative path from a different worktree/branch/HEAD.
+
+The tagged app bundle CLI was then run with an explicit `--database` and a
+forced nonexistent socket. Observed output sizes were 3,844 bytes for related
+text, 79,859 bytes for related JSON with `--limit 1`, 1,175 bytes for collision
+text, and 5,548 bytes for untouched-path collision JSON. Observed timings were
+`real 4.70s` for related text and `real 0.05s` for collision text.
+
+The untouched-path collision query returned a valid empty result for
+`Sources/Untouched.swift`, demonstrating that the target-artifact limitation is
+visible instead of being advertised as generic file-history search.
+
+Full reproduction details and sanitized excerpts live in
+[agent-accessible-cross-session-retrieval-demo.md](../context-efficiency/agent-accessible-cross-session-retrieval-demo.md).
 
 ## Validation
 
-Passed locally on 2026-08-31. Focused related-session, blocker/approach, and SessionWorkModel SDK suites passed, and the full Provenance Engine package suite passed with 236 tests across 36 suites.
+Passed locally on 2026-08-31:
 
-Additional checks passed: Project Truth validate/generate/check, authenticated Project Truth CI, git diff whitespace check, Swift file-length budget, Package.resolved policy, workspace package grouping, and pbxproj test wiring. An unauthenticated Project Truth CI attempt first failed on GitHub API rate limits; the authenticated retry passed without printing a token.
+- `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -configuration Debug -destination 'platform=macOS' -derivedDataPath /Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-agent-accessible-cross-session-retrieval-tests -only-testing:bmuxTests/CLIProvenanceSessionOutcomeCommandTests`
+- `swift test --package-path Packages/macOS/ProvenanceEngine`
+- `BMUX_CLI_BIN=/Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-agent-accessible-cross-session-retrieval-tests/Build/Products/Debug/bmux python3 tests/test_cli_contract_help.py`
+- `xcrun xcstringstool compile --output-directory /tmp/bmux-retrieval-xcstrings-check Resources/Localizable.xcstrings`
+- `./scripts/reload.sh --tag agent-accessible-cross-session-retrieval`
+- Tagged app bundle CLI dogfood against `/tmp/bmux-provenance-retrieval-demo.kFEzkQ/provenance.sqlite`
+- `./scripts/lint-pbxproj-test-wiring.sh`
+- `python3 scripts/check-package-resolved-policy.py`
+- `python3 scripts/check-workspace-package-groups.py --check`
+- `python3 scripts/swift_file_length_budget.py --repo-root . --base-ref origin/main`
 
-No tagged app build or reload was run because this is a package-only PE contract, SQLite projection, test, and documentation change. No bmux runtime or UI behavior changed.
+Project Truth validate/generate/check/ci and `git diff --check` are part of the
+final guard pass before commit.
+
+Localization audit: new bmux provenance CLI help, argument errors, and text
+presentation strings were added to `Resources/Localizable.xcstrings` with
+English and Japanese values. The Xcode string catalog compiler accepted the
+catalog. Machine JSON field names and enum values remain locale-independent.
 
 ## Known Limitations
 
-The carried blocker and approach-change records remain the v1 explicit-marker semantics from PR #85. This slice does not broaden natural-language inference, parse whole transcripts again, infer blockers from commands or clean worktrees, or prove correctness from provider claims.
+This slice does not add automatic prompt/context injection, proactive UI,
+alerts, locks, reassignment, agent messaging, coordination policy, arbitrary
+pre-edit file-history search, broader natural-language inference,
+cross-session milestone unification, semantic conflict detection, embeddings,
+graph storage, Knowledge Compiler integration, shared/team databases, or
+remote/mobile retrieval.
 
-The slice does not add agent-accessible retrieval, CLI/MCP query integration, automatic context injection, agent coordination, file locks, merge blocking, proactive notifications, Smart Session UI, Knowledge Compiler integration, embeddings, graph storage, organization sharing, or semantic artifact conflict judgments.
+Automatic caller resolution remains out of scope for v1. Agents must supply the
+PE session id and database explicitly or discover them through existing public
+context/session reads.
 
-Project-wide Engineering Observation Period remains active. PR #87 is merged, so `delivery_status` is `merged`, capability maturity is `validated`, and this slice is no longer the active assignment.
+## Next Candidates
 
-## Next Candidate
-
-`agent_accessible_cross_session_retrieval` is the likely next candidate after fresh `origin/main` reassessment. Related-session foundation, artifact-collision awareness, milestone inference, blocker/approach semantics, and rich work-state briefs are validated at this baseline, but retrieval is not selected or started.
+After this retrieval slice is reviewed and accepted, reassess
+`proactive_bmux_cross_session_awareness` and
+`cross_session_context_assembly_experiment` against observed results. They are
+candidates only; this handoff does not authorize starting either one.

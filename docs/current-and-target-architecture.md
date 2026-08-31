@@ -187,8 +187,8 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
 - Primary capability frontier: Richer Session Understanding (`richer_session_understanding`)
-- Active implementation slice: none selected
-- Bmux repository state: none selected
+- Active implementation slice: Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) - draft
+- Bmux repository state: active
 
 ### Current Roadmap Lanes
 
@@ -202,7 +202,9 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Three-view Coding Session Experience (`three_view_coding_session_experience`) - phase; status: active; owner: Bmux
 - Coding Session View Surfaces (`coding_session_view_surfaces`) - milestone; status: active; owner: Bmux
 - Cross-Session Work Awareness (`cross_session_work_awareness`) - program; status: active; owner: Provenance Engine
-- Cross-Session Awareness Read Models (`cross_session_awareness_read_models`) - phase; status: active; owner: Provenance Engine
+- Cross-Session Retrieval and Context (`cross_session_awareness_retrieval_and_context`) - phase; status: active; owner: Provenance Engine
+- Cross-Session Retrieval and Presentation (`cross_session_retrieval_and_presentation`) - milestone; status: active; owner: Provenance Engine
+- Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) - slice; status: active; owner: Provenance Engine
 
 ### Major Node Summaries
 
@@ -289,7 +291,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready Work
 
-- Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) - selection: planned; owner: Provenance Engine; depends on: `cross_session_work_awareness_foundation`, `rich_cross_session_work_state_semantics`, `cross_session_artifact_collision_awareness`. Rationale: Provide explicit bounded agent queries over PE-owned cross-session state instead of blindly injecting historical context or exposing full transcripts.
+- None.
 
 ### Selected Next Work
 
@@ -297,7 +299,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready But Not Selected
 
-- Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) - owner: Provenance Engine; depends on: `cross_session_work_awareness_foundation`, `rich_cross_session_work_state_semantics`, `cross_session_artifact_collision_awareness`
+- None.
 
 ### Gated / Blocked Downstream Work
 
@@ -312,14 +314,14 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
   - React Terminal live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
 - Proactive bmux cross-session awareness (`proactive_bmux_cross_session_awareness`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
-  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity ready; requires validated for gate `cross_session_retrieval_validated`: Proactive presentation should depend on observed useful retrieval and relevance behavior.
+  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity active; requires validated for gate `cross_session_retrieval_validated`: Proactive presentation should depend on observed useful retrieval and relevance behavior.
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
-  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity ready; requires validated for gate `cross_session_retrieval_validated`: Automatic context assembly should be an experiment after explicit cross-session retrieval proves useful.
+  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity active; requires validated for gate `cross_session_retrieval_validated`: Automatic context assembly should be an experiment after explicit cross-session retrieval proves useful.
 - Knowledge Compiler cross-session bridge (`knowledge_compiler_cross_session_bridge`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
   - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) is not dependency-satisfying
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) is not dependency-satisfying
-  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity ready; requires validated for gate `cross_session_retrieval_validated`: The bridge should consume validated working-memory retrieval behavior, not transient session statements.
+  - Agent-accessible cross-session retrieval (`agent_accessible_cross_session_retrieval`) has maturity active; requires validated for gate `cross_session_retrieval_validated`: The bridge should consume validated working-memory retrieval behavior, not transient session statements.
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) has maturity gated; requires active for gate `compiler_implementation_available`: Cross-session outcomes cannot be promoted into durable knowledge until the Knowledge Compiler exists.
 - Continuous presentation learning (`continuous_presentation_learning`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) is not dependency-satisfying

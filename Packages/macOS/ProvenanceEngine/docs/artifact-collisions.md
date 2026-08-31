@@ -197,12 +197,32 @@ collision facts. The projection does not persist raw transcripts, hidden
 reasoning, prompt-context packs, LLM summaries, or semantic compatibility
 judgments.
 
+## bmux CLI Consumer
+
+bmux exposes this read through:
+
+```bash
+bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]
+```
+
+The CLI requires an explicit PE session id and uses the public
+`ProvenanceEngineClient.artifactCollisions(...)` contract. bmux owns only
+argument parsing, database selection, output formatting, and agent-facing docs;
+PE owns overlap discovery, ordering, stale classification, repository/worktree
+boundaries, revision semantics, completeness, and evidence authority.
+
+The command preserves this API's target-artifact limitation: discovery starts
+from the target session's recorded changed artifacts, and `--artifact-path` only
+narrows those overlap candidates. It is not arbitrary file-history search before
+the target session touched a path. Same path in a different repository remains
+outside artifact-collision candidates.
+
 ## Non-Goals
 
 This slice does not implement automatic coordination, merge or rebase actions,
 file locks, interruption policy, prompt injection, agent-to-agent messaging,
-proactive bmux notifications, Smart Session collision UI, agent-facing
-retrieval, Knowledge Compiler integration, remote or organization-scale
+proactive bmux notifications, Smart Session collision UI, Knowledge Compiler
+integration, remote or organization-scale
 collision handling, or semantic conflict detection.
 
 A returned candidate means PE found an evidence-backed artifact overlap under
