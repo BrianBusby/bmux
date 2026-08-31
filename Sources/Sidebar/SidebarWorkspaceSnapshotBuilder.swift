@@ -175,6 +175,7 @@ struct SidebarWorkspaceSnapshotBuilder {
             login: ownerLogin,
             url: pullRequest.ownerURL ?? provenancePullRequest?.ownerURL
         )
+        let branch = pullRequest.branch ?? provenancePullRequest?.branch
         return PullRequestDisplay(
             id: "\(pullRequest.label.lowercased())#\(pullRequest.number)|\(pullRequest.url.absoluteString)",
             number: pullRequest.number,
@@ -184,7 +185,7 @@ struct SidebarWorkspaceSnapshotBuilder {
             status: pullRequest.status,
             ownerLogin: ownerLogin,
             ownerURL: ownerURL,
-            branch: pullRequest.branch,
+            branch: branch,
             isStale: pullRequest.isStale,
             isFromProvenance: false
         )
