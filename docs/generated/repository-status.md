@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: none selected
+- Active slice: Rich cross-session work-state semantics (`rich_cross_session_work_state_semantics`)
+- Slice state: open
+- Owner: Provenance Engine
+- Repository state: active
 
 ## Release
 
@@ -50,6 +52,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Producer Neutral Lifecycle Recording | implemented |
 | Provenance Engine Public In Process Sdk | implemented |
 | Provenance Engine Related Session Read Model | implemented |
+| Provenance Engine Rich Cross Session Work State Semantics | implemented |
 | Provenance Engine Richer Coding Agent Evidence | implemented |
 | Provenance Engine Schema Identity Validation | implemented |
 | Provenance Engine Scoped Architecture Projection | planned |

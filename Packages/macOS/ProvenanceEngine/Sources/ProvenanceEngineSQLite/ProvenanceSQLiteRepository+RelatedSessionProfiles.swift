@@ -364,10 +364,11 @@ extension ProvenanceSQLiteRepository {
             workModel.currentTurn?.intent,
             workModel.currentTurn?.currentActivity,
             workModel.milestones,
+            workModel.blockers,
+            workModel.approachChanges,
             workModel.sessionPhase,
         ].compactMap { field in
-            guard let field, field.record != nil else { return nil }
-            return field
+            field.map(boundedRelatedSessionSemanticField)
         }
     }
 }

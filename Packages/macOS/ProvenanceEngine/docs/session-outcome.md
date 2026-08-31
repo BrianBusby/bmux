@@ -151,10 +151,10 @@ session-level factual source. It records the exact Session Outcome revision id
 used for every related-session brief and derives compact outcome summaries from
 Session Outcome fields without replaying whole turns or transcripts.
 
-Deferred work includes semantic milestone/blocker/approach-change fields,
-richer cross-session work-state semantics, context injection, Knowledge
-Compiler output, raw transcript retention policy changes, and richer dedicated
-validation evidence beyond command-attempt classification.
+Deferred work includes context injection, Knowledge Compiler output, raw
+transcript retention policy changes, richer dedicated validation evidence
+beyond command-attempt classification, and future semantic categories beyond the
+implemented milestone, blocker, and approach-change fields.
 
 ## Example
 

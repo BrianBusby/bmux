@@ -2,8 +2,15 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice: null
-  state: none_selected
+  active_slice:
+    id: rich_cross_session_work_state_semantics
+    title: Rich cross-session work-state semantics
+    state: open
+    owner: Provenance Engine
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/rich-cross-session-work-state-semantics
+    active_branch: rich-cross-session-work-state-semantics
+    active_agent: Codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented
@@ -56,6 +63,7 @@ local_capabilities:
   provenance_engine_cross_session_work_awareness: implemented
   provenance_engine_related_session_read_model: implemented
   provenance_engine_cross_session_artifact_collision_awareness: implemented
+  provenance_engine_rich_cross_session_work_state_semantics: implemented
   provenance_engine_agent_accessible_cross_session_retrieval: planned
   provenance_engine_milestone_inference: implemented
   provenance_engine_blocker_approach_change_semantics: implemented

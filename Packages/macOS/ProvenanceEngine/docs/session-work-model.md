@@ -556,17 +556,24 @@ shared changed artifact path inside a shared repository or worktree context.
 Ordering is deterministic by strongest relationship reason, freshness, and
 stable session id.
 
-If a related session already has SessionWorkModel semantic fields, the brief can
-include those fields with their original semantic record, confidence,
-specificity, producer, inference version, and evidence basis. Those fields are
-not relationship reasons and the related-session projector does not create new
-semantic milestone, blocker, decision, approach-change, progress, risk, or
-architecture inference.
+Related-session briefs now carry existing SessionWorkModel thread intent, turn
+intent, current activity, milestones, blockers, approach changes, and session
+phase fields. Known records preserve their original semantic record identity,
+source-session scope, bounded structured payload, supporting factual revision,
+evidence references, confidence, specificity, producer, inference version,
+status, and supersession metadata. Unknown and unavailable fields remain
+explicit, and bounded semantic payload omissions are reported through payload
+omission reasons plus partial availability rows.
+
+Those fields are not relationship reasons. The related-session projector does
+not create new semantic milestone, blocker, decision, approach-change,
+progress, risk, or architecture inference; it only carries already-supported
+SessionWorkModel semantics into a bounded cross-session brief.
 
 This foundation is deliberately not Smart Session presentation, automatic
 context injection, agent coordination, artifact-collision warning, prompt
 assembly, raw transcript sharing, hidden reasoning storage, or Knowledge
-Compiler integration. Future cross-session semantic slices must build on this
+Compiler integration. Future cross-session retrieval slices must build on this
 read contract instead of asking bmux to infer relationships from provider
 output locally.
 

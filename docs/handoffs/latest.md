@@ -2,15 +2,13 @@
 
 ## Completed Slice
 
-- Slice: `blocker_approach_change_semantics`
-- Branch: `session-blocker-approach-semantics`
-- Worktree: `/Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics`
-- Base: `origin/main` containing merged milestone-inference PR #84, merge commit `cd59ec10b27500a4c0dc0954bd1da9f7fed44de8`
-- PR: https://github.com/BrianBusby/bmux/pull/85, merged at `2026-08-30T18:46:46Z`
-- Implementation commit: `2cc991cae7a7b6306a24e19811fe0d5edc0527c4`
-- Review/follow-up commits: `af91d9f09adc9d176b0cd5fc49460d8907dde5dc`, `b0e34ad6bec46120184bc215f61bdcfd4c5f3b79`
-- Merge commit: `79d6cd404b98f63a10f6fcc7748a921c3efbf19b`
-- Status: implemented, locally validated, CI green, and merged
+- Slice: `rich_cross_session_work_state_semantics`
+- Branch: `rich-cross-session-work-state-semantics`
+- Worktree: `/Users/brianbusby/repos/.bmux-worktrees/rich-cross-session-work-state-semantics`
+- Base: `origin/main` at `88b0fb7ba5e7d0a4296806eec49c245456e2fbf2`
+- PR: https://github.com/BrianBusby/bmux/pull/87, open
+- Implementation commits: `335d71518f94324ded81a68b6e0bc87c6618ff60`, `6022f6499f6a04ebcf8980530c6f439325a0f9fc`
+- Status: implemented and locally validated; delivery remains open pending PR review, CI, merge, and acceptance
 
 ## Current Generated Truth
 
@@ -20,110 +18,80 @@
 
 ## What Changed
 
-Provenance Engine now exposes bounded blocker and approach-change semantics
-through the existing semantic inference record framework and `SessionWorkModel`
-composition path. The rule-produced records are `coding_agent.blockers` and
-`coding_agent.approach_changes`, and the public model schema now includes
-session-level `blockers` and `approachChanges` semantic fields alongside
-milestones and session phase.
+Provenance Engine related-session briefs now carry the useful work-state
+semantics already present in each source session's `SessionWorkModel`:
+milestones, blockers, approach changes, thread intent, turn intent, current
+activity, and session phase. The public read remains
+`ProvenanceEngineClient.relatedSessions(...)`.
 
-The v1 producer consumes supported explicit marker statements from accepted
-visible assistant output and visible reasoning summaries. It preserves source
-evidence references, reported provider/source attribution, identity basis,
-state basis, factual projection revision, producer version, confidence,
-specificity, source-history state, ambiguity reasons, omission reasons, and
-existing semantic supersession metadata.
+The related-session rule version is now `2`. Content fingerprints include the
+public semantic field content, including field state/reason, source-session
+scope, record identity, bounded structured payload, supporting factual
+revision, confidence, specificity, producer identity/version, status,
+supersession links, and evidence references.
+
+Known milestone, blocker, and approach-change payload arrays are bounded to ten
+items inside the related-session brief. Retained items keep their original
+record reference and evidence; omitted items add
+`related_session_semantic_payload_omitted:<kind>:<count>` to payload omission
+reasons and mark the semantic availability row `partial`.
 
 ## Semantics
 
-Supported blocker statements use `Blocker:` or `Blocker resolved:` markers with
-structured fields such as `activity`, `condition`, `description`, `outcome`,
-and optional exact `milestone` id. Supported states are reported open, cleared,
-bypassed, and no-longer-applicable. A command failure, warning, completed turn,
-successful later command, clean worktree, or missing statement is not treated as
-proof of a blocker or resolution.
+Briefs distinguish known, unknown, unavailable, partial, and bounded-away
+semantic state. Missing or unknown fields do not mean "no blockers," "no failed
+approaches," "resolved work," verified completion, merge, or acceptance.
+Ended sessions do not imply blockers cleared.
 
-Supported approach-change statements use `Approach change:` markers with
-`objective`, `prior`, `state`, optional `replacement`, optional `reason`, and
-optional exact `milestone` id. Supported states are reported replaced,
-abandoned, deferred, and failed. Replacement requires an explicit replacement
-approach. Reordered plans, routine retries, another command, and changed files
-do not imply a strategy change.
+An active semantic record whose payload carries `unknownReason` is kept in the
+brief with its record identity and evidence, but its availability row is
+`unknown` with reason `source_semantic_unknown`, not `observed`.
 
-Milestone relationships are attached only when the statement supplies an exact
-same-session milestone id from the current milestone payload. Title matching,
-foreign ids, duplicate titles, ordering, indentation-like prose, and
-cross-session relationships are omitted with bounded reasons instead of being
-guessed.
+Milestone, blocker, and approach identities remain scoped to the originating
+session. Same names, same ids, or same activity/condition text across sessions
+do not create shared identity, cross-session resolution, or semantic conflict.
+Supported same-session milestone links are preserved; no new cross-session
+links are inferred.
 
-## Boundaries
+Relationship reasons remain factual and inspectable. Semantic work-state fields
+are not relationship reasons, relevance scores, artifact-collision judgments,
+coordination policy, or prompt/context input.
 
-This slice does not add cross-session semantic propagation, agent retrieval,
-automatic context injection, coordination, notifications, Smart Session UI,
-progress percentages, milestone hierarchy rewrites, milestone-to-code or
-architecture relationships, GitHub ingestion, Knowledge Compiler behavior, raw
-transcript persistence, hidden reasoning access, or a general failure taxonomy.
+## Example
 
-The inference remains above deterministic factual Current State. The tests
-verify that semantic blockers and approach changes do not enter factual Current
-State, Turn Outcome, or Session Outcome projections.
+A sanitized SDK fixture appends this visible assistant output in a related
+session:
+
+```text
+Blocker: activity=run package suite; condition=database unavailable
+Approach change: objective=validate related work state; prior=full package suite; replacement=SQLite SDK fixture; state=replaced; reason=database unavailable
+```
+
+The target session's `relatedSessions(...)` response includes the related
+session brief with `coding_agent.blockers` and
+`coding_agent.approach_changes` semantic fields. Both fields have `scopeID`
+equal to the related session id, carry the original semantic record metadata,
+and preserve evidence references back to the assistant message. A later partial
+blocker replacement creates a new related-session content revision without
+moving the factual source evidence watermark; requesting the old revision id
+still returns the old semantic payload.
 
 ## Validation
 
-Passed locally on 2026-08-30:
+Passed locally on 2026-08-31. Focused related-session, blocker/approach, and SessionWorkModel SDK suites passed, and the full Provenance Engine package suite passed with 236 tests across 36 suites.
 
-- `swiftc -parse-as-library -typecheck /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics/Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts/*.swift`
-- `swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics/Packages/macOS/ProvenanceEngine --filter BlockerApproachChange` - 9 tests / 2 suites
-- `swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics/Packages/macOS/ProvenanceEngine --filter SemanticMilestoneMessageTests` - 2 tests / 1 suite
-- `swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics/Packages/macOS/ProvenanceEngine` - 228 tests / 33 suites
-- `./scripts/project-docs validate`
-- `./scripts/project-docs generate`
-- `./scripts/project-docs check`
-- `GITHUB_TOKEN=$(gh auth token) ./scripts/project-docs ci`
-- `git diff --check`
-- `python3 scripts/check-package-resolved-policy.py`
-- `python3 scripts/check-workspace-package-groups.py --check`
-- `scripts/lint-pbxproj-test-wiring.sh`
+Additional checks passed: Project Truth validate/generate/check, authenticated Project Truth CI, git diff whitespace check, Swift file-length budget, Package.resolved policy, workspace package grouping, and pbxproj test wiring. An unauthenticated Project Truth CI attempt first failed on GitHub API rate limits; the authenticated retry passed without printing a token.
 
-The Swift file-length budget check was run and remains blocked by pre-existing
-repository-wide budget debt. After splitting the new parser and tests, no new
-blocker/approach file appears in the failure list; the remaining failures are
-existing over-budget files such as `CLI/BMUXCLI+Provenance.swift`,
-`bmuxTests/WorkProvenanceObserverTests.swift`, and other unrelated files.
-
-The new blocker/approach tests use synthetic sanitized accepted evidence only.
-They cover assistant-output and reasoning-summary markers, abstention for
-commands/warnings/reordered plans/unsupported prose, negated/hypothetical/quoted
-and code-fenced contexts, independent blockers, reported bypass, recurrence,
-partial source history retention, exact milestone links and rejected title or
-foreign links, legacy SessionWorkModel decoding, public SDK reads, restart
-durability, semantic message rendering, and factual-projection separation. No
-real private session transcript validation is claimed.
-
-No tagged app build or reload was run because this slice changes PE package
-contracts, semantic producer logic, SQLite composition, tests, and documentation
-only; no bmux app/runtime path changed.
+No tagged app build or reload was run because this is a package-only PE contract, SQLite projection, test, and documentation change. No bmux runtime or UI behavior changed.
 
 ## Known Limitations
 
-The v1 language contract is intentionally narrow. Unsupported wording abstains
-rather than trying to perform broad natural-language understanding. The producer
-does not infer blockers from failed commands, approvals, idle state, final
-assistant messages, or clean worktrees; does not infer approach changes from
-ordinary retries or file edits; and does not prove correctness, validation,
-merge, acceptance, or real resolution from provider claims.
+The carried blocker and approach-change records remain the v1 explicit-marker semantics from PR #85. This slice does not broaden natural-language inference, parse whole transcripts again, infer blockers from commands or clean worktrees, or prove correctness from provider claims.
 
-When bounded reads omit earlier turns, PE preserves existing active blocker or
-approach-change records instead of silently clearing them; consumers must inspect
-semantic record source revisions and source-history/omission metadata for
-freshness. Richer recurrence grouping, root-cause taxonomy, and cross-session
-work-state propagation remain out of scope.
+The slice does not add agent-accessible retrieval, CLI/MCP query integration, automatic context injection, agent coordination, file locks, merge blocking, proactive notifications, Smart Session UI, Knowledge Compiler integration, embeddings, graph storage, organization sharing, or semantic artifact conflict judgments.
 
-## Next Ready Work
+Project-wide Engineering Observation Period remains active. PR #87 is open, so `delivery_status` remains `open` and capability maturity remains below `validated` until review, CI, merge, and acceptance complete.
 
-The recommended next slice is `rich_cross_session_work_state_semantics`, after
-rechecking the current Project Truth graph from fresh `origin/main`. Milestone
-inference and blocker/approach semantics are now merged and validated locally;
-downstream consumer work should still preserve its own selection and validation
-gates instead of assuming Smart Session or cross-session propagation is ready by
-default.
+## Next Candidate
+
+After PR #87 is merged and the slice is validated in Project Truth, reassess `agent_accessible_cross_session_retrieval` against fresh `origin/main`. Related-session foundation, artifact-collision awareness, milestone inference, and blocker/approach semantics are implemented at this baseline, but retrieval must still be explicitly selected before work begins.

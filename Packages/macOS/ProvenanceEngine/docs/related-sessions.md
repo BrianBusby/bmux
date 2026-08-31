@@ -50,8 +50,10 @@ unbounded conversation history.
 
 ## Relationship Reasons
 
-The v1 rule id is `deterministic_related_sessions` with rule version `1`.
-Implemented relationship kinds are:
+The rule id is `deterministic_related_sessions` with rule version `2`. The
+relationship reasons remain deterministic facts or existing projection links;
+version 2 adds richer carried work-state semantics to each brief without making
+those semantics relationship reasons. Implemented relationship kinds are:
 
 - `same_repository`: both sessions have accepted evidence for the same
   repository id, repository path, or repository remote slug.
@@ -106,8 +108,10 @@ Each related-session brief exposes:
 - lifecycle state and completion state;
 - exact Session Outcome revision metadata used for the brief;
 - a compact outcome brief derived from Session Outcome;
-- existing SessionWorkModel semantic fields, when present, with their original
-  semantic provenance;
+- existing SessionWorkModel thread intent, turn intent, current activity,
+  milestones, blockers, approach changes, and session phase fields, including
+  unknown or unavailable fields when the source model cannot support a known
+  record;
 - relationship freshness and source-watermark metadata;
 - supporting evidence or projection references;
 - explicit completeness and availability states.
@@ -116,6 +120,22 @@ The outcome brief is deliberately bounded: two objectives, five plan items,
 five completed actions, five completed commands, ten changed artifacts, five
 validation attempts, five blockers, five unresolved items, and one latest resume
 point. Truncated fields are listed explicitly.
+
+Known milestone, blocker, and approach-change payload arrays are additionally
+bounded to ten items in related-session briefs. The embedded semantic record
+keeps the original inference id, producer, confidence, specificity, supporting
+factual revision, evidence references, status, and supersession metadata. When a
+payload is compacted, `omissionReasons` includes a
+`related_session_semantic_payload_omitted:<kind>:<count>` entry and the
+corresponding `semantic_field:<kind>` availability row is marked `partial`.
+For milestones, the current milestone pointer is retained inside the bound when
+the source payload identifies one.
+
+If an active semantic record exists but its payload carries `unknownReason`, the
+field remains present with the source record and the availability row is marked
+`unknown` with reason `source_semantic_unknown`. This distinguishes "PE has an
+active semantic claim that the bounded source does not support a known value"
+from "the related-session read model did not select or cannot read the field."
 
 ## Revisions And Freshness
 
@@ -126,15 +146,24 @@ recent-time boundary, generated time, and revision id.
 The content revision changes when the public relationship content changes:
 session identity fields, lifecycle/completion state, boundary facts, provider
 identity facts, relationship reasons, Session Outcome revision identity, or
-selected SessionWorkModel semantic revision identity. Duplicate or overlapping
-evidence that changes only supporting reference availability can advance
-freshness or source watermark without creating a new content revision.
+included SessionWorkModel semantic field content. Semantic content includes
+field state/reason, source-session-scoped record identity, bounded structured
+payload, supporting factual revision, evidence references, confidence,
+specificity, producer identity/version, lifecycle status, and supersession
+links. Duplicate or overlapping evidence that changes only supporting reference
+availability can advance freshness or source watermark without creating a new
+content revision. Semantic-only updates can create a new content revision
+without moving the factual source evidence watermark.
 
 The brief freshness state exposes the relationship evidence watermark,
 relationship observed time, Session Outcome generated time, newest selected
 SessionWorkModel semantic inference time, and related-session projection
 generated time. Consumers should present stale or partial information from these
 fields rather than treating the projection as a live guarantee.
+
+Historical requests remain pinned to the stored related-session projection
+revision. They do not silently substitute newer live semantic payloads,
+corrections, or supersession state.
 
 SQLite schema version 23 stores related-session content revisions in
 `provenance_related_session_revisions` and latest pointers in
@@ -146,12 +175,53 @@ Relationship reasons come only from observed deterministic facts and existing
 versioned projections. Explicit plan, command, file, validation, blocker,
 unresolved, and resume facts appear through Session Outcome. Existing
 SessionWorkModel semantic fields may be included, but they preserve their
-semantic record, inference kind/version, confidence, specificity, producer, and
-evidence basis.
+semantic record, inference kind/version, confidence, specificity, producer,
+source session, factual revision, and evidence basis. Milestone, blocker, and
+approach identities remain scoped to their originating session. Identical
+titles, activities, conditions, or ids in different sessions do not establish a
+shared milestone, a cross-session resolution, or a semantic conflict.
 
 This projector does not create new milestone, blocker, decision,
 approach-change, risk, architecture, or progress inference. Semantic message
 wording and ordinary assistant prose do not become relationship facts.
+
+Unknown, unavailable, stale, partial, or bounded-away semantic state must be
+presented as uncertainty. A missing record does not mean no blockers, no failed
+approaches, resolved work, verified completion, merge, or acceptance. Reported
+blocker states and approach-change states remain provider-reported semantics;
+they are not strengthened into observed success or failure claims.
+
+## Example
+
+```swift
+let response = try await client.relatedSessions(
+    ProvenanceRelatedSessionRequest(targetSessionID: "session-current")
+)
+
+for brief in response.projection?.relatedSessions ?? [] {
+    let blockers = brief.semanticFields.first {
+        $0.kind == ProvenanceCodingAgentSemanticInferenceKind.blockers.rawValue
+    }
+    let approaches = brief.semanticFields.first {
+        $0.kind == ProvenanceCodingAgentSemanticInferenceKind.approachChanges.rawValue
+    }
+
+    print(brief.sessionID)
+    print(blockers?.scopeID ?? "unknown source session")
+    print(blockers?.state.rawValue ?? "unavailable")
+    print(approaches?.record?.supportingEvidenceRefs ?? [])
+}
+```
+
+A sanitized fixture for this contract includes a related session that reports
+`Blocker: activity=run package suite; condition=database unavailable` and
+`Approach change: objective=validate related work state; prior=full package
+suite; replacement=SQLite SDK fixture; state=replaced`. The related-session
+brief returns those records with `scopeID` equal to the related session id and
+evidence referencing the visible assistant message that contained the marker
+lines. If the source session later reports a partial blocker replacement, a new
+related-session content revision is produced while the older historical
+revision remains readable.
 
 ## Known Limitations
 
@@ -159,8 +229,8 @@ Provider-thread and external-identity relationships depend on accepted
 current-state identity records. They remain absent when producers do not append
 or preserve those identities in a shareable way.
 
-The v1 related-session artifact relationship is only a factual shared
-changed path inside shared repository/worktree context. Possible-collision
+The related-session artifact relationship is only a factual shared changed path
+inside shared repository/worktree context. Possible-collision
 explanations now live in `artifact-collisions.md`, and they are still not
 rename tracking, diff-hunk identity, semantic component overlap, coordination,
 or conflict proof.
