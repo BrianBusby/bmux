@@ -2401,13 +2401,15 @@ roadmap:
         active_worktree: /Users/brianbusby/repos/.bmux-worktrees/rich-cross-session-work-state-semantics
         active_branch: rich-cross-session-work-state-semantics
         active_agent: Codex
-        notes: Implemented on PR #87 after rechecking origin/main at 88b0fb7ba5e7d0a4296806eec49c245456e2fbf2. Gates are satisfied because cross_session_work_awareness_foundation, milestone_inference, and blocker_approach_change_semantics are implemented with capability_maturity validated and merged delivery evidence. Delivery remains open pending PR review and merge.
+        notes: Implemented on PR #87 after rechecking origin/main at 88b0fb7ba5e7d0a4296806eec49c245456e2fbf2. Gates are satisfied because cross_session_work_awareness_foundation, milestone_inference, and blocker_approach_change_semantics are implemented with capability_maturity validated and merged delivery evidence. Foreground review findings around unknown semantic availability and public helper scope were addressed. Delivery remains open pending PR review and merge.
       delivery_status: open
       acceptance_status: implemented
       evidence:
         commits:
           - repository: BrianBusby/bmux
             sha: 335d71518f94324ded81a68b6e0bc87c6618ff60
+          - repository: BrianBusby/bmux
+            sha: 6022f6499f6a04ebcf8980530c6f439325a0f9fc
         pull_requests:
           - repository: BrianBusby/bmux
             number: 87

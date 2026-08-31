@@ -7,7 +7,7 @@
 - Worktree: `/Users/brianbusby/repos/.bmux-worktrees/rich-cross-session-work-state-semantics`
 - Base: `origin/main` at `88b0fb7ba5e7d0a4296806eec49c245456e2fbf2`
 - PR: https://github.com/BrianBusby/bmux/pull/87, open
-- Implementation commit: `335d71518f94324ded81a68b6e0bc87c6618ff60`
+- Implementation commits: `335d71518f94324ded81a68b6e0bc87c6618ff60`, `6022f6499f6a04ebcf8980530c6f439325a0f9fc`
 - Status: implemented and locally validated; delivery remains open pending PR review, CI, merge, and acceptance
 
 ## Current Generated Truth
@@ -42,6 +42,10 @@ Briefs distinguish known, unknown, unavailable, partial, and bounded-away
 semantic state. Missing or unknown fields do not mean "no blockers," "no failed
 approaches," "resolved work," verified completion, merge, or acceptance.
 Ended sessions do not imply blockers cleared.
+
+An active semantic record whose payload carries `unknownReason` is kept in the
+brief with its record identity and evidence, but its availability row is
+`unknown` with reason `source_semantic_unknown`, not `observed`.
 
 Milestone, blocker, and approach identities remain scoped to the originating
 session. Same names, same ids, or same activity/condition text across sessions
