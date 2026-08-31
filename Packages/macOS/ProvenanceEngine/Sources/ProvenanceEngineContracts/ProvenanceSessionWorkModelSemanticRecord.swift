@@ -63,4 +63,61 @@ public struct ProvenanceSessionWorkModelSemanticRecord: Codable, Equatable, Send
         self.supersedes = record.supersedes
         self.supersededBy = record.supersededBy
     }
+
+    /// Returns a copy with a replacement payload while preserving the source inference identity.
+    ///
+    /// Bounded read models can use this to expose a compact payload without losing the
+    /// authoritative semantic record reference that consumers may query for the full source claim.
+    public func replacingPayload(
+        _ payload: ProvenanceSemanticPayloadValue
+    ) -> ProvenanceSessionWorkModelSemanticRecord {
+        ProvenanceSessionWorkModelSemanticRecord(
+            inferenceID: inferenceID,
+            schemaVersion: schemaVersion,
+            payload: payload,
+            supportingEvidenceRefs: supportingEvidenceRefs,
+            supportingFactualRevision: supportingFactualRevision,
+            confidence: confidence,
+            specificity: specificity,
+            producerType: producerType,
+            producerID: producerID,
+            producerVersion: producerVersion,
+            createdAt: createdAt,
+            status: status,
+            supersedes: supersedes,
+            supersededBy: supersededBy
+        )
+    }
+
+    private init(
+        inferenceID: String,
+        schemaVersion: Int,
+        payload: ProvenanceSemanticPayloadValue,
+        supportingEvidenceRefs: [ProvenanceSemanticEvidenceReference],
+        supportingFactualRevision: Int?,
+        confidence: ProvenanceConfidence,
+        specificity: ProvenanceSemanticSpecificity,
+        producerType: ProvenanceSemanticInferenceProducerType,
+        producerID: String,
+        producerVersion: String,
+        createdAt: Date,
+        status: ProvenanceSemanticInferenceStatus,
+        supersedes: [String],
+        supersededBy: String?
+    ) {
+        self.inferenceID = inferenceID
+        self.schemaVersion = schemaVersion
+        self.payload = payload
+        self.supportingEvidenceRefs = supportingEvidenceRefs
+        self.supportingFactualRevision = supportingFactualRevision
+        self.confidence = confidence
+        self.specificity = specificity
+        self.producerType = producerType
+        self.producerID = producerID
+        self.producerVersion = producerVersion
+        self.createdAt = createdAt
+        self.status = status
+        self.supersedes = supersedes
+        self.supersededBy = supersededBy
+    }
 }

@@ -140,9 +140,22 @@ prompt fallback only when no usable plan exists, reported state basis,
 identity basis, evidence references, hierarchy validation, bounded omissions,
 ambiguity notes, producer version, and existing semantic supersession metadata.
 Provider-reported completion is not validation, merge, or acceptance proof.
-Blockers, approach changes, progress, milestone-to-code relationships,
-milestone-to-architecture relationships, risk, and scoped architecture remain
-future semantic slices.
+Blocker and approach-change semantics are implemented by PR #85. Progress,
+milestone-to-code relationships, milestone-to-architecture relationships, risk,
+and scoped architecture remain future semantic slices.
+
+Rich cross-session work-state semantics is implemented on branch
+`rich-cross-session-work-state-semantics` as the PE related-session rule-version
+2 contract. `relatedSessions(...)` now carries existing SessionWorkModel thread
+intent, turn intent, current activity, milestones, blockers, approach changes,
+and session phase fields into related-session briefs with source-session scope,
+semantic record identity, bounded structured payloads, supporting factual
+revisions, producer/confidence/specificity metadata, evidence references,
+supersession status, explicit unknown/unavailable states, and partial
+availability for source-history or brief-bound omissions. It still does not add
+agent retrieval, automatic context injection, coordination, proactive UI,
+cross-session milestone unification, semantic conflict judgments, or new
+natural-language inference.
 
 Planning target: PE owns the `SessionWorkModel` projection for one
 coding-agent session. bmux should consume PE factual projection, semantic

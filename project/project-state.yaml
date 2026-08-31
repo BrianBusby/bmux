@@ -2341,7 +2341,7 @@ roadmap:
       kind: slice
       title: Rich cross-session work-state semantics
       parent: cross_session_semantics_and_collisions
-      status: planned
+      status: active
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2352,7 +2352,7 @@ roadmap:
         tags:
           - cross_session_awareness
           - session_work_model
-      capability_maturity: gated
+      capability_maturity: active
       depends_on:
         - cross_session_work_awareness_foundation
         - milestone_inference
@@ -2396,10 +2396,23 @@ roadmap:
           - semantic_inference_records
         worktree_required: true
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: provenance_engine
-      delivery_status: proposed
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/rich-cross-session-work-state-semantics
+        active_branch: rich-cross-session-work-state-semantics
+        active_agent: Codex
+        notes: Selected from the 2026-08-31 Codex handoff after rechecking origin/main at 88b0fb7ba5e7d0a4296806eec49c245456e2fbf2. Gates are satisfied because cross_session_work_awareness_foundation, milestone_inference, and blocker_approach_change_semantics are implemented with capability_maturity validated and merged delivery evidence.
+      delivery_status: draft
       acceptance_status: proposed
+      acceptance:
+        criteria:
+          - Related-session public SDK reads carry supported SessionWorkModel milestones, blockers, and approach changes for related sessions with original semantic records, evidence references, producer/version, confidence, specificity, source-session attribution, and factual revision metadata intact.
+          - Reported blocker transitions, approach replacements, supersession, semantic-only updates, late or corrected evidence, restart, and projection rebuild update related-session briefs and revisions according to the documented content-versus-freshness contract.
+          - Same-named milestones or repeated session-scoped semantic ids from different sessions remain distinct, and one session's claims never clear, resolve, or supersede another session's blockers or approach history.
+          - Partial history, unavailable semantic records, stale evidence, bounded omissions, and unknown older-model fields remain explicitly distinguishable from empty, complete, or resolved work state after encoding and decoding.
+          - Large semantic payloads are bounded deterministically with omission reasons and counts while retained items keep enough provenance to interpret their original source records.
+          - Semantic work-state fields remain separate from factual relationship reasons, Session Outcome, Turn Outcome, factual Current State, artifact-collision facts, prompt injection, coordination policy, and Knowledge Compiler behavior.
+          - A public-read example demonstrates the carried cross-session work state and limitations using sanitized fixture data.
       rationale: Add richer validated semantic information to related-session briefs only after PE owns the underlying milestone, blocker, validation, and approach-change semantics.
 
     - id: cross_session_artifact_collision_awareness

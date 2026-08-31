@@ -234,7 +234,7 @@ extension ProvenanceSQLiteRepository {
         excludedCandidates: [ProvenanceRelatedSessionCandidateExclusion]
     ) -> String {
         var parts = [
-            "schema=1",
+            "schema=2",
             "request=\(requestFingerprint)",
             "target=\(target.session.id)",
             "target_status=\(target.session.status)",
@@ -275,6 +275,9 @@ extension ProvenanceSQLiteRepository {
                     reason.relatedValue ?? "",
                     reason.relationshipDepth.map(String.init) ?? "",
                 ].joined(separator: "|"))
+            }
+            for field in brief.semanticFields {
+                parts.append(relatedSessionSemanticFieldFingerprint(field))
             }
             for field in brief.completeness.fields {
                 parts.append("availability|\(field.field)|\(field.status)|\(field.reason ?? "")")
@@ -391,7 +394,9 @@ extension ProvenanceSQLiteRepository {
     func relatedSessionCompletenessNotes() -> [String] {
         [
             "related-session relationships are deterministic facts or existing projections, not semantic relevance scores",
-            "SessionWorkModel semantic fields are exposed only with existing semantic provenance and are not relationship reasons",
+            "SessionWorkModel milestones, blockers, approach changes, phase, intent, and activity are exposed only with existing semantic provenance and are not relationship reasons",
+            "unknown or unavailable semantic fields mean PE lacks a supported active record; they do not mean no blockers, no failed approaches, or resolved work",
+            "related-session semantic payloads are bounded; omitted source items are reported through semantic payload omission reasons and field completeness",
             "outcome briefs are bounded slices of Session Outcome facts and never include whole transcripts",
         ]
     }

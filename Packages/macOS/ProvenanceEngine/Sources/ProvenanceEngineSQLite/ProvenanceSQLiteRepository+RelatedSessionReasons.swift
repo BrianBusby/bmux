@@ -307,7 +307,9 @@ extension ProvenanceSQLiteRepository {
                 reason: "no_active_session_work_model_semantic_fields",
                 evidence: profile.workModel.map { [relatedSessionEvidence($0)] } ?? []
             ),
-        ]
+        ] + profile.semanticFields.map {
+            relatedSessionSemanticAvailability(field: $0, workModel: profile.workModel)
+        }
         return ProvenanceRelatedSessionCompleteness(
             status: fields.allSatisfy { $0.status == "observed" } ? "complete" : "partial",
             evaluatedThroughSequence: evaluatedThroughSequence,

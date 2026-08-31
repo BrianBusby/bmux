@@ -262,12 +262,12 @@ provider controls, approvals, interrupts, modes, skills, and working-directory
 controls. It should not become the source of durable session meaning.
 
 The React Smart Session surface should consume PE contracts for higher-level
-understanding. Its first foundation can use `factualSessionProjection(...)`,
-`factualSessionTurnDetail(...)`, semantic inference records, and semantic
-messages. Later richer presentation should consume the PE `SessionWorkModel`
-contract for completed/current turn summaries, progress, blockers, approach
-changes, validations, risks, and milestone relationships. bmux should not build
-a parallel semantic model from raw Terminal events.
+understanding. Its foundation can use `factualSessionProjection(...)`,
+`factualSessionTurnDetail(...)`, semantic inference records, semantic messages,
+and the PE `SessionWorkModel` contract for completed/current turn summaries,
+milestones, blockers, approach changes, and current activity as those fields
+are validated. bmux should not build a parallel semantic model from raw
+Terminal events.
 
 The current factual Session view work is still valuable: it proves the factual
 projection consumer shape, establishes data-access and diagnostic behavior, and
@@ -282,7 +282,7 @@ The planned PE high-level projection is named `SessionWorkModel`. bmux should
 consume it as a domain model for one coding-agent session, not create a parallel
 bmux-owned semantic model.
 
-Expected bmux responsibilities when that contract exists:
+Expected bmux responsibilities as that contract matures:
 
 - forward policy-approved completed evidence units through public PE contracts;
 - render a human-readable live coding-agent work view from the authoritative
@@ -294,10 +294,11 @@ Expected bmux responsibilities when that contract exists:
 - present provenance/confidence on inferred fields instead of flattening them
   into facts.
 
-Expected PE-owned semantic fields include thread intent, turn intent, session
-phase, current activity, milestone hierarchy and descriptions, blocker/risk
-state, scoped thread/current-turn architecture projections, milestone-to-
-architecture links, and later milestone-to-diff/Git/GitHub attribution.
+Implemented PE-owned semantic fields include thread intent, turn intent,
+session phase, current activity, session milestones, blockers, and approach
+changes. Future PE-owned semantic fields include progress/risk state, scoped
+thread/current-turn architecture projections, milestone-to-architecture links,
+and later milestone-to-diff/Git/GitHub attribution.
 
 Current implemented behavior remains below full `SessionWorkModel`
 presentation: `currentContext`, `sessionTree`, `fileExplanation`,
@@ -306,17 +307,20 @@ writes, and structured Agent Chat coding-agent evidence writes/projections.
 
 ## Cross-Session Work Awareness Direction
 
-Cross-session work awareness is planned as PE-owned working memory for nearby
-active or recent coding-agent work. It should let a session ask which other
-sessions are related, why they are related, what bounded work state matters, and
-what evidence or semantic provenance supports the answer.
+Cross-session work awareness is PE-owned working memory for nearby active or
+recent coding-agent work. It lets a session ask which other sessions are
+related, why they are related, what bounded work state matters, and what
+evidence or semantic provenance supports the answer.
 
-The relationship/read model belongs in Provenance Engine. It should derive
+The relationship/read model belongs in Provenance Engine. It derives
 deterministic reasons from durable evidence where possible: explicit
 parent/child session relationships, same repository, same worktree, same
-branch, and overlapping recorded file-change paths. Richer reasons such as
-milestones, blockers, approach changes, validation state, and scoped
-architecture must wait for the corresponding PE-owned semantic slices.
+branch, and overlapping recorded file-change paths. Related-session briefs now
+carry existing SessionWorkModel milestone, blocker, and approach-change
+records with their source-session scope, evidence, revisions, and bounded
+availability semantics. Those carried fields are not relationship reasons;
+richer semantic reasons such as shared milestones, validation state, and scoped
+architecture remain future PE-owned slices.
 
 bmux may call the PE public API and present the result, but it must not create a
 parallel semantic cross-session engine from raw Terminal or provider output.

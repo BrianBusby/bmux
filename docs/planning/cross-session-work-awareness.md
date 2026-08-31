@@ -1,7 +1,8 @@
 # Cross-Session Work Awareness
 
-Status: implemented related-session foundation and artifact-collision awareness plus planning context. Generated Project Truth
-is authoritative for dependency readiness, selected-next work, and active
+Status: implemented related-session foundation, artifact-collision awareness,
+and rich carried work-state semantics plus planning context. Generated Project
+Truth is authoritative for dependency readiness, selected-next work, and active
 implementation:
 
 - [Nested roadmap](../generated/nested-roadmap.md)
@@ -50,11 +51,13 @@ omission bound.
 This foundation intentionally does not add bmux UI, automatic context assembly,
 agent coordination, proactive notifications, raw transcript sharing, hidden
 reasoning storage, LLM-authored cross-session summaries, Knowledge Compiler
-integration, organization-scale storage, or cross-session propagation of
-semantic milestone/blocker/approach-change/decision/risk/architecture
-inference. Artifact-collision awareness is implemented separately as an
-inspectable factual PE read and still does not warn, block, coordinate, inject
-context, or judge semantic conflict.
+integration, or organization-scale storage. The rich work-state semantic slice
+now carries existing PE milestone, blocker, and approach-change records through
+related-session briefs, but it does not create new semantic inference, unify
+cross-session identities, or infer decision/risk/architecture relationships.
+Artifact-collision awareness is implemented separately as an inspectable
+factual PE read and still does not warn, block, coordinate, inject context, or
+judge semantic conflict.
 
 ## Ownership
 
@@ -127,9 +130,11 @@ Facts, explicit plan evidence, and semantic inference remain separate:
   factual projections.
 - Explicit plans, commands, validations, blockers, unresolved items, changed
   artifacts, and resume points come through bounded Session Outcome facts.
-- Existing SessionWorkModel semantic fields are carried only with their
-  semantic provenance, confidence, specificity, producer, inference version,
-  and evidence basis. They are not relationship reasons.
+- Existing SessionWorkModel thread intent, turn intent, current activity,
+  milestones, blockers, approach changes, and session phase fields are carried
+  only with their semantic provenance, confidence, specificity, producer,
+  inference version, source revisions, source-session scope, evidence basis,
+  and supported bounded payload. They are not relationship reasons.
 
 SQLite schema 23 stores related-session content revisions and latest pointers.
 Projection metadata records the rule id/version, request fingerprint, content
@@ -158,11 +163,12 @@ preserves the language boundary that a possible collision is not a proven
 semantic conflict. Stable rename identity remains unsupported until accepted
 evidence can establish it deterministically.
 
-After the local milestone and blocker/approach-change semantic slices, richer
-cross-session work-state semantics remain gated on explicit selection and
-validation of how those fields should be carried into briefs. Agent-accessible
-cross-session retrieval remains gated on those richer semantics plus validated
-artifact-collision awareness.
+Rich cross-session work-state semantics now carries existing milestone,
+blocker, and approach-change records into related-session briefs with explicit
+unknown, unavailable, partial, stale, and bounded-omission semantics.
+Agent-accessible cross-session retrieval remains gated on explicit selection
+after fresh Project Truth reassessment; this planning doc is not authorization
+to start that retrieval slice.
 
 ## Sequence
 

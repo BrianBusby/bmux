@@ -321,3 +321,133 @@ struct SemanticInferenceFrameworkTests {
         try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
     }
 }
+
+@Suite
+struct RelatedSessionWorkStateSemanticTests {
+    @Test
+    func semanticReplacementRevisesBriefWithoutChangingFactualWatermark() async throws {
+        typealias Support = RelatedSessionWorkStateSemanticTestSupport
+        let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
+        defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let seeded = try await Support.seedWorkStateSessions(into: repository)
+        let request = ProvenanceRelatedSessionRequest(targetSessionID: seeded.target.session.id, limit: 10)
+        let before = try Support.require(try await repository.relatedSessions(request).projection)
+        let beforeBrief = try Support.require(before.relatedSessions.first { $0.sessionID == seeded.open.session.id })
+        let beforeRecord = try Support.require(Support.semanticField(.blockers, in: beforeBrief).record)
+        let replacement = Support.partialBlockerRecord(
+            id: "semantic-partial-blocker-session-open",
+            sessionID: seeded.open.session.id,
+            evidenceID: seeded.openEvidenceID,
+            factualRevision: beforeRecord.supportingFactualRevision,
+            createdAt: seeded.fixture.time(90),
+            supersedes: [beforeRecord.inferenceID]
+        )
+
+        _ = try await repository.publishSemanticInference(ProvenanceSemanticInferencePublishRequest(record: replacement))
+        let after = try Support.require(try await repository.relatedSessions(request).projection)
+        let afterBrief = try Support.require(after.relatedSessions.first { $0.sessionID == seeded.open.session.id })
+        let afterField = try Support.semanticField(.blockers, in: afterBrief)
+        let historical = try Support.require(try await repository.relatedSessions(
+            ProvenanceRelatedSessionRequest(
+                targetSessionID: seeded.target.session.id,
+                limit: 10,
+                revisionID: before.projection.revisionID
+            )
+        ).projection)
+        let historicalBrief = try Support.require(historical.relatedSessions.first {
+            $0.sessionID == seeded.open.session.id
+        })
+
+        #expect(after.projection.revisionID != before.projection.revisionID)
+        #expect(after.projection.sourceEvidenceWatermark == before.projection.sourceEvidenceWatermark)
+        #expect(afterField.record?.inferenceID == replacement.id)
+        #expect(afterField.record?.supersedes == [beforeRecord.inferenceID])
+        #expect(afterField.record?.supportingFactualRevision == beforeRecord.supportingFactualRevision)
+        #expect(Support.availability(.blockers, in: afterBrief)?.status == "partial")
+        #expect(Support.availability(.blockers, in: afterBrief)?.reason == "partial_source_history")
+        #expect(try Support.semanticField(.blockers, in: historicalBrief).record?.inferenceID == beforeRecord.inferenceID)
+
+        let reopened = try ProvenanceSQLiteRepository(url: url)
+        #expect(try Support.require(try await reopened.relatedSessions(request).projection) == after)
+        _ = try await reopened.rebuildProjectionsFromEventLedger(batchSize: 2)
+        #expect(try Support.require(try await reopened.relatedSessions(request).projection) == after)
+    }
+
+    @Test
+    func unknownAndBoundedSemanticFieldsRemainExplicit() async throws {
+        typealias Support = RelatedSessionWorkStateSemanticTestSupport
+        let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
+        defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let fixture = RelatedSessionFixture()
+        let repo = fixture.repository()
+        let worktree = fixture.worktree(
+            id: "worktree-bounds",
+            repository: repo,
+            path: "/repos/bounds",
+            branch: "bounds",
+            head: "bounds-head",
+            offset: 1
+        )
+        let target = try await RelatedSessionProjectionTestSupport.seedSession(
+            id: "session-target",
+            status: "active",
+            worktree: worktree,
+            repository: repo,
+            fixture: fixture,
+            into: repository
+        )
+        let related = try await RelatedSessionProjectionTestSupport.seedSession(
+            id: "session-related",
+            status: "completed",
+            worktree: worktree,
+            repository: repo,
+            fixture: fixture,
+            into: repository
+        )
+
+        let unknownBrief = try Support.require(try await repository.relatedSessions(
+            ProvenanceRelatedSessionRequest(targetSessionID: target.session.id)
+        ).projection?.relatedSessions.first)
+        #expect(try Support.semanticField(.blockers, in: unknownBrief).state == .unknown)
+        #expect(try Support.semanticField(.approachChanges, in: unknownBrief).state == .unknown)
+        #expect(Support.availability(.blockers, in: unknownBrief)?.status == "unknown")
+
+        try await fixture.appendPlan(
+            Support.largePlan(
+                sessionID: related.session.id,
+                threadID: related.thread.id,
+                turnID: related.turn.id,
+                observedAt: fixture.time(40)
+            ),
+            into: repository
+        )
+        _ = try await Support.appendAssistantMessage(
+            Support.semanticStatementBatch(0..<12),
+            id: "assistant-bounded-semantics",
+            sessionID: related.session.id,
+            threadID: related.thread.id,
+            turnID: related.turn.id,
+            offset: 41,
+            fixture: fixture,
+            into: repository
+        )
+        _ = try await Support.publishSemantics(sessionID: related.session.id, offset: 60, fixture: fixture, into: repository)
+        let boundedBrief = try Support.require(try await repository.relatedSessions(
+            ProvenanceRelatedSessionRequest(targetSessionID: target.session.id)
+        ).projection?.relatedSessions.first)
+        let milestones = try Support.milestonePayload(from: boundedBrief)
+        let blockers = try Support.blockerPayload(from: boundedBrief)
+        let approaches = try Support.approachPayload(from: boundedBrief)
+
+        #expect(milestones.milestones.count == 10)
+        #expect(blockers.blockers.count == 10)
+        #expect(approaches.approachChanges.count == 10)
+        #expect(milestones.currentMilestoneID == milestones.milestones.last?.id)
+        #expect(blockers.omissionReasons.contains("related_session_semantic_payload_omitted:blockers:2"))
+        #expect(approaches.omissionReasons.contains("related_session_semantic_payload_omitted:approach_changes:2"))
+        #expect(Support.availability(.blockers, in: boundedBrief)?.status == "partial")
+        #expect(Support.availability(.approachChanges, in: boundedBrief)?.reason == "bounded_semantic_payload")
+    }
+}

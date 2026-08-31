@@ -380,4 +380,58 @@ struct RelatedSessionProjectionTests {
         #expect(projection.excludedCandidates.map(\.sessionID) == ["session-repo-only"])
         #expect(projection.excludedCandidates.map(\.reason) == ["result_limit"])
     }
+
+    @Test
+    func briefsCarryWorkStateSemanticsWithScopedEvidenceAndAvailability() async throws {
+        typealias Support = RelatedSessionWorkStateSemanticTestSupport
+        let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
+        defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let seeded = try await Support.seedWorkStateSessions(into: repository)
+
+        let projection = try #require(try await repository.relatedSessions(
+            ProvenanceRelatedSessionRequest(targetSessionID: seeded.target.session.id, limit: 10)
+        ).projection)
+        let openBrief = try #require(projection.relatedSessions.first {
+            $0.sessionID == seeded.open.session.id
+        })
+        let bypassedBrief = try #require(projection.relatedSessions.first {
+            $0.sessionID == seeded.bypassed.session.id
+        })
+        let openMilestones = try Support.milestonePayload(from: openBrief)
+        let bypassedMilestones = try Support.milestonePayload(from: bypassedBrief)
+        let openBlockers = try Support.blockerPayload(from: openBrief)
+        let bypassedBlockers = try Support.blockerPayload(from: bypassedBrief)
+        let openApproaches = try Support.approachPayload(from: openBrief)
+        let openBlockerField = try Support.semanticField(.blockers, in: openBrief)
+        let bypassedBlockerField = try Support.semanticField(.blockers, in: bypassedBrief)
+        let openApproachField = try Support.semanticField(.approachChanges, in: openBrief)
+
+        #expect(openBrief.semanticFields.map(\.kind) == Support.expectedSemanticFieldKinds)
+        #expect(openMilestones.milestones.first?.title == bypassedMilestones.milestones.first?.title)
+        #expect(openBlockerField.scopeID == seeded.open.session.id)
+        #expect(bypassedBlockerField.scopeID == seeded.bypassed.session.id)
+        #expect(openBlockers.blockers.first?.affectedActivity == "run package suite")
+        #expect(openBlockers.blockers.first?.state == .reportedOpen)
+        #expect(bypassedBlockers.blockers.first?.affectedActivity == "run package suite")
+        #expect(bypassedBlockers.blockers.first?.state == .reportedBypassed)
+        #expect(openApproachField.scopeID == seeded.open.session.id)
+        #expect(openApproaches.approachChanges.first?.state == .reportedReplaced)
+        #expect(openBlockers.blockers.first?.sourceEvidenceRefs == [
+            .init(kind: "coding_agent_assistant_message", id: seeded.openEvidenceID),
+        ])
+        #expect(bypassedBlockers.blockers.first?.sourceEvidenceRefs.contains {
+            $0.kind == "coding_agent_assistant_message" && $0.id == seeded.bypassedResolutionEvidenceID
+        } == true)
+        #expect(openBlockerField.record?.supportingEvidenceRefs.contains {
+            $0.kind == "coding_agent_assistant_message" && $0.id == seeded.openEvidenceID
+        } == true)
+        #expect(openBlockerField.record?.producerID == ProvenanceCodingAgentSessionSemanticInferenceProducer.producerID)
+        #expect(openBlockerField.record?.producerVersion == ProvenanceCodingAgentSessionSemanticInferenceProducer.producerVersion)
+        #expect(Support.availability(.blockers, in: openBrief)?.status == "observed")
+        #expect(Support.availability(.approachChanges, in: openBrief)?.status == "observed")
+        #expect(openBrief.relationshipReasons.allSatisfy {
+            ![.sameRepository, .sameWorktree, .sameBranch].contains($0.kind) || !$0.evidence.isEmpty
+        })
+    }
 }
