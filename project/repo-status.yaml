@@ -2,15 +2,8 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice:
-    id: blocker_approach_change_semantics
-    title: Blocker and approach-change semantics
-    state: implemented
-    owner: provenance_engine
-    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/session-blocker-approach-semantics
-    active_branch: session-blocker-approach-semantics
-    active_agent: codex
-  state: active
+  active_slice: null
+  state: none_selected
 
 execution_telemetry:
   provider_neutral_contract: implemented

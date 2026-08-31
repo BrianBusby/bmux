@@ -20,12 +20,11 @@ Regenerate with: ./scripts/project-docs generate
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)
-- Active or selected slices in the frontier:
-  - Blocker and approach-change semantics (`blocker_approach_change_semantics`) - maturity: validated; status: implemented; selection: current; owner: Provenance Engine
+- Active or selected slices in the frontier: none
 
 ### Active Implementation
 
-- Blocker and approach-change semantics (`blocker_approach_change_semantics`) - maturity: validated; status: implemented; selection: current; owner: Provenance Engine
+- None.
 
 ### Selected Next
 
