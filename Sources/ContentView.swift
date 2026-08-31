@@ -12419,11 +12419,17 @@ struct VerticalTabsSidebar: View {
                 lastSidebarSelectionIndex = nil
             }
         }
+        let provenanceDisplaySnapshot = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: tab)
+        let workspaceTitleResolution = tabManager.sidebarWorkspaceTitleResolution(
+            for: tab,
+            provenanceDisplaySnapshot: provenanceDisplaySnapshot
+        )
         let row = TabItemView(
             tabManager: tabManager,
             notificationStore: notificationStore,
             tab: tab,
-            provenanceDisplaySnapshot: tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: tab),
+            provenanceDisplaySnapshot: provenanceDisplaySnapshot,
+            workspaceTitleResolution: workspaceTitleResolution,
             index: index,
             workspaceShortcutDigit: WorkspaceShortcutMapper.digitForWorkspace(
                 at: index,
@@ -13196,6 +13202,7 @@ struct TabItemView: View, Equatable {
     nonisolated static func == (lhs: TabItemView, rhs: TabItemView) -> Bool {
         lhs.tab === rhs.tab &&
         lhs.provenanceDisplaySnapshot == rhs.provenanceDisplaySnapshot &&
+        lhs.workspaceTitleResolution == rhs.workspaceTitleResolution &&
         lhs.index == rhs.index &&
         lhs.workspaceShortcutDigit == rhs.workspaceShortcutDigit &&
         lhs.workspaceShortcutModifierSymbol == rhs.workspaceShortcutModifierSymbol &&
@@ -13241,6 +13248,7 @@ struct TabItemView: View, Equatable {
 #endif
     let tab: Tab
     let provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot?
+    let workspaceTitleResolution: SidebarWorkspaceTitleResolution
     let index: Int
     let workspaceShortcutDigit: Int?
     let workspaceShortcutModifierSymbol: String
@@ -13292,6 +13300,9 @@ struct TabItemView: View, Equatable {
     @State private var isEditing = false
     @State private var renameDraft = ""
     @State private var renameBaselineHadUserCustomTitle = false
+#if DEBUG
+    @State private var lastLoggedSidebarTitleSelfHealKey: String?
+#endif
 
     private static let maxWrappedTitleLines = 8
     private static let maxDisplayedTitleCharacters = 2048
@@ -13627,7 +13638,8 @@ struct TabItemView: View, Equatable {
             showsGitBranch: sidebarShowGitBranch,
             usesViewportAwarePath: sidebarUsesLastSegmentPath,
             visibleAuxiliaryDetails: visibleAuxiliaryDetails,
-            provenanceDisplaySnapshot: provenanceDisplaySnapshot
+            provenanceDisplaySnapshot: provenanceDisplaySnapshot,
+            titleResolution: workspaceTitleResolution
         )
     }
 
@@ -14244,6 +14256,9 @@ struct TabItemView: View, Equatable {
 
     func refreshWorkspaceSnapshot(force: Bool = false) {
         let nextSnapshot = makeWorkspaceSnapshot()
+#if DEBUG
+        logSidebarTitleSelfHealIfNeeded()
+#endif
         let decision = SidebarWorkspaceSnapshotRefreshPolicy().decision(
             current: workspaceSnapshotStorage,
             next: nextSnapshot,
@@ -14927,7 +14942,7 @@ struct TabItemView: View, Equatable {
         }
         return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: workspaceSnapshotPresentationKey,
-            title: provenanceDisplaySnapshot?.title ?? tab.title,
+            title: workspaceTitleResolution.title,
             customDescription: settings.showsWorkspaceDescription ? sidebarVisibleCustomDescription(hiddenPullRequestNumbers: displayedPullRequestNumbers) : nil,
             isPinned: tab.isPinned,
             customColorHex: tab.customColor,
@@ -14960,6 +14975,25 @@ struct TabItemView: View, Equatable {
             hasActiveAIWork: tab.hasActiveAIWork
         )
     }
+
+#if DEBUG
+    private func logSidebarTitleSelfHealIfNeeded() {
+        guard workspaceTitleResolution.suppressedStaleProvenanceTitle else {
+            lastLoggedSidebarTitleSelfHealKey = nil
+            return
+        }
+        let provenanceTitle = workspaceTitleResolution.provenanceTitle ?? ""
+        let key = "\(tab.id.uuidString)|\(workspaceTitleResolution.liveTitle)|\(provenanceTitle)"
+        guard lastLoggedSidebarTitleSelfHealKey != key else { return }
+        lastLoggedSidebarTitleSelfHealKey = key
+        bmuxDebugLog(
+            "sidebar.title.selfHeal " +
+            "workspace=\(tab.id.uuidString.prefix(8)) " +
+            "live=\"\(debugCommandPaletteTextPreview(workspaceTitleResolution.liveTitle))\" " +
+            "provenance=\"\(debugCommandPaletteTextPreview(provenanceTitle))\""
+        )
+    }
+#endif
 
     private func sidebarVisibleCustomDescription(hiddenPullRequestNumbers: Set<Int>) -> String? {
         guard let description = tab.customDescription else { return nil }

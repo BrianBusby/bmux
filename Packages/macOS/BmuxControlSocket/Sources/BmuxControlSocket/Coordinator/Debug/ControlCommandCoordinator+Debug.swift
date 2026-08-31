@@ -68,6 +68,8 @@ extension ControlCommandCoordinator {
             return debugRightSidebarFocus(request.params)
         case "debug.sidebar.visible":
             return debugSidebarVisible(request.params)
+        case "debug.sidebar.health":
+            return debugSidebarHealth(request.params)
         case "debug.terminal.is_focused":
             return debugIsTerminalFocused(request.params)
         case "debug.terminal.simulate_file_drop":

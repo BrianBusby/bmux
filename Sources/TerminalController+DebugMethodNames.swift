@@ -20,6 +20,7 @@ extension TerminalController {
         "debug.browser.favicon",
         "debug.right_sidebar.focus",
         "debug.sidebar.visible",
+        "debug.sidebar.health",
         "debug.terminal.is_focused",
         "debug.terminal.read_text",
         "debug.terminal.render_stats",

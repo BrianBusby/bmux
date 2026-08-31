@@ -383,6 +383,57 @@ extension TerminalController: ControlDebugContext {
         AppDelegate.shared?.sidebarVisibility(windowId: windowID)
     }
 
+    func controlDebugSidebarHealth(routing: ControlRoutingSelectors) -> JSONValue? {
+        guard let tabManager = resolveTabManager(routing: routing) else {
+            return nil
+        }
+        let windowID = v2ResolveWindowId(tabManager: tabManager)
+        var unhealthyCount = 0
+        var selfHealedCount = 0
+        let rows: [JSONValue] = tabManager.tabs.enumerated().map { index, workspace in
+            let provenanceDisplaySnapshot = tabManager.workProvenanceRuntime?
+                .workspaceDisplayCurrentStateSnapshot(for: workspace)
+            let resolution = tabManager.sidebarWorkspaceTitleResolution(
+                for: workspace,
+                provenanceDisplaySnapshot: provenanceDisplaySnapshot
+            )
+            let staleProvenanceConflict = resolution.liveTitleIsAuthoritative
+                && resolution.provenanceTitle != nil
+                && resolution.provenanceTitle != resolution.liveTitle
+            let selfHealed = staleProvenanceConflict && resolution.title == resolution.liveTitle
+            let healthy = !resolution.liveTitleIsAuthoritative || resolution.title == resolution.liveTitle
+            if !healthy {
+                unhealthyCount += 1
+            }
+            if selfHealed {
+                selfHealedCount += 1
+            }
+            return .object([
+                "workspace_id": .string(workspace.id.uuidString),
+                "stable_workspace_id": .string(workspace.stableId.uuidString),
+                "row_identifier": .string("sidebarWorkspace.\(workspace.id.uuidString)"),
+                "index": .int(Int64(index)),
+                "live_title": .string(resolution.liveTitle),
+                "provenance_title": resolution.provenanceTitle.map(JSONValue.string) ?? .null,
+                "resolved_title": .string(resolution.title),
+                "title_source": .string(resolution.source.rawValue),
+                "live_title_authoritative": .bool(resolution.liveTitleIsAuthoritative),
+                "stale_provenance_conflict": .bool(staleProvenanceConflict),
+                "self_healed": .bool(selfHealed),
+                "healthy": .bool(healthy),
+            ])
+        }
+
+        return .object([
+            "window_id": windowID.map { .string($0.uuidString) } ?? .null,
+            "healthy": .bool(unhealthyCount == 0),
+            "unhealthy_count": .int(Int64(unhealthyCount)),
+            "self_healed_count": .int(Int64(selfHealedCount)),
+            "workspace_count": .int(Int64(tabManager.tabs.count)),
+            "workspaces": .array(rows),
+        ])
+    }
+
     // MARK: - debug.terminal.simulate_file_drop
 
     func controlDebugSimulateTerminalFileDrop(

@@ -42,6 +42,21 @@ extension TabManager {
         return tab.title
     }
 
+    func sidebarWorkspaceTitleResolution(
+        for tab: Workspace,
+        provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot?
+    ) -> SidebarWorkspaceTitleResolution {
+        SidebarWorkspaceTitleResolution(
+            liveTitle: resolvedWorkspaceDisplayTitle(for: tab),
+            liveTitleIsAuthoritative: isWorkspaceDisplayTitleAuthoritative(for: tab),
+            provenanceTitle: provenanceDisplaySnapshot?.title
+        )
+    }
+
+    func isWorkspaceDisplayTitleAuthoritative(for tab: Workspace) -> Bool {
+        tab.hasCustomTitle || workspaceGroups.contains { $0.anchorWorkspaceId == tab.id }
+    }
+
     private func windowTitle(for tab: Workspace?) -> String {
         let defaultTitle = defaultWindowTitle(for: tab)
         guard let windowId, let template = WindowTitleTemplate.configured() else { return defaultTitle }
