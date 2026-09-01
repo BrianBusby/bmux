@@ -8,10 +8,7 @@ extension AgentSessionSmartSessionSnapshot {
         let relatedOmittedCount: Int
         let collisionOmittedCount: Int
 
-        static let unavailable = CrossSessionAwareness(
-            status: "unavailable", relatedSessions: [], collisions: [],
-            relatedOmittedCount: 0, collisionOmittedCount: 0
-        )
+        static let unavailable = CrossSessionAwareness(related: nil, collisions: nil)
 
         init(related: ProvenanceRelatedSessionResponse?, collisions: ProvenanceArtifactCollisionResponse?) {
             let relatedProjection = related?.projection
