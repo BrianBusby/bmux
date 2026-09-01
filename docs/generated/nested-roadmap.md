@@ -20,7 +20,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Active Implementation
 
-- Workspace Display Prompt Resource Discovery (`workspace_display_prompt_resource_discovery`) - maturity: active; status: active; selection: current; owner: Bmux
+- None.
 
 ### Selected Next
 
@@ -135,7 +135,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Depends on: `claude_lifecycle_telemetry`
           Enables: `richer_session_understanding`
           Evidence: BrianBusby/bmux@bdf81ae0454f, BrianBusby/bmux@543161954689
-        - **Workspace Display Prompt Resource Discovery** (`workspace_display_prompt_resource_discovery`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: workspace display; layer: evidence sources; execution: current / Bmux; parallelism: conditional; delivery: open; acceptance: proposed; maturity: active
+        - **Workspace Display Prompt Resource Discovery** (`workspace_display_prompt_resource_discovery`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: workspace display; layer: evidence sources; execution: complete / Bmux; parallelism: conditional; delivery: open; acceptance: implemented; maturity: validated
           Depends on: `workspace_display_durable_context`
           Enables: `richer_session_understanding`
           Expected contract domains: `workspace_display_resource_evidence`, `provider_specific_extraction`, `optional_provider_resolution`, `idempotent_prompt_backfill`
@@ -143,7 +143,8 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `workspace_display_current_state`, `submitted_prompt_display_metadata`, `linear_ticket_resolution`
           Contract dependencies: `workspace_display_durable_context`
           Worktree required: true
-          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/prompt-derived-workspace-resources`; branch: `prompt-derived-workspace-resources`; agent: `Codex`
+          Evidence: BrianBusby/bmux#93 by [BrianBusby](https://github.com/BrianBusby)
+          Acceptance reason: bmux now performs bounded prompt-derived Linear resource discovery in the workspace observation path, merges it with PR-derived evidence, and writes normalized durable workspace display facts to Provenance Engine.
           Acceptance criteria: Submitted workspace prompts produce normalized Linear ticket evidence when they contain explicit Linear issue URLs or known bare ticket IDs.; Prompt evidence, stored-prompt backfill, PR title evidence, and PR branch evidence merge without duplicate ticket, ticket-link, or project-link facts.; Linear lookup enriches resolved tickets and projects when available, while unavailable authentication or resolution failure preserves unresolved IDs and explicit URLs for retry.; Sidebar and row views continue to render normalized PE workspace display metadata without provider-specific parsing.
   - **Project Truth Governance** (`project_truth_governance`) - program; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: project truth; layer: project truth; execution: current / Provenance Engine; parallelism: safe
     Rationale: Maintains canonical structured project state, generated status, and read-only CI checks that prevent authored documentation drift.
@@ -701,9 +702,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Workspace Display Prompt Resource Discovery (`workspace_display_prompt_resource_discovery`) | conditional | /Users/brianbusby/repos/.bmux-worktrees/prompt-derived-workspace-resources | prompt-derived-workspace-resources | Codex | `linear_ticket_resolution`, `submitted_prompt_display_metadata`, `workspace_display_current_state` | `workspace_display_durable_context` | single active assignment |
+- Active implementation assignments: none selected.
 
 ### Dependency-Ready Preflight
 

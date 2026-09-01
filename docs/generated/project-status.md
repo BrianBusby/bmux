@@ -24,7 +24,7 @@ Regenerate with: ./scripts/project-docs generate
 
 ### Active Implementation
 
-- Workspace Display Prompt Resource Discovery (`workspace_display_prompt_resource_discovery`) - maturity: active; status: active; selection: current; owner: Bmux
+- None.
 
 ### Selected Next
 

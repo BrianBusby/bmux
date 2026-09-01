@@ -193,7 +193,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 ### Current Roadmap Lanes
 
 - Bmux and Provenance Engine (`bmux_provenance_platform`) - project; status: active; owner: Provenance Engine
-- Workspace Display Prompt Resource Discovery (`workspace_display_prompt_resource_discovery`) - slice; status: active; owner: Bmux
 - Project Truth Governance (`project_truth_governance`) - program; status: active; owner: Provenance Engine
 - Canonical Project Truth State (`canonical_project_truth_state`) - phase; status: active; owner: Provenance Engine
 - Project Truth Manifest and CI (`project_truth_manifest_and_ci`) - milestone; status: active; owner: Provenance Engine

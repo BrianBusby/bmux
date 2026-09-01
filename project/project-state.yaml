@@ -430,7 +430,7 @@ roadmap:
       kind: slice
       title: Workspace Display Prompt Resource Discovery
       parent: workspace_display_current_state
-      status: active
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -442,7 +442,7 @@ roadmap:
           - workspace_display
           - prompt_resource_discovery
           - linear
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - workspace_display_durable_context
       enables:
@@ -467,19 +467,26 @@ roadmap:
           - workspace_display_durable_context
         worktree_required: true
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: bmux
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/prompt-derived-workspace-resources
-        active_branch: prompt-derived-workspace-resources
-        active_agent: Codex
       delivery_status: open
-      acceptance_status: proposed
+      acceptance_status: implemented
+      evidence:
+        commits: []
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 93
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-09-01
       acceptance:
         criteria:
           - Submitted workspace prompts produce normalized Linear ticket evidence when they contain explicit Linear issue URLs or known bare ticket IDs.
           - Prompt evidence, stored-prompt backfill, PR title evidence, and PR branch evidence merge without duplicate ticket, ticket-link, or project-link facts.
           - Linear lookup enriches resolved tickets and projects when available, while unavailable authentication or resolution failure preserves unresolved IDs and explicit URLs for retry.
           - Sidebar and row views continue to render normalized PE workspace display metadata without provider-specific parsing.
+      acceptance_reason: bmux now performs bounded prompt-derived Linear resource discovery in the workspace observation path, merges it with PR-derived evidence, and writes normalized durable workspace display facts to Provenance Engine.
 
     - id: project_truth_governance
       kind: program
