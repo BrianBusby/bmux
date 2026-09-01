@@ -666,7 +666,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Worktree required: true
           Execution notes: Implemented as bounded related-session and possible artifact-collision presentation inside the existing React Smart Session refresh. It does not inject agent context, notify outside the Session surface, block work, coordinate agents, or share transcripts.
           Gate `cross_session_retrieval_validated`: requires `agent_accessible_cross_session_retrieval` maturity validated; reason: Proactive presentation should depend on observed useful retrieval and relevance behavior.
-          Evidence: BrianBusby/bmux@a2b88f2479f4
+          Evidence: BrianBusby/bmux@a2b88f2479f4, BrianBusby/bmux#94 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Surface especially relevant cross-session changes through bounded Smart Session presentation without silently mutating coding-agent context.
           Acceptance reason: The existing Smart Session refresh path now reads at most five related sessions and five possible collision candidates through PE public contracts and presents their factual boundaries separately from the session's own semantic work model.
           Acceptance criteria: React Smart Session refresh performs bounded PE related-session and artifact-collision reads for the linked PE session.; Presentation preserves relationship reasons, lifecycle/freshness state, normalized artifact paths, collision state, and bounded omission counts.; Failed awareness reads degrade to an explicit unavailable state without hiding the existing Smart Session snapshot.; No prompt injection, external notification, locking, interruption, reassignment, transcript sharing, or coordination policy is added.

@@ -2786,7 +2786,12 @@ roadmap:
         commits:
           - repository: BrianBusby/bmux
             sha: a2b88f2479f4424ea1a9072039e270da208386a2
-        pull_requests: []
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 94
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
       completed_at: 2026-09-01
       acceptance:
         criteria:

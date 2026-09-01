@@ -125,7 +125,7 @@ context/session reads.
 ## Current Slice
 
 `proactive_bmux_cross_session_awareness` is implemented on branch
-`proactive-cross-session-awareness`. The existing React Smart Session refresh
+`proactive-cross-session-awareness` in PR #94. The existing React Smart Session refresh
 now performs bounded PE reads for at most five related sessions and five
 possible artifact collisions, then presents relationship reasons,
 lifecycle/freshness state, normalized paths, and collision state in a separate
