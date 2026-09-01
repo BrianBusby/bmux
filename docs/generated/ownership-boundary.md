@@ -33,6 +33,7 @@ Regenerate with: ./scripts/project-docs generate
 | Streaming Execution Telemetry | Bmux |
 | User interface | Bmux |
 | Workflow observation | Bmux |
+| Workspace Display Resource Discovery | Bmux |
 
 ## Durable Versus Ephemeral Policy
 

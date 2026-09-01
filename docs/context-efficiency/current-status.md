@@ -133,6 +133,17 @@ the broader semantic-session product. Routed workspace display refreshes now
 notify the owning tab manager rather than only the startup manager, so linked
 prompt state can update immediately in the window that owns the workspace.
 
+Workspace prompt resource discovery is implemented for Workspace Display
+Current State. Submitted prompts, stored submitted prompts used for idempotent
+backfill, PR titles, and PR branches now share one extraction/linking boundary
+for Linear issue IDs and issue URLs. bmux performs provider-specific extraction
+and optional Linear enrichment, preserving unresolved IDs and explicit prompt
+URLs when authentication or resolution fails; PE remains the durable display
+fact store/projection owner, and sidebar views still render only normalized
+workspace metadata. Captured agent output and initial session instructions are
+not inputs yet; they should use the same boundary only after a follow-up
+capture-policy and false-positive slice.
+
 Milestone inference is implemented on branch `session-milestone-inference` and
 PR #84. SessionWorkModel now exposes bounded coding-agent milestone semantics
 from existing semantic inference records: plan-derived milestone collections,

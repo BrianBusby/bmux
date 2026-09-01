@@ -143,6 +143,22 @@ prompt preview used by the sidebar row; PE persists/projects that accepted
 display value. Expanding this into raw prompt or transcript storage requires a
 separate privacy/capture-policy slice.
 
+Prompt-derived workspace resource discovery is a bmux observation/linking
+concern. Bounded text evidence sources, currently submitted prompts, stored
+submitted prompts used for idempotent backfill, PR titles, and PR branches,
+enter `WorkProvenanceWorkspaceResourceDiscovery` for provider-specific
+extraction without API I/O. `WorkProvenanceWorkspaceDisplayResourceLinker`
+normalizes and deduplicates extracted evidence, optionally enriches it through
+provider resolvers such as Linear, preserves unresolved IDs and explicit URLs
+when resolution is unavailable or fails, and writes the merged ticket/project
+facts through PE workspace display evidence. Sidebar and row views must keep
+rendering normalized workspace metadata and must not parse provider-specific
+text. Additional providers or evidence sources should add extractor/resolver
+adapters at this boundary. Captured agent output and initial session
+instructions can use the same extraction entry point only after a follow-up
+slice defines the evidence origin, false-positive threshold, and retention
+policy; this slice intentionally does not feed those sources.
+
 bmux may use optimistic UI only as temporary pending state, such as immediately
 reflecting a user rename while writing to PE. The pending value must reconcile
 from PE Current State and must roll back or surface an error if PE rejects the
