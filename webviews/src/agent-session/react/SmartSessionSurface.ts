@@ -163,7 +163,7 @@ function CrossSessionAwarenessSection({ snapshot, copy }: { snapshot: SmartSessi
   return h(
     "section",
     { className: "smart-session-section", "data-cross-session-status": awareness.status },
-    h("h2", null, copyText(copy, "smartSessionRelatedWork", "Related work")),
+    h("h2", null, copyText(copy, "smartSessionEvidence", "Evidence")),
     hasEvidence
       ? h(
           "div",
@@ -178,12 +178,12 @@ function CrossSessionAwarenessSection({ snapshot, copy }: { snapshot: SmartSessi
           ...awareness.collisions.map((collision) => h(
             "div",
             { className: "smart-session-evidence-card", key: collision.id },
-            h("strong", null, copyText(copy, "smartSessionPossibleCollisions", "Possible collision")),
+            h("strong", null, copyText(copy, "smartSessionFiles", "Files")),
             h("p", null, collision.path),
             h("p", { className: "smart-session-muted" }, collision.state),
           )),
         )
-      : h("p", { className: "smart-session-muted" }, copyText(copy, "smartSessionNoRelatedWork", "No related work evidence")),
+      : h("p", { className: "smart-session-muted" }, copyText(copy, "smartSessionNoEvidence", "No evidence yet")),
   );
 }
 

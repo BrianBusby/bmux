@@ -144,9 +144,6 @@ const context: AppContext = {
     smartSessionRevision: "Revision",
     smartSessionThread: "Thread",
     smartSessionTurn: "Turn",
-    smartSessionRelatedWork: "Related work",
-    smartSessionNoRelatedWork: "No related work evidence",
-    smartSessionPossibleCollisions: "Possible collision",
   },
   theme,
 };

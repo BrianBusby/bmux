@@ -114,18 +114,6 @@ extension AgentSessionWebRendererCoordinator {
             "smartSessionTurn": String(
                 localized: "agentSession.web.smartSession.turn",
                 defaultValue: "Turn"
-            ),
-            "smartSessionRelatedWork": String(
-                localized: "agentSession.web.smartSession.relatedWork",
-                defaultValue: "Related work"
-            ),
-            "smartSessionNoRelatedWork": String(
-                localized: "agentSession.web.smartSession.noRelatedWork",
-                defaultValue: "No related work evidence"
-            ),
-            "smartSessionPossibleCollisions": String(
-                localized: "agentSession.web.smartSession.possibleCollision",
-                defaultValue: "Possible collision"
             )
         ]
     }

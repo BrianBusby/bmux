@@ -149,9 +149,6 @@ export type AgentSessionCopy = {
   smartSessionRevision: string;
   smartSessionThread: string;
   smartSessionTurn: string;
-  smartSessionRelatedWork: string;
-  smartSessionNoRelatedWork: string;
-  smartSessionPossibleCollisions: string;
 };
 
 export type SmartSessionReadStatus =
