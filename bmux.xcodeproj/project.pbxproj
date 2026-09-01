@@ -982,6 +982,7 @@
 		A5C0DE0000000000000000B4 /* ProjectPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000B3 /* ProjectPanelView.swift */; };
 		A5C0DE0000000000000000BC /* ProjectSchemesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000BB /* ProjectSchemesTabView.swift */; };
 		A5C0DE0000000000000000B8 /* ProjectTargetsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000B7 /* ProjectTargetsTabView.swift */; };
+		CE0E06100000000000000001 /* PromptSessionLinkProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E06100000000000000002 /* PromptSessionLinkProjectionTests.swift */; };
 		CE0C00010000000000000001 /* ProvenanceAppendEventRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00010000000000000002 /* ProvenanceAppendEventRequest.swift */; };
 		CE0D10010000000000000001 /* ProvenanceAppendEventRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00010000000000000002 /* ProvenanceAppendEventRequest.swift */; };
 		CE0C00020000000000000001 /* ProvenanceAppendEventResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00020000000000000002 /* ProvenanceAppendEventResponse.swift */; };
@@ -2697,6 +2698,7 @@
 		A5C0DE0000000000000000B3 /* ProjectPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectPanelView.swift; sourceTree = "<group>"; };
 		A5C0DE0000000000000000BB /* ProjectSchemesTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectSchemesTabView.swift; sourceTree = "<group>"; };
 		A5C0DE0000000000000000B7 /* ProjectTargetsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectTargetsTabView.swift; sourceTree = "<group>"; };
+		CE0E06100000000000000002 /* PromptSessionLinkProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptSessionLinkProjectionTests.swift; sourceTree = "<group>"; };
 		CE0C00010000000000000002 /* ProvenanceAppendEventRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceAppendEventRequest.swift; sourceTree = "<group>"; };
 		CE0C00020000000000000002 /* ProvenanceAppendEventResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceAppendEventResponse.swift; sourceTree = "<group>"; };
 		CE0C001A0000000000000002 /* ProvenanceCurrentContextCheckpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceCurrentContextCheckpoint.swift; sourceTree = "<group>"; };
@@ -4728,6 +4730,7 @@
 				C7A51D100000000000000001 /* AgentChatSessionRegistryObservationReviewRegressionTests.swift */,
 				C7A51D000000000000000001 /* AgentChatSessionRegistryObservationTests.swift */,
 					CE0B00050000000000000002 /* SessionProvenanceTests.swift */,
+					CE0E06100000000000000002 /* PromptSessionLinkProjectionTests.swift */,
 				D3610B010000000000000002 /* AgentSessionAutoResumeSettingsTests.swift */,
 				D3610B020000000000000002 /* AgentSessionAutoResumeSwiftTests.swift */,
 				A9E010000000000000000005 /* AgentExecutableResolverTests.swift */,
@@ -7104,6 +7107,7 @@
 				B8E9500A0000000000000001 /* PostHogAnalyticsPropertiesTests.swift in Sources */,
 				DE71CE00000000000000000A /* PresenceHeartbeatClientTests.swift in Sources */,
 				C47110010000000000000001 /* ProcessPipeReadCrashRegressionTests.swift in Sources */,
+				CE0E06100000000000000001 /* PromptSessionLinkProjectionTests.swift in Sources */,
 				A64610020000000000000001 /* QuitConfirmationAlertPresenterTests.swift in Sources */,
 				A6D1F0400000000000000002 /* ReleasingWindowControllerTests.swift in Sources */,
 				REE0CA0000000000000000B2 /* RemotesClientTests.swift in Sources */,
