@@ -144,6 +144,9 @@ const context: AppContext = {
     smartSessionRevision: "Revision",
     smartSessionThread: "Thread",
     smartSessionTurn: "Turn",
+    smartSessionRelatedWork: "Related work",
+    smartSessionNoRelatedWork: "No related work evidence",
+    smartSessionPossibleCollisions: "Possible collision",
   },
   theme,
 };
@@ -1461,6 +1464,13 @@ function smartSessionSnapshot({
       turnCount: 1,
     },
     semanticMessages,
+    crossSessionAwareness: {
+      status: "available",
+      relatedSessions: [],
+      collisions: [],
+      relatedOmittedCount: 0,
+      collisionOmittedCount: 0,
+    },
   };
 }
 

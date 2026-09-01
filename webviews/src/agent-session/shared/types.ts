@@ -149,6 +149,9 @@ export type AgentSessionCopy = {
   smartSessionRevision: string;
   smartSessionThread: string;
   smartSessionTurn: string;
+  smartSessionRelatedWork: string;
+  smartSessionNoRelatedWork: string;
+  smartSessionPossibleCollisions: string;
 };
 
 export type SmartSessionReadStatus =
@@ -178,6 +181,24 @@ export type SmartSessionSnapshot = {
   workModel?: SmartSessionWorkModel;
   factual: SmartSessionFactual;
   semanticMessages: SmartSessionSemanticMessage[];
+  crossSessionAwareness: {
+    status: "available" | "unavailable";
+    relatedSessions: Array<{
+      sessionId: string;
+      lifecycleState: string;
+      completionState: string;
+      relationshipReasons: string[];
+      freshnessState: string;
+    }>;
+    collisions: Array<{
+      id: string;
+      path: string;
+      state: string;
+      participantSessionIds: string[];
+    }>;
+    relatedOmittedCount: number;
+    collisionOmittedCount: number;
+  };
 };
 
 export type SmartSessionRevision = {

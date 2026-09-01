@@ -9,10 +9,12 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
     let workModel: WorkModel
     let factual: Factual
     let semanticMessages: [SemanticMessage]
+    let crossSessionAwareness: CrossSessionAwareness
 
     init(
         workModel: ProvenanceSessionWorkModel,
-        semanticMessages semanticMessageRecords: [ProvenanceSemanticMessageRecord]
+        semanticMessages semanticMessageRecords: [ProvenanceSemanticMessageRecord],
+        crossSessionAwareness: CrossSessionAwareness = .unavailable
     ) {
         let factualProjection = workModel.basis.factualSessionProjection
         let messages = semanticMessageRecords
@@ -39,6 +41,7 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
         self.workModel = WorkModel(model: workModel)
         self.factual = Factual(factualProjection: factualProjection)
         self.semanticMessages = messages
+        self.crossSessionAwareness = crossSessionAwareness
     }
 
     var bridgePayload: [String: Any] {
@@ -48,8 +51,93 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
             "identity": identity.bridgePayload,
             "workModel": workModel.bridgePayload,
             "factual": factual.bridgePayload,
-            "semanticMessages": semanticMessages.map(\.bridgePayload)
+            "semanticMessages": semanticMessages.map(\.bridgePayload),
+            "crossSessionAwareness": crossSessionAwareness.bridgePayload
         ]
+    }
+}
+
+extension AgentSessionSmartSessionSnapshot {
+    struct CrossSessionAwareness: Equatable, Sendable {
+        let status: String
+        let relatedSessions: [RelatedSession]
+        let collisions: [Collision]
+        let relatedOmittedCount: Int
+        let collisionOmittedCount: Int
+
+        static let unavailable = CrossSessionAwareness(
+            status: "unavailable", relatedSessions: [], collisions: [],
+            relatedOmittedCount: 0, collisionOmittedCount: 0
+        )
+
+        init(related: ProvenanceRelatedSessionResponse?, collisions: ProvenanceArtifactCollisionResponse?) {
+            let relatedProjection = related?.projection
+            let collisionProjection = collisions?.projection
+            self.status = relatedProjection == nil && collisionProjection == nil ? "unavailable" : "available"
+            self.relatedSessions = (relatedProjection?.relatedSessions ?? []).map(RelatedSession.init)
+            self.collisions = (collisionProjection?.candidates ?? []).map(Collision.init)
+            self.relatedOmittedCount = relatedProjection?.excludedCandidates.count ?? 0
+            self.collisionOmittedCount = collisionProjection?.excludedCandidates.count ?? 0
+        }
+
+        var bridgePayload: [String: Any] {
+            [
+                "status": status,
+                "relatedSessions": relatedSessions.map(\.bridgePayload),
+                "collisions": collisions.map(\.bridgePayload),
+                "relatedOmittedCount": relatedOmittedCount,
+                "collisionOmittedCount": collisionOmittedCount
+            ]
+        }
+    }
+
+    struct RelatedSession: Equatable, Sendable {
+        let sessionID: String
+        let lifecycleState: String
+        let completionState: String
+        let relationshipReasons: [String]
+        let freshnessState: String
+
+        init(_ brief: ProvenanceRelatedSessionBrief) {
+            sessionID = brief.sessionID
+            lifecycleState = brief.lifecycleState
+            completionState = brief.completionState
+            relationshipReasons = brief.relationshipReasons.map { $0.kind.rawValue }
+            freshnessState = brief.freshness.state
+        }
+
+        var bridgePayload: [String: Any] {
+            [
+                "sessionId": sessionID,
+                "lifecycleState": lifecycleState,
+                "completionState": completionState,
+                "relationshipReasons": relationshipReasons,
+                "freshnessState": freshnessState
+            ]
+        }
+    }
+
+    struct Collision: Equatable, Sendable {
+        let id: String
+        let path: String
+        let state: String
+        let participantSessionIDs: [String]
+
+        init(_ candidate: ProvenanceArtifactCollisionCandidate) {
+            id = candidate.id
+            path = candidate.artifactIdentity.normalizedPath
+            state = candidate.state.rawValue
+            participantSessionIDs = candidate.participants.map(\.sessionID)
+        }
+
+        var bridgePayload: [String: Any] {
+            [
+                "id": id,
+                "path": path,
+                "state": state,
+                "participantSessionIds": participantSessionIDs
+            ]
+        }
     }
 }
 
