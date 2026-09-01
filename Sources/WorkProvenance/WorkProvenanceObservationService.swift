@@ -6,7 +6,7 @@ actor WorkProvenanceObservationService {
     private let client: any ProvenanceEngineContracts.ProvenanceEngineClient
     private let gitInspector: any WorkProvenanceGitInspecting
     private let pullRequestOwnerResolver: any WorkProvenancePullRequestOwnerResolving
-    private let ticketLinkResolver: any WorkProvenanceTicketLinkResolving
+    private let resourceLinker: WorkProvenanceWorkspaceDisplayResourceLinker
     private let stableIDFactory: WorkProvenanceStableIDFactory
     private let dateProvider: @Sendable () -> Date
     private var latestFingerprintByWorkspaceID: [UUID: String] = [:]
@@ -22,13 +22,17 @@ actor WorkProvenanceObservationService {
         gitInspector: any WorkProvenanceGitInspecting,
         pullRequestOwnerResolver: any WorkProvenancePullRequestOwnerResolving = WorkProvenanceGitHubCLIPullRequestOwnerResolver(),
         ticketLinkResolver: any WorkProvenanceTicketLinkResolving = WorkProvenanceLinearTicketLinkResolver(),
+        resourceDiscovery: WorkProvenanceWorkspaceResourceDiscovery = WorkProvenanceWorkspaceResourceDiscovery(),
         stableIDFactory: WorkProvenanceStableIDFactory = WorkProvenanceStableIDFactory(),
         dateProvider: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.client = client
         self.gitInspector = gitInspector
         self.pullRequestOwnerResolver = pullRequestOwnerResolver
-        self.ticketLinkResolver = ticketLinkResolver
+        self.resourceLinker = WorkProvenanceWorkspaceDisplayResourceLinker(
+            ticketLinkResolver: ticketLinkResolver,
+            resourceDiscovery: resourceDiscovery
+        )
         self.stableIDFactory = stableIDFactory
         self.dateProvider = dateProvider
     }
@@ -156,15 +160,13 @@ actor WorkProvenanceObservationService {
         gitSnapshot: WorkProvenanceGitSnapshot?
     ) async throws {
         let pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest)
-        // Keep ticket association tied to explicit PR evidence. Branch-only
-        // workspaces must not inherit ambient ticket keys from the current repo.
-        let explicitTicketIDs = Self.ticketIDs(evidenceStrings: [
-            pullRequest?.title,
-            pullRequest?.branch
-        ].compactMap { $0 })
-        let linkFacts = try await workspaceDisplayLinkFacts(
-            stableWorkspaceID: workspace.stableWorkspaceID,
-            explicitTicketIDs: explicitTicketIDs
+        let existingDisplayResponse = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
+            workspaceID: workspace.stableWorkspaceID.uuidString
+        ))
+        let linkFacts = await resourceLinker.linkFacts(
+            pullRequest: pullRequest,
+            lastSubmittedPrompt: workspace.lastSubmittedPrompt,
+            existingDisplay: existingDisplayResponse.display
         )
         let ticketIDs = linkFacts.ticketIDs
         let ticketLinks = linkFacts.ticketLinks
@@ -256,50 +258,6 @@ actor WorkProvenanceObservationService {
         StartupBreadcrumbLog.append("workProvenance.observe.workspaceDisplayAppended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
     }
 
-    private func workspaceDisplayLinkFacts(
-        stableWorkspaceID: UUID,
-        explicitTicketIDs: [String]
-    ) async throws -> (
-        ticketIDs: [String],
-        ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord],
-        projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord]
-    ) {
-        guard explicitTicketIDs.isEmpty else {
-            let resolvedLinks = await ticketLinkResolver.workspaceLinks(for: explicitTicketIDs)
-            let existingDisplay = try? await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
-                workspaceID: stableWorkspaceID.uuidString
-            ))
-            return (
-                ticketIDs: explicitTicketIDs,
-                ticketLinks: Self.mergedTicketLinks(
-                    ticketIDs: explicitTicketIDs,
-                    incomingLinks: resolvedLinks.ticketLinks,
-                    existingLinks: existingDisplay?.display?.ticketLinks ?? []
-                ),
-                projectLinks: Self.mergedProjectLinks(
-                    incomingLinks: resolvedLinks.projectLinks,
-                    existingLinks: existingDisplay?.display?.projectLinks ?? []
-                )
-            )
-        }
-
-        let response = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
-            workspaceID: stableWorkspaceID.uuidString
-        ))
-        guard let display = response.display else {
-            return (ticketIDs: [], ticketLinks: [], projectLinks: [])
-        }
-        let ticketFacts = Self.normalizedTicketFacts(
-            ticketIDs: display.ticketIDs,
-            ticketLinks: display.ticketLinks
-        )
-        return (
-            ticketIDs: ticketFacts.ids,
-            ticketLinks: ticketFacts.links,
-            projectLinks: Self.normalizedProjectLinks(display.projectLinks)
-        )
-    }
-
     private func pullRequestWithResolvedOwner(
         _ pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest?
     ) async -> WorkProvenanceWorkspaceSnapshot.PullRequest? {
@@ -353,142 +311,6 @@ actor WorkProvenanceObservationService {
             return nil
         }
         return trimmed
-    }
-
-    private static func normalizedTicketFacts(
-        ticketIDs: [String],
-        ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord]
-    ) -> (
-        ids: [String],
-        links: [ProvenanceWorkspaceDisplayTicketLinkRecord]
-    ) {
-        var seenLinkIDs = Set<String>()
-        let links = ticketLinks.compactMap { link -> ProvenanceWorkspaceDisplayTicketLinkRecord? in
-            guard let id = normalizedTicketID(link.id),
-                  seenLinkIDs.insert(id).inserted else {
-                return nil
-            }
-            return ProvenanceWorkspaceDisplayTicketLinkRecord(
-                id: id,
-                system: normalizedNonEmpty(link.system),
-                title: normalizedNonEmpty(link.title),
-                url: normalizedNonEmpty(link.url),
-                ownerName: normalizedNonEmpty(link.ownerName),
-                ownerURL: normalizedNonEmpty(link.ownerURL)
-            )
-        }
-        var seenTicketIDs = Set<String>()
-        let ids = ticketIDs.compactMap { ticketID -> String? in
-            guard let id = normalizedTicketID(ticketID),
-                  seenTicketIDs.insert(id).inserted else {
-                return nil
-            }
-            return id
-        }
-        return (
-            ids: ids.isEmpty ? links.map(\.id) : ids,
-            links: links
-        )
-    }
-
-    private static func normalizedProjectLinks(
-        _ projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord]
-    ) -> [ProvenanceWorkspaceDisplayProjectLinkRecord] {
-        var seen = Set<String>()
-        return projectLinks.compactMap { link -> ProvenanceWorkspaceDisplayProjectLinkRecord? in
-            guard let id = normalizedNonEmpty(link.id),
-                  seen.insert(id).inserted else {
-                return nil
-            }
-            return ProvenanceWorkspaceDisplayProjectLinkRecord(
-                id: id,
-                system: normalizedNonEmpty(link.system),
-                title: normalizedNonEmpty(link.title),
-                url: normalizedNonEmpty(link.url)
-            )
-        }
-    }
-
-    private static func mergedProjectLinks(
-        incomingLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord],
-        existingLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord]
-    ) -> [ProvenanceWorkspaceDisplayProjectLinkRecord] {
-        let incomingLinks = normalizedProjectLinks(incomingLinks)
-        let existingLinks = normalizedProjectLinks(existingLinks)
-        guard !incomingLinks.isEmpty else { return existingLinks }
-        let existingByID = projectLinksByID(existingLinks)
-        return incomingLinks.map { incoming in
-            let existing = existingByID[incoming.id]
-            return ProvenanceWorkspaceDisplayProjectLinkRecord(
-                id: incoming.id,
-                system: normalizedNonEmpty(incoming.system) ?? normalizedNonEmpty(existing?.system),
-                title: normalizedNonEmpty(incoming.title) ?? normalizedNonEmpty(existing?.title),
-                url: normalizedNonEmpty(incoming.url) ?? normalizedNonEmpty(existing?.url)
-            )
-        }
-    }
-
-    private static func projectLinksByID(
-        _ links: [ProvenanceWorkspaceDisplayProjectLinkRecord]
-    ) -> [String: ProvenanceWorkspaceDisplayProjectLinkRecord] {
-        links.reduce(into: [:]) { result, link in
-            guard let id = normalizedNonEmpty(link.id) else { return }
-            result[id] = link
-        }
-    }
-
-    private static func mergedTicketLinks(
-        ticketIDs: [String],
-        incomingLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord],
-        existingLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord]
-    ) -> [ProvenanceWorkspaceDisplayTicketLinkRecord] {
-        let normalizedTicketIDs = normalizedTicketFacts(ticketIDs: ticketIDs, ticketLinks: []).ids
-        let incomingByID = ticketLinksByID(incomingLinks)
-        let existingByID = ticketLinksByID(existingLinks)
-        return normalizedTicketIDs.compactMap { id in
-            let incoming = incomingByID[id]
-            let existing = existingByID[id]
-            guard incoming != nil || existing != nil else { return nil }
-            return ProvenanceWorkspaceDisplayTicketLinkRecord(
-                id: id,
-                system: normalizedNonEmpty(incoming?.system) ?? normalizedNonEmpty(existing?.system),
-                title: normalizedNonEmpty(incoming?.title) ?? normalizedNonEmpty(existing?.title),
-                url: normalizedNonEmpty(incoming?.url) ?? normalizedNonEmpty(existing?.url),
-                ownerName: normalizedNonEmpty(incoming?.ownerName) ?? normalizedNonEmpty(existing?.ownerName),
-                ownerURL: normalizedNonEmpty(incoming?.ownerURL) ?? normalizedNonEmpty(existing?.ownerURL)
-            )
-        }
-    }
-
-    private static func ticketLinksByID(
-        _ links: [ProvenanceWorkspaceDisplayTicketLinkRecord]
-    ) -> [String: ProvenanceWorkspaceDisplayTicketLinkRecord] {
-        links.reduce(into: [:]) { result, link in
-            guard let id = normalizedTicketID(link.id) else { return }
-            result[id] = link
-        }
-    }
-
-    private static func ticketIDs(evidenceStrings: [String]) -> [String] {
-        let pattern = #"[A-Z][A-Z0-9]+-[0-9]+"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
-        var seen = Set<String>()
-        var ticketIDs: [String] = []
-        for evidenceString in evidenceStrings {
-            let range = NSRange(evidenceString.startIndex..<evidenceString.endIndex, in: evidenceString)
-            for match in regex.matches(in: evidenceString, range: range) {
-                guard let matchRange = Range(match.range, in: evidenceString) else { continue }
-                let ticketID = String(evidenceString[matchRange]).uppercased()
-                if seen.insert(ticketID).inserted {
-                    ticketIDs.append(ticketID)
-                }
-            }
-        }
-        return ticketIDs
-    }
-
-    private static func normalizedTicketID(_ value: String?) -> String? {
-        normalizedNonEmpty(value)?.uppercased()
     }
 
     private static func summary(fileCount: Int, isDirty: Bool) -> String {

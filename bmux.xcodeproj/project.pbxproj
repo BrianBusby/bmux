@@ -1617,6 +1617,10 @@
 		CE0D101F0000000000000001 /* WorkProvenanceValidationRunRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59911A9C30F6E3E5FA86A5E9 /* WorkProvenanceValidationRunRecord.swift */; };
 		C2C1613D6327DBD7F58D5FB6 /* WorkProvenanceWorkItemRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4B8B1CDBF4DFC8201D7D95 /* WorkProvenanceWorkItemRecord.swift */; };
 		CE0D10200000000000000001 /* WorkProvenanceWorkItemRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4B8B1CDBF4DFC8201D7D95 /* WorkProvenanceWorkItemRecord.swift */; };
+		CE0E03160000000000000001 /* WorkProvenanceWorkspaceDisplayResourceLinker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03160000000000000002 /* WorkProvenanceWorkspaceDisplayResourceLinker.swift */; };
+		CE0E03150000000000000001 /* WorkProvenanceWorkspaceResourceDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03150000000000000002 /* WorkProvenanceWorkspaceResourceDiscovery.swift */; };
+		CE0E03170000000000000001 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03170000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift */; };
+		CE0E03180000000000000001 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03180000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift */; };
 		9537A3EC66F94ED444031D42 /* WorkProvenanceWorkspaceSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28D2640EA59ABFD3DD5CA59B /* WorkProvenanceWorkspaceSnapshot.swift */; };
 		C0DE43000000000000000007 /* Workspace+AgentChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE43000000000000000008 /* Workspace+AgentChat.swift */; };
 		C54860020000000000000001 /* Workspace+BmuxNavigationDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860020000000000000002 /* Workspace+BmuxNavigationDescriptor.swift */; };
@@ -3283,6 +3287,10 @@
 		CE0E03060000000000000002 /* WorkProvenanceTicketLinkResolving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceTicketLinkResolving.swift; sourceTree = "<group>"; };
 		59911A9C30F6E3E5FA86A5E9 /* WorkProvenanceValidationRunRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceValidationRunRecord.swift; sourceTree = "<group>"; };
 		1D4B8B1CDBF4DFC8201D7D95 /* WorkProvenanceWorkItemRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceWorkItemRecord.swift; sourceTree = "<group>"; };
+		CE0E03160000000000000002 /* WorkProvenanceWorkspaceDisplayResourceLinker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceWorkspaceDisplayResourceLinker.swift; sourceTree = "<group>"; };
+		CE0E03150000000000000002 /* WorkProvenanceWorkspaceResourceDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceWorkspaceResourceDiscovery.swift; sourceTree = "<group>"; };
+		CE0E03170000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceWorkspaceResourceDiscoveryTests.swift; sourceTree = "<group>"; };
+		CE0E03180000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift; sourceTree = "<group>"; };
 		28D2640EA59ABFD3DD5CA59B /* WorkProvenanceWorkspaceSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceWorkspaceSnapshot.swift; sourceTree = "<group>"; };
 		C0DE43000000000000000008 /* Workspace+AgentChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Workspace+AgentChat.swift"; sourceTree = "<group>"; };
 		C54860020000000000000002 /* Workspace+BmuxNavigationDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Workspace+BmuxNavigationDescriptor.swift"; sourceTree = "<group>"; };
@@ -5093,6 +5101,8 @@
 
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
 					CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */,
+					CE0E03170000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift */,
+					CE0E03180000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift */,
 					C0DE70600000000000000002 /* CLIProvenanceCodexTranscriptImporterTests.swift */,
 					C0DE70C00000000000000002 /* CLIProvenanceRetrievalFixture.swift */,
 					C0DE70610000000000000002 /* CLIProvenanceSessionOutcomeCommandTests.swift */,
@@ -5206,6 +5216,8 @@
 				59911A9C30F6E3E5FA86A5E9 /* WorkProvenanceValidationRunRecord.swift */,
 				1D4B8B1CDBF4DFC8201D7D95 /* WorkProvenanceWorkItemRecord.swift */,
 				28D2640EA59ABFD3DD5CA59B /* WorkProvenanceWorkspaceSnapshot.swift */,
+				CE0E03160000000000000002 /* WorkProvenanceWorkspaceDisplayResourceLinker.swift */,
+				CE0E03150000000000000002 /* WorkProvenanceWorkspaceResourceDiscovery.swift */,
 			);
 			path = WorkProvenance;
 			sourceTree = "<group>";
@@ -6604,6 +6616,8 @@
 				CE0E03060000000000000001 /* WorkProvenanceTicketLinkResolving.swift in Sources */,
 				325D6087DAE009D97B24D4EF /* WorkProvenanceValidationRunRecord.swift in Sources */,
 				C2C1613D6327DBD7F58D5FB6 /* WorkProvenanceWorkItemRecord.swift in Sources */,
+				CE0E03160000000000000001 /* WorkProvenanceWorkspaceDisplayResourceLinker.swift in Sources */,
+				CE0E03150000000000000001 /* WorkProvenanceWorkspaceResourceDiscovery.swift in Sources */,
 				9537A3EC66F94ED444031D42 /* WorkProvenanceWorkspaceSnapshot.swift in Sources */,
 					C0DE43000000000000000007 /* Workspace+AgentChat.swift in Sources */,
 				C54860020000000000000001 /* Workspace+BmuxNavigationDescriptor.swift in Sources */,
@@ -7257,6 +7271,8 @@
 					CE0E03140000000000000001 /* WorkProvenanceLinearTicketLinkResolverTests.swift in Sources */,
 					8DCF06522BB39B4A966FFC83 /* WorkProvenanceObserverTests.swift in Sources */,
 					B1581966C6355C46BC3ABE62 /* WorkProvenanceStoreTests.swift in Sources */,
+					CE0E03170000000000000001 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift in Sources */,
+					CE0E03180000000000000001 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift in Sources */,
 					7F0A0E04A8CADC84BB4F1DF7 /* WorkspaceActionDispatcherTests.swift in Sources */,
 				A31B2201A31B2201A31B2201 /* WorkspaceActionSocketTests.swift in Sources */,
 				D7AB00000000000000000011 /* WorkspaceAdjacentPaneMoveTests.swift in Sources */,

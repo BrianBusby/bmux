@@ -79,6 +79,7 @@ local_capabilities:
   workspace_display_tab_projection: implemented
   workspace_display_ticket_title_sidebar: implemented
   workspace_display_durable_context: implemented
+  workspace_display_prompt_resource_discovery: implemented
   session_work_model_consumer: planned
   richer_session_work_view: planned
   normal_coding_agent_evidence_ingestion: implemented

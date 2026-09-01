@@ -266,7 +266,7 @@ roadmap:
       kind: phase
       title: Runtime Observation and Workspace Display
       parent: v1_foundation_and_adoption
-      status: implemented
+      status: active
       owner: bmux
       repositories:
         - bmux
@@ -287,7 +287,7 @@ roadmap:
       kind: milestone
       title: Execution Telemetry Migration
       parent: runtime_observation_and_workspace_display
-      status: implemented
+      status: active
       owner: bmux
       repositories:
         - bmux
@@ -425,6 +425,68 @@ roadmap:
         pull_requests: []
       completed_at: 2026-08-13
       mirrors_milestone: workspace_display_durable_context
+
+    - id: workspace_display_prompt_resource_discovery
+      kind: slice
+      title: Workspace Display Prompt Resource Discovery
+      parent: workspace_display_current_state
+      status: implemented
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: workspace_display
+        architecture_layer: evidence_sources
+        tags:
+          - workspace_display
+          - prompt_resource_discovery
+          - linear
+      capability_maturity: validated
+      depends_on:
+        - workspace_display_durable_context
+      enables:
+        - richer_session_understanding
+      parallelism:
+        classification: conditional
+        expected_contract_domains:
+          - workspace_display_resource_evidence
+          - provider_specific_extraction
+          - optional_provider_resolution
+          - idempotent_prompt_backfill
+        expected_code_areas:
+          - Sources/WorkProvenance/WorkProvenanceWorkspaceResourceDiscovery.swift
+          - Sources/WorkProvenance/WorkProvenanceWorkspaceDisplayResourceLinker.swift
+          - Sources/WorkProvenance/WorkProvenanceObservationService.swift
+          - bmuxTests/WorkProvenanceWorkspaceResourceDiscoveryTests.swift
+        likely_conflict_domains:
+          - workspace_display_current_state
+          - submitted_prompt_display_metadata
+          - linear_ticket_resolution
+        contract_dependencies:
+          - workspace_display_durable_context
+        worktree_required: true
+      execution:
+        assignment: complete
+        assigned_to: bmux
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits: []
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 93
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-09-01
+      acceptance:
+        criteria:
+          - Submitted workspace prompts produce normalized Linear ticket evidence when they contain explicit Linear issue URLs or known bare ticket IDs.
+          - Prompt evidence, stored-prompt backfill, PR title evidence, and PR branch evidence merge without duplicate ticket, ticket-link, or project-link facts.
+          - Linear lookup enriches resolved tickets and projects when available, while unavailable authentication or resolution failure preserves unresolved IDs and explicit URLs for retry.
+          - Sidebar and row views continue to render normalized PE workspace display metadata without provider-specific parsing.
+      acceptance_reason: bmux now performs bounded prompt-derived Linear resource discovery in the workspace observation path, merges it with PR-derived evidence, and writes normalized durable workspace display facts to Provenance Engine.
 
     - id: project_truth_governance
       kind: program
@@ -3774,6 +3836,7 @@ ownership:
   schema_compatibility: provenance_engine
   bounded_provenance_queries: provenance_engine
   workflow_observation: bmux
+  workspace_display_resource_discovery: bmux
   execution_telemetry: bmux
   streaming_execution_telemetry: bmux
   provider_specific_acquisition: bmux

@@ -94,6 +94,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Display Current State Diagnostic | implemented |
 | Workspace Display Durable Context | implemented |
 | Workspace Display Projection | implemented |
+| Workspace Display Prompt Resource Discovery | implemented |
 | Workspace Display Tab Projection | implemented |
 | Workspace Display Ticket Link Facts | implemented |
 | Workspace Display Ticket Title Sidebar | implemented |
