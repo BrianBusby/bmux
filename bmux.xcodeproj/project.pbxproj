@@ -70,6 +70,9 @@
 		CE2F02040000000000000001 /* AgentSessionSmartSessionEvidenceSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02040000000000000002 /* AgentSessionSmartSessionEvidenceSnapshot.swift */; };
 		CE2F02050000000000000001 /* AgentSessionSmartSessionFactualSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02050000000000000002 /* AgentSessionSmartSessionFactualSnapshot.swift */; };
 		CE2F02010000000000000001 /* AgentSessionSmartSessionReadResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02010000000000000002 /* AgentSessionSmartSessionReadResult.swift */; };
+		CE2F02090000000000000001 /* AgentSessionSmartSessionSnapshot+Collision.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02090000000000000002 /* AgentSessionSmartSessionSnapshot+Collision.swift */; };
+		CE2F02070000000000000001 /* AgentSessionSmartSessionSnapshot+CrossSessionAwareness.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02070000000000000002 /* AgentSessionSmartSessionSnapshot+CrossSessionAwareness.swift */; };
+		CE2F02080000000000000001 /* AgentSessionSmartSessionSnapshot+RelatedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02080000000000000002 /* AgentSessionSmartSessionSnapshot+RelatedSession.swift */; };
 		CE2F02060000000000000001 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02060000000000000002 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift */; };
 		CE2F02020000000000000001 /* AgentSessionSmartSessionSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02020000000000000002 /* AgentSessionSmartSessionSnapshot.swift */; };
 		CE2F02030000000000000001 /* AgentSessionSmartSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F02030000000000000002 /* AgentSessionSmartSessionStore.swift */; };
@@ -1863,6 +1866,9 @@
 		CE2F02040000000000000002 /* AgentSessionSmartSessionEvidenceSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionEvidenceSnapshot.swift; sourceTree = "<group>"; };
 		CE2F02050000000000000002 /* AgentSessionSmartSessionFactualSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionFactualSnapshot.swift; sourceTree = "<group>"; };
 		CE2F02010000000000000002 /* AgentSessionSmartSessionReadResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionReadResult.swift; sourceTree = "<group>"; };
+		CE2F02090000000000000002 /* AgentSessionSmartSessionSnapshot+Collision.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AgentSessionSmartSessionSnapshot+Collision.swift"; sourceTree = "<group>"; };
+		CE2F02070000000000000002 /* AgentSessionSmartSessionSnapshot+CrossSessionAwareness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AgentSessionSmartSessionSnapshot+CrossSessionAwareness.swift"; sourceTree = "<group>"; };
+		CE2F02080000000000000002 /* AgentSessionSmartSessionSnapshot+RelatedSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AgentSessionSmartSessionSnapshot+RelatedSession.swift"; sourceTree = "<group>"; };
 		CE2F02060000000000000002 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AgentSessionSmartSessionSnapshot+SemanticPresentation.swift"; sourceTree = "<group>"; };
 		CE2F02020000000000000002 /* AgentSessionSmartSessionSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionSnapshot.swift; sourceTree = "<group>"; };
 		CE2F02030000000000000002 /* AgentSessionSmartSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSmartSessionStore.swift; sourceTree = "<group>"; };
@@ -5190,6 +5196,9 @@
 				CE2F02010000000000000002 /* AgentSessionSmartSessionReadResult.swift */,
 				CE2F02040000000000000002 /* AgentSessionSmartSessionEvidenceSnapshot.swift */,
 				CE2F02050000000000000002 /* AgentSessionSmartSessionFactualSnapshot.swift */,
+				CE2F02090000000000000002 /* AgentSessionSmartSessionSnapshot+Collision.swift */,
+				CE2F02070000000000000002 /* AgentSessionSmartSessionSnapshot+CrossSessionAwareness.swift */,
+				CE2F02080000000000000002 /* AgentSessionSmartSessionSnapshot+RelatedSession.swift */,
 				CE2F02060000000000000002 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift */,
 				CE2F02020000000000000002 /* AgentSessionSmartSessionSnapshot.swift */,
 				CE2F02030000000000000002 /* AgentSessionSmartSessionStore.swift */,
@@ -5693,6 +5702,9 @@
 				CE2F02040000000000000001 /* AgentSessionSmartSessionEvidenceSnapshot.swift in Sources */,
 				CE2F02050000000000000001 /* AgentSessionSmartSessionFactualSnapshot.swift in Sources */,
 				CE2F02010000000000000001 /* AgentSessionSmartSessionReadResult.swift in Sources */,
+				CE2F02090000000000000001 /* AgentSessionSmartSessionSnapshot+Collision.swift in Sources */,
+				CE2F02070000000000000001 /* AgentSessionSmartSessionSnapshot+CrossSessionAwareness.swift in Sources */,
+				CE2F02080000000000000001 /* AgentSessionSmartSessionSnapshot+RelatedSession.swift in Sources */,
 				CE2F02060000000000000001 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift in Sources */,
 				CE2F02020000000000000001 /* AgentSessionSmartSessionSnapshot.swift in Sources */,
 				CE2F02030000000000000001 /* AgentSessionSmartSessionStore.swift in Sources */,

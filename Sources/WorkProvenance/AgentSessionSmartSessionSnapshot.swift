@@ -9,10 +9,12 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
     let workModel: WorkModel
     let factual: Factual
     let semanticMessages: [SemanticMessage]
+    let crossSessionAwareness: CrossSessionAwareness
 
     init(
         workModel: ProvenanceSessionWorkModel,
-        semanticMessages semanticMessageRecords: [ProvenanceSemanticMessageRecord]
+        semanticMessages semanticMessageRecords: [ProvenanceSemanticMessageRecord],
+        crossSessionAwareness: CrossSessionAwareness = .unavailable
     ) {
         let factualProjection = workModel.basis.factualSessionProjection
         let messages = semanticMessageRecords
@@ -39,6 +41,7 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
         self.workModel = WorkModel(model: workModel)
         self.factual = Factual(factualProjection: factualProjection)
         self.semanticMessages = messages
+        self.crossSessionAwareness = crossSessionAwareness
     }
 
     var bridgePayload: [String: Any] {
@@ -48,7 +51,8 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
             "identity": identity.bridgePayload,
             "workModel": workModel.bridgePayload,
             "factual": factual.bridgePayload,
-            "semanticMessages": semanticMessages.map(\.bridgePayload)
+            "semanticMessages": semanticMessages.map(\.bridgePayload),
+            "crossSessionAwareness": crossSessionAwareness.bridgePayload
         ]
     }
 }

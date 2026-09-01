@@ -72,9 +72,16 @@ final class AgentSessionSmartSessionStore {
                 return .notFound(sessionID: sessionID, reason: notFoundReason)
             }
             let semanticMessages = await presentationMessages(for: workModel)
+            let relatedResult = await relatedSessions(sessionID: sessionID)
+            let collisionResult = await artifactCollisions(sessionID: sessionID)
+            let awareness = AgentSessionSmartSessionSnapshot.CrossSessionAwareness(
+                related: relatedResult,
+                collisions: collisionResult
+            )
             let nextSnapshot = AgentSessionSmartSessionSnapshot(
                 workModel: workModel,
-                semanticMessages: semanticMessages
+                semanticMessages: semanticMessages,
+                crossSessionAwareness: awareness
             )
             if let existing = snapshotsBySessionID[sessionID],
                existing.revision.isNewerThan(nextSnapshot.revision) {
@@ -91,6 +98,32 @@ final class AgentSessionSmartSessionStore {
                 return .available(snapshot)
             }
             return .failed(sessionID: sessionID)
+        }
+    }
+
+    private func relatedSessions(sessionID: String) async -> ProvenanceRelatedSessionResponse? {
+        do {
+            return try await client.relatedSessions(ProvenanceRelatedSessionRequest(
+                targetSessionID: sessionID, limit: 5, exclusionLimit: 5
+            ))
+        } catch {
+            StartupBreadcrumbLog.append("workProvenance.agentSessionSmartSession.relatedSessionsSkipped", fields: [
+                "session": sessionID, "error": String(describing: error)
+            ])
+            return nil
+        }
+    }
+
+    private func artifactCollisions(sessionID: String) async -> ProvenanceArtifactCollisionResponse? {
+        do {
+            return try await client.artifactCollisions(ProvenanceArtifactCollisionRequest(
+                targetSessionID: sessionID, limit: 5, relatedSessionLimit: 20, exclusionLimit: 5
+            ))
+        } catch {
+            StartupBreadcrumbLog.append("workProvenance.agentSessionSmartSession.artifactCollisionsSkipped", fields: [
+                "session": sessionID, "error": String(describing: error)
+            ])
+            return nil
         }
     }
 

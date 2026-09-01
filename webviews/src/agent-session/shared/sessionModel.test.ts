@@ -1461,6 +1461,13 @@ function smartSessionSnapshot({
       turnCount: 1,
     },
     semanticMessages,
+    crossSessionAwareness: {
+      status: "available",
+      relatedSessions: [],
+      collisions: [],
+      relatedOmittedCount: 0,
+      collisionOmittedCount: 0,
+    },
   };
 }
 

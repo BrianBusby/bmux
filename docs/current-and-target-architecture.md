@@ -227,7 +227,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 #### Deterministic Current State
 
-- Status: Workspace Display Durable Context and Reconciliation (`workspace_display_durable_context`): implemented, delivery open, acceptance implemented; Factual session projection foundation (`factual_session_projection_foundation`): implemented, delivery open, acceptance implemented; Deterministic Current State: not listed; Workspace Display Current State: not listed; Workspace Display Projection Cursors: not listed; Workspace Display Ticket Link Facts: implemented; Workspace Display Ticket Title Facts: not listed; Workspace Display Project Link Facts: not listed; Workspace Display Durable Context: implemented
+- Status: Workspace Display Durable Context and Reconciliation (`workspace_display_durable_context`): implemented, delivery merged, acceptance accepted; Factual session projection foundation (`factual_session_projection_foundation`): implemented, delivery open, acceptance implemented; Deterministic Current State: not listed; Workspace Display Current State: not listed; Workspace Display Projection Cursors: not listed; Workspace Display Ticket Link Facts: implemented; Workspace Display Ticket Title Facts: not listed; Workspace Display Project Link Facts: not listed; Workspace Display Durable Context: implemented
 - Owns: Mechanical, rebuildable present-tense state derived only from accepted evidence.
 - Inputs: Immutable ledger events and deterministic reducer rules.
 - Outputs: Workspace display facts, current context, session/worktree/file views, and other factual public reads.
@@ -311,8 +311,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Three-view session navigation (`three_view_session_navigation`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - React Terminal live interaction productization (`react_terminal_productization`) is not dependency-satisfying
   - React Terminal live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
-- Proactive bmux cross-session awareness (`proactive_bmux_cross_session_awareness`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Knowledge Compiler cross-session bridge (`knowledge_compiler_cross_session_bridge`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine

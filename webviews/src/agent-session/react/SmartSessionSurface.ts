@@ -147,11 +147,43 @@ function SmartSessionSnapshotView({
       "div",
       { className: "smart-session-sections" },
       h(IdentitySection, { snapshot, copy }),
+      h(CrossSessionAwarenessSection, { snapshot, copy }),
       h(PromptSection, { snapshot, copy }),
       h(PlanSection, { snapshot, copy }),
       h(EvidenceSection, { snapshot, copy }),
       h(PriorTurnsSection, { snapshot, copy }),
     ),
+  );
+}
+
+function CrossSessionAwarenessSection({ snapshot, copy }: { snapshot: SmartSessionSnapshot; copy?: AgentSessionCopy }) {
+  const awareness = snapshot.crossSessionAwareness;
+  const hasEvidence = awareness.status === "available" &&
+    (awareness.relatedSessions.length > 0 || awareness.collisions.length > 0);
+  return h(
+    "section",
+    { className: "smart-session-section", "data-cross-session-status": awareness.status },
+    h("h2", null, copyText(copy, "smartSessionEvidence", "Evidence")),
+    hasEvidence
+      ? h(
+          "div",
+          { className: "smart-session-evidence-groups" },
+          ...awareness.relatedSessions.map((related) => h(
+            "div",
+            { className: "smart-session-evidence-card", key: related.sessionId },
+            h("strong", null, related.sessionId),
+            h("p", null, related.relationshipReasons.join(", ")),
+            h("p", { className: "smart-session-muted" }, `${related.lifecycleState} · ${related.freshnessState}`),
+          )),
+          ...awareness.collisions.map((collision) => h(
+            "div",
+            { className: "smart-session-evidence-card", key: collision.id },
+            h("strong", null, copyText(copy, "smartSessionFiles", "Files")),
+            h("p", null, collision.path),
+            h("p", { className: "smart-session-muted" }, collision.state),
+          )),
+        )
+      : h("p", { className: "smart-session-muted" }, copyText(copy, "smartSessionNoEvidence", "No evidence yet")),
   );
 }
 

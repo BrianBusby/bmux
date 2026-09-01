@@ -88,8 +88,8 @@ milestones:
   - id: workspace_display_durable_context
     title: Workspace Display Durable Context and Reconciliation
     owner: bmux
-    delivery_status: open
-    acceptance_status: implemented
+    delivery_status: merged
+    acceptance_status: accepted
     evidence:
       commits:
         - repository: BrianBusby/bmux
@@ -98,6 +98,8 @@ milestones:
           sha: 54316195468987c47512eb4f16d4fca2b3c2f8ed
       pull_requests: []
     completed_at: 2026-08-13
+    accepted_at: 2026-09-01
+    acceptance_reason: The durable workspace display context implementation is present on monorepo main with recorded implementation commits and has remained the accepted substrate for subsequent workspace resource and session-link slices.
 
   - id: richer_session_work_model
     title: Richer Coding-Agent Evidence and Factual Session Projection
@@ -414,8 +416,8 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: shared
-      delivery_status: open
-      acceptance_status: implemented
+      delivery_status: merged
+      acceptance_status: accepted
       evidence:
         commits:
           - repository: BrianBusby/bmux
@@ -424,6 +426,8 @@ roadmap:
             sha: 54316195468987c47512eb4f16d4fca2b3c2f8ed
         pull_requests: []
       completed_at: 2026-08-13
+      accepted_at: 2026-09-01
+      acceptance_reason: The durable workspace display context implementation is present on monorepo main with recorded implementation commits and has remained the accepted substrate for subsequent workspace resource and session-link slices.
       mirrors_milestone: workspace_display_durable_context
 
     - id: workspace_display_prompt_resource_discovery
@@ -469,10 +473,12 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: bmux
-      delivery_status: open
-      acceptance_status: implemented
+      delivery_status: merged
+      acceptance_status: accepted
       evidence:
-        commits: []
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 9fc7061ba353ed5a008cfaa34d0d9f34e933783a
         pull_requests:
           - repository: BrianBusby/bmux
             number: 93
@@ -875,7 +881,7 @@ roadmap:
         architecture_layer: inference_session_work_projections
         tags:
           - session_work_model
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - workspace_display_durable_context
       parallelism:
@@ -2700,12 +2706,14 @@ roadmap:
         assignment: complete
         assigned_to: shared
         notes: "Implemented after PR #87 merged and Project Truth validated rich_cross_session_work_state_semantics. Scope is explicit bounded agent-facing CLI retrieval over existing PE related-session and artifact-collision read contracts; no prompt injection, proactive UI, coordination policy, arbitrary file-history search, or new inference layer is in scope. Local validation covered focused bmux-unit CLI dispatch, the full PE package suite, no-socket help, localization, tagged build 509, and an isolated two-session demo."
-      delivery_status: open
-      acceptance_status: implemented
+      delivery_status: merged
+      acceptance_status: accepted
       evidence:
         commits:
           - repository: BrianBusby/bmux
             sha: 6be29aaa60ff8e6f883b6ec0b29bf80fe7f3e3b1
+          - repository: BrianBusby/bmux
+            sha: 5db53927906a83677e1bebbc2f04680af10b5055
         pull_requests:
           - repository: BrianBusby/bmux
             number: 88
@@ -2724,13 +2732,13 @@ roadmap:
       rationale: Provide explicit bounded agent queries over PE-owned cross-session state instead of blindly injecting historical context or exposing full transcripts.
       completed_at: 2026-08-31
       acceptance_reason: >-
-        Implemented as two explicit `bmux provenance sessions` retrieval operations backed by public PE `relatedSessions(...)` and `artifactCollisions(...)` reads. The commands require explicit PE session ids, accept explicit databases without a live app socket, enforce finite limits and timestamp/path validation, preserve exact revision reads and missing/empty/partial distinctions, render compact localized text, emit stable JSON, document the target-session changed-artifact collision limitation, and include deterministic fixtures plus a reproducible two-session demo. Delivery is open in PR #88 and acceptance is not claimed until review and merge evidence support it.
+        Implemented as two explicit `bmux provenance sessions` retrieval operations backed by public PE `relatedSessions(...)` and `artifactCollisions(...)` reads. The commands require explicit PE session ids, accept explicit databases without a live app socket, enforce finite limits and timestamp/path validation, preserve exact revision reads and missing/empty/partial distinctions, render compact localized text, emit stable JSON, document the target-session changed-artifact collision limitation, and include deterministic fixtures plus a reproducible two-session demo. PR #88 merged as `5db53927906a83677e1bebbc2f04680af10b5055` after its review findings were resolved.
 
     - id: proactive_bmux_cross_session_awareness
       kind: slice
       title: Proactive bmux cross-session awareness
       parent: cross_session_retrieval_and_presentation
-      status: planned
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -2741,7 +2749,7 @@ roadmap:
         tags:
           - cross_session_awareness
           - notification
-      capability_maturity: gated
+      capability_maturity: validated
       depends_on:
         - agent_accessible_cross_session_retrieval
         - cross_session_artifact_collision_awareness
@@ -2769,11 +2777,30 @@ roadmap:
           - artifact_collision_explanations
         worktree_required: true
       execution:
-        assignment: planned
+        assignment: complete
         assigned_to: bmux
-      delivery_status: proposed
-      acceptance_status: proposed
-      rationale: Surface especially relevant cross-session changes through bmux presentation or notifications without silently mutating coding-agent context.
+        notes: "Implemented as bounded related-session and possible artifact-collision presentation inside the existing React Smart Session refresh. It does not inject agent context, notify outside the Session surface, block work, coordinate agents, or share transcripts."
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: a2b88f2479f4424ea1a9072039e270da208386a2
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 94
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: 2026-09-01
+      acceptance:
+        criteria:
+          - React Smart Session refresh performs bounded PE related-session and artifact-collision reads for the linked PE session.
+          - Presentation preserves relationship reasons, lifecycle/freshness state, normalized artifact paths, collision state, and bounded omission counts.
+          - Failed awareness reads degrade to an explicit unavailable state without hiding the existing Smart Session snapshot.
+          - No prompt injection, external notification, locking, interruption, reassignment, transcript sharing, or coordination policy is added.
+      rationale: Surface especially relevant cross-session changes through bounded Smart Session presentation without silently mutating coding-agent context.
+      acceptance_reason: The existing Smart Session refresh path now reads at most five related sessions and five possible collision candidates through PE public contracts and presents their factual boundaries separately from the session's own semantic work model.
 
     - id: cross_session_context_assembly_experiment
       kind: slice

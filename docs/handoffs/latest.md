@@ -1,6 +1,6 @@
 # Latest Handoff
 
-## Completed Slice
+## Completed and Merged Slice
 
 - Slice: `agent_accessible_cross_session_retrieval`
 - Branch: `agent-accessible-cross-session-retrieval`
@@ -8,7 +8,8 @@
 - Base: `origin/main` at `e90cbf54e7bcc75c9103c664143f03baabd20cb0`
 - PR: https://github.com/BrianBusby/bmux/pull/88
 - Tagged build: `agent-accessible-cross-session-retrieval`, local build number 509
-- Status: implemented and locally validated in Project Truth; delivery is open in PR #88 and remains unmerged/unaccepted
+- Merge: `5db53927906a83677e1bebbc2f04680af10b5055`
+- Status: merged and accepted in Project Truth after resolved review findings and recorded validation
 
 ## Current Generated Truth
 
@@ -121,9 +122,23 @@ Automatic caller resolution remains out of scope for v1. Agents must supply the
 PE session id and database explicitly or discover them through existing public
 context/session reads.
 
-## Next Candidates
+## Current Slice
 
-After this retrieval slice is reviewed and accepted, reassess
-`proactive_bmux_cross_session_awareness` and
-`cross_session_context_assembly_experiment` against observed results. They are
-candidates only; this handoff does not authorize starting either one.
+`proactive_bmux_cross_session_awareness` is implemented on branch
+`proactive-cross-session-awareness` in PR #94. The existing React Smart Session refresh
+now performs bounded PE reads for at most five related sessions and five
+possible artifact collisions, then presents relationship reasons,
+lifecycle/freshness state, normalized paths, and collision state in a separate
+Related work section. Failed awareness reads degrade to unavailable without
+hiding the existing Smart Session snapshot.
+
+This slice does not inject prompt context, send notifications outside the
+Session surface, lock or block files, interrupt or reassign agents, share raw
+transcripts, or introduce coordination policy. Project Truth records the slice
+as implemented with delivery open until its PR merges.
+
+## Next Candidate
+
+After proactive presentation is reviewed, merged, and observed with real
+sessions, reassess `cross_session_context_assembly_experiment`. It remains
+planned and gated; this handoff does not authorize automatic prompt injection.
