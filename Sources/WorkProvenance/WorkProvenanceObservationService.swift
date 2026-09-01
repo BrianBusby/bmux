@@ -171,9 +171,10 @@ actor WorkProvenanceObservationService {
         let projectLinks = linkFacts.projectLinks
         let currentWorkSummary = Self.normalizedNonEmpty(workspace.currentWorkSummary)
         let lastSubmittedPrompt = Self.normalizedNonEmpty(workspace.lastSubmittedPrompt)
-        let lastSubmittedPromptSubmittedAt = lastSubmittedPrompt == nil
+        let lastSubmittedPromptSessionID = lastSubmittedPrompt == nil
             ? nil
-            : workspace.lastSubmittedPromptSubmittedAt
+            : Self.normalizedNonEmpty(workspace.lastSubmittedPromptSessionID)
+        let lastSubmittedPromptSubmittedAt = lastSubmittedPrompt == nil ? nil : workspace.lastSubmittedPromptSubmittedAt
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
             title: workspace.title,
@@ -193,6 +194,7 @@ actor WorkProvenanceObservationService {
             projectLinks: projectLinks,
             currentWorkSummary: currentWorkSummary,
             lastSubmittedPrompt: lastSubmittedPrompt,
+            lastSubmittedPromptSessionID: lastSubmittedPromptSessionID,
             lastSubmittedPromptSubmittedAt: lastSubmittedPromptSubmittedAt,
             explicitlyClearedFields: workspace.explicitlyClearedFields
         )
@@ -227,6 +229,7 @@ actor WorkProvenanceObservationService {
             currentWorkSummary: currentWorkSummary,
             lastSubmittedPrompt: lastSubmittedPrompt,
             lastSubmittedPromptSubmittedAt: lastSubmittedPromptSubmittedAt,
+            lastSubmittedPromptSessionID: lastSubmittedPromptSessionID,
             clearedFields: workspace.explicitlyClearedFields,
             observedAt: now,
             updatedAt: now

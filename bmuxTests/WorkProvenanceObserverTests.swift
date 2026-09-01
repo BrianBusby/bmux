@@ -241,6 +241,7 @@ struct WorkProvenanceObserverTests {
             ),
             currentWorkSummary: "Preparing initial display state",
             lastSubmittedPrompt: "Open PR 41 for the workspace",
+            lastSubmittedPromptSessionID: "session-41",
             lastSubmittedPromptSubmittedAt: Date(timeIntervalSince1970: 490)
         )
         let secondWorkspace = WorkProvenanceWorkspaceSnapshot(
@@ -261,6 +262,7 @@ struct WorkProvenanceObserverTests {
             ),
             currentWorkSummary: "Reviewing durable workspace display",
             lastSubmittedPrompt: "Update the workspace details panel",
+            lastSubmittedPromptSessionID: "session-42",
             lastSubmittedPromptSubmittedAt: Date(timeIntervalSince1970: 501)
         )
 
@@ -286,6 +288,7 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.isDirty == false)
         #expect(display.display?.currentWorkSummary == "Reviewing durable workspace display")
         #expect(display.display?.lastSubmittedPrompt == "Update the workspace details panel")
+        #expect(display.display?.lastSubmittedPromptSessionID == "session-42")
         #expect(display.display?.lastSubmittedPromptSubmittedAt == Date(timeIntervalSince1970: 501))
         #expect(display.display?.latestEventID != nil)
         #expect(display.display?.latestEventSequence == 3)
@@ -428,7 +431,9 @@ struct WorkProvenanceObserverTests {
         let sidebarTicket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
             id: ticketLink.id,
             title: ticketLink.title,
-            url: ticketLink.url
+            url: ticketLink.url,
+            ownerName: ticketLink.ownerName,
+            ownerURL: ticketLink.ownerURL
         )
         let sidebarProject = SidebarWorkspaceSnapshotBuilder.ProjectDisplay(
             id: projectLink.id,
@@ -437,6 +442,8 @@ struct WorkProvenanceObserverTests {
         )
         #expect(ticketLink.url == URL(string: "https://linear.app/companycam/issue/INP-2122"))
         #expect(sidebarTicket.linkText == "INP-2122: Canonical domain mutation paths")
+        #expect(sidebarTicket.ownerName == "Brian Busby")
+        #expect(sidebarTicket.ownerURL == nil)
         #expect(projectLink.url == URL(string: "https://linear.app/companycam/project/context-efficiency-c1b9a"))
         #expect(sidebarProject.linkText == "Context Efficiency")
         #expect(await linearServer.requests == [

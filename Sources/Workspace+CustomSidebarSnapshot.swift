@@ -10,6 +10,8 @@ extension Workspace {
     ) -> CustomSidebarWorkspaceSnapshot {
         let focusedPanelId = focusedPanelId
         let firstBranch = sidebarGitBranchesInDisplayOrder().first
+        let provenanceDisplaySnapshot = owningTabManager?.workProvenanceRuntime?
+            .workspaceDisplayCurrentStateSnapshot(for: self)
         let progress = self.progress.map {
             CustomSidebarWorkspaceSnapshot.Progress(value: $0.value, label: $0.label)
         }
@@ -22,7 +24,7 @@ extension Workspace {
         }
         return CustomSidebarWorkspaceSnapshot(
             id: id,
-            title: customTitle ?? title,
+            title: customTitle ?? provenanceDisplaySnapshot?.title ?? title,
             isSelected: id == selectedId,
             isPinned: isPinned,
             index: index,
@@ -35,13 +37,17 @@ extension Workspace {
             },
             customDescription: customDescription,
             customColor: customColor,
-            gitBranch: firstBranch?.branch,
-            gitIsDirty: firstBranch?.isDirty ?? false,
-            pullRequestValues: customSidebarPullRequestValues(),
+            gitBranch: provenanceDisplaySnapshot?.branch ?? firstBranch?.branch,
+            gitIsDirty: provenanceDisplaySnapshot?.branch != nil
+                ? provenanceDisplaySnapshot?.isDirty == true
+                : firstBranch?.isDirty ?? false,
+            pullRequestValues: customSidebarPullRequestValues(
+                provenanceDisplaySnapshot: provenanceDisplaySnapshot
+            ),
             progress: progress,
             latestConversationMessage: latestConversationMessage,
-            latestSubmittedMessage: latestSubmittedMessage,
-            latestSubmittedAt: latestSubmittedAt,
+            latestSubmittedMessage: provenanceDisplaySnapshot?.lastSubmittedPrompt ?? latestSubmittedMessage,
+            latestSubmittedAt: provenanceDisplaySnapshot?.lastSubmittedPromptSubmittedAt ?? latestSubmittedAt,
             remote: remote
         )
     }

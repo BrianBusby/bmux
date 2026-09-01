@@ -1,6 +1,7 @@
 import XCTest
 import BmuxWorkspaces
 import BmuxSwiftRender
+import ProvenanceEngineContracts
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -237,6 +238,36 @@ final class WorkspaceCustomSidebarPullRequestContextTests: XCTestCase {
     }
 
     @MainActor
+    func testValuesIncludeProvenancePullRequestWhenLiveStateIsMissing() throws {
+        let workspace = Workspace(
+            title: "Tests",
+            workingDirectory: FileManager.default.currentDirectoryPath,
+            portOrdinal: 0
+        )
+        let snapshot = try Self.provenanceDisplaySnapshot(
+            number: 5314,
+            ownerLogin: "octocat",
+            ownerURL: "https://github.com/octocat",
+            branch: "inp-5314-sidebar-metadata",
+            lastSubmittedPrompt: "continue checking pull 5314"
+        )
+
+        let values = workspace.customSidebarPullRequestValues(provenanceDisplaySnapshot: snapshot)
+        XCTAssertEqual(values.count, 1)
+        guard case .object(let fields)? = values.first else {
+            XCTFail("Expected object pull-request value, got \(String(describing: values.first))")
+            return
+        }
+        XCTAssertEqual(fields["number"], .int(5314))
+        XCTAssertEqual(fields["status"], .string("open"))
+        XCTAssertEqual(fields["url"], .string("https://github.com/manaflow-ai/bmux/pull/5314"))
+        XCTAssertEqual(fields["owner"], .string("octocat"))
+        XCTAssertEqual(fields["owner_url"], .string("https://github.com/octocat"))
+        XCTAssertEqual(fields["branch"], .string("inp-5314-sidebar-metadata"))
+        XCTAssertEqual(fields["stale"], .bool(false))
+    }
+
+    @MainActor
     func testValuesEmptyWhenWorkspaceHasNoPullRequests() {
         let workspace = Workspace(
             title: "Tests",
@@ -245,6 +276,44 @@ final class WorkspaceCustomSidebarPullRequestContextTests: XCTestCase {
         )
 
         XCTAssertEqual(workspace.customSidebarPullRequestValues(), [])
+    }
+
+    private static func provenanceDisplaySnapshot(
+        number: Int,
+        ownerLogin: String?,
+        ownerURL: String?,
+        branch: String?,
+        lastSubmittedPrompt: String
+    ) throws -> WorkspaceDisplayCurrentStateSnapshot {
+        let updatedAt = Date(timeIntervalSince1970: 900)
+        let record = ProvenanceWorkspaceDisplayRecord(
+            id: "workspace-display-\(number)",
+            workspaceID: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            repositoryID: nil,
+            worktreeID: nil,
+            currentDirectory: nil,
+            title: nil,
+            titleSource: nil,
+            branch: branch,
+            pullRequestNumber: number,
+            pullRequestURL: "https://github.com/manaflow-ai/bmux/pull/\(number)",
+            pullRequestOwnerLogin: ownerLogin,
+            pullRequestOwnerURL: ownerURL,
+            pullRequestStatus: "open",
+            pullRequestBranch: branch,
+            pullRequestIsStale: false,
+            isDirty: nil,
+            ticketIDs: [],
+            ticketLinks: [],
+            lastSubmittedPrompt: lastSubmittedPrompt,
+            lastSubmittedPromptSubmittedAt: updatedAt,
+            lastSubmittedPromptSessionID: "session-\(number)",
+            latestEventID: "event-\(number)",
+            latestEventSequence: number,
+            observedAt: updatedAt,
+            updatedAt: updatedAt
+        )
+        return try XCTUnwrap(WorkspaceDisplayCurrentStateSnapshot(record))
     }
 
     private func withTemporaryCustomSidebarsDirectory<T>(_ body: (URL) throws -> T) throws -> T {

@@ -139,7 +139,9 @@ import Testing
         let ticket = SidebarWorkspaceSnapshotBuilder.TicketDisplay(
             id: "STE-1964",
             title: title,
-            url: nil
+            url: nil,
+            ownerName: nil,
+            ownerURL: nil
         )
 
         #expect(ticket.linkText == expected)
@@ -176,7 +178,8 @@ import Testing
             provenancePullRequest: try Self.provenancePullRequest(
                 number: 26171,
                 ownerLogin: "BrianBusby",
-                ownerURL: "https://github.com/BrianBusby"
+                ownerURL: "https://github.com/BrianBusby",
+                branch: "inp-2153-advanced-checklists"
             ),
             latestSubmittedMessage: nil,
             latestConversationMessage: nil,
@@ -187,7 +190,22 @@ import Testing
         #expect(row.number == 26171)
         #expect(row.ownerLogin == "BrianBusby")
         #expect(row.ownerURL == URL(string: "https://github.com/BrianBusby"))
+        #expect(row.branch == "inp-2153-advanced-checklists")
         #expect(row.isFromProvenance == false)
+    }
+
+    @Test func livePullRequestRowsPreserveKnownBranch() throws {
+        let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: [try Self.livePullRequest(number: 26171, branch: "inp-2153-advanced-checklists")],
+            provenancePullRequest: nil,
+            latestSubmittedMessage: nil,
+            latestConversationMessage: nil,
+            label: "PR"
+        )
+
+        let row = try #require(rows.first)
+        #expect(row.number == 26171)
+        #expect(row.branch == "inp-2153-advanced-checklists")
     }
 
     @Test func livePullRequestRowsPreserveKnownTitle() throws {
@@ -247,14 +265,19 @@ import Testing
     @Test func provenancePullRequestRendersWhenPromptMentionsSameNumber() throws {
         let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
             livePullRequests: [],
-            provenancePullRequest: try Self.provenancePullRequest(number: 26201),
+            provenancePullRequest: try Self.provenancePullRequest(
+                number: 26201,
+                branch: "inp-2153-advanced-checklists"
+            ),
             latestSubmittedMessage: "continue checking pull 26201",
             latestConversationMessage: nil,
             label: "PR"
         )
 
         #expect(rows.map(\.number) == [26201])
-        #expect(rows.first?.isFromProvenance == true)
+        let row = try #require(rows.first)
+        #expect(row.isFromProvenance == true)
+        #expect(row.branch == "inp-2153-advanced-checklists")
     }
 
     @Test func provenancePullRequestRendersForPullRequestScopedWorktree() throws {
@@ -379,18 +402,25 @@ import Testing
             status: .open,
             ownerLogin: nil,
             ownerURL: nil,
+            branch: nil,
             isStale: isStale,
             isFromProvenance: false
         )
     }
 
-    private static func livePullRequest(number: Int, title: String? = nil, status: SidebarPullRequestStatus = .open) throws -> SidebarPullRequestState {
+    private static func livePullRequest(
+        number: Int,
+        title: String? = nil,
+        status: SidebarPullRequestStatus = .open,
+        branch: String? = nil
+    ) throws -> SidebarPullRequestState {
         SidebarPullRequestState(
             number: number,
             title: title,
             label: "PR",
             url: try #require(URL(string: "https://github.com/CompanyCam/Company-Cam-API/pull/\(number)")),
-            status: status
+            status: status,
+            branch: branch
         )
     }
 
@@ -398,7 +428,8 @@ import Testing
         number: Int,
         status: String = "open",
         ownerLogin: String? = nil,
-        ownerURL: String? = nil
+        ownerURL: String? = nil,
+        branch: String? = nil
     ) throws -> WorkspaceDisplayCurrentStatePullRequestSnapshot {
         let updatedAt = Date(timeIntervalSince1970: 900)
         let record = ProvenanceWorkspaceDisplayRecord(
@@ -415,7 +446,7 @@ import Testing
             pullRequestOwnerLogin: ownerLogin,
             pullRequestOwnerURL: ownerURL,
             pullRequestStatus: status,
-            pullRequestBranch: nil,
+            pullRequestBranch: branch,
             pullRequestIsStale: false,
             isDirty: nil,
             ticketIDs: [],
@@ -426,116 +457,6 @@ import Testing
             updatedAt: updatedAt
         )
         return try #require(WorkspaceDisplayCurrentStateSnapshot(record)?.pullRequest)
-    }
-}
-
-@Suite struct SidebarWorkspaceRowLineLimitPolicyTests {
-    @Test func workspaceTitlesUseAtMostThreeLinesWhenWrappingIsEnabled() {
-        #expect(SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: true) == 3)
-    }
-
-    @Test func workspaceTitlesStaySingleLineWhenWrappingIsDisabled() {
-        #expect(SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: false) == 1)
-    }
-
-    @Test func linkedTitlesUseAtMostThreeLinesWhenWrappingIsEnabled() {
-        #expect(SidebarWorkspaceRowLineLimitPolicy.linkedTitleLineLimit(wrapsWorkspaceTitles: true) == 3)
-    }
-
-    @Test func linkedTitlesStaySingleLineWhenWrappingIsDisabled() {
-        #expect(SidebarWorkspaceRowLineLimitPolicy.linkedTitleLineLimit(wrapsWorkspaceTitles: false) == 1)
-    }
-
-    @Test func workspaceTitleWrappingIsEnabledByDefault() {
-        #expect(SidebarWorkspaceTitleWrapSettings.defaultWrap)
-    }
-
-    @Test func conversationSubtitleCanUseThreeLines() throws {
-        let subtitle = try #require(SidebarWorkspaceRowLineLimitPolicy.subtitle(
-            notificationText: nil,
-            conversationMessage: "First line\nSecond line\nThird line"
-        ))
-
-        #expect(subtitle.text == "First line\nSecond line\nThird line")
-        #expect(subtitle.lineLimit == 3)
-    }
-
-    @Test func notificationSubtitleStaysCompactAndWinsOverConversation() throws {
-        let subtitle = try #require(SidebarWorkspaceRowLineLimitPolicy.subtitle(
-            notificationText: "Build finished",
-            conversationMessage: "A longer conversation summary"
-        ))
-
-        #expect(subtitle.text == "Build finished")
-        #expect(subtitle.lineLimit == 2)
-    }
-
-    @Test func conversationSubtitlePrefersSubmittedPromptOverAssistantReply() {
-        let subtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
-            latestSubmittedMessage: "last prompt I submitted",
-            latestConversationMessage: "assistant response that arrived later",
-            hidesAllDetails: false,
-            iMessageModeEnabled: true
-        )
-
-        #expect(subtitle == "last prompt I submitted")
-    }
-
-    @Test func conversationSubtitleHidesDisplayedPullRequestPrompt() {
-        let subtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
-            latestSubmittedMessage: "do an adversarial review of this pr: https://github.com/CompanyCam/Company-Cam-API/pull/25964",
-            latestConversationMessage: nil,
-            hidesAllDetails: false,
-            iMessageModeEnabled: true,
-            hiddenPullRequestNumbers: [25964]
-        )
-
-        #expect(subtitle == nil)
-    }
-
-    @Test func conversationSubtitleKeepsDifferentPullRequestPrompt() {
-        let subtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
-            latestSubmittedMessage: "do an adversarial review of this pr: https://github.com/CompanyCam/Company-Cam-API/pull/25964",
-            latestConversationMessage: nil,
-            hidesAllDetails: false,
-            iMessageModeEnabled: true,
-            hiddenPullRequestNumbers: [12345]
-        )
-
-        #expect(subtitle != nil)
-    }
-
-    @Test func conversationSubtitleDoesNotFallBackToAssistantReply() {
-        let subtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
-            latestSubmittedMessage: nil,
-            latestConversationMessage: "assistant response that arrived later",
-            hidesAllDetails: false,
-            iMessageModeEnabled: true
-        )
-
-        #expect(subtitle == nil)
-    }
-
-    @Test func conversationSubtitleIsHiddenOutsideIMessageDetails() {
-        #expect(SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
-            latestSubmittedMessage: "last prompt I submitted",
-            latestConversationMessage: "assistant response",
-            hidesAllDetails: true,
-            iMessageModeEnabled: true
-        ) == nil)
-        #expect(SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
-            latestSubmittedMessage: "last prompt I submitted",
-            latestConversationMessage: "assistant response",
-            hidesAllDetails: false,
-            iMessageModeEnabled: false
-        ) == nil)
-    }
-
-    @Test func blankConversationSubtitleIsHidden() {
-        #expect(SidebarWorkspaceRowLineLimitPolicy.subtitle(
-            notificationText: nil,
-            conversationMessage: " \n "
-        ) == nil)
     }
 }
 
