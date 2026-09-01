@@ -313,3 +313,11 @@ public protocol ControlDebugContext: AnyObject {
     func controlDebugPortalStats() -> JSONValue?
 #endif
 }
+
+#if DEBUG
+extension ControlDebugContext {
+    public func controlDebugSidebarHealth(routing: ControlRoutingSelectors) -> JSONValue? {
+        nil
+    }
+}
+#endif
