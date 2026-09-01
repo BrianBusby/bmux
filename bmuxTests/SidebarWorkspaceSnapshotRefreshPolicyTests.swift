@@ -144,7 +144,6 @@ import Testing
 
         #expect(ticket.linkText == expected)
     }
-
     @Test(arguments: [
         (" Context Efficiency ", "Context Efficiency"),
         (" ", "context-efficiency-c1b9a"),
@@ -157,7 +156,6 @@ import Testing
 
         #expect(project.linkText == expected)
     }
-
     @Test func livePullRequestRowsOverrideStaleProvenancePullRequest() throws {
         let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
             livePullRequests: [try Self.livePullRequest(number: 26196)],
@@ -353,7 +351,8 @@ import Testing
             showsPullRequests: true,
             showsPorts: true
         ),
-        provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot? = nil
+        provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot? = nil,
+        titleResolution: SidebarWorkspaceTitleResolution = SidebarWorkspaceTitleResolution(liveTitle: "workspace", liveTitleIsAuthoritative: true, provenanceTitle: nil)
     ) -> SidebarWorkspaceSnapshotBuilder.PresentationKey {
         SidebarWorkspaceSnapshotBuilder.PresentationKey(
             showsWorkspaceDescription: showsWorkspaceDescription,
@@ -361,7 +360,8 @@ import Testing
             showsGitBranch: showsGitBranch,
             usesViewportAwarePath: usesViewportAwarePath,
             visibleAuxiliaryDetails: visibleAuxiliaryDetails,
-            provenanceDisplaySnapshot: provenanceDisplaySnapshot
+            provenanceDisplaySnapshot: provenanceDisplaySnapshot,
+            titleResolution: titleResolution
         )
     }
 

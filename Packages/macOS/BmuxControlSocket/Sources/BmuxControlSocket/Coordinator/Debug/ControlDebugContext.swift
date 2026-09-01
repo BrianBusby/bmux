@@ -282,6 +282,13 @@ public protocol ControlDebugContext: AnyObject {
     ///   legacy `not_found` error).
     func controlDebugSidebarVisibility(windowID: UUID) -> Bool?
 
+    /// Snapshots sidebar title-resolution health for `debug.sidebar.health`.
+    ///
+    /// - Parameter routing: Optional workspace/window routing selectors.
+    /// - Returns: The health payload, or `nil` when the workspace manager was
+    ///   not available.
+    func controlDebugSidebarHealth(routing: ControlRoutingSelectors) -> JSONValue?
+
     /// Simulates a file drop onto a terminal for
     /// `debug.terminal.simulate_file_drop`.
     ///
@@ -306,3 +313,11 @@ public protocol ControlDebugContext: AnyObject {
     func controlDebugPortalStats() -> JSONValue?
 #endif
 }
+
+#if DEBUG
+extension ControlDebugContext {
+    public func controlDebugSidebarHealth(routing: ControlRoutingSelectors) -> JSONValue? {
+        nil
+    }
+}
+#endif

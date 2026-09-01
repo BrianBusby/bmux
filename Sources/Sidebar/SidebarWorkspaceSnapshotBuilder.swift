@@ -1,6 +1,56 @@
 import BmuxSidebar
 import Foundation
 
+struct SidebarWorkspaceTitleResolution: Equatable, Sendable {
+    enum Source: String, Sendable {
+        case live
+        case provenance
+    }
+
+    let title: String
+    let source: Source
+    let liveTitle: String
+    let provenanceTitle: String?
+    let liveTitleIsAuthoritative: Bool
+
+    var suppressedStaleProvenanceTitle: Bool {
+        guard liveTitleIsAuthoritative,
+              source == .live,
+              let provenanceTitle else {
+            return false
+        }
+        return provenanceTitle != liveTitle
+    }
+
+    init(
+        liveTitle: String,
+        liveTitleIsAuthoritative: Bool,
+        provenanceTitle: String?
+    ) {
+        let normalizedLiveTitle = Self.normalizedTitle(liveTitle) ?? liveTitle
+        let normalizedProvenanceTitle = Self.normalizedTitle(provenanceTitle)
+        self.liveTitle = normalizedLiveTitle
+        self.provenanceTitle = normalizedProvenanceTitle
+        self.liveTitleIsAuthoritative = liveTitleIsAuthoritative
+
+        if liveTitleIsAuthoritative, Self.normalizedTitle(liveTitle) != nil {
+            title = normalizedLiveTitle
+            source = .live
+        } else if let normalizedProvenanceTitle {
+            title = normalizedProvenanceTitle
+            source = .provenance
+        } else {
+            title = normalizedLiveTitle
+            source = .live
+        }
+    }
+
+    private static func normalizedTitle(_ title: String?) -> String? {
+        let trimmed = title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
 struct SidebarWorkspaceSnapshotBuilder {
     struct PresentationKey: Equatable {
         let showsWorkspaceDescription: Bool
@@ -9,6 +59,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         let usesViewportAwarePath: Bool
         let visibleAuxiliaryDetails: SidebarWorkspaceAuxiliaryDetailVisibility
         let provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot?
+        let titleResolution: SidebarWorkspaceTitleResolution
     }
 
     struct VerticalBranchDirectoryLine: Equatable {

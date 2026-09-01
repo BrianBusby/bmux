@@ -112,6 +112,14 @@ extension ControlCommandCoordinator {
         ]))
     }
 
+    /// `debug.sidebar.health` — default-sidebar title-resolution health.
+    func debugSidebarHealth(_ params: [String: JSONValue]) -> ControlCallResult {
+        guard let payload = debugContext?.controlDebugSidebarHealth(routing: routingSelectors(params)) else {
+            return .err(code: "unavailable", message: "TabManager not available", data: nil)
+        }
+        return .ok(payload)
+    }
+
     // MARK: - debug.terminal.*
 
     /// `debug.terminal.is_focused` — whether a terminal surface has focus

@@ -278,6 +278,7 @@ extension TerminalController: ControlSystemContext {
         let selectedWorkspaceId = tabManager.selectedTabId
         let workspaces = tabManager.tabs.enumerated().map { index, workspace in
             extensionSidebarWorkspaceRow(
+                tabManager: tabManager,
                 workspace: workspace,
                 index: index,
                 selected: workspace.id == tabManager.selectedTabId
@@ -294,6 +295,7 @@ extension TerminalController: ControlSystemContext {
     /// The byte-faithful twin of the former
     /// `v2ExtensionSidebarWorkspacePayload`, producing a Sendable row.
     private func extensionSidebarWorkspaceRow(
+        tabManager: TabManager,
         workspace: Workspace,
         index: Int,
         selected: Bool
@@ -308,7 +310,7 @@ extension TerminalController: ControlSystemContext {
         return ControlExtensionSidebarWorkspace(
             workspaceID: workspace.id,
             index: index,
-            title: workspace.title,
+            title: tabManager.resolvedWorkspaceDisplayTitle(for: workspace),
             description: workspace.customDescription,
             isSelected: selected,
             isPinned: workspace.isPinned,

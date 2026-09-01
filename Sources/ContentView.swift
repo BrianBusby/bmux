@@ -13292,7 +13292,6 @@ struct TabItemView: View, Equatable {
     @State private var isEditing = false
     @State private var renameDraft = ""
     @State private var renameBaselineHadUserCustomTitle = false
-
     private static let maxWrappedTitleLines = 8
     private static let maxDisplayedTitleCharacters = 2048
 
@@ -13627,7 +13626,8 @@ struct TabItemView: View, Equatable {
             showsGitBranch: sidebarShowGitBranch,
             usesViewportAwarePath: sidebarUsesLastSegmentPath,
             visibleAuxiliaryDetails: visibleAuxiliaryDetails,
-            provenanceDisplaySnapshot: provenanceDisplaySnapshot
+            provenanceDisplaySnapshot: provenanceDisplaySnapshot,
+            titleResolution: tabManager.sidebarWorkspaceTitleResolution(for: tab, provenanceDisplaySnapshot: provenanceDisplaySnapshot)
         )
     }
 
@@ -14927,7 +14927,7 @@ struct TabItemView: View, Equatable {
         }
         return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: workspaceSnapshotPresentationKey,
-            title: provenanceDisplaySnapshot?.title ?? tab.title,
+            title: tabManager.sidebarWorkspaceTitleResolution(for: tab, provenanceDisplaySnapshot: provenanceDisplaySnapshot).title,
             customDescription: settings.showsWorkspaceDescription ? sidebarVisibleCustomDescription(hiddenPullRequestNumbers: displayedPullRequestNumbers) : nil,
             isPinned: tab.isPinned,
             customColorHex: tab.customColor,
