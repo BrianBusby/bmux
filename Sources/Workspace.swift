@@ -5404,8 +5404,7 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     func clearRecordedPromptMessages() {
-        latestConversationMessage = nil
-        latestSubmittedPromptMetadata = nil
+        latestConversationMessage = nil; latestSubmittedPromptMetadata = nil
         workspacePromptPullRequestIntentNumbers.removeAll()
         workspacePromptBranchIntentNames.removeAll()
     }
