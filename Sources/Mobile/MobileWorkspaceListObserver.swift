@@ -187,8 +187,7 @@ final class MobileWorkspaceListObserver {
                 workspace.$currentDirectory.map { _ in () }.eraseToAnyPublisher(),
                 workspace.$panelDirectories.map { _ in () }.eraseToAnyPublisher(),
                 workspace.$latestConversationMessage.map { _ in () }.eraseToAnyPublisher(),
-                workspace.$latestSubmittedMessage.map { _ in () }.eraseToAnyPublisher(),
-                workspace.$latestSubmittedAt.map { _ in () }.eraseToAnyPublisher(),
+                workspace.$latestSubmittedPromptMetadata.map { _ in () }.eraseToAnyPublisher(),
                 workspace.currentDirectoryChangeRevisionPublisher()
                     .map { _ in () }
                     .eraseToAnyPublisher(),
