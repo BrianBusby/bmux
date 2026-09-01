@@ -213,6 +213,24 @@ for brief in response.projection?.relatedSessions ?? [] {
 }
 ```
 
+## bmux CLI Consumer
+
+bmux exposes this read through:
+
+```bash
+bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]
+```
+
+The CLI requires an explicit PE session id and uses the public
+`ProvenanceEngineClient.relatedSessions(...)` contract. bmux owns only argument
+parsing, database selection, output formatting, and agent-facing docs; PE owns
+relationship reasons, ordering, revision semantics, work-state field authority,
+freshness, completeness, evidence references, and bounded omissions.
+
+The command works without a live bmux socket when the selected local PE database
+exists. A missing database, missing session, missing revision, valid empty
+projection, and partial result remain distinguishable in JSON and text output.
+
 A sanitized fixture for this contract includes a related session that reports
 `Blocker: activity=run package suite; condition=database unavailable` and
 `Approach change: objective=validate related work state; prior=full package

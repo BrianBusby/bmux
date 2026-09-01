@@ -2181,7 +2181,7 @@ roadmap:
       kind: phase
       title: Cross-Session Awareness Read Models
       parent: cross_session_work_awareness
-      status: active
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2191,14 +2191,14 @@ roadmap:
         architecture_layer: inference_session_work_projections
         tags:
           - cross_session_awareness
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - session_work_model_contract_foundation
         - session_outcome_aggregation
       parallelism:
         classification: serial
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: provenance_engine
       rationale: Group PE-owned read models that derive related-session briefs from durable evidence and validated semantic records.
 
@@ -2512,7 +2512,7 @@ roadmap:
       kind: phase
       title: Cross-Session Retrieval and Context
       parent: cross_session_work_awareness
-      status: planned
+      status: active
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2522,7 +2522,7 @@ roadmap:
         architecture_layer: retrieval_engine
         tags:
           - cross_session_awareness
-      capability_maturity: ready
+      capability_maturity: active
       depends_on:
         - cross_session_work_awareness_foundation
       gates:
@@ -2534,7 +2534,7 @@ roadmap:
       parallelism:
         classification: serial
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: shared
       rationale: Groups explicit agent retrieval, bmux presentation, and later measured context assembly over cross-session awareness.
 
@@ -2542,7 +2542,7 @@ roadmap:
       kind: milestone
       title: Cross-Session Retrieval and Presentation
       parent: cross_session_awareness_retrieval_and_context
-      status: planned
+      status: active
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2552,7 +2552,7 @@ roadmap:
         architecture_layer: retrieval_engine
         tags:
           - cross_session_awareness
-      capability_maturity: ready
+      capability_maturity: active
       depends_on:
         - rich_cross_session_work_state_semantics
         - cross_session_artifact_collision_awareness
@@ -2570,7 +2570,7 @@ roadmap:
       parallelism:
         classification: serial
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: shared
       rationale: Makes cross-session awareness accessible to agents and bmux only after the relationship and brief semantics prove reliable.
 
@@ -2578,7 +2578,7 @@ roadmap:
       kind: slice
       title: Agent-accessible cross-session retrieval
       parent: cross_session_retrieval_and_presentation
-      status: planned
+      status: implemented
       owner: provenance_engine
       repositories:
         - provenance_engine
@@ -2589,7 +2589,7 @@ roadmap:
         tags:
           - cross_session_awareness
           - agent_retrieval
-      capability_maturity: ready
+      capability_maturity: validated
       depends_on:
         - cross_session_work_awareness_foundation
         - rich_cross_session_work_state_semantics
@@ -2635,12 +2635,34 @@ roadmap:
           - artifact_collision_explanations
         worktree_required: true
       execution:
-        assignment: planned
+        assignment: complete
         assigned_to: shared
-        notes: "Likely next candidate after PR #87 merged and Project Truth validated rich_cross_session_work_state_semantics; not selected or started."
-      delivery_status: proposed
-      acceptance_status: proposed
+        notes: "Implemented after PR #87 merged and Project Truth validated rich_cross_session_work_state_semantics. Scope is explicit bounded agent-facing CLI retrieval over existing PE related-session and artifact-collision read contracts; no prompt injection, proactive UI, coordination policy, arbitrary file-history search, or new inference layer is in scope. Local validation covered focused bmux-unit CLI dispatch, the full PE package suite, no-socket help, localization, tagged build 509, and an isolated two-session demo."
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 6be29aaa60ff8e6f883b6ec0b29bf80fe7f3e3b1
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 88
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      acceptance:
+        criteria:
+          - Expose explicit agent retrieval CLI commands over existing PE related-session and artifact-collision reads.
+          - Require explicit PE session ids and selected local databases; do not infer from focus or require a live app socket.
+          - Support bounded limits, recent-time filters, exact historical revisions, artifact-path filters, stale classification, and clear malformed-argument failures.
+          - Preserve JSON contract fields for relationship reasons, repository/worktree/branch/HEAD boundaries, semantic claims, evidence references, revisions, freshness, completeness, stale/partial states, and omissions.
+          - Preserve the collision limitation that discovery starts from the target session's recorded changed artifacts and never treats same-path different-repository work as a collision.
+          - "Keep the reads workflow-neutral: no ingestion, mutation, prompt/context injection, notification, raw transcript sharing, or unrelated secret access."
+          - Verify through real command dispatch, deterministic PE fixtures, no-socket help, documentation, localization, and a reproducible two-session demonstration.
       rationale: Provide explicit bounded agent queries over PE-owned cross-session state instead of blindly injecting historical context or exposing full transcripts.
+      completed_at: 2026-08-31
+      acceptance_reason: >-
+        Implemented as two explicit `bmux provenance sessions` retrieval operations backed by public PE `relatedSessions(...)` and `artifactCollisions(...)` reads. The commands require explicit PE session ids, accept explicit databases without a live app socket, enforce finite limits and timestamp/path validation, preserve exact revision reads and missing/empty/partial distinctions, render compact localized text, emit stable JSON, document the target-session changed-artifact collision limitation, and include deterministic fixtures plus a reproducible two-session demo. Delivery is open in PR #88 and acceptance is not claimed until review and merge evidence support it.
 
     - id: proactive_bmux_cross_session_awareness
       kind: slice

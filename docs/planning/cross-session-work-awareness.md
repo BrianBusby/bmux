@@ -1,9 +1,9 @@
 # Cross-Session Work Awareness
 
 Status: implemented related-session foundation, artifact-collision awareness,
-and rich carried work-state semantics plus planning context. Generated Project
-Truth is authoritative for dependency readiness, selected-next work, and active
-implementation:
+rich carried work-state semantics, and agent-accessible retrieval plus planning
+context. Generated Project Truth is authoritative for dependency readiness,
+selected-next work, and active implementation:
 
 - [Nested roadmap](../generated/nested-roadmap.md)
 - [Project status](../generated/project-status.md)
@@ -58,6 +58,9 @@ cross-session identities, or infer decision/risk/architecture relationships.
 Artifact-collision awareness is implemented separately as an inspectable
 factual PE read and still does not warn, block, coordinate, inject context, or
 judge semantic conflict.
+Agent-accessible retrieval exposes both reads through the existing bmux
+`provenance` CLI namespace for explicit, bounded agent queries without adding a
+sidecar, MCP server, prompt injection, or automatic coordination policy.
 
 ## Ownership
 
@@ -151,8 +154,9 @@ Known limitations:
 - Shared changed artifact is only same normalized changed path within shared
   repository/worktree context; it is not rename, diff-hunk, semantic component,
   or collision analysis.
-- There is no compact bmux CLI boundary in this slice; consumers should use the
-  public PE client contract until a separate consumer slice is selected.
+- The bmux CLI retrieval boundary requires an explicit PE session id. It does
+  not infer identity from focus, provider thread id, workspace id, surface id,
+  or the first matching session.
 
 Artifact-collision awareness now adds `artifactCollisions(...)` above the
 related-session foundation. It detects exact normalized path overlaps within
@@ -166,9 +170,11 @@ evidence can establish it deterministically.
 Rich cross-session work-state semantics now carries existing milestone,
 blocker, and approach-change records into related-session briefs with explicit
 unknown, unavailable, partial, stale, and bounded-omission semantics.
-Agent-accessible cross-session retrieval remains gated on explicit selection
-after fresh Project Truth reassessment; this planning doc is not authorization
-to start that retrieval slice.
+Agent-accessible cross-session retrieval adds `bmux provenance sessions related`
+and `bmux provenance sessions collisions` as CLI consumers of those public PE
+reads. The collision command preserves the PE limitation that path filtering
+only narrows overlaps for target-session changed artifacts; it is not arbitrary
+file-history search.
 
 ## Sequence
 
@@ -180,7 +186,8 @@ Project Truth models the capability as these slices:
    approach-change, validation, and activity semantics in briefs.
 3. Artifact and change collision awareness: implemented detection and
    explanation of exact-path overlapping work, not automatic blocking.
-4. Agent-accessible cross-session retrieval: explicit bounded agent queries.
+4. Agent-accessible cross-session retrieval: implemented explicit bounded agent
+   queries through the provenance CLI.
 5. Proactive bmux cross-session awareness: presentation or notifications for
    especially relevant changes.
 6. Cross-session context assembly experiment: measured, bounded automatic

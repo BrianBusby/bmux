@@ -17071,18 +17071,7 @@ struct BMUXCLI {
         case "codex-token-audit", "token-audit":
             return codexTokenAuditUsage()
         case "provenance":
-            return String(localized: "cli.provenance.usage", defaultValue: """
-            Usage:
-              bmux provenance explain <path> [--json]
-              bmux provenance context current [--json]
-              bmux provenance worktrees list [--json]
-              bmux provenance sessions tree <session-id> [--json]
-              bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]
-              bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]
-              bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]
-
-            Inspect bmux work provenance without requiring a live app socket.
-            """)
+            return provenanceUsage()
         case "browser":
             return """
             Usage: bmux browser [--surface <id|ref|index> | <surface>] <subcommand> [args]
@@ -17198,7 +17187,15 @@ struct BMUXCLI {
 
     /// Dispatch help for a subcommand. Returns true if help was printed.
     private func dispatchSubcommandHelp(command: String, commandArgs: [String]) -> Bool {
-        guard commandArgs.contains("--help") || commandArgs.contains("-h") else { return false }
+        let preSeparatorArgs = commandArgs.firstIndex(of: "--").map { commandArgs[..<$0] } ?? commandArgs[...]
+        guard preSeparatorArgs.contains(where: { $0 == "--help" || $0 == "-h" }) else { return false }
+        if command == "provenance",
+           let help = provenanceSubcommandHelp(commandArgs: commandArgs) {
+            print("bmux \(help.command)")
+            print("")
+            print(help.text)
+            return true
+        }
         guard let text = subcommandUsage(command) else { return false }
         print("bmux \(command)")
         print("")

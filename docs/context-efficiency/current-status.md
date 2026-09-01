@@ -157,6 +157,20 @@ agent retrieval, automatic context injection, coordination, proactive UI,
 cross-session milestone unification, semantic conflict judgments, or new
 natural-language inference.
 
+Agent-accessible cross-session retrieval is implemented locally on branch
+`agent-accessible-cross-session-retrieval`. The bmux provenance CLI now exposes
+`bmux provenance sessions related <pe-session-id>` and
+`bmux provenance sessions collisions <pe-session-id>` over the existing public
+PE `relatedSessions(...)` and `artifactCollisions(...)` reads. The commands are
+explicit, bounded, database-selectable, no-socket reads with JSON and compact
+localized text output. They preserve source revisions, semantic field
+availability, evidence references, repository/worktree/branch/HEAD boundaries,
+unknown/partial/omitted states, and the collision limitation that candidates
+start from the target session's recorded changed artifacts. This slice does not
+add prompt injection, proactive bmux UI, agent messaging, coordination policy,
+arbitrary file-history search, semantic conflict detection, raw transcript
+sharing, Knowledge Compiler integration, or automatic session-id resolution.
+
 Planning target: PE owns the `SessionWorkModel` projection for one
 coding-agent session. bmux should consume PE factual projection, semantic
 messages, and the revisioned `SessionWorkModel` snapshot for Smart Session
@@ -171,16 +185,21 @@ use one branch and one worktree unless a future release/extraction task
 explicitly requires a separate PE checkout. The original PE repository remains
 an archival and recovery reference until the migration is accepted.
 
-Latest Provenance Engine semantic/cross-session verification:
+Latest Provenance Engine semantic/cross-session retrieval verification:
 
 - Project Truth: `./scripts/project-docs validate`, `./scripts/project-docs generate`, `./scripts/project-docs check`, and authenticated `./scripts/project-docs ci`
-- Provenance Engine: `swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-milestone-inference/Packages/macOS/ProvenanceEngine`
-- Milestone focus: `swift test --package-path /Users/brianbusby/repos/.bmux-worktrees/session-milestone-inference/Packages/macOS/ProvenanceEngine --filter MilestoneInferenceTests --filter ProvenanceEngineSessionWorkModelClientFactoryTests`
-- Regression focus: semantic inference, SessionWorkModel, Turn Outcome, Session Outcome, related-session, artifact-collision, SDK, migration, and rebuild suites through the full PE package test
-- Guards: `python3 scripts/swift_file_length_budget.py --repo-root . --base-ref origin/main`, `git diff --check`, `./scripts/lint-pbxproj-test-wiring.sh`, and `python3 scripts/check-package-resolved-policy.py`
+- Provenance Engine: `swift test --package-path Packages/macOS/ProvenanceEngine`
+- CLI focus: `BMUX_SKIP_ZIG_BUILD=1 xcodebuild test -project bmux.xcodeproj -scheme bmux-unit -configuration Debug -destination 'platform=macOS' -derivedDataPath /Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-agent-accessible-cross-session-retrieval-tests -only-testing:bmuxTests/CLIProvenanceSessionOutcomeCommandTests`
+- CLI help: `BMUX_CLI_BIN=/Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-agent-accessible-cross-session-retrieval-tests/Build/Products/Debug/bmux python3 tests/test_cli_contract_help.py`
+- Runtime build: `./scripts/reload.sh --tag agent-accessible-cross-session-retrieval` succeeded with local build number 509 and did not launch the app.
+- Dogfood: `ProvenanceRetrievalDemoSeed` seeded an isolated PE SQLite database, then the tagged app bundle CLI queried `session-retrieval-demo-b` with explicit `--database` and a forced nonexistent socket. Observed output sizes were 3,844 bytes for related text, 79,859 bytes for related JSON with `--limit 1`, 1,175 bytes for collision text, and 5,548 bytes for untouched-path collision JSON. Observed timings were `real 4.70s` for related text and `real 0.05s` for collision text.
+- Regression focus: semantic inference, SessionWorkModel, Turn Outcome, Session Outcome, related-session, artifact-collision, SDK, migration, rebuild, and CLI formatting suites through the full PE package test and focused bundled CLI test.
+- Guards: `python3 scripts/swift_file_length_budget.py --repo-root . --base-ref origin/main`, `git diff --check`, `./scripts/lint-pbxproj-test-wiring.sh`, `python3 scripts/check-package-resolved-policy.py`, and `python3 scripts/check-workspace-package-groups.py --check`.
 
-Runtime tests or tagged reloads are only required when production app/runtime
-behavior changes; this branch changes PE package contracts/storage only.
+Runtime tests and tagged reloads are required for production CLI behavior
+changes. Use the tagged app bundle CLI or a launched tag-bound helper with an
+explicit test database; do not test these retrieval reads against the production
+database or the ambiguous `/tmp/bmux-cli` symlink.
 
 Codex transcript importer verification is covered by the
 `WorkProvenanceStoreTests` suite in the `bmux-unit` scheme.
