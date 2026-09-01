@@ -3,7 +3,7 @@ import BmuxAgentChat
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
-import XCTest
+import Testing
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -11,9 +11,9 @@ import XCTest
 @testable import bmux
 #endif
 
-final class PromptSessionLinkProjectionTests: XCTestCase {
+@Suite struct PromptSessionLinkProjectionTests {
     @MainActor
-    func testPromptSubmitSessionLinkSurvivesThroughWorkspaceDisplayProjection() async throws {
+    @Test func promptSubmitSessionLinkSurvivesThroughWorkspaceDisplayProjection() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
@@ -62,13 +62,13 @@ final class PromptSessionLinkProjectionTests: XCTestCase {
         let manager = TabManager()
         let workspace = manager.tabs[0]
         workspace.currentDirectory = repositoryRoot
-        let promptOutcome = try XCTUnwrap(manager.handlePromptSubmit(
+        let promptOutcome = try #require(manager.handlePromptSubmit(
             workspaceId: workspace.id,
             message: " \(promptText) ",
             sessionID: " \(sessionID) ",
             iMessageModeEnabled: false
         ))
-        XCTAssertTrue(promptOutcome.messageRecorded)
+        #expect(promptOutcome.messageRecorded)
 
         let observationService = WorkProvenanceObservationService(
             client: client,
@@ -80,8 +80,8 @@ final class PromptSessionLinkProjectionTests: XCTestCase {
         let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
             workspaceID: workspace.stableId.uuidString
         ))
-        XCTAssertEqual(display.display?.lastSubmittedPrompt, promptText)
-        XCTAssertEqual(display.display?.lastSubmittedPromptSessionID, sessionID)
+        #expect(display.display?.lastSubmittedPrompt == promptText)
+        #expect(display.display?.lastSubmittedPromptSessionID == sessionID)
 
         let runtime = WorkProvenanceRuntime(
             observationService: observationService,
@@ -91,10 +91,11 @@ final class PromptSessionLinkProjectionTests: XCTestCase {
         guard case .available(let projection) = await runtime.agentSessionFactualProjection(
             stableWorkspaceID: workspace.stableId
         ) else {
-            return XCTFail("Expected PE factual session projection for the prompt-linked workspace")
+            Issue.record("Expected PE factual session projection for the prompt-linked workspace")
+            return
         }
 
-        XCTAssertEqual(projection.session.id, sessionID)
+        #expect(projection.session.id == sessionID)
     }
 
     private struct FakeGitInspector: WorkProvenanceGitInspecting {
