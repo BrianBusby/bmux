@@ -72,11 +72,11 @@ final class AgentSessionSmartSessionStore {
                 return .notFound(sessionID: sessionID, reason: notFoundReason)
             }
             let semanticMessages = await presentationMessages(for: workModel)
-            async let relatedResult = relatedSessions(sessionID: sessionID)
-            async let collisionResult = artifactCollisions(sessionID: sessionID)
+            let relatedResult = await relatedSessions(sessionID: sessionID)
+            let collisionResult = await artifactCollisions(sessionID: sessionID)
             let awareness = AgentSessionSmartSessionSnapshot.CrossSessionAwareness(
-                related: await relatedResult,
-                collisions: await collisionResult
+                related: relatedResult,
+                collisions: collisionResult
             )
             let nextSnapshot = AgentSessionSmartSessionSnapshot(
                 workModel: workModel,
