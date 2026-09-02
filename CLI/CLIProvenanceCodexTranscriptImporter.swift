@@ -99,6 +99,8 @@ struct CLIProvenanceCodexTranscriptImporter {
                 line: pendingPrompt.line,
                 text: pendingPrompt.text,
                 providerTurnID: nil,
+                workspaceID: context.workspaceID,
+                surfaceID: context.surfaceID,
                 fileReport: &fileReport
             )
         }
@@ -111,7 +113,7 @@ struct CLIProvenanceCodexTranscriptImporter {
         var fileReport = FileReport(path: path, status: "live")
         let fileSize = try currentFileSize(at: url)
         if fileSize < state.offset {
-            state = LiveImportState()
+            state = LiveImportState(workspaceID: state.workspaceID, surfaceID: state.surfaceID)
         }
 
         guard fileSize > state.offset else {
@@ -162,6 +164,8 @@ struct CLIProvenanceCodexTranscriptImporter {
                 line: pendingPrompt.line,
                 text: pendingPrompt.text,
                 providerTurnID: nil,
+                workspaceID: context.workspaceID,
+                surfaceID: context.surfaceID,
                 fileReport: &fileReport
             )
         }
@@ -224,6 +228,8 @@ struct CLIProvenanceCodexTranscriptImporter {
             state.context = TranscriptContext(
                 sessionID: metadata.sessionID,
                 providerThreadID: metadata.providerThreadID,
+                workspaceID: state.workspaceID,
+                surfaceID: state.surfaceID,
                 cwd: metadata.cwd,
                 sessionStartedAt: metadata.timestamp,
                 latestModel: metadata.model,
@@ -236,7 +242,11 @@ struct CLIProvenanceCodexTranscriptImporter {
         guard let metadata = state.metadata,
               var context = state.context else { return }
         if !state.threadObserved {
-            try await appendThread(metadata: metadata, line: metadata.line, fileReport: &fileReport)
+            try await appendThread(
+                metadata: metadata, line: metadata.line,
+                workspaceID: context.workspaceID, surfaceID: context.surfaceID,
+                fileReport: &fileReport
+            )
             state.threadObserved = true
         }
         let importLines = state.pendingLines
@@ -318,6 +328,8 @@ struct CLIProvenanceCodexTranscriptImporter {
                     line: prompt.line,
                     text: prompt.text,
                     providerTurnID: providerTurnID,
+                    workspaceID: context.workspaceID,
+                    surfaceID: context.surfaceID,
                     fileReport: &fileReport
                 )
             }
@@ -414,6 +426,8 @@ struct CLIProvenanceCodexTranscriptImporter {
                     line: line,
                     text: text,
                     providerTurnID: providerTurnID,
+                    workspaceID: context.workspaceID,
+                    surfaceID: context.surfaceID,
                     fileReport: &fileReport
                 )
             } else {

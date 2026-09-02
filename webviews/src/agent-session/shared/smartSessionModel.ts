@@ -20,6 +20,14 @@ export type SmartSessionStatus =
   | "available"
   | "missingSession"
   | "unavailable"
+  | "noSupportedCodingAgentDetected"
+  | "agentDetectedAwaitingFirstPrompt"
+  | "promptObservedAssociationPending"
+  | "associationEstablishedProjectionPending"
+  | "ingestionFailed"
+  | "identityReconciliationFailed"
+  | "projectionFailed"
+  | "unsupportedOrUnassociatedSession"
   | "notFound"
   | "failed";
 
@@ -29,6 +37,7 @@ export type SmartSessionState = {
   snapshot?: SmartSessionSnapshot;
   reason?: string;
   sessionId?: string;
+  diagnostics?: Record<string, unknown>;
 };
 
 export type SmartSessionAction =
@@ -72,6 +81,7 @@ export function reduceSmartSession(state: SmartSessionState, action: SmartSessio
           status: action.result.status,
           reason: action.result.reason,
           sessionId: action.result.sessionId,
+          diagnostics: action.result.diagnostics,
           snapshot: state.snapshot,
         };
       }

@@ -73,6 +73,10 @@ extension TerminalSurface {
             to: &env,
             protectedKeys: &protectedStartupEnvironmentKeys
         )
+        Self.applyManagedAgentScopedEnvironmentReset(
+            to: &env,
+            protectedKeys: &protectedStartupEnvironmentKeys
+        )
         func setManagedEnvironmentValue(_ key: String, _ value: String) {
             env[key] = value
             protectedStartupEnvironmentKeys.insert(key)
@@ -82,6 +86,7 @@ extension TerminalSurface {
         Self.applyManagedBmuxContextEnvironment(
             Self.bmuxContextEnvironment(
                 workspaceId: tabId,
+                stableWorkspaceId: stableWorkspaceId,
                 surfaceId: id,
                 socketPath: socketPath
             ),
@@ -97,6 +102,7 @@ extension TerminalSurface {
            runtimeFilesystem.isExecutableFile(bundledCLIURL.path) {
             setManagedEnvironmentValue("BMUX_BUNDLED_CLI_PATH", bundledCLIURL.path)
             setManagedEnvironmentValue("CMUX_BUNDLED_CLI_PATH", bundledCLIURL.path)
+            setManagedEnvironmentValue("BMUX_CODEX_HOOK_BMUX_BIN", bundledCLIURL.path)
         }
         if let bundleId = Bundle.main.bundleIdentifier, !bundleId.isEmpty {
             setManagedEnvironmentValue("BMUX_BUNDLE_ID", bundleId)

@@ -4,7 +4,7 @@ import ProvenanceEngineContracts
 /// Reads PE SessionWorkModel data for the React Smart Session surface.
 @MainActor
 final class AgentSessionSmartSessionStore {
-    private let client: any ProvenanceEngineClient
+    let client: any ProvenanceEngineClient
     private var snapshotsBySessionID: [String: AgentSessionSmartSessionSnapshot] = [:]
     private var refreshTasksBySessionID: [String: RefreshTaskEntry] = [:]
     private static let semanticReconciliationAttemptLimit = 3

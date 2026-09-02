@@ -3806,6 +3806,142 @@
         }
       }
     },
+    "agentSession.factual.noSupportedAgent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No supported coding agent has been detected in this workspace."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このワークスペースでは、対応しているコーディングエージェントが検出されていません。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.awaitingFirstPrompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coding agent detected. Waiting for the first prompt."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コーディングエージェントを検出しました。最初のプロンプトを待機しています。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.associationPending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prompt observed. Linking the coding-agent session."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロンプトを検出しました。コーディングエージェントセッションをリンクしています。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.projectionPending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session linked. Building factual session data."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッションをリンクしました。事実セッションデータを構築しています。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.ingestionFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session evidence ingestion failed."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッション証拠の取り込みに失敗しました。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.identityReconciliationFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not reconcile the coding-agent session identity."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コーディングエージェントセッションの識別情報を照合できませんでした。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.projectionFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not read factual session data."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "事実セッションデータを読み取れませんでした。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.unsupportedOrUnassociated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workspace does not have an associated supported coding-agent session."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このワークスペースには、対応しているコーディングエージェントセッションが関連付けられていません。"
+          }
+        }
+      }
+    },
     "agentSession.factual.unknown": {
       "extractionState": "manual",
       "localizations": {
@@ -9080,6 +9216,142 @@
           "stringUnit": {
             "state": "translated",
             "value": "セッションデータを利用できません"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.noSupportedAgent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No supported coding agent detected"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "対応しているコーディングエージェントが検出されていません"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.awaitingFirstPrompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coding agent detected. Waiting for a prompt."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コーディングエージェントを検出しました。プロンプトを待機しています。"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.associationPending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prompt observed. Linking session."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロンプトを検出しました。セッションをリンクしています。"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.projectionPending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session linked. Building facts."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッションをリンクしました。事実データを構築しています。"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.ingestionFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session evidence ingestion failed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッション証拠の取り込みに失敗しました"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.identityReconciliationFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not reconcile session identity"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッション識別情報を照合できませんでした"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.projectionFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not read session facts"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッションの事実データを読み取れませんでした"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.unsupportedOrUnassociated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No associated supported session"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "関連付けられた対応セッションがありません"
           }
         }
       }

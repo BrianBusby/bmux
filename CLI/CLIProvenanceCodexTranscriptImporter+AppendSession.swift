@@ -5,6 +5,8 @@ extension CLIProvenanceCodexTranscriptImporter {
     func appendThread(
         metadata: TranscriptMetadata,
         line: TranscriptLine,
+        workspaceID: String? = nil,
+        surfaceID: String? = nil,
         fileReport: inout FileReport
     ) async throws {
         let observedAt = line.timestamp ?? metadata.timestamp
@@ -12,6 +14,8 @@ extension CLIProvenanceCodexTranscriptImporter {
         let session = ProvenanceSessionRecord(
             id: metadata.sessionID,
             agentKind: "codex",
+            workspaceID: Self.trimmedNonEmpty(workspaceID),
+            surfaceID: Self.trimmedNonEmpty(surfaceID),
             worktreeID: gitContext?.worktreeID,
             cwd: metadata.cwd,
             status: "active",
@@ -43,6 +47,19 @@ extension CLIProvenanceCodexTranscriptImporter {
                 observedAt: observedAt
             )
         ]
+        let association = workspaceCodingAgentSessionAssociation(
+            workspaceID: workspaceID,
+            sessionID: metadata.sessionID,
+            rawSessionID: metadata.sessionID,
+            surfaceID: surfaceID,
+            gitContext: gitContext,
+            currentDirectory: metadata.cwd,
+            sourcePath: "transcript",
+            observedAt: observedAt,
+            promptObservedAt: nil,
+            stage: "agent_detected_awaiting_first_prompt",
+            reasonCode: "transcript_thread_observed"
+        )
         let event = provenanceEvent(
             id: eventID(sessionID: metadata.sessionID, line: line, kind: "thread"),
             eventType: .codingAgentThreadObserved,
@@ -55,6 +72,7 @@ extension CLIProvenanceCodexTranscriptImporter {
                 worktree: gitContext?.worktree,
                 session: session,
                 externalIdentities: identities,
+                workspaceCodingAgentSessionAssociation: association,
                 codingAgentThread: thread
             )
         )
@@ -139,6 +157,8 @@ extension CLIProvenanceCodexTranscriptImporter {
         line: TranscriptLine,
         text: String,
         providerTurnID: String?,
+        workspaceID: String? = nil,
+        surfaceID: String? = nil,
         fileReport: inout FileReport
     ) async throws {
         guard let text = Self.trimmedNonEmpty(text).map({ Self.bounded($0, limit: Self.textLimit) }) else { return }
@@ -166,6 +186,19 @@ extension CLIProvenanceCodexTranscriptImporter {
             source: .observed,
             confidence: .high
         )
+        let association = workspaceCodingAgentSessionAssociation(
+            workspaceID: workspaceID,
+            sessionID: metadata.sessionID,
+            rawSessionID: metadata.sessionID,
+            surfaceID: surfaceID,
+            gitContext: gitContext,
+            currentDirectory: metadata.cwd,
+            sourcePath: "transcript",
+            observedAt: observedAt,
+            promptObservedAt: observedAt,
+            stage: "workspace_session_association_persisted",
+            reasonCode: "transcript_prompt_observed"
+        )
         let event = provenanceEvent(
             id: eventID(sessionID: metadata.sessionID, line: line, kind: "prompt"),
             eventType: .codingAgentPromptSubmitted,
@@ -176,10 +209,52 @@ extension CLIProvenanceCodexTranscriptImporter {
             payload: ProvenanceEventPayload(
                 repository: gitContext?.repository,
                 worktree: gitContext?.worktree,
+                workspaceCodingAgentSessionAssociation: association,
                 codingAgentPrompt: prompt
             )
         )
         try await append(event, stat: \.prompts, fileReport: &fileReport)
+    }
+
+    func workspaceCodingAgentSessionAssociation(
+        workspaceID: String?,
+        sessionID: String,
+        rawSessionID: String?,
+        surfaceID: String?,
+        gitContext: GitContext?,
+        currentDirectory: String?,
+        sourcePath: String,
+        observedAt: Date,
+        promptObservedAt: Date?,
+        stage: String,
+        reasonCode: String?
+    ) -> ProvenanceWorkspaceCodingAgentSessionAssociationRecord? {
+        guard let workspaceID = Self.trimmedNonEmpty(workspaceID) else { return nil }
+        let agentKind = "codex"
+        return ProvenanceWorkspaceCodingAgentSessionAssociationRecord(
+            id: stableIDFactory.workspaceCodingAgentSessionAssociationID(
+                workspaceID: workspaceID,
+                agentKind: agentKind,
+                sessionID: sessionID
+            ),
+            workspaceID: workspaceID,
+            sessionID: sessionID,
+            agentKind: agentKind,
+            rawSessionID: Self.trimmedNonEmpty(rawSessionID),
+            canonicalSessionID: sessionID,
+            surfaceID: Self.trimmedNonEmpty(surfaceID),
+            repositoryID: gitContext?.repositoryID,
+            worktreeID: gitContext?.worktreeID,
+            currentDirectory: Self.trimmedNonEmpty(currentDirectory),
+            sourcePath: sourcePath,
+            stage: stage,
+            reasonCode: reasonCode,
+            retryable: true,
+            firstObservedAt: observedAt,
+            promptObservedAt: promptObservedAt,
+            lastObservedAt: observedAt,
+            lastTransitionAt: observedAt
+        )
     }
 
     func appendPlan(

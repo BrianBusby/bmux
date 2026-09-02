@@ -215,7 +215,11 @@ func runCodexHookProcess(
     let stdinPipe = standardInput == nil ? nil : Pipe()
     process.executableURL = URL(fileURLWithPath: executablePath)
     process.arguments = arguments
-    process.environment = environment
+    var childEnvironment = environment
+    if childEnvironment["CFFIXED_USER_HOME"] == nil, let home = childEnvironment["HOME"] {
+        childEnvironment["CFFIXED_USER_HOME"] = home
+    }
+    process.environment = childEnvironment
     process.standardInput = stdinPipe ?? FileHandle.nullDevice
     process.standardOutput = stdoutPipe
     process.standardError = stderrPipe
@@ -236,7 +240,10 @@ func runCodexHookProcess(
         exitSignal.signal()
     }
 
-    let timedOut = exitSignal.wait(timeout: .now() + timeout) == .timedOut
+    var timedOut = exitSignal.wait(timeout: .now() + timeout) == .timedOut
+    if timedOut, !process.isRunning {
+        timedOut = false
+    }
     if timedOut {
         process.terminate()
         if exitSignal.wait(timeout: .now() + 1) == .timedOut {

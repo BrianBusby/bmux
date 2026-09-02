@@ -34,6 +34,23 @@ struct WorkProvenanceStableIDFactory: Sendable {
         id(prefix: "event", value: "workspace-display\n\(stableWorkspaceID.uuidString.lowercased())\n\(fingerprint)")
     }
 
+    /// Stable projection id for a workspace-to-coding-agent-session association.
+    func workspaceCodingAgentSessionAssociationID(
+        stableWorkspaceID: UUID,
+        agentKind: String,
+        sessionID: String
+    ) -> String {
+        id(
+            prefix: "workspace-agent-session",
+            value: [
+                "workspace-coding-agent-session-association",
+                stableWorkspaceID.uuidString.lowercased(),
+                agentKind.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                sessionID.trimmingCharacters(in: .whitespacesAndNewlines),
+            ].joined(separator: "\n")
+        )
+    }
+
     /// Fingerprint for the Git state represented by a snapshot.
     func fingerprint(for snapshot: WorkProvenanceGitSnapshot) -> String {
         let fileLines = snapshot.statusEntries

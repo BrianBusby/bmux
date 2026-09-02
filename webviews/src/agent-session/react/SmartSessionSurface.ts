@@ -443,6 +443,22 @@ function statusMessage(state: SmartSessionState, copy?: AgentSessionCopy): strin
       return copyText(copy, "smartSessionNoSession", "No linked session");
     case "unavailable":
       return copyText(copy, "smartSessionUnavailable", "Session data unavailable");
+    case "noSupportedCodingAgentDetected":
+      return copyText(copy, "smartSessionNoSupportedAgent", "No supported coding agent detected");
+    case "agentDetectedAwaitingFirstPrompt":
+      return copyText(copy, "smartSessionAwaitingFirstPrompt", "Coding agent detected. Waiting for a prompt.");
+    case "promptObservedAssociationPending":
+      return copyText(copy, "smartSessionAssociationPending", "Prompt observed. Linking session.");
+    case "associationEstablishedProjectionPending":
+      return copyText(copy, "smartSessionProjectionPending", "Session linked. Building facts.");
+    case "ingestionFailed":
+      return copyText(copy, "smartSessionIngestionFailed", "Session evidence ingestion failed");
+    case "identityReconciliationFailed":
+      return copyText(copy, "smartSessionIdentityReconciliationFailed", "Could not reconcile session identity");
+    case "projectionFailed":
+      return copyText(copy, "smartSessionProjectionFailed", "Could not read session facts");
+    case "unsupportedOrUnassociatedSession":
+      return copyText(copy, "smartSessionUnsupportedOrUnassociated", "No associated supported session");
     case "notFound":
       return copyText(copy, "smartSessionNotFound", "Session not found");
     case "failed":

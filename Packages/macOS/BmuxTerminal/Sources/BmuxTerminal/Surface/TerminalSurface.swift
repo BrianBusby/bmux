@@ -136,6 +136,9 @@ public final class TerminalSurface: Identifiable, ObservableObject {
     /// The owning workspace id.
     public private(set) var tabId: UUID
 
+    /// The restart-stable workspace id used by durable provenance associations.
+    public private(set) var stableWorkspaceId: UUID
+
     /// Port ordinal for BMUX_PORT range assignment. Captured at construction so
     /// every runtime startup path uses the same immutable workspace port range.
     let portOrdinal: Int
@@ -327,11 +330,13 @@ public final class TerminalSurface: Identifiable, ObservableObject {
 
     static func bmuxContextEnvironment(
         workspaceId: UUID,
+        stableWorkspaceId: UUID? = nil,
         surfaceId: UUID,
         socketPath: String
     ) -> BmuxContextEnvironment {
         BmuxContextEnvironment(
             workspaceId: workspaceId,
+            stableWorkspaceId: stableWorkspaceId,
             surfaceId: surfaceId,
             socketPath: socketPath
         )
@@ -345,9 +350,14 @@ public final class TerminalSurface: Identifiable, ObservableObject {
         let socketPath = spawnPolicyProvider.controlSocketPath()
         var environment: [String: String] = [:]
         var protectedKeys: Set<String> = []
+        Self.applyManagedAgentScopedEnvironmentReset(
+            to: &environment,
+            protectedKeys: &protectedKeys
+        )
         Self.applyManagedBmuxContextEnvironment(
             Self.bmuxContextEnvironment(
                 workspaceId: tabId,
+                stableWorkspaceId: stableWorkspaceId,
                 surfaceId: id,
                 socketPath: socketPath
             ),
@@ -374,6 +384,7 @@ public final class TerminalSurface: Identifiable, ObservableObject {
     public init(
         id: UUID = UUID(),
         tabId: UUID,
+        stableWorkspaceId: UUID? = nil,
         context: ghostty_surface_context_e,
         configTemplate: BmuxSurfaceConfigTemplate?,
         workingDirectory: String? = nil,
@@ -391,6 +402,7 @@ public final class TerminalSurface: Identifiable, ObservableObject {
     ) {
         self.id = id
         self.tabId = tabId
+        self.stableWorkspaceId = stableWorkspaceId ?? tabId
         self.surfaceContext = context
         self.configTemplate = configTemplate
         self.workingDirectory = workingDirectory?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -465,6 +477,16 @@ public final class TerminalSurface: Identifiable, ObservableObject {
     @MainActor
     public func updateWorkspaceId(_ newTabId: UUID) {
         tabId = newTabId
+        stableWorkspaceId = newTabId
+        attachedView?.tabId = newTabId
+        surfaceView.tabId = newTabId
+    }
+
+    /// Rebinds the surface to a new owning workspace and stable provenance id.
+    @MainActor
+    public func updateWorkspaceId(_ newTabId: UUID, stableWorkspaceId newStableWorkspaceId: UUID?) {
+        tabId = newTabId
+        stableWorkspaceId = newStableWorkspaceId ?? newTabId
         attachedView?.tabId = newTabId
         surfaceView.tabId = newTabId
     }

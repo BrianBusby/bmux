@@ -41,6 +41,12 @@ extension ProvenanceSQLiteRepository: ProvenanceEngineClient {
         try artifactCollisionRecord(request)
     }
 
+    func workspaceCodingAgentSessionAssociation(
+        _ request: ProvenanceWorkspaceCodingAgentSessionAssociationRequest
+    ) async throws -> ProvenanceWorkspaceCodingAgentSessionAssociationResponse {
+        try workspaceCodingAgentSessionAssociationRecord(request)
+    }
+
     func publishSemanticInference(_ request: ProvenanceSemanticInferencePublishRequest) async throws
         -> ProvenanceSemanticInferencePublishResponse {
         try publishSemanticInferenceRecord(request)

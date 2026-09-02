@@ -236,6 +236,31 @@ actor WorkProvenanceObservationService {
             observedAt: now,
             updatedAt: now
         )
+        let association = lastSubmittedPromptSessionID.map { sessionID in
+            ProvenanceEngineContracts.ProvenanceWorkspaceCodingAgentSessionAssociationRecord(
+                id: stableIDFactory.workspaceCodingAgentSessionAssociationID(
+                    stableWorkspaceID: workspace.stableWorkspaceID,
+                    agentKind: "codex",
+                    sessionID: sessionID
+                ),
+                workspaceID: workspace.stableWorkspaceID.uuidString,
+                sessionID: sessionID,
+                agentKind: "codex",
+                rawSessionID: sessionID,
+                canonicalSessionID: sessionID,
+                repositoryID: repositoryID,
+                worktreeID: worktreeID,
+                currentDirectory: workspace.currentDirectory,
+                sourcePath: "display",
+                stage: "workspace_session_association_persisted",
+                reasonCode: "workspace_display_prompt_session_observed",
+                retryable: true,
+                firstObservedAt: lastSubmittedPromptSubmittedAt ?? now,
+                promptObservedAt: lastSubmittedPromptSubmittedAt,
+                lastObservedAt: now,
+                lastTransitionAt: now
+            )
+        }
         let event = ProvenanceEngineContracts.ProvenanceEvent(
             id: stableIDFactory.workspaceDisplayEventID(
                 stableWorkspaceID: workspace.stableWorkspaceID,
@@ -250,7 +275,8 @@ actor WorkProvenanceObservationService {
             evidenceScope: ProvenanceEngineContracts.ProvenanceEvidenceScope(level: .personal, id: "bmux-local"),
             confidence: ProvenanceEngineContracts.ProvenanceConfidence.high,
             payload: ProvenanceEngineContracts.ProvenanceEventPayload(
-                workspaceDisplay: display
+                workspaceDisplay: display,
+                workspaceCodingAgentSessionAssociation: association
             )
         )
 

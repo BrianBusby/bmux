@@ -1,11 +1,11 @@
 # bmux-owned Swift file length budget.
 # Format: max_lines<TAB>relative path
 # Reduce counts as files shrink. CI fails if tracked files exceed this budget.
-35824	CLI/bmux.swift
+35821	CLI/bmux.swift
 18366	Sources/AppDelegate.swift
 16645	Sources/ContentView.swift
 15126	Sources/TerminalController.swift
-13506	Sources/Workspace.swift
+13396	Sources/Workspace.swift
 13457	Sources/GhosttyTerminalView.swift
 12348	bmuxTests/AppDelegateShortcutRoutingTests.swift
 11388	Sources/Panels/BrowserPanel.swift

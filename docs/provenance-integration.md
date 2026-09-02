@@ -38,6 +38,14 @@ same logical Codex work. When Codex exposes provider turn identity, hook prompt
 evidence and transcript evidence reconcile onto the same factual turn before
 semantic inference or Smart Session presentation consumes the session.
 
+The workspace-to-coding-agent-session link is a PE-owned factual association,
+not display metadata. Codex hook, transcript, sidecar, lifecycle, and replay
+evidence should converge into one deterministic workspace/session association
+record before native Session, React Smart Session, cross-session reads, or later
+semantic consumers ask for the session. `lastSubmittedPromptSessionID` remains a
+bounded workspace display fact for row/sidebar presentation; it is not the
+authoritative identity bridge for Session reads.
+
 ## Public SDK Boundary
 
 bmux imports only the public engine products for adopted provenance paths:
@@ -78,6 +86,12 @@ Adopted CLI reads:
 - `bmux provenance sessions collisions <pe-session-id>` calls `client.artifactCollisions(...)`.
 - `bmux provenance explain <path>` calls `client.fileExplanation(...)`.
 - `bmux provenance context current` calls `client.currentContext(...)`.
+
+Adopted app reads:
+
+- Native factual Session and React Smart Session resolve the active coding-agent
+  session for a workspace through `client.workspaceCodingAgentSessionAssociation(...)`
+  before reading `factualSessionProjection(...)` or `sessionWorkModel(...)`.
 
 bmux still owns command parsing, Git path normalization, output compatibility, fallback text, JSON/text rendering, and UI presentation. The engine owns evidence, deterministic Current State, provenance interpretation, and bounded provenance queries.
 
@@ -327,6 +341,24 @@ error, and compaction evidence remain unimplemented. Model-derived milestone,
 intent, current-activity, or architecture meaning must not be written into
 deterministic PE Current State.
 
+Workspace/session association follows this factual pipeline:
+
+```text
+Codex evidence
+-> identity reconciliation
+-> durable PE workspace/session association
+-> factual projection
+-> Session/Smart Session consumers
+```
+
+The association record carries the stable workspace id, PE session id, raw and
+canonical provider session identities when known, source path, convergence
+stage, reason code, timestamps, retryability, and latest evidence revision. It
+is written idempotently from hook prompt evidence, transcript thread/prompt
+evidence, workspace display observation, and replay. Rebuilding projections from
+the ledger must reproduce the same association without relying on bmux display
+state.
+
 ## Three-view Session Presentation Boundary
 
 bmux should preserve three distinct views for one coding-agent session:
@@ -347,6 +379,13 @@ and the PE `SessionWorkModel` contract for completed/current turn summaries,
 milestones, blockers, approach changes, and current activity as those fields
 are validated. bmux should not build a parallel semantic model from raw
 Terminal events.
+
+Session consumers must distinguish readiness from absence. A workspace with a
+recognized supported agent but delayed hook/transcript convergence should report
+an awaiting or pending state, not the definitive empty state used for an
+unsupported workspace. Ingestion, reconciliation, and projection failures should
+carry concise UI copy plus diagnostic stage/reason details without logging
+prompt contents.
 
 The current factual Session view work is still valuable: it proves the factual
 projection consumer shape, establishes data-access and diagnostic behavior, and
@@ -424,6 +463,18 @@ bmux provenance sessions tree <session-id>
 bmux provenance sessions related <session-id> --limit 5 --database <path>
 bmux provenance sessions collisions <session-id> --artifact-path <changed-file> --database <path>
 ```
+
+For workspace/session linkage dogfood, launch an isolated tagged Debug app and
+exercise an ordinary Codex CLI session inside a bmux workspace:
+
+1. Start a new terminal-backed workspace in the tagged app.
+2. Launch ordinary `codex` from that terminal and submit a prompt.
+3. Open the Session view and verify it reaches available factual session data.
+4. Restart the tagged app and verify the association is still available.
+5. Resume the Codex session and verify it remains associated with the same
+   workspace.
+6. Capture diagnostic stage output for the association path without copying
+   prompt contents.
 
 Required schema identity rows live in `provenance_metadata`: `schema_family = provenance-engine`, `schema_identity_version = 1`, and the current `schema_version`.
 

@@ -20,11 +20,12 @@ Regenerate with: ./scripts/project-docs generate
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)
-- Active or selected slices in the frontier: none
+- Active or selected slices in the frontier:
+  - Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`) - maturity: unspecified; status: active; selection: current; owner: Provenance Engine
 
 ### Active Implementation
 
-- None.
+- Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`) - maturity: unspecified; status: active; selection: current; owner: Provenance Engine
 
 ### Selected Next
 

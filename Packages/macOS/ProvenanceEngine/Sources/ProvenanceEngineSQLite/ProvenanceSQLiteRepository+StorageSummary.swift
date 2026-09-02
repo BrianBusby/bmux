@@ -23,6 +23,9 @@ extension ProvenanceSQLiteRepository {
             fileChangeCount: try countRows(in: "provenance_file_changes"),
             validationRunCount: try countRows(in: "provenance_validation_runs"),
             workspaceDisplayCount: try countRows(in: "provenance_workspace_display"),
+            workspaceCodingAgentSessionAssociationCount: try countRows(
+                in: "provenance_workspace_coding_agent_session_associations"
+            ),
             codingAgentThreadCount: try countRows(in: "provenance_coding_agent_threads"),
             codingAgentTurnCount: try countRows(in: "provenance_coding_agent_turns"),
             codingAgentPromptCount: try countRows(in: "provenance_coding_agent_prompts"),

@@ -225,65 +225,6 @@ final class TerminalPanel: Panel, ObservableObject {
             .store(in: &cancellables)
     }
 
-    /// Create a new terminal panel with a fresh surface
-    convenience init(
-        id: UUID = UUID(),
-        workspaceId: UUID,
-        context: ghostty_surface_context_e = GHOSTTY_SURFACE_CONTEXT_SPLIT,
-        configTemplate: BmuxSurfaceConfigTemplate? = nil,
-        workingDirectory: String? = nil,
-        portOrdinal: Int = 0,
-        initialCommand: String? = nil,
-        tmuxStartCommand: String? = nil,
-        initialInput: String? = nil,
-        initialEnvironmentOverrides: [String: String] = [:],
-        additionalEnvironment: [String: String] = [:],
-        focusPlacement: TerminalSurfaceFocusPlacement = .workspace,
-        runtimeSpawnPolicy: TerminalSurfaceRuntimeSpawnPolicy = .immediate
-    ) {
-        let surface = TerminalSurface(
-            id: id,
-            tabId: workspaceId,
-            context: context,
-            configTemplate: configTemplate,
-            workingDirectory: workingDirectory,
-            portOrdinal: portOrdinal,
-            initialCommand: initialCommand,
-            tmuxStartCommand: tmuxStartCommand,
-            initialInput: initialInput,
-            initialEnvironmentOverrides: initialEnvironmentOverrides,
-            additionalEnvironment: additionalEnvironment,
-            focusPlacement: focusPlacement,
-            runtimeSpawnPolicy: runtimeSpawnPolicy
-        )
-        self.init(workspaceId: workspaceId, surface: surface)
-        if Self.startsAtOwnedPrompt(
-            configTemplate: configTemplate,
-            initialCommand: initialCommand,
-            tmuxStartCommand: tmuxStartCommand,
-            initialInput: initialInput
-        ) {
-            updateShellActivityState(.promptIdle)
-        }
-    }
-
-    private static func startsAtOwnedPrompt(
-        configTemplate: BmuxSurfaceConfigTemplate?,
-        initialCommand: String?,
-        tmuxStartCommand: String?,
-        initialInput: String?
-    ) -> Bool {
-        isBlank(initialCommand) &&
-            isBlank(tmuxStartCommand) &&
-            isBlank(initialInput) &&
-            isBlank(configTemplate?.command) &&
-            isBlank(configTemplate?.initialInput)
-    }
-
-    private static func isBlank(_ value: String?) -> Bool {
-        value?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true
-    }
-
     func updateTitle(_ newTitle: String) {
         let trimmed = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty && title != trimmed {
@@ -301,6 +242,11 @@ final class TerminalPanel: Panel, ObservableObject {
     func updateWorkspaceId(_ newWorkspaceId: UUID) {
         workspaceId = newWorkspaceId
         surface.updateWorkspaceId(newWorkspaceId)
+    }
+
+    func updateWorkspaceId(_ newWorkspaceId: UUID, stableWorkspaceId: UUID?) {
+        workspaceId = newWorkspaceId
+        surface.updateWorkspaceId(newWorkspaceId, stableWorkspaceId: stableWorkspaceId)
     }
 
     func updateTmuxLayoutReport(_ report: TmuxPaneLayoutReport?) {

@@ -30896,7 +30896,7 @@ export default BMUXSessionRestore;
                 print("{}")
                 return
             }
-            if let pid, !suppressVisibleMutations {
+            if def.name == "codex", !sessionId.isEmpty, !suppressVisibleMutations { await recordCodexHookSessionStartAssociation(workspaceId: workspaceId, surfaceId: surfaceId, sessionId: sessionId, turnId: input.turnId, cwd: hookCwd ?? mapped?.cwd, socketPath: client.socketPath, env: env) }; if let pid, !suppressVisibleMutations {
                 _ = try? sendV1Command(
                     "set_agent_pid \(pidKey) \(pid) --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
                     client: client
@@ -31199,7 +31199,7 @@ export default BMUXSessionRestore;
                     stopStaleCodexPromptSubmit(restoreVisibleState: true)
                     return
                 }
-                let leasePath = createCodexMonitorLease(
+                await recordCodexHookPromptSubmitAssociation(workspaceId: workspaceId, surfaceId: surfaceId, sessionId: sessionId, turnId: input.turnId, cwd: hookCwd ?? mapped?.cwd, socketPath: client.socketPath, env: env); let leasePath = createCodexMonitorLease(
                     sessionId: sessionId,
                     turnId: input.turnId,
                     workspaceId: workspaceId,

@@ -206,21 +206,23 @@ final class PromptSessionLinkProjectionTests: XCTestCase {
         return latest
     }
 
-    private static func writeCodexTranscript(
+    private static func codexPromptTranscriptLines(
         sessionID: String,
         repositoryRoot: String,
         promptText: String,
-        to url: URL
-    ) throws {
-        let lines = [
+        timestampMinute: String = "2026-08-21T10:00",
+        turnID: String = "turn-monitor-1",
+        startedAt: Int = 1_787_325_602
+    ) throws -> [String] {
+        [
             try codexTranscriptLine(
                 ordinal: 0,
                 type: "session_meta",
-                timestamp: "2026-08-21T10:00:00Z",
+                timestamp: "\(timestampMinute):00Z",
                 payload: [
                     "session_id": sessionID,
                     "id": sessionID,
-                    "timestamp": "2026-08-21T10:00:00Z",
+                    "timestamp": "\(timestampMinute):00Z",
                     "cwd": repositoryRoot,
                     "originator": "codex-tui",
                     "source": "cli",
@@ -230,7 +232,7 @@ final class PromptSessionLinkProjectionTests: XCTestCase {
             try codexTranscriptLine(
                 ordinal: 1,
                 type: "response_item",
-                timestamp: "2026-08-21T10:00:01Z",
+                timestamp: "\(timestampMinute):01Z",
                 payload: [
                     "type": "message",
                     "role": "user",
@@ -245,14 +247,27 @@ final class PromptSessionLinkProjectionTests: XCTestCase {
             try codexTranscriptLine(
                 ordinal: 2,
                 type: "event_msg",
-                timestamp: "2026-08-21T10:00:02Z",
+                timestamp: "\(timestampMinute):02Z",
                 payload: [
                     "type": "task_started",
-                    "turn_id": "turn-monitor-1",
-                    "started_at": 1_787_325_602
+                    "turn_id": turnID,
+                    "started_at": startedAt
                 ]
             )
         ]
+    }
+
+    private static func writeCodexTranscript(
+        sessionID: String,
+        repositoryRoot: String,
+        promptText: String,
+        to url: URL
+    ) throws {
+        let lines = try codexPromptTranscriptLines(
+            sessionID: sessionID,
+            repositoryRoot: repositoryRoot,
+            promptText: promptText
+        )
         try lines.joined(separator: "\n")
             .appending("\n")
             .write(to: url, atomically: true, encoding: .utf8)

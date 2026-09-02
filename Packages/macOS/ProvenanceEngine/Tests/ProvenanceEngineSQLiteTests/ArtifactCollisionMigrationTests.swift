@@ -13,7 +13,7 @@ struct ArtifactCollisionMigrationTests {
         let database = try ProvenanceSQLiteDatabase(url: url)
         let summary = try await repository.storageSummary()
 
-        #expect(try await repository.schemaVersion() == 24)
+        #expect(try await repository.schemaVersion() == 25)
         #expect(try Self.tableExists("provenance_artifact_collision_revisions", in: database))
         #expect(try Self.tableExists("provenance_artifact_collisions", in: database))
         #expect(summary.artifactCollisionRevisionCount == 0)
@@ -27,7 +27,7 @@ struct ArtifactCollisionMigrationTests {
 
         let oldRepository = try ProvenanceSQLiteRepository(
             url: url,
-            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast())
+            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast(2))
         )
         let oldDatabase = try ProvenanceSQLiteDatabase(url: url)
 
@@ -39,10 +39,10 @@ struct ArtifactCollisionMigrationTests {
         let repository = try ProvenanceSQLiteRepository(url: url)
         let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
 
-        #expect(try await repository.schemaVersion() == 24)
+        #expect(try await repository.schemaVersion() == 25)
         #expect(try Self.tableExists("provenance_artifact_collision_revisions", in: migratedDatabase))
         #expect(try Self.tableExists("provenance_artifact_collisions", in: migratedDatabase))
-        #expect(try await repository.schemaMigrationRecords(limit: 2).map(\.version) == [24, 23])
+        #expect(try await repository.schemaMigrationRecords(limit: 3).map(\.version) == [25, 24, 23])
     }
 
     private static func tableExists(_ name: String, in database: ProvenanceSQLiteDatabase) throws -> Bool {

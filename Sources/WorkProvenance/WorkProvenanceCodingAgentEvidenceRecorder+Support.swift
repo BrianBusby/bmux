@@ -50,41 +50,30 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
     ) async throws {
         guard record.agentKind == .codex,
               event.hookEventName == .userPromptSubmit,
-              let sessionID = trimmedNonEmpty(record.sessionID),
-              let promptText = firstNonEmpty(
-                event.submittedPromptMessage,
-                fallbackPromptText
-              ).map({ bounded($0, limit: Self.textLimit) })
+              let sessionID = trimmedNonEmpty(record.sessionID)
         else {
             return
         }
         let observedAt = event.receivedAt
+        let promptText = firstNonEmpty(event.submittedPromptMessage, fallbackPromptText)
+            .map { bounded($0, limit: Self.textLimit) }
         let workingDirectory = firstNonEmpty(record.workingDirectory, event.cwd)
-        let workspaceID = firstNonEmpty(record.workspaceID, event.workspaceId)
+        let workspaceID = stableWorkspaceID.uuidString
         let surfaceID = firstNonEmpty(record.surfaceID, event.surfaceId)
         let gitContext = await gitContext(for: workingDirectory, observedAt: observedAt)
         let nativeProviderTurnID = event.codexProviderTurnID
-        let hookTurnSeedComponents = if let nativeProviderTurnID {
-            [
-                sessionID,
-                nativeProviderTurnID,
-                event.requestId ?? "",
-                event.sessionId,
-                String(observedAt.timeIntervalSince1970),
-                promptText
-            ]
-        } else {
-            [
-                sessionID,
-                event.requestId ?? "",
-                event.sessionId,
-                String(observedAt.timeIntervalSince1970),
-                promptText
-            ]
+        var hookTurnSeedComponents = [
+            sessionID,
+            event.requestId ?? "",
+            event.sessionId,
+            String(observedAt.timeIntervalSince1970),
+            promptText ?? "prompt-identity"
+        ]
+        if let nativeProviderTurnID {
+            hookTurnSeedComponents.insert(nativeProviderTurnID, at: 1)
         }
         let hookTurnSeed = hookTurnSeedComponents.joined(separator: "\n")
         let providerTurnID = nativeProviderTurnID ?? stableIDFactory.id(prefix: "hook-codex-turn", value: hookTurnSeed)
-        let turnID = turnRecordID(providerTurnID: providerTurnID)
         let session = ProvenanceSessionRecord(
             id: sessionID,
             agentKind: "codex",
@@ -96,41 +85,63 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
             startedAt: observedAt,
             updatedAt: observedAt
         )
-        let turn = ProvenanceCodingAgentTurnRecord(
-            id: turnID,
+        let turnID = turnRecordID(providerTurnID: providerTurnID)
+        let turn = promptText.map { _ in
+            ProvenanceCodingAgentTurnRecord(
+                id: turnID,
+                sessionID: sessionID,
+                provider: "codex",
+                providerTurnID: providerTurnID,
+                status: "started",
+                startedAt: observedAt,
+                updatedAt: observedAt,
+                source: .observed,
+                confidence: .medium
+            )
+        }
+        let prompt = promptText.map { promptText in
+            ProvenanceCodingAgentPromptRecord(
+                id: stableIDFactory.id(
+                    prefix: "coding-agent-prompt",
+                    value: "\(nativeProviderTurnID == nil ? "hook" : "codex")\n\(sessionID)\n\(providerTurnID)\n\(promptText)"
+                ),
+                sessionID: sessionID,
+                turnID: turnID,
+                provider: "codex",
+                text: promptText,
+                submittedAt: observedAt,
+                source: .observed,
+                confidence: .medium
+            )
+        }
+        let display = promptText.map { promptText in
+            ProvenanceWorkspaceDisplayRecord(
+                id: stableIDFactory.workspaceDisplayID(stableWorkspaceID: stableWorkspaceID),
+                workspaceID: stableWorkspaceID.uuidString,
+                repositoryID: gitContext?.repositoryID,
+                worktreeID: gitContext?.worktreeID,
+                currentDirectory: workingDirectory,
+                lastSubmittedPrompt: promptText,
+                lastSubmittedPromptSubmittedAt: observedAt,
+                lastSubmittedPromptSessionID: sessionID,
+                observedAt: observedAt,
+                updatedAt: observedAt
+            )
+        }
+        let association = workspaceCodingAgentSessionAssociation(
+            stableWorkspaceID: stableWorkspaceID,
             sessionID: sessionID,
-            provider: "codex",
-            providerTurnID: providerTurnID,
-            status: "started",
-            startedAt: observedAt,
-            updatedAt: observedAt,
-            source: .observed,
-            confidence: .medium
-        )
-        let prompt = ProvenanceCodingAgentPromptRecord(
-            id: stableIDFactory.id(
-                prefix: "coding-agent-prompt",
-                value: "\(nativeProviderTurnID == nil ? "hook" : "codex")\n\(sessionID)\n\(providerTurnID)\n\(promptText)"
-            ),
-            sessionID: sessionID,
-            turnID: turnID,
-            provider: "codex",
-            text: promptText,
-            submittedAt: observedAt,
-            source: .observed,
-            confidence: .medium
-        )
-        let display = ProvenanceWorkspaceDisplayRecord(
-            id: stableIDFactory.workspaceDisplayID(stableWorkspaceID: stableWorkspaceID),
-            workspaceID: stableWorkspaceID.uuidString,
+            rawSessionID: event.sessionId,
+            surfaceID: surfaceID,
             repositoryID: gitContext?.repositoryID,
             worktreeID: gitContext?.worktreeID,
             currentDirectory: workingDirectory,
-            lastSubmittedPrompt: promptText,
-            lastSubmittedPromptSubmittedAt: observedAt,
-            lastSubmittedPromptSessionID: sessionID,
+            sourcePath: "hook",
             observedAt: observedAt,
-            updatedAt: observedAt
+            promptObservedAt: observedAt,
+            stage: "workspace_session_association_persisted",
+            reasonCode: promptText == nil ? "hook_prompt_identity_observed" : "hook_prompt_observed",
+            confidence: .medium
         )
         try await append(
             eventType: .codingAgentPromptSubmitted,
@@ -145,6 +156,7 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
                 worktree: gitContext?.worktree,
                 session: session,
                 workspaceDisplay: display,
+                workspaceCodingAgentSessionAssociation: association,
                 codingAgentTurn: turn,
                 codingAgentPrompt: prompt
             )
@@ -173,7 +185,7 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
             let session = ProvenanceSessionRecord(
                 id: sessionID,
                 agentKind: "codex",
-                workspaceID: record.workspaceID,
+                workspaceID: stableWorkspaceID?.uuidString ?? record.workspaceID,
                 surfaceID: record.surfaceID,
                 worktreeID: gitContext?.worktreeID,
                 cwd: workingDirectory,
@@ -205,6 +217,23 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
                     updatedAt: submittedAt
                 )
             }
+            let association = stableWorkspaceID.map { stableWorkspaceID in
+                workspaceCodingAgentSessionAssociation(
+                    stableWorkspaceID: stableWorkspaceID,
+                    sessionID: sessionID,
+                    rawSessionID: record.sessionID,
+                    surfaceID: record.surfaceID,
+                    repositoryID: gitContext?.repositoryID,
+                    worktreeID: gitContext?.worktreeID,
+                    currentDirectory: workingDirectory,
+                    sourcePath: "transcript",
+                    observedAt: submittedAt,
+                    promptObservedAt: submittedAt,
+                    stage: "workspace_session_association_persisted",
+                    reasonCode: "transcript_prompt_observed",
+                    confidence: .medium
+                )
+            }
             try await append(
                 eventType: .codingAgentPromptSubmitted,
                 envelopeID: stableIDFactory.id(prefix: "transcript-codex-prompt", value: turnSeed),
@@ -218,6 +247,7 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
                     worktree: gitContext?.worktree,
                     session: session,
                     workspaceDisplay: display,
+                    workspaceCodingAgentSessionAssociation: association,
                     codingAgentPrompt: prompt
                 )
             )
