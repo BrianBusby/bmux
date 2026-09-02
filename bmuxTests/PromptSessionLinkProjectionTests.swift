@@ -1,9 +1,9 @@
+import XCTest
 import BMUXAgentLaunch
 import BmuxAgentChat
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
-import Testing
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -11,9 +11,99 @@ import Testing
 @testable import bmux
 #endif
 
-@Suite struct PromptSessionLinkProjectionTests {
+final class PromptSessionLinkProjectionTests: XCTestCase {
     @MainActor
-    @Test func promptSubmitSessionLinkSurvivesThroughWorkspaceDisplayProjection() async throws {
+    func testMonitorTranscriptAndIdentityHookConvergeWithoutDisplayMetadataSeed() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let repositoryRoot = "/tmp/bmux-monitor-session-link-repo"
+        let gitSnapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "\(repositoryRoot)/.git",
+            remoteSlug: "manaflow-ai/bmux",
+            branch: "harden-pe-session-readiness",
+            headCommit: "def456",
+            isDirty: false
+        )
+        let sessionID = "codex-monitor-session"
+        let surfaceID = UUID()
+        let promptText = "Show the factual Session data for this workspace."
+        let transcriptURL = fixture.root.appendingPathComponent("rollout-\(sessionID).jsonl")
+        try Self.writeCodexTranscript(
+            sessionID: sessionID,
+            repositoryRoot: repositoryRoot,
+            promptText: promptText,
+            to: transcriptURL
+        )
+
+        let importer = CLIProvenanceCodexTranscriptImporter(client: client)
+        var liveImportState = CLIProvenanceCodexTranscriptImporter.LiveImportState()
+        let importResult = try await importer.importLiveTranscriptAppend(
+            at: transcriptURL,
+            state: &liveImportState
+        )
+        XCTAssertEqual(importResult.fileReport.threads, 1)
+        XCTAssertEqual(importResult.fileReport.turns, 1)
+        XCTAssertEqual(importResult.fileReport.prompts, 1)
+        let directProjection = try await client.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: sessionID)
+        )
+        XCTAssertEqual(directProjection.snapshot?.session.id, sessionID)
+
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        workspace.currentDirectory = repositoryRoot
+        let observationService = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: gitSnapshot])
+        )
+        let runtime = WorkProvenanceRuntime(
+            observationService: observationService,
+            workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore(client: client),
+            agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore(client: client),
+            codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder(
+                client: client,
+                gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: gitSnapshot])
+            )
+        )
+        runtime.start(tabManager: manager)
+
+        let transcriptService = AgentChatTranscriptService(
+            registry: AgentChatSessionRegistry(),
+            resolver: AgentChatTranscriptResolver(
+                homeDirectory: fixture.root,
+                environment: ["CODEX_HOME": fixture.root.appendingPathComponent("empty-codex").path]
+            ),
+            recordTaskWorkspaceDirectory: { _, _ in }
+        )
+        transcriptService.recordSessionLifecycleChanges(with: runtime)
+        transcriptService.noteHookEvent(WorkstreamEvent(
+            sessionId: "codex-\(sessionID)",
+            hookEventName: .userPromptSubmit,
+            source: "codex",
+            workspaceId: workspace.id.uuidString,
+            surfaceId: surfaceID.uuidString,
+            transcriptPath: nil,
+            cwd: repositoryRoot,
+            requestId: "identity-only-hook",
+            receivedAt: Date(timeIntervalSince1970: 1_725_000_123)
+        ))
+
+        let result = await Self.waitForFactualProjection(
+            runtime: runtime,
+            stableWorkspaceID: workspace.stableId
+        )
+        guard case .available(let projection) = result else {
+            XCTFail("Expected monitor transcript plus identity hook to converge to an available factual projection; got \(result)")
+            return
+        }
+        XCTAssertEqual(projection.session.id, sessionID)
+    }
+
+    @MainActor
+    func testPromptSubmitSessionLinkSurvivesThroughWorkspaceDisplayProjection() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
@@ -62,13 +152,13 @@ import Testing
         let manager = TabManager()
         let workspace = manager.tabs[0]
         workspace.currentDirectory = repositoryRoot
-        let promptOutcome = try #require(manager.handlePromptSubmit(
+        let promptOutcome = try XCTUnwrap(manager.handlePromptSubmit(
             workspaceId: workspace.id,
             message: " \(promptText) ",
             sessionID: " \(sessionID) ",
             iMessageModeEnabled: false
         ))
-        #expect(promptOutcome.messageRecorded)
+        XCTAssertTrue(promptOutcome.messageRecorded)
 
         let observationService = WorkProvenanceObservationService(
             client: client,
@@ -80,8 +170,8 @@ import Testing
         let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
             workspaceID: workspace.stableId.uuidString
         ))
-        #expect(display.display?.lastSubmittedPrompt == promptText)
-        #expect(display.display?.lastSubmittedPromptSessionID == sessionID)
+        XCTAssertEqual(display.display?.lastSubmittedPrompt, promptText)
+        XCTAssertEqual(display.display?.lastSubmittedPromptSessionID, sessionID)
 
         let runtime = WorkProvenanceRuntime(
             observationService: observationService,
@@ -91,11 +181,97 @@ import Testing
         guard case .available(let projection) = await runtime.agentSessionFactualProjection(
             stableWorkspaceID: workspace.stableId
         ) else {
-            Issue.record("Expected PE factual session projection for the prompt-linked workspace")
+            XCTFail("Expected PE factual session projection for the prompt-linked workspace")
             return
         }
 
-        #expect(projection.session.id == sessionID)
+        XCTAssertEqual(projection.session.id, sessionID)
+    }
+
+    @MainActor
+    private static func waitForFactualProjection(
+        runtime: WorkProvenanceRuntime,
+        stableWorkspaceID: UUID,
+        timeout: TimeInterval = 1
+    ) async -> AgentSessionFactualProjectionReadResult {
+        let deadline = Date().addingTimeInterval(timeout)
+        var latest = await runtime.agentSessionFactualProjection(stableWorkspaceID: stableWorkspaceID)
+        while Date() < deadline {
+            if case .available = latest {
+                return latest
+            }
+            try? await Task.sleep(nanoseconds: 50_000_000)
+            latest = await runtime.agentSessionFactualProjection(stableWorkspaceID: stableWorkspaceID)
+        }
+        return latest
+    }
+
+    private static func writeCodexTranscript(
+        sessionID: String,
+        repositoryRoot: String,
+        promptText: String,
+        to url: URL
+    ) throws {
+        let lines = [
+            try codexTranscriptLine(
+                ordinal: 0,
+                type: "session_meta",
+                timestamp: "2026-08-21T10:00:00Z",
+                payload: [
+                    "session_id": sessionID,
+                    "id": sessionID,
+                    "timestamp": "2026-08-21T10:00:00Z",
+                    "cwd": repositoryRoot,
+                    "originator": "codex-tui",
+                    "source": "cli",
+                    "model_provider": "openai"
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 1,
+                type: "response_item",
+                timestamp: "2026-08-21T10:00:01Z",
+                payload: [
+                    "type": "message",
+                    "role": "user",
+                    "content": [
+                        [
+                            "type": "input_text",
+                            "text": promptText
+                        ]
+                    ]
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 2,
+                type: "event_msg",
+                timestamp: "2026-08-21T10:00:02Z",
+                payload: [
+                    "type": "task_started",
+                    "turn_id": "turn-monitor-1",
+                    "started_at": 1_787_325_602
+                ]
+            )
+        ]
+        try lines.joined(separator: "\n")
+            .appending("\n")
+            .write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    private static func codexTranscriptLine(
+        ordinal: Int,
+        type: String,
+        timestamp: String,
+        payload: [String: Any]
+    ) throws -> String {
+        let object: [String: Any] = [
+            "timestamp": timestamp,
+            "ordinal": ordinal,
+            "type": type,
+            "payload": payload
+        ]
+        let data = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
+        return String(decoding: data, as: UTF8.self)
     }
 
     private struct FakeGitInspector: WorkProvenanceGitInspecting {
