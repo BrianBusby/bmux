@@ -249,6 +249,51 @@ struct WorkspaceSessionAssociationProjectionTests {
         #expect(try await repository.storageSummary().workspaceCodingAgentSessionAssociationCount == 3)
     }
 
+    @Test
+    func newerHookOnlySessionOutranksStaleTranscriptPrompt() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let baseTime = Date(timeIntervalSince1970: 1_812_000_150)
+
+        try await Self.appendAssociation(
+            eventID: "event-old-transcript-prompt",
+            timestamp: baseTime,
+            association: Self.association(
+                sessionID: "codex-old-transcript",
+                sourcePath: "transcript",
+                stage: "workspace_session_association_persisted",
+                reasonCode: "transcript_prompt_observed",
+                observedAt: baseTime,
+                promptObservedAt: baseTime
+            ),
+            into: repository
+        )
+        try await Self.appendAssociation(
+            eventID: "event-current-hook-detected",
+            timestamp: baseTime.addingTimeInterval(30),
+            association: Self.association(
+                sessionID: "codex-current-hook-only",
+                rawSessionID: "codex-current-hook-only",
+                sourcePath: "hook",
+                stage: "agent_detected_awaiting_first_prompt",
+                reasonCode: "hook_session_detected",
+                observedAt: baseTime.addingTimeInterval(30)
+            ),
+            into: repository
+        )
+
+        let response = try await repository.workspaceCodingAgentSessionAssociation(
+            ProvenanceWorkspaceCodingAgentSessionAssociationRequest(workspaceID: Self.workspaceID)
+        )
+        let association = try #require(response.association)
+        #expect(response.found)
+        #expect(response.readiness.status == .agentDetectedAwaitingFirstPrompt)
+        #expect(association.sessionID == "codex-current-hook-only")
+        #expect(association.sourcePath == "hook")
+        #expect(association.promptObservedAt == nil)
+    }
+
     private static let workspaceID = "00000000-0000-0000-0000-000000001842"
 
     private static func expectCurrentAssociation(
