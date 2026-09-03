@@ -208,7 +208,7 @@ extension DockSplitStore {
 
         if let terminal = panel as? TerminalPanel {
             terminal.surface.setFocusPlacement(.rightSidebarDock)
-            terminal.updateWorkspaceId(workspaceId)
+            terminal.updateWorkspaceId(workspaceId, stableWorkspaceId: stableWorkspaceId)
         } else if let browser = panel as? BrowserPanel {
             browser.updateWorkspaceId(workspaceId)
         }

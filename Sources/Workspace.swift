@@ -2046,7 +2046,7 @@ final class Workspace: Identifiable, ObservableObject {
     var dockSplit: DockSplitStore {
         if let existing = _dockSplit { return existing }
         let store = DockSplitStore(
-            workspaceId: id,
+            workspaceId: id, stableWorkspaceId: stableId,
             baseDirectoryProvider: { [weak self] in self?.currentDirectory },
             remoteBrowserSettingsProvider: { [weak self] in
                 guard let self else { return .local }
