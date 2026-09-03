@@ -159,16 +159,18 @@ extension Workspace {
         }
         if branchChanged {
             let nextBranch = state.branch.normalizedSidebarBranchName
-            if let pullRequestBranch = panelPullRequests[panelId]?.branch?.normalizedSidebarBranchName,
-               pullRequestBranch != nextBranch,
-               source.canReplacePullRequest(from: sidebarMetadata.workContext(panelId: panelId).pullRequest?.source) {
+            let existingPanelPullRequestSource = sidebarMetadata.workContext(panelId: panelId).pullRequest?.source
+            let existingPanelPullRequestBranch = panelPullRequests[panelId]?.branch?.normalizedSidebarBranchName
+            if panelPullRequests[panelId] != nil,
+               existingPanelPullRequestBranch != nextBranch,
+               source.canReplacePullRequest(from: existingPanelPullRequestSource) {
                 panelPullRequests.removeValue(forKey: panelId)
                 markWorkspaceDisplayFieldsExplicitlyCleared(["pull_request"])
                 displayMetadataChanged = true
             }
             if panelId == focusedPanelId,
-               let focusedPullRequestBranch = pullRequest?.branch?.normalizedSidebarBranchName,
-               focusedPullRequestBranch != nextBranch,
+               pullRequest != nil,
+               pullRequest?.branch?.normalizedSidebarBranchName != nextBranch,
                source.canReplacePullRequest(from: sidebarMetadata.workContext.pullRequest?.source) {
                 pullRequest = nil
                 markWorkspaceDisplayFieldsExplicitlyCleared(["pull_request"])

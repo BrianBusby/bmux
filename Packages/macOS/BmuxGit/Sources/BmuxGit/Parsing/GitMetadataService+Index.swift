@@ -14,7 +14,9 @@ extension GitMetadataService {
             return GitTrackedChangesSnapshot(
                 isDirty: false,
                 indexSignature: Self.gitIndexFileSignature(indexURL: indexURL),
-                indexContentSignature: nil
+                indexContentSignature: nil,
+                indexStatContentSignature: nil,
+                indexDirtyCheckContentSignature: nil
             )
         }
 
@@ -29,14 +31,18 @@ extension GitMetadataService {
                     return GitTrackedChangesSnapshot(
                         isDirty: true,
                         indexSignature: indexSnapshot.signature,
-                        indexContentSignature: indexSnapshot.contentSignature
+                        indexContentSignature: indexSnapshot.contentSignature,
+                        indexStatContentSignature: indexSnapshot.statContentSignature,
+                        indexDirtyCheckContentSignature: indexSnapshot.dirtyCheckContentSignature
                     )
                 }
                 if submoduleCommit.caseInsensitiveCompare(entry.objectID) != .orderedSame {
                     return GitTrackedChangesSnapshot(
                         isDirty: true,
                         indexSignature: indexSnapshot.signature,
-                        indexContentSignature: indexSnapshot.contentSignature
+                        indexContentSignature: indexSnapshot.contentSignature,
+                        indexStatContentSignature: indexSnapshot.statContentSignature,
+                        indexDirtyCheckContentSignature: indexSnapshot.dirtyCheckContentSignature
                     )
                 }
                 continue
@@ -46,7 +52,9 @@ extension GitMetadataService {
                 return GitTrackedChangesSnapshot(
                     isDirty: true,
                     indexSignature: indexSnapshot.signature,
-                    indexContentSignature: indexSnapshot.contentSignature
+                    indexContentSignature: indexSnapshot.contentSignature,
+                    indexStatContentSignature: indexSnapshot.statContentSignature,
+                    indexDirtyCheckContentSignature: indexSnapshot.dirtyCheckContentSignature
                 )
             }
             let size = Self.gitIndexUInt32Field(fileStatus.size)
@@ -56,7 +64,9 @@ extension GitMetadataService {
                 return GitTrackedChangesSnapshot(
                     isDirty: true,
                     indexSignature: indexSnapshot.signature,
-                    indexContentSignature: indexSnapshot.contentSignature
+                    indexContentSignature: indexSnapshot.contentSignature,
+                    indexStatContentSignature: indexSnapshot.statContentSignature,
+                    indexDirtyCheckContentSignature: indexSnapshot.dirtyCheckContentSignature
                 )
             }
             if size != entry.size ||
@@ -66,7 +76,9 @@ extension GitMetadataService {
                 return GitTrackedChangesSnapshot(
                     isDirty: true,
                     indexSignature: indexSnapshot.signature,
-                    indexContentSignature: indexSnapshot.contentSignature
+                    indexContentSignature: indexSnapshot.contentSignature,
+                    indexStatContentSignature: indexSnapshot.statContentSignature,
+                    indexDirtyCheckContentSignature: indexSnapshot.dirtyCheckContentSignature
                 )
             }
         }
@@ -74,7 +86,9 @@ extension GitMetadataService {
         return GitTrackedChangesSnapshot(
             isDirty: false,
             indexSignature: indexSnapshot.signature,
-            indexContentSignature: indexSnapshot.contentSignature
+            indexContentSignature: indexSnapshot.contentSignature,
+            indexStatContentSignature: indexSnapshot.statContentSignature,
+            indexDirtyCheckContentSignature: indexSnapshot.dirtyCheckContentSignature
         )
     }
 
@@ -184,7 +198,9 @@ extension GitMetadataService {
         return GitIndexSnapshot(
             entries: entries,
             signature: checksum,
-            contentSignature: gitIndexContentSignature(entries: contentEntries)
+            contentSignature: gitIndexContentSignature(entries: contentEntries),
+            statContentSignature: gitIndexStatContentSignature(entries: contentEntries),
+            dirtyCheckContentSignature: gitIndexContentSignature(entries: entries)
         )
     }
 
@@ -219,6 +235,46 @@ extension GitMetadataService {
             appendUInt32(entry.mode)
             appendByte(0)
             appendString(entry.objectID)
+            appendByte(0)
+        }
+        return gitIndexFixedWidthHexString(hash)
+    }
+
+    /// A content-plus-stat signature over each entry. Unlike
+    /// ``gitIndexContentSignature(entries:)``, this changes when Git refreshes a
+    /// clean index's cached stat fields without changing tracked content.
+    nonisolated static func gitIndexStatContentSignature(entries: [GitIndexEntryStat]) -> String {
+        var hash: UInt64 = 14_695_981_039_346_656_037
+
+        func appendByte(_ byte: UInt8) {
+            hash ^= UInt64(byte)
+            hash = hash &* 1_099_511_628_211
+        }
+
+        func appendUInt32(_ value: UInt32) {
+            appendByte(UInt8((value >> 24) & 0xff))
+            appendByte(UInt8((value >> 16) & 0xff))
+            appendByte(UInt8((value >> 8) & 0xff))
+            appendByte(UInt8(value & 0xff))
+        }
+
+        func appendString(_ value: String) {
+            for byte in value.utf8 {
+                appendByte(byte)
+            }
+        }
+
+        appendUInt32(UInt32(truncatingIfNeeded: entries.count))
+        for entry in entries {
+            appendString(entry.path)
+            appendByte(0)
+            appendUInt32(entry.mode)
+            appendByte(0)
+            appendString(entry.objectID)
+            appendByte(0)
+            appendUInt32(entry.mtimeSeconds)
+            appendUInt32(entry.mtimeNanoseconds)
+            appendUInt32(entry.size)
             appendByte(0)
         }
         return gitIndexFixedWidthHexString(hash)

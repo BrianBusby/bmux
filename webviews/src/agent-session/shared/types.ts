@@ -127,6 +127,14 @@ export type AgentSessionCopy = {
   smartSessionLoading: string;
   smartSessionNoSession: string;
   smartSessionUnavailable: string;
+  smartSessionNoSupportedAgent: string;
+  smartSessionAwaitingFirstPrompt: string;
+  smartSessionAssociationPending: string;
+  smartSessionProjectionPending: string;
+  smartSessionIngestionFailed: string;
+  smartSessionIdentityReconciliationFailed: string;
+  smartSessionProjectionFailed: string;
+  smartSessionUnsupportedOrUnassociated: string;
   smartSessionNotFound: string;
   smartSessionFailed: string;
   smartSessionUnknown: string;
@@ -155,6 +163,14 @@ export type SmartSessionReadStatus =
   | "available"
   | "missingSession"
   | "unavailable"
+  | "noSupportedCodingAgentDetected"
+  | "agentDetectedAwaitingFirstPrompt"
+  | "promptObservedAssociationPending"
+  | "associationEstablishedProjectionPending"
+  | "ingestionFailed"
+  | "identityReconciliationFailed"
+  | "projectionFailed"
+  | "unsupportedOrUnassociatedSession"
   | "notFound"
   | "failed";
 
@@ -169,6 +185,7 @@ export type SmartSessionReadResult =
       status: Exclude<SmartSessionReadStatus, "available">;
       sessionId?: string;
       reason?: string;
+      diagnostics?: Record<string, unknown>;
     };
 
 export type SmartSessionSnapshot = {

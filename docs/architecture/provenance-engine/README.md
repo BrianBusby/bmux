@@ -23,8 +23,9 @@ external consumers later, move it through the documented package-group workflow.
 ## Public Products
 
 - `ProvenanceEngineContracts`: DTOs, request/response types, public protocol,
-  health, factual projection, semantic record, semantic message, SessionWorkModel,
-  and related-session awareness contracts.
+  health, workspace/coding-agent session association, factual projection,
+  semantic record, semantic message, SessionWorkModel, and related-session
+  awareness contracts.
 - `ProvenanceEngineSDK`: public client construction through
   `ProvenanceEngineClientFactory`.
 
@@ -48,7 +49,32 @@ ProvenanceEngine -> bmux app/runtime/UI internals
 bmux production integration -> ProvenanceEngineSQLite implementation types
 React Session UI -> raw semantic inference from provider events
 bmux presentation -> separate cross-session semantic model over provider output
+bmux Session/Smart Session -> workspace display metadata as authoritative session identity
 ```
+
+## Workspace/Session Association
+
+The durable workspace-to-coding-agent-session association belongs to Provenance
+Engine. bmux observes Codex hook, transcript, sidecar, lifecycle, display, and
+replay evidence, but PE owns the canonical association record and the readiness
+state that tells consumers whether the session is unavailable, pending,
+failed, or available.
+
+The intended path is:
+
+```text
+Codex evidence
+-> identity reconciliation
+-> durable PE workspace/session association
+-> factual projection
+-> Session/Smart Session consumers
+```
+
+Display metadata such as `lastSubmittedPromptSessionID` may still describe a
+workspace row, but it must not be the only bridge from a workspace to a PE
+coding-agent session. Native Session, React Smart Session, and later
+cross-session consumers should read through PE public contracts so replay and
+projection rebuilds reproduce the same identity relationship.
 
 ## Future Independence
 

@@ -101,7 +101,18 @@ extension AppDelegate {
                 allowFallback: Self.allowsWindowFallback(for: action)
             ) else { return false }
 
-            for panel in allBrowserPanelsForInspectorWindowClose() {
+            let panels = allBrowserPanelsForInspectorWindowClose()
+            if Self.shouldConsumeAttachedInspectorCloseAction(
+                action,
+                target: target,
+                sender: sender,
+                window: window,
+                panels: panels
+            ) {
+                return true
+            }
+
+            for panel in panels {
                 if panel.closeDeveloperToolsFromDetachedInspectorWindowUserAction(
                     window,
                     source: "sendAction.\(NSStringFromSelector(action))"
@@ -118,6 +129,19 @@ extension AppDelegate {
 
             return false
         }
+    }
+
+    static func shouldConsumeAttachedInspectorCloseAction(
+        _ action: Selector,
+        target: Any?,
+        sender: Any?,
+        window: NSWindow,
+        panels: [BrowserPanel]
+    ) -> Bool {
+        guard target == nil, sender == nil else { return false }
+        guard NSStringFromSelector(action) == "__close" else { return false }
+        guard window.identifier?.rawValue.hasPrefix("bmux.main.") == true else { return false }
+        return panels.contains { $0.ownsAttachedDeveloperToolsInWindow(window) }
     }
 
     static func shouldInterceptWindowCloseAction(
@@ -162,9 +186,17 @@ extension AppDelegate {
             return cell.controlView?.window
         }
         if target == nil, sender is NSMenuItem {
-            return AppDelegate.shared?.shortcutRoutingActiveWindow ?? NSApp.keyWindow ?? NSApp.mainWindow
+            return AppDelegate.shared?.shortcutRoutingKeyWindow
+                ?? AppDelegate.shared?.shortcutRoutingActiveWindow
+                ?? NSApp.keyWindow
+                ?? NSApp.mainWindow
         }
-        return allowFallback ? (AppDelegate.shared?.shortcutRoutingActiveWindow ?? NSApp.keyWindow ?? NSApp.mainWindow) : nil
+        return allowFallback ? (
+            AppDelegate.shared?.shortcutRoutingKeyWindow
+                ?? AppDelegate.shared?.shortcutRoutingActiveWindow
+                ?? NSApp.keyWindow
+                ?? NSApp.mainWindow
+        ) : nil
     }
 
     func allBrowserPanelsForInspectorWindowClose() -> [BrowserPanel] {

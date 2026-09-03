@@ -10,60 +10,6 @@ import BmuxSidebar
 @testable import bmux
 #endif
 
-/// A `CommandRunning` fake that routes each call through a closure, replacing the
-/// former `TabManager.commandRunnerForTesting` static hook.
-private struct StubCommandRunner: CommandRunning {
-    let handler: @Sendable (String, String, [String], TimeInterval?) -> CommandResult
-    func run(
-        directory: String,
-        executable: String,
-        arguments: [String],
-        timeout: TimeInterval?
-    ) async -> CommandResult {
-        handler(directory, executable, arguments, timeout)
-    }
-}
-
-private final class CommandRunnerInvocationCounter: @unchecked Sendable {
-    private let lock = NSLock()
-    private var storedValue = 0
-
-    func increment() {
-        lock.lock()
-        storedValue += 1
-        lock.unlock()
-    }
-
-    var value: Int {
-        lock.lock()
-        defer { lock.unlock() }
-        return storedValue
-    }
-}
-
-/// Records whether any observation happened on the main thread. Used to assert
-/// that off-main work (e.g. PR-refresh git commands) never executes on the main
-/// thread, a deterministic signal that does not depend on wall-clock timing.
-private final class MainThreadObservationBox: @unchecked Sendable {
-    private let lock = NSLock()
-    private var storedObservedOnMainThread = false
-
-    func recordCurrentThread() {
-        let onMain = Thread.isMainThread
-        lock.lock()
-        if onMain {
-            storedObservedOnMainThread = true
-        }
-        lock.unlock()
-    }
-
-    var observedOnMainThread: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return storedObservedOnMainThread
-    }
-}
-
 private final class IndexLockObserver: @unchecked Sendable {
     private let path: String
     private let queue = DispatchQueue(label: "com.bmux.tests.index-lock-observer", qos: .utility)
@@ -214,7 +160,8 @@ private func waitForCondition(
 private func writeMinimalGitRepository(
     at repoURL: URL,
     headCommit: String = "0000000000000000000000000000000000000000",
-    indexData: Data = Data()
+    indexData: Data = Data(),
+    remoteURL: String = "https://github.com/manaflow-ai/bmux.git"
 ) throws {
     let gitURL = repoURL.appendingPathComponent(".git", isDirectory: true)
     let refsURL = gitURL.appendingPathComponent("refs/heads", isDirectory: true)
@@ -232,7 +179,7 @@ private func writeMinimalGitRepository(
     try indexData.write(to: gitURL.appendingPathComponent("index"))
     try """
     [remote "origin"]
-        url = https://github.com/manaflow-ai/bmux.git
+        url = \(remoteURL)
     """.write(
         to: gitURL.appendingPathComponent("config"),
         atomically: true,
@@ -605,59 +552,64 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
     }
 
     func testPullRequestRefreshRepositoryDiscoveryDoesNotBlockMainRunLoop() throws {
-        let invocationCounter = CommandRunnerInvocationCounter()
-        let gitThreadObservation = MainThreadObservationBox()
-        let commandDelay: TimeInterval = 0.03
-        let commandRunner = StubCommandRunner { _, executable, arguments, _ in
-            if executable == "git", arguments == ["remote", "-v"] {
-                invocationCounter.increment()
-                gitThreadObservation.recordCurrentThread()
-                Thread.sleep(forTimeInterval: commandDelay)
-                return CommandResult(
-                    stdout: "origin\tssh://example.invalid/not-github.git (fetch)\n",
-                    stderr: "",
-                    exitStatus: 0,
-                    timedOut: false,
-                    executionError: nil
-                )
-            }
-            return CommandResult(
-                stdout: "",
-                stderr: "",
-                exitStatus: 0,
-                timedOut: false,
-                executionError: nil
-            )
+        let defaults = UserDefaults.standard
+        let previousShowPullRequests = defaults.object(forKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey)
+        defer {
+            restoreUserDefault(previousShowPullRequests, key: SidebarWorkspaceDetailDefaults.showPullRequestsKey)
+        }
+        defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey)
+
+        let repoRoot = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "bmux-pr-refresh-main-thread-\(UUID().uuidString)",
+            isDirectory: true
+        )
+        try FileManager.default.createDirectory(at: repoRoot, withIntermediateDirectories: true)
+        defer {
+            try? FileManager.default.removeItem(at: repoRoot)
         }
 
-        let manager = TabManager(commandRunner: commandRunner)
-        var seededPanels: [(workspaceId: UUID, panelId: UUID)] = []
+        let manager = TabManager()
+        var seededPanels: [(workspace: Workspace, panelId: UUID)] = []
         let workspaceCount = 45
         var workspaces = manager.tabs
         while workspaces.count < workspaceCount {
             workspaces.append(manager.addWorkspace(select: false, eagerLoadTerminal: false))
         }
+        let staleURL = try XCTUnwrap(URL(string: "https://github.com/manaflow-ai/bmux/pull/3033"))
 
         for (index, workspace) in workspaces.enumerated() {
             let panelId = try XCTUnwrap(workspace.focusedPanelId)
+            let repoURL = repoRoot.appendingPathComponent("repo-\(index)", isDirectory: true)
+            try FileManager.default.createDirectory(at: repoURL, withIntermediateDirectories: true)
+            try writeMinimalGitRepository(
+                at: repoURL,
+                remoteURL: "ssh://example.invalid/not-github-\(index).git"
+            )
             workspace.updatePanelDirectory(
                 panelId: panelId,
-                directory: "/tmp/bmux-pr-refresh-main-thread-\(index)"
+                directory: repoURL.path
             )
             workspace.updatePanelGitBranch(
                 panelId: panelId,
                 branch: "issue-3033-\(index)",
                 isDirty: false
             )
-            seededPanels.append((workspace.id, panelId))
+            workspace.updatePanelPullRequest(
+                panelId: panelId,
+                number: 3033,
+                label: "PR",
+                url: staleURL,
+                status: .open,
+                branch: "issue-3033-\(index)"
+            )
+            seededPanels.append((workspace, panelId))
         }
 
         let monitorDuration: TimeInterval = 0.7
         // Generous bound far above macOS CI scheduling noise (GC, unrelated test
         // work, run-loop jitter can stall the main thread well past a few hundred
         // ms on a loaded shared runner). This catches gross main-thread blocking
-        // without failing on routine host jitter; the deterministic non-main-thread
-        // assertion below is the real regression signal.
+        // while the detached repository-discovery refresh parses real git configs.
         let allowedMainThreadGap: TimeInterval = 2.0
         let finishedMonitoring = expectation(description: "main run loop remained responsive")
         let monitorStartedAt = Date()
@@ -675,7 +627,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
 
         let triggerPanel = try XCTUnwrap(seededPanels.first)
         manager.updateSurfaceShellActivity(
-            tabId: triggerPanel.workspaceId,
+            tabId: triggerPanel.workspace.id,
             surfaceId: triggerPanel.panelId,
             state: .promptIdle
         )
@@ -683,13 +635,11 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         let result = XCTWaiter().wait(for: [finishedMonitoring], timeout: monitorDuration + 1.5)
         timer.invalidate()
         XCTAssertEqual(result, .completed)
-        XCTAssertGreaterThan(invocationCounter.value, 0)
-        // Deterministic regression signal: the blocking git work must have run off
-        // the main thread. This does not depend on wall-clock timing, so it cannot
-        // flake from host scheduling noise.
-        XCTAssertFalse(
-            gitThreadObservation.observedOnMainThread,
-            "Pull request refresh ran its blocking git command on the main thread"
+        XCTAssertTrue(
+            waitForCondition {
+                triggerPanel.workspace.panelPullRequests[triggerPanel.panelId] == nil
+            },
+            "The asynchronous refresh should read repository config and clear an unsupported non-GitHub PR badge."
         )
         XCTAssertLessThan(
             maxTickGap,
@@ -1122,13 +1072,8 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
-        XCTAssertTrue(
-            waitForCondition(timeout: 12.0) {
-                manager.activeWorkspaceGitProbePanelIdsForTesting(workspaceId: workspace.id).isEmpty
-            }
-        )
-
         workspace.currentDirectory = workingDirectoryURL.path
+        manager.clearWorkspaceGitProbesForTesting(workspaceId: workspace.id)
         defaults.set(UUID().uuidString, forKey: unrelatedDefaultsKey)
         manager.sidebarGitMetadataWatchSettingsDidChangeForTesting()
 

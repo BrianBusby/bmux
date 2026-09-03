@@ -133,6 +133,30 @@ the broader semantic-session product. Routed workspace display refreshes now
 notify the owning tab manager rather than only the startup manager, so linked
 prompt state can update immediately in the window that owns the workspace.
 
+Workspace coding-agent session linkage hardening is the current reliability
+slice. The recurring empty Session state came from treating Workspace Display
+metadata, especially `lastSubmittedPromptSessionID`, as the authoritative bridge
+from a workspace to a PE coding-agent session. The intended corrected boundary
+is factual and PE-owned:
+
+```text
+Codex evidence
+-> identity reconciliation
+-> durable PE workspace/session association
+-> factual projection
+-> Session/Smart Session consumers
+```
+
+bmux may continue to write bounded prompt/display facts for workspace rows, but
+native Session, React Smart Session, and future cross-session consumers should
+resolve session identity through the PE workspace/session association read path.
+The association must be deterministic and idempotent across hook-first,
+transcript-first, partial JSONL, duplicate/replayed evidence, app restart,
+resume, and multiple concurrent sessions. User-facing Session states should
+distinguish unsupported/no-agent, awaiting first prompt, association pending,
+projection pending, failures, and available data; detailed diagnostics should
+carry stage/reason identifiers without prompt contents.
+
 Workspace prompt resource discovery is implemented for Workspace Display
 Current State. Submitted prompts, stored submitted prompts used for idempotent
 backfill, PR titles, and PR branches now share one extraction/linking boundary

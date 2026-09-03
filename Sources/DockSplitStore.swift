@@ -11,6 +11,7 @@ import SwiftUI
 @Observable
 final class DockSplitStore: BonsplitDelegate {
     let workspaceId: UUID
+    let stableWorkspaceId: UUID
     let bonsplitController: BonsplitController
 
     /// Which Dock this store backs: `.workspace` (per-workspace, seeded from the
@@ -72,12 +73,14 @@ final class DockSplitStore: BonsplitDelegate {
 
     init(
         workspaceId: UUID,
+        stableWorkspaceId: UUID? = nil,
         scope: DockScope = .workspace,
         baseDirectoryProvider: @escaping () -> String?,
         remoteBrowserSettingsProvider: @escaping () -> DockRemoteBrowserSettings = { .local },
         browserAvailabilityProvider: @escaping () -> Bool = { BrowserAvailabilitySettings.isEnabled() }
     ) {
         self.workspaceId = workspaceId
+        self.stableWorkspaceId = stableWorkspaceId ?? workspaceId
         self.scope = scope
         self.baseDirectoryProvider = baseDirectoryProvider
         self.remoteBrowserSettingsProvider = remoteBrowserSettingsProvider

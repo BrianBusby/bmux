@@ -38,6 +38,9 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
     /// Workspace display projection update.
     public var workspaceDisplay: ProvenanceWorkspaceDisplayRecord?
 
+    /// Workspace-to-coding-agent-session association projection update.
+    public var workspaceCodingAgentSessionAssociation: ProvenanceWorkspaceCodingAgentSessionAssociationRecord?
+
     /// Coding-agent thread projection update.
     public var codingAgentThread: ProvenanceCodingAgentThreadRecord?
 
@@ -75,6 +78,7 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         case fileChanges
         case validationRun
         case workspaceDisplay
+        case workspaceCodingAgentSessionAssociation
         case codingAgentThread
         case codingAgentTurn
         case codingAgentPrompt
@@ -99,6 +103,7 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         fileChanges: [ProvenanceFileChangeRecord] = [],
         validationRun: ProvenanceValidationRunRecord? = nil,
         workspaceDisplay: ProvenanceWorkspaceDisplayRecord? = nil,
+        workspaceCodingAgentSessionAssociation: ProvenanceWorkspaceCodingAgentSessionAssociationRecord? = nil,
         codingAgentThread: ProvenanceCodingAgentThreadRecord? = nil,
         codingAgentTurn: ProvenanceCodingAgentTurnRecord? = nil,
         codingAgentPrompt: ProvenanceCodingAgentPromptRecord? = nil,
@@ -120,6 +125,7 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         self.fileChanges = fileChanges
         self.validationRun = validationRun
         self.workspaceDisplay = workspaceDisplay
+        self.workspaceCodingAgentSessionAssociation = workspaceCodingAgentSessionAssociation
         self.codingAgentThread = codingAgentThread
         self.codingAgentTurn = codingAgentTurn
         self.codingAgentPrompt = codingAgentPrompt
@@ -159,6 +165,10 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         self.workspaceDisplay = try container.decodeIfPresent(
             ProvenanceWorkspaceDisplayRecord.self,
             forKey: .workspaceDisplay
+        )
+        self.workspaceCodingAgentSessionAssociation = try container.decodeIfPresent(
+            ProvenanceWorkspaceCodingAgentSessionAssociationRecord.self,
+            forKey: .workspaceCodingAgentSessionAssociation
         )
         self.codingAgentThread = try container.decodeIfPresent(
             ProvenanceCodingAgentThreadRecord.self,

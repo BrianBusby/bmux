@@ -2857,133 +2857,6 @@ final class BrowserDeveloperToolsVisibilityPersistenceTests: XCTestCase {
         installBmuxUnitTestInspectorOverride()
     }
 
-    func makePanelWithInspector(
-        hideBehavior: FakeInspector.HideBehavior = .unsupported
-    ) -> (BrowserPanel, FakeInspector) {
-        let panel = BrowserPanel(workspaceId: UUID())
-        let inspector = FakeInspector(hideBehavior: hideBehavior)
-        panel.webView.bmuxSetUnitTestInspector(inspector)
-        return (panel, inspector)
-    }
-
-    func withTemporaryShortcut(
-        action: KeyboardShortcutSettings.Action,
-        shortcut: BrowserConfigStoredShortcut,
-        _ body: () -> Void
-    ) {
-        let hadPersistedShortcut = UserDefaults.standard.object(forKey: action.defaultsKey) != nil
-        let originalShortcut = KeyboardShortcutSettings.shortcut(for: action)
-        defer {
-            if hadPersistedShortcut {
-                KeyboardShortcutSettings.setShortcut(originalShortcut, for: action)
-            } else {
-                KeyboardShortcutSettings.resetShortcut(for: action)
-            }
-#if DEBUG
-            AppDelegate.shared?.debugResetShortcutRoutingStateForTesting(clearFocusedWindowOverride: false)
-#endif
-        }
-        KeyboardShortcutSettings.setShortcut(shortcut, for: action)
-#if DEBUG
-        AppDelegate.shared?.debugResetShortcutRoutingStateForTesting(clearFocusedWindowOverride: false)
-#endif
-        body()
-    }
-
-    func spinRunLoopOneTick() {
-        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
-    }
-
-    func window(withId windowId: UUID) -> NSWindow? {
-        let identifier = "bmux.main.\(windowId.uuidString)"
-        return NSApp.windows.first(where: { $0.identifier?.rawValue == identifier })
-    }
-
-    private func findHostContainerView(in root: NSView) -> WebViewRepresentable.HostContainerView? {
-        if let host = root as? WebViewRepresentable.HostContainerView {
-            return host
-        }
-        for subview in root.subviews {
-            if let host = findHostContainerView(in: subview) {
-                return host
-            }
-        }
-        return nil
-    }
-
-    func waitForDetachedDeveloperToolsCloseResolutionDeadline(
-        until condition: () -> Bool,
-        file: StaticString = #filePath,
-        line: UInt = #line
-    ) {
-        let productionMaxDuration: TimeInterval = 2.0
-        let productionPollInterval: TimeInterval = 0.35
-        let ciSchedulingMargin: TimeInterval = 0.5
-        let deadline = Date().addingTimeInterval(
-            productionMaxDuration + productionPollInterval + ciSchedulingMargin
-        )
-        while Date() < deadline {
-            if condition() { return }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.01))
-        }
-        XCTFail("Timed out waiting for detached DevTools close resolution", file: file, line: line)
-    }
-
-    func waitForDeveloperToolsTransitions(
-        panel: BrowserPanel,
-        until condition: () -> Bool,
-        file: StaticString = #filePath,
-        line: UInt = #line
-    ) {
-        waitForDetachedDeveloperToolsCloseResolutionDeadline(
-            until: {
-                let summary = panel.debugDeveloperToolsStateSummary()
-                return summary.contains("tx=nil") &&
-                    summary.contains("pending=nil") &&
-                    summary.contains("closeResolution=0") &&
-                    condition()
-            },
-            file: file,
-            line: line
-        )
-    }
-
-    var commandWCloseTabShortcut: BrowserConfigStoredShortcut {
-        BrowserConfigStoredShortcut(key: "w", command: true, shift: false, option: false, control: false, keyCode: 13)
-    }
-
-    func closeBrowserPanel(_ panel: BrowserPanel) {
-        panel.close()
-        BrowserWindowPortalRegistry.detach(webView: panel.webView)
-        panel.webView.bmuxSetUnitTestInspector(nil)
-        panel.webView.removeFromSuperview()
-    }
-
-    func closeWindow(_ window: NSWindow) {
-        window.contentView = nil
-        window.orderOut(nil)
-        window.close()
-    }
-
-    func tearDownMainWindow(
-        _ window: NSWindow,
-        manager: TabManager
-    ) {
-        let browserPanels = manager.tabs.flatMap { workspace in
-            workspace.panels.values.compactMap { $0 as? BrowserPanel }
-        }
-        for workspace in manager.tabs {
-            workspace.teardownAllPanels()
-        }
-        for browserPanel in browserPanels {
-            BrowserWindowPortalRegistry.detach(webView: browserPanel.webView)
-            browserPanel.webView.bmuxSetUnitTestInspector(nil)
-            browserPanel.webView.removeFromSuperview()
-        }
-        closeWindow(window)
-        spinRunLoopOneTick()
-    }
-
     private func findWindowBrowserSlotView(in root: NSView) -> WindowBrowserSlotView? {
         if let slot = root as? WindowBrowserSlotView {
             return slot
@@ -3159,12 +3032,14 @@ final class BrowserDeveloperToolsVisibilityPersistenceTests: XCTestCase {
         inspectorWindow.contentView?.addSubview(frontendWebView)
         inspector.setFrontendWebView(frontendWebView)
         defer { closeWindow(inspectorWindow) }
+        let clearShortcutRoutingKeyWindowOverride = installShortcutRoutingKeyWindowOverride(inspectorWindow)
+        defer { clearShortcutRoutingKeyWindowOverride() }
 
         inspectorWindow.makeKeyAndOrderFront(nil)
         inspectorWindow.makeKey()
         XCTAssertTrue(browserPanel.showDeveloperTools())
         XCTAssertEqual(inspector.closeCount, 0)
-        XCTAssertTrue(inspectorWindow.isKeyWindow)
+        waitForKeyWindow(inspectorWindow)
 
         let prefixEvent = try XCTUnwrap(NSEvent.keyEvent(
             with: .keyDown,
@@ -3346,6 +3221,7 @@ final class BrowserDeveloperToolsVisibilityPersistenceTests: XCTestCase {
         XCTAssertFalse(panel.isDeveloperToolsVisible())
         XCTAssertEqual(inspector.closeCount, 1)
 
+        panel.requestDeveloperToolsRefreshAfterNextAttach(reason: "unit-test")
         panel.restoreDeveloperToolsAfterAttachIfNeeded()
         XCTAssertTrue(panel.isDeveloperToolsVisible())
         XCTAssertEqual(inspector.showCount, 2)
@@ -3680,6 +3556,11 @@ final class BrowserDeveloperToolsVisibilityPersistenceTests: XCTestCase {
         XCTAssertTrue(panel.isDeveloperToolsVisible())
 
         XCTAssertTrue(panel.toggleDeveloperTools())
+        waitForDeveloperToolsTransitions(panel: panel) {
+            !panel.isDeveloperToolsVisible() &&
+                inspector.hideCount == 1 &&
+                inspector.closeCount == 1
+        }
 
         XCTAssertEqual(inspector.hideCount, 1)
         XCTAssertEqual(inspector.closeCount, 1)
@@ -4096,14 +3977,13 @@ final class BrowserDeveloperToolsVisibilityPersistenceTests: XCTestCase {
             return
         }
 
-        XCTAssertTrue(
-            panel.webView.superview === replacementSlot,
-            "A visible replacement local host should take over the hosted page"
-        )
-        XCTAssertTrue(
-            inspectorView.superview === replacementSlot,
-            "A visible replacement local host should move the DevTools companion views with the page"
-        )
+        guard waitForBrowserCondition({
+            panel.webView.superview === replacementSlot &&
+                inspectorView.superview === replacementSlot
+        }) else {
+            XCTFail("A visible replacement local host should take over the page and DevTools companion views")
+            return
+        }
         XCTAssertEqual(inspectorView.frame.minX, 0, accuracy: 0.5)
         XCTAssertEqual(inspectorView.frame.minY, 0, accuracy: 0.5)
         XCTAssertEqual(inspectorView.frame.width, replacementSlot.bounds.width, accuracy: 0.5)

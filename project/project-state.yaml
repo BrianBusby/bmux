@@ -1242,6 +1242,27 @@ roadmap:
           - An open Session surface refreshes revisioned factual state without requiring the tab to be reopened.
       acceptance_reason: Engineering Observation Period dogfood of PR #68 showed initial hydration without continuous convergence, plus provider/model and visible-summary metadata defects. This slice fixes transcript monitor lifetime and final-append handling, imports only completed visible Codex commentary summaries as visible reasoning-summary evidence, keeps provider/model/effort distinct from authoritative transcript sources, refreshes Session factual reads by revision, labels PE/provider identity domains explicitly, and was validated by synthetic append-cycle coverage plus real bmux-hosted Codex dogfood. Dogfood observed active-turn convergence through the one-minute monitor owner-check boundary, completion-status convergence after Stop/lease retirement, and duplicate-only historical re-import of live-ingested evidence.
 
+    - id: workspace_coding_agent_session_linkage_hardening
+      kind: slice
+      title: Workspace Coding-Agent Session Linkage Hardening
+      parent: normal_coding_agent_evidence_ingestion
+      status: active
+      owner: provenance_engine
+      repositories:
+        - provenance_engine
+        - bmux
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: deterministic_current_state
+      parallelism:
+        classification: serial
+      execution:
+        assignment: current
+        assigned_to: shared
+      delivery_status: open
+      acceptance_status: proposed
+      rationale: Harden the factual workspace to coding-agent session association below semantic inference so Session and Smart Session reads no longer depend on workspace display metadata as their only identity bridge.
+
     - id: factual_session_projection_read_contract
       kind: milestone
       title: Factual Session Projection Read Contract
@@ -2779,13 +2800,15 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: bmux
-        notes: "Implemented as bounded related-session and possible artifact-collision presentation inside the existing React Smart Session refresh. It does not inject agent context, notify outside the Session surface, block work, coordinate agents, or share transcripts."
-      delivery_status: open
+        notes: "Implemented as bounded related-session and possible artifact-collision presentation inside the existing React Smart Session refresh. It does not inject agent context, notify outside the Session surface, block work, coordinate agents, or share transcripts. PR #94 merged at 2026-09-01T19:08:35Z with merge commit 0400109c5ec0678c6e89bff0cc316b661a44f626."
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
           - repository: BrianBusby/bmux
             sha: a2b88f2479f4424ea1a9072039e270da208386a2
+          - repository: BrianBusby/bmux
+            sha: 0400109c5ec0678c6e89bff0cc316b661a44f626
         pull_requests:
           - repository: BrianBusby/bmux
             number: 94
@@ -3852,6 +3875,7 @@ roadmap:
 ownership:
   durable_evidence: provenance_engine
   deterministic_current_state: provenance_engine
+  workspace_coding_agent_session_association: provenance_engine
   meaningful_execution_evidence: provenance_engine
   semantic_inference: provenance_engine
   session_work_model_projection: provenance_engine

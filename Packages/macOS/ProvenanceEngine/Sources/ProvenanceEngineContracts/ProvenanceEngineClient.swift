@@ -54,6 +54,15 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     func workspaceDisplay(_ request: ProvenanceWorkspaceDisplayRequest) async throws
         -> ProvenanceWorkspaceDisplayResponse
 
+    /// Returns the canonical PE-owned association between one workspace and coding-agent session.
+    ///
+    /// - Parameter request: Query parameters for the workspace session association projection.
+    /// - Returns: A readiness response containing the current association when available.
+    /// - Throws: An implementation-defined error when the query fails.
+    func workspaceCodingAgentSessionAssociation(
+        _ request: ProvenanceWorkspaceCodingAgentSessionAssociationRequest
+    ) async throws -> ProvenanceWorkspaceCodingAgentSessionAssociationResponse
+
     /// Returns the factual session projection snapshot for one coding-agent session.
     ///
     /// - Parameter request: Query parameters for the factual session projection.
@@ -224,6 +233,28 @@ public extension ProvenanceEngineClient {
             reason: "unsupported",
             targetSessionID: request.targetSessionID,
             projection: nil
+        )
+    }
+
+    /// Default unsupported response for clients that have not adopted workspace session association reads.
+    func workspaceCodingAgentSessionAssociation(
+        _ request: ProvenanceWorkspaceCodingAgentSessionAssociationRequest
+    ) async throws -> ProvenanceWorkspaceCodingAgentSessionAssociationResponse {
+        let readiness = ProvenanceWorkspaceCodingAgentSessionReadiness(
+            status: .unsupportedOrUnassociatedSession,
+            workspaceID: request.workspaceID,
+            agentKind: request.agentKind,
+            stage: "association_read",
+            reasonCode: "unsupported",
+            retryable: false
+        )
+        return ProvenanceWorkspaceCodingAgentSessionAssociationResponse(
+            found: false,
+            reason: "unsupported",
+            workspaceID: request.workspaceID,
+            agentKind: request.agentKind,
+            association: nil,
+            readiness: readiness
         )
     }
 

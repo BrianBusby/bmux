@@ -59,6 +59,8 @@ public final class SidebarGitMetadataService: SidebarGitMetadataServing {
     var workspaceGitTrackedDirectoryByKey: [WorkspaceGitProbeKey: String] = [:]
     var workspaceGitCleanIndexSignatureByKey: [WorkspaceGitProbeKey: String] = [:]
     var workspaceGitCleanIndexContentSignatureByKey: [WorkspaceGitProbeKey: String] = [:]
+    var workspaceGitCleanIndexStatContentSignatureByKey: [WorkspaceGitProbeKey: String] = [:]
+    var workspaceGitCleanIndexDirtyCheckContentSignatureByKey: [WorkspaceGitProbeKey: String] = [:]
     var workspaceGitHeadSignatureByKey: [WorkspaceGitProbeKey: String] = [:]
     var workspaceGitMetadataWatcherSourceDirectoryByKey: [WorkspaceGitProbeKey: String] = [:]
     var workspaceGitMetadataWatcherKeysBySourceDirectory: [String: Set<WorkspaceGitProbeKey>] = [:]
@@ -205,6 +207,8 @@ public final class SidebarGitMetadataService: SidebarGitMetadataServing {
             workspaceGitTrackedDirectoryByKey.removeAll()
             workspaceGitCleanIndexSignatureByKey.removeAll()
             workspaceGitCleanIndexContentSignatureByKey.removeAll()
+            workspaceGitCleanIndexStatContentSignatureByKey.removeAll()
+            workspaceGitCleanIndexDirtyCheckContentSignatureByKey.removeAll()
             workspaceGitHeadSignatureByKey.removeAll()
             pullRequestProbing.resetWorkspacePullRequestRefreshState()
             host?.clearAllSidebarGitMetadata()
@@ -306,6 +310,8 @@ public final class SidebarGitMetadataService: SidebarGitMetadataServing {
         workspaceGitProbeStateByKey.removeValue(forKey: key)
         workspaceGitCleanIndexSignatureByKey.removeValue(forKey: key)
         workspaceGitCleanIndexContentSignatureByKey.removeValue(forKey: key)
+        workspaceGitCleanIndexStatContentSignatureByKey.removeValue(forKey: key)
+        workspaceGitCleanIndexDirtyCheckContentSignatureByKey.removeValue(forKey: key)
         workspaceGitHeadSignatureByKey.removeValue(forKey: key)
         cancelWorkspaceGitProbeTask(for: key)
         stopWorkspaceGitMetadataWatcher(for: key)
@@ -351,6 +357,13 @@ public final class SidebarGitMetadataService: SidebarGitMetadataServing {
         workspaceGitCleanIndexContentSignatureByKey = workspaceGitCleanIndexContentSignatureByKey.filter { key, _ in
             key.workspaceId != workspaceId
         }
+        workspaceGitCleanIndexStatContentSignatureByKey = workspaceGitCleanIndexStatContentSignatureByKey.filter { key, _ in
+            key.workspaceId != workspaceId
+        }
+        workspaceGitCleanIndexDirtyCheckContentSignatureByKey =
+            workspaceGitCleanIndexDirtyCheckContentSignatureByKey.filter { key, _ in
+                key.workspaceId != workspaceId
+            }
         workspaceGitHeadSignatureByKey = workspaceGitHeadSignatureByKey.filter { key, _ in
             key.workspaceId != workspaceId
         }

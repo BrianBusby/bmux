@@ -133,6 +133,8 @@ extension GitWorkspaceMetadata {
             isDirty: isDirty,
             indexSignature: "index",
             indexContentSignature: "content",
+            indexStatContentSignature: "stat-content",
+            indexDirtyCheckContentSignature: "dirty-check-content",
             headSignature: "head"
         )
     }
@@ -143,6 +145,8 @@ extension GitWorkspaceMetadata {
         isDirty: false,
         indexSignature: nil,
         indexContentSignature: nil,
+        indexStatContentSignature: nil,
+        indexDirtyCheckContentSignature: nil,
         headSignature: nil
     )
 }

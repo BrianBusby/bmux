@@ -83,6 +83,14 @@ struct FakeTokenProvider: TokenProviding {
         return (service, defaults)
     }
 
+    private func waitForRecordedMethod(_ method: String) async -> Bool {
+        for _ in 0..<1000 {
+            if await RecordingURLProtocol.recorder.methods.contains(method) { return true }
+            await Task.yield()
+        }
+        return await RecordingURLProtocol.recorder.methods.contains(method)
+    }
+
     @Test func disabledByDefault() async {
         let (service, _) = makeService()
         #expect(await service.isEnabled == false)
@@ -102,7 +110,7 @@ struct FakeTokenProvider: TokenProviding {
         await service.register(deviceToken: Data([0xAB, 0xCD]))
         await service.setEnabled(true)
         #expect(defaults.bool(forKey: "bmux.notifications.pushEnabled"))
-        #expect(await RecordingURLProtocol.recorder.methods.contains("POST"))
+        #expect(await waitForRecordedMethod("POST"))
     }
 
     @Test func disablingDeletesServerToken() async {
@@ -111,7 +119,7 @@ struct FakeTokenProvider: TokenProviding {
         await service.register(deviceToken: Data([0xAB, 0xCD]))
         await service.setEnabled(true)
         await service.setEnabled(false)
-        #expect(await RecordingURLProtocol.recorder.methods.contains("DELETE"))
+        #expect(await waitForRecordedMethod("DELETE"))
     }
 
     @Test func signOutUnregisterAuthenticatesWithCapturedCredentials() async {

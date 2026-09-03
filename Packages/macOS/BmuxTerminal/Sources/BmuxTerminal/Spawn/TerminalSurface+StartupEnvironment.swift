@@ -50,13 +50,17 @@ extension TerminalSurface {
         let values = [
             "BMUX_SURFACE_ID": context.surfaceId.uuidString,
             "BMUX_WORKSPACE_ID": context.workspaceId.uuidString,
+            "BMUX_STABLE_WORKSPACE_ID": context.stableWorkspaceId.uuidString,
             "BMUX_PANEL_ID": context.surfaceId.uuidString,
             "BMUX_TAB_ID": context.workspaceId.uuidString,
+            "BMUX_STABLE_TAB_ID": context.stableWorkspaceId.uuidString,
             "BMUX_SOCKET_PATH": context.socketPath,
             "CMUX_SURFACE_ID": context.surfaceId.uuidString,
             "CMUX_WORKSPACE_ID": context.workspaceId.uuidString,
+            "CMUX_STABLE_WORKSPACE_ID": context.stableWorkspaceId.uuidString,
             "CMUX_PANEL_ID": context.surfaceId.uuidString,
             "CMUX_TAB_ID": context.workspaceId.uuidString,
+            "CMUX_STABLE_TAB_ID": context.stableWorkspaceId.uuidString,
             "CMUX_SOCKET_PATH": context.socketPath
         ]
 

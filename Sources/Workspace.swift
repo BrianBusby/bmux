@@ -2046,7 +2046,7 @@ final class Workspace: Identifiable, ObservableObject {
     var dockSplit: DockSplitStore {
         if let existing = _dockSplit { return existing }
         let store = DockSplitStore(
-            workspaceId: id,
+            workspaceId: id, stableWorkspaceId: stableId,
             baseDirectoryProvider: { [weak self] in self?.currentDirectory },
             remoteBrowserSettingsProvider: { [weak self] in
                 guard let self else { return .local }
@@ -2498,7 +2498,9 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     private var preservesProxyFailureForSSHRemoteWorkspace: Bool {
-        remoteConfiguration?.transport == .ssh && hasRemoteTerminalStartupCommand
+        remoteConfiguration?.transport == .ssh
+            && hasRemoteTerminalStartupCommand
+            && remoteConfiguration?.preserveAfterTerminalExit != true
     }
 
     private var preservesProxyFailureWhileSSHTerminalIsAlive: Bool {
@@ -3057,7 +3059,7 @@ final class Workspace: Identifiable, ObservableObject {
             }
         } else {
             // Create initial terminal panel
-            let terminalPanel = TerminalPanel(
+            let terminalPanel = makeStableTerminalPanel(
                 workspaceId: id,
                 context: GHOSTTY_SURFACE_CONTEXT_TAB,
                 configTemplate: resolvedConfigTemplate,
@@ -7562,7 +7564,7 @@ final class Workspace: Identifiable, ObservableObject {
 #endif
 
         // Create the new terminal panel.
-        let newPanel = TerminalPanel(
+        let newPanel = makeStableTerminalPanel(
             id: newPanelID,
             workspaceId: id,
             context: GHOSTTY_SURFACE_CONTEXT_SPLIT,
@@ -7868,7 +7870,7 @@ final class Workspace: Identifiable, ObservableObject {
         // surface id (the panel/surface id IS the ghostty surface id, a
         // Swift-side UUID), so a session's terminal binding survives relaunch
         // and restore. The caller only passes an id it has verified is free.
-        let newPanel = TerminalPanel(
+        let newPanel = makeStableTerminalPanel(
             id: newPanelID,
             workspaceId: id,
             context: GHOSTTY_SURFACE_CONTEXT_SPLIT,
@@ -7973,13 +7975,7 @@ final class Workspace: Identifiable, ObservableObject {
     /// inside a single tab, so the pane gets the full native bmux pane chrome —
     /// background, focus overlay, dividers).
     func makeRemoteTmuxPanePanel(onInput: @escaping @Sendable (Data) -> Void) -> TerminalPanel {
-        let surface = TerminalSurface(
-            tabId: id,
-            context: GHOSTTY_SURFACE_CONTEXT_SPLIT,
-            configTemplate: nil,
-            manualIO: true,
-            manualInputHandler: onInput
-        )
+        let surface = makeStableManualTerminalSurface(onInput: onInput)
         let panel = TerminalPanel(workspaceId: id, surface: surface)
         configureNewTerminalPanel(panel)
         return panel
@@ -8010,13 +8006,7 @@ final class Workspace: Identifiable, ObservableObject {
         else { return nil }
 
         let title = customTitle ?? String(localized: "remoteTmux.tab.pane", defaultValue: "tmux pane")
-        let surface = TerminalSurface(
-            tabId: id,
-            context: GHOSTTY_SURFACE_CONTEXT_SPLIT,
-            configTemplate: nil,
-            manualIO: true,
-            manualInputHandler: onInput
-        )
+        let surface = makeStableManualTerminalSurface(onInput: onInput)
         surface.onManualGridResize = onResize
         let newPanel = TerminalPanel(workspaceId: id, surface: surface)
         configureNewTerminalPanel(
@@ -8138,7 +8128,7 @@ final class Workspace: Identifiable, ObservableObject {
 
         var inheritedConfig = inheritedTerminalConfig(inPane: paneId) ?? BmuxSurfaceConfigTemplate()
         inheritedConfig.waitAfterCommand = true
-        let replacementPanel = TerminalPanel(
+        let replacementPanel = makeStableTerminalPanel(
             id: pair.key,
             workspaceId: id,
             context: GHOSTTY_SURFACE_CONTEXT_TAB,
@@ -8260,7 +8250,7 @@ final class Workspace: Identifiable, ObservableObject {
         GhosttyApp.terminalSurfaceRegistry.unregister(oldPanel.surface)
         oldPanel.surface.teardownSurface()
 
-        let replacementPanel = TerminalPanel(
+        let replacementPanel = makeStableTerminalPanel(
             id: panelId,
             workspaceId: id,
             context: launchContext,
@@ -9831,7 +9821,7 @@ final class Workspace: Identifiable, ObservableObject {
         bindSurface(newTabId, toPanelId: detached.panelId)
         panels[detached.panelId] = detached.panel
         if let terminalPanel = detached.panel as? TerminalPanel {
-            terminalPanel.updateWorkspaceId(id)
+            terminalPanel.updateWorkspaceId(id, stableWorkspaceId: stableId)
             configureTerminalPanel(terminalPanel)
         } else if let browserPanel = detached.panel as? BrowserPanel {
             browserPanel.reattachToWorkspace(
@@ -10505,7 +10495,7 @@ final class Workspace: Identifiable, ObservableObject {
             config.waitAfterCommand = true
             replacementConfig = config
         }
-        let newPanel = TerminalPanel(
+        let newPanel = makeStableTerminalPanel(
             workspaceId: id,
             context: GHOSTTY_SURFACE_CONTEXT_TAB,
             configTemplate: replacementConfig,
@@ -13048,7 +13038,7 @@ extension Workspace: BonsplitDelegate {
                     // empty pane during drag-to-split of a single-tab pane.
                     let inheritedConfig = inheritedTerminalConfig(inPane: originalPane)
 
-                    let replacementPanel = TerminalPanel(
+                    let replacementPanel = makeStableTerminalPanel(
                         workspaceId: id,
                         context: GHOSTTY_SURFACE_CONTEXT_SPLIT,
                         configTemplate: inheritedConfig,

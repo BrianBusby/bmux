@@ -51,6 +51,23 @@ struct ProvenanceStableIDFactory: Sendable {
         )
     }
 
+    /// Stable projection id for a workspace-to-coding-agent-session association.
+    func workspaceCodingAgentSessionAssociationID(
+        workspaceID: String,
+        agentKind: String,
+        sessionID: String
+    ) -> String {
+        id(
+            prefix: "workspace-agent-session",
+            value: [
+                "workspace-coding-agent-session-association",
+                workspaceID.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                agentKind.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                sessionID.trimmingCharacters(in: .whitespacesAndNewlines),
+            ].joined(separator: "\n")
+        )
+    }
+
     /// Stable event id for one observed lifecycle transition.
     func subsessionLifecycleEventID(
         phase: String,

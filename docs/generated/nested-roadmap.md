@@ -16,11 +16,12 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)
-- Active or selected slices in the frontier: none
+- Active or selected slices in the frontier:
+  - Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`) - maturity: unspecified; status: active; selection: current; owner: Provenance Engine
 
 ### Active Implementation
 
-- None.
+- Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`) - maturity: unspecified; status: active; selection: current; owner: Provenance Engine
 
 ### Selected Next
 
@@ -261,6 +262,8 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@69c1cf02314e
           Acceptance reason: Engineering Observation Period dogfood of PR
           Acceptance criteria: A long-running ordinary Codex CLI turn continues ingesting appended JSONL records while the turn is active.; Accepted live transcript evidence advances PE factual session projection revisions and factual reads.; Visible Codex commentary/progress summaries are imported only when they are completed provider-visible summary units, never from hidden reasoning content.; Provider/model/effort fields remain distinct and use authoritative Codex transcript/runtime sources.; Hook and transcript observations converge on one factual session/thread/turn without duplicate logical turns.; Historical transcript import remains idempotent after live ingestion.; An open Session surface refreshes revisioned factual state without requiring the tab to be reopened.
+        - **Workspace Coding-Agent Session Linkage Hardening** (`workspace_coding_agent_session_linkage_hardening`) - slice; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: current / Shared; parallelism: serial; delivery: open; acceptance: proposed
+          Rationale: Harden the factual workspace to coding-agent session association below semantic inference so Session and Smart Session reads no longer depend on workspace display metadata as their only identity bridge.
       - **Factual Session Projection Read Contract** (`factual_session_projection_read_contract`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial
         Depends on: `richer_session_observable_evidence`
         - **Factual session projection foundation** (`factual_session_projection_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: open; acceptance: implemented; mirrors: `richer_session_work_model`; maturity: validated
@@ -657,16 +660,16 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Rationale: Provide explicit bounded agent queries over PE-owned cross-session state instead of blindly injecting historical context or exposing full transcripts.
           Acceptance reason: Implemented as two explicit `bmux provenance sessions` retrieval operations backed by public PE `relatedSessions(...)` and `artifactCollisions(...)` reads. The commands require explicit PE session ids, accept explicit databases without a live app socket, enforce finite limits and timestamp/path validation, preserve exact revision reads and missing/empty/partial distinctions, render compact localized text, emit stable JSON, document the target-session changed-artifact collision limitation, and include deterministic fixtures plus a reproducible two-session demo. PR #88 merged as `5db53927906a83677e1bebbc2f04680af10b5055` after its review findings were resolved.
           Acceptance criteria: Expose explicit agent retrieval CLI commands over existing PE related-session and artifact-collision reads.; Require explicit PE session ids and selected local databases; do not infer from focus or require a live app socket.; Support bounded limits, recent-time filters, exact historical revisions, artifact-path filters, stale classification, and clear malformed-argument failures.; Preserve JSON contract fields for relationship reasons, repository/worktree/branch/HEAD boundaries, semantic claims, evidence references, revisions, freshness, completeness, stale/partial states, and omissions.; Preserve the collision limitation that discovery starts from the target session's recorded changed artifacts and never treats same-path different-repository work as a collision.; Keep the reads workflow-neutral: no ingestion, mutation, prompt/context injection, notification, raw transcript sharing, or unrelated secret access.; Verify through real command dispatch, deterministic PE fixtures, no-socket help, documentation, localization, and a reproducible two-session demonstration.
-        - **Proactive bmux cross-session awareness** (`proactive_bmux_cross_session_awareness`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: semantic understanding; layer: consumer presentation; execution: complete / Bmux; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
+        - **Proactive bmux cross-session awareness** (`proactive_bmux_cross_session_awareness`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: semantic understanding; layer: consumer presentation; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `agent_accessible_cross_session_retrieval`, `cross_session_artifact_collision_awareness`
           Expected contract domains: `cross_session_notifications`, `bmux_cross_session_presentation`
           Expected code areas: `bmux notification surfaces`, `React Smart Session surface`, `bmux provenance consumers`
           Likely conflict domains: `bmux_session_presentation`, `notification_policy`, `context_assembly_policy`
           Contract dependencies: `cross_session_agent_query`, `artifact_collision_explanations`
           Worktree required: true
-          Execution notes: Implemented as bounded related-session and possible artifact-collision presentation inside the existing React Smart Session refresh. It does not inject agent context, notify outside the Session surface, block work, coordinate agents, or share transcripts.
+          Execution notes: Implemented as bounded related-session and possible artifact-collision presentation inside the existing React Smart Session refresh. It does not inject agent context, notify outside the Session surface, block work, coordinate agents, or share transcripts. PR #94 merged at 2026-09-01T19:08:35Z with merge commit 0400109c5ec0678c6e89bff0cc316b661a44f626.
           Gate `cross_session_retrieval_validated`: requires `agent_accessible_cross_session_retrieval` maturity validated; reason: Proactive presentation should depend on observed useful retrieval and relevance behavior.
-          Evidence: BrianBusby/bmux@a2b88f2479f4, BrianBusby/bmux#94 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@a2b88f2479f4, BrianBusby/bmux@0400109c5ec0, BrianBusby/bmux#94 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Surface especially relevant cross-session changes through bounded Smart Session presentation without silently mutating coding-agent context.
           Acceptance reason: The existing Smart Session refresh path now reads at most five related sessions and five possible collision candidates through PE public contracts and presents their factual boundaries separately from the session's own semantic work model.
           Acceptance criteria: React Smart Session refresh performs bounded PE related-session and artifact-collision reads for the linked PE session.; Presentation preserves relationship reasons, lifecycle/freshness state, normalized artifact paths, collision state, and bounded omission counts.; Failed awareness reads degrade to an explicit unavailable state without hiding the existing Smart Session snapshot.; No prompt injection, external notification, locking, interruption, reassignment, transcript sharing, or coordination policy is added.
@@ -704,7 +707,9 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-- Active implementation assignments: none selected.
+| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`) | serial | None | None | None | None | None | single active assignment |
 
 ### Dependency-Ready Preflight
 

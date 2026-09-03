@@ -4,7 +4,7 @@ import ProvenanceEngineContracts
 /// Reads PE-owned factual coding-agent session projections for agent-session UI.
 @MainActor
 final class AgentSessionFactualProjectionStore {
-    private let client: any ProvenanceEngineClient
+    let client: any ProvenanceEngineClient
     private var snapshotsBySessionID: [String: ProvenanceFactualSessionProjectionSnapshot] = [:]
 
     init(client: any ProvenanceEngineClient) {

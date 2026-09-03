@@ -105,6 +105,8 @@ extension CLIProvenanceCodexTranscriptImporter {
     }
 
     struct LiveImportState {
+        var workspaceID: String?
+        var surfaceID: String?
         var offset: UInt64 = 0
         var pendingFragment = Data()
         var nextLineNumber = 1
@@ -135,6 +137,8 @@ extension CLIProvenanceCodexTranscriptImporter {
     struct TranscriptContext {
         let sessionID: String
         let providerThreadID: String
+        let workspaceID: String?
+        let surfaceID: String?
         var cwd: String?
         let sessionStartedAt: Date
         var latestModel: String?
@@ -144,6 +148,26 @@ extension CLIProvenanceCodexTranscriptImporter {
         var observedProviderTurnIDs: Set<String> = []
         var startedProviderTurnIDs: Set<String> = []
         var pendingPrompts: [PendingPrompt] = []
+
+        init(
+            sessionID: String,
+            providerThreadID: String,
+            workspaceID: String? = nil,
+            surfaceID: String? = nil,
+            cwd: String?,
+            sessionStartedAt: Date,
+            latestModel: String?,
+            latestEffort: String?
+        ) {
+            self.sessionID = sessionID
+            self.providerThreadID = providerThreadID
+            self.workspaceID = workspaceID
+            self.surfaceID = surfaceID
+            self.cwd = cwd
+            self.sessionStartedAt = sessionStartedAt
+            self.latestModel = latestModel
+            self.latestEffort = latestEffort
+        }
     }
 
     struct PendingPrompt {
@@ -205,6 +229,22 @@ extension CLIProvenanceCodexTranscriptImporter {
 
         func changeSetID(worktreeID: String, fingerprint: String) -> String {
             id(prefix: "changeset", value: "\(worktreeID)\n\(fingerprint)")
+        }
+
+        func workspaceCodingAgentSessionAssociationID(
+            workspaceID: String,
+            agentKind: String,
+            sessionID: String
+        ) -> String {
+            id(
+                prefix: "workspace-agent-session",
+                value: [
+                    "workspace-coding-agent-session-association",
+                    workspaceID.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                    agentKind.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                    sessionID.trimmingCharacters(in: .whitespacesAndNewlines),
+                ].joined(separator: "\n")
+            )
         }
 
         func id(prefix: String, value: String) -> String {

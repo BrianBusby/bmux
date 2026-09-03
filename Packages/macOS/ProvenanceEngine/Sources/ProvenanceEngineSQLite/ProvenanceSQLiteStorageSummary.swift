@@ -45,6 +45,9 @@ struct ProvenanceSQLiteStorageSummary: Equatable, Sendable {
     /// Number of workspace display projection rows.
     var workspaceDisplayCount: Int
 
+    /// Number of workspace coding-agent session association projection rows.
+    var workspaceCodingAgentSessionAssociationCount: Int
+
     /// Number of coding-agent thread projection rows.
     var codingAgentThreadCount: Int
 
@@ -109,6 +112,7 @@ struct ProvenanceSQLiteStorageSummary: Equatable, Sendable {
         fileChangeCount: Int,
         validationRunCount: Int,
         workspaceDisplayCount: Int,
+        workspaceCodingAgentSessionAssociationCount: Int = 0,
         codingAgentThreadCount: Int = 0,
         codingAgentTurnCount: Int = 0,
         codingAgentPromptCount: Int = 0,
@@ -141,6 +145,7 @@ struct ProvenanceSQLiteStorageSummary: Equatable, Sendable {
         self.fileChangeCount = fileChangeCount
         self.validationRunCount = validationRunCount
         self.workspaceDisplayCount = workspaceDisplayCount
+        self.workspaceCodingAgentSessionAssociationCount = workspaceCodingAgentSessionAssociationCount
         self.codingAgentThreadCount = codingAgentThreadCount
         self.codingAgentTurnCount = codingAgentTurnCount
         self.codingAgentPromptCount = codingAgentPromptCount

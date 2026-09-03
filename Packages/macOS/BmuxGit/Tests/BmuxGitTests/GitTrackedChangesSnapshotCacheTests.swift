@@ -45,22 +45,30 @@ import Testing
         let firstSnapshot = GitTrackedChangesSnapshot(
             isDirty: false,
             indexSignature: "first",
-            indexContentSignature: "first-content"
+            indexContentSignature: "first-content",
+            indexStatContentSignature: "first-stat-content",
+            indexDirtyCheckContentSignature: "first-dirty-check-content"
         )
         let refreshedFirstSnapshot = GitTrackedChangesSnapshot(
             isDirty: true,
             indexSignature: "first-refreshed",
-            indexContentSignature: "first-refreshed-content"
+            indexContentSignature: "first-refreshed-content",
+            indexStatContentSignature: "first-refreshed-stat-content",
+            indexDirtyCheckContentSignature: "first-refreshed-dirty-check-content"
         )
         let secondSnapshot = GitTrackedChangesSnapshot(
             isDirty: false,
             indexSignature: "second",
-            indexContentSignature: "second-content"
+            indexContentSignature: "second-content",
+            indexStatContentSignature: "second-stat-content",
+            indexDirtyCheckContentSignature: "second-dirty-check-content"
         )
         let thirdSnapshot = GitTrackedChangesSnapshot(
             isDirty: false,
             indexSignature: "third",
-            indexContentSignature: "third-content"
+            indexContentSignature: "third-content",
+            indexStatContentSignature: "third-stat-content",
+            indexDirtyCheckContentSignature: "third-dirty-check-content"
         )
         let namespace = UUID()
         let generation1 = GitTrackedPathEventGeneration(namespace: namespace, generation: 1)

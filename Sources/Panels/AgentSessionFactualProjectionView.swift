@@ -98,7 +98,18 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
         .onChange(of: showsSwitcher) { _, isVisible in
             if !isVisible {
                 viewMode = .terminal
+            } else {
+                scheduleFactualProjectionRefreshIfNeeded()
             }
+        }
+        .onChange(of: viewMode) { _, _ in
+            scheduleFactualProjectionRefreshIfNeeded()
+        }
+        .onChange(of: stableWorkspaceID) { _, _ in
+            scheduleFactualProjectionRefreshIfNeeded()
+        }
+        .onAppear {
+            scheduleFactualProjectionRefreshIfNeeded()
         }
         .task(id: factualProjectionTaskID) {
             guard showsSwitcher,
@@ -130,6 +141,9 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                     }
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .onAppear {
+                    scheduleFactualProjectionRefreshIfNeeded()
+                }
             }
         }
     }
@@ -197,6 +211,11 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
         if nextResult != factualProjectionResult {
             factualProjectionResult = nextResult
         }
+    }
+
+    private func scheduleFactualProjectionRefreshIfNeeded() {
+        guard showsSwitcher, viewMode == .session else { return }
+        Task { await refreshFactualProjection() }
     }
 }
 
@@ -278,6 +297,46 @@ struct AgentSessionFactualProjectionView: View {
             emptyMessage(String(
                 localized: "agentSession.factual.unavailable",
                 defaultValue: "Provenance Engine is unavailable for this build."
+            ))
+        case .noSupportedCodingAgentDetected:
+            emptyMessage(String(
+                localized: "agentSession.factual.noSupportedAgent",
+                defaultValue: "No supported coding agent has been detected in this workspace."
+            ))
+        case .agentDetectedAwaitingFirstPrompt:
+            emptyMessage(String(
+                localized: "agentSession.factual.awaitingFirstPrompt",
+                defaultValue: "Coding agent detected. Waiting for the first prompt."
+            ))
+        case .promptObservedAssociationPending:
+            emptyMessage(String(
+                localized: "agentSession.factual.associationPending",
+                defaultValue: "Prompt observed. Linking the coding-agent session."
+            ))
+        case .associationEstablishedProjectionPending:
+            emptyMessage(String(
+                localized: "agentSession.factual.projectionPending",
+                defaultValue: "Session linked. Building factual session data."
+            ))
+        case .ingestionFailed:
+            emptyMessage(String(
+                localized: "agentSession.factual.ingestionFailed",
+                defaultValue: "Session evidence ingestion failed."
+            ))
+        case .identityReconciliationFailed:
+            emptyMessage(String(
+                localized: "agentSession.factual.identityReconciliationFailed",
+                defaultValue: "Could not reconcile the coding-agent session identity."
+            ))
+        case .projectionFailed:
+            emptyMessage(String(
+                localized: "agentSession.factual.projectionFailed",
+                defaultValue: "Could not read factual session data."
+            ))
+        case .unsupportedOrUnassociatedSession:
+            emptyMessage(String(
+                localized: "agentSession.factual.unsupportedOrUnassociated",
+                defaultValue: "This workspace does not have an associated supported coding-agent session."
             ))
         case .notFound:
             emptyMessage(String(

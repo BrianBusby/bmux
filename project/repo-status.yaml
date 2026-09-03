@@ -2,8 +2,15 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice: null
-  state: none_selected
+  active_slice:
+    id: workspace_coding_agent_session_linkage_hardening
+    title: Workspace Coding-Agent Session Linkage Hardening
+    state: open
+    owner: shared
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/harden-pe-session-readiness
+    active_branch: harden-pe-session-readiness
+    active_agent: codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented
@@ -54,6 +61,7 @@ local_capabilities:
   provenance_engine_semantic_message_presentation_policy: implemented
   provenance_engine_session_work_model_contract_foundation: implemented
   provenance_engine_cross_session_work_awareness: implemented
+  provenance_engine_workspace_coding_agent_session_association: under_observation
   provenance_engine_related_session_read_model: implemented
   provenance_engine_cross_session_artifact_collision_awareness: implemented
   provenance_engine_rich_cross_session_work_state_semantics: implemented
@@ -61,7 +69,7 @@ local_capabilities:
   provenance_engine_milestone_inference: implemented
   provenance_engine_blocker_approach_change_semantics: implemented
   provenance_engine_scoped_architecture_projection: planned
-  bmux_proactive_cross_session_awareness: planned
+  bmux_proactive_cross_session_awareness: implemented
   bmux_cross_session_context_assembly_experiment: planned
   knowledge_compiler_cross_session_bridge: planned
   factual_agent_session_view: implemented
@@ -83,6 +91,7 @@ local_capabilities:
   session_work_model_consumer: planned
   richer_session_work_view: planned
   normal_coding_agent_evidence_ingestion: implemented
+  workspace_coding_agent_session_linkage_hardening: under_observation
   remote_mobile_planning_reconciliation: planned
   remote_local_session_host_contract: planned
   remote_session_protocol_loopback: planned

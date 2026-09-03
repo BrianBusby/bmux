@@ -5,4 +5,6 @@ nonisolated struct GitTrackedChangesSnapshot: Equatable, Sendable {
     let isDirty: Bool
     let indexSignature: String?
     let indexContentSignature: String?
+    let indexStatContentSignature: String?
+    let indexDirtyCheckContentSignature: String?
 }

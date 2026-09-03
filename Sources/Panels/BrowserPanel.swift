@@ -6810,7 +6810,7 @@ extension BrowserPanel {
                 developerToolsPreservedVisibleIntentForNextAttach = false
                 syncDeveloperToolsPresentationPreferenceFromUI()
                 cancelDeveloperToolsRestoreRetry()
-            } else if !targetVisible {
+            } else if preserveVisibleIntent && targetVisible { developerToolsPreservedVisibleIntentForNextAttach = true } else if !targetVisible {
                 developerToolsDetachedOpenGraceDeadline = nil
                 forceDeveloperToolsRefreshOnNextAttach = false
                 developerToolsPreservedVisibleIntentForNextAttach = false
@@ -6931,7 +6931,7 @@ extension BrowserPanel {
             developerToolsPreservedVisibleIntentForNextAttach = false
             return
         }
-        guard !isDeveloperToolsTransitionInFlight else { return }
+        guard !isDeveloperToolsTransitionInFlight || (pendingDeveloperToolsTransitionTargetVisible ?? developerToolsTransitionTargetVisible) == true else { return }
         guard let inspector = webView.bmuxInspectorObject() else {
             scheduleDeveloperToolsRestoreRetry()
             return

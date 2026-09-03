@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: none selected
+- Active slice: Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`)
+- Slice state: open
+- Owner: shared
+- Repository state: active
 
 ## Release
 
@@ -26,7 +28,7 @@ Repository: `BrianBusby/bmux`
 | Capability | State |
 | --- | --- |
 | Bmux Cross Session Context Assembly Experiment | planned |
-| Bmux Proactive Cross Session Awareness | planned |
+| Bmux Proactive Cross Session Awareness | implemented |
 | Factual Agent Session View | implemented |
 | Knowledge Compiler Cross Session Bridge | planned |
 | Native Provider Session View | implemented |
@@ -64,6 +66,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Session Work Model Contract Foundation | implemented |
 | Provenance Engine Sqlite Store | implemented |
 | Provenance Engine Turn Outcome Projection | implemented |
+| Provenance Engine Workspace Coding Agent Session Association | under observation |
 | Provenance Engine Workspace Display Current State | implemented |
 | Provenance Engine Workspace Display Durable Context | implemented |
 | Provenance Engine Workspace Display Project Link Facts | implemented |
@@ -91,6 +94,7 @@ Repository: `BrianBusby/bmux`
 | Richer Session Work View | planned |
 | Session Work Model Consumer | planned |
 | Three View Session Navigation | planned |
+| Workspace Coding Agent Session Linkage Hardening | under observation |
 | Workspace Display Current State Diagnostic | implemented |
 | Workspace Display Durable Context | implemented |
 | Workspace Display Projection | implemented |

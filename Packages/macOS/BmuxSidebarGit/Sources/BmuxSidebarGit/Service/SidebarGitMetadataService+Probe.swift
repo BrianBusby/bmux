@@ -341,6 +341,8 @@ extension SidebarGitMetadataService {
                    previousHeadSignature != headSignature {
                     workspaceGitCleanIndexSignatureByKey.removeValue(forKey: probeKey)
                     workspaceGitCleanIndexContentSignatureByKey.removeValue(forKey: probeKey)
+                    workspaceGitCleanIndexStatContentSignatureByKey.removeValue(forKey: probeKey)
+                    workspaceGitCleanIndexDirtyCheckContentSignatureByKey.removeValue(forKey: probeKey)
                 }
                 workspaceGitHeadSignatureByKey[probeKey] = headSignature
             } else {
@@ -351,9 +353,17 @@ extension SidebarGitMetadataService {
                let indexSignature = snapshot.indexSignature,
                let cleanIndexSignature = workspaceGitCleanIndexSignatureByKey[probeKey],
                cleanIndexSignature != indexSignature {
-                if let indexContentSignature = snapshot.indexContentSignature,
-                   let cleanIndexContentSignature = workspaceGitCleanIndexContentSignatureByKey[probeKey],
-                   cleanIndexContentSignature == indexContentSignature {
+                let contentUnchanged = snapshot.indexContentSignature != nil &&
+                    workspaceGitCleanIndexContentSignatureByKey[probeKey] == snapshot.indexContentSignature
+                let dirtyCheckContentChanged = snapshot.indexDirtyCheckContentSignature != nil &&
+                    workspaceGitCleanIndexDirtyCheckContentSignatureByKey[probeKey] != nil &&
+                    workspaceGitCleanIndexDirtyCheckContentSignatureByKey[probeKey] !=
+                        snapshot.indexDirtyCheckContentSignature
+                let statContentChanged = snapshot.indexStatContentSignature != nil &&
+                    workspaceGitCleanIndexStatContentSignatureByKey[probeKey] != nil &&
+                    workspaceGitCleanIndexStatContentSignatureByKey[probeKey] != snapshot.indexStatContentSignature
+                if contentUnchanged &&
+                    (previousBranchState?.isDirty == true || dirtyCheckContentChanged || statContentChanged) {
                     workspaceGitCleanIndexSignatureByKey[probeKey] = indexSignature
                 } else {
                     isDirty = true
@@ -378,10 +388,22 @@ extension SidebarGitMetadataService {
                 } else {
                     workspaceGitCleanIndexContentSignatureByKey.removeValue(forKey: probeKey)
                 }
+                if let indexStatContentSignature = snapshot.indexStatContentSignature {
+                    workspaceGitCleanIndexStatContentSignatureByKey[probeKey] = indexStatContentSignature
+                } else {
+                    workspaceGitCleanIndexStatContentSignatureByKey.removeValue(forKey: probeKey)
+                }
+                if let indexDirtyCheckContentSignature = snapshot.indexDirtyCheckContentSignature {
+                    workspaceGitCleanIndexDirtyCheckContentSignatureByKey[probeKey] = indexDirtyCheckContentSignature
+                } else {
+                    workspaceGitCleanIndexDirtyCheckContentSignatureByKey.removeValue(forKey: probeKey)
+                }
             }
         } else {
             workspaceGitCleanIndexSignatureByKey.removeValue(forKey: probeKey)
             workspaceGitCleanIndexContentSignatureByKey.removeValue(forKey: probeKey)
+            workspaceGitCleanIndexStatContentSignatureByKey.removeValue(forKey: probeKey)
+            workspaceGitCleanIndexDirtyCheckContentSignatureByKey.removeValue(forKey: probeKey)
             workspaceGitHeadSignatureByKey.removeValue(forKey: probeKey)
             didApplyMaterialSidebarGitChange = previousBranchState != nil
             host.clearPanelGitBranch(workspaceId: probeKey.workspaceId, panelId: probeKey.panelId)

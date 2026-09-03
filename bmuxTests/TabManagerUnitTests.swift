@@ -930,7 +930,6 @@ final class TabManagerWorkspaceOwnershipTests: XCTestCase {
 
 @MainActor
 final class TabManagerPullRequestProbeTests: XCTestCase {
-
     // Pure pull-request selection/policy tests moved to the BmuxGit package
     // (BmuxGitTests.PullRequestProbeServiceTests) with the extraction.
 
@@ -1026,7 +1025,7 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
             }
         }
 
-        let manager = TabManager(workspaceGitMetadataReader: reader)
+        let manager = TabManager(workspaceGitMetadataReader: reader, mobileHostDeferral: .disabledForSidebarGitTests)
         guard let workspace = manager.selectedWorkspace,
               let mainPanelId = workspace.focusedPanelId,
               let paneId = workspace.bonsplitController.focusedPaneId,
@@ -1069,12 +1068,10 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
         XCTAssertEqual(observedMaxActiveCallCount, 1)
 
         await reader.releaseAll()
-        XCTAssertTrue(
-            waitForCondition {
-                panelIds.allSatisfy { workspace.panelGitBranches[$0]?.branch == "main" }
-            },
-            "One same-directory snapshot should update every queued panel."
-        )
+        let didApplySnapshot = await waitForMainActorCondition {
+            panelIds.allSatisfy { workspace.panelGitBranches[$0]?.branch == "main" }
+        }
+        XCTAssertTrue(didApplySnapshot, "One same-directory snapshot should update every queued panel.")
         let finalObservedCallCount = await reader.observedCallCount
         XCTAssertEqual(finalObservedCallCount, 1)
     }
@@ -1088,7 +1085,7 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
         try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         defer { try? fileManager.removeItem(at: directoryURL) }
 
-        let manager = TabManager()
+        let manager = TabManager(mobileHostDeferral: .disabledForSidebarGitTests)
         guard let workspace = manager.selectedWorkspace,
               let panelId = workspace.focusedPanelId else {
             XCTFail("Expected selected workspace with focused panel")
@@ -1236,19 +1233,18 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
         XCTAssertEqual(workspace.sidebarGitBranchesInDisplayOrder().map(\.branch), ["main"])
     }
 
-    func testRemoteSplitSkipsInitialGitMetadataProbe() throws {
-        let manager = TabManager()
+    func testRemoteSplitSkipsInitialGitMetadataProbe() async throws {
+        let manager = TabManager(mobileHostDeferral: .disabledForSidebarGitTests)
         guard let workspace = manager.selectedWorkspace,
               let panelId = workspace.focusedPanelId else {
             XCTFail("Expected selected workspace with focused panel")
             return
         }
 
-        XCTAssertTrue(
-            waitForCondition(timeout: 12.0) {
-                manager.activeWorkspaceGitProbePanelIdsForTesting(workspaceId: workspace.id).isEmpty
-            }
-        )
+        let didDrainInitialProbe = await waitForMainActorCondition(timeout: 12.0) {
+            manager.activeWorkspaceGitProbePanelIdsForTesting(workspaceId: workspace.id).isEmpty
+        }
+        XCTAssertTrue(didDrainInitialProbe)
 
         workspace.configureRemoteConnection(
             WorkspaceRemoteConfiguration(
@@ -1336,7 +1332,6 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
         XCTAssertTrue(workspace.sidebarPullRequestsInDisplayOrder().isEmpty)
     }
 }
-
 
 @MainActor
 final class TabManagerCloseWorkspacesWithConfirmationTests: XCTestCase {

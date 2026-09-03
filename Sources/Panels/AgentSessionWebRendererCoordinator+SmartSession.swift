@@ -27,6 +27,38 @@ extension AgentSessionWebRendererCoordinator {
                 localized: "agentSession.web.smartSession.unavailable",
                 defaultValue: "Session data unavailable"
             ),
+            "smartSessionNoSupportedAgent": String(
+                localized: "agentSession.web.smartSession.noSupportedAgent",
+                defaultValue: "No supported coding agent detected"
+            ),
+            "smartSessionAwaitingFirstPrompt": String(
+                localized: "agentSession.web.smartSession.awaitingFirstPrompt",
+                defaultValue: "Coding agent detected. Waiting for a prompt."
+            ),
+            "smartSessionAssociationPending": String(
+                localized: "agentSession.web.smartSession.associationPending",
+                defaultValue: "Prompt observed. Linking session."
+            ),
+            "smartSessionProjectionPending": String(
+                localized: "agentSession.web.smartSession.projectionPending",
+                defaultValue: "Session linked. Building facts."
+            ),
+            "smartSessionIngestionFailed": String(
+                localized: "agentSession.web.smartSession.ingestionFailed",
+                defaultValue: "Session evidence ingestion failed"
+            ),
+            "smartSessionIdentityReconciliationFailed": String(
+                localized: "agentSession.web.smartSession.identityReconciliationFailed",
+                defaultValue: "Could not reconcile session identity"
+            ),
+            "smartSessionProjectionFailed": String(
+                localized: "agentSession.web.smartSession.projectionFailed",
+                defaultValue: "Could not read session facts"
+            ),
+            "smartSessionUnsupportedOrUnassociated": String(
+                localized: "agentSession.web.smartSession.unsupportedOrUnassociated",
+                defaultValue: "No associated supported session"
+            ),
             "smartSessionNotFound": String(
                 localized: "agentSession.web.smartSession.notFound",
                 defaultValue: "Session not found"
