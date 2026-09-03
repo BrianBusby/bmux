@@ -380,6 +380,7 @@
 		B1F0C0050000000000000001 /* BrowserDeveloperToolsDockControlNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0C0050000000000000002 /* BrowserDeveloperToolsDockControlNormalizer.swift */; };
 		B1F0C0060000000000000001 /* BrowserDeveloperToolsDockControlNormalizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0C0060000000000000002 /* BrowserDeveloperToolsDockControlNormalizerTests.swift */; };
 		B1F0C0070000000000000001 /* BrowserDeveloperToolsLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0C0070000000000000002 /* BrowserDeveloperToolsLifecycleTests.swift */; };
+		B1F0D1030000000000000001 /* BrowserDeveloperToolsTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0D1030000000000000002 /* BrowserDeveloperToolsTestSupport.swift */; };
 		C42660030000000000000001 /* BrowserDownloadDelegate+PDFPreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C42660030000000000000002 /* BrowserDownloadDelegate+PDFPreviewData.swift */; };
 		C59240010000000000000001 /* BrowserDownloadFilenameResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C59240010000000000000002 /* BrowserDownloadFilenameResolver.swift */; };
 		C59240010000000000000003 /* BrowserDownloadFilenameResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */; };
@@ -429,6 +430,7 @@
 		D0B1000EA1B2C3D4E5F60001 /* BrowserPaneDropRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B1000FA1B2C3D4E5F60001 /* BrowserPaneDropRoutingTests.swift */; };
 		D0B1001EA1B2C3D4E5F60001 /* BrowserPaneDropTargetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B1001FA1B2C3D4E5F60001 /* BrowserPaneDropTargetView.swift */; };
 		C65241010000000000000001 /* BrowserPanel+AppPricingRestore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C65241010000000000000002 /* BrowserPanel+AppPricingRestore.swift */; };
+		B1F0D1010000000000000001 /* BrowserPanel+DeveloperToolsWindowOwnership.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0D1010000000000000002 /* BrowserPanel+DeveloperToolsWindowOwnership.swift */; };
 		C3711E000000000000000001 /* BrowserPanel+DisplayURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3711E000000000000000002 /* BrowserPanel+DisplayURL.swift */; };
 		A500MX01 /* BrowserPanel+MediaPlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = A500MX00 /* BrowserPanel+MediaPlayback.swift */; };
 		D7AB00000000000000000007 /* BrowserPanel+MoveTabToNewWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB00000000000000000008 /* BrowserPanel+MoveTabToNewWorkspace.swift */; };
@@ -1365,6 +1367,7 @@
 		A5001003 /* TabManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001013 /* TabManager.swift */; };
 		C0DE64160000000000000001 /* TabManagerNotificationFocusRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64160000000000000002 /* TabManagerNotificationFocusRegressionTests.swift */; };
 		2BB56A710BB1FC50367E5BCF /* TabManagerSessionSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D684CFFB8CDEF89CE2D9E1 /* TabManagerSessionSnapshotTests.swift */; };
+		B1F0D1040000000000000001 /* TabManagerSidebarGitTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0D1040000000000000002 /* TabManagerSidebarGitTestSupport.swift */; };
 		C06552030000000000000001 /* TabManagerTitleUpdateStalenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C06552030000000000000002 /* TabManagerTitleUpdateStalenessTests.swift */; };
 		C06552020000000000000001 /* TabManagerTitleUpdateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C06552020000000000000002 /* TabManagerTitleUpdateTests.swift */; };
 		B6BF3DC98DB1495E57900199 /* TabManagerUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42092CDB2109E250F7F2A76E /* TabManagerUnitTests.swift */; };
@@ -1525,6 +1528,7 @@
 		ACE4FE2A8F1CC6C0B6A673AB /* VMClientSocketCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CEC6F0035B71AE59FA45BA7 /* VMClientSocketCommands.swift */; };
 		C37800000000000000000003 /* VMDefaultCloudCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C37800000000000000000004 /* VMDefaultCloudCommandTests.swift */; };
 		C37800000000000000000001 /* VMSSHCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C37800000000000000000002 /* VMSSHCommandTests.swift */; };
+		B1F0D1020000000000000001 /* WebViewRepresentable+WebKitTransferSubviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0D1020000000000000002 /* WebViewRepresentable+WebKitTransferSubviews.swift */; };
 		A500120C /* WindowAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001222 /* WindowAccessor.swift */; };
 		063BC42CEE257D6213A2E30C /* WindowAndDragTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE83F8394D90ACACD8E19DD /* WindowAndDragTests.swift */; };
 		A59170000000000000000001 /* WindowAppearanceSnapshotPaneBackgroundTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59170000000000000000002 /* WindowAppearanceSnapshotPaneBackgroundTests.swift */; };
@@ -1594,6 +1598,7 @@
 		C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
 		CE0D10140000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
 		CE0E010B0000000000000001 /* WorkProvenanceRuntime+AgentSessionAssociation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E010B0000000000000002 /* WorkProvenanceRuntime+AgentSessionAssociation.swift */; };
+		CE0E010C0000000000000001 /* WorkProvenanceRuntime+XCTestGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E010C0000000000000002 /* WorkProvenanceRuntime+XCTestGate.swift */; };
 		756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */; };
 		CE0B00040000000000000001 /* WorkProvenanceSessionLifecycleRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00040000000000000002 /* WorkProvenanceSessionLifecycleRecorder.swift */; };
 		A801809D8020AD996B4C0997 /* WorkProvenanceSessionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 447E35CF777CC9B4432D5BFA /* WorkProvenanceSessionRecord.swift */; };
@@ -2127,6 +2132,7 @@
 		B1F0C0050000000000000002 /* BrowserDeveloperToolsDockControlNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserDeveloperToolsDockControlNormalizer.swift; sourceTree = "<group>"; };
 		B1F0C0060000000000000002 /* BrowserDeveloperToolsDockControlNormalizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDeveloperToolsDockControlNormalizerTests.swift; sourceTree = "<group>"; };
 		B1F0C0070000000000000002 /* BrowserDeveloperToolsLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDeveloperToolsLifecycleTests.swift; sourceTree = "<group>"; };
+		B1F0D1030000000000000002 /* BrowserDeveloperToolsTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDeveloperToolsTestSupport.swift; sourceTree = "<group>"; };
 		C42660030000000000000002 /* BrowserDownloadDelegate+PDFPreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BrowserDownloadDelegate+PDFPreviewData.swift"; sourceTree = "<group>"; };
 		C59240010000000000000002 /* BrowserDownloadFilenameResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserDownloadFilenameResolver.swift; sourceTree = "<group>"; };
 		C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDownloadFilenameResolverTests.swift; sourceTree = "<group>"; };
@@ -2176,6 +2182,7 @@
 		D0B1000FA1B2C3D4E5F60001 /* BrowserPaneDropRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPaneDropRoutingTests.swift; sourceTree = "<group>"; };
 		D0B1001FA1B2C3D4E5F60001 /* BrowserPaneDropTargetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPaneDropTargetView.swift; sourceTree = "<group>"; };
 		C65241010000000000000002 /* BrowserPanel+AppPricingRestore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BrowserPanel+AppPricingRestore.swift"; sourceTree = "<group>"; };
+		B1F0D1010000000000000002 /* BrowserPanel+DeveloperToolsWindowOwnership.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BrowserPanel+DeveloperToolsWindowOwnership.swift"; sourceTree = "<group>"; };
 		C3711E000000000000000002 /* BrowserPanel+DisplayURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BrowserPanel+DisplayURL.swift"; sourceTree = "<group>"; };
 		A500MX00 /* BrowserPanel+MediaPlayback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BrowserPanel+MediaPlayback.swift"; sourceTree = "<group>"; };
 		D7AB00000000000000000008 /* BrowserPanel+MoveTabToNewWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BrowserPanel+MoveTabToNewWorkspace.swift"; sourceTree = "<group>"; };
@@ -3070,6 +3077,7 @@
 		A5001013 /* TabManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManager.swift; sourceTree = "<group>"; };
 		C0DE64160000000000000002 /* TabManagerNotificationFocusRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerNotificationFocusRegressionTests.swift; sourceTree = "<group>"; };
 		10D684CFFB8CDEF89CE2D9E1 /* TabManagerSessionSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerSessionSnapshotTests.swift; sourceTree = "<group>"; };
+		B1F0D1040000000000000002 /* TabManagerSidebarGitTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerSidebarGitTestSupport.swift; sourceTree = "<group>"; };
 		C06552030000000000000002 /* TabManagerTitleUpdateStalenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerTitleUpdateStalenessTests.swift; sourceTree = "<group>"; };
 		C06552020000000000000002 /* TabManagerTitleUpdateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerTitleUpdateTests.swift; sourceTree = "<group>"; };
 		42092CDB2109E250F7F2A76E /* TabManagerUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerUnitTests.swift; sourceTree = "<group>"; };
@@ -3231,6 +3239,7 @@
 		9CEC6F0035B71AE59FA45BA7 /* VMClientSocketCommands.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VMClientSocketCommands.swift; sourceTree = "<group>"; };
 		C37800000000000000000004 /* VMDefaultCloudCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMDefaultCloudCommandTests.swift; sourceTree = "<group>"; };
 		C37800000000000000000002 /* VMSSHCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMSSHCommandTests.swift; sourceTree = "<group>"; };
+		B1F0D1020000000000000002 /* WebViewRepresentable+WebKitTransferSubviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/WebViewRepresentable+WebKitTransferSubviews.swift"; sourceTree = "<group>"; };
 		A5001222 /* WindowAccessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccessor.swift; sourceTree = "<group>"; };
 		BEE83F8394D90ACACD8E19DD /* WindowAndDragTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAndDragTests.swift; sourceTree = "<group>"; };
 		A59170000000000000000002 /* WindowAppearanceSnapshotPaneBackgroundTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAppearanceSnapshotPaneBackgroundTests.swift; sourceTree = "<group>"; };
@@ -3287,6 +3296,7 @@
 		CE0E03040000000000000002 /* WorkProvenancePullRequestOwnerResolving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwnerResolving.swift; sourceTree = "<group>"; };
 		C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRetentionPolicy.swift; sourceTree = "<group>"; };
 		CE0E010B0000000000000002 /* WorkProvenanceRuntime+AgentSessionAssociation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceRuntime+AgentSessionAssociation.swift"; sourceTree = "<group>"; };
+		CE0E010C0000000000000002 /* WorkProvenanceRuntime+XCTestGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceRuntime+XCTestGate.swift"; sourceTree = "<group>"; };
 		B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRuntime.swift; sourceTree = "<group>"; };
 		CE0B00040000000000000002 /* WorkProvenanceSessionLifecycleRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionLifecycleRecorder.swift; sourceTree = "<group>"; };
 		447E35CF777CC9B4432D5BFA /* WorkProvenanceSessionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionRecord.swift; sourceTree = "<group>"; };
@@ -4275,10 +4285,11 @@
 				BABA2500000000000000000A /* BrowserNavigationDelegate.swift */,
 				C67540080000000000000002 /* BrowserNavigationDebugURL.swift */,
 				C67540110000000000000002 /* BrowserDownloadRecord.swift */,
-				C67540120000000000000002 /* BrowserDownloadsToolbarButton.swift */,
-				C67540100000000000000002 /* BrowserNavigationPopupPolicy.swift */,
-				A5001412 /* BrowserPanel.swift */,
-				B1F0C0090000000000000002 /* BrowserPanelDeveloperToolsLifecycle.swift */,
+					C67540120000000000000002 /* BrowserDownloadsToolbarButton.swift */,
+					C67540100000000000000002 /* BrowserNavigationPopupPolicy.swift */,
+					A5001412 /* BrowserPanel.swift */,
+					B1F0D1010000000000000002 /* BrowserPanel+DeveloperToolsWindowOwnership.swift */,
+					B1F0C0090000000000000002 /* BrowserPanelDeveloperToolsLifecycle.swift */,
 				C2035A010000000000000002 /* BrowserErrorPage.swift */,
 				C2035A020000000000000002 /* BrowserErrorPageContent.swift */,
 				C2035A0C000000000000002 /* BrowserErrorPageRetry.swift */,
@@ -4314,10 +4325,11 @@
 				A5001413 /* TerminalPanelView.swift */,
 				BCBC0A0E0000000000000C02 /* BrowserChromeMetrics.swift */,
 				048DACB3F8147BCBDD266297 /* BrowserSystemProxyMirror.swift */,
-				109D0E38E29A8779FA0BAE82 /* BrowserRemoteWorkspaceStatus.swift */,
-				326E7A5E13C6DF650B9F8971 /* BrowserSystemProxyWatcher.swift */,
-				A5001414 /* BrowserPanelView.swift */,
-				C67540070000000000000002 /* BrowserPDFDocumentToolbarButtons.swift */,
+					109D0E38E29A8779FA0BAE82 /* BrowserRemoteWorkspaceStatus.swift */,
+					326E7A5E13C6DF650B9F8971 /* BrowserSystemProxyWatcher.swift */,
+					A5001414 /* BrowserPanelView.swift */,
+					B1F0D1020000000000000002 /* WebViewRepresentable+WebKitTransferSubviews.swift */,
+					C67540070000000000000002 /* BrowserPDFDocumentToolbarButtons.swift */,
 				C42660010000000000000002 /* BrowserPDFPreviewActionUIDelegate.swift */,
 				C42660020000000000000002 /* BrowserPDFPrintOperationRunner.swift */,
 				C67540090000000000000002 /* OmnibarAddressButtonStyle.swift */,
@@ -4851,9 +4863,10 @@
 				D36090010000000000000004 /* SettingsWindowPresenterTests.swift */,
 				D36090010000000000000006 /* BmuxMainWindowConstrainFrameTests.swift */,
 				D36090020000000000000006 /* BmuxMainWindowFullScreenCapabilityTests.swift */,
-				730600010000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift */,
-				970226F3C99D0D937CD00539 /* BrowserConfigTests.swift */,
-				B1F0C0070000000000000002 /* BrowserDeveloperToolsLifecycleTests.swift */,
+					730600010000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift */,
+					970226F3C99D0D937CD00539 /* BrowserConfigTests.swift */,
+					B1F0D1030000000000000002 /* BrowserDeveloperToolsTestSupport.swift */,
+					B1F0C0070000000000000002 /* BrowserDeveloperToolsLifecycleTests.swift */,
 				B1F0C0060000000000000002 /* BrowserDeveloperToolsDockControlNormalizerTests.swift */,
 				B1F0C0020000000000000002 /* BrowserInspectorFocusHandoffTests.swift */,
 				B1F0C0040000000000000002 /* HostedInspectorDockControlScriptTests.swift */,
@@ -4996,10 +5009,11 @@
 				D7AB00000000000000B020 /* NotificationDismissSyncTests.swift */,
 				4E5F60720000000000000002 /* NotificationSoundSettingsTests.swift */,
 				C0DE64160000000000000002 /* TabManagerNotificationFocusRegressionTests.swift */,
-				C06552030000000000000002 /* TabManagerTitleUpdateStalenessTests.swift */,
-				C06552020000000000000002 /* TabManagerTitleUpdateTests.swift */,
-				42092CDB2109E250F7F2A76E /* TabManagerUnitTests.swift */,
-				C0DE1A080000000000000002 /* SavedLayoutDefinitionTests.swift */,
+					C06552030000000000000002 /* TabManagerTitleUpdateStalenessTests.swift */,
+					C06552020000000000000002 /* TabManagerTitleUpdateTests.swift */,
+					42092CDB2109E250F7F2A76E /* TabManagerUnitTests.swift */,
+					B1F0D1040000000000000002 /* TabManagerSidebarGitTestSupport.swift */,
+					C0DE1A080000000000000002 /* SavedLayoutDefinitionTests.swift */,
 				C0DE1A070000000000000002 /* SavedLayoutStoreTests.swift */,
 				5830CA11BAC0000000000001 /* SocketCallbackAwaiterMainThreadTests.swift */,
 				5C0011AA0000000000000002 /* GhosttyScrollPreciseBoostTests.swift */,
@@ -5205,11 +5219,12 @@
 				C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */,
 				CE0E00010000000000000002 /* ExecutionTelemetryProvenanceProjectionService.swift */,
 				CE0E00020000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder.swift */,
-				CE0E00030000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift */,
-				CE0E00040000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Support.swift */,
-				CE0E010A0000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+SessionAssociation.swift */,
-				CE0E010B0000000000000002 /* WorkProvenanceRuntime+AgentSessionAssociation.swift */,
-				B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */,
+					CE0E00030000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift */,
+					CE0E00040000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Support.swift */,
+					CE0E010A0000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+SessionAssociation.swift */,
+					CE0E010B0000000000000002 /* WorkProvenanceRuntime+AgentSessionAssociation.swift */,
+					CE0E010C0000000000000002 /* WorkProvenanceRuntime+XCTestGate.swift */,
+					B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */,
 				CE0E01090000000000000002 /* WorkspaceCodingAgentSessionAssociationStore.swift */,
 				CE0E03100000000000000002 /* WorkProvenanceSettingsLinearAuthorizationProvider.swift */,
 				CE2F01040000000000000002 /* AgentSessionFactualProjectionReadResult.swift */,
@@ -5877,15 +5892,16 @@
 				D0B1002EA1B2C3D4E5F60001 /* BrowserPaneDropRouting.swift in Sources */,
 				D0B1001EA1B2C3D4E5F60001 /* BrowserPaneDropTargetView.swift in Sources */,
 				C65241010000000000000001 /* BrowserPanel+AppPricingRestore.swift in Sources */,
+					B1F0D1010000000000000001 /* BrowserPanel+DeveloperToolsWindowOwnership.swift in Sources */,
 				C3711E000000000000000001 /* BrowserPanel+DisplayURL.swift in Sources */,
 				A500MX01 /* BrowserPanel+MediaPlayback.swift in Sources */,
-				D7AB00000000000000000007 /* BrowserPanel+MoveTabToNewWorkspace.swift in Sources */,
-				C67540060000000000000001 /* BrowserPanel+PDFDocumentActions.swift in Sources */,
-				B424PWAD000000000000PW01 /* BrowserPanel+PrewarmedWebViewAdoption.swift in Sources */,
-				A5001402 /* BrowserPanel.swift in Sources */,
-				B1F0C0090000000000000001 /* BrowserPanelDeveloperToolsLifecycle.swift in Sources */,
-				C62530010000000000000001 /* BrowserPanelReloadMode.swift in Sources */,
-				A5001404 /* BrowserPanelView.swift in Sources */,
+					D7AB00000000000000000007 /* BrowserPanel+MoveTabToNewWorkspace.swift in Sources */,
+					C67540060000000000000001 /* BrowserPanel+PDFDocumentActions.swift in Sources */,
+					B424PWAD000000000000PW01 /* BrowserPanel+PrewarmedWebViewAdoption.swift in Sources */,
+					A5001402 /* BrowserPanel.swift in Sources */,
+					B1F0C0090000000000000001 /* BrowserPanelDeveloperToolsLifecycle.swift in Sources */,
+					C62530010000000000000001 /* BrowserPanelReloadMode.swift in Sources */,
+					A5001404 /* BrowserPanelView.swift in Sources */,
 				D0B1003EA1B2C3D4E5F60001 /* BrowserPaneSplitTarget.swift in Sources */,
 				C67540070000000000000001 /* BrowserPDFDocumentToolbarButtons.swift in Sources */,
 				C42660010000000000000001 /* BrowserPDFPreviewActionUIDelegate.swift in Sources */,
@@ -6589,6 +6605,7 @@
 				C9A57209C9A57209C9A57209 /* VerticalTabsSidebar+WorkspaceGroups.swift in Sources */,
 				ACE4FE1A8F1CC6C0B6A673AB /* VMClient.swift in Sources */,
 				ACE4FE2A8F1CC6C0B6A673AB /* VMClientSocketCommands.swift in Sources */,
+					B1F0D1020000000000000001 /* WebViewRepresentable+WebKitTransferSubviews.swift in Sources */,
 				A500120C /* WindowAccessor.swift in Sources */,
 				A5001900A1B2C3D4E5F60718 /* WindowBackgroundComposition.swift in Sources */,
 				B7F9A602B7F9A602B7F9A602 /* WindowChromeMetrics.swift in Sources */,
@@ -6632,10 +6649,11 @@
 				0B11704B4770CA402725B958 /* WorkProvenanceProcessGitCommandRunner.swift in Sources */,
 				C0DE70110000000000000001 /* WorkProvenancePruneResult.swift in Sources */,
 				CE0E03030000000000000001 /* WorkProvenancePullRequestOwner.swift in Sources */,
-				CE0E03040000000000000001 /* WorkProvenancePullRequestOwnerResolving.swift in Sources */,
-				C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */,
-				CE0E010B0000000000000001 /* WorkProvenanceRuntime+AgentSessionAssociation.swift in Sources */,
-				756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */,
+					CE0E03040000000000000001 /* WorkProvenancePullRequestOwnerResolving.swift in Sources */,
+					C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */,
+					CE0E010B0000000000000001 /* WorkProvenanceRuntime+AgentSessionAssociation.swift in Sources */,
+					CE0E010C0000000000000001 /* WorkProvenanceRuntime+XCTestGate.swift in Sources */,
+					756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */,
 				CE0B00040000000000000001 /* WorkProvenanceSessionLifecycleRecorder.swift in Sources */,
 				A801809D8020AD996B4C0997 /* WorkProvenanceSessionRecord.swift in Sources */,
 				CE0B00020000000000000001 /* WorkProvenanceSessionRelationshipRecord.swift in Sources */,
@@ -6998,10 +7016,11 @@
 				7D5DA4DC51454ECDBF9AC978 /* BmuxWebViewMouseNavigationButtonTests.swift in Sources */,
 				D3622000A1B2C3D4E5F60718 /* BrowserArrowKeyForwardingTests.swift in Sources */,
 				BCBC0A0E0000000000000D01 /* BrowserChromeMetricsTests.swift in Sources */,
-				D7032A030000000000000001 /* BrowserClientCertificateCredentialPickerTests.swift in Sources */,
-				E12E88F82733EC42F32C36A3 /* BrowserConfigTests.swift in Sources */,
-				B1F0C0060000000000000001 /* BrowserDeveloperToolsDockControlNormalizerTests.swift in Sources */,
+					D7032A030000000000000001 /* BrowserClientCertificateCredentialPickerTests.swift in Sources */,
+					E12E88F82733EC42F32C36A3 /* BrowserConfigTests.swift in Sources */,
+					B1F0C0060000000000000001 /* BrowserDeveloperToolsDockControlNormalizerTests.swift in Sources */,
 				B1F0C0070000000000000001 /* BrowserDeveloperToolsLifecycleTests.swift in Sources */,
+					B1F0D1030000000000000001 /* BrowserDeveloperToolsTestSupport.swift in Sources */,
 				C59240010000000000000003 /* BrowserDownloadFilenameResolverTests.swift in Sources */,
 				A5008381 /* BrowserFindJavaScriptTests.swift in Sources */,
 				B6585001B6585001B6585001 /* BrowserHiddenWebViewDiscardMemoryPressureTests.swift in Sources */,
@@ -7267,10 +7286,11 @@
 				FBE660ABA1854983B84368C6 /* SystemWideHotkeyShortcutPolicyTests.swift in Sources */,
 				C0DE64160000000000000001 /* TabManagerNotificationFocusRegressionTests.swift in Sources */,
 				2BB56A710BB1FC50367E5BCF /* TabManagerSessionSnapshotTests.swift in Sources */,
-				C06552030000000000000001 /* TabManagerTitleUpdateStalenessTests.swift in Sources */,
-				C06552020000000000000001 /* TabManagerTitleUpdateTests.swift in Sources */,
-				B6BF3DC98DB1495E57900199 /* TabManagerUnitTests.swift in Sources */,
-				C7A507000000000000000002 /* TaskManagerResourcesTests.swift in Sources */,
+					B1F0D1040000000000000001 /* TabManagerSidebarGitTestSupport.swift in Sources */,
+					C06552030000000000000001 /* TabManagerTitleUpdateStalenessTests.swift in Sources */,
+					C06552020000000000000001 /* TabManagerTitleUpdateTests.swift in Sources */,
+					B6BF3DC98DB1495E57900199 /* TabManagerUnitTests.swift in Sources */,
+					C7A507000000000000000002 /* TaskManagerResourcesTests.swift in Sources */,
 				C7A507000000000000004529 /* TaskManagerViewSnapshotBoundaryTests.swift in Sources */,
 				46F6AC15863EC84DCD3770A2 /* TerminalAndGhosttyTests.swift in Sources */,
 				E4D1768B7041CDE4F9A084A4 /* TerminalClearScreenKeepScrollbackTests.swift in Sources */,

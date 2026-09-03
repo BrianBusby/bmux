@@ -450,15 +450,11 @@ class TabManager: ObservableObject {
     private var uiTestCancellables = Set<AnyCancellable>()
 #endif
 
-    // Process-wide cap on concurrent sidebar git snapshot probes, shared by
-    // every window's SidebarGitMetadataService. A static (not a per-instance
-    // default) on purpose: the cap is per process, not per window, matching
-    // the legacy shared limiter; tests inject their own instance.
+    // Process-wide cap on concurrent sidebar git snapshot probes.
+    // Static matches the legacy shared limiter; tests inject their own instance.
     private static let sharedWorkspaceGitProbeLimiter = WorkspaceGitMetadataProbeLimiter(limit: 2)
 
-    // The sidebar git/PR subsystem (extracted to BmuxSidebarGit). TabManager
-    // is the per-window composition point: it constructs the concrete services,
-    // stores only the seams, implements SidebarGitHosting, and forwards legacy entry points.
+    // Per-window composition point for sidebar git/PR services.
     let pullRequestProbeService: PullRequestProbeService
     let sidebarGitMetadataService: any SidebarGitMetadataServing
     let pullRequestProbing: any PullRequestProbing
@@ -473,6 +469,7 @@ class TabManager: ObservableObject {
         workspaceGitMetadataReader: (any WorkspaceGitMetadataReading)? = nil,
         gitPollClock: any GitPollClock = SystemGitPollClock(),
         gitProbeLimiter: WorkspaceGitMetadataProbeLimiter? = nil,
+        mobileHostDeferral: MobileHostDeferralPolicy = .standard,
         panelTitleUpdateCoalescer: NotificationBurstCoalescer? = nil,
         settings: any SettingsWriting = UserDefaultsSettingsClient(defaults: .standard),
         closeTabWarningDefaults: UserDefaults = .standard
@@ -507,6 +504,7 @@ class TabManager: ObservableObject {
             gitMetadataService: gitMetadataService,
             probeService: pullRequestProbeService,
             clock: gitPollClock,
+            mobileHostDeferral: mobileHostDeferral,
             debugLog: sidebarGitDebugLog
         )
         self.pullRequestProbing = pullRequestPollService
@@ -516,6 +514,7 @@ class TabManager: ObservableObject {
             pullRequestProbing: pullRequestPollService,
             probeLimiter: gitProbeLimiter ?? Self.sharedWorkspaceGitProbeLimiter,
             clock: gitPollClock,
+            mobileHostDeferral: mobileHostDeferral,
             debugLog: sidebarGitDebugLog
         )
         // Wire the host seam before the first workspace is added so the
@@ -523,7 +522,7 @@ class TabManager: ObservableObject {
         // services, matching the legacy in-class scheduling timing.
         pullRequestProbing.attach(host: self)
         sidebarGitMetadataService.attach(host: self)
-        captureSidebarMetadataSettingsBaseline()
+        lastSidebarMetadataSettingsForFanout = sidebarMetadataSettingsForFanout()
         notificationDismissal.attach(host: self)
         focusHistoryNavigation.attach(host: self)
         // Workspace-list/group/selection storage (BmuxWorkspaces). Attached
@@ -645,29 +644,24 @@ class TabManager: ObservableObject {
     }
 
     // MARK: - Sidebar git/PR forwarders (subsystem extracted to BmuxSidebarGit)
+    private var lastSidebarMetadataSettingsForFanout: (gitWatch: Bool, pullRequests: Bool)?
 
-    private var lastSidebarGitMetadataWatchEnabledForSettingsFanout: Bool?
-    private var lastSidebarPullRequestPollingEnabledForSettingsFanout: Bool?
-
-    private func captureSidebarMetadataSettingsBaseline() {
+    private func sidebarMetadataSettingsForFanout() -> (gitWatch: Bool, pullRequests: Bool) {
         let defaults = UserDefaults.standard
-        lastSidebarGitMetadataWatchEnabledForSettingsFanout =
-            SidebarWorkspaceDetailDefaults.watchGitStatusValue(defaults: defaults)
-        lastSidebarPullRequestPollingEnabledForSettingsFanout =
+        return (
+            SidebarWorkspaceDetailDefaults.watchGitStatusValue(defaults: defaults),
             SidebarWorkspaceDetailDefaults.pullRequestPollingEnabled(defaults: defaults)
+        )
     }
 
     private func sidebarMetadataSettingsDidChange() {
-        let defaults = UserDefaults.standard
-        let gitWatchEnabled = SidebarWorkspaceDetailDefaults.watchGitStatusValue(defaults: defaults)
-        if gitWatchEnabled != lastSidebarGitMetadataWatchEnabledForSettingsFanout {
-            lastSidebarGitMetadataWatchEnabledForSettingsFanout = gitWatchEnabled
+        let current = sidebarMetadataSettingsForFanout()
+        let previous = lastSidebarMetadataSettingsForFanout
+        lastSidebarMetadataSettingsForFanout = current
+        if current.gitWatch != previous?.gitWatch {
             sidebarGitMetadataService.sidebarGitMetadataWatchSettingsDidChange()
         }
-        let pullRequestPollingEnabled =
-            SidebarWorkspaceDetailDefaults.pullRequestPollingEnabled(defaults: defaults)
-        if pullRequestPollingEnabled != lastSidebarPullRequestPollingEnabledForSettingsFanout {
-            lastSidebarPullRequestPollingEnabledForSettingsFanout = pullRequestPollingEnabled
+        if current.pullRequests != previous?.pullRequests {
             pullRequestProbing.sidebarPullRequestPollingSettingsDidChange()
         }
         refreshRemotePortScanningEnablement()
@@ -692,34 +686,9 @@ class TabManager: ObservableObject {
         }
     }
 
-    func refreshTrackedWorkspaceGitMetadataForTesting() {
-        sidebarGitMetadataService.refreshTrackedWorkspaceGitMetadata(reason: "test")
-    }
-
     func sidebarGitMetadataWatchSettingsDidChangeForTesting() {
         sidebarMetadataSettingsDidChange()
     }
-
-    func trackedWorkspaceGitMetadataPollCandidatePanelIdsForTesting(workspaceId: UUID) -> Set<UUID> {
-        sidebarGitMetadataService.trackedWorkspaceGitMetadataPollCandidatePanelIds(workspaceId: workspaceId)
-    }
-
-    func activeWorkspaceGitProbePanelIdsForTesting(workspaceId: UUID) -> Set<UUID> {
-        sidebarGitMetadataService.activeWorkspaceGitProbePanelIds(workspaceId: workspaceId)
-    }
-
-    func workspacePullRequestTrackedPanelIdsForTesting(workspaceId: UUID) -> Set<UUID> {
-        var panelIds = pullRequestProbing.workspacePullRequestTrackedPanelIds(workspaceId: workspaceId)
-        if let workspace = tabs.first(where: { $0.id == workspaceId }) {
-            panelIds.formUnion(workspace.panelPullRequests.keys)
-        }
-        return panelIds
-    }
-
-    func clearWorkspaceGitProbesForTesting(workspaceId: UUID) {
-        sidebarGitMetadataService.clearWorkspaceGitProbes(workspaceId: workspaceId)
-    }
-
 
     private func sweepStaleAgentPIDs() {
         for tab in tabs {
