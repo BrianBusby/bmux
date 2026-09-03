@@ -35,9 +35,9 @@ extension ProvenanceSQLiteRepository {
                 ON provenance_workspace_coding_agent_session_associations (
                     workspace_id,
                     agent_kind,
-                    prompt_observed_at_seconds,
                     last_observed_at_seconds,
-                    latest_event_sequence
+                    latest_event_sequence,
+                    prompt_observed_at_seconds
                 )
                 """,
                 """
@@ -247,7 +247,10 @@ extension ProvenanceSQLiteRepository {
                     WHEN source_path = 'display' THEN 1
                     ELSE 0
                 END ASC,
+                last_observed_at_seconds DESC,
+                latest_event_sequence DESC,
                 prompt_observed_at_seconds IS NULL ASC,
+                prompt_observed_at_seconds DESC,
                 CASE source_path
                     WHEN 'transcript' THEN 0
                     WHEN 'hook' THEN 1
@@ -256,9 +259,6 @@ extension ProvenanceSQLiteRepository {
                     WHEN 'replay' THEN 4
                     ELSE 5
                 END ASC,
-                prompt_observed_at_seconds DESC,
-                last_observed_at_seconds DESC,
-                latest_event_sequence DESC,
                 rowid DESC
             LIMIT 1
             """
