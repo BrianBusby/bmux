@@ -1017,6 +1017,8 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
                 isDirty: false,
                 indexSignature: "index",
                 indexContentSignature: "content",
+                indexStatContentSignature: "stat-content",
+                indexDirtyCheckContentSignature: "dirty-check-content",
                 headSignature: "head"
             )
         )

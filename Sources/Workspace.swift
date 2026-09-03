@@ -2498,7 +2498,9 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     private var preservesProxyFailureForSSHRemoteWorkspace: Bool {
-        remoteConfiguration?.transport == .ssh && hasRemoteTerminalStartupCommand
+        remoteConfiguration?.transport == .ssh
+            && hasRemoteTerminalStartupCommand
+            && remoteConfiguration?.preserveAfterTerminalExit != true
     }
 
     private var preservesProxyFailureWhileSSHTerminalIsAlive: Bool {

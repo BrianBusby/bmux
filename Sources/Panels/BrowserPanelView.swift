@@ -7207,17 +7207,27 @@ struct WebViewRepresentable: NSViewRepresentable {
         }
 
         let inspectorFrontendWebView = primaryWebView.bmuxInspectorFrontendWebView()
+        let sourceIsManagedLocalSlot = sourceSuperview is WindowBrowserSlotView
         for view in sourceSuperview.subviews {
             if view === primaryWebView { continue }
-            if let inspectorFrontendWebView,
+            if !sourceIsManagedLocalSlot,
+               let inspectorFrontendWebView,
                inspectorFrontendWebView === view || inspectorFrontendWebView.isDescendant(of: view) {
                 continue
             }
             let className = String(describing: type(of: view))
-            if bmuxIsWebInspectorClassName(className) || bmuxIsWebInspectorObject(view) {
+            if !sourceIsManagedLocalSlot,
+               bmuxIsWebInspectorClassName(className) || bmuxIsWebInspectorObject(view) {
                 continue
             }
-            guard className.contains("WK") else { continue }
+            let isTransferableInspectorCompanion =
+                sourceIsManagedLocalSlot &&
+                (
+                    bmuxIsWebInspectorClassName(className) ||
+                    bmuxIsWebInspectorObject(view) ||
+                    inspectorFrontendWebView.map { $0 === view || $0.isDescendant(of: view) } == true
+                )
+            guard className.contains("WK") || isTransferableInspectorCompanion else { continue }
             append(view)
         }
 

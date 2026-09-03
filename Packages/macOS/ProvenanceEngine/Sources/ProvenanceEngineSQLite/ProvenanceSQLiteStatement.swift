@@ -114,6 +114,16 @@ final class ProvenanceSQLiteStatement {
         return Int(sqlite3_column_int64(statement, index))
     }
 
+    /// Returns an optional integer column.
+    ///
+    /// - Parameter index: Zero-based SQLite column index.
+    /// - Returns: The column value, or `nil` for SQL `NULL`.
+    func optionalInt(at index: Int32) -> Int? {
+        guard let statement else { return nil }
+        guard sqlite3_column_type(statement, index) != SQLITE_NULL else { return nil }
+        return Int(sqlite3_column_int64(statement, index))
+    }
+
     /// Returns a 32-bit integer column.
     ///
     /// - Parameter index: Zero-based SQLite column index.

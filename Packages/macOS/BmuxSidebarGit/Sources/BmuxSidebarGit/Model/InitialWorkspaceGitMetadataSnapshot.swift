@@ -23,6 +23,8 @@ struct InitialWorkspaceGitMetadataSnapshot: Equatable, Sendable {
     let isDirty: Bool
     let indexSignature: String?
     let indexContentSignature: String?
+    let indexStatContentSignature: String?
+    let indexDirtyCheckContentSignature: String?
     let headSignature: String?
     let pullRequest: PullRequest
 
@@ -44,6 +46,8 @@ struct InitialWorkspaceGitMetadataSnapshot: Equatable, Sendable {
                 isDirty: false,
                 indexSignature: nil,
                 indexContentSignature: nil,
+                indexStatContentSignature: nil,
+                indexDirtyCheckContentSignature: nil,
                 headSignature: nil,
                 pullRequest: .notFound
             )
@@ -57,6 +61,8 @@ struct InitialWorkspaceGitMetadataSnapshot: Equatable, Sendable {
             isDirty: metadata.isDirty,
             indexSignature: metadata.indexSignature,
             indexContentSignature: metadata.indexContentSignature,
+            indexStatContentSignature: metadata.indexStatContentSignature,
+            indexDirtyCheckContentSignature: metadata.indexDirtyCheckContentSignature,
             headSignature: metadata.headSignature,
             pullRequest: branch == nil ? .notFound : .deferred
         )
@@ -68,6 +74,8 @@ struct InitialWorkspaceGitMetadataSnapshot: Equatable, Sendable {
         isDirty: Bool,
         indexSignature: String?,
         indexContentSignature: String?,
+        indexStatContentSignature: String?,
+        indexDirtyCheckContentSignature: String?,
         headSignature: String?,
         pullRequest: PullRequest
     ) {
@@ -76,6 +84,8 @@ struct InitialWorkspaceGitMetadataSnapshot: Equatable, Sendable {
         self.isDirty = isDirty
         self.indexSignature = indexSignature
         self.indexContentSignature = indexContentSignature
+        self.indexStatContentSignature = indexStatContentSignature
+        self.indexDirtyCheckContentSignature = indexDirtyCheckContentSignature
         self.headSignature = headSignature
         self.pullRequest = pullRequest
     }

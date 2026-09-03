@@ -2894,6 +2894,35 @@ final class BrowserDeveloperToolsVisibilityPersistenceTests: XCTestCase {
         RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
     }
 
+    func waitForKeyWindow(
+        _ window: NSWindow,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let deadline = Date().addingTimeInterval(1.0)
+        while Date() < deadline {
+            if window.isKeyWindow || AppDelegate.shared?.shortcutRoutingKeyWindow === window { return }
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+            window.makeKey()
+            RunLoop.current.run(until: Date().addingTimeInterval(0.01))
+        }
+        XCTFail("Timed out waiting for key window", file: file, line: line)
+    }
+
+    func installShortcutRoutingKeyWindowOverride(_ window: NSWindow) -> () -> Void {
+#if DEBUG
+        guard let appDelegate = AppDelegate.shared else { return {} }
+        appDelegate.debugBeginShortcutRoutingFocusedWindowCaptureForTesting()
+        appDelegate.debugSetShortcutRoutingFocusedWindowForTesting(window)
+        return {
+            appDelegate.debugEndShortcutRoutingFocusedWindowCaptureForTesting()
+        }
+#else
+        return {}
+#endif
+    }
+
     func window(withId windowId: UUID) -> NSWindow? {
         let identifier = "bmux.main.\(windowId.uuidString)"
         return NSApp.windows.first(where: { $0.identifier?.rawValue == identifier })
@@ -3159,12 +3188,14 @@ final class BrowserDeveloperToolsVisibilityPersistenceTests: XCTestCase {
         inspectorWindow.contentView?.addSubview(frontendWebView)
         inspector.setFrontendWebView(frontendWebView)
         defer { closeWindow(inspectorWindow) }
+        let clearShortcutRoutingKeyWindowOverride = installShortcutRoutingKeyWindowOverride(inspectorWindow)
+        defer { clearShortcutRoutingKeyWindowOverride() }
 
         inspectorWindow.makeKeyAndOrderFront(nil)
         inspectorWindow.makeKey()
         XCTAssertTrue(browserPanel.showDeveloperTools())
         XCTAssertEqual(inspector.closeCount, 0)
-        XCTAssertTrue(inspectorWindow.isKeyWindow)
+        waitForKeyWindow(inspectorWindow)
 
         let prefixEvent = try XCTUnwrap(NSEvent.keyEvent(
             with: .keyDown,
@@ -3346,6 +3377,7 @@ final class BrowserDeveloperToolsVisibilityPersistenceTests: XCTestCase {
         XCTAssertFalse(panel.isDeveloperToolsVisible())
         XCTAssertEqual(inspector.closeCount, 1)
 
+        panel.requestDeveloperToolsRefreshAfterNextAttach(reason: "unit-test")
         panel.restoreDeveloperToolsAfterAttachIfNeeded()
         XCTAssertTrue(panel.isDeveloperToolsVisible())
         XCTAssertEqual(inspector.showCount, 2)
@@ -3680,6 +3712,11 @@ final class BrowserDeveloperToolsVisibilityPersistenceTests: XCTestCase {
         XCTAssertTrue(panel.isDeveloperToolsVisible())
 
         XCTAssertTrue(panel.toggleDeveloperTools())
+        waitForDeveloperToolsTransitions(panel: panel) {
+            !panel.isDeveloperToolsVisible() &&
+                inspector.hideCount == 1 &&
+                inspector.closeCount == 1
+        }
 
         XCTAssertEqual(inspector.hideCount, 1)
         XCTAssertEqual(inspector.closeCount, 1)

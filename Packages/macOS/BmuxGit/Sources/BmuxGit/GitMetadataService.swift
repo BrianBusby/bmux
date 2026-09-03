@@ -90,6 +90,8 @@ public struct GitMetadataService: Sendable {
             isDirty: trackedChanges.isDirty,
             indexSignature: trackedChanges.indexSignature,
             indexContentSignature: trackedChanges.indexContentSignature,
+            indexStatContentSignature: trackedChanges.indexStatContentSignature,
+            indexDirtyCheckContentSignature: trackedChanges.indexDirtyCheckContentSignature,
             headSignature: Self.gitHeadSignature(repository: repository)
         )
     }

@@ -6836,6 +6836,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         guard let responder = window.firstResponder else { return sidebarIntentActive }
         if isRightSidebarFocusResponder(responder, in: window) { return true }
         if terminalKeyboardFocusRequest(for: responder) != nil { return false }
+        if sidebarIntentActive, responder is NSWindow { return true }
         guard let ghosttyView = bmuxOwningGhosttyView(for: responder),
               let panelId = ghosttyView.terminalSurface?.id else { return false }
         return GhosttyApp.terminalSurfaceRegistry.isRightSidebarDockSurface(id: panelId)

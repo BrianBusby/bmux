@@ -206,7 +206,11 @@ struct bmuxApp: App {
         let tabManager = TabManager()
         tabManager.workProvenanceRuntime = workProvenanceRuntime
         _tabManager = StateObject(wrappedValue: tabManager)
-        workProvenanceRuntime.start(tabManager: tabManager)
+        let shouldStartWorkProvenanceRuntime = !AppDelegate.detectRunningUnderXCTest(ProcessInfo.processInfo.environment)
+            || ProcessInfo.processInfo.environment["BMUX_ENABLE_PROVENANCE_RUNTIME_IN_XCTEST"] == "1"
+        if shouldStartWorkProvenanceRuntime {
+            workProvenanceRuntime.start(tabManager: tabManager)
+        }
         StartupBreadcrumbLog.append("app.init.tabManager.complete")
         // Migrate legacy and old-format socket mode values to the new enum.
         if let stored = defaults.string(forKey: SocketControlSettings.appStorageKey) {

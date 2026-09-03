@@ -15,4 +15,12 @@ struct GitIndexSnapshot: Sendable {
     /// A content signature over all entries' paths, modes, and object IDs that
     /// is stable across index rewrites which don't change tracked content.
     let contentSignature: String
+
+    /// A signature over all entries' content plus cached stat fields. This
+    /// changes on clean stat-cache rewrites even when tracked content is stable.
+    let statContentSignature: String
+
+    /// A content signature over only the entries that participate in dirty
+    /// detection after assume-unchanged and skip-worktree filtering.
+    let dirtyCheckContentSignature: String
 }

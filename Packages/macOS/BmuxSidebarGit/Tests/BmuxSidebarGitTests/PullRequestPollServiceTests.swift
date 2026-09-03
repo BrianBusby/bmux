@@ -144,6 +144,26 @@ import BmuxGit
         #expect(service.workspacePullRequestTrackedPanelIds(workspaceId: workspaceId) == [panelId])
     }
 
+    /// A prompt-idle shell lifecycle report should activate PR polling once a
+    /// branch exists; this is the ordinary terminal path after branch metadata
+    /// has been observed.
+    @Test func shellPromptActivatesPollingWithoutExistingBadge() async throws {
+        let host = RecordingSidebarGitHost()
+        host.pollingEnabled = true
+        let (workspaceId, panelId) = host.addWorkspace(panelDirectory: nil)
+        host.workspaces[0].state.panels[panelId]?.branch = SidebarPanelGitBranch(branch: "feature/x", isDirty: false)
+        let clock = ManualGitPollClock()
+        let service = makeService(host: host, clock: clock)
+
+        service.scheduleWorkspacePullRequestRefresh(
+            workspaceId: workspaceId,
+            panelId: panelId,
+            reason: "shellPrompt"
+        )
+
+        #expect(service.workspacePullRequestTrackedPanelIds(workspaceId: workspaceId) == [panelId])
+    }
+
     /// Explicit PR commands activate polling for that panel even before a badge
     /// is known.
     @Test func commandHintActivatesPollingWithoutExistingBadge() throws {

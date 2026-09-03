@@ -125,6 +125,8 @@ extension BrowserDeveloperToolsVisibilityPersistenceTests {
         inspectorWindow.contentView?.addSubview(frontendWebView)
         inspector.setFrontendWebView(frontendWebView)
         defer { closeWindow(inspectorWindow) }
+        let clearShortcutRoutingKeyWindowOverride = installShortcutRoutingKeyWindowOverride(inspectorWindow)
+        defer { clearShortcutRoutingKeyWindowOverride() }
         inspectorWindow.makeKeyAndOrderFront(nil)
         inspectorWindow.makeKey()
         XCTAssertTrue(browserPanel.showDeveloperTools())
@@ -201,11 +203,13 @@ extension BrowserDeveloperToolsVisibilityPersistenceTests {
         inspectorWindow.contentView?.addSubview(frontendWebView)
         inspector.setFrontendWebView(frontendWebView)
         defer { closeWindow(inspectorWindow) }
+        let clearShortcutRoutingKeyWindowOverride = installShortcutRoutingKeyWindowOverride(inspectorWindow)
+        defer { clearShortcutRoutingKeyWindowOverride() }
         inspectorWindow.makeKeyAndOrderFront(nil)
         inspectorWindow.makeKey()
         XCTAssertTrue(browserPanel.showDeveloperTools())
         XCTAssertEqual(inspector.closeCount, 0)
-        XCTAssertTrue(inspectorWindow.isKeyWindow)
+        waitForKeyWindow(inspectorWindow)
         let handled = NSApp.sendAction(NSSelectorFromString("__close"), to: nil, from: nil)
         spinRunLoopOneTick()
         XCTAssertTrue(handled)
@@ -254,11 +258,13 @@ extension BrowserDeveloperToolsVisibilityPersistenceTests {
         inspectorWindow.contentView?.addSubview(frontendWebView)
         inspector.setFrontendWebView(frontendWebView)
         defer { closeWindow(inspectorWindow) }
+        let clearShortcutRoutingKeyWindowOverride = installShortcutRoutingKeyWindowOverride(inspectorWindow)
+        defer { clearShortcutRoutingKeyWindowOverride() }
         inspectorWindow.makeKeyAndOrderFront(nil)
         inspectorWindow.makeKey()
         XCTAssertTrue(browserPanel.showDeveloperTools())
         XCTAssertEqual(inspector.closeCount, 0)
-        XCTAssertTrue(inspectorWindow.isKeyWindow)
+        waitForKeyWindow(inspectorWindow)
         let menuItem = NSMenuItem(
             title: "Close",
             action: NSSelectorFromString("close:"),
@@ -312,11 +318,13 @@ extension BrowserDeveloperToolsVisibilityPersistenceTests {
         inspectorWindow.contentView?.addSubview(frontendWebView)
         inspector.setFrontendWebView(frontendWebView)
         defer { closeWindow(inspectorWindow) }
+        let clearShortcutRoutingKeyWindowOverride = installShortcutRoutingKeyWindowOverride(inspectorWindow)
+        defer { clearShortcutRoutingKeyWindowOverride() }
         inspectorWindow.makeKeyAndOrderFront(nil)
         inspectorWindow.makeKey()
         XCTAssertTrue(browserPanel.showDeveloperTools())
         XCTAssertEqual(inspector.closeCount, 0)
-        XCTAssertTrue(inspectorWindow.isKeyWindow)
+        waitForKeyWindow(inspectorWindow)
         let event = try XCTUnwrap(NSEvent.keyEvent(
             with: .keyDown,
             location: .zero,
@@ -386,11 +394,13 @@ extension BrowserDeveloperToolsVisibilityPersistenceTests {
         inspectorWindow.contentView?.addSubview(frontendWebView)
         inspector.setFrontendWebView(frontendWebView)
         defer { closeWindow(inspectorWindow) }
+        let clearShortcutRoutingKeyWindowOverride = installShortcutRoutingKeyWindowOverride(inspectorWindow)
+        defer { clearShortcutRoutingKeyWindowOverride() }
         inspectorWindow.makeKeyAndOrderFront(nil)
         inspectorWindow.makeKey()
         XCTAssertTrue(browserPanel.showDeveloperTools())
         XCTAssertEqual(inspector.closeCount, 0)
-        XCTAssertTrue(inspectorWindow.isKeyWindow)
+        waitForKeyWindow(inspectorWindow)
         let event = try XCTUnwrap(NSEvent.keyEvent(
             with: .keyDown,
             location: .zero,

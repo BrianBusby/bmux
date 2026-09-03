@@ -31,7 +31,7 @@ extension TerminalController {
                 kind: .gitBranch
             )
         ) {
-            guard let tabManager = AppDelegate.shared?.tabManagerFor(tabId: scope.workspaceID),
+            guard let tabManager = self.controlSidebarTabManagerForMutation(id: scope.workspaceID),
                   let tab = tabManager.tabs.first(where: { $0.id == scope.workspaceID }) else {
                 return
             }
@@ -79,7 +79,7 @@ extension TerminalController {
                 kind: .gitBranch
             )
         ) {
-            guard let tabManager = AppDelegate.shared?.tabManagerFor(tabId: scope.workspaceID),
+            guard let tabManager = self.controlSidebarTabManagerForMutation(id: scope.workspaceID),
                   let tab = tabManager.tabs.first(where: { $0.id == scope.workspaceID }) else {
                 return
             }
@@ -176,7 +176,7 @@ extension TerminalController {
                 return
             }
 
-            guard let tabManager = AppDelegate.shared?.tabManagerFor(tabId: tab.id) else { return }
+            guard let tabManager = self.controlSidebarTabManagerForMutation(id: tab.id) else { return }
             tabManager.handleWorkspacePullRequestCommandHint(
                 tabId: tab.id,
                 surfaceId: surfaceId,
@@ -264,7 +264,7 @@ extension TerminalController {
             ) else {
                 return
             }
-            guard let tabManager = AppDelegate.shared?.tabManagerFor(tabId: scope.workspaceID) else { return }
+            guard let tabManager = self.controlSidebarTabManagerForMutation(id: scope.workspaceID) else { return }
             tabManager.updateSurfaceShellActivity(tabId: scope.workspaceID, surfaceId: scope.panelID, state: state)
         }
     }
@@ -293,7 +293,7 @@ extension TerminalController {
     /// not a practical concern on this path.
     nonisolated func controlSidebarScheduleScopedTTY(scope: ControlSidebarPanelScope, ttyName: String) {
         TerminalMutationBus.shared.enqueueMainActorMutation {
-            guard let tabManager = AppDelegate.shared?.tabManagerFor(tabId: scope.workspaceID),
+            guard let tabManager = self.controlSidebarTabManagerForMutation(id: scope.workspaceID),
                   let tab = tabManager.tabs.first(where: { $0.id == scope.workspaceID }) else {
                 return
             }
@@ -341,7 +341,7 @@ extension TerminalController {
                 kind: .portsKick(reason)
             )
         ) {
-            guard let tabManager = AppDelegate.shared?.tabManagerFor(tabId: scope.workspaceID),
+            guard let tabManager = self.controlSidebarTabManagerForMutation(id: scope.workspaceID),
                   let tab = tabManager.tabs.first(where: { $0.id == scope.workspaceID }) else {
                 return
             }

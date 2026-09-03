@@ -316,7 +316,7 @@ public final class PullRequestPollService: PullRequestProbing {
             return
         }
         let currentPullRequest = host?.panelPullRequestBadge(workspaceId: workspaceId, panelId: panelId)
-        if reason.hasPrefix("commandHint:") {
+        if isWorkspacePullRequestActivationReason(reason) {
             workspacePullRequestActiveKeys.insert(key)
         }
         guard shouldScheduleWorkspacePullRequestRefresh(
@@ -356,13 +356,14 @@ public final class PullRequestPollService: PullRequestProbing {
         reason: String,
         currentPullRequest: SidebarPullRequestBadge?
     ) -> Bool {
-        if reason.hasPrefix("commandHint:") {
-            return true
-        }
-        if reason == "localGitProbe" {
+        if isWorkspacePullRequestActivationReason(reason) {
             return true
         }
         return isWorkspacePullRequestRefreshActivated(for: key, currentPullRequest: currentPullRequest)
+    }
+
+    func isWorkspacePullRequestActivationReason(_ reason: String) -> Bool {
+        reason.hasPrefix("commandHint:") || reason == "localGitProbe" || reason == "shellPrompt"
     }
 
     func isWorkspacePullRequestRefreshActivated(

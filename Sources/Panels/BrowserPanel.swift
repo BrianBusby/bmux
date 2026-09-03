@@ -6810,6 +6810,8 @@ extension BrowserPanel {
                 developerToolsPreservedVisibleIntentForNextAttach = false
                 syncDeveloperToolsPresentationPreferenceFromUI()
                 cancelDeveloperToolsRestoreRetry()
+            } else if preserveVisibleIntent && targetVisible {
+                developerToolsPreservedVisibleIntentForNextAttach = true
             } else if !targetVisible {
                 developerToolsDetachedOpenGraceDeadline = nil
                 forceDeveloperToolsRefreshOnNextAttach = false
@@ -6931,7 +6933,10 @@ extension BrowserPanel {
             developerToolsPreservedVisibleIntentForNextAttach = false
             return
         }
-        guard !isDeveloperToolsTransitionInFlight else { return }
+        if isDeveloperToolsTransitionInFlight {
+            let targetVisible = pendingDeveloperToolsTransitionTargetVisible ?? developerToolsTransitionTargetVisible
+            guard targetVisible == true else { return }
+        }
         guard let inspector = webView.bmuxInspectorObject() else {
             scheduleDeveloperToolsRestoreRetry()
             return
@@ -7009,6 +7014,17 @@ extension BrowserPanel {
     func isDeveloperToolsVisible() -> Bool {
         guard let inspector = webView.bmuxInspectorObject() else { return false }
         return inspector.bmuxCallBool(selector: NSSelectorFromString("isVisible")) ?? false
+    }
+
+    func ownsAttachedDeveloperToolsInWindow(_ window: NSWindow) -> Bool {
+        guard let contentView = window.contentView,
+              webView.window === window,
+              webView.isDescendant(of: contentView),
+              let frontendWebView = webView.bmuxInspectorFrontendWebView(),
+              frontendWebView.window === window else {
+            return false
+        }
+        return frontendWebView === contentView || frontendWebView.isDescendant(of: contentView)
     }
 
     @discardableResult

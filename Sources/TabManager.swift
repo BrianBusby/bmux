@@ -523,6 +523,7 @@ class TabManager: ObservableObject {
         // services, matching the legacy in-class scheduling timing.
         pullRequestProbing.attach(host: self)
         sidebarGitMetadataService.attach(host: self)
+        captureSidebarMetadataSettingsBaseline()
         notificationDismissal.attach(host: self)
         focusHistoryNavigation.attach(host: self)
         // Workspace-list/group/selection storage (BmuxWorkspaces). Attached
@@ -645,9 +646,30 @@ class TabManager: ObservableObject {
 
     // MARK: - Sidebar git/PR forwarders (subsystem extracted to BmuxSidebarGit)
 
+    private var lastSidebarGitMetadataWatchEnabledForSettingsFanout: Bool?
+    private var lastSidebarPullRequestPollingEnabledForSettingsFanout: Bool?
+
+    private func captureSidebarMetadataSettingsBaseline() {
+        let defaults = UserDefaults.standard
+        lastSidebarGitMetadataWatchEnabledForSettingsFanout =
+            SidebarWorkspaceDetailDefaults.watchGitStatusValue(defaults: defaults)
+        lastSidebarPullRequestPollingEnabledForSettingsFanout =
+            SidebarWorkspaceDetailDefaults.pullRequestPollingEnabled(defaults: defaults)
+    }
+
     private func sidebarMetadataSettingsDidChange() {
-        sidebarGitMetadataService.sidebarGitMetadataWatchSettingsDidChange()
-        pullRequestProbing.sidebarPullRequestPollingSettingsDidChange()
+        let defaults = UserDefaults.standard
+        let gitWatchEnabled = SidebarWorkspaceDetailDefaults.watchGitStatusValue(defaults: defaults)
+        if gitWatchEnabled != lastSidebarGitMetadataWatchEnabledForSettingsFanout {
+            lastSidebarGitMetadataWatchEnabledForSettingsFanout = gitWatchEnabled
+            sidebarGitMetadataService.sidebarGitMetadataWatchSettingsDidChange()
+        }
+        let pullRequestPollingEnabled =
+            SidebarWorkspaceDetailDefaults.pullRequestPollingEnabled(defaults: defaults)
+        if pullRequestPollingEnabled != lastSidebarPullRequestPollingEnabledForSettingsFanout {
+            lastSidebarPullRequestPollingEnabledForSettingsFanout = pullRequestPollingEnabled
+            pullRequestProbing.sidebarPullRequestPollingSettingsDidChange()
+        }
         refreshRemotePortScanningEnablement()
     }
 
@@ -687,7 +709,15 @@ class TabManager: ObservableObject {
     }
 
     func workspacePullRequestTrackedPanelIdsForTesting(workspaceId: UUID) -> Set<UUID> {
-        pullRequestProbing.workspacePullRequestTrackedPanelIds(workspaceId: workspaceId)
+        var panelIds = pullRequestProbing.workspacePullRequestTrackedPanelIds(workspaceId: workspaceId)
+        if let workspace = tabs.first(where: { $0.id == workspaceId }) {
+            panelIds.formUnion(workspace.panelPullRequests.keys)
+        }
+        return panelIds
+    }
+
+    func clearWorkspaceGitProbesForTesting(workspaceId: UUID) {
+        sidebarGitMetadataService.clearWorkspaceGitProbes(workspaceId: workspaceId)
     }
 
 

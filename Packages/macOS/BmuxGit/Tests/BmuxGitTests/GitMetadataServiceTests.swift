@@ -322,6 +322,10 @@ import Testing
         let lhs = GitMetadataService.gitIndexContentSignature(entries: [base])
         let rhs = GitMetadataService.gitIndexContentSignature(entries: [restated])
         #expect(lhs == rhs) // path + mode + objectID only
+        #expect(
+            GitMetadataService.gitIndexStatContentSignature(entries: [base])
+                != GitMetadataService.gitIndexStatContentSignature(entries: [restated])
+        )
     }
 
     @Test func contentSignatureChangesWithObjectID() {

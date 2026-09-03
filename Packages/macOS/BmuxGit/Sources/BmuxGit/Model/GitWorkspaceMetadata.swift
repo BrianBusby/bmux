@@ -32,18 +32,41 @@ public struct GitWorkspaceMetadata: Equatable, Sendable {
     /// rebaseline a clean working tree.
     public let indexContentSignature: String?
 
+    /// A signature over tracked entries plus their cached stat fields, or `nil`
+    /// when the index is unparseable. Changes when Git refreshes a clean index's
+    /// stat cache without changing tracked content.
+    public let indexStatContentSignature: String?
+
+    /// A signature over entries that participate in dirty detection after
+    /// assume-unchanged and skip-worktree filtering, or `nil` when the index is
+    /// unparseable. This distinguishes ignored-entry flag changes from raw
+    /// checksum changes with unchanged tracked content.
+    public let indexDirtyCheckContentSignature: String?
+
     /// A signature of `HEAD` plus the commit it points at (symbolic ref text and
     /// resolved value), or `nil` when `HEAD` is unreadable. Changes on checkout,
     /// commit, or reset.
     public let headSignature: String?
 
     /// Creates a workspace-metadata snapshot.
+    ///
+    /// - Parameters:
+    ///   - isRepository: Whether the directory resolved to a git repository.
+    ///   - branch: Current branch name, or `nil` when detached or unreadable.
+    ///   - isDirty: Whether tracked files differ from the parsed index.
+    ///   - indexSignature: Raw index checksum signature, when available.
+    ///   - indexContentSignature: Stat-independent tracked-content signature.
+    ///   - indexStatContentSignature: Tracked-content plus stat-cache signature.
+    ///   - indexDirtyCheckContentSignature: Signature for dirty-check participants.
+    ///   - headSignature: Signature for `HEAD` and its resolved commit.
     public init(
         isRepository: Bool,
         branch: String?,
         isDirty: Bool,
         indexSignature: String?,
         indexContentSignature: String?,
+        indexStatContentSignature: String? = nil,
+        indexDirtyCheckContentSignature: String? = nil,
         headSignature: String?
     ) {
         self.isRepository = isRepository
@@ -51,6 +74,8 @@ public struct GitWorkspaceMetadata: Equatable, Sendable {
         self.isDirty = isDirty
         self.indexSignature = indexSignature
         self.indexContentSignature = indexContentSignature
+        self.indexStatContentSignature = indexStatContentSignature
+        self.indexDirtyCheckContentSignature = indexDirtyCheckContentSignature
         self.headSignature = headSignature
     }
 
@@ -61,6 +86,8 @@ public struct GitWorkspaceMetadata: Equatable, Sendable {
         isDirty: false,
         indexSignature: nil,
         indexContentSignature: nil,
+        indexStatContentSignature: nil,
+        indexDirtyCheckContentSignature: nil,
         headSignature: nil
     )
 }

@@ -304,7 +304,7 @@ extension ProvenanceSQLiteRepository {
             lastObservedAt: Date(timeIntervalSince1970: query.double(at: 16) ?? 0),
             lastTransitionAt: Date(timeIntervalSince1970: query.double(at: 17) ?? 0),
             latestEventID: query.string(at: 18),
-            latestEventSequence: query.double(at: 19).map(Int.init)
+            latestEventSequence: query.optionalInt(at: 19)
         )
     }
 
