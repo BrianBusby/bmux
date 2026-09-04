@@ -118,7 +118,9 @@ func startCodexHookMockSocketServerAccepting(
     listenerFD: Int32,
     commands: CodexHookCapturedSocketCommands,
     surfaceId: String,
-    connectionLimit: Int
+    connectionLimit: Int,
+    runtimeWorkspaceId: String? = nil,
+    stableWorkspaceId: String? = nil
 ) {
     DispatchQueue.global(qos: .userInitiated).async {
         var accepted = 0
@@ -136,7 +138,13 @@ func startCodexHookMockSocketServerAccepting(
             }
             accepted += 1
             DispatchQueue.global(qos: .userInitiated).async {
-                handleCodexHookMockSocketClient(fd: clientFD, commands: commands, surfaceId: surfaceId)
+                handleCodexHookMockSocketClient(
+                    fd: clientFD,
+                    commands: commands,
+                    surfaceId: surfaceId,
+                    runtimeWorkspaceId: runtimeWorkspaceId,
+                    stableWorkspaceId: stableWorkspaceId
+                )
             }
         }
     }
@@ -145,7 +153,9 @@ func startCodexHookMockSocketServerAccepting(
 func handleCodexHookMockSocketClient(
     fd clientFD: Int32,
     commands: CodexHookCapturedSocketCommands,
-    surfaceId: String
+    surfaceId: String,
+    runtimeWorkspaceId: String?,
+    stableWorkspaceId: String?
 ) {
     defer { Darwin.close(clientFD) }
     var pending = Data()
@@ -163,7 +173,12 @@ func handleCodexHookMockSocketClient(
             pending.removeSubrange(0...newlineRange.lowerBound)
             guard let line = String(data: lineData, encoding: .utf8) else { continue }
             commands.append(line)
-            let response = codexHookMockSocketResponse(for: line, surfaceId: surfaceId) + "\n"
+            let response = codexHookMockSocketResponse(
+                for: line,
+                surfaceId: surfaceId,
+                runtimeWorkspaceId: runtimeWorkspaceId,
+                stableWorkspaceId: stableWorkspaceId
+            ) + "\n"
             _ = response.withCString { ptr in
                 Darwin.write(clientFD, ptr, strlen(ptr))
             }
@@ -172,9 +187,36 @@ func handleCodexHookMockSocketClient(
 }
 
 func codexHookMockSocketResponse(for line: String, surfaceId: String) -> String {
+    codexHookMockSocketResponse(
+        for: line,
+        surfaceId: surfaceId,
+        runtimeWorkspaceId: nil,
+        stableWorkspaceId: nil
+    )
+}
+
+func codexHookMockSocketResponse(
+    for line: String,
+    surfaceId: String,
+    runtimeWorkspaceId: String?,
+    stableWorkspaceId: String?
+) -> String {
     guard let payload = codexHookJSONObject(line),
           let id = payload["id"] as? String else {
         return "OK"
+    }
+    if payload["method"] as? String == "workspace.list" {
+        let workspaces: [[String: Any]]
+        if let runtimeWorkspaceId, let stableWorkspaceId {
+            workspaces = [[
+                "id": runtimeWorkspaceId,
+                "ref": runtimeWorkspaceId,
+                "stable_workspace_id": stableWorkspaceId,
+            ]]
+        } else {
+            workspaces = []
+        }
+        return codexHookV2Response(id: id, ok: true, result: ["workspaces": workspaces])
     }
     if payload["method"] as? String == "surface.list" {
         return codexHookV2Response(
