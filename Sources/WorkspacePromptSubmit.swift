@@ -67,10 +67,6 @@ enum IMessageModeGroupSortSettings {
 }
 
 extension WorkstreamEvent {
-    var submittedPromptSessionID: String? {
-        Self.normalizedSessionID(sessionId, source: source)
-    }
-
     var submittedPromptMessage: String? {
         guard hookEventName == .userPromptSubmit else { return nil }
         let contextMessage = context?.lastUserMessage.flatMap(Self.normalizedPromptText)
@@ -142,20 +138,6 @@ extension WorkstreamEvent {
             return normalized
         }
         return nil
-    }
-
-    private static func normalizedSessionID(_ id: String, source: String) -> String? {
-        let trimmedID = id.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedID.isEmpty else { return nil }
-        let trimmedSource = source.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalizedSource = trimmedSource.lowercased()
-        guard normalizedSource == "codex" || normalizedSource == "claude" else {
-            return trimmedID
-        }
-        let sourcePrefix = "\(normalizedSource)-"
-        guard trimmedID.lowercased().hasPrefix(sourcePrefix) else { return trimmedID }
-        let normalizedID = String(trimmedID.dropFirst(sourcePrefix.count))
-        return normalizedID.isEmpty ? nil : normalizedID
     }
 
     private static func normalizedPromptText(_ value: String) -> String? {

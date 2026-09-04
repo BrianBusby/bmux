@@ -475,14 +475,6 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         return description.contains("provenance_events")
             && (description.contains("unique") || description.contains("constraint") || description.contains("duplicate"))
     }
-
-    static func isTransientSQLiteContention(_ error: Error) -> Bool {
-        let description = String(describing: error).lowercased()
-        return description.contains("database is locked")
-            || description.contains("database table is locked")
-            || description.contains("sqlite_busy")
-            || description.contains("sqlite_locked")
-    }
 }
 
 struct PendingPrompt: Sendable {

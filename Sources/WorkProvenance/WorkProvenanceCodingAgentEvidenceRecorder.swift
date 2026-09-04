@@ -164,4 +164,12 @@ actor WorkProvenanceCodingAgentEvidenceRecorder {
             }
         }
     }
+
+    private static func isTransientSQLiteContention(_ error: Error) -> Bool {
+        let description = String(describing: error).lowercased()
+        return description.contains("database is locked")
+            || description.contains("database table is locked")
+            || description.contains("sqlite_busy")
+            || description.contains("sqlite_locked")
+    }
 }
