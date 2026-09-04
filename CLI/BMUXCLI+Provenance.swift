@@ -1380,7 +1380,7 @@ extension BMUXCLI {
         return payload
     }
 
-    private func provenanceStableWorkspaceIDForRuntimeWorkspace(
+    func provenanceStableWorkspaceIDForRuntimeWorkspace(
         _ workspaceID: String,
         explicitSocketPath: String?,
         processEnv: [String: String],
@@ -1417,13 +1417,12 @@ extension BMUXCLI {
             bundleIdentifier: cliBundleIdentifier
         )
         let client = SocketClient(path: socketPath)
-        guard let payload = try? client.sendV2(method: "workspace.list") else {
+        defer { client.close() }
+        guard (try? client.connect()) != nil,
+              let payload = try? client.sendV2(method: "workspace.list") else {
             return nil
         }
-        return provenanceStableWorkspaceID(
-            fromWorkspaceListPayload: payload,
-            matching: workspaceID
-        )
+        return provenanceStableWorkspaceID(fromWorkspaceListPayload: payload, matching: workspaceID)
     }
 
     private func provenanceStableWorkspaceID(

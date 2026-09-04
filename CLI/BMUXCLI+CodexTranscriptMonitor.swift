@@ -210,7 +210,20 @@ extension BMUXCLI {
         let normalizedSessionId = sessionId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedSessionId.isEmpty else { return }
         guard let associationWorkspaceId = normalizedHookValue(env["BMUX_STABLE_WORKSPACE_ID"])
-            ?? normalizedHookValue(env["CMUX_STABLE_WORKSPACE_ID"]) else {
+            ?? normalizedHookValue(env["CMUX_STABLE_WORKSPACE_ID"])
+            ?? provenanceStableWorkspaceIDForRuntimeWorkspace(
+                workspaceId,
+                explicitSocketPath: socketPath,
+                processEnv: env,
+                cliBundleIdentifier: CLISocketPathResolver.currentAppBundleIdentifier()
+            ) else {
+#if DEBUG
+            agentHookDebugLog(
+                "codexHookAssociation.skipped session=\(agentHookDebugShort(normalizedSessionId)) workspace=\(agentHookDebugShort(workspaceId)) reason=stable_workspace_unresolved",
+                socketPath: socketPath,
+                env: env
+            )
+#endif
             return
         }
 
