@@ -596,6 +596,7 @@ struct WorkspacePromptSubmitTests {
             manager.handlePromptSubmit(
                 workspaceId: second.id,
                 message: event.submittedPromptMessage,
+                sessionID: event.submittedPromptSessionID,
                 iMessageModeEnabled: true
             )
         )
@@ -604,11 +605,12 @@ struct WorkspacePromptSubmitTests {
         #expect(outcome.reordered)
         #expect(manager.tabs.map(\.id) == [second.id, first.id])
         #expect(second.latestConversationMessage == "shipped from feed path")
+        #expect(second.latestSubmittedPromptSessionID == "opencode-session")
     }
 
     @Test func testFeedPromptSubmitEventFallsBackToContextMessage() {
         let event = WorkstreamEvent(
-            sessionId: "agent-session",
+            sessionId: "codex-agent-session",
             hookEventName: .userPromptSubmit,
             source: "codex",
             workspaceId: UUID().uuidString,
@@ -616,6 +618,7 @@ struct WorkspacePromptSubmitTests {
         )
 
         #expect(event.submittedPromptMessage == "from context")
+        #expect(event.submittedPromptSessionID == "agent-session")
     }
 
     @Test func testFeedPromptSubmitSkipsBlankContextBeforeExtraFields() {

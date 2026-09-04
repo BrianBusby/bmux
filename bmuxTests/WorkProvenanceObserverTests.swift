@@ -672,6 +672,54 @@ struct WorkProvenanceObserverTests {
     }
 
     @Test
+    func workspaceDisplayObservationNormalizesCodexHookSessionPrefixForAssociation() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let repositoryRoot = "/tmp/bmux-codex-session-prefix-repo"
+        let snapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "\(repositoryRoot)/.git",
+            remoteSlug: "manaflow-ai/bmux",
+            branch: "fix-pe-session-hook-association",
+            headCommit: "7777777777777777777777777777777777777777",
+            isDirty: false,
+            statusEntries: []
+        )
+        let service = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: snapshot]),
+            dateProvider: { Date(timeIntervalSince1970: 590) }
+        )
+        let stableWorkspaceID = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
+        let rawSessionID = "01a06d31-46f0-7cc3-b74a-a4ca30099800"
+        let workspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: UUID(uuidString: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")!,
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Prompt-linked session",
+            currentDirectory: repositoryRoot,
+            branch: "fix-pe-session-hook-association",
+            lastSubmittedPrompt: "Fix the PE Session tab",
+            lastSubmittedPromptSessionID: "codex-\(rawSessionID)",
+            lastSubmittedPromptSubmittedAt: Date(timeIntervalSince1970: 589)
+        )
+
+        await service.observeWorkspaceSnapshot(workspace)
+
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
+        let associationResponse = try await client.workspaceCodingAgentSessionAssociation(
+            ProvenanceWorkspaceCodingAgentSessionAssociationRequest(workspaceID: stableWorkspaceID.uuidString)
+        )
+        let association = try #require(associationResponse.association)
+
+        #expect(display.display?.lastSubmittedPromptSessionID == rawSessionID)
+        #expect(association.sessionID == rawSessionID)
+        #expect(association.rawSessionID == rawSessionID)
+        #expect(association.canonicalSessionID == rawSessionID)
+        #expect(association.sourcePath == "display")
+    }
+
+    @Test
     func ambientBranchTicketDoesNotPopulateBranchOnlyWorkspaceDisplay() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
