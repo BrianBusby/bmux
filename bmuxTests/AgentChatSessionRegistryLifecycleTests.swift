@@ -54,6 +54,72 @@ struct AgentChatSessionRegistryLifecycleTests {
     }
 
     @MainActor
+    @Test func transcriptServiceRecordsPromptFirstParentSessionPresence() throws {
+        let sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b"
+        let workspaceID = UUID().uuidString
+        let surfaceID = UUID().uuidString
+        let receivedAt = Date(timeIntervalSince1970: 1_725_000_020)
+        var changes: [(AgentSessionPresenceChange, Date)] = []
+        let service = AgentChatTranscriptService(
+            registry: AgentChatSessionRegistry(),
+            recordSessionPresence: { change, timestamp in
+                changes.append((change, timestamp))
+            },
+            now: { receivedAt }
+        )
+
+        service.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .userPromptSubmit,
+            source: "codex",
+            workspaceId: workspaceID,
+            surfaceId: surfaceID,
+            cwd: "/Users/example/project",
+            receivedAt: receivedAt
+        ))
+
+        #expect(changes.count == 1)
+        #expect(changes[0].0.phase == .started)
+        #expect(changes[0].0.sessionID == sessionID)
+        #expect(changes[0].0.agentKind == .codex)
+        #expect(changes[0].0.workspaceID == workspaceID)
+        #expect(changes[0].0.surfaceID == surfaceID)
+        #expect(changes[0].0.workingDirectory == "/Users/example/project")
+        #expect(changes[0].1 == receivedAt)
+    }
+
+    @Test func provenanceAssociationResolverReturnsStableWorkspaceIDForLiveBindings() {
+        let runtimeWorkspaceID = UUID()
+        let stableWorkspaceID = UUID()
+        let surfaceID = UUID()
+        let binding = WorkProvenanceLiveWorkspaceBinding(
+            runtimeWorkspaceID: runtimeWorkspaceID,
+            stableWorkspaceID: stableWorkspaceID,
+            surfaceIDs: [surfaceID],
+            currentDirectory: "/Users/example/project"
+        )
+
+        #expect(WorkProvenanceSessionAssociationResolver.resolvedStableWorkspaceID(
+            workspaceID: runtimeWorkspaceID.uuidString,
+            surfaceID: nil,
+            workingDirectory: nil,
+            liveWorkspaceBindings: [binding]
+        ) == stableWorkspaceID.uuidString)
+        #expect(WorkProvenanceSessionAssociationResolver.resolvedStableWorkspaceID(
+            workspaceID: nil,
+            surfaceID: surfaceID.uuidString,
+            workingDirectory: nil,
+            liveWorkspaceBindings: [binding]
+        ) == stableWorkspaceID.uuidString)
+        #expect(WorkProvenanceSessionAssociationResolver.resolvedStableWorkspaceID(
+            workspaceID: nil,
+            surfaceID: nil,
+            workingDirectory: "/Users/example/project/.",
+            liveWorkspaceBindings: [binding]
+        ) == stableWorkspaceID.uuidString)
+    }
+
+    @MainActor
     @Test func endedParentSessionSuppressesLateSubagentStartsButAllowsStops() throws {
         let registry = AgentChatSessionRegistry()
         let sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b"

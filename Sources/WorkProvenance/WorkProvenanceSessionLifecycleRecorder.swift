@@ -43,11 +43,43 @@ actor WorkProvenanceSessionLifecycleRecorder {
         }
     }
 
+    /// Records top-level agent session presence, keeping provenance persistence best-effort.
+    func record(_ change: AgentSessionPresenceChange, timestamp: Date) async {
+        guard let sessionID = Self.trimmedNonEmpty(change.sessionID),
+              let agentKind = Self.trimmedNonEmpty(change.agentKind.sourceName) else {
+            return
+        }
+        let workspaceID = Self.trimmedNonEmpty(change.workspaceID)
+        let surfaceID = Self.trimmedNonEmpty(change.surfaceID)
+        let workingDirectory = Self.trimmedNonEmpty(change.workingDirectory)
+        let worktreeID = await resolvedWorktreeID(for: workingDirectory)
+        let response = await client.recordSessionLifecycle(ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest(
+            phase: ProvenanceEngineContracts.ProvenanceSessionLifecyclePhase(change.phase),
+            sessionID: sessionID,
+            parentSessionID: nil,
+            agentKind: agentKind,
+            workspaceID: workspaceID,
+            surfaceID: surfaceID,
+            worktreeID: worktreeID,
+            workingDirectory: workingDirectory,
+            externalIdentityKind: nil,
+            externalIdentityValue: nil,
+            displayName: change.displayName,
+            timestamp: timestamp
+        ))
+        lastErrorDescription = response.errorDescription
+        if let errorDescription = response.errorDescription {
+            NSLog("bmux provenance agent session presence recording failed: %@", errorDescription)
+        }
+    }
+
     /// Records a broad sidecar execution-telemetry lifecycle presence fact.
     func recordExecutionTelemetrySessionStarted(
         sessionID: String,
         provider: String,
         providerSessionID: String?,
+        workspaceID: String? = nil,
+        surfaceID: String? = nil,
         workingDirectory: String?,
         timestamp: Date
     ) async {
@@ -55,16 +87,19 @@ actor WorkProvenanceSessionLifecycleRecorder {
         let trimmedProvider = Self.trimmedNonEmpty(provider)
         guard let trimmedSessionID, let trimmedProvider else { return }
         let trimmedProviderSessionID = Self.trimmedNonEmpty(providerSessionID)
-        let worktreeID = await resolvedWorktreeID(for: workingDirectory)
+        let trimmedWorkspaceID = Self.trimmedNonEmpty(workspaceID)
+        let trimmedSurfaceID = Self.trimmedNonEmpty(surfaceID)
+        let trimmedWorkingDirectory = Self.trimmedNonEmpty(workingDirectory)
+        let worktreeID = await resolvedWorktreeID(for: trimmedWorkingDirectory)
         let response = await client.recordSessionLifecycle(ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest(
             phase: .started,
             sessionID: trimmedSessionID,
             parentSessionID: nil,
             agentKind: trimmedProvider,
-            workspaceID: nil,
-            surfaceID: nil,
+            workspaceID: trimmedWorkspaceID,
+            surfaceID: trimmedSurfaceID,
             worktreeID: worktreeID,
-            workingDirectory: nil,
+            workingDirectory: trimmedWorkingDirectory,
             externalIdentityKind: trimmedProviderSessionID == nil ? nil : "provider_session",
             externalIdentityValue: trimmedProviderSessionID,
             displayName: nil,

@@ -1,7 +1,64 @@
 import AppKit
+import BmuxAgentChat
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
+
+struct WorkProvenanceLiveWorkspaceBinding: Equatable, Sendable {
+    let runtimeWorkspaceID: UUID
+    let stableWorkspaceID: UUID
+    let surfaceIDs: Set<UUID>
+    let currentDirectory: String
+}
+
+enum WorkProvenanceSessionAssociationResolver {
+    static func resolvedStableWorkspaceID(
+        workspaceID: String?,
+        surfaceID: String?,
+        workingDirectory: String?,
+        liveWorkspaceBindings: [WorkProvenanceLiveWorkspaceBinding]
+    ) -> String? {
+        if let workspaceUUID = uuid(from: workspaceID),
+           let binding = liveWorkspaceBindings.first(where: {
+               $0.runtimeWorkspaceID == workspaceUUID || $0.stableWorkspaceID == workspaceUUID
+           }) {
+            return binding.stableWorkspaceID.uuidString
+        }
+
+        if let surfaceUUID = uuid(from: surfaceID),
+           let binding = liveWorkspaceBindings.first(where: { $0.surfaceIDs.contains(surfaceUUID) }) {
+            return binding.stableWorkspaceID.uuidString
+        }
+
+        if let workingDirectory = normalizedPath(workingDirectory) {
+            let matchingBindings = liveWorkspaceBindings.filter {
+                normalizedPath($0.currentDirectory) == workingDirectory
+            }
+            if matchingBindings.count == 1 {
+                return matchingBindings[0].stableWorkspaceID.uuidString
+            }
+        }
+
+        return trimmedNonEmpty(workspaceID)
+    }
+
+    private static func uuid(from value: String?) -> UUID? {
+        trimmedNonEmpty(value).flatMap(UUID.init(uuidString:))
+    }
+
+    private static func normalizedPath(_ path: String?) -> String? {
+        guard let path = trimmedNonEmpty(path) else { return nil }
+        return NSString(string: path).standardizingPath
+    }
+
+    private static func trimmedNonEmpty(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
+    }
+}
 
 /// Main-actor runtime that wires workspace lifecycle to observe-only provenance storage.
 @MainActor
@@ -125,6 +182,10 @@ final class WorkProvenanceRuntime {
             agentChatURL: agentChatURL,
             lifecycleRecorder: sessionLifecycleRecorder,
             codingAgentEvidenceRecorder: codingAgentEvidenceRecorder,
+            workspaceAssociationResolver: { [weak self] summary in
+                self?.executionTelemetryWorkspaceAssociation(for: summary)
+                    ?? ExecutionTelemetryWorkspaceAssociation(workingDirectory: summary.cwd)
+            },
             sidecarStatusHandler: sidecarStatusHandler
         )
         executionTelemetryProjectionService = service
@@ -160,9 +221,82 @@ final class WorkProvenanceRuntime {
     /// Persists an observed agent session lifecycle change.
     func recordSessionLifecycleChange(_ change: AgentSessionLifecycleChange, timestamp: Date) {
         guard let sessionLifecycleRecorder else { return }
+        let resolvedChange = AgentSessionLifecycleChange(
+            phase: change.phase,
+            parentSessionID: change.parentSessionID,
+            agentKind: change.agentKind,
+            workspaceID: provenanceWorkspaceID(
+                workspaceID: change.workspaceID,
+                surfaceID: change.surfaceID,
+                workingDirectory: change.workingDirectory
+            ),
+            surfaceID: change.surfaceID,
+            workingDirectory: change.workingDirectory,
+            externalSessionID: change.externalSessionID,
+            displayName: change.displayName
+        )
         Task {
-            await sessionLifecycleRecorder.record(change, timestamp: timestamp)
+            await sessionLifecycleRecorder.record(resolvedChange, timestamp: timestamp)
         }
+    }
+
+    /// Persists an observed top-level agent session presence change.
+    func recordSessionPresenceChange(_ change: AgentSessionPresenceChange, timestamp: Date) {
+        guard let sessionLifecycleRecorder else { return }
+        let resolvedChange = AgentSessionPresenceChange(
+            phase: change.phase,
+            sessionID: change.sessionID,
+            agentKind: change.agentKind,
+            workspaceID: provenanceWorkspaceID(
+                workspaceID: change.workspaceID,
+                surfaceID: change.surfaceID,
+                workingDirectory: change.workingDirectory
+            ),
+            surfaceID: change.surfaceID,
+            workingDirectory: change.workingDirectory,
+            displayName: change.displayName
+        )
+        Task {
+            await sessionLifecycleRecorder.record(resolvedChange, timestamp: timestamp)
+        }
+    }
+
+    private func executionTelemetryWorkspaceAssociation(
+        for summary: AgentChatSessionSummary
+    ) -> ExecutionTelemetryWorkspaceAssociation {
+        ExecutionTelemetryWorkspaceAssociation(
+            workspaceID: provenanceWorkspaceID(
+                workspaceID: nil,
+                surfaceID: nil,
+                workingDirectory: summary.cwd
+            ),
+            surfaceID: nil,
+            workingDirectory: summary.cwd
+        )
+    }
+
+    private func provenanceWorkspaceID(
+        workspaceID: String?,
+        surfaceID: String?,
+        workingDirectory: String?
+    ) -> String? {
+        WorkProvenanceSessionAssociationResolver.resolvedStableWorkspaceID(
+            workspaceID: workspaceID,
+            surfaceID: surfaceID,
+            workingDirectory: workingDirectory,
+            liveWorkspaceBindings: liveWorkspaceBindings()
+        )
+    }
+
+    private func liveWorkspaceBindings() -> [WorkProvenanceLiveWorkspaceBinding] {
+        tabManager?.tabs.map { workspace in
+            WorkProvenanceLiveWorkspaceBinding(
+                runtimeWorkspaceID: workspace.id,
+                stableWorkspaceID: workspace.stableId,
+                surfaceIDs: Set(workspace.panels.keys),
+                currentDirectory: workspace.currentDirectory
+            )
+        } ?? []
     }
 
     private func startDirectoryObservationIfNeeded() {

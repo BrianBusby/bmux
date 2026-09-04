@@ -86,6 +86,8 @@ final class SessionProvenanceTests: XCTestCase {
             sessionID: "session-sidecar",
             provider: "codex",
             providerSessionID: "thread-sidecar",
+            workspaceID: "workspace-sidecar",
+            surfaceID: "surface-sidecar",
             workingDirectory: "/repo/subdir",
             timestamp: timestamp.addingTimeInterval(1)
         )
@@ -95,16 +97,17 @@ final class SessionProvenanceTests: XCTestCase {
         XCTAssertEqual(sidecarRequest?.sessionID, "session-sidecar")
         XCTAssertEqual(sidecarRequest?.parentSessionID, nil)
         XCTAssertEqual(sidecarRequest?.agentKind, "codex")
-        XCTAssertEqual(sidecarRequest?.workspaceID, nil)
-        XCTAssertEqual(sidecarRequest?.surfaceID, nil)
+        XCTAssertEqual(sidecarRequest?.workspaceID, "workspace-sidecar")
+        XCTAssertEqual(sidecarRequest?.surfaceID, "surface-sidecar")
         XCTAssertEqual(sidecarRequest?.worktreeID, WorkProvenanceStableIDFactory().worktreeID(repositoryRoot: "/repo"))
-        XCTAssertEqual(sidecarRequest?.workingDirectory, nil)
+        XCTAssertEqual(sidecarRequest?.workingDirectory, "/repo/subdir")
         XCTAssertEqual(sidecarRequest?.externalIdentityKind, "provider_session")
         XCTAssertEqual(sidecarRequest?.externalIdentityValue, "thread-sidecar")
         XCTAssertEqual(sidecarRequest?.displayName, nil)
         XCTAssertEqual(sidecarRequest?.timestamp, timestamp.addingTimeInterval(1))
         let lastErrorDescription = await recorder.lastErrorDescription
         XCTAssertNil(lastErrorDescription)
+
     }
 
     func testSessionLifecycleRecorderRetainsBoundedEngineError() async throws {

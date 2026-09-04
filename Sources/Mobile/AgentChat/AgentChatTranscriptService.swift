@@ -27,6 +27,7 @@ final class AgentChatTranscriptService {
     private let hasEventSubscribers: @MainActor () -> Bool
     private let emitEventPayload: @MainActor ([String: Any]) -> Void
     private var recordSessionLifecycle: @MainActor (AgentSessionLifecycleChange, Date) -> Void
+    private var recordSessionPresence: @MainActor (AgentSessionPresenceChange, Date) -> Void
     private let recordTaskWorkspaceDirectory: @MainActor (AgentChatSessionRecord, String) -> Void
     private let now: () -> Date
     /// Drives the live agent-prose streaming preview.
@@ -68,6 +69,7 @@ final class AgentChatTranscriptService {
             MobileHostService.emitEvent(topic: AgentChatTranscriptService.eventTopic, payload: payload)
         },
         recordSessionLifecycle: @escaping @MainActor (AgentSessionLifecycleChange, Date) -> Void = { _, _ in },
+        recordSessionPresence: @escaping @MainActor (AgentSessionPresenceChange, Date) -> Void = { _, _ in },
         recordTaskWorkspaceDirectory: @escaping @MainActor (AgentChatSessionRecord, String) -> Void =
             AgentChatTranscriptService.defaultRecordTaskWorkspaceDirectory,
         now: @escaping () -> Date = { Date() }
@@ -79,6 +81,7 @@ final class AgentChatTranscriptService {
         self.hasEventSubscribers = hasEventSubscribers
         self.emitEventPayload = emitEventPayload
         self.recordSessionLifecycle = recordSessionLifecycle
+        self.recordSessionPresence = recordSessionPresence
         self.recordTaskWorkspaceDirectory = recordTaskWorkspaceDirectory
         self.now = now
         registry.onRecordChanged = { [weak self] record, previous in
@@ -198,6 +201,9 @@ final class AgentChatTranscriptService {
     func recordSessionLifecycleChanges(with runtime: WorkProvenanceRuntime) {
         recordSessionLifecycle = { change, timestamp in
             runtime.recordSessionLifecycleChange(change, timestamp: timestamp)
+        }
+        recordSessionPresence = { change, timestamp in
+            runtime.recordSessionPresenceChange(change, timestamp: timestamp)
         }
     }
 
@@ -496,6 +502,7 @@ final class AgentChatTranscriptService {
     }
 
     private func handleRecordChange(_ record: AgentChatSessionRecord, previous: AgentChatSessionRecord?) {
+        recordParentSessionPresenceIfNeeded(record, previous: previous)
         let endedRecordIsListable: Bool
         if record.state == .ended {
             endedRecordIsListable = record.agentKind == .codex
@@ -534,6 +541,47 @@ final class AgentChatTranscriptService {
         // descriptor changed beyond the activity timestamp.
         if Self.descriptorChangedMeaningfully(previous: previous, current: record) {
             emit(frame: ChatSessionEventFrame(sessionID: record.sessionID, event: .descriptorChanged(record.descriptor)))
+        }
+    }
+
+    private func recordParentSessionPresenceIfNeeded(
+        _ record: AgentChatSessionRecord,
+        previous: AgentChatSessionRecord?
+    ) {
+        let recordIsLive = record.state != .ended
+        let previousWasLive = previous.map { $0.state != .ended } ?? false
+        let bindingChanged = previous.map {
+            $0.workspaceID != record.workspaceID
+                || $0.surfaceID != record.surfaceID
+                || $0.workingDirectory != record.workingDirectory
+        } ?? false
+
+        if recordIsLive, previous == nil || !previousWasLive || bindingChanged {
+            recordSessionPresence(
+                AgentSessionPresenceChange(
+                    phase: .started,
+                    sessionID: record.sessionID,
+                    agentKind: record.agentKind,
+                    workspaceID: record.workspaceID,
+                    surfaceID: record.surfaceID,
+                    workingDirectory: record.workingDirectory,
+                    displayName: record.title
+                ),
+                record.lastActivityAt
+            )
+        } else if previousWasLive, !recordIsLive {
+            recordSessionPresence(
+                AgentSessionPresenceChange(
+                    phase: .stopped,
+                    sessionID: record.sessionID,
+                    agentKind: record.agentKind,
+                    workspaceID: record.workspaceID,
+                    surfaceID: record.surfaceID,
+                    workingDirectory: record.workingDirectory,
+                    displayName: record.title
+                ),
+                record.endedAt ?? record.lastActivityAt
+            )
         }
     }
 
