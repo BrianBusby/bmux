@@ -6,6 +6,9 @@ import ProvenanceEngineContracts
 actor WorkProvenanceCodingAgentEvidenceRecorder {
     static let textLimit = 12_000
     static let summaryLimit = 4_000
+    private static let appendRetryDeadlineSeconds: TimeInterval = 120
+    private static let appendRetryInitialDelayNanoseconds: UInt64 = 250_000_000
+    private static let appendRetryMaximumDelayNanoseconds: UInt64 = 2_000_000_000
 
     let client: any ProvenanceEngineContracts.ProvenanceEngineClient
     let gitInspector: any WorkProvenanceGitInspecting
@@ -92,18 +95,7 @@ actor WorkProvenanceCodingAgentEvidenceRecorder {
             confidence: confidence,
             payload: payload
         )
-        do {
-            _ = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
-            lastErrorDescription = nil
-        } catch {
-            if Self.isDuplicateAppendError(error) {
-                lastErrorDescription = nil
-                return
-            }
-            let description = String(describing: error)
-            lastErrorDescription = description
-            throw error
-        }
+        try await appendEventHandlingTransientContention(event)
     }
 
     func append(
@@ -129,17 +121,55 @@ actor WorkProvenanceCodingAgentEvidenceRecorder {
             confidence: confidence,
             payload: payload
         )
-        do {
-            _ = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
-            lastErrorDescription = nil
-        } catch {
-            if Self.isDuplicateAppendError(error) {
+        try await appendEventHandlingTransientContention(event)
+    }
+
+    private func appendEventHandlingTransientContention(
+        _ event: ProvenanceEngineContracts.ProvenanceEvent
+    ) async throws {
+        let deadline = Date().addingTimeInterval(Self.appendRetryDeadlineSeconds)
+        var delayNanoseconds = Self.appendRetryInitialDelayNanoseconds
+        var attempt = 0
+        while true {
+            do {
+                _ = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
                 lastErrorDescription = nil
                 return
+            } catch {
+                if Self.isDuplicateAppendError(error) {
+                    lastErrorDescription = nil
+                    return
+                }
+                guard Self.isTransientSQLiteContention(error), Date() < deadline else {
+                    let description = String(describing: error)
+                    lastErrorDescription = description
+                    throw error
+                }
+                attempt += 1
+                #if DEBUG
+                if attempt == 1 || attempt % 10 == 0 {
+                    bmuxDebugLog(
+                        "workProvenance.codexEvidence.append.retry event=\(event.id) "
+                            + "attempt=\(attempt) error=\(String(describing: error))"
+                    )
+                }
+                #endif
+                try Task.checkCancellation()
+                // Backoff is the intended retry delay for transient SQLite writer contention.
+                try await Task.sleep(nanoseconds: delayNanoseconds)
+                delayNanoseconds = min(
+                    delayNanoseconds * 2,
+                    Self.appendRetryMaximumDelayNanoseconds
+                )
             }
-            let description = String(describing: error)
-            lastErrorDescription = description
-            throw error
         }
+    }
+
+    private static func isTransientSQLiteContention(_ error: Error) -> Bool {
+        let description = String(describing: error).lowercased()
+        return description.contains("database is locked")
+            || description.contains("database table is locked")
+            || description.contains("sqlite_busy")
+            || description.contains("sqlite_locked")
     }
 }

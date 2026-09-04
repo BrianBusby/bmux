@@ -672,6 +672,24 @@ struct WorkProvenanceObserverTests {
     }
 
     @Test
+    func workspaceDisplayObservationNormalizesCodexHookSessionPrefixForAssociation() async throws {
+        let fixture = try StoreFixture(); defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let root = "/tmp/bmux-codex-session-prefix-repo"
+        let service = WorkProvenanceObservationService(client: client, gitInspector: FakeGitInspector(snapshotsByDirectory: [
+            root: WorkProvenanceGitSnapshot(repositoryRoot: root, commonDirectory: "\(root)/.git", remoteSlug: "manaflow-ai/bmux", branch: "fix", headCommit: "7777777777777777777777777777777777777777", isDirty: false, statusEntries: [])
+        ]), dateProvider: { Date(timeIntervalSince1970: 590) })
+        let stable = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
+        let raw = "01a06d31-46f0-7cc3-b74a-a4ca30099800"
+        await service.observeWorkspaceSnapshot(WorkProvenanceWorkspaceSnapshot(workspaceID: UUID(uuidString: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")!, stableWorkspaceID: stable, title: "Prompt-linked session", currentDirectory: root, branch: "fix", lastSubmittedPrompt: "Fix the PE Session tab", lastSubmittedPromptSessionID: "codex-\(raw)", lastSubmittedPromptSubmittedAt: Date(timeIntervalSince1970: 589)))
+        let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stable.uuidString))
+        let association = try #require(try await client.workspaceCodingAgentSessionAssociation(ProvenanceWorkspaceCodingAgentSessionAssociationRequest(workspaceID: stable.uuidString)).association)
+        #expect(display.display?.lastSubmittedPromptSessionID == raw)
+        #expect(association.sessionID == raw)
+        #expect(association.canonicalSessionID == raw)
+    }
+
+    @Test
     func ambientBranchTicketDoesNotPopulateBranchOnlyWorkspaceDisplay() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }

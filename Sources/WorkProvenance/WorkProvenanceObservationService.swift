@@ -175,7 +175,7 @@ actor WorkProvenanceObservationService {
         let lastSubmittedPrompt = Self.normalizedNonEmpty(workspace.lastSubmittedPrompt)
         let lastSubmittedPromptSessionID = lastSubmittedPrompt == nil
             ? nil
-            : Self.normalizedNonEmpty(workspace.lastSubmittedPromptSessionID)
+            : Self.normalizedCodingAgentSessionID(workspace.lastSubmittedPromptSessionID)
         let lastSubmittedPromptSubmittedAt = lastSubmittedPrompt == nil ? nil : workspace.lastSubmittedPromptSubmittedAt
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
@@ -337,6 +337,17 @@ actor WorkProvenanceObservationService {
             return nil
         }
         return trimmed
+    }
+
+    private static func normalizedCodingAgentSessionID(_ value: String?) -> String? {
+        guard let sessionID = normalizedNonEmpty(value) else { return nil }
+        let codexHookPrefix = "codex-"
+        guard sessionID.hasPrefix(codexHookPrefix) else { return sessionID }
+        let candidate = String(sessionID.dropFirst(codexHookPrefix.count))
+        guard UUID(uuidString: candidate) != nil else {
+            return sessionID
+        }
+        return candidate
     }
 
     private static func summary(fileCount: Int, isDirty: Bool) -> String {
