@@ -54,6 +54,16 @@ struct AgentSessionLifecycleChange: Sendable, Equatable {
     let displayName: String?
 }
 
+struct AgentSessionPresenceChange: Sendable, Equatable {
+    let phase: AgentSessionLifecycleChange.Phase
+    let sessionID: String
+    let agentKind: ChatAgentKind
+    let workspaceID: String?
+    let surfaceID: String?
+    let workingDirectory: String?
+    let displayName: String?
+}
+
 extension AgentChatSessionRegistry {
     func stampLifecycleTransition(
         previous: AgentChatSessionRecord?,

@@ -1,9 +1,64 @@
 import AppKit
-import BMUXAgentLaunch
 import BmuxAgentChat
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
+
+struct WorkProvenanceLiveWorkspaceBinding: Equatable, Sendable {
+    let runtimeWorkspaceID: UUID
+    let stableWorkspaceID: UUID
+    let surfaceIDs: Set<UUID>
+    let currentDirectory: String
+}
+
+enum WorkProvenanceSessionAssociationResolver {
+    static func resolvedStableWorkspaceID(
+        workspaceID: String?,
+        surfaceID: String?,
+        workingDirectory: String?,
+        liveWorkspaceBindings: [WorkProvenanceLiveWorkspaceBinding]
+    ) -> String? {
+        if let workspaceUUID = uuid(from: workspaceID),
+           let binding = liveWorkspaceBindings.first(where: {
+               $0.runtimeWorkspaceID == workspaceUUID || $0.stableWorkspaceID == workspaceUUID
+           }) {
+            return binding.stableWorkspaceID.uuidString
+        }
+
+        if let surfaceUUID = uuid(from: surfaceID),
+           let binding = liveWorkspaceBindings.first(where: { $0.surfaceIDs.contains(surfaceUUID) }) {
+            return binding.stableWorkspaceID.uuidString
+        }
+
+        if let workingDirectory = normalizedPath(workingDirectory) {
+            let matchingBindings = liveWorkspaceBindings.filter {
+                normalizedPath($0.currentDirectory) == workingDirectory
+            }
+            if matchingBindings.count == 1 {
+                return matchingBindings[0].stableWorkspaceID.uuidString
+            }
+        }
+
+        return trimmedNonEmpty(workspaceID)
+    }
+
+    private static func uuid(from value: String?) -> UUID? {
+        trimmedNonEmpty(value).flatMap(UUID.init(uuidString:))
+    }
+
+    private static func normalizedPath(_ path: String?) -> String? {
+        guard let path = trimmedNonEmpty(path) else { return nil }
+        return NSString(string: path).standardizingPath
+    }
+
+    private static func trimmedNonEmpty(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
+    }
+}
 
 /// Main-actor runtime that wires workspace lifecycle to observe-only provenance storage.
 @MainActor
@@ -11,9 +66,6 @@ final class WorkProvenanceRuntime {
     private weak var tabManager: TabManager?
     private let observationService: WorkProvenanceObservationService?
     private let workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore?
-    let workspaceCodingAgentSessionAssociationStore: WorkspaceCodingAgentSessionAssociationStore?
-    let agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore?
-    let agentSessionSmartSessionStore: AgentSessionSmartSessionStore?
     private let workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
     private let codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder?
@@ -22,59 +74,34 @@ final class WorkProvenanceRuntime {
     private var displayMetadataObservationTask: Task<Void, Never>?
     private var activationObservationTask: Task<Void, Never>?
     private var executionTelemetryProjectionService: ExecutionTelemetryProvenanceProjectionService?
-    private var backgroundTasksByID: [UUID: Task<Void, Never>] = [:]
 
-    private(set) var lifecycleState: WorkProvenanceRuntimeLifecycleState
+    /// Effective V1 database path when the runtime starts successfully.
     let effectiveDatabaseURL: URL?
+
+    /// Startup failure retained for diagnostics when provenance is disabled.
     let startupErrorDescription: String?
+
+    /// Whether the runtime has a usable provenance store.
     let isEnabled: Bool
 
-    var hasActiveLifecycleWork: Bool {
-        directoryObservationTask != nil || titleObservationTask != nil ||
-            displayMetadataObservationTask != nil || activationObservationTask != nil ||
-            executionTelemetryProjectionService != nil || !backgroundTasksByID.isEmpty
-    }
-
-    private var acceptsLifecycleProducerWork: Bool { lifecycleState != .stopping && lifecycleState != .stopped }
-    private var acceptsObservationProducerWork: Bool { lifecycleState == .starting || lifecycleState == .ready }
-
+    /// Creates a provenance runtime.
     init(
         observationService: WorkProvenanceObservationService?,
         workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore? = nil,
-        workspaceCodingAgentSessionAssociationStore: WorkspaceCodingAgentSessionAssociationStore? = nil,
-        agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore? = nil,
-        agentSessionSmartSessionStore: AgentSessionSmartSessionStore? = nil,
         workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription? = nil,
         sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil,
         codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder? = nil,
         effectiveDatabaseURL: URL? = nil,
-        startupErrorDescription: String? = nil,
-        initialLifecycleState: WorkProvenanceRuntimeLifecycleState = .notStarted
+        startupErrorDescription: String? = nil
     ) {
         self.observationService = observationService
         self.workspaceDisplayCurrentStateStore = workspaceDisplayCurrentStateStore
-        self.agentSessionFactualProjectionStore = agentSessionFactualProjectionStore
-        self.agentSessionSmartSessionStore = agentSessionSmartSessionStore
-        if let workspaceCodingAgentSessionAssociationStore {
-            self.workspaceCodingAgentSessionAssociationStore = workspaceCodingAgentSessionAssociationStore
-        } else if let agentSessionFactualProjectionStore {
-            self.workspaceCodingAgentSessionAssociationStore = WorkspaceCodingAgentSessionAssociationStore(
-                client: agentSessionFactualProjectionStore.client
-            )
-        } else if let agentSessionSmartSessionStore {
-            self.workspaceCodingAgentSessionAssociationStore = WorkspaceCodingAgentSessionAssociationStore(
-                client: agentSessionSmartSessionStore.client
-            )
-        } else {
-            self.workspaceCodingAgentSessionAssociationStore = nil
-        }
         self.workspaceDisplayCurrentStateSubscription = workspaceDisplayCurrentStateSubscription
         self.sessionLifecycleRecorder = sessionLifecycleRecorder
         self.codingAgentEvidenceRecorder = codingAgentEvidenceRecorder
         self.effectiveDatabaseURL = effectiveDatabaseURL
         self.startupErrorDescription = startupErrorDescription
         self.isEnabled = observationService != nil
-        self.lifecycleState = initialLifecycleState
     }
 
     deinit {
@@ -82,7 +109,6 @@ final class WorkProvenanceRuntime {
         titleObservationTask?.cancel()
         displayMetadataObservationTask?.cancel()
         activationObservationTask?.cancel()
-        backgroundTasksByID.values.forEach { $0.cancel() }
     }
 
     /// Creates the standard runtime backed by the per-user bmux state directory.
@@ -94,7 +120,6 @@ final class WorkProvenanceRuntime {
         do {
             let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
                 try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
-            let workspaceDisplayCurrentStateStore = WorkspaceDisplayCurrentStateStore(client: client)
             NSLog("bmux provenance runtime using database: %@", location.databaseURL.path)
             return WorkProvenanceRuntime(
                 observationService: WorkProvenanceObservationService(
@@ -104,10 +129,7 @@ final class WorkProvenanceRuntime {
                         authorizationProvider: linearAuthorizationProvider
                     )
                 ),
-                workspaceDisplayCurrentStateStore: workspaceDisplayCurrentStateStore,
-                workspaceCodingAgentSessionAssociationStore: WorkspaceCodingAgentSessionAssociationStore(client: client),
-                agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore(client: client),
-                agentSessionSmartSessionStore: AgentSessionSmartSessionStore(client: client),
+                workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore(client: client),
                 workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription(
                     databaseURL: location.databaseURL
                 ),
@@ -130,62 +152,18 @@ final class WorkProvenanceRuntime {
         }
     }
 
-    static func disabledByComposition() -> WorkProvenanceRuntime {
-        WorkProvenanceRuntime(observationService: nil, initialLifecycleState: .stopped)
-    }
-
     /// Starts observing workspace list and current-directory changes.
-    @discardableResult
-    func start(tabManager: TabManager) -> WorkProvenanceRuntimeLifecycleState {
-        switch lifecycleState {
-        case .ready, .starting:
-            return lifecycleState
-        case .stopped where startupErrorDescription == nil && observationService == nil:
-            return lifecycleState
-        default:
-            break
-        }
-        guard let observationService else {
-            if let startupErrorDescription {
-                lifecycleState = .failed(reason: startupErrorDescription)
-            } else {
-                lifecycleState = .degraded(reason: "Work provenance observation is disabled by app runtime composition")
-            }
-            return lifecycleState
-        }
-        lifecycleState = .starting
+    func start(tabManager: TabManager) {
+        guard let observationService else { return }
         self.tabManager = tabManager
-        trackBackgroundTask(Task {
+        Task {
             await observationService.pruneExpiredObservedHistory()
-        })
+        }
         observeWorkspaces(tabManager.tabs)
         startDirectoryObservationIfNeeded()
         startDisplayObservationIfNeeded()
         startActivationObservationIfNeeded()
         startWorkspaceDisplayCurrentStateSubscriptionIfNeeded()
-        lifecycleState = .ready
-        return lifecycleState
-    }
-
-    func stop() {
-        guard lifecycleState != .stopped else { return }
-        lifecycleState = .stopping
-        directoryObservationTask?.cancel()
-        directoryObservationTask = nil
-        titleObservationTask?.cancel()
-        titleObservationTask = nil
-        displayMetadataObservationTask?.cancel()
-        displayMetadataObservationTask = nil
-        activationObservationTask?.cancel()
-        activationObservationTask = nil
-        workspaceDisplayCurrentStateSubscription?.stop()
-        workspaceDisplayCurrentStateStore?.cancelRefreshes()
-        executionTelemetryProjectionService?.stop()
-        executionTelemetryProjectionService = nil
-        backgroundTasksByID.values.forEach { $0.cancel() }
-        backgroundTasksByID.removeAll()
-        tabManager = nil
-        lifecycleState = .stopped
     }
 
     /// Starts projecting eligible live execution telemetry facts into provenance.
@@ -193,7 +171,7 @@ final class WorkProvenanceRuntime {
         agentChatURL: URL,
         sidecarStatusHandler: @escaping (ExecutionTelemetryProjectionSidecarStatus) -> Void = { _ in }
     ) {
-        guard acceptsLifecycleProducerWork, let sessionLifecycleRecorder else { return }
+        guard let sessionLifecycleRecorder else { return }
         guard executionTelemetryProjectionService?.agentChatURL != agentChatURL else {
             executionTelemetryProjectionService?.updateSidecarStatusHandler(sidecarStatusHandler)
             executionTelemetryProjectionService?.start()
@@ -204,6 +182,10 @@ final class WorkProvenanceRuntime {
             agentChatURL: agentChatURL,
             lifecycleRecorder: sessionLifecycleRecorder,
             codingAgentEvidenceRecorder: codingAgentEvidenceRecorder,
+            workspaceAssociationResolver: { [weak self] summary in
+                self?.executionTelemetryWorkspaceAssociation(for: summary)
+                    ?? ExecutionTelemetryWorkspaceAssociation(workingDirectory: summary.cwd)
+            },
             sidecarStatusHandler: sidecarStatusHandler
         )
         executionTelemetryProjectionService = service
@@ -215,37 +197,14 @@ final class WorkProvenanceRuntime {
         StartupBreadcrumbLog.append("workProvenance.runtime.observeWorkspaces", fields: [
             "count": "\(workspaces.count)"
         ])
-        guard acceptsObservationProducerWork else { return }
         guard let observationService else { return }
         let snapshots = workspaces.map(WorkProvenanceWorkspaceSnapshot.init(workspace:))
         let stableWorkspaceIDs = snapshots.map(\.stableWorkspaceID)
-        trackBackgroundTask(Task { [weak self] in
+        Task {
             await observationService.observeWorkspaceSnapshots(snapshots)
             await MainActor.run {
-                self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: stableWorkspaceIDs)
+                self.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: stableWorkspaceIDs)
             }
-        })
-    }
-
-    func waitForBackgroundTasks() async {
-        while true {
-            let tasksByID = backgroundTasksByID
-            guard !tasksByID.isEmpty else { return }
-            for task in tasksByID.values {
-                await task.value
-            }
-            for id in tasksByID.keys {
-                backgroundTasksByID[id] = nil
-            }
-        }
-    }
-
-    private func trackBackgroundTask(_ task: Task<Void, Never>) {
-        let id = UUID()
-        backgroundTasksByID[id] = task
-        Task { @MainActor [weak self] in
-            await task.value
-            self?.backgroundTasksByID[id] = nil
         }
     }
 
@@ -261,63 +220,83 @@ final class WorkProvenanceRuntime {
 
     /// Persists an observed agent session lifecycle change.
     func recordSessionLifecycleChange(_ change: AgentSessionLifecycleChange, timestamp: Date) {
-        guard acceptsLifecycleProducerWork, let sessionLifecycleRecorder else { return }
-        trackBackgroundTask(Task {
-            await sessionLifecycleRecorder.record(change, timestamp: timestamp)
-        })
-    }
-
-    /// Persists hook-observed prompt evidence when sidecar telemetry has not linked the workspace yet.
-    func recordHookUserPromptSubmit(record: AgentChatSessionRecord, event: WorkstreamEvent) {
-        guard acceptsLifecycleProducerWork, let codingAgentEvidenceRecorder,
-              let workspace = workspace(forRuntimeOrStableWorkspaceID: record.workspaceID ?? event.workspaceId) else {
-            return
+        guard let sessionLifecycleRecorder else { return }
+        let resolvedChange = AgentSessionLifecycleChange(
+            phase: change.phase,
+            parentSessionID: change.parentSessionID,
+            agentKind: change.agentKind,
+            workspaceID: provenanceWorkspaceID(
+                workspaceID: change.workspaceID,
+                surfaceID: change.surfaceID,
+                workingDirectory: change.workingDirectory
+            ),
+            surfaceID: change.surfaceID,
+            workingDirectory: change.workingDirectory,
+            externalSessionID: change.externalSessionID,
+            displayName: change.displayName
+        )
+        Task {
+            await sessionLifecycleRecorder.record(resolvedChange, timestamp: timestamp)
         }
-        let stableWorkspaceID = workspace.stableId
-        let fallbackPromptText = workspace.latestSubmittedMessage
-        trackBackgroundTask(Task { [weak self] in
-            do {
-                try await codingAgentEvidenceRecorder.recordHookUserPromptSubmit(
-                    record: record,
-                    event: event,
-                    stableWorkspaceID: stableWorkspaceID,
-                    fallbackPromptText: fallbackPromptText
-                )
-                await MainActor.run {
-                    self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [stableWorkspaceID])
-                }
-            } catch {
-                StartupBreadcrumbLog.append("workProvenance.hookPrompt.recordFailed", fields: [
-                    "session": record.sessionID,
-                    "error": String(describing: error)
-                ])
-            }
-        })
     }
 
-    /// Persists transcript-observed prompt evidence when sidecar telemetry did not project it.
-    func recordTranscriptUserPrompts(record: AgentChatSessionRecord, messages: [ChatMessage]) {
-        guard acceptsLifecycleProducerWork, let codingAgentEvidenceRecorder, !messages.isEmpty else { return }
-        let stableWorkspaceID = workspace(forRuntimeOrStableWorkspaceID: record.workspaceID)?.stableId
-        trackBackgroundTask(Task { [weak self] in
-            do {
-                try await codingAgentEvidenceRecorder.recordTranscriptUserPrompts(
-                    record: record,
-                    messages: messages,
-                    stableWorkspaceID: stableWorkspaceID
-                )
-                if let stableWorkspaceID {
-                    await MainActor.run {
-                        self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [stableWorkspaceID])
-                    }
-                }
-            } catch {
-                StartupBreadcrumbLog.append("workProvenance.transcriptPrompt.recordFailed", fields: [
-                    "session": record.sessionID,
-                    "error": String(describing: error)
-                ])
-            }
-        })
+    /// Persists an observed top-level agent session presence change.
+    func recordSessionPresenceChange(_ change: AgentSessionPresenceChange, timestamp: Date) {
+        guard let sessionLifecycleRecorder else { return }
+        let resolvedChange = AgentSessionPresenceChange(
+            phase: change.phase,
+            sessionID: change.sessionID,
+            agentKind: change.agentKind,
+            workspaceID: provenanceWorkspaceID(
+                workspaceID: change.workspaceID,
+                surfaceID: change.surfaceID,
+                workingDirectory: change.workingDirectory
+            ),
+            surfaceID: change.surfaceID,
+            workingDirectory: change.workingDirectory,
+            displayName: change.displayName
+        )
+        Task {
+            await sessionLifecycleRecorder.record(resolvedChange, timestamp: timestamp)
+        }
+    }
+
+    private func executionTelemetryWorkspaceAssociation(
+        for summary: AgentChatSessionSummary
+    ) -> ExecutionTelemetryWorkspaceAssociation {
+        ExecutionTelemetryWorkspaceAssociation(
+            workspaceID: provenanceWorkspaceID(
+                workspaceID: nil,
+                surfaceID: nil,
+                workingDirectory: summary.cwd
+            ),
+            surfaceID: nil,
+            workingDirectory: summary.cwd
+        )
+    }
+
+    private func provenanceWorkspaceID(
+        workspaceID: String?,
+        surfaceID: String?,
+        workingDirectory: String?
+    ) -> String? {
+        WorkProvenanceSessionAssociationResolver.resolvedStableWorkspaceID(
+            workspaceID: workspaceID,
+            surfaceID: surfaceID,
+            workingDirectory: workingDirectory,
+            liveWorkspaceBindings: liveWorkspaceBindings()
+        )
+    }
+
+    private func liveWorkspaceBindings() -> [WorkProvenanceLiveWorkspaceBinding] {
+        tabManager?.tabs.map { workspace in
+            WorkProvenanceLiveWorkspaceBinding(
+                runtimeWorkspaceID: workspace.id,
+                stableWorkspaceID: workspace.stableId,
+                surfaceIDs: Set(workspace.panels.keys),
+                currentDirectory: workspace.currentDirectory
+            )
+        } ?? []
     }
 
     private func startDirectoryObservationIfNeeded() {
@@ -370,7 +349,7 @@ final class WorkProvenanceRuntime {
     private func startWorkspaceDisplayCurrentStateSubscriptionIfNeeded() {
         workspaceDisplayCurrentStateSubscription?.start(
             stableWorkspaceIDs: { [weak self] in
-                self?.currentDisplayStableWorkspaceIDs() ?? []
+                self?.tabManager?.tabs.map(\.stableId) ?? []
             },
             refresh: { [weak self] stableWorkspaceIDs in
                 self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: stableWorkspaceIDs)
@@ -386,21 +365,17 @@ final class WorkProvenanceRuntime {
         let workspaceID = (notification.userInfo?["workspaceId"] as? UUID)
             ?? (notification.userInfo?[GhosttyNotificationKey.tabId] as? UUID)
         guard let workspaceID,
-              let workspace = Self.workspace(
-                matching: workspaceID,
-                in: workspaceResolutionTabManagers(for: workspaceID)
-              ) else {
+              let workspace = tabManager?.tabs.first(where: { $0.id == workspaceID }) else {
             return
         }
         observeWorkspaces([workspace])
     }
 
     private func refreshAllWorkspaceDisplayCurrentState() {
-        refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: currentDisplayStableWorkspaceIDs())
+        refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: tabManager?.tabs.map(\.stableId) ?? [])
     }
 
     private func refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [UUID]) {
-        guard acceptsObservationProducerWork else { return }
         workspaceDisplayCurrentStateStore?.refresh(
             stableWorkspaceIDs: stableWorkspaceIDs,
             notify: { [weak self] stableWorkspaceID in
@@ -409,89 +384,16 @@ final class WorkProvenanceRuntime {
         )
     }
 
-    private func workspace(forRuntimeOrStableWorkspaceID workspaceID: String?) -> Workspace? {
-        guard let workspaceID = workspaceID.flatMap(UUID.init(uuidString:)) else { return nil }
-        return Self.workspace(
-            matching: workspaceID,
-            in: workspaceResolutionTabManagers(for: workspaceID)
-        )
-    }
-
-    static func workspace(matching workspaceID: UUID, in tabManagers: [TabManager]) -> Workspace? {
-        workspaceMatch(matching: workspaceID, in: tabManagers)?.workspace
-    }
-
-    static func workspaceMatch(
-        matching workspaceID: UUID,
-        in tabManagers: [TabManager]
-    ) -> (tabManager: TabManager, workspace: Workspace)? {
-        var seenManagers: Set<ObjectIdentifier> = []
-        for tabManager in tabManagers where seenManagers.insert(ObjectIdentifier(tabManager)).inserted {
-            if let workspace = tabManager.tabs.first(where: { workspace in
-                workspace.id == workspaceID || workspace.stableId == workspaceID
-            }) {
-                return (tabManager, workspace)
-            }
-        }
-        return nil
-    }
-
-    static func stableWorkspaceIDs(in tabManagers: [TabManager]) -> [UUID] {
-        var seenWorkspaceIDs: Set<UUID> = []
-        var ids: [UUID] = []
-        for tabManager in tabManagers {
-            for workspace in tabManager.tabs where seenWorkspaceIDs.insert(workspace.stableId).inserted {
-                ids.append(workspace.stableId)
-            }
-        }
-        return ids
-    }
-
-    @discardableResult
-    static func notifyWorkspaceDisplayCurrentStateDidChange(
-        stableWorkspaceID: UUID,
-        in tabManagers: [TabManager]
-    ) -> Bool {
-        guard let match = workspaceMatch(matching: stableWorkspaceID, in: tabManagers) else {
-            return false
-        }
-        match.tabManager.objectWillChange.send()
-        match.workspace.sidebarImmediateObservationChangeSubject.send(())
-        return true
-    }
-
-    private func currentDisplayStableWorkspaceIDs() -> [UUID] {
-        Self.stableWorkspaceIDs(in: workspaceResolutionTabManagers(for: nil))
-    }
-
-    private func workspaceResolutionTabManagers(for runtimeOrStableWorkspaceID: UUID?) -> [TabManager] {
-        var managers: [TabManager] = []
-        var seenManagers: Set<ObjectIdentifier> = []
-        func append(_ manager: TabManager?) {
-            guard let manager,
-                  seenManagers.insert(ObjectIdentifier(manager)).inserted else {
-                return
-            }
-            managers.append(manager)
-        }
-
-        append(tabManager)
-        guard let appDelegate = AppDelegate.shared else { return managers }
-        if let runtimeOrStableWorkspaceID {
-            append(appDelegate.tabManagerFor(tabId: runtimeOrStableWorkspaceID))
-        }
-        append(appDelegate.tabManager)
-        for window in appDelegate.scriptableMainWindows() {
-            append(window.tabManager)
-        }
-        return managers
-    }
-
     private func workspaceDisplayCurrentStateDidChange(stableWorkspaceID: UUID) {
-        Self.notifyWorkspaceDisplayCurrentStateDidChange(
-            stableWorkspaceID: stableWorkspaceID,
-            in: workspaceResolutionTabManagers(for: stableWorkspaceID)
-        )
+        guard let tabManager,
+              let workspace = tabManager.tabs.first(where: { $0.stableId == stableWorkspaceID }) else {
+            return
+        }
+        tabManager.objectWillChange.send()
+        workspace.sidebarImmediateObservationChangeSubject.send(())
     }
 
+    private static var isRunningUnderXCTest: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
 }

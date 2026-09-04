@@ -7,6 +7,22 @@ enum ExecutionTelemetryProjectionSidecarStatus: Equatable {
     case unavailable(agentChatURL: URL, errorDescription: String)
 }
 
+struct ExecutionTelemetryWorkspaceAssociation: Equatable, Sendable {
+    let workspaceID: String?
+    let surfaceID: String?
+    let workingDirectory: String?
+
+    init(
+        workspaceID: String? = nil,
+        surfaceID: String? = nil,
+        workingDirectory: String? = nil
+    ) {
+        self.workspaceID = workspaceID
+        self.surfaceID = surfaceID
+        self.workingDirectory = workingDirectory
+    }
+}
+
 /// Projects selected live execution telemetry facts into durable provenance lifecycle evidence.
 @MainActor
 final class ExecutionTelemetryProvenanceProjectionService {
@@ -17,6 +33,7 @@ final class ExecutionTelemetryProvenanceProjectionService {
     private let eventClient: ExecutionTelemetryEventClient
     private let lifecycleRecorder: WorkProvenanceSessionLifecycleRecorder
     private let codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder?
+    private let workspaceAssociationResolver: @MainActor (AgentChatSessionSummary) -> ExecutionTelemetryWorkspaceAssociation
     private let pollInterval: Duration
     private var sidecarStatusHandler: (ExecutionTelemetryProjectionSidecarStatus) -> Void
     private var projectionTask: Task<Void, Never>?
@@ -32,6 +49,9 @@ final class ExecutionTelemetryProvenanceProjectionService {
         sessionListClient: AgentChatSessionListClient? = nil,
         liveProjectionClient: ExecutionTelemetryLiveProjectionClient? = nil,
         eventClient: ExecutionTelemetryEventClient? = nil,
+        workspaceAssociationResolver: @escaping @MainActor (AgentChatSessionSummary) -> ExecutionTelemetryWorkspaceAssociation = {
+            ExecutionTelemetryWorkspaceAssociation(workingDirectory: $0.cwd)
+        },
         pollInterval: Duration = .seconds(5),
         sidecarStatusHandler: @escaping (ExecutionTelemetryProjectionSidecarStatus) -> Void = { _ in }
     ) {
@@ -41,6 +61,7 @@ final class ExecutionTelemetryProvenanceProjectionService {
         self.sessionListClient = sessionListClient ?? AgentChatSessionListClient(baseURL: agentChatURL)
         self.liveProjectionClient = liveProjectionClient ?? ExecutionTelemetryLiveProjectionClient(baseURL: agentChatURL)
         self.eventClient = eventClient ?? ExecutionTelemetryEventClient(baseURL: agentChatURL)
+        self.workspaceAssociationResolver = workspaceAssociationResolver
         self.pollInterval = pollInterval
         self.sidecarStatusHandler = sidecarStatusHandler
     }
@@ -121,11 +142,14 @@ final class ExecutionTelemetryProvenanceProjectionService {
             providerSessionID: snapshot.providerSessionID
         )
         guard !recordedLifecycleKeys.contains(key) else { return }
+        let workspaceAssociation = workspaceAssociationResolver(summary)
         await lifecycleRecorder.recordExecutionTelemetrySessionStarted(
             sessionID: snapshot.sessionID,
             provider: snapshot.provider,
             providerSessionID: snapshot.providerSessionID,
-            workingDirectory: summary.cwd,
+            workspaceID: workspaceAssociation.workspaceID,
+            surfaceID: workspaceAssociation.surfaceID,
+            workingDirectory: workspaceAssociation.workingDirectory ?? summary.cwd,
             timestamp: Self.timestamp(summary: summary, snapshot: snapshot)
         )
         recordedLifecycleKeys.insert(key)
