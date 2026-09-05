@@ -33,13 +33,13 @@ final class WorkProvenanceRuntime {
     let isEnabled: Bool
 
     var hasActiveLifecycleWork: Bool {
-        directoryObservationTask != nil ||
-            titleObservationTask != nil ||
-            displayMetadataObservationTask != nil ||
-            activationObservationTask != nil ||
-            executionTelemetryProjectionService != nil ||
-            !backgroundTasksByID.isEmpty
+        directoryObservationTask != nil || titleObservationTask != nil ||
+            displayMetadataObservationTask != nil || activationObservationTask != nil ||
+            executionTelemetryProjectionService != nil || !backgroundTasksByID.isEmpty
     }
+
+    private var acceptsLifecycleProducerWork: Bool { lifecycleState != .stopping && lifecycleState != .stopped }
+    private var acceptsObservationProducerWork: Bool { lifecycleState == .starting || lifecycleState == .ready }
 
     init(
         observationService: WorkProvenanceObservationService?,
@@ -196,7 +196,7 @@ final class WorkProvenanceRuntime {
         agentChatURL: URL,
         sidecarStatusHandler: @escaping (ExecutionTelemetryProjectionSidecarStatus) -> Void = { _ in }
     ) {
-        guard let sessionLifecycleRecorder else { return }
+        guard acceptsLifecycleProducerWork, let sessionLifecycleRecorder else { return }
         guard executionTelemetryProjectionService?.agentChatURL != agentChatURL else {
             executionTelemetryProjectionService?.updateSidecarStatusHandler(sidecarStatusHandler)
             executionTelemetryProjectionService?.start()
@@ -218,6 +218,7 @@ final class WorkProvenanceRuntime {
         StartupBreadcrumbLog.append("workProvenance.runtime.observeWorkspaces", fields: [
             "count": "\(workspaces.count)"
         ])
+        guard acceptsObservationProducerWork else { return }
         guard let observationService else { return }
         let snapshots = workspaces.map(WorkProvenanceWorkspaceSnapshot.init(workspace:))
         let stableWorkspaceIDs = snapshots.map(\.stableWorkspaceID)
@@ -263,7 +264,7 @@ final class WorkProvenanceRuntime {
 
     /// Persists an observed agent session lifecycle change.
     func recordSessionLifecycleChange(_ change: AgentSessionLifecycleChange, timestamp: Date) {
-        guard let sessionLifecycleRecorder else { return }
+        guard acceptsLifecycleProducerWork, let sessionLifecycleRecorder else { return }
         trackBackgroundTask(Task {
             await sessionLifecycleRecorder.record(change, timestamp: timestamp)
         })
@@ -271,7 +272,7 @@ final class WorkProvenanceRuntime {
 
     /// Persists hook-observed prompt evidence when sidecar telemetry has not linked the workspace yet.
     func recordHookUserPromptSubmit(record: AgentChatSessionRecord, event: WorkstreamEvent) {
-        guard let codingAgentEvidenceRecorder,
+        guard acceptsLifecycleProducerWork, let codingAgentEvidenceRecorder,
               let workspace = workspace(forRuntimeOrStableWorkspaceID: record.workspaceID ?? event.workspaceId) else {
             return
         }
@@ -299,7 +300,7 @@ final class WorkProvenanceRuntime {
 
     /// Persists transcript-observed prompt evidence when sidecar telemetry did not project it.
     func recordTranscriptUserPrompts(record: AgentChatSessionRecord, messages: [ChatMessage]) {
-        guard let codingAgentEvidenceRecorder, !messages.isEmpty else { return }
+        guard acceptsLifecycleProducerWork, let codingAgentEvidenceRecorder, !messages.isEmpty else { return }
         let stableWorkspaceID = workspace(forRuntimeOrStableWorkspaceID: record.workspaceID)?.stableId
         trackBackgroundTask(Task { [weak self] in
             do {
@@ -402,6 +403,7 @@ final class WorkProvenanceRuntime {
     }
 
     private func refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [UUID]) {
+        guard acceptsObservationProducerWork else { return }
         workspaceDisplayCurrentStateStore?.refresh(
             stableWorkspaceIDs: stableWorkspaceIDs,
             notify: { [weak self] stableWorkspaceID in

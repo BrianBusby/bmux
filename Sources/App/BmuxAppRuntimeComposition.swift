@@ -61,7 +61,9 @@ struct BmuxAppRuntimeComposition {
 
     @MainActor
     func makeWorkProvenanceRuntime(catalog: SettingCatalog) -> WorkProvenanceRuntime {
-        guard runtimeConfiguration.enables(.workProvenanceObservation) else {
+        let requiresWorkProvenanceStorage = runtimeConfiguration.enables(.workProvenanceObservation)
+            || runtimeConfiguration.enables(.agentChatExecutionTelemetryProjection)
+        guard requiresWorkProvenanceStorage else {
             return WorkProvenanceRuntime.disabledByComposition()
         }
         return WorkProvenanceRuntime.live(

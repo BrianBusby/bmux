@@ -123,6 +123,45 @@ struct AppRuntimeCompositionTests {
     }
 
     @Test
+    func explicitTestCompositionCanOptIntoExecutionTelemetryWithoutWorkspaceObservation() throws {
+        let homeDirectory = try Self.temporaryDirectory(named: "telemetry-only")
+        let configuration = BmuxAppRuntimeConfiguration.test(
+            enabledCapabilities: [BmuxAppRuntimeCapability.agentChatExecutionTelemetryProjection],
+            workProvenanceHomeDirectory: homeDirectory
+        )
+        let composition = BmuxAppRuntimeComposition(
+            configFileURL: homeDirectory.appendingPathComponent("bmux.json"),
+            secretBaseDirectory: homeDirectory.appendingPathComponent("secrets"),
+            bundleIdentifier: "com.example.bmux-tests",
+            runtimeConfiguration: configuration
+        )
+
+        let runtime = composition.makeWorkProvenanceRuntime(catalog: SettingCatalog())
+        let services = composition.makeRuntimeServices(workProvenanceRuntime: runtime)
+        let databaseURL = Self.databaseURL(in: homeDirectory)
+
+        #expect(configuration.enables(BmuxAppRuntimeCapability.agentChatExecutionTelemetryProjection))
+        #expect(!configuration.enables(BmuxAppRuntimeCapability.workProvenanceObservation))
+        #expect(runtime.effectiveDatabaseURL == databaseURL)
+
+        services.start(tabManager: TabManager())
+
+        #expect(services.startCount(for: BmuxAppRuntimeCapability.workProvenanceObservation) == 0)
+        #expect(runtime.lifecycleState == WorkProvenanceRuntimeLifecycleState.notStarted)
+
+        services.startAgentChatExecutionTelemetryProjection(agentChatURL: Self.agentChatURL())
+
+        #expect(services.startCount(for: BmuxAppRuntimeCapability.agentChatExecutionTelemetryProjection) == 1)
+        #expect(runtime.hasActiveLifecycleWork)
+
+        services.stop()
+
+        #expect(runtime.lifecycleState == WorkProvenanceRuntimeLifecycleState.stopped)
+        #expect(!runtime.hasActiveLifecycleWork)
+        #expect(FileManager.default.fileExists(atPath: databaseURL.path))
+    }
+
+    @Test
     func xctestCompatibilityEnvironmentOptInUsesConfiguredHomeDirectory() throws {
         let homeDirectory = try Self.temporaryDirectory(named: "environment-opt-in")
         let configuration = BmuxAppRuntimeConfiguration.currentProcess(
@@ -221,5 +260,9 @@ struct AppRuntimeCompositionTests {
 
     private static func databaseURL(in homeDirectory: URL) -> URL {
         WorkProvenanceStorageLocation(homeDirectory: homeDirectory).databaseURL
+    }
+
+    private static func agentChatURL() -> URL {
+        URL(string: "http://127.0.0.1:9")!
     }
 }
