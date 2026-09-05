@@ -20,7 +20,9 @@ class FakeGitHubProvider:
     def __init__(self):
         self.repositories: set[str] = set()
         self.commits: set[tuple[str, str]] = set()
+        self.reachable_commits: set[tuple[str, str]] = set()
         self.pull_requests: dict[tuple[str, int], project_docs.PullRequestEvidence] = {}
+        self.pull_requests_by_head: dict[tuple[str, str, str], list[project_docs.PullRequestEvidence]] = {}
         self.issues: dict[tuple[str, int], project_docs.IssueEvidence] = {}
         self.tags: dict[tuple[str, str], project_docs.TagEvidence] = {}
         self.releases: set[tuple[str, str]] = set()
@@ -39,9 +41,17 @@ class FakeGitHubProvider:
         self._maybe_fail("commit", f"{repository}@{sha}")
         return (repository, sha) in self.commits
 
+    def commit_reachable_from_default_branch(self, repository: str, sha: str) -> bool:
+        self._maybe_fail("commit_reachable", f"{repository}@{sha}")
+        return (repository, sha) in self.reachable_commits
+
     def pull_request(self, repository: str, number: int):
         self._maybe_fail("pull_request", f"{repository}#{number}")
         return self.pull_requests.get((repository, number))
+
+    def pull_requests_for_head(self, repository: str, owner: str, branch: str):
+        self._maybe_fail("pull_requests_for_head", f"{repository}:{owner}:{branch}")
+        return self.pull_requests_by_head.get((repository, owner, branch), [])
 
     def issue(self, repository: str, number: int):
         self._maybe_fail("issue", f"{repository}#{number}")
@@ -161,24 +171,36 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_dependency_satisfied_slice_becomes_ready(self):
         shared, _local = self.load_valid()
+        dependency = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+        dependency["status"] = "implemented"
+        dependency["capability_maturity"] = "validated"
+        dependency["execution"]["assignment"] = "complete"
+        dependency["delivery_status"] = "merged"
+        dependency["acceptance_status"] = "implemented"
+        dependency["evidence"] = {
+            "commits": [{"repository": "BrianBusby/bmux", "sha": "a" * 40}],
+            "pull_requests": [],
+        }
+        candidate = self.roadmap_node(shared, "app_runtime_service_lifecycle_migration")
+        candidate["capability_maturity"] = "ready"
         nodes = shared["roadmap"]["nodes"]
         ready_ids = {node["id"] for node in project_docs.dependency_ready_nodes(nodes)}
-        self.assertIn("milestone_inference", ready_ids)
+        self.assertIn("app_runtime_service_lifecycle_migration", ready_ids)
         readiness = project_docs.dependency_readiness(
-            self.roadmap_node(shared, "milestone_inference"),
+            candidate,
             {node["id"]: node for node in nodes},
         )
         self.assertTrue(readiness.ready)
 
     def test_unsatisfied_dependency_remains_gated(self):
         shared, _local = self.load_valid()
-        node = self.roadmap_node(shared, "milestone_to_code_relationships")
+        node = self.roadmap_node(shared, "scoped_architecture_projection")
         readiness = project_docs.dependency_readiness(
             node,
             {item["id"]: item for item in shared["roadmap"]["nodes"]},
         )
         self.assertFalse(readiness.ready)
-        self.assertTrue(any("milestone_inference" in blocker for blocker in readiness.blockers))
+        self.assertTrue(any("milestone_to_code_relationships" in blocker for blocker in readiness.blockers))
         self.assertNotIn(node, project_docs.dependency_ready_nodes(shared["roadmap"]["nodes"]))
 
     def test_gate_requiring_validated_does_not_pass_when_dependency_is_merely_implemented(self):
@@ -234,7 +256,23 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_ready_slice_can_be_selected_next(self):
         shared, local = self.load_valid()
-        selected = self.roadmap_node(shared, "milestone_inference")
+        selected = self.roadmap_node(shared, "app_runtime_service_lifecycle_migration")
+        dependency = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+        dependency["status"] = "implemented"
+        dependency["capability_maturity"] = "validated"
+        dependency["execution"]["assignment"] = "complete"
+        dependency["delivery_status"] = "merged"
+        dependency["acceptance_status"] = "implemented"
+        dependency["evidence"] = {
+            "commits": [{"repository": "BrianBusby/bmux", "sha": "a" * 40}],
+            "pull_requests": [],
+        }
+        for key in ("active_worktree", "active_branch", "active_agent", "active_session"):
+            dependency["execution"].pop(key, None)
+        local["current_work"]["active_slice"] = {"id": None, "title": None, "state": "none_selected"}
+        local["current_work"]["state"] = "none_selected"
+        selected["capability_maturity"] = "ready"
+        selected["execution"]["assignment"] = "selected_next"
         self.assertEqual("ready", selected["capability_maturity"])
         self.assertEqual("selected_next", selected["execution"]["assignment"])
         project_docs.semantic_validate(shared, local, LOCAL)
@@ -249,16 +287,16 @@ class ProjectDocsTests(unittest.TestCase):
         context = project_docs.load_inputs(ROOT)
         rendered = project_docs.render_next_work_text(context)
         self.assertIn("Primary frontier:", rendered)
-        self.assertIn("Richer Session Understanding (richer_session_understanding)", rendered)
+        self.assertIn("Process Integrity (process_integrity)", rendered)
         self.assertIn("Selected next:", rendered)
-        self.assertIn("Milestone inference (`milestone_inference`)", rendered)
-        self.assertIn("Evidence-aware knowledge retrieval", rendered)
-        self.assertIn("requires validated for gate `compiled_knowledge_validated`", rendered)
+        self.assertIn("Deterministic App Runtime Composition and App-Host Test Isolation", rendered)
+        self.assertIn("Background Service Lifecycle Migration", rendered)
+        self.assertIn("requires validated for gate `runtime_composition_validated`", rendered)
 
     def test_primary_capability_frontier_renders_in_generated_docs(self):
         context = project_docs.load_inputs(ROOT)
         rendered = project_docs.render_project_status(context)
-        self.assertIn("Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)", rendered)
+        self.assertIn("Primary Capability Frontier: Process Integrity (`process_integrity`)", rendered)
         self.assertIn("## What Can Be Worked On Next", rendered)
 
     def test_historical_accepted_and_observation_nodes_satisfy_dependencies(self):
@@ -442,7 +480,7 @@ class ProjectDocsTests(unittest.TestCase):
             doc = repo / "docs/current-and-target-architecture.md"
             doc.write_text(
                 doc.read_text(encoding="utf-8").replace(
-                    "Active implementation slice: Project Truth dependency and capability frontier governance",
+                    "Active implementation slice: Deterministic App Runtime Composition and App-Host Test Isolation",
                     "Active implementation slice: stale",
                     1,
                 ),
@@ -505,6 +543,7 @@ class ProjectDocsTests(unittest.TestCase):
         for milestone in shared["milestones"]:
             for commit in milestone["evidence"]["commits"]:
                 provider.commits.add((commit["repository"], commit["sha"]))
+                provider.reachable_commits.add((commit["repository"], commit["sha"]))
             for pr in milestone["evidence"]["pull_requests"]:
                 owner = pr.get("owner", {})
                 provider.pull_requests[(pr["repository"], pr["number"])] = pr_evidence_for_delivery(
@@ -514,6 +553,7 @@ class ProjectDocsTests(unittest.TestCase):
             evidence = node.get("evidence", {})
             for commit in evidence.get("commits", []):
                 provider.commits.add((commit["repository"], commit["sha"]))
+                provider.reachable_commits.add((commit["repository"], commit["sha"]))
             for pr in evidence.get("pull_requests", []):
                 owner = pr.get("owner", {})
                 provider.pull_requests[(pr["repository"], pr["number"])] = pr_evidence_for_delivery(
@@ -789,6 +829,14 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_valid_parallel_active_assignments_pass(self):
         shared, local = self.load_valid()
+        current = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+        current["status"] = "implemented"
+        current["capability_maturity"] = "validated"
+        current["execution"]["assignment"] = "complete"
+        for key in ("active_worktree", "active_branch", "active_agent", "active_session"):
+            current["execution"].pop(key, None)
+        local["current_work"]["active_slice"] = {"id": None, "title": None, "state": "none_selected"}
+        local["current_work"]["state"] = "none_selected"
         self.activate_slice(
             shared,
             "human_readable_semantic_messaging",
@@ -888,6 +936,108 @@ class ProjectDocsTests(unittest.TestCase):
         first = [issue.format() for issue in sorted(issues, key=lambda item: item.sort_key())]
         second = [issue.format() for issue in sorted(reversed(issues), key=lambda item: item.sort_key())]
         self.assertEqual(first, second)
+
+    def runtime_merge_provider(self) -> FakeGitHubProvider:
+        provider = self.fake_provider_for_current_manifests()
+        merge_sha = "2a08fa2ce32495c2e637629bee8691b23bbe91c0"
+        merged = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+            merged_at="2026-09-05T17:38:46Z",
+            merge_commit_sha=merge_sha,
+            head_ref="process-integrity-runtime-composition",
+            head_owner_login="BrianBusby",
+        )
+        provider.pull_requests[("BrianBusby/bmux", 97)] = merged
+        provider.pull_requests_by_head[("BrianBusby/bmux", "BrianBusby", "process-integrity-runtime-composition")] = [merged]
+        provider.commits.add(("BrianBusby/bmux", merge_sha))
+        provider.reachable_commits.add(("BrianBusby/bmux", merge_sha))
+        return provider
+
+    def test_reconcile_detects_current_merged_branch_without_recorded_pr(self):
+        shared, local = self.load_valid()
+        plan = project_docs.reconciliation_plan(shared, [local], self.runtime_merge_provider())
+
+        self.assertTrue(plan.changes)
+        self.assertTrue(any(change.node_id == "deterministic_app_runtime_composition" for change in plan.changes))
+        self.assertEqual([], plan.decisions)
+
+    def test_reconcile_apply_reconciles_current_runtime_slice_and_is_idempotent(self):
+        shared, local = self.load_valid()
+        provider = self.runtime_merge_provider()
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider)
+        reconciled_shared, reconciled_repo_statuses = project_docs.apply_reconciliation_plan(shared, [local], plan)
+
+        node = self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")
+        self.assertEqual("implemented", node["status"])
+        self.assertEqual("validated", node["capability_maturity"])
+        self.assertEqual("complete", node["execution"]["assignment"])
+        self.assertEqual("merged", node["delivery_status"])
+        self.assertEqual("implemented", node["acceptance_status"])
+        self.assertEqual("2026-09-05", node["completed_at"])
+        self.assertNotIn("active_worktree", node["execution"])
+        self.assertTrue(any(commit["sha"] == "2a08fa2ce32495c2e637629bee8691b23bbe91c0" for commit in node["evidence"]["commits"]))
+        self.assertTrue(any(pr["number"] == 97 and pr["merge_commit_sha"] == "2a08fa2ce32495c2e637629bee8691b23bbe91c0" for pr in node["evidence"]["pull_requests"]))
+        self.assertIsNone(reconciled_repo_statuses[0]["current_work"]["active_slice"]["id"])
+
+        second = project_docs.reconciliation_plan(reconciled_shared, reconciled_repo_statuses, provider)
+        self.assertEqual([], second.changes)
+
+    def test_reconcile_advances_gated_ready_candidate_without_selecting_it(self):
+        shared, local = self.load_valid()
+        plan = project_docs.reconciliation_plan(shared, [local], self.runtime_merge_provider())
+        reconciled_shared, _ = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        candidate = self.roadmap_node(reconciled_shared, "app_runtime_service_lifecycle_migration")
+
+        self.assertEqual("ready", candidate["capability_maturity"])
+        self.assertEqual("planned", candidate["execution"]["assignment"])
+        ready_ids = {node["id"] for node in project_docs.dependency_ready_nodes(reconciled_shared["roadmap"]["nodes"])}
+        self.assertIn("app_runtime_service_lifecycle_migration", ready_ids)
+
+    def test_reconcile_preserves_observation_gate_for_merged_delivery(self):
+        shared, local = self.load_valid()
+        self.roadmap_node(shared, "deterministic_app_runtime_composition")["acceptance_status"] = "under_observation"
+
+        plan = project_docs.reconciliation_plan(shared, [local], self.runtime_merge_provider())
+        reconciled_shared, _ = project_docs.apply_reconciliation_plan(shared, [local], plan)
+
+        self.assertEqual("under_observation", self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")["acceptance_status"])
+
+    def test_reconcile_reports_closed_unmerged_pr_as_decision(self):
+        shared, local = self.load_valid()
+        provider = self.fake_provider_for_current_manifests()
+        closed = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+            merged_at=None,
+            merge_commit_sha=None,
+        )
+        provider.pull_requests_by_head[("BrianBusby/bmux", "BrianBusby", "process-integrity-runtime-composition")] = [closed]
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider)
+
+        self.assertEqual([], plan.changes)
+        self.assertTrue(any(decision.name == "closed_unmerged_pr" for decision in plan.decisions))
+
+    def test_reconcile_distinguishes_github_rate_limit(self):
+        shared, local = self.load_valid()
+        provider = self.fake_provider_for_current_manifests()
+        provider.failures[("pull_requests_for_head", "BrianBusby/bmux:BrianBusby:process-integrity-runtime-composition")] = (
+            project_docs.GitHubProviderError("rate_limit", "rate limited")
+        )
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider)
+
+        self.assertTrue(any(issue.name == "rate_limit" for issue in plan.issues))
 
     def test_project_truth_workflow_runs_canonical_ci_gate(self):
         text = PROJECT_TRUTH_WORKFLOW.read_text(encoding="utf-8")
