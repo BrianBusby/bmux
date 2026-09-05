@@ -23,6 +23,8 @@ validation fails if a shared-state pointer is reintroduced.
 ./scripts/project-docs validate
 ./scripts/project-docs generate
 ./scripts/project-docs check
+./scripts/project-docs reconcile --check
+./scripts/project-docs reconcile --apply
 ./scripts/project-docs ci
 ```
 
@@ -39,3 +41,43 @@ failures fail with separate categories.
 
 This validation does not write manifests, edit documentation automatically,
 synchronize through a GitHub App, or persist GitHub responses as project state.
+
+## Delivery Lifecycle
+
+Project Truth delivery state follows this lifecycle:
+
+```text
+planned
+-> selected/current
+-> implementation active
+-> implementation complete
+-> delivery merged
+-> observation/acceptance
+-> active assignment cleared
+-> frontier recalculated
+```
+
+The canonical reconciliation owner is `tools/project-docs`. It derives only
+mechanical facts from GitHub: PR existence/state, merge commit, merged timestamp,
+active branch to PR identity when exactly one PR matches, recorded commit
+reachability from the repository default branch, stale active assignments, and
+readiness changes under declared dependency policy. It does not accept work,
+close caveats, supersede abandoned work, or select the next priority.
+
+Run `./scripts/project-docs reconcile --check` to inspect stale delivery state
+without writing files. It exits nonzero when safe changes or explicit planning
+decisions remain, and reports GitHub authentication, rate-limit, network,
+missing-evidence, and contradictory-state failures separately.
+
+Run `./scripts/project-docs reconcile --apply` after reviewing check output. It
+updates only `project/project-state.yaml` and `project/repo-status.yaml`, records
+verified merge evidence, clears completed active-work metadata when safe,
+advances newly ready candidates, regenerates generated docs through the existing
+generator, and validates the result in a temporary copy before writing back. A
+second apply against unchanged GitHub state should produce no diff.
+
+Post-merge automation may open or update a single bounded reconciliation PR from
+these safe changes. If automation fails, maintainers recover by running check and
+apply locally, reviewing the generated diff, and opening the reconciliation PR
+manually. Closed-unmerged, superseded, replaced, abandoned, or still-observed
+work remains explicit Project Truth planning state.

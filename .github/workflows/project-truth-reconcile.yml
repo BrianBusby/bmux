@@ -1,0 +1,109 @@
+name: Project Truth Reconcile
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+
+concurrency:
+  group: ${{ github.workflow }}-project-truth-reconciliation
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    name: post-merge-reconciliation
+    runs-on: ${{ vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Install Project Truth dependencies
+        run: python3 -m pip install -r tools/project-docs/requirements.txt
+
+      - name: Check reconciliation state
+        id: reconcile-check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          ./scripts/project-docs reconcile --check | tee /tmp/project-truth-reconcile-check.txt
+          status=${PIPESTATUS[0]}
+          set -e
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
+          if [[ "$status" == "0" || "$status" == "1" ]]; then
+            exit 0
+          fi
+          exit "$status"
+
+      - name: Open or update reconciliation PR
+        if: steps.reconcile-check.outputs.status == '1'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RECONCILIATION_BRANCH: project-truth/post-merge-reconciliation
+        run: |
+          set -euo pipefail
+
+          base_sha="$(git rev-parse HEAD)"
+          set +e
+          ./scripts/project-docs reconcile --apply | tee /tmp/project-truth-reconcile-apply.txt
+          apply_status=${PIPESTATUS[0]}
+          set -e
+          if [[ "$apply_status" != "0" && "$apply_status" != "1" ]]; then
+            exit "$apply_status"
+          fi
+
+          if git diff --quiet; then
+            echo "Reconciliation reported required action but produced no safe diff."
+            exit "$apply_status"
+          fi
+
+          git diff --check
+          ./scripts/project-docs validate
+          ./scripts/project-docs check
+          ./scripts/project-docs ci
+
+          git fetch origin main
+          current_main="$(git rev-parse origin/main)"
+          if [[ "$base_sha" != "$current_main" ]]; then
+            echo "main advanced from $base_sha to $current_main during reconciliation; rerun against current main."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$RECONCILIATION_BRANCH"
+          git add project/project-state.yaml project/repo-status.yaml docs/generated docs/current-and-target-architecture.md
+          git commit -m "Reconcile Project Truth delivery state"
+          git push --force-with-lease origin "HEAD:$RECONCILIATION_BRANCH"
+
+          cat > /tmp/project-truth-reconcile-pr.md <<'BODY'
+          ## Summary
+
+          - Reconciles Project Truth delivery state after merged implementation evidence.
+          - Regenerates derived Project Truth documentation from canonical manifests.
+          - Leaves acceptance, caveat closure, and next-priority selection as explicit human decisions.
+
+          ## Testing
+
+          - `./scripts/project-docs reconcile --apply`
+          - `git diff --check`
+          - `./scripts/project-docs validate`
+          - `./scripts/project-docs check`
+          - `./scripts/project-docs ci`
+          BODY
+
+          pr_number="$(gh pr list --head "$RECONCILIATION_BRANCH" --state open --json number --jq '.[0].number')"
+          if [[ -n "$pr_number" ]]; then
+            gh pr edit "$pr_number" --title "Reconcile Project Truth delivery state" --body-file /tmp/project-truth-reconcile-pr.md
+          else
+            gh pr create --base main --head "$RECONCILIATION_BRANCH" --title "Reconcile Project Truth delivery state" --body-file /tmp/project-truth-reconcile-pr.md
+          fi

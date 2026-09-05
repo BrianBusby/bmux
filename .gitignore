@@ -32,6 +32,7 @@ appcast.xml
 __pycache__/
 *.pyc
 *.pyo
+.venv-project-docs/
 .pytest_cache/
 .hypothesis/
 .vercel

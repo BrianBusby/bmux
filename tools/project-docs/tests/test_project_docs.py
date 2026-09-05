@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[3]
 SHARED = ROOT / "project" / "project-state.yaml"
 LOCAL = ROOT / "project" / "repo-status.yaml"
 PROJECT_TRUTH_WORKFLOW = ROOT / ".github" / "workflows" / "project-truth.yml"
+PROJECT_TRUTH_RECONCILE_WORKFLOW = ROOT / ".github" / "workflows" / "project-truth-reconcile.yml"
 
 
 class FakeGitHubProvider:
@@ -113,6 +114,47 @@ class ProjectDocsTests(unittest.TestCase):
         node["execution"]["active_worktree"] = worktree
         node["execution"]["active_branch"] = branch
         node["execution"]["active_agent"] = agent
+        return node
+
+    def clear_current_work(self, shared, local, node_id: str = "post_merge_project_truth_reconciliation"):
+        node = self.roadmap_node(shared, node_id)
+        node["status"] = "implemented"
+        node["capability_maturity"] = "validated"
+        node["execution"]["assignment"] = "complete"
+        node["delivery_status"] = "merged"
+        node["acceptance_status"] = "implemented"
+        node["evidence"] = {"commits": [{"repository": "BrianBusby/bmux", "sha": "b" * 40}], "pull_requests": []}
+        for key in ("active_worktree", "active_branch", "active_agent", "active_session"):
+            node["execution"].pop(key, None)
+        local["current_work"]["active_slice"] = {"id": None, "title": None, "state": "none_selected"}
+        local["current_work"]["state"] = "none_selected"
+        return node
+
+    def make_runtime_slice_stale(self, shared, local):
+        self.clear_current_work(shared, local)
+        node = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+        node["status"] = "active"
+        node["capability_maturity"] = "active"
+        node["execution"]["assignment"] = "current"
+        node["execution"]["active_worktree"] = "/Users/brianbusby/repos/.bmux-worktrees/process-integrity-runtime-composition"
+        node["execution"]["active_branch"] = "process-integrity-runtime-composition"
+        node["execution"]["active_agent"] = "codex"
+        node["delivery_status"] = "open"
+        node["acceptance_status"] = "proposed"
+        node.pop("evidence", None)
+        node.pop("completed_at", None)
+        local["current_work"]["active_slice"] = {
+            "id": "deterministic_app_runtime_composition",
+            "title": "Deterministic App Runtime Composition and App-Host Test Isolation",
+            "state": "open",
+            "owner": "bmux",
+            "active_worktree": "/Users/brianbusby/repos/.bmux-worktrees/process-integrity-runtime-composition",
+            "active_branch": "process-integrity-runtime-composition",
+            "active_agent": "codex",
+        }
+        local["current_work"]["state"] = "active"
+        candidate = self.roadmap_node(shared, "app_runtime_service_lifecycle_migration")
+        candidate["capability_maturity"] = "gated"
         return node
 
     def test_valid_shared_manifest(self):
@@ -238,14 +280,18 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_gated_slice_cannot_be_selected_next(self):
         shared, local = self.load_valid()
+        self.clear_current_work(shared, local)
         node = self.roadmap_node(shared, "milestone_to_code_relationships")
+        node["capability_maturity"] = "gated"
         node["execution"]["assignment"] = "selected_next"
         with self.assertRaisesRegex(project_docs.ProjectDocsError, "capability_maturity gated cannot be selected_next"):
             project_docs.semantic_validate(shared, local, LOCAL)
 
     def test_gated_slice_cannot_be_active_current(self):
         shared, local = self.load_valid()
+        self.clear_current_work(shared, local)
         node = self.roadmap_node(shared, "milestone_to_code_relationships")
+        node["capability_maturity"] = "gated"
         node["status"] = "active"
         node["execution"]["assignment"] = "current"
         node["execution"]["active_worktree"] = "/worktrees/gated"
@@ -256,21 +302,8 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_ready_slice_can_be_selected_next(self):
         shared, local = self.load_valid()
+        self.clear_current_work(shared, local)
         selected = self.roadmap_node(shared, "app_runtime_service_lifecycle_migration")
-        dependency = self.roadmap_node(shared, "deterministic_app_runtime_composition")
-        dependency["status"] = "implemented"
-        dependency["capability_maturity"] = "validated"
-        dependency["execution"]["assignment"] = "complete"
-        dependency["delivery_status"] = "merged"
-        dependency["acceptance_status"] = "implemented"
-        dependency["evidence"] = {
-            "commits": [{"repository": "BrianBusby/bmux", "sha": "a" * 40}],
-            "pull_requests": [],
-        }
-        for key in ("active_worktree", "active_branch", "active_agent", "active_session"):
-            dependency["execution"].pop(key, None)
-        local["current_work"]["active_slice"] = {"id": None, "title": None, "state": "none_selected"}
-        local["current_work"]["state"] = "none_selected"
         selected["capability_maturity"] = "ready"
         selected["execution"]["assignment"] = "selected_next"
         self.assertEqual("ready", selected["capability_maturity"])
@@ -289,9 +322,9 @@ class ProjectDocsTests(unittest.TestCase):
         self.assertIn("Primary frontier:", rendered)
         self.assertIn("Process Integrity (process_integrity)", rendered)
         self.assertIn("Selected next:", rendered)
-        self.assertIn("Deterministic App Runtime Composition and App-Host Test Isolation", rendered)
+        self.assertIn("Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement", rendered)
         self.assertIn("Background Service Lifecycle Migration", rendered)
-        self.assertIn("requires validated for gate `runtime_composition_validated`", rendered)
+        self.assertIn("Ready:", rendered)
 
     def test_primary_capability_frontier_renders_in_generated_docs(self):
         context = project_docs.load_inputs(ROOT)
@@ -480,7 +513,7 @@ class ProjectDocsTests(unittest.TestCase):
             doc = repo / "docs/current-and-target-architecture.md"
             doc.write_text(
                 doc.read_text(encoding="utf-8").replace(
-                    "Active implementation slice: Deterministic App Runtime Composition and App-Host Test Isolation",
+                    "Active implementation slice: Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement",
                     "Active implementation slice: stale",
                     1,
                 ),
@@ -507,7 +540,7 @@ class ProjectDocsTests(unittest.TestCase):
         provider = FakeGitHubProvider()
         provider.repositories.update(project_docs.collect_evidence_repositories(shared, [local]))
 
-        def pr_evidence_for_delivery(delivery_status: str, owner: dict):
+        def pr_evidence_for_delivery(delivery_status: str, owner: dict, pr: dict):
             if delivery_status == "draft":
                 return project_docs.PullRequestEvidence(
                     state="open",
@@ -515,6 +548,9 @@ class ProjectDocsTests(unittest.TestCase):
                     merged=False,
                     owner_login=owner.get("login"),
                     owner_url=owner.get("profile_url"),
+                    number=pr.get("number"),
+                    merged_at=pr.get("merged_at"),
+                    merge_commit_sha=pr.get("merge_commit_sha"),
                 )
             if delivery_status == "open":
                 return project_docs.PullRequestEvidence(
@@ -523,6 +559,9 @@ class ProjectDocsTests(unittest.TestCase):
                     merged=False,
                     owner_login=owner.get("login"),
                     owner_url=owner.get("profile_url"),
+                    number=pr.get("number"),
+                    merged_at=pr.get("merged_at"),
+                    merge_commit_sha=pr.get("merge_commit_sha"),
                 )
             if delivery_status == "closed":
                 return project_docs.PullRequestEvidence(
@@ -531,6 +570,9 @@ class ProjectDocsTests(unittest.TestCase):
                     merged=False,
                     owner_login=owner.get("login"),
                     owner_url=owner.get("profile_url"),
+                    number=pr.get("number"),
+                    merged_at=pr.get("merged_at"),
+                    merge_commit_sha=pr.get("merge_commit_sha"),
                 )
             return project_docs.PullRequestEvidence(
                 state="closed",
@@ -538,6 +580,9 @@ class ProjectDocsTests(unittest.TestCase):
                 merged=delivery_status == "merged",
                 owner_login=owner.get("login"),
                 owner_url=owner.get("profile_url"),
+                number=pr.get("number"),
+                merged_at=pr.get("merged_at"),
+                merge_commit_sha=pr.get("merge_commit_sha"),
             )
 
         for milestone in shared["milestones"]:
@@ -547,7 +592,7 @@ class ProjectDocsTests(unittest.TestCase):
             for pr in milestone["evidence"]["pull_requests"]:
                 owner = pr.get("owner", {})
                 provider.pull_requests[(pr["repository"], pr["number"])] = pr_evidence_for_delivery(
-                    milestone["delivery_status"], owner
+                    milestone["delivery_status"], owner, pr
                 )
         for node in shared["roadmap"]["nodes"]:
             evidence = node.get("evidence", {})
@@ -557,7 +602,7 @@ class ProjectDocsTests(unittest.TestCase):
             for pr in evidence.get("pull_requests", []):
                 owner = pr.get("owner", {})
                 provider.pull_requests[(pr["repository"], pr["number"])] = pr_evidence_for_delivery(
-                    node.get("delivery_status"), owner
+                    node.get("delivery_status"), owner, pr
                 )
         for caveat in shared["caveats"]:
             issue = caveat.get("issue")
@@ -632,6 +677,29 @@ class ProjectDocsTests(unittest.TestCase):
         issues = project_docs.github_evidence_issues(shared, [local], provider)
         self.assertTrue(any(issue.name == "pr_owner_login_mismatch" for issue in issues))
         self.assertTrue(any(issue.name == "pr_owner_url_mismatch" for issue in issues))
+
+    def test_pr_merge_metadata_mismatch_fails_github_verification(self):
+        shared, local = self.load_valid()
+        node = self.roadmap_node(shared, "workspace_coding_agent_session_linkage_hardening")
+        pr = node["evidence"]["pull_requests"][0]
+        pr["merged_at"] = "2026-09-03T20:46:18Z"
+        pr["merge_commit_sha"] = "8a0163fe1b72c3f714f5c3a3719a8dfc9114000e"
+        provider = self.fake_provider_for_current_manifests()
+        provider.pull_requests[(pr["repository"], pr["number"])] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=pr["number"],
+            merged_at="2026-09-03T20:46:19Z",
+            merge_commit_sha="c" * 40,
+        )
+
+        issues = project_docs.github_evidence_issues(shared, [local], provider)
+
+        self.assertTrue(any(issue.name == "pr_merged_at_mismatch" for issue in issues))
+        self.assertTrue(any(issue.name == "pr_merge_commit_mismatch" for issue in issues))
 
     def test_draft_open_and_closed_pr_mismatches_are_distinct(self):
         shared, local = self.load_valid()
@@ -829,14 +897,7 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_valid_parallel_active_assignments_pass(self):
         shared, local = self.load_valid()
-        current = self.roadmap_node(shared, "deterministic_app_runtime_composition")
-        current["status"] = "implemented"
-        current["capability_maturity"] = "validated"
-        current["execution"]["assignment"] = "complete"
-        for key in ("active_worktree", "active_branch", "active_agent", "active_session"):
-            current["execution"].pop(key, None)
-        local["current_work"]["active_slice"] = {"id": None, "title": None, "state": "none_selected"}
-        local["current_work"]["state"] = "none_selected"
+        self.clear_current_work(shared, local)
         self.activate_slice(
             shared,
             "human_readable_semantic_messaging",
@@ -960,6 +1021,7 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_reconcile_detects_current_merged_branch_without_recorded_pr(self):
         shared, local = self.load_valid()
+        self.make_runtime_slice_stale(shared, local)
         plan = project_docs.reconciliation_plan(shared, [local], self.runtime_merge_provider())
 
         self.assertTrue(plan.changes)
@@ -968,6 +1030,7 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_reconcile_apply_reconciles_current_runtime_slice_and_is_idempotent(self):
         shared, local = self.load_valid()
+        self.make_runtime_slice_stale(shared, local)
         provider = self.runtime_merge_provider()
 
         plan = project_docs.reconciliation_plan(shared, [local], provider)
@@ -990,6 +1053,7 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_reconcile_advances_gated_ready_candidate_without_selecting_it(self):
         shared, local = self.load_valid()
+        self.make_runtime_slice_stale(shared, local)
         plan = project_docs.reconciliation_plan(shared, [local], self.runtime_merge_provider())
         reconciled_shared, _ = project_docs.apply_reconciliation_plan(shared, [local], plan)
         candidate = self.roadmap_node(reconciled_shared, "app_runtime_service_lifecycle_migration")
@@ -1001,6 +1065,7 @@ class ProjectDocsTests(unittest.TestCase):
 
     def test_reconcile_preserves_observation_gate_for_merged_delivery(self):
         shared, local = self.load_valid()
+        self.make_runtime_slice_stale(shared, local)
         self.roadmap_node(shared, "deterministic_app_runtime_composition")["acceptance_status"] = "under_observation"
 
         plan = project_docs.reconciliation_plan(shared, [local], self.runtime_merge_provider())
@@ -1008,8 +1073,37 @@ class ProjectDocsTests(unittest.TestCase):
 
         self.assertEqual("under_observation", self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")["acceptance_status"])
 
+    def test_reconcile_open_pr_records_evidence_without_completing_delivery(self):
+        shared, local = self.load_valid()
+        self.make_runtime_slice_stale(shared, local)
+        provider = self.fake_provider_for_current_manifests()
+        open_pr = project_docs.PullRequestEvidence(
+            state="open",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+            merge_commit_sha="d" * 40,
+            head_ref="process-integrity-runtime-composition",
+            head_owner_login="BrianBusby",
+        )
+        provider.pull_requests_by_head[("BrianBusby/bmux", "BrianBusby", "process-integrity-runtime-composition")] = [open_pr]
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider)
+        reconciled_shared, reconciled_repo_statuses = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        node = self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")
+
+        self.assertEqual("active", node["status"])
+        self.assertEqual("open", node["delivery_status"])
+        self.assertEqual("current", node["execution"]["assignment"])
+        self.assertEqual("deterministic_app_runtime_composition", reconciled_repo_statuses[0]["current_work"]["active_slice"]["id"])
+        recorded_pr = next(pr for pr in node["evidence"]["pull_requests"] if pr["number"] == 97)
+        self.assertNotIn("merge_commit_sha", recorded_pr)
+
     def test_reconcile_reports_closed_unmerged_pr_as_decision(self):
         shared, local = self.load_valid()
+        self.make_runtime_slice_stale(shared, local)
         provider = self.fake_provider_for_current_manifests()
         closed = project_docs.PullRequestEvidence(
             state="closed",
@@ -1025,11 +1119,13 @@ class ProjectDocsTests(unittest.TestCase):
 
         plan = project_docs.reconciliation_plan(shared, [local], provider)
 
-        self.assertEqual([], plan.changes)
+        target_changes = [change for change in plan.changes if change.node_id == "deterministic_app_runtime_composition"]
+        self.assertEqual([], target_changes)
         self.assertTrue(any(decision.name == "closed_unmerged_pr" for decision in plan.decisions))
 
     def test_reconcile_distinguishes_github_rate_limit(self):
         shared, local = self.load_valid()
+        self.make_runtime_slice_stale(shared, local)
         provider = self.fake_provider_for_current_manifests()
         provider.failures[("pull_requests_for_head", "BrianBusby/bmux:BrianBusby:process-integrity-runtime-composition")] = (
             project_docs.GitHubProviderError("rate_limit", "rate limited")
@@ -1051,6 +1147,17 @@ class ProjectDocsTests(unittest.TestCase):
         self.assertIn("./scripts/project-docs validate", text)
         self.assertIn("./scripts/project-docs check", text)
         self.assertIn("./scripts/project-docs ci", text)
+
+    def test_project_truth_reconcile_workflow_uses_bounded_writer(self):
+        text = PROJECT_TRUTH_RECONCILE_WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("contents: write", text)
+        self.assertIn("pull-requests: write", text)
+        self.assertIn("RECONCILIATION_BRANCH: project-truth/post-merge-reconciliation", text)
+        self.assertIn("./scripts/project-docs reconcile --check", text)
+        self.assertIn("./scripts/project-docs reconcile --apply", text)
+        self.assertIn("git push --force-with-lease origin \"HEAD:$RECONCILIATION_BRANCH\"", text)
+        self.assertIn("gh pr list --head \"$RECONCILIATION_BRANCH\" --state open", text)
+        self.assertNotIn("git push origin main", text)
 
 
 if __name__ == "__main__":

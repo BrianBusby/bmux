@@ -187,16 +187,18 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
 - Primary capability frontier: Process Integrity (`process_integrity`)
-- Active implementation slice: Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) - open
+- Active implementation slice: Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`) - open
 - Bmux repository state: active
 
 ### Current Roadmap Lanes
 
 - Bmux and Provenance Engine (`bmux_provenance_platform`) - project; status: active; owner: Provenance Engine
 - Process Integrity (`process_integrity`) - program; status: active; owner: Bmux
+- Project Truth Delivery Lifecycle (`project_truth_delivery_lifecycle`) - phase; status: active; owner: Bmux
+- Post-Merge Project Truth Reconciliation (`post_merge_project_truth_reconciliation_milestone`) - milestone; status: active; owner: Bmux
+- Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`) - slice; status: active; owner: Bmux
 - App Runtime Composition and Test Isolation (`app_runtime_composition_and_test_isolation`) - phase; status: active; owner: Bmux
 - App Runtime Composition Migration (`app_runtime_composition_migration`) - milestone; status: active; owner: Bmux
-- Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) - slice; status: active; owner: Bmux
 - Project Truth Governance (`project_truth_governance`) - program; status: active; owner: Provenance Engine
 - Canonical Project Truth State (`canonical_project_truth_state`) - phase; status: active; owner: Provenance Engine
 - Project Truth Manifest and CI (`project_truth_manifest_and_ci`) - milestone; status: active; owner: Provenance Engine
@@ -231,7 +233,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 #### Deterministic Current State
 
-- Status: Workspace Display Durable Context and Reconciliation (`workspace_display_durable_context`): implemented, delivery merged, acceptance accepted; Factual session projection foundation (`factual_session_projection_foundation`): implemented, delivery open, acceptance implemented; Deterministic Current State: not listed; Workspace Display Current State: not listed; Workspace Display Projection Cursors: not listed; Workspace Display Ticket Link Facts: implemented; Workspace Display Ticket Title Facts: not listed; Workspace Display Project Link Facts: not listed; Workspace Display Durable Context: implemented
+- Status: Workspace Display Durable Context and Reconciliation (`workspace_display_durable_context`): implemented, delivery merged, acceptance accepted; Factual session projection foundation (`factual_session_projection_foundation`): implemented, delivery merged, acceptance implemented; Deterministic Current State: not listed; Workspace Display Current State: not listed; Workspace Display Projection Cursors: not listed; Workspace Display Ticket Link Facts: implemented; Workspace Display Ticket Title Facts: not listed; Workspace Display Project Link Facts: not listed; Workspace Display Durable Context: implemented
 - Owns: Mechanical, rebuildable present-tense state derived only from accepted evidence.
 - Inputs: Immutable ledger events and deterministic reducer rules.
 - Outputs: Workspace display facts, current context, session/worktree/file views, and other factual public reads.
@@ -240,7 +242,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 #### Factual session projection
 
-- Status: Factual session projection foundation (`factual_session_projection_foundation`): implemented, delivery open, acceptance implemented; Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`): implemented, delivery merged, acceptance implemented; Factual agent session view (`factual_agent_session_view`): implemented, delivery merged, acceptance implemented; Factual Session Projection: not listed
+- Status: Factual session projection foundation (`factual_session_projection_foundation`): implemented, delivery merged, acceptance implemented; Factual projection consumer shape follow-up (`factual_projection_consumer_shape_followup`): implemented, delivery merged, acceptance implemented; Factual agent session view (`factual_agent_session_view`): implemented, delivery merged, acceptance implemented; Factual Session Projection: not listed
 - Owns: Revisioned factual snapshots of observed coding-agent thread and turn evidence for one PE session.
 - Inputs: Coding-agent thread, turn, prompt, plan, completed command, visible reasoning summary, and file-change attribution evidence.
 - Outputs: Observed thread/turn grouping with latest prompt, plan, commands, summaries, file changes, and ledger revision.
@@ -294,7 +296,10 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready Work
 
-- None.
+- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - selection: planned; owner: Bmux; depends on: `deterministic_app_runtime_composition`. Rationale: Follow-up Process Integrity slice to migrate the next background service family exposed by app-host side effects into explicit construction, readiness, and teardown ownership.
+- React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - selection: planned; owner: Bmux; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`. Rationale: Consume the PE SessionWorkModel for completed-turn summaries, current-turn state, plan/progress, blockers, approach changes, validations, and richer session-level synthesis once those contracts exist.
+- Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - selection: planned; owner: Bmux; depends on: `agent_accessible_cross_session_retrieval`. Rationale: Measure whether bounded explainable cross-session context improves outcomes before making automatic context assembly a product behavior.
+- Milestone-to-code relationships (`milestone_to_code_relationships`) - selection: planned; owner: Provenance Engine; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`.
 
 ### Selected Next Work
 
@@ -302,24 +307,20 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready But Not Selected
 
-- None.
+- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - owner: Bmux; depends on: `deterministic_app_runtime_composition`
+- React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - owner: Bmux; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
+- Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - owner: Bmux; depends on: `agent_accessible_cross_session_retrieval`
+- Milestone-to-code relationships (`milestone_to_code_relationships`) - owner: Provenance Engine; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`
 
 ### Gated / Blocked Downstream Work
 
-- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) is not dependency-satisfying
-  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) has maturity active; requires validated for gate `runtime_composition_validated`: Additional background services should migrate only after the first PE-backed production/test composition path is validated.
 - React Terminal live interaction productization (`react_terminal_productization`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
-- React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Three-view session navigation (`three_view_session_navigation`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - React Terminal live interaction productization (`react_terminal_productization`) is not dependency-satisfying
   - React Terminal live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
-- Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Knowledge Compiler cross-session bridge (`knowledge_compiler_cross_session_bridge`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) is not dependency-satisfying
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) has maturity gated; requires active for gate `compiler_implementation_available`: Cross-session outcomes cannot be promoted into durable knowledge until the Knowledge Compiler exists.
@@ -330,18 +331,16 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
   - Presentation language calibration corpus (`presentation_language_calibration_corpus`) has maturity captured; requires validated for gate `calibration_corpus_validated`: Presentation learning needs a validated corpus before feedback changes policy.
 - Presentation language calibration corpus (`presentation_language_calibration_corpus`) - maturity: captured; status: planned; selection: planned; owner: Provenance Engine
   - Architecture or product direction is captured, but the slice is not implementation-ready.
-- Milestone-to-code relationships (`milestone_to_code_relationships`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
-  - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Scoped architecture projection (`scoped_architecture_projection`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Milestone-to-code relationships (`milestone_to_code_relationships`) is not dependency-satisfying
-  - Milestone-to-code relationships (`milestone_to_code_relationships`) has maturity gated; requires validated for gate `milestone_code_relationships_validated`: Scoped architecture projection should be designed against validated milestone-to-code evidence relationships.
+  - Milestone-to-code relationships (`milestone_to_code_relationships`) has maturity ready; requires validated for gate `milestone_code_relationships_validated`: Scoped architecture projection should be designed against validated milestone-to-code evidence relationships.
 - Milestone-to-architecture relationships (`milestone_to_architecture_relationships`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Scoped architecture projection (`scoped_architecture_projection`) is not dependency-satisfying
   - Scoped architecture projection (`scoped_architecture_projection`) has maturity gated; requires validated for gate `scoped_architecture_validated`: Milestone-to-architecture links require validated scoped architecture projections.
 - Local Knowledge Compiler (`knowledge_compiler_outcomes`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
   - Milestone-to-code relationships (`milestone_to_code_relationships`) is not dependency-satisfying
   - Milestone-to-architecture relationships (`milestone_to_architecture_relationships`) is not dependency-satisfying
-  - Milestone-to-code relationships (`milestone_to_code_relationships`) has maturity gated; requires validated for gate `milestone_code_relationships_validated`: The compiler should consume validated milestone-to-code relationships rather than infer from branch existence.
+  - Milestone-to-code relationships (`milestone_to_code_relationships`) has maturity ready; requires validated for gate `milestone_code_relationships_validated`: The compiler should consume validated milestone-to-code relationships rather than infer from branch existence.
   - Milestone-to-architecture relationships (`milestone_to_architecture_relationships`) has maturity gated; requires validated for gate `milestone_architecture_relationships_validated`: The compiler should consume validated milestone-to-architecture relationships before producing reusable knowledge.
 - Validate compiled knowledge usefulness (`compiled_knowledge_validation`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) is not dependency-satisfying

@@ -17,11 +17,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
 - Active or selected slices in the frontier:
-  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) - maturity: active; status: active; selection: current; owner: Bmux
+  - Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Active Implementation
 
-- Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) - maturity: active; status: active; selection: current; owner: Bmux
+- Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -29,24 +29,20 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Ready Candidates
 
-- None.
+- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: ready; status: planned; selection: planned; owner: Bmux
+- React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: ready; status: planned; selection: planned; owner: Bmux
+- Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: ready; status: planned; selection: planned; owner: Bmux
+- Milestone-to-code relationships (`milestone_to_code_relationships`) - maturity: ready; status: planned; selection: planned; owner: Provenance Engine
 
 ### Gated / Blocked Downstream Work
 
-- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) is not dependency-satisfying
-  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) has maturity active; requires validated for gate `runtime_composition_validated`: Additional background services should migrate only after the first PE-backed production/test composition path is validated.
 - React Terminal live interaction productization (`react_terminal_productization`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
-- React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Three-view session navigation (`three_view_session_navigation`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - React Terminal live interaction productization (`react_terminal_productization`) is not dependency-satisfying
   - React Terminal live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
-- Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Knowledge Compiler cross-session bridge (`knowledge_compiler_cross_session_bridge`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) is not dependency-satisfying
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) has maturity gated; requires active for gate `compiler_implementation_available`: Cross-session outcomes cannot be promoted into durable knowledge until the Knowledge Compiler exists.
@@ -57,18 +53,16 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - Presentation language calibration corpus (`presentation_language_calibration_corpus`) has maturity captured; requires validated for gate `calibration_corpus_validated`: Presentation learning needs a validated corpus before feedback changes policy.
 - Presentation language calibration corpus (`presentation_language_calibration_corpus`) - maturity: captured; status: planned; selection: planned; owner: Provenance Engine
   - Architecture or product direction is captured, but the slice is not implementation-ready.
-- Milestone-to-code relationships (`milestone_to_code_relationships`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
-  - Capability maturity is gated; declare satisfied prerequisites and move it to ready before selection.
 - Scoped architecture projection (`scoped_architecture_projection`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Milestone-to-code relationships (`milestone_to_code_relationships`) is not dependency-satisfying
-  - Milestone-to-code relationships (`milestone_to_code_relationships`) has maturity gated; requires validated for gate `milestone_code_relationships_validated`: Scoped architecture projection should be designed against validated milestone-to-code evidence relationships.
+  - Milestone-to-code relationships (`milestone_to_code_relationships`) has maturity ready; requires validated for gate `milestone_code_relationships_validated`: Scoped architecture projection should be designed against validated milestone-to-code evidence relationships.
 - Milestone-to-architecture relationships (`milestone_to_architecture_relationships`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
   - Scoped architecture projection (`scoped_architecture_projection`) is not dependency-satisfying
   - Scoped architecture projection (`scoped_architecture_projection`) has maturity gated; requires validated for gate `scoped_architecture_validated`: Milestone-to-architecture links require validated scoped architecture projections.
 - Local Knowledge Compiler (`knowledge_compiler_outcomes`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
   - Milestone-to-code relationships (`milestone_to_code_relationships`) is not dependency-satisfying
   - Milestone-to-architecture relationships (`milestone_to_architecture_relationships`) is not dependency-satisfying
-  - Milestone-to-code relationships (`milestone_to_code_relationships`) has maturity gated; requires validated for gate `milestone_code_relationships_validated`: The compiler should consume validated milestone-to-code relationships rather than infer from branch existence.
+  - Milestone-to-code relationships (`milestone_to_code_relationships`) has maturity ready; requires validated for gate `milestone_code_relationships_validated`: The compiler should consume validated milestone-to-code relationships rather than infer from branch existence.
   - Milestone-to-architecture relationships (`milestone_to_architecture_relationships`) has maturity gated; requires validated for gate `milestone_architecture_relationships_validated`: The compiler should consume validated milestone-to-architecture relationships before producing reusable knowledge.
 - Validate compiled knowledge usefulness (`compiled_knowledge_validation`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) is not dependency-satisfying
@@ -109,6 +103,28 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
     Expected contract domains: `project_truth_reconciliation`, `app_runtime_composition`, `app_host_test_isolation`
     Likely conflict domains: `active_work_selection`, `app_startup_lifecycle`
     Rationale: Tracks cross-cutting process-integrity slices that define a single owner, lifecycle, validation path, and completion step for failure classes that individual feature fixes exposed but should not keep repairing locally.
+    - **Project Truth Delivery Lifecycle** (`project_truth_delivery_lifecycle`) - phase; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: project truth; layer: cross repository workflow; execution: current / Bmux; parallelism: serial
+      Depends on: `project_truth_capability_frontier_governance`
+      Expected contract domains: `post_merge_delivery_reconciliation`, `github_merge_evidence`, `capability_frontier_recalculation`, `active_work_assignment_clearing`
+      Expected code areas: `project/project-state.yaml`, `project/repo-status.yaml`, `project/schema/project-state.schema.json`, `tools/project-docs`, `scripts/project-docs`, `.github/workflows/project-truth.yml`, `.github/workflows/project-truth-reconcile.yml`, `docs/process-integrity`, `docs/generated`
+      Likely conflict domains: `project_truth_manifest`, `project_docs_generation`, `github_actions_project_truth`
+      Contract dependencies: `project_truth_generated_docs`, `project_docs_validation`, `github_evidence_validation`
+      Rationale: Completes the Project Truth delivery lifecycle so merged implementation work transitions deterministically into reconciled delivery state, active-work cleanup, and a recalculated capability frontier without inventing acceptance or priority decisions.
+      - **Post-Merge Project Truth Reconciliation** (`post_merge_project_truth_reconciliation_milestone`) - milestone; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: project truth; layer: cross repository workflow; execution: current / Bmux; parallelism: serial
+        Depends on: `project_truth_capability_frontier_governance`
+        Rationale: Milestone for making post-merge reconciliation a canonical Project Truth tool and reviewable repository automation path rather than a sequence of one-off delivery metadata repair PRs.
+        - **Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement** (`post_merge_project_truth_reconciliation`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: project truth; layer: cross repository workflow; execution: current / Bmux; parallelism: serial; delivery: open; acceptance: proposed; maturity: active
+          Depends on: `project_truth_capability_frontier_governance`
+          Enables: `app_runtime_service_lifecycle_migration`
+          Expected contract domains: `post_merge_delivery_reconciliation`, `github_merge_evidence`, `active_work_state`, `capability_frontier_recalculation`, `reconciliation_pr_deduplication`
+          Expected code areas: `tools/project-docs/project_docs.py`, `tools/project-docs/tests/test_project_docs.py`, `tools/project-docs/README.md`, `project/README.md`, `project/project-state.yaml`, `project/repo-status.yaml`, `project/schema/project-state.schema.json`, `.github/workflows/project-truth.yml`, `.github/workflows/project-truth-reconcile.yml`, `docs/process-integrity/post-merge-reconciliation-audit.md`, `docs/generated`
+          Likely conflict domains: `project_truth_manifest`, `project_docs_generation`, `github_evidence_validation`, `github_actions_project_truth`
+          Contract dependencies: `project_truth_generated_docs`, `project_docs_validation`, `github_evidence_validation`
+          Worktree required: true
+          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/process-integrity-post-merge-reconciliation`; branch: `process-integrity-post-merge-reconciliation`; agent: `codex`
+          Evidence: BrianBusby/bmux#98 by [BrianBusby](https://github.com/BrianBusby)
+          Rationale: Add a canonical reconcile check/apply command that reads Project Truth and GitHub evidence, applies only mechanically justified delivery transitions, clears stale active work, advances ready candidates, regenerates docs atomically, and reports remaining human planning decisions.
+          Acceptance criteria: Reconciliation check mode is read-only, actionable, and exits nonzero when safe changes or explicit decisions remain.; Reconciliation apply mode updates only canonical manifests and generated docs, validates in a temporary copy, and is idempotent on a second run.; Merged PR evidence records merge timestamp and merge commit identity after GitHub verification.; Active branch/worktree assignments for completed delivery are cleared without selecting the next priority automatically.; Capability-frontier candidates whose declared gates are now satisfied become ready but remain unselected until a human chooses them.; CI detects stale recorded delivery evidence and post-merge automation opens or updates one bounded reconciliation PR.
     - **App Runtime Composition and Test Isolation** (`app_runtime_composition_and_test_isolation`) - phase; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial
       Depends on: `workspace_coding_agent_session_linkage_hardening`
       Expected contract domains: `production_runtime_startup`, `explicit_test_runtime_capabilities`, `service_readiness_and_teardown`
@@ -117,7 +133,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
       - **App Runtime Composition Migration** (`app_runtime_composition_migration`) - milestone; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial
         Depends on: `workspace_coding_agent_session_linkage_hardening`
         Rationale: Milestone for migrating app background service lifecycle ownership from scattered app-host side effects into explicit production/test runtime composition.
-        - **Deterministic App Runtime Composition and App-Host Test Isolation** (`deterministic_app_runtime_composition`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial; delivery: open; acceptance: proposed; maturity: active
+        - **Deterministic App Runtime Composition and App-Host Test Isolation** (`deterministic_app_runtime_composition`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `workspace_coding_agent_session_linkage_hardening`
           Enables: `app_runtime_service_lifecycle_migration`
           Expected contract domains: `app_runtime_service_construction`, `production_startup_lifecycle`, `app_host_test_runtime_capabilities`, `work_provenance_runtime_readiness`, `deterministic_teardown`
@@ -125,10 +141,10 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `app_startup`, `work_provenance_runtime_startup`, `agent_chat_telemetry_projection`, `app_host_test_bootstrap`
           Contract dependencies: `workspace_coding_agent_session_association`, `factual_session_projection`
           Worktree required: true
-          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/process-integrity-runtime-composition`; branch: `process-integrity-runtime-composition`; agent: `codex`
+          Evidence: BrianBusby/bmux@2a08fa2ce324, BrianBusby/bmux#97 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Move WorkProvenanceRuntime construction/startup and related agent-chat PE projection startup behind one app-runtime composition owner so production starts PE deliberately, default app-host tests cannot open the production PE database, opted-in tests use isolated storage, and migrated services expose deterministic readiness/failure/teardown.
           Acceptance criteria: App runtime composition is the only production source path that constructs the live WorkProvenanceRuntime.; BmuxAppRuntimeServices is the only production source path that starts PE workspace observation and agent-chat execution telemetry projection.; Default app-host XCTest composition disables PE without opening the production PE database.; Tests can opt into PE with a temporary home directory and observe ready, failed, and stopped lifecycle states without sleeps or timing assertions.; Runtime shutdown cancels migrated observation work and releases owned lifecycle tasks.; A source guard prevents migrated app entrypoints from bypassing the composition boundary.; Existing Session-tab production lifecycle coverage still reaches PE readiness through deterministic task completion.; Production PE prompt evidence appends scope turn-outcome evidence acquisition to the affected session instead of scanning unrelated ledger history.; Agent-chat startup prompt seeding skips ended historical Codex hook-store records while preserving non-ended live startup backfill and live UserPromptSubmit prompt evidence.
-        - **Background Service Lifecycle Migration** (`app_runtime_service_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+        - **Background Service Lifecycle Migration** (`app_runtime_service_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
           Depends on: `deterministic_app_runtime_composition`
           Expected contract domains: `browser_lifecycle`, `sidebar_git_observation`, `remote_session_presence`, `push_registration`, `notification_runtime_services`
           Likely conflict domains: `app_delegate_startup`, `app_host_test_side_effects`, `global_singletons`
@@ -245,7 +261,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
         Enables: `factual_session_projection_read_contract`
         - **Richer coding-agent evidence foundation** (`richer_coding_agent_evidence_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: evidence store; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented; mirrors: `richer_session_work_model`; maturity: complete
           Enables: `factual_session_projection_foundation`
-          Evidence: BrianBusby/bmux@9e69452a2ec2, BrianBusby/bmux@45b7188ea62d, BrianBusby/bmux#48 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@9e69452a2ec2, BrianBusby/bmux@45b7188ea62d, BrianBusby/bmux@c11d54c3f8e3, BrianBusby/bmux#48 by [BrianBusby](https://github.com/BrianBusby)
           Acceptance reason: Completed-unit coding-agent evidence exists below the semantic layer; raw provider streams, private reasoning, approvals, validation, errors, and compaction remain gated follow-ups.
       - **Normal Coding-Agent Evidence Ingestion** (`normal_coding_agent_evidence_ingestion`) - milestone; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence sources; execution: complete / Bmux; parallelism: serial; maturity: validated
         Depends on: `richer_coding_agent_evidence_foundation`
@@ -261,7 +277,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Worktree required: true
           Evidence: BrianBusby/bmux@6329fe8ec849, BrianBusby/bmux#66 by [BrianBusby](https://github.com/BrianBusby)
           Acceptance reason: Historical Codex JSONL transcripts import into canonical PE thread, turn, prompt, plan, command, visible reasoning summary, and file-change attribution evidence with stable idempotent event IDs.
-        - **Live terminal Codex evidence ingestion** (`live_terminal_codex_evidence_ingestion`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence sources; execution: complete / Bmux; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
+        - **Live terminal Codex evidence ingestion** (`live_terminal_codex_evidence_ingestion`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence sources; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `codex_transcript_canonical_evidence_import`
           Enables: `coding_agent_evidence_source_reconciliation`
           Expected contract domains: `codex_jsonl_transcript_adapter`, `canonical_coding_agent_evidence`, `live_transcript_tail_progress`, `restart_replay_idempotence`
@@ -272,7 +288,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@29a5a5d1ea0a
           Acceptance reason: The existing Codex monitor now tails known session transcripts into PE via the shared importer, preserving partial-line safety and stable event IDs while leaving raw private reasoning/full stream persistence out of scope.
           Acceptance criteria: Active bmux-managed Codex transcript monitors append newly completed JSONL lines through the shared canonical transcript adapter.; Partial final lines remain buffered until newline completion.; Live ingestion followed by historical import is idempotent.; Restart/replay can reread existing transcript content without duplicating canonical PE events.
-        - **Coding-agent evidence source reconciliation** (`coding_agent_evidence_source_reconciliation`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Bmux; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
+        - **Coding-agent evidence source reconciliation** (`coding_agent_evidence_source_reconciliation`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `live_terminal_codex_evidence_ingestion`
           Enables: `semantic_inference_framework`, `react_smart_session_work_model_consumer`
           Expected contract domains: `provider_turn_identity`, `hook_transcript_reconciliation`, `factual_session_projection`, `provenance_event_sources`
@@ -283,7 +299,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@29a5a5d1ea0a
           Acceptance reason: Hook feed payloads now forward Codex turn IDs, app-side hook evidence prefers provider turn identity, transcript prompt IDs canonicalize by provider turn when available, and focused SQLite projection coverage verifies hook-plus-live-transcript evidence appears as one factual turn.
           Acceptance criteria: Codex hook prompt evidence uses provider turn identity when the hook exposes it.; Hook and transcript prompt observations for one provider turn converge onto one canonical prompt record while preserving distinct ledger events.; Prompt-only transcript backfill does not create synthetic transcript turns that duplicate live transcript turns.; Factual session projection exposes one logical turn when hook and transcript sources observe the same Codex turn.
-        - **Live Codex Evidence Convergence & Metadata Correctness** (`live_codex_evidence_convergence_correctness`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Bmux; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
+        - **Live Codex Evidence Convergence & Metadata Correctness** (`live_codex_evidence_convergence_correctness`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `live_terminal_codex_evidence_ingestion`, `coding_agent_evidence_source_reconciliation`
           Enables: `milestone_inference`
           Expected contract domains: `codex_jsonl_transcript_adapter`, `live_transcript_tail_progress`, `canonical_coding_agent_evidence`, `factual_session_projection`, `session_surface_refresh`
@@ -301,7 +317,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Acceptance criteria: Session identity is resolved through the durable PE workspace/session association read path rather than display metadata alone.; Hook-first, transcript-first, replay, restart, resume, and multiple concurrent sessions preserve deterministic workspace/session association.; User-facing Session readiness distinguishes unsupported, awaiting first prompt, association pending, projection pending, failure, and available states.
       - **Factual Session Projection Read Contract** (`factual_session_projection_read_contract`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial
         Depends on: `richer_session_observable_evidence`
-        - **Factual session projection foundation** (`factual_session_projection_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: open; acceptance: implemented; mirrors: `richer_session_work_model`; maturity: validated
+        - **Factual session projection foundation** (`factual_session_projection_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented; mirrors: `richer_session_work_model`; maturity: validated
           Depends on: `richer_coding_agent_evidence_foundation`
           Enables: `factual_projection_consumer_shape_followup`
           Evidence: BrianBusby/bmux@2add52c611e2, BrianBusby/bmux@a0f8c1fa2d0e
@@ -319,7 +335,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Rationale: Confirmed the PE-owned consumer shape before semantic inference depends on the factual session projection.
           Acceptance reason: The public factual projection now exposes a detailed latest-turn snapshot, compact prior-turn references, compact provider-thread identities, and independent factual turn-detail retrieval while preserving deterministic evidence-only semantics and v1 decoding compatibility.
           Acceptance criteria: Confirm the factual projection shape needed by early consumers before semantic SessionWorkModel inference begins.; Preserve the boundary that deterministic Current State contains observed facts only.
-        - **Deterministic Turn Outcome Projection** (`deterministic_turn_outcome_projection`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
+        - **Deterministic Turn Outcome Projection** (`deterministic_turn_outcome_projection`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `factual_projection_consumer_shape_followup`, `live_codex_evidence_convergence_correctness`
           Enables: `session_outcome_aggregation`
           Sequence before: `session_outcome_aggregation`, `cross_session_work_awareness`
@@ -341,7 +357,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `deterministic_turn_outcome_projection`, `factual_session_projection`, `deterministic_current_state_api`
           Worktree required: true
           Conflict note: This slice aggregates factual turn outcomes into a session outcome without adding LLM-authored summaries, semantic ranking, cross-session injection, or Knowledge Compiler output.
-          Evidence: BrianBusby/bmux@2a4f2d7bc43f, BrianBusby/bmux#78 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@2a4f2d7bc43f, BrianBusby/bmux@e0582b0feb31, BrianBusby/bmux#78 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Aggregates evidence-backed TurnOutcome revisions into one factual session-level outcome boundary so later Smart Session and cross-session handoff work can consume bounded factual units before semantic enrichment.
           Acceptance reason: Session Outcome aggregation is implemented as a schema-v22 SQLite projection and public PE read contract for session-level factual outcomes. It aggregates exact TurnOutcome revisions and remains below semantic SessionWorkModel, Smart Session UI, cross-session retrieval, context injection, and Knowledge Compiler output.
           Acceptance criteria: Build a revisioned, rebuildable factual outcome projection for one coding-agent session from accepted TurnOutcome revisions.; Track ordered constituent turns and the exact TurnOutcome revision id, content fingerprint, and source watermark used for each turn.; Preserve session lifecycle, completion state, objectives, plan states, commands, changed artifacts, validation attempts, blockers, unresolved work, resume points, repository/worktree/branch/HEAD boundaries, completeness metadata, and supporting evidence references where accepted evidence supports them.; Keep duplicate, overlapping, late, corrected, and out-of-order evidence idempotent and revisioned according to deterministic rules.; Expose latest and specific revisions through the public PE SDK and bmux CLI boundary.
@@ -392,7 +408,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `factual_session_projection`, `semantic_inference_records`, `semantic_session_inferences`
           Worktree required: true
           Conflict note: Define the PE-owned contract before bmux builds richer Smart Session presentation so bmux consumes a revisioned model instead of composing its own semantic interpretation.
-          Evidence: BrianBusby/bmux@c623bf26bd8a, BrianBusby/bmux#57 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@c623bf26bd8a, BrianBusby/bmux@979bdf0d4056, BrianBusby/bmux#57 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Introduce the first revisioned PE-owned SessionWorkModel snapshot contract for Smart Session consumers. The contract preserves evidence references, deterministic factual projections, semantic inference records, and presentation boundaries without using semantic messages as truth input.
           Acceptance reason: PR #57 merged the SessionWorkModel contract foundation. The contract is validated for the initial supported semantic fields while milestone, blocker, approach-change, progress, validation, and architecture semantics remain gated.
           Acceptance criteria: Expose a public SessionWorkModel read contract through ProvenanceEngineClient.; Compose deterministic factual session projection with active semantic inference records.; Preserve factual and semantic provenance, revision metadata, unknown states, and semantic-message separation.
@@ -449,7 +465,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `factual_session_projection`, `semantic_message_contract`, `bmux_panel_surface_identity`
           Worktree required: true
           Conflict note: Start after factual Session UI lands so the React surface can reuse proven factual consumer shape. Keep the presentation summary-oriented and PE-backed rather than transcript-oriented.
-          Evidence: BrianBusby/bmux@1a9f01708b55, BrianBusby/bmux#56 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@1a9f01708b55, BrianBusby/bmux@5b43656e0047, BrianBusby/bmux#56 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Establish a separate React Session surface that consumes PE factual projections and existing semantic messages through a typed revision-safe bridge. This foundation must not infer session meaning from raw provider events inside bmux and must not define the future PE-owned SessionWorkModel contract.
           Acceptance reason: PR #56 merged the React Smart Session foundation delivery. Acceptance remains under observation after PR #58 validated the first SessionWorkModel-backed consumer path.
         - **React Smart Session initial SessionWorkModel consumer** (`react_smart_session_initial_work_model_consumer`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: structured work understanding; layer: consumer presentation; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: under observation; maturity: validated
@@ -461,10 +477,10 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `session_work_model_contract`, `react_smart_session_surface_identity`
           Worktree required: true
           Conflict note: This is the narrow first consumer proving SessionWorkModel -> bridge -> React rendering. It must not claim the later milestone/blocker-gated Smart Session consumer complete.
-          Evidence: BrianBusby/bmux@000468433cc4, BrianBusby/bmux@335237bf8680, BrianBusby/bmux#58 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@000468433cc4, BrianBusby/bmux@335237bf8680, BrianBusby/bmux@60b9635d7f6d, BrianBusby/bmux#58 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Replace the Slice 1 disposable Smart Session bridge composition with the first PE-owned SessionWorkModel consumer path for supported fields only, while leaving milestone, blocker, approach-change, progress, and architecture semantics gated for later work.
           Acceptance reason: PR #58 merged the initial React Smart Session SessionWorkModel consumer for supported intent, activity, phase, factual evidence, revision, and provenance fields. The broader Smart SessionWorkModel consumer remains gated because milestone and blocker/approach-change semantics are still intentionally gated.
-        - **React Smart SessionWorkModel consumer** (`react_smart_session_work_model_consumer`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: structured work understanding; layer: consumer presentation; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+        - **React Smart SessionWorkModel consumer** (`react_smart_session_work_model_consumer`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: structured work understanding; layer: consumer presentation; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
           Depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
           Enables: `continuous_presentation_learning`
           Expected contract domains: `session_work_model_contract`, `milestone_semantics`, `blocker_approach_change_semantics`, `semantic_explanation_provenance`
@@ -524,7 +540,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Rationale: Add conservative coding-agent blocker and approach-change semantics from accepted visible statements without introducing a new inference pipeline, bmux-local semantic logic, raw transcript retention, cross-session propagation, or an external model dependency.
           Acceptance reason: Blocker and approach-change semantics are implemented as producer-versioned PE semantic records selected into the existing SessionWorkModel read. The built-in rule consumes only supported explicit visible assistant-output and visible reasoning-summary marker statements, preserves reported-versus-observed basis and source evidence, handles independent blockers, reported resolution/bypass/no-longer-applicable states, recurrence, exact milestone-id links, partial source history, bounded output, supersession, and SDK decoding, and abstains on unsupported command/prose/quote/hypothetical evidence. Validation used synthetic sanitized PE fixtures and the full ProvenanceEngine package suite; no real private session transcript validation is claimed.
           Acceptance criteria: Expose bounded blocker and approach-change semantic records through the existing PE semantic inference framework and SessionWorkModel composition.; Preserve stable session-scoped identities, identity basis, reported state basis, source evidence references, factual projection revisions, producer version, confidence, specificity, source-history completeness, ambiguity, omission, and supersession metadata.; Distinguish reported open, cleared, bypassed, no-longer-applicable, replaced, abandoned, deferred, and failed states without treating command failures, completed turns, successful commands, reordered plans, or clean worktrees as proof.; Link blockers and approach changes to milestones only by exact same-session milestone id, preserving unresolved or unsupported relationships as omissions.; Keep inferred blocker and approach-change semantics above deterministic factual Current State, Turn Outcome, and Session Outcome.; Preserve existing factual reads, milestone inference, related-session awareness, artifact-collision awareness, semantic messages, SDK consumers, restart/rebuild behavior, and old SessionWorkModel decoding.
-        - **Milestone-to-code relationships** (`milestone_to_code_relationships`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+        - **Milestone-to-code relationships** (`milestone_to_code_relationships`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
           Depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`
           Expected contract domains: `milestone_code_relationships`, `file_change_attribution`
           Expected code areas: `Sources/ProvenanceEngineCore`, `Sources/ProvenanceEngineContracts`, `Tests/ProvenanceEngineTests`
@@ -633,7 +649,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `session_work_model_contract`, `session_outcome_projection`, `richer_coding_agent_evidence`, `deterministic_current_state_api`
           Worktree required: true
           Conflict note: Slice 1 is read-only. It derives deterministic relationships from existing session, worktree, repository, branch, session-tree, provider identity, external identity, Session Outcome, and SessionWorkModel evidence, and does not introduce coordination policy, prompt injection, whole-transcript sharing, artifact-collision warnings, or speculative milestone/blocker/architecture inference.
-          Evidence: BrianBusby/bmux@2ec30211c5ce, BrianBusby/bmux#80 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@2ec30211c5ce, BrianBusby/bmux@629ba10768fc, BrianBusby/bmux#80 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: First implementation slice for deterministic related-session discovery and bounded PE-owned briefs over active or recent coding-agent sessions.
           Acceptance reason: Cross-session work awareness foundation is implemented as a schema-v23 PE read contract and SQLite projection. `relatedSessions(...)` returns bounded deterministic briefs with same-repository, same-worktree, same-branch, session-tree, provider-identity, external-identity, and shared changed-artifact relationship reasons; compact Session Outcome facts; exact Session Outcome and SessionWorkModel revision metadata; freshness/source-watermark metadata; and explicit availability/completeness states. The slice remains below richer cross-session semantics, collision awareness, explicit agent retrieval, bmux presentation, prompt/context injection, and Knowledge Compiler integration.
           Acceptance criteria: Expose a PE public read contract for bounded related-session briefs.; Preserve individually inspectable relationship reasons and deterministic ordering.; Keep observed facts, explicit plan evidence, and semantic inference distinguishable.; Return freshness/revision metadata and provenance references without raw transcript sharing.; Preserve exact Session Outcome and SessionWorkModel revision metadata used by every brief.; Keep the slice read-only with no prompt injection, coordination policy, bmux UI, or artifact-collision warning behavior.
@@ -666,7 +682,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `related_session_read_contract`, `richer_coding_agent_evidence`, `factual_file_change_evidence`
           Worktree required: true
           Gate `cross_session_foundation_validated`: requires `cross_session_work_awareness_foundation` maturity validated; reason: Collision detection needs validated related-session relationships and bounded explanation semantics.
-          Evidence: BrianBusby/bmux@a11e649812f7, BrianBusby/bmux#82 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@a11e649812f7, BrianBusby/bmux@efaf78b33757, BrianBusby/bmux#82 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Detect and explain possible parallel-work artifact collisions from factual worktree, branch, repository, change-set, and file-change evidence without automatically blocking or mutating another session.
           Acceptance reason: Artifact and change collision awareness is implemented as a schema-v24 PE read contract and SQLite projection. `artifactCollisions(...)` returns bounded exact-path artifact-overlap candidates for a target session and related sessions, with per-session participation, repository/worktree/branch/HEAD boundary comparison, temporal overlap state, freshness and stale classification, completeness metadata, Session Outcome and related-session projection revision references, accepted evidence references, stable ordering, bounded exclusions, and deterministic revision persistence. The slice remains a factual possible-collision read only: rename identity is unsupported without accepted deterministic evidence, similar paths do not collide, same relative paths in different repositories are excluded, and no semantic compatibility judgment, coordination policy, prompt injection, raw transcript sharing, bmux UI, proactive notification, retrieval integration, or Knowledge Compiler behavior is added.
           Acceptance criteria: Expose a PE public read contract for bounded artifact-collision awareness.; Detect exact normalized path overlaps only inside shared repository identity.; Preserve per-session participation, Session Outcome revisions, related-session projection revision metadata, and evidence references.; Report repository, worktree, branch, HEAD, temporal, freshness, and completeness boundaries deterministically.; Handle duplicate, late, corrected, and out-of-order evidence through revisioned deterministic projection semantics.; Keep rename identity unsupported unless accepted evidence can establish it deterministically.; Preserve factuality and non-coordination boundaries: no semantic conflict judgment, prompt injection, agent coordination, raw transcript sharing, proactive UI, or Knowledge Compiler behavior.
@@ -708,7 +724,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Rationale: Surface especially relevant cross-session changes through bounded Smart Session presentation without silently mutating coding-agent context.
           Acceptance reason: The existing Smart Session refresh path now reads at most five related sessions and five possible collision candidates through PE public contracts and presents their factual boundaries separately from the session's own semantic work model.
           Acceptance criteria: React Smart Session refresh performs bounded PE related-session and artifact-collision reads for the linked PE session.; Presentation preserves relationship reasons, lifecycle/freshness state, normalized artifact paths, collision state, and bounded omission counts.; Failed awareness reads degrade to an explicit unavailable state without hiding the existing Smart Session snapshot.; No prompt injection, external notification, locking, interruption, reassignment, transcript sharing, or coordination policy is added.
-        - **Cross-session context assembly experiment** (`cross_session_context_assembly_experiment`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: retrieval; layer: consumer presentation; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+        - **Cross-session context assembly experiment** (`cross_session_context_assembly_experiment`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: retrieval; layer: consumer presentation; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
           Depends on: `agent_accessible_cross_session_retrieval`
           Expected contract domains: `context_assembly_policy`, `cross_session_effectiveness_metrics`, `bounded_context_pack`
           Expected code areas: `bmux context assembly`, `bmux agent launch/session orchestration`, `evaluation fixtures`
@@ -744,15 +760,23 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) | serial | /Users/brianbusby/repos/.bmux-worktrees/process-integrity-runtime-composition | process-integrity-runtime-composition | codex | `agent_chat_telemetry_projection`, `app_host_test_bootstrap`, `app_startup`, `work_provenance_runtime_startup` | `factual_session_projection`, `workspace_coding_agent_session_association` | single active assignment |
+| Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`) | serial | /Users/brianbusby/repos/.bmux-worktrees/process-integrity-post-merge-reconciliation | process-integrity-post-merge-reconciliation | codex | `github_actions_project_truth`, `github_evidence_validation`, `project_docs_generation`, `project_truth_manifest` | `github_evidence_validation`, `project_docs_validation`, `project_truth_generated_docs` | single active assignment |
 
 ### Dependency-Ready Preflight
 
-None.
+| Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) | planned | ready | serial | false | `app_delegate_startup`, `app_host_test_side_effects`, `global_singletons` | None | `browser_lifecycle`, `sidebar_git_observation`, `remote_session_presence`, `push_registration`, `notification_runtime_services` | None |
+| React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) | planned | ready | serial | true | `session_work_model_projection`, `react_session_presentation`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `blocker_approach_change_semantics`, `semantic_explanation_provenance` | `React Smart Session surface`, `bmux SessionWorkModel client`, `Sources/WorkProvenance`, `Sources/ProvenanceEngineContracts` |
+| Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) | planned | ready | serial | true | `prompt_context_assembly`, `retrieval_contracts`, `privacy_policy` | `cross_session_agent_query`, `context_effectiveness_metrics` | `context_assembly_policy`, `cross_session_effectiveness_metrics`, `bounded_context_pack` | `bmux context assembly`, `bmux agent launch/session orchestration`, `evaluation fixtures` |
+| Milestone-to-code relationships (`milestone_to_code_relationships`) | planned | ready | serial | true | `milestone_relationships`, `file_change_attribution` | `milestone_semantics`, `richer_coding_agent_evidence` | `milestone_code_relationships`, `file_change_attribution` | `Sources/ProvenanceEngineCore`, `Sources/ProvenanceEngineContracts`, `Tests/ProvenanceEngineTests` |
 
 ## Dependency-Ready Work
 
-None.
+- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - selection: planned; depends on: `deterministic_app_runtime_composition`
+- React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - selection: planned; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
+- Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - selection: planned; depends on: `agent_accessible_cross_session_retrieval`
+- Milestone-to-code relationships (`milestone_to_code_relationships`) - selection: planned; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`
 
 ## Selected Next Work
 
@@ -760,7 +784,10 @@ None.
 
 ## Dependency-Ready But Not Selected
 
-None.
+- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - depends on: `deterministic_app_runtime_composition`
+- React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
+- Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - depends on: `agent_accessible_cross_session_retrieval`
+- Milestone-to-code relationships (`milestone_to_code_relationships`) - depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`
 
 ## Deferred Or Blocked Work
 

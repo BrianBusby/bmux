@@ -177,6 +177,157 @@ roadmap:
         assigned_to: bmux
       rationale: Tracks cross-cutting process-integrity slices that define a single owner, lifecycle, validation path, and completion step for failure classes that individual feature fixes exposed but should not keep repairing locally.
 
+    - id: project_truth_delivery_lifecycle
+      kind: phase
+      title: Project Truth Delivery Lifecycle
+      parent: process_integrity
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: cross_repository_workflow
+        tags:
+          - process_integrity
+          - project_truth_reconciliation
+          - delivery_lifecycle
+      depends_on:
+        - project_truth_capability_frontier_governance
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - post_merge_delivery_reconciliation
+          - github_merge_evidence
+          - capability_frontier_recalculation
+          - active_work_assignment_clearing
+        expected_code_areas:
+          - project/project-state.yaml
+          - project/repo-status.yaml
+          - project/schema/project-state.schema.json
+          - tools/project-docs
+          - scripts/project-docs
+          - .github/workflows/project-truth.yml
+          - .github/workflows/project-truth-reconcile.yml
+          - docs/process-integrity
+          - docs/generated
+        likely_conflict_domains:
+          - project_truth_manifest
+          - project_docs_generation
+          - github_actions_project_truth
+        contract_dependencies:
+          - project_truth_generated_docs
+          - project_docs_validation
+          - github_evidence_validation
+      execution:
+        assignment: current
+        assigned_to: bmux
+      rationale: Completes the Project Truth delivery lifecycle so merged implementation work transitions deterministically into reconciled delivery state, active-work cleanup, and a recalculated capability frontier without inventing acceptance or priority decisions.
+
+    - id: post_merge_project_truth_reconciliation_milestone
+      kind: milestone
+      title: Post-Merge Project Truth Reconciliation
+      parent: project_truth_delivery_lifecycle
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: cross_repository_workflow
+        tags:
+          - process_integrity
+          - project_truth_reconciliation
+          - capability_frontier
+      depends_on:
+        - project_truth_capability_frontier_governance
+      parallelism:
+        classification: serial
+      execution:
+        assignment: current
+        assigned_to: bmux
+      rationale: Milestone for making post-merge reconciliation a canonical Project Truth tool and reviewable repository automation path rather than a sequence of one-off delivery metadata repair PRs.
+
+    - id: post_merge_project_truth_reconciliation
+      kind: slice
+      title: Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement
+      parent: post_merge_project_truth_reconciliation_milestone
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+        - provenance_engine
+      concept_classification:
+        primary: project_truth
+        architecture_layer: cross_repository_workflow
+        tags:
+          - process_integrity
+          - project_truth_reconciliation
+          - post_merge_delivery
+          - capability_frontier
+      capability_maturity: active
+      depends_on:
+        - project_truth_capability_frontier_governance
+      enables:
+        - app_runtime_service_lifecycle_migration
+      parallelism:
+        classification: serial
+        expected_contract_domains:
+          - post_merge_delivery_reconciliation
+          - github_merge_evidence
+          - active_work_state
+          - capability_frontier_recalculation
+          - reconciliation_pr_deduplication
+        expected_code_areas:
+          - tools/project-docs/project_docs.py
+          - tools/project-docs/tests/test_project_docs.py
+          - tools/project-docs/README.md
+          - project/README.md
+          - project/project-state.yaml
+          - project/repo-status.yaml
+          - project/schema/project-state.schema.json
+          - .github/workflows/project-truth.yml
+          - .github/workflows/project-truth-reconcile.yml
+          - docs/process-integrity/post-merge-reconciliation-audit.md
+          - docs/generated
+        likely_conflict_domains:
+          - project_truth_manifest
+          - project_docs_generation
+          - github_evidence_validation
+          - github_actions_project_truth
+        contract_dependencies:
+          - project_truth_generated_docs
+          - project_docs_validation
+          - github_evidence_validation
+        worktree_required: true
+      execution:
+        assignment: current
+        assigned_to: bmux
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/process-integrity-post-merge-reconciliation
+        active_branch: process-integrity-post-merge-reconciliation
+        active_agent: codex
+      delivery_status: open
+      acceptance_status: proposed
+      rationale: Add a canonical reconcile check/apply command that reads Project Truth and GitHub evidence, applies only mechanically justified delivery transitions, clears stale active work, advances ready candidates, regenerates docs atomically, and reports remaining human planning decisions.
+      acceptance:
+        criteria:
+          - Reconciliation check mode is read-only, actionable, and exits nonzero when safe changes or explicit decisions remain.
+          - Reconciliation apply mode updates only canonical manifests and generated docs, validates in a temporary copy, and is idempotent on a second run.
+          - Merged PR evidence records merge timestamp and merge commit identity after GitHub verification.
+          - Active branch/worktree assignments for completed delivery are cleared without selecting the next priority automatically.
+          - Capability-frontier candidates whose declared gates are now satisfied become ready but remain unselected until a human chooses them.
+          - CI detects stale recorded delivery evidence and post-merge automation opens or updates one bounded reconciliation PR.
+
+      evidence:
+        commits: []
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 98
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
     - id: app_runtime_composition_and_test_isolation
       kind: phase
       title: App Runtime Composition and Test Isolation
@@ -240,7 +391,7 @@ roadmap:
       kind: slice
       title: Deterministic App Runtime Composition and App-Host Test Isolation
       parent: app_runtime_composition_migration
-      status: active
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -253,7 +404,7 @@ roadmap:
           - app_runtime_composition
           - app_host_test_isolation
           - work_provenance_runtime
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - workspace_coding_agent_session_linkage_hardening
       enables:
@@ -288,13 +439,10 @@ roadmap:
           - factual_session_projection
         worktree_required: true
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: bmux
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/process-integrity-runtime-composition
-        active_branch: process-integrity-runtime-composition
-        active_agent: codex
-      delivery_status: open
-      acceptance_status: proposed
+      delivery_status: merged
+      acceptance_status: implemented
       rationale: Move WorkProvenanceRuntime construction/startup and related agent-chat PE projection startup behind one app-runtime composition owner so production starts PE deliberately, default app-host tests cannot open the production PE database, opted-in tests use isolated storage, and migrated services expose deterministic readiness/failure/teardown.
       acceptance:
         criteria:
@@ -308,6 +456,19 @@ roadmap:
           - Production PE prompt evidence appends scope turn-outcome evidence acquisition to the affected session instead of scanning unrelated ledger history.
           - Agent-chat startup prompt seeding skips ended historical Codex hook-store records while preserving non-ended live startup backfill and live UserPromptSubmit prompt evidence.
 
+      completed_at: '2026-09-05'
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 2a08fa2ce32495c2e637629bee8691b23bbe91c0
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 97
+            merged_at: '2026-09-05T17:38:46Z'
+            merge_commit_sha: 2a08fa2ce32495c2e637629bee8691b23bbe91c0
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
     - id: app_runtime_service_lifecycle_migration
       kind: slice
       title: Background Service Lifecycle Migration
@@ -323,7 +484,7 @@ roadmap:
           - process_integrity
           - app_runtime_composition
           - deferred_service_migration
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - deterministic_app_runtime_composition
       gates:
@@ -539,6 +700,8 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-07-29T16:12:06Z'
+            merge_commit_sha: c32ed93989c8ed8531d9b573bb34b36149461475
       mirrors_milestone: execution_telemetry_foundation
 
     - id: claude_lifecycle_telemetry
@@ -573,6 +736,8 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-07-31T07:08:06Z'
+            merge_commit_sha: 3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9
       completed_at: 2026-07-31
       mirrors_milestone: claude_lifecycle_telemetry
 
@@ -688,6 +853,8 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-09-01T15:09:58Z'
+            merge_commit_sha: 9fc7061ba353ed5a008cfaa34d0d9f34e933783a
       completed_at: 2026-09-01
       acceptance:
         criteria:
@@ -1005,6 +1172,8 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-17T01:54:02Z'
+            merge_commit_sha: f4b96132c2c70e6fe7d84150ef720c38096b2d30
       completed_at: 2026-08-17
       rationale: Consolidates the Git repository boundary that had become accidental coordination overhead while preserving Provenance Engine as a standalone Swift package boundary, retaining imported PE history, and replacing peer-repo Project Truth with a root-local canonical project graph.
       acceptance_reason: "PR #53 merged the local Provenance Engine package, root Project Truth tooling, generated docs, and monorepo package dependency model without making PE a bmux-internal module."
@@ -1066,6 +1235,8 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-21T13:56:22Z'
+            merge_commit_sha: 0ce21dfb424d69368f4562e6b98e20e893e6cb76
       completed_at: 2026-08-21
       rationale: Add explicit capability maturity, readiness gates, primary frontier reporting, and stricter validation so documented future architecture cannot become implementation-ready without Project Truth authorization.
       acceptance_reason: "PR #60 merged capability maturity, readiness gates, primary frontier reporting, stricter validation, and generated preflight visibility."
@@ -1093,7 +1264,11 @@ roadmap:
         assignment: current
         assigned_to: shared
       rationale: >-
-        Richer coding-agent evidence and session projections are the active direction after V1 adoption and workspace-display observation. This program now explicitly supports bmux's three-view coding-session model: Native provider-native fidelity, React Terminal live interaction, and React Smart Session understanding backed by PE factual and semantic models.
+        Richer coding-agent evidence and session projections are the active direction
+        after V1 adoption and workspace-display observation. This program now explicitly
+        supports bmux's three-view coding-session model: Native provider-native fidelity,
+        React Terminal live interaction, and React Smart Session understanding backed
+        by PE factual and semantic models.
 
     - id: richer_session_evidence_and_factual_state
       kind: phase
@@ -1161,12 +1336,16 @@ roadmap:
             sha: 9e69452a2ec22ead8dcbb2ef5d2a3c63f4464096
           - repository: BrianBusby/bmux
             sha: 45b7188ea62d343bca433dee5cb0897e5427adc2
+          - repository: BrianBusby/bmux
+            sha: c11d54c3f8e3f3ab112fbdabae164f589cdc8d69
         pull_requests:
           - repository: BrianBusby/bmux
             number: 48
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-15T21:37:18Z'
+            merge_commit_sha: c11d54c3f8e3f3ab112fbdabae164f589cdc8d69
       completed_at: 2026-08-15
       mirrors_milestone: richer_session_work_model
       acceptance_reason: Completed-unit coding-agent evidence exists below the semantic layer; raw provider streams, private reasoning, approvals, validation, errors, and compaction remain gated follow-ups.
@@ -1252,6 +1431,8 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-21T23:52:34Z'
+            merge_commit_sha: 6329fe8ec849b34da461f6e86362a2e16e6f9a5c
       completed_at: 2026-08-22
       acceptance_reason: Historical Codex JSONL transcripts import into canonical PE thread, turn, prompt, plan, command, visible reasoning summary, and file-change attribution evidence with stable idempotent event IDs.
 
@@ -1298,7 +1479,7 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: bmux
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
@@ -1360,7 +1541,7 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: bmux
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
@@ -1426,7 +1607,7 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: bmux
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
@@ -1477,11 +1658,15 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-09-03T20:46:18Z'
+            merge_commit_sha: 8a0163fe1b72c3f714f5c3a3719a8dfc9114000e
           - repository: BrianBusby/bmux
             number: 96
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-09-04T18:41:13Z'
+            merge_commit_sha: c07b9f8bd8522934b7dfe3ffb14232329c0f6185
       completed_at: 2026-09-04
       rationale: Harden the factual workspace to coding-agent session association below semantic inference so Session and Smart Session reads no longer depend on workspace display metadata as their only identity bridge.
       acceptance:
@@ -1532,7 +1717,7 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: provenance_engine
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
@@ -1657,7 +1842,7 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: provenance_engine
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
@@ -1727,12 +1912,16 @@ roadmap:
         commits:
           - repository: BrianBusby/bmux
             sha: 2a4f2d7bc43f5d66cd6273e970835266f7e3d09b
+          - repository: BrianBusby/bmux
+            sha: e0582b0feb3123a3a3b6c89d583146dfce7d959f
         pull_requests:
           - repository: BrianBusby/bmux
             number: 78
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-29T15:35:56Z'
+            merge_commit_sha: e0582b0feb3123a3a3b6c89d583146dfce7d959f
       completed_at: 2026-08-28
       acceptance:
         criteria:
@@ -1990,12 +2179,16 @@ roadmap:
         commits:
           - repository: BrianBusby/bmux
             sha: c623bf26bd8aaefe7352a8669b1044b6132cfc5b
+          - repository: BrianBusby/bmux
+            sha: 979bdf0d40560373025f00ee1d0a2ad18c5e177a
         pull_requests:
           - repository: BrianBusby/bmux
             number: 57
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-21T01:53:54Z'
+            merge_commit_sha: 979bdf0d40560373025f00ee1d0a2ad18c5e177a
       completed_at: 2026-08-17
       acceptance:
         criteria:
@@ -2029,7 +2222,10 @@ roadmap:
         assignment: current
         assigned_to: bmux
       rationale: >-
-        Make the three distinct user-facing views durable in Project Truth: Native preserves provider-native fidelity, Terminal is the bmux React live interaction surface, and Session is a separate React smart summary surface backed by PE factual and semantic models.
+        Make the three distinct user-facing views durable in Project Truth: Native
+        preserves provider-native fidelity, Terminal is the bmux React live interaction
+        surface, and Session is a separate React smart summary surface backed by PE
+        factual and semantic models.
 
     - id: coding_session_view_surfaces
       kind: milestone
@@ -2108,6 +2304,8 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-17T06:42:00Z'
+            merge_commit_sha: 6fe54d5411febdbe9bc79ef320b25be28c563938
       completed_at: 2026-08-17
       rationale: Records the completed bmux factual Session view work as a prerequisite PE factual-projection consumer. The native view is useful inspection/debug scaffolding and data-access foundation, but the intended user-facing Smart Session surface is React and remains separate from the React Terminal transcript/live interaction surface.
 
@@ -2211,12 +2409,16 @@ roadmap:
         commits:
           - repository: BrianBusby/bmux
             sha: 1a9f01708b55783bb1cbde275e4163d586e68d90
+          - repository: BrianBusby/bmux
+            sha: 5b43656e0047ade577177d00b121906dce808009
         pull_requests:
           - repository: BrianBusby/bmux
             number: 56
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-18T13:31:32Z'
+            merge_commit_sha: 5b43656e0047ade577177d00b121906dce808009
       completed_at: 2026-08-17
       rationale: Establish a separate React Session surface that consumes PE factual projections and existing semantic messages through a typed revision-safe bridge. This foundation must not infer session meaning from raw provider events inside bmux and must not define the future PE-owned SessionWorkModel contract.
       acceptance_reason: "PR #56 merged the React Smart Session foundation delivery. Acceptance remains under observation after PR #58 validated the first SessionWorkModel-backed consumer path."
@@ -2272,12 +2474,16 @@ roadmap:
             sha: 000468433cc46e96a1a8f5555179546af921fcb3
           - repository: BrianBusby/bmux
             sha: 335237bf8680149f6070a6139acd526279d2bcdc
+          - repository: BrianBusby/bmux
+            sha: 60b9635d7f6d254ebdecb634bdfeb1ea6050099f
         pull_requests:
           - repository: BrianBusby/bmux
             number: 58
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-21T01:53:53Z'
+            merge_commit_sha: 60b9635d7f6d254ebdecb634bdfeb1ea6050099f
       completed_at: 2026-08-17
       rationale: Replace the Slice 1 disposable Smart Session bridge composition with the first PE-owned SessionWorkModel consumer path for supported fields only, while leaving milestone, blocker, approach-change, progress, and architecture semantics gated for later work.
       acceptance_reason: "PR #58 merged the initial React Smart Session SessionWorkModel consumer for supported intent, activity, phase, factual evidence, revision, and provenance fields. The broader Smart SessionWorkModel consumer remains gated because milestone and blocker/approach-change semantics are still intentionally gated."
@@ -2297,7 +2503,7 @@ roadmap:
         tags:
           - react_smart_session
           - session_work_model
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - react_smart_session_initial_work_model_consumer
         - react_smart_session_foundation
@@ -2487,12 +2693,17 @@ roadmap:
           - provider_runtime_identity
         worktree_required: true
         conflict_note: >-
-          Cross-session awareness must stay PE-owned for durable relationships and read models. bmux may present or ask for bounded results, but must not infer a separate semantic cross-session model from raw provider output.
+          Cross-session awareness must stay PE-owned for durable relationships and
+          read models. bmux may present or ask for bounded results, but must not infer
+          a separate semantic cross-session model from raw provider output.
       execution:
         assignment: current
         assigned_to: shared
       rationale: >-
-        Capture the long-term cross-session working-memory capability so related coding-agent sessions can discover bounded evidence-backed work state, relationships, blockers, artifacts, and outcomes without sharing raw transcripts or automatically injecting context.
+        Capture the long-term cross-session working-memory capability so related coding-agent
+        sessions can discover bounded evidence-backed work state, relationships, blockers,
+        artifacts, and outcomes without sharing raw transcripts or automatically injecting
+        context.
 
     - id: cross_session_awareness_read_models
       kind: phase
@@ -2594,7 +2805,12 @@ roadmap:
           - deterministic_current_state_api
         worktree_required: true
         conflict_note: >-
-          Slice 1 is read-only. It derives deterministic relationships from existing session, worktree, repository, branch, session-tree, provider identity, external identity, Session Outcome, and SessionWorkModel evidence, and does not introduce coordination policy, prompt injection, whole-transcript sharing, artifact-collision warnings, or speculative milestone/blocker/architecture inference.
+          Slice 1 is read-only. It derives deterministic relationships from existing
+          session, worktree, repository, branch, session-tree, provider identity,
+          external identity, Session Outcome, and SessionWorkModel evidence, and does
+          not introduce coordination policy, prompt injection, whole-transcript sharing,
+          artifact-collision warnings, or speculative milestone/blocker/architecture
+          inference.
       execution:
         assignment: complete
         assigned_to: provenance_engine
@@ -2604,12 +2820,16 @@ roadmap:
         commits:
           - repository: BrianBusby/bmux
             sha: 2ec30211c5ce61caa7b8cf6a8c91c7202054a420
+          - repository: BrianBusby/bmux
+            sha: 629ba10768fca82cf70c4b1abf06c46fe9dc60aa
         pull_requests:
           - repository: BrianBusby/bmux
             number: 80
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-29T18:27:37Z'
+            merge_commit_sha: 629ba10768fca82cf70c4b1abf06c46fe9dc60aa
       completed_at: 2026-08-29
       acceptance:
         criteria:
@@ -2620,9 +2840,18 @@ roadmap:
           - Preserve exact Session Outcome and SessionWorkModel revision metadata used by every brief.
           - Keep the slice read-only with no prompt injection, coordination policy, bmux UI, or artifact-collision warning behavior.
       acceptance_reason: >-
-        Cross-session work awareness foundation is implemented as a schema-v23 PE read contract and SQLite projection. `relatedSessions(...)` returns bounded deterministic briefs with same-repository, same-worktree, same-branch, session-tree, provider-identity, external-identity, and shared changed-artifact relationship reasons; compact Session Outcome facts; exact Session Outcome and SessionWorkModel revision metadata; freshness/source-watermark metadata; and explicit availability/completeness states. The slice remains below richer cross-session semantics, collision awareness, explicit agent retrieval, bmux presentation, prompt/context injection, and Knowledge Compiler integration.
+        Cross-session work awareness foundation is implemented as a schema-v23 PE
+        read contract and SQLite projection. `relatedSessions(...)` returns bounded
+        deterministic briefs with same-repository, same-worktree, same-branch, session-tree,
+        provider-identity, external-identity, and shared changed-artifact relationship
+        reasons; compact Session Outcome facts; exact Session Outcome and SessionWorkModel
+        revision metadata; freshness/source-watermark metadata; and explicit availability/completeness
+        states. The slice remains below richer cross-session semantics, collision
+        awareness, explicit agent retrieval, bmux presentation, prompt/context injection,
+        and Knowledge Compiler integration.
       rationale: >-
-        First implementation slice for deterministic related-session discovery and bounded PE-owned briefs over active or recent coding-agent sessions.
+        First implementation slice for deterministic related-session discovery and
+        bounded PE-owned briefs over active or recent coding-agent sessions.
 
     - id: cross_session_semantics_and_collisions
       kind: milestone
@@ -2734,6 +2963,8 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-31T05:44:25Z'
+            merge_commit_sha: adf55adb8a81f77a5b07e8fd129ad0d9cce2e149
       completed_at: 2026-08-31
       acceptance:
         criteria:
@@ -2745,7 +2976,17 @@ roadmap:
           - Semantic work-state fields remain separate from factual relationship reasons, Session Outcome, Turn Outcome, factual Current State, artifact-collision facts, prompt injection, coordination policy, and Knowledge Compiler behavior.
           - A public-read example demonstrates the carried cross-session work state and limitations using sanitized fixture data.
       acceptance_reason: >-
-        Rich cross-session work-state semantics is implemented and merged through PR #87. Related-session rule version 2 carries existing SessionWorkModel milestones, blockers, approach changes, thread/turn intent, current activity, and session phase with source-session scope, semantic record identity, bounded payloads, evidence references, producer metadata, supporting factual revision, supersession metadata, explicit unknown/unavailable/partial availability, and deterministic content revision behavior. Validation used synthetic sanitized multi-session fixtures, public SDK reads, restart/rebuild and historical-revision coverage, focused related-session/blocker/approach suites, the full ProvenanceEngine package suite, foreground Codex review, and Project Truth gates. Agent-accessible retrieval is not selected or implemented by this slice.
+        Rich cross-session work-state semantics is implemented and merged through
+        PR #87. Related-session rule version 2 carries existing SessionWorkModel milestones,
+        blockers, approach changes, thread/turn intent, current activity, and session
+        phase with source-session scope, semantic record identity, bounded payloads,
+        evidence references, producer metadata, supporting factual revision, supersession
+        metadata, explicit unknown/unavailable/partial availability, and deterministic
+        content revision behavior. Validation used synthetic sanitized multi-session
+        fixtures, public SDK reads, restart/rebuild and historical-revision coverage,
+        focused related-session/blocker/approach suites, the full ProvenanceEngine
+        package suite, foreground Codex review, and Project Truth gates. Agent-accessible
+        retrieval is not selected or implemented by this slice.
       rationale: Add richer validated semantic information to related-session briefs only after PE owns the underlying milestone, blocker, validation, and approach-change semantics.
 
     - id: cross_session_artifact_collision_awareness
@@ -2805,12 +3046,16 @@ roadmap:
         commits:
           - repository: BrianBusby/bmux
             sha: a11e649812f7287d7f9466d9d1359fb61aafc88d
+          - repository: BrianBusby/bmux
+            sha: efaf78b33757634d29e3ee4922bff248bcb2e12b
         pull_requests:
           - repository: BrianBusby/bmux
             number: 82
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-30T00:09:31Z'
+            merge_commit_sha: efaf78b33757634d29e3ee4922bff248bcb2e12b
       completed_at: 2026-08-29
       acceptance:
         criteria:
@@ -2823,7 +3068,19 @@ roadmap:
           - "Preserve factuality and non-coordination boundaries: no semantic conflict judgment, prompt injection, agent coordination, raw transcript sharing, proactive UI, or Knowledge Compiler behavior."
       rationale: Detect and explain possible parallel-work artifact collisions from factual worktree, branch, repository, change-set, and file-change evidence without automatically blocking or mutating another session.
       acceptance_reason: >-
-        Artifact and change collision awareness is implemented as a schema-v24 PE read contract and SQLite projection. `artifactCollisions(...)` returns bounded exact-path artifact-overlap candidates for a target session and related sessions, with per-session participation, repository/worktree/branch/HEAD boundary comparison, temporal overlap state, freshness and stale classification, completeness metadata, Session Outcome and related-session projection revision references, accepted evidence references, stable ordering, bounded exclusions, and deterministic revision persistence. The slice remains a factual possible-collision read only: rename identity is unsupported without accepted deterministic evidence, similar paths do not collide, same relative paths in different repositories are excluded, and no semantic compatibility judgment, coordination policy, prompt injection, raw transcript sharing, bmux UI, proactive notification, retrieval integration, or Knowledge Compiler behavior is added.
+        Artifact and change collision awareness is implemented as a schema-v24 PE
+        read contract and SQLite projection. `artifactCollisions(...)` returns bounded
+        exact-path artifact-overlap candidates for a target session and related sessions,
+        with per-session participation, repository/worktree/branch/HEAD boundary comparison,
+        temporal overlap state, freshness and stale classification, completeness metadata,
+        Session Outcome and related-session projection revision references, accepted
+        evidence references, stable ordering, bounded exclusions, and deterministic
+        revision persistence. The slice remains a factual possible-collision read
+        only: rename identity is unsupported without accepted deterministic evidence,
+        similar paths do not collide, same relative paths in different repositories
+        are excluded, and no semantic compatibility judgment, coordination policy,
+        prompt injection, raw transcript sharing, bmux UI, proactive notification,
+        retrieval integration, or Knowledge Compiler behavior is added.
 
     - id: cross_session_awareness_retrieval_and_context
       kind: phase
@@ -2969,6 +3226,8 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-09-01T15:09:46Z'
+            merge_commit_sha: 5db53927906a83677e1bebbc2f04680af10b5055
       acceptance:
         criteria:
           - Expose explicit agent retrieval CLI commands over existing PE related-session and artifact-collision reads.
@@ -2981,7 +3240,15 @@ roadmap:
       rationale: Provide explicit bounded agent queries over PE-owned cross-session state instead of blindly injecting historical context or exposing full transcripts.
       completed_at: 2026-08-31
       acceptance_reason: >-
-        Implemented as two explicit `bmux provenance sessions` retrieval operations backed by public PE `relatedSessions(...)` and `artifactCollisions(...)` reads. The commands require explicit PE session ids, accept explicit databases without a live app socket, enforce finite limits and timestamp/path validation, preserve exact revision reads and missing/empty/partial distinctions, render compact localized text, emit stable JSON, document the target-session changed-artifact collision limitation, and include deterministic fixtures plus a reproducible two-session demo. PR #88 merged as `5db53927906a83677e1bebbc2f04680af10b5055` after its review findings were resolved.
+        Implemented as two explicit `bmux provenance sessions` retrieval operations
+        backed by public PE `relatedSessions(...)` and `artifactCollisions(...)` reads.
+        The commands require explicit PE session ids, accept explicit databases without
+        a live app socket, enforce finite limits and timestamp/path validation, preserve
+        exact revision reads and missing/empty/partial distinctions, render compact
+        localized text, emit stable JSON, document the target-session changed-artifact
+        collision limitation, and include deterministic fixtures plus a reproducible
+        two-session demo. PR #88 merged as `5db53927906a83677e1bebbc2f04680af10b5055`
+        after its review findings were resolved.
 
     - id: proactive_bmux_cross_session_awareness
       kind: slice
@@ -3043,6 +3310,8 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-09-01T19:08:35Z'
+            merge_commit_sha: 0400109c5ec0678c6e89bff0cc316b661a44f626
       completed_at: 2026-09-01
       acceptance:
         criteria:
@@ -3069,7 +3338,7 @@ roadmap:
           - cross_session_awareness
           - context_assembly
           - experiment
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - agent_accessible_cross_session_retrieval
       gates:
@@ -3417,6 +3686,8 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-30T02:11:31Z'
+            merge_commit_sha: cd59ec10b27500a4c0dc0954bd1da9f7fed44de8
       completed_at: 2026-08-30
       acceptance:
         criteria:
@@ -3428,7 +3699,15 @@ roadmap:
           - Keep semantic milestones above deterministic factual Current State and compatible with existing factual, outcome, related-session, collision, and SDK read APIs.
       rationale: Add conservative coding-agent milestone semantics from existing accepted plan and prompt evidence without introducing a second inference pipeline, bmux-local semantic logic, raw transcript retention, or external model dependency.
       acceptance_reason: >-
-        Milestone inference is implemented as a producer-versioned semantic record payload consumed by the existing SessionWorkModel path. The built-in rule materializes plan-derived milestones with explicit identity and state bases, treats bmux-generated plan-step record ids as source-only evidence rather than provider-stable continuity anchors, falls back to a prompt-scoped milestone only when no usable plan exists, validates supported hierarchy links in the payload contract, preserves omission and ambiguity reasons, bounds large plan output, remains idempotent for unchanged semantic content, and keeps milestone interpretation out of factual Current State.
+        Milestone inference is implemented as a producer-versioned semantic record
+        payload consumed by the existing SessionWorkModel path. The built-in rule
+        materializes plan-derived milestones with explicit identity and state bases,
+        treats bmux-generated plan-step record ids as source-only evidence rather
+        than provider-stable continuity anchors, falls back to a prompt-scoped milestone
+        only when no usable plan exists, validates supported hierarchy links in the
+        payload contract, preserves omission and ambiguity reasons, bounds large plan
+        output, remains idempotent for unchanged semantic content, and keeps milestone
+        interpretation out of factual Current State.
 
     - id: blocker_approach_change_semantics
       kind: slice
@@ -3486,6 +3765,8 @@ roadmap:
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-08-30T18:46:46Z'
+            merge_commit_sha: 79d6cd404b98f63a10f6fcc7748a921c3efbf19b
       completed_at: 2026-08-30
       acceptance:
         criteria:
@@ -3497,7 +3778,15 @@ roadmap:
           - Preserve existing factual reads, milestone inference, related-session awareness, artifact-collision awareness, semantic messages, SDK consumers, restart/rebuild behavior, and old SessionWorkModel decoding.
       rationale: Add conservative coding-agent blocker and approach-change semantics from accepted visible statements without introducing a new inference pipeline, bmux-local semantic logic, raw transcript retention, cross-session propagation, or an external model dependency.
       acceptance_reason: >-
-        Blocker and approach-change semantics are implemented as producer-versioned PE semantic records selected into the existing SessionWorkModel read. The built-in rule consumes only supported explicit visible assistant-output and visible reasoning-summary marker statements, preserves reported-versus-observed basis and source evidence, handles independent blockers, reported resolution/bypass/no-longer-applicable states, recurrence, exact milestone-id links, partial source history, bounded output, supersession, and SDK decoding, and abstains on unsupported command/prose/quote/hypothetical evidence. Validation used synthetic sanitized PE fixtures and the full ProvenanceEngine package suite; no real private session transcript validation is claimed.
+        Blocker and approach-change semantics are implemented as producer-versioned
+        PE semantic records selected into the existing SessionWorkModel read. The
+        built-in rule consumes only supported explicit visible assistant-output and
+        visible reasoning-summary marker statements, preserves reported-versus-observed
+        basis and source evidence, handles independent blockers, reported resolution/bypass/no-longer-applicable
+        states, recurrence, exact milestone-id links, partial source history, bounded
+        output, supersession, and SDK decoding, and abstains on unsupported command/prose/quote/hypothetical
+        evidence. Validation used synthetic sanitized PE fixtures and the full ProvenanceEngine
+        package suite; no real private session transcript validation is claimed.
 
     - id: milestone_to_code_relationships
       kind: slice
@@ -3511,7 +3800,7 @@ roadmap:
       concept_classification:
         primary: structured_work_understanding
         architecture_layer: inference_session_work_projections
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - milestone_inference
         - richer_coding_agent_evidence_foundation
