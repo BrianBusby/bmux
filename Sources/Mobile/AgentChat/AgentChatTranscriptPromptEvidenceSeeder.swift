@@ -7,12 +7,13 @@ struct AgentChatTranscriptPromptEvidenceSeeder {
         let messages: [ChatMessage]
     }
 
+    @discardableResult
     static func seed(
         records: [AgentChatSessionRecord],
         resolver: AgentChatTranscriptResolver,
         tokenOptimizationMode: TokenOptimizationMode,
         recordPrompts: @escaping @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
-    ) {
+    ) -> Task<Void, Never> {
         Task {
             let seeds = await Task.detached(priority: .utility) {
                 let backfill = CodexTranscriptPromptBackfill(tokenOptimizationMode: tokenOptimizationMode)
@@ -33,12 +34,13 @@ struct AgentChatTranscriptPromptEvidenceSeeder {
         }
     }
 
+    @discardableResult
     static func seed(
         record: AgentChatSessionRecord,
         resolver: AgentChatTranscriptResolver,
         tokenOptimizationMode: TokenOptimizationMode,
         recordPrompts: @escaping @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
-    ) {
+    ) -> Task<Void, Never> {
         seed(
             records: [record],
             resolver: resolver,

@@ -590,8 +590,9 @@ struct AgentChatSessionRegistryLifecycleTests {
         try #"{"sessions":{"\#(sessionID)":{"workspaceId":"\#(workspaceID)","surfaceId":"\#(surfaceID)","cwd":"/Users/example/project","transcriptPath":"\#(transcriptURL.path)","updatedAt":140}}}"#.write(to: hookDir.appendingPathComponent("codex-hook-sessions.json"), atomically: true, encoding: .utf8)
         var recorded = [(record: AgentChatSessionRecord, messages: [ChatMessage])]()
         let service = AgentChatTranscriptService(registry: AgentChatSessionRegistry(hookStore: AgentChatHookSessionStore(homeDirectory: home)), resolver: AgentChatTranscriptResolver(homeDirectory: home, environment: [:]), recordTranscriptUserPrompts: { recorded.append(($0, $1)) })
-        service.start()
-        for _ in 0..<100 where recorded.isEmpty { try await Task.sleep(nanoseconds: 10_000_000) }
+        let startupTask = service.start()
+        await startupTask.value
+        await service.waitForPromptEvidenceTasks()
         let captured = try #require(recorded.first)
         let texts = captured.messages.compactMap { message -> String? in guard case .prose(let prose) = message.kind else { return nil }; return prose.text }
         #expect((captured.record.sessionID, captured.record.workspaceID, captured.record.surfaceID, texts) == (sessionID, workspaceID, surfaceID, ["[Image #1] Fix the PE session tab link"]))
@@ -615,7 +616,7 @@ struct AgentChatSessionRegistryLifecycleTests {
             sessionId: sessionID, hookEventName: .userPromptSubmit, source: "codex",
             workspaceId: workspaceID, surfaceId: surfaceID, transcriptPath: transcriptURL.path, cwd: "/Users/example/project"
         ))
-        for _ in 0..<100 where recorded.isEmpty { try await Task.sleep(nanoseconds: 10_000_000) }
+        await service.waitForPromptEvidenceTasks()
         let captured = try #require(recorded.first)
         let texts = captured.messages.compactMap { message -> String? in guard case .prose(let prose) = message.kind else { return nil }; return prose.text }
         #expect((captured.record.sessionID, captured.record.workspaceID, captured.record.surfaceID, texts) == (sessionID, workspaceID, surfaceID, ["[Image #1] Fix the PE session tab link"]))
