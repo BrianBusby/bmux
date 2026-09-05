@@ -39,6 +39,11 @@ explicit import or future maintenance capability. Dogfood also identified
 workspace-display SQLite file-watcher churn on shared stores as a deferred
 runtime-composition follow-up; do not fold that into this PR unless it becomes
 the blocking startup/readiness failure.
+Final dogfood also found that another active tagged Debug app can hold the
+shared production PE SQLite store and force this slice's writes into retry; the
+validated build 535 dogfood used an isolated `BMUX_PROVENANCE_HOME` while still
+running production composition (`xctest=0`). Treat multi-app shared-store writer
+policy as a separate follow-up, not part of this PR.
 
 ## Read Order
 

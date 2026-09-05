@@ -155,3 +155,11 @@ startup-time historical prompt ingestion again, it should be introduced as an
 explicit runtime capability with its own readiness, storage bounds, progress,
 and teardown contract rather than piggybacking on the live agent-chat projection
 startup.
+
+Cross-process write contention on the shared production PE SQLite store remains
+outside this PR. Final dogfood first hit `database is locked` retries because an
+unrelated tagged Debug app (`bmux DEV pe-session-hook-main`) was actively writing
+to the same production store. The validated dogfood path relaunched this PR's
+tagged app with an isolated `BMUX_PROVENANCE_HOME`, preserving production runtime
+composition while removing the external writer. A durable multi-app writer
+policy, if needed, should be a separate Process Integrity slice.
