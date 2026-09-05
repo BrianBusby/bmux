@@ -271,8 +271,10 @@ roadmap:
           - Sources/AppDelegate*.swift
           - Sources/App/BmuxAppRuntime*.swift
           - Sources/WorkProvenance/*.swift
+          - Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite/ProvenanceSQLiteRepository*.swift
           - bmuxTests/AppRuntimeCompositionTests.swift
           - bmuxTests/PromptSessionLinkProductionLifecycleTests.swift
+          - Packages/macOS/ProvenanceEngine/Tests/ProvenanceEngineSQLiteTests/TurnOutcomeProjectionTests.swift
         likely_conflict_domains:
           - app_startup
           - work_provenance_runtime_startup
@@ -300,6 +302,7 @@ roadmap:
           - Runtime shutdown cancels migrated observation work and releases owned lifecycle tasks.
           - A source guard prevents migrated app entrypoints from bypassing the composition boundary.
           - Existing Session-tab production lifecycle coverage still reaches PE readiness through deterministic task completion.
+          - Production PE prompt evidence appends scope turn-outcome evidence acquisition to the affected session instead of scanning unrelated ledger history.
 
     - id: app_runtime_service_lifecycle_migration
       kind: slice

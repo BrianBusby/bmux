@@ -178,7 +178,7 @@ extension ProvenanceSQLiteRepository {
             timeColumn: "observed_at_seconds",
             turnID: turnID
         ).compactMap { try codingAgentFileChangeAttribution(id: $0) }
-        let evidenceIndex = try turnOutcomeEvidenceIndex()
+        let evidenceIndex = try turnOutcomeEvidenceIndex(sessionID: turn.sessionID)
         let repositoryBoundary = try turnOutcomeRepositoryBoundary(
             turn: turn,
             session: session,
@@ -961,10 +961,9 @@ extension ProvenanceSQLiteRepository {
         )
     }
 
-    private func turnOutcomeEvidenceIndex() throws -> TurnOutcomeEvidenceIndex {
-        let count = try turnOutcomeEventCount()
-        guard count > 0 else { return TurnOutcomeEvidenceIndex(referencesByKey: [:]) }
-        let entries = try eventLedgerEntries(limit: count)
+    private func turnOutcomeEvidenceIndex(sessionID: String) throws -> TurnOutcomeEvidenceIndex {
+        let entries = try eventLedgerEntries(sessionID: sessionID)
+        guard !entries.isEmpty else { return TurnOutcomeEvidenceIndex(referencesByKey: [:]) }
         var referencesByKey: [TurnOutcomeEvidenceKey: [ProvenanceTurnOutcomeEvidenceReference]] = [:]
         for entry in entries {
             func append(kind: String, id: String?) {
@@ -1007,13 +1006,6 @@ extension ProvenanceSQLiteRepository {
             append(kind: "coding_agent_file_change_attribution", id: payload.codingAgentFileChangeAttribution?.id)
         }
         return TurnOutcomeEvidenceIndex(referencesByKey: referencesByKey)
-    }
-
-    private func turnOutcomeEventCount() throws -> Int {
-        let query = try database.prepare("SELECT COUNT(*) FROM provenance_events")
-        defer { query.finalize() }
-        guard try query.step() else { return 0 }
-        return query.int(at: 0)
     }
 
     private func turnOutcomeLatestLedgerSequence() throws -> Int? {

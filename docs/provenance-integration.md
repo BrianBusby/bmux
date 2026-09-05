@@ -78,6 +78,8 @@ Explicit CLI `--database <path>` is supported for provenance CLI fixture/debug u
 
 Startup breadcrumbs include the effective V1 database path in `app.init.workProvenance.created`. Producer failures are logged instead of being silently discarded. `WorkProvenanceRuntime` exposes lifecycle state for `notStarted`, `starting`, `ready`, `degraded`, `stopping`, `stopped`, and `failed`, plus deterministic task-settling and shutdown hooks for production-path tests.
 
+Production prompt evidence appends must keep readiness bounded to the affected session. Turn-outcome evidence references are resolved from `provenance_events.session_id` using the existing session index; appending one transcript or hook prompt must not decode unrelated ledger history from the shared local PE store.
+
 ## Current State Reads
 
 bmux treats Provenance Engine Current State as authoritative present-tense provenance.

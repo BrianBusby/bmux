@@ -96,6 +96,16 @@ background PE work, then clears the retained `TabManager` reference.
 workspace observation tasks. It replaces fixed sleeps in the Session-tab
 production lifecycle regression.
 
+Tagged-app dogfood exposed one additional readiness hazard in the production PE
+prompt path: transcript prompt evidence appends were spending all sampled CPU in
+turn-outcome evidence acquisition because the projection decoded the entire
+local event ledger. That was not a composition-construction bypass, but it meant
+the migrated production path could start deliberately and still fail to reach a
+useful ready state on a long-lived local store. The fix keeps the existing
+evidence contract and scopes turn-outcome evidence reads to the affected
+`session_id`, using the existing `provenance_events_session_index`; unrelated
+ledger history is no longer decoded for one active session append.
+
 ## Guardrail
 
 `scripts/check-app-runtime-composition-boundary.sh` fails if production app source
@@ -121,3 +131,10 @@ presence startup, because the app-runtime composition tests still show app-host
 logs from listener/mobile-host startup even when PE is disabled. Browser/DevTools
 ownership and sidebar Git/PR observation are also candidates, but they should be
 migrated in separate focused PRs with their own production-path tests.
+
+The workspace-display Current State file watcher also remains deferred. Dogfood
+sampling showed it can receive frequent SQLite `-wal`/`-shm` change events from a
+shared production PE store and rescan candidate watch paths on the main actor.
+That was not the sampled source of the blocking PE append, so this PR records it
+as a follow-up instead of changing watcher semantics alongside the composition
+boundary.

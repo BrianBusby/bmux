@@ -30,6 +30,13 @@ The retained compatibility behavior is `BMUX_ENABLE_PROVENANCE_RUNTIME_IN_XCTEST
 plus `BMUX_PROVENANCE_HOME`, now interpreted only by the runtime composition
 configuration.
 
+Production PE prompt evidence appends are part of this slice's readiness surface:
+turn-outcome evidence acquisition is scoped to the affected `session_id`, not the
+entire local event ledger. Dogfood also identified workspace-display SQLite
+file-watcher churn on shared stores as a deferred runtime-composition follow-up;
+do not fold that into this PR unless it becomes the blocking startup/readiness
+failure.
+
 ## Read Order
 
 1. `AGENTS.md`
