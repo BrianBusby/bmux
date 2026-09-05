@@ -576,6 +576,45 @@ struct AgentChatSessionRegistryLifecycleTests {
     }
 
     @MainActor
+    @Test func endedCodexPromptEvidenceSeedSkipsHistoricalTranscriptBackfill() async throws {
+        let home = try temporaryHomeDirectory()
+        let sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b"
+        let transcriptURL = home
+            .appendingPathComponent(".codex/sessions/2026/08/21", isDirectory: true)
+            .appendingPathComponent("rollout-2026-08-21T10-00-00-\(sessionID).jsonl")
+        try FileManager.default.createDirectory(
+            at: transcriptURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try ##"{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Historical prompt must not be startup PE evidence."}]}}"##
+            .appending("\n")
+            .write(to: transcriptURL, atomically: true, encoding: .utf8)
+        let record = AgentChatSessionRecord(
+            sessionID: sessionID,
+            agentKind: .codex,
+            workspaceID: UUID().uuidString,
+            surfaceID: UUID().uuidString,
+            workingDirectory: "/Users/example/project",
+            transcriptPath: transcriptURL.path,
+            state: .ended,
+            lastActivityAt: Date(timeIntervalSince1970: 140),
+            title: nil,
+            pid: nil
+        )
+        var recorded = [(record: AgentChatSessionRecord, messages: [ChatMessage])]()
+
+        let seedTask = AgentChatTranscriptPromptEvidenceSeeder.seed(
+            records: [record],
+            resolver: AgentChatTranscriptResolver(homeDirectory: home, environment: [:]),
+            tokenOptimizationMode: .balanced,
+            recordPrompts: { recorded.append(($0, $1)) }
+        )
+        await seedTask.value
+
+        #expect(recorded.isEmpty)
+    }
+
+    @MainActor
     @Test func startupBackfillsCodexTranscriptPromptsFromHookStoreSessions() async throws {
         let home = try temporaryHomeDirectory(), sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b", workspaceID = UUID().uuidString, surfaceID = UUID().uuidString
         let transcriptURL = home.appendingPathComponent(".codex/sessions/2026/08/21", isDirectory: true).appendingPathComponent("rollout-2026-08-21T10-00-00-\(sessionID).jsonl")
